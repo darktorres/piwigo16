@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Permission;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
-use Piwigo\Db\Tables;
 use Psr\Cache\CacheItemPoolInterface;
 
 /**
@@ -61,7 +59,7 @@ final readonly class EffectiveForbiddenCategoriesCache
     public function __construct(
         private PermissionService $permissionService,
         private CategoryService $categoryService,
-        private Connection $conn,
+        private PermissionRepository $permissionRepository,
         private CacheItemPoolInterface $pool,
     ) {}
 
@@ -114,14 +112,9 @@ final readonly class EffectiveForbiddenCategoriesCache
         // this list does not contain images that are not in at least an
         // authorized category -- same query UserService::getUserData()'s
         // own regeneration block runs, based on the structural value.
-        $query = '
-SELECT DISTINCT(id)
-  FROM ' . Tables::images() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id=image_id
-  WHERE category_id NOT IN (' . $structuralForbidden . ')
-    AND level>' . $level;
         $forbiddenIds = array_map(
-            static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
-            array_column($this->conn->fetchAllAssociative($query), 'id')
+            static fn (int $v): string => (string) $v,
+            $this->permissionRepository->findImageIdsOutsideForbiddenCategories($structuralForbidden, $level)
         );
         if ($forbiddenIds === []) {
             $forbiddenIds[] = '0';
@@ -129,14 +122,7 @@ SELECT DISTINCT(id)
         $imageAccessType = 'NOT IN';
         $imageAccessList = implode(',', $forbiddenIds);
 
-        $query = '
-SELECT COUNT(DISTINCT(image_id)) as total
-  FROM ' . Tables::imageCategory() . '
-  WHERE category_id NOT IN (' . $structuralForbidden . ')
-    AND image_id ' . $imageAccessType . ' (' . $imageAccessList . ')';
-        $row = $this->conn->fetchNumeric($query);
-        $totalRaw = $row !== false ? ($row[0] ?? null) : null;
-        $nbTotalImages = is_scalar($totalRaw) ? (string) $totalRaw : '0';
+        $nbTotalImages = $this->permissionRepository->countAccessibleImages($structuralForbidden, $imageAccessType, $imageAccessList);
 
         // Called unconditionally, matching the legacy code's own real
         // behavior -- lastPhotoDate below is a real byproduct every status

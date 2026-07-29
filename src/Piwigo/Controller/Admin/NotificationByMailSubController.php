@@ -96,7 +96,6 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
 
         $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
 
-        $conn = DbConnection::build();
         $nbmSender = \Piwigo\Bootstrap\PresentationAccessor::notificationByMailSender();
 
         $notificationByMailRequest = Request\NotificationByMailRequest::fromGlobals();
@@ -158,9 +157,8 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
 
                     $updated_param_count = 0;
                     // Update param
-                    foreach ($conn->fetchAllAssociative('select param, value from ' . Tables::config() . ' where param like \'nbm\\_%\'') as $nbm_user) {
-                        // 'param' is the config table's primary key, never null.
-                        if (! is_string($nbm_user['param']) || $nbm_user['param'] === '') {
+                    foreach ($this->configService->getParamsAndValuesLike('nbm\\_%') as $nbm_user) {
+                        if ($nbm_user['param'] === '') {
                             continue;
                         }
                         if (isset($post[$nbm_user['param']])) {
@@ -431,6 +429,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         $base_url = $urlService->getRootUrl() . 'admin.php';
 
         $conn = DbConnection::build();
+        $notificationByMailService = new \Piwigo\Notification\NotificationByMailService(new \Piwigo\Notification\NotificationByMailRepository($conn));
 
         // user_fields maps generic field names to table-specific column names
         // (see include/config_default.inc.php); every value is a plain string.
@@ -440,30 +439,10 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         $user_field_username = $user_fields['username'];
 
         // Set null mail_address empty
-        $query = '
-update
-  ' . Tables::users() . '
-set
-  ' . $user_field_email . ' = null
-where
-  trim(' . $user_field_email . ') = \'\';';
-        $conn->executeStatement($query);
+        $notificationByMailService->nullifyBlankEmails($user_field_email);
 
         // null mail_address are not selected in the list
-        $query = '
-select
-  u.' . $user_field_id . ' as user_id,
-  u.' . $user_field_username . ' as username,
-  u.' . $user_field_email . ' as mail_address
-from
-  ' . Tables::users() . ' as u left join ' . Tables::userMailNotification() . ' as m on u.' . $user_field_id . ' = m.user_id
-where
-  u.' . $user_field_email . ' is not null and
-  m.user_id is null
-order by
-  user_id;';
-
-        $rows = $conn->fetchAllAssociative($query);
+        $rows = $notificationByMailService->getUsersWithoutNotificationRow($user_field_id, $user_field_username, $user_field_email);
 
         if ($rows !== []) {
             $inserts = [];
@@ -506,8 +485,7 @@ order by
             if ($nbmSender->isSendmailTimeout()) {
                 $quoted_check_key_list = NotificationByMailSender::quoteCheckKeyList(array_diff($check_key_list, $check_key_treated));
                 if (count($quoted_check_key_list) !== 0) {
-                    $query = 'delete from ' . Tables::userMailNotification() . ' where check_key in (' . implode(',', $quoted_check_key_list) . ');';
-                    $conn->executeStatement($query);
+                    $notificationByMailService->deleteByQuotedCheckKeys(array_values($quoted_check_key_list));
 
                     $redirectService->redirect($base_url . $urlService->getQueryStringDiff([], false), Lang::t('Operation in progress') . "\n" . Lang::t('Please wait...'));
                 }

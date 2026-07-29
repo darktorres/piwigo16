@@ -70,6 +70,46 @@ final class PwgCore
         return \Piwigo\Bootstrap\ExtendedDomainAccessor::historyService();
     }
 
+    private static function imageService(): \Piwigo\Image\ImageService
+    {
+        return \Piwigo\Bootstrap\CoreDomainAccessor::imageService();
+    }
+
+    private static function categoryService(): \Piwigo\Category\CategoryService
+    {
+        return \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
+    }
+
+    private static function tagService(): \Piwigo\Tag\TagService
+    {
+        return \Piwigo\Bootstrap\CoreDomainAccessor::tagService();
+    }
+
+    private static function groupService(): \Piwigo\Group\GroupService
+    {
+        return \Piwigo\Bootstrap\CoreDomainAccessor::groupService();
+    }
+
+    private static function userService(): \Piwigo\Users\UserService
+    {
+        return \Piwigo\Bootstrap\CoreDomainAccessor::userService();
+    }
+
+    private static function commentService(): \Piwigo\Comment\CommentService
+    {
+        return \Piwigo\Bootstrap\ExtendedDomainAccessor::commentService();
+    }
+
+    private static function activityService(): \Piwigo\Activity\ActivityService
+    {
+        return \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService();
+    }
+
+    private static function rateService(): \Piwigo\Rate\RateService
+    {
+        return \Piwigo\Bootstrap\ExtendedDomainAccessor::rateService();
+    }
+
     /**
      * API method
      * Returns a list of missing derivatives (not generated yet)
@@ -93,18 +133,10 @@ final class PwgCore
             }
         }
 
-        $conn = DbConnection::build();
         $max_urls = $params['max_urls'];
-        $query = 'SELECT MAX(id)+1, COUNT(*) FROM ' . Tables::images() . ';';
-        $row = $conn->fetchNumeric($query);
-        assert($row !== false);
-        $max_id = $row[0] ?? null;
-        $image_count = $row[1] ?? null;
-        // COUNT(*) is always numeric; MAX(id)+1 is numeric whenever rows
-        // exist, which the $image_count == 0 early return below guarantees
-        // for every later use of $max_id.
-        $image_count = is_numeric($image_count) ? (int) $image_count : 0;
-        $max_id = is_numeric($max_id) ? (int) $max_id : 0;
+        $next_id_and_count = self::imageService()->getNextIdAndCount();
+        $max_id = $next_id_and_count['nextId'];
+        $image_count = $next_id_and_count['count'];
 
         if ($image_count === 0) {
             return [];
@@ -121,25 +153,16 @@ final class PwgCore
         \Piwigo\Config\CurrentConfig::setPhpExtensionInUrls(true);
         \Piwigo\Config\CurrentConfig::setDerivativeUrlStyle(2); // script
 
-        $qlimit = min(5000, ceil(max($image_count / 500, $max_urls / count($types))));
+        $qlimit = (int) min(5000, ceil(max($image_count / 500, $max_urls / count($types))));
         $where_clauses = WsHelper::stdImageSqlFilter($params, $service, '');
-        $where_clauses[] = 'id<start_id';
 
         if ($params['ids'] !== []) {
             $where_clauses[] = 'id IN (' . implode(',', $params['ids']) . ')';
         }
 
-        $query_model = '
-SELECT id, path, representative_ext, width, height, rotation
-  FROM ' . Tables::images() . '
-  WHERE ' . implode(' AND ', $where_clauses) . '
-  ORDER BY id DESC
-  LIMIT ' . (string) $qlimit . '
-;';
-
         $urls = [];
         do {
-            $rows = $conn->fetchAllAssociative(str_replace('start_id', (string) $start_id, $query_model));
+            $rows = self::imageService()->getForMissingDerivatives($where_clauses, $start_id, $qlimit);
             $is_last = count($rows) < $qlimit;
 
             foreach ($rows as $image_row) {
@@ -194,50 +217,28 @@ SELECT id, path, representative_ext, width, height, rotation
      */
     public static function getInfos(array $params, PwgServer &$service): array
     {
-        $conn = DbConnection::build();
         $infos = [];
         $infos['version'] = AppInfo::VERSION;
 
-        $query = 'SELECT COUNT(*) FROM ' . Tables::images() . ';';
-        $infos['nb_elements'] = $conn->fetchOne($query);
-
-        $query = 'SELECT COUNT(*) FROM ' . Tables::categories() . ';';
-        $infos['nb_categories'] = $conn->fetchOne($query);
-
-        $query = 'SELECT COUNT(*) FROM ' . Tables::categories() . ' WHERE dir IS NULL;';
-        $infos['nb_virtual'] = $conn->fetchOne($query);
-
-        $query = 'SELECT COUNT(*) FROM ' . Tables::categories() . ' WHERE dir IS NOT NULL;';
-        $infos['nb_physical'] = $conn->fetchOne($query);
-
-        $query = 'SELECT COUNT(*) FROM ' . Tables::imageCategory() . ';';
-        $infos['nb_image_category'] = $conn->fetchOne($query);
-
-        $query = 'SELECT COUNT(*) FROM ' . Tables::tags() . ';';
-        $infos['nb_tags'] = $conn->fetchOne($query);
-
-        $query = 'SELECT COUNT(*) FROM ' . Tables::imageTag() . ';';
-        $infos['nb_image_tag'] = $conn->fetchOne($query);
-
-        $query = 'SELECT COUNT(*) FROM ' . Tables::users() . ';';
-        $infos['nb_users'] = $conn->fetchOne($query);
-
-        $query = 'SELECT COUNT(*) FROM `' . Tables::groups() . '`;';
-        $infos['nb_groups'] = $conn->fetchOne($query);
-
-        $query = 'SELECT COUNT(*) FROM ' . Tables::comments() . ';';
-        $infos['nb_comments'] = $conn->fetchOne($query);
+        $infos['nb_elements'] = self::imageService()->getTotalImageCount();
+        $infos['nb_categories'] = self::categoryService()->countAllCategories();
+        $infos['nb_virtual'] = self::categoryService()->countByDirNull(true);
+        $infos['nb_physical'] = self::categoryService()->countByDirNull(false);
+        $infos['nb_image_category'] = self::imageService()->getImageCategoryLinkCount();
+        $infos['nb_tags'] = self::tagService()->countAll();
+        $infos['nb_image_tag'] = self::tagService()->countAllImageTagLinks();
+        $infos['nb_users'] = self::userService()->getTotalUserCount();
+        $infos['nb_groups'] = self::groupService()->countAll();
+        $infos['nb_comments'] = self::commentService()->countAll();
 
         // first element
         if ($infos['nb_elements'] > 0) {
-            $query = 'SELECT MIN(date_available) FROM ' . Tables::images() . ';';
-            $infos['first_date'] = $conn->fetchOne($query);
+            $infos['first_date'] = self::imageService()->getMinDateAvailable();
         }
 
         // unvalidated comments
         if ($infos['nb_comments'] > 0) {
-            $query = 'SELECT COUNT(*) FROM ' . Tables::comments() . ' WHERE validated=0;';
-            $infos['nb_unvalidated_comments'] = $conn->fetchOne($query);
+            $infos['nb_unvalidated_comments'] = self::commentService()->countUnvalidated();
         }
 
         // Cache size: not computed here on purpose. A real answer means
@@ -395,31 +396,22 @@ SELECT id, path, representative_ext, width, height, rotation
      *    WS_TYPE flag, null default -- string|null. image_id:
      *    WsParamFlag::OPTIONAL with no 'default' -- may be entirely absent.
      */
-    public static function ratesDelete(array $params, PwgServer &$service): int|string
+    public static function ratesDelete(array $params, PwgServer &$service): int
     {
-        $query = '
-DELETE FROM ' . Tables::rate() . '
-  WHERE user_id=' . $params['user_id'];
-
-        if (! in_array($params['anonymous_id'], [null, ''], true)) {
-            $query .= ' AND anonymous_id=\'' . $params['anonymous_id'] . '\'';
-        }
-        if (isset($params['image_id']) and $params['image_id'] !== 0) {
-            $query .= ' AND element_id=' . $params['image_id'];
-        }
+        $anonymous_id = (! in_array($params['anonymous_id'], [null, ''], true)) ? $params['anonymous_id'] : null;
+        $image_id = (isset($params['image_id']) and $params['image_id'] !== 0) ? $params['image_id'] : null;
 
         // Real bug fix, not just a MysqliDb retarget: the original (both here
         // and in the pre-rewrite legacy include/ws_functions/pwg.php) built
-        // $query above and then NEVER executed it -- MysqliDb::changes()
+        // its own raw query and then NEVER executed it -- MysqliDb::changes()
         // just reads $mysqli->affected_rows from whatever OTHER query last
         // ran on the connection, completely disconnected from this DELETE.
         // executeStatement() both runs the query for real and returns its
         // actual affected-row count.
-        $changes = DbConnection::build()->executeStatement($query);
+        $changes = self::rateService()->deleteByOptionalConditions($params['user_id'], $anonymous_id, $image_id);
         \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
         if ($changes > 0) {
-            \Piwigo\Bootstrap\ExtendedDomainAccessor::rateService()
-                ->updateRatingScore();
+            self::rateService()->updateRatingScore();
         }
         return $changes;
     }
@@ -492,7 +484,11 @@ DELETE FROM ' . Tables::rate() . '
         $res['pwg_token'] = new \Piwigo\Csrf\CsrfService()->getToken();
         $res['charset'] = \Piwigo\Core\CharsetHelper::getPwgCharset();
 
-        $res['current_datetime'] = DbConnection::build()->fetchOne('SELECT NOW();');
+        // Env::now() rather than SQL's NOW() -- the real DB-server clock,
+        // invisible to Env::now()'s own PIWIGO_TEST_NOW freeze, same
+        // reasoning as every other NOW()-reading call site this migration
+        // already retargeted.
+        $res['current_datetime'] = \Piwigo\Core\Env::now()->format('Y-m-d H:i:s');
         $res['version'] = AppInfo::VERSION;
         $res['save_visits'] = self::historyService()->isLoggingAllowed();
         $res['connected_with'] = $_SESSION['connected_with'] ?? null;
@@ -638,24 +634,7 @@ DELETE FROM ' . Tables::rate() . '
         $more_rows_available = true;
 
         while (count($output_lines) < $page_size and $more_rows_available) {
-            $query = '
-SELECT
-    activity_id,
-    performed_by,
-    object,
-    object_id,
-    action,
-    session_idx,
-    ip_address,
-    occured_on,
-    details,
-    user_agent
-  FROM ' . Tables::activity() . '
-  ' . $where . '
-  ORDER BY activity_id DESC
-  LIMIT ' . $nb_rows_to_fetch . ' OFFSET ' . $page_offset . '
-;';
-            $rows = $conn->fetchAllAssociative($query);
+            $rows = self::activityService()->getPaginated($where, $nb_rows_to_fetch, $page_offset);
 
             if (count($rows) < $nb_rows_to_fetch) {
                 $more_rows_available = false;
@@ -750,18 +729,7 @@ SELECT
         $username_of = [];
         $user_id_list = [];
         if (count($user_ids) > 0) {
-            $user_fields = \Piwigo\Config\CurrentConfig::userFields();
-            $user_field_id = $user_fields['id'];
-            $user_field_username = $user_fields['username'];
-
-            $query = '
-SELECT
-    `' . $user_field_id . '` AS user_id,
-    `' . $user_field_username . '` AS username
-  FROM ' . Tables::users() . '
-  WHERE `' . $user_field_id . '` IN (' . implode(',', array_keys($user_ids)) . ')
-;';
-            $username_of = array_column($conn->fetchAllAssociative($query), 'username', 'user_id');
+            $username_of = self::userService()->getUsernamesByIds(array_keys($user_ids));
         }
 
         foreach ($output_lines as $idx => $output_line) {
@@ -1115,22 +1083,9 @@ SELECT
         }
 
         if (count($user_ids) > 0) {
-            $user_fields = \Piwigo\Config\CurrentConfig::userFields();
-            $user_field_id = $user_fields['id'];
-            $user_field_username = $user_fields['username'];
-
-            $query = '
-SELECT ' . $user_field_id . ' AS id
-     , ' . $user_field_username . ' AS username
-  FROM ' . Tables::users() . '
-  WHERE id IN (' . implode(',', array_keys($user_ids)) . ')
-;';
             $username_of = [];
-            foreach ($conn->fetchAllAssociative($query) as $row) {
-                if (! is_scalar($row['id'])) {
-                    continue;
-                }
-                $username_of[(string) $row['id']] = stripslashes(is_scalar($row['username']) ? (string) $row['username'] : '');
+            foreach (self::userService()->getUsernamesByIds(array_map(strval(...), array_keys($user_ids))) as $id => $username) {
+                $username_of[(string) $id] = stripslashes($username);
             }
         }
 
@@ -1142,18 +1097,9 @@ SELECT ' . $user_field_id . ' AS id
         // false positive).
         $full_cat_path = [];
         if (count($category_ids) > 0) {
-            $query = '
-SELECT id, uppercats
-  FROM ' . Tables::categories() . '
-  WHERE id IN (' . implode(',', $category_ids) . ')
-;';
-            $uppercats_of = array_column($conn->fetchAllAssociative($query), 'uppercats', 'id');
+            $uppercats_of = self::categoryService()->getUppercatsById(array_map(intval(...), $category_ids));
 
             foreach ($uppercats_of as $category_id => $uppercats) {
-                if (! is_string($uppercats)) {
-                    continue;
-                }
-
                 $full_cat_path[$category_id] = \Piwigo\Bootstrap\PresentationAccessor::htmlService()->getCatDisplayNameCache(
                     $uppercats,
                     'admin.php?page=album-'
@@ -1169,18 +1115,7 @@ SELECT id, uppercats
 
         $image_infos = [];
         if (count($image_ids) > 0) {
-            $query = '
-SELECT
-    id,
-    IF(name IS NULL, file, name) AS label,
-    filesize,
-    file,
-    path,
-    representative_ext
-  FROM ' . Tables::images() . '
-  WHERE id IN (' . implode(',', array_keys($image_ids)) . ')
-;';
-            $image_infos = array_column($conn->fetchAllAssociative($query), null, 'id');
+            $image_infos = self::imageService()->getHistoryDisplayInfoByIds(array_keys($image_ids));
         }
 
         // Not a real global: written, read (including via the closure
@@ -1189,17 +1124,13 @@ SELECT
         // `global` keyword was always redundant; kept as a plain local.
         $name_of_tag = [];
         if ($has_tags) {
-            $query = '
-SELECT
-    id,
-    name, url_name
-  FROM ' . Tables::tags();
-
-            foreach ($conn->fetchAllAssociative($query) as $row) {
-                if (! is_scalar($row['id'])) {
-                    continue;
-                }
-                $name_of_tag[(string) $row['id']] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_name', $row['name'], $row);
+            foreach (self::tagService()->getAll() as $tag) {
+                $tag_row = [
+                    'id' => $tag->id->value,
+                    'name' => $tag->name,
+                    'url_name' => $tag->urlName,
+                ];
+                $name_of_tag[(string) $tag->id->value] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_name', $tag->name, $tag_row);
             }
         }
 

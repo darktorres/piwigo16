@@ -8,8 +8,6 @@ use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 /**
@@ -42,7 +40,6 @@ final class CatListPageRenderer
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        $categoryConn = DbConnection::build();
         $categoryService = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_cat_list');
@@ -87,12 +84,7 @@ final class CatListPageRenderer
         $tabsheet->select('list');
         $tabsheet->assign();
 
-        $query = '
-SELECT COUNT(*)
-  FROM ' . Tables::categories() . '
-;';
-        $row = $categoryConn->fetchNumeric($query);
-        $nb_cats = $row !== false ? $row[0] : 0;
+        $nb_cats = $categoryService->countAllCategories();
         $template->assign(
             [
                 'nb_cats' => $nb_cats,
@@ -184,20 +176,7 @@ SELECT COUNT(*)
 
         $categories = [];
 
-        $query = '
-SELECT id, name, permalink, dir, `rank`, status
-  FROM ' . Tables::categories();
-        if ($parent_id === null) {
-            $query .= '
-  WHERE id_uppercat IS NULL';
-        } else {
-            $query .= '
-  WHERE id_uppercat = ' . $parent_id;
-        }
-        $query .= '
-  ORDER BY `rank` ASC
-;';
-        $categories = array_column($categoryConn->fetchAllAssociative($query), null, 'id');
+        $categories = array_column($categoryService->getChildrenOfParent($parent_id), null, 'id');
         /** @var array<int|string, array{id: int|string, name: string, permalink: ?string, dir: ?string, rank: int|string|null, status: string}> $categories */
 
         // get the categories containing images directly
@@ -206,24 +185,9 @@ SELECT id, name, permalink, dir, `rank`, status
         $subcats_of = [];
         $nb_sub_photos = [];
         if ((bool) count($categories)) {
-            $query = '
-SELECT
-    category_id,
-    COUNT(*) AS nb_photos
-  FROM ' . Tables::imageCategory() . '
-  GROUP BY category_id
-;';
-            // WHERE category_id IN ('.implode(',', array_keys($categories)).')
+            $nb_photos_in = $categoryService->getPhotoCountsByCategory();
 
-            $nb_photos_in = array_column($categoryConn->fetchAllAssociative($query), 'nb_photos', 'category_id');
-
-            $query = '
-SELECT
-    id,
-    uppercats
-  FROM ' . Tables::categories() . '
-;';
-            $all_categories = array_column($categoryConn->fetchAllAssociative($query), 'uppercats', 'id');
+            $all_categories = $categoryService->getAllCategoryUppercats();
             $subcats_of = [];
 
             foreach ($all_categories as $id => $uppercats) {
@@ -239,8 +203,8 @@ SELECT
             foreach ($subcats_of as $cat_id => $subcat_ids) {
                 $nb_photos = 0;
                 foreach ($subcat_ids as $id) {
-                    if (isset($nb_photos_in[$id]) and is_numeric($nb_photos_in[$id])) {
-                        $nb_photos += (int) $nb_photos_in[$id];
+                    if (isset($nb_photos_in[$id])) {
+                        $nb_photos += $nb_photos_in[$id];
                     }
                 }
 

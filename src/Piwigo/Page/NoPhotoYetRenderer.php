@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Page;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Template\Template;
 
 /**
@@ -35,7 +34,7 @@ use Piwigo\Template\Template;
 final readonly class NoPhotoYetRenderer
 {
     public function __construct(
-        private Connection $conn,
+        private ImageRepository $imageRepository,
         private ConfigService $configService,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
@@ -53,9 +52,7 @@ final readonly class NoPhotoYetRenderer
             and (\Piwigo\Auth\AccessControl::isAGuest() or \Piwigo\Auth\AccessControl::isAdmin())          // normal users are not concerned by no_photo_yet
             and ! isset($_SESSION['no_photo_yet'])     // temporary hide
         ) {
-            $nb_photos = $this->conn->executeQuery('SELECT COUNT(*) FROM ' . Tables::images())
-                ->fetchOne();
-            $nb_photos = is_numeric($nb_photos) ? (int) $nb_photos : 0;
+            $nb_photos = $this->imageRepository->countAllImages();
 
             if ($nb_photos === 0) {
                 // make sure we don't use the mobile theme, which is not compatible with

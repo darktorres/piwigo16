@@ -79,7 +79,7 @@ final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
         $this->cache = new EffectiveForbiddenCategoriesCache(
             $permissionService,
             new CategoryService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class), $permissionService),
-            $this->conn,
+            new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)),
             $this->pool,
         );
     }
@@ -138,7 +138,7 @@ final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
             $afterCache = new EffectiveForbiddenCategoriesCache(
                 new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class)),
                 new CategoryService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class), new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class))),
-                $this->conn,
+                new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)),
                 new ArrayAdapter(),
             );
             $after = $afterCache->getForUser(2, 'normal', '0');

@@ -6,6 +6,7 @@ namespace Piwigo\Comment;
 
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\EphemeralKeyService;
+use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -81,6 +82,86 @@ final readonly class CommentService
         }
         $nb_available_comments = $currentUser->rawAttributes['nb_available_comments'];
         return is_numeric($nb_available_comments) ? (int) $nb_available_comments : 0;
+    }
+
+    /**
+     * @param list<string> $whereClauses
+     * @return PaginatedResult<array<string, mixed>>
+     */
+    public function getAllCommentsWithConditions(
+        array $whereClauses,
+        string $userIdColumn,
+        string $userEmailColumn,
+        string $sortByColumn,
+        string $sortOrder,
+        int|string $limit,
+        int $offset
+    ): PaginatedResult {
+        return $this->repo->findAllWithConditions($whereClauses, $userIdColumn, $userEmailColumn, $sortByColumn, $sortOrder, $limit, $offset);
+    }
+
+    /**
+     * @param  list<string>  $whereClauses
+     * @return array{all_comments: mixed, validated: mixed, pending: mixed}|null
+     */
+    public function getSummaryCounts(array $whereClauses): ?array
+    {
+        return $this->repo->findSummaryCounts($whereClauses);
+    }
+
+    /**
+     * @param  list<string>  $whereClauses
+     * @return list<array<string, mixed>>
+     */
+    public function getListForAdminWs(
+        array $whereClauses,
+        string $userIdColumn,
+        string $userUsernameColumn,
+        int $offset,
+        int $limit
+    ): array {
+        return $this->repo->findListForAdminWs($whereClauses, $userIdColumn, $userUsernameColumn, $offset, $limit);
+    }
+
+    /**
+     * @param  list<string>  $whereClauses
+     * @return array{started_at: mixed, ended_at: mixed}|null
+     */
+    public function getDateRange(array $whereClauses): ?array
+    {
+        return $this->repo->findDateRange($whereClauses);
+    }
+
+    /**
+     * @param  list<string>  $whereClauses
+     * @return list<array<string, mixed>>
+     */
+    public function getAuthorCounts(array $whereClauses): array
+    {
+        return $this->repo->findAuthorCounts($whereClauses);
+    }
+
+    public function countAll(): int
+    {
+        return $this->repo->countAll();
+    }
+
+    public function countUnvalidated(): int
+    {
+        return $this->repo->countUnvalidated();
+    }
+
+    public function countForImage(int $imageId, bool $onlyValidated): int
+    {
+        return $this->repo->countForImage($imageId, $onlyValidated);
+    }
+
+    /**
+     * @return list<\Piwigo\Comment\Projection\CommentSummary>
+     */
+    public function getSummariesForImage(int $imageId, bool $onlyValidated, int $limit, int $offset): array
+    {
+        return $this->repo->findSummariesForImage($imageId, $onlyValidated, $limit, $offset);
     }
 
     /**

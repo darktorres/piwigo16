@@ -56,22 +56,12 @@ final class PwgPermissions
             return new PwgError(WsError::INVALID_PARAM, 'Too many parameters, provide cat_id OR user_id OR group_id');
         }
 
-        $conn = DbConnection::build();
-
-        $cat_filter = '';
-        if (isset($params['cat_id']) && $params['cat_id'] !== []) {
-            $cat_filter = 'WHERE cat_id IN(' . implode(',', $params['cat_id']) . ')';
-        }
+        $cat_ids_filter = array_values($params['cat_id'] ?? []);
 
         $perms = [];
 
         // direct users
-        $query = '
-SELECT user_id, cat_id
-  FROM ' . Tables::userAccess() . '
-  ' . $cat_filter . '
-;';
-        foreach ($conn->fetchAllAssociative($query) as $row) {
+        foreach (self::permissionService()->getDirectUserAccessRows($cat_ids_filter) as $row) {
             if (! isset($row['cat_id']) || ! is_numeric($row['cat_id'])) {
                 continue;
             }
@@ -83,14 +73,7 @@ SELECT user_id, cat_id
         }
 
         // indirect users
-        $query = '
-SELECT ug.user_id, ga.cat_id
-  FROM ' . Tables::userGroup() . ' AS ug
-    INNER JOIN ' . Tables::groupAccess() . ' AS ga
-    ON ug.group_id = ga.group_id
-  ' . $cat_filter . '
-;';
-        foreach ($conn->fetchAllAssociative($query) as $row) {
+        foreach (self::permissionService()->getIndirectUserAccessRows($cat_ids_filter) as $row) {
             if (! isset($row['cat_id']) || ! is_numeric($row['cat_id'])) {
                 continue;
             }
@@ -102,12 +85,7 @@ SELECT ug.user_id, ga.cat_id
         }
 
         // groups
-        $query = '
-SELECT group_id, cat_id
-  FROM ' . Tables::groupAccess() . '
-  ' . $cat_filter . '
-;';
-        foreach ($conn->fetchAllAssociative($query) as $row) {
+        foreach (self::permissionService()->getGroupAccessRows($cat_ids_filter) as $row) {
             if (! isset($row['cat_id']) || ! is_numeric($row['cat_id'])) {
                 continue;
             }
@@ -185,13 +163,7 @@ SELECT group_id, cat_id
                 $cat_ids = array_merge($cat_ids, self::categoryService()->getSubcatIds($params['cat_id']));
             }
 
-            $query = '
-SELECT id
-  FROM ' . Tables::categories() . '
-  WHERE id IN (' . implode(',', $cat_ids) . ')
-    AND status = \'private\'
-;';
-            $private_cats = array_column($conn->fetchAllAssociative($query), 'id');
+            $private_cats = self::permissionService()->getPrivateCategoryIdsAmong(array_values($cat_ids));
 
             $inserts = [];
             foreach ($private_cats as $cat_id) {
@@ -242,27 +214,14 @@ SELECT id
             return new PwgError(403, 'Invalid security token');
         }
 
-        $conn = DbConnection::build();
         $cat_ids = self::categoryService()->getSubcatIds($params['cat_id']);
 
         if (isset($params['group_id']) && $params['group_id'] !== []) {
-            $query = '
-DELETE
-  FROM ' . Tables::groupAccess() . '
-  WHERE group_id IN (' . implode(',', $params['group_id']) . ')
-    AND cat_id IN (' . implode(',', $cat_ids) . ')
-;';
-            $conn->executeStatement($query);
+            self::categoryService()->denyGroupAccess($params['group_id'], $cat_ids);
         }
 
         if (isset($params['user_id']) && $params['user_id'] !== []) {
-            $query = '
-DELETE
-  FROM ' . Tables::userAccess() . '
-  WHERE user_id IN (' . implode(',', $params['user_id']) . ')
-    AND cat_id IN (' . implode(',', $cat_ids) . ')
-;';
-            $conn->executeStatement($query);
+            self::categoryService()->denyUserAccess($params['user_id'], $cat_ids);
         }
 
         return $service->invoke('pwg.permissions.getList', [

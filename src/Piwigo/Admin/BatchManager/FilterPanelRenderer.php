@@ -202,21 +202,14 @@ SELECT
         $associated_categories = [];
 
         if (count($catElementsId) > 0) {
-            $cat_elements_id_for_sql = array_map(strval(...), array_filter($catElementsId, is_scalar(...)));
+            $cat_elements_id_for_sql = array_filter($catElementsId, is_scalar(...));
 
-            $query = '
-SELECT
-    DISTINCT(category_id) AS id
-  FROM ' . Tables::imageCategory() . ' AS ic
-    JOIN ' . Tables::images() . ' AS i ON i.id = ic.image_id
-  WHERE ic.image_id IN (' . implode(',', $cat_elements_id_for_sql) . ')
-    AND (
-      ic.category_id != i.storage_category_id
-      OR i.storage_category_id IS NULL
-    )
-;';
-
-            $associated_categories = array_column($conn->fetchAllAssociative($query), 'id', 'id');
+            $associated_categories = array_column(
+                \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
+                    ->findVirtuallyAssociatedCategoryRows($cat_elements_id_for_sql),
+                'id',
+                'id'
+            );
         }
 
         $template->assign('associated_categories', $associated_categories);

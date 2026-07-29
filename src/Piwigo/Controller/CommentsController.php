@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentService;
@@ -401,46 +400,16 @@ SELECT id, name, uppercats, global_rank
 
         $where_clauses = $whereClauses;
 
-        // ANY_VALUE(ic.category_id): category_id comes from the JOINed
-        // image_category table, not functionally dependent on the
-        // GROUP BY column (comment_id) -- Piwigo\Db\DbConnection
-        // doesn't strip ONLY_FULL_GROUP_BY the way the legacy mysqli
-        // connection did (same class of issue as
-        // Ws\PwgComments::getCommentsDateRange()'s own ANY_VALUE(author)
-        // fix), so this query (already GROUP BY comment_id, unchanged
-        // from the original) needs an explicit "any value is fine, same
-        // as the old driver's own permissive default" opt-out to keep
-        // selecting exactly one arbitrary category per comment, matching
-        // the original grouping/row-count exactly rather than splitting
-        // groups by adding category_id to GROUP BY.
-        $query = '
-SELECT SQL_CALC_FOUND_ROWS com.id AS comment_id,
-   com.image_id,
-   ANY_VALUE(ic.category_id) AS category_id,
-   com.author,
-   com.author_id,
-   u.' . $email_field . ' AS user_email,
-   com.email,
-   com.date,
-   com.website_url,
-   com.content,
-   com.validated
-  FROM ' . Tables::imageCategory() . ' AS ic
-INNER JOIN ' . Tables::comments() . ' AS com
-ON ic.image_id = com.image_id
-LEFT JOIN ' . Tables::users() . ' As u
-ON u.' . $id_field . ' = com.author_id
-  WHERE ' . implode('
-AND ', $where_clauses) . '
-  GROUP BY comment_id
-  ORDER BY ' . $sort_by_value . ' ' . $sort_order_value . ', comment_id ' . $sort_order_value;
-        if ($selected_items_number !== 'all') {
-            $query .= '
-  LIMIT ' . $selected_items_number . ' OFFSET ' . $start;
-        }
-        $query .= '
-;';
-        foreach ($conn->fetchAllAssociative($query) as $row) {
+        $paginated_comments = $commentService->getAllCommentsWithConditions(
+            $where_clauses,
+            $id_field,
+            $email_field,
+            $sort_by_value,
+            $sort_order_value,
+            $selected_items_number,
+            $start
+        );
+        foreach ($paginated_comments->rows as $row) {
             $comments[] = $row;
             $row_image_id = $row['image_id'];
             $row_category_id = $row['category_id'];
@@ -450,11 +419,7 @@ AND ', $where_clauses) . '
             $element_ids[] = (string) $row_image_id;
             $category_ids[] = (string) $row_category_id;
         }
-        // FOUND_ROWS() reflects the immediately-preceding query on the
-        // SAME connection/session -- both share $conn, no intervening
-        // query in between.
-        $counter_raw = $conn->fetchOne('SELECT FOUND_ROWS()');
-        $counter = is_numeric($counter_raw) ? (int) $counter_raw : 0;
+        $counter = $paginated_comments->total ?? 0;
 
         $url = $urlService->getRootUrl() . 'comments.php'
           . $urlService->getQueryStringDiff(['start', 'edit', 'delete', 'validate', 'pwg_token']);
@@ -479,10 +444,11 @@ AND ', $where_clauses) . '
             );
 
             // retrieving category informations
-            $query = 'SELECT id, name, permalink, uppercats
-  FROM ' . Tables::categories() . '
-  WHERE id IN (' . implode(',', $category_ids) . ')';
-            $categories = array_column($conn->fetchAllAssociative($query), null, 'id');
+            $categories = array_column(
+                self::categoryService()->getCategoriesByIds(array_map(intval(...), $category_ids)),
+                null,
+                'id'
+            );
 
             foreach ($comments as $comment) {
                 $image_id_raw = $comment['image_id'];

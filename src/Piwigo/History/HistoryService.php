@@ -458,4 +458,38 @@ final readonly class HistoryService
 
         $this->repo->deleteBefore($deleteBeforeId);
     }
+
+    public function getTotalPageViews(): int
+    {
+        return $this->repo->sumPageViews();
+    }
+
+    /**
+     * @return list<array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null}>
+     */
+    public function getLastByType(string $type, int $limit): array
+    {
+        return $this->repo->findLastByType($type, $limit);
+    }
+
+    /**
+     * @return list<array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null}>
+     */
+    public function getMonthlyRows(?int $limit): array
+    {
+        return $this->repo->findMonthlyRows($limit);
+    }
+
+    /**
+     * @return list<array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null}>
+     */
+    public function getDailyRowsForMonths(int $year1, int $month1, int $year2, int $month2, int $year3, int $month3): array
+    {
+        return $this->repo->findDailyRowsForMonths($year1, $month1, $year2, $month2, $year3, $month3);
+    }
+
+    public function getAverageDailyPageViewsSince(int $year, int $previousYear, int $afterMonth): ?float
+    {
+        return $this->repo->findAverageDailyPageViewsSince($year, $previousYear, $afterMonth);
+    }
 }

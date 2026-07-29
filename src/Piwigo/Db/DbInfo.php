@@ -49,4 +49,26 @@ final readonly class DbInfo
 
         return [];
     }
+
+    /**
+     * A cheap "did this table change" fingerprint (its own max
+     * `lastmodified` timestamp plus row count) -- Admin\AdminUiHelper's
+     * own client-side cache-busting key, called on different tables from
+     * multiple unrelated domains (categories/groups/images/tags/
+     * user_infos), same "no single owning domain" shape as
+     * {@see getEnums()} above.
+     */
+    public function getTableFingerprint(string $table): string
+    {
+        $value = $this->conn->fetchOne('
+SELECT CONCAT(
+    UNIX_TIMESTAMP(MAX(lastmodified)),
+    "_",
+    COUNT(*)
+  )
+  FROM `' . $table . '`
+;');
+
+        return is_string($value) ? $value : '';
+    }
 }

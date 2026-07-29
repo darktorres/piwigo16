@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
-use Piwigo\Db\Tables;
-
 /**
  * P23 batch 8d: installed-theme listing relocated from
  * include/functions.inc.php -- no natural existing class home (theme
@@ -31,20 +29,10 @@ final class ThemeCatalog
 
         $themes = [];
 
-        $query = '
-SELECT
-    id,
-    name
-  FROM ' . Tables::themes() . '
-  ORDER BY name ASC
-;';
-        $rows = \Piwigo\Db\DbConnection::build()->fetchAllAssociative($query);
+        $rows = new ThemeRepository(\Piwigo\Db\DbConnection::build())->findAllIdsAndNames();
         foreach ($rows as $row) {
             $id = $row['id'];
             $name = $row['name'];
-            if (! is_string($id) || ! is_string($name)) {
-                continue;
-            }
 
             $mobile_theme = \Piwigo\Config\CurrentConfig::mobilTheme();
             if ($id === $mobile_theme) {

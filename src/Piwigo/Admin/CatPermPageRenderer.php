@@ -8,7 +8,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 /**
@@ -112,30 +111,15 @@ final class CatPermPageRenderer
         // minus groups granted to find groups denied.
 
         $groups = [];
-
-        $query = '
-SELECT id, name
-  FROM `' . Tables::groups() . '`
-  ORDER BY name ASC
-;';
-        $groups = array_column($conn->fetchAllAssociative($query), 'name', 'id');
+        foreach (\Piwigo\Bootstrap\CoreDomainAccessor::groupService()->getAllBasic() as $g) {
+            $groups[$g->id->value] = $g->name;
+        }
         $template->assign('groups', $groups);
 
         // groups granted to access the category
-        $query = '
-SELECT group_id
-  FROM ' . Tables::groupAccess() . '
-  WHERE cat_id = ' . $page['cat'] . '
-;';
-        // array_column()'s extracted value is mixed (fetchAllAssociative()'s
-        // own row type); narrow to the real int ids (group_id is a NOT NULL
-        // numeric column, native int or numeric string depending on driver)
-        $group_granted_ids = [];
-        foreach (array_column($conn->fetchAllAssociative($query), 'group_id') as $raw_group_id) {
-            if (is_numeric($raw_group_id)) {
-                $group_granted_ids[] = (int) $raw_group_id;
-            }
-        }
+        $permissionRepository = new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn));
+        $cat_id = $page['cat'];
+        $group_granted_ids = $permissionRepository->findGrantedGroupIdsByCategory([$cat_id])[$cat_id] ?? [];
         $template->assign('groups_selected', $group_granted_ids);
 
         // users...
@@ -148,40 +132,17 @@ SELECT group_id
         $user_field_id = $user_fields['id'];
         $user_field_username = $user_fields['username'];
 
-        $query = '
-SELECT ' . $user_field_id . ' AS id,
-       ' . $user_field_username . ' AS username
-  FROM ' . Tables::users() . '
-;';
-        $users = array_column($conn->fetchAllAssociative($query), 'username', 'id');
+        $users = \Piwigo\Bootstrap\CoreDomainAccessor::userService()->getAllUsernamesById($user_field_id, $user_field_username);
         $template->assign('users', $users);
 
-        $query = '
-SELECT user_id
-  FROM ' . Tables::userAccess() . '
-  WHERE cat_id = ' . $page['cat'] . '
-;';
-        // array_column()'s extracted value is mixed (fetchAllAssociative()'s
-        // own row type); narrow to the real int ids (user_id is a NOT NULL
-        // numeric column, native int or numeric string depending on driver)
-        $user_granted_direct_ids = [];
-        foreach (array_column($conn->fetchAllAssociative($query), 'user_id') as $raw_user_id) {
-            if (is_numeric($raw_user_id)) {
-                $user_granted_direct_ids[] = (int) $raw_user_id;
-            }
-        }
+        $user_granted_direct_ids = $permissionRepository->findGrantedUserIdsByCategory([$cat_id])[$cat_id] ?? [];
         $template->assign('users_selected', $user_granted_direct_ids);
 
         $user_granted_indirect_ids = [];
         if (count($group_granted_ids) > 0) {
             $granted_groups = [];
 
-            $query = '
-SELECT user_id, group_id
-  FROM ' . Tables::userGroup() . '
-  WHERE group_id IN (' . implode(',', $group_granted_ids) . ')
-';
-            foreach ($conn->fetchAllAssociative($query) as $row) {
+            foreach (\Piwigo\Bootstrap\CoreDomainAccessor::groupService()->getMembersByGroupIds($group_granted_ids) as $row) {
                 // group_id/user_id are NOT NULL numeric columns; DBAL can hand
                 // back a native int for either (mysqli always gave a numeric
                 // string), so accept both before using group_id as an array key

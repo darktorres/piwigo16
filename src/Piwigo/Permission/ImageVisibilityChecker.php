@@ -4,10 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Permission;
 
-use Doctrine\DBAL\ArrayParameterType;
-use Doctrine\DBAL\Connection;
-use Piwigo\Db\Tables;
-
 /**
  * [SEC-33] Decides, from precomputed permission data only, whether an
  * image is visible to the current user -- false means the image belongs
@@ -19,7 +15,13 @@ use Piwigo\Db\Tables;
  * bootMinimal()-era design ADR-0007/0008 already settled: never
  * recomputing permissions live on the fast path -- deliberately NOT
  * PermissionService, whose live recomputation is exactly what this fast
- * path must avoid.
+ * path must avoid. Delegating the one query itself to
+ * {@see PermissionRepository::isImageOutsideForbiddenCategories()} doesn't
+ * reintroduce that recomputation -- it's still the same single cheap
+ * query against already-computed forbidden-category ids, just relocated
+ * out of a standalone raw-DBAL call per the deptrac DBAL-leak cleanup
+ * (2026-07-29): PermissionRepository is exactly as directly constructible
+ * as a bare Connection was, no DI container cost added.
  *
  * Gap-closure Stage 4g gap-closure (2026-07-25): retargeted from a raw
  * `user_cache.forbidden_categories` read onto `CurrentUser::
@@ -39,20 +41,11 @@ use Piwigo\Db\Tables;
  * strictly better. The `$userId` parameter is dropped -- its one real
  * caller (Controller\ImageDerivativeController::checkDerivativePermission())
  * always passed `CurrentUser::get()->id`, never an arbitrary other user's.
- *
- * Was legacy-mysqli-only until Legacy Coupling Retirement: DI+DBAL
- * migration retargeted it onto DBAL (Connection is directly
- * constructible with no DI container, matching every other
- * AbstractRepository-based class in this codebase) -- the original
- * MysqliDb-only design predated the FrankenPHP/workers conversion plan;
- * under a persistent worker process the connection is already warm, so
- * there's no longer a per-request container-cost reason to special-case
- * this file's own DB access.
  */
 final readonly class ImageVisibilityChecker
 {
     public function __construct(
-        private Connection $conn,
+        private PermissionRepository $permissionRepository,
     ) {}
 
     public function isVisibleToUser(int $imageId): bool
@@ -65,16 +58,6 @@ final readonly class ImageVisibilityChecker
 
         $forbiddenIds = array_map(intval(...), explode(',', $forbidden));
 
-        $nb = $this->conn->createQueryBuilder()
-            ->select('COUNT(*) AS nb')
-            ->from(Tables::imageCategory())
-            ->where('image_id = :imageId')
-            ->andWhere('category_id NOT IN (:forbidden)')
-            ->setParameter('imageId', $imageId)
-            ->setParameter('forbidden', $forbiddenIds, ArrayParameterType::INTEGER)
-            ->executeQuery()
-            ->fetchOne();
-
-        return is_numeric($nb) && (int) $nb !== 0;
+        return $this->permissionRepository->isImageOutsideForbiddenCategories($imageId, $forbiddenIds);
     }
 }

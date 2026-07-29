@@ -7,6 +7,7 @@ namespace Piwigo\Category;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityRepository;
 use Piwigo\Category\Projection\Category;
+use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Db\BatchWriter;
@@ -99,6 +100,37 @@ final class CategoryRepository extends EntityRepository
         }
 
         return $byId;
+    }
+
+    /**
+     * A single category's id/name/permalink, or null if it doesn't exist --
+     * Ws\PwgImages::add()'s own "resolve the just-associated category, for
+     * the response URL" lookup. Unlike findAllIdNamePermalink() above
+     * (every row, cache warm-up), this is a single-id lookup.
+     *
+     * @return ?array{id: int, name: string, permalink: ?string}
+     */
+    public function findIdNamePermalinkById(int $id): ?array
+    {
+        $row = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
+            ->select('id', 'name', 'permalink')
+            ->from(Tables::categories())
+            ->where('id = :id')
+            ->setParameter('id', $id)
+            ->executeQuery()
+            ->fetchAssociative();
+
+        if ($row === false) {
+            return null;
+        }
+
+        return [
+            'id' => is_numeric($row['id']) ? (int) $row['id'] : 0,
+            'name' => is_string($row['name']) ? $row['name'] : '',
+            'permalink' => is_string($row['permalink'] ?? null) ? $row['permalink'] : null,
+        ];
     }
 
     /**
@@ -566,6 +598,33 @@ SELECT
   FROM ' . Tables::imageCategory() . '
   WHERE image_id IN (' . implode(',', $imageIds) . ')
     AND category_id NOT IN (' . implode(',', $excludeIds) . ')
+;')->fetchFirstColumn());
+    }
+
+    /**
+     * image_id for every link outside $excludeIds, NOT deduplicated
+     * (matches Ws\PwgCategories::calculateOrphans()'s own large-category
+     * fallback path, which dedupes in PHP after intersecting against the
+     * recursive image id set) -- a different contract from
+     * {@see findNonOrphanImageIds()} above (that one is DISTINCT and
+     * pre-filtered to a specific image id set; this one returns every
+     * matching row so the caller can avoid sending a huge `image_id IN
+     * (...)` list when the recursive set is large).
+     *
+     * @param  list<int>  $excludeIds
+     * @return list<int>
+     */
+    public function findImageIdsOutsideCategories(array $excludeIds): array
+    {
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery('
+SELECT
+    image_id
+  FROM
+    ' . Tables::imageCategory() . '
+  WHERE
+    category_id
+  NOT IN
+    (' . implode(',', $excludeIds) . ')
 ;')->fetchFirstColumn());
     }
 
@@ -1245,6 +1304,23 @@ UPDATE ' . Tables::images() . '
     }
 
     /**
+     * Sets $categoryId's representative image -- Controller\
+     * PictureController's own "set_as_representative" action. Caller is
+     * responsible for clearing the EntityManager afterward (bypasses the
+     * ORM, same as every other raw-DBAL write in this class).
+     */
+    public function setRepresentativeImage(int $categoryId, int $imageId): void
+    {
+        $this->getEntityManager()
+            ->getConnection()
+            ->executeStatement('
+UPDATE ' . Tables::categories() . '
+  SET representative_picture_id = ' . $imageId . '
+  WHERE id = ' . $categoryId . '
+;');
+    }
+
+    /**
      * @param  array<int>  $ids  real callers don't guarantee a list
      * @return list<array{id: int, id_uppercat: ?int, status: string, uppercats: string}>
      */
@@ -1604,5 +1680,846 @@ SELECT
         }
 
         return $byId;
+    }
+
+    public function countAllCategories(): int
+    {
+        $value = $this->getEntityManager()
+            ->getConnection()
+            ->fetchOne('SELECT COUNT(*) FROM ' . Tables::categories() . ';');
+
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /**
+     * Count of categories with no physical directory (virtual) or with
+     * one (physical) -- Ws\PwgCore::getInfos()'s own "nb_virtual"/
+     * "nb_physical" summary figures.
+     */
+    public function countByDirNull(bool $dirIsNull): int
+    {
+        $value = $this->getEntityManager()
+            ->getConnection()
+            ->fetchOne('
+SELECT COUNT(*)
+  FROM ' . Tables::categories() . '
+  WHERE dir IS ' . ($dirIsNull ? 'NULL' : 'NOT NULL') . '
+;');
+
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /**
+     * Ids of every category that uses $imageId as its own representative
+     * picture -- Admin\PictureModifyPageRenderer's own "which albums does
+     * this photo currently represent" lookup.
+     *
+     * @return list<int>
+     */
+    public function findCategoryIdsRepresentedByImage(int $imageId): array
+    {
+        return array_map(
+            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+            array_column($this->getEntityManager()
+                ->getConnection()
+                ->fetchAllAssociative('
+SELECT id
+  FROM ' . Tables::categories() . '
+  WHERE representative_picture_id = ' . $imageId . '
+;'), 'id')
+        );
+    }
+
+    /**
+     * Bulk variant of setRepresentativeImage() above -- Admin\
+     * PictureModifyPageRenderer's own "make this photo the thumbnail for
+     * every newly-checked album" step.
+     *
+     * @param list<int> $categoryIds
+     */
+    public function setRepresentativeImageForCategories(array $categoryIds, int $imageId): void
+    {
+        if ($categoryIds === []) {
+            return;
+        }
+
+        $this->getEntityManager()
+            ->getConnection()
+            ->executeStatement('
+UPDATE ' . Tables::categories() . '
+  SET representative_picture_id = ' . $imageId . '
+  WHERE id IN (' . implode(',', $categoryIds) . ')
+;');
+    }
+
+    /**
+     * Private category ids already granted to $groupId --
+     * Admin\GroupPermPageRenderer's own "already-authorized" set, used to
+     * compute which private categories still need granting.
+     *
+     * @return list<int>
+     */
+    public function findPrivateCategoryIdsGrantedToGroup(int $groupId): array
+    {
+        return array_map(
+            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+            array_column($this->getEntityManager()
+                ->getConnection()
+                ->fetchAllAssociative('
+SELECT id
+  FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::groupAccess() . ' ON cat_id = id
+  WHERE status = \'private\'
+    AND group_id = ' . $groupId . '
+;'), 'id')
+        );
+    }
+
+    /**
+     * Categories $userId is authorized for via group membership (not
+     * direct grants) -- Admin\UserPermPageRenderer's own "authorized
+     * because of a group" display, deduplicated across every group the
+     * user belongs to.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findCategoriesAuthorizedViaGroupsForUser(int $userId): array
+    {
+        return $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative('
+SELECT DISTINCT cat_id, c.uppercats, c.global_rank
+  FROM ' . Tables::userGroup() . ' AS ug
+    INNER JOIN ' . Tables::groupAccess() . ' AS ga
+      ON ug.group_id = ga.group_id
+    INNER JOIN ' . Tables::categories() . ' AS c
+      ON c.id = ga.cat_id
+  WHERE ug.user_id = ' . $userId . '
+;');
+    }
+
+    /**
+     * Private categories directly granted to $userId, optionally excluding
+     * $excludeCategoryIds (categories already authorized via group
+     * membership) -- Admin\UserPermPageRenderer's own "authorized
+     * individually" listing.
+     *
+     * @param list<int> $excludeCategoryIds
+     * @return list<int>
+     */
+    public function findPrivateCategoryIdsGrantedToUser(int $userId, array $excludeCategoryIds): array
+    {
+        $query = '
+SELECT id
+  FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::userAccess() . ' ON cat_id = id
+  WHERE status = \'private\'
+    AND user_id = ' . $userId;
+        if ($excludeCategoryIds !== []) {
+            $query .= '
+    AND cat_id NOT IN (' . implode(',', $excludeCategoryIds) . ')';
+        }
+        $query .= '
+;';
+
+        return array_map(
+            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+            array_column($this->getEntityManager()
+                ->getConnection()
+                ->fetchAllAssociative($query), 'id')
+        );
+    }
+
+    /**
+     * Every non-null category permalink -- Admin\ExtendForTemplatesPageRenderer's
+     * own "selective URLs keyword" list.
+     *
+     * @return list<string>
+     */
+    public function findActivePermalinks(): array
+    {
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative('
+SELECT permalink
+  FROM ' . Tables::categories() . '
+  WHERE permalink IS NOT NULL
+;');
+
+        return array_map(
+            static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
+            array_column($rows, 'permalink')
+        );
+    }
+
+    /**
+     * Direct children of $parentId (or every root category when null),
+     * ordered by rank -- Admin\CatListPageRenderer's own album listing.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findChildrenOfParent(?int $parentId): array
+    {
+        $query = '
+SELECT id, name, permalink, dir, `rank`, status
+  FROM ' . Tables::categories();
+        $query .= $parentId === null
+            ? '
+  WHERE id_uppercat IS NULL'
+            : '
+  WHERE id_uppercat = ' . $parentId;
+        $query .= '
+  ORDER BY `rank` ASC
+;';
+
+        return $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative($query);
+    }
+
+    /**
+     * Photo count per category (every category that owns at least one
+     * direct image_category link) -- Admin\CatListPageRenderer's own
+     * per-album photo count display.
+     *
+     * @return array<int, int> keyed by category_id
+     */
+    public function findPhotoCountsByCategory(): array
+    {
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative('
+SELECT
+    category_id,
+    COUNT(*) AS nb_photos
+  FROM ' . Tables::imageCategory() . '
+  GROUP BY category_id
+;');
+
+        $countByCategory = [];
+        foreach ($rows as $row) {
+            if (is_numeric($row['category_id']) && is_numeric($row['nb_photos'])) {
+                $countByCategory[(int) $row['category_id']] = (int) $row['nb_photos'];
+            }
+        }
+
+        return $countByCategory;
+    }
+
+    /**
+     * Every category's own uppercats string, unfiltered and keyed by id --
+     * Admin\CatListPageRenderer's own subcategory/photo-rollup computation.
+     *
+     * @return array<int|string, mixed> keyed by id
+     */
+    public function findAllCategoryUppercats(): array
+    {
+        return array_column($this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative('
+SELECT
+    id,
+    uppercats
+  FROM ' . Tables::categories() . '
+;'), 'uppercats', 'id');
+    }
+
+    /**
+     * Bare ids of $parentId's direct children (or every root category when
+     * null) -- Admin\AlbumsPageRenderer's own auto-order id resolution, a
+     * narrower-column sibling of findChildrenOfParent() above (that one
+     * also selects name/permalink/dir/rank/status and orders by rank).
+     *
+     * @return list<int>
+     */
+    public function findIdsByParent(?int $parentId): array
+    {
+        $query = '
+SELECT id
+  FROM ' . Tables::categories() . '
+  WHERE id_uppercat ' . ($parentId === null ? 'IS NULL' : '= ' . $parentId) . '
+;';
+
+        return array_map(
+            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+            array_column($this->getEntityManager()
+                ->getConnection()
+                ->fetchAllAssociative($query), 'id')
+        );
+    }
+
+    /**
+     * id/name/id_uppercat for $categoryIds -- Admin\AlbumsPageRenderer's
+     * own auto-order sort-and-save step.
+     *
+     * @param list<string> $categoryIds
+     * @return list<array<string, mixed>>
+     */
+    public function findIdsNamesUppercatsForIds(array $categoryIds): array
+    {
+        return $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative('
+SELECT id, name, id_uppercat
+  FROM ' . Tables::categories() . '
+  WHERE id IN (' . implode(',', $categoryIds) . ')
+;');
+    }
+
+    /**
+     * Every category's id/name/rank/status/visible/uppercats/lastmodified
+     * -- Admin\AlbumsPageRenderer's own full album-tree listing.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findAllForAlbumTree(): array
+    {
+        return $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative('
+SELECT id,name,`rank`,status, visible, uppercats, lastmodified
+  FROM ' . Tables::categories() . '
+;');
+    }
+
+    /**
+     * Whether $categoryId has at least one direct image link --
+     * Admin\CatModifyPageRenderer's own "has_images" flag.
+     */
+    public function hasImages(int $categoryId): bool
+    {
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative('SELECT DISTINCT category_id
+  FROM ' . Tables::imageCategory() . '
+  WHERE category_id = :category_id
+  LIMIT 1', [
+                'category_id' => $categoryId,
+            ]);
+
+        return count($rows) > 0;
+    }
+
+    /**
+     * Photo count plus min/max date_available for $categoryId's own direct
+     * images -- Admin\CatModifyPageRenderer's own "this album contains N
+     * photos, added between X and Y" summary.
+     *
+     * @return list<mixed>|false
+     */
+    public function findPhotoCountAndDateRange(int $categoryId): array|false
+    {
+        return $this->getEntityManager()
+            ->getConnection()
+            ->fetchNumeric('
+SELECT
+    COUNT(image_id),
+    MIN(DATE(date_available)),
+    MAX(DATE(date_available))
+  FROM ' . Tables::images() . '
+    JOIN ' . Tables::imageCategory() . ' ON image_id = id
+  WHERE category_id = ' . $categoryId . '
+;');
+    }
+
+    /**
+     * Distinct image ids across every id in $categoryIds -- Admin\
+     * CatModifyPageRenderer's own recursive (including sub-albums) photo
+     * count.
+     *
+     * @param list<int> $categoryIds
+     * @return list<int>
+     */
+    public function findDistinctImageIdsInCategories(array $categoryIds): array
+    {
+        return array_map(
+            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+            array_column($this->getEntityManager()
+                ->getConnection()
+                ->fetchAllAssociative('
+SELECT DISTINCT
+    (image_id)
+  FROM
+    ' . Tables::imageCategory() . '
+  WHERE
+    category_id IN (' . implode(',', $categoryIds) . ')
+  ;'), 'image_id')
+        );
+    }
+
+    /**
+     * `dir` keyed by id for $ids -- Admin\CatModifyPageRenderer's own
+     * getLocalDir() path-segment resolution.
+     *
+     * @param list<int|string> $ids
+     * @return array<int|string, mixed> keyed by id
+     */
+    public function findDirsByIds(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+
+        return array_column($this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative('SELECT id,dir
+  FROM ' . Tables::categories() . ' WHERE id IN (' . implode(',', $ids) . ')
+;'), 'dir', 'id');
+    }
+
+    /**
+     * $categoryId's own site's galleries_url, via the site_id FK join --
+     * Admin\CatModifyPageRenderer's own getSiteUrl().
+     */
+    public function findGalleriesUrlForCategory(int|string $categoryId): ?string
+    {
+        $row = $this->getEntityManager()
+            ->getConnection()
+            ->fetchAssociative('
+SELECT galleries_url
+  FROM ' . Tables::sites() . ' AS s,' . Tables::categories() . ' AS c
+  WHERE s.id = c.site_id
+    AND c.id = ' . $categoryId . '
+;');
+
+        if ($row === false) {
+            return null;
+        }
+
+        $galleriesUrl = $row['galleries_url'];
+
+        return is_string($galleriesUrl) ? $galleriesUrl : '';
+    }
+
+    /**
+     * id/permalink/uppercats/global_rank for every category with an active
+     * permalink -- Controller\Admin\PermalinksSubController's own listing.
+     * $orderBySql is a raw "ORDER BY ..." fragment or '' (the caller sorts
+     * by global_rank itself afterward when not sorting by id/permalink).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findActivePermalinksList(string $orderBySql): array
+    {
+        return $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative('
+SELECT id, permalink, uppercats, global_rank
+  FROM ' . Tables::categories() . '
+  WHERE permalink IS NOT NULL
+' . $orderBySql);
+    }
+
+    /**
+     * Whether $catId exists and isn't among $forbiddenCategoriesCsv --
+     * Controller\SearchController's own "does this album exist and is it
+     * accessible" check.
+     */
+    public function existsAndNotForbidden(int $catId, string $forbiddenCategoriesCsv): bool
+    {
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative('
+SELECT
+    id
+  FROM ' . Tables::categories() . '
+  WHERE id = ' . $catId . '
+    AND id NOT IN (' . $forbiddenCategoriesCsv . ')
+;');
+
+        return $rows !== [];
+    }
+
+    /**
+     * Whether a category with this id exists -- Ws\PwgCategories'
+     * setRepresentative()'s own existence check.
+     */
+    public function existsById(int $id): bool
+    {
+        $value = $this->getEntityManager()
+            ->getConnection()
+            ->fetchOne('
+SELECT COUNT(*)
+  FROM ' . Tables::categories() . '
+  WHERE id = ' . $id . '
+;');
+
+        return is_numeric($value) && (int) $value > 0;
+    }
+
+    /**
+     * Ids from $ids that really exist -- Ws\PwgCategories' own "do these
+     * categories really exist" checks (getImages()/delete()).
+     *
+     * @param  list<int>  $ids
+     * @return list<int>
+     */
+    public function findExistingIds(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+
+        return array_map(
+            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+            $this->getEntityManager()
+                ->getConnection()
+                ->executeQuery('
+SELECT id
+  FROM ' . Tables::categories() . '
+  WHERE id IN (' . implode(',', $ids) . ')
+;')->fetchFirstColumn()
+        );
+    }
+
+    /**
+     * id/image_order for categories matching already-built $whereClauses --
+     * Ws\PwgCategories::getImages()'s own "which categories are we
+     * fetching images for" step.
+     *
+     * @param  list<string>  $whereClauses
+     * @return list<array{id: int, image_order: ?string}>
+     */
+    public function findIdsAndImageOrderWithConditions(array $whereClauses): array
+    {
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative('
+SELECT
+    id,
+    image_order
+  FROM ' . Tables::categories() . '
+  WHERE ' . implode("\n    AND ", $whereClauses) . '
+;');
+
+        return array_map(
+            static fn (array $row): array => [
+                'id' => is_numeric($row['id']) ? (int) $row['id'] : 0,
+                'image_order' => is_string($row['image_order'] ?? null) ? $row['image_order'] : null,
+            ],
+            $rows
+        );
+    }
+
+    /**
+     * Ws\PwgCategories::getList()'s own paginated category rollup --
+     * $whereClauses are already-built, trusted SQL fragments (permission/
+     * recursive-scope conditions), same "caller composes trusted
+     * fragments" contract as {@see \Piwigo\Comment\CommentRepository::findAllWithConditions()}.
+     * $searchTerm/$searchLimit/$limit/$limitPlusOne replicate the
+     * original's own conditional LIMIT logic verbatim: a search term gets
+     * its own LIMIT only when no explicit $limit is requested; $limit
+     * itself gets +1 when $limitPlusOne (single-category scope), to detect
+     * "more remain" without a second query. FOUND_ROWS() is only fetched
+     * when $limit !== null, matching the original's own guard.
+     *
+     * @param  list<string>  $whereClauses
+     * @return PaginatedResult<array<string, mixed>>
+     */
+    public function findListForWs(
+        array $whereClauses,
+        ?string $searchTerm,
+        int $searchLimit,
+        ?int $limit,
+        bool $limitPlusOne
+    ): PaginatedResult {
+        $conn = $this->getEntityManager()
+            ->getConnection();
+
+        $sql = '
+SELECT SQL_CALC_FOUND_ROWS
+    id, name, comment, permalink, status,
+    uppercats, global_rank, id_uppercat,
+    representative_picture_id,
+    image_order
+  FROM ' . Tables::categories() . '
+  WHERE ' . implode("\n    AND ", $whereClauses);
+
+        if ($searchTerm !== null) {
+            $sql .= '
+    AND name LIKE ' . $conn->quote('%' . $searchTerm . '%');
+            if ($limit === null) {
+                $sql .= ' LIMIT ' . $searchLimit;
+            }
+        }
+
+        if ($limit !== null) {
+            $sql .= '
+  ORDER BY `rank` ASC
+  LIMIT ' . ($limit + ($limitPlusOne ? 1 : 0));
+        }
+
+        $sql .= '
+;';
+
+        $rows = $conn->fetchAllAssociative($sql);
+
+        $total = null;
+        if ($limit !== null) {
+            $totalRaw = $conn->fetchOne('SELECT FOUND_ROWS()');
+            $total = is_numeric($totalRaw) ? (int) $totalRaw : 0;
+        }
+
+        return new PaginatedResult($rows, $total);
+    }
+
+    /**
+     * Ws\PwgCategories::getAdminList()'s own paginated category rollup --
+     * same "caller composes trusted fragments" contract as
+     * {@see findListForWs()} above, always fetches FOUND_ROWS()
+     * (unconditional in the original, unlike findListForWs()'s own
+     * $limit-gated fetch).
+     *
+     * @param  list<string>  $whereClauses
+     * @return PaginatedResult<array<string, mixed>>
+     */
+    public function findAdminListForWs(array $whereClauses, ?string $searchTerm, int $searchLimit): PaginatedResult
+    {
+        $conn = $this->getEntityManager()
+            ->getConnection();
+
+        $sql = '
+SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, status, image_order
+  FROM ' . Tables::categories() . '
+  WHERE ' . implode("\n    AND ", $whereClauses);
+
+        if ($searchTerm !== null) {
+            $sql .= '
+  AND name LIKE ' . $conn->quote('%' . $searchTerm . '%') . '
+  LIMIT ' . $searchLimit;
+        }
+
+        $sql .= '
+;';
+
+        $rows = $conn->fetchAllAssociative($sql);
+        $totalRaw = $conn->fetchOne('SELECT FOUND_ROWS()');
+
+        return new PaginatedResult($rows, is_numeric($totalRaw) ? (int) $totalRaw : 0);
+    }
+
+    /**
+     * Subcategory counts grouped by parent id -- Ws\PwgCategories::
+     * getAdminList()'s own non-recursive "nb_categories" column.
+     *
+     * @param  list<int>  $parentIds
+     * @return array<string, int> keyed by id_uppercat
+     */
+    public function findSubcategoryCountsByParent(array $parentIds): array
+    {
+        if ($parentIds === []) {
+            return [];
+        }
+
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative('
+SELECT
+    id_uppercat,
+    COUNT(*) AS nb_subcats
+  FROM ' . Tables::categories() . '
+  WHERE id_uppercat IN (' . implode(',', $parentIds) . ')
+  GROUP BY id_uppercat
+;');
+
+        $bySubcat = [];
+        foreach ($rows as $row) {
+            $idUppercat = $row['id_uppercat'] ?? null;
+            $nbSubcats = $row['nb_subcats'] ?? null;
+            if (is_scalar($idUppercat) && is_numeric($nbSubcats)) {
+                $bySubcat[(string) $idUppercat] = (int) $nbSubcats;
+            }
+        }
+
+        return $bySubcat;
+    }
+
+    /**
+     * id/id_uppercat/rank for $ids -- Ws\PwgCategories::setRank()'s own
+     * "does the category really exist" check plus the sibling data it
+     * needs afterward.
+     *
+     * @param  list<int>  $ids
+     * @return list<array{id: int, id_uppercat: ?int, rank: ?int}>
+     */
+    public function findRankInfoByIds(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative('
+SELECT id, id_uppercat, `rank`
+  FROM ' . Tables::categories() . '
+  WHERE id IN (' . implode(',', $ids) . ')
+;');
+
+        return array_map(
+            static fn (array $row): array => [
+                'id' => is_numeric($row['id']) ? (int) $row['id'] : 0,
+                'id_uppercat' => is_numeric($row['id_uppercat'] ?? null) ? (int) $row['id_uppercat'] : null,
+                'rank' => is_numeric($row['rank'] ?? null) ? (int) $row['rank'] : null,
+            ],
+            $rows
+        );
+    }
+
+    /**
+     * Ids of every category directly under $parentId (or top-level, when
+     * null), ordered by id -- Ws\PwgCategories::setRank()'s own
+     * "does the caller-provided order cover every sibling" check, which
+     * relies on this exact id-ascending order to compare against the
+     * caller's own numerically-sorted id list.
+     *
+     * @return list<int>
+     */
+    public function findIdsByParentOrderedById(?int $parentId): array
+    {
+        return array_map(
+            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+            $this->getEntityManager()
+                ->getConnection()
+                ->executeQuery('
+SELECT id
+  FROM ' . Tables::categories() . '
+  WHERE id_uppercat ' . ($parentId === null ? 'IS NULL' : '= ' . $parentId) . '
+  ORDER BY `id` ASC
+;')->fetchFirstColumn()
+        );
+    }
+
+    /**
+     * Ids of every sibling of $excludeId under $parentId (or top-level,
+     * when null), ordered by rank -- Ws\PwgCategories::setRank()'s own
+     * "insert the new category into its siblings' existing rank order"
+     * step.
+     *
+     * @return list<int>
+     */
+    public function findSiblingIdsExcludingOrderedByRank(?int $parentId, int $excludeId): array
+    {
+        return array_map(
+            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+            $this->getEntityManager()
+                ->getConnection()
+                ->executeQuery('
+SELECT id
+  FROM ' . Tables::categories() . '
+  WHERE id_uppercat ' . ($parentId === null ? 'IS NULL' : '= ' . $parentId) . '
+    AND id != ' . $excludeId . '
+  ORDER BY `rank` ASC
+;')->fetchFirstColumn()
+        );
+    }
+
+    /**
+     * id/name/dir/uppercats for $ids -- Ws\PwgCategories::move()'s own
+     * "reject physical categories, and remember every ancestor to
+     * refresh" step. A different 4-column shape from
+     * {@see findCategoriesForMove()} above (that one is
+     * id/id_uppercat/status/uppercats, for a different real caller).
+     *
+     * @param  list<int>  $ids
+     * @return list<array{id: int, name: string, dir: ?string, uppercats: string}>
+     */
+    public function findMoveDetailsByIds(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative('
+SELECT id, name, dir, uppercats
+  FROM ' . Tables::categories() . '
+  WHERE id IN (' . implode(',', $ids) . ')
+;');
+
+        return array_map(
+            static fn (array $row): array => [
+                'id' => is_numeric($row['id']) ? (int) $row['id'] : 0,
+                'name' => is_string($row['name'] ?? null) ? $row['name'] : '',
+                'dir' => is_string($row['dir'] ?? null) ? $row['dir'] : null,
+                'uppercats' => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
+            ],
+            $rows
+        );
+    }
+
+    /**
+     * Next free id -- Controller\Admin\SiteUpdateSubController's own
+     * manual-id assignment for directory-synced categories (mirrors the
+     * retired MysqliDb::nextval()).
+     */
+    public function findNextId(): int
+    {
+        $next = $this->getEntityManager()
+            ->getConnection()
+            ->fetchOne('
+SELECT IF(MAX(id)+1 IS NULL, 1, MAX(id)+1)
+  FROM ' . Tables::categories());
+
+        return is_numeric($next) ? (int) $next : 1;
+    }
+
+    /**
+     * Categories with a physical `dir`, scoped to $siteId (directory-based
+     * synchronization's own candidate set) -- Controller\Admin\
+     * SiteUpdateSubController's own "which categories to update" step.
+     * $extraCondition is an already-built, trusted SQL AND-continuation
+     * fragment (empty string means no further restriction) -- same
+     * "caller composes trusted fragments" contract used throughout this
+     * repository.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findSyncCandidatesForSite(int $siteId, string $extraCondition): array
+    {
+        return $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative('
+SELECT id, uppercats, global_rank, status, visible
+  FROM ' . Tables::categories() . '
+  WHERE dir IS NOT NULL
+    AND site_id = ' . $siteId . '
+' . $extraCondition);
+    }
+
+    /**
+     * Every category id, unfiltered -- Controller\Admin\
+     * SiteUpdateSubController's own rank-bootstrap step ("every category
+     * defaults to next-rank 1 on its own sub-categories, until proven
+     * otherwise below").
+     *
+     * @return list<int>
+     */
+    public function findAllIds(): array
+    {
+        return array_map(
+            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+            $this->getEntityManager()
+                ->getConnection()
+                ->executeQuery('
+SELECT id
+  FROM ' . Tables::categories())->fetchFirstColumn()
+        );
+    }
+
+    /**
+     * Next available rank per parent (id_uppercat) -- Controller\Admin\
+     * SiteUpdateSubController's own "does this parent already have
+     * sub-categories, and if so what's the next free rank" step.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findNextRanksByParent(): array
+    {
+        return $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative('
+SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
+  FROM ' . Tables::categories() . '
+  GROUP BY id_uppercat');
     }
 }

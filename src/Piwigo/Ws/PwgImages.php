@@ -121,12 +121,7 @@ final class PwgImages
 
         if ($categories_string === '') {
             if ($replace_mode) {
-                $query = '
-DELETE
-  FROM ' . Tables::imageCategory() . '
-  WHERE image_id = ' . $image_id . '
-;';
-                $categoryConn->executeStatement($query);
+                self::imageService()->deleteImageCategoryRowsForImageIds([$image_id]);
                 $categoryService->updateCategory([]);
             }
             return true;
@@ -153,27 +148,17 @@ DELETE
 
         if (count($cat_ids) === 0) {
             if ($replace_mode) {
-                $query = '
-DELETE
-  FROM ' . Tables::imageCategory() . '
-  WHERE image_id = ' . $image_id . '
-;';
-                $categoryConn->executeStatement($query);
+                self::imageService()->deleteImageCategoryRowsForImageIds([$image_id]);
                 $categoryService->updateCategory([]);
             }
             return true;
         }
 
-        $query = '
-SELECT id
-  FROM ' . Tables::categories() . '
-  WHERE id IN (' . implode(',', $cat_ids) . ')
-;';
         // native int under DBAL (vs. guaranteed string|null under legacy
         // mysqli) -- cast to string so array_diff() below (string-based
         // comparison against $cat_ids, which comes from explode()-derived
         // string tokens) keeps comparing like-for-like.
-        $db_cat_ids = array_map(strval(...), array_filter(array_column($categoryConn->fetchAllAssociative($query), 'id'), is_scalar(...)));
+        $db_cat_ids = array_map(strval(...), $categoryService->getExistingIds(array_values(array_map(intval(...), $cat_ids))));
 
         $unknown_cat_ids = array_diff($cat_ids, $db_cat_ids);
         if (count($unknown_cat_ids) !== 0) {
@@ -186,25 +171,14 @@ SELECT id
         $to_update_cat_ids = [];
 
         // in case of replace mode, we first check the existing associations
-        $query = '
-SELECT category_id
-  FROM ' . Tables::imageCategory() . '
-  WHERE image_id = ' . $image_id . '
-;';
         // native int under DBAL -- same string-cast rationale as
         // $db_cat_ids above.
-        $existing_cat_ids = array_map(strval(...), array_filter(array_column($categoryConn->fetchAllAssociative($query), 'category_id'), is_scalar(...)));
+        $existing_cat_ids = array_map(strval(...), self::imageService()->getCategoryIdsForImage($image_id));
 
         if ($replace_mode) {
-            $to_remove_cat_ids = array_diff($existing_cat_ids, $cat_ids);
+            $to_remove_cat_ids = array_values(array_diff($existing_cat_ids, $cat_ids));
             if (count($to_remove_cat_ids) > 0) {
-                $query = '
-DELETE
-  FROM ' . Tables::imageCategory() . '
-  WHERE image_id = ' . $image_id . '
-    AND category_id IN (' . implode(', ', $to_remove_cat_ids) . ')
-;';
-                $categoryConn->executeStatement($query);
+                self::imageService()->deleteImageCategoryLinksForCategoryIds($image_id, $to_remove_cat_ids);
                 $categoryService->updateCategory($to_remove_cat_ids);
             }
         }
@@ -215,14 +189,7 @@ DELETE
         }
 
         if ($search_current_ranks) {
-            $query = '
-SELECT category_id, MAX(`rank`) AS max_rank
-  FROM ' . Tables::imageCategory() . '
-  WHERE `rank` IS NOT NULL
-    AND category_id IN (' . implode(',', $new_cat_ids) . ')
-  GROUP BY category_id
-;';
-            $current_rank_of = array_column($categoryConn->fetchAllAssociative($query), 'max_rank', 'category_id');
+            $current_rank_of = self::imageService()->getMaxRanksByCategory($new_cat_ids);
 
             foreach ($new_cat_ids as $cat_id) {
                 if (! isset($current_rank_of[$cat_id])) {
@@ -230,8 +197,7 @@ SELECT category_id, MAX(`rank`) AS max_rank
                 }
 
                 if ($rank_on_category[$cat_id] === 'auto') {
-                    $max_rank = is_numeric($current_rank_of[$cat_id]) ? (int) $current_rank_of[$cat_id] : 0;
-                    $rank_on_category[$cat_id] = $max_rank + 1;
+                    $rank_on_category[$cat_id] = $current_rank_of[$cat_id] + 1;
                 }
             }
         }
@@ -370,21 +336,13 @@ SELECT category_id, MAX(`rank`) AS max_rank
             return new PwgError(403, 'Comments are disabled');
         }
 
-        $conn = DbConnection::build();
-        $query = '
-SELECT DISTINCT image_id
-  FROM ' . Tables::imageCategory() . '
-      INNER JOIN ' . Tables::categories() . ' ON category_id=id
-  WHERE commentable=1
-    AND image_id=' . $params['image_id'] .
-          self::permissionService()->getSqlConditionFandF([
-              'forbidden_categories' => 'id',
-              'visible_categories' => 'id',
-              'visible_images' => 'image_id',
-          ], ' AND') . '
-;';
+        $permissionCondition = self::permissionService()->getSqlConditionFandF([
+            'forbidden_categories' => 'id',
+            'visible_categories' => 'id',
+            'visible_images' => 'image_id',
+        ], ' AND');
 
-        if ($conn->fetchOne($query) === false) {
+        if (! self::imageService()->isImageCommentableWithCondition($params['image_id'], $permissionCondition)) {
             return new PwgError(WsError::INVALID_PARAM, 'Invalid image_id');
         }
 
@@ -430,18 +388,13 @@ SELECT DISTINCT image_id
     public static function getInfo(array $params, PwgServer $service): PwgError|array
     {
 
-        $conn = DbConnection::build();
-        $query = '
-SELECT *
-  FROM ' . Tables::images() . '
-  WHERE id=' . $params['image_id'] .
-          self::permissionService()->getSqlConditionFandF([
-              'visible_images' => 'id',
-          ], ' AND') . '
-LIMIT 1
-;';
-        $image_row = $conn->fetchAssociative($query);
-        if ($image_row === false) {
+        $image_row = self::imageService()->getRowWithCondition(
+            $params['image_id'],
+            self::permissionService()->getSqlConditionFandF([
+                'visible_images' => 'id',
+            ], ' AND')
+        );
+        if ($image_row === null) {
             return new PwgError(404, 'image_id not found');
         }
 
@@ -476,19 +429,16 @@ LIMIT 1
         );
 
         // -------------------------------------------------------- related categories
-        $query = '
-SELECT id, name, permalink, uppercats, global_rank, commentable
-  FROM ' . Tables::imageCategory() . '
-    INNER JOIN ' . Tables::categories() . ' ON category_id = id
-  WHERE image_id = ' . $image_id .
-          self::permissionService()->getSqlConditionFandF([
-              'forbidden_categories' => 'category_id',
-          ], ' AND') . '
-;';
+        $related_category_rows = self::imageService()->getRelatedCategoriesForImage(
+            $image_id,
+            self::permissionService()->getSqlConditionFandF([
+                'forbidden_categories' => 'category_id',
+            ], ' AND')
+        );
 
         $is_commentable = false;
         $related_categories = [];
-        foreach ($conn->fetchAllAssociative($query) as $row) {
+        foreach ($related_category_rows as $row) {
             if ((bool) $row['commentable']) {
                 $is_commentable = true;
             }
@@ -556,50 +506,31 @@ SELECT id, name, permalink, uppercats, global_rank, commentable
             'average' => null,
         ];
         if (isset($rating['score'])) {
-            $query = '
-SELECT COUNT(rate) AS count, ROUND(AVG(rate),2) AS average
-  FROM ' . Tables::rate() . '
-  WHERE element_id = ' . $image_id . '
-;';
-            $row = $conn->fetchAssociative($query);
-            if ($row === false) {
-                throw new Exception('ws_images_getInfo(): rate aggregate query returned no row');
-            }
+            $rate_summary = \Piwigo\Bootstrap\ExtendedDomainAccessor::rateService()->getRateSummaryForElement($image_id);
 
             assert(is_numeric($rating_score_raw));
             $rating['score'] = (float) $rating_score_raw;
-            $rating['average'] = is_numeric($row['average']) ? (float) $row['average'] : 0.0;
-            $rating['count'] = is_numeric($row['count']) ? (int) $row['count'] : 0;
+            $rating['average'] = $rate_summary['average'] ?? 0.0;
+            $rating['count'] = $rate_summary['count'];
         }
 
         // ---------------------------------------------------------- related comments
         $related_comments = [];
 
-        $where_comments = 'image_id = ' . $image_id;
-        if (! \Piwigo\Auth\AccessControl::isAdmin()) {
-            $where_comments .= ' AND validated=1';
-        }
+        $only_validated_comments = ! \Piwigo\Auth\AccessControl::isAdmin();
+        $commentService = \Piwigo\Bootstrap\ExtendedDomainAccessor::commentService();
 
-        $query = '
-SELECT COUNT(id) AS nb_comments
-  FROM ' . Tables::comments() . '
-  WHERE ' . $where_comments . '
-;';
-        $nb_comments_result = $conn->fetchOne($query);
-        $nb_comments = is_numeric($nb_comments_result) ? (int) $nb_comments_result : 0;
+        $nb_comments = $commentService->countForImage($image_id, $only_validated_comments);
 
         if ($nb_comments > 0 and $params['comments_per_page'] > 0) {
-            $query = '
-SELECT id, date, author, content
-  FROM ' . Tables::comments() . '
-  WHERE ' . $where_comments . '
-  ORDER BY date
-  LIMIT ' . $params['comments_per_page'] . '
-  OFFSET ' . ($params['comments_per_page'] * $params['comments_page']) . '
-;';
             $related_comments = array_map(
                 static fn (CommentSummary $summary): array => $summary->toArray(),
-                array_map(CommentSummary::fromRow(...), $conn->fetchAllAssociative($query))
+                $commentService->getSummariesForImage(
+                    $image_id,
+                    $only_validated_comments,
+                    $params['comments_per_page'],
+                    $params['comments_per_page'] * $params['comments_page']
+                )
             );
         }
 
@@ -678,19 +609,14 @@ SELECT id, date, author, content
      */
     public static function rate(array $params, PwgServer $service): PwgError|array
     {
-        $conn = DbConnection::build();
-        $query = '
-SELECT DISTINCT id
-  FROM ' . Tables::images() . '
-    INNER JOIN ' . Tables::imageCategory() . ' ON id=image_id
-  WHERE id=' . $params['image_id']
-          . self::permissionService()->getSqlConditionFandF([
-              'forbidden_categories' => 'category_id',
-              'forbidden_images' => 'id',
-          ], '    AND') . '
-  LIMIT 1
-;';
-        if ($conn->fetchOne($query) === false) {
+        $accessible = self::imageService()->isImageAccessibleWithCondition(
+            $params['image_id'],
+            self::permissionService()->getSqlConditionFandF([
+                'forbidden_categories' => 'category_id',
+                'forbidden_images' => 'id',
+            ], '    AND')
+        );
+        if (! $accessible) {
             return new PwgError(404, 'Invalid image_id or access denied');
         }
 
@@ -824,7 +750,6 @@ SELECT DISTINCT id
     public static function filteredSearchCreate(array $params, PwgServer $service): PwgError|array
     {
 
-        $searchConn = DbConnection::build();
         $searchService = self::searchService();
 
         // * check the search exists
@@ -1104,7 +1029,7 @@ SELECT DISTINCT id
      *    level: WsParamType::INT|WsParamType::POSITIVE, mandatory (no 'default') -- always
      *      a plain int by the time this runs
      */
-    public static function setPrivacyLevel(array $params, PwgServer $service): PwgError|int|string
+    public static function setPrivacyLevel(array $params, PwgServer $service): PwgError|int
     {
 
         $available_permission_levels = \Piwigo\Config\CurrentConfig::availablePermissionLevels();
@@ -1113,20 +1038,14 @@ SELECT DISTINCT id
             return new PwgError(WsError::INVALID_PARAM, 'Invalid level');
         }
 
-        $conn = DbConnection::build();
-        $query = '
-UPDATE ' . Tables::images() . '
-  SET level=' . $params['level'] . '
-  WHERE id IN (' . implode(',', $params['image_id']) . ')
-;';
         // executeStatement() both runs the query and returns its real
         // affected-row count directly, replacing the separate
         // MysqliDb::changes() call (which only worked because this query,
         // unlike ratesDelete()'s dormant one, was actually executed).
-        $affected_rows = $conn->executeStatement($query);
+        $affected_rows = self::imageService()->updateLevelForImages($params['image_id'], $params['level']);
         \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
-        self::activityService($conn)->record('photo', $params['image_id'], 'edit');
+        self::activityService(DbConnection::build())->record('photo', $params['image_id'], 'edit');
 
         if ($affected_rows > 0) {
             PermissionCacheInvalidator::invalidate();
@@ -1150,8 +1069,6 @@ UPDATE ' . Tables::images() . '
      */
     public static function setRank(array $params, PwgServer $service): array|PwgError
     {
-        $conn = DbConnection::build();
-
         if (count($params['image_id']) > 1) {
             self::imageService()
                 ->saveImagesOrder(
@@ -1159,19 +1076,7 @@ UPDATE ' . Tables::images() . '
                     $params['image_id']
                 );
 
-            $query = '
-SELECT
-    image_id
-  FROM ' . Tables::imageCategory() . '
-  WHERE category_id = ' . $params['category_id'] . '
-  ORDER BY `rank` ASC
-;';
-            // image_id is Tables::imageCategory()'s NOT NULL FK column
-            // (int|string per driver).
-            $image_ids = array_values(array_filter(
-                array_column($conn->fetchAllAssociative($query), 'image_id'),
-                static fn (mixed $v): bool => is_int($v) || is_string($v)
-            ));
+            $image_ids = self::imageService()->getImageIdsOrderedByRankForCategory($params['category_id']);
 
             // return data for client
             return [
@@ -1192,67 +1097,31 @@ SELECT
         }
 
         // does the image really exist?
-        $query = '
-SELECT COUNT(*)
-  FROM ' . Tables::images() . '
-  WHERE id = ' . (string) $params['image_id'] . '
-;';
-        $count = $conn->fetchOne($query);
-        $count = is_numeric($count) ? (int) $count : 0;
-        if ($count === 0) {
+        if (! self::imageService()->existsById($params['image_id'])) {
             return new PwgError(404, 'image_id not found');
         }
 
         // is the image associated to this category?
-        $query = '
-SELECT COUNT(*)
-  FROM ' . Tables::imageCategory() . '
-  WHERE image_id = ' . (string) $params['image_id'] . '
-    AND category_id = ' . $params['category_id'] . '
-;';
-        $count = $conn->fetchOne($query);
-        $count = is_numeric($count) ? (int) $count : 0;
-        if ($count === 0) {
+        if (! self::imageService()->isImageInCategory($params['image_id'], $params['category_id'])) {
             return new PwgError(404, 'This image is not associated to this category');
         }
 
         // what is the current higher rank for this category?
-        $query = '
-SELECT MAX(`rank`) AS max_rank
-  FROM ' . Tables::imageCategory() . '
-  WHERE category_id = ' . $params['category_id'] . '
-;';
-        $row = $conn->fetchAssociative($query);
-        if ($row === false) {
-            throw new Exception('ws_images_setRank(): max-rank aggregate query returned no row');
-        }
+        $max_rank = self::imageService()->getMaxRankForCategory($params['category_id']);
 
-        if (is_numeric($row['max_rank'])) {
-            if ($params['rank'] > $row['max_rank']) {
-                $params['rank'] = (int) $row['max_rank'] + 1;
+        if ($max_rank !== null) {
+            if ($params['rank'] > $max_rank) {
+                $params['rank'] = $max_rank + 1;
             }
         } else {
             $params['rank'] = 1;
         }
 
         // update rank for all other photos in the same category
-        $query = '
-UPDATE ' . Tables::imageCategory() . '
-  SET `rank` = `rank` + 1
-  WHERE category_id = ' . $params['category_id'] . '
-    AND `rank` IS NOT NULL
-    AND `rank` >= ' . $params['rank'] . '
-;';
-        $conn->executeStatement($query);
+        self::imageService()->incrementRanksFromForCategory($params['category_id'], $params['rank']);
 
         // set the new rank for the photo
-        $query = '
-UPDATE ' . Tables::imageCategory() . '
-  SET `rank` = ' . $params['rank'] . '
-  WHERE image_id = ' . (string) $params['image_id'] . '
-    AND category_id = ' . $params['category_id'] . '
-;';
-        $conn->executeStatement($query);
+        self::imageService()->updateRankForImageInCategory($params['image_id'], $params['category_id'], $params['rank']);
 
         // return data for client
         return [
@@ -1332,15 +1201,8 @@ UPDATE ' . Tables::imageCategory() . '
         $logger->debug(__FUNCTION__, 'WS', $params);
 
         // what is the path and other infos about the photo?
-        $query = '
-SELECT
-    path, file, md5sum,
-    width, height, filesize
-  FROM ' . Tables::images() . '
-  WHERE id = ' . $params['image_id'] . '
-;';
-        $image = DbConnection::build()->fetchAssociative($query);
-        if ($image === false) {
+        $image = self::imageService()->getUploadInfoById($params['image_id']);
+        if ($image === null) {
             return new PwgError(404, 'image_id not found');
         }
 
@@ -1393,7 +1255,7 @@ SELECT
             ->addUploadedFile(
                 $file_path,
                 \Piwigo\Bootstrap\PresentationAccessor::urlService(),
-                is_string($image['file']) ? $image['file'] : null,
+                $image['file'],
                 null,
                 null,
                 $params['image_id'],
@@ -1431,14 +1293,7 @@ SELECT
         $conn = DbConnection::build();
 
         if ($params['image_id'] > 0) {
-            $query = '
-SELECT COUNT(*)
-  FROM ' . Tables::images() . '
-  WHERE id = ' . $params['image_id'] . '
-;';
-            $count = $conn->fetchOne($query);
-            $count = is_numeric($count) ? (int) $count : 0;
-            if ($count === 0) {
+            if (! self::imageService()->existsById($params['image_id'])) {
                 return new PwgError(404, 'image_id not found');
             }
         }
@@ -1453,14 +1308,7 @@ SELECT COUNT(*)
                 $where_clause = "file = '" . $params['original_filename'] . "'";
             }
 
-            $query = '
-SELECT COUNT(*)
-  FROM ' . Tables::images() . '
-  WHERE ' . $where_clause . '
-;';
-            $counter = $conn->fetchOne($query);
-            $counter = is_numeric($counter) ? (int) $counter : 0;
-            if ($counter !== 0) {
+            if (self::imageService()->existsWithCondition($where_clause)) {
                 return new PwgError(500, 'file already exists');
             }
         }
@@ -1533,15 +1381,10 @@ SELECT COUNT(*)
             if ((bool) preg_match('/^\d+/', $params['categories'], $matches)) {
                 $category_id = $matches[0];
 
-                $query = '
-SELECT id, name, permalink
-  FROM ' . Tables::categories() . '
-  WHERE id = ' . $category_id . '
-;';
-                $category = $conn->fetchAssociative($query);
+                $category = self::categoryService()->getIdNamePermalinkById((int) $category_id);
 
                 $url_params['section'] = 'categories';
-                $url_params['category'] = $category !== false ? $category : null;
+                $url_params['category'] = $category;
             }
         }
 
@@ -1608,14 +1451,7 @@ SELECT id, name, permalink
         $conn = DbConnection::build();
 
         if ($params['image_id'] > 0) {
-            $query = '
-SELECT COUNT(*)
-  FROM ' . Tables::images() . '
-  WHERE id = ' . $params['image_id'] . '
-;';
-            $count = $conn->fetchOne($query);
-            $count = is_numeric($count) ? (int) $count : 0;
-            if ($count === 0) {
+            if (! self::imageService()->existsById($params['image_id'])) {
                 return new PwgError(404, 'image_id not found');
             }
         }
@@ -1690,15 +1526,10 @@ SELECT COUNT(*)
         ];
 
         if ($params['category'] !== []) {
-            $query = '
-SELECT id, name, permalink
-  FROM ' . Tables::categories() . '
-  WHERE id = ' . $params['category'][0] . '
-;';
-            $category = $conn->fetchAssociative($query);
+            $category = self::categoryService()->getIdNamePermalinkById($params['category'][0]);
 
             $url_params['section'] = 'categories';
-            $url_params['category'] = $category !== false ? $category : null;
+            $url_params['category'] = $category;
         }
 
         // update metadata from the uploaded file (exif/iptc), even if the sync
@@ -1853,27 +1684,13 @@ SELECT id, name, permalink
                 ];
             }
 
-            // realEscapeString() dropped for the raw-SQL WHERE clause below
-            // in favor of Connection::quote() (SEC-18 pattern); $name itself
-            // stays the plain stripslashes()'d value (matching what
-            // addUploadedFile() below and the 'name' key elsewhere already
-            // expect -- only the WHERE clause needs driver-aware escaping).
             $name = stripslashes((string) $params['name']);
             $id_image = null; // null by default
 
             if ($params['update_mode']) {
-                $query = '
-SELECT
-  id
-  FROM ' . Tables::images() . ' AS i
-    INNER JOIN ' . Tables::imageCategory() . ' as ic ON ic.image_id = i.id
-  WHERE i.file = ' . $conn->quote($name) . '
-  AND ic.category_id = ' . $params['category'][0] . '
-;';
-                $images = $conn->fetchAllAssociative($query);
-                if ($images !== []) {
-                    $existing_id = $images[0]['id']; // take the id of the already existing image to replace it
-                    $id_image = is_numeric($existing_id) ? (int) $existing_id : null;
+                $existing_ids = self::imageService()->getIdsByFilenameInCategory($name, $params['category'][0]);
+                if ($existing_ids !== []) {
+                    $id_image = $existing_ids[0]; // take the id of the already existing image to replace it
                     $add_status = 'update';
                 }
             }
@@ -1890,45 +1707,16 @@ SELECT
                     $service
                 );
 
-            $query = '
-SELECT
-    id,
-    name,
-    representative_ext,
-    path
-  FROM ' . Tables::images() . '
-  WHERE id = ' . $image_id . '
-;';
-            $image_infos = $conn->fetchAssociative($query);
-            if ($image_infos === false) {
+            $image_infos = self::imageService()->getUploadResultInfoById((int) $image_id);
+            if ($image_infos === null) {
                 throw new Exception('ws_images_upload(): image fetch failed right after inserting it');
             }
 
-            $query = '
-SELECT
-    COUNT(*) AS nb_photos
-  FROM ' . Tables::imageCategory() . '
-  WHERE category_id = ' . $params['category'][0] . '
-;';
-            $category_infos = $conn->fetchAssociative($query);
-            if ($category_infos === false) {
-                throw new Exception('ws_images_upload(): category-count aggregate query returned no row');
-            }
-
-            $query = '
-SELECT
-    COUNT(*)
-  FROM ' . Tables::lounge() . '
-  WHERE category_id = ' . $params['category'][0] . '
-  AND image_id NOT IN (Select image_id from ' . Tables::imageCategory() . ')
-;';
-            $nb_photos_lounge = $conn->fetchOne($query);
+            $nb_photos_in_category = self::imageService()->countImagesInCategory($params['category'][0]);
+            $nb_photos_lounge = self::imageService()->countLoungeImagesPendingForCategory($params['category'][0]);
 
             $category_name = \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->getCatDisplayNameFromId($params['category'][0], null);
-
-            $nb_photos_in_category = is_numeric($category_infos['nb_photos']) ? (int) $category_infos['nb_photos'] : 0;
-            $nb_photos_lounge = is_numeric($nb_photos_lounge) ? (int) $nb_photos_lounge : 0;
 
             return [
                 'image_id' => $image_id,
@@ -1979,17 +1767,8 @@ SELECT
             return new PwgError(WsError::INVALID_PARAM, 'Invalid original_sum');
         }
 
-        $conn = DbConnection::build();
-
         if ($params['image_id'] > 0) {
-            $query = '
-SELECT COUNT(*)
-  FROM ' . Tables::images() . '
-  WHERE id = ' . $params['image_id'] . '
-;';
-            $count = $conn->fetchOne($query);
-            $count = is_numeric($count) ? (int) $count : 0;
-            if ($count === 0) {
+            if (! self::imageService()->existsById($params['image_id'])) {
                 return new PwgError(404, __FUNCTION__ . ' : image_id not found');
             }
         }
@@ -2177,7 +1956,7 @@ SELECT COUNT(*)
         }
 
         if (count(array_keys($update)) > 0) {
-            new BatchWriter($conn)
+            new BatchWriter(DbConnection::build())
                 ->singleUpdate(
                     Tables::images(),
                     $update,
@@ -2255,7 +2034,6 @@ SELECT COUNT(*)
 
         $logger->debug(__FUNCTION__, 'WS', $params);
 
-        $conn = DbConnection::build();
         $split_pattern = '/[\s,;\|]/';
         $result = [];
 
@@ -2271,16 +2049,10 @@ SELECT COUNT(*)
                 throw new Exception('ws_images_exist(): preg_split() failed');
             }
 
-            $query = '
-SELECT id, md5sum
-  FROM ' . Tables::images() . '
-  WHERE md5sum IN (\'' . implode("','", $md5sums) . '\')
-;';
-            $id_of_md5 = array_column($conn->fetchAllAssociative($query), 'id', 'md5sum');
+            $id_of_md5 = self::imageService()->getIdsByMd5sums($md5sums);
 
             foreach ($md5sums as $md5sum) {
-                $id = $id_of_md5[$md5sum] ?? null;
-                $result[$md5sum] = (is_int($id) || is_string($id)) ? $id : null;
+                $result[$md5sum] = $id_of_md5[$md5sum] ?? null;
             }
         } elseif (\Piwigo\Config\CurrentConfig::uniquenessMode() === 'filename') {
             // search among photos the list of photos already added, based on
@@ -2295,16 +2067,10 @@ SELECT id, md5sum
                 throw new Exception('ws_images_exist(): preg_split() failed');
             }
 
-            $query = '
-SELECT id, file
-  FROM ' . Tables::images() . '
-  WHERE file IN (\'' . implode("','", $filenames) . '\')
-;';
-            $id_of_filename = array_column($conn->fetchAllAssociative($query), 'id', 'file');
+            $id_of_filename = self::imageService()->getIdsByFilenames($filenames);
 
             foreach ($filenames as $filename) {
-                $id = $id_of_filename[$filename] ?? null;
-                $result[$filename] = (is_int($id) || is_string($id)) ? $id : null;
+                $result[$filename] = $id_of_filename[$filename] ?? null;
             }
         }
 
@@ -2340,15 +2106,7 @@ SELECT id, file
         /** @var array<int|string, mixed> $candidates */
         $unique_filenames_db = [];
 
-        $conn = DbConnection::build();
-        $query = '
-SELECT
-    id,
-    file
-  FROM ' . Tables::images() . '
-;';
-        foreach ($conn->fetchAllAssociative($query) as $row) {
-            assert(is_string($row['file']));
+        foreach (self::imageService()->getAllIdsAndFiles() as $row) {
             $filename_wo_ext = \Piwigo\Core\StringHelper::getFilenameWoExtension($row['file']);
             @$unique_filenames_db[$filename_wo_ext][] = $row['id'];
         }
@@ -2361,15 +2119,8 @@ SELECT
         $format_ext_list = \Piwigo\Config\CurrentConfig::formatExtensions();
         usort($format_ext_list, static fn (string $a, string $b): int => strlen($b) - strlen($a));
 
-        $query = '
-SELECT
-    image_id,
-    ext
-  FROM ' . Tables::imageFormat() . '
-;';
         $format_db = [];
-        foreach ($conn->fetchAllAssociative($query) as $row) {
-            assert(is_int($row['image_id']) || is_string($row['image_id']));
+        foreach (self::imageService()->getAllImageIdsAndExts() as $row) {
             $format_image_id = $row['image_id'];
             @$format_db[$format_image_id][] = $row['ext'];
         }
@@ -2405,7 +2156,6 @@ SELECT
                     continue;
                 }
                 $img_id = $unique_filenames_db[$candidate_filename_wo_ext][0];
-                assert(is_int($img_id) || is_string($img_id));
                 $mult_form = false;
                 if (isset($format_db[$img_id])) {
                     $format_ext = pathinfo($format_filename, PATHINFO_EXTENSION);
@@ -2472,18 +2222,7 @@ SELECT
         // Delete physical file
         $ok = true;
 
-        $conn = DbConnection::build();
-        $query = '
-SELECT
-    image_id,
-    ext
-  FROM ' . Tables::imageFormat() . '
-  WHERE format_id IN (' . implode(',', $format_ids) . ')
-;';
-        foreach ($conn->fetchAllAssociative($query) as $row) {
-            assert(is_int($row['image_id']) || is_string($row['image_id']));
-            assert($row['ext'] !== null);
-
+        foreach (self::imageService()->getImageIdsAndExtsByFormatIds($format_ids) as $row) {
             if (! isset($formats_of[$row['image_id']])) {
                 $image_ids[] = $row['image_id'];
                 $formats_of[$row['image_id']] = [];
@@ -2496,17 +2235,8 @@ SELECT
             return new PwgError(404, 'No format found for the id(s) given');
         }
 
-        $query = '
-SELECT
-    id,
-    path,
-    representative_ext
-  FROM ' . Tables::images() . '
-  WHERE id IN (' . implode(',', $image_ids) . ')
-;';
         $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
-        foreach ($conn->fetchAllAssociative($query) as $image_row) {
-            assert(is_string($image_row['path']));
+        foreach (self::imageService()->getPathsForFileDeletion($image_ids) as $image_row) {
             if ($urlService->urlIsRemote($image_row['path'])) {
                 continue;
             }
@@ -2514,10 +2244,8 @@ SELECT
             $files = [];
             $image_path = \Piwigo\Image\ImagePathHelper::getElementPath($image_row, $urlService);
 
-            assert(is_int($image_row['id']) || is_string($image_row['id']));
             if (isset($formats_of[$image_row['id']])) {
                 foreach ($formats_of[$image_row['id']] as $format_ext) {
-                    assert(is_string($format_ext));
                     $files[] = \Piwigo\Image\ImagePathHelper::originalToFormat($image_path, $format_ext);
                 }
             }
@@ -2532,11 +2260,7 @@ SELECT
         }
 
         // Delete format in the database
-        $query = '
-DELETE FROM ' . Tables::imageFormat() . '
-  WHERE format_id IN (' . implode(',', $format_ids) . ')
-;';
-        $conn->executeStatement($query);
+        self::imageService()->deleteFormatsByIds($format_ids);
 
         PermissionCacheInvalidator::invalidate();
 
@@ -2557,17 +2281,11 @@ DELETE FROM ' . Tables::imageFormat() . '
 
         $logger->debug(__FUNCTION__, 'WS', $params);
 
-        $query = '
-SELECT path
-  FROM ' . Tables::images() . '
-  WHERE id = ' . $params['image_id'] . '
-;';
-        $path = DbConnection::build()->fetchOne($query);
+        $path = self::imageService()->getPathById($params['image_id']);
 
-        if ($path === false) {
+        if ($path === null) {
             return new PwgError(404, 'image_id not found');
         }
-        assert(is_string($path));
         // `path` is stored root-relative (e.g. "upload/2026/.../foo.jpg") --
         // resolve it to a real filesystem path the same way
         // formatsDelete()/DerivativeImage do (ImagePathHelper::
@@ -2815,7 +2533,6 @@ SELECT path
             }
         }
 
-        $imageConn = DbConnection::build();
         $ret = self::imageService()
             ->deleteElements($image_ids, \Piwigo\Bootstrap\PresentationAccessor::urlService(), true);
         PermissionCacheInvalidator::invalidate();
@@ -2851,7 +2568,6 @@ SELECT path
      */
     public static function emptyLounge(array $params, PwgServer $service): array
     {
-        $imageConn = DbConnection::build();
         $ret = [
             'rows' => self::imageService()
                 ->emptyLounge(),
@@ -2905,23 +2621,12 @@ SELECT path
 
         // the list of images moved from the lounge might not be the same than
         // $image_ids (canbe a subset or more image_ids from another upload too)
-        $imageConn = DbConnection::build();
         $moved_from_lounge = self::imageService()
             ->emptyLounge();
 
-        $query = '
-SELECT
-    COUNT(*) AS nb_photos
-  FROM ' . Tables::imageCategory() . '
-  WHERE category_id = ' . $params['category_id'] . '
-;';
-        $category_infos = $imageConn->fetchAssociative($query);
-        if ($category_infos === false) {
-            throw new Exception(__FUNCTION__ . '(): category-count aggregate query returned no row');
-        }
+        $nb_photos = self::imageService()->countImagesInCategory($params['category_id']);
         $category_name = \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->getCatDisplayNameFromId($params['category_id'], null);
-        $nb_photos = is_numeric($category_infos['nb_photos']) ? (int) $category_infos['nb_photos'] : 0;
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify(
             'ws_images_uploadCompleted',
@@ -2956,7 +2661,6 @@ SELECT
             return new PwgError(403, 'Invalid security token');
         }
 
-        $imageConn = DbConnection::build();
         $imageService = self::imageService();
 
         $no_md5sum_ids = $imageService->getPhotosNoMd5sum();
@@ -3015,19 +2719,11 @@ SELECT
             return new PwgError(WsError::INVALID_PARAM, 'Invalid image_id (no value after filters)');
         }
 
-        $query = '
-SELECT id
-  FROM ' . Tables::images() . '
-  WHERE id IN (' . implode(', ', $image_ids) . ')
-;';
-        $conn = DbConnection::build();
-        $image_ids = array_column($conn->fetchAllAssociative($query), 'id');
+        $image_ids = self::imageService()->getExistingIds($image_ids);
 
         if ($image_ids === []) {
             return new PwgError(403, 'No image found');
         }
-
-        $image_ids = array_values(array_map(intval(...), array_filter($image_ids, is_numeric(...))));
 
         \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService()
             ->syncMetadata($image_ids);
@@ -3051,7 +2747,6 @@ SELECT id
             return new PwgError(403, 'Invalid security token');
         }
 
-        $imageConn = DbConnection::build();
         $imageService = self::imageService();
 
         $orphan_ids_to_delete = array_slice($imageService->getOrphans(), 0, $params['block_size']);
@@ -3081,16 +2776,8 @@ SELECT id
             return new PwgError(403, 'Invalid security token');
         }
 
-        $imageConn = DbConnection::build();
-
         // does the category really exist?
-        $query = '
-SELECT
-    id
-  FROM ' . Tables::categories() . '
-  WHERE id = ' . $params['category_id'] . '
-;';
-        if ($imageConn->fetchOne($query) === false) {
+        if (! self::categoryService()->existsById($params['category_id'])) {
             return new PwgError(404, 'category_id not found');
         }
 

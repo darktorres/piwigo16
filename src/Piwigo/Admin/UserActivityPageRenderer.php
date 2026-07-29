@@ -7,8 +7,6 @@ namespace Piwigo\Admin;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 /**
@@ -41,7 +39,6 @@ final class UserActivityPageRenderer
         /** @var array<string, string> $user_fields */
         $user_fields = \Piwigo\Config\CurrentConfig::userFields();
 
-        $conn = DbConnection::build();
         $activity_service = \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService();
 
         if ($userActivityRequest->isDownloadLogs) {
@@ -95,13 +92,7 @@ final class UserActivityPageRenderer
         $nb_lines_for_user = $activity_service->getCountByUser();
 
         if (count($nb_lines_for_user) > 0) {
-            $query = '
-  SELECT
-      ' . $user_fields['id'] . ' AS id,
-      ' . $user_fields['username'] . ' AS username
-    FROM ' . Tables::users() . '
-    WHERE ' . $user_fields['id'] . ' IN (' . implode(',', array_keys($nb_lines_for_user)) . ');';
-            $username_of = array_column($conn->fetchAllAssociative($query), 'username', 'id');
+            $username_of = \Piwigo\Bootstrap\CoreDomainAccessor::userService()->getUsernamesByIds(array_map(strval(...), array_keys($nb_lines_for_user)));
         } else {
             // no activity lines at all: skip the lookup query rather than
             // re-running the stale $query from above (previously left in place
@@ -124,13 +115,7 @@ final class UserActivityPageRenderer
         }
         $template->assign('ulist', $filterable_users);
 
-        $query = '
-SELECT COUNT(*)
-  FROM ' . Tables::users() . '
-;';
-
-        $row = $conn->fetchNumeric($query);
-        $nb_users = is_array($row) ? $row[0] : 0;
+        $nb_users = \Piwigo\Bootstrap\CoreDomainAccessor::userService()->getTotalUserCount();
         $template->assign('nb_users', $nb_users);
 
         $min_date = $activity_service->getMinOccuredOn();
@@ -148,13 +133,9 @@ SELECT COUNT(*)
         $additional_filt_name = null;
         $additional_filt_value = null;
 
-        $additional_filters = [
-            'photo' => Tables::images(),
-            'album' => Tables::categories(),
-            'group' => Tables::groups(),
-        ];
+        $additional_filter_keys = ['photo', 'album', 'group'];
 
-        foreach ($additional_filters as $filter_key => $filter_table) {
+        foreach ($additional_filter_keys as $filter_key) {
             if ($userActivityRequest->hasFilter($filter_key)) {
                 $filter_value = $userActivityRequest->filterValue($filter_key);
                 if (! is_string($filter_value)) {
@@ -162,21 +143,20 @@ SELECT COUNT(*)
                         ->fatalError('[Hacking attempt] the input parameter "' . $filter_key . '" is not valid');
                 }
 
-                $query = '
-SELECT
-    name
-  FROM ' . $filter_table . '
-  WHERE id = ' . $filter_value . '
-;';
-                $rows = $conn->fetchAllAssociative($query);
+                $filter_id = (int) $filter_value;
+                $name = match ($filter_key) {
+                    'photo' => \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->getImageRow($filter_id)['name'] ?? null,
+                    'album' => \Piwigo\Bootstrap\CoreDomainAccessor::categoryService()->getNamesByIds([$filter_id])[$filter_id]['name'] ?? null,
+                    'group' => \Piwigo\Bootstrap\CoreDomainAccessor::groupService()->getName(\Piwigo\Common\ValueObject\GroupId::from($filter_id)),
+                };
 
-                if (count($rows) === 0) {
+                if ($name === null) {
                     \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                         ->fatalError($filter_key . ' #' . $filter_value . ' does not exist');
                 }
 
                 $additional_filt_type = $filter_key;
-                $additional_filt_name = $rows[0]['name'];
+                $additional_filt_name = $name;
                 $additional_filt_value = $filter_value;
 
                 break;

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Caddie;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\Tables;
@@ -36,5 +37,56 @@ final class CaddieRepository extends AbstractRepository
         }
 
         return $added;
+    }
+
+    /**
+     * Empties $userId's caddie then adds $elementIds -- Admin\
+     * PhotosAddDirectPageRenderer's own "batch" action, unlike
+     * addElements() above which only ever adds on top of what's there.
+     *
+     * @param list<int> $elementIds
+     */
+    public function replaceForUser(int $userId, array $elementIds): void
+    {
+        $this->conn->executeStatement(
+            'DELETE FROM ' . Tables::caddie() . ' WHERE user_id = ?',
+            [$userId],
+            [ParameterType::INTEGER],
+        );
+
+        $inserts = [];
+        foreach ($elementIds as $elementId) {
+            $inserts[] = [
+                'user_id' => $userId,
+                'element_id' => $elementId,
+            ];
+        }
+
+        if ($inserts === []) {
+            return;
+        }
+
+        $this->batchWriter()
+            ->massInsert(Tables::caddie(), array_keys($inserts[0]), $inserts);
+    }
+
+    /**
+     * Removes only the given elements from $userId's caddie --
+     * Admin\BatchManagerGlobalPageRenderer's own "remove_from_caddie"
+     * action, unlike replaceForUser() above which clears everything.
+     *
+     * @param list<int> $elementIds
+     */
+    public function removeElementsForUser(int $userId, array $elementIds): void
+    {
+        if ($elementIds === []) {
+            return;
+        }
+
+        $this->conn->executeStatement(
+            'DELETE FROM ' . Tables::caddie() . ' WHERE element_id IN (?) AND user_id = ?',
+            [$elementIds, $userId],
+            [ArrayParameterType::INTEGER, ParameterType::INTEGER],
+        );
     }
 }

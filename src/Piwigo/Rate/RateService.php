@@ -168,4 +168,31 @@ final readonly class RateService
             'count' => 0,
         ];
     }
+
+    /**
+     * Number of rates for a single element -- Admin\PictureModifyPageRenderer's
+     * own "how many times has this photo been rated" display.
+     */
+    public function countRatesForElement(int $elementId): int
+    {
+        return $this->repo->countRatesForElement($elementId);
+    }
+
+    /**
+     * @return array{count: int, average: ?float}
+     */
+    public function getRateSummaryForElement(int $elementId): array
+    {
+        return $this->repo->findRateSummaryForElement($elementId);
+    }
+
+    public function countAll(): int
+    {
+        return $this->repo->countAllRates();
+    }
+
+    public function deleteByOptionalConditions(int $userId, ?string $anonymousId, ?int $elementId): int
+    {
+        return $this->repo->deleteByOptionalConditions($userId, $anonymousId, $elementId);
+    }
 }

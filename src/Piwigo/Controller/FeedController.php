@@ -82,10 +82,11 @@ final class FeedController implements ControllerInterface
         // Check the status now after the user has been loaded
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
-        $dbnow = $conn->fetchOne('SELECT NOW();');
-        // NOW() is a MySQL builtin that always returns a valid non-null
-        // datetime value, never a nullable column read.
-        assert(is_string($dbnow));
+        // Env::now() rather than SQL's NOW() -- the real DB-server clock,
+        // invisible to Env::now()'s own PIWIGO_TEST_NOW freeze, same
+        // reasoning as every other NOW()-reading call site this migration
+        // already retargeted.
+        $dbnow = \Piwigo\Core\Env::now()->format('Y-m-d H:i:s');
 
         $this->urlService->setMakeFullUrl();
 

@@ -86,24 +86,12 @@ final class GroupPermPageRenderer
         } elseif ($groupPermSubmit->isTrueify
                  and count($cat_false) > 0) {
             $uppercats = $categoryService->getUppercatIds($cat_false);
-            $private_uppercats = [];
-
-            $query = '
-SELECT id
-  FROM ' . Tables::categories() . '
-  WHERE id IN (' . implode(',', $uppercats) . ')
-  AND status = \'private\'
-;';
-            foreach ($conn->fetchAllAssociative($query) as $row) {
-                if (is_int($row['id']) || is_string($row['id'])) {
-                    $private_uppercats[] = (string) $row['id'];
-                }
-            }
+            $private_uppercat_ids = \Piwigo\Bootstrap\CoreDomainAccessor::permissionService()
+                ->getPrivateCategoryIdsAmong(array_values(array_map(intval(...), $uppercats)));
 
             // GroupService::addAccess() itself skips categories the group is
             // already authorized for (retrying to authorize an already-authorized
             // category may cause a duplicate-key SQL error otherwise).
-            $private_uppercat_ids = array_map(intval(...), $private_uppercats);
             $group_service->addAccess($groupId, array_map(CategoryId::from(...), $private_uppercat_ids));
 
             self::auditService()
@@ -144,12 +132,7 @@ SELECT id,name,uppercats,global_rank
 ;';
         $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true', \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $template);
 
-        $authorized_ids = [];
-        foreach ($conn->fetchAllAssociative($query_true) as $row) {
-            if (is_int($row['id']) || is_string($row['id'])) {
-                $authorized_ids[] = (string) $row['id'];
-            }
-        }
+        $authorized_ids = array_map(strval(...), $categoryService->getPrivateCategoryIdsGrantedToGroup($groupId->value));
 
         $query_false = '
 SELECT id,name,uppercats,global_rank

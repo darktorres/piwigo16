@@ -12,9 +12,7 @@ use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -75,53 +73,22 @@ final class PhotosAddDirectPageRenderer
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
-            $query = '
-DELETE FROM ' . Tables::caddie() . '
-  WHERE user_id = ' . $user_id . '
-;';
-            $conn->executeStatement($query);
-
-            $inserts = [];
-            foreach (array_unique(explode(',', $photosAddDirectRequest->batch)) as $image_id) {
-                $inserts[] = [
-                    'user_id' => $user_id,
-                    'element_id' => $image_id,
-                ];
-            }
-            new BatchWriter($conn)
-                ->massInsert(
-                    Tables::caddie(),
-                    array_keys($inserts[0]),
-                    $inserts
+            new \Piwigo\Caddie\CaddieRepository($conn)
+                ->replaceForUser(
+                    $user_id,
+                    array_values(array_map(intval(...), array_unique(explode(',', $photosAddDirectRequest->batch))))
                 );
 
             $this->redirectService->redirect($this->urlService->getRootUrl() . 'admin.php?page=batch_manager&filter=prefilter-caddie');
         }
 
         if ((bool) \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService()->getParam('promote-mobile-apps', true)) {
-            $query = '
-SELECT registration_date
-  FROM ' . Tables::userInfos() . '
-  WHERE registration_date IS NOT NULL
-  ORDER BY user_id ASC
-  LIMIT 1
-;';
-            $row = $conn->fetchNumeric($query);
-            $register_date = $row !== false ? $row[0] : null;
-
-            $query = '
-SELECT COUNT(*)
-  FROM ' . Tables::categories() . '
-;';
-            $row = $conn->fetchNumeric($query);
-            $nb_cats = $row !== false ? $row[0] : 0;
-
-            $query = '
-SELECT COUNT(*)
-  FROM ' . Tables::images() . '
-;';
-            $row = $conn->fetchNumeric($query);
-            $nb_images = $row !== false ? $row[0] : 0;
+            $register_date = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class)
+                ->findEarliestRegistrationDate();
+            $nb_cats = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class)
+                ->countAllCategories();
+            $nb_images = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
+                ->countAllImages();
 
             // To see the mobile app promote, the account must have 2 weeks
             // ancient, 3 albums created and 30 photos uploaded. Anchored on
@@ -131,7 +98,7 @@ SELECT COUNT(*)
             // this project's admin pages.
             $two_weeks_ago = (clone Env::now())
                 ->modify('-2 weeks');
-            $register_date_str = is_scalar($register_date) ? (string) $register_date : '';
+            $register_date_str = $register_date ?? '';
             $template->assign('PROMOTE_MOBILE_APPS', (strtotime($register_date_str) < $two_weeks_ago->getTimestamp() and $nb_cats >= 3 and $nb_images >= 30));
         } else {
             $template->assign('PROMOTE_MOBILE_APPS', false);
@@ -314,41 +281,22 @@ SELECT COUNT(*)
             $album_id = $photosAddDirectRequest->albumId;
 
             // test if album really exists
-            $query = '
-SELECT id, uppercats
-  FROM ' . Tables::categories() . '
-  WHERE id = ' . ($album_id ?? 0) . '
-;';
-            $rows = $conn->fetchAllAssociative($query);
-            if ($album_id !== null && count($rows) === 1) {
+            $uppercats = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class)
+                ->findCategoryUppercatsById($album_id ?? 0);
+            if ($album_id !== null && $uppercats !== null) {
                 $selected_category = [$album_id];
 
-                $cat = $rows[0];
-                $uppercats = $cat['uppercats'];
-                // uppercats is a NOT NULL varchar column (install/piwigo_structure-mysql.sql)
-                assert(is_string($uppercats));
                 $template->assign('ADD_TO_ALBUM', $htmlRenderer->getCatDisplayNameCache($uppercats, null));
             } else {
                 $htmlRenderer->fatalError('[Hacking attempt] the album id = "' . ($album_id ?? '') . '" is not valid');
             }
         } else {
             // we need to know the category in which the last photo was added
-            $query = '
-SELECT category_id, c.uppercats
-  FROM ' . Tables::images() . ' AS i
-    JOIN ' . Tables::imageCategory() . ' AS ic ON image_id = i.id
-    JOIN ' . Tables::categories() . ' AS c ON category_id = c.id
-  ORDER BY i.id DESC
-  LIMIT 1
-;
-';
-            $rows = $conn->fetchAllAssociative($query);
-            if (count($rows) > 0) {
-                $row = $rows[0];
-                $selected_category = [$row['category_id']];
-                $uppercats = $row['uppercats'];
-                // uppercats is a NOT NULL varchar column (install/piwigo_structure-mysql.sql)
-                assert(is_string($uppercats));
+            $mostRecentCategoryInfo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
+                ->findMostRecentImageCategoryInfo();
+            if ($mostRecentCategoryInfo !== null) {
+                $selected_category = [$mostRecentCategoryInfo['category_id']];
+                $uppercats = $mostRecentCategoryInfo['uppercats'];
                 $selected_category_name = $htmlRenderer->getCatDisplayNameCache($uppercats, null);
                 $template->assign('selected_category_name', $selected_category_name);
             }
@@ -358,13 +306,8 @@ SELECT category_id, c.uppercats
         $template->assign('selected_category', $selected_category);
 
         // how many existing albums?
-        $query = '
-SELECT
-    COUNT(*)
-  FROM ' . Tables::categories() . '
-;';
-        $row = $conn->fetchNumeric($query);
-        $nb_albums = $row !== false ? $row[0] : 0;
+        $nb_albums = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class)
+            ->countAllCategories();
         $template->assign('NB_ALBUMS', $nb_albums);
 
         // image level options

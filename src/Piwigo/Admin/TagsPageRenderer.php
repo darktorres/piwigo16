@@ -8,8 +8,6 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 
 /**
  * Ported from admin/tags.php (page slug "tags").
@@ -38,7 +36,6 @@ final class TagsPageRenderer
         $tabsheet->select('');
         $tabsheet->assign();
 
-        $tagConn = DbConnection::build();
         $tagService = \Piwigo\Bootstrap\CoreDomainAccessor::tagService();
 
         if (Request\TagsActionRequest::fromGlobals()->isDeleteOrphans) {
@@ -112,34 +109,24 @@ final class TagsPageRenderer
         $per_page = 100;
 
         // tag counters
-        $query = '
-SELECT tag_id, COUNT(image_id) AS counter
-  FROM ' . Tables::imageTag() . '
-  GROUP BY tag_id';
-        $tag_counters = array_column($tagConn->fetchAllAssociative($query), 'counter', 'tag_id');
+        $tag_counters = $tagService->getImageCountsPerTagUnrestricted();
 
         // all tags
-        $query = '
-SELECT name, id, url_name
-  FROM ' . Tables::tags() . '
-;';
         $all_tags = [];
-        foreach ($tagConn->fetchAllAssociative($query) as $tag) {
-            $raw_name = $tag['name'];
+        foreach ($tagService->getAll() as $tag_obj) {
+            $tag = [
+                'name' => $tag_obj->name,
+                'id' => $tag_obj->id->value,
+                'url_name' => $tag_obj->urlName,
+            ];
+            $raw_name = $tag_obj->name;
             $tag['raw_name'] = $raw_name;
-            $raw_name_str = is_scalar($raw_name) ? (string) $raw_name : '';
             $rendered_name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_name', $raw_name, $tag);
-            $rendered_name = is_string($rendered_name) ? $rendered_name : $raw_name_str;
+            $rendered_name = is_string($rendered_name) ? $rendered_name : $raw_name;
             $tag['name'] = $rendered_name;
 
-            $tag_id = $tag['id'];
-            $counter = 0;
-            if ((is_int($tag_id) || is_string($tag_id)) && isset($tag_counters[$tag_id])) {
-                $tag_counter_value = $tag_counters[$tag_id];
-                if (is_numeric($tag_counter_value)) {
-                    $counter = intval($tag_counter_value);
-                }
-            }
+            $tag_id = $tag_obj->id->value;
+            $counter = $tag_counters[$tag_id] ?? 0;
             if ($counter > 0) {
                 $tag['counter'] = $counter;
             }

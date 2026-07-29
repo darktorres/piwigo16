@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
-
 /**
  * Ported from admin/include/functions.php's get_pwg_general_statitics()/
  * get_installation_date() (P23 batch 8d). Lives under Admin\, not a
@@ -25,93 +22,19 @@ final class InstallationStats
      */
     public static function getGeneralStatistics(): array
     {
-        $conn = DbConnection::build();
-
-        $query = '
-SELECT COUNT(*)
-  FROM ' . Tables::images() . '
-;';
-        $row = $conn->fetchNumeric($query);
-        $nb_photos = ($row !== false && is_numeric($row[0])) ? (int) $row[0] : 0;
-
-        $query = '
-SELECT COUNT(*)
-  FROM ' . Tables::categories() . '
-;';
-        $row = $conn->fetchNumeric($query);
-        $nb_categories = ($row !== false && is_numeric($row[0])) ? (int) $row[0] : 0;
-
-        $query = '
-SELECT COUNT(*)
-  FROM ' . Tables::tags() . '
-;';
-        $row = $conn->fetchNumeric($query);
-        $nb_tags = ($row !== false && is_numeric($row[0])) ? (int) $row[0] : 0;
-
-        $query = '
-SELECT COUNT(*)
-  FROM ' . Tables::imageTag() . '
-;';
-        $row = $conn->fetchNumeric($query);
-        $nb_image_tag = ($row !== false && is_numeric($row[0])) ? (int) $row[0] : 0;
-
-        $query = '
-SELECT COUNT(*)
-  FROM ' . Tables::users() . '
-;';
-        $row = $conn->fetchNumeric($query);
-        $nb_users = ($row !== false && is_numeric($row[0])) ? (int) $row[0] : 0;
-
-        $query = '
-SELECT
-    COUNT(*)
-  FROM ' . Tables::userInfos() . '
-  WHERE status IN (\'webmaster\', \'admin\')
-;';
-        $row = $conn->fetchNumeric($query);
-        $nb_admins = ($row !== false && is_numeric($row[0])) ? (int) $row[0] : 0;
-
-        $query = '
-SELECT COUNT(*)
-  FROM `' . Tables::groups() . '`
-;';
-        $row = $conn->fetchNumeric($query);
-        $nb_groups = ($row !== false && is_numeric($row[0])) ? (int) $row[0] : 0;
-
-        $query = '
-SELECT COUNT(*)
-  FROM ' . Tables::rate() . '
-;';
-        $row = $conn->fetchNumeric($query);
-        $nb_rates = ($row !== false && is_numeric($row[0])) ? (int) $row[0] : 0;
-
-        // SUM() returns NULL (not '0') when the table has no matching rows.
-        $query = '
-SELECT
-    SUM(nb_pages)
-  FROM ' . Tables::historySummary() . '
-  WHERE month IS NULL
-;';
-        $row = $conn->fetchNumeric($query);
-        $nb_views = ($row !== false && is_numeric($row[0])) ? (int) $row[0] : 0;
-
-        $query = '
-SELECT
-    SUM(filesize)
-  FROM ' . Tables::images() . '
-;';
-        $row = $conn->fetchNumeric($query);
-        $images_disk_usage = ($row !== false && is_numeric($row[0])) ? (int) $row[0] : 0;
-
-        $query = '
-SELECT
-    COUNT(*),
-    SUM(filesize)
-  FROM ' . Tables::imageFormat() . '
-;';
-        $row = $conn->fetchNumeric($query);
-        $nb_formats = ($row !== false && is_numeric($row[0] ?? null)) ? (int) $row[0] : 0;
-        $formats_disk_usage = ($row !== false && is_numeric($row[1] ?? null)) ? (int) $row[1] : 0;
+        $nb_photos = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->getTotalImageCount();
+        $nb_categories = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService()->countAllCategories();
+        $nb_tags = \Piwigo\Bootstrap\CoreDomainAccessor::tagService()->countAll();
+        $nb_image_tag = \Piwigo\Bootstrap\CoreDomainAccessor::tagService()->countAllImageTagLinks();
+        $nb_users = \Piwigo\Bootstrap\CoreDomainAccessor::userService()->getTotalUserCount();
+        $nb_admins = count(\Piwigo\Bootstrap\CoreDomainAccessor::userService()->getAdminIds());
+        $nb_groups = \Piwigo\Bootstrap\CoreDomainAccessor::groupService()->countAll();
+        $nb_rates = \Piwigo\Bootstrap\ExtendedDomainAccessor::rateService()->countAll();
+        $nb_views = \Piwigo\Bootstrap\ExtendedDomainAccessor::historyService()->getTotalPageViews();
+        $images_disk_usage = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->getTotalFilesize();
+        $format_stats = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->getFormatCountAndSize();
+        $nb_formats = $format_stats['count'];
+        $formats_disk_usage = $format_stats['sum'];
 
         return [
             'nb_photos' => $nb_photos,
@@ -144,48 +67,16 @@ SELECT
         // Piwigo first beta versions were created in septembre 2001, so it's not possible
         // to have an installation prior to this "origin of times"
         $piwigo_origins = '2001-09-01 00:00:00';
-        $conn = DbConnection::build();
 
-        $query = '
-SELECT
-    registration_date
-  FROM ' . Tables::userInfos() . '
-  WHERE user_id = 2
-;';
-        $users = $conn->fetchAllAssociative($query);
-        if (count($users) > 0) {
-            $registration_date = $users[0]['registration_date'];
-            $candidate = is_string($registration_date) ? $registration_date : null;
-        }
+        $candidate = \Piwigo\Bootstrap\CoreDomainAccessor::userService()->getRegistrationDateById(2);
 
         if (in_array($candidate, [null, false, 0, '0', '', []], true) or strtotime($candidate) < strtotime($piwigo_origins)) {
-            $query = '
-SELECT
-    MIN(registration_date) AS min_registration_date
-  FROM ' . Tables::userInfos() . '
-  WHERE registration_date > \'' . $piwigo_origins . '\'
-;';
-            $users = $conn->fetchAllAssociative($query);
-            if (count($users) > 0) {
-                $min_registration_date = $users[0]['min_registration_date'];
-                $candidate = is_string($min_registration_date) ? $min_registration_date : null;
-            }
+            $candidate = \Piwigo\Bootstrap\CoreDomainAccessor::userService()->getMinRegistrationDateAfter($piwigo_origins);
         }
 
         if (in_array($candidate, [null, false, 0, '0', '', []], true) or strtotime($candidate) < strtotime($piwigo_origins)) {
             // let's find another candidate
-            $query = '
-SELECT
-    date_available
-  FROM ' . Tables::images() . '
-  ORDER BY id ASC
-  LIMIT 1
-;';
-            $images = $conn->fetchAllAssociative($query);
-            if (count($images) > 0) {
-                $date_available = $images[0]['date_available'];
-                $candidate = is_string($date_available) ? $date_available : null;
-            }
+            $candidate = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->getEarliestDateAvailable();
         }
 
         return $candidate;

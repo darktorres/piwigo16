@@ -18,7 +18,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\DerivativeUrlCodec;
@@ -434,25 +433,18 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
             // updating configuration if no error found
             if (! in_array($page_section, ['sizes', 'watermark'], true) and ! \Piwigo\Core\PageState::current()->hasErrors() and \Piwigo\Auth\AccessControl::isWebmaster()) {
-                foreach ($conn->fetchAllAssociative('SELECT param FROM ' . Tables::config()) as $row) {
-                    if (! is_string($row['param']) || $row['param'] === '') {
-                        // `param` is the config table's NOT NULL primary key; a
-                        // non-string row here would mean the query result changed
-                        // shape, not a real config param to update.
-                        continue;
-                    }
-
-                    if (isset($post[$row['param']])) {
-                        $post_value = $post[$row['param']];
+                foreach ($this->configService->getAllParamNames() as $param_name) {
+                    if (isset($post[$param_name])) {
+                        $post_value = $post[$param_name];
                         $value = is_string($post_value) || is_array($post_value) ? $post_value : '';
 
-                        if ($row['param'] === 'gallery_title' && is_string($value)) {
+                        if ($param_name === 'gallery_title' && is_string($value)) {
                             if (! \Piwigo\Config\CurrentConfig::allowHtmlDescriptions()) {
                                 $value = strip_tags($value);
                             }
                         }
 
-                        $this->configService->confUpdateParam($row['param'], $value);
+                        $this->configService->confUpdateParam($param_name, $value);
                     }
                 }
                 $template->assign(
@@ -571,16 +563,10 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 );
 
                 // list of groups
-                $query = '
-    SELECT
-        id,
-        name
-      FROM `' . Tables::groups() . '`
-    ;';
-                // groups.name is a NOT NULL varchar column, so this is always
-                // a real string; filter defensively rather than trust the
-                // generic array_column() mixed value type.
-                $groups = array_filter(array_column($conn->fetchAllAssociative($query), 'name', 'id'), is_string(...));
+                $groups = [];
+                foreach (\Piwigo\Bootstrap\CoreDomainAccessor::groupService()->getAllBasic() as $group) {
+                    $groups[$group->id->value] = $group->name;
+                }
                 natcasesort($groups);
 
                 $template->assign(

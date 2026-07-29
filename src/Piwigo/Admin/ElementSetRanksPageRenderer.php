@@ -8,7 +8,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -168,21 +167,8 @@ final class ElementSetRanksPageRenderer
         // |                              thumbnails                           |
         // +-------------------------------------------------------------------+
 
-        $query = '
-SELECT
-    id,
-    file,
-    path,
-    representative_ext,
-    width, height, rotation,
-    name,
-    `rank`
-  FROM ' . Tables::images() . '
-    JOIN ' . Tables::imageCategory() . ' ON image_id = id
-  WHERE category_id = ' . $category_id . '
-  ORDER BY `rank`
-;';
-        $thumbnail_rows = $conn->fetchAllAssociative($query);
+        $thumbnail_rows = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
+            ->findThumbnailRowsForCategoryOrderedByRank($category_id);
         if (count($thumbnail_rows) > 0) {
             // template thumbnail initialization
             $current_rank = 1;

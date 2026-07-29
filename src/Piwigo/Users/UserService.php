@@ -14,6 +14,8 @@ use Piwigo\Auth\PasswordService;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\Dto\PaginatedResult;
+use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\AppInfo;
@@ -201,6 +203,32 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         $username = $this->repo->findUsernameById($userId, $user_fields['id'], $user_fields['username']);
 
         return $username === null ? false : stripslashes($username);
+    }
+
+    /**
+     * Username keyed by id for $userIds -- Admin\BatchManagerUnitPageRenderer's
+     * own "who uploaded each of these photos" lookup.
+     *
+     * @param list<string> $userIds
+     * @return array<int|string, string>
+     */
+    public function getUsernamesByIds(array $userIds): array
+    {
+        /** @var array<string, string> $user_fields */
+        $user_fields = \Piwigo\Config\CurrentConfig::userFields();
+
+        $rows = $this->repo->findUsernamesByIds($user_fields, $userIds);
+
+        $usernames = [];
+        foreach ($rows as $row) {
+            $id = $row['id'];
+            $username = $row['username'];
+            if ((is_int($id) || is_string($id)) && is_string($username)) {
+                $usernames[$id] = $username;
+            }
+        }
+
+        return $usernames;
     }
 
     /**
@@ -632,23 +660,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         $user_fields = \Piwigo\Config\CurrentConfig::userFields();
 
         // retrieve basic user data
-        $query = '
-SELECT ';
-        $is_first = true;
-        foreach ($user_fields as $pwgfield => $dbfield) {
-            if ($is_first) {
-                $is_first = false;
-            } else {
-                $query .= '
-     , ';
-            }
-            $query .= $dbfield . ' AS ' . $pwgfield;
-        }
-        $query .= '
-  FROM ' . Tables::users() . '
-  WHERE ' . $user_fields['id'] . ' = \'' . $userId->value . '\'';
-
-        $row = $this->conn->fetchAssociative($query);
+        $row = $this->repo->fetchBasicUserRow($userId, $user_fields);
         if ($row === false) {
             throw new \Exception('UserService::getUserData(): no such user_id ' . $userId->value);
         }
@@ -660,16 +672,7 @@ SELECT ';
             // add exactly 0 or 1 matching row per ui row, and GROUP BY
             // ui.user_id collapses that back to 1 either way), and nothing
             // here selects any of its columns.
-            $query = '
-SELECT
-    COUNT(1) AS counter
-  FROM ' . Tables::userInfos() . ' AS ui
-    LEFT JOIN ' . Tables::themes() . ' AS t ON t.id = ui.theme
-  WHERE ui.user_id = ' . $userId->value . '
-  GROUP BY ui.user_id
-;';
-            $counter_row = $this->conn->fetchNumeric($query);
-            $counter = $counter_row !== false && is_numeric($counter_row[0]) ? (int) $counter_row[0] : 0;
+            $counter = $this->repo->countUserInfosRows($userId);
             if ($counter !== 1) {
                 $this->createUserInfos([$userId]);
             }
@@ -679,16 +682,7 @@ SELECT
         // onto user_cache (`uc.*`) -- getUserData() no longer reads any of
         // its columns, and nothing writes that table any more either
         // (deleted alongside this same stage's lock/wait/503 mechanism).
-        $query = '
-SELECT
-    ui.*,
-    t.name AS theme_name
-  FROM ' . Tables::userInfos() . ' AS ui
-    LEFT JOIN ' . Tables::themes() . ' AS t ON t.id = ui.theme
-  WHERE ui.user_id = ' . $userId->value . '
-;';
-
-        $user_infos_row = $this->conn->fetchAssociative($query);
+        $user_infos_row = $this->repo->fetchUserInfosWithThemeName($userId);
         if ($user_infos_row === false) {
             throw new \Exception('UserService::getUserData(): user_infos fetch failed for user_id ' . $userId->value);
         }
@@ -761,7 +755,7 @@ SELECT
         $effective = new EffectiveForbiddenCategoriesCache(
             $this->permissionService(),
             $this->categoryService(),
-            $this->conn,
+            new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)),
             \Piwigo\Cache\CachePools::effectivePermissions()
         )->getForUser($userId->value, $effective_status, $effective_level);
 
@@ -792,48 +786,87 @@ SELECT
             return;
         }
 
-        $user_id_str = (string) $currentUser->id->value;
-
         // $filter['visible_categories'] and $filter['visible_images']
         // must be not used because filter <> restriction
         // retrieving images allowed : belonging to at least one authorized
         // category
-        $query = '
-SELECT DISTINCT f.image_id
-  FROM ' . Tables::favorites() . ' AS f INNER JOIN ' . Tables::imageCategory() . ' AS ic
-    ON f.image_id = ic.image_id
-  WHERE f.user_id = ' . $user_id_str . '
-  ' . $this->permissionService()->getSqlConditionFandF(
-            [
-                'forbidden_categories' => 'ic.category_id',
-            ],
-            'AND'
-        ) . '
-;';
-        $authorizeds = array_map(
-            static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
-            array_column($this->conn->fetchAllAssociative($query), 'image_id')
+        $authorizeds = $this->repo->findAuthorizedFavoriteImageIds(
+            $currentUser->id,
+            $this->permissionService()
+                ->getSqlConditionFandF(
+                    [
+                        'forbidden_categories' => 'ic.category_id',
+                    ],
+                    'AND'
+                )
         );
 
-        $query = '
-SELECT image_id
-  FROM ' . Tables::favorites() . '
-  WHERE user_id = ' . $user_id_str . '
-;';
-        $favorites = array_map(
-            static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
-            array_column($this->conn->fetchAllAssociative($query), 'image_id')
-        );
+        $favorites = $this->repo->findFavoriteImageIds($currentUser->id);
 
         $to_deletes = array_diff($favorites, $authorizeds);
         if (count($to_deletes) > 0) {
-            $query = '
-DELETE FROM ' . Tables::favorites() . '
-  WHERE image_id IN (' . implode(',', $to_deletes) . ')
-    AND user_id = ' . $user_id_str . '
-;';
-            $this->conn->executeStatement($query);
+            $this->repo->deleteFavoritesForImages($currentUser->id, array_values($to_deletes));
         }
+    }
+
+    /**
+     * Adds a single favorite -- Controller\PictureController's own
+     * "add_to_favorites" action.
+     */
+    public function addFavorite(UserId $userId, int $imageId): void
+    {
+        $this->repo->addFavorite($userId, $imageId);
+    }
+
+    /**
+     * Removes a single favorite -- Controller\PictureController's own
+     * "remove_from_favorites" action.
+     */
+    public function removeFavorite(UserId $userId, int $imageId): void
+    {
+        $this->repo->deleteFavoritesForImages($userId, [$imageId]);
+    }
+
+    /**
+     * Whether $imageId is already among $userId's favorites --
+     * Controller\PictureController's own favorite-icon toggle state.
+     */
+    public function isFavorite(UserId $userId, int $imageId): bool
+    {
+        return $this->repo->isFavorite($userId, $imageId);
+    }
+
+    /**
+     * @return array<int|string, mixed> keyed by id
+     */
+    public function getAllUsernamesById(string $idColumn, string $usernameColumn): array
+    {
+        return $this->repo->findAllUsernamesById($idColumn, $usernameColumn);
+    }
+
+    /**
+     * Removes every favorite for $userId -- Section\SectionPopulator's own
+     * "remove_all_from_favorites" action.
+     */
+    public function removeAllFavorites(UserId $userId): void
+    {
+        $this->repo->deleteAllFavorites($userId);
+    }
+
+    /**
+     * @return list<string|null>
+     */
+    public function getVisibleFavoriteImageIds(UserId $userId, string $permissionCondition, string $orderBySql): array
+    {
+        return $this->repo->findVisibleFavoriteImageIds($userId, $permissionCondition, $orderBySql);
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function getVisibleFavoriteImages(UserId $userId, string $permissionCondition, string $orderBySql): array
+    {
+        return $this->repo->findVisibleFavoriteImages($userId, $permissionCondition, $orderBySql);
     }
 
     /**
@@ -1151,15 +1184,9 @@ DELETE FROM ' . Tables::favorites() . '
                 if (! AccessControl::isWebmaster()) {
                     $password_protected_users = [\Piwigo\Config\CurrentConfig::guestId()];
 
-                    $query = '
-SELECT
-    user_id
-  FROM ' . Tables::userInfos() . '
-  WHERE status IN (\'webmaster\', \'admin\')
-;';
                     $admin_ids = array_map(
-                        static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
-                        array_column($this->conn->fetchAllAssociative($query), 'user_id')
+                        static fn (UserId $id): string => (string) $id->value,
+                        $this->repo->findAdminIds(includeWebmaster: true)
                     );
 
                     $current_user_id_str = (string) CurrentUser::get()->id->value;
@@ -1217,13 +1244,10 @@ SELECT
 
             // an admin can't change status of other admin/webmaster
             if (CurrentUser::get()->status === UserStatus::Admin) {
-                $query = '
-SELECT
-    user_id
-  FROM ' . Tables::userInfos() . '
-  WHERE status IN (\'webmaster\', \'admin\')
-;';
-                $protected_users = array_merge($protected_users, array_column($this->conn->fetchAllAssociative($query), 'user_id'));
+                $protected_users = array_merge(
+                    $protected_users,
+                    array_map(static fn (UserId $id): int => $id->value, $this->repo->findAdminIds(includeWebmaster: true))
+                );
             }
 
             // status update query is separated from the rest as not applying to the same
@@ -1327,12 +1351,10 @@ SELECT
         }
 
         if (isset($update_status) and count($user_ids_for_status) > 0) {
-            $query = '
-UPDATE ' . Tables::userInfos() . ' SET
-    status = "' . $update_status . '"
-  WHERE user_id IN(' . implode(',', array_map(strval(...), $user_ids_for_status)) . ')
-;';
-            $this->conn->executeStatement($query);
+            $this->repo->updateStatusForUsers(
+                array_values(array_map(static fn (int $id): UserId => UserId::from($id), $user_ids_for_status)),
+                $update_status
+            );
 
             // we delete sessions, ie disconnect, for users if status becomes "guest".
             // It's like deactivating the user.
@@ -1344,24 +1366,10 @@ UPDATE ' . Tables::userInfos() . ' SET
         }
 
         if (count($updates_infos) > 0) {
-            $query = '
-UPDATE ' . Tables::userInfos() . ' SET ';
-
-            $first = true;
-            foreach ($updates_infos as $field => $value) {
-                if (! $first) {
-                    $query .= ', ';
-                } else {
-                    $first = false;
-                }
-                assert(is_scalar($value));
-                $query .= $field . ' = "' . (string) $value . '"';
-            }
-
-            $query .= '
-  WHERE user_id IN(' . implode(',', array_map(strval(...), $user_ids)) . ')
-;';
-            $this->conn->executeStatement($query);
+            $this->repo->updateInfosForUsers(
+                array_map(static fn (int $id): UserId => UserId::from($id), $user_ids),
+                $updates_infos
+            );
         }
 
         // manage association to groups
@@ -1374,21 +1382,17 @@ UPDATE ' . Tables::userInfos() . ' SET ';
                 $group_ids_param[] = (int) $raw_group_id;
             }
 
-            $query = '
-DELETE
-  FROM ' . Tables::userGroup() . '
-  WHERE user_id IN (' . implode(',', array_map(strval(...), $user_ids)) . ')
-;';
-            $this->conn->executeStatement($query);
+            $this->groupRepo->removeAllMembershipsForUsers(
+                array_map(static fn (int $id): UserId => UserId::from($id), $user_ids)
+            );
 
             // we remove all provided groups that do not really exist
-            $query = '
-SELECT
-    id
-  FROM `' . Tables::groups() . '`
-  WHERE id IN (' . implode(',', array_map(strval(...), $group_ids_param)) . ')
-;';
-            $group_ids = array_column($this->conn->fetchAllAssociative($query), 'id');
+            $group_ids = array_map(
+                static fn (GroupId $id): int => $id->value,
+                $this->groupRepo->findExistingIds(
+                    array_values(array_filter(array_map(GroupId::tryFrom(...), $group_ids_param)))
+                )
+            );
 
             // if only -1 (a group id that can't exist) is in the list, then no
             // group is associated
@@ -1472,5 +1476,109 @@ SELECT
                 $this->repo->deleteUsersFromTable($table, $toDelete);
             }
         }
+    }
+
+    /**
+     * @return list<\Piwigo\Users\Projection\ActivationKeyRow>
+     */
+    public function getPendingActivationKeyRows(): array
+    {
+        return $this->repo->findPendingActivationKeyRows();
+    }
+
+    /**
+     * @param  list<int|string>  $ids
+     * @return array<int|string, ?string>
+     */
+    public function getStatusByIds(string $idColumn, array $ids): array
+    {
+        return $this->repo->findStatusByIds($idColumn, $ids);
+    }
+
+    public function getTotalUserCount(): int
+    {
+        return $this->repo->countAllUsers();
+    }
+
+    public function getRegistrationDateById(int $userId): ?string
+    {
+        return $this->repo->findRegistrationDateById($userId);
+    }
+
+    public function getMinRegistrationDateAfter(string $afterDate): ?string
+    {
+        return $this->repo->findMinRegistrationDateAfter($afterDate);
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function getAdminIds(bool $includeWebmaster = true): array
+    {
+        return array_map(static fn (UserId $id): int => $id->value, $this->repo->findAdminIds($includeWebmaster));
+    }
+
+    public function getUsernameById(UserId $userId, string $idColumn, string $usernameColumn): ?string
+    {
+        return $this->repo->findUsernameById($userId, $idColumn, $usernameColumn);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function getDistinctRegistrationYearMonths(): array
+    {
+        return $this->repo->findDistinctRegistrationYearMonths();
+    }
+
+    /**
+     * @return array<string, int>
+     */
+    public function getUserCountsByStatus(int $excludeUserId): array
+    {
+        return $this->repo->findUserCountsByStatus($excludeUserId);
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    public function getUserCountsByLevel(int $excludeUserId): array
+    {
+        return $this->repo->findUserCountsByLevel($excludeUserId);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function getUserIdsExcludingStatus(string $excludedStatus): array
+    {
+        return $this->repo->findUserIdsExcludingStatus($excludedStatus);
+    }
+
+    /**
+     * @param  list<int|string>  $userIds
+     * @return list<array<string, mixed>>
+     */
+    public function getNotificationRecipientsByIds(array $userIds, string $idColumn, string $usernameColumn, string $emailColumn): array
+    {
+        return $this->repo->findNotificationRecipientsByIds($userIds, $idColumn, $usernameColumn, $emailColumn);
+    }
+
+    /**
+     * @param  array<string, string>  $displayColumns
+     * @param  list<string>  $whereClauses
+     * @return PaginatedResult<array<string, mixed>>
+     */
+    public function getListForWs(
+        string $idColumn,
+        array $displayColumns,
+        bool $includeLastVisitFromHistory,
+        array $whereClauses,
+        string $orderBy,
+        bool $includeTotalCount,
+        ?int $limit,
+        int $offset
+    ): PaginatedResult {
+        return $this->repo->findListForWs($idColumn, $displayColumns, $includeLastVisitFromHistory, $whereClauses, $orderBy, $includeTotalCount, $limit, $offset);
     }
 }

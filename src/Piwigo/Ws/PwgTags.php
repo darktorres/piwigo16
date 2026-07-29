@@ -159,16 +159,8 @@ final class PwgTags
         $image_tag_map = [];
         // build list of image ids with associated tags per image
         if ($image_ids !== [] and ! $params['tag_mode_and']) {
-            $query = '
-SELECT image_id, GROUP_CONCAT(tag_id) AS tag_ids
-  FROM ' . Tables::imageTag() . '
-  WHERE tag_id IN (' . implode(',', $tag_ids) . ')
-    AND image_id IN (' . implode(',', $image_ids) . ')
-  GROUP BY image_id
-;';
-            foreach ($conn->fetchAllAssociative($query) as $row) {
-                $row['image_id'] = is_numeric($row['image_id']) ? (int) $row['image_id'] : 0;
-                $image_tag_map[$row['image_id']] = explode(',', is_scalar($row['tag_ids']) ? (string) $row['tag_ids'] : '');
+            foreach ($tagService->getCommaJoinedTagIdsByImageIds($tag_ids, $image_ids) as $row_image_id => $tag_ids_csv) {
+                $image_tag_map[$row_image_id] = explode(',', $tag_ids_csv);
             }
         }
 
@@ -278,20 +270,13 @@ SELECT image_id, GROUP_CONCAT(tag_id) AS tag_ids
 
         self::activityService($conn)->record('tag', $creation_id, 'add');
 
-        $query = '
-SELECT name, url_name
-FROM `' . Tables::tags() . '`
-WHERE id = ' . $creation_id . ';';
-
-        $new_tag = $conn->fetchAssociative($query);
-        $new_tag_name = $new_tag !== false ? ($new_tag['name'] ?? null) : null;
-        $new_tag_url_name = $new_tag !== false ? ($new_tag['url_name'] ?? null) : null;
+        $new_tag = self::tagService()->getById(TagId::from($creation_id));
 
         return [
             'info' => $creation_info,
             'id' => $creation_id,
-            'name' => is_string($new_tag_name) ? $new_tag_name : '',
-            'url_name' => is_string($new_tag_url_name) ? $new_tag_url_name : '',
+            'name' => $new_tag->name ?? '',
+            'url_name' => $new_tag->urlName ?? '',
         ];
     }
 
@@ -310,14 +295,7 @@ WHERE id = ' . $creation_id . ';';
             return new PwgError(403, 'Invalid security token');
         }
 
-        $query = '
-SELECT COUNT(*)
-  FROM `' . Tables::tags() . '`
-  WHERE id in (' . implode(',', $params['tag_id']) . ')
-;';
-        $count = DbConnection::build()->fetchOne($query);
-        $count = is_numeric($count) ? (int) $count : 0;
-        if ($count !== count($params['tag_id'])) {
+        if (self::tagService()->countExistingIds(array_values($params['tag_id'])) !== count($params['tag_id'])) {
             return new PwgError(WsError::INVALID_PARAM, 'All tags does not exist.');
         }
 
@@ -355,27 +333,15 @@ SELECT COUNT(*)
         $tag_name = strip_tags(stripslashes($params['new_name']));
 
         // does the tag exist ?
-        $query = '
-SELECT COUNT(*)
-  FROM `' . Tables::tags() . '`
-  WHERE id = ' . $tag_id . '
-;';
-        $count = $conn->fetchOne($query);
-        $count = is_numeric($count) ? (int) $count : 0;
-        if ($count === 0) {
+        if (! self::tagService()->existsById($tag_id)) {
             return new PwgError(WsError::INVALID_PARAM, 'This tag does not exist.');
         }
 
-        $query = '
-SELECT name
-  FROM ' . Tables::tags() . '
-  WHERE id != ' . $tag_id . '
-;';
-        $existing_names = array_column($conn->fetchAllAssociative($query), 'name');
+        $existing_names = self::tagService()->getOtherNames($tag_id);
 
         $update = [];
 
-        if (in_array($tag_name, array_map(strval(...), array_filter($existing_names, is_scalar(...))), true)) {
+        if (in_array($tag_name, $existing_names, true)) {
             return new PwgError(WsError::INVALID_PARAM, 'This name is already token');
         }
         if ($tag_name !== '') {
@@ -402,17 +368,14 @@ SELECT name
             );
         \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
-        $query = '
-SELECT
-    id,
-    name,
-    url_name
-  FROM ' . Tables::tags() . '
-  WHERE id = ' . $tag_id . '
-;';
+        $renamed_tag = self::tagService()->getById(TagId::from($tag_id));
+        assert($renamed_tag !== null);
 
-        $tag = $conn->fetchAssociative($query);
-        assert($tag !== false);
+        $tag = [
+            'id' => $renamed_tag->id->value,
+            'name' => $renamed_tag->name,
+            'url_name' => $renamed_tag->urlName,
+        ];
         $tag['raw_name'] = $tag['name'];
         $tag['name'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_name', $tag['raw_name'], $tag);
         $tag['alt_names'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_tag_alt_names', [], $tag['raw_name']);
@@ -443,25 +406,11 @@ SELECT
         $copy_name = $params['copy_name'];
 
         // does the tag exist ?
-        $query = '
-SELECT COUNT(*)
-  FROM `' . Tables::tags() . '`
-  WHERE id = ' . $tag_id . '
-;';
-        $count = $conn->fetchOne($query);
-        $count = is_numeric($count) ? (int) $count : 0;
-        if ($count === 0) {
+        if (! self::tagService()->existsById($tag_id)) {
             return new PwgError(WsError::INVALID_PARAM, 'This tag does not exist.');
         }
 
-        $query = '
-SELECT COUNT(*)
-  FROM `' . Tables::tags() . '`
-  WHERE name = "' . $copy_name . '"
-;';
-        $count = $conn->fetchOne($query);
-        $count = is_numeric($count) ? (int) $count : 0;
-        if ($count !== 0) {
+        if (self::tagService()->existsByName($copy_name)) {
             return new PwgError(WsError::INVALID_PARAM, 'This name is already taken.');
         }
 
@@ -481,13 +430,7 @@ SELECT COUNT(*)
             'source_tag' => $tag_id,
         ]);
 
-        $query = '
-SELECT image_id
-  FROM ' . Tables::imageTag() . '
-  WHERE tag_id = ' . $tag_id . '
-;';
-        $destination_tag_image_ids = array_column($conn->fetchAllAssociative($query), 'image_id');
-        $destination_tag_image_ids = array_values(array_map(intval(...), array_filter($destination_tag_image_ids, is_numeric(...))));
+        $destination_tag_image_ids = self::tagService()->getImageIdsForTagIds([TagId::from($tag_id)]);
 
         $inserts = [];
 
@@ -542,32 +485,15 @@ SELECT image_id
         $all_tags = array_unique($all_tags);
         $merge_tag = array_diff($params['merge_tag_id'], [$params['destination_tag_id']]);
 
-        $query = '
-SELECT COUNT(*)
-  FROM `' . Tables::tags() . '`
-  WHERE id in (' . implode(',', $all_tags) . ')
-;';
-        $count = $conn->fetchOne($query);
-        $count = is_numeric($count) ? (int) $count : 0;
-        if ($count !== count($all_tags)) {
+        if (self::tagService()->countExistingIds(array_values($all_tags)) !== count($all_tags)) {
             return new PwgError(WsError::INVALID_PARAM, 'All tags does not exist.');
         }
 
-        $query = '
-SELECT DISTINCT(image_id)
-  FROM `' . Tables::imageTag() . '`
-  WHERE
-    tag_id IN (' . implode(',', $merge_tag) . ')
-;';
-        $image_in_merge_tags = array_values(array_map(intval(...), array_filter(array_column($conn->fetchAllAssociative($query), 'image_id'), is_numeric(...))));
+        $image_in_merge_tags = array_values(array_unique(
+            self::tagService()->getImageIdsForTagIds(array_map(TagId::from(...), array_values($merge_tag)))
+        ));
 
-        $query = '
-SELECT image_id
-  FROM `' . Tables::imageTag() . '`
-  WHERE tag_id = ' . $params['destination_tag_id'] . '
-;';
-
-        $image_in_dest = array_values(array_map(intval(...), array_filter(array_column($conn->fetchAllAssociative($query), 'image_id'), is_numeric(...))));
+        $image_in_dest = self::tagService()->getImageIdsForTagIds([TagId::from($params['destination_tag_id'])]);
 
         $image_to_add = array_values(array_diff($image_in_merge_tags, $image_in_dest));
 

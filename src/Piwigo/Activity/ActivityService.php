@@ -180,6 +180,11 @@ final readonly class ActivityService implements ActivityLoggerInterface
         return $this->repo->findMaxOccuredOn();
     }
 
+    public function getOccuredOnForObject(int $objectId, string $object, string $action): ?string
+    {
+        return $this->repo->findOccuredOnForObject($objectId, $object, $action);
+    }
+
     /**
      * @return list<array{object: string, action: string, counter: int}>
      */
@@ -194,5 +199,13 @@ final readonly class ActivityService implements ActivityLoggerInterface
     public function getUserObjectLogWithUsernames(string $usernameColumn, string $idColumn): array
     {
         return $this->repo->findUserObjectLogWithUsernames($usernameColumn, $idColumn);
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function getPaginated(string $whereClause, int $limit, int $offset): array
+    {
+        return $this->repo->findPaginated($whereClause, $limit, $offset);
     }
 }

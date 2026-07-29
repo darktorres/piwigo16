@@ -6,6 +6,7 @@ namespace Piwigo\Image;
 
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -566,6 +567,149 @@ final readonly class ImageService
     }
 
     /**
+     * @return list<array<string, mixed>>
+     */
+    public function getDistinctDimensions(): array
+    {
+        return $this->repo->findDistinctDimensions();
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function getDistinctFilesizes(): array
+    {
+        return $this->repo->findDistinctFilesizes();
+    }
+
+    /**
+     * @param array<int, int|string> $ids
+     * @return list<array{id: int, path: string, representative_ext: ?string}>
+     */
+    public function getPathsForFileDeletion(array $ids): array
+    {
+        return $this->repo->findPathsForFileDeletion($ids);
+    }
+
+    /**
+     * @param  list<int>  $ids
+     * @return list<array{id: int, path: string, representative_ext: ?string, level: int}>
+     */
+    public function getPathsAndLevelForIds(array $ids): array
+    {
+        return $this->repo->findPathsAndLevelForIds($ids);
+    }
+
+    /**
+     * @param array<int, int> $imageIds
+     * @return int affected row count
+     */
+    public function updateLevelForImages(array $imageIds, int $level): int
+    {
+        return $this->repo->updateLevelForImages($imageIds, $level);
+    }
+
+    /**
+     * @param array<array-key, int|string|float|bool> $imageIds
+     * @return list<array<string, mixed>>
+     */
+    public function getBatchManagerThumbnails(array $imageIds, ?int $categoryId, string $orderBySql, int $limit, int $offset): array
+    {
+        return $this->repo->findBatchManagerThumbnails($imageIds, $categoryId, $orderBySql, $limit, $offset);
+    }
+
+    /**
+     * @param array<array-key, int|string> $imageIds
+     * @return list<array<string, mixed>>
+     */
+    public function getIdsAndDatesForBatchUnitSave(array $imageIds): array
+    {
+        return $this->repo->findIdsAndDatesForBatchUnitSave($imageIds);
+    }
+
+    /**
+     * @param array<array-key, int|string|float|bool> $imageIds
+     * @return list<array<string, mixed>>
+     */
+    public function getBatchManagerUnitRows(array $imageIds, ?int $categoryId, string $orderBySql, int $limit, int $offset): array
+    {
+        return $this->repo->findBatchManagerUnitRows($imageIds, $categoryId, $orderBySql, $limit, $offset);
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function getCategoryLinksForImage(int $imageId): array
+    {
+        return $this->repo->findCategoryLinksForImage($imageId);
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function getCategoryIdsForImage(int $imageId): array
+    {
+        return $this->repo->findCategoryIdsForImage($imageId);
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function getIssue1827CandidateImageIds(int $limit): array
+    {
+        return $this->repo->findIssue1827CandidateImageIds($limit);
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function getImageIdsSample(int $limit): array
+    {
+        return $this->repo->findImageIdsSample($limit);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function getDuplicatePaths(): array
+    {
+        return $this->repo->findDuplicatePaths();
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function getOrphanImageCategoryLinkIds(): array
+    {
+        return $this->repo->findOrphanImageCategoryLinkIds();
+    }
+
+    /**
+     * @param list<int> $imageIds
+     */
+    public function deleteImageCategoryRowsForImageIds(array $imageIds): void
+    {
+        $this->repo->deleteImageCategoryRowsForImageIds($imageIds);
+    }
+
+    /**
+     * @param array<int|string> $categories real callers don't guarantee a list
+     * @return array<int|string, int> category_id => max rank
+     */
+    public function getMaxRanksByCategory(array $categories): array
+    {
+        return $this->repo->findMaxRanksByCategory($categories);
+    }
+
+    /**
+     * @param list<int|string> $categoryIds
+     */
+    public function deleteImageCategoryLinksForCategoryIds(int $imageId, array $categoryIds): void
+    {
+        $this->repo->deleteImageCategoryLinksForCategoryIds($imageId, $categoryIds);
+    }
+
+    /**
      * save the rank depending on given images order
      *
      * The list of ordered images id is supposed to be in the same parent
@@ -644,5 +788,329 @@ final readonly class ImageService
         }
 
         return $image->toArray();
+    }
+
+    /**
+     * @return array<string, mixed>|false
+     */
+    public function findByIdOrFilePattern(int $imageId, ?string $imageFile): array|false
+    {
+        return $this->repo->findByIdOrFilePattern($imageId, $imageFile);
+    }
+
+    public function isImageAccessibleWithCondition(int $imageId, string $forbiddenCondition): bool
+    {
+        return $this->repo->isImageAccessibleWithCondition($imageId, $forbiddenCondition);
+    }
+
+    public function isImageAccessibleViaCategoryWithCondition(int $imageId, string $permissionCondition): bool
+    {
+        return $this->repo->isImageAccessibleViaCategoryWithCondition($imageId, $permissionCondition);
+    }
+
+    /**
+     * @return ?array<string, mixed>
+     */
+    public function getRowWithCondition(int $imageId, string $permissionCondition): ?array
+    {
+        return $this->repo->findRowWithCondition($imageId, $permissionCondition);
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function getRelatedCategoriesForImage(int $imageId, string $forbiddenCondition): array
+    {
+        return $this->repo->findRelatedCategoriesForImage($imageId, $forbiddenCondition);
+    }
+
+    public function isImageCommentableWithCondition(int $imageId, string $permissionCondition): bool
+    {
+        return $this->repo->isImageCommentableWithCondition($imageId, $permissionCondition);
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function getVisibleCategoriesForImage(int $imageId, string $permissionCondition): array
+    {
+        return $this->repo->findVisibleCategoriesForImage($imageId, $permissionCondition);
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function getAssociatedCategoryIds(int $imageId): array
+    {
+        return $this->repo->findAssociatedCategoryIds($imageId);
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function getIdsByMd5sum(string $md5sum): array
+    {
+        return $this->repo->findIdsByMd5sum($md5sum);
+    }
+
+    /**
+     * @param list<string> $md5sums
+     * @return array<string, int>
+     */
+    public function getIdsByMd5sums(array $md5sums): array
+    {
+        return $this->repo->findIdsByMd5sums($md5sums);
+    }
+
+    /**
+     * @param list<string> $filenames
+     * @return array<string, int>
+     */
+    public function getIdsByFilenames(array $filenames): array
+    {
+        return $this->repo->findIdsByFilenames($filenames);
+    }
+
+    public function getFormatIdByImageAndExt(int $imageId, string $ext): ?int
+    {
+        return $this->repo->findFormatIdByImageAndExt($imageId, $ext);
+    }
+
+    /**
+     * @param array<int, int|string> $ids
+     * @return list<array{id: int, path: string, representative_ext: ?string}>
+     */
+    public function getPathsForIds(array $ids): array
+    {
+        return $this->repo->findPathsForFileDeletion($ids);
+    }
+
+    /**
+     * Full image row, or null if $imageId doesn't exist -- Admin\Upload\
+     * UploadService's own post-save re-read (throws its own plain
+     * \Exception on null, unlike getImageInfos()'s HtmlRenderingInterface
+     * fatal-error path above, so this stays a separate, simpler method
+     * rather than reusing that one with a different error-handling shape).
+     *
+     * @return array<string, mixed>|null
+     */
+    public function getImageRow(int|string $imageId): ?array
+    {
+        return $this->repo->findById($imageId)?->toArray();
+    }
+
+    public function getTotalImageCount(): int
+    {
+        return $this->repo->countAllImages();
+    }
+
+    public function getTotalFilesize(): int
+    {
+        return $this->repo->sumFilesize();
+    }
+
+    /**
+     * @return array{count: int, sum: int}
+     */
+    public function getFormatCountAndSize(): array
+    {
+        return $this->repo->countAndSumFormats();
+    }
+
+    public function getEarliestDateAvailable(): ?string
+    {
+        return $this->repo->findEarliestDateAvailable();
+    }
+
+    /**
+     * @return list<array{id: int, file: string}>
+     */
+    public function getAllIdsAndFiles(): array
+    {
+        return $this->repo->findAllIdsAndFiles();
+    }
+
+    /**
+     * @return list<array{image_id: int, ext: string}>
+     */
+    public function getAllImageIdsAndExts(): array
+    {
+        return $this->repo->findAllImageIdsAndExts();
+    }
+
+    public function getImageCategoryLinkCount(): int
+    {
+        return $this->repo->countImageCategoryLinks();
+    }
+
+    public function getMinDateAvailable(): ?string
+    {
+        return $this->repo->findMinDateAvailable();
+    }
+
+    /**
+     * @return array{nextId: int, count: int}
+     */
+    public function getNextIdAndCount(): array
+    {
+        return $this->repo->findNextIdAndCount();
+    }
+
+    /**
+     * @param  list<string>  $whereClauses
+     * @return list<array<string, mixed>>
+     */
+    public function getForMissingDerivatives(array $whereClauses, int $startId, int $limit): array
+    {
+        return $this->repo->findForMissingDerivatives($whereClauses, $startId, $limit);
+    }
+
+    /**
+     * @param  list<int|string>  $imageIds
+     * @return array<int|string, array<string, mixed>>
+     */
+    public function getHistoryDisplayInfoByIds(array $imageIds): array
+    {
+        return $this->repo->findHistoryDisplayInfoByIds($imageIds);
+    }
+
+    public function hasAccessibleImageWithAuthor(string $permissionCondition): bool
+    {
+        return $this->repo->hasAccessibleImageWithAuthor($permissionCondition);
+    }
+
+    public function existsById(int $id): bool
+    {
+        return $this->repo->existsById($id);
+    }
+
+    /**
+     * @param array<int|string> $ids
+     * @return list<int>
+     */
+    public function getExistingIds(array $ids): array
+    {
+        return $this->repo->findExistingIds($ids);
+    }
+
+    /**
+     * @return ?array{path: string, file: string, md5sum: ?string, width: ?int, height: ?int, filesize: ?int}
+     */
+    public function getUploadInfoById(int $imageId): ?array
+    {
+        return $this->repo->findUploadInfoById($imageId);
+    }
+
+    public function getPathById(int $imageId): ?string
+    {
+        return $this->repo->findPathById($imageId);
+    }
+
+    public function existsWithCondition(string $condition): bool
+    {
+        return $this->repo->existsWithCondition($condition);
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function getIdsByFilenameInCategory(string $filename, int $categoryId): array
+    {
+        return $this->repo->findIdsByFilenameInCategory($filename, $categoryId);
+    }
+
+    /**
+     * @return ?array{id: int, name: ?string, representative_ext: ?string, path: string}
+     */
+    public function getUploadResultInfoById(int $imageId): ?array
+    {
+        return $this->repo->findUploadResultInfoById($imageId);
+    }
+
+    public function countImagesInCategory(int $categoryId): int
+    {
+        return $this->repo->countImagesInCategory($categoryId);
+    }
+
+    public function countLoungeImagesPendingForCategory(int $categoryId): int
+    {
+        return $this->repo->countLoungeImagesPendingForCategory($categoryId);
+    }
+
+    /**
+     * @return list<int|string>
+     */
+    public function getImageIdsOrderedByRankForCategory(int $categoryId): array
+    {
+        return $this->repo->findImageIdsOrderedByRankForCategory($categoryId);
+    }
+
+    public function isImageInCategory(int $imageId, int $categoryId): bool
+    {
+        return $this->repo->isImageInCategory($imageId, $categoryId);
+    }
+
+    public function getMaxRankForCategory(int $categoryId): ?int
+    {
+        return $this->repo->findMaxRankForCategory($categoryId);
+    }
+
+    public function incrementRanksFromForCategory(int $categoryId, int $rank): void
+    {
+        $this->repo->incrementRanksFromForCategory($categoryId, $rank);
+    }
+
+    public function updateRankForImageInCategory(int $imageId, int $categoryId, int $rank): void
+    {
+        $this->repo->updateRankForImageInCategory($imageId, $categoryId, $rank);
+    }
+
+    /**
+     * @param  list<string>  $whereClauses
+     * @return PaginatedResult<array<string, mixed>>
+     */
+    public function getWithConditionsPaginated(array $whereClauses, string $orderByClause, int $limit, int $offset): PaginatedResult
+    {
+        return $this->repo->findWithConditionsPaginated($whereClauses, $orderByClause, $limit, $offset);
+    }
+
+    /**
+     * @param  list<int>  $imageIds
+     * @return list<array{image_id: int, category_id: int}>
+     */
+    public function getCategoryLinksForImageIdsWithCondition(array $imageIds, string $permissionCondition): array
+    {
+        return $this->repo->findCategoryLinksForImageIdsWithCondition($imageIds, $permissionCondition);
+    }
+
+    public function getNextId(): int
+    {
+        return $this->repo->findNextId();
+    }
+
+    /**
+     * @param  list<int|string>  $categoryIds
+     * @return array<int, string>
+     */
+    public function getIdsAndPathsByStorageCategoryIds(array $categoryIds): array
+    {
+        return $this->repo->findIdsAndPathsByStorageCategoryIds($categoryIds);
+    }
+
+    /**
+     * @param  list<int>  $formatIds
+     */
+    public function deleteFormatsByIds(array $formatIds): void
+    {
+        $this->repo->deleteFormatsByIds($formatIds);
+    }
+
+    /**
+     * @param list<int> $formatIds
+     * @return list<array{image_id: int, ext: string}>
+     */
+    public function getImageIdsAndExtsByFormatIds(array $formatIds): array
+    {
+        return $this->repo->findImageIdsAndExtsByFormatIds($formatIds);
     }
 }

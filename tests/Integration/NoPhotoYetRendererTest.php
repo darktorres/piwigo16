@@ -60,7 +60,7 @@ final class NoPhotoYetRendererTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         CurrentConfigService::set(new ConfigService($this->buildConfigRepository()));
-        $this->renderer = new NoPhotoYetRenderer($this->conn, new ConfigService($this->buildConfigRepository()), new RedirectService(), new UrlService(new HtmlService()), Paths::fromRoot(dirname(__DIR__, 2)));
+        $this->renderer = new NoPhotoYetRenderer(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Image\ImageEntity::class), new ConfigService($this->buildConfigRepository()), new RedirectService(), new UrlService(new HtmlService()), Paths::fromRoot(dirname(__DIR__, 2)));
 
         // NoPhotoYetRenderer calls Piwigo\Auth\AccessControl::isAGuest()/
         // isAdmin() directly (real class methods), which read

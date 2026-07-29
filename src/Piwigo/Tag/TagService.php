@@ -449,6 +449,19 @@ final readonly class TagService
     }
 
     /**
+     * Removes only the association between $imageIds and $tagIds (unlike
+     * deleteTags() below, which deletes the tags themselves) --
+     * Admin\BatchManagerGlobalPageRenderer's own "del_tags" action.
+     *
+     * @param int[] $imageIds
+     * @param list<TagId> $tagIds
+     */
+    public function removeTagsFromImages(array $imageIds, array $tagIds): void
+    {
+        $this->repo->deleteImageTagByImageAndTagIds($imageIds, $tagIds);
+    }
+
+    /**
      * Delete tags and tags associations.
      *
      * @param list<TagId> $tagIds
@@ -737,5 +750,85 @@ final readonly class TagService
         }
 
         return $tagIds;
+    }
+
+    public function getById(TagId $id): ?Tag
+    {
+        return $this->repo->findById($id);
+    }
+
+    public function existsById(int $id): bool
+    {
+        return $this->repo->existsById($id);
+    }
+
+    /**
+     * @param  list<int>  $ids
+     */
+    public function countExistingIds(array $ids): int
+    {
+        return $this->repo->countExistingIds($ids);
+    }
+
+    public function existsByName(string $name): bool
+    {
+        return $this->repo->existsByName($name);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function getOtherNames(int $excludeId): array
+    {
+        return $this->repo->findOtherNames($excludeId);
+    }
+
+    /**
+     * @param  list<int>  $tagIds
+     * @param  list<int>  $imageIds
+     * @return array<int, string>
+     */
+    public function getCommaJoinedTagIdsByImageIds(array $tagIds, array $imageIds): array
+    {
+        return $this->repo->findCommaJoinedTagIdsByImageIds($tagIds, $imageIds);
+    }
+
+    /**
+     * @param  list<TagId>  $tagIds
+     * @return list<int>
+     */
+    public function getImageIdsForTagIds(array $tagIds): array
+    {
+        return $this->repo->findImageIdsForTagIds($tagIds);
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    public function getImageCountsPerTagUnrestricted(): array
+    {
+        return $this->repo->countImagesPerTagUnrestricted();
+    }
+
+    public function countAll(): int
+    {
+        return $this->repo->countAll();
+    }
+
+    public function countAllImageTagLinks(): int
+    {
+        return $this->repo->countAllImageTagLinks();
+    }
+
+    /**
+     * Every tag, unenriched -- Admin\TagsPageRenderer's own listing, which
+     * builds its own row shape (counter/alt_names) rather than
+     * {@see getAllTags()}'s own enriched shape.
+     *
+     * @return list<Tag>
+     */
+    public function getAll(): array
+    {
+        return $this->repo->findAllTags();
     }
 }

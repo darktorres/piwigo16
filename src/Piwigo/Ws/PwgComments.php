@@ -18,7 +18,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
-use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 
@@ -115,17 +114,8 @@ final class PwgComments
         // coercion would otherwise silently convert 'true' to 0 too,
         // inverting the validated/pending counts (same bug class
         // Category's own commentable/visible retype found).
-        $query = '
-SELECT
-  count(*) as all_comments,
-  sum(validated = 1) as validated,
-  sum(validated = 0) as pending
-FROM ' . Tables::comments() . '
-WHERE ' . implode(' AND ', $where_clauses) . '
-;';
-
-        $summary = $conn->fetchAssociative($query);
-        if (! is_array($summary)) {
+        $summary = self::commentService()->getSummaryCounts(array_values($where_clauses));
+        if ($summary === null) {
             return new PwgError(500, 'Unable to compute comments summary');
         }
         // count(*)/sum(...) results are typed string|null by the driver; they
@@ -148,35 +138,14 @@ WHERE ' . implode(' AND ', $where_clauses) . '
         // comments
         /** @var array<string, string> $user_fields */
         $user_fields = \Piwigo\Config\CurrentConfig::userFields();
-        $query = '
-SELECT
-    c.id,
-    c.image_id,
-    c.date,
-    c.author,
-    c.author_id,
-    ' . $user_fields['username'] . ' AS username,
-    ui.status,
-    c.content,
-    i.path,
-    i.representative_ext,
-    i.file,
-    i.date_available,
-    validated,
-    c.anonymous_id
-  FROM ' . Tables::comments() . ' AS c
-    INNER JOIN ' . Tables::images() . ' AS i
-      ON i.id = c.image_id
-    LEFT JOIN ' . Tables::users() . ' AS u
-      ON u.' . $user_fields['id'] . ' = c.author_id
-    LEFT JOIN ' . Tables::userInfos() . ' AS ui
-      ON ui.user_id = c.author_id
-  WHERE ' . implode(' AND ', $where_clauses) . '
-  ORDER BY c.date DESC, c.id DESC
-  LIMIT ' . $params['per_page'] * $params['page'] . ', ' . $params['per_page'] . '
-;';
         $list = [];
-        foreach ($conn->fetchAllAssociative($query) as $row) {
+        foreach (self::commentService()->getListForAdminWs(
+            array_values($where_clauses),
+            $user_fields['id'],
+            $user_fields['username'],
+            $params['per_page'] * $params['page'],
+            $params['per_page']
+        ) as $row) {
 
             $row_image_id = $row['image_id'];
 
@@ -227,40 +196,13 @@ SELECT
         }
 
         // filters
-        $query = '
-SELECT
-  MIN(date) AS started_at,
-  MAX(date) AS ended_at
-FROM ' . Tables::comments() . '
-WHERE ' . implode(' AND ', $where_clauses) . '
-;';
-
-        $dates = $conn->fetchAssociative($query);
-        if (! is_array($dates)) {
+        $dates = self::commentService()->getDateRange(array_values($where_clauses));
+        if ($dates === null) {
             return new PwgError(500, 'Unable to compute comments date range');
         }
 
         unset($where_clauses['author_id']);
-        // ANY_VALUE(author): `author` isn't functionally dependent on the
-        // GROUP BY column (author_id) -- Piwigo\Db\DbConnection doesn't
-        // strip ONLY_FULL_GROUP_BY the way the legacy mysqli connection
-        // did, so this query (already GROUP BY author_id, unchanged from
-        // the original) needs an explicit "any value is fine, same as the
-        // old driver's own permissive default" opt-out to keep selecting
-        // exactly one arbitrary author name per author_id, matching the
-        // original grouping/row-count exactly rather than splitting groups
-        // by adding author to GROUP BY.
-        $query = '
-SELECT
-  ANY_VALUE(author) AS author,
-  author_id,
-  count(*) as nb_authors
-FROM ' . Tables::comments() . '
-WHERE ' . implode(' AND ', $where_clauses) . '
-GROUP BY author_id
-;';
-
-        $nb_authors_in = $conn->fetchAllAssociative($query);
+        $nb_authors_in = self::commentService()->getAuthorCounts(array_values($where_clauses));
 
         return [
             'summary' => $summary,

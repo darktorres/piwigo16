@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
@@ -49,47 +48,18 @@ final class UserListPageRenderer
         $groups = [];
         $groups_for_filter = [];
 
-        $query = '
-SELECT id, name, COUNT(ug.user_id) as nb_users_of
-  FROM `' . Tables::groups() . '`
-    LEFT JOIN `' . Tables::userGroup() . '` ug ON id = ug.group_id
-  GROUP BY name
-  ORDER BY name ASC
-;';
-        foreach ($conn->fetchAllAssociative($query) as $row) {
-            $group_id = $row['id'];
-            if (! is_int($group_id) && ! is_string($group_id)) {
-                continue;
-            }
-            $groups[$group_id] = $row['name'];
+        foreach (\Piwigo\Bootstrap\CoreDomainAccessor::groupService()->getListWithMemberCounts() as $row) {
+            $groups[$row['id']] = $row['name'];
             $groups_for_filter[] = [
-                'id' => $group_id,
+                'id' => $row['id'],
                 'name' => $row['name'],
-                'counter' => $row['nb_users_of'],
+                'counter' => $row['nb_users'],
             ];
         }
 
         $template->assign('groups_for_filter', $groups_for_filter);
 
-        // ORDER BY registration_year, registration_month (the SELECTed
-        // aliases), not the raw registration_date column -- Piwigo\Db\
-        // DbConnection doesn't accept a DISTINCT query's ORDER BY
-        // referencing a column absent from its own SELECT list the way the
-        // legacy mysqli connection did (same class of strictness gap as
-        // CommentsController's own ONLY_FULL_GROUP_BY fix).
-        $query = '
-SELECT DISTINCT
-      month(registration_date) as registration_month,
-      year(registration_date) as registration_year
-FROM ' . Tables::userInfos() . '
-ORDER BY registration_year, registration_month
-;';
-        $register_dates = [];
-        foreach ($conn->fetchAllAssociative($query) as $row) {
-            $registration_month = is_numeric($row['registration_month']) ? (int) $row['registration_month'] : 0;
-            $registration_year = is_scalar($row['registration_year']) ? (string) $row['registration_year'] : '';
-            $register_dates[] = $registration_year . '-' . sprintf('%02u', $registration_month);
-        }
+        $register_dates = self::userService()->getDistinctRegistrationYearMonths();
 
         $template->assign('register_dates', implode(',', $register_dates));
 
@@ -129,16 +99,7 @@ ORDER BY registration_year, registration_month
 
         // an admin can't delete other admin/webmaster
         if (\Piwigo\Users\CurrentUser::get()->status === \Piwigo\Users\UserStatus::Admin) {
-            $query = '
-SELECT
-    user_id
-  FROM ' . Tables::userInfos() . '
-  WHERE status IN (\'webmaster\', \'admin\')
-;';
-            $admin_ids = array_map(
-                static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
-                array_column($conn->fetchAllAssociative($query), 'user_id')
-            );
+            $admin_ids = array_map(strval(...), self::userService()->getAdminIds());
 
             $protected_users = array_merge($protected_users, $admin_ids);
 
@@ -150,14 +111,7 @@ SELECT
 
         $user_fields = \Piwigo\Config\CurrentConfig::userFields();
 
-        $query = '
-SELECT
-    ' . $user_fields['username'] . ' AS username
-    FROM ' . Tables::users() . '
-    WHERE ' . $user_fields['id'] . ' = ' . $webmaster_id . '
-;';
-
-        $owner_username = array_column($conn->fetchAllAssociative($query), 'username');
+        $owner_username = self::userService()->getUsernameById(\Piwigo\Common\ValueObject\UserId::from($webmaster_id), $user_fields['id'], $user_fields['username']);
 
         // protected_users/password_protected_users mix CurrentUser::get()->id, several $conf
         // ids (already normalized to int above) and $admin_ids (query2array
@@ -186,7 +140,7 @@ SELECT
                 'connected_user' => \Piwigo\Users\CurrentUser::get()->id->value,
                 'connected_user_status' => \Piwigo\Users\CurrentUser::get()->status->value,
                 'owner' => $webmaster_id,
-                'owner_username' => $owner_username[0],
+                'owner_username' => $owner_username,
             ]
         );
 
@@ -200,24 +154,11 @@ SELECT
             $label_of_status[$status] = Lang::t('user_status_' . $status);
         }
 
-        $query = '
-SELECT
-    status,
-    COUNT(*) AS nb_users_of
-  FROM ' . Tables::userInfos() . '
-  WHERE user_id != ' . $guest_id . '
-  GROUP BY status
-';
-
         $nb_users_by_status = [];
-        foreach ($conn->fetchAllAssociative($query) as $row) {
-            $status = $row['status'];
-            if (! is_string($status)) {
-                continue;
-            }
+        foreach (self::userService()->getUserCountsByStatus($guest_id) as $status => $counter) {
             $nb_users_by_status[$status] = [
                 'name' => Lang::t('user_status_' . $status),
-                'counter' => $row['nb_users_of'],
+                'counter' => $counter,
             ];
         }
 
@@ -244,25 +185,11 @@ SELECT
             $level_options[$level] = Lang::t(sprintf('Level %d', $level));
         }
 
-        $query = '
-SELECT
-    level,
-    COUNT(*) AS nb_users_of
-  FROM ' . Tables::userInfos() . '
-  WHERE user_id != ' . $guest_id . '
-  GROUP BY level
-';
-
         $nb_users_by_level = $level_options;
-        foreach ($conn->fetchAllAssociative($query) as $row) {
-            $level = $row['level'];
-            if (! is_numeric($level)) {
-                continue;
-            }
-            $level = (int) $level;
+        foreach (self::userService()->getUserCountsByLevel($guest_id) as $level => $counter) {
             $nb_users_by_level[$level] = [
                 'name' => Lang::t(sprintf('Level %d', $level)),
-                'counter' => $row['nb_users_of'],
+                'counter' => $counter,
             ];
         }
 
@@ -270,18 +197,11 @@ SELECT
         $template->assign('level_selected', $default_user['level']);
         $template->assign('nb_users_by_level', $nb_users_by_level);
 
-        $query = '
-SELECT id, name, is_default
-  FROM `' . Tables::groups() . '`
-  ORDER BY name ASC
-;';
         $groups_arr_id = [];
         $groups_arr_name = [];
-        foreach ($conn->fetchAllAssociative($query) as $row) {
-            $groups_arr_name[] = '"' . addslashes(is_scalar($row['name']) ? (string) $row['name'] : '') . '"';
-            if (is_int($row['id']) || is_string($row['id'])) {
-                $groups_arr_id[] = (string) $row['id'];
-            }
+        foreach (\Piwigo\Bootstrap\CoreDomainAccessor::groupService()->getAllBasic() as $group) {
+            $groups_arr_name[] = '"' . addslashes($group->name) . '"';
+            $groups_arr_id[] = (string) $group->id->value;
         }
 
         $template->assign('groups_arr_id', implode(',', $groups_arr_id));

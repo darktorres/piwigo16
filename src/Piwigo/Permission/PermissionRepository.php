@@ -228,6 +228,146 @@ final readonly class PermissionRepository
     }
 
     /**
+     * Image ids outside $structuralForbidden with an access level above
+     * $level -- EffectiveForbiddenCategoriesCache's own "which specific
+     * images does the level restriction additionally forbid" step.
+     * $structuralForbidden stays a raw comma-separated `NOT IN (...)`
+     * fragment (PermissionService::getForbiddenCategories()'s own return
+     * shape, embedded as SQL text throughout this codebase, not something
+     * this one extraction should re-litigate into bound parameters).
+     *
+     * @return list<int>
+     */
+    public function findImageIdsOutsideForbiddenCategories(string $structuralForbidden, int|string $level): array
+    {
+        $ids = $this->em->getConnection()
+            ->fetchAllAssociative('
+SELECT DISTINCT(id)
+  FROM ' . Tables::images() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id=image_id
+  WHERE category_id NOT IN (' . $structuralForbidden . ')
+    AND level>' . $level);
+
+        return self::toIntList(array_column($ids, 'id'));
+    }
+
+    /**
+     * Count of distinct accessible images given $structuralForbidden plus
+     * the already-computed $imageAccessType/$imageAccessList restriction --
+     * EffectiveForbiddenCategoriesCache's own `nbTotalImages`.
+     */
+    public function countAccessibleImages(string $structuralForbidden, string $imageAccessType, string $imageAccessList): string
+    {
+        $row = $this->em->getConnection()
+            ->fetchNumeric('
+SELECT COUNT(DISTINCT(image_id)) as total
+  FROM ' . Tables::imageCategory() . '
+  WHERE category_id NOT IN (' . $structuralForbidden . ')
+    AND image_id ' . $imageAccessType . ' (' . $imageAccessList . ')');
+        $totalRaw = $row !== false ? ($row[0] ?? null) : null;
+
+        return is_scalar($totalRaw) ? (string) $totalRaw : '0';
+    }
+
+    /**
+     * Whether $imageId belongs to any category NOT in $forbiddenCategoryIds
+     * -- ImageVisibilityChecker's [SEC-33] fast-path check. Deliberately
+     * just this one cheap query against already-computed forbidden-category
+     * ids, never a PermissionService call: ADR-0007/0008 forbids live
+     * permission recomputation on this path (see ImageVisibilityChecker's
+     * own docblock).
+     *
+     * @param list<int> $forbiddenCategoryIds
+     */
+    public function isImageOutsideForbiddenCategories(int $imageId, array $forbiddenCategoryIds): bool
+    {
+        $nb = $this->em->getConnection()
+            ->createQueryBuilder()
+            ->select('COUNT(*) AS nb')
+            ->from(Tables::imageCategory())
+            ->where('image_id = :imageId')
+            ->andWhere('category_id NOT IN (:forbidden)')
+            ->setParameter('imageId', $imageId)
+            ->setParameter('forbidden', $forbiddenCategoryIds, ArrayParameterType::INTEGER)
+            ->executeQuery()
+            ->fetchOne();
+
+        return is_numeric($nb) && (int) $nb !== 0;
+    }
+
+    /**
+     * Every direct user_access row, optionally filtered to $catIds ([]
+     * means unfiltered) -- Ws\PwgPermissions::getList()'s own "direct
+     * users" block.
+     *
+     * @param  list<int>  $catIds
+     * @return list<array<string, mixed>>
+     */
+    public function findDirectUserAccessRows(array $catIds): array
+    {
+        $qb = $this->em->getConnection()
+            ->createQueryBuilder()
+            ->select('user_id', 'cat_id')
+            ->from(Tables::userAccess());
+
+        if ($catIds !== []) {
+            $qb->where('cat_id IN (:catIds)')
+                ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER);
+        }
+
+        return $qb->executeQuery()
+            ->fetchAllAssociative();
+    }
+
+    /**
+     * Every indirect (via group membership) user access row, optionally
+     * filtered to $catIds ([] means unfiltered) -- Ws\PwgPermissions::
+     * getList()'s own "indirect users" block.
+     *
+     * @param  list<int>  $catIds
+     * @return list<array<string, mixed>>
+     */
+    public function findIndirectUserAccessRows(array $catIds): array
+    {
+        $qb = $this->em->getConnection()
+            ->createQueryBuilder()
+            ->select('ug.user_id', 'ga.cat_id')
+            ->from(Tables::userGroup(), 'ug')
+            ->innerJoin('ug', Tables::groupAccess(), 'ga', 'ug.group_id = ga.group_id');
+
+        if ($catIds !== []) {
+            $qb->where('ga.cat_id IN (:catIds)')
+                ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER);
+        }
+
+        return $qb->executeQuery()
+            ->fetchAllAssociative();
+    }
+
+    /**
+     * Every direct group_access row, optionally filtered to $catIds ([]
+     * means unfiltered) -- Ws\PwgPermissions::getList()'s own "groups"
+     * block.
+     *
+     * @param  list<int>  $catIds
+     * @return list<array<string, mixed>>
+     */
+    public function findGroupAccessRows(array $catIds): array
+    {
+        $qb = $this->em->getConnection()
+            ->createQueryBuilder()
+            ->select('group_id', 'cat_id')
+            ->from(Tables::groupAccess());
+
+        if ($catIds !== []) {
+            $qb->where('cat_id IN (:catIds)')
+                ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER);
+        }
+
+        return $qb->executeQuery()
+            ->fetchAllAssociative();
+    }
+
+    /**
      * @param list<mixed> $values
      * @return list<int>
      */

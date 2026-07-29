@@ -381,6 +381,56 @@ final class RateRepository extends EntityRepository
     }
 
     /**
+     * Deletes rates matching $userId, and optionally further narrowed to
+     * $anonymousId and/or $elementId -- Ws\PwgCore::ratesDelete()'s own
+     * "delete this user's rates, optionally scoped" WS method, a
+     * different contract from {@see deleteByUserAnonymousAndElements()}
+     * above (that one requires both a non-null anonymousId and a
+     * non-empty elementIds list; every condition here is independently
+     * optional). Returns the number of rows actually deleted.
+     */
+    public function deleteByOptionalConditions(int $userId, ?string $anonymousId, ?int $elementId): int
+    {
+        $qb = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
+            ->delete(Tables::rate())
+            ->where('user_id = :userId')
+            ->setParameter('userId', $userId);
+
+        if ($anonymousId !== null) {
+            $qb->andWhere('anonymous_id = :anonymousId')
+                ->setParameter('anonymousId', $anonymousId);
+        }
+
+        if ($elementId !== null) {
+            $qb->andWhere('element_id = :elementId')
+                ->setParameter('elementId', $elementId);
+        }
+
+        return (int) $qb->executeStatement();
+    }
+
+    /**
+     * Number of rates for a single element -- Admin\PictureModifyPageRenderer's
+     * own "how many times has this photo been rated" display.
+     */
+    public function countRatesForElement(int $elementId): int
+    {
+        $value = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from(Tables::rate())
+            ->where('element_id = :elementId')
+            ->setParameter('elementId', $elementId)
+            ->executeQuery()
+            ->fetchOne();
+
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /**
      * Admin "Rating by user" report: every rater, joined to their account
      * status (used by the page to decide whether to render them as an
      * anonymous rater).

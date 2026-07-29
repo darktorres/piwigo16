@@ -79,4 +79,65 @@ final class NotificationByMailRepository extends AbstractRepository
 
         return array_map(UserMailNotification::fromRow(...), $rows);
     }
+
+    /**
+     * Sets every blank (trimmed-empty) email address to NULL --
+     * Controller\Admin\NotificationByMailSubController::
+     * insertNewDataUserMailNotification()'s own pre-sync cleanup, so
+     * `WHERE email IS NOT NULL` below can't false-negative on a
+     * whitespace-only address.
+     */
+    public function nullifyBlankEmails(string $emailColumn): void
+    {
+        $this->conn->executeStatement('
+UPDATE
+  ' . Tables::users() . '
+SET
+  ' . $emailColumn . ' = NULL
+WHERE
+  TRIM(' . $emailColumn . ') = \'\'
+;');
+    }
+
+    /**
+     * user_id/username/mail_address for every user with a real email
+     * address but no `user_mail_notification` row yet -- Controller\Admin\
+     * NotificationByMailSubController's own "which users need a fresh
+     * subscription row" step.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findUsersWithoutNotificationRow(string $idColumn, string $usernameColumn, string $emailColumn): array
+    {
+        return $this->conn->fetchAllAssociative('
+SELECT
+  u.' . $idColumn . ' AS user_id,
+  u.' . $usernameColumn . ' AS username,
+  u.' . $emailColumn . ' AS mail_address
+FROM
+  ' . Tables::users() . ' AS u LEFT JOIN ' . Tables::userMailNotification() . ' AS m ON u.' . $idColumn . ' = m.user_id
+WHERE
+  u.' . $emailColumn . ' IS NOT NULL AND
+  m.user_id IS NULL
+ORDER BY
+  user_id
+;');
+    }
+
+    /**
+     * Deletes rows by check_key. $quotedCheckKeyList is already-quoted SQL
+     * literals (NotificationByMailSender::quoteCheckKeyList()'s own
+     * output) -- see this class's own docblock on why that stays as-is
+     * rather than becoming bound parameters here.
+     *
+     * @param  list<string>  $quotedCheckKeyList
+     */
+    public function deleteByQuotedCheckKeys(array $quotedCheckKeyList): void
+    {
+        if ($quotedCheckKeyList === []) {
+            return;
+        }
+
+        $this->conn->executeStatement('DELETE FROM ' . Tables::userMailNotification() . ' WHERE check_key IN (' . implode(',', $quotedCheckKeyList) . ')');
+    }
 }

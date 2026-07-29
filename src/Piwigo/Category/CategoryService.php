@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Category;
 
 use Piwigo\Cache\CachePools;
+use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\Env;
 use Piwigo\Core\FilterUpdaterInterface;
@@ -1828,5 +1829,378 @@ final readonly class CategoryService
         // are not used because it's not necessary (filter <> restriction)
         $forbiddenCategories = \Piwigo\Users\CurrentUser::get()->forbiddenCategories;
         return ! in_array((string) $categoryId, explode(',', $forbiddenCategories), true);
+    }
+
+    /**
+     * Sets $categoryId's representative image -- Controller\
+     * PictureController's own "set_as_representative" action. Bypasses
+     * the ORM (see CategoryRepository::setRepresentativeImage()'s own
+     * docblock); caller clears the EntityManager afterward.
+     */
+    public function setRepresentativeImage(int $categoryId, int $imageId): void
+    {
+        $this->repo->setRepresentativeImage($categoryId, $imageId);
+    }
+
+    /**
+     * Clears $categoryId's representative image -- Ws\PwgCategories::
+     * deleteRepresentative()'s own action; caller clears the
+     * EntityManager afterward (same contract as
+     * {@see setRepresentativeImage()} above).
+     */
+    public function clearRepresentativeImage(int $categoryId): void
+    {
+        $this->repo->clearRepresentativePictureIds([$categoryId]);
+    }
+
+    /**
+     * @param list<int> $categoryIds
+     */
+    public function setRepresentativeImageForCategories(array $categoryIds, int $imageId): void
+    {
+        $this->repo->setRepresentativeImageForCategories($categoryIds, $imageId);
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function getCategoryIdsRepresentedByImage(int $imageId): array
+    {
+        return $this->repo->findCategoryIdsRepresentedByImage($imageId);
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function getPrivateCategoryIdsGrantedToGroup(int $groupId): array
+    {
+        return $this->repo->findPrivateCategoryIdsGrantedToGroup($groupId);
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function getCategoriesAuthorizedViaGroupsForUser(int $userId): array
+    {
+        return $this->repo->findCategoriesAuthorizedViaGroupsForUser($userId);
+    }
+
+    /**
+     * @param  list<int>  $ids
+     * @return list<array{id: int, name: string, permalink: ?string, id_uppercat: ?int, uppercats: string, global_rank: ?string}>
+     */
+    public function getCategoriesByIds(array $ids): array
+    {
+        return $this->repo->findCategoriesByIds($ids);
+    }
+
+    /**
+     * @param list<int> $excludeCategoryIds
+     * @return list<int>
+     */
+    public function getPrivateCategoryIdsGrantedToUser(int $userId, array $excludeCategoryIds): array
+    {
+        return $this->repo->findPrivateCategoryIdsGrantedToUser($userId, $excludeCategoryIds);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function getActivePermalinks(): array
+    {
+        return $this->repo->findActivePermalinks();
+    }
+
+    public function countAllCategories(): int
+    {
+        return $this->repo->countAllCategories();
+    }
+
+    public function countByDirNull(bool $dirIsNull): int
+    {
+        return $this->repo->countByDirNull($dirIsNull);
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function getChildrenOfParent(?int $parentId): array
+    {
+        return $this->repo->findChildrenOfParent($parentId);
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    public function getPhotoCountsByCategory(): array
+    {
+        return $this->repo->findPhotoCountsByCategory();
+    }
+
+    /**
+     * @return array<int|string, mixed>
+     */
+    public function getAllCategoryUppercats(): array
+    {
+        return $this->repo->findAllCategoryUppercats();
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function getIdsByParent(?int $parentId): array
+    {
+        return $this->repo->findIdsByParent($parentId);
+    }
+
+    /**
+     * @param list<string> $categoryIds
+     * @return list<array<string, mixed>>
+     */
+    public function getIdsNamesUppercatsForIds(array $categoryIds): array
+    {
+        return $this->repo->findIdsNamesUppercatsForIds($categoryIds);
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function getAllForAlbumTree(): array
+    {
+        return $this->repo->findAllForAlbumTree();
+    }
+
+    public function hasImages(int $categoryId): bool
+    {
+        return $this->repo->hasImages($categoryId);
+    }
+
+    /**
+     * @return list<mixed>|false
+     */
+    public function getPhotoCountAndDateRange(int $categoryId): array|false
+    {
+        return $this->repo->findPhotoCountAndDateRange($categoryId);
+    }
+
+    /**
+     * @param list<int> $categoryIds
+     * @return list<int>
+     */
+    public function getDistinctImageIdsInCategories(array $categoryIds): array
+    {
+        return $this->repo->findDistinctImageIdsInCategories($categoryIds);
+    }
+
+    /**
+     * @param list<int|string> $ids
+     * @return array<int|string, mixed>
+     */
+    public function getDirsByIds(array $ids): array
+    {
+        return $this->repo->findDirsByIds($ids);
+    }
+
+    public function getGalleriesUrlForCategory(int|string $categoryId): ?string
+    {
+        return $this->repo->findGalleriesUrlForCategory($categoryId);
+    }
+
+    public function getCategoryUppercatsById(int $id): ?string
+    {
+        return $this->repo->findCategoryUppercatsById($id);
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function getActivePermalinksList(string $orderBySql): array
+    {
+        return $this->repo->findActivePermalinksList($orderBySql);
+    }
+
+    public function existsAndNotForbidden(int $catId, string $forbiddenCategoriesCsv): bool
+    {
+        return $this->repo->existsAndNotForbidden($catId, $forbiddenCategoriesCsv);
+    }
+
+    /**
+     * Names/permalinks keyed by id -- Controller\PictureController's own
+     * "one query for every related category's display name" lookup.
+     *
+     * @param list<int> $ids
+     * @return array<int, array{id: int, name: string, permalink: ?string}>
+     */
+    public function getNamesByIds(array $ids): array
+    {
+        return $this->repo->findNamesByIds($ids);
+    }
+
+    public function existsById(int $id): bool
+    {
+        return $this->repo->existsById($id);
+    }
+
+    public function getRandomRepresentativeIdAmongSubcategories(string $uppercats, string $permissionCondition): ?string
+    {
+        return $this->repo->findRandomRepresentativeIdAmongSubcategories($uppercats, $permissionCondition);
+    }
+
+    /**
+     * @param  list<int>  $ids
+     * @return list<int>
+     */
+    public function getExistingIds(array $ids): array
+    {
+        return $this->repo->findExistingIds($ids);
+    }
+
+    /**
+     * @return ?array{id: int, name: string, permalink: ?string}
+     */
+    public function getIdNamePermalinkById(int $id): ?array
+    {
+        return $this->repo->findIdNamePermalinkById($id);
+    }
+
+    /**
+     * @param  list<string>  $whereClauses
+     * @return list<array{id: int, image_order: ?string}>
+     */
+    public function getIdsAndImageOrderWithConditions(array $whereClauses): array
+    {
+        return $this->repo->findIdsAndImageOrderWithConditions($whereClauses);
+    }
+
+    /**
+     * @param  list<string>  $whereClauses
+     * @return PaginatedResult<array<string, mixed>>
+     */
+    public function getListForWs(
+        array $whereClauses,
+        ?string $searchTerm,
+        int $searchLimit,
+        ?int $limit,
+        bool $limitPlusOne
+    ): PaginatedResult {
+        return $this->repo->findListForWs($whereClauses, $searchTerm, $searchLimit, $limit, $limitPlusOne);
+    }
+
+    /**
+     * @param  list<string>  $whereClauses
+     * @return PaginatedResult<array<string, mixed>>
+     */
+    public function getAdminListForWs(array $whereClauses, ?string $searchTerm, int $searchLimit): PaginatedResult
+    {
+        return $this->repo->findAdminListForWs($whereClauses, $searchTerm, $searchLimit);
+    }
+
+    /**
+     * @param  list<int>  $parentIds
+     * @return array<string, int>
+     */
+    public function getSubcategoryCountsByParent(array $parentIds): array
+    {
+        return $this->repo->findSubcategoryCountsByParent($parentIds);
+    }
+
+    /**
+     * @param  list<int>  $ids
+     * @return list<array{id: int, id_uppercat: ?int, rank: ?int}>
+     */
+    public function getRankInfoByIds(array $ids): array
+    {
+        return $this->repo->findRankInfoByIds($ids);
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function getIdsByParentOrderedById(?int $parentId): array
+    {
+        return $this->repo->findIdsByParentOrderedById($parentId);
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function getSiblingIdsExcludingOrderedByRank(?int $parentId, int $excludeId): array
+    {
+        return $this->repo->findSiblingIdsExcludingOrderedByRank($parentId, $excludeId);
+    }
+
+    /**
+     * @param  list<int>  $ids
+     * @return list<array{id: int, name: string, dir: ?string, uppercats: string}>
+     */
+    public function getMoveDetailsByIds(array $ids): array
+    {
+        return $this->repo->findMoveDetailsByIds($ids);
+    }
+
+    /**
+     * @param  list<int>  $ids
+     * @return list<int>
+     */
+    public function getDistinctLinkedImageIds(array $ids): array
+    {
+        return $this->repo->findDistinctLinkedImageIds($ids);
+    }
+
+    /**
+     * @param  list<int>  $imageIds
+     * @param  list<int>  $excludeIds
+     * @return list<int>
+     */
+    public function getNonOrphanImageIds(array $imageIds, array $excludeIds): array
+    {
+        return $this->repo->findNonOrphanImageIds($imageIds, $excludeIds);
+    }
+
+    /**
+     * @param  list<int>  $excludeIds
+     * @return list<int>
+     */
+    public function getImageIdsOutsideCategories(array $excludeIds): array
+    {
+        return $this->repo->findImageIdsOutsideCategories($excludeIds);
+    }
+
+    /**
+     * @param  list<int>  $ids
+     * @return list<string>
+     */
+    public function getUppercatsColumns(array $ids): array
+    {
+        return $this->repo->findUppercatsColumns($ids);
+    }
+
+    public function getNextId(): int
+    {
+        return $this->repo->findNextId();
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function getSyncCandidatesForSite(int $siteId, string $extraCondition): array
+    {
+        return $this->repo->findSyncCandidatesForSite($siteId, $extraCondition);
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function getAllIds(): array
+    {
+        return $this->repo->findAllIds();
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function getNextRanksByParent(): array
+    {
+        return $this->repo->findNextRanksByParent();
     }
 }

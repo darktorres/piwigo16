@@ -33,6 +33,18 @@ final readonly class PermissionService
     ) {}
 
     /**
+     * Which of $categoryIds are private -- Admin\GroupPermPageRenderer's
+     * own "restrict to private categories" filter.
+     *
+     * @param list<int> $categoryIds
+     * @return list<int>
+     */
+    public function getPrivateCategoryIdsAmong(array $categoryIds): array
+    {
+        return $this->repo->findPrivateCategoryIdsAmong($categoryIds);
+    }
+
+    /**
      * get localized privacy level values
      *
      * P23 batch 8d: relocated from include/functions.inc.php's
@@ -306,5 +318,32 @@ final readonly class PermissionService
         }
 
         $this->repo->massInsertUserAccess($inserts);
+    }
+
+    /**
+     * @param  list<int>  $catIds
+     * @return list<array<string, mixed>>
+     */
+    public function getDirectUserAccessRows(array $catIds): array
+    {
+        return $this->repo->findDirectUserAccessRows($catIds);
+    }
+
+    /**
+     * @param  list<int>  $catIds
+     * @return list<array<string, mixed>>
+     */
+    public function getIndirectUserAccessRows(array $catIds): array
+    {
+        return $this->repo->findIndirectUserAccessRows($catIds);
+    }
+
+    /**
+     * @param  list<int>  $catIds
+     * @return list<array<string, mixed>>
+     */
+    public function getGroupAccessRows(array $catIds): array
+    {
+        return $this->repo->findGroupAccessRows($catIds);
     }
 }

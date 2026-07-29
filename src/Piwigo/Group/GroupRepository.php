@@ -57,6 +57,29 @@ final class GroupRepository extends EntityRepository
     }
 
     /**
+     * Ids of every group whose name matches $namePattern (an already-built
+     * SQL LIKE pattern, e.g. `%foo%`) -- Ws\PwgUsers::getList()'s own
+     * "filter" param, which also searches group membership.
+     *
+     * @return list<int>
+     */
+    public function findIdsByNameLike(string $namePattern): array
+    {
+        return array_map(
+            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+            $this->getEntityManager()
+                ->getConnection()
+                ->createQueryBuilder()
+                ->select('id')
+                ->from(\Piwigo\Db\Tables::groups())
+                ->where('name LIKE :namePattern')
+                ->setParameter('namePattern', $namePattern)
+                ->executeQuery()
+                ->fetchFirstColumn()
+        );
+    }
+
+    /**
      * Every group's id/name/is_default, ordered by name.
      *
      * @return list<Group>
@@ -344,6 +367,30 @@ final class GroupRepository extends EntityRepository
     }
 
     /**
+     * Removes $userIds from every group they belong to (not just one) --
+     * UserService::checkAndSaveUserInfos()'s own "replace this user's
+     * entire group membership list" step, unlike removeMembers() above
+     * which is scoped to a single $groupId.
+     *
+     * @param list<UserId> $userIds
+     */
+    public function removeAllMembershipsForUsers(array $userIds): void
+    {
+        if ($userIds === []) {
+            return;
+        }
+
+        $em = $this->getEntityManager();
+        $em->createQueryBuilder()
+            ->delete(UserGroupEntity::class, 'ug')
+            ->where('ug.userId IN (:userIds)')
+            ->setParameter('userIds', array_map(static fn (UserId $id): int => $id->value, $userIds), ArrayParameterType::INTEGER)
+            ->getQuery()
+            ->execute();
+        $em->clear();
+    }
+
+    /**
      * Deletes the given groups and everything referencing them
      * (group_access rows, user_group rows), returning the id => name of
      * every group actually deleted. Return stays int-keyed -- a GroupId
@@ -488,5 +535,104 @@ final class GroupRepository extends EntityRepository
 
             return $row['catId'];
         }, $rows);
+    }
+
+    /**
+     * Raw (user_id, group_id) membership pairs across every id in
+     * $groupIds -- Admin\CatPermPageRenderer's own "which users belong to
+     * these granted groups" breakdown, a bulk variant of
+     * findMemberUserIds() above (that one is scoped to a single group).
+     *
+     * @param list<int> $groupIds
+     * @return list<array<string, mixed>>
+     */
+    public function findMembersByGroupIds(array $groupIds): array
+    {
+        if ($groupIds === []) {
+            return [];
+        }
+
+        return $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative('
+SELECT user_id, group_id
+  FROM ' . \Piwigo\Db\Tables::userGroup() . '
+  WHERE group_id IN (' . implode(',', $groupIds) . ')
+;');
+    }
+
+    /**
+     * Raw (user_id, group_id) membership pairs for every id in $userIds --
+     * Ws\PwgUsers::getList()'s own "which groups does each returned user
+     * belong to" step, the reverse direction of
+     * {@see findMembersByGroupIds()} above (that one is keyed by group,
+     * this one by user).
+     *
+     * @param  list<int>  $userIds
+     * @return list<array<string, mixed>>
+     */
+    public function findMembershipsForUserIds(array $userIds): array
+    {
+        if ($userIds === []) {
+            return [];
+        }
+
+        return $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative('
+SELECT user_id, group_id
+  FROM ' . \Piwigo\Db\Tables::userGroup() . '
+  WHERE user_id IN (' . implode(',', $userIds) . ')
+;');
+    }
+
+    /**
+     * Total row count of `groups` -- Admin\InstallationStats's own
+     * "nb_groups" summary figure.
+     */
+    public function countAll(): int
+    {
+        $value = $this->getEntityManager()
+            ->getConnection()
+            ->fetchOne('SELECT COUNT(*) FROM `' . \Piwigo\Db\Tables::groups() . '`;');
+
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /**
+     * name keyed by id for $groupIds, ordered by name --
+     * Admin\AlbumNotificationPageRenderer's own "group_mail_options"
+     * select dropdown.
+     *
+     * @param  list<int>  $groupIds
+     * @return array<int, string> keyed by id
+     */
+    public function findNamesByIds(array $groupIds): array
+    {
+        if ($groupIds === []) {
+            return [];
+        }
+
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative('
+SELECT
+    id,
+    name
+  FROM `' . \Piwigo\Db\Tables::groups() . '`
+  WHERE id IN (' . implode(',', $groupIds) . ')
+  ORDER BY name ASC
+;');
+
+        $byId = [];
+        foreach ($rows as $row) {
+            if (! is_numeric($row['id']) || ! is_string($row['name'])) {
+                continue;
+            }
+
+            $byId[(int) $row['id']] = $row['name'];
+        }
+
+        return $byId;
     }
 }

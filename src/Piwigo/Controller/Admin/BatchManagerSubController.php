@@ -17,7 +17,6 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Image\ImageService;
 use Piwigo\Lang\Translator;
 use Piwigo\Tag\TagService;
@@ -181,11 +180,8 @@ final class BatchManagerSubController implements AdminSubControllerInterface
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
-            $query = '
-DELETE FROM ' . Tables::caddie() . '
-  WHERE user_id = ' . $userId . '
-;';
-            DbConnection::build()->executeStatement($query);
+            new \Piwigo\Caddie\CaddieRepository(DbConnection::build())
+                ->replaceForUser($userId, []);
 
             $_SESSION['page_infos'] = [
                 Lang::t('Information data registered in database'),
@@ -684,14 +680,7 @@ DELETE FROM ' . Tables::caddie() . '
         $dimensions = [];
 
         // get all width, height and ratios
-        $query = '
-SELECT
-  DISTINCT width, height
-  FROM ' . Tables::images() . '
-  WHERE width IS NOT NULL
-    AND height IS NOT NULL
-;';
-        foreach (DbConnection::build()->fetchAllAssociative($query) as $row) {
+        foreach (self::imageService()->getDistinctDimensions() as $row) {
             if (is_numeric($row['width']) && is_numeric($row['height']) && $row['width'] > 0 && $row['height'] > 0) {
                 $widths[] = $row['width'];
                 $heights[] = $row['height'];
@@ -775,14 +764,7 @@ SELECT
         $filesizes = [];
         $filesize = [];
 
-        $query = '
-SELECT
-  filesize
-  FROM ' . Tables::images() . '
-  WHERE filesize IS NOT NULL
-  GROUP BY filesize
-;';
-        foreach (DbConnection::build()->fetchAllAssociative($query) as $row) {
+        foreach (self::imageService()->getDistinctFilesizes() as $row) {
             if (is_numeric($row['filesize'])) {
                 $filesizes[] = sprintf('%.1f', (float) $row['filesize'] / 1024.0);
             }

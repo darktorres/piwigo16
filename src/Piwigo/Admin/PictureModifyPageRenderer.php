@@ -51,6 +51,11 @@ final class PictureModifyPageRenderer
         return \Piwigo\Bootstrap\CoreDomainAccessor::tagService();
     }
 
+    private static function categoryService(): CategoryService
+    {
+        return \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
+    }
+
     /**
      * DRY extraction (Phase 1k DI-chain audit): the same PermissionService
      * recipe was repeated verbatim at 3 sites in this file.
@@ -98,18 +103,7 @@ final class PictureModifyPageRenderer
         }
 
         // represent
-        $query = '
-SELECT id
-  FROM ' . Tables::categories() . '
-  WHERE representative_picture_id = ' . $image_id . '
-;';
-        $represented_albums_raw = array_column($conn->fetchAllAssociative($query), 'id');
-        $represented_albums = [];
-        foreach ($represented_albums_raw as $represented_album_value) {
-            if (is_numeric($represented_album_value)) {
-                $represented_albums[] = (int) $represented_album_value;
-            }
-        }
+        $represented_albums = self::categoryService()->getCategoryIdsRepresentedByImage($image_id);
 
         // +-------------------------------------------------------------------+
         // |                             delete photo                          |
@@ -235,12 +229,10 @@ SELECT id
 
             $new_thumbnail_for = array_diff($represent_categories, $represented_albums);
             if (count($new_thumbnail_for) > 0) {
-                $query = '
-UPDATE ' . Tables::categories() . '
-  SET representative_picture_id = ' . $image_id . '
-  WHERE id IN (' . implode(',', $new_thumbnail_for) . ')
-;';
-                $conn->executeStatement($query);
+                self::categoryService()->setRepresentativeImageForCategories(
+                    array_values(array_map(intval(...), $new_thumbnail_for)),
+                    $image_id
+                );
                 \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
             }
 
@@ -383,21 +375,9 @@ SELECT
         ];
 
         if (\Piwigo\Config\CurrentConfig::rateEnabled() && ! in_array($row['rating_score'], [null, false, 0, 0.0, '0', '', []], true)) {
-            $query = '
-SELECT
-    COUNT(*)
-  FROM ' . Tables::rate() . '
-  WHERE element_id = ' . $image_id . '
-;';
-            $rate_row = $conn->fetchNumeric($query);
-            // a COUNT(*) query always yields exactly one row; this guard is what
-            // actually protects the list-destructure below (not assert(), which is
-            // a no-op under this app's zend.assertions=-1).
-            if ($rate_row !== false) {
-                $row['nb_rates'] = $rate_row[0] ?? null;
+            $row['nb_rates'] = \Piwigo\Bootstrap\ExtendedDomainAccessor::rateService()->countRatesForElement($image_id);
 
-                $intro_vars['stats'] .= ', ' . sprintf(Lang::t('Rated %d times, score : %.2f'), is_numeric($row['nb_rates']) ? (int) $row['nb_rates'] : 0, is_numeric($row['rating_score']) ? (float) $row['rating_score'] : 0.0);
-            }
+            $intro_vars['stats'] .= ', ' . sprintf(Lang::t('Rated %d times, score : %.2f'), $row['nb_rates'], is_numeric($row['rating_score']) ? (float) $row['rating_score'] : 0.0);
         }
 
         $formats = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
@@ -431,17 +411,10 @@ SELECT
         );
 
         // categories
-        $query = '
-SELECT category_id, uppercats, dir
-  FROM ' . Tables::imageCategory() . ' AS ic
-    INNER JOIN ' . Tables::categories() . ' AS c
-      ON c.id = ic.category_id
-  WHERE image_id = ' . $image_id . '
-;';
         $related_categories = [];
         $related_categories_ids = [];
 
-        foreach ($conn->fetchAllAssociative($query) as $cat_row) {
+        foreach ($imageService->getCategoryLinksForImage($image_id) as $cat_row) {
             $raw_row_category_id = $cat_row['category_id'];
             $row_category_id = (is_int($raw_row_category_id) || is_string($raw_row_category_id)) ? (string) $raw_row_category_id : '';
             $row_uppercats = is_string($cat_row['uppercats']) ? $cat_row['uppercats'] : '';
@@ -485,21 +458,9 @@ SELECT category_id, uppercats, dir
                 'image_id' => $image_id,
             ]) . '/' . $custom_context);
         } elseif (\Piwigo\Users\CurrentUser::get()->level >= $image_level) {
-            $query = '
-SELECT category_id
-  FROM ' . Tables::imageCategory() . '
-  WHERE image_id = ' . $image_id . '
-;';
-
-            // array_column() over the fetched rows gives list<mixed> here since
-            // only the 'category_id' column is selected; drop non-scalar rows then
-            // stringify, since DBAL can hand back native ints for this column.
             $authorized_category_ids = array_map(
                 strval(...),
-                array_filter(
-                    array_column($conn->fetchAllAssociative($query), 'category_id'),
-                    static fn (mixed $v): bool => is_int($v) || is_string($v)
-                )
+                $imageService->getCategoryIdsForImage($image_id)
             );
 
             $authorizeds = array_diff(
@@ -530,13 +491,7 @@ SELECT category_id
         }
 
         // associate to albums
-        $query = '
-SELECT id
-  FROM ' . Tables::categories() . '
-    INNER JOIN ' . Tables::imageCategory() . ' ON id = category_id
-  WHERE image_id = ' . $image_id . '
-;';
-        $associated_albums = array_column($conn->fetchAllAssociative($query), 'id');
+        $associated_albums = $imageService->getAssociatedCategoryIds($image_id);
 
         $template->assign([
             'associated_albums' => $associated_albums,

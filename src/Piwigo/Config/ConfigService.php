@@ -564,6 +564,37 @@ final readonly class ConfigService
     }
 
     /**
+     * @return list<string>
+     */
+    public function getAllParamNames(): array
+    {
+        return $this->repo->findAllParamNames();
+    }
+
+    /**
+     * @return list<array{param: string, value: ?string}>
+     */
+    public function getParamsAndValuesLike(string $likePattern): array
+    {
+        return $this->repo->findParamsAndValuesLike($likePattern);
+    }
+
+    public function insertIgnoreRawValue(string $param, string $value): void
+    {
+        $this->repo->insertIgnoreRawValue($param, $value);
+    }
+
+    public function findRawValue(string $param): string|false
+    {
+        return $this->repo->findRawValue($param);
+    }
+
+    public function countByParam(string $param): int
+    {
+        return $this->repo->countByParam($param);
+    }
+
+    /**
      * @param array<mixed>|string|int|float|bool|null $value
      */
     private static function encode(string $param, array|string|int|float|bool|null $value): ?string

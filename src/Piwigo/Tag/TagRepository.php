@@ -484,10 +484,182 @@ SELECT id
         $em->clear();
     }
 
+    /**
+     * Image count per tag, every tag/image counted regardless of
+     * permissions -- Admin\TagsPageRenderer's own "permissions are not
+     * taken into account" listing, unlike {@see countImagesPerTag()}
+     * above (that one restricts to visible/permitted images via an
+     * image_category JOIN, for the public-facing WS listing).
+     *
+     * @return array<int, int> [tag_id => counter]
+     */
+    public function countImagesPerTagUnrestricted(): array
+    {
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative('
+SELECT tag_id, COUNT(image_id) AS counter
+  FROM ' . Tables::imageTag() . '
+  GROUP BY tag_id
+;');
+
+        $counters = [];
+        foreach ($rows as $row) {
+            $tagId = $row['tag_id'];
+            if (! is_numeric($tagId)) {
+                continue;
+            }
+
+            $counters[(int) $tagId] = is_numeric($row['counter']) ? (int) $row['counter'] : 0;
+        }
+
+        return $counters;
+    }
+
+    /**
+     * Comma-joined tag ids per image, for images linked to any of $tagIds
+     * -- Ws\PwgTags::getImages()'s own "OR mode" per-image tag list.
+     *
+     * @param  list<int>  $tagIds
+     * @param  list<int>  $imageIds
+     * @return array<int, string> keyed by image_id, value a comma-joined tag id list
+     */
+    public function findCommaJoinedTagIdsByImageIds(array $tagIds, array $imageIds): array
+    {
+        if ($tagIds === [] || $imageIds === []) {
+            return [];
+        }
+
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative('
+SELECT image_id, GROUP_CONCAT(tag_id) AS tag_ids
+  FROM ' . Tables::imageTag() . '
+  WHERE tag_id IN (' . implode(',', $tagIds) . ')
+    AND image_id IN (' . implode(',', $imageIds) . ')
+  GROUP BY image_id
+;');
+
+        $byImageId = [];
+        foreach ($rows as $row) {
+            $imageId = $row['image_id'];
+            if (! is_numeric($imageId)) {
+                continue;
+            }
+
+            $byImageId[(int) $imageId] = is_scalar($row['tag_ids'] ?? null) ? (string) $row['tag_ids'] : '';
+        }
+
+        return $byImageId;
+    }
+
+    public function findById(TagId $id): ?Tag
+    {
+        $entity = $this->find($id);
+
+        return $entity === null ? null : self::toProjection($entity);
+    }
+
+    public function existsById(int $id): bool
+    {
+        $value = $this->getEntityManager()
+            ->getConnection()
+            ->fetchOne('
+SELECT COUNT(*)
+  FROM ' . Tables::tags() . '
+  WHERE id = ' . $id . '
+;');
+
+        return is_numeric($value) && (int) $value > 0;
+    }
+
+    /**
+     * @param  list<int>  $ids
+     */
+    public function countExistingIds(array $ids): int
+    {
+        if ($ids === []) {
+            return 0;
+        }
+
+        $value = $this->getEntityManager()
+            ->getConnection()
+            ->fetchOne('
+SELECT COUNT(*)
+  FROM ' . Tables::tags() . '
+  WHERE id IN (' . implode(',', $ids) . ')
+;');
+
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    public function existsByName(string $name): bool
+    {
+        $value = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from(Tables::tags())
+            ->where('name = :name')
+            ->setParameter('name', $name)
+            ->executeQuery()
+            ->fetchOne();
+
+        return is_numeric($value) && (int) $value > 0;
+    }
+
+    /**
+     * Every tag name except $excludeId's own -- Ws\PwgTags::rename()'s
+     * own "is the new name already taken by a different tag" check.
+     *
+     * @return list<string>
+     */
+    public function findOtherNames(int $excludeId): array
+    {
+        return array_map(
+            static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
+            $this->getEntityManager()
+                ->getConnection()
+                ->createQueryBuilder()
+                ->select('name')
+                ->from(Tables::tags())
+                ->where('id != :excludeId')
+                ->setParameter('excludeId', $excludeId)
+                ->executeQuery()
+                ->fetchFirstColumn()
+        );
+    }
+
     private static function toProjection(TagEntity $entity): Tag
     {
         assert($entity->id !== null);
 
         return new Tag($entity->id, $entity->name, $entity->urlName, $entity->lastmodified);
+    }
+
+    /**
+     * Total row count of `tags` -- Admin\InstallationStats's own
+     * "nb_tags" summary figure.
+     */
+    public function countAll(): int
+    {
+        $value = $this->getEntityManager()
+            ->getConnection()
+            ->fetchOne('SELECT COUNT(*) FROM ' . Tables::tags() . ';');
+
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /**
+     * Total row count of `image_tag` -- Admin\InstallationStats's own
+     * "nb_image_tag" summary figure.
+     */
+    public function countAllImageTagLinks(): int
+    {
+        $value = $this->getEntityManager()
+            ->getConnection()
+            ->fetchOne('SELECT COUNT(*) FROM ' . Tables::imageTag() . ';');
+
+        return is_numeric($value) ? (int) $value : 0;
     }
 }

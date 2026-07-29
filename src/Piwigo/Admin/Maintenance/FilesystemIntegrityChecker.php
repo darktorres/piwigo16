@@ -6,8 +6,6 @@ namespace Piwigo\Admin\Maintenance;
 
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 
 /**
  * Ported from admin/include/functions.php's fs_quick_check()/
@@ -51,32 +49,18 @@ final class FilesystemIntegrityChecker
         self::$fsQuickCheckDone = true;
         \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('fs_quick_check_last_check', date('c'));
 
-        $conn = DbConnection::build();
+        $imageService = \Piwigo\Bootstrap\CoreDomainAccessor::imageService();
 
-        $query = '
-SELECT
-    id
-  FROM ' . Tables::images() . '
-  WHERE date_available < \'2022-12-08 00:00:00\'
-    AND path LIKE \'./upload/%\'
-  LIMIT 5000
-;';
         $issue1827_ids = array_map(
-            static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
-            array_column($conn->fetchAllAssociative($query), 'id')
+            static fn (int $v): string => (string) $v,
+            $imageService->getIssue1827CandidateImageIds(5000)
         );
         shuffle($issue1827_ids);
         $issue1827_ids = array_slice($issue1827_ids, 0, 50);
 
-        $query = '
-SELECT
-    id
-  FROM ' . Tables::images() . '
-  LIMIT 5000
-;';
         $random_image_ids = array_map(
-            static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
-            array_column($conn->fetchAllAssociative($query), 'id')
+            static fn (int $v): string => (string) $v,
+            $imageService->getImageIdsSample(5000)
         );
         shuffle($random_image_ids);
         $random_image_ids = array_slice($random_image_ids, 0, 50);
@@ -87,14 +71,11 @@ SELECT
             return;
         }
 
-        $query = '
-SELECT
-    id,
-    path
-  FROM ' . Tables::images() . '
-  WHERE id IN (' . implode(',', $fs_quick_check_ids) . ')
-;';
-        $fsqc_paths = array_column($conn->fetchAllAssociative($query), 'path', 'id');
+        $fsqc_paths = array_column(
+            $imageService->getPathsForFileDeletion($fs_quick_check_ids),
+            'path',
+            'id'
+        );
 
         foreach ($fsqc_paths as $id => $path) {
             // path is a NOT NULL column in the images table, root-relative
@@ -104,7 +85,6 @@ SELECT
             // as-is (found live: a real Visual Regression failure, a
             // spurious "some photos are missing" banner on every admin
             // dashboard load).
-            assert(is_string($path));
             if (! file_exists(CurrentPaths::get()->root . $path)) {
                 $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -120,14 +100,7 @@ SELECT
         }
 
         // search for duplicate paths
-        $query = '
-SELECT
-    path
-  FROM ' . Tables::images() . '
-  GROUP BY path
-  HAVING COUNT(*) > 1
-;';
-        $duplicate_paths = $conn->fetchAllAssociative($query);
+        $duplicate_paths = $imageService->getDuplicatePaths();
 
         if (count($duplicate_paths) > 0) {
             $template = \Piwigo\Template\CurrentTemplate::get();
@@ -145,27 +118,12 @@ SELECT
 
     public static function imagesIntegrity(): void
     {
-        $conn = DbConnection::build();
+        $imageService = \Piwigo\Bootstrap\CoreDomainAccessor::imageService();
 
-        $query = '
-SELECT
-    image_id
-  FROM ' . Tables::imageCategory() . '
-    LEFT JOIN ' . Tables::images() . ' ON id = image_id
-  WHERE id IS NULL
-;';
-        $orphan_image_ids = array_map(
-            static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
-            array_column($conn->fetchAllAssociative($query), 'image_id')
-        );
+        $orphan_image_ids = $imageService->getOrphanImageCategoryLinkIds();
 
         if (count($orphan_image_ids) > 0) {
-            $query = '
-DELETE
-  FROM ' . Tables::imageCategory() . '
-  WHERE image_id IN (' . implode(',', $orphan_image_ids) . ')
-;';
-            $conn->executeStatement($query);
+            $imageService->deleteImageCategoryRowsForImageIds($orphan_image_ids);
         }
     }
 

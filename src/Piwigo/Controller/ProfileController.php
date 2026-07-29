@@ -15,6 +15,7 @@ use Piwigo\Db\Tables;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
+use Piwigo\Users\UserService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -45,6 +46,11 @@ final class ProfileController implements ControllerInterface
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
     ) {}
+
+    private static function userService(): UserService
+    {
+        return \Piwigo\Bootstrap\CoreDomainAccessor::userService();
+    }
 
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
@@ -110,37 +116,14 @@ final class ProfileController implements ControllerInterface
             'show_nb_comments', 'show_nb_hits', 'recent_period', 'show_nb_hits',
         ];
 
-        // Get the Guest custom settings
-        $default_user_id = \Piwigo\Config\CurrentConfig::defaultUserId();
-        $query = '
-SELECT ' . implode(',', $fields) . '
-  FROM ' . Tables::userInfos() . '
-  WHERE user_id = ' . $default_user_id . '
-;';
-        $conn = DbConnection::build();
-        $default_user = $conn->fetchAssociative($query);
-        // The guest user_infos row can plausibly be missing (deleted directly in
-        // DB, broken migration, ...); fall back to an empty array rather than
-        // trusting a no-op assert() (zend.assertions=-1 in this environment --
-        // see getuserdata() in functions_user.inc.php for the same "fetch may
-        // fail" invariant handled with a real guard instead of assert()).
-        $default_user = is_array($default_user) ? $default_user : [];
-
-        // expand/show_nb_comments/show_nb_hits are real tinyint columns
-        // now (User domain Stage 1a) -- this is a raw fetchAssociative(),
-        // not routed through UserService::getUserData()'s own
-        // normalization, so these 3 are still raw ints here. Normalize to
-        // real bool BEFORE the $userdata merge below (so
-        // loadIntoTemplate()'s `(bool) $userdata[...]` stays correct --
-        // (bool) on the *string* 'false' this method used to hand it
-        // would be true, a real regression the merge would have
-        // introduced) -- then render the JS-literal-string form
-        // separately, only for the template assignment.
-        foreach (['expand', 'show_nb_comments', 'show_nb_hits'] as $k) {
-            if (isset($default_user[$k])) {
-                $default_user[$k] = SqlDialect::getBoolean($default_user[$k]);
-            }
-        }
+        // Get the Guest custom settings -- UserService::getDefaultUserInfo()
+        // already provides this exact row (process-cached, expand/
+        // show_nb_comments/show_nb_hits already real bool), narrowed back
+        // down to $fields so no extra column (activation_key included)
+        // leaks into the DEFAULT_USER_VALUES template assignment below,
+        // matching this method's own original raw-query column list.
+        $default_user = self::userService()->getDefaultUserInfo();
+        $default_user = is_array($default_user) ? array_intersect_key($default_user, array_flip($fields)) : [];
 
         // profile.tpl's inline JS (preferencesDefaultValues) interpolates
         // these bare/unquoted, relying on the *old* enum('true','false')

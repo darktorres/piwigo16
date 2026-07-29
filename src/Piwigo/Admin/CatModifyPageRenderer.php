@@ -4,12 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
-use Piwigo\Db\Tables;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Template\Template;
 
@@ -50,7 +47,6 @@ final class CatModifyPageRenderer
 
         $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
 
-        $categoryConn = DbConnection::build();
         $categoryService = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_cat_modify');
@@ -92,13 +88,7 @@ final class CatModifyPageRenderer
         /** @var array<string, mixed> $category */
         $category['is_virtual'] = in_array($category['dir'], [null, false, 0, '0', '', []], true) ? true : false;
 
-        $query = 'SELECT DISTINCT category_id
-  FROM ' . Tables::imageCategory() . '
-  WHERE category_id = :category_id
-  LIMIT 1';
-        $category['has_images'] = count($categoryConn->fetchAllAssociative($query, [
-            'category_id' => $category_id,
-        ])) > 0 ? true : false;
+        $category['has_images'] = $categoryService->hasImages($category_id);
 
         // number of sub-categories
         $subcat_ids = $categoryService->getSubcatIds([$category_id]);
@@ -181,16 +171,7 @@ final class CatModifyPageRenderer
                 $base_url . 'batch_manager&amp;filter=album-' . $category_id
             );
 
-            $query = '
-SELECT
-    COUNT(image_id),
-    MIN(DATE(date_available)),
-    MAX(DATE(date_available))
-  FROM ' . Tables::images() . '
-    JOIN ' . Tables::imageCategory() . ' ON image_id = id
-  WHERE category_id = ' . $category_id . '
-;';
-            $row = $categoryConn->fetchNumeric($query);
+            $row = $categoryService->getPhotoCountAndDateRange($category_id);
             if ($row === false) {
                 throw new \Exception("cat_modify: aggregate photo count/date query returned no row for category #{$category_id}");
             }
@@ -230,54 +211,31 @@ SELECT
         );
 
         // total number of images under this category (including sub-categories)
-        $query = '
-SELECT DISTINCT
-    (image_id)
-  FROM
-    ' . Tables::imageCategory() . '
-  WHERE
-    category_id IN (' . implode(',', $subcat_ids) . ')
-  ;';
-        $image_ids_recursive = array_column($categoryConn->fetchAllAssociative($query), 'image_id');
+        $image_ids_recursive = $categoryService->getDistinctImageIdsInCategories($subcat_ids);
 
         $category['nb_images_recursive'] = count($image_ids_recursive);
 
         // date creation
-        $query = '
-SELECT occured_on
-  FROM `' . Tables::activity() . '`
-  WHERE object_id = ' . $category_id . '
-    AND object = "album"
-    AND action = "add"
-';
-        $result = $categoryConn->fetchAllAssociative($query);
+        $occured_on = \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
+            ->getOccuredOnForObject($category_id, 'album', 'add');
 
-        if (count($result) > 0) {
-            // occured_on is a nullable timestamp column; the driver always types
-            // fetched values as string|null, so narrow with real fallbacks rather
-            // than assuming a value is present.
-            $occured_on = $result[0]['occured_on'];
+        if ($occured_on !== null) {
             $template->assign(
                 [
-                    'INFO_CREATION_SINCE' => \Piwigo\Core\DateHelper::timeSince(is_string($occured_on) ? $occured_on : '', 'day', $format = null, $with_text = true, $with_week = true, $only_last_unit = true),
-                    'INFO_CREATION' => \Piwigo\Core\DateHelper::formatDate(is_string($occured_on) ? $occured_on : false, ['day', 'month', 'year']),
+                    'INFO_CREATION_SINCE' => \Piwigo\Core\DateHelper::timeSince($occured_on, 'day', $format = null, $with_text = true, $with_week = true, $only_last_unit = true),
+                    'INFO_CREATION' => \Piwigo\Core\DateHelper::formatDate($occured_on, ['day', 'month', 'year']),
                 ]
             );
         }
 
         // Sub Albums
-        $query = '
-SELECT COUNT(*)
-  FROM `' . Tables::categories() . '`
-  WHERE id_uppercat = ' . $category_id . '
-';
-        $result = $categoryConn->fetchAllAssociative($query);
+        $nb_direct_sub = count($categoryService->getChildrenOfParent($category_id));
 
         $template->assign(
             [
                 'INFO_DIRECT_SUB' => Lang::t(
                     '%d sub-albums',
-                    $result[0]['COUNT(*)']
+                    $nb_direct_sub
                 ),
             ]
         );
@@ -310,7 +268,7 @@ SELECT COUNT(*)
         ]);
 
         if (! (bool) $category['is_virtual']) {
-            $category['cat_full_dir'] = $this->getCompleteDir($categoryConn, $category_id);
+            $category['cat_full_dir'] = $this->getCompleteDir($category_id);
             $category_full_dir = preg_replace('/\/$/', '', $category['cat_full_dir']);
             $template->assign(
                 [
@@ -384,9 +342,9 @@ SELECT COUNT(*)
      * Piwigo files and this category has 22 for identifier
      * getCompleteDir(22) returns "./galleries/pets/rex/1_year_old/"
      */
-    private function getCompleteDir(Connection $conn, int|string $category_id): string
+    private function getCompleteDir(int|string $category_id): string
     {
-        return $this->getSiteUrl($conn, $category_id) . $this->getLocalDir($conn, $category_id);
+        return $this->getSiteUrl($category_id) . $this->getLocalDir($category_id);
     }
 
     /**
@@ -395,7 +353,7 @@ SELECT COUNT(*)
      * Piwigo files and this category has 22 for identifier
      * getLocalDir(22) returns "pets/rex/1_year_old/"
      */
-    private function getLocalDir(Connection $conn, int|string $category_id): string
+    private function getLocalDir(int|string $category_id): string
     {
         $local_dir = '';
 
@@ -403,26 +361,17 @@ SELECT COUNT(*)
         // this used to read as a shortcut is confirmed dead (nothing in the
         // codebase ever populated it) and $page is retired as a channel
         // altogether, so this always takes the DB-lookup path now.
-        $query = 'SELECT uppercats';
-        $query .= ' FROM ' . Tables::categories() . ' WHERE id = ' . $category_id;
-        $query .= ';';
-        $row = $conn->fetchAssociative($query);
-        if ($row === false) {
+        $categoryService = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
+        $uppercats = $categoryService->getCategoryUppercatsById((int) $category_id);
+        if ($uppercats === null) {
             throw new \Exception(__FUNCTION__ . "(): category #{$category_id} not found");
         }
-        $uppercats = is_string($row['uppercats']) ? $row['uppercats'] : '';
 
         $upper_array = explode(',', $uppercats);
 
         $database_dirs = [];
-        $query = 'SELECT id,dir';
-        $query .= ' FROM ' . Tables::categories() . ' WHERE id IN (' . $uppercats . ')';
-        $query .= ';';
-        foreach ($conn->fetchAllAssociative($query) as $dir_row) {
-            $dir_row_id = $dir_row['id'];
-            if (is_int($dir_row_id) || is_string($dir_row_id)) {
-                $database_dirs[$dir_row_id] = is_scalar($dir_row['dir']) ? (string) $dir_row['dir'] : '';
-            }
+        foreach ($categoryService->getDirsByIds(explode(',', $uppercats)) as $dir_row_id => $dir) {
+            $database_dirs[$dir_row_id] = is_scalar($dir) ? (string) $dir : '';
         }
         foreach ($upper_array as $id) {
             $local_dir .= ($database_dirs[$id] ?? '') . '/';
@@ -435,20 +384,14 @@ SELECT COUNT(*)
      * retrieving the site url : "http://domain.com/gallery/" or
      * simply "./galleries/"
      */
-    private function getSiteUrl(Connection $conn, int|string $category_id): string
+    private function getSiteUrl(int|string $category_id): string
     {
-        $query = '
-SELECT galleries_url
-  FROM ' . Tables::sites() . ' AS s,' . Tables::categories() . ' AS c
-  WHERE s.id = c.site_id
-    AND c.id = ' . $category_id . '
-;';
-        $row = $conn->fetchAssociative($query);
-        if ($row === false) {
+        $galleries_url = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService()->getGalleriesUrlForCategory($category_id);
+        if ($galleries_url === null) {
             throw new \Exception(__FUNCTION__ . "(): category #{$category_id} not found");
         }
-        $galleries_url = $row['galleries_url'];
-        return is_string($galleries_url) ? $galleries_url : '';
+
+        return $galleries_url;
     }
 
     private function getMinLocalDir(?string $local_dir): ?string

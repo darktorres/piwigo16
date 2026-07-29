@@ -9,7 +9,6 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Permission\PermissionService;
 
@@ -34,7 +33,6 @@ final class UserPermPageRenderer
 
         $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
 
-        $conn = DbConnection::build();
         // Built once, reused below -- was the same PermissionService recipe
         // repeated verbatim at 2 sites in this method (Phase 1k DI-chain audit).
         $permissionService = \Piwigo\Bootstrap\CoreDomainAccessor::permissionService();
@@ -95,16 +93,7 @@ final class UserPermPageRenderer
         // retrieve category ids authorized to the groups the user belongs to
         $group_authorized = [];
 
-        $query = '
-SELECT DISTINCT cat_id, c.uppercats, c.global_rank
-  FROM ' . Tables::userGroup() . ' AS ug
-    INNER JOIN ' . Tables::groupAccess() . ' AS ga
-      ON ug.group_id = ga.group_id
-    INNER JOIN ' . Tables::categories() . ' AS c
-      ON c.id = ga.cat_id
-  WHERE ug.user_id = ' . $user_id . '
-;';
-        $group_rows = $conn->fetchAllAssociative($query);
+        $group_rows = $categoryService->getCategoriesAuthorizedViaGroupsForUser($user_id);
 
         if (count($group_rows) > 0) {
             $cats = [];
@@ -142,12 +131,10 @@ SELECT id,name,uppercats,global_rank
 ;';
         $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true', $htmlRenderer, $template);
 
-        $authorized_ids = [];
-        foreach ($conn->fetchAllAssociative($query_true) as $row) {
-            if (is_int($row['id']) || is_string($row['id'])) {
-                $authorized_ids[] = (string) $row['id'];
-            }
-        }
+        $authorized_ids = array_map(
+            strval(...),
+            $categoryService->getPrivateCategoryIdsGrantedToUser($user_id, array_map(intval(...), $group_authorized))
+        );
 
         $query_false = '
 SELECT id,name,uppercats,global_rank

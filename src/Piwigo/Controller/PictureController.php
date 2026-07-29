@@ -17,7 +17,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeImage;
@@ -164,24 +163,17 @@ final class PictureController implements ControllerInterface
         $image_file = $section_context->imageFile;
 
         $currentUser = \Piwigo\Users\CurrentUser::get();
-        $user_id = $currentUser->id->value;
 
         // if this image_id doesn't correspond to this category, an error
         // message is displayed, and execution is stopped
         if (! isset($rank_of[$image_id])) {
-            $query = '
-SELECT id, file, level
-  FROM ' . Tables::images() . '
-  WHERE ';
             if ($image_id > 0) {
-                $query .= 'id = ' . $image_id;
+                $escaped_image_file = null;
             } else {// url given by file name
                 assert($image_file !== null && $image_file !== '');
-                $query .= 'file LIKE \'' .
-                  str_replace(['_', '%'], ['/_', '/%'], $image_file) .
-                  '.%\' ESCAPE \'/\' LIMIT 1';
+                $escaped_image_file = str_replace(['_', '%'], ['/_', '/%'], $image_file);
             }
-            $row = $conn->fetchAssociative($query);
+            $row = self::imageService()->findByIdOrFilePattern($image_id, $escaped_image_file);
             if ($row === false) {// element does not exist
                 \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                     ->pageNotFound(
@@ -230,15 +222,13 @@ SELECT id, file, level
                     \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                         ->accessDenied($this->redirectService);
                 } else {// try to see if we can access it differently
-                    $query = '
-SELECT id
-  FROM ' . Tables::images() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id=image_id
-  WHERE id=' . $image_id
-                      . self::permissionService()->getSqlConditionFandF([
-                          'forbidden_categories' => 'category_id',
-                      ], ' AND') . '
-  LIMIT 1';
-                    if ($conn->fetchOne($query) === false) {
+                    $accessible = self::imageService()->isImageAccessibleWithCondition(
+                        $image_id,
+                        self::permissionService()->getSqlConditionFandF([
+                            'forbidden_categories' => 'category_id',
+                        ], ' AND')
+                    );
+                    if (! $accessible) {
                         \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                             ->accessDenied($this->redirectService);
                     } else {
@@ -367,25 +357,14 @@ SELECT id
             switch ($pictureRequest->action) {
                 case 'add_to_favorites':
 
-                    $query = '
-INSERT INTO ' . Tables::favorites() . '
-  (image_id,user_id)
-  VALUES
-  (' . $image_id . ',' . $user_id . ')
-;';
-                    $conn->executeStatement($query);
+                    self::userService()->addFavorite($currentUser->id, $image_id);
 
                     $this->redirectService->redirect($url_self);
 
                     // no break
                 case 'remove_from_favorites':
 
-                    $query = '
-DELETE FROM ' . Tables::favorites() . '
-  WHERE user_id = ' . $user_id . '
-    AND image_id = ' . $image_id . '
-;';
-                    $conn->executeStatement($query);
+                    self::userService()->removeFavorite($currentUser->id, $image_id);
 
                     if ($section_context->section === 'favorites') {
                         $this->redirectService->redirect($url_up);
@@ -399,12 +378,7 @@ DELETE FROM ' . Tables::favorites() . '
                     if (\Piwigo\Auth\AccessControl::isAdmin() and $page_category !== null) {
                         $representative_category_id = $page_category['id'] ?? null;
                         $representative_category_id = is_numeric($representative_category_id) ? (int) $representative_category_id : 0;
-                        $query = '
-UPDATE ' . Tables::categories() . '
-  SET representative_picture_id = ' . $image_id . '
-  WHERE id = ' . $representative_category_id . '
-;';
-                        $conn->executeStatement($query);
+                        self::categoryService()->setRepresentativeImage($representative_category_id, $image_id);
                         \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
                         \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()->record('album', $representative_category_id, 'edit', [
                             'action' => $pictureRequest->action,
@@ -585,21 +559,16 @@ UPDATE ' . Tables::categories() . '
         }
 
         // -------------------------------------------------- related categories
-        $query = '
-SELECT id,uppercats,commentable,visible,status,global_rank
-  FROM ' . Tables::imageCategory() . '
-    INNER JOIN ' . Tables::categories() . ' ON category_id = id
-  WHERE image_id = ' . $image_id . '
-' . self::permissionService()->getSqlConditionFandF([
-            'forbidden_categories' => 'id',
-            'visible_categories' => 'id',
-        ], 'AND') . '
-;';
         // Row shape is mixed, not uniformly string|null -- see
         // PictureCommentRenderer::render()'s own param docblock for the
         // real per-column breakdown.
-        /** @var list<array<string, mixed>> $related_categories */
-        $related_categories = $conn->fetchAllAssociative($query);
+        $related_categories = self::imageService()->getVisibleCategoriesForImage(
+            $image_id,
+            self::permissionService()->getSqlConditionFandF([
+                'forbidden_categories' => 'id',
+                'visible_categories' => 'id',
+            ], 'AND')
+        );
         usort($related_categories, CategoryService::compareByGlobalRank(...));
         // ---------------------- first, prev, current, next & last picture management
         $picture = [];
@@ -996,18 +965,7 @@ SELECT id,uppercats,commentable,visible,status,global_rank
         if (! \Piwigo\Auth\AccessControl::isAGuest() and \Piwigo\Config\CurrentConfig::pictureFavoriteIcon()) {
             // verify if the picture is already in the favorite of the
             // user
-            $query = '
-SELECT COUNT(*) AS nb_fav
-  FROM ' . Tables::favorites() . '
-  WHERE image_id = ' . $image_id . '
-    AND user_id = ' . $user_id . '
-;';
-            $row = $conn->fetchAssociative($query);
-            if ($row === false) {
-                throw new \Exception('picture.php: favorite-count aggregate query returned no row');
-            }
-            $nb_fav = $row['nb_fav'];
-            $is_favorite = (is_numeric($nb_fav) ? (int) $nb_fav : 0) !== 0;
+            $is_favorite = self::userService()->isFavorite($currentUser->id, $image_id);
 
             $template->assign(
                 'favorite',
@@ -1151,12 +1109,7 @@ SELECT COUNT(*) AS nb_fav
                 $ids = array_merge($ids, explode(',', is_scalar($categoryUppercats) ? (string) $categoryUppercats : ''));
             }
             $ids = array_unique($ids);
-            $query = '
-SELECT id, name, permalink
-  FROM ' . Tables::categories() . '
-  WHERE id IN (' . implode(',', $ids) . ')';
-            /** @var array<int|string, array<string, string|null>> $cat_map */
-            $cat_map = array_column($conn->fetchAllAssociative($query), null, 'id');
+            $cat_map = self::categoryService()->getNamesByIds(array_values(array_map(intval(...), $ids)));
             foreach ($related_categories as $category) {
                 $cats = [];
                 $categoryUppercats = $category['uppercats'];

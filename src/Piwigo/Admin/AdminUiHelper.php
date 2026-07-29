@@ -178,19 +178,9 @@ final class AdminUiHelper
             '_hash' => md5($urlService->getAbsoluteRootUrl()),
         ];
 
-        $conn = DbConnection::build();
+        $dbInfo = new \Piwigo\Db\DbInfo(DbConnection::build());
         foreach ($requested as $item) {
-            $query = '
-SELECT CONCAT(
-    UNIX_TIMESTAMP(MAX(lastmodified)),
-    "_",
-    COUNT(*)
-  )
-  FROM `' . $tables[$item] . '`
-;';
-            $cache_key = $conn->fetchOne($query);
-            assert(is_string($cache_key));
-            $keys[$item] = $cache_key;
+            $keys[$item] = $dbInfo->getTableFingerprint($tables[$item]);
         }
 
         return $keys;

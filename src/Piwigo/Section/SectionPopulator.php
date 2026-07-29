@@ -13,7 +13,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\Tables;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Search\SearchService;
 use Piwigo\Session\SessionService;
@@ -298,17 +297,13 @@ final readonly class SectionPopulator
                     // get all allowed sub-categories
                     if ($page_category !== null) {
                         $uppercats = $page_category['uppercats'];
-                        $query = '
-SELECT id
-  FROM ' . Tables::categories() . '
-  WHERE
-    uppercats LIKE \'' . $uppercats . ',%\' '
-    . $this->permissionService->getSqlConditionFandF([
-        'forbidden_categories' => 'id',
-        'visible_categories' => 'id',
-    ], "\n  AND");
-
-                        $subcat_ids_raw = $this->repo->queryColumn($query);
+                        $subcat_ids_raw = $this->repo->findVisibleSubcategoryIds(
+                            $uppercats,
+                            $this->permissionService->getSqlConditionFandF([
+                                'forbidden_categories' => 'id',
+                                'visible_categories' => 'id',
+                            ], "\n  AND")
+                        );
                         $subcat_ids = array_values(array_filter($subcat_ids_raw, is_string(...)));
                         $subcat_ids[] = (string) $page_category['id'];
                         $where_sql = 'category_id IN (' . implode(',', $subcat_ids) . ')';
@@ -355,18 +350,7 @@ SELECT id
                     // here, same fix as CalendarRepository::findImageIds()/
                     // SearchService::getQuickSearchResultsNoCache() -- `id`
                     // and `image_id` are equal per the JOIN condition.
-                    $query = '
-SELECT id
-  FROM ' . Tables::imageCategory() . '
-    INNER JOIN ' . Tables::images() . ' ON id = image_id
-  WHERE
-    ' . $where_sql . '
-' . $forbidden . '
-  GROUP BY id
-  ' . $order_by . '
-;';
-
-                    $page['items'] = $this->repo->queryColumn($query);
+                    $page['items'] = $this->repo->findSectionImageIds($where_sql, $forbidden, $order_by);
 
                     if ($cache_item instanceof \Psr\Cache\CacheItemInterface) {
                         $cache_item->set($page['items']);
@@ -472,31 +456,23 @@ SELECT id
                     ]
                 );
 
-                $user_id_sql = \Piwigo\Users\CurrentUser::get()->id->value;
+                $current_user_id = \Piwigo\Users\CurrentUser::get()->id;
                 if (Request\FavoritesActionRequest::fromGlobals()->removeAllFromFavorites) {
-                    $query = '
-DELETE FROM ' . Tables::favorites() . '
-  WHERE user_id = ' . $user_id_sql . '
-;';
-                    $this->repo->executeStatement($query);
+                    $this->userService->removeAllFavorites($current_user_id);
                     $this->redirectService->redirect($this->urlService->makeIndexUrl([
                         'section' => 'favorites',
                     ]));
                 } else {
-                    $query = '
-SELECT image_id
-  FROM ' . Tables::favorites() . '
-    INNER JOIN ' . Tables::images() . ' ON image_id = id
-  WHERE user_id = ' . $user_id_sql . '
-' . $this->permissionService->getSqlConditionFandF([
-                        'visible_images' => 'id',
-                    ], 'AND') . '
-  ' . $order_by . '
-;';
                     $page = array_merge(
                         $page,
                         [
-                            'items' => $this->repo->queryColumn($query),
+                            'items' => $this->userService->getVisibleFavoriteImageIds(
+                                $current_user_id,
+                                $this->permissionService->getSqlConditionFandF([
+                                    'visible_images' => 'id',
+                                ], 'AND'),
+                                $order_by
+                            ),
                         ]
                     );
 
@@ -534,17 +510,6 @@ SELECT image_id
                 // query above; $order_by orders by date_available, images'
                 // own column, so `id` is a full functional-dependency key
                 // for it.
-                $query = '
-SELECT id
-  FROM ' . Tables::images() . '
-    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
-  WHERE '
-  . $this->userService->getRecentPhotosSql('date_available') . '
-  ' . $forbidden . '
-  GROUP BY id
-  ' . $order_by . '
-;';
-
                 $page = array_merge(
                     $page,
                     [
@@ -552,7 +517,11 @@ SELECT id
                             'start' => 0,
                         ]) . '">'
                                     . Lang::t('Recent photos') . '</a>',
-                        'items' => $this->repo->queryColumn($query),
+                        'items' => $this->repo->findRecentImageIds(
+                            $this->userService->getRecentPhotosSql('date_available'),
+                            $forbidden,
+                            $order_by
+                        ),
                     ]
                 );
             }
@@ -581,17 +550,6 @@ SELECT id
 
                 // GROUP BY id, same ONLY_FULL_GROUP_BY fix as above --
                 // $order_by orders by hit/id, both images' own columns.
-                $query = '
-SELECT id
-  FROM ' . Tables::images() . '
-    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
-  WHERE hit > 0
-    ' . $forbidden . '
-    GROUP BY id
-    ' . $order_by . '
-  LIMIT ' . $top_number . '
-;';
-
                 $page = array_merge(
                     $page,
                     [
@@ -599,7 +557,7 @@ SELECT id
                             'start' => 0,
                         ]) . '">'
                                     . $top_number . ' ' . Lang::t('Most visited') . '</a>',
-                        'items' => $this->repo->queryColumn($query),
+                        'items' => $this->repo->findTopByHitsImageIds($forbidden, $order_by, $top_number),
                     ]
                 );
             }
@@ -615,16 +573,6 @@ SELECT id
                 // GROUP BY id, same ONLY_FULL_GROUP_BY fix as above --
                 // $order_by orders by rating_score/id, both images' own
                 // columns.
-                $query = '
-SELECT id
-  FROM ' . Tables::images() . '
-    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
-  WHERE rating_score IS NOT NULL
-    ' . $forbidden . '
-    GROUP BY id
-    ' . $order_by . '
-  LIMIT ' . $top_number . '
-;';
                 $page = array_merge(
                     $page,
                     [
@@ -632,7 +580,7 @@ SELECT id
                             'start' => 0,
                         ]) . '">'
                                     . $top_number . ' ' . Lang::t('Best rated') . '</a>',
-                        'items' => $this->repo->queryColumn($query),
+                        'items' => $this->repo->findTopRatedImageIds($forbidden, $order_by, $top_number),
                     ]
                 );
             }
@@ -644,19 +592,9 @@ SELECT id
                 // (a dummy [-1] or a real id list) alongside 'section' => 'list'
                 assert(isset($page['list']));
                 $list_ids_raw = is_array($page['list']) ? array_filter($page['list'], is_scalar(...)) : [];
-                $list_ids = array_map(strval(...), $list_ids_raw);
+                $list_ids = array_values(array_map(strval(...), $list_ids_raw));
                 // GROUP BY id, same ONLY_FULL_GROUP_BY fix as above --
                 // $order_by orders by images' own columns.
-                $query = '
-SELECT id
-  FROM ' . Tables::images() . '
-    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
-  WHERE image_id IN (' . implode(',', $list_ids) . ')
-    ' . $forbidden . '
-  GROUP BY id
-  ' . $order_by . '
-;';
-
                 $page = array_merge(
                     $page,
                     [
@@ -664,7 +602,7 @@ SELECT id
                             'start' => 0,
                         ]) . '">'
                                     . Lang::t('Random photos') . '</a>',
-                        'items' => $this->repo->queryColumn($query),
+                        'items' => $this->repo->findImageIdsAmongList($list_ids, $forbidden, $order_by),
                     ]
                 );
             }

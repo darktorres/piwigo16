@@ -97,6 +97,11 @@ final class PwgCategories
         return \Piwigo\Bootstrap\CoreDomainAccessor::userService();
     }
 
+    private static function imageService(): \Piwigo\Image\ImageService
+    {
+        return \Piwigo\Bootstrap\CoreDomainAccessor::imageService();
+    }
+
     /**
      * Gap-closure Stage 4h: replaces `user_cache_categories.
      * user_representative_picture_id` -- a per-user "remembered random
@@ -143,19 +148,13 @@ final class PwgCategories
      */
     public static function getImages(array $params, PwgServer &$service): PwgError|array
     {
-        $conn = DbConnection::build();
         $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
 
         $params['cat_id'] = array_unique($params['cat_id']);
 
         if (count($params['cat_id']) > 0) {
             // do the categories really exist?
-            $query = '
-SELECT id
-  FROM ' . Tables::categories() . '
-  WHERE id IN (' . implode(',', $params['cat_id']) . ')
-;';
-            $db_cat_ids = array_map(intval(...), array_filter(array_column($conn->fetchAllAssociative($query), 'id'), is_numeric(...)));
+            $db_cat_ids = self::categoryService()->getExistingIds(array_values($params['cat_id']));
             $missing_cat_ids = array_diff($params['cat_id'], $db_cat_ids);
 
             if (count($missing_cat_ids) > 0) {
@@ -183,17 +182,8 @@ SELECT id
             'forbidden_categories' => 'id',
         ], null, true);
 
-        $query = '
-SELECT
-    id,
-    image_order
-  FROM ' . Tables::categories() . '
-  WHERE ' . implode("\n    AND ", $where_clauses) . '
-;';
-
         $cats = [];
-        foreach ($conn->fetchAllAssociative($query) as $row) {
-            $row['id'] = is_numeric($row['id']) ? (int) $row['id'] : 0;
+        foreach (self::categoryService()->getIdsAndImageOrderWithConditions($where_clauses) as $row) {
             $cats[$row['id']] = $row;
         }
 
@@ -209,29 +199,19 @@ SELECT
             if ($order_by === ''
                   and count($params['cat_id']) === 1
                   and isset($cats[$params['cat_id'][0]]['image_order'])
-                  and is_string($cats[$params['cat_id'][0]]['image_order'])
             ) {
                 $order_by = $cats[$params['cat_id'][0]]['image_order'];
             }
             $order_by = $order_by === '' ? \Piwigo\Config\CurrentConfig::orderBy() : 'ORDER BY ' . $order_by;
             $favorite_ids = $urlService->getUserFavorites();
 
-            $query = '
-SELECT SQL_CALC_FOUND_ROWS i.*
-  FROM ' . Tables::images() . ' i
-    INNER JOIN ' . Tables::imageCategory() . ' ON i.id=image_id
-  WHERE ' . implode("\n    AND ", $where_clauses) . '
-  GROUP BY i.id
-  ' . $order_by . '
-  LIMIT ' . $params['per_page'] . '
-  OFFSET ' . ($params['per_page'] * $params['page']) . '
-;';
-            // Fetched eagerly (rather than a lazy mysqli-style cursor) so the
-            // SELECT FOUND_ROWS() below -- which reads THIS query's stats on
-            // the SAME connection/session -- can safely run right after,
-            // matching the established "one shared $conn for a
-            // SQL_CALC_FOUND_ROWS/FOUND_ROWS() pair" pattern.
-            $rows = $conn->fetchAllAssociative($query);
+            $paginated_images = self::imageService()->getWithConditionsPaginated(
+                $where_clauses,
+                $order_by,
+                $params['per_page'],
+                $params['per_page'] * $params['page']
+            );
+            $rows = $paginated_images->rows;
 
             foreach ($rows as $image_row) {
                 // id is images.id, a NOT NULL primary key -- verified against
@@ -262,46 +242,33 @@ SELECT SQL_CALC_FOUND_ROWS i.*
                 $images[] = $image;
             }
 
-            $total_images_result = $conn->fetchOne('SELECT FOUND_ROWS()');
-            $total_images = is_numeric($total_images_result) ? (int) $total_images_result : 0;
+            $total_images = $paginated_images->total ?? 0;
 
             // let's take care of adding the related albums to each photo
             if (count($image_ids) > 0) {
                 $category_ids = [];
 
                 // find the complete list (given permissions) of albums linked to photos
-                $query = '
-SELECT
-    image_id,
-    category_id
-  FROM ' . Tables::imageCategory() . '
-  WHERE image_id IN (' . implode(',', $image_ids) . ')
-    AND ' . self::permissionService()->getSqlConditionFandF([
-                    'forbidden_categories' => 'category_id',
-                ], null, true) . '
-;';
+                $image_category_rows = self::imageService()->getCategoryLinksForImageIdsWithCondition(
+                    $image_ids,
+                    self::permissionService()->getSqlConditionFandF([
+                        'forbidden_categories' => 'category_id',
+                    ], null, true)
+                );
                 $categories_of_image = [];
-                foreach ($conn->fetchAllAssociative($query) as $image_category_row) {
-                    // image_id/category_id are NOT NULL columns of image_category
-                    // -- verified against install/piwigo_structure-mysql.sql.
-                    $row_image_id = is_numeric($image_category_row['image_id']) ? (int) $image_category_row['image_id'] : 0;
-                    $row_category_id = is_numeric($image_category_row['category_id']) ? (int) $image_category_row['category_id'] : 0;
-                    $category_ids[] = $row_category_id;
-                    $categories_of_image[$row_image_id][] = $row_category_id;
+                foreach ($image_category_rows as $image_category_row) {
+                    $category_ids[] = $image_category_row['category_id'];
+                    $categories_of_image[$image_category_row['image_id']][] = $image_category_row['category_id'];
                 }
 
                 $details_for_category = [];
                 if (count($category_ids) > 0) {
                     // find details (for URL generation) about each album
-                    $query = '
-SELECT
-    id,
-    name,
-    permalink
-  FROM ' . Tables::categories() . '
-  WHERE id IN (' . implode(',', $category_ids) . ')
-;';
-                    $details_for_category = array_column($conn->fetchAllAssociative($query), null, 'id');
+                    $details_for_category = array_column(
+                        self::categoryService()->getCategoriesByIds(array_values(array_unique($category_ids))),
+                        null,
+                        'id'
+                    );
                 }
 
                 foreach ($images as $idx => $img) {
@@ -488,39 +455,19 @@ SELECT
             $rollupByCatId = self::categoryTreeCache($categoryConn)->getForUser($currentUser->toUserArray());
         }
 
-        $query = '
-SELECT SQL_CALC_FOUND_ROWS
-    id, name, comment, permalink, status,
-    uppercats, global_rank, id_uppercat,
-    representative_picture_id,
-    image_order
-  FROM ' . Tables::categories() . '
-  WHERE ' . implode("\n    AND ", $where);
+        $search_term = (isset($params['search']) and $params['search'] !== '') ? $params['search'] : null;
 
-        if (isset($params['search']) and $params['search'] !== '') {
-            $query .= '
-    AND name LIKE ' . $categoryConn->quote('%' . $params['search'] . '%');
-            if (! isset($params['limit'])) {
-                $query .= ' LIMIT ' . \Piwigo\Config\CurrentConfig::linkedAlbumSearchLimit();
-            }
-        }
+        $paginated_cats = self::categoryService()->getListForWs(
+            $where,
+            $search_term,
+            \Piwigo\Config\CurrentConfig::linkedAlbumSearchLimit(),
+            $params['limit'],
+            $params['cat_id'] > 0
+        );
+        $rows = $paginated_cats->rows;
 
         if (isset($params['limit'])) {
-            $query .= '
-  ORDER BY `rank` ASC
-  LIMIT ' . ($params['limit'] + ($params['cat_id'] > 0 ? 1 : 0));
-        }
-
-        $query .= '
-;';
-        // Fetched eagerly so the SELECT FOUND_ROWS() below -- which reads
-        // THIS query's stats on the SAME connection/session -- can safely
-        // run right after, same pattern as getImages() above.
-        $rows = $categoryConn->fetchAllAssociative($query);
-
-        if (isset($params['limit'])) {
-            $result_count = $categoryConn->fetchOne('SELECT FOUND_ROWS()');
-            $result_count = is_numeric($result_count) ? (int) $result_count : 0;
+            $result_count = $paginated_cats->total ?? 0;
             if ($params['cat_id'] > 0) {
                 --$result_count;
             }
@@ -626,25 +573,18 @@ SELECT SQL_CALC_FOUND_ROWS
                     // Gap-closure Stage 4h (docs/plan/gap-closure-p0-p23.md):
                     // dropped the user_cache_categories INNER JOIN -- a real,
                     // live regression fix (Stage 4g deleted the table's only
-                    // remaining writer), not just cleanup. The
-                    // getSqlConditionFandF() condition already appended below
-                    // was *already* a live, correctly-scoped duplicate of the
-                    // same "is this category visible" check, same as
-                    // CategoryRepository::findRandomRepresentativeIdAmongSubcategories().
-                    $query = '
-SELECT representative_picture_id
-  FROM ' . Tables::categories() . '
-  WHERE uppercats LIKE \'' . $row['uppercats'] . ',%\'
-    AND representative_picture_id IS NOT NULL
-        ' . self::permissionService()->getSqlConditionFandF([
-                        'visible_categories' => 'id',
-                    ], "\n  AND") . '
-  ORDER BY ' . SqlDialect::DB_RANDOM_FUNCTION . '()
-  LIMIT 1
-;';
-                    $subrow_image_id = $categoryConn->fetchOne($query);
+                    // remaining writer), not just cleanup. Same query as
+                    // CategoryCatsRenderer's own identical lookup, now
+                    // shared via CategoryRepository::
+                    // findRandomRepresentativeIdAmongSubcategories().
+                    $subrow_image_id = $categoryService->getRandomRepresentativeIdAmongSubcategories(
+                        $row['uppercats'],
+                        self::permissionService()->getSqlConditionFandF([
+                            'visible_categories' => 'id',
+                        ], "\n  AND")
+                    );
 
-                    if ($subrow_image_id !== false) {
+                    if ($subrow_image_id !== null) {
                         $image_id = $subrow_image_id;
                     }
                 }
@@ -690,16 +630,9 @@ SELECT representative_picture_id
             $thumbnail_src_of = [];
             $new_image_ids = [];
 
-            $query = '
-SELECT id, path, representative_ext, level
-  FROM ' . Tables::images() . '
-  WHERE id IN (' . implode(',', $image_ids) . ')
-;';
-            foreach ($categoryConn->fetchAllAssociative($query) as $row) {
+            foreach (self::imageService()->getPathsAndLevelForIds($image_ids) as $row) {
                 if ($row['level'] <= $currentUser->level) {
-                    // id is images.id, a NOT NULL primary key -- verified
-                    // against install/piwigo_structure-mysql.sql.
-                    $thumbnail_src_of[is_numeric($row['id']) ? (int) $row['id'] : 0] = DerivativeImage::url($params['thumbnail_size'], $row);
+                    $thumbnail_src_of[$row['id']] = DerivativeImage::url($params['thumbnail_size'], $row);
                 } else {
                     // problem: we must not display the thumbnail of a photo which has a
                     // higher privacy level than user privacy level
@@ -709,7 +642,7 @@ SELECT id, path, representative_ext, level
                     // * register it at user_representative_picture_id
                     // * set it as the representative_picture_id for the category
                     foreach ($categories as &$category) {
-                        if (is_numeric($row['id']) and (int) $row['id'] === $category['representative_picture_id']) {
+                        if ($row['id'] === $category['representative_picture_id']) {
                             // searching a random representant among elements in sub-categories
                             $image_id = $categoryService->getRandomImageInCategory($category);
 
@@ -731,13 +664,8 @@ SELECT id, path, representative_ext, level
             }
 
             if (count($new_image_ids) > 0) {
-                $query = '
-SELECT id, path, representative_ext
-  FROM ' . Tables::images() . '
-  WHERE id IN (' . implode(',', $new_image_ids) . ')
-;';
-                foreach ($categoryConn->fetchAllAssociative($query) as $row) {
-                    $thumbnail_src_of[is_numeric($row['id']) ? (int) $row['id'] : 0] = DerivativeImage::url($params['thumbnail_size'], $row);
+                foreach (self::imageService()->getPathsForFileDeletion($new_image_ids) as $row) {
+                    $thumbnail_src_of[$row['id']] = DerivativeImage::url($params['thumbnail_size'], $row);
                 }
             }
         }
@@ -802,19 +730,12 @@ SELECT id, path, representative_ext
      */
     public static function getAdminList(array $params, PwgServer &$service): array
     {
-        $conn = DbConnection::build();
-
         if (! isset($params['additional_output'])) {
             $params['additional_output'] = '';
         }
         $params['additional_output'] = array_map(trim(...), explode(',', $params['additional_output']));
 
-        $query = '
-SELECT category_id, COUNT(*) AS counter
-  FROM ' . Tables::imageCategory() . '
-  GROUP BY category_id
-;';
-        $nb_images_of = array_column($conn->fetchAllAssociative($query), 'counter', 'category_id');
+        $nb_images_of = self::categoryService()->getPhotoCountsByCategory();
 
         // pwg_db_real_escape_string
 
@@ -834,25 +755,14 @@ SELECT category_id, COUNT(*) AS counter
               $params['cat_id'] . '(,|$)\'';
         }
 
-        $query = '
-SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, status, image_order
-  FROM ' . Tables::categories() . '
-  WHERE ' . implode("\n    AND ", $where);
-
-        if (isset($params['search']) and $params['search'] !== '') {
-            $query .= '
-  AND name LIKE ' . $conn->quote('%' . $params['search'] . '%') . '
-  LIMIT ' . \Piwigo\Config\CurrentConfig::linkedAlbumSearchLimit();
-        }
-
-        $query .= '
-;';
-        // Fetched eagerly so the SELECT FOUND_ROWS() below -- which reads
-        // THIS query's stats on the SAME connection/session -- can safely
-        // run right after, same pattern as getImages()/getList() above.
-        $rows = $conn->fetchAllAssociative($query);
-
-        $counter = $conn->fetchOne('SELECT FOUND_ROWS()');
+        $search_term = (isset($params['search']) and $params['search'] !== '') ? $params['search'] : null;
+        $paginated_admin_cats = self::categoryService()->getAdminListForWs(
+            $where,
+            $search_term,
+            \Piwigo\Config\CurrentConfig::linkedAlbumSearchLimit()
+        );
+        $rows = $paginated_admin_cats->rows;
+        $counter = $paginated_admin_cats->total ?? 0;
 
         $cats = [];
         foreach ($rows as $row) {
@@ -905,24 +815,14 @@ SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, statu
             $cats_ids = array_column($cats, 'id');
             $nb_subcats_of = [];
             if ($cats_ids !== []) {
-                $cats_ids = array_map(strval(...), array_filter($cats_ids, is_scalar(...)));
+                $cats_ids = array_map(intval(...), array_filter($cats_ids, is_numeric(...)));
 
-                $query = '
-SELECT
-    id_uppercat,
-    COUNT(*) AS nb_subcats
-  FROM ' . Tables::categories() . '
-  WHERE id_uppercat IN (' . implode(',', $cats_ids) . ')
-  GROUP BY id_uppercat
-';
-
-                $nb_subcats_of = array_column($conn->fetchAllAssociative($query), 'nb_subcats', 'id_uppercat');
+                $nb_subcats_of = self::categoryService()->getSubcategoryCountsByParent(array_values($cats_ids));
             }
 
             foreach ($cats as $idx => $cat) {
                 $cat_id = $cat['id'];
-                $nb_subcats_value = is_numeric($cat_id) ? ($nb_subcats_of[(int) $cat_id] ?? 0) : 0;
-                $cats[$idx]['nb_categories'] = is_numeric($nb_subcats_value) ? (int) $nb_subcats_value : 0;
+                $cats[$idx]['nb_categories'] = is_numeric($cat_id) ? ($nb_subcats_of[(string) $cat_id] ?? 0) : 0;
             }
         }
 
@@ -1015,21 +915,15 @@ SELECT
      */
     public static function setRank(array $params, PwgServer &$service): ?PwgError
     {
-        $conn = DbConnection::build();
-
         // does the category really exist?
-        $query = '
-SELECT id, id_uppercat, `rank`
-  FROM ' . Tables::categories() . '
-  WHERE id IN (' . implode(',', $params['category_id']) . ')
-;';
-        $categories = $conn->fetchAllAssociative($query);
+        $categories = self::categoryService()->getRankInfoByIds(array_values($params['category_id']));
 
         if (count($categories) === 0) {
             return new PwgError(404, 'category_id not found');
         }
 
         $category = $categories[0];
+        $parent_id = ($category['id_uppercat'] !== null && $category['id_uppercat'] !== 0) ? $category['id_uppercat'] : null;
 
         // check the number of category given by the user
         if (count($params['category_id']) > 1) {
@@ -1037,14 +931,7 @@ SELECT id, id_uppercat, `rank`
             $order_new_by_id = $order_new;
             sort($order_new_by_id, SORT_NUMERIC);
 
-            $query = '
-SELECT id
-  FROM ' . Tables::categories() . '
-  WHERE id_uppercat ' . ((is_numeric($category['id_uppercat']) && (int) $category['id_uppercat'] !== 0) ? '= ' . (string) $category['id_uppercat'] : 'IS NULL') . '
-  ORDER BY `id` ASC
-;';
-
-            $cat_asc = array_map(intval(...), array_filter(array_column($conn->fetchAllAssociative($query), 'id'), is_numeric(...)));
+            $cat_asc = self::categoryService()->getIdsByParentOrderedById($parent_id);
 
             if (strcmp(implode(',', $cat_asc), implode(',', $order_new_by_id)) !== 0) {
                 return new PwgError(WsError::INVALID_PARAM, 'you need to provide all sub-category ids for a given category');
@@ -1052,15 +939,7 @@ SELECT id
         } else {
             $params['category_id'] = implode('', $params['category_id']);
 
-            $query = '
-SELECT id
-  FROM ' . Tables::categories() . '
-  WHERE id_uppercat ' . ((is_numeric($category['id_uppercat']) && (int) $category['id_uppercat'] !== 0) ? '= ' . (string) $category['id_uppercat'] : 'IS NULL') . '
-    AND id != ' . $params['category_id'] . '
-  ORDER BY `rank` ASC
-;';
-
-            $order_old = array_column($conn->fetchAllAssociative($query), 'id');
+            $order_old = self::categoryService()->getSiblingIdsExcludingOrderedByRank($parent_id, (int) $params['category_id']);
             $order_new = [];
             $was_inserted = false;
             $i = 1;
@@ -1191,39 +1070,18 @@ SELECT id
      */
     public static function setRepresentative(array $params, PwgServer &$service): ?PwgError
     {
-        $conn = DbConnection::build();
-
         // does the category really exist?
-        $query = '
-SELECT COUNT(*)
-  FROM ' . Tables::categories() . '
-  WHERE id = ' . $params['category_id'] . '
-;';
-        $count = $conn->fetchOne($query);
-        $count = is_numeric($count) ? (int) $count : 0;
-        if ($count === 0) {
+        if (! self::categoryService()->existsById($params['category_id'])) {
             return new PwgError(404, 'category_id not found');
         }
 
         // does the image really exist?
-        $query = '
-SELECT COUNT(*)
-  FROM ' . Tables::images() . '
-  WHERE id = ' . $params['image_id'] . '
-;';
-        $count = $conn->fetchOne($query);
-        $count = is_numeric($count) ? (int) $count : 0;
-        if ($count === 0) {
+        if (! self::imageService()->existsById($params['image_id'])) {
             return new PwgError(404, 'image_id not found');
         }
 
         // apply change
-        $query = '
-UPDATE ' . Tables::categories() . '
-  SET representative_picture_id = ' . $params['image_id'] . '
-  WHERE id = ' . $params['category_id'] . '
-;';
-        $conn->executeStatement($query);
+        self::categoryService()->setRepresentativeImage($params['category_id'], $params['image_id']);
         \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
         // Gap-closure Stage 4h: was `UPDATE user_cache_categories SET
@@ -1255,36 +1113,18 @@ UPDATE ' . Tables::categories() . '
      */
     public static function deleteRepresentative(array $params, PwgServer &$service): ?PwgError
     {
-        $conn = DbConnection::build();
-
         // does the category really exist?
-        $query = '
-SELECT id
-  FROM ' . Tables::categories() . '
-  WHERE id = ' . $params['category_id'] . '
-;';
-        if ($conn->fetchOne($query) === false) {
+        if (! self::categoryService()->existsById($params['category_id'])) {
             return new PwgError(404, 'category_id not found');
         }
 
-        $query = '
-SELECT COUNT(*)
-  FROM ' . Tables::imageCategory() . '
-  WHERE category_id = ' . $params['category_id'] . '
-;';
-        $nb_images = $conn->fetchOne($query);
-        $nb_images = is_numeric($nb_images) ? (int) $nb_images : 0;
+        $has_images = self::categoryService()->hasImages($params['category_id']);
 
-        if (! \Piwigo\Config\CurrentConfig::allowRandomRepresentative() and $nb_images !== 0) {
+        if (! \Piwigo\Config\CurrentConfig::allowRandomRepresentative() and $has_images) {
             return new PwgError(401, 'not permitted');
         }
 
-        $query = '
-UPDATE ' . Tables::categories() . '
-  SET representative_picture_id = NULL
-  WHERE id = ' . $params['category_id'] . '
-;';
-        $conn->executeStatement($query);
+        self::categoryService()->clearRepresentativeImage($params['category_id']);
         \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
         self::activityService()->record('album', $params['category_id'], 'edit');
@@ -1307,30 +1147,16 @@ UPDATE ' . Tables::categories() . '
     {
         $categoryConn = DbConnection::build();
 
+        $categoryService = self::categoryService();
+
         // does the category really exist?
-        $query = '
-SELECT id
-  FROM ' . Tables::categories() . '
-  WHERE id = ' . $params['category_id'] . '
-;';
-        if ($categoryConn->fetchOne($query) === false) {
+        if (! $categoryService->existsById($params['category_id'])) {
             return new PwgError(404, 'category_id not found');
         }
 
-        $query = '
-SELECT
-    DISTINCT category_id
-  FROM ' . Tables::imageCategory() . '
-  WHERE category_id = ' . $params['category_id'] . '
-  LIMIT 1
-;';
-        $has_images = $categoryConn->fetchOne($query) !== false;
-
-        if (! $has_images) {
+        if (! $categoryService->hasImages($params['category_id'])) {
             return new PwgError(401, 'not permitted');
         }
-
-        $categoryService = self::categoryService();
 
         $categoryService->setRandomRepresentant([$params['category_id']]);
 
@@ -1367,8 +1193,6 @@ SELECT
      */
     public static function delete(array $params, PwgServer &$service): ?PwgError
     {
-        $categoryConn = DbConnection::build();
-
         if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -1407,14 +1231,7 @@ SELECT
             return null;
         }
 
-        $query = '
-SELECT id
-  FROM ' . Tables::categories() . '
-  WHERE id IN (' . implode(',', $category_ids) . ')
-;';
-        // id is a NOT NULL primary key -- verified against
-        // install/piwigo_structure-mysql.sql.
-        $category_ids = array_map(intval(...), array_filter(array_column($categoryConn->fetchAllAssociative($query), 'id'), is_numeric(...)));
+        $category_ids = self::categoryService()->getExistingIds($category_ids);
 
         if (count($category_ids) === 0) {
             return null;
@@ -1447,8 +1264,6 @@ SELECT id
      */
     public static function move(array $params, PwgServer &$service): PwgError|array
     {
-        $categoryConn = DbConnection::build();
-
         if (new CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
@@ -1481,18 +1296,10 @@ SELECT id
         $categories_in_db = [];
         $update_cat_ids = [];
 
-        $query = '
-SELECT id, name, dir, uppercats
-  FROM ' . Tables::categories() . '
-  WHERE id IN (' . implode(',', $category_ids) . ')
-;';
-        foreach ($categoryConn->fetchAllAssociative($query) as $row) {
-            // id is a NOT NULL primary key -- verified against
-            // install/piwigo_structure-mysql.sql.
-            $row_id = is_numeric($row['id']) ? (int) $row['id'] : 0;
+        foreach (self::categoryService()->getMoveDetailsByIds($category_ids) as $row) {
+            $row_id = $row['id'];
             $categories_in_db[$row_id] = $row;
-            $row_uppercats = is_scalar($row['uppercats']) ? (string) $row['uppercats'] : '';
-            $update_cat_ids = array_merge($update_cat_ids, array_slice(explode(',', $row_uppercats), 0, -1));
+            $update_cat_ids = array_merge($update_cat_ids, array_slice(explode(',', $row['uppercats']), 0, -1));
 
             // we break on error at first physical category detected
             if (! in_array($row['dir'], [null, '', '0'], true)) {
@@ -1558,33 +1365,17 @@ SELECT id, name, dir, uppercats
             return new PwgError(403, implode('; ', $pageState->errors));
         }
 
-        $query = '
-  SELECT uppercats
-    FROM ' . Tables::categories() . '
-    WHERE id IN (' . implode(',', $category_ids) . ')
-  ;';
         $cat_display_name = '';
-        foreach ($categoryConn->fetchAllAssociative($query) as $uppercats_row) {
-            // uppercats is a NOT NULL column of the categories table --
-            // verified against install/piwigo_structure-mysql.sql.
-            assert(is_string($uppercats_row['uppercats']));
+        foreach (self::categoryService()->getUppercatsColumns($category_ids) as $uppercats) {
             $cat_display_name = \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->getCatDisplayNameCache(
-                    $uppercats_row['uppercats'],
+                    $uppercats,
                     'admin.php?page=album-'
                 );
-            $update_cat_ids = array_merge($update_cat_ids, array_slice(explode(',', $uppercats_row['uppercats']), 0, -1));
+            $update_cat_ids = array_merge($update_cat_ids, array_slice(explode(',', $uppercats), 0, -1));
         }
 
-        $query = '
-SELECT
-    category_id,
-    COUNT(*) AS nb_photos
-  FROM ' . Tables::imageCategory() . '
-  GROUP BY category_id
-;';
-
-        $nb_photos_in = array_column($categoryConn->fetchAllAssociative($query), 'nb_photos', 'category_id');
+        $nb_photos_in = self::categoryService()->getPhotoCountsByCategory();
 
         $update_cats = [];
         foreach (array_unique($update_cat_ids) as $update_cat) {
@@ -1592,8 +1383,7 @@ SELECT
             $sub_cat_without_parent = array_diff(self::categoryService()->getSubcatIds([$update_cat]), [$update_cat]);
 
             foreach ($sub_cat_without_parent as $id_sub_cat) {
-                $nb_photos_for_sub_cat = $nb_photos_in[$id_sub_cat] ?? 0;
-                $nb_sub_photos += is_numeric($nb_photos_for_sub_cat) ? (int) $nb_photos_for_sub_cat : 0;
+                $nb_sub_photos += $nb_photos_in[$id_sub_cat] ?? 0;
             }
 
             $update_cats[] = [
@@ -1620,20 +1410,10 @@ SELECT
      */
     public static function calculateOrphans(array $param, PwgServer &$service): array
     {
-        $conn = DbConnection::build();
-
         $category_id = $param['category_id'][0];
 
-        $query = '
-SELECT DISTINCT
-    category_id
-  FROM
-    ' . Tables::imageCategory() . '
-  WHERE
-    category_id = ' . $category_id . '
-  LIMIT 1';
         $category = [];
-        $category['has_images'] = $conn->fetchOne($query) !== false;
+        $category['has_images'] = self::categoryService()->hasImages($category_id);
 
         // number of sub-categories
         $subcat_ids = self::categoryService()->getSubcatIds([$category_id]);
@@ -1641,15 +1421,7 @@ SELECT DISTINCT
         $category['nb_subcats'] = count($subcat_ids) - 1;
 
         // total number of images under this category (including sub-categories)
-        $query = '
-SELECT DISTINCT
-    (image_id)
-  FROM
-    ' . Tables::imageCategory() . '
-  WHERE
-    category_id IN (' . implode(',', $subcat_ids) . ')
-  ;';
-        $image_ids_recursive = array_map(intval(...), array_filter(array_column($conn->fetchAllAssociative($query), 'image_id'), is_numeric(...)));
+        $image_ids_recursive = self::categoryService()->getDistinctLinkedImageIds($subcat_ids);
 
         $category['nb_images_recursive'] = count($image_ids_recursive);
 
@@ -1660,22 +1432,7 @@ SELECT DISTINCT
         if ($category['nb_images_recursive'] > 0) {
             // if we don't have "too many" photos, it's faster to compute the orphans with MySQL
             if ($category['nb_images_recursive'] < 1000) {
-                $query = '
-  SELECT DISTINCT
-      (image_id)
-    FROM
-      ' . Tables::imageCategory() . '
-    WHERE
-      category_id
-    NOT IN
-      (' . implode(',', $subcat_ids) . ')
-    AND
-      image_id
-    IN
-      (' . implode(',', $image_ids_recursive) . ')
-  ;';
-
-                $image_ids_associated_outside = array_map(intval(...), array_filter(array_column($conn->fetchAllAssociative($query), 'image_id'), is_numeric(...)));
+                $image_ids_associated_outside = self::categoryService()->getNonOrphanImageIds($image_ids_recursive, $subcat_ids);
                 $category['nb_images_associated_outside'] = count($image_ids_associated_outside);
 
                 $image_ids_becoming_orphan = array_diff($image_ids_recursive, $image_ids_associated_outside);
@@ -1689,17 +1446,7 @@ SELECT DISTINCT
                 // flip directly.
                 $image_ids_recursive_keys = array_flip($image_ids_recursive);
 
-                $query = '
-  SELECT
-      image_id
-    FROM
-      ' . Tables::imageCategory() . '
-    WHERE
-      category_id
-    NOT IN
-      (' . implode(',', $subcat_ids) . ')
-  ;';
-                $image_ids_associated_outside = array_map(intval(...), array_filter(array_column($conn->fetchAllAssociative($query), 'image_id'), is_numeric(...)));
+                $image_ids_associated_outside = self::categoryService()->getImageIdsOutsideCategories($subcat_ids);
                 $image_ids_not_orphan = [];
 
                 foreach ($image_ids_associated_outside as $image_id) {

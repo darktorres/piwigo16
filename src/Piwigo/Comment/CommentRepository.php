@@ -7,6 +7,8 @@ namespace Piwigo\Comment;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityRepository;
 use Piwigo\Comment\Projection\Comment;
+use Piwigo\Comment\Projection\CommentSummary;
+use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Core\CommentCounterInterface;
 use Piwigo\Core\Env;
@@ -301,6 +303,38 @@ final class CommentRepository extends EntityRepository implements CommentCounter
     }
 
     /**
+     * Paginated `id, date, author, content` summaries for a single image,
+     * ordered by date ascending -- Ws\PwgImages::getInfo()'s own "related
+     * comments" block, a different (narrower, no user join) shape from
+     * findForImage() above.
+     *
+     * @return list<CommentSummary>
+     */
+    public function findSummariesForImage(int $imageId, bool $onlyValidated, int $limit, int $offset): array
+    {
+        $qb = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
+            ->select('id', 'date', 'author', 'content')
+            ->from(Tables::comments())
+            ->where('image_id = :imageId')
+            ->setParameter('imageId', $imageId)
+            ->orderBy('date', 'ASC')
+            ->setMaxResults($limit)
+            ->setFirstResult($offset);
+
+        if ($onlyValidated) {
+            $qb->andWhere('validated = 1');
+        }
+
+        return array_map(
+            CommentSummary::fromRow(...),
+            $qb->executeQuery()
+                ->fetchAllAssociative()
+        );
+    }
+
+    /**
      * Validated comment count per image, for a batch of images at once
      * (`CategoryDefaultRenderer`'s main-page thumbnail grid, one query
      * instead of one `countForImage()` call per thumbnail).
@@ -392,5 +426,248 @@ final class CommentRepository extends EntityRepository implements CommentCounter
             ->fetchAllAssociative();
 
         return array_map(Comment::fromRow(...), $rows);
+    }
+
+    /**
+     * Cross-category "all comments" listing (comments.php's own front-end
+     * page) -- $whereClauses are already-built, trusted SQL fragments
+     * (permission/status/search filters, same "caller composes trusted
+     * fragments" contract as {@see countAvailableWithConditions()}),
+     * ANDed together. $userIdColumn/$userEmailColumn resolve
+     * \Piwigo\Config\CurrentConfig::userFields() same as
+     * {@see findForImage()}'s identical parameters. $sortByColumn/
+     * $sortOrder concatenate directly into ORDER BY with no further
+     * validation -- caller must restrict these to a known-safe set first,
+     * same contract as {@see findForImage()}'s own $order.
+     *
+     * Deliberately returns raw rows, not a {@see Comment} Projection: the
+     * `category_id`/`comment_id`-aliased shape here differs from
+     * {@see findForImage()}'s own column list, and that Projection's own
+     * docblock documents it as scoped to exactly that one caller.
+     *
+     * ANY_VALUE(ic.category_id): category_id comes from the JOINed
+     * image_category table, not functionally dependent on the GROUP BY
+     * column (comment_id) -- this connection doesn't strip
+     * ONLY_FULL_GROUP_BY the way the legacy mysqli connection did, so this
+     * needs the explicit opt-out to keep selecting exactly one arbitrary
+     * category per comment, matching the original's own grouping/row
+     * count exactly.
+     *
+     * @param list<string> $whereClauses
+     * @return PaginatedResult<array<string, mixed>>
+     */
+    public function findAllWithConditions(
+        array $whereClauses,
+        string $userIdColumn,
+        string $userEmailColumn,
+        string $sortByColumn,
+        string $sortOrder,
+        int|string $limit,
+        int $offset
+    ): PaginatedResult {
+        $conn = $this->getEntityManager()
+            ->getConnection();
+
+        $sql = '
+SELECT SQL_CALC_FOUND_ROWS com.id AS comment_id,
+   com.image_id,
+   ANY_VALUE(ic.category_id) AS category_id,
+   com.author,
+   com.author_id,
+   u.' . $userEmailColumn . ' AS user_email,
+   com.email,
+   com.date,
+   com.website_url,
+   com.content,
+   com.validated
+  FROM ' . Tables::imageCategory() . ' AS ic
+INNER JOIN ' . Tables::comments() . ' AS com
+ON ic.image_id = com.image_id
+LEFT JOIN ' . Tables::users() . ' AS u
+ON u.' . $userIdColumn . ' = com.author_id
+  WHERE ' . implode('
+AND ', $whereClauses) . '
+  GROUP BY comment_id
+  ORDER BY ' . $sortByColumn . ' ' . $sortOrder . ', comment_id ' . $sortOrder;
+
+        if ($limit !== 'all') {
+            $sql .= '
+  LIMIT ' . $limit . ' OFFSET ' . $offset;
+        }
+
+        $sql .= '
+;';
+
+        $rows = $conn->fetchAllAssociative($sql);
+
+        // FOUND_ROWS() reflects the immediately-preceding query on the
+        // same connection/session.
+        $total_raw = $conn->fetchOne('SELECT FOUND_ROWS()');
+
+        return new PaginatedResult($rows, is_numeric($total_raw) ? (int) $total_raw : null);
+    }
+
+    /**
+     * Total/validated/pending counts matching already-built $whereClauses
+     * -- Ws\PwgComments::getList()'s own summary block, same "caller
+     * composes trusted fragments" contract as
+     * {@see countAvailableWithConditions()} above.
+     *
+     * @param  list<string>  $whereClauses
+     * @return array{all_comments: mixed, validated: mixed, pending: mixed}|null
+     */
+    public function findSummaryCounts(array $whereClauses): ?array
+    {
+        $row = $this->getEntityManager()
+            ->getConnection()
+            ->fetchAssociative('
+SELECT
+  count(*) as all_comments,
+  sum(validated = 1) as validated,
+  sum(validated = 0) as pending
+FROM ' . Tables::comments() . '
+WHERE ' . implode(' AND ', $whereClauses) . '
+;');
+
+        if ($row === false) {
+            return null;
+        }
+
+        return [
+            'all_comments' => $row['all_comments'],
+            'validated' => $row['validated'],
+            'pending' => $row['pending'],
+        ];
+    }
+
+    /**
+     * Paginated admin comment listing (joined with the commenting image
+     * and user) matching already-built $whereClauses -- Ws\PwgComments::
+     * getList()'s own row listing. $userIdColumn/$userUsernameColumn
+     * resolve \Piwigo\Config\CurrentConfig::userFields(), same reasoning
+     * as {@see findForImage()}'s own equivalents.
+     *
+     * @param  list<string>  $whereClauses
+     * @return list<array<string, mixed>>
+     */
+    public function findListForAdminWs(
+        array $whereClauses,
+        string $userIdColumn,
+        string $userUsernameColumn,
+        int $offset,
+        int $limit
+    ): array {
+        return $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative('
+SELECT
+    c.id,
+    c.image_id,
+    c.date,
+    c.author,
+    c.author_id,
+    ' . $userUsernameColumn . ' AS username,
+    ui.status,
+    c.content,
+    i.path,
+    i.representative_ext,
+    i.file,
+    i.date_available,
+    validated,
+    c.anonymous_id
+  FROM ' . Tables::comments() . ' AS c
+    INNER JOIN ' . Tables::images() . ' AS i
+      ON i.id = c.image_id
+    LEFT JOIN ' . Tables::users() . ' AS u
+      ON u.' . $userIdColumn . ' = c.author_id
+    LEFT JOIN ' . Tables::userInfos() . ' AS ui
+      ON ui.user_id = c.author_id
+  WHERE ' . implode(' AND ', $whereClauses) . '
+  ORDER BY c.date DESC, c.id DESC
+  LIMIT ' . $offset . ', ' . $limit . '
+;');
+    }
+
+    /**
+     * Earliest/latest `date` matching already-built $whereClauses --
+     * Ws\PwgComments::getList()'s own "filters" date range.
+     *
+     * @param  list<string>  $whereClauses
+     * @return array{started_at: mixed, ended_at: mixed}|null
+     */
+    public function findDateRange(array $whereClauses): ?array
+    {
+        $row = $this->getEntityManager()
+            ->getConnection()
+            ->fetchAssociative('
+SELECT
+  MIN(date) AS started_at,
+  MAX(date) AS ended_at
+FROM ' . Tables::comments() . '
+WHERE ' . implode(' AND ', $whereClauses) . '
+;');
+
+        if ($row === false) {
+            return null;
+        }
+
+        return [
+            'started_at' => $row['started_at'],
+            'ended_at' => $row['ended_at'],
+        ];
+    }
+
+    /**
+     * Per-author comment counts matching already-built $whereClauses --
+     * Ws\PwgComments::getList()'s own "filters.nb_authors" breakdown.
+     * ANY_VALUE(author): author isn't functionally dependent on the GROUP
+     * BY column (author_id) -- this connection doesn't strip
+     * ONLY_FULL_GROUP_BY the way the legacy mysqli connection did, so this
+     * needs the explicit opt-out to keep selecting exactly one arbitrary
+     * author name per author_id, matching the original grouping/row count
+     * exactly.
+     *
+     * @param  list<string>  $whereClauses
+     * @return list<array<string, mixed>>
+     */
+    public function findAuthorCounts(array $whereClauses): array
+    {
+        return $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative('
+SELECT
+  ANY_VALUE(author) AS author,
+  author_id,
+  count(*) as nb_authors
+FROM ' . Tables::comments() . '
+WHERE ' . implode(' AND ', $whereClauses) . '
+GROUP BY author_id
+;');
+    }
+
+    /**
+     * Total row count of `comments` -- Ws\PwgCore::getInfos()'s own
+     * "nb_comments" summary figure.
+     */
+    public function countAll(): int
+    {
+        $value = $this->getEntityManager()
+            ->getConnection()
+            ->fetchOne('SELECT COUNT(*) FROM ' . Tables::comments() . ';');
+
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /**
+     * Total count of unvalidated (pending) comments -- Ws\PwgCore::
+     * getInfos()'s own "nb_unvalidated_comments" summary figure.
+     */
+    public function countUnvalidated(): int
+    {
+        $value = $this->getEntityManager()
+            ->getConnection()
+            ->fetchOne('SELECT COUNT(*) FROM ' . Tables::comments() . ' WHERE validated=0;');
+
+        return is_numeric($value) ? (int) $value : 0;
     }
 }

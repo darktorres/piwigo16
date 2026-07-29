@@ -12,7 +12,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Section\SectionContextRegistry;
@@ -977,24 +976,15 @@ final class UrlService implements UrlServiceInterface
             return [];
         }
 
-        $user_id = \Piwigo\Users\CurrentUser::get()->id->value;
+        $currentUserId = \Piwigo\Users\CurrentUser::get()->id;
 
-        $query = '
-SELECT
-    image_id,
-    1 as fake_value
-  FROM ' . Tables::favorites() . '
-  WHERE user_id = ' . $user_id . '
-';
-
-        $rows = ($this->conn ??= DbConnection::build())->fetchAllAssociative($query);
+        $imageIds = \Piwigo\Db\EntityManagerFactory::build($this->conn ??= DbConnection::build())
+            ->getRepository(\Piwigo\Users\UserInfoEntity::class)
+            ->findFavoriteImageIds($currentUserId);
 
         $favorites = [];
-        foreach ($rows as $row) {
-            $image_id = $row['image_id'];
-            if (is_numeric($image_id)) {
-                $favorites[(int) $image_id] = 1;
-            }
+        foreach ($imageIds as $image_id) {
+            $favorites[$image_id] = 1;
         }
 
         return $favorites;

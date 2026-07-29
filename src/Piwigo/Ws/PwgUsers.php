@@ -70,6 +70,16 @@ final class PwgUsers
         return \Piwigo\Bootstrap\CoreDomainAccessor::apiKeyService();
     }
 
+    private static function groupService(): \Piwigo\Group\GroupService
+    {
+        return \Piwigo\Bootstrap\CoreDomainAccessor::groupService();
+    }
+
+    private static function imageService(): \Piwigo\Image\ImageService
+    {
+        return \Piwigo\Bootstrap\CoreDomainAccessor::imageService();
+    }
+
     /**
      * API method
      * Returns a list of users
@@ -134,12 +144,10 @@ final class PwgUsers
         $filtered_groups = [];
         if (isset($params['filter']) && $params['filter'] !== '') {
             $filter_like = $conn->quote('%' . $params['filter'] . '%');
-            $filter_query = 'SELECT id FROM `' . Tables::groups() . '` WHERE name LIKE ' . $filter_like . ';';
-            foreach ($conn->fetchAllAssociative($filter_query) as $row) {
-                if (is_scalar($row['id'])) {
-                    $filtered_groups[] = (string) $row['id'];
-                }
-            }
+            $filtered_groups = array_map(
+                strval(...),
+                self::groupService()->getIdsByNameLike('%' . $params['filter'] . '%')
+            );
             $filter_where_clause = '(u.' . $user_field_username . ' LIKE ' . $filter_like . ' OR '
             . 'u.' . $user_field_email . ' LIKE ' . $filter_like;
 
@@ -281,52 +289,21 @@ final class PwgUsers
             }
         }
 
-        $query = '
-SELECT DISTINCT ';
-
-        // ADD SQL_CALC_FOUND_ROWS if display total_count is requested
-        if (isset($display_flags['total_count'])) {
-            $query .= 'SQL_CALC_FOUND_ROWS ';
-        }
-        $first = true;
-        foreach ($display as $field => $name) {
-            if (! $first) {
-                $query .= ', ';
-            } else {
-                $first = false;
-            }
-            $query .= $field . ' AS ' . $name;
-        }
-
-        if (isset($display['ui.last_visit'])) {
-            // $display always has at least the 'id' entry set above the foreach,
-            // so $first is always false by the time we get here.
-            $query .= ', ui.last_visit_from_history AS last_visit_from_history';
-        }
-        $query .= '
-  FROM ' . Tables::users() . ' AS u
-    INNER JOIN ' . Tables::userInfos() . ' AS ui
-      ON u.' . $user_field_id . ' = ui.user_id
-    LEFT JOIN ' . Tables::userGroup() . ' AS ug
-      ON u.' . $user_field_id . ' = ug.user_id
-  WHERE
-    ' . implode(' AND ', $where_clauses) . '
-  ORDER BY ' . $params['order'];
-        if ($params['per_page'] !== 0 || $display_flags !== []) {
-            $query .= '
-    LIMIT ' . $params['per_page'] . '
-    OFFSET ' . ($params['per_page'] * $params['page']) . ';
-    ;';
-        }
+        $apply_limit = $params['per_page'] !== 0 || $display_flags !== [];
+        $paginated_users = self::userService()->getListForWs(
+            $user_field_id,
+            $display,
+            isset($display['ui.last_visit']),
+            $where_clauses,
+            $params['order'],
+            isset($display_flags['total_count']),
+            $apply_limit ? $params['per_page'] : null,
+            $params['per_page'] * $params['page']
+        );
         $users = [];
-        $rows = $conn->fetchAllAssociative($query);
-        $total_count = 0;
+        $rows = $paginated_users->rows;
+        $total_count = $paginated_users->total ?? 0;
 
-        /* GET THE RESULT OF SQL_CALC_FOUND_ROWS if display total_count is requested */
-        if (isset($display_flags['total_count'])) {
-            $total_count_result = $conn->fetchOne('SELECT FOUND_ROWS();');
-            $total_count = is_numeric($total_count_result) ? (int) $total_count_result : 0;
-        }
         // Extracted once (instead of re-checking isset($display_flags['groups'])
         // both inside this loop and again below it) because PHPStan's loop-body
         // type narrowing otherwise mis-infers the offset as unconditionally
@@ -343,15 +320,10 @@ SELECT DISTINCT ';
         $users_id_arr = [];
         if (count($users) > 0) {
             if ($want_groups) {
-                $query = '
-  SELECT user_id, group_id
-  FROM ' . Tables::userGroup() . '
-  WHERE user_id IN (' . implode(',', array_keys($users)) . ')
-;';
                 // a dedicated $group_row (instead of reusing $row from the loop
                 // above, which iterates a differently-shaped result set) keeps
                 // PHPStan's per-loop type inference precise.
-                foreach ($conn->fetchAllAssociative($query) as $group_row) {
+                foreach (self::groupService()->getMembershipsForUserIds(array_keys($users)) as $group_row) {
                     $group_user_id = is_numeric($group_row['user_id']) ? (int) $group_row['user_id'] : null;
                     $group_id = is_numeric($group_row['group_id']) ? (int) $group_row['group_id'] : null;
                     if ($group_user_id === null || $group_id === null || ! isset($users[$group_user_id]) || ! is_array($users[$group_user_id]['groups'] ?? null)) {
@@ -550,13 +522,7 @@ SELECT DISTINCT ';
 
         // an admin can't delete other admin/webmaster
         if ($currentUser->status === \Piwigo\Users\UserStatus::Admin) {
-            $query = '
-SELECT
-    user_id
-  FROM ' . Tables::userInfos() . '
-  WHERE status IN (\'webmaster\', \'admin\')
-;';
-            $protected_users = array_merge($protected_users, array_column(DbConnection::build()->fetchAllAssociative($query), 'user_id'));
+            $protected_users = array_merge($protected_users, self::userService()->getAdminIds());
         }
 
         // protect some users
@@ -687,17 +653,9 @@ SELECT
             // DB column names (see Piwigo\Users\UserService for the same
             // pattern).
             $user_fields = \Piwigo\Config\CurrentConfig::userFields();
-            $user_field_password = $user_fields['password'];
-            $user_field_id = $user_fields['id'];
-            $current_user_id = (string) $currentUser->id->value;
 
-            $query = '
-SELECT ' . $user_field_password . ' AS password
-  FROM ' . Tables::users() . '
-  WHERE ' . $user_field_id . ' = \'' . $current_user_id . '\'
-;';
-            $current_password = DbConnection::build()->fetchOne($query);
-            $current_password = is_string($current_password) ? $current_password : '';
+            $current_password = self::authService()->getPasswordHash($currentUser->id->value, $user_fields['id'], $user_fields['username'], $user_fields['password']);
+            $current_password ??= '';
 
             // $params['password'] is declared string via this function's own
             // @param docblock, but the conditional unset($params['password'])
@@ -785,17 +743,11 @@ SELECT ' . $user_field_password . ' AS password
         }
 
         // does the image really exist?
-        $query = '
-SELECT COUNT(*)
-  FROM ' . Tables::images() . '
-  WHERE id = ' . $params['image_id'] . '
-;';
-        $conn = DbConnection::build();
-        $count = $conn->fetchOne($query);
-        $count = is_numeric($count) ? (int) $count : 0;
-        if ($count === 0) {
+        if (! self::imageService()->existsById($params['image_id'])) {
             return new PwgError(404, 'image_id not found');
         }
+
+        $conn = DbConnection::build();
 
         new BatchWriter($conn)
             ->singleInsert(
@@ -826,27 +778,11 @@ SELECT COUNT(*)
         }
 
         // does the image really exist?
-        $query = '
-SELECT COUNT(*)
-  FROM ' . Tables::images() . '
-  WHERE id = ' . $params['image_id'] . '
-;';
-        $conn = DbConnection::build();
-        $count = $conn->fetchOne($query);
-        $count = is_numeric($count) ? (int) $count : 0;
-        if ($count === 0) {
+        if (! self::imageService()->existsById($params['image_id'])) {
             return new PwgError(404, 'image_id not found');
         }
 
-        $current_user_id = (string) \Piwigo\Users\CurrentUser::get()->id->value;
-        $query = '
-DELETE
-  FROM ' . Tables::favorites() . '
-  WHERE user_id = ' . $current_user_id . '
-    AND image_id = ' . $params['image_id'] . '
-;';
-
-        $conn->executeStatement($query);
+        self::userService()->removeFavorite(\Piwigo\Users\CurrentUser::get()->id, $params['image_id']);
 
         return true;
     }
@@ -872,21 +808,13 @@ DELETE
 
         $order_by = WsHelper::stdImageSqlOrder($params, 'i.');
         $order_by = $order_by === '' ? \Piwigo\Config\CurrentConfig::orderBy() : 'ORDER BY ' . $order_by;
-        $current_user_id = (string) \Piwigo\Users\CurrentUser::get()->id->value;
 
-        $query = '
-SELECT
-    i.*
-  FROM ' . Tables::favorites() . '
-    INNER JOIN ' . Tables::images() . ' i ON image_id = i.id
-  WHERE user_id = ' . $current_user_id . '
-' . new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Category\CategoryEntity::class))->getSqlConditionFandF([
+        $permission_condition = new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Category\CategoryEntity::class))->getSqlConditionFandF([
             'visible_images' => 'id',
-        ], 'AND') . '
-    ' . $order_by . '
-;';
+        ], 'AND');
+
         $images = [];
-        foreach (DbConnection::build()->fetchAllAssociative($query) as $row) {
+        foreach (self::userService()->getVisibleFavoriteImages(\Piwigo\Users\CurrentUser::get()->id, $permission_condition, $order_by) as $row) {
             $image = [];
 
             foreach (['id', 'width', 'height', 'hit'] as $k) {

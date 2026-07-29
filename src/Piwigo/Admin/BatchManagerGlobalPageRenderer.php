@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Piwigo\Admin\BatchManager\FilterPanelRenderer;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
@@ -63,6 +64,11 @@ final class BatchManagerGlobalPageRenderer
     private static function categoryService(): CategoryService
     {
         return \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
+    }
+
+    private static function imageService(): ImageService
+    {
+        return \Piwigo\Bootstrap\CoreDomainAccessor::imageService();
     }
 
     /**
@@ -174,13 +180,8 @@ final class BatchManagerGlobalPageRenderer
 
             if ($action === 'remove_from_caddie') {
                 $current_user_id = \Piwigo\Users\CurrentUser::get()->id->value;
-                $query = '
-DELETE
-  FROM ' . Tables::caddie() . '
-  WHERE element_id IN (' . implode(',', $collection) . ')
-    AND user_id = ' . $current_user_id . '
-;';
-                $conn->executeStatement($query);
+                new \Piwigo\Caddie\CaddieRepository($conn)
+                    ->removeElementsForUser($current_user_id, $collection);
 
                 // remove from caddie action available only in caddie so reload content
                 $redirect = true;
@@ -216,13 +217,10 @@ DELETE
                 if (count($del_tags) > 0) {
                     $taglist_before = $tagService->getImageTagIds($collection);
 
-                    $query = '
-DELETE
-  FROM ' . Tables::imageTag() . '
-  WHERE image_id IN (' . implode(',', $collection) . ')
-    AND tag_id IN (' . implode(',', $del_tags) . ')
-;';
-                    $conn->executeStatement($query);
+                    $tagService->removeTagsFromImages(
+                        $collection,
+                        array_values(array_filter(array_map(TagId::tryFrom(...), $del_tags), static fn (?TagId $id): bool => $id !== null))
+                    );
 
                     $taglist_after = $tagService->getImageTagIds($collection);
                     $images_to_update = $tagService->compareImageTagLists($taglist_before, $taglist_after);
@@ -474,14 +472,11 @@ DELETE
             elseif ($action === 'metadata') {
                 \Piwigo\Core\PageState::current()->addInfo(Lang::t('Metadata synchronized from file') . ' <span class="badge">' . count($collection) . '</span>');
             } elseif ($action === 'delete_derivatives' && isset($post['del_derivatives_type']) && is_array($post['del_derivatives_type']) && count($post['del_derivatives_type']) > 0) {
-                $query = 'SELECT path,representative_ext FROM ' . Tables::images() . '
-  WHERE id IN (' . implode(',', $collection) . ')';
-                foreach ($conn->fetchAllAssociative($query) as $info) {
-                    $info_path = $info['path'];
+                foreach ($imageService->getPathsForFileDeletion($collection) as $info) {
                     $derivative_infos = [
-                        'path' => is_scalar($info_path) ? (string) $info_path : '',
+                        'path' => $info['path'],
                     ];
-                    if (is_string($info['representative_ext'] ?? null) && $info['representative_ext'] !== '') {
+                    if ($info['representative_ext'] !== null && $info['representative_ext'] !== '') {
                         $derivative_infos['representative_ext'] = $info['representative_ext'];
                     }
                     foreach ($post['del_derivatives_type'] as $type) {
@@ -626,10 +621,6 @@ DELETE
                 $order_by = \Piwigo\Config\CurrentConfig::orderBy();
             }
 
-            $query = '
-SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
-  FROM ' . Tables::images();
-
             if ($is_category) {
                 $category_info = self::categoryService()->getCategoryInfo($filter_category_id);
 
@@ -638,26 +629,11 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
                 if (is_string($category_image_order) && $category_image_order !== '') {
                     $order_by = ' ORDER BY ' . $category_image_order;
                 }
-
-                $query .= '
-    JOIN ' . Tables::imageCategory() . ' ON id = image_id';
             }
 
-            $query .= '
-  WHERE id IN (' . implode(',', $cat_elements_id) . ')';
-
-            if ($is_category) {
-                $query .= '
-    AND category_id = ' . $filter_category_id;
-            }
-
-            $query .= '
-  ' . $order_by . '
-  LIMIT ' . $nb_images . ' OFFSET ' . $page_start . '
-;';
             $thumb_params = ImageStdParams::get_by_type(ImageStdParams::SQUARE);
             // template thumbnail initialization
-            foreach ($conn->fetchAllAssociative($query) as $row) {
+            foreach (self::imageService()->getBatchManagerThumbnails($cat_elements_id, $is_category ? $filter_category_id : null, $order_by, $nb_images, $page_start) as $row) {
                 $nb_thumbs_page++;
                 $src_image = new SrcImage($row);
 

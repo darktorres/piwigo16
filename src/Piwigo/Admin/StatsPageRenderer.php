@@ -6,17 +6,11 @@ namespace Piwigo\Admin;
 
 use DateInterval;
 use DateTime;
-use Doctrine\DBAL\Connection;
 use InvalidArgumentException;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
-use Piwigo\History\HistoryRepository;
-use Piwigo\History\HistoryService;
-use Piwigo\Template\Template;
 
 /**
  * Ported from admin/stats.php (page slug "stats") -- a sibling top-level
@@ -46,7 +40,6 @@ final class StatsPageRenderer
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
-        $conn = DbConnection::build();
         // Gap-closure Stage 4j (docs/plan/gap-closure-p0-p23.md): bounded to
         // match HistoryService::logVisit()'s own self-triggered summarize()
         // call -- an unbounded call here would rescan the entire remaining
@@ -83,7 +76,7 @@ final class StatsPageRenderer
         $first_date = new DateTime();
         $last_hours = self::setMissingValues(
             'hour',
-            self::getLast($conn, 72, 'hour'),
+            self::getLast(72, 'hour'),
             $first_date->sub(new DateInterval('P3D')),
             $actual_date
         );
@@ -91,7 +84,7 @@ final class StatsPageRenderer
         $first_date = new DateTime();
         $last_days = self::setMissingValues(
             'day',
-            self::getLast($conn, 90, 'day'),
+            self::getLast(90, 'day'),
             $first_date->sub(new DateInterval('P90D')),
             $actual_date
         );
@@ -99,21 +92,21 @@ final class StatsPageRenderer
         $first_date = new DateTime();
         $last_months = self::setMissingValues(
             'month',
-            self::getLast($conn, 60, 'month'),
+            self::getLast(60, 'month'),
             $first_date->sub(new DateInterval('P60M')),
             $actual_date
         );
 
-        if (count(self::getLast($conn, 60, 'year')) > 1) {
+        if (count(self::getLast(60, 'year')) > 1) {
             $last_years = self::setMissingValues(
                 'year',
-                self::getLast($conn, 60, 'year')
+                self::getLast(60, 'year')
             );
         } else {
             $last_year_date = new DateTime();
             $last_years = self::setMissingValues(
                 'year',
-                self::getLast($conn, 60, 'year'),
+                self::getLast(60, 'year'),
                 $last_year_date->sub(new DateInterval('P1Y')),
                 new DateTime()
             );
@@ -133,8 +126,8 @@ final class StatsPageRenderer
         $stat_compare_year_displayed = \Piwigo\Config\CurrentConfig::statCompareYearDisplayed();
 
         $template->assign([
-            'compareYears' => self::getMonthOfLastYears($conn, $stat_compare_year_displayed),
-            'monthStats' => self::getMonthStats($conn),
+            'compareYears' => self::getMonthOfLastYears($stat_compare_year_displayed),
+            'monthStats' => self::getMonthStats(),
             'lastHours' => $last_hours,
             'lastDays' => $last_days,
             'lastMonths' => $last_months,
@@ -152,104 +145,28 @@ final class StatsPageRenderer
      *
      * @return list<array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null}>
      */
-    private static function getLast(Connection $conn, int $last_number = 60, string $type = 'year'): array
+    private static function getLast(int $last_number = 60, string $type = 'year'): array
     {
-        $query = '
-SELECT
-    year,
-    month,
-    day,
-    hour,
-    nb_pages
-  FROM ' . Tables::historySummary();
-
-        if ($type === 'hour') {
-            $query .= '
-  WHERE year IS NOT NULL
-    AND month IS NOT NULL
-    AND day IS NOT NULL
-    AND hour IS NOT NULL
-  ORDER BY
-    year DESC,
-    month DESC,
-    day DESC,
-    hour DESC
-  LIMIT ' . $last_number . '
-;';
-        } elseif ($type === 'day') {
-            $query .= '
-  WHERE year IS NOT NULL
-    AND month IS NOT NULL
-    AND day IS NOT NULL
-    AND hour IS NULL
-  ORDER BY
-    year DESC,
-    month DESC,
-    day DESC
-  LIMIT ' . $last_number . '
-;';
-        } elseif ($type === 'month') {
-            $query .= '
-  WHERE year IS NOT NULL
-    AND month IS NOT NULL
-    AND day IS NULL
-  ORDER BY
-    year DESC,
-    month DESC
-  LIMIT ' . $last_number . '
-;';
-        } else {
-            $query .= '
-  WHERE year IS NOT NULL
-    AND month IS NULL
-  ORDER BY
-    year DESC
-  LIMIT ' . $last_number . '
-;';
-        }
-
-        $output = [];
-        foreach ($conn->fetchAllAssociative($query) as $row) {
-            /** @var array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null} $row */
-            $output[] = $row;
-        }
-
-        return $output;
+        return \Piwigo\Bootstrap\ExtendedDomainAccessor::historyService()->getLastByType($type, $last_number);
     }
 
     /**
      * @param int|'all' $last
      * @return float[]|int[]
      */
-    private static function getMonthOfLastYears(Connection $conn, $last = 'all'): array
+    private static function getMonthOfLastYears($last = 'all'): array
     {
-        $query = '
-SELECT
-  year,
-  month,
-  day,
-  hour,
-  nb_pages
-FROM ' . Tables::historySummary() . '
-WHERE month IS NOT NULL
-  AND day IS NULL
-ORDER BY
-  year DESC,
-  month DESC';
+        $historyService = \Piwigo\Bootstrap\ExtendedDomainAccessor::historyService();
 
         if ($last !== 'all') {
             $date = new DateTime();
             $limit = ($last - 1) * 12 + (int) $date->format('n') - 1;
-            $query .=
-' LIMIT ' . (string) $limit;
-            /** @var list<array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null}> $result */
-            $result = $conn->fetchAllAssociative($query . ';');
+            $result = $historyService->getMonthlyRows($limit);
             $lastDate = $date->sub(new DateInterval('P' . ($last - 1) . 'Y' . ((int) $date->format('n') - 1) . 'M'));
             return self::setMissingValues('month', $result, $lastDate, new DateTime());
         }
 
-        /** @var list<array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null}> $allRows */
-        $allRows = $conn->fetchAllAssociative($query . ';');
+        $allRows = $historyService->getMonthlyRows(null);
         if (count($allRows) > 1) {
             return self::setMissingValues('month', $allRows);
         } else {
@@ -266,7 +183,7 @@ ORDER BY
     /**
      * @return array{month?: list<array<int|string, float|int>>, avg: ?float}
      */
-    private static function getMonthStats(Connection $conn): array
+    private static function getMonthStats(): array
     {
         $result = [];
         $date = new DateTime();
@@ -276,28 +193,17 @@ ORDER BY
 
         $date_last_month->sub(new DateInterval('P1M'));
         $date_last_year->sub(new DateInterval('P1Y'));
-        $query = '
-SELECT
-  year,
-  month,
-  day,
-  hour,
-  nb_pages
-FROM ' . Tables::historySummary() . '
-WHERE
-  (
-    (year = ' . $date->format('Y') . ' AND month = ' . $date->format('n') . ')
-    OR (year = ' . $date_last_month->format('Y') . ' AND month = ' . $date_last_month->format('n') . ')
-    OR (year = ' . $date_last_year->format('Y') . ' AND month = ' . $date_last_year->format('n') . ')
-  )
-  AND day IS NOT NULL
-  AND hour IS NULL
-ORDER BY
-  year DESC,
-  month DESC
-;';
 
-        foreach ($conn->fetchAllAssociative($query) as $value) {
+        $historyService = \Piwigo\Bootstrap\ExtendedDomainAccessor::historyService();
+
+        foreach ($historyService->getDailyRowsForMonths(
+            (int) $date->format('Y'),
+            (int) $date->format('n'),
+            (int) $date_last_month->format('Y'),
+            (int) $date_last_month->format('n'),
+            (int) $date_last_year->format('Y'),
+            (int) $date_last_year->format('n')
+        ) as $value) {
             /** @var array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null} $value */
             $date = self::getDateObject($value);
             @$months[$date->format('Y/m/1')][] = $value;
@@ -324,24 +230,11 @@ ORDER BY
             $result['month'][] = self::setMissingValues('day', $val, new DateTime($key), $lastDate);
         }
 
-        $query = '
-SELECT
-  AVG(nb_pages)
-FROM ' . Tables::historySummary() . '
-WHERE
-  (
-  year = ' . $date->format('Y') . ' OR
-  (year = ' . ((int) $date->format('Y') - 1) . ' and month > ' . $date->format('n') . ')
-  )
-  AND day IS NOT NULL
-  AND hour IS NULL
-ORDER BY
-  year DESC,
-  month DESC
-;';
-
-        $row = $conn->fetchNumeric($query);
-        $result['avg'] = ($row !== false && is_numeric($row[0])) ? (float) $row[0] : null;
+        $result['avg'] = $historyService->getAverageDailyPageViewsSince(
+            (int) $date->format('Y'),
+            (int) $date->format('Y') - 1,
+            (int) $date->format('n')
+        );
 
         return $result;
     }

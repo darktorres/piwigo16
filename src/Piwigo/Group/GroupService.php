@@ -49,6 +49,46 @@ final readonly class GroupService
     }
 
     /**
+     * @param list<int> $groupIds
+     * @return list<array<string, mixed>>
+     */
+    public function getMembersByGroupIds(array $groupIds): array
+    {
+        return $this->repo->findMembersByGroupIds($groupIds);
+    }
+
+    /**
+     * @param  list<int>  $groupIds
+     * @return array<int, string>
+     */
+    public function getNamesByIds(array $groupIds): array
+    {
+        return $this->repo->findNamesByIds($groupIds);
+    }
+
+    public function countAll(): int
+    {
+        return $this->repo->countAll();
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function getIdsByNameLike(string $namePattern): array
+    {
+        return $this->repo->findIdsByNameLike($namePattern);
+    }
+
+    /**
+     * @param  list<int>  $userIds
+     * @return list<array<string, mixed>>
+     */
+    public function getMembershipsForUserIds(array $userIds): array
+    {
+        return $this->repo->findMembershipsForUserIds($userIds);
+    }
+
+    /**
      * @return list<string>
      */
     public function getMemberUsernames(GroupId $groupId, string $usernameColumn, string $idColumn): array

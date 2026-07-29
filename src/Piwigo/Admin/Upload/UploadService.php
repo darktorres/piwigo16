@@ -238,24 +238,10 @@ final class UploadService
 
         // we only try to detect duplicate on a new image, not when updating an existing image
         if (! isset($image_id) and \Piwigo\Config\CurrentConfig::uploadDetectDuplicate()) {
-            $query = '
-SELECT
-    id
-  FROM ' . Tables::images() . '
-  WHERE md5sum = \'' . $md5sum . '\'
-;';
-            $images_found = $conn->fetchAllAssociative($query);
+            $images_found = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->getIdsByMd5sum($md5sum);
 
             if (count($images_found) > 0) {
-                $found_id = $images_found[0]['id'];
-                if (! is_numeric($found_id)) {
-                    // id is the table's NOT NULL auto-increment primary key,
-                    // so it is always numeric here (native int under DBAL,
-                    // numeric string under mysqli); this guard only exists to
-                    // give PHPStan a real narrowing.
-                    throw new \Exception(__METHOD__ . '(): unexpected non-numeric image id while checking for duplicates');
-                }
-                $image_id = (int) $found_id;
+                $image_id = $images_found[0];
                 $logger->info('[' . __METHOD__ . '] image already exist #' . $image_id . ', we delete the newly uploaded file : ' . $source_filepath);
                 unlink($source_filepath);
 
@@ -276,14 +262,9 @@ SELECT
 
         if (isset($image_id)) {
             // this photo already exists, we update it
-            $query = '
-SELECT
-    path
-  FROM ' . Tables::images() . '
-  WHERE id = ' . $image_id . '
-;';
-            foreach ($conn->fetchAllAssociative($query) as $row) {
-                $file_path = is_string($row['path']) ? $row['path'] : null;
+            $existing_paths = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->getPathsForIds([$image_id]);
+            foreach ($existing_paths as $row) {
+                $file_path = $row['path'];
             }
 
             if (! isset($file_path)) {
@@ -574,17 +555,8 @@ SELECT
         // optional -- but this query never selected `file`, so every real
         // addUploadedFile() call (new photo or update) hit that warning
         // right here, not just the update branch.
-        $query = '
-SELECT
-    id,
-    path,
-    file,
-    representative_ext
-  FROM ' . Tables::images() . '
-  WHERE id = ' . $image_id . '
-;';
-        $image_infos = $conn->fetchAssociative($query);
-        if ($image_infos === false) {
+        $image_infos = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->getImageRow($image_id);
+        if ($image_infos === null) {
             throw new \Exception(__METHOD__ . '(): image #' . $image_id . ' not found right after being saved');
         }
         $src_image = new SrcImage($image_infos);
@@ -615,8 +587,7 @@ SELECT
 
         if (! \Piwigo\Config\CurrentConfig::loungeActive()) {
             // check if we need to use the lounge from now
-            $row = DbConnection::build()->fetchNumeric('SELECT COUNT(*) FROM ' . Tables::images() . ';');
-            $nb_photos = $row !== false ? $row[0] : 0;
+            $nb_photos = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->getTotalImageCount();
             if ($nb_photos >= \Piwigo\Config\CurrentConfig::loungeActivateThreshold()) {
                 \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('lounge_active', true, true);
             }
@@ -722,19 +693,13 @@ SELECT
         }
 
         $conn = DbConnection::build();
-        $query = '
-SELECT
-    path
-  FROM ' . Tables::images() . '
-  WHERE id = ' . $format_of . '
-;';
-        $images = $conn->fetchAllAssociative($query);
+        $images = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->getPathsForIds([$format_of]);
 
         if (! isset($images[0])) {
             throw new ImageProcessingException('[' . __METHOD__ . '] this photo does not exist in the database');
         }
 
-        $image_0_path = is_scalar($images[0]['path']) ? (string) $images[0]['path'] : '';
+        $image_0_path = $images[0]['path'];
         $format_path = dirname($image_0_path) . '/pwg_format/';
         $format_path .= \Piwigo\Core\StringHelper::getFilenameWoExtension(basename($image_0_path));
         $format_path .= '.' . $format_ext;
@@ -774,27 +739,19 @@ SELECT
             'filesize' => $file_infos['filesize'],
         ];
 
-        $query = '
-SELECT
-  format_id
-  FROM ' . Tables::imageFormat() . '
-  WHERE image_id = ' . $format_of . '
-  AND ext = "' . $format_ext . '"
-;';
-
-        $formats = $conn->fetchAllAssociative($query);
-        if ((bool) $formats) {
+        $existing_format_id = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->getFormatIdByImageAndExt((int) $format_of, $format_ext);
+        if ($existing_format_id !== null) {
             $set_fields = [
                 'filesize' => $file_infos['filesize'],
             ];
             $where_fields = [
-                'format_id' => $formats[0]['format_id'],
+                'format_id' => $existing_format_id,
                 'image_id' => $format_of,
                 'ext' => $format_ext,
             ];
             new BatchWriter($conn)
                 ->singleUpdate(Tables::imageFormat(), $set_fields, $where_fields);
-            $format_id = $formats[0]['format_id'];
+            $format_id = $existing_format_id;
             $add_status = 'update';
         } else {
             new BatchWriter($conn)

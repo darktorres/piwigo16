@@ -81,6 +81,16 @@ final class BatchManagerUnitPageRenderer
         return \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
     }
 
+    private static function imageService(): ImageService
+    {
+        return \Piwigo\Bootstrap\CoreDomainAccessor::imageService();
+    }
+
+    private static function userService(): \Piwigo\Users\UserService
+    {
+        return \Piwigo\Bootstrap\CoreDomainAccessor::userService();
+    }
+
     /**
      * @param array<array-key, int|string|float|bool> $catElementsId a
      *   scalar-filtered image id set -- see
@@ -108,14 +118,9 @@ final class BatchManagerUnitPageRenderer
 
             $datas = [];
 
-            $query = '
-SELECT id, date_creation
-  FROM ' . Tables::images() . '
-  WHERE id IN (' . implode(',', $collection) . ')
-;';
             $tagService = self::tagService();
 
-            foreach ($conn->fetchAllAssociative($query) as $row) {
+            foreach (self::imageService()->getIdsAndDatesForBatchUnitSave($collection) as $row) {
                 // Tables::images().id is a NOT NULL auto_increment primary key; this
                 // guard only defends against the generic mixed element type a
                 // fetched row carries for every column.
@@ -290,10 +295,6 @@ SELECT id, date_creation
                 $order_by = \Piwigo\Config\CurrentConfig::orderBy();
             }
 
-            $query = '
-SELECT *
-  FROM ' . Tables::images();
-
             if ($is_category) {
                 $category_info = self::categoryService()->getCategoryInfo($filter_category_id);
 
@@ -302,28 +303,13 @@ SELECT *
                 if (is_string($category_image_order) && $category_image_order !== '') {
                     $order_by = ' ORDER BY ' . $category_image_order;
                 }
-
-                $query .= '
-    JOIN ' . Tables::imageCategory() . ' ON id = image_id';
             }
 
-            $query .= '
-  WHERE id IN (' . implode(',', $cat_elements_id) . ')';
-
-            if ($is_category) {
-                $query .= '
-    AND category_id = ' . $filter_category_id;
-            }
-
-            $query .= '
-  ' . $order_by . '
-  LIMIT ' . $page_nb_images . ' OFFSET ' . $page_start . '
-;';
-            $images = $conn->fetchAllAssociative($query);
-            $added_by_ids = array_unique(array_map(strval(...), array_filter(
+            $images = self::imageService()->getBatchManagerUnitRows($cat_elements_id, $is_category ? $filter_category_id : null, $order_by, $page_nb_images, $page_start);
+            $added_by_ids = array_values(array_unique(array_map(strval(...), array_filter(
                 array_column($images, 'added_by'),
                 static fn (mixed $v): bool => is_int($v) || is_string($v)
-            )));
+            ))));
             // Defaults to empty so the read inside the foreach loop below is always
             // a real array, whether or not $added_by_ids was non-empty (the
             // foreach loop only ever runs when $images -- and therefore
@@ -331,15 +317,7 @@ SELECT *
             // that cross-block invariant).
             $added_by_username_of = [];
             if (count($added_by_ids) > 0) {
-                $user_fields = \Piwigo\Config\CurrentConfig::userFields();
-                $query = '
-SELECT
-    ' . $user_fields['username'] . ' AS username,
-    ' . $user_fields['id'] . ' AS id
-  FROM ' . Tables::users() . '
-  WHERE ' . $user_fields['id'] . ' IN ( ' . implode(',', $added_by_ids) . ' )
-;';
-                $added_by_username_of = array_column($conn->fetchAllAssociative($query), 'username', 'id');
+                $added_by_username_of = self::userService()->getUsernamesByIds($added_by_ids);
             }
 
             $tagService = self::tagService();
@@ -389,14 +367,6 @@ SELECT
 
                 // categories
 
-                $query = '
-    SELECT category_id, uppercats, dir
-      FROM ' . Tables::imageCategory() . ' AS ic
-        INNER JOIN ' . Tables::categories() . ' AS c
-          ON c.id = ic.category_id
-      WHERE image_id = ' . $row_id_str . '
-    ;';
-
                 $related_categories = [];
                 $related_category_ids = [];
                 $media = [
@@ -406,7 +376,7 @@ SELECT
                 // a fatal_error() path that never returns.
                 assert($media['image'] !== null);
 
-                foreach ($conn->fetchAllAssociative($query) as $item) {
+                foreach ($imageService->getCategoryLinksForImage((int) $row_id) as $item) {
                     // Tables::imageCategory()/Tables::categories().category_id/uppercats are
                     // NOT NULL; this guard only defends against the generic mixed
                     // element type a fetched row carries for every column.
@@ -443,23 +413,11 @@ SELECT
                 // jump to link
                 $image_file = $row['file'];
 
-                $query = '
-    SELECT category_id
-    FROM ' . Tables::imageCategory() . '
-    WHERE image_id = ' . $row_id_str . '
-    ;';
                 $currentUser = \Piwigo\Users\CurrentUser::get();
-                // array_column() over the fetched rows gives list<mixed> here since
-                // only the 'category_id' column is selected; drop non-scalar rows
-                // then stringify, since DBAL can hand back native ints for this
-                // column (mysqli always gave a numeric string).
                 $authorizeds = array_diff(
                     array_map(
                         strval(...),
-                        array_filter(
-                            array_column($conn->fetchAllAssociative($query), 'category_id'),
-                            static fn (mixed $v): bool => is_int($v) || is_string($v)
-                        )
+                        $imageService->getCategoryIdsForImage((int) $row_id)
                     ),
                     explode(
                         ',',

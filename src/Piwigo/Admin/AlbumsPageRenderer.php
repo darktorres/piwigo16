@@ -4,12 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Piwigo\Category\CategoryService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
-use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 /**
@@ -40,16 +37,9 @@ final class AlbumsPageRenderer
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        $conn = DbConnection::build();
         $categoryService = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
 
-        $query = '
-SELECT
-    COUNT(*)
-  FROM ' . Tables::categories() . '
-;';
-        $row = $conn->fetchNumeric($query);
-        $albums_counter = $row !== false ? $row[0] : 0;
+        $albums_counter = $categoryService->countAllCategories();
 
         $albumsRequest = Request\AlbumsRequest::fromGlobals();
 
@@ -64,12 +54,7 @@ SELECT
         $tabsheet->select('list');
         $tabsheet->assign();
 
-        $query = '
-SELECT COUNT(*)
-  FROM ' . Tables::categories() . '
-;';
-        $row = $conn->fetchNumeric($query);
-        $nb_cats = $row !== false ? $row[0] : 0;
+        $nb_cats = $categoryService->countAllCategories();
         $template->assign(
             [
                 'nb_cats' => $nb_cats,
@@ -103,25 +88,13 @@ SELECT COUNT(*)
 
             $post_id = $albumsRequest->id;
 
-            $query = '
-SELECT id
-  FROM ' . Tables::categories() . '
-  WHERE id_uppercat ' .
-              (($post_id === '-1') ? 'IS NULL' : '= ' . $post_id) . '
-;';
-            $category_ids_raw = array_column($conn->fetchAllAssociative($query), 'id');
-            // 'id' is Tables::categories()'s primary key column, always populated
-            // per this driver's fetch convention (native int under DBAL, numeric
-            // string under mysqli) -- filter out non-scalar values then stringify
-            // so downstream implode()/CategoryService::getSubcatIds() calls
-            // get values castable to string.
-            $category_ids = array_values(array_map(
+            $category_ids = array_map(
                 strval(...),
-                array_filter($category_ids_raw, static fn (mixed $v): bool => is_int($v) || is_string($v))
-            ));
+                $categoryService->getIdsByParent($post_id === '-1' ? null : (int) $post_id)
+            );
 
             if ($albumsRequest->recursiveAutoOrder) {
-                $category_ids = $categoryService->getSubcatIds($category_ids);
+                $category_ids = array_map(strval(...), $categoryService->getSubcatIds($category_ids));
             }
 
             $categories = [];
@@ -141,12 +114,7 @@ SELECT id
                     ->getCategoriesRefDate($category_ids, $order_by_field, $order_by_asc === 'ASC' ? 'min' : 'max');
             }
 
-            $query = '
-SELECT id, name, id_uppercat
-  FROM ' . Tables::categories() . '
-  WHERE id IN (' . implode(',', $category_ids) . ')
-;';
-            foreach ($conn->fetchAllAssociative($query) as $cat_row) {
+            foreach ($categoryService->getIdsNamesUppercatsForIds($category_ids) as $cat_row) {
                 $rendered_name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_category_name', $cat_row['name'], 'admin_cat_list');
                 $cat_row['name'] = is_string($rendered_name) ? $rendered_name : $cat_row['name'];
 
@@ -203,12 +171,7 @@ SELECT id, name, id_uppercat
         // +-------------------------------------------------------------------+
 
         // Get all albums
-        $query = '
-SELECT id,name,`rank`,status, visible, uppercats, lastmodified
-  FROM ' . Tables::categories() . '
-;';
-
-        $allAlbum = $conn->fetchAllAssociative($query);
+        $allAlbum = $categoryService->getAllForAlbumTree();
 
         // Make an id tree
         /**
@@ -270,30 +233,9 @@ SELECT id,name,`rank`,status, visible, uppercats, lastmodified
         $forbidden_categories = \Piwigo\Users\CurrentUser::get()->forbiddenCategories;
         $is_forbidden = array_fill_keys(@explode(',', $forbidden_categories), 1);
 
-        $query = '
-SELECT
-    category_id,
-    COUNT(*) AS nb_photos
-  FROM ' . Tables::imageCategory() . '
-  GROUP BY category_id
-;';
+        $nb_photos_in = $categoryService->getPhotoCountsByCategory();
 
-        $nb_photos_in = [];
-        foreach ($conn->fetchAllAssociative($query) as $photo_count_row) {
-            $category_id = $photo_count_row['category_id'];
-            $nb_photos = $photo_count_row['nb_photos'];
-            if (is_numeric($category_id) && (is_int($nb_photos) || is_string($nb_photos))) {
-                $nb_photos_in[(int) $category_id] = $nb_photos;
-            }
-        }
-
-        $query = '
-SELECT
-    id,
-    uppercats
-  FROM ' . Tables::categories() . '
-;';
-        $all_categories = array_column($conn->fetchAllAssociative($query), 'uppercats', 'id');
+        $all_categories = $categoryService->getAllCategoryUppercats();
 
         $subcats_of = [];
 
@@ -308,11 +250,8 @@ SELECT
         foreach ($subcats_of as $cat_id => $subcat_ids) {
             $nb_photos = 0;
             foreach ($subcat_ids as $id) {
-                if (isset($nb_photos_in[$id]) && is_numeric($nb_photos_in[$id])) {
-                    // COUNT(*) always yields a numeric value (native int under
-                    // DBAL, numeric string under mysqli); cast so the accumulator
-                    // stays a provably-int running total.
-                    $nb_photos += (int) $nb_photos_in[$id];
+                if (isset($nb_photos_in[$id])) {
+                    $nb_photos += $nb_photos_in[$id];
                 }
             }
 

@@ -79,4 +79,25 @@ final readonly class NotificationByMailService
             $idField
         );
     }
+
+    public function nullifyBlankEmails(string $emailColumn): void
+    {
+        $this->repo->nullifyBlankEmails($emailColumn);
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function getUsersWithoutNotificationRow(string $idColumn, string $usernameColumn, string $emailColumn): array
+    {
+        return $this->repo->findUsersWithoutNotificationRow($idColumn, $usernameColumn, $emailColumn);
+    }
+
+    /**
+     * @param  list<string>  $quotedCheckKeyList
+     */
+    public function deleteByQuotedCheckKeys(array $quotedCheckKeyList): void
+    {
+        $this->repo->deleteByQuotedCheckKeys($quotedCheckKeyList);
+    }
 }

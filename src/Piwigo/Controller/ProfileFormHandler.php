@@ -175,12 +175,7 @@ final class ProfileFormHandler
             }
 
             if (! \Piwigo\Core\AdminContext::isActive()) {// changing password requires old password
-                $query = '
-  SELECT ' . $user_fields['password'] . ' AS password
-    FROM ' . Tables::users() . '
-    WHERE ' . $user_fields['id'] . ' = \'' . $user_id . '\'
-  ;';
-                $current_password = $conn->fetchOne($query);
+                $current_password = self::authService()->getPasswordHash($user_id, $user_fields['id'], $user_fields['username'], $user_fields['password']);
 
                 // the password column allows NULL (external-authentication
                 // accounts with no local password set); such an account can
@@ -389,27 +384,23 @@ final class ProfileFormHandler
 
         // api key expiration choice
         $conn = DbConnection::build();
-        $dbnow = $conn->fetchOne('SELECT ADDDATE(NOW(), INTERVAL 1 DAY);');
-        $dbnow_str = is_scalar($dbnow) ? (string) $dbnow : '';
+        $sqlDialectExecutor = new \Piwigo\Db\SqlDialectExecutor($conn);
+        $dbnow_str = $sqlDialectExecutor->fetchTomorrow();
         $template->assign('API_CURRENT_DATE', explode(' ', $dbnow_str)[0]);
 
-        $duration = [];
         $display_duration = [];
         $has_custom = false;
         $api_key_duration = \Piwigo\Config\CurrentConfig::apiKeyDuration();
+        $duration_days = [];
         foreach ($api_key_duration as $day) {
             if ($day === 'custom') {
                 $has_custom = true;
                 continue;
             }
-            $duration[] = 'ADDDATE(NOW(), INTERVAL ' . $day . ' DAY) as `' . $day . '`';
+            $duration_days[] = (int) $day;
         }
 
-        $query = '
-SELECT
-  ' . implode(', ', $duration) . '
-;';
-        $result = $conn->fetchAllAssociative($query)[0];
+        $result = $sqlDialectExecutor->fetchFutureDatesFor($duration_days);
         foreach ($result as $day => $date) {
             $date_for_format = (is_string($date) || is_int($date)) ? $date : false;
             $display_duration[$day] = Lang::t('%d days', $day) . ' (' . \Piwigo\Core\DateHelper::formatDate($date_for_format, ['day', 'month', 'year']) . ')';

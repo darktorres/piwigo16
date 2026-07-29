@@ -9,8 +9,6 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 
 /**
@@ -34,7 +32,6 @@ final class ExtendForTemplatesPageRenderer
     public function render(UrlServiceInterface $urlService, ConfigService $configService): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
-        $conn = DbConnection::build();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
@@ -72,14 +69,8 @@ final class ExtendForTemplatesPageRenderer
             'list', /* <=> Random */
             'tags',
         ];
-        $query = '
-SELECT permalink
-  FROM ' . Tables::categories() . '
-  WHERE permalink IS NOT NULL
-';
-
         /* Add active permalinks */
-        $permalinks = array_column($conn->fetchAllAssociative($query), 'permalink');
+        $permalinks = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService()->getActivePermalinks();
         $relevant_parameters = array_merge($relevant_parameters, $permalinks);
 
         /* Link all supported templates to their respective handle */

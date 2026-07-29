@@ -102,6 +102,21 @@ final readonly class AuthService
     }
 
     /**
+     * Current password hash for $userId -- Controller\
+     * ProfileFormHandler::saveFromPost()'s own "changing password requires
+     * old password" check. Reuses
+     * {@see AuthRepository::findUsernameAndPassword()}'s own query
+     * (same shape as {@see calculateAutoLoginKey()} above), discarding the
+     * username half.
+     */
+    public function getPasswordHash(int|string $userId, string $idColumn, string $usernameColumn, string $passwordColumn): ?string
+    {
+        $found = $this->repo->findUsernameAndPassword($userId, $idColumn, $usernameColumn, $passwordColumn);
+
+        return $found['password'] ?? null;
+    }
+
+    /**
      * Performs all required actions for user login.
      *
      * @param int|numeric-string|false $userId auto_login() passes a raw

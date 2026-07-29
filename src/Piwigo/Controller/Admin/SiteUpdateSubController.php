@@ -115,22 +115,9 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         return \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService();
     }
 
-    /**
-     * Get max value plus one of a particular column -- same shape as the
-     * retired MysqliDb::nextval(), reused twice in this file (categories,
-     * images).
-     */
-    private static function nextval(Connection $conn, string $column, string $table): int
+    private static function imageService(Connection $conn): ImageService
     {
-        $query = '
-SELECT IF(MAX(' . $column . ')+1 IS NULL, 1, MAX(' . $column . ')+1)
-  FROM ' . $table;
-        $next = $conn->fetchOne($query);
-
-        // The IF(...) wrapper guarantees a non-NULL numeric result; fall back to
-        // 1 (the same value the query itself uses when MAX() is NULL) if that
-        // invariant is ever violated.
-        return is_numeric($next) ? (int) $next : 1;
+        return new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), self::activityService());
     }
 
     #[\Override]
@@ -162,18 +149,19 @@ SELECT IF(MAX(' . $column . ')+1 IS NULL, 1, MAX(' . $column . ')+1)
         // construction-chain debt (Phase 1d finding).
         $conn = DbConnection::build();
 
-        $query = '
-SELECT galleries_url
-  FROM ' . Tables::sites() . '
-  WHERE id = ' . $site_id;
-        $site_url = $conn->fetchOne($query);
+        $site_url = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Site\SiteEntity::class)
+            ->findGalleriesUrlById($site_id);
         if (! is_string($site_url)) {
             \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->fatalError('site ' . $site_id . ' does not exist');
         }
         $site_is_remote = $this->urlService->urlIsRemote($site_url);
 
-        $dbnow = $conn->fetchOne('SELECT NOW();');
+        // Env::now() rather than SQL's NOW() -- the real DB-server clock,
+        // invisible to Env::now()'s own PIWIGO_TEST_NOW freeze, same
+        // reasoning as every other NOW()-reading repository this
+        // migration already retargeted (e.g. Comment\CommentRepository::insert()).
+        $dbnow = \Piwigo\Core\Env::now()->format('Y-m-d H:i:s');
 
         $error_labels = [
             'PWG-UPDATE-1' => [
@@ -286,18 +274,14 @@ SELECT galleries_url
             and ! $general_failure) {
             $start = \Piwigo\Core\TimingHelper::getMoment();
             // which categories to update ?
-            $query = '
-SELECT id, uppercats, global_rank, status, visible
-  FROM ' . Tables::categories() . '
-  WHERE dir IS NOT NULL
-    AND site_id = ' . $site_id;
+            $extra_condition = '';
             if (isset($post['cat']) and is_numeric($post['cat'])) {
                 if (isset($post['subcats-included']) and $post['subcats-included'] === '1') {
-                    $query .= '
+                    $extra_condition = '
     AND uppercats ' . SqlDialect::DB_REGEX_OPERATOR . ' \'(^|,)' . $post['cat'] . '(,|$)\'
 ';
                 } else {
-                    $query .= '
+                    $extra_condition = '
     AND id = ' . $post['cat'] . '
 ';
                 }
@@ -311,7 +295,7 @@ SELECT id, uppercats, global_rank, status, visible
             // common shape for both origins; individual fields are narrowed with
             // is_string()/is_int() at each point of use below.
             /** @var array<int|string, array<string, mixed>> $db_categories */
-            $db_categories = array_column($conn->fetchAllAssociative($query), null, 'id');
+            $db_categories = array_column(self::categoryService()->getSyncCandidatesForSite($site_id, $extra_condition), null, 'id');
 
             // get categort full directories in an array for comparison with file
             // system directory tree
@@ -336,25 +320,12 @@ SELECT id, uppercats, global_rank, status, visible
                 'NULL' => 1,
             ];
 
-            $query = '
-SELECT id
-  FROM ' . Tables::categories();
-            foreach ($conn->fetchAllAssociative($query) as $row) {
-                // id is a NOT NULL primary key; skip defensively rather than use a
-                // null/non-scalar value as an invalid array key.
-                $row_id = $row['id'];
-                if (! is_int($row_id) && ! is_string($row_id)) {
-                    continue;
-                }
+            foreach (self::categoryService()->getAllIds() as $row_id) {
                 $next_rank[$row_id] = 1;
             }
 
             // let's see if some categories already have some sub-categories...
-            $query = '
-SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
-  FROM ' . Tables::categories() . '
-  GROUP BY id_uppercat';
-            foreach ($conn->fetchAllAssociative($query) as $row) {
+            foreach (self::categoryService()->getNextRanksByParent() as $row) {
                 // for the id_uppercat NULL, we write 'NULL' and not the empty string
                 if (! isset($row['id_uppercat']) or $row['id_uppercat'] === '') {
                     $row['id_uppercat'] = 'NULL';
@@ -371,7 +342,7 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
             }
 
             // next category id available
-            $next_id = self::nextval($conn, 'id', Tables::categories());
+            $next_id = self::categoryService()->getNextId();
 
             // retrieve sub-directories fulldirs from the site reader
             $fs_fulldirs = $site_reader->get_full_directories($basedir);
@@ -592,27 +563,16 @@ SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
               . \Piwigo\Core\TimingHelper::getElapsedTime($start, \Piwigo\Core\TimingHelper::getMoment())
               . ' -->');
 
-            $cat_ids = array_diff(array_keys($db_categories), $to_delete);
+            $cat_ids = array_values(array_diff(array_keys($db_categories), $to_delete));
 
             $db_elements = [];
 
             if (count($cat_ids) > 0) {
-                $query = '
-SELECT id, path
-  FROM ' . Tables::images() . '
-  WHERE storage_category_id IN ('
-                  . wordwrap(
-                      implode(', ', $cat_ids),
-                      160,
-                      "\n"
-                  ) . ')';
-                // path is a NOT NULL varchar column, so filter defensively to
-                // guarantee real strings here.
-                $db_elements = array_filter(array_column($conn->fetchAllAssociative($query), 'path', 'id'), is_string(...));
+                $db_elements = self::imageService($conn)->getIdsAndPathsByStorageCategoryIds($cat_ids);
             }
 
             // next element id available
-            $next_element_id = self::nextval($conn, 'id', Tables::images());
+            $next_element_id = self::imageService($conn)->getNextId();
 
             $start = \Piwigo\Core\TimingHelper::getMoment();
 
@@ -720,7 +680,7 @@ SELECT id, path
                         $image_formats_to_delete = array_diff_key($formats, $element_formats);
                         $logger->debug('image_formats_to_delete', 'sync', $image_formats_to_delete);
                         foreach ($image_formats_to_delete as $ext => $format_id) {
-                            $formats_to_delete[] = $format_id;
+                            $formats_to_delete[] = (int) $format_id;
 
                             $infos[] = [
                                 'path' => $db_elements[$image_id],
@@ -798,12 +758,7 @@ SELECT id, path
                 }
 
                 if (count($formats_to_delete) > 0) {
-                    $query = '
-DELETE
-  FROM ' . Tables::imageFormat() . '
-  WHERE format_id IN (' . implode(',', $formats_to_delete) . ')
-;';
-                    $conn->executeStatement($query);
+                    self::imageService($conn)->deleteFormatsByIds($formats_to_delete);
                 }
             }
 
@@ -816,7 +771,7 @@ DELETE
                 // it's always found in it
                 $element_id = array_search($path, $db_elements, true);
                 assert($element_id !== false);
-                $to_delete_elements[] = (int) $element_id;
+                $to_delete_elements[] = $element_id;
                 $infos[] = [
                     'path' => $path,
                     'info' => Lang::t('deleted'),
@@ -824,8 +779,7 @@ DELETE
             }
             if (count($to_delete_elements) > 0) {
                 if (! $simulate) {
-                    new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), self::activityService())
-                        ->deleteElements($to_delete_elements, $this->urlService);
+                    self::imageService($conn)->deleteElements($to_delete_elements, $this->urlService);
                 }
                 $counts['del_elements'] = count($to_delete_elements);
             }

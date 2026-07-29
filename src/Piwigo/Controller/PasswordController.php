@@ -537,19 +537,8 @@ final class PasswordController implements ControllerInterface
             return false;
         }
 
-        $query = '
-SELECT
-    user_id,
-    status,
-    activation_key
-  FROM ' . Tables::userInfos() . '
-  WHERE activation_key IS NOT NULL
-    AND activation_key_expire > NOW()
-;';
-        $conn = DbConnection::build();
         $user_id = null;
-        foreach ($conn->fetchAllAssociative($query) as $row) {
-            $activationKeyRow = \Piwigo\Users\Projection\ActivationKeyRow::fromRow($row);
+        foreach (self::userService()->getPendingActivationKeyRows() as $activationKeyRow) {
             if ($activationKeyRow->activationKey === '') {
                 continue;
             }

@@ -4,13 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Search\SearchService;
@@ -39,11 +36,6 @@ final class SearchController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        // A single connection for the whole request -- mirrors the
-        // legacy single-global-mysqli-connection model this migration
-        // restores, and avoids the needless-reconnection pattern found
-        // in earlier construction-chain debt (Phase 1d finding).
-        $conn = DbConnection::build();
         $searchService = \Piwigo\Bootstrap\ExtendedDomainAccessor::searchService();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
@@ -140,15 +132,9 @@ final class SearchController implements ControllerInterface
             $forbidden_categories = \Piwigo\Users\CurrentUser::get()->forbiddenCategories;
             $forbidden_categories_csv = $forbidden_categories !== '' ? $forbidden_categories : '0';
 
-            $query = '
-SELECT
-    id
-  FROM ' . Tables::categories() . '
-  WHERE id = ' . $cat_id . '
-    AND id NOT IN (' . $forbidden_categories_csv . ')
-;';
-            $found_categories = $conn->fetchAllAssociative($query);
-            if ($found_categories === []) {
+            $category_accessible = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService()
+                ->existsAndNotForbidden((int) $cat_id, $forbidden_categories_csv);
+            if (! $category_accessible) {
                 \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                     ->pageNotFound($this->redirectService, Lang::t('Requested album does not exist'));
             }
@@ -187,22 +173,15 @@ SELECT
 
         if (in_array('author', $fields, true)) {
             // does this Piwigo has authors for current user?
-            $query = '
-SELECT
-    id
-  FROM ' . Tables::images() . ' AS i
-    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
-  ' . self::permissionService()->getSqlConditionFandF([
-                'forbidden_categories' => 'category_id',
-                'visible_categories' => 'category_id',
-                'visible_images' => 'id',
-            ], ' WHERE ') . '
-    AND author IS NOT NULL
-    LIMIT 1
-;';
-            $first_author = $conn->fetchAllAssociative($query);
+            $has_author = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->hasAccessibleImageWithAuthor(
+                self::permissionService()->getSqlConditionFandF([
+                    'forbidden_categories' => 'category_id',
+                    'visible_categories' => 'category_id',
+                    'visible_images' => 'id',
+                ], ' WHERE ')
+            );
 
-            if (count($first_author) > 0) {
+            if ($has_author) {
                 $search['fields']['author'] = [
                     'words' => [],
                     'mode' => 'OR',

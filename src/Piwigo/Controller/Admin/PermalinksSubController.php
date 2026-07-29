@@ -99,11 +99,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
         $tabsheet->select('permalinks');
         $tabsheet->assign();
 
-        $query = '
-SELECT COUNT(*)
-  FROM ' . Tables::categories() . '
-;';
-        $nb_cats = $conn->fetchOne($query);
+        $nb_cats = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService()->countAllCategories();
         $template->assign(
             [
                 'nb_cats' => $nb_cats,
@@ -133,16 +129,9 @@ FROM ' . Tables::categories();
             $permalinksRequest->psf
         );
 
-        $query = '
-SELECT id, permalink, uppercats, global_rank
-  FROM ' . Tables::categories() . '
-  WHERE permalink IS NOT NULL
-';
-        if ($sort_by[0] === 'id' or $sort_by[0] === 'permalink') {
-            $query .= ' ORDER BY ' . $sort_by[0];
-        }
+        $order_by_sql = ($sort_by[0] === 'id' or $sort_by[0] === 'permalink') ? ' ORDER BY ' . $sort_by[0] : '';
         $categories = [];
-        foreach ($conn->fetchAllAssociative($query) as $row) {
+        foreach (\Piwigo\Bootstrap\CoreDomainAccessor::categoryService()->getActivePermalinksList($order_by_sql) as $row) {
             // uppercats is NOT NULL in the schema; is_string() is a defensive
             // narrowing of the driver's generic string|null column type, not a
             // documented nullability.

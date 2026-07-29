@@ -109,6 +109,19 @@ final class ActivityRepository extends EntityRepository
     }
 
     /**
+     * When $objectId (of type $object) was logged performing $action --
+     * Admin\CatModifyPageRenderer's own "album created since" display.
+     */
+    public function findOccuredOnForObject(int $objectId, string $object, string $action): ?string
+    {
+        return $this->findOneBy([
+            'objectId' => $objectId,
+            'object' => $object,
+            'action' => $action,
+        ])?->occuredOn;
+    }
+
+    /**
      * Number of logged actions per (object, action) pair, excluding
      * object='system' and optionally restricted to a single object type.
      *
@@ -210,5 +223,37 @@ final class ActivityRepository extends EntityRepository
             ->fetchAllAssociative();
 
         return array_map(SystemActivityLogEntry::fromRow(...), $rows);
+    }
+
+    /**
+     * Paginated activity rows matching an already-built $whereClause --
+     * Ws\PwgCore::getActivityList()'s own WS listing, one real caller.
+     * $whereClause is an already-built, trusted SQL WHERE fragment
+     * (starting with `WHERE`), same "caller composes trusted fragments"
+     * contract used throughout this codebase.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findPaginated(string $whereClause, int $limit, int $offset): array
+    {
+        return $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative('
+SELECT
+    activity_id,
+    performed_by,
+    object,
+    object_id,
+    action,
+    session_idx,
+    ip_address,
+    occured_on,
+    details,
+    user_agent
+  FROM ' . Tables::activity() . '
+  ' . $whereClause . '
+  ORDER BY activity_id DESC
+  LIMIT ' . $limit . ' OFFSET ' . $offset . '
+;');
     }
 }

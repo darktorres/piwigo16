@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Admin\InstallationStats;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 
@@ -12,6 +13,19 @@ function installationStatsDbPrefix(): string
 
     return $prefix !== false ? $prefix : 'piwigo_';
 }
+
+// InstallationStats reads several of its counts through Bootstrap\
+// CoreDomainAccessor/ExtendedDomainAccessor (TagRepository/GroupRepository/
+// HistoryRepository/ImageRepository/UserRepository/RateService), so every
+// test in this file needs a booted container -- same convention as the
+// other Integration tests that touch container-backed services.
+beforeEach(function (): void {
+    Kernel::boot();
+});
+
+afterEach(function (): void {
+    Kernel::reset();
+});
 
 test('getGeneralStatistics returns the full known shape with non-negative integer values', function (): void {
     $stats = InstallationStats::getGeneralStatistics();

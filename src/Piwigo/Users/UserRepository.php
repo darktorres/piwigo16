@@ -6,6 +6,7 @@ namespace Piwigo\Users;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityRepository;
+use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Db\Tables;
 use Piwigo\Users\Projection\UserInfo;
@@ -208,6 +209,24 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             static fn (mixed $name): string => is_scalar($name) ? (string) $name : '',
             $names
         );
+    }
+
+    /**
+     * Every username keyed by id, both via caller-supplied dynamic column
+     * names -- Admin\CatPermPageRenderer's own "list every user for the
+     * groups/users permission form" lookup.
+     *
+     * @return array<int|string, mixed> keyed by id
+     */
+    public function findAllUsernamesById(string $idColumn, string $usernameColumn): array
+    {
+        return array_column($this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative('
+SELECT ' . $idColumn . ' AS id,
+       ' . $usernameColumn . ' AS username
+  FROM ' . Tables::users() . '
+;'), 'username', 'id');
     }
 
     /**
@@ -453,5 +472,709 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
         // one of these ids would otherwise stay stale (same reasoning as
         // deleteUser()'s own comment).
         $em->clear();
+    }
+
+    /**
+     * Basic `users`-table row for UserService::getUserData() -- `$userFields`
+     * is \Piwigo\Config\CurrentConfig::userFields() (pwgfield => dbfield),
+     * same dynamic-column-mapping reason `users` stays unmapped by any
+     * entity (see this class's own docblock).
+     *
+     * @param array<string, string> $userFields
+     * @return array<string, mixed>|false
+     */
+    public function fetchBasicUserRow(UserId $userId, array $userFields): array|false
+    {
+        $query = 'SELECT ';
+        $isFirst = true;
+        foreach ($userFields as $pwgfield => $dbfield) {
+            if ($isFirst) {
+                $isFirst = false;
+            } else {
+                $query .= '
+     , ';
+            }
+            $query .= $dbfield . ' AS ' . $pwgfield;
+        }
+        $query .= '
+  FROM ' . Tables::users() . '
+  WHERE ' . $userFields['id'] . ' = \'' . $userId->value . '\'';
+
+        return $this->getEntityManager()
+            ->getConnection()
+            ->fetchAssociative($query);
+    }
+
+    /**
+     * Whether exactly one `user_infos` row (LEFT JOINed with `themes`, a
+     * harmless no-op for this COUNT -- see UserService::getUserData()'s own
+     * comment) exists for $userId -- the externalAuthentification
+     * integrity check gating whether a missing row needs creating.
+     */
+    public function countUserInfosRows(UserId $userId): int
+    {
+        $row = $this->getEntityManager()
+            ->getConnection()
+            ->fetchNumeric('
+SELECT
+    COUNT(1) AS counter
+  FROM ' . Tables::userInfos() . ' AS ui
+    LEFT JOIN ' . Tables::themes() . ' AS t ON t.id = ui.theme
+  WHERE ui.user_id = ' . $userId->value . '
+  GROUP BY ui.user_id
+;');
+
+        return $row !== false && is_numeric($row[0]) ? (int) $row[0] : 0;
+    }
+
+    /**
+     * Full `user_infos` row plus the joined theme's display name --
+     * UserService::getUserData()'s own merge-with-basic-row step.
+     *
+     * @return array<string, mixed>|false
+     */
+    public function fetchUserInfosWithThemeName(UserId $userId): array|false
+    {
+        return $this->getEntityManager()
+            ->getConnection()
+            ->fetchAssociative('
+SELECT
+    ui.*,
+    t.name AS theme_name
+  FROM ' . Tables::userInfos() . ' AS ui
+    LEFT JOIN ' . Tables::themes() . ' AS t ON t.id = ui.theme
+  WHERE ui.user_id = ' . $userId->value . '
+;');
+    }
+
+    /**
+     * Favorite image ids for $userId restricted to $forbiddenCondition --
+     * UserService::checkUserFavorites()'s own "images still in an
+     * authorized category" half of the comparison. $forbiddenCondition is
+     * PermissionService::getSqlConditionFandF()'s own raw SQL fragment,
+     * embedded as text like every other forbidden-categories fragment in
+     * this codebase (see Permission\PermissionRepository's own methods for
+     * the same shape).
+     *
+     * @return list<int>
+     */
+    public function findAuthorizedFavoriteImageIds(UserId $userId, string $forbiddenCondition): array
+    {
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative('
+SELECT DISTINCT f.image_id
+  FROM ' . Tables::favorites() . ' AS f INNER JOIN ' . Tables::imageCategory() . ' AS ic
+    ON f.image_id = ic.image_id
+  WHERE f.user_id = ' . $userId->value . '
+  ' . $forbiddenCondition . '
+;');
+
+        return self::toIntList(array_column($rows, 'image_id'));
+    }
+
+    /**
+     * Every favorite image id for $userId, unfiltered -- the other half of
+     * UserService::checkUserFavorites()'s comparison.
+     *
+     * @return list<int>
+     */
+    public function findFavoriteImageIds(UserId $userId): array
+    {
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative('
+SELECT image_id
+  FROM ' . Tables::favorites() . '
+  WHERE user_id = ' . $userId->value . '
+;');
+
+        return self::toIntList(array_column($rows, 'image_id'));
+    }
+
+    /**
+     * @param list<int> $imageIds
+     */
+    public function deleteFavoritesForImages(UserId $userId, array $imageIds): void
+    {
+        if ($imageIds === []) {
+            return;
+        }
+
+        $this->getEntityManager()
+            ->getConnection()
+            ->executeStatement('
+DELETE FROM ' . Tables::favorites() . '
+  WHERE image_id IN (' . implode(',', $imageIds) . ')
+    AND user_id = ' . $userId->value . '
+;');
+    }
+
+    /**
+     * Adds a single favorite -- Controller\PictureController's own
+     * "add_to_favorites" action, unlike deleteFavoritesForImages() above
+     * which is a bulk removal.
+     */
+    public function addFavorite(UserId $userId, int $imageId): void
+    {
+        $this->getEntityManager()
+            ->getConnection()
+            ->executeStatement('
+INSERT INTO ' . Tables::favorites() . '
+  (image_id,user_id)
+  VALUES
+  (' . $imageId . ',' . $userId->value . ')
+;');
+    }
+
+    /**
+     * Whether $imageId is already among $userId's favorites --
+     * Controller\PictureController's own favorite-icon toggle state.
+     */
+    public function isFavorite(UserId $userId, int $imageId): bool
+    {
+        $value = $this->getEntityManager()
+            ->getConnection()
+            ->fetchOne('
+SELECT COUNT(*)
+  FROM ' . Tables::favorites() . '
+  WHERE image_id = ' . $imageId . '
+    AND user_id = ' . $userId->value . '
+;');
+
+        return is_numeric($value) && (int) $value !== 0;
+    }
+
+    /**
+     * Removes every favorite for $userId regardless of image -- Section\
+     * SectionPopulator's own "remove_all_from_favorites" action, unlike
+     * deleteFavoritesForImages() above which is scoped to a given image set.
+     */
+    public function deleteAllFavorites(UserId $userId): void
+    {
+        $this->getEntityManager()
+            ->getConnection()
+            ->executeStatement('
+DELETE FROM ' . Tables::favorites() . '
+  WHERE user_id = ' . $userId->value . '
+;');
+    }
+
+    /**
+     * Visible favorite image ids for $userId, in $orderBySql order --
+     * Section\SectionPopulator's own "favorites" section listing. Returns
+     * list<string|null> (not list<int>, this class's usual convention) to
+     * match SectionRepository::queryColumn()'s own shape, since the caller
+     * merges this directly alongside that repository's sibling section
+     * queries into the same $page['items'] slot.
+     *
+     * @return list<string|null>
+     */
+    public function findVisibleFavoriteImageIds(UserId $userId, string $permissionCondition, string $orderBySql): array
+    {
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->fetchFirstColumn('
+SELECT image_id
+  FROM ' . Tables::favorites() . '
+    INNER JOIN ' . Tables::images() . ' ON image_id = id
+  WHERE user_id = ' . $userId->value . '
+' . $permissionCondition . '
+  ' . $orderBySql . '
+;');
+
+        return array_map(
+            static fn (mixed $v): ?string => is_scalar($v) ? (string) $v : null,
+            $rows
+        );
+    }
+
+    /**
+     * Every column of every favorite image for $userId matching
+     * $permissionCondition -- Ws\PwgUsers::favoritesGetList()'s own full
+     * row listing, a different contract from
+     * {@see findVisibleFavoriteImageIds()} above (that one is
+     * `image_id`-only, this one is `i.*`).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findVisibleFavoriteImages(UserId $userId, string $permissionCondition, string $orderBySql): array
+    {
+        return $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative('
+SELECT
+    i.*
+  FROM ' . Tables::favorites() . '
+    INNER JOIN ' . Tables::images() . ' i ON image_id = i.id
+  WHERE user_id = ' . $userId->value . '
+' . $permissionCondition . '
+  ' . $orderBySql . '
+;');
+    }
+
+    /**
+     * Bulk `user_infos.status` update -- UserService::checkAndSaveUserInfos()'s
+     * own status-change branch, applied to every id in $userIds at once.
+     *
+     * @param list<UserId> $userIds
+     */
+    public function updateStatusForUsers(array $userIds, string $status): void
+    {
+        if ($userIds === []) {
+            return;
+        }
+
+        $this->getEntityManager()
+            ->getConnection()
+            ->executeStatement('
+UPDATE ' . Tables::userInfos() . ' SET
+    status = "' . $status . '"
+  WHERE user_id IN(' . implode(',', array_map(static fn (UserId $id): string => (string) $id->value, $userIds)) . ')
+;');
+    }
+
+    /**
+     * Bulk `user_infos` field update -- UserService::checkAndSaveUserInfos()'s
+     * own dynamic-fields branch (nb_image_page/language/recent_period/etc,
+     * whichever the caller actually changed), applied to every id in
+     * $userIds at once. $updates stays a raw column => scalar-value map,
+     * same dynamic-column reasoning as fetchBasicUserRow() above.
+     *
+     * @param list<UserId> $userIds
+     * @param array<string, mixed> $updates
+     */
+    public function updateInfosForUsers(array $userIds, array $updates): void
+    {
+        if ($userIds === [] || $updates === []) {
+            return;
+        }
+
+        $query = 'UPDATE ' . Tables::userInfos() . ' SET ';
+        $isFirst = true;
+        foreach ($updates as $field => $value) {
+            if ($isFirst) {
+                $isFirst = false;
+            } else {
+                $query .= ', ';
+            }
+            assert(is_scalar($value));
+            $query .= $field . ' = "' . (string) $value . '"';
+        }
+        $query .= '
+  WHERE user_id IN(' . implode(',', array_map(static fn (UserId $id): string => (string) $id->value, $userIds)) . ')
+;';
+
+        $this->getEntityManager()
+            ->getConnection()
+            ->executeStatement($query);
+    }
+
+    /**
+     * The earliest non-null `registration_date` among every user --
+     * Admin\PhotosAddDirectPageRenderer's own "how old is this install"
+     * check for the mobile-app promotion banner.
+     */
+    public function findEarliestRegistrationDate(): ?string
+    {
+        $value = $this->getEntityManager()
+            ->getConnection()
+            ->fetchOne('
+SELECT registration_date
+  FROM ' . Tables::userInfos() . '
+  WHERE registration_date IS NOT NULL
+  ORDER BY user_id ASC
+  LIMIT 1
+;');
+
+        return is_string($value) ? $value : null;
+    }
+
+    /**
+     * Distinct "YYYY-MM" registration months among every user --
+     * Admin\UserListPageRenderer's own registration-date filter dropdown.
+     *
+     * @return list<string>
+     */
+    public function findDistinctRegistrationYearMonths(): array
+    {
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative('
+SELECT DISTINCT
+      month(registration_date) as registration_month,
+      year(registration_date) as registration_year
+FROM ' . Tables::userInfos() . '
+ORDER BY registration_year, registration_month
+;');
+
+        return array_map(
+            static function (array $row): string {
+                $registrationMonth = is_numeric($row['registration_month']) ? (int) $row['registration_month'] : 0;
+                $registrationYear = is_scalar($row['registration_year']) ? (string) $row['registration_year'] : '';
+
+                return $registrationYear . '-' . sprintf('%02u', $registrationMonth);
+            },
+            $rows
+        );
+    }
+
+    /**
+     * Per-status user counts, excluding $excludeUserId (the guest user) --
+     * Admin\UserListPageRenderer's own status-filter counters.
+     *
+     * @return array<string, int> keyed by status
+     */
+    public function findUserCountsByStatus(int $excludeUserId): array
+    {
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative('
+SELECT
+    status,
+    COUNT(*) AS nb_users_of
+  FROM ' . Tables::userInfos() . '
+  WHERE user_id != ' . $excludeUserId . '
+  GROUP BY status
+;');
+
+        $byStatus = [];
+        foreach ($rows as $row) {
+            $status = $row['status'];
+            if (! is_string($status)) {
+                continue;
+            }
+
+            $byStatus[$status] = is_numeric($row['nb_users_of']) ? (int) $row['nb_users_of'] : 0;
+        }
+
+        return $byStatus;
+    }
+
+    /**
+     * Per-level user counts, excluding $excludeUserId (the guest user) --
+     * Admin\UserListPageRenderer's own level-filter counters.
+     *
+     * @return array<int, int> keyed by level
+     */
+    public function findUserCountsByLevel(int $excludeUserId): array
+    {
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative('
+SELECT
+    level,
+    COUNT(*) AS nb_users_of
+  FROM ' . Tables::userInfos() . '
+  WHERE user_id != ' . $excludeUserId . '
+  GROUP BY level
+;');
+
+        $byLevel = [];
+        foreach ($rows as $row) {
+            $level = $row['level'];
+            if (! is_numeric($level)) {
+                continue;
+            }
+
+            $byLevel[(int) $level] = is_numeric($row['nb_users_of']) ? (int) $row['nb_users_of'] : 0;
+        }
+
+        return $byLevel;
+    }
+
+    /**
+     * Ws\PwgUsers::getList()'s own paginated, dynamically-columned user
+     * listing -- $displayColumns is the already-built `field expr => alias`
+     * map (always includes at least `u.<idColumn> => id`), matching the WS
+     * method's client-controlled `display` param; $whereClauses are
+     * already-built, trusted SQL fragments, same "caller composes trusted
+     * fragments" contract as {@see \Piwigo\Comment\CommentRepository::findAllWithConditions()}.
+     * $orderBy concatenates directly into ORDER BY -- caller must validate
+     * this first (the WS method's own ValidationPattern::ORDER check), same
+     * contract as {@see \Piwigo\Comment\CommentRepository::findForImage()}'s
+     * own $order. FOUND_ROWS() is only fetched when $includeTotalCount.
+     * LIMIT/OFFSET are only applied when $limit !== null.
+     *
+     * @param  array<string, string>  $displayColumns
+     * @param  list<string>  $whereClauses
+     * @return PaginatedResult<array<string, mixed>>
+     */
+    public function findListForWs(
+        string $idColumn,
+        array $displayColumns,
+        bool $includeLastVisitFromHistory,
+        array $whereClauses,
+        string $orderBy,
+        bool $includeTotalCount,
+        ?int $limit,
+        int $offset
+    ): PaginatedResult {
+        $conn = $this->getEntityManager()
+            ->getConnection();
+
+        $sql = '
+SELECT DISTINCT ' . ($includeTotalCount ? 'SQL_CALC_FOUND_ROWS ' : '');
+
+        $columnPairs = [];
+        foreach ($displayColumns as $field => $alias) {
+            $columnPairs[] = $field . ' AS ' . $alias;
+        }
+        if ($includeLastVisitFromHistory) {
+            $columnPairs[] = 'ui.last_visit_from_history AS last_visit_from_history';
+        }
+        $sql .= implode(', ', $columnPairs);
+
+        $sql .= '
+  FROM ' . Tables::users() . ' AS u
+    INNER JOIN ' . Tables::userInfos() . ' AS ui
+      ON u.' . $idColumn . ' = ui.user_id
+    LEFT JOIN ' . Tables::userGroup() . ' AS ug
+      ON u.' . $idColumn . ' = ug.user_id
+  WHERE
+    ' . implode(' AND ', $whereClauses) . '
+  ORDER BY ' . $orderBy;
+
+        if ($limit !== null) {
+            $sql .= '
+    LIMIT ' . $limit . '
+    OFFSET ' . $offset . ';
+    ';
+        }
+
+        $sql .= ';';
+
+        $rows = $conn->fetchAllAssociative($sql);
+
+        $total = null;
+        if ($includeTotalCount) {
+            $totalRaw = $conn->fetchOne('SELECT FOUND_ROWS();');
+            $total = is_numeric($totalRaw) ? (int) $totalRaw : 0;
+        }
+
+        return new PaginatedResult($rows, $total);
+    }
+
+    /**
+     * user_id for every `user_infos` row NOT matching $excludedStatus --
+     * Admin\AlbumNotificationPageRenderer's own "every non-guest user"
+     * pool, further intersected with album-access ids for private albums.
+     *
+     * @return list<string>
+     */
+    public function findUserIdsExcludingStatus(string $excludedStatus): array
+    {
+        return array_map(
+            static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
+            $this->getEntityManager()
+                ->getConnection()
+                ->executeQuery('
+SELECT user_id
+  FROM ' . Tables::userInfos() . '
+  WHERE status != :status
+;', [
+                    'status' => $excludedStatus,
+                ])
+                ->fetchFirstColumn()
+        );
+    }
+
+    /**
+     * user_id/status/language, plus email/username (JOINed from `users`,
+     * matching a dynamic $idColumn/$usernameColumn/$emailColumn mapping)
+     * for $userIds -- Admin\AlbumNotificationPageRenderer's own
+     * "notify these specific users" mail-merge data.
+     *
+     * @param  list<int|string>  $userIds
+     * @return list<array<string, mixed>>
+     */
+    public function findNotificationRecipientsByIds(array $userIds, string $idColumn, string $usernameColumn, string $emailColumn): array
+    {
+        if ($userIds === []) {
+            return [];
+        }
+
+        return $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative('
+SELECT
+    ui.user_id,
+    ui.status,
+    ui.language,
+    u.' . $emailColumn . ' AS email,
+    u.' . $usernameColumn . ' AS username
+  FROM ' . Tables::userInfos() . ' AS ui
+    JOIN ' . Tables::users() . ' AS u ON u.' . $idColumn . ' = ui.user_id
+  WHERE ui.user_id IN (' . implode(',', $userIds) . ')
+;');
+    }
+
+    /**
+     * Username + id rows for $userIds, matching a dynamic $userFields
+     * column mapping -- Admin\BatchManagerUnitPageRenderer's own
+     * "who uploaded each of these photos" lookup, same dynamic-column
+     * reasoning as fetchBasicUserRow() above.
+     *
+     * @param array<string, string> $userFields
+     * @param list<string> $userIds
+     * @return list<array<string, mixed>>
+     */
+    public function findUsernamesByIds(array $userFields, array $userIds): array
+    {
+        if ($userIds === []) {
+            return [];
+        }
+
+        return $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative('
+SELECT
+    ' . $userFields['username'] . ' AS username,
+    ' . $userFields['id'] . ' AS id
+  FROM ' . Tables::users() . '
+  WHERE ' . $userFields['id'] . ' IN ( ' . implode(',', $userIds) . ' )
+;');
+    }
+
+    /**
+     * registration_date for a single user id -- Admin\InstallationStats::
+     * getInstallationDate()'s own "when was the first real (non-guest,
+     * non-default) user, id 2, registered" candidate.
+     */
+    public function findRegistrationDateById(int $userId): ?string
+    {
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative('
+SELECT
+    registration_date
+  FROM ' . Tables::userInfos() . '
+  WHERE user_id = ' . $userId . '
+;');
+
+        if ($rows === []) {
+            return null;
+        }
+
+        $registrationDate = $rows[0]['registration_date'];
+
+        return is_string($registrationDate) ? $registrationDate : null;
+    }
+
+    /**
+     * Earliest registration_date after $afterDate -- Admin\
+     * InstallationStats::getInstallationDate()'s own fallback candidate
+     * when user id 2's own registration_date predates Piwigo's own
+     * "origin of times".
+     */
+    public function findMinRegistrationDateAfter(string $afterDate): ?string
+    {
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative('
+SELECT
+    MIN(registration_date) AS min_registration_date
+  FROM ' . Tables::userInfos() . '
+  WHERE registration_date > \'' . $afterDate . '\'
+;');
+
+        if ($rows === []) {
+            return null;
+        }
+
+        $minRegistrationDate = $rows[0]['min_registration_date'];
+
+        return is_string($minRegistrationDate) ? $minRegistrationDate : null;
+    }
+
+    /**
+     * Total row count of `users` -- Admin\UserActivityPageRenderer's own
+     * "nb_users" summary figure.
+     */
+    public function countAllUsers(): int
+    {
+        $value = $this->getEntityManager()
+            ->getConnection()
+            ->fetchOne('
+SELECT COUNT(*)
+  FROM ' . Tables::users() . '
+;');
+
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /**
+     * status keyed by id for $ids -- Admin\Integrity\C13yInternal::
+     * c13y_user()'s own "does the guest/default/webmaster user exist, with
+     * the right status" check. A user present in `users` but missing its
+     * `user_infos` row (the LEFT JOIN's own "no such row" case) still
+     * appears here, with a null status.
+     *
+     * @param  list<int|string>  $ids
+     * @return array<int|string, ?string>
+     */
+    public function findStatusByIds(string $idColumn, array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative('
+SELECT u.' . $idColumn . ' AS id, ui.status
+  FROM ' . Tables::users() . ' AS u
+    LEFT JOIN ' . Tables::userInfos() . ' AS ui
+      ON u.' . $idColumn . ' = ui.user_id
+  WHERE u.' . $idColumn . ' IN (' . implode(',', $ids) . ')
+;');
+
+        $byId = [];
+        foreach ($rows as $row) {
+            $id = $row['id'];
+            if (! is_int($id) && ! is_string($id)) {
+                continue;
+            }
+
+            $byId[$id] = is_string($row['status'] ?? null) ? $row['status'] : null;
+        }
+
+        return $byId;
+    }
+
+    /**
+     * Every `user_infos` row with a non-expired activation key --
+     * Controller\PasswordController::checkPasswordResetKey()'s own reset-
+     * key scan.
+     *
+     * @return list<\Piwigo\Users\Projection\ActivationKeyRow>
+     */
+    public function findPendingActivationKeyRows(): array
+    {
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative('
+SELECT
+    user_id,
+    status,
+    activation_key
+  FROM ' . Tables::userInfos() . '
+  WHERE activation_key IS NOT NULL
+    AND activation_key_expire > NOW()
+;');
+
+        return array_map(\Piwigo\Users\Projection\ActivationKeyRow::fromRow(...), $rows);
+    }
+
+    /**
+     * @param list<mixed> $values
+     * @return list<int>
+     */
+    private static function toIntList(array $values): array
+    {
+        return array_map(
+            static fn (mixed $value): int => is_numeric($value) ? (int) $value : 0,
+            $values
+        );
     }
 }

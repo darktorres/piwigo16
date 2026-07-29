@@ -7,8 +7,6 @@ namespace Piwigo\Admin;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Translator;
@@ -50,7 +48,6 @@ final class AlbumNotificationPageRenderer
         /** @var array<string, mixed> $page */
         $page = [];
         $template = \Piwigo\Template\CurrentTemplate::get();
-        $conn = DbConnection::build();
 
         // +-------------------------------------------------------------------+
         // |                       variable initialization                     |
@@ -87,16 +84,8 @@ final class AlbumNotificationPageRenderer
             // a direct-representative check. Not a defect, just a smaller
             // feature than a full recursive lookup would be.
             if ($category['representative_picture_id'] !== null && $category['representative_picture_id'] !== 0) {
-                $query = '
-SELECT id, file, path, representative_ext
-  FROM ' . Tables::images() . '
-  WHERE id = ' . $category['representative_picture_id'] . '
-;';
-
-                $img_rows = $conn->fetchAllAssociative($query);
-                if (count($img_rows) > 0) {
-                    $element = $img_rows[0];
-
+                $element = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->getImageRow($category['representative_picture_id']);
+                if ($element !== null) {
                     $img = [
                         'link' => $this->urlService->makePictureUrl(
                             [
@@ -140,18 +129,7 @@ SELECT id, file, path, representative_ext
                 // private content beyond a public category name/link.
                 $post_user_ids = $albumNotificationSubmit->users;
 
-                $query = '
-SELECT
-    ui.user_id,
-    ui.status,
-    ui.language,
-    u.' . $user_field_email . ' AS email,
-    u.' . $user_field_username . ' AS username
-  FROM ' . Tables::userInfos() . ' AS ui
-    JOIN ' . Tables::users() . ' AS u ON u.' . $user_field_id . ' = ui.user_id
-  WHERE ui.user_id IN (' . implode(',', $post_user_ids) . ')
-;';
-                $users = $conn->fetchAllAssociative($query);
+                $users = \Piwigo\Bootstrap\CoreDomainAccessor::userService()->getNotificationRecipientsByIds($post_user_ids, $user_field_id, $user_field_username, $user_field_email);
                 $usernames = [];
 
                 foreach ($users as $u) {
@@ -221,14 +199,7 @@ SELECT
                 \Piwigo\Bootstrap\PresentationAccessor::mailService()
                     ->mailGroup($group_id, $args, $tpl);
 
-                $query = '
-SELECT
-    name
-  FROM `' . Tables::groups() . '`
-  WHERE id = ' . $group_id . '
-;';
-                $row = $conn->fetchNumeric($query);
-                $group_name = $row !== false ? $row[0] : null;
+                $group_name = \Piwigo\Bootstrap\CoreDomainAccessor::groupService()->getName(\Piwigo\Common\ValueObject\GroupId::from($group_id));
 
                 $template->assign(
                     [
@@ -285,12 +256,10 @@ SELECT
         // |                          form construction                        |
         // +-------------------------------------------------------------------+
 
-        $query = '
-SELECT
-    id AS group_id
-  FROM `' . Tables::groups() . '`
-;';
-        $all_group_ids = array_column($conn->fetchAllAssociative($query), 'group_id');
+        $all_group_ids = array_map(
+            static fn (\Piwigo\Group\Projection\Group $group): int => $group->id->value,
+            \Piwigo\Bootstrap\CoreDomainAccessor::groupService()->getAllBasic()
+        );
         // group_ids stays [] (rather than undefined) when the gallery has no
         // groups at all, so the "private album" branch below can safely read it
         // unconditionally instead of guarding on definedness.
@@ -302,29 +271,15 @@ SELECT
             if ($category['status'] === 'private') {
                 $template->assign('permission_url', $admin_album_base_url . '-permissions');
 
-                $query = '
-SELECT
-    group_id
-  FROM ' . Tables::groupAccess() . '
-  WHERE cat_id = ' . $category_id . '
-;';
-                $group_ids = array_column($conn->fetchAllAssociative($query), 'group_id');
+                $group_ids = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService()->getAccessGroupIds($category_id);
             } else {
                 $group_ids = $all_group_ids;
             }
 
             if (count($group_ids) > 0) {
-                $query = '
-SELECT
-    id,
-    name
-  FROM `' . Tables::groups() . '`
-  WHERE id IN (' . implode(',', array_filter($group_ids, static fn (mixed $v): bool => is_int($v) || is_string($v))) . ')
-  ORDER BY name ASC
-;';
                 $template->assign(
                     'group_mail_options',
-                    array_column($conn->fetchAllAssociative($query), 'name', 'id')
+                    \Piwigo\Bootstrap\CoreDomainAccessor::groupService()->getNamesByIds($group_ids)
                 );
             }
         }
@@ -332,42 +287,21 @@ SELECT
         // all users with status != guest and permitted to this this album (for a
         // perfect search, we should also check that album is not only filled with
         // private photos)
-        $query = '
-SELECT
-    user_id
-  FROM ' . Tables::userInfos() . '
-  WHERE status != \'guest\'
-;';
-        $all_user_ids = array_map(
-            static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
-            array_column($conn->fetchAllAssociative($query), 'user_id')
-        );
+        $all_user_ids = \Piwigo\Bootstrap\CoreDomainAccessor::userService()->getUserIdsExcludingStatus('guest');
 
         if ($category['status'] === 'private') {
             $user_ids_access_indirect = [];
 
             if (count($group_ids) > 0) {
-                $query = '
-SELECT
-    user_id
-  FROM ' . Tables::userGroup() . '
-  WHERE group_id IN (' . implode(',', array_filter($group_ids, static fn (mixed $v): bool => is_int($v) || is_string($v))) . ')
-';
                 $user_ids_access_indirect = array_map(
                     static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
-                    array_column($conn->fetchAllAssociative($query), 'user_id')
+                    array_column(\Piwigo\Bootstrap\CoreDomainAccessor::groupService()->getMembersByGroupIds($group_ids), 'user_id')
                 );
             }
 
-            $query = '
-SELECT
-    user_id
-  FROM ' . Tables::userAccess() . '
-  WHERE cat_id = ' . $category_id . '
-;';
             $user_ids_access_direct = array_map(
-                static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
-                array_column($conn->fetchAllAssociative($query), 'user_id')
+                strval(...),
+                \Piwigo\Bootstrap\CoreDomainAccessor::categoryService()->getAccessUserIds($category_id)
             );
 
             $user_ids_access = array_unique(array_merge($user_ids_access_direct, $user_ids_access_indirect));
@@ -382,15 +316,7 @@ SELECT
             // above) id column the SELECT aliases to "id" -- a literal `id` here
             // would silently filter on the wrong column for a site using a
             // non-default external-auth $conf['user_fields']['id'] mapping.
-            $query = '
-SELECT
-    ' . $user_field_id . ' AS id,
-    ' . $user_field_username . ' AS username
-  FROM ' . Tables::users() . '
-  WHERE ' . $user_field_id . ' IN (' . implode(',', $user_ids) . ')
-;';
-
-            $users = array_column($conn->fetchAllAssociative($query), 'username', 'id');
+            $users = \Piwigo\Bootstrap\CoreDomainAccessor::userService()->getUsernamesByIds(array_values($user_ids));
 
             $template->assign('user_options', $users);
         }

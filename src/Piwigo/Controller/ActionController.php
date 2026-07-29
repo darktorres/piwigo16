@@ -7,7 +7,6 @@ namespace Piwigo\Controller;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\History\HistoryService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
@@ -117,18 +116,15 @@ final class ActionController implements ControllerInterface
 
         // $filter['visible_categories'] and $filter['visible_images']
         // are not used because it's not necessary (filter <> restriction)
-        $query = '
-SELECT id
-  FROM ' . Tables::categories() . '
-    INNER JOIN ' . Tables::imageCategory() . ' ON category_id = id
-  WHERE image_id = ' . $image_id . '
-' . \Piwigo\Bootstrap\CoreDomainAccessor::permissionService()->getSqlConditionFandF([
-    'forbidden_categories' => 'category_id',
+        $permissionCondition = \Piwigo\Bootstrap\CoreDomainAccessor::permissionService()->getSqlConditionFandF([
+            'forbidden_categories' => 'category_id',
             'forbidden_images' => 'image_id',
-], '    AND') . '
-  LIMIT 1
-;';
-        if (! $is_admin_download and $conn->fetchOne($query) === false) {
+        ], '    AND');
+        if (
+            ! $is_admin_download
+            and ! \Piwigo\Bootstrap\CoreDomainAccessor::imageService()
+                ->isImageAccessibleViaCategoryWithCondition($image_id, $permissionCondition)
+        ) {
             return $this->doError(401, 'Access denied');
         }
 

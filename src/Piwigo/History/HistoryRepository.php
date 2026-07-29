@@ -24,11 +24,17 @@ use Piwigo\History\Projection\HistorySummaryCursor;
  * stays plain DBAL via $this->getEntityManager()->getConnection(), same
  * "mixed repository" shape Image/Category/Rate's own conversions
  * established. A handful of other classes (AuthRepository,
- * Admin\Maintenance\DbMaintenanceRepository, Admin\HistoryPageRenderer,
- * Admin\InstallationStats, Admin\StatsPageRenderer, Ws\PwgCore) also touch
- * these two tables directly via raw DBAL -- no cross-repository
+ * Admin\Maintenance\DbMaintenanceRepository, Admin\HistoryPageRenderer)
+ * also touch these two tables directly via raw DBAL -- no cross-repository
  * identity-map risk from leaving the rest raw here either, since none of
  * those go through the ORM/entity manager for these tables.
+ * Admin\InstallationStats/Admin\StatsPageRenderer/Ws\PwgCore were all
+ * retargeted (during the raw-DBAL-out-of-non-Repository-classes pass)
+ * onto this repository's own findLastByType()/findMonthlyRows()/
+ * findDailyRowsForMonths()/findAverageDailyPageViewsSince()/
+ * sumPageViews() for their history_summary reads; Ws\PwgCore's own
+ * activity-table listing went to {@see \Piwigo\Activity\ActivityRepository::findPaginated()}
+ * instead, a different table this class doesn't own.
  *
  * @extends EntityRepository<HistoryEntity>
  */
@@ -222,6 +228,192 @@ final class HistoryRepository extends EntityRepository
             ->fetchOne();
 
         return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /**
+     * Total page views across every yearly summary row (`month IS NULL`
+     * is `summarize()`'s own "whole year" rollup row, distinct from its
+     * per-month/day/hour rows) -- Admin\InstallationStats's own
+     * "nb_views" summary figure.
+     */
+    public function sumPageViews(): int
+    {
+        $value = $this->getEntityManager()
+            ->getConnection()
+            ->fetchOne('
+SELECT
+    SUM(nb_pages)
+  FROM ' . Tables::historySummary() . '
+  WHERE month IS NULL
+;');
+
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /**
+     * The last $limit summary rows at the given hierarchy level ($type:
+     * 'hour'/'day'/'month', or year for anything else), most recent
+     * first -- Admin\StatsPageRenderer's own chart-data query, one real
+     * caller, page-specific view-shaping (not a general-purpose finder).
+     *
+     * @return list<array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null}>
+     */
+    public function findLastByType(string $type, int $limit): array
+    {
+        $sql = '
+SELECT
+    year,
+    month,
+    day,
+    hour,
+    nb_pages
+  FROM ' . Tables::historySummary();
+
+        $sql .= match ($type) {
+            'hour' => '
+  WHERE year IS NOT NULL
+    AND month IS NOT NULL
+    AND day IS NOT NULL
+    AND hour IS NOT NULL
+  ORDER BY
+    year DESC,
+    month DESC,
+    day DESC,
+    hour DESC
+  LIMIT ' . $limit . '
+;',
+            'day' => '
+  WHERE year IS NOT NULL
+    AND month IS NOT NULL
+    AND day IS NOT NULL
+    AND hour IS NULL
+  ORDER BY
+    year DESC,
+    month DESC,
+    day DESC
+  LIMIT ' . $limit . '
+;',
+            'month' => '
+  WHERE year IS NOT NULL
+    AND month IS NOT NULL
+    AND day IS NULL
+  ORDER BY
+    year DESC,
+    month DESC
+  LIMIT ' . $limit . '
+;',
+            default => '
+  WHERE year IS NOT NULL
+    AND month IS NULL
+  ORDER BY
+    year DESC
+  LIMIT ' . $limit . '
+;',
+        };
+
+        /** @var list<array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null}> */
+        return $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative($sql);
+    }
+
+    /**
+     * Every month-level summary row, most recent first, optionally capped
+     * at $limit -- Admin\StatsPageRenderer's own "compare years" chart
+     * data, one real caller.
+     *
+     * @return list<array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null}>
+     */
+    public function findMonthlyRows(?int $limit): array
+    {
+        $sql = '
+SELECT
+  year,
+  month,
+  day,
+  hour,
+  nb_pages
+FROM ' . Tables::historySummary() . '
+WHERE month IS NOT NULL
+  AND day IS NULL
+ORDER BY
+  year DESC,
+  month DESC';
+
+        if ($limit !== null) {
+            $sql .= ' LIMIT ' . $limit;
+        }
+
+        $sql .= ';';
+
+        /** @var list<array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null}> */
+        return $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative($sql);
+    }
+
+    /**
+     * Day-level summary rows for 3 specific (year, month) pairs (this
+     * month, last month, this month last year) -- Admin\
+     * StatsPageRenderer::getMonthStats()'s own "recent months" chart data,
+     * one real caller.
+     *
+     * @return list<array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null}>
+     */
+    public function findDailyRowsForMonths(int $year1, int $month1, int $year2, int $month2, int $year3, int $month3): array
+    {
+        /** @var list<array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null}> */
+        return $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative('
+SELECT
+  year,
+  month,
+  day,
+  hour,
+  nb_pages
+FROM ' . Tables::historySummary() . '
+WHERE
+  (
+    (year = ' . $year1 . ' AND month = ' . $month1 . ')
+    OR (year = ' . $year2 . ' AND month = ' . $month2 . ')
+    OR (year = ' . $year3 . ' AND month = ' . $month3 . ')
+  )
+  AND day IS NOT NULL
+  AND hour IS NULL
+ORDER BY
+  year DESC,
+  month DESC
+;');
+    }
+
+    /**
+     * Average daily page views across the trailing 12-ish months (this
+     * year, plus last year from $afterMonth onward) -- Admin\
+     * StatsPageRenderer::getMonthStats()'s own "avg" figure, one real
+     * caller.
+     */
+    public function findAverageDailyPageViewsSince(int $year, int $previousYear, int $afterMonth): ?float
+    {
+        $value = $this->getEntityManager()
+            ->getConnection()
+            ->fetchOne('
+SELECT
+  AVG(nb_pages)
+FROM ' . Tables::historySummary() . '
+WHERE
+  (
+  year = ' . $year . ' OR
+  (year = ' . $previousYear . ' and month > ' . $afterMonth . ')
+  )
+  AND day IS NOT NULL
+  AND hour IS NULL
+ORDER BY
+  year DESC,
+  month DESC
+;');
+
+        return is_numeric($value) ? (float) $value : null;
     }
 
     public function findLatestHistoryId(): ?int

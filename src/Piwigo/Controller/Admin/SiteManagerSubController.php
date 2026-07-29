@@ -12,7 +12,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -157,18 +156,12 @@ final class SiteManagerSubController implements AdminSubControllerInterface
             ]
         );
 
-        $query = '
-SELECT c.site_id, COUNT(DISTINCT c.id) AS nb_categories, COUNT(i.id) AS nb_images
-  FROM ' . Tables::categories() . ' AS c LEFT JOIN ' . Tables::images() . ' AS i
-  ON c.id=i.storage_category_id
-  WHERE c.site_id IS NOT NULL
-  GROUP BY c.site_id
-;';
-        /** @var array<int|string, array<string, string|null>> $sites_detail */
-        $sites_detail = array_column($conn->fetchAllAssociative($query), null, 'site_id');
+        $sites_detail = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Site\SiteEntity::class)
+            ->findCategoryAndImageCountsBySite();
 
         foreach (\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Site\SiteEntity::class)->findAllSites() as $row) {
             $id = (string) $row->id;
+            $id_int = $row->id;
             $galleries_url = $row->galleriesUrl;
             $is_remote = $this->urlService->urlIsRemote($galleries_url);
             $base_url = $this->urlService->getRootUrl() . 'admin.php';
@@ -185,8 +178,8 @@ SELECT c.site_id, COUNT(DISTINCT c.id) AS nb_categories, COUNT(i.id) AS nb_image
               [
                   'NAME' => $galleries_url,
                   'TYPE' => Lang::t($is_remote ? 'Remote' : 'Local'),
-                  'CATEGORIES' => (int) @$sites_detail[$id]['nb_categories'],
-                  'IMAGES' => (int) @$sites_detail[$id]['nb_images'],
+                  'CATEGORIES' => $sites_detail[$id_int]['nb_categories'] ?? 0,
+                  'IMAGES' => $sites_detail[$id_int]['nb_images'] ?? 0,
                   'U_SYNCHRONIZE' => $update_url,
               ];
 

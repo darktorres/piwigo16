@@ -60,10 +60,8 @@ final class RecentIconResolver
 
         if (! isset($get_icon_cache['sql_recent_date'])) {
             // Use MySql date in order to standardize all recent "actions/queries"
-            $sql_recent_date = \Piwigo\Db\DbConnection::build()->fetchOne(
-                'SELECT ' . \Piwigo\Db\SqlDialect::getRecentPeriodExpression($recent_period)
-            );
-            $get_icon_cache['sql_recent_date'] = is_string($sql_recent_date) ? $sql_recent_date : '';
+            $get_icon_cache['sql_recent_date'] = new \Piwigo\Db\SqlDialectExecutor(\Piwigo\Db\DbConnection::build())
+                ->fetchRecentCutoffDate($recent_period);
         }
 
         $get_icon_cache[$date] = $date > $get_icon_cache['sql_recent_date'];

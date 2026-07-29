@@ -8,12 +8,16 @@ use Piwigo\Db\AbstractRepository;
 
 /**
  * Persistence layer for SectionPopulator/SectionInitializer's own
- * hand-built, per-section-branch SQL (categories/favorites/recent_pics/
- * most_visited/best_rated/list/flat-subcat item-id queries, the favorites
- * DELETE) -- same "generic, fully parameterized executors instead of one
- * method per query shape" rationale as Search\SearchRepository, since these
- * WHERE/ORDER-BY fragments are assembled dynamically by the caller across
- * many branches, not a fixed shape a typed method could usefully wrap.
+ * per-section-branch item-id queries (categories/recent_pics/most_visited/
+ * best_rated/list/flat-subcat), each exposed as its own named method below
+ * parameterized by the truly dynamic fragments (permission conditions,
+ * order-by, limit) SectionPopulator computes per branch -- deptrac DBAL-leak
+ * cleanup (2026-07-29) moved the actual query text here from
+ * SectionPopulator itself, which used to build full SQL strings and hand
+ * them to a generic queryColumn()/executeStatement() escape hatch. Favorites
+ * queries stay in Users\UserRepository (a different domain); this class
+ * still exposes queryColumn()/executeStatement() as raw escape hatches for
+ * SectionInitializer's own remaining direct use.
  */
 final class SectionRepository extends AbstractRepository
 {
@@ -39,6 +43,123 @@ final class SectionRepository extends AbstractRepository
     public function executeStatement(string $sql): void
     {
         $this->conn->executeStatement($sql);
+    }
+
+    /**
+     * Visible subcategory ids directly under $uppercatsPattern (a category's
+     * own `uppercats` value, matched as `uppercats LIKE '$uppercatsPattern,%'`)
+     * -- SectionPopulator's own "flat categories" mode subcategory expansion.
+     *
+     * @return list<string|null>
+     */
+    public function findVisibleSubcategoryIds(string $uppercatsPattern, string $permissionCondition): array
+    {
+        return $this->queryColumn('
+SELECT id
+  FROM ' . \Piwigo\Db\Tables::categories() . '
+  WHERE
+    uppercats LIKE \'' . $uppercatsPattern . ',%\' '
+    . $permissionCondition);
+    }
+
+    /**
+     * Image ids for the current category/flat-mode section, given
+     * $whereSql (either a plain `category_id = X` or the flat-mode
+     * `category_id IN (...)` SectionPopulator already resolved) --
+     * SectionPopulator's own main categories-section query.
+     *
+     * @return list<string|null>
+     */
+    public function findSectionImageIds(string $whereSql, string $forbiddenSql, string $orderBySql): array
+    {
+        return $this->queryColumn('
+SELECT id
+  FROM ' . \Piwigo\Db\Tables::imageCategory() . '
+    INNER JOIN ' . \Piwigo\Db\Tables::images() . ' ON id = image_id
+  WHERE
+    ' . $whereSql . '
+' . $forbiddenSql . '
+  GROUP BY id
+  ' . $orderBySql . '
+;');
+    }
+
+    /**
+     * Image ids for the "recent_pics" section -- $recentSql is
+     * UserService::getRecentPhotosSql()'s own raw WHERE fragment.
+     *
+     * @return list<string|null>
+     */
+    public function findRecentImageIds(string $recentSql, string $forbiddenSql, string $orderBySql): array
+    {
+        return $this->queryColumn('
+SELECT id
+  FROM ' . \Piwigo\Db\Tables::images() . '
+    INNER JOIN ' . \Piwigo\Db\Tables::imageCategory() . ' AS ic ON id = ic.image_id
+  WHERE '
+  . $recentSql . '
+  ' . $forbiddenSql . '
+  GROUP BY id
+  ' . $orderBySql . '
+;');
+    }
+
+    /**
+     * Image ids for the "most_visited" section, capped at $limit.
+     *
+     * @return list<string|null>
+     */
+    public function findTopByHitsImageIds(string $forbiddenSql, string $orderBySql, int $limit): array
+    {
+        return $this->queryColumn('
+SELECT id
+  FROM ' . \Piwigo\Db\Tables::images() . '
+    INNER JOIN ' . \Piwigo\Db\Tables::imageCategory() . ' AS ic ON id = ic.image_id
+  WHERE hit > 0
+    ' . $forbiddenSql . '
+    GROUP BY id
+    ' . $orderBySql . '
+  LIMIT ' . $limit . '
+;');
+    }
+
+    /**
+     * Image ids for the "best_rated" section, capped at $limit.
+     *
+     * @return list<string|null>
+     */
+    public function findTopRatedImageIds(string $forbiddenSql, string $orderBySql, int $limit): array
+    {
+        return $this->queryColumn('
+SELECT id
+  FROM ' . \Piwigo\Db\Tables::images() . '
+    INNER JOIN ' . \Piwigo\Db\Tables::imageCategory() . ' AS ic ON id = ic.image_id
+  WHERE rating_score IS NOT NULL
+    ' . $forbiddenSql . '
+    GROUP BY id
+    ' . $orderBySql . '
+  LIMIT ' . $limit . '
+;');
+    }
+
+    /**
+     * Image ids for the "list" section (a caller-supplied id set, e.g. a
+     * random-photos block), restricted to $imageIds and visibility.
+     *
+     * @param list<string> $imageIds
+     * @return list<string|null>
+     */
+    public function findImageIdsAmongList(array $imageIds, string $forbiddenSql, string $orderBySql): array
+    {
+        return $this->queryColumn('
+SELECT id
+  FROM ' . \Piwigo\Db\Tables::images() . '
+    INNER JOIN ' . \Piwigo\Db\Tables::imageCategory() . ' AS ic ON id = ic.image_id
+  WHERE image_id IN (' . implode(',', $imageIds) . ')
+    ' . $forbiddenSql . '
+  GROUP BY id
+  ' . $orderBySql . '
+;');
     }
 
     /**

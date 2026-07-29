@@ -589,7 +589,7 @@ final class RequestBootstrap
             // when it decides to take over the page. CurrentConfigService::get()
             // reuses the instance connect() already resolved earlier in the
             // same request (Legacy Coupling Retirement Phase 8, 8d).
-            new NoPhotoYetRenderer($conn, \Piwigo\Config\CurrentConfigService::get(), new RedirectService(), new UrlService(new HtmlService()), CurrentPaths::get())
+            new NoPhotoYetRenderer(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), \Piwigo\Config\CurrentConfigService::get(), new RedirectService(), new UrlService(new HtmlService()), CurrentPaths::get())
                 ->render();
         }
 

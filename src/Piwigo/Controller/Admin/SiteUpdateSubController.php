@@ -1065,10 +1065,12 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
 
         $template->assign('introduction', $tpl_introduction);
 
-        $query = '
-SELECT id,name,uppercats,global_rank
-  FROM ' . Tables::categories() . '
-  WHERE site_id = ' . $site_id;
+        $categoriesTable = Tables::categories();
+        $query = <<<SQL
+            SELECT id,name,uppercats,global_rank
+            FROM {$categoriesTable}
+            WHERE site_id = {$site_id}
+            SQL;
         self::categoryService()->displaySelectCatWrapper(
             $query,
             $cat_selected,

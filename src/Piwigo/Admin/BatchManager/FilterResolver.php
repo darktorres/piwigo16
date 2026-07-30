@@ -111,8 +111,11 @@ final readonly class FilterResolver
             return [];
         }
 
-        $sql = 'SELECT id FROM ' . Tables::images()
-            . ' WHERE date_available BETWEEN ' . SqlDialect::getRecentPeriodExpression(1, $lastDate) . ' AND :last_date';
+        $imagesTable = Tables::images();
+        $recentPeriodExpr = SqlDialect::getRecentPeriodExpression(1, $lastDate);
+        $sql = <<<SQL
+            SELECT id FROM {$imagesTable} WHERE date_available BETWEEN {$recentPeriodExpr} AND :last_date
+            SQL;
 
         return $this->fetchIntColumnSql($sql, [
             'last_date' => $lastDate,
@@ -160,9 +163,11 @@ final readonly class FilterResolver
      */
     private function noTagPhotoIds(): array
     {
-        $sql = 'SELECT id FROM ' . Tables::images()
-            . ' LEFT JOIN ' . Tables::imageTag() . ' ON id = image_id'
-            . ' WHERE tag_id IS NULL';
+        $imagesTable = Tables::images();
+        $imageTagTable = Tables::imageTag();
+        $sql = <<<SQL
+            SELECT id FROM {$imagesTable} LEFT JOIN {$imageTagTable} ON id = image_id WHERE tag_id IS NULL
+            SQL;
 
         return $this->fetchIntColumnSql($sql, []);
     }
@@ -255,7 +260,10 @@ final readonly class FilterResolver
      */
     private function allPhotoIds(string $orderBy): array
     {
-        $sql = 'SELECT id FROM ' . Tables::images() . ' ' . $orderBy;
+        $imagesTable = Tables::images();
+        $sql = <<<SQL
+            SELECT id FROM {$imagesTable} {$orderBy}
+            SQL;
 
         return $this->fetchIntColumnSql($sql, []);
     }
@@ -298,8 +306,10 @@ final readonly class FilterResolver
     public function levelPhotoIds(int $level, bool $includeLower, string $orderBy): array
     {
         $operator = $includeLower ? '<=' : '=';
-        $sql = 'SELECT id FROM ' . Tables::images()
-            . ' WHERE level ' . $operator . ' :level ' . $orderBy;
+        $imagesTable = Tables::images();
+        $sql = <<<SQL
+            SELECT id FROM {$imagesTable} WHERE level {$operator} :level {$orderBy}
+            SQL;
 
         return $this->fetchIntColumnSql($sql, [
             'level' => $level,
@@ -357,8 +367,11 @@ final readonly class FilterResolver
             return null;
         }
 
-        $sql = 'SELECT id FROM ' . Tables::images()
-            . ' WHERE ' . implode(' AND ', $where) . ' ' . $orderBy;
+        $imagesTable = Tables::images();
+        $whereSql = implode(' AND ', $where);
+        $sql = <<<SQL
+            SELECT id FROM {$imagesTable} WHERE {$whereSql} {$orderBy}
+            SQL;
 
         return $this->fetchIntColumnSql($sql, $params);
     }
@@ -389,8 +402,11 @@ final readonly class FilterResolver
             return null;
         }
 
-        $sql = 'SELECT id FROM ' . Tables::images()
-            . ' WHERE ' . implode(' AND ', $where) . ' ' . $orderBy;
+        $imagesTable = Tables::images();
+        $whereSql = implode(' AND ', $where);
+        $sql = <<<SQL
+            SELECT id FROM {$imagesTable} WHERE {$whereSql} {$orderBy}
+            SQL;
 
         return $this->fetchIntColumnSql($sql, $params);
     }

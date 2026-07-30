@@ -321,12 +321,14 @@ abstract class CalendarBase
      */
     protected function build_nav_bar($level, ?array $labels, \Piwigo\Core\TemplateInterface $template): void
     {
-        $query = '
-SELECT DISTINCT(' . $this->calendar_levels[$level]['sql'] . ') as period,
-  COUNT(DISTINCT id) as nb_images' .
-$this->inner_sql .
-$this->get_date_where($level) . '
-  GROUP BY period;';
+        $levelSql = $this->calendar_levels[$level]['sql'];
+        $innerSql = $this->inner_sql;
+        $dateWhere = $this->get_date_where($level);
+        $query = <<<SQL
+            SELECT DISTINCT({$levelSql}) as period,
+              COUNT(DISTINCT id) as nb_images{$innerSql}{$dateWhere}
+              GROUP BY period;
+            SQL;
 
         $rows = $this->calendarRepository->findRows($query);
         $level_items = [];
@@ -398,10 +400,15 @@ $this->get_date_where($level) . '
                 $sub_queries[] = \Piwigo\Db\SqlDialect::castToText($this->calendar_levels[$i]['sql']);
             }
         }
-        $query = 'SELECT ' . \Piwigo\Db\SqlDialect::concatWs($sub_queries, '-') . ' AS period';
-        $query .= $this->inner_sql . '
-AND ' . $this->date_field . ' IS NOT NULL
-GROUP BY period';
+        $concatWsExpr = \Piwigo\Db\SqlDialect::concatWs($sub_queries, '-');
+        $query = <<<SQL
+            SELECT {$concatWsExpr} AS period
+            SQL;
+        $query .= $this->inner_sql . <<<SQL
+
+            AND {$this->date_field} IS NOT NULL
+            GROUP BY period
+            SQL;
 
         // $current must mirror the SQL side's own per-element treatment
         // above (every component included, whether 'any' or a real date

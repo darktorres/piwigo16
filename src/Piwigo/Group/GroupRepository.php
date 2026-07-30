@@ -329,9 +329,13 @@ final class GroupRepository extends EntityRepository
     {
         $conn = $this->getEntityManager()
             ->getConnection();
+        $userGroupTable = \Piwigo\Db\Tables::userGroup();
         foreach ($userIds as $userId) {
             $conn->executeStatement(
-                'INSERT IGNORE INTO ' . \Piwigo\Db\Tables::userGroup() . ' (group_id, user_id) VALUES (?, ?)',
+                <<<SQL
+                INSERT IGNORE INTO {$userGroupTable} (group_id, user_id) VALUES (?, ?)
+                SQL
+                ,
                 [$groupId->value, $userId->value],
                 [\Doctrine\DBAL\ParameterType::INTEGER, \Doctrine\DBAL\ParameterType::INTEGER],
             );
@@ -552,13 +556,16 @@ final class GroupRepository extends EntityRepository
             return [];
         }
 
+        $userGroupTable = \Piwigo\Db\Tables::userGroup();
+        $groupIdsCsv = implode(',', $groupIds);
+
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT user_id, group_id
-  FROM ' . \Piwigo\Db\Tables::userGroup() . '
-  WHERE group_id IN (' . implode(',', $groupIds) . ')
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT user_id, group_id
+                FROM {$userGroupTable}
+                WHERE group_id IN ({$groupIdsCsv})
+                SQL);
     }
 
     /**
@@ -577,13 +584,16 @@ SELECT user_id, group_id
             return [];
         }
 
+        $userGroupTable = \Piwigo\Db\Tables::userGroup();
+        $userIdsCsv = implode(',', $userIds);
+
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT user_id, group_id
-  FROM ' . \Piwigo\Db\Tables::userGroup() . '
-  WHERE user_id IN (' . implode(',', $userIds) . ')
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT user_id, group_id
+                FROM {$userGroupTable}
+                WHERE user_id IN ({$userIdsCsv})
+                SQL);
     }
 
     /**
@@ -592,9 +602,12 @@ SELECT user_id, group_id
      */
     public function countAll(): int
     {
+        $groupsTable = \Piwigo\Db\Tables::groups();
         $value = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne('SELECT COUNT(*) FROM `' . \Piwigo\Db\Tables::groups() . '`;');
+            ->fetchOne(<<<SQL
+                SELECT COUNT(*) FROM `{$groupsTable}`
+                SQL);
 
         return is_numeric($value) ? (int) $value : 0;
     }
@@ -613,16 +626,19 @@ SELECT user_id, group_id
             return [];
         }
 
+        $groupsTable = \Piwigo\Db\Tables::groups();
+        $groupIdsCsv = implode(',', $groupIds);
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT
-    id,
-    name
-  FROM `' . \Piwigo\Db\Tables::groups() . '`
-  WHERE id IN (' . implode(',', $groupIds) . ')
-  ORDER BY name ASC
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT
+                    id,
+                    name
+                FROM `{$groupsTable}`
+                WHERE id IN ({$groupIdsCsv})
+                ORDER BY name ASC
+                SQL);
 
         $byId = [];
         foreach ($rows as $row) {

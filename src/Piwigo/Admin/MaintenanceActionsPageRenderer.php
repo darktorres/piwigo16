@@ -86,7 +86,9 @@ final class MaintenanceActionsPageRenderer
         $php_current_timestamp = date('Y-m-d H:i:s');
         $db_version = new DbInfo($conn)
             ->version();
-        $row = $conn->fetchNumeric('SELECT now();');
+        $row = $conn->fetchNumeric(<<<SQL
+            SELECT now()
+            SQL);
         $db_current_date = $row !== false ? $row[0] : null;
 
         // \Piwigo\Config\CurrentConfig::cacheSizes() is a serialized 4-row [name, value] list produced by

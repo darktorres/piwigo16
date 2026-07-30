@@ -38,8 +38,12 @@ final class SearchRepository extends AbstractRepository
      */
     public function findOneByClause(string $whereSql, array $params = []): ?Search
     {
+        $searchTable = Tables::search();
         $row = $this->conn->executeQuery(
-            'SELECT * FROM ' . Tables::search() . ' WHERE ' . $whereSql,
+            <<<SQL
+            SELECT * FROM {$searchTable} WHERE {$whereSql}
+            SQL
+            ,
             $params
         )->fetchAssociative();
 
@@ -62,7 +66,10 @@ final class SearchRepository extends AbstractRepository
     public function findIdsByClause(string $selectSql, string $fromSql, string $whereSql, array $params = []): array
     {
         $ids = $this->conn->executeQuery(
-            'SELECT ' . $selectSql . ' FROM ' . $fromSql . ' WHERE ' . $whereSql,
+            <<<SQL
+            SELECT {$selectSql} FROM {$fromSql} WHERE {$whereSql}
+            SQL
+            ,
             $params
         )->fetchFirstColumn();
 
@@ -83,7 +90,10 @@ final class SearchRepository extends AbstractRepository
     public function findRowsByClause(string $fromSql, string $whereSql, array $params = []): array
     {
         return $this->conn->executeQuery(
-            'SELECT * FROM ' . $fromSql . ' WHERE ' . $whereSql,
+            <<<SQL
+            SELECT * FROM {$fromSql} WHERE {$whereSql}
+            SQL
+            ,
             $params
         )->fetchAllAssociative();
     }
@@ -106,8 +116,12 @@ final class SearchRepository extends AbstractRepository
 
     public function countByUuid(string $uuid): int
     {
+        $searchTable = Tables::search();
         $count = $this->conn->executeQuery(
-            'SELECT COUNT(*) FROM ' . Tables::search() . ' WHERE search_uuid = ?',
+            <<<SQL
+            SELECT COUNT(*) FROM {$searchTable} WHERE search_uuid = ?
+            SQL
+            ,
             [$uuid]
         )->fetchOne();
 
@@ -130,8 +144,12 @@ final class SearchRepository extends AbstractRepository
         ?string $searchUuid = null,
         ?int $forkedFrom = null
     ): int {
+        $searchTable = Tables::search();
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::search() . ' (rules, created_on, created_by, search_uuid, forked_from) VALUES (?, ?, ?, ?, ?)',
+            <<<SQL
+            INSERT INTO {$searchTable} (rules, created_on, created_by, search_uuid, forked_from) VALUES (?, ?, ?, ?, ?)
+            SQL
+            ,
             [json_encode($rules), $createdOn, $createdBy, $searchUuid, $forkedFrom]
         );
 
@@ -153,8 +171,12 @@ final class SearchRepository extends AbstractRepository
             return [];
         }
 
+        $searchTable = Tables::search();
         $rows = $this->conn->executeQuery(
-            'SELECT id, rules FROM ' . Tables::search() . ' WHERE id IN (?)',
+            <<<SQL
+            SELECT id, rules FROM {$searchTable} WHERE id IN (?)
+            SQL
+            ,
             [$ids],
             [ArrayParameterType::INTEGER]
         )->fetchAllAssociative();
@@ -176,7 +198,9 @@ final class SearchRepository extends AbstractRepository
 
     public function now(): string
     {
-        $row = $this->conn->executeQuery('SELECT NOW()')
+        $row = $this->conn->executeQuery(<<<SQL
+            SELECT NOW()
+            SQL)
             ->fetchOne();
 
         return is_string($row) ? $row : '';

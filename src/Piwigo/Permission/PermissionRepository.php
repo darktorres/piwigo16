@@ -240,12 +240,15 @@ final readonly class PermissionRepository
      */
     public function findImageIdsOutsideForbiddenCategories(string $structuralForbidden, int|string $level): array
     {
+        $imagesTable = Tables::images();
+        $imageCategoryTable = Tables::imageCategory();
         $ids = $this->em->getConnection()
-            ->fetchAllAssociative('
-SELECT DISTINCT(id)
-  FROM ' . Tables::images() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id=image_id
-  WHERE category_id NOT IN (' . $structuralForbidden . ')
-    AND level>' . $level);
+            ->fetchAllAssociative(<<<SQL
+                SELECT DISTINCT(id)
+                FROM {$imagesTable} INNER JOIN {$imageCategoryTable} ON id=image_id
+                WHERE category_id NOT IN ({$structuralForbidden})
+                    AND level>{$level}
+                SQL);
 
         return self::toIntList(array_column($ids, 'id'));
     }
@@ -257,12 +260,14 @@ SELECT DISTINCT(id)
      */
     public function countAccessibleImages(string $structuralForbidden, string $imageAccessType, string $imageAccessList): string
     {
+        $imageCategoryTable = Tables::imageCategory();
         $row = $this->em->getConnection()
-            ->fetchNumeric('
-SELECT COUNT(DISTINCT(image_id)) as total
-  FROM ' . Tables::imageCategory() . '
-  WHERE category_id NOT IN (' . $structuralForbidden . ')
-    AND image_id ' . $imageAccessType . ' (' . $imageAccessList . ')');
+            ->fetchNumeric(<<<SQL
+                SELECT COUNT(DISTINCT(image_id)) as total
+                FROM {$imageCategoryTable}
+                WHERE category_id NOT IN ({$structuralForbidden})
+                    AND image_id {$imageAccessType} ({$imageAccessList})
+                SQL);
         $totalRaw = $row !== false ? ($row[0] ?? null) : null;
 
         return is_scalar($totalRaw) ? (string) $totalRaw : '0';

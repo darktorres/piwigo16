@@ -310,11 +310,12 @@ final class AdminShell
             $template->assign('U_COMMENTS', $link_start . 'comments');
 
             // pending comments
-            $query = '
-SELECT COUNT(*)
-  FROM ' . Tables::comments() . '
-  WHERE validated=0
-;';
+            $commentsTable = Tables::comments();
+            $query = <<<SQL
+                SELECT COUNT(*)
+                FROM {$commentsTable}
+                WHERE validated=0
+                SQL;
             $row = $conn->fetchNumeric($query);
             $nb_comments = $row !== false ? $row[0] : 0;
 
@@ -326,11 +327,12 @@ SELECT COUNT(*)
 
         // any photo in the caddie?
         $user_id = \Piwigo\Users\CurrentUser::get()->id->value;
-        $query = '
-SELECT COUNT(*)
-  FROM ' . Tables::caddie() . '
-  WHERE user_id = ' . $user_id . '
-;';
+        $caddieTable = Tables::caddie();
+        $query = <<<SQL
+            SELECT COUNT(*)
+            FROM {$caddieTable}
+            WHERE user_id = {$user_id}
+            SQL;
         $row = $conn->fetchNumeric($query);
         $nb_photos_in_caddie = $row !== false ? $row[0] : 0;
 
@@ -364,7 +366,10 @@ SELECT COUNT(*)
         // only calculate number of orphans on all pages if the number of images is "not huge"
         $nb_orphans = 0;
 
-        $row = $conn->fetchNumeric('SELECT COUNT(*) FROM ' . Tables::images());
+        $imagesTable = Tables::images();
+        $row = $conn->fetchNumeric(<<<SQL
+            SELECT COUNT(*) FROM {$imagesTable}
+            SQL);
         $nb_photos_total_raw = $row !== false ? $row[0] : 0;
         $nb_photos_total = is_numeric($nb_photos_total_raw) ? (int) $nb_photos_total_raw : 0;
         if ($nb_photos_total < 100000) { // 100k is already a big gallery

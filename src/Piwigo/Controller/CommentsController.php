@@ -348,14 +348,16 @@ final class CommentsController implements ControllerInterface
         // Search in a particular category
         $blockname = 'categories';
 
-        $query = '
-SELECT id, name, uppercats, global_rank
-  FROM ' . Tables::categories() . '
-' . self::permissionService()->getSqlConditionFandF([
+        $categoriesTable = Tables::categories();
+        $categoryConditionSql = self::permissionService()->getSqlConditionFandF([
             'forbidden_categories' => 'id',
             'visible_categories' => 'id',
-        ], 'WHERE') . '
-;';
+        ], 'WHERE');
+        $query = <<<SQL
+            SELECT id, name, uppercats, global_rank
+            FROM {$categoriesTable}
+            {$categoryConditionSql}
+            SQL;
         self::categoryService()
             ->displaySelectCatWrapper($query, [$commentsRequest->catDisplay], $blockname, \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $template, true);
 

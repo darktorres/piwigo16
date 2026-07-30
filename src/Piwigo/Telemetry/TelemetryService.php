@@ -73,7 +73,9 @@ final readonly class TelemetryService
 
     private function databaseInfo(): DatabaseInfo
     {
-        $version = $this->conn->executeQuery('SELECT VERSION()')
+        $version = $this->conn->executeQuery(<<<SQL
+            SELECT VERSION()
+            SQL)
             ->fetchOne();
 
         return new DatabaseInfo($this->detectDriverLabel(), is_string($version) ? $version : '');
@@ -100,7 +102,9 @@ final readonly class TelemetryService
 
     private function count(string $table): int
     {
-        $count = $this->conn->executeQuery('SELECT COUNT(*) FROM ' . $table)->fetchOne();
+        $count = $this->conn->executeQuery(<<<SQL
+            SELECT COUNT(*) FROM {$table}
+            SQL)->fetchOne();
 
         return is_numeric($count) ? (int) $count : 0;
     }

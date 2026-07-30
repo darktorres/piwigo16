@@ -18,7 +18,9 @@ final readonly class DbInfo
 
     public function version(): string
     {
-        $v = $this->conn->executeQuery('SELECT VERSION()')
+        $v = $this->conn->executeQuery(<<<SQL
+            SELECT VERSION()
+            SQL)
             ->fetchOne();
         return is_string($v) ? $v : '';
     }
@@ -36,7 +38,9 @@ final readonly class DbInfo
      */
     public function getEnums(string $table, string $field): array
     {
-        $rows = $this->conn->executeQuery('DESC ' . $table)->fetchAllAssociative();
+        $rows = $this->conn->executeQuery(<<<SQL
+            DESC {$table}
+            SQL)->fetchAllAssociative();
 
         foreach ($rows as $row) {
             if (($row['Field'] ?? null) === $field) {
@@ -60,14 +64,14 @@ final readonly class DbInfo
      */
     public function getTableFingerprint(string $table): string
     {
-        $value = $this->conn->fetchOne('
-SELECT CONCAT(
-    UNIX_TIMESTAMP(MAX(lastmodified)),
-    "_",
-    COUNT(*)
-  )
-  FROM `' . $table . '`
-;');
+        $value = $this->conn->fetchOne(<<<SQL
+            SELECT CONCAT(
+                UNIX_TIMESTAMP(MAX(lastmodified)),
+                "_",
+                COUNT(*)
+              )
+            FROM `{$table}`
+            SQL);
 
         return is_string($value) ? $value : '';
     }

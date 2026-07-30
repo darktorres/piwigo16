@@ -107,14 +107,15 @@ final class ConfigRepository extends EntityRepository
      */
     public function insertIgnoreRawValue(string $param, string $value): void
     {
+        $configTable = \Piwigo\Db\Tables::config();
         $this->getEntityManager()
             ->getConnection()
-            ->executeStatement('
-INSERT IGNORE
-  INTO ' . \Piwigo\Db\Tables::config() . '
-  SET param="' . $param . '"
-    , value="' . $value . '"
-;');
+            ->executeStatement(<<<SQL
+                INSERT IGNORE
+                INTO {$configTable}
+                SET param="{$param}"
+                    , value="{$value}"
+                SQL);
     }
 
     /**
@@ -128,23 +129,27 @@ INSERT IGNORE
      */
     public function findRawValue(string $param): string|false
     {
+        $configTable = \Piwigo\Db\Tables::config();
         $value = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne('SELECT value FROM ' . \Piwigo\Db\Tables::config() . ' WHERE param = "' . $param . '"');
+            ->fetchOne(<<<SQL
+                SELECT value FROM {$configTable} WHERE param = "{$param}"
+                SQL);
 
         return is_string($value) ? $value : false;
     }
 
     public function countByParam(string $param): int
     {
+        $configTable = \Piwigo\Db\Tables::config();
         $value = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne('
-SELECT
-    COUNT(*)
-  FROM ' . \Piwigo\Db\Tables::config() . '
-  WHERE param = "' . $param . '"
-;');
+            ->fetchOne(<<<SQL
+                SELECT
+                    COUNT(*)
+                FROM {$configTable}
+                WHERE param = "{$param}"
+                SQL);
 
         return is_numeric($value) ? (int) $value : 0;
     }

@@ -127,27 +127,40 @@ final readonly class DbMaintenanceRepository
     public function repairOptimizeAllTables(): void
     {
         $conn = $this->em->getConnection();
+        $prefix = DbCredentials::current()->prefix;
         $allTables = array_map(
             static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
-            $conn->fetchFirstColumn('SHOW TABLES LIKE \'' . DbCredentials::current()->prefix . '%\'')
+            $conn->fetchFirstColumn(<<<SQL
+                SHOW TABLES LIKE '{$prefix}%'
+                SQL)
         );
 
-        $conn->executeStatement('REPAIR TABLE ' . implode(', ', $allTables));
+        $allTablesCsv = implode(', ', $allTables);
+        $conn->executeStatement(<<<SQL
+            REPAIR TABLE {$allTablesCsv}
+            SQL);
 
         foreach ($allTables as $tableName) {
             $allPrimaryKey = [];
-            foreach ($conn->fetchAllAssociative('DESC ' . $tableName . ';') as $column) {
+            foreach ($conn->fetchAllAssociative(<<<SQL
+                DESC {$tableName};
+                SQL) as $column) {
                 if (($column['Key'] ?? null) === 'PRI' && is_scalar($column['Field'])) {
                     $allPrimaryKey[] = (string) $column['Field'];
                 }
             }
 
             if ($allPrimaryKey !== []) {
-                $conn->executeStatement('ALTER TABLE ' . $tableName . ' ORDER BY ' . implode(', ', $allPrimaryKey) . ';');
+                $primaryKeyCsv = implode(', ', $allPrimaryKey);
+                $conn->executeStatement(<<<SQL
+                    ALTER TABLE {$tableName} ORDER BY {$primaryKeyCsv};
+                    SQL);
             }
         }
 
-        $conn->executeStatement('OPTIMIZE TABLE ' . implode(', ', $allTables));
+        $conn->executeStatement(<<<SQL
+            OPTIMIZE TABLE {$allTablesCsv}
+            SQL);
     }
 
     public function countLoungeItems(): int

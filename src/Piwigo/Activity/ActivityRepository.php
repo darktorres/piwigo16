@@ -236,24 +236,26 @@ final class ActivityRepository extends EntityRepository
      */
     public function findPaginated(string $whereClause, int $limit, int $offset): array
     {
+        $activityTable = Tables::activity();
+
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT
-    activity_id,
-    performed_by,
-    object,
-    object_id,
-    action,
-    session_idx,
-    ip_address,
-    occured_on,
-    details,
-    user_agent
-  FROM ' . Tables::activity() . '
-  ' . $whereClause . '
-  ORDER BY activity_id DESC
-  LIMIT ' . $limit . ' OFFSET ' . $offset . '
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT
+                    activity_id,
+                    performed_by,
+                    object,
+                    object_id,
+                    action,
+                    session_idx,
+                    ip_address,
+                    occured_on,
+                    details,
+                    user_agent
+                FROM {$activityTable}
+                {$whereClause}
+                ORDER BY activity_id DESC
+                LIMIT {$limit} OFFSET {$offset}
+                SQL);
     }
 }

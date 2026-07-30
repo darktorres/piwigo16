@@ -76,7 +76,9 @@ final class MaintenanceEnvPageRenderer
         $php_current_timestamp = date('Y-m-d H:i:s');
         $db_version = new DbInfo($conn)
             ->version();
-        $row = $conn->fetchNumeric('SELECT now();');
+        $row = $conn->fetchNumeric(<<<SQL
+            SELECT now()
+            SQL);
         $db_current_date = $row !== false ? $row[0] : null;
 
         [$container_name, $container_version] = \Piwigo\Core\ContainerDetector::detect();

@@ -252,14 +252,16 @@ final class PictureModifyPageRenderer
         }
 
         // tags
-        $query = '
-SELECT
-    id,
-    name
-  FROM ' . Tables::imageTag() . ' AS it
-    JOIN ' . Tables::tags() . ' AS t ON t.id = it.tag_id
-  WHERE image_id = ' . $image_id . '
-;';
+        $imageTagTable = Tables::imageTag();
+        $tagsTable = Tables::tags();
+        $query = <<<SQL
+            SELECT
+                id,
+                name
+            FROM {$imageTagTable} AS it
+                JOIN {$tagsTable} AS t ON t.id = it.tag_id
+            WHERE image_id = {$image_id}
+            SQL;
         $tag_selection = self::tagService()
             ->getTagList($query, $htmlRenderer);
 

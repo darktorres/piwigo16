@@ -238,14 +238,16 @@ final class HistoryRepository extends EntityRepository
      */
     public function sumPageViews(): int
     {
+        $historySummaryTable = Tables::historySummary();
+
         $value = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne('
-SELECT
-    SUM(nb_pages)
-  FROM ' . Tables::historySummary() . '
-  WHERE month IS NULL
-;');
+            ->fetchOne(<<<SQL
+                SELECT
+                    SUM(nb_pages)
+                FROM {$historySummaryTable}
+                WHERE month IS NULL
+                SQL);
 
         return is_numeric($value) ? (int) $value : 0;
     }
@@ -260,55 +262,70 @@ SELECT
      */
     public function findLastByType(string $type, int $limit): array
     {
-        $sql = '
-SELECT
-    year,
-    month,
-    day,
-    hour,
-    nb_pages
-  FROM ' . Tables::historySummary();
+        $historySummaryTable = Tables::historySummary();
+
+        $sql = <<<SQL
+            SELECT
+                year,
+                month,
+                day,
+                hour,
+                nb_pages
+            FROM {$historySummaryTable}
+            SQL;
 
         $sql .= match ($type) {
-            'hour' => '
-  WHERE year IS NOT NULL
-    AND month IS NOT NULL
-    AND day IS NOT NULL
-    AND hour IS NOT NULL
-  ORDER BY
-    year DESC,
-    month DESC,
-    day DESC,
-    hour DESC
-  LIMIT ' . $limit . '
-;',
-            'day' => '
-  WHERE year IS NOT NULL
-    AND month IS NOT NULL
-    AND day IS NOT NULL
-    AND hour IS NULL
-  ORDER BY
-    year DESC,
-    month DESC,
-    day DESC
-  LIMIT ' . $limit . '
-;',
-            'month' => '
-  WHERE year IS NOT NULL
-    AND month IS NOT NULL
-    AND day IS NULL
-  ORDER BY
-    year DESC,
-    month DESC
-  LIMIT ' . $limit . '
-;',
-            default => '
-  WHERE year IS NOT NULL
-    AND month IS NULL
-  ORDER BY
-    year DESC
-  LIMIT ' . $limit . '
-;',
+            'hour' => <<<SQL
+
+                WHERE year IS NOT NULL
+                    AND month IS NOT NULL
+                    AND day IS NOT NULL
+                    AND hour IS NOT NULL
+                ORDER BY
+                    year DESC,
+                    month DESC,
+                    day DESC,
+                    hour DESC
+                LIMIT {$limit}
+                ;
+                SQL
+            ,
+            'day' => <<<SQL
+
+                WHERE year IS NOT NULL
+                    AND month IS NOT NULL
+                    AND day IS NOT NULL
+                    AND hour IS NULL
+                ORDER BY
+                    year DESC,
+                    month DESC,
+                    day DESC
+                LIMIT {$limit}
+                ;
+                SQL
+            ,
+            'month' => <<<SQL
+
+                WHERE year IS NOT NULL
+                    AND month IS NOT NULL
+                    AND day IS NULL
+                ORDER BY
+                    year DESC,
+                    month DESC
+                LIMIT {$limit}
+                ;
+                SQL
+            ,
+            default => <<<SQL
+
+                WHERE year IS NOT NULL
+                    AND month IS NULL
+                ORDER BY
+                    year DESC
+                LIMIT {$limit}
+                ;
+                SQL
+            ,
         };
 
         /** @var list<array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null}> */
@@ -326,22 +343,27 @@ SELECT
      */
     public function findMonthlyRows(?int $limit): array
     {
-        $sql = '
-SELECT
-  year,
-  month,
-  day,
-  hour,
-  nb_pages
-FROM ' . Tables::historySummary() . '
-WHERE month IS NOT NULL
-  AND day IS NULL
-ORDER BY
-  year DESC,
-  month DESC';
+        $historySummaryTable = Tables::historySummary();
+
+        $sql = <<<SQL
+            SELECT
+              year,
+              month,
+              day,
+              hour,
+              nb_pages
+            FROM {$historySummaryTable}
+            WHERE month IS NOT NULL
+              AND day IS NULL
+            ORDER BY
+              year DESC,
+              month DESC
+            SQL;
 
         if ($limit !== null) {
-            $sql .= ' LIMIT ' . $limit;
+            $sql .= <<<SQL
+                 LIMIT {$limit}
+                SQL;
         }
 
         $sql .= ';';
@@ -362,29 +384,31 @@ ORDER BY
      */
     public function findDailyRowsForMonths(int $year1, int $month1, int $year2, int $month2, int $year3, int $month3): array
     {
+        $historySummaryTable = Tables::historySummary();
+
         /** @var list<array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null}> */
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT
-  year,
-  month,
-  day,
-  hour,
-  nb_pages
-FROM ' . Tables::historySummary() . '
-WHERE
-  (
-    (year = ' . $year1 . ' AND month = ' . $month1 . ')
-    OR (year = ' . $year2 . ' AND month = ' . $month2 . ')
-    OR (year = ' . $year3 . ' AND month = ' . $month3 . ')
-  )
-  AND day IS NOT NULL
-  AND hour IS NULL
-ORDER BY
-  year DESC,
-  month DESC
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT
+                  year,
+                  month,
+                  day,
+                  hour,
+                  nb_pages
+                FROM {$historySummaryTable}
+                WHERE
+                  (
+                    (year = {$year1} AND month = {$month1})
+                    OR (year = {$year2} AND month = {$month2})
+                    OR (year = {$year3} AND month = {$month3})
+                  )
+                  AND day IS NOT NULL
+                  AND hour IS NULL
+                ORDER BY
+                  year DESC,
+                  month DESC
+                SQL);
     }
 
     /**
@@ -395,23 +419,25 @@ ORDER BY
      */
     public function findAverageDailyPageViewsSince(int $year, int $previousYear, int $afterMonth): ?float
     {
+        $historySummaryTable = Tables::historySummary();
+
         $value = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne('
-SELECT
-  AVG(nb_pages)
-FROM ' . Tables::historySummary() . '
-WHERE
-  (
-  year = ' . $year . ' OR
-  (year = ' . $previousYear . ' and month > ' . $afterMonth . ')
-  )
-  AND day IS NOT NULL
-  AND hour IS NULL
-ORDER BY
-  year DESC,
-  month DESC
-;');
+            ->fetchOne(<<<SQL
+                SELECT
+                  AVG(nb_pages)
+                FROM {$historySummaryTable}
+                WHERE
+                  (
+                  year = {$year} OR
+                  (year = {$previousYear} and month > {$afterMonth})
+                  )
+                  AND day IS NOT NULL
+                  AND hour IS NULL
+                ORDER BY
+                  year DESC,
+                  month DESC
+                SQL);
 
         return is_numeric($value) ? (float) $value : null;
     }
@@ -615,9 +641,12 @@ ORDER BY
      */
     public function getSectionEnumOptions(): array
     {
+        $historyTable = Tables::history();
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->executeQuery('DESC ' . Tables::history())->fetchAllAssociative();
+            ->executeQuery(<<<SQL
+                DESC {$historyTable}
+                SQL)->fetchAllAssociative();
 
         foreach ($rows as $row) {
             if (($row['Field'] ?? null) === 'section') {
@@ -645,10 +674,13 @@ ORDER BY
     {
         $enumList = implode(',', array_map(static fn (string $option): string => "'" . $option . "'", array_unique($options)));
 
+        $historyTable = Tables::history();
         $this->getEntityManager()
             ->getConnection()
             ->executeStatement(
-                'ALTER TABLE ' . Tables::history() . ' CHANGE section section enum(' . $enumList . ') DEFAULT NULL'
+                <<<SQL
+                ALTER TABLE {$historyTable} CHANGE section section enum({$enumList}) DEFAULT NULL
+                SQL
             );
     }
 

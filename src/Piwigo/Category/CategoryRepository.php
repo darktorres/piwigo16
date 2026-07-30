@@ -551,12 +551,15 @@ final class CategoryRepository extends EntityRepository
             return [];
         }
 
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery('
-SELECT id
-  FROM ' . Tables::images() . '
-  WHERE storage_category_id IN (
-' . wordwrap(implode(', ', $ids), 80, "\n") . ')
-;')->fetchFirstColumn());
+        $imagesTable = Tables::images();
+        $idsStr = wordwrap(implode(', ', $ids), 80, "\n");
+
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery(<<<SQL
+            SELECT id
+            FROM {$imagesTable}
+            WHERE storage_category_id IN (
+                {$idsStr})
+            SQL)->fetchFirstColumn());
     }
 
     /**
@@ -569,12 +572,15 @@ SELECT id
             return [];
         }
 
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery('
-SELECT
-    DISTINCT(image_id)
-  FROM ' . Tables::imageCategory() . '
-  WHERE category_id IN (' . implode(',', $ids) . ')
-;')->fetchFirstColumn());
+        $imageCategoryTable = Tables::imageCategory();
+        $idsCsv = implode(',', $ids);
+
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery(<<<SQL
+            SELECT
+                DISTINCT(image_id)
+            FROM {$imageCategoryTable}
+            WHERE category_id IN ({$idsCsv})
+            SQL)->fetchFirstColumn());
     }
 
     /**
@@ -592,13 +598,17 @@ SELECT
             return [];
         }
 
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery('
-SELECT
-    DISTINCT(image_id)
-  FROM ' . Tables::imageCategory() . '
-  WHERE image_id IN (' . implode(',', $imageIds) . ')
-    AND category_id NOT IN (' . implode(',', $excludeIds) . ')
-;')->fetchFirstColumn());
+        $imageCategoryTable = Tables::imageCategory();
+        $imageIdsCsv = implode(',', $imageIds);
+        $excludeIdsCsv = implode(',', $excludeIds);
+
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery(<<<SQL
+            SELECT
+                DISTINCT(image_id)
+            FROM {$imageCategoryTable}
+            WHERE image_id IN ({$imageIdsCsv})
+                AND category_id NOT IN ({$excludeIdsCsv})
+            SQL)->fetchFirstColumn());
     }
 
     /**
@@ -616,16 +626,19 @@ SELECT
      */
     public function findImageIdsOutsideCategories(array $excludeIds): array
     {
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery('
-SELECT
-    image_id
-  FROM
-    ' . Tables::imageCategory() . '
-  WHERE
-    category_id
-  NOT IN
-    (' . implode(',', $excludeIds) . ')
-;')->fetchFirstColumn());
+        $imageCategoryTable = Tables::imageCategory();
+        $excludeIdsCsv = implode(',', $excludeIds);
+
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery(<<<SQL
+            SELECT
+                image_id
+            FROM
+                {$imageCategoryTable}
+            WHERE
+                category_id
+            NOT IN
+                ({$excludeIdsCsv})
+            SQL)->fetchFirstColumn());
     }
 
     /**
@@ -633,13 +646,16 @@ SELECT
      */
     public function deleteImageCategoryLinksForCategories(array $ids): void
     {
+        $imageCategoryTable = Tables::imageCategory();
+        $idsStr = wordwrap(implode(', ', $ids), 80, "\n");
+
         $this->getEntityManager()
             ->getConnection()
-            ->executeStatement('
-DELETE FROM ' . Tables::imageCategory() . '
-  WHERE category_id IN (
-' . wordwrap(implode(', ', $ids), 80, "\n") . ')
-;');
+            ->executeStatement(<<<SQL
+                DELETE FROM {$imageCategoryTable}
+                WHERE category_id IN (
+                    {$idsStr})
+                SQL);
     }
 
     /**
@@ -771,11 +787,15 @@ DELETE FROM ' . Tables::imageCategory() . '
             return;
         }
 
+        $oldPermalinksTable = Tables::oldPermalinks();
+        $idsCsv = implode(',', $ids);
+
         $this->getEntityManager()
             ->getConnection()
-            ->executeStatement('
-DELETE FROM ' . Tables::oldPermalinks() . '
-  WHERE cat_id IN (' . implode(',', $ids) . ')');
+            ->executeStatement(<<<SQL
+                DELETE FROM {$oldPermalinksTable}
+                WHERE cat_id IN ({$idsCsv})
+                SQL);
     }
 
     /**
@@ -787,14 +807,17 @@ DELETE FROM ' . Tables::oldPermalinks() . '
      */
     public function findWrongRepresentativeCategoryIds(string $whereCatsSql): array
     {
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery('
-SELECT DISTINCT c.id
-  FROM ' . Tables::categories() . ' AS c LEFT JOIN ' . Tables::images() . ' AS i
-    ON c.representative_picture_id = i.id
-  WHERE representative_picture_id IS NOT NULL
-    AND ' . $whereCatsSql . '
-    AND i.id IS NULL
-;')->fetchFirstColumn());
+        $categoriesTable = Tables::categories();
+        $imagesTable = Tables::images();
+
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery(<<<SQL
+            SELECT DISTINCT c.id
+            FROM {$categoriesTable} AS c LEFT JOIN {$imagesTable} AS i
+                ON c.representative_picture_id = i.id
+            WHERE representative_picture_id IS NOT NULL
+                AND {$whereCatsSql}
+                AND i.id IS NULL
+            SQL)->fetchFirstColumn());
     }
 
     /**
@@ -823,13 +846,16 @@ SELECT DISTINCT c.id
      */
     public function findCategoriesNeedingRandomRepresentative(string $whereCatsSql): array
     {
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery('
-SELECT DISTINCT id
-  FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::imageCategory() . '
-    ON id = category_id
-  WHERE representative_picture_id IS NULL
-    AND ' . $whereCatsSql . '
-;')->fetchFirstColumn());
+        $categoriesTable = Tables::categories();
+        $imageCategoryTable = Tables::imageCategory();
+
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery(<<<SQL
+            SELECT DISTINCT id
+            FROM {$categoriesTable} INNER JOIN {$imageCategoryTable}
+                ON id = category_id
+            WHERE representative_picture_id IS NULL
+                AND {$whereCatsSql}
+            SQL)->fetchFirstColumn());
     }
 
     /**
@@ -837,13 +863,15 @@ SELECT DISTINCT id
      */
     public function findOrphanedColumnValues(string $table, string $column): array
     {
-        return array_values(array_unique(array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $this->getEntityManager()->getConnection()->executeQuery('
-SELECT
-    ' . $column . '
-  FROM ' . $table . '
-    LEFT JOIN ' . Tables::categories() . ' ON id = ' . $column . '
-  WHERE id IS NULL
-;')->fetchFirstColumn())));
+        $categoriesTable = Tables::categories();
+
+        return array_values(array_unique(array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $this->getEntityManager()->getConnection()->executeQuery(<<<SQL
+            SELECT
+                {$column}
+            FROM {$table}
+                LEFT JOIN {$categoriesTable} ON id = {$column}
+            WHERE id IS NULL
+            SQL)->fetchFirstColumn())));
     }
 
     /**
@@ -851,13 +879,15 @@ SELECT
      */
     public function deleteRowsWhereColumnIn(string $table, string $column, array $values): void
     {
+        $valuesCsv = implode(',', $values);
+
         $this->getEntityManager()
             ->getConnection()
-            ->executeStatement('
-DELETE
-  FROM ' . $table . '
-  WHERE ' . $column . ' IN (' . implode(',', $values) . ')
-;');
+            ->executeStatement(<<<SQL
+                DELETE
+                FROM {$table}
+                WHERE {$column} IN ({$valuesCsv})
+                SQL);
     }
 
     /**
@@ -871,13 +901,15 @@ DELETE
      */
     public function findCategoriesForRankUpdate(): array
     {
+        $categoriesTable = Tables::categories();
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->executeQuery('
-SELECT id, id_uppercat, uppercats, `rank`, global_rank
-  FROM ' . Tables::categories() . '
-  ORDER BY id_uppercat, `rank`, name
-;')->fetchAllAssociative();
+            ->executeQuery(<<<SQL
+                SELECT id, id_uppercat, uppercats, `rank`, global_rank
+                FROM {$categoriesTable}
+                ORDER BY id_uppercat, `rank`, name
+                SQL)->fetchAllAssociative();
 
         return array_map(
             static fn (array $row): array => [
@@ -1000,15 +1032,18 @@ SELECT id, id_uppercat, uppercats, `rank`, global_rank
             return [];
         }
 
+        $categoriesTable = Tables::categories();
+        $idsCsv = implode(',', $ids);
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->executeQuery('
-SELECT
-    id,
-    status
-  FROM ' . Tables::categories() . '
-  WHERE id IN (' . implode(',', $ids) . ')
-;')->fetchAllAssociative();
+            ->executeQuery(<<<SQL
+                SELECT
+                    id,
+                    status
+                FROM {$categoriesTable}
+                WHERE id IN ({$idsCsv})
+                SQL)->fetchAllAssociative();
 
         $byId = [];
         foreach ($rows as $row) {
@@ -1065,14 +1100,17 @@ SELECT
      */
     public function deleteInconsistentAccess(string $table, string $field, array $keepIds, array $catIds): void
     {
+        $keepIdsCsv = implode(',', $keepIds);
+        $catIdsCsv = implode(',', $catIds);
+
         $em = $this->getEntityManager();
         $em->getConnection()
-            ->executeStatement('
-DELETE
-  FROM ' . $table . '
-  WHERE ' . $field . ' NOT IN (' . implode(',', $keepIds) . ')
-    AND cat_id IN (' . implode(',', $catIds) . ')
-;');
+            ->executeStatement(<<<SQL
+                DELETE
+                FROM {$table}
+                WHERE {$field} NOT IN ({$keepIdsCsv})
+                    AND cat_id IN ({$catIdsCsv})
+                SQL);
         $em->clear();
     }
 
@@ -1086,11 +1124,14 @@ DELETE
             return [];
         }
 
-        return array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $this->getEntityManager()->getConnection()->executeQuery('
-SELECT uppercats
-  FROM ' . Tables::categories() . '
-  WHERE id IN (' . implode(',', $ids) . ')
-;')->fetchFirstColumn());
+        $categoriesTable = Tables::categories();
+        $idsCsv = implode(',', $ids);
+
+        return array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $this->getEntityManager()->getConnection()->executeQuery(<<<SQL
+            SELECT uppercats
+            FROM {$categoriesTable}
+            WHERE id IN ({$idsCsv})
+            SQL)->fetchFirstColumn());
     }
 
     /**
@@ -1107,13 +1148,16 @@ SELECT uppercats
             return [];
         }
 
+        $categoriesTable = Tables::categories();
+        $idsCsv = implode(',', $ids);
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->executeQuery('
-SELECT id, uppercats
-  FROM ' . Tables::categories() . '
-  WHERE id IN (' . implode(',', $ids) . ')
-;')->fetchAllKeyValue();
+            ->executeQuery(<<<SQL
+                SELECT id, uppercats
+                FROM {$categoriesTable}
+                WHERE id IN ({$idsCsv})
+                SQL)->fetchAllKeyValue();
 
         $byId = [];
         foreach ($rows as $id => $uppercats) {
@@ -1148,17 +1192,21 @@ SELECT id, uppercats
             return [];
         }
 
+        $imageCategoryTable = Tables::imageCategory();
+        $imagesTable = Tables::images();
+        $categoryIdsCsv = implode(',', $categoryIds);
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->executeQuery('
-SELECT
-    category_id,
-    ' . $minmax . '(' . $field . ') as ref_date
-  FROM ' . Tables::imageCategory() . '
-    JOIN ' . Tables::images() . ' ON image_id = id
-  WHERE category_id IN (' . implode(',', $categoryIds) . ')
-  GROUP BY category_id
-;')->fetchAllKeyValue();
+            ->executeQuery(<<<SQL
+                SELECT
+                    category_id,
+                    {$minmax}({$field}) as ref_date
+                FROM {$imageCategoryTable}
+                    JOIN {$imagesTable} ON image_id = id
+                WHERE category_id IN ({$categoryIdsCsv})
+                GROUP BY category_id
+                SQL)->fetchAllKeyValue();
 
         $byCategoryId = [];
         foreach ($rows as $categoryId => $refDate) {
@@ -1200,15 +1248,18 @@ SELECT
 
     public function findRandomImageIdInCategory(int $categoryId): ?int
     {
+        $imageCategoryTable = Tables::imageCategory();
+        $randomFunction = $this->randomFunction();
+
         $value = $this->getEntityManager()
             ->getConnection()
-            ->executeQuery('
-SELECT image_id
-  FROM ' . Tables::imageCategory() . '
-  WHERE category_id = ' . $categoryId . '
-  ORDER BY ' . $this->randomFunction() . '()
-  LIMIT 1
-;')->fetchOne();
+            ->executeQuery(<<<SQL
+                SELECT image_id
+                FROM {$imageCategoryTable}
+                WHERE category_id = {$categoryId}
+                ORDER BY {$randomFunction}()
+                LIMIT 1
+                SQL)->fetchOne();
 
         return is_numeric($value) ? (int) $value : null;
     }
@@ -1231,11 +1282,13 @@ SELECT image_id
      */
     public function findCategoryDirsById(): array
     {
-        return array_filter($this->getEntityManager()->getConnection()->executeQuery('
-SELECT id, dir
-  FROM ' . Tables::categories() . '
-  WHERE dir IS NOT NULL
-;')->fetchAllKeyValue(), is_string(...));
+        $categoriesTable = Tables::categories();
+
+        return array_filter($this->getEntityManager()->getConnection()->executeQuery(<<<SQL
+            SELECT id, dir
+            FROM {$categoriesTable}
+            WHERE dir IS NOT NULL
+            SQL)->fetchAllKeyValue(), is_string(...));
     }
 
     /**
@@ -1244,10 +1297,12 @@ SELECT id, dir
      */
     public function findSiteGalleriesUrls(): array
     {
-        return array_filter($this->getEntityManager()->getConnection()->executeQuery('
-SELECT id, galleries_url
-  FROM ' . Tables::sites() . '
-;')->fetchAllKeyValue(), is_string(...));
+        $sitesTable = Tables::sites();
+
+        return array_filter($this->getEntityManager()->getConnection()->executeQuery(<<<SQL
+            SELECT id, galleries_url
+            FROM {$sitesTable}
+            SQL)->fetchAllKeyValue(), is_string(...));
     }
 
     /**
@@ -1260,15 +1315,18 @@ SELECT id, galleries_url
             return [];
         }
 
+        $categoriesTable = Tables::categories();
+        $idsStr = wordwrap(implode(', ', $ids), 80, "\n");
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->executeQuery('
-SELECT id, uppercats, site_id
-  FROM ' . Tables::categories() . '
-  WHERE dir IS NOT NULL
-    AND id IN (
-' . wordwrap(implode(', ', $ids), 80, "\n") . ')
-;')->fetchAllAssociative();
+            ->executeQuery(<<<SQL
+                SELECT id, uppercats, site_id
+                FROM {$categoriesTable}
+                WHERE dir IS NOT NULL
+                    AND id IN (
+                        {$idsStr})
+                SQL)->fetchAllAssociative();
 
         return array_map(
             static fn (array $row): array => [
@@ -1285,22 +1343,27 @@ SELECT id, uppercats, site_id
      */
     public function findDistinctStorageCategoryIds(): array
     {
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery('
-SELECT DISTINCT(storage_category_id)
-  FROM ' . Tables::images() . '
-  WHERE storage_category_id IS NOT NULL
-;')->fetchFirstColumn());
+        $imagesTable = Tables::images();
+
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery(<<<SQL
+            SELECT DISTINCT(storage_category_id)
+            FROM {$imagesTable}
+            WHERE storage_category_id IS NOT NULL
+            SQL)->fetchFirstColumn());
     }
 
     public function updateImagePathsForCategory(int $categoryId, string $fulldir): void
     {
+        $imagesTable = Tables::images();
+        $pathExpr = SqlDialect::concat(["'" . $fulldir . "/'", 'file']);
+
         $this->getEntityManager()
             ->getConnection()
-            ->executeStatement('
-UPDATE ' . Tables::images() . '
-  SET path = ' . SqlDialect::concat(["'" . $fulldir . "/'", 'file']) . '
-  WHERE storage_category_id = ' . $categoryId . '
-;');
+            ->executeStatement(<<<SQL
+                UPDATE {$imagesTable}
+                SET path = {$pathExpr}
+                WHERE storage_category_id = {$categoryId}
+                SQL);
     }
 
     /**
@@ -1311,13 +1374,15 @@ UPDATE ' . Tables::images() . '
      */
     public function setRepresentativeImage(int $categoryId, int $imageId): void
     {
+        $categoriesTable = Tables::categories();
+
         $this->getEntityManager()
             ->getConnection()
-            ->executeStatement('
-UPDATE ' . Tables::categories() . '
-  SET representative_picture_id = ' . $imageId . '
-  WHERE id = ' . $categoryId . '
-;');
+            ->executeStatement(<<<SQL
+                UPDATE {$categoriesTable}
+                SET representative_picture_id = {$imageId}
+                WHERE id = {$categoryId}
+                SQL);
     }
 
     /**
@@ -1326,13 +1391,16 @@ UPDATE ' . Tables::categories() . '
      */
     public function findCategoriesForMove(array $ids): array
     {
+        $categoriesTable = Tables::categories();
+        $idsCsv = implode(',', $ids);
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->executeQuery('
-SELECT id, id_uppercat, status, uppercats
-  FROM ' . Tables::categories() . '
-  WHERE id IN (' . implode(',', $ids) . ')
-;')->fetchAllAssociative();
+            ->executeQuery(<<<SQL
+                SELECT id, id_uppercat, status, uppercats
+                FROM {$categoriesTable}
+                WHERE id IN ({$idsCsv})
+                SQL)->fetchAllAssociative();
 
         return array_map(
             static fn (array $row): array => [
@@ -1347,13 +1415,15 @@ SELECT id, id_uppercat, status, uppercats
 
     public function findCategoryUppercatsById(int $id): ?string
     {
+        $categoriesTable = Tables::categories();
+
         $value = $this->getEntityManager()
             ->getConnection()
-            ->executeQuery('
-SELECT uppercats
-  FROM ' . Tables::categories() . '
-  WHERE id = ' . $id . '
-;')->fetchOne();
+            ->executeQuery(<<<SQL
+                SELECT uppercats
+                FROM {$categoriesTable}
+                WHERE id = {$id}
+                SQL)->fetchOne();
 
         return is_string($value) ? $value : null;
     }
@@ -1387,13 +1457,15 @@ SELECT uppercats
 
     public function findCategoryStatus(int $id): ?string
     {
+        $categoriesTable = Tables::categories();
+
         $value = $this->getEntityManager()
             ->getConnection()
-            ->executeQuery('
-SELECT status
-  FROM ' . Tables::categories() . '
-  WHERE id = ' . $id . '
-;')->fetchOne();
+            ->executeQuery(<<<SQL
+                SELECT status
+                FROM {$categoriesTable}
+                WHERE id = {$id}
+                SQL)->fetchOne();
 
         return is_string($value) ? $value : null;
     }
@@ -1404,13 +1476,16 @@ SELECT status
         // '0', and '' all mean "no parent" / root level).
         $parentIsEmpty = $parentId === null || $parentId === 0 || $parentId === '0' || $parentId === '';
 
+        $categoriesTable = Tables::categories();
+        $parentCondition = $parentIsEmpty ? 'IS NULL' : '= ' . (string) $parentId;
+
         $value = $this->getEntityManager()
             ->getConnection()
-            ->executeQuery('
-SELECT MAX(`rank`) AS max_rank
-  FROM ' . Tables::categories() . '
-  WHERE id_uppercat ' . ($parentIsEmpty ? 'IS NULL' : '= ' . (string) $parentId) . '
-;')->fetchOne();
+            ->executeQuery(<<<SQL
+                SELECT MAX(`rank`) AS max_rank
+                FROM {$categoriesTable}
+                WHERE id_uppercat {$parentCondition}
+                SQL)->fetchOne();
 
         return is_numeric($value) ? (int) $value : null;
     }
@@ -1420,13 +1495,15 @@ SELECT MAX(`rank`) AS max_rank
      */
     public function findParentCategoryForCreate(int|string $parentId): ?array
     {
+        $categoriesTable = Tables::categories();
+
         $row = $this->getEntityManager()
             ->getConnection()
-            ->executeQuery('
-SELECT id, uppercats, global_rank, visible, status
-  FROM ' . Tables::categories() . '
-  WHERE id = ' . $parentId . '
-;')->fetchAssociative();
+            ->executeQuery(<<<SQL
+                SELECT id, uppercats, global_rank, visible, status
+                FROM {$categoriesTable}
+                WHERE id = {$parentId}
+                SQL)->fetchAssociative();
 
         /** @var array{id: int, uppercats: string, global_rank: string, visible: int, status: string}|false $row */
         return $row === false ? null : $row;
@@ -1614,19 +1691,24 @@ SELECT id, uppercats, global_rank, visible, status
      */
     public function findRandomRepresentativeIdAmongSubcategories(string $uppercats, string $permissionCondition): ?string
     {
+        $categoriesTable = Tables::categories();
+        $dbRandomFunction = SqlDialect::DB_RANDOM_FUNCTION;
+        $uppercatsLike = $uppercats . ',%';
+
         $value = $this->getEntityManager()
             ->getConnection()
-            ->executeQuery('
-SELECT representative_picture_id
-  FROM ' . Tables::categories() . '
-  WHERE uppercats LIKE :uppercatsLike
-    AND representative_picture_id IS NOT NULL'
-              . $permissionCondition . '
-  ORDER BY ' . SqlDialect::DB_RANDOM_FUNCTION . '()
-  LIMIT 1
-;', [
-                  'uppercatsLike' => $uppercats . ',%',
-              ])->fetchOne();
+            ->executeQuery(<<<SQL
+                SELECT representative_picture_id
+                FROM {$categoriesTable}
+                WHERE uppercats LIKE :uppercatsLike
+                    AND representative_picture_id IS NOT NULL
+                {$permissionCondition}
+                ORDER BY {$dbRandomFunction}()
+                LIMIT 1
+                SQL
+                , [
+                    'uppercatsLike' => $uppercatsLike,
+                ])->fetchOne();
 
         // fetchOne() returns false (also a real is_scalar() value) to
         // signal "no rows matched" -- is_scalar() alone can't tell that
@@ -1650,23 +1732,27 @@ SELECT representative_picture_id
             return [];
         }
 
+        $imageCategoryTable = Tables::imageCategory();
+        $imagesTable = Tables::images();
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->executeQuery('
-SELECT
-    category_id,
-    MIN(date_creation) AS `from`,
-    MAX(date_creation) AS `to`
-  FROM ' . Tables::imageCategory() . '
-    INNER JOIN ' . Tables::images() . ' ON image_id = id
-  WHERE category_id IN (:categoryIds)
-' . $permissionCondition . '
-  GROUP BY category_id
-;', [
-                'categoryIds' => $categoryIds,
-            ], [
-                'categoryIds' => ArrayParameterType::INTEGER,
-            ])->fetchAllAssociative();
+            ->executeQuery(<<<SQL
+                SELECT
+                    category_id,
+                    MIN(date_creation) AS `from`,
+                    MAX(date_creation) AS `to`
+                FROM {$imageCategoryTable}
+                    INNER JOIN {$imagesTable} ON image_id = id
+                WHERE category_id IN (:categoryIds)
+                {$permissionCondition}
+                GROUP BY category_id
+                SQL
+                , [
+                    'categoryIds' => $categoryIds,
+                ], [
+                    'categoryIds' => ArrayParameterType::INTEGER,
+                ])->fetchAllAssociative();
 
         $byId = [];
         foreach ($rows as $row) {
@@ -1684,9 +1770,13 @@ SELECT
 
     public function countAllCategories(): int
     {
+        $categoriesTable = Tables::categories();
+
         $value = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne('SELECT COUNT(*) FROM ' . Tables::categories() . ';');
+            ->fetchOne(<<<SQL
+                SELECT COUNT(*) FROM {$categoriesTable}
+                SQL);
 
         return is_numeric($value) ? (int) $value : 0;
     }
@@ -1698,13 +1788,16 @@ SELECT
      */
     public function countByDirNull(bool $dirIsNull): int
     {
+        $categoriesTable = Tables::categories();
+        $dirCondition = $dirIsNull ? 'NULL' : 'NOT NULL';
+
         $value = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne('
-SELECT COUNT(*)
-  FROM ' . Tables::categories() . '
-  WHERE dir IS ' . ($dirIsNull ? 'NULL' : 'NOT NULL') . '
-;');
+            ->fetchOne(<<<SQL
+                SELECT COUNT(*)
+                FROM {$categoriesTable}
+                WHERE dir IS {$dirCondition}
+                SQL);
 
         return is_numeric($value) ? (int) $value : 0;
     }
@@ -1718,15 +1811,17 @@ SELECT COUNT(*)
      */
     public function findCategoryIdsRepresentedByImage(int $imageId): array
     {
+        $categoriesTable = Tables::categories();
+
         return array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             array_column($this->getEntityManager()
                 ->getConnection()
-                ->fetchAllAssociative('
-SELECT id
-  FROM ' . Tables::categories() . '
-  WHERE representative_picture_id = ' . $imageId . '
-;'), 'id')
+                ->fetchAllAssociative(<<<SQL
+                    SELECT id
+                    FROM {$categoriesTable}
+                    WHERE representative_picture_id = {$imageId}
+                    SQL), 'id')
         );
     }
 
@@ -1743,13 +1838,16 @@ SELECT id
             return;
         }
 
+        $categoriesTable = Tables::categories();
+        $categoryIdsCsv = implode(',', $categoryIds);
+
         $this->getEntityManager()
             ->getConnection()
-            ->executeStatement('
-UPDATE ' . Tables::categories() . '
-  SET representative_picture_id = ' . $imageId . '
-  WHERE id IN (' . implode(',', $categoryIds) . ')
-;');
+            ->executeStatement(<<<SQL
+                UPDATE {$categoriesTable}
+                SET representative_picture_id = {$imageId}
+                WHERE id IN ({$categoryIdsCsv})
+                SQL);
     }
 
     /**
@@ -1761,16 +1859,19 @@ UPDATE ' . Tables::categories() . '
      */
     public function findPrivateCategoryIdsGrantedToGroup(int $groupId): array
     {
+        $categoriesTable = Tables::categories();
+        $groupAccessTable = Tables::groupAccess();
+
         return array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             array_column($this->getEntityManager()
                 ->getConnection()
-                ->fetchAllAssociative('
-SELECT id
-  FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::groupAccess() . ' ON cat_id = id
-  WHERE status = \'private\'
-    AND group_id = ' . $groupId . '
-;'), 'id')
+                ->fetchAllAssociative(<<<SQL
+                    SELECT id
+                    FROM {$categoriesTable} INNER JOIN {$groupAccessTable} ON cat_id = id
+                    WHERE status = 'private'
+                        AND group_id = {$groupId}
+                    SQL), 'id')
         );
     }
 
@@ -1784,17 +1885,21 @@ SELECT id
      */
     public function findCategoriesAuthorizedViaGroupsForUser(int $userId): array
     {
+        $userGroupTable = Tables::userGroup();
+        $groupAccessTable = Tables::groupAccess();
+        $categoriesTable = Tables::categories();
+
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT DISTINCT cat_id, c.uppercats, c.global_rank
-  FROM ' . Tables::userGroup() . ' AS ug
-    INNER JOIN ' . Tables::groupAccess() . ' AS ga
-      ON ug.group_id = ga.group_id
-    INNER JOIN ' . Tables::categories() . ' AS c
-      ON c.id = ga.cat_id
-  WHERE ug.user_id = ' . $userId . '
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT DISTINCT cat_id, c.uppercats, c.global_rank
+                FROM {$userGroupTable} AS ug
+                    INNER JOIN {$groupAccessTable} AS ga
+                        ON ug.group_id = ga.group_id
+                    INNER JOIN {$categoriesTable} AS c
+                        ON c.id = ga.cat_id
+                WHERE ug.user_id = {$userId}
+                SQL);
     }
 
     /**
@@ -1808,17 +1913,23 @@ SELECT DISTINCT cat_id, c.uppercats, c.global_rank
      */
     public function findPrivateCategoryIdsGrantedToUser(int $userId, array $excludeCategoryIds): array
     {
-        $query = '
-SELECT id
-  FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::userAccess() . ' ON cat_id = id
-  WHERE status = \'private\'
-    AND user_id = ' . $userId;
+        $categoriesTable = Tables::categories();
+        $userAccessTable = Tables::userAccess();
+
+        $query = <<<SQL
+            SELECT id
+            FROM {$categoriesTable} INNER JOIN {$userAccessTable} ON cat_id = id
+            WHERE status = 'private'
+                AND user_id = {$userId}
+            SQL;
+
         if ($excludeCategoryIds !== []) {
-            $query .= '
-    AND cat_id NOT IN (' . implode(',', $excludeCategoryIds) . ')';
+            $excludeCsv = implode(',', $excludeCategoryIds);
+            $query .= <<<SQL
+
+                AND cat_id NOT IN ({$excludeCsv})
+                SQL;
         }
-        $query .= '
-;';
 
         return array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
@@ -1836,13 +1947,15 @@ SELECT id
      */
     public function findActivePermalinks(): array
     {
+        $categoriesTable = Tables::categories();
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT permalink
-  FROM ' . Tables::categories() . '
-  WHERE permalink IS NOT NULL
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT permalink
+                FROM {$categoriesTable}
+                WHERE permalink IS NOT NULL
+                SQL);
 
         return array_map(
             static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
@@ -1858,17 +1971,25 @@ SELECT permalink
      */
     public function findChildrenOfParent(?int $parentId): array
     {
-        $query = '
-SELECT id, name, permalink, dir, `rank`, status
-  FROM ' . Tables::categories();
+        $categoriesTable = Tables::categories();
+
+        $query = <<<SQL
+            SELECT id, name, permalink, dir, `rank`, status
+            FROM {$categoriesTable}
+            SQL;
         $query .= $parentId === null
-            ? '
-  WHERE id_uppercat IS NULL'
-            : '
-  WHERE id_uppercat = ' . $parentId;
-        $query .= '
-  ORDER BY `rank` ASC
-;';
+            ? <<<SQL
+
+                WHERE id_uppercat IS NULL
+                SQL
+            : <<<SQL
+
+                WHERE id_uppercat = {$parentId}
+                SQL;
+        $query .= <<<SQL
+
+            ORDER BY `rank` ASC
+            SQL;
 
         return $this->getEntityManager()
             ->getConnection()
@@ -1884,15 +2005,17 @@ SELECT id, name, permalink, dir, `rank`, status
      */
     public function findPhotoCountsByCategory(): array
     {
+        $imageCategoryTable = Tables::imageCategory();
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT
-    category_id,
-    COUNT(*) AS nb_photos
-  FROM ' . Tables::imageCategory() . '
-  GROUP BY category_id
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT
+                    category_id,
+                    COUNT(*) AS nb_photos
+                FROM {$imageCategoryTable}
+                GROUP BY category_id
+                SQL);
 
         $countByCategory = [];
         foreach ($rows as $row) {
@@ -1912,14 +2035,16 @@ SELECT
      */
     public function findAllCategoryUppercats(): array
     {
+        $categoriesTable = Tables::categories();
+
         return array_column($this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT
-    id,
-    uppercats
-  FROM ' . Tables::categories() . '
-;'), 'uppercats', 'id');
+            ->fetchAllAssociative(<<<SQL
+                SELECT
+                    id,
+                    uppercats
+                FROM {$categoriesTable}
+                SQL), 'uppercats', 'id');
     }
 
     /**
@@ -1932,11 +2057,14 @@ SELECT
      */
     public function findIdsByParent(?int $parentId): array
     {
-        $query = '
-SELECT id
-  FROM ' . Tables::categories() . '
-  WHERE id_uppercat ' . ($parentId === null ? 'IS NULL' : '= ' . $parentId) . '
-;';
+        $categoriesTable = Tables::categories();
+        $parentCondition = $parentId === null ? 'IS NULL' : '= ' . $parentId;
+
+        $query = <<<SQL
+            SELECT id
+            FROM {$categoriesTable}
+            WHERE id_uppercat {$parentCondition}
+            SQL;
 
         return array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
@@ -1955,13 +2083,16 @@ SELECT id
      */
     public function findIdsNamesUppercatsForIds(array $categoryIds): array
     {
+        $categoriesTable = Tables::categories();
+        $idsCsv = implode(',', $categoryIds);
+
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT id, name, id_uppercat
-  FROM ' . Tables::categories() . '
-  WHERE id IN (' . implode(',', $categoryIds) . ')
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT id, name, id_uppercat
+                FROM {$categoriesTable}
+                WHERE id IN ({$idsCsv})
+                SQL);
     }
 
     /**
@@ -1972,12 +2103,14 @@ SELECT id, name, id_uppercat
      */
     public function findAllForAlbumTree(): array
     {
+        $categoriesTable = Tables::categories();
+
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT id,name,`rank`,status, visible, uppercats, lastmodified
-  FROM ' . Tables::categories() . '
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT id,name,`rank`,status, visible, uppercats, lastmodified
+                FROM {$categoriesTable}
+                SQL);
     }
 
     /**
@@ -1986,14 +2119,19 @@ SELECT id,name,`rank`,status, visible, uppercats, lastmodified
      */
     public function hasImages(int $categoryId): bool
     {
+        $imageCategoryTable = Tables::imageCategory();
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('SELECT DISTINCT category_id
-  FROM ' . Tables::imageCategory() . '
-  WHERE category_id = :category_id
-  LIMIT 1', [
-                'category_id' => $categoryId,
-            ]);
+            ->fetchAllAssociative(<<<SQL
+                SELECT DISTINCT category_id
+                FROM {$imageCategoryTable}
+                WHERE category_id = :category_id
+                LIMIT 1
+                SQL
+                , [
+                    'category_id' => $categoryId,
+                ]);
 
         return count($rows) > 0;
     }
@@ -2007,17 +2145,20 @@ SELECT id,name,`rank`,status, visible, uppercats, lastmodified
      */
     public function findPhotoCountAndDateRange(int $categoryId): array|false
     {
+        $imagesTable = Tables::images();
+        $imageCategoryTable = Tables::imageCategory();
+
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchNumeric('
-SELECT
-    COUNT(image_id),
-    MIN(DATE(date_available)),
-    MAX(DATE(date_available))
-  FROM ' . Tables::images() . '
-    JOIN ' . Tables::imageCategory() . ' ON image_id = id
-  WHERE category_id = ' . $categoryId . '
-;');
+            ->fetchNumeric(<<<SQL
+                SELECT
+                    COUNT(image_id),
+                    MIN(DATE(date_available)),
+                    MAX(DATE(date_available))
+                FROM {$imagesTable}
+                    JOIN {$imageCategoryTable} ON image_id = id
+                WHERE category_id = {$categoryId}
+                SQL);
     }
 
     /**
@@ -2030,18 +2171,21 @@ SELECT
      */
     public function findDistinctImageIdsInCategories(array $categoryIds): array
     {
+        $imageCategoryTable = Tables::imageCategory();
+        $categoryIdsCsv = implode(',', $categoryIds);
+
         return array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             array_column($this->getEntityManager()
                 ->getConnection()
-                ->fetchAllAssociative('
-SELECT DISTINCT
-    (image_id)
-  FROM
-    ' . Tables::imageCategory() . '
-  WHERE
-    category_id IN (' . implode(',', $categoryIds) . ')
-  ;'), 'image_id')
+                ->fetchAllAssociative(<<<SQL
+                    SELECT DISTINCT
+                        (image_id)
+                    FROM
+                        {$imageCategoryTable}
+                    WHERE
+                        category_id IN ({$categoryIdsCsv})
+                    SQL), 'image_id')
         );
     }
 
@@ -2058,11 +2202,15 @@ SELECT DISTINCT
             return [];
         }
 
+        $categoriesTable = Tables::categories();
+        $idsCsv = implode(',', $ids);
+
         return array_column($this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('SELECT id,dir
-  FROM ' . Tables::categories() . ' WHERE id IN (' . implode(',', $ids) . ')
-;'), 'dir', 'id');
+            ->fetchAllAssociative(<<<SQL
+                SELECT id,dir
+                FROM {$categoriesTable} WHERE id IN ({$idsCsv})
+                SQL), 'dir', 'id');
     }
 
     /**
@@ -2071,14 +2219,17 @@ SELECT DISTINCT
      */
     public function findGalleriesUrlForCategory(int|string $categoryId): ?string
     {
+        $sitesTable = Tables::sites();
+        $categoriesTable = Tables::categories();
+
         $row = $this->getEntityManager()
             ->getConnection()
-            ->fetchAssociative('
-SELECT galleries_url
-  FROM ' . Tables::sites() . ' AS s,' . Tables::categories() . ' AS c
-  WHERE s.id = c.site_id
-    AND c.id = ' . $categoryId . '
-;');
+            ->fetchAssociative(<<<SQL
+                SELECT galleries_url
+                FROM {$sitesTable} AS s,{$categoriesTable} AS c
+                WHERE s.id = c.site_id
+                    AND c.id = {$categoryId}
+                SQL);
 
         if ($row === false) {
             return null;
@@ -2099,13 +2250,16 @@ SELECT galleries_url
      */
     public function findActivePermalinksList(string $orderBySql): array
     {
+        $categoriesTable = Tables::categories();
+
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT id, permalink, uppercats, global_rank
-  FROM ' . Tables::categories() . '
-  WHERE permalink IS NOT NULL
-' . $orderBySql);
+            ->fetchAllAssociative(<<<SQL
+                SELECT id, permalink, uppercats, global_rank
+                FROM {$categoriesTable}
+                WHERE permalink IS NOT NULL
+                {$orderBySql}
+                SQL);
     }
 
     /**
@@ -2115,15 +2269,17 @@ SELECT id, permalink, uppercats, global_rank
      */
     public function existsAndNotForbidden(int $catId, string $forbiddenCategoriesCsv): bool
     {
+        $categoriesTable = Tables::categories();
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT
-    id
-  FROM ' . Tables::categories() . '
-  WHERE id = ' . $catId . '
-    AND id NOT IN (' . $forbiddenCategoriesCsv . ')
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT
+                    id
+                FROM {$categoriesTable}
+                WHERE id = {$catId}
+                    AND id NOT IN ({$forbiddenCategoriesCsv})
+                SQL);
 
         return $rows !== [];
     }
@@ -2134,13 +2290,15 @@ SELECT
      */
     public function existsById(int $id): bool
     {
+        $categoriesTable = Tables::categories();
+
         $value = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne('
-SELECT COUNT(*)
-  FROM ' . Tables::categories() . '
-  WHERE id = ' . $id . '
-;');
+            ->fetchOne(<<<SQL
+                SELECT COUNT(*)
+                FROM {$categoriesTable}
+                WHERE id = {$id}
+                SQL);
 
         return is_numeric($value) && (int) $value > 0;
     }
@@ -2158,15 +2316,18 @@ SELECT COUNT(*)
             return [];
         }
 
+        $categoriesTable = Tables::categories();
+        $idsCsv = implode(',', $ids);
+
         return array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             $this->getEntityManager()
                 ->getConnection()
-                ->executeQuery('
-SELECT id
-  FROM ' . Tables::categories() . '
-  WHERE id IN (' . implode(',', $ids) . ')
-;')->fetchFirstColumn()
+                ->executeQuery(<<<SQL
+                    SELECT id
+                    FROM {$categoriesTable}
+                    WHERE id IN ({$idsCsv})
+                    SQL)->fetchFirstColumn()
         );
     }
 
@@ -2180,15 +2341,18 @@ SELECT id
      */
     public function findIdsAndImageOrderWithConditions(array $whereClauses): array
     {
+        $categoriesTable = Tables::categories();
+        $whereSql = implode("\n    AND ", $whereClauses);
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT
-    id,
-    image_order
-  FROM ' . Tables::categories() . '
-  WHERE ' . implode("\n    AND ", $whereClauses) . '
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT
+                    id,
+                    image_order
+                FROM {$categoriesTable}
+                WHERE {$whereSql}
+                SQL);
 
         return array_map(
             static fn (array $row): array => [
@@ -2224,37 +2388,46 @@ SELECT
         $conn = $this->getEntityManager()
             ->getConnection();
 
-        $sql = '
-SELECT SQL_CALC_FOUND_ROWS
-    id, name, comment, permalink, status,
-    uppercats, global_rank, id_uppercat,
-    representative_picture_id,
-    image_order
-  FROM ' . Tables::categories() . '
-  WHERE ' . implode("\n    AND ", $whereClauses);
+        $categoriesTable = Tables::categories();
+        $whereSql = implode("\n    AND ", $whereClauses);
+
+        $sql = <<<SQL
+            SELECT SQL_CALC_FOUND_ROWS
+                id, name, comment, permalink, status,
+                uppercats, global_rank, id_uppercat,
+                representative_picture_id,
+                image_order
+            FROM {$categoriesTable}
+            WHERE {$whereSql}
+            SQL;
 
         if ($searchTerm !== null) {
-            $sql .= '
-    AND name LIKE ' . $conn->quote('%' . $searchTerm . '%');
+            $searchTermQuoted = $conn->quote('%' . $searchTerm . '%');
+            $sql .= <<<SQL
+
+                AND name LIKE {$searchTermQuoted}
+                SQL;
             if ($limit === null) {
-                $sql .= ' LIMIT ' . $searchLimit;
+                $sql .= " LIMIT {$searchLimit}";
             }
         }
 
         if ($limit !== null) {
-            $sql .= '
-  ORDER BY `rank` ASC
-  LIMIT ' . ($limit + ($limitPlusOne ? 1 : 0));
-        }
+            $effectiveLimit = $limit + ($limitPlusOne ? 1 : 0);
+            $sql .= <<<SQL
 
-        $sql .= '
-;';
+                ORDER BY `rank` ASC
+                LIMIT {$effectiveLimit}
+                SQL;
+        }
 
         $rows = $conn->fetchAllAssociative($sql);
 
         $total = null;
         if ($limit !== null) {
-            $totalRaw = $conn->fetchOne('SELECT FOUND_ROWS()');
+            $totalRaw = $conn->fetchOne(<<<SQL
+                SELECT FOUND_ROWS()
+                SQL);
             $total = is_numeric($totalRaw) ? (int) $totalRaw : 0;
         }
 
@@ -2276,22 +2449,28 @@ SELECT SQL_CALC_FOUND_ROWS
         $conn = $this->getEntityManager()
             ->getConnection();
 
-        $sql = '
-SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, status, image_order
-  FROM ' . Tables::categories() . '
-  WHERE ' . implode("\n    AND ", $whereClauses);
+        $categoriesTable = Tables::categories();
+        $whereSql = implode("\n    AND ", $whereClauses);
+
+        $sql = <<<SQL
+            SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, status, image_order
+            FROM {$categoriesTable}
+            WHERE {$whereSql}
+            SQL;
 
         if ($searchTerm !== null) {
-            $sql .= '
-  AND name LIKE ' . $conn->quote('%' . $searchTerm . '%') . '
-  LIMIT ' . $searchLimit;
+            $searchTermQuoted = $conn->quote('%' . $searchTerm . '%');
+            $sql .= <<<SQL
+
+                AND name LIKE {$searchTermQuoted}
+                LIMIT {$searchLimit}
+                SQL;
         }
 
-        $sql .= '
-;';
-
         $rows = $conn->fetchAllAssociative($sql);
-        $totalRaw = $conn->fetchOne('SELECT FOUND_ROWS()');
+        $totalRaw = $conn->fetchOne(<<<SQL
+            SELECT FOUND_ROWS()
+            SQL);
 
         return new PaginatedResult($rows, is_numeric($totalRaw) ? (int) $totalRaw : 0);
     }
@@ -2309,16 +2488,19 @@ SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, statu
             return [];
         }
 
+        $categoriesTable = Tables::categories();
+        $parentIdsCsv = implode(',', $parentIds);
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT
-    id_uppercat,
-    COUNT(*) AS nb_subcats
-  FROM ' . Tables::categories() . '
-  WHERE id_uppercat IN (' . implode(',', $parentIds) . ')
-  GROUP BY id_uppercat
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT
+                    id_uppercat,
+                    COUNT(*) AS nb_subcats
+                FROM {$categoriesTable}
+                WHERE id_uppercat IN ({$parentIdsCsv})
+                GROUP BY id_uppercat
+                SQL);
 
         $bySubcat = [];
         foreach ($rows as $row) {
@@ -2346,13 +2528,16 @@ SELECT
             return [];
         }
 
+        $categoriesTable = Tables::categories();
+        $idsCsv = implode(',', $ids);
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT id, id_uppercat, `rank`
-  FROM ' . Tables::categories() . '
-  WHERE id IN (' . implode(',', $ids) . ')
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT id, id_uppercat, `rank`
+                FROM {$categoriesTable}
+                WHERE id IN ({$idsCsv})
+                SQL);
 
         return array_map(
             static fn (array $row): array => [
@@ -2375,16 +2560,19 @@ SELECT id, id_uppercat, `rank`
      */
     public function findIdsByParentOrderedById(?int $parentId): array
     {
+        $categoriesTable = Tables::categories();
+        $parentCondition = $parentId === null ? 'IS NULL' : '= ' . $parentId;
+
         return array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             $this->getEntityManager()
                 ->getConnection()
-                ->executeQuery('
-SELECT id
-  FROM ' . Tables::categories() . '
-  WHERE id_uppercat ' . ($parentId === null ? 'IS NULL' : '= ' . $parentId) . '
-  ORDER BY `id` ASC
-;')->fetchFirstColumn()
+                ->executeQuery(<<<SQL
+                    SELECT id
+                    FROM {$categoriesTable}
+                    WHERE id_uppercat {$parentCondition}
+                    ORDER BY `id` ASC
+                    SQL)->fetchFirstColumn()
         );
     }
 
@@ -2398,17 +2586,20 @@ SELECT id
      */
     public function findSiblingIdsExcludingOrderedByRank(?int $parentId, int $excludeId): array
     {
+        $categoriesTable = Tables::categories();
+        $parentCondition = $parentId === null ? 'IS NULL' : '= ' . $parentId;
+
         return array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             $this->getEntityManager()
                 ->getConnection()
-                ->executeQuery('
-SELECT id
-  FROM ' . Tables::categories() . '
-  WHERE id_uppercat ' . ($parentId === null ? 'IS NULL' : '= ' . $parentId) . '
-    AND id != ' . $excludeId . '
-  ORDER BY `rank` ASC
-;')->fetchFirstColumn()
+                ->executeQuery(<<<SQL
+                    SELECT id
+                    FROM {$categoriesTable}
+                    WHERE id_uppercat {$parentCondition}
+                        AND id != {$excludeId}
+                    ORDER BY `rank` ASC
+                    SQL)->fetchFirstColumn()
         );
     }
 
@@ -2428,13 +2619,16 @@ SELECT id
             return [];
         }
 
+        $categoriesTable = Tables::categories();
+        $idsCsv = implode(',', $ids);
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT id, name, dir, uppercats
-  FROM ' . Tables::categories() . '
-  WHERE id IN (' . implode(',', $ids) . ')
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT id, name, dir, uppercats
+                FROM {$categoriesTable}
+                WHERE id IN ({$idsCsv})
+                SQL);
 
         return array_map(
             static fn (array $row): array => [
@@ -2454,11 +2648,14 @@ SELECT id, name, dir, uppercats
      */
     public function findNextId(): int
     {
+        $categoriesTable = Tables::categories();
+
         $next = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne('
-SELECT IF(MAX(id)+1 IS NULL, 1, MAX(id)+1)
-  FROM ' . Tables::categories());
+            ->fetchOne(<<<SQL
+                SELECT IF(MAX(id)+1 IS NULL, 1, MAX(id)+1)
+                FROM {$categoriesTable}
+                SQL);
 
         return is_numeric($next) ? (int) $next : 1;
     }
@@ -2476,14 +2673,17 @@ SELECT IF(MAX(id)+1 IS NULL, 1, MAX(id)+1)
      */
     public function findSyncCandidatesForSite(int $siteId, string $extraCondition): array
     {
+        $categoriesTable = Tables::categories();
+
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT id, uppercats, global_rank, status, visible
-  FROM ' . Tables::categories() . '
-  WHERE dir IS NOT NULL
-    AND site_id = ' . $siteId . '
-' . $extraCondition);
+            ->fetchAllAssociative(<<<SQL
+                SELECT id, uppercats, global_rank, status, visible
+                FROM {$categoriesTable}
+                WHERE dir IS NOT NULL
+                    AND site_id = {$siteId}
+                {$extraCondition}
+                SQL);
     }
 
     /**
@@ -2496,13 +2696,16 @@ SELECT id, uppercats, global_rank, status, visible
      */
     public function findAllIds(): array
     {
+        $categoriesTable = Tables::categories();
+
         return array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             $this->getEntityManager()
                 ->getConnection()
-                ->executeQuery('
-SELECT id
-  FROM ' . Tables::categories())->fetchFirstColumn()
+                ->executeQuery(<<<SQL
+                    SELECT id
+                    FROM {$categoriesTable}
+                    SQL)->fetchFirstColumn()
         );
     }
 
@@ -2515,11 +2718,14 @@ SELECT id
      */
     public function findNextRanksByParent(): array
     {
+        $categoriesTable = Tables::categories();
+
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
-  FROM ' . Tables::categories() . '
-  GROUP BY id_uppercat');
+            ->fetchAllAssociative(<<<SQL
+                SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
+                FROM {$categoriesTable}
+                GROUP BY id_uppercat
+                SQL);
     }
 }

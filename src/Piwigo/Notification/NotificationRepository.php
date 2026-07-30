@@ -26,7 +26,10 @@ final class NotificationRepository extends AbstractRepository
     {
         [$fromWhereSql, $fieldId, $params] = $this->buildFromWhere($type, $start, $end, $restrictSql);
 
-        $count = $this->conn->executeQuery('SELECT COUNT(DISTINCT ' . $fieldId . ') ' . $fromWhereSql, $params)
+        $count = $this->conn->executeQuery(<<<SQL
+            SELECT COUNT(DISTINCT {$fieldId}) {$fromWhereSql}
+            SQL
+            , $params)
             ->fetchOne();
 
         return is_numeric($count) ? (int) $count : 0;
@@ -39,7 +42,10 @@ final class NotificationRepository extends AbstractRepository
     {
         [$fromWhereSql, $fieldId, $params] = $this->buildFromWhere($type, $start, $end, $restrictSql);
 
-        $ids = $this->conn->executeQuery('SELECT DISTINCT ' . $fieldId . ' ' . $fromWhereSql, $params)
+        $ids = $this->conn->executeQuery(<<<SQL
+            SELECT DISTINCT {$fieldId} {$fromWhereSql}
+            SQL
+            , $params)
             ->fetchFirstColumn();
 
         return array_values(array_map(intval(...), array_filter($ids, is_numeric(...))));
@@ -54,30 +60,40 @@ final class NotificationRepository extends AbstractRepository
 
         switch ($type) {
             case 'new_comments':
-                $sql = ' FROM ' . Tables::comments() . ' AS c'
-                    . ' INNER JOIN ' . Tables::imageCategory() . ' AS ic ON c.image_id = ic.image_id'
-                    . ' WHERE 1=1';
+                $commentsTable = Tables::comments();
+                $imageCategoryTable = Tables::imageCategory();
+                $sql = <<<SQL
+                     FROM {$commentsTable} AS c INNER JOIN {$imageCategoryTable} AS ic ON c.image_id = ic.image_id WHERE 1=1
+                    SQL;
                 $dateColumn = 'c.validation_date';
                 $fieldId = 'c.id';
 
                 break;
             case 'unvalidated_comments':
-                $sql = ' FROM ' . Tables::comments() . ' WHERE 1=1';
+                $commentsTable = Tables::comments();
+                $sql = <<<SQL
+                     FROM {$commentsTable} WHERE 1=1
+                    SQL;
                 $dateColumn = 'date';
                 $fieldId = 'id';
 
                 break;
             case 'new_elements':
             case 'updated_categories':
-                $sql = ' FROM ' . Tables::images()
-                    . ' INNER JOIN ' . Tables::imageCategory() . ' AS ic ON image_id = id'
-                    . ' WHERE 1=1';
+                $imagesTable = Tables::images();
+                $imageCategoryTable = Tables::imageCategory();
+                $sql = <<<SQL
+                     FROM {$imagesTable} INNER JOIN {$imageCategoryTable} AS ic ON image_id = id WHERE 1=1
+                    SQL;
                 $dateColumn = 'date_available';
                 $fieldId = $type === 'new_elements' ? 'image_id' : 'category_id';
 
                 break;
             case 'new_users':
-                $sql = ' FROM ' . Tables::userInfos() . ' WHERE 1=1';
+                $userInfosTable = Tables::userInfos();
+                $sql = <<<SQL
+                     FROM {$userInfosTable} WHERE 1=1
+                    SQL;
                 $dateColumn = 'registration_date';
                 $fieldId = 'user_id';
 
@@ -87,12 +103,16 @@ final class NotificationRepository extends AbstractRepository
         }
 
         if ($start !== null && $start !== '') {
-            $sql .= ' AND ' . $dateColumn . ' > ?';
+            $sql .= <<<SQL
+                 AND {$dateColumn} > ?
+                SQL;
             $params[] = $start;
         }
 
         if ($end !== null && $end !== '') {
-            $sql .= ' AND ' . $dateColumn . ' <= ?';
+            $sql .= <<<SQL
+                 AND {$dateColumn} <= ?
+                SQL;
             $params[] = $end;
         }
 
@@ -104,10 +124,14 @@ final class NotificationRepository extends AbstractRepository
             // too, matching every row instead of filtering to unvalidated
             // ones (same bug class Category's own commentable/visible
             // retype found).
-            $sql .= ' AND validated = 0';
+            $sql .= <<<SQL
+                 AND validated = 0
+                SQL;
         }
 
-        $sql .= ' ' . $restrictSql;
+        $sql .= <<<SQL
+             {$restrictSql}
+            SQL;
 
         return [$sql, $fieldId, $params];
     }
@@ -117,11 +141,13 @@ final class NotificationRepository extends AbstractRepository
      */
     public function findRecentPostDates(string $whereSql, int $maxDates): array
     {
+        $imagesTable = Tables::images();
+        $imageCategoryTable = Tables::imageCategory();
+
         $rows = $this->conn->executeQuery(
-            'SELECT date_available, COUNT(DISTINCT id) AS nb_elements, COUNT(DISTINCT category_id) AS nb_cats'
-            . ' FROM ' . Tables::images() . ' i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = image_id'
-            . ' ' . $whereSql
-            . ' GROUP BY date_available ORDER BY date_available DESC LIMIT ' . $maxDates
+            <<<SQL
+            SELECT date_available, COUNT(DISTINCT id) AS nb_elements, COUNT(DISTINCT category_id) AS nb_cats FROM {$imagesTable} i INNER JOIN {$imageCategoryTable} AS ic ON id = image_id {$whereSql} GROUP BY date_available ORDER BY date_available DESC LIMIT {$maxDates}
+            SQL
         )->fetchAllAssociative();
 
         return array_map(
@@ -143,11 +169,14 @@ final class NotificationRepository extends AbstractRepository
      */
     public function findRecentElementsForDate(string $whereSql, string $dateAvailable, int $maxElements): array
     {
+        $imagesTable = Tables::images();
+        $imageCategoryTable = Tables::imageCategory();
+
         return $this->conn->executeQuery(
-            'SELECT DISTINCT i.* FROM ' . Tables::images() . ' i'
-            . ' INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = image_id'
-            . ' ' . $whereSql
-            . ' AND date_available = ? ORDER BY RAND() LIMIT ' . $maxElements,
+            <<<SQL
+            SELECT DISTINCT i.* FROM {$imagesTable} i INNER JOIN {$imageCategoryTable} AS ic ON id = image_id {$whereSql} AND date_available = ? ORDER BY RAND() LIMIT {$maxElements}
+            SQL
+            ,
             [$dateAvailable]
         )->fetchAllAssociative();
     }
@@ -157,13 +186,15 @@ final class NotificationRepository extends AbstractRepository
      */
     public function findRecentCategoriesForDate(string $whereSql, string $dateAvailable, int $maxCats): array
     {
+        $imagesTable = Tables::images();
+        $imageCategoryTable = Tables::imageCategory();
+        $categoriesTable = Tables::categories();
+
         $rows = $this->conn->executeQuery(
-            'SELECT DISTINCT c.uppercats, COUNT(DISTINCT i.id) AS img_count'
-            . ' FROM ' . Tables::images() . ' i'
-            . ' INNER JOIN ' . Tables::imageCategory() . ' AS ic ON i.id = image_id'
-            . ' INNER JOIN ' . Tables::categories() . ' c ON c.id = category_id'
-            . ' ' . $whereSql
-            . ' AND date_available = ? GROUP BY category_id, c.uppercats ORDER BY img_count DESC LIMIT ' . $maxCats,
+            <<<SQL
+            SELECT DISTINCT c.uppercats, COUNT(DISTINCT i.id) AS img_count FROM {$imagesTable} i INNER JOIN {$imageCategoryTable} AS ic ON i.id = image_id INNER JOIN {$categoriesTable} c ON c.id = category_id {$whereSql} AND date_available = ? GROUP BY category_id, c.uppercats ORDER BY img_count DESC LIMIT {$maxCats}
+            SQL
+            ,
             [$dateAvailable]
         )->fetchAllAssociative();
 

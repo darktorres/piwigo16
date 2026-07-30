@@ -265,16 +265,18 @@ final readonly class SearchFilterRenderer
         if (isset($searchFields['author']) and (bool) $displayFilters['author']['access']) {
             $filterClause = $this->getClauseForFilter('author', $page);
 
-            $query = '
-SELECT
-    author,
-    COUNT(DISTINCT(id)) AS counter
-  FROM ' . Tables::images() . ' AS i
-    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
-  WHERE ' . $filterClause . '
-    AND author IS NOT NULL
-  GROUP BY author
-;';
+            $imagesTable = Tables::images();
+            $imageCategoryTable = Tables::imageCategory();
+            $query = <<<SQL
+                SELECT
+                    author,
+                    COUNT(DISTINCT(id)) AS counter
+                FROM {$imagesTable} AS i
+                    JOIN {$imageCategoryTable} AS ic ON ic.image_id = i.id
+                WHERE {$filterClause}
+                    AND author IS NOT NULL
+                GROUP BY author
+                SQL;
 
             if (! (bool) preg_match('/^image_id IN/', $filterClause)) {
                 // we use the cache pool only for fetching lines filtered
@@ -373,16 +375,18 @@ SELECT
         if (isset($searchFields['added_by']) and (bool) $displayFilters['added_by']['access']) {
             $filterClause = $this->getClauseForFilter('added_by', $page);
 
-            $query = '
-SELECT
-    COUNT(DISTINCT(id)) AS counter,
-    added_by AS added_by_id
-  FROM ' . Tables::images() . ' AS i
-    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
-  WHERE ' . $filterClause . '
-  GROUP BY added_by_id
-  ORDER BY counter DESC
-;';
+            $imagesTable = Tables::images();
+            $imageCategoryTable = Tables::imageCategory();
+            $query = <<<SQL
+                SELECT
+                    COUNT(DISTINCT(id)) AS counter,
+                    added_by AS added_by_id
+                FROM {$imagesTable} AS i
+                    JOIN {$imageCategoryTable} AS ic ON ic.image_id = i.id
+                WHERE {$filterClause}
+                GROUP BY added_by_id
+                ORDER BY counter DESC
+                SQL;
 
             if (! (bool) preg_match('/^image_id IN/', $filterClause)) {
                 // we use the cache pool only for fetching lines filtered
@@ -421,13 +425,15 @@ SELECT
                 $userFieldId = $confUserFields['id'];
                 $userFieldUsername = $confUserFields['username'];
 
-                $query = '
-SELECT
-    ' . $userFieldId . ' AS id,
-    ' . $userFieldUsername . ' AS username
-  FROM ' . Tables::users() . '
-  WHERE ' . $userFieldId . ' IN (' . implode(',', $userIds) . ')
-;';
+                $usersTable = Tables::users();
+                $userIdsCsv = implode(',', $userIds);
+                $query = <<<SQL
+                    SELECT
+                        {$userFieldId} AS id,
+                        {$userFieldUsername} AS username
+                    FROM {$usersTable}
+                    WHERE {$userFieldId} IN ({$userIdsCsv})
+                    SQL;
                 $usernameOf = $this->repo->queryKeyedColumn($query, 'id', 'username');
 
                 foreach (array_keys($addedBy) as $addedByIdx) {
@@ -481,14 +487,15 @@ SELECT
                     'visible_categories' => 'id',
                 ], "\n  AND");
 
-                $query = '
-SELECT
-    id,
-    uppercats
-  FROM ' . Tables::categories() . '
-  WHERE id IN (' . implode(',', $catWords) . ')'
-  . $permissionCondition . '
-;';
+                $categoriesTable = Tables::categories();
+                $catWordsCsv = implode(',', $catWords);
+                $query = <<<SQL
+                    SELECT
+                        id,
+                        uppercats
+                    FROM {$categoriesTable}
+                    WHERE id IN ({$catWordsCsv}){$permissionCondition}
+                    SQL;
                 foreach ($this->repo->queryRows($query) as $row) {
                     if ($row['id'] === null || $row['uppercats'] === null) {
                         continue;
@@ -537,16 +544,18 @@ SELECT
             $searchDetailsRaw = $page['search_details'];
             $searchDetailsForbiddenRaw = is_array($searchDetailsRaw) ? ($searchDetailsRaw['forbidden'] ?? null) : null;
             $searchDetailsForbidden = is_string($searchDetailsForbiddenRaw) ? $searchDetailsForbiddenRaw : '';
-            $allExtsQuery = '
-SELECT
-    SUBSTRING_INDEX(path, ".", -1) AS ext,
-    COUNT(DISTINCT(id)) AS counter
-  FROM ' . Tables::images() . ' AS i
-    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
-  WHERE 1=1' . $searchDetailsForbidden . '
-  GROUP BY ext
-  ORDER BY counter DESC
-;';
+            $imagesTable = Tables::images();
+            $imageCategoryTable = Tables::imageCategory();
+            $allExtsQuery = <<<SQL
+                SELECT
+                    SUBSTRING_INDEX(path, ".", -1) AS ext,
+                    COUNT(DISTINCT(id)) AS counter
+                FROM {$imagesTable} AS i
+                    JOIN {$imageCategoryTable} AS ic ON ic.image_id = i.id
+                WHERE 1=1{$searchDetailsForbidden}
+                GROUP BY ext
+                ORDER BY counter DESC
+                SQL;
             $allExts = $this->cacheGet($cacheKey);
             if (! is_array($allExts)) {
                 $allExts = $this->repo->queryKeyedColumn($allExtsQuery, 'ext', 'counter');
@@ -554,16 +563,16 @@ SELECT
             }
 
             if ((bool) preg_match('/^image_id IN/', $filterClause)) {
-                $query = '
-SELECT
-    SUBSTRING_INDEX(path, ".", -1) AS ext,
-    COUNT(DISTINCT(id)) AS counter
-  FROM ' . Tables::images() . ' AS i
-    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
-  WHERE ' . $filterClause . '
-  GROUP BY ext
-  ORDER BY counter DESC
-;';
+                $query = <<<SQL
+                    SELECT
+                        SUBSTRING_INDEX(path, ".", -1) AS ext,
+                        COUNT(DISTINCT(id)) AS counter
+                    FROM {$imagesTable} AS i
+                        JOIN {$imageCategoryTable} AS ic ON ic.image_id = i.id
+                    WHERE {$filterClause}
+                    GROUP BY ext
+                    ORDER BY counter DESC
+                    SQL;
                 $filteredExts = $this->repo->queryKeyedColumn($query, 'ext', 'counter');
 
                 $exts = [];
@@ -591,13 +600,16 @@ SELECT
                 $ratings = $cacheApplicable ? $this->cacheGet($cacheKey) : null;
 
                 if (! is_array($ratings)) {
-                    $query = '
-SELECT
-    DISTINCT id,
-    rating_score
-  FROM ' . Tables::images() . ' AS i
-    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
-  WHERE ' . $filterClause;
+                    $imagesTable = Tables::images();
+                    $imageCategoryTable = Tables::imageCategory();
+                    $query = <<<SQL
+                        SELECT
+                            DISTINCT id,
+                            rating_score
+                        FROM {$imagesTable} AS i
+                            JOIN {$imageCategoryTable} AS ic ON ic.image_id = i.id
+                        WHERE {$filterClause}
+                        SQL;
 
                     $filterRows = $this->repo->queryRows($query);
 
@@ -646,14 +658,16 @@ SELECT
 
             $filesizes = [];
 
-            $query = '
-SELECT
-    DISTINCT id,
-    filesize
-  FROM ' . Tables::images() . ' AS i
-    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
-  WHERE ' . $filterClause . '
-;';
+            $imagesTable = Tables::images();
+            $imageCategoryTable = Tables::imageCategory();
+            $query = <<<SQL
+                SELECT
+                    DISTINCT id,
+                    filesize
+                FROM {$imagesTable} AS i
+                    JOIN {$imageCategoryTable} AS ic ON ic.image_id = i.id
+                WHERE {$filterClause}
+                SQL;
             foreach ($this->repo->queryRows($query) as $row) {
                 if (! is_numeric($row['filesize'])) {
                     continue;
@@ -709,17 +723,19 @@ SELECT
             $ratios = $cacheApplicable ? $this->cacheGet($cacheKey) : null;
 
             if (! is_array($ratios)) {
-                $query = '
-SELECT
-    DISTINCT id,
-    width,
-    height
-  FROM ' . Tables::images() . ' as i
-    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
-  WHERE ' . $filterClause . '
-    AND width IS NOT NULL
-    AND height IS NOT NULL
-;';
+                $imagesTable = Tables::images();
+                $imageCategoryTable = Tables::imageCategory();
+                $query = <<<SQL
+                    SELECT
+                        DISTINCT id,
+                        width,
+                        height
+                    FROM {$imagesTable} as i
+                        JOIN {$imageCategoryTable} AS ic ON ic.image_id = i.id
+                    WHERE {$filterClause}
+                        AND width IS NOT NULL
+                        AND height IS NOT NULL
+                    SQL;
 
                 $filterRows = $this->repo->queryRows($query);
 
@@ -770,16 +786,18 @@ SELECT
         if (isset($searchFields['height_min']) and isset($searchFields['height_max']) and (bool) $displayFilters['height']['access']) {
             $filterClause = $this->getClauseForFilter('height', $page);
 
-            $query = '
-SELECT
-    height
-  FROM ' . Tables::images() . ' as i
-    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
-  WHERE ' . $filterClause . '
-    AND height IS NOT NULL
-  GROUP BY height
-  ORDER BY height ASC
-;';
+            $imagesTable = Tables::images();
+            $imageCategoryTable = Tables::imageCategory();
+            $query = <<<SQL
+                SELECT
+                    height
+                FROM {$imagesTable} as i
+                    JOIN {$imageCategoryTable} AS ic ON ic.image_id = i.id
+                WHERE {$filterClause}
+                    AND height IS NOT NULL
+                GROUP BY height
+                ORDER BY height ASC
+                SQL;
 
             if (! (bool) preg_match('/^image_id IN/', $filterClause)) {
                 // we use the cache pool only for fetching lines filtered
@@ -827,16 +845,18 @@ SELECT
         if (isset($searchFields['width_min']) and isset($searchFields['width_max']) and (bool) $displayFilters['width']['access']) {
             $filterClause = $this->getClauseForFilter('width', $page);
 
-            $query = '
-SELECT
-    width
-  FROM ' . Tables::images() . ' as i
-    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
-  WHERE ' . $filterClause . '
-    AND width IS NOT NULL
-  GROUP BY width
-  ORDER BY width ASC
-;';
+            $imagesTable = Tables::images();
+            $imageCategoryTable = Tables::imageCategory();
+            $query = <<<SQL
+                SELECT
+                    width
+                FROM {$imagesTable} as i
+                    JOIN {$imageCategoryTable} AS ic ON ic.image_id = i.id
+                WHERE {$filterClause}
+                    AND width IS NOT NULL
+                GROUP BY width
+                ORDER BY width ASC
+                SQL;
 
             if (! (bool) preg_match('/^image_id IN/', $filterClause)) {
                 // we use the cache pool only for fetching lines filtered
@@ -1079,20 +1099,23 @@ SELECT
             foreach (array_keys($labelForThreshold) as $threshold) {
                 $intervalExprs[] = 'SUBDATE(NOW(), ' . $this->intervalForThreshold($threshold) . ') AS `' . $threshold . '`';
             }
-            $query = '
-SELECT
-    ' . implode(",\n    ", $intervalExprs) . '
-;';
+            $intervalExprsSql = implode(",\n    ", $intervalExprs);
+            $query = <<<SQL
+                SELECT
+                    {$intervalExprsSql}
+                SQL;
             $thresholds = $this->repo->queryRows($query)[0];
 
-            $query = '
-SELECT
-    DISTINCT id,
-    ' . $dbField . ' as date
-  FROM ' . Tables::images() . ' AS i
-    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
-  WHERE ' . $filterClause . '
-;';
+            $imagesTable = Tables::images();
+            $imageCategoryTable = Tables::imageCategory();
+            $query = <<<SQL
+                SELECT
+                    DISTINCT id,
+                    {$dbField} as date
+                FROM {$imagesTable} AS i
+                    JOIN {$imageCategoryTable} AS ic ON ic.image_id = i.id
+                WHERE {$filterClause}
+                SQL;
 
             $listOfDates = [];
             $preCounters = [];

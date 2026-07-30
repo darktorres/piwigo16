@@ -344,14 +344,16 @@ final class BatchManagerUnitPageRenderer
 
                 $image_file = $row['file'];
 
-                $query = '
-SELECT
-    id,
-    name
-  FROM ' . Tables::imageTag() . ' AS it
-    JOIN ' . Tables::tags() . ' AS t ON t.id = it.tag_id
-  WHERE image_id = ' . $row_id_str . '
-;';
+                $imageTagTable = Tables::imageTag();
+                $tagsTable = Tables::tags();
+                $query = <<<SQL
+                    SELECT
+                        id,
+                        name
+                    FROM {$imageTagTable} AS it
+                        JOIN {$tagsTable} AS t ON t.id = it.tag_id
+                    WHERE image_id = {$row_id_str}
+                    SQL;
 
                 $tag_selection = $tagService->getTagList($query, $htmlRenderer);
 

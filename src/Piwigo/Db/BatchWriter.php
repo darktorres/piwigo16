@@ -64,9 +64,12 @@ final readonly class BatchWriter
         $columns = array_map(SqlDialect::protectColumnName(...), array_keys($data));
         $placeholders = array_map(static fn (string $key): string => ':' . $key, array_keys($data));
 
-        $query = 'INSERT ' . $ignore . ' INTO ' . SqlDialect::protectColumnName($table)
-            . ' (' . implode(',', $columns) . ')'
-            . ' VALUES (' . implode(',', $placeholders) . ')';
+        $protectedTable = SqlDialect::protectColumnName($table);
+        $columnsSql = implode(',', $columns);
+        $placeholdersSql = implode(',', $placeholders);
+        $query = <<<SQL
+            INSERT {$ignore} INTO {$protectedTable} ({$columnsSql}) VALUES ({$placeholdersSql})
+            SQL;
 
         $params = [];
         foreach ($data as $key => $value) {
@@ -96,6 +99,8 @@ final readonly class BatchWriter
 
         $ignore = ($options['ignore'] ?? false) ? 'IGNORE' : '';
         $columns = array_map(SqlDialect::protectColumnName(...), $dbfields);
+        $protectedTable = SqlDialect::protectColumnName($table);
+        $columnsSql = implode(',', $columns);
 
         $this->conn->beginTransaction();
         try {
@@ -109,9 +114,10 @@ final readonly class BatchWriter
                     $params[$placeholder] = ($value === '' || $value === null || ! is_scalar($value)) ? null : $value;
                 }
 
-                $query = 'INSERT ' . $ignore . ' INTO ' . SqlDialect::protectColumnName($table)
-                    . ' (' . implode(',', $columns) . ')'
-                    . ' VALUES (' . implode(',', $placeholders) . ')';
+                $placeholdersSql = implode(',', $placeholders);
+                $query = <<<SQL
+                    INSERT {$ignore} INTO {$protectedTable} ({$columnsSql}) VALUES ({$placeholdersSql})
+                    SQL;
 
                 $this->conn->executeStatement($query, $params);
             }
@@ -209,9 +215,12 @@ final readonly class BatchWriter
             }
         }
 
-        $query = 'UPDATE ' . SqlDialect::protectColumnName($table)
-            . ' SET ' . implode(', ', $setParts)
-            . ' WHERE ' . implode(' AND ', $whereParts);
+        $protectedTable = SqlDialect::protectColumnName($table);
+        $setPartsSql = implode(', ', $setParts);
+        $wherePartsSql = implode(' AND ', $whereParts);
+        $query = <<<SQL
+            UPDATE {$protectedTable} SET {$setPartsSql} WHERE {$wherePartsSql}
+            SQL;
 
         $this->conn->executeStatement($query, $params);
     }

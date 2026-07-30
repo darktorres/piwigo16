@@ -169,19 +169,26 @@ final class FilterService implements FilterUpdaterInterface
                     $filter['visible_categories'] = -1;
                 }
 
-                $query = '
-SELECT
-  distinct image_id
-FROM ' .
-  Tables::imageCategory() . ' INNER JOIN ' . Tables::images() . ' ON image_id = id
-WHERE ';
+                $imageCategoryTable = Tables::imageCategory();
+                $imagesTable = Tables::images();
+                $query = <<<SQL
+                    SELECT
+                      distinct image_id
+                    FROM {$imageCategoryTable} INNER JOIN {$imagesTable} ON image_id = id
+                    WHERE
+                    SQL;
                 // $filter['visible_categories'] is always non-empty here: either a
                 // non-empty string (from the implode() above) or the literal -1
                 // fallback set right above when that implode() was empty.
-                $query .= '
-  category_id  IN (' . $filter['visible_categories'] . ') and';
-                $query .= '
-    date_available >= ' . SqlDialect::getRecentPeriodExpression($filter_recent_period);
+                $query .= <<<SQL
+
+                      category_id  IN ({$filter['visible_categories']}) and
+                    SQL;
+                $recentPeriodExpr = SqlDialect::getRecentPeriodExpression($filter_recent_period);
+                $query .= <<<SQL
+
+                        date_available >= {$recentPeriodExpr}
+                    SQL;
 
                 $visible_image_ids = array_map(
                     static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',

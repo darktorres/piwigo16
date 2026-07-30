@@ -529,10 +529,12 @@ define(\'DB_COLLATE\', \'\');
         $secretKeyJson = json_encode(sha1(random_bytes(1000)));
         assert($secretKeyJson !== false);
 
-        $query = '
-INSERT INTO ' . $this->prefixeTable . 'config (param,value,comment)
-   VALUES (\'secret_key\',\'' . $secretKeyJson . '\',
-   \'a secret key specific to the gallery for internal use\');';
+        $configTable = $this->prefixeTable . 'config';
+        $query = <<<SQL
+            INSERT INTO {$configTable} (param,value,comment)
+               VALUES ('secret_key','{$secretKeyJson}',
+               'a secret key specific to the gallery for internal use');
+            SQL;
         $conn->executeStatement($query);
 
         $configService = \Piwigo\Config\CurrentConfigService::get();

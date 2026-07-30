@@ -107,7 +107,9 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
         }
 
         $conn = DbConnection::build();
-        $row = $conn->fetchNumeric('SELECT now();');
+        $row = $conn->fetchNumeric(<<<SQL
+            SELECT now()
+            SQL);
         $dbCurrentDate = $row !== false ? $row[0] : null;
 
         if (\Piwigo\Config\CurrentConfig::sendPiwigoInfosOriginHash() === null) {
@@ -143,22 +145,23 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
         $piwigoInfos['general_stats']['last_photo'] = null;
 
         if ($piwigoInfos['general_stats']['nb_photos'] > 0) {
-            $query = '
-SELECT
-    COUNT(*) AS counter
-  FROM `' . Tables::images() . '`
-  WHERE storage_category_id IS NOT NULL
-;';
+            $imagesTable = Tables::images();
+            $query = <<<SQL
+                SELECT
+                    COUNT(*) AS counter
+                FROM `{$imagesTable}`
+                WHERE storage_category_id IS NOT NULL
+                SQL;
             if (array_column($conn->fetchAllAssociative($query), 'counter')[0] > 0) {
                 // slow SQL query, but necessary if you have files added by sync
-                $query = '
-SELECT
-    IF(storage_category_id IS NULL, \'api\', \'sync\') AS add_method,
-    MAX(date_available) AS last_added_on,
-    COUNT(*) AS nb_files
-  FROM `' . Tables::images() . '`
-  GROUP BY add_method
-;';
+                $query = <<<SQL
+                    SELECT
+                        IF(storage_category_id IS NULL, 'api', 'sync') AS add_method,
+                        MAX(date_available) AS last_added_on,
+                        COUNT(*) AS nb_files
+                    FROM `{$imagesTable}`
+                    GROUP BY add_method
+                    SQL;
                 $filesAddedBy = array_column($conn->fetchAllAssociative($query), null, 'add_method');
 
                 $piwigoInfos['general_stats']['nb_photos_synced'] = $filesAddedBy['sync']['nb_files'];
@@ -175,27 +178,27 @@ SELECT
                 $piwigoInfos['general_stats']['last_photo'] = $filesAddedBy[$methodOfLastPhoto]['last_added_on'];
             } else {
                 // much faster SQL query, but valid only if you do not use sync to add photos
-                $query = '
-SELECT
-    date_available
-  FROM `' . Tables::images() . '`
-  ORDER BY id DESC
-  LIMIT 1
-;';
+                $query = <<<SQL
+                    SELECT
+                        date_available
+                    FROM `{$imagesTable}`
+                    ORDER BY id DESC
+                    LIMIT 1
+                    SQL;
                 $images = $conn->fetchAllAssociative($query);
                 if (count($images) > 0) {
                     $piwigoInfos['general_stats']['last_photo'] = $images[0]['date_available'];
                 }
             }
 
-            $query = '
-SELECT
-    SUBSTRING_INDEX(path,".",-1) AS ext,
-    COUNT(*) AS counter,
-    SUM(filesize) AS filesize
-  FROM `' . Tables::images() . '`
-  GROUP BY ext
-;';
+            $query = <<<SQL
+                SELECT
+                    SUBSTRING_INDEX(path,".",-1) AS ext,
+                    COUNT(*) AS counter,
+                    SUM(filesize) AS filesize
+                FROM `{$imagesTable}`
+                GROUP BY ext
+                SQL;
             $piwigoInfos['file_extensions'] = array_column($conn->fetchAllAssociative($query), null, 'ext');
         }
 
@@ -361,14 +364,15 @@ SELECT
         $piwigoInfos['general_stats']['default_theme'] = $defaultTheme;
 
         $piwigoInfos['themes_usage'] = [];
-        $query = '
-SELECT
-    theme,
-    COUNT(*) AS theme_counter
-  FROM ' . Tables::userInfos() . '
-  GROUP BY theme
-  ORDER BY theme
-;';
+        $userInfosTable = Tables::userInfos();
+        $query = <<<SQL
+            SELECT
+                theme,
+                COUNT(*) AS theme_counter
+            FROM {$userInfosTable}
+            GROUP BY theme
+            ORDER BY theme
+            SQL;
         $themesUsed = array_column($conn->fetchAllAssociative($query), 'theme_counter', 'theme');
         // built as a separate local accumulator (rather than mutating
         // $piwigoInfos directly with a dynamic key) so PHPStan keeps tracking
@@ -387,28 +391,29 @@ SELECT
 
         $piwigoInfos['general_stats']['default_language'] = self::userService()->getDefaultLanguage();
 
-        $query = '
-SELECT
-    language,
-    COUNT(*) AS language_counter
-  FROM ' . Tables::userInfos() . '
-  GROUP BY language
-  ORDER BY language
-;';
+        $query = <<<SQL
+            SELECT
+                language,
+                COUNT(*) AS language_counter
+            FROM {$userInfosTable}
+            GROUP BY language
+            ORDER BY language
+            SQL;
         $piwigoInfos['languages_usage'] = array_column($conn->fetchAllAssociative($query), 'language_counter', 'language');
 
         $piwigoInfos['activities'] = [];
         $piwigoInfos['general_stats']['nb_activities'] = 0;
 
-        $query = '
-SELECT
-    object,
-    action,
-    COUNT(*) AS counter
-  FROM ' . Tables::activity() . '
-  WHERE object != \'system\'
-  GROUP BY object, action
-;';
+        $activityTable = Tables::activity();
+        $query = <<<SQL
+            SELECT
+                object,
+                action,
+                COUNT(*) AS counter
+            FROM {$activityTable}
+            WHERE object != 'system'
+            GROUP BY object, action
+            SQL;
         $activities = $conn->fetchAllAssociative($query);
         // 'activities' is heterogeneous by design: every object except 'system'
         // (queried here, WHERE object != 'system') stores a flat action=>counter
@@ -439,16 +444,16 @@ SELECT
             3 => 'theme',
         ];
 
-        $query = '
-SELECT
-    object,
-    object_id,
-    action,
-    COUNT(*) AS counter
-  FROM ' . Tables::activity() . '
-  WHERE object = \'system\'
-  GROUP BY object, object_id, action
-;';
+        $query = <<<SQL
+            SELECT
+                object,
+                object_id,
+                action,
+                COUNT(*) AS counter
+            FROM {$activityTable}
+            WHERE object = 'system'
+            GROUP BY object, object_id, action
+            SQL;
         $activities = $conn->fetchAllAssociative($query);
         /** @var array<string, array<string, array<string, string|null>>> $piwigoActivitiesSystem */
         $piwigoActivitiesSystem = [];
@@ -467,17 +472,18 @@ SELECT
         $piwigoInfos['activities'] = $piwigoActivitiesFlat + $piwigoActivitiesSystem;
         $piwigoInfos['general_stats']['nb_activities'] = $nbActivities;
 
-        $query = '
-SELECT
-    action,
-    occured_on,
-    details
-  FROM ' . Tables::activity() . '
-  WHERE object = \'system\'
-    AND object_id = ' . ActivitySystem::Core . '
-    AND action IN (\'update\', \'autoupdate\')
-  ORDER BY activity_id ASC
-;';
+        $activitySystemCore = ActivitySystem::Core;
+        $query = <<<SQL
+            SELECT
+                action,
+                occured_on,
+                details
+            FROM {$activityTable}
+            WHERE object = 'system'
+                AND object_id = {$activitySystemCore}
+                AND action IN ('update', 'autoupdate')
+            ORDER BY activity_id ASC
+            SQL;
         $updates = $conn->fetchAllAssociative($query);
         foreach ($updates as $update) {
             $updateDetails = $update['details'];
@@ -509,16 +515,16 @@ SELECT
         // which remote apps have been used?
         $remoteAppsStartTime = TimingHelper::getMoment();
 
-        $query = '
-SELECT
-    user_agent,
-    COUNT(*) AS counter,
-    MIN(occured_on) AS first_encounter,
-    MAX(occured_on) AS last_encounter
-  FROM ' . Tables::activity() . '
-  WHERE user_agent NOT LIKE \'Mozilla/5%\'
-  GROUP BY user_agent
-;';
+        $query = <<<SQL
+            SELECT
+                user_agent,
+                COUNT(*) AS counter,
+                MIN(occured_on) AS first_encounter,
+                MAX(occured_on) AS last_encounter
+            FROM {$activityTable}
+            WHERE user_agent NOT LIKE 'Mozilla/5%'
+            GROUP BY user_agent
+            SQL;
         $activities = $conn->fetchAllAssociative($query);
         $apps = [];
 

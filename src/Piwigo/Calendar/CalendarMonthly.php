@@ -220,9 +220,11 @@ final class CalendarMonthly extends CalendarBase
     {
         $page_chronology_date = $this->chronology_date;
         assert(count($page_chronology_date) === 0);
-        $query = '
-  SELECT ' . \Piwigo\Db\SqlDialect::getDateYYYYMM($this->date_field) . ' as period,
-    COUNT(distinct id) as count';
+        $dateYYYYMM = \Piwigo\Db\SqlDialect::getDateYYYYMM($this->date_field);
+        $query = <<<SQL
+            SELECT {$dateYYYYMM} as period,
+                COUNT(distinct id) as count
+            SQL;
         $query .= $this->inner_sql;
         $query .= $this->get_date_where();
         // GROUP BY also lists the exact YEAR()/MONTH() expressions ORDER BY
@@ -235,9 +237,13 @@ final class CalendarMonthly extends CalendarBase
         // by all three doesn't change the partitioning (period and
         // year+month already identify the same buckets), only satisfies the
         // SQL-mode requirement.
-        $query .= '
-    GROUP BY period, ' . \Piwigo\Db\SqlDialect::getYear($this->date_field) . ', ' . \Piwigo\Db\SqlDialect::getMonth($this->date_field) . '
-    ORDER BY ' . \Piwigo\Db\SqlDialect::getYear($this->date_field) . ' DESC, ' . \Piwigo\Db\SqlDialect::getMonth($this->date_field) . ' ASC';
+        $yearExpr = \Piwigo\Db\SqlDialect::getYear($this->date_field);
+        $monthExpr = \Piwigo\Db\SqlDialect::getMonth($this->date_field);
+        $query .= <<<SQL
+
+            GROUP BY period, {$yearExpr}, {$monthExpr}
+            ORDER BY {$yearExpr} DESC, {$monthExpr} ASC
+            SQL;
 
         $rows = $this->calendarRepository->findRows($query);
         $items = [];
@@ -311,13 +317,18 @@ final class CalendarMonthly extends CalendarBase
     {
         $page_chronology_date = $this->chronology_date;
         assert(count($page_chronology_date) === 1);
-        $query = 'SELECT ' . \Piwigo\Db\SqlDialect::getDateMMDD($this->date_field) . ' as period,
-              COUNT(DISTINCT id) as count';
+        $dateMMDD = \Piwigo\Db\SqlDialect::getDateMMDD($this->date_field);
+        $query = <<<SQL
+            SELECT {$dateMMDD} as period,
+                  COUNT(DISTINCT id) as count
+            SQL;
         $query .= $this->inner_sql;
         $query .= $this->get_date_where();
-        $query .= '
-    GROUP BY period
-    ORDER BY period ASC';
+        $query .= <<<SQL
+
+            GROUP BY period
+            ORDER BY period ASC
+            SQL;
 
         $rows = $this->calendarRepository->findRows($query);
         $items = [];
@@ -399,13 +410,18 @@ final class CalendarMonthly extends CalendarBase
         $month = $page_chronology_date[self::CMONTH] ?? null;
         $month = is_int($month) || is_string($month) ? $month : 0;
 
-        $query = 'SELECT ' . \Piwigo\Db\SqlDialect::getDayOfMonth($this->date_field) . ' as period,
-              COUNT(DISTINCT id) as count';
+        $dayOfMonth = \Piwigo\Db\SqlDialect::getDayOfMonth($this->date_field);
+        $query = <<<SQL
+            SELECT {$dayOfMonth} as period,
+                  COUNT(DISTINCT id) as count
+            SQL;
         $query .= $this->inner_sql;
         $query .= $this->get_date_where();
-        $query .= '
-    GROUP BY period
-    ORDER BY period ASC';
+        $query .= <<<SQL
+
+            GROUP BY period
+            ORDER BY period ASC
+            SQL;
 
         $items = [];
         $rows = $this->calendarRepository->findRows($query);
@@ -419,13 +435,18 @@ final class CalendarMonthly extends CalendarBase
 
         foreach ($items as $day => $data) {
             $this->chronology_date[self::CDAY] = $day;
-            $query = '
-  SELECT id, file,representative_ext,path,width,height,rotation, ' . \Piwigo\Db\SqlDialect::getDayOfWeek($this->date_field) . '-1 as dow';
+            $dayOfWeek = \Piwigo\Db\SqlDialect::getDayOfWeek($this->date_field);
+            $query = <<<SQL
+                SELECT id, file,representative_ext,path,width,height,rotation, {$dayOfWeek}-1 as dow
+                SQL;
             $query .= $this->inner_sql;
             $query .= $this->get_date_where();
-            $query .= '
-    ORDER BY ' . \Piwigo\Db\SqlDialect::DB_RANDOM_FUNCTION . '()
-    LIMIT 1';
+            $randomFunction = \Piwigo\Db\SqlDialect::DB_RANDOM_FUNCTION;
+            $query .= <<<SQL
+
+                ORDER BY {$randomFunction}()
+                LIMIT 1
+                SQL;
             unset($this->chronology_date[self::CDAY]);
 
             $row = $this->calendarRepository->findRow($query);

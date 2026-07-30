@@ -29,7 +29,10 @@ final class SqlDialectExecutor
      */
     public function fetchRecentCutoffDate(int|string $period, string $date = 'CURRENT_DATE'): string
     {
-        $value = $this->conn->fetchOne('SELECT ' . SqlDialect::getRecentPeriodExpression($period, $date));
+        $recentPeriodExpr = SqlDialect::getRecentPeriodExpression($period, $date);
+        $value = $this->conn->fetchOne(<<<SQL
+            SELECT {$recentPeriodExpr}
+            SQL);
 
         return is_string($value) ? $value : '';
     }
@@ -41,7 +44,9 @@ final class SqlDialectExecutor
      */
     public function fetchTomorrow(): string
     {
-        $value = $this->conn->fetchOne('SELECT ADDDATE(NOW(), INTERVAL 1 DAY);');
+        $value = $this->conn->fetchOne(<<<SQL
+            SELECT ADDDATE(NOW(), INTERVAL 1 DAY)
+            SQL);
 
         return is_string($value) ? $value : '';
     }
@@ -62,13 +67,14 @@ final class SqlDialectExecutor
 
         $columns = [];
         foreach ($days as $day) {
-            $columns[] = 'ADDDATE(NOW(), INTERVAL ' . $day . ' DAY) as `' . $day . '`';
+            $columns[] = "ADDDATE(NOW(), INTERVAL {$day} DAY) as `{$day}`";
         }
 
-        $row = $this->conn->fetchAssociative('
-SELECT
-  ' . implode(', ', $columns) . '
-;');
+        $columnsSql = implode(', ', $columns);
+        $row = $this->conn->fetchAssociative(<<<SQL
+            SELECT
+              {$columnsSql}
+            SQL);
 
         if ($row === false) {
             return [];

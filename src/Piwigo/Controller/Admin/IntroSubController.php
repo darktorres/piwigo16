@@ -138,11 +138,12 @@ final class IntroSubController implements AdminSubControllerInterface
         }
 
         // locked album ?
-        $query = '
-SELECT COUNT(*)
-  FROM ' . Tables::categories() . '
-  WHERE visible =\'false\'
-;';
+        $categoriesTable = Tables::categories();
+        $query = <<<SQL
+            SELECT COUNT(*)
+            FROM {$categoriesTable}
+            WHERE visible ='false'
+            SQL;
         $locked_album = $conn->fetchOne($query);
         if (is_numeric($locked_album) && $locked_album > 0) {
             $locked_album_url = $this->urlService->getRootUrl() . 'admin.php?page=cat_options&section=visible';
@@ -165,26 +166,28 @@ SELECT COUNT(*)
         ]);
 
         if (\Piwigo\Config\CurrentConfig::showNewsletterSubscription() and (bool) \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService()->getParam('show_newsletter_subscription', true)) {
-            $query = '
-  SELECT registration_date
-    FROM ' . Tables::userInfos() . '
-    WHERE registration_date IS NOT NULL
-    ORDER BY user_id ASC
-    LIMIT 1
-  ;';
+            $userInfosTable = Tables::userInfos();
+            $query = <<<SQL
+                SELECT registration_date
+                FROM {$userInfosTable}
+                WHERE registration_date IS NOT NULL
+                ORDER BY user_id ASC
+                LIMIT 1
+                SQL;
             $register_date = $conn->fetchOne($query);
 
-            $query = '
-  SELECT COUNT(*)
-    FROM ' . Tables::categories() . '
-  ;';
+            $query = <<<SQL
+                SELECT COUNT(*)
+                FROM {$categoriesTable}
+                SQL;
             $nb_cats = $conn->fetchOne($query);
             $nb_cats = is_numeric($nb_cats) ? $nb_cats : 0;
 
-            $query = '
-  SELECT COUNT(*)
-    FROM ' . Tables::images() . '
-  ;';
+            $newsletterImagesTable = Tables::images();
+            $query = <<<SQL
+                SELECT COUNT(*)
+                FROM {$newsletterImagesTable}
+                SQL;
             $nb_images = $conn->fetchOne($query);
             $nb_images = is_numeric($nb_images) ? $nb_images : 0;
 
@@ -235,10 +238,11 @@ SELECT COUNT(*)
         );
 
         if (\Piwigo\Config\CurrentConfig::activateComments()) {
-            $query = '
-SELECT COUNT(*)
-  FROM ' . Tables::comments() . '
-;';
+            $commentsTable = Tables::comments();
+            $query = <<<SQL
+                SELECT COUNT(*)
+                FROM {$commentsTable}
+                SQL;
             $nb_comments = $conn->fetchOne($query);
             $template->assign('NB_COMMENTS', $nb_comments);
         } else {
@@ -316,16 +320,17 @@ SELECT COUNT(*)
         if ($session_cache_calculated_on === null or $session_cache_calculated_on < Env::now()->getTimestamp() - 300) {
             $start_time = \Piwigo\Core\TimingHelper::getMoment();
 
-            $query = '
-  SELECT
-      DATE_FORMAT(occured_on , \'%Y-%m-%d\') AS activity_day,
-      object,
-      action,
-      COUNT(*) AS activity_counter
-    FROM `' . Tables::activity() . '`
-    WHERE occured_on >= \'' . $date_string . '\'
-    GROUP BY activity_day, object, action
-  ;';
+            $activityTable = Tables::activity();
+            $query = <<<SQL
+                SELECT
+                    DATE_FORMAT(occured_on , '%Y-%m-%d') AS activity_day,
+                    object,
+                    action,
+                    COUNT(*) AS activity_counter
+                FROM `{$activityTable}`
+                WHERE occured_on >= '{$date_string}'
+                GROUP BY activity_day, object, action
+                SQL;
             $activity_actions = $conn->fetchAllAssociative($query);
 
             foreach ($activity_actions as $action) {
@@ -493,14 +498,15 @@ SELECT COUNT(*)
         $picture_ext = \Piwigo\Config\CurrentConfig::pictureExtensions();
 
         // Select files in Image_Table
-        $query = '
-SELECT
-  COUNT(*) AS ext_counter,
-   SUBSTRING_INDEX(path,".",-1) AS ext,
-   SUM(filesize) AS filesize
-  FROM `' . Tables::images() . '`
-  GROUP BY ext
-;';
+        $imagesTable = Tables::images();
+        $query = <<<SQL
+            SELECT
+                COUNT(*) AS ext_counter,
+                SUBSTRING_INDEX(path,".",-1) AS ext,
+                SUM(filesize) AS filesize
+            FROM `{$imagesTable}`
+            GROUP BY ext
+            SQL;
 
         $file_extensions = array_column($conn->fetchAllAssociative($query), null, 'ext');
 
@@ -537,14 +543,15 @@ SELECT
         }
 
         // Select files from format table
-        $query = '
-SELECT
-    COUNT(*) AS ext_counter,
-    ext,
-    SUM(filesize) AS filesize
-  FROM `' . Tables::imageFormat() . '`
-  GROUP BY ext
-;';
+        $imageFormatTable = Tables::imageFormat();
+        $query = <<<SQL
+            SELECT
+                COUNT(*) AS ext_counter,
+                ext,
+                SUM(filesize) AS filesize
+            FROM `{$imageFormatTable}`
+            GROUP BY ext
+            SQL;
 
         $file_extensions = array_column($conn->fetchAllAssociative($query), null, 'ext');
         foreach ($file_extensions as $ext => $ext_details) {

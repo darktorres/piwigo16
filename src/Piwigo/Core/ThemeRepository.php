@@ -29,13 +29,14 @@ final class ThemeRepository extends AbstractRepository
      */
     public function findAllIdsAndNames(): array
     {
-        $rows = $this->conn->fetchAllAssociative('
-SELECT
-    id,
-    name
-  FROM ' . Tables::themes() . '
-  ORDER BY name ASC
-;');
+        $themesTable = Tables::themes();
+        $rows = $this->conn->fetchAllAssociative(<<<SQL
+            SELECT
+                id,
+                name
+            FROM {$themesTable}
+            ORDER BY name ASC
+            SQL);
 
         $themes = [];
         foreach ($rows as $row) {

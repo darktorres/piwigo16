@@ -468,41 +468,50 @@ final class CommentRepository extends EntityRepository implements CommentCounter
         $conn = $this->getEntityManager()
             ->getConnection();
 
-        $sql = '
-SELECT SQL_CALC_FOUND_ROWS com.id AS comment_id,
-   com.image_id,
-   ANY_VALUE(ic.category_id) AS category_id,
-   com.author,
-   com.author_id,
-   u.' . $userEmailColumn . ' AS user_email,
-   com.email,
-   com.date,
-   com.website_url,
-   com.content,
-   com.validated
-  FROM ' . Tables::imageCategory() . ' AS ic
-INNER JOIN ' . Tables::comments() . ' AS com
-ON ic.image_id = com.image_id
-LEFT JOIN ' . Tables::users() . ' AS u
-ON u.' . $userIdColumn . ' = com.author_id
-  WHERE ' . implode('
-AND ', $whereClauses) . '
-  GROUP BY comment_id
-  ORDER BY ' . $sortByColumn . ' ' . $sortOrder . ', comment_id ' . $sortOrder;
+        $imageCategoryTable = Tables::imageCategory();
+        $commentsTable = Tables::comments();
+        $usersTable = Tables::users();
+        $whereSql = implode('
+AND ', $whereClauses);
+
+        $sql = <<<SQL
+            SELECT SQL_CALC_FOUND_ROWS com.id AS comment_id,
+               com.image_id,
+               ANY_VALUE(ic.category_id) AS category_id,
+               com.author,
+               com.author_id,
+               u.{$userEmailColumn} AS user_email,
+               com.email,
+               com.date,
+               com.website_url,
+               com.content,
+               com.validated
+            FROM {$imageCategoryTable} AS ic
+            INNER JOIN {$commentsTable} AS com
+            ON ic.image_id = com.image_id
+            LEFT JOIN {$usersTable} AS u
+            ON u.{$userIdColumn} = com.author_id
+            WHERE {$whereSql}
+            GROUP BY comment_id
+            ORDER BY {$sortByColumn} {$sortOrder}, comment_id {$sortOrder}
+            SQL;
 
         if ($limit !== 'all') {
-            $sql .= '
-  LIMIT ' . $limit . ' OFFSET ' . $offset;
+            $sql .= <<<SQL
+
+                LIMIT {$limit} OFFSET {$offset}
+                SQL;
         }
 
-        $sql .= '
-;';
+        $sql .= ';';
 
         $rows = $conn->fetchAllAssociative($sql);
 
         // FOUND_ROWS() reflects the immediately-preceding query on the
         // same connection/session.
-        $total_raw = $conn->fetchOne('SELECT FOUND_ROWS()');
+        $total_raw = $conn->fetchOne(<<<SQL
+            SELECT FOUND_ROWS()
+            SQL);
 
         return new PaginatedResult($rows, is_numeric($total_raw) ? (int) $total_raw : null);
     }
@@ -518,16 +527,19 @@ AND ', $whereClauses) . '
      */
     public function findSummaryCounts(array $whereClauses): ?array
     {
+        $commentsTable = Tables::comments();
+        $whereSql = implode(' AND ', $whereClauses);
+
         $row = $this->getEntityManager()
             ->getConnection()
-            ->fetchAssociative('
-SELECT
-  count(*) as all_comments,
-  sum(validated = 1) as validated,
-  sum(validated = 0) as pending
-FROM ' . Tables::comments() . '
-WHERE ' . implode(' AND ', $whereClauses) . '
-;');
+            ->fetchAssociative(<<<SQL
+                SELECT
+                    count(*) as all_comments,
+                    sum(validated = 1) as validated,
+                    sum(validated = 0) as pending
+                FROM {$commentsTable}
+                WHERE {$whereSql}
+                SQL);
 
         if ($row === false) {
             return null;
@@ -557,35 +569,41 @@ WHERE ' . implode(' AND ', $whereClauses) . '
         int $offset,
         int $limit
     ): array {
+        $commentsTable = Tables::comments();
+        $imagesTable = Tables::images();
+        $usersTable = Tables::users();
+        $userInfosTable = Tables::userInfos();
+        $whereSql = implode(' AND ', $whereClauses);
+
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT
-    c.id,
-    c.image_id,
-    c.date,
-    c.author,
-    c.author_id,
-    ' . $userUsernameColumn . ' AS username,
-    ui.status,
-    c.content,
-    i.path,
-    i.representative_ext,
-    i.file,
-    i.date_available,
-    validated,
-    c.anonymous_id
-  FROM ' . Tables::comments() . ' AS c
-    INNER JOIN ' . Tables::images() . ' AS i
-      ON i.id = c.image_id
-    LEFT JOIN ' . Tables::users() . ' AS u
-      ON u.' . $userIdColumn . ' = c.author_id
-    LEFT JOIN ' . Tables::userInfos() . ' AS ui
-      ON ui.user_id = c.author_id
-  WHERE ' . implode(' AND ', $whereClauses) . '
-  ORDER BY c.date DESC, c.id DESC
-  LIMIT ' . $offset . ', ' . $limit . '
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT
+                    c.id,
+                    c.image_id,
+                    c.date,
+                    c.author,
+                    c.author_id,
+                    {$userUsernameColumn} AS username,
+                    ui.status,
+                    c.content,
+                    i.path,
+                    i.representative_ext,
+                    i.file,
+                    i.date_available,
+                    validated,
+                    c.anonymous_id
+                FROM {$commentsTable} AS c
+                    INNER JOIN {$imagesTable} AS i
+                        ON i.id = c.image_id
+                    LEFT JOIN {$usersTable} AS u
+                        ON u.{$userIdColumn} = c.author_id
+                    LEFT JOIN {$userInfosTable} AS ui
+                        ON ui.user_id = c.author_id
+                WHERE {$whereSql}
+                ORDER BY c.date DESC, c.id DESC
+                LIMIT {$offset}, {$limit}
+                SQL);
     }
 
     /**
@@ -597,15 +615,18 @@ SELECT
      */
     public function findDateRange(array $whereClauses): ?array
     {
+        $commentsTable = Tables::comments();
+        $whereSql = implode(' AND ', $whereClauses);
+
         $row = $this->getEntityManager()
             ->getConnection()
-            ->fetchAssociative('
-SELECT
-  MIN(date) AS started_at,
-  MAX(date) AS ended_at
-FROM ' . Tables::comments() . '
-WHERE ' . implode(' AND ', $whereClauses) . '
-;');
+            ->fetchAssociative(<<<SQL
+                SELECT
+                    MIN(date) AS started_at,
+                    MAX(date) AS ended_at
+                FROM {$commentsTable}
+                WHERE {$whereSql}
+                SQL);
 
         if ($row === false) {
             return null;
@@ -632,17 +653,20 @@ WHERE ' . implode(' AND ', $whereClauses) . '
      */
     public function findAuthorCounts(array $whereClauses): array
     {
+        $commentsTable = Tables::comments();
+        $whereSql = implode(' AND ', $whereClauses);
+
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT
-  ANY_VALUE(author) AS author,
-  author_id,
-  count(*) as nb_authors
-FROM ' . Tables::comments() . '
-WHERE ' . implode(' AND ', $whereClauses) . '
-GROUP BY author_id
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT
+                    ANY_VALUE(author) AS author,
+                    author_id,
+                    count(*) as nb_authors
+                FROM {$commentsTable}
+                WHERE {$whereSql}
+                GROUP BY author_id
+                SQL);
     }
 
     /**
@@ -651,9 +675,13 @@ GROUP BY author_id
      */
     public function countAll(): int
     {
+        $commentsTable = Tables::comments();
+
         $value = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne('SELECT COUNT(*) FROM ' . Tables::comments() . ';');
+            ->fetchOne(<<<SQL
+                SELECT COUNT(*) FROM {$commentsTable}
+                SQL);
 
         return is_numeric($value) ? (int) $value : 0;
     }
@@ -664,9 +692,13 @@ GROUP BY author_id
      */
     public function countUnvalidated(): int
     {
+        $commentsTable = Tables::comments();
+
         $value = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne('SELECT COUNT(*) FROM ' . Tables::comments() . ' WHERE validated=0;');
+            ->fetchOne(<<<SQL
+                SELECT COUNT(*) FROM {$commentsTable} WHERE validated=0
+                SQL);
 
         return is_numeric($value) ? (int) $value : 0;
     }

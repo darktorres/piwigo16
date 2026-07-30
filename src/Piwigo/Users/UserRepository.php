@@ -220,13 +220,15 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function findAllUsernamesById(string $idColumn, string $usernameColumn): array
     {
+        $usersTable = Tables::users();
+
         return array_column($this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT ' . $idColumn . ' AS id,
-       ' . $usernameColumn . ' AS username
-  FROM ' . Tables::users() . '
-;'), 'username', 'id');
+            ->fetchAllAssociative(<<<SQL
+                SELECT {$idColumn} AS id,
+                       {$usernameColumn} AS username
+                FROM {$usersTable}
+                SQL), 'username', 'id');
     }
 
     /**
@@ -485,20 +487,20 @@ SELECT ' . $idColumn . ' AS id,
      */
     public function fetchBasicUserRow(UserId $userId, array $userFields): array|false
     {
-        $query = 'SELECT ';
-        $isFirst = true;
+        $usersTable = Tables::users();
+
+        $columnPairs = [];
         foreach ($userFields as $pwgfield => $dbfield) {
-            if ($isFirst) {
-                $isFirst = false;
-            } else {
-                $query .= '
-     , ';
-            }
-            $query .= $dbfield . ' AS ' . $pwgfield;
+            $columnPairs[] = "{$dbfield} AS {$pwgfield}";
         }
-        $query .= '
-  FROM ' . Tables::users() . '
-  WHERE ' . $userFields['id'] . ' = \'' . $userId->value . '\'';
+        $columnsSql = implode("\n     , ", $columnPairs);
+        $idField = $userFields['id'];
+
+        $query = <<<SQL
+            SELECT {$columnsSql}
+            FROM {$usersTable}
+            WHERE {$idField} = '{$userId->value}'
+            SQL;
 
         return $this->getEntityManager()
             ->getConnection()
@@ -513,16 +515,19 @@ SELECT ' . $idColumn . ' AS id,
      */
     public function countUserInfosRows(UserId $userId): int
     {
+        $userInfosTable = Tables::userInfos();
+        $themesTable = Tables::themes();
+
         $row = $this->getEntityManager()
             ->getConnection()
-            ->fetchNumeric('
-SELECT
-    COUNT(1) AS counter
-  FROM ' . Tables::userInfos() . ' AS ui
-    LEFT JOIN ' . Tables::themes() . ' AS t ON t.id = ui.theme
-  WHERE ui.user_id = ' . $userId->value . '
-  GROUP BY ui.user_id
-;');
+            ->fetchNumeric(<<<SQL
+                SELECT
+                    COUNT(1) AS counter
+                FROM {$userInfosTable} AS ui
+                    LEFT JOIN {$themesTable} AS t ON t.id = ui.theme
+                WHERE ui.user_id = {$userId->value}
+                GROUP BY ui.user_id
+                SQL);
 
         return $row !== false && is_numeric($row[0]) ? (int) $row[0] : 0;
     }
@@ -535,16 +540,19 @@ SELECT
      */
     public function fetchUserInfosWithThemeName(UserId $userId): array|false
     {
+        $userInfosTable = Tables::userInfos();
+        $themesTable = Tables::themes();
+
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAssociative('
-SELECT
-    ui.*,
-    t.name AS theme_name
-  FROM ' . Tables::userInfos() . ' AS ui
-    LEFT JOIN ' . Tables::themes() . ' AS t ON t.id = ui.theme
-  WHERE ui.user_id = ' . $userId->value . '
-;');
+            ->fetchAssociative(<<<SQL
+                SELECT
+                    ui.*,
+                    t.name AS theme_name
+                FROM {$userInfosTable} AS ui
+                    LEFT JOIN {$themesTable} AS t ON t.id = ui.theme
+                WHERE ui.user_id = {$userId->value}
+                SQL);
     }
 
     /**
@@ -560,15 +568,18 @@ SELECT
      */
     public function findAuthorizedFavoriteImageIds(UserId $userId, string $forbiddenCondition): array
     {
+        $favoritesTable = Tables::favorites();
+        $imageCategoryTable = Tables::imageCategory();
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT DISTINCT f.image_id
-  FROM ' . Tables::favorites() . ' AS f INNER JOIN ' . Tables::imageCategory() . ' AS ic
-    ON f.image_id = ic.image_id
-  WHERE f.user_id = ' . $userId->value . '
-  ' . $forbiddenCondition . '
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT DISTINCT f.image_id
+                FROM {$favoritesTable} AS f INNER JOIN {$imageCategoryTable} AS ic
+                    ON f.image_id = ic.image_id
+                WHERE f.user_id = {$userId->value}
+                {$forbiddenCondition}
+                SQL);
 
         return self::toIntList(array_column($rows, 'image_id'));
     }
@@ -581,13 +592,15 @@ SELECT DISTINCT f.image_id
      */
     public function findFavoriteImageIds(UserId $userId): array
     {
+        $favoritesTable = Tables::favorites();
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT image_id
-  FROM ' . Tables::favorites() . '
-  WHERE user_id = ' . $userId->value . '
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT image_id
+                FROM {$favoritesTable}
+                WHERE user_id = {$userId->value}
+                SQL);
 
         return self::toIntList(array_column($rows, 'image_id'));
     }
@@ -601,13 +614,16 @@ SELECT image_id
             return;
         }
 
+        $favoritesTable = Tables::favorites();
+        $imageIdsCsv = implode(',', $imageIds);
+
         $this->getEntityManager()
             ->getConnection()
-            ->executeStatement('
-DELETE FROM ' . Tables::favorites() . '
-  WHERE image_id IN (' . implode(',', $imageIds) . ')
-    AND user_id = ' . $userId->value . '
-;');
+            ->executeStatement(<<<SQL
+                DELETE FROM {$favoritesTable}
+                WHERE image_id IN ({$imageIdsCsv})
+                    AND user_id = {$userId->value}
+                SQL);
     }
 
     /**
@@ -617,14 +633,16 @@ DELETE FROM ' . Tables::favorites() . '
      */
     public function addFavorite(UserId $userId, int $imageId): void
     {
+        $favoritesTable = Tables::favorites();
+
         $this->getEntityManager()
             ->getConnection()
-            ->executeStatement('
-INSERT INTO ' . Tables::favorites() . '
-  (image_id,user_id)
-  VALUES
-  (' . $imageId . ',' . $userId->value . ')
-;');
+            ->executeStatement(<<<SQL
+                INSERT INTO {$favoritesTable}
+                    (image_id,user_id)
+                VALUES
+                    ({$imageId},{$userId->value})
+                SQL);
     }
 
     /**
@@ -633,14 +651,16 @@ INSERT INTO ' . Tables::favorites() . '
      */
     public function isFavorite(UserId $userId, int $imageId): bool
     {
+        $favoritesTable = Tables::favorites();
+
         $value = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne('
-SELECT COUNT(*)
-  FROM ' . Tables::favorites() . '
-  WHERE image_id = ' . $imageId . '
-    AND user_id = ' . $userId->value . '
-;');
+            ->fetchOne(<<<SQL
+                SELECT COUNT(*)
+                FROM {$favoritesTable}
+                WHERE image_id = {$imageId}
+                    AND user_id = {$userId->value}
+                SQL);
 
         return is_numeric($value) && (int) $value !== 0;
     }
@@ -652,12 +672,14 @@ SELECT COUNT(*)
      */
     public function deleteAllFavorites(UserId $userId): void
     {
+        $favoritesTable = Tables::favorites();
+
         $this->getEntityManager()
             ->getConnection()
-            ->executeStatement('
-DELETE FROM ' . Tables::favorites() . '
-  WHERE user_id = ' . $userId->value . '
-;');
+            ->executeStatement(<<<SQL
+                DELETE FROM {$favoritesTable}
+                WHERE user_id = {$userId->value}
+                SQL);
     }
 
     /**
@@ -672,16 +694,19 @@ DELETE FROM ' . Tables::favorites() . '
      */
     public function findVisibleFavoriteImageIds(UserId $userId, string $permissionCondition, string $orderBySql): array
     {
+        $favoritesTable = Tables::favorites();
+        $imagesTable = Tables::images();
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchFirstColumn('
-SELECT image_id
-  FROM ' . Tables::favorites() . '
-    INNER JOIN ' . Tables::images() . ' ON image_id = id
-  WHERE user_id = ' . $userId->value . '
-' . $permissionCondition . '
-  ' . $orderBySql . '
-;');
+            ->fetchFirstColumn(<<<SQL
+                SELECT image_id
+                FROM {$favoritesTable}
+                    INNER JOIN {$imagesTable} ON image_id = id
+                WHERE user_id = {$userId->value}
+                {$permissionCondition}
+                {$orderBySql}
+                SQL);
 
         return array_map(
             static fn (mixed $v): ?string => is_scalar($v) ? (string) $v : null,
@@ -700,17 +725,20 @@ SELECT image_id
      */
     public function findVisibleFavoriteImages(UserId $userId, string $permissionCondition, string $orderBySql): array
     {
+        $favoritesTable = Tables::favorites();
+        $imagesTable = Tables::images();
+
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT
-    i.*
-  FROM ' . Tables::favorites() . '
-    INNER JOIN ' . Tables::images() . ' i ON image_id = i.id
-  WHERE user_id = ' . $userId->value . '
-' . $permissionCondition . '
-  ' . $orderBySql . '
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT
+                    i.*
+                FROM {$favoritesTable}
+                    INNER JOIN {$imagesTable} i ON image_id = i.id
+                WHERE user_id = {$userId->value}
+                {$permissionCondition}
+                {$orderBySql}
+                SQL);
     }
 
     /**
@@ -725,13 +753,16 @@ SELECT
             return;
         }
 
+        $userInfosTable = Tables::userInfos();
+        $userIdsCsv = implode(',', array_map(static fn (UserId $id): string => (string) $id->value, $userIds));
+
         $this->getEntityManager()
             ->getConnection()
-            ->executeStatement('
-UPDATE ' . Tables::userInfos() . ' SET
-    status = "' . $status . '"
-  WHERE user_id IN(' . implode(',', array_map(static fn (UserId $id): string => (string) $id->value, $userIds)) . ')
-;');
+            ->executeStatement(<<<SQL
+                UPDATE {$userInfosTable} SET
+                    status = "{$status}"
+                WHERE user_id IN({$userIdsCsv})
+                SQL);
     }
 
     /**
@@ -750,20 +781,20 @@ UPDATE ' . Tables::userInfos() . ' SET
             return;
         }
 
-        $query = 'UPDATE ' . Tables::userInfos() . ' SET ';
-        $isFirst = true;
+        $userInfosTable = Tables::userInfos();
+
+        $setPairs = [];
         foreach ($updates as $field => $value) {
-            if ($isFirst) {
-                $isFirst = false;
-            } else {
-                $query .= ', ';
-            }
             assert(is_scalar($value));
-            $query .= $field . ' = "' . (string) $value . '"';
+            $setPairs[] = $field . ' = "' . (string) $value . '"';
         }
-        $query .= '
-  WHERE user_id IN(' . implode(',', array_map(static fn (UserId $id): string => (string) $id->value, $userIds)) . ')
-;';
+        $setSql = implode(', ', $setPairs);
+        $userIdsCsv = implode(',', array_map(static fn (UserId $id): string => (string) $id->value, $userIds));
+
+        $query = <<<SQL
+            UPDATE {$userInfosTable} SET {$setSql}
+            WHERE user_id IN({$userIdsCsv})
+            SQL;
 
         $this->getEntityManager()
             ->getConnection()
@@ -777,15 +808,17 @@ UPDATE ' . Tables::userInfos() . ' SET
      */
     public function findEarliestRegistrationDate(): ?string
     {
+        $userInfosTable = Tables::userInfos();
+
         $value = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne('
-SELECT registration_date
-  FROM ' . Tables::userInfos() . '
-  WHERE registration_date IS NOT NULL
-  ORDER BY user_id ASC
-  LIMIT 1
-;');
+            ->fetchOne(<<<SQL
+                SELECT registration_date
+                FROM {$userInfosTable}
+                WHERE registration_date IS NOT NULL
+                ORDER BY user_id ASC
+                LIMIT 1
+                SQL);
 
         return is_string($value) ? $value : null;
     }
@@ -798,15 +831,17 @@ SELECT registration_date
      */
     public function findDistinctRegistrationYearMonths(): array
     {
+        $userInfosTable = Tables::userInfos();
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT DISTINCT
-      month(registration_date) as registration_month,
-      year(registration_date) as registration_year
-FROM ' . Tables::userInfos() . '
-ORDER BY registration_year, registration_month
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT DISTINCT
+                    month(registration_date) as registration_month,
+                    year(registration_date) as registration_year
+                FROM {$userInfosTable}
+                ORDER BY registration_year, registration_month
+                SQL);
 
         return array_map(
             static function (array $row): string {
@@ -827,16 +862,18 @@ ORDER BY registration_year, registration_month
      */
     public function findUserCountsByStatus(int $excludeUserId): array
     {
+        $userInfosTable = Tables::userInfos();
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT
-    status,
-    COUNT(*) AS nb_users_of
-  FROM ' . Tables::userInfos() . '
-  WHERE user_id != ' . $excludeUserId . '
-  GROUP BY status
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT
+                    status,
+                    COUNT(*) AS nb_users_of
+                FROM {$userInfosTable}
+                WHERE user_id != {$excludeUserId}
+                GROUP BY status
+                SQL);
 
         $byStatus = [];
         foreach ($rows as $row) {
@@ -859,16 +896,18 @@ SELECT
      */
     public function findUserCountsByLevel(int $excludeUserId): array
     {
+        $userInfosTable = Tables::userInfos();
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT
-    level,
-    COUNT(*) AS nb_users_of
-  FROM ' . Tables::userInfos() . '
-  WHERE user_id != ' . $excludeUserId . '
-  GROUP BY level
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT
+                    level,
+                    COUNT(*) AS nb_users_of
+                FROM {$userInfosTable}
+                WHERE user_id != {$excludeUserId}
+                GROUP BY level
+                SQL);
 
         $byLevel = [];
         foreach ($rows as $row) {
@@ -913,8 +952,9 @@ SELECT
         $conn = $this->getEntityManager()
             ->getConnection();
 
-        $sql = '
-SELECT DISTINCT ' . ($includeTotalCount ? 'SQL_CALC_FOUND_ROWS ' : '');
+        $usersTable = Tables::users();
+        $userInfosTable = Tables::userInfos();
+        $userGroupTable = Tables::userGroup();
 
         $columnPairs = [];
         foreach ($displayColumns as $field => $alias) {
@@ -923,23 +963,29 @@ SELECT DISTINCT ' . ($includeTotalCount ? 'SQL_CALC_FOUND_ROWS ' : '');
         if ($includeLastVisitFromHistory) {
             $columnPairs[] = 'ui.last_visit_from_history AS last_visit_from_history';
         }
-        $sql .= implode(', ', $columnPairs);
+        $columnsSql = implode(', ', $columnPairs);
+        $whereSql = implode(' AND ', $whereClauses);
+        $distinctPrefix = $includeTotalCount ? 'SQL_CALC_FOUND_ROWS ' : '';
 
-        $sql .= '
-  FROM ' . Tables::users() . ' AS u
-    INNER JOIN ' . Tables::userInfos() . ' AS ui
-      ON u.' . $idColumn . ' = ui.user_id
-    LEFT JOIN ' . Tables::userGroup() . ' AS ug
-      ON u.' . $idColumn . ' = ug.user_id
-  WHERE
-    ' . implode(' AND ', $whereClauses) . '
-  ORDER BY ' . $orderBy;
+        $sql = <<<SQL
+            SELECT DISTINCT {$distinctPrefix}{$columnsSql}
+            FROM {$usersTable} AS u
+                INNER JOIN {$userInfosTable} AS ui
+                    ON u.{$idColumn} = ui.user_id
+                LEFT JOIN {$userGroupTable} AS ug
+                    ON u.{$idColumn} = ug.user_id
+            WHERE
+                {$whereSql}
+            ORDER BY {$orderBy}
+            SQL;
 
         if ($limit !== null) {
-            $sql .= '
-    LIMIT ' . $limit . '
-    OFFSET ' . $offset . ';
-    ';
+            $sql .= <<<SQL
+
+                    LIMIT {$limit}
+                    OFFSET {$offset};
+
+                SQL;
         }
 
         $sql .= ';';
@@ -948,7 +994,9 @@ SELECT DISTINCT ' . ($includeTotalCount ? 'SQL_CALC_FOUND_ROWS ' : '');
 
         $total = null;
         if ($includeTotalCount) {
-            $totalRaw = $conn->fetchOne('SELECT FOUND_ROWS();');
+            $totalRaw = $conn->fetchOne(<<<SQL
+                SELECT FOUND_ROWS();
+                SQL);
             $total = is_numeric($totalRaw) ? (int) $totalRaw : 0;
         }
 
@@ -964,17 +1012,20 @@ SELECT DISTINCT ' . ($includeTotalCount ? 'SQL_CALC_FOUND_ROWS ' : '');
      */
     public function findUserIdsExcludingStatus(string $excludedStatus): array
     {
+        $userInfosTable = Tables::userInfos();
+
         return array_map(
             static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
             $this->getEntityManager()
                 ->getConnection()
-                ->executeQuery('
-SELECT user_id
-  FROM ' . Tables::userInfos() . '
-  WHERE status != :status
-;', [
-                    'status' => $excludedStatus,
-                ])
+                ->executeQuery(<<<SQL
+                    SELECT user_id
+                    FROM {$userInfosTable}
+                    WHERE status != :status
+                    SQL
+                    , [
+                        'status' => $excludedStatus,
+                    ])
                 ->fetchFirstColumn()
         );
     }
@@ -994,19 +1045,23 @@ SELECT user_id
             return [];
         }
 
+        $userInfosTable = Tables::userInfos();
+        $usersTable = Tables::users();
+        $userIdsCsv = implode(',', $userIds);
+
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT
-    ui.user_id,
-    ui.status,
-    ui.language,
-    u.' . $emailColumn . ' AS email,
-    u.' . $usernameColumn . ' AS username
-  FROM ' . Tables::userInfos() . ' AS ui
-    JOIN ' . Tables::users() . ' AS u ON u.' . $idColumn . ' = ui.user_id
-  WHERE ui.user_id IN (' . implode(',', $userIds) . ')
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT
+                    ui.user_id,
+                    ui.status,
+                    ui.language,
+                    u.{$emailColumn} AS email,
+                    u.{$usernameColumn} AS username
+                FROM {$userInfosTable} AS ui
+                    JOIN {$usersTable} AS u ON u.{$idColumn} = ui.user_id
+                WHERE ui.user_id IN ({$userIdsCsv})
+                SQL);
     }
 
     /**
@@ -1025,15 +1080,20 @@ SELECT
             return [];
         }
 
+        $usersTable = Tables::users();
+        $usernameField = $userFields['username'];
+        $idField = $userFields['id'];
+        $userIdsCsv = implode(',', $userIds);
+
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT
-    ' . $userFields['username'] . ' AS username,
-    ' . $userFields['id'] . ' AS id
-  FROM ' . Tables::users() . '
-  WHERE ' . $userFields['id'] . ' IN ( ' . implode(',', $userIds) . ' )
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT
+                    {$usernameField} AS username,
+                    {$idField} AS id
+                FROM {$usersTable}
+                WHERE {$idField} IN ( {$userIdsCsv} )
+                SQL);
     }
 
     /**
@@ -1043,14 +1103,16 @@ SELECT
      */
     public function findRegistrationDateById(int $userId): ?string
     {
+        $userInfosTable = Tables::userInfos();
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT
-    registration_date
-  FROM ' . Tables::userInfos() . '
-  WHERE user_id = ' . $userId . '
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT
+                    registration_date
+                FROM {$userInfosTable}
+                WHERE user_id = {$userId}
+                SQL);
 
         if ($rows === []) {
             return null;
@@ -1069,14 +1131,16 @@ SELECT
      */
     public function findMinRegistrationDateAfter(string $afterDate): ?string
     {
+        $userInfosTable = Tables::userInfos();
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT
-    MIN(registration_date) AS min_registration_date
-  FROM ' . Tables::userInfos() . '
-  WHERE registration_date > \'' . $afterDate . '\'
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT
+                    MIN(registration_date) AS min_registration_date
+                FROM {$userInfosTable}
+                WHERE registration_date > '{$afterDate}'
+                SQL);
 
         if ($rows === []) {
             return null;
@@ -1093,12 +1157,14 @@ SELECT
      */
     public function countAllUsers(): int
     {
+        $usersTable = Tables::users();
+
         $value = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne('
-SELECT COUNT(*)
-  FROM ' . Tables::users() . '
-;');
+            ->fetchOne(<<<SQL
+                SELECT COUNT(*)
+                FROM {$usersTable}
+                SQL);
 
         return is_numeric($value) ? (int) $value : 0;
     }
@@ -1119,15 +1185,19 @@ SELECT COUNT(*)
             return [];
         }
 
+        $usersTable = Tables::users();
+        $userInfosTable = Tables::userInfos();
+        $idsCsv = implode(',', $ids);
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT u.' . $idColumn . ' AS id, ui.status
-  FROM ' . Tables::users() . ' AS u
-    LEFT JOIN ' . Tables::userInfos() . ' AS ui
-      ON u.' . $idColumn . ' = ui.user_id
-  WHERE u.' . $idColumn . ' IN (' . implode(',', $ids) . ')
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT u.{$idColumn} AS id, ui.status
+                FROM {$usersTable} AS u
+                    LEFT JOIN {$userInfosTable} AS ui
+                        ON u.{$idColumn} = ui.user_id
+                WHERE u.{$idColumn} IN ({$idsCsv})
+                SQL);
 
         $byId = [];
         foreach ($rows as $row) {
@@ -1151,17 +1221,19 @@ SELECT u.' . $idColumn . ' AS id, ui.status
      */
     public function findPendingActivationKeyRows(): array
     {
+        $userInfosTable = Tables::userInfos();
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT
-    user_id,
-    status,
-    activation_key
-  FROM ' . Tables::userInfos() . '
-  WHERE activation_key IS NOT NULL
-    AND activation_key_expire > NOW()
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT
+                    user_id,
+                    status,
+                    activation_key
+                FROM {$userInfosTable}
+                WHERE activation_key IS NOT NULL
+                    AND activation_key_expire > NOW()
+                SQL);
 
         return array_map(\Piwigo\Users\Projection\ActivationKeyRow::fromRow(...), $rows);
     }

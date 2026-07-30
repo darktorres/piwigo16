@@ -40,16 +40,18 @@ final class LoungeMaintenance
         }
 
         // is the oldest photo in the lounge older than lounge maximum waiting time?
-        $query = '
-SELECT
-    image_id,
-    date_available,
-    NOW() AS dbnow
-  FROM ' . Tables::lounge() . '
-    JOIN ' . Tables::images() . ' ON image_id = id
-  ORDER BY image_id ASC
-  LIMIT 1
-;';
+        $loungeTable = Tables::lounge();
+        $imagesTable = Tables::images();
+        $query = <<<SQL
+            SELECT
+                image_id,
+                date_available,
+                NOW() AS dbnow
+            FROM {$loungeTable}
+                JOIN {$imagesTable} ON image_id = id
+            ORDER BY image_id ASC
+            LIMIT 1
+            SQL;
         $voyagers = \Piwigo\Db\DbConnection::build()->fetchAllAssociative($query);
         if (count($voyagers) === 0) {
             return false;

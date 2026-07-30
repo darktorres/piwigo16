@@ -106,12 +106,14 @@ final class PermalinksSubController implements AdminSubControllerInterface
             ]
         );
 
-        $query = '
-SELECT
-  id, permalink,
-  CONCAT(id, " - ", name, IF(permalink IS NULL, "", " &radic;") ) AS name,
-  uppercats, global_rank
-FROM ' . Tables::categories();
+        $categoriesTable = Tables::categories();
+        $query = <<<SQL
+            SELECT
+              id, permalink,
+              CONCAT(id, " - ", name, IF(permalink IS NULL, "", " &radic;") ) AS name,
+              uppercats, global_rank
+            FROM {$categoriesTable}
+            SQL;
 
         \Piwigo\Bootstrap\CoreDomainAccessor::categoryService()->displaySelectCatWrapper($query, $selected_cat, 'categories', $htmlRenderer, $template, false);
 

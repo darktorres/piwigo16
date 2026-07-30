@@ -20,8 +20,12 @@ final class NotificationByMailRepository extends AbstractRepository
 {
     public function countByCheckKey(string $checkKey): int
     {
+        $userMailNotificationTable = Tables::userMailNotification();
         $count = $this->conn->executeQuery(
-            'SELECT COUNT(*) FROM ' . Tables::userMailNotification() . ' WHERE check_key = ?',
+            <<<SQL
+            SELECT COUNT(*) FROM {$userMailNotificationTable} WHERE check_key = ?
+            SQL
+            ,
             [$checkKey]
         )->fetchOne();
 
@@ -49,26 +53,34 @@ final class NotificationByMailRepository extends AbstractRepository
         string $emailField,
         string $idField
     ): array {
-        $sql = 'SELECT N.user_id, N.check_key, U.' . $usernameField . ' AS username, U.' . $emailField . ' AS mail_address,'
-            . ' N.enabled, N.last_send, UI.status'
-            . ' FROM ' . Tables::userMailNotification() . ' AS N'
-            . ' JOIN ' . Tables::users() . ' AS U ON N.user_id = U.' . $idField
-            . ' JOIN ' . Tables::userInfos() . ' AS UI ON UI.user_id = N.user_id'
-            . ' WHERE 1=1';
+        $userMailNotificationTable = Tables::userMailNotification();
+        $usersTable = Tables::users();
+        $userInfosTable = Tables::userInfos();
+
+        $sql = <<<SQL
+            SELECT N.user_id, N.check_key, U.{$usernameField} AS username, U.{$emailField} AS mail_address, N.enabled, N.last_send, UI.status FROM {$userMailNotificationTable} AS N JOIN {$usersTable} AS U ON N.user_id = U.{$idField} JOIN {$userInfosTable} AS UI ON UI.user_id = N.user_id WHERE 1=1
+            SQL;
         $params = [];
 
         if ($action === 'send') {
-            $sql .= ' AND N.enabled = ? AND U.' . $emailField . ' IS NOT NULL';
+            $sql .= <<<SQL
+                 AND N.enabled = ? AND U.{$emailField} IS NOT NULL
+                SQL;
             $params[] = 1;
         }
 
         if ($checkKeyList !== []) {
-            $sql .= ' AND N.check_key IN (' . implode(',', array_fill(0, count($checkKeyList), '?')) . ')';
+            $placeholders = implode(',', array_fill(0, count($checkKeyList), '?'));
+            $sql .= <<<SQL
+                 AND N.check_key IN ({$placeholders})
+                SQL;
             array_push($params, ...$checkKeyList);
         }
 
         if ($enabledFilterValue !== '') {
-            $sql .= ' AND N.enabled = ?';
+            $sql .= <<<SQL
+                 AND N.enabled = ?
+                SQL;
             $params[] = $enabledFilterValue;
         }
 
@@ -89,14 +101,15 @@ final class NotificationByMailRepository extends AbstractRepository
      */
     public function nullifyBlankEmails(string $emailColumn): void
     {
-        $this->conn->executeStatement('
-UPDATE
-  ' . Tables::users() . '
-SET
-  ' . $emailColumn . ' = NULL
-WHERE
-  TRIM(' . $emailColumn . ') = \'\'
-;');
+        $usersTable = Tables::users();
+        $this->conn->executeStatement(<<<SQL
+            UPDATE
+              {$usersTable}
+            SET
+              {$emailColumn} = NULL
+            WHERE
+              TRIM({$emailColumn}) = ''
+            SQL);
     }
 
     /**
@@ -109,19 +122,22 @@ WHERE
      */
     public function findUsersWithoutNotificationRow(string $idColumn, string $usernameColumn, string $emailColumn): array
     {
-        return $this->conn->fetchAllAssociative('
-SELECT
-  u.' . $idColumn . ' AS user_id,
-  u.' . $usernameColumn . ' AS username,
-  u.' . $emailColumn . ' AS mail_address
-FROM
-  ' . Tables::users() . ' AS u LEFT JOIN ' . Tables::userMailNotification() . ' AS m ON u.' . $idColumn . ' = m.user_id
-WHERE
-  u.' . $emailColumn . ' IS NOT NULL AND
-  m.user_id IS NULL
-ORDER BY
-  user_id
-;');
+        $usersTable = Tables::users();
+        $userMailNotificationTable = Tables::userMailNotification();
+
+        return $this->conn->fetchAllAssociative(<<<SQL
+            SELECT
+              u.{$idColumn} AS user_id,
+              u.{$usernameColumn} AS username,
+              u.{$emailColumn} AS mail_address
+            FROM
+              {$usersTable} AS u LEFT JOIN {$userMailNotificationTable} AS m ON u.{$idColumn} = m.user_id
+            WHERE
+              u.{$emailColumn} IS NOT NULL AND
+              m.user_id IS NULL
+            ORDER BY
+              user_id
+            SQL);
     }
 
     /**
@@ -138,6 +154,10 @@ ORDER BY
             return;
         }
 
-        $this->conn->executeStatement('DELETE FROM ' . Tables::userMailNotification() . ' WHERE check_key IN (' . implode(',', $quotedCheckKeyList) . ')');
+        $userMailNotificationTable = Tables::userMailNotification();
+        $quotedCheckKeysCsv = implode(',', $quotedCheckKeyList);
+        $this->conn->executeStatement(<<<SQL
+            DELETE FROM {$userMailNotificationTable} WHERE check_key IN ({$quotedCheckKeysCsv})
+            SQL);
     }
 }

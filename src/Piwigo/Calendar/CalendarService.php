@@ -42,10 +42,12 @@ final readonly class CalendarService
      */
     public function buildInnerSql(string $section, bool $hasCategoryContext, int|string|null $categoryId, string $forbiddenCategories, array $items): ?string
     {
-        $sql = ' FROM ' . Tables::images();
+        $imagesTable = Tables::images();
+        $sql = " FROM {$imagesTable}";
 
         if ($section === 'categories') {
-            $sql .= "\nINNER JOIN " . Tables::imageCategory() . ' ON id = image_id';
+            $imageCategoryTable = Tables::imageCategory();
+            $sql .= "\nINNER JOIN {$imageCategoryTable} ON id = image_id";
 
             if ($hasCategoryContext) {
                 $subIds = $categoryId === null ? [] : array_diff($this->categoryService->getSubcatIds([$categoryId]), explode(',', $forbiddenCategories));
@@ -53,16 +55,19 @@ final readonly class CalendarService
                     return null;
                 }
 
-                $sql .= "\nWHERE category_id IN (" . implode(',', $subIds) . ')';
-                $sql .= "\n    " . $this->permissionService->getSqlConditionFandF([
+                $subIdsCsv = implode(',', $subIds);
+                $sql .= "\nWHERE category_id IN ({$subIdsCsv})";
+                $permissionCondition = $this->permissionService->getSqlConditionFandF([
                     'visible_images' => 'id',
                 ], 'AND', false);
+                $sql .= "\n    {$permissionCondition}";
             } else {
-                $sql .= "\n    " . $this->permissionService->getSqlConditionFandF([
+                $permissionCondition = $this->permissionService->getSqlConditionFandF([
                     'forbidden_categories' => 'category_id',
                     'visible_categories' => 'category_id',
                     'visible_images' => 'id',
                 ], 'WHERE', true);
+                $sql .= "\n    {$permissionCondition}";
             }
 
             return $sql;
@@ -72,7 +77,8 @@ final readonly class CalendarService
             return null;
         }
 
-        $sql .= "\nWHERE id IN (" . implode(',', $items) . ')';
+        $itemsCsv = implode(',', $items);
+        $sql .= "\nWHERE id IN ({$itemsCsv})";
 
         return $sql;
     }

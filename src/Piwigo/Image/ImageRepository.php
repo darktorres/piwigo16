@@ -59,10 +59,14 @@ final class ImageRepository extends EntityRepository
      */
     public function incrementVisitCounter(int $imageId): void
     {
+        $imagesTable = Tables::images();
         $em = $this->getEntityManager();
         $em->getConnection()
             ->executeStatement(
-                'UPDATE ' . Tables::images() . ' SET hit = hit + 1, lastmodified = lastmodified WHERE id = ?',
+                <<<SQL
+                UPDATE {$imagesTable} SET hit = hit + 1, lastmodified = lastmodified WHERE id = ?
+                SQL
+                ,
                 [$imageId]
             );
         $em->clear();
@@ -205,16 +209,19 @@ final class ImageRepository extends EntityRepository
      */
     public function findPathsForFileDeletion(array $imageIds): array
     {
+        $imagesTable = Tables::images();
+        $idsCsv = implode(',', $imageIds);
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->executeQuery('
-SELECT
-    id,
-    path,
-    representative_ext
-  FROM ' . Tables::images() . '
-  WHERE id IN (' . implode(',', $imageIds) . ')
-;')->fetchAllAssociative();
+            ->executeQuery(<<<SQL
+                SELECT
+                    id,
+                    path,
+                    representative_ext
+                FROM {$imagesTable}
+                WHERE id IN ({$idsCsv})
+                SQL)->fetchAllAssociative();
 
         return array_map(
             static fn (array $row): array => [
@@ -240,13 +247,16 @@ SELECT
             return [];
         }
 
+        $imagesTable = Tables::images();
+        $idsCsv = implode(',', $imageIds);
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->executeQuery('
-SELECT id, path, representative_ext, level
-  FROM ' . Tables::images() . '
-  WHERE id IN (' . implode(',', $imageIds) . ')
-;')->fetchAllAssociative();
+            ->executeQuery(<<<SQL
+                SELECT id, path, representative_ext, level
+                FROM {$imagesTable}
+                WHERE id IN ({$idsCsv})
+                SQL)->fetchAllAssociative();
 
         return array_map(
             static fn (array $row): array => [
@@ -271,13 +281,16 @@ SELECT id, path, representative_ext, level
      */
     public function updateLevelForImages(array $imageIds, int $level): int
     {
+        $imagesTable = Tables::images();
+        $idsCsv = implode(',', $imageIds);
+
         return (int) $this->getEntityManager()
             ->getConnection()
-            ->executeStatement('
-UPDATE ' . Tables::images() . '
-  SET level=' . $level . '
-  WHERE id IN (' . implode(',', $imageIds) . ')
-;');
+            ->executeStatement(<<<SQL
+                UPDATE {$imagesTable}
+                SET level={$level}
+                WHERE id IN ({$idsCsv})
+                SQL);
     }
 
     /**
@@ -302,17 +315,17 @@ UPDATE ' . Tables::images() . '
             ->getConnection();
 
         foreach ([Tables::comments(), Tables::imageCategory(), Tables::imageFormat(), Tables::imageTag(), Tables::favorites()] as $table) {
-            $conn->executeStatement('
-DELETE FROM ' . $table . '
-  WHERE image_id IN (' . $idsStr . ')
-;');
+            $conn->executeStatement(<<<SQL
+                DELETE FROM {$table}
+                WHERE image_id IN ({$idsStr})
+                SQL);
         }
 
         foreach ([Tables::rate(), Tables::caddie()] as $table) {
-            $conn->executeStatement('
-DELETE FROM ' . $table . '
-  WHERE element_id IN (' . $idsStr . ')
-;');
+            $conn->executeStatement(<<<SQL
+                DELETE FROM {$table}
+                WHERE element_id IN ({$idsStr})
+                SQL);
         }
 
         $this->getEntityManager()
@@ -347,13 +360,14 @@ DELETE FROM ' . $table . '
     public function findRepresentedCategoryIds(array $ids): array
     {
         $idsStr = wordwrap(implode(', ', $ids), 80, "\n");
+        $categoriesTable = Tables::categories();
 
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery('
-SELECT
-    id
-  FROM ' . Tables::categories() . '
-  WHERE representative_picture_id IN (' . $idsStr . ')
-;')->fetchFirstColumn());
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery(<<<SQL
+            SELECT
+                id
+            FROM {$categoriesTable}
+            WHERE representative_picture_id IN ({$idsStr})
+            SQL)->fetchFirstColumn());
     }
 
     /**
@@ -361,15 +375,17 @@ SELECT
      */
     public function findLoungeRows(): array
     {
+        $loungeTable = Tables::lounge();
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->executeQuery('
-SELECT
-    image_id,
-    category_id
-  FROM ' . Tables::lounge() . '
-  ORDER BY category_id ASC, image_id ASC
-;')->fetchAllAssociative();
+            ->executeQuery(<<<SQL
+                SELECT
+                    image_id,
+                    category_id
+                FROM {$loungeTable}
+                ORDER BY category_id ASC, image_id ASC
+                SQL)->fetchAllAssociative();
 
         return array_map(
             static fn (array $row): array => [
@@ -387,24 +403,31 @@ SELECT
      */
     public function countLoungeImagesPendingForCategory(int $categoryId): int
     {
+        $loungeTable = Tables::lounge();
+        $imageCategoryTable = Tables::imageCategory();
+
         $value = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne('
-SELECT COUNT(*)
-  FROM ' . Tables::lounge() . '
-  WHERE category_id = ' . $categoryId . '
-  AND image_id NOT IN (SELECT image_id FROM ' . Tables::imageCategory() . ')
-;');
+            ->fetchOne(<<<SQL
+                SELECT COUNT(*)
+                FROM {$loungeTable}
+                WHERE category_id = {$categoryId}
+                AND image_id NOT IN (SELECT image_id FROM {$imageCategoryTable})
+                SQL);
 
         return is_numeric($value) ? (int) $value : 0;
     }
 
     public function deleteLoungeUpTo(int $maxImageId): void
     {
+        $loungeTable = Tables::lounge();
         $this->getEntityManager()
             ->getConnection()
             ->executeStatement(
-                'DELETE FROM ' . Tables::lounge() . ' WHERE image_id <= ?',
+                <<<SQL
+                DELETE FROM {$loungeTable} WHERE image_id <= ?
+                SQL
+                ,
                 [$maxImageId]
             );
     }
@@ -430,10 +453,14 @@ SELECT COUNT(*)
         $encodedLockValue = json_encode($lockValue);
         assert($encodedLockValue !== false);
 
+        $configTable = Tables::config();
         $em = $this->getEntityManager();
         $em->getConnection()
             ->executeStatement(
-                'INSERT IGNORE INTO ' . Tables::config() . ' SET param = ?, value = ?',
+                <<<SQL
+                INSERT IGNORE INTO {$configTable} SET param = ?, value = ?
+                SQL
+                ,
                 ['empty_lounge_running', $encodedLockValue]
             );
         $em->clear();
@@ -441,10 +468,13 @@ SELECT COUNT(*)
 
     public function findLoungeLockValue(): ?string
     {
+        $configTable = Tables::config();
         $value = $this->getEntityManager()
             ->getConnection()
             ->executeQuery(
-                'SELECT value FROM ' . Tables::config() . ' WHERE param = "empty_lounge_running"'
+                <<<SQL
+                SELECT value FROM {$configTable} WHERE param = "empty_lounge_running"
+                SQL
             )->fetchOne();
 
         $decoded = is_string($value) ? json_decode($value, true) : null;
@@ -460,14 +490,18 @@ SELECT COUNT(*)
     public function findExistingAssociations(array $images, array $categories): array
     {
         $existing = [];
-        foreach ($this->getEntityManager()->getConnection()->executeQuery('
-SELECT
-    image_id,
-    category_id
-  FROM ' . Tables::imageCategory() . '
-  WHERE image_id IN (' . implode(',', $images) . ')
-    AND category_id IN (' . implode(',', $categories) . ')
-;')->fetchAllAssociative() as $row) {
+        $imageCategoryTable = Tables::imageCategory();
+        $imagesCsv = implode(',', $images);
+        $categoriesCsv = implode(',', $categories);
+
+        foreach ($this->getEntityManager()->getConnection()->executeQuery(<<<SQL
+            SELECT
+                image_id,
+                category_id
+            FROM {$imageCategoryTable}
+            WHERE image_id IN ({$imagesCsv})
+                AND category_id IN ({$categoriesCsv})
+            SQL)->fetchAllAssociative() as $row) {
             $categoryId = $row['category_id'];
             $imageId = $row['image_id'];
             assert(is_numeric($categoryId) && is_numeric($imageId));
@@ -483,17 +517,20 @@ SELECT
      */
     public function findMaxRanksByCategory(array $categories): array
     {
+        $imageCategoryTable = Tables::imageCategory();
+        $categoriesCsv = implode(',', $categories);
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->executeQuery('
-SELECT
-    category_id,
-    MAX(`rank`) AS max_rank
-  FROM ' . Tables::imageCategory() . '
-  WHERE `rank` IS NOT NULL
-    AND category_id IN (' . implode(',', $categories) . ')
-  GROUP BY category_id
-;')->fetchAllKeyValue();
+            ->executeQuery(<<<SQL
+                SELECT
+                    category_id,
+                    MAX(`rank`) AS max_rank
+                FROM {$imageCategoryTable}
+                WHERE `rank` IS NOT NULL
+                    AND category_id IN ({$categoriesCsv})
+                GROUP BY category_id
+                SQL)->fetchAllKeyValue();
 
         return array_map(static fn (mixed $rank): int => is_numeric($rank) ? (int) $rank : 0, $rows);
     }
@@ -511,17 +548,21 @@ SELECT
      */
     public function findDissociableImageIds(array $images, int|string $category): array
     {
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery('
-SELECT id
-  FROM ' . Tables::imageCategory() . '
-    INNER JOIN ' . Tables::images() . ' ON image_id = id
-  WHERE category_id =' . $category . '
-    AND id IN (' . implode(',', $images) . ')
-    AND (
-      category_id != storage_category_id
-      OR storage_category_id IS NULL
-    )
-;')->fetchFirstColumn());
+        $imageCategoryTable = Tables::imageCategory();
+        $imagesTable = Tables::images();
+        $imagesCsv = implode(',', $images);
+
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery(<<<SQL
+            SELECT id
+            FROM {$imageCategoryTable}
+                INNER JOIN {$imagesTable} ON image_id = id
+            WHERE category_id = {$category}
+                AND id IN ({$imagesCsv})
+                AND (
+                    category_id != storage_category_id
+                    OR storage_category_id IS NULL
+                )
+            SQL)->fetchFirstColumn());
     }
 
     /**
@@ -529,14 +570,17 @@ SELECT id
      */
     public function deleteImageCategoryLinks(array $imageIds, int|string $category): void
     {
+        $imageCategoryTable = Tables::imageCategory();
+        $imagesCsv = implode(',', $imageIds);
+
         $em = $this->getEntityManager();
         $em->getConnection()
-            ->executeStatement('
-DELETE
-  FROM ' . Tables::imageCategory() . '
-  WHERE category_id = ' . $category . '
-    AND image_id IN (' . implode(',', $imageIds) . ')
-');
+            ->executeStatement(<<<SQL
+                DELETE
+                FROM {$imageCategoryTable}
+                WHERE category_id = {$category}
+                    AND image_id IN ({$imagesCsv})
+                SQL);
         $em->clear();
     }
 
@@ -556,14 +600,17 @@ DELETE
             return;
         }
 
+        $imageCategoryTable = Tables::imageCategory();
+        $categoryIdsCsv = implode(',', $categoryIds);
+
         $this->getEntityManager()
             ->getConnection()
-            ->executeStatement('
-DELETE
-  FROM ' . Tables::imageCategory() . '
-  WHERE image_id = ' . $imageId . '
-    AND category_id IN (' . implode(',', $categoryIds) . ')
-;');
+            ->executeStatement(<<<SQL
+                DELETE
+                FROM {$imageCategoryTable}
+                WHERE image_id = {$imageId}
+                    AND category_id IN ({$categoryIdsCsv})
+                SQL);
     }
 
     /**
@@ -577,22 +624,29 @@ DELETE
      */
     public function deleteNonStorageCategoryLinks(array $images, array $categories): void
     {
-        $query = '
-DELETE ' . Tables::imageCategory() . '.*
-  FROM ' . Tables::imageCategory() . '
-    JOIN ' . Tables::images() . ' ON image_id=id
-  WHERE id IN (' . implode(',', $images) . ')
-';
+        $imageCategoryTable = Tables::imageCategory();
+        $imagesTable = Tables::images();
+        $imagesCsv = implode(',', $images);
+
+        $query = <<<SQL
+            DELETE {$imageCategoryTable}.*
+            FROM {$imageCategoryTable}
+                JOIN {$imagesTable} ON image_id=id
+            WHERE id IN ({$imagesCsv})
+            SQL;
 
         if ($categories !== []) {
-            $query .= '
-    AND category_id NOT IN (' . implode(',', $categories) . ')
-';
+            $categoriesCsv = implode(',', $categories);
+            $query .= <<<SQL
+
+                AND category_id NOT IN ({$categoriesCsv})
+                SQL;
         }
 
-        $query .= '
-    AND (storage_category_id IS NULL OR storage_category_id != category_id)
-;';
+        $query .= <<<SQL
+
+            AND (storage_category_id IS NULL OR storage_category_id != category_id)
+            SQL;
 
         $em = $this->getEntityManager();
         $em->getConnection()
@@ -605,11 +659,13 @@ DELETE ' . Tables::imageCategory() . '.*
      */
     public function findImageIdsWithoutMd5sum(): array
     {
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery('
-SELECT id
-  FROM ' . Tables::images() . '
-  WHERE md5sum is null
-;')->fetchFirstColumn());
+        $imagesTable = Tables::images();
+
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery(<<<SQL
+            SELECT id
+            FROM {$imagesTable}
+            WHERE md5sum IS NULL
+            SQL)->fetchFirstColumn());
     }
 
     /**
@@ -618,15 +674,18 @@ SELECT id
      */
     public function findPathsForMd5sum(array $ids): array
     {
+        $imagesTable = Tables::images();
+        $idsCsv = implode(', ', $ids);
+
         $paths = $this->getEntityManager()
             ->getConnection()
-            ->executeQuery('
-SELECT
-    id,
-    path
-  FROM ' . Tables::images() . '
-  WHERE id IN (' . implode(', ', $ids) . ')
-;')->fetchAllKeyValue();
+            ->executeQuery(<<<SQL
+                SELECT
+                    id,
+                    path
+                FROM {$imagesTable}
+                WHERE id IN ({$idsCsv})
+                SQL)->fetchAllKeyValue();
 
         return array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $paths);
     }
@@ -640,15 +699,17 @@ SELECT
      */
     public function findUploadInfoById(int $imageId): ?array
     {
+        $imagesTable = Tables::images();
+
         $row = $this->getEntityManager()
             ->getConnection()
-            ->fetchAssociative('
-SELECT
-    path, file, md5sum,
-    width, height, filesize
-  FROM ' . Tables::images() . '
-  WHERE id = ' . $imageId . '
-;');
+            ->fetchAssociative(<<<SQL
+                SELECT
+                    path, file, md5sum,
+                    width, height, filesize
+                FROM {$imagesTable}
+                WHERE id = {$imageId}
+                SQL);
 
         if ($row === false) {
             return null;
@@ -674,22 +735,28 @@ SELECT
      */
     public function existsWithCondition(string $condition): bool
     {
+        $imagesTable = Tables::images();
+
         $value = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne('
-SELECT COUNT(*)
-  FROM ' . Tables::images() . '
-  WHERE ' . $condition . '
-;');
+            ->fetchOne(<<<SQL
+                SELECT COUNT(*)
+                FROM {$imagesTable}
+                WHERE {$condition}
+                SQL);
 
         return is_numeric($value) && (int) $value > 0;
     }
 
     public function countAllImages(): int
     {
+        $imagesTable = Tables::images();
+
         $count = $this->getEntityManager()
             ->getConnection()
-            ->executeQuery('SELECT COUNT(*) FROM ' . Tables::images() . ';')->fetchOne();
+            ->executeQuery(<<<SQL
+                SELECT COUNT(*) FROM {$imagesTable}
+                SQL)->fetchOne();
 
         return is_numeric($count) ? (int) $count : 0;
     }
@@ -701,13 +768,15 @@ SELECT COUNT(*)
      */
     public function sumFilesize(): int
     {
+        $imagesTable = Tables::images();
+
         $value = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne('
-SELECT
-    SUM(filesize)
-  FROM ' . Tables::images() . '
-;');
+            ->fetchOne(<<<SQL
+                SELECT
+                    SUM(filesize)
+                FROM {$imagesTable}
+                SQL);
 
         return is_numeric($value) ? (int) $value : 0;
     }
@@ -721,14 +790,16 @@ SELECT
      */
     public function countAndSumFormats(): array
     {
+        $imageFormatTable = Tables::imageFormat();
+
         $row = $this->getEntityManager()
             ->getConnection()
-            ->fetchNumeric('
-SELECT
-    COUNT(*),
-    SUM(filesize)
-  FROM ' . Tables::imageFormat() . '
-;');
+            ->fetchNumeric(<<<SQL
+                SELECT
+                    COUNT(*),
+                    SUM(filesize)
+                FROM {$imageFormatTable}
+                SQL);
 
         return [
             'count' => ($row !== false && is_numeric($row[0])) ? (int) $row[0] : 0,
@@ -745,6 +816,8 @@ SELECT
      */
     public function findAllIdsAndFiles(): array
     {
+        $imagesTable = Tables::images();
+
         return array_map(
             static fn (array $row): array => [
                 'id' => is_numeric($row['id']) ? (int) $row['id'] : 0,
@@ -752,12 +825,12 @@ SELECT
             ],
             $this->getEntityManager()
                 ->getConnection()
-                ->fetchAllAssociative('
-SELECT
-    id,
-    file
-  FROM ' . Tables::images() . '
-;')
+                ->fetchAllAssociative(<<<SQL
+                    SELECT
+                        id,
+                        file
+                    FROM {$imagesTable}
+                    SQL)
         );
     }
 
@@ -770,6 +843,8 @@ SELECT
      */
     public function findAllImageIdsAndExts(): array
     {
+        $imageFormatTable = Tables::imageFormat();
+
         return array_map(
             static fn (array $row): array => [
                 'image_id' => is_numeric($row['image_id']) ? (int) $row['image_id'] : 0,
@@ -777,12 +852,12 @@ SELECT
             ],
             $this->getEntityManager()
                 ->getConnection()
-                ->fetchAllAssociative('
-SELECT
-    image_id,
-    ext
-  FROM ' . Tables::imageFormat() . '
-;')
+                ->fetchAllAssociative(<<<SQL
+                    SELECT
+                        image_id,
+                        ext
+                    FROM {$imageFormatTable}
+                    SQL)
         );
     }
 
@@ -793,15 +868,17 @@ SELECT
      */
     public function findEarliestDateAvailable(): ?string
     {
+        $imagesTable = Tables::images();
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT
-    date_available
-  FROM ' . Tables::images() . '
-  ORDER BY id ASC
-  LIMIT 1
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT
+                    date_available
+                FROM {$imagesTable}
+                ORDER BY id ASC
+                LIMIT 1
+                SQL);
 
         if ($rows === []) {
             return null;
@@ -814,9 +891,13 @@ SELECT
 
     public function countImagesInCategories(): int
     {
+        $imageCategoryTable = Tables::imageCategory();
+
         $count = $this->getEntityManager()
             ->getConnection()
-            ->executeQuery('SELECT COUNT(DISTINCT(image_id)) FROM ' . Tables::imageCategory() . ';')->fetchOne();
+            ->executeQuery(<<<SQL
+                SELECT COUNT(DISTINCT(image_id)) FROM {$imageCategoryTable}
+                SQL)->fetchOne();
 
         return is_numeric($count) ? (int) $count : 0;
     }
@@ -829,9 +910,13 @@ SELECT
      */
     public function countImageCategoryLinks(): int
     {
+        $imageCategoryTable = Tables::imageCategory();
+
         $count = $this->getEntityManager()
             ->getConnection()
-            ->executeQuery('SELECT COUNT(*) FROM ' . Tables::imageCategory() . ';')->fetchOne();
+            ->executeQuery(<<<SQL
+                SELECT COUNT(*) FROM {$imageCategoryTable}
+                SQL)->fetchOne();
 
         return is_numeric($count) ? (int) $count : 0;
     }
@@ -845,9 +930,13 @@ SELECT
      */
     public function findMinDateAvailable(): ?string
     {
+        $imagesTable = Tables::images();
+
         $value = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne('SELECT MIN(date_available) FROM ' . Tables::images() . ';');
+            ->fetchOne(<<<SQL
+                SELECT MIN(date_available) FROM {$imagesTable}
+                SQL);
 
         return is_string($value) ? $value : null;
     }
@@ -862,9 +951,13 @@ SELECT
      */
     public function findNextIdAndCount(): array
     {
+        $imagesTable = Tables::images();
+
         $row = $this->getEntityManager()
             ->getConnection()
-            ->fetchNumeric('SELECT MAX(id)+1, COUNT(*) FROM ' . Tables::images() . ';');
+            ->fetchNumeric(<<<SQL
+                SELECT MAX(id)+1, COUNT(*) FROM {$imagesTable}
+                SQL);
 
         return [
             'nextId' => ($row !== false && is_numeric($row[0] ?? null)) ? (int) $row[0] : 0,
@@ -889,15 +982,18 @@ SELECT
         $allClauses = $whereClauses;
         $allClauses[] = 'id < ' . $startId;
 
+        $imagesTable = Tables::images();
+        $whereSql = implode(' AND ', $allClauses);
+
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT id, path, representative_ext, width, height, rotation
-  FROM ' . Tables::images() . '
-  WHERE ' . implode(' AND ', $allClauses) . '
-  ORDER BY id DESC
-  LIMIT ' . $limit . '
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT id, path, representative_ext, width, height, rotation
+                FROM {$imagesTable}
+                WHERE {$whereSql}
+                ORDER BY id DESC
+                LIMIT {$limit}
+                SQL);
     }
 
     /**
@@ -914,19 +1010,22 @@ SELECT id, path, representative_ext, width, height, rotation
             return [];
         }
 
+        $imagesTable = Tables::images();
+        $idsCsv = implode(',', $imageIds);
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT
-    id,
-    IF(name IS NULL, file, name) AS label,
-    filesize,
-    file,
-    path,
-    representative_ext
-  FROM ' . Tables::images() . '
-  WHERE id IN (' . implode(',', $imageIds) . ')
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT
+                    id,
+                    IF(name IS NULL, file, name) AS label,
+                    filesize,
+                    file,
+                    path,
+                    representative_ext
+                FROM {$imagesTable}
+                WHERE id IN ({$idsCsv})
+                SQL);
 
         return array_column($rows, null, 'id');
     }
@@ -936,11 +1035,15 @@ SELECT
      */
     public function findLoungedImageIds(): array
     {
+        $loungeTable = Tables::lounge();
+
         return array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             $this->getEntityManager()
                 ->getConnection()
-                ->executeQuery('SELECT image_id FROM ' . Tables::lounge() . ';')->fetchFirstColumn()
+                ->executeQuery(<<<SQL
+                    SELECT image_id FROM {$loungeTable}
+                    SQL)->fetchFirstColumn()
         );
     }
 
@@ -950,21 +1053,29 @@ SELECT
      */
     public function findOrphanImageIds(array $loungedIds): array
     {
-        $query = '
-SELECT
-    id
-  FROM ' . Tables::images() . '
-    LEFT JOIN ' . Tables::imageCategory() . ' ON id = image_id
-  WHERE category_id is null';
+        $imagesTable = Tables::images();
+        $imageCategoryTable = Tables::imageCategory();
+
+        $query = <<<SQL
+            SELECT
+                id
+            FROM {$imagesTable}
+                LEFT JOIN {$imageCategoryTable} ON id = image_id
+            WHERE category_id IS NULL
+            SQL;
 
         if (count($loungedIds) > 0) {
-            $query .= '
-    AND id NOT IN (' . implode(',', $loungedIds) . ')';
+            $loungedIdsCsv = implode(',', $loungedIds);
+            $query .= <<<SQL
+
+                AND id NOT IN ({$loungedIdsCsv})
+                SQL;
         }
 
-        $query .= '
-  ORDER BY id ASC
-;';
+        $query .= <<<SQL
+
+            ORDER BY id ASC
+            SQL;
 
         return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery($query)->fetchFirstColumn());
     }
@@ -1034,17 +1145,20 @@ SELECT
             return [];
         }
 
+        $imagesTable = Tables::images();
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->executeQuery('
-SELECT *
-  FROM ' . Tables::images() . '
-  WHERE id IN (:ids)
-;', [
-                'ids' => $ids,
-            ], [
-                'ids' => ArrayParameterType::STRING,
-            ])->fetchAllAssociative();
+            ->executeQuery(<<<SQL
+                SELECT *
+                FROM {$imagesTable}
+                WHERE id IN (:ids)
+                SQL
+                , [
+                    'ids' => $ids,
+                ], [
+                    'ids' => ArrayParameterType::STRING,
+                ])->fetchAllAssociative();
 
         $byId = [];
         foreach ($rows as $row) {
@@ -1151,20 +1265,23 @@ SELECT *
     public function findVirtuallyAssociatedCategoryRows(array $imageIds): array
     {
         $idsForSql = array_map(strval(...), $imageIds);
+        $imageCategoryTable = Tables::imageCategory();
+        $imagesTable = Tables::images();
+        $idsCsv = implode(',', $idsForSql);
 
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT
-    DISTINCT(category_id) AS id
-  FROM ' . Tables::imageCategory() . ' AS ic
-    JOIN ' . Tables::images() . ' AS i ON i.id = ic.image_id
-  WHERE ic.image_id IN (' . implode(',', $idsForSql) . ')
-    AND (
-      ic.category_id != i.storage_category_id
-      OR i.storage_category_id IS NULL
-    )
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT
+                    DISTINCT(category_id) AS id
+                FROM {$imageCategoryTable} AS ic
+                    JOIN {$imagesTable} AS i ON i.id = ic.image_id
+                WHERE ic.image_id IN ({$idsCsv})
+                    AND (
+                        ic.category_id != i.storage_category_id
+                        OR i.storage_category_id IS NULL
+                    )
+                SQL);
     }
 
     /**
@@ -1178,22 +1295,25 @@ SELECT
      */
     public function findThumbnailRowsForCategoryOrderedByRank(int $categoryId): array
     {
+        $imagesTable = Tables::images();
+        $imageCategoryTable = Tables::imageCategory();
+
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT
-    id,
-    file,
-    path,
-    representative_ext,
-    width, height, rotation,
-    name,
-    `rank`
-  FROM ' . Tables::images() . '
-    JOIN ' . Tables::imageCategory() . ' ON image_id = id
-  WHERE category_id = ' . $categoryId . '
-  ORDER BY `rank`
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT
+                    id,
+                    file,
+                    path,
+                    representative_ext,
+                    width, height, rotation,
+                    name,
+                    `rank`
+                FROM {$imagesTable}
+                    JOIN {$imageCategoryTable} ON image_id = id
+                WHERE category_id = {$categoryId}
+                ORDER BY `rank`
+                SQL);
     }
 
     /**
@@ -1205,16 +1325,18 @@ SELECT
      */
     public function findImageIdsOrderedByRankForCategory(int $categoryId): array
     {
+        $imageCategoryTable = Tables::imageCategory();
+
         return array_values(array_filter(
             array_column($this->getEntityManager()
                 ->getConnection()
-                ->fetchAllAssociative('
-SELECT
-    image_id
-  FROM ' . Tables::imageCategory() . '
-  WHERE category_id = ' . $categoryId . '
-  ORDER BY `rank` ASC
-;'), 'image_id'),
+                ->fetchAllAssociative(<<<SQL
+                    SELECT
+                        image_id
+                    FROM {$imageCategoryTable}
+                    WHERE category_id = {$categoryId}
+                    ORDER BY `rank` ASC
+                    SQL), 'image_id'),
             static fn (mixed $v): bool => is_int($v) || is_string($v)
         ));
     }
@@ -1225,14 +1347,16 @@ SELECT
      */
     public function isImageInCategory(int $imageId, int $categoryId): bool
     {
+        $imageCategoryTable = Tables::imageCategory();
+
         $value = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne('
-SELECT COUNT(*)
-  FROM ' . Tables::imageCategory() . '
-  WHERE image_id = ' . $imageId . '
-    AND category_id = ' . $categoryId . '
-;');
+            ->fetchOne(<<<SQL
+                SELECT COUNT(*)
+                FROM {$imageCategoryTable}
+                WHERE image_id = {$imageId}
+                    AND category_id = {$categoryId}
+                SQL);
 
         return is_numeric($value) && (int) $value > 0;
     }
@@ -1245,13 +1369,15 @@ SELECT COUNT(*)
      */
     public function findMaxRankForCategory(int $categoryId): ?int
     {
+        $imageCategoryTable = Tables::imageCategory();
+
         $row = $this->getEntityManager()
             ->getConnection()
-            ->fetchAssociative('
-SELECT MAX(`rank`) AS max_rank
-  FROM ' . Tables::imageCategory() . '
-  WHERE category_id = ' . $categoryId . '
-;');
+            ->fetchAssociative(<<<SQL
+                SELECT MAX(`rank`) AS max_rank
+                FROM {$imageCategoryTable}
+                WHERE category_id = {$categoryId}
+                SQL);
 
         if ($row === false || ! is_numeric($row['max_rank'])) {
             return null;
@@ -1268,15 +1394,17 @@ SELECT MAX(`rank`) AS max_rank
      */
     public function incrementRanksFromForCategory(int $categoryId, int $rank): void
     {
+        $imageCategoryTable = Tables::imageCategory();
+
         $this->getEntityManager()
             ->getConnection()
-            ->executeStatement('
-UPDATE ' . Tables::imageCategory() . '
-  SET `rank` = `rank` + 1
-  WHERE category_id = ' . $categoryId . '
-    AND `rank` IS NOT NULL
-    AND `rank` >= ' . $rank . '
-;');
+            ->executeStatement(<<<SQL
+                UPDATE {$imageCategoryTable}
+                SET `rank` = `rank` + 1
+                WHERE category_id = {$categoryId}
+                    AND `rank` IS NOT NULL
+                    AND `rank` >= {$rank}
+                SQL);
     }
 
     /**
@@ -1285,14 +1413,16 @@ UPDATE ' . Tables::imageCategory() . '
      */
     public function updateRankForImageInCategory(int $imageId, int $categoryId, int $rank): void
     {
+        $imageCategoryTable = Tables::imageCategory();
+
         $this->getEntityManager()
             ->getConnection()
-            ->executeStatement('
-UPDATE ' . Tables::imageCategory() . '
-  SET `rank` = ' . $rank . '
-  WHERE image_id = ' . $imageId . '
-    AND category_id = ' . $categoryId . '
-;');
+            ->executeStatement(<<<SQL
+                UPDATE {$imageCategoryTable}
+                SET `rank` = {$rank}
+                WHERE image_id = {$imageId}
+                    AND category_id = {$categoryId}
+                SQL);
     }
 
     /**
@@ -1304,16 +1434,20 @@ UPDATE ' . Tables::imageCategory() . '
      */
     public function findMostRecentImageCategoryInfo(): ?array
     {
+        $imagesTable = Tables::images();
+        $imageCategoryTable = Tables::imageCategory();
+        $categoriesTable = Tables::categories();
+
         $row = $this->getEntityManager()
             ->getConnection()
-            ->fetchAssociative('
-SELECT category_id, c.uppercats
-  FROM ' . Tables::images() . ' AS i
-    JOIN ' . Tables::imageCategory() . ' AS ic ON image_id = i.id
-    JOIN ' . Tables::categories() . ' AS c ON category_id = c.id
-  ORDER BY i.id DESC
-  LIMIT 1
-;');
+            ->fetchAssociative(<<<SQL
+                SELECT category_id, c.uppercats
+                FROM {$imagesTable} AS i
+                    JOIN {$imageCategoryTable} AS ic ON image_id = i.id
+                    JOIN {$categoriesTable} AS c ON category_id = c.id
+                ORDER BY i.id DESC
+                LIMIT 1
+                SQL);
 
         if ($row === false) {
             return null;
@@ -1339,15 +1473,17 @@ SELECT category_id, c.uppercats
      */
     public function findDistinctDimensions(): array
     {
+        $imagesTable = Tables::images();
+
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT
-  DISTINCT width, height
-  FROM ' . Tables::images() . '
-  WHERE width IS NOT NULL
-    AND height IS NOT NULL
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT
+                DISTINCT width, height
+                FROM {$imagesTable}
+                WHERE width IS NOT NULL
+                    AND height IS NOT NULL
+                SQL);
     }
 
     /**
@@ -1359,15 +1495,17 @@ SELECT
      */
     public function findDistinctFilesizes(): array
     {
+        $imagesTable = Tables::images();
+
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT
-  filesize
-  FROM ' . Tables::images() . '
-  WHERE filesize IS NOT NULL
-  GROUP BY filesize
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT
+                filesize
+                FROM {$imagesTable}
+                WHERE filesize IS NOT NULL
+                GROUP BY filesize
+                SQL);
     }
 
     /**
@@ -1385,27 +1523,39 @@ SELECT
      */
     public function findBatchManagerThumbnails(array $imageIds, ?int $categoryId, string $orderBySql, int $limit, int $offset): array
     {
-        $query = '
-SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
-  FROM ' . Tables::images();
+        $imagesTable = Tables::images();
+        $imagesCsv = implode(',', $imageIds);
+
+        $query = <<<SQL
+            SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
+            FROM {$imagesTable}
+            SQL;
 
         if ($categoryId !== null) {
-            $query .= '
-    JOIN ' . Tables::imageCategory() . ' ON id = image_id';
+            $imageCategoryTable = Tables::imageCategory();
+            $query .= <<<SQL
+
+                JOIN {$imageCategoryTable} ON id = image_id
+                SQL;
         }
 
-        $query .= '
-  WHERE id IN (' . implode(',', $imageIds) . ')';
+        $query .= <<<SQL
+
+            WHERE id IN ({$imagesCsv})
+            SQL;
 
         if ($categoryId !== null) {
-            $query .= '
-    AND category_id = ' . $categoryId;
+            $query .= <<<SQL
+
+                AND category_id = {$categoryId}
+                SQL;
         }
 
-        $query .= '
-  ' . $orderBySql . '
-  LIMIT ' . $limit . ' OFFSET ' . $offset . '
-;';
+        $query .= <<<SQL
+
+            {$orderBySql}
+            LIMIT {$limit} OFFSET {$offset}
+            SQL;
 
         return $this->getEntityManager()
             ->getConnection()
@@ -1421,13 +1571,16 @@ SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
      */
     public function findIdsAndDatesForBatchUnitSave(array $imageIds): array
     {
+        $imagesTable = Tables::images();
+        $idsCsv = implode(',', $imageIds);
+
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT id, date_creation
-  FROM ' . Tables::images() . '
-  WHERE id IN (' . implode(',', $imageIds) . ')
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT id, date_creation
+                FROM {$imagesTable}
+                WHERE id IN ({$idsCsv})
+                SQL);
     }
 
     /**
@@ -1441,27 +1594,39 @@ SELECT id, date_creation
      */
     public function findBatchManagerUnitRows(array $imageIds, ?int $categoryId, string $orderBySql, int $limit, int $offset): array
     {
-        $query = '
-SELECT *
-  FROM ' . Tables::images();
+        $imagesTable = Tables::images();
+        $imagesCsv = implode(',', $imageIds);
+
+        $query = <<<SQL
+            SELECT *
+            FROM {$imagesTable}
+            SQL;
 
         if ($categoryId !== null) {
-            $query .= '
-    JOIN ' . Tables::imageCategory() . ' ON id = image_id';
+            $imageCategoryTable = Tables::imageCategory();
+            $query .= <<<SQL
+
+                JOIN {$imageCategoryTable} ON id = image_id
+                SQL;
         }
 
-        $query .= '
-  WHERE id IN (' . implode(',', $imageIds) . ')';
+        $query .= <<<SQL
+
+            WHERE id IN ({$imagesCsv})
+            SQL;
 
         if ($categoryId !== null) {
-            $query .= '
-    AND category_id = ' . $categoryId;
+            $query .= <<<SQL
+
+                AND category_id = {$categoryId}
+                SQL;
         }
 
-        $query .= '
-  ' . $orderBySql . '
-  LIMIT ' . $limit . ' OFFSET ' . $offset . '
-;';
+        $query .= <<<SQL
+
+            {$orderBySql}
+            LIMIT {$limit} OFFSET {$offset}
+            SQL;
 
         return $this->getEntityManager()
             ->getConnection()
@@ -1477,15 +1642,18 @@ SELECT *
      */
     public function findCategoryLinksForImage(int $imageId): array
     {
+        $imageCategoryTable = Tables::imageCategory();
+        $categoriesTable = Tables::categories();
+
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT category_id, uppercats, dir
-  FROM ' . Tables::imageCategory() . ' AS ic
-    INNER JOIN ' . Tables::categories() . ' AS c
-      ON c.id = ic.category_id
-  WHERE image_id = ' . $imageId . '
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT category_id, uppercats, dir
+                FROM {$imageCategoryTable} AS ic
+                    INNER JOIN {$categoriesTable} AS c
+                        ON c.id = ic.category_id
+                WHERE image_id = {$imageId}
+                SQL);
     }
 
     /**
@@ -1498,15 +1666,17 @@ SELECT category_id, uppercats, dir
      */
     public function findCategoryIdsForImage(int $imageId): array
     {
+        $imageCategoryTable = Tables::imageCategory();
+
         return array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             array_column($this->getEntityManager()
                 ->getConnection()
-                ->fetchAllAssociative('
-SELECT category_id
-  FROM ' . Tables::imageCategory() . '
-  WHERE image_id = ' . $imageId . '
-;'), 'category_id')
+                ->fetchAllAssociative(<<<SQL
+                    SELECT category_id
+                    FROM {$imageCategoryTable}
+                    WHERE image_id = {$imageId}
+                    SQL), 'category_id')
         );
     }
 
@@ -1521,18 +1691,20 @@ SELECT category_id
      */
     public function findIssue1827CandidateImageIds(int $limit): array
     {
+        $imagesTable = Tables::images();
+
         return array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             array_column($this->getEntityManager()
                 ->getConnection()
-                ->fetchAllAssociative('
-SELECT
-    id
-  FROM ' . Tables::images() . '
-  WHERE date_available < \'2022-12-08 00:00:00\'
-    AND path LIKE \'./upload/%\'
-  LIMIT ' . $limit . '
-;'), 'id')
+                ->fetchAllAssociative(<<<SQL
+                    SELECT
+                        id
+                    FROM {$imagesTable}
+                    WHERE date_available < '2022-12-08 00:00:00'
+                        AND path LIKE './upload/%'
+                    LIMIT {$limit}
+                    SQL), 'id')
         );
     }
 
@@ -1545,16 +1717,18 @@ SELECT
      */
     public function findImageIdsSample(int $limit): array
     {
+        $imagesTable = Tables::images();
+
         return array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             array_column($this->getEntityManager()
                 ->getConnection()
-                ->fetchAllAssociative('
-SELECT
-    id
-  FROM ' . Tables::images() . '
-  LIMIT ' . $limit . '
-;'), 'id')
+                ->fetchAllAssociative(<<<SQL
+                    SELECT
+                        id
+                    FROM {$imagesTable}
+                    LIMIT {$limit}
+                    SQL), 'id')
         );
     }
 
@@ -1567,15 +1741,17 @@ SELECT
      */
     public function findDuplicatePaths(): array
     {
+        $imagesTable = Tables::images();
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT
-    path
-  FROM ' . Tables::images() . '
-  GROUP BY path
-  HAVING COUNT(*) > 1
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT
+                    path
+                FROM {$imagesTable}
+                GROUP BY path
+                HAVING COUNT(*) > 1
+                SQL);
 
         return array_map(
             static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
@@ -1592,17 +1768,20 @@ SELECT
      */
     public function findOrphanImageCategoryLinkIds(): array
     {
+        $imageCategoryTable = Tables::imageCategory();
+        $imagesTable = Tables::images();
+
         return array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             array_column($this->getEntityManager()
                 ->getConnection()
-                ->fetchAllAssociative('
-SELECT
-    image_id
-  FROM ' . Tables::imageCategory() . '
-    LEFT JOIN ' . Tables::images() . ' ON id = image_id
-  WHERE id IS NULL
-;'), 'image_id')
+                ->fetchAllAssociative(<<<SQL
+                    SELECT
+                        image_id
+                    FROM {$imageCategoryTable}
+                        LEFT JOIN {$imagesTable} ON id = image_id
+                    WHERE id IS NULL
+                    SQL), 'image_id')
         );
     }
 
@@ -1620,13 +1799,16 @@ SELECT
             return;
         }
 
+        $imageCategoryTable = Tables::imageCategory();
+        $idsCsv = implode(',', $imageIds);
+
         $this->getEntityManager()
             ->getConnection()
-            ->executeStatement('
-DELETE
-  FROM ' . Tables::imageCategory() . '
-  WHERE image_id IN (' . implode(',', $imageIds) . ')
-;');
+            ->executeStatement(<<<SQL
+                DELETE
+                FROM {$imageCategoryTable}
+                WHERE image_id IN ({$idsCsv})
+                SQL);
     }
 
     /**
@@ -1639,15 +1821,18 @@ DELETE
      */
     public function findByIdOrFilePattern(int $imageId, ?string $imageFile): array|false
     {
-        $query = '
-SELECT id, file, level
-  FROM ' . Tables::images() . '
-  WHERE ';
+        $imagesTable = Tables::images();
+
+        $query = <<<SQL
+            SELECT id, file, level
+            FROM {$imagesTable}
+            WHERE
+            SQL;
         if ($imageId > 0) {
-            $query .= 'id = ' . $imageId;
+            $query .= " id = {$imageId}";
         } else {
             assert($imageFile !== null && $imageFile !== '');
-            $query .= 'file LIKE \'' . $imageFile . '.%\' ESCAPE \'/\' LIMIT 1';
+            $query .= " file LIKE '{$imageFile}.%' ESCAPE '/' LIMIT 1";
         }
 
         return $this->getEntityManager()
@@ -1686,13 +1871,15 @@ SELECT id, file, level
      */
     public function findPathById(int $imageId): ?string
     {
+        $imagesTable = Tables::images();
+
         $value = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne('
-SELECT path
-  FROM ' . Tables::images() . '
-  WHERE id = ' . $imageId . '
-;');
+            ->fetchOne(<<<SQL
+                SELECT path
+                FROM {$imagesTable}
+                WHERE id = {$imageId}
+                SQL);
 
         return is_string($value) ? $value : null;
     }
@@ -1706,17 +1893,19 @@ SELECT path
      */
     public function findUploadResultInfoById(int $imageId): ?array
     {
+        $imagesTable = Tables::images();
+
         $row = $this->getEntityManager()
             ->getConnection()
-            ->fetchAssociative('
-SELECT
-    id,
-    name,
-    representative_ext,
-    path
-  FROM ' . Tables::images() . '
-  WHERE id = ' . $imageId . '
-;');
+            ->fetchAssociative(<<<SQL
+                SELECT
+                    id,
+                    name,
+                    representative_ext,
+                    path
+                FROM {$imagesTable}
+                WHERE id = {$imageId}
+                SQL);
 
         if ($row === false) {
             return null;
@@ -1736,13 +1925,15 @@ SELECT
      */
     public function countImagesInCategory(int $categoryId): int
     {
+        $imageCategoryTable = Tables::imageCategory();
+
         $value = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne('
-SELECT COUNT(*)
-  FROM ' . Tables::imageCategory() . '
-  WHERE category_id = ' . $categoryId . '
-;');
+            ->fetchOne(<<<SQL
+                SELECT COUNT(*)
+                FROM {$imageCategoryTable}
+                WHERE category_id = {$categoryId}
+                SQL);
 
         return is_numeric($value) ? (int) $value : 0;
     }
@@ -1754,14 +1945,18 @@ SELECT COUNT(*)
      */
     public function isImageAccessibleWithCondition(int $imageId, string $forbiddenCondition): bool
     {
+        $imagesTable = Tables::images();
+        $imageCategoryTable = Tables::imageCategory();
+
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchOne('
-SELECT id
-  FROM ' . Tables::images() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id=image_id
-  WHERE id=' . $imageId . '
-' . $forbiddenCondition . '
-  LIMIT 1') !== false;
+            ->fetchOne(<<<SQL
+                SELECT id
+                FROM {$imagesTable} INNER JOIN {$imageCategoryTable} ON id=image_id
+                WHERE id={$imageId}
+                {$forbiddenCondition}
+                LIMIT 1
+                SQL) !== false;
     }
 
     /**
@@ -1772,15 +1967,17 @@ SELECT id
      */
     public function findRowWithCondition(int $imageId, string $permissionCondition): ?array
     {
+        $imagesTable = Tables::images();
+
         $row = $this->getEntityManager()
             ->getConnection()
-            ->fetchAssociative('
-SELECT *
-  FROM ' . Tables::images() . '
-  WHERE id=' . $imageId . '
-' . $permissionCondition . '
-LIMIT 1
-;');
+            ->fetchAssociative(<<<SQL
+                SELECT *
+                FROM {$imagesTable}
+                WHERE id={$imageId}
+                {$permissionCondition}
+                LIMIT 1
+                SQL);
 
         return $row === false ? null : $row;
     }
@@ -1795,15 +1992,18 @@ LIMIT 1
      */
     public function findRelatedCategoriesForImage(int $imageId, string $forbiddenCondition): array
     {
+        $imageCategoryTable = Tables::imageCategory();
+        $categoriesTable = Tables::categories();
+
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT id, name, permalink, uppercats, global_rank, commentable
-  FROM ' . Tables::imageCategory() . '
-    INNER JOIN ' . Tables::categories() . ' ON category_id = id
-  WHERE image_id = ' . $imageId . '
-' . $forbiddenCondition . '
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT id, name, permalink, uppercats, global_rank, commentable
+                FROM {$imageCategoryTable}
+                    INNER JOIN {$categoriesTable} ON category_id = id
+                WHERE image_id = {$imageId}
+                {$forbiddenCondition}
+                SQL);
     }
 
     /**
@@ -1813,16 +2013,19 @@ SELECT id, name, permalink, uppercats, global_rank, commentable
      */
     public function isImageCommentableWithCondition(int $imageId, string $permissionCondition): bool
     {
+        $imageCategoryTable = Tables::imageCategory();
+        $categoriesTable = Tables::categories();
+
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchOne('
-SELECT DISTINCT image_id
-  FROM ' . Tables::imageCategory() . '
-      INNER JOIN ' . Tables::categories() . ' ON category_id=id
-  WHERE commentable=1
-    AND image_id=' . $imageId . '
-' . $permissionCondition . '
-;') !== false;
+            ->fetchOne(<<<SQL
+                SELECT DISTINCT image_id
+                FROM {$imageCategoryTable}
+                    INNER JOIN {$categoriesTable} ON category_id=id
+                WHERE commentable=1
+                    AND image_id={$imageId}
+                {$permissionCondition}
+                SQL) !== false;
     }
 
     /**
@@ -1835,15 +2038,18 @@ SELECT DISTINCT image_id
      */
     public function findVisibleCategoriesForImage(int $imageId, string $permissionCondition): array
     {
+        $imageCategoryTable = Tables::imageCategory();
+        $categoriesTable = Tables::categories();
+
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT id,uppercats,commentable,visible,status,global_rank
-  FROM ' . Tables::imageCategory() . '
-    INNER JOIN ' . Tables::categories() . ' ON category_id = id
-  WHERE image_id = ' . $imageId . '
-' . $permissionCondition . '
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT id,uppercats,commentable,visible,status,global_rank
+                FROM {$imageCategoryTable}
+                    INNER JOIN {$categoriesTable} ON category_id = id
+                WHERE image_id = {$imageId}
+                {$permissionCondition}
+                SQL);
     }
 
     /**
@@ -1857,16 +2063,19 @@ SELECT id,uppercats,commentable,visible,status,global_rank
      */
     public function findAssociatedCategoryIds(int $imageId): array
     {
+        $categoriesTable = Tables::categories();
+        $imageCategoryTable = Tables::imageCategory();
+
         return array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             array_column($this->getEntityManager()
                 ->getConnection()
-                ->fetchAllAssociative('
-SELECT id
-  FROM ' . Tables::categories() . '
-    INNER JOIN ' . Tables::imageCategory() . ' ON id = category_id
-  WHERE image_id = ' . $imageId . '
-;'), 'id')
+                ->fetchAllAssociative(<<<SQL
+                    SELECT id
+                    FROM {$categoriesTable}
+                        INNER JOIN {$imageCategoryTable} ON id = category_id
+                    WHERE image_id = {$imageId}
+                    SQL), 'id')
         );
     }
 
@@ -1878,16 +2087,18 @@ SELECT id
      */
     public function findIdsByMd5sum(string $md5sum): array
     {
+        $imagesTable = Tables::images();
+
         return array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             array_column($this->getEntityManager()
                 ->getConnection()
-                ->fetchAllAssociative('
-SELECT
-    id
-  FROM ' . Tables::images() . '
-  WHERE md5sum = \'' . $md5sum . '\'
-;'), 'id')
+                ->fetchAllAssociative(<<<SQL
+                    SELECT
+                        id
+                    FROM {$imagesTable}
+                    WHERE md5sum = '{$md5sum}'
+                    SQL), 'id')
         );
     }
 
@@ -1991,17 +2202,20 @@ SELECT
      */
     public function hasAccessibleImageWithAuthor(string $permissionCondition): bool
     {
+        $imagesTable = Tables::images();
+        $imageCategoryTable = Tables::imageCategory();
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT
-    id
-  FROM ' . Tables::images() . ' AS i
-    JOIN ' . Tables::imageCategory() . ' AS ic ON ic.image_id = i.id
-  ' . $permissionCondition . '
-    AND author IS NOT NULL
-    LIMIT 1
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT
+                    id
+                FROM {$imagesTable} AS i
+                    JOIN {$imageCategoryTable} AS ic ON ic.image_id = i.id
+                {$permissionCondition}
+                    AND author IS NOT NULL
+                    LIMIT 1
+                SQL);
 
         return $rows !== [];
     }
@@ -2016,16 +2230,19 @@ SELECT
      */
     public function isImageAccessibleViaCategoryWithCondition(int $imageId, string $permissionCondition): bool
     {
+        $categoriesTable = Tables::categories();
+        $imageCategoryTable = Tables::imageCategory();
+
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchOne('
-SELECT id
-  FROM ' . Tables::categories() . '
-    INNER JOIN ' . Tables::imageCategory() . ' ON category_id = id
-  WHERE image_id = ' . $imageId . '
-' . $permissionCondition . '
-  LIMIT 1
-;') !== false;
+            ->fetchOne(<<<SQL
+                SELECT id
+                FROM {$categoriesTable}
+                    INNER JOIN {$imageCategoryTable} ON category_id = id
+                WHERE image_id = {$imageId}
+                {$permissionCondition}
+                LIMIT 1
+                SQL) !== false;
     }
 
     /**
@@ -2044,20 +2261,26 @@ SELECT id
         $conn = $this->getEntityManager()
             ->getConnection();
 
-        $sql = '
-SELECT SQL_CALC_FOUND_ROWS i.*
-  FROM ' . Tables::images() . ' i
-    INNER JOIN ' . Tables::imageCategory() . ' ON i.id=image_id
-  WHERE ' . implode("\n    AND ", $whereClauses) . '
-  GROUP BY i.id
-  ' . $orderByClause . '
-  LIMIT ' . $limit . '
-  OFFSET ' . $offset . '
-;';
+        $imagesTable = Tables::images();
+        $imageCategoryTable = Tables::imageCategory();
+        $whereSql = implode("\n    AND ", $whereClauses);
+
+        $sql = <<<SQL
+            SELECT SQL_CALC_FOUND_ROWS i.*
+            FROM {$imagesTable} i
+                INNER JOIN {$imageCategoryTable} ON i.id=image_id
+            WHERE {$whereSql}
+            GROUP BY i.id
+            {$orderByClause}
+            LIMIT {$limit}
+            OFFSET {$offset}
+            SQL;
 
         $rows = $conn->fetchAllAssociative($sql);
 
-        $totalRaw = $conn->fetchOne('SELECT FOUND_ROWS()');
+        $totalRaw = $conn->fetchOne(<<<SQL
+            SELECT FOUND_ROWS()
+            SQL);
 
         return new PaginatedResult($rows, is_numeric($totalRaw) ? (int) $totalRaw : 0);
     }
@@ -2068,13 +2291,15 @@ SELECT SQL_CALC_FOUND_ROWS i.*
      */
     public function existsById(int $id): bool
     {
+        $imagesTable = Tables::images();
+
         $value = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne('
-SELECT COUNT(*)
-  FROM ' . Tables::images() . '
-  WHERE id = ' . $id . '
-;');
+            ->fetchOne(<<<SQL
+                SELECT COUNT(*)
+                FROM {$imagesTable}
+                WHERE id = {$id}
+                SQL);
 
         return is_numeric($value) && (int) $value > 0;
     }
@@ -2093,15 +2318,18 @@ SELECT COUNT(*)
             return [];
         }
 
+        $imagesTable = Tables::images();
+        $idsCsv = implode(',', $ids);
+
         return array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             $this->getEntityManager()
                 ->getConnection()
-                ->fetchFirstColumn('
-SELECT id
-  FROM ' . Tables::images() . '
-  WHERE id IN (' . implode(',', $ids) . ')
-;')
+                ->fetchFirstColumn(<<<SQL
+                    SELECT id
+                    FROM {$imagesTable}
+                    WHERE id IN ({$idsCsv})
+                    SQL)
         );
     }
 
@@ -2120,16 +2348,19 @@ SELECT id
             return [];
         }
 
+        $imageCategoryTable = Tables::imageCategory();
+        $idsCsv = implode(',', $imageIds);
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT
-    image_id,
-    category_id
-  FROM ' . Tables::imageCategory() . '
-  WHERE image_id IN (' . implode(',', $imageIds) . ')
-    AND ' . $permissionCondition . '
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT
+                    image_id,
+                    category_id
+                FROM {$imageCategoryTable}
+                WHERE image_id IN ({$idsCsv})
+                    AND {$permissionCondition}
+                SQL);
 
         return array_map(
             static fn (array $row): array => [
@@ -2147,11 +2378,14 @@ SELECT
      */
     public function findNextId(): int
     {
+        $imagesTable = Tables::images();
+
         $next = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne('
-SELECT IF(MAX(id)+1 IS NULL, 1, MAX(id)+1)
-  FROM ' . Tables::images());
+            ->fetchOne(<<<SQL
+                SELECT IF(MAX(id)+1 IS NULL, 1, MAX(id)+1)
+                FROM {$imagesTable}
+                SQL);
 
         return is_numeric($next) ? (int) $next : 1;
     }
@@ -2171,13 +2405,16 @@ SELECT IF(MAX(id)+1 IS NULL, 1, MAX(id)+1)
             return [];
         }
 
+        $imagesTable = Tables::images();
+        $categoryIdsCsv = implode(',', $categoryIds);
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT id, path
-  FROM ' . Tables::images() . '
-  WHERE storage_category_id IN (' . implode(',', $categoryIds) . ')
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT id, path
+                FROM {$imagesTable}
+                WHERE storage_category_id IN ({$categoryIdsCsv})
+                SQL);
 
         $byId = [];
         foreach ($rows as $row) {

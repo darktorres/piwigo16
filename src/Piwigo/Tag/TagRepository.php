@@ -97,22 +97,31 @@ final class TagRepository extends EntityRepository
      */
     public function countImagesPerTag(array $tagIds, string $fandFSql): array
     {
-        $query = '
-SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
-  FROM ' . Tables::imageCategory() . ' ic
-    INNER JOIN ' . Tables::imageTag() . ' it
-    ON ic.image_id=it.image_id
-  WHERE 1=1
-  ' . $fandFSql;
+        $imageCategoryTable = Tables::imageCategory();
+        $imageTagTable = Tables::imageTag();
+
+        $query = <<<SQL
+            SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
+            FROM {$imageCategoryTable} ic
+                INNER JOIN {$imageTagTable} it
+                ON ic.image_id=it.image_id
+            WHERE 1=1
+            {$fandFSql}
+            SQL;
 
         if ($tagIds !== []) {
-            $query .= '
-    AND tag_id IN (' . implode(',', $tagIds) . ')
-';
+            $tagIdsCsv = implode(',', $tagIds);
+            $query .= <<<SQL
+
+                AND tag_id IN ({$tagIdsCsv})
+
+                SQL;
         }
 
-        $query .= '
-  GROUP BY tag_id';
+        $query .= <<<SQL
+
+            GROUP BY tag_id
+            SQL;
 
         $counters = [];
         foreach ($this->getEntityManager()->getConnection()->executeQuery($query)->fetchAllAssociative() as $row) {
@@ -152,24 +161,34 @@ SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
      */
     public function findCommonTags(array $items, int $maxTags, array $excludedTagIds): array
     {
-        $query = '
-SELECT t.*, count(*) AS counter
-  FROM ' . Tables::imageTag() . '
-    INNER JOIN ' . Tables::tags() . ' t ON tag_id = id
-  WHERE image_id IN (' . implode(',', $items) . ')';
+        $imageTagTable = Tables::imageTag();
+        $tagsTable = Tables::tags();
+        $itemsCsv = implode(',', $items);
+
+        $query = <<<SQL
+            SELECT t.*, count(*) AS counter
+            FROM {$imageTagTable}
+                INNER JOIN {$tagsTable} t ON tag_id = id
+            WHERE image_id IN ({$itemsCsv})
+            SQL;
 
         if ($excludedTagIds !== []) {
-            $query .= '
-    AND tag_id NOT IN (' . implode(',', $excludedTagIds) . ')';
+            $excludedTagIdsCsv = implode(',', $excludedTagIds);
+            $query .= <<<SQL
+
+                AND tag_id NOT IN ({$excludedTagIdsCsv})
+                SQL;
         }
 
-        $query .= '
-  GROUP BY t.id
-  ORDER BY ';
+        $query .= <<<SQL
+
+            GROUP BY t.id
+            ORDER BY
+            SQL;
 
         $query .= $maxTags > 0
-            ? 'counter DESC LIMIT ' . $maxTags
-            : 'NULL';
+            ? ' counter DESC LIMIT ' . $maxTags
+            : ' NULL';
 
         $rows = $this->getEntityManager()
             ->getConnection()
@@ -197,10 +216,14 @@ SELECT t.*, count(*) AS counter
      */
     public function findImageIdsForTags(string $joinSql, string $whereSql, string $groupHavingSql, string $orderBySql): array
     {
+        $imagesTable = Tables::images();
+
         $ids = $this->getEntityManager()
             ->getConnection()
             ->executeQuery(
-                'SELECT id FROM ' . Tables::images() . ' i ' . $joinSql . ' ' . $whereSql . ' ' . $groupHavingSql . ' ' . $orderBySql
+                <<<SQL
+                SELECT id FROM {$imagesTable} i {$joinSql} {$whereSql} {$groupHavingSql} {$orderBySql}
+                SQL
             )->fetchFirstColumn();
 
         return array_values(array_map(intval(...), array_filter($ids, is_numeric(...))));
@@ -215,15 +238,18 @@ SELECT t.*, count(*) AS counter
      */
     public function findOrphanTags(): array
     {
-        $query = '
-SELECT
-    id,
-    name
-  FROM ' . Tables::tags() . '
-    LEFT JOIN ' . Tables::imageTag() . ' ON id = tag_id
-  WHERE tag_id IS NULL
-    AND lastmodified < SUBDATE(NOW(), INTERVAL 1 DAY)
-;';
+        $tagsTable = Tables::tags();
+        $imageTagTable = Tables::imageTag();
+
+        $query = <<<SQL
+            SELECT
+                id,
+                name
+            FROM {$tagsTable}
+                LEFT JOIN {$imageTagTable} ON id = tag_id
+            WHERE tag_id IS NULL
+                AND lastmodified < SUBDATE(NOW(), INTERVAL 1 DAY)
+            SQL;
         return array_map(
             TagBrief::fromRow(...),
             $this->getEntityManager()
@@ -389,13 +415,15 @@ SELECT
      */
     public function findIdByWhereFragment(string $whereSql): ?TagId
     {
+        $tagsTable = Tables::tags();
+
         $id = $this->getEntityManager()
             ->getConnection()
-            ->executeQuery('
-SELECT id
-  FROM ' . Tables::tags() . '
-  WHERE ' . $whereSql . '
-;')->fetchOne();
+            ->executeQuery(<<<SQL
+                SELECT id
+                FROM {$tagsTable}
+                WHERE {$whereSql}
+                SQL)->fetchOne();
 
         return is_numeric($id) ? TagId::from((int) $id) : null;
     }
@@ -495,13 +523,15 @@ SELECT id
      */
     public function countImagesPerTagUnrestricted(): array
     {
+        $imageTagTable = Tables::imageTag();
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT tag_id, COUNT(image_id) AS counter
-  FROM ' . Tables::imageTag() . '
-  GROUP BY tag_id
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT tag_id, COUNT(image_id) AS counter
+                FROM {$imageTagTable}
+                GROUP BY tag_id
+                SQL);
 
         $counters = [];
         foreach ($rows as $row) {
@@ -530,15 +560,19 @@ SELECT tag_id, COUNT(image_id) AS counter
             return [];
         }
 
+        $imageTagTable = Tables::imageTag();
+        $tagIdsCsv = implode(',', $tagIds);
+        $imageIdsCsv = implode(',', $imageIds);
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative('
-SELECT image_id, GROUP_CONCAT(tag_id) AS tag_ids
-  FROM ' . Tables::imageTag() . '
-  WHERE tag_id IN (' . implode(',', $tagIds) . ')
-    AND image_id IN (' . implode(',', $imageIds) . ')
-  GROUP BY image_id
-;');
+            ->fetchAllAssociative(<<<SQL
+                SELECT image_id, GROUP_CONCAT(tag_id) AS tag_ids
+                FROM {$imageTagTable}
+                WHERE tag_id IN ({$tagIdsCsv})
+                    AND image_id IN ({$imageIdsCsv})
+                GROUP BY image_id
+                SQL);
 
         $byImageId = [];
         foreach ($rows as $row) {
@@ -562,13 +596,15 @@ SELECT image_id, GROUP_CONCAT(tag_id) AS tag_ids
 
     public function existsById(int $id): bool
     {
+        $tagsTable = Tables::tags();
+
         $value = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne('
-SELECT COUNT(*)
-  FROM ' . Tables::tags() . '
-  WHERE id = ' . $id . '
-;');
+            ->fetchOne(<<<SQL
+                SELECT COUNT(*)
+                FROM {$tagsTable}
+                WHERE id = {$id}
+                SQL);
 
         return is_numeric($value) && (int) $value > 0;
     }
@@ -582,13 +618,16 @@ SELECT COUNT(*)
             return 0;
         }
 
+        $tagsTable = Tables::tags();
+        $idsCsv = implode(',', $ids);
+
         $value = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne('
-SELECT COUNT(*)
-  FROM ' . Tables::tags() . '
-  WHERE id IN (' . implode(',', $ids) . ')
-;');
+            ->fetchOne(<<<SQL
+                SELECT COUNT(*)
+                FROM {$tagsTable}
+                WHERE id IN ({$idsCsv})
+                SQL);
 
         return is_numeric($value) ? (int) $value : 0;
     }
@@ -643,9 +682,13 @@ SELECT COUNT(*)
      */
     public function countAll(): int
     {
+        $tagsTable = Tables::tags();
+
         $value = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne('SELECT COUNT(*) FROM ' . Tables::tags() . ';');
+            ->fetchOne(<<<SQL
+                SELECT COUNT(*) FROM {$tagsTable}
+                SQL);
 
         return is_numeric($value) ? (int) $value : 0;
     }
@@ -656,9 +699,13 @@ SELECT COUNT(*)
      */
     public function countAllImageTagLinks(): int
     {
+        $imageTagTable = Tables::imageTag();
+
         $value = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne('SELECT COUNT(*) FROM ' . Tables::imageTag() . ';');
+            ->fetchOne(<<<SQL
+                SELECT COUNT(*) FROM {$imageTagTable}
+                SQL);
 
         return is_numeric($value) ? (int) $value : 0;
     }

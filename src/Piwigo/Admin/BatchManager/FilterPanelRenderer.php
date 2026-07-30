@@ -169,13 +169,15 @@ final class FilterPanelRenderer
         if (is_array($bulk_manager_filter['tags'] ?? null) && count($bulk_manager_filter['tags']) > 0) {
             $filter_tags_ids = array_filter($bulk_manager_filter['tags'], is_scalar(...));
 
-            $query = '
-SELECT
-    id,
-    name
-  FROM ' . Tables::tags() . '
-  WHERE id IN (' . implode(',', $filter_tags_ids) . ')
-;';
+            $tagsTable = Tables::tags();
+            $filterTagsIdsCsv = implode(',', $filter_tags_ids);
+            $query = <<<SQL
+                SELECT
+                    id,
+                    name
+                FROM {$tagsTable}
+                WHERE id IN ({$filterTagsIdsCsv})
+                SQL;
 
             $filter_tags = \Piwigo\Bootstrap\CoreDomainAccessor::tagService()
                 ->getTagList($query, \Piwigo\Bootstrap\PresentationAccessor::htmlService());

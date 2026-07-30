@@ -415,7 +415,9 @@ final class RequestBootstrap
 
         // Check if last major update conf is set if not set it
         if (\Piwigo\Config\CurrentConfig::lastMajorUpdate() === null) {
-            $dbnow = $conn->fetchOne('SELECT NOW()');
+            $dbnow = $conn->fetchOne(<<<SQL
+                SELECT NOW()
+                SQL);
             assert(is_string($dbnow));
             $configService->confUpdateParam('last_major_update', $dbnow, updateGlobal: true);
         }

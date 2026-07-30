@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace Piwigo\Tests\Unit\Section;
+
 use Piwigo\Section\SectionPopulator;
 
 /**

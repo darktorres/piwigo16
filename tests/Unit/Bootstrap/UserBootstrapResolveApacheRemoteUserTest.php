@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace Piwigo\Tests\Unit\Bootstrap;
+
 use Piwigo\Bootstrap\UserBootstrap;
 
 /**

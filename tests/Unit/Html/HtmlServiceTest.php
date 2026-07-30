@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
+namespace Piwigo\Tests\Unit\Html;
+
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ProcessCache;
-use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\SrcImage;
 use Piwigo\Menu\BlockManager;
@@ -318,35 +319,6 @@ test('getElementUrlProtectionHandler builds an action url for any extension when
     expect($result)->toBe('action.php?id=5&amp;part=e');
 });
 
-/**
- * Captures redirectHttp()'s url argument then throws, matching
- * CategoryServiceFakeHtmlRendererDeniesAccess's own established
- * "marker exception" convention for a `never`-typed interface method.
- */
-final class HtmlServiceTestCapturingRedirectHttpService implements RedirectServiceInterface
-{
-    public ?string $capturedUrl = null;
-
-    #[\Override]
-    public function redirectHttp(string $url, int $status = 302): never
-    {
-        $this->capturedUrl = $url;
-        throw new \RuntimeException('HTML_SERVICE_TEST_REDIRECT_HTTP_MARKER');
-    }
-
-    #[\Override]
-    public function redirectHtml(string $url, string $msg = '', int $refresh_time = 0, int $status = 200): never
-    {
-        throw new \LogicException('not used by accessDenied()');
-    }
-
-    #[\Override]
-    public function redirect(string $url, string $msg = '', int $refresh_time = 0): never
-    {
-        throw new \LogicException('not used by accessDenied()');
-    }
-}
-
 test('accessDenied redirects to identification.php with a double urlencoded REQUEST_URI when the user is unauthenticated', function (): void {
     $service = new HtmlService();
     $redirectService = new HtmlServiceTestCapturingRedirectHttpService();
@@ -386,43 +358,6 @@ test('accessDenied falls back to an empty redirect path when REQUEST_URI is miss
 
     expect($redirectService->capturedUrl)->toBe('identification.php?redirect=');
 });
-
-/**
- * Captures redirectHtml()'s 4 arguments then throws, same convention as
- * HtmlServiceTestCapturingRedirectHttpService above.
- */
-final class HtmlServiceTestCapturingRedirectHtmlService implements RedirectServiceInterface
-{
-    public ?string $capturedUrl = null;
-
-    public ?string $capturedMsg = null;
-
-    public ?int $capturedRefreshTime = null;
-
-    public ?int $capturedStatus = null;
-
-    #[\Override]
-    public function redirectHttp(string $url, int $status = 302): never
-    {
-        throw new \LogicException('not used by pageForbidden()');
-    }
-
-    #[\Override]
-    public function redirectHtml(string $url, string $msg = '', int $refresh_time = 0, int $status = 200): never
-    {
-        $this->capturedUrl = $url;
-        $this->capturedMsg = $msg;
-        $this->capturedRefreshTime = $refresh_time;
-        $this->capturedStatus = $status;
-        throw new \RuntimeException('HTML_SERVICE_TEST_REDIRECT_HTML_MARKER');
-    }
-
-    #[\Override]
-    public function redirect(string $url, string $msg = '', int $refresh_time = 0): never
-    {
-        throw new \LogicException('not used by pageForbidden()');
-    }
-}
 
 test('pageForbidden redirects to the given alternate url with a 403 status, a 5 second refresh, and the forbidden message', function (): void {
     $service = new HtmlService();

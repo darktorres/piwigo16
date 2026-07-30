@@ -2,15 +2,16 @@
 
 declare(strict_types=1);
 
+namespace Piwigo\Tests\Unit\Url;
+
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
-use Piwigo\Core\HtmlRenderingInterface;
-use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\RequestMountDepth;
 use Piwigo\Html\HtmlService;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Url\RootPathOverride;
 use Piwigo\Url\UrlService;
+use RuntimeException;
 
 /**
  * Records the message passed to whichever of badRequest()/pageNotFound()/
@@ -19,119 +20,6 @@ use Piwigo\Url\UrlService;
  * without needing a real Template/Lang/DB stack the concrete HtmlService
  * would otherwise reach for via RedirectService::redirectHtml().
  */
-final class UrlServiceTestHtmlRenderer implements HtmlRenderingInterface
-{
-    public ?string $lastMessage = null;
-
-    #[\Override]
-    public function getCatDisplayName(array $catInformations, ?string $url = ''): string
-    {
-        return '';
-    }
-
-    #[\Override]
-    public function getCatDisplayNameCache(string $uppercats, ?string $url = '', bool $singleLink = false, ?string $linkClass = null, ?string $authKey = null): string
-    {
-        return '';
-    }
-
-    #[\Override]
-    public function nameCompare(array $a, array $b): int
-    {
-        return 0;
-    }
-
-    #[\Override]
-    public function tagAlphaCompare(array $a, array $b): int
-    {
-        return 0;
-    }
-
-    #[\Override]
-    public function accessDenied(RedirectServiceInterface $redirectService): never
-    {
-        throw new RuntimeException('accessDenied');
-    }
-
-    #[\Override]
-    public function badRequest(RedirectServiceInterface $redirectService, string $msg, ?string $alternateUrl = null): never
-    {
-        $this->lastMessage = $msg;
-
-        throw new RuntimeException('badRequest: ' . $msg);
-    }
-
-    #[\Override]
-    public function pageNotFound(RedirectServiceInterface $redirectService, ?string $msg, ?string $alternateUrl = null): never
-    {
-        $this->lastMessage = $msg;
-
-        throw new RuntimeException('pageNotFound: ' . $msg);
-    }
-
-    #[\Override]
-    public function fatalError(string $msg, ?string $title = null, bool $showTrace = true): never
-    {
-        $this->lastMessage = $msg;
-
-        throw new RuntimeException('fatalError: ' . $msg);
-    }
-
-    #[\Override]
-    public function getTagsContentTitle(array $tags): string
-    {
-        return '';
-    }
-
-    #[\Override]
-    public function getCombinedCategoriesContentTitle(?array $category, array $combinedCategories): string
-    {
-        return '';
-    }
-
-    #[\Override]
-    public function setStatusHeader(int $code, string $text = ''): void {}
-
-    #[\Override]
-    public function renderElementName(array $info): string
-    {
-        return '';
-    }
-
-    #[\Override]
-    public function renderElementDescription(array $info, string $param = ''): string
-    {
-        return '';
-    }
-
-    #[\Override]
-    public function getThumbnailTitle(array $info, string $title, string $comment = ''): string
-    {
-        return '';
-    }
-}
-
-final class UrlServiceTestRedirectService implements RedirectServiceInterface
-{
-    #[\Override]
-    public function redirectHttp(string $url, int $status = 302): never
-    {
-        throw new RuntimeException('unexpected redirectHttp() call');
-    }
-
-    #[\Override]
-    public function redirectHtml(string $url, string $msg = '', int $refresh_time = 0, int $status = 200): never
-    {
-        throw new RuntimeException('unexpected redirectHtml() call');
-    }
-
-    #[\Override]
-    public function redirect(string $url, string $msg = '', int $refresh_time = 0): never
-    {
-        throw new RuntimeException('unexpected redirect() call');
-    }
-}
-
 beforeEach(function (): void {
     unset($_SERVER['HTTPS'], $_SERVER['HTTP_X_FORWARDED_PROTO'], $_SERVER['HTTP_X_FORWARDED_HOST'], $_SERVER['HTTP_HOST']);
     // getAbsoluteRootUrl() calls the real Piwigo\Auth\CookieService::cookiePath()

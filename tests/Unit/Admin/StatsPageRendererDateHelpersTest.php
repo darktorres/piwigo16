@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+namespace Piwigo\Tests\Unit\Admin;
+
+use DateTime;
+use InvalidArgumentException;
 use Piwigo\Admin\StatsPageRenderer;
 
 /**

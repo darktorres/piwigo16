@@ -17,10 +17,29 @@ test('compareByGlobalRank sorts naturally by the global_rank string', function (
     expect(CategoryService::compareByGlobalRank(['global_rank' => null], ['global_rank' => null]))->toBe(0);
 });
 
+test('compareByGlobalRank casts non-string scalars to string before comparing', function (): void {
+    // Both sides are ints here (is_scalar() but not string) -- strnatcasecmp()
+    // requires strings, and this file is declare(strict_types=1), so if
+    // either (string) cast were dropped this would throw a TypeError
+    // instead of comparing naturally.
+    expect(CategoryService::compareByGlobalRank(['global_rank' => 5], ['global_rank' => 10]))->toBeLessThan(0);
+});
+
 test('compareByRank sorts numerically by the rank column, treating non-numeric as 0', function (): void {
     expect(CategoryService::compareByRank(['rank' => 5], ['rank' => 2]))->toBe(3);
     expect(CategoryService::compareByRank(['rank' => 2], ['rank' => 5]))->toBe(-3);
     expect(CategoryService::compareByRank(['rank' => 'not-numeric'], ['rank' => 3]))->toBe(-3);
+});
+
+test('compareByRank truncates fractional ranks on both sides via the (int) cast', function (): void {
+    // Fractional values force the (int) cast to actually narrow something --
+    // without it, subtracting two floats returns a float, which the method's
+    // own `: int` return type (under strict_types=1) rejects with a TypeError.
+    expect(CategoryService::compareByRank(['rank' => 5.9], ['rank' => 2.9]))->toBe(3);
+});
+
+test('compareByRank falls back to 0 for a non-numeric rank on the right side too', function (): void {
+    expect(CategoryService::compareByRank(['rank' => 5], ['rank' => 'bogus']))->toBe(5);
 });
 
 test('isRecentCategory is false when either date is null or empty', function (): void {
@@ -44,6 +63,25 @@ test('isRecentCategory is false when the category date is older than both thresh
     // 30 days ago, recent_period=7, last_photo_date recent -> outside both
     // the today-minus-period AND the last-photo-minus-1-day thresholds.
     expect(CategoryService::isRecentCategory('2026-05-01', 7, '2026-06-14', $now))->toBeFalse();
+});
+
+test('isRecentCategory is false when last_photo_date is an empty string', function (): void {
+    $now = new DateTimeImmutable('2026-06-15');
+
+    expect(CategoryService::isRecentCategory('2026-06-14', 7, '', $now))->toBeFalse();
+});
+
+test('isRecentCategory zeroes out the today-threshold time-of-day down to the second', function (): void {
+    $now = new DateTimeImmutable('2026-06-15');
+
+    // thresholdFromToday = today (zeroed to midnight) - 5 days = 2026-06-10
+    // 00:00:00. last_photo_date is far enough in the future that its own
+    // threshold never wins, so thresholdFromToday alone decides the result.
+    // date_last sits exactly 1 second before that threshold: correct if
+    // setTime() truly zeroes hour/minute/second, but >= the threshold (so
+    // "recent") if any of the three were left un-zeroed (each rolls the
+    // date back an extra day, past this date_last).
+    expect(CategoryService::isRecentCategory('2026-06-09 23:59:59', 5, '2026-06-15', $now))->toBeFalse();
 });
 
 /**
@@ -107,10 +145,48 @@ test('filterMenuRows restricts to the visible-categories csv when a filter is ac
     expect(array_column($result, 'id'))->toBe([1, 3]);
 });
 
+test('filterMenuRows treats a categoryPage with no uppercats key as having no uppercat restriction', function (): void {
+    // categoryPage !== null (true) but is_scalar($uppercatsRaw) is false
+    // (the key is missing, so it's null) -- only row 1 (top-level) should
+    // pass; row 2 must NOT be pulled in via an empty/zero uppercatIds list.
+    $rows = [catMenuRow(1, null), catMenuRow(2, 0)];
+
+    $result = CategoryService::filterMenuRows($rows, [], false, false, '');
+
+    expect(array_column($result, 'id'))->toBe([1]);
+});
+
+test('filterMenuRows treats an empty-string uppercats value the same as absent', function (): void {
+    $rows = [catMenuRow(1, null), catMenuRow(2, 0)];
+
+    $result = CategoryService::filterMenuRows($rows, ['uppercats' => ''], false, false, '');
+
+    expect(array_column($result, 'id'))->toBe([1]);
+});
+
+test('filterMenuRows string-casts a non-string scalar uppercats value before exploding it', function (): void {
+    // uppercats=0 (int, scalar, !== '') takes the restriction branch and
+    // must produce uppercatIds=[0] via the (string) cast -- without it,
+    // explode() would receive a raw int under strict_types and throw.
+    $rows = [catMenuRow(1, null), catMenuRow(2, 0)];
+
+    $result = CategoryService::filterMenuRows($rows, ['uppercats' => 0], false, false, '');
+
+    expect(array_column($result, 'id'))->toBe([1, 2]);
+});
+
 test('getDisplayImagesCount reports a flat photo count when there are no sub-albums', function (): void {
     $result = CategoryService::getDisplayImagesCount(0, 12, 0);
 
     expect($result)->toBe('12 photos');
+});
+
+test('getDisplayImagesCount returns an empty string when there are no images at all', function (): void {
+    expect(CategoryService::getDisplayImagesCount(0, 0, 0))->toBe('');
+});
+
+test('getDisplayImagesCount uses the singular form for exactly one image', function (): void {
+    expect(CategoryService::getDisplayImagesCount(0, 1, 0))->toBe('1 photo');
 });
 
 test('getDisplayImagesCount splits direct vs sub-album counts when both exist', function (): void {
@@ -118,8 +194,23 @@ test('getDisplayImagesCount splits direct vs sub-album counts when both exist', 
     // the recursive self-call formats the direct-count portion first.
     $result = CategoryService::getDisplayImagesCount(5, 20, 2, true, ' | ');
 
-    expect($result)->toContain('5 photos');
-    expect($result)->toContain('15 photos');
+    expect($result)->toBe('5 photos | 15 photos in 2 sub-albums');
+});
+
+test('getDisplayImagesCount only recurses into the direct-count split when direct images are strictly fewer than the total', function (): void {
+    // 1 direct photo out of 5 total -- exercises the recursive branch with
+    // singular phrasing on the direct-count part and plural on the
+    // remainder, pinned to an exact string so the recursive call's
+    // concatenation order/separator can't silently drop or reorder.
+    expect(CategoryService::getDisplayImagesCount(1, 5, 0, true, '-'))->toBe('1 photo-4 photos');
+});
+
+test('getDisplayImagesCount reports sub-albums after a direct/remainder split when they land on the same count', function (): void {
+    // 3 direct out of 4 total leaves exactly 1 remaining "sub-album" photo --
+    // the post-split catNbImages (0) must NOT equal the post-split
+    // catCountImages (1), or the sub-album text would be wrongly skipped.
+    expect(CategoryService::getDisplayImagesCount(3, 4, 2, true, '-'))
+        ->toBe('3 photos-1 photo in 2 sub-albums');
 });
 
 /**
@@ -167,6 +258,18 @@ test('removeComputedCategory decrements the parent\'s own counters and bubbles u
     expect($cats[1]['nb_categories'])->toBe(2);
     expect($cats[1]['count_images'])->toBe(90);
     expect($cats[1]['count_categories'])->toBe(4);
+});
+
+test('removeComputedCategory subtracts both the removed leaf itself and its own sub-category count from the parent', function (): void {
+    // The removed category's own count_categories (4) must be added to the
+    // flat "1" for the leaf itself -- 1 + 4, not 1 - 4.
+    $cats = [1 => catComputedRow(1, null, 3, 50, 10)];
+    $removed = catComputedRow(2, 1, 0, 5, 4);
+    $removed['nb_images'] = 5;
+
+    CategoryService::removeComputedCategory($cats, $removed);
+
+    expect($cats[1]['count_categories'])->toBe(5);
 });
 
 test('removeComputedCategory does nothing when the category has no known parent in the map', function (): void {

@@ -41,9 +41,18 @@ final class CssLoader
      */
     public function get_css(UrlServiceInterface $urlService): array
     {
-        uasort($this->registered_css, self::cmp_by_order(...));
-        $combiner = new FileCombiner('css', $urlService, \Piwigo\Core\CurrentPaths::get(), $this->registered_css);
+        $combiner = new FileCombiner('css', $urlService, \Piwigo\Core\CurrentPaths::get(), $this->sortedRegisteredCss());
         return $combiner->combine();
+    }
+
+    /**
+     * @return Css[]
+     */
+    private function sortedRegisteredCss(): array
+    {
+        uasort($this->registered_css, self::cmp_by_order(...));
+
+        return $this->registered_css;
     }
 
     /**
@@ -76,13 +85,22 @@ final class CssLoader
             $this->counter++;
         } else {
             $css = $this->registered_css[$id];
-            if ($css->order < $order * 1000
-                || $css->version === false
-                || $version === false
-                || version_compare($css->version, $version) < 0) {
+            if (self::shouldReplace($css, $order, $version)) {
                 unset($this->registered_css[$id]);
                 $this->add($id, $path, $version, $order, $is_template);
             }
         }
+    }
+
+    /**
+     * @param int $order
+     * @param string|false $version
+     */
+    private static function shouldReplace(Css $existing, $order, $version): bool
+    {
+        return $existing->order < $order * 1000
+            || $existing->version === false
+            || $version === false
+            || version_compare($existing->version, $version) < 0;
     }
 }

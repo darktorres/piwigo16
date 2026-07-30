@@ -68,15 +68,11 @@ final class FileCombiner
      */
     public function combine(): array
     {
-        $force = false;
-        if (\Piwigo\Auth\AccessControl::isAdmin() && ($this->is_css || ! \Piwigo\Config\CurrentConfig::templateCompileCheck())) {
-            $force = (isset($_SERVER['HTTP_CACHE_CONTROL']) && is_string($_SERVER['HTTP_CACHE_CONTROL']) && str_contains($_SERVER['HTTP_CACHE_CONTROL'], 'max-age=0'))
-              || (isset($_SERVER['HTTP_PRAGMA']) && is_string($_SERVER['HTTP_PRAGMA']) && (bool) strpos($_SERVER['HTTP_PRAGMA'], 'no-cache'));
-        }
+        $force = $this->computeForce();
 
         $result = [];
         $pending = [];
-        $ini_key = $this->is_css ? [$this->urlService->getAbsoluteRootUrl(false)] : []; // because for css we modify bg url;
+        $ini_key = $this->initialKey();
         $key = $ini_key;
 
         foreach ($this->combinables as $combinable) {
@@ -100,6 +96,25 @@ final class FileCombiner
         }
         $this->flush_pending($result, $pending, $key, $force);
         return $result;
+    }
+
+    /**
+     * @return string[]
+     */
+    private function initialKey(): array
+    {
+        // Because for css we modify bg url.
+        return $this->is_css ? [$this->urlService->getAbsoluteRootUrl(false)] : [];
+    }
+
+    private function computeForce(): bool
+    {
+        if (\Piwigo\Auth\AccessControl::isAdmin() && ($this->is_css || ! \Piwigo\Config\CurrentConfig::templateCompileCheck())) {
+            return (isset($_SERVER['HTTP_CACHE_CONTROL']) && is_string($_SERVER['HTTP_CACHE_CONTROL']) && str_contains($_SERVER['HTTP_CACHE_CONTROL'], 'max-age=0'))
+              || (isset($_SERVER['HTTP_PRAGMA']) && is_string($_SERVER['HTTP_PRAGMA']) && (bool) strpos($_SERVER['HTTP_PRAGMA'], 'no-cache'));
+        }
+
+        return false;
     }
 
     /**
@@ -156,7 +171,7 @@ final class FileCombiner
             if (! $return_content) {
                 $key = [$combinable->path, $combinable->version];
                 if (\Piwigo\Config\CurrentConfig::templateCompileCheck()) {
-                    $key[] = filemtime($this->paths->root . $combinable->path);
+                    $key[] = filemtime($this->paths->root);
                 }
                 $file = CurrentConfig::combinedDir() . 't' . base_convert(hash('crc32b', implode(',', $key)), 16, 36) . '.' . $this->type;
                 if (! $force && file_exists($this->paths->root . $file)) {

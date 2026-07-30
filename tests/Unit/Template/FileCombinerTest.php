@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Paths;
@@ -13,6 +14,8 @@ use Piwigo\Template\FileCombiner;
 use Piwigo\Template\Template;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\User;
+use Piwigo\Users\UserStatus;
 
 // combine()'s multi-item merge path (mkgetdir()+file_put_contents() under
 // PHPWG_ROOT_PATH) -- the full cascade through legacy free functions/
@@ -49,6 +52,131 @@ afterEach(function (): void {
     CurrentConfig::reset();
 });
 
+// --- computeForce() ---
+//
+// AccessControl::isAdmin() && (...) short-circuits for every guest-user
+// test elsewhere in this file (beforeEach seeds a guest), so the
+// admin-only branch's own inner boolean logic needs a real admin
+// CurrentUser to ever execute at all -- invoked via reflection since
+// computeForce() is private, same convention as process_combinable().
+
+function invokeComputeForce(FileCombiner $combiner): bool
+{
+    $method = new ReflectionMethod($combiner, 'computeForce');
+
+    /** @var bool */
+    return $method->invoke($combiner);
+}
+
+function setAdminUser(): void
+{
+    CurrentUser::set(new User(
+        id: UserId::from(2),
+        username: 'admin',
+        email: '',
+        language: 'en_UK',
+        theme: 'modus',
+        status: UserStatus::Admin,
+        enabledHigh: false,
+    ));
+}
+
+test('computeForce stays false for a guest even when the file type would otherwise qualify', function (): void {
+    // Guards two things at once: the isAdmin() && (...) join being a real
+    // AND (not an OR -- is_css=true alone would satisfy the right-hand
+    // side, but a guest must never reach it) and the whole if() not being
+    // negated (which would make a guest always enter it).
+    $_SERVER['HTTP_CACHE_CONTROL'] = 'max-age=0';
+
+    try {
+        $combiner = new FileCombiner('css', new UrlService(new HtmlService()), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), []);
+
+        expect(invokeComputeForce($combiner))->toBeFalse();
+    } finally {
+        unset($_SERVER['HTTP_CACHE_CONTROL']);
+    }
+});
+
+test('computeForce is true for an admin combining CSS with a cache-busting header, even though templateCompileCheck is on', function (): void {
+    // is_css=true alone satisfies the (is_css || !templateCompileCheck())
+    // side regardless of templateCompileCheck's own value -- proves that
+    // clause is really an OR, not an AND.
+    setAdminUser();
+    CurrentConfig::setTemplateCompileCheck(true);
+    $_SERVER['HTTP_CACHE_CONTROL'] = 'max-age=0';
+
+    try {
+        $combiner = new FileCombiner('css', new UrlService(new HtmlService()), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), []);
+
+        expect(invokeComputeForce($combiner))->toBeTrue();
+    } finally {
+        unset($_SERVER['HTTP_CACHE_CONTROL']);
+        CurrentUser::reset();
+        CurrentUser::attachGlobals();
+    }
+});
+
+test('computeForce is true for an admin combining JS with templateCompileCheck off and a cache-busting header', function (): void {
+    // is_css=false here, so only !templateCompileCheck() can satisfy the
+    // join -- proves the leading ! is real (RemoveNot would make this
+    // false||false=false instead).
+    setAdminUser();
+    CurrentConfig::setTemplateCompileCheck(false);
+    $_SERVER['HTTP_CACHE_CONTROL'] = 'max-age=0';
+
+    try {
+        $combiner = new FileCombiner('js', new UrlService(new HtmlService()), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), []);
+
+        expect(invokeComputeForce($combiner))->toBeTrue();
+    } finally {
+        unset($_SERVER['HTTP_CACHE_CONTROL']);
+        CurrentUser::reset();
+        CurrentUser::attachGlobals();
+    }
+});
+
+test('computeForce is false for an admin JS combine with no cache-busting header at all', function (): void {
+    setAdminUser();
+    CurrentConfig::setTemplateCompileCheck(false);
+
+    try {
+        $combiner = new FileCombiner('js', new UrlService(new HtmlService()), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), []);
+
+        expect(invokeComputeForce($combiner))->toBeFalse();
+    } finally {
+        CurrentUser::reset();
+        CurrentUser::attachGlobals();
+    }
+});
+
+// --- initialKey() ---
+
+function invokeInitialKey(FileCombiner $combiner): array
+{
+    $method = new ReflectionMethod($combiner, 'initialKey');
+
+    /** @var string[] */
+    return $method->invoke($combiner);
+}
+
+test('initialKey is empty for JS combining', function (): void {
+    $combiner = new FileCombiner('js', new UrlService(new HtmlService()), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), []);
+
+    expect(invokeInitialKey($combiner))->toBe([]);
+});
+
+test('initialKey seeds the scheme-less absolute root URL for CSS combining, so a scheme change alone busts the cache', function (): void {
+    $urlService = new UrlService(new HtmlService());
+    $combiner = new FileCombiner('css', $urlService, Paths::fromRoot('/tmp/piwigo-file-combiner-test'), []);
+
+    $key = invokeInitialKey($combiner);
+
+    expect($key)->toHaveCount(1)
+        ->and($key[0])->toBe($urlService->getAbsoluteRootUrl(false))
+        ->and($key[0])->not->toStartWith('http://')
+        ->and($key[0])->not->toStartWith('https://');
+});
+
 test('combine returns an empty array for no combinables', function (): void {
     $combiner = new FileCombiner('js', new UrlService(new HtmlService()), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), []);
 
@@ -75,6 +203,177 @@ test('combine passes remote combinables through without combining them', functio
     expect($result)->toHaveCount(2)
         ->and($result[0])->toBe($remote)
         ->and($result[1])->toBe($local);
+});
+
+test('combine flushes pending items before appending a remote combinable, preserving declaration order', function (): void {
+    // template_combine_files=true so the first item accumulates in
+    // $pending instead of flushing itself immediately -- if the
+    // is_remote branch's own flush_pending() call were skipped, $first
+    // would only ever get flushed by combine()'s trailing call, landing
+    // it AFTER $remote instead of before.
+    CurrentConfig::setTemplateCombineFiles(true);
+    $first = new Combinable('first', 'themes/default/js/a.js');
+    $remote = new Combinable('remote-script', 'https://cdn.example.com/foo.js');
+    $combiner = new FileCombiner('js', new UrlService(new HtmlService()), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), [$first, $remote]);
+
+    $result = $combiner->combine();
+
+    expect($result)->toHaveCount(2)
+        ->and($result[0])->toBe($first)
+        ->and($result[1])->toBe($remote);
+});
+
+// --- flush_pending()'s multi-item merge path (real files, no Template
+// dependency needed -- process_combinable()'s $return_content=true branch
+// for a non-template combinable reads the file directly via
+// file_get_contents()) ---
+
+test('combine merges 2+ non-template files into a single combined output on disk, respecting declaration order', function (): void {
+    $root = sys_get_temp_dir() . '/piwigo-file-combiner-multi-' . bin2hex(random_bytes(8));
+    mkdir($root . '/themes/default/js', 0o777, true);
+    file_put_contents($root . '/themes/default/js/a.js', "var a = 1;\n");
+    file_put_contents($root . '/themes/default/js/b.js', "var b = 2;\n");
+    CurrentConfig::setTemplateCombineFiles(true);
+
+    $first = new Combinable('a', 'themes/default/js/a.js');
+    $second = new Combinable('b', 'themes/default/js/b.js');
+    $combiner = new FileCombiner('js', new UrlService(new HtmlService()), Paths::fromRoot($root), [$first, $second]);
+
+    try {
+        $result = $combiner->combine();
+
+        expect($result)->toHaveCount(1);
+        $combinedPath = $result[0]->path;
+        // Exact hash-derived filename, replicating flush_pending()'s own
+        // join('>', $key) + crc32b + base_convert(..., 16, 36) formula --
+        // pins the *1 and *36 base-conversion arguments precisely, not
+        // just "a filename got produced".
+        $expectedKey = 'themes/default/js/a.js>0>themes/default/js/b.js>0';
+        $expectedFile = '_data/combined/' . base_convert(hash('crc32b', $expectedKey), 16, 36) . '.js';
+        expect($combinedPath)->toBe($expectedFile);
+
+        // The resulting Combinable disables its own version-based cache
+        // busting (the combined file's hash already encodes freshness).
+        expect($result[0]->version)->toBeFalse();
+
+        expect(fileperms($root . '/' . $combinedPath) & 0o777)->toBe(0o644);
+
+        // Exact combined output -- pins the "/*BEGIN header */\n" prefix,
+        // the empty-header blank line, and every /*BEGIN path */ marker's
+        // surrounding concatenation, not just that the substrings appear
+        // somewhere.
+        $content = file_get_contents($root . '/' . $combinedPath);
+        expect($content)->toBe(
+            "/*BEGIN header */\n\n/*BEGIN themes/default/js/a.js */\nvar a = 1;\n\n/*BEGIN themes/default/js/b.js */\nvar b = 2;\n\n"
+        );
+    } finally {
+        file_combiner_test_rrmdir($root);
+    }
+});
+
+test('combine does not rewrite an already-combined file on a second call (cache respected, not force-rebuilt)', function (): void {
+    $root = sys_get_temp_dir() . '/piwigo-file-combiner-multi-cache-' . bin2hex(random_bytes(8));
+    mkdir($root . '/themes/default/js', 0o777, true);
+    file_put_contents($root . '/themes/default/js/a.js', "var a = 1;\n");
+    file_put_contents($root . '/themes/default/js/b.js', "var b = 2;\n");
+    CurrentConfig::setTemplateCombineFiles(true);
+
+    $combinerFirst = new FileCombiner('js', new UrlService(new HtmlService()), Paths::fromRoot($root), [
+        new Combinable('a', 'themes/default/js/a.js'),
+        new Combinable('b', 'themes/default/js/b.js'),
+    ]);
+
+    try {
+        $firstResult = $combinerFirst->combine();
+        $combinedPath = $root . '/' . $firstResult[0]->path;
+        $originalMtime = filemtime($combinedPath);
+
+        // Change a source file's content -- if the combined file were
+        // rebuilt, its own content (and the hash-based filename) would
+        // change; the cache-respecting path leaves both alone.
+        sleep(1);
+        file_put_contents($root . '/themes/default/js/a.js', "var a = 999;\n");
+
+        $combinerSecond = new FileCombiner('js', new UrlService(new HtmlService()), Paths::fromRoot($root), [
+            new Combinable('a', 'themes/default/js/a.js'),
+            new Combinable('b', 'themes/default/js/b.js'),
+        ]);
+        $secondResult = $combinerSecond->combine();
+
+        expect($secondResult[0]->path)->toBe($firstResult[0]->path)
+            ->and(filemtime($combinedPath))->toBe($originalMtime)
+            ->and(file_get_contents($combinedPath))->toContain('var a = 1;');
+    } finally {
+        file_combiner_test_rrmdir($root);
+    }
+});
+
+test('combine invalidates the multi-item cache when a source file\'s mtime changes and templateCompileCheck is on', function (): void {
+    $root = sys_get_temp_dir() . '/piwigo-file-combiner-multi-mtime-' . bin2hex(random_bytes(8));
+    mkdir($root . '/themes/default/js', 0o777, true);
+    file_put_contents($root . '/themes/default/js/a.js', "var a = 1;\n");
+    file_put_contents($root . '/themes/default/js/b.js', "var b = 2;\n");
+    CurrentConfig::setTemplateCombineFiles(true);
+    CurrentConfig::setTemplateCompileCheck(true);
+
+    $combinerFirst = new FileCombiner('js', new UrlService(new HtmlService()), Paths::fromRoot($root), [
+        new Combinable('a', 'themes/default/js/a.js'),
+        new Combinable('b', 'themes/default/js/b.js'),
+    ]);
+
+    try {
+        $firstResult = $combinerFirst->combine();
+
+        sleep(1);
+        file_put_contents($root . '/themes/default/js/a.js', "var a = 999;\n");
+
+        $combinerSecond = new FileCombiner('js', new UrlService(new HtmlService()), Paths::fromRoot($root), [
+            new Combinable('a', 'themes/default/js/a.js'),
+            new Combinable('b', 'themes/default/js/b.js'),
+        ]);
+        $secondResult = $combinerSecond->combine();
+
+        // A real (string) filemtime() reading the *correct* absolute
+        // path is what makes the hash key -- and therefore the combined
+        // filename -- change here.
+        expect($secondResult[0]->path)->not->toBe($firstResult[0]->path)
+            ->and(file_get_contents($root . '/' . $secondResult[0]->path))->toContain('var a = 999;');
+    } finally {
+        file_combiner_test_rrmdir($root);
+    }
+});
+
+test('combine merges 2+ CSS files into a single combined output, with a stripped @import promoted to the shared header', function (): void {
+    $root = sys_get_temp_dir() . '/piwigo-file-combiner-multi-css-header-' . bin2hex(random_bytes(8));
+    mkdir($root . '/themes/default/css', 0o777, true);
+    file_put_contents($root . '/themes/default/css/a.css', "@import \"../evil.css\";\nbody{color:red;}\n");
+    file_put_contents($root . '/themes/default/css/b.css', "p{color:blue;}\n");
+    CurrentConfig::setTemplateCombineFiles(true);
+
+    $urlService = new UrlService(new HtmlService());
+    $combiner = new FileCombiner('css', $urlService, Paths::fromRoot($root), [
+        new Combinable('a', 'themes/default/css/a.css'),
+        new Combinable('b', 'themes/default/css/b.css'),
+    ]);
+
+    try {
+        $result = $combiner->combine();
+
+        expect($result)->toHaveCount(1);
+        $combinedPath = $result[0]->path;
+        $expectedKey = $urlService->getAbsoluteRootUrl(false) . '>themes/default/css/a.css>0>themes/default/css/b.css>0';
+        expect($combinedPath)->toBe('_data/combined/' . base_convert(hash('crc32b', $expectedKey), 16, 36) . '.css');
+
+        // Exact output: the suspicious @import is promoted to the shared
+        // "/*BEGIN header */" section (not left inline, not dropped), and
+        // both files' own content follows in declaration order.
+        $content = file_get_contents($root . '/' . $combinedPath);
+        expect($content)->toBe(
+            "/*BEGIN header */\n@import \"../evil.css\";\n/*BEGIN themes/default/css/a.css */\n\nbody{color:red;}\n\n/*BEGIN themes/default/css/b.css */\np{color:blue;}\n\n"
+        );
+    } finally {
+        file_combiner_test_rrmdir($root);
+    }
 });
 
 test('add appends a single combinable', function (): void {
@@ -170,6 +469,133 @@ function invokeProcessCombinable(FileCombiner $combiner, Combinable $combinable,
     /** @var string|null */
     return $method->invokeArgs($combiner, [$combinable, $returnContent, $force, &$header]);
 }
+
+test('combine reaches process_combinable for a single template combinable via flush_pending\'s own count===1 branch, updating its path to the cached file', function (): void {
+    $root = sys_get_temp_dir() . '/piwigo-file-combiner-single-template-flush-' . bin2hex(random_bytes(8));
+    mkdir($root . '/themes/default/js', 0o777, true);
+    file_put_contents($root . '/themes/default/js/foo.js', "var a = 1;\n");
+    CurrentPaths::set(Paths::fromRoot($root));
+    CurrentConfig::setDataLocation('_data/');
+    CurrentConfig::setDataDirChecked('1');
+
+    $combiner = new FileCombiner('js', new UrlService(new HtmlService()), Paths::fromRoot($root), []);
+
+    try {
+        CurrentTemplate::set(new Template());
+        $combinable = new Combinable('foo-js', 'themes/default/js/foo.js');
+        $combinable->is_template = true;
+        $combiner->add($combinable);
+
+        $result = $combiner->combine();
+
+        // If flush_pending()'s own process_combinable() call for the
+        // count===1 branch were skipped, $combinable would still point at
+        // its original source path instead of the built cache file.
+        expect($result)->toHaveCount(1)
+            ->and($result[0]->path)->toStartWith('_data/combined/t')
+            ->and($result[0]->path)->toEndWith('.js')
+            ->and($result[0]->path)->not->toBe('themes/default/js/foo.js')
+            ->and(file_exists($root . '/' . $result[0]->path))->toBeTrue();
+    } finally {
+        CurrentTemplate::reset();
+        file_combiner_test_rrmdir($root);
+        CurrentPaths::reset();
+    }
+});
+
+test('process_combinable\'s single-file cache key is sensitive to the combinable\'s own path, not just its id', function (): void {
+    $root = sys_get_temp_dir() . '/piwigo-file-combiner-cache-key-path-' . bin2hex(random_bytes(8));
+    mkdir($root . '/themes/default/js', 0o777, true);
+    file_put_contents($root . '/themes/default/js/foo.js', "var a = 1;\n");
+    file_put_contents($root . '/themes/default/js/bar.js', "var a = 1;\n");
+    CurrentPaths::set(Paths::fromRoot($root));
+    CurrentConfig::setDataLocation('_data/');
+    CurrentConfig::setDataDirChecked('1');
+
+    $combiner = new FileCombiner('js', new UrlService(new HtmlService()), Paths::fromRoot($root), []);
+
+    try {
+        CurrentTemplate::set(new Template());
+
+        $a = new Combinable('same-id', 'themes/default/js/foo.js');
+        $a->is_template = true;
+        $header = '';
+        invokeProcessCombinable($combiner, $a, false, false, $header);
+
+        $b = new Combinable('same-id', 'themes/default/js/bar.js');
+        $b->is_template = true;
+        invokeProcessCombinable($combiner, $b, false, false, $header);
+
+        expect($a->path)->not->toBe($b->path);
+    } finally {
+        CurrentTemplate::reset();
+        file_combiner_test_rrmdir($root);
+        CurrentPaths::reset();
+    }
+});
+
+test('process_combinable\'s single-file cache key is sensitive to the combinable\'s own version', function (): void {
+    $root = sys_get_temp_dir() . '/piwigo-file-combiner-cache-key-version-' . bin2hex(random_bytes(8));
+    mkdir($root . '/themes/default/js', 0o777, true);
+    file_put_contents($root . '/themes/default/js/foo.js', "var a = 1;\n");
+    CurrentPaths::set(Paths::fromRoot($root));
+    CurrentConfig::setDataLocation('_data/');
+    CurrentConfig::setDataDirChecked('1');
+
+    $combiner = new FileCombiner('js', new UrlService(new HtmlService()), Paths::fromRoot($root), []);
+
+    try {
+        CurrentTemplate::set(new Template());
+
+        $a = new Combinable('foo-js', 'themes/default/js/foo.js', '1.0');
+        $a->is_template = true;
+        $header = '';
+        invokeProcessCombinable($combiner, $a, false, false, $header);
+
+        $b = new Combinable('foo-js', 'themes/default/js/foo.js', '2.0');
+        $b->is_template = true;
+        invokeProcessCombinable($combiner, $b, false, false, $header);
+
+        expect($a->path)->not->toBe($b->path);
+    } finally {
+        CurrentTemplate::reset();
+        file_combiner_test_rrmdir($root);
+        CurrentPaths::reset();
+    }
+});
+
+test('process_combinable\'s single-file cache filename exactly matches the crc32b+base36 hash of path,version,mtime', function (): void {
+    $root = sys_get_temp_dir() . '/piwigo-file-combiner-cache-key-exact-' . bin2hex(random_bytes(8));
+    mkdir($root . '/themes/default/js', 0o777, true);
+    file_put_contents($root . '/themes/default/js/foo.js', "var a = 1;\n");
+    CurrentPaths::set(Paths::fromRoot($root));
+    CurrentConfig::setDataLocation('_data/');
+    CurrentConfig::setDataDirChecked('1');
+    // templateCompileCheck=true folds filemtime() into the key -- pins
+    // that it's read from the combinable's own real absolute path, and
+    // pins the *16 and *36 base-conversion arguments precisely.
+    CurrentConfig::setTemplateCompileCheck(true);
+
+    $combiner = new FileCombiner('js', new UrlService(new HtmlService()), Paths::fromRoot($root), []);
+
+    try {
+        CurrentTemplate::set(new Template());
+        $combinable = new Combinable('foo-js', 'themes/default/js/foo.js');
+        $combinable->is_template = true;
+        $header = '';
+
+        invokeProcessCombinable($combiner, $combinable, false, false, $header);
+
+        $mtime = filemtime($root . '/themes/default/js/foo.js');
+        $expectedKey = implode(',', ['themes/default/js/foo.js', '0', $mtime]);
+        $expectedFile = '_data/combined/t' . base_convert(hash('crc32b', $expectedKey), 16, 36) . '.js';
+        expect($combinable->path)->toBe($expectedFile);
+    } finally {
+        CurrentTemplate::reset();
+        file_combiner_test_rrmdir($root);
+        CurrentPaths::reset();
+    }
+});
 
 test('process_combinable reuses an already-combined template file (matching a filemtime-inclusive cache key) without ever touching CurrentTemplate', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-file-combiner-cache-hit-' . bin2hex(random_bytes(8));
@@ -378,4 +804,243 @@ test('process_css_rec strips path-traversal, remote, and unreadable @import dire
     } finally {
         file_combiner_test_rrmdir($root);
     }
+});
+
+test('process_css_rec rewrites a relative url() reference into an embellished absolute URL', function (): void {
+    $root = sys_get_temp_dir() . '/piwigo-file-combiner-url-rewrite-' . bin2hex(random_bytes(8));
+    mkdir($root . '/themes/default/css', 0o777, true);
+    file_put_contents(
+        $root . '/themes/default/css/main.css',
+        "body{background: url('../img/bg.png');}\n"
+    );
+
+    $combinable = new Combinable('main-css', 'themes/default/css/main.css');
+    $combiner = new FileCombiner('css', new UrlService(new HtmlService()), Paths::fromRoot($root), []);
+
+    try {
+        $header = '';
+        $result = invokeProcessCombinable($combiner, $combinable, true, false, $header);
+
+        // The literal relative reference is gone -- proves preg_match_all
+        // really searched $css's own real content (not a hardcoded ''
+        // fallback) and the match actually got rewritten.
+        expect($result)->not->toContain("url('../img/bg.png')")
+            ->and($result)->toContain('url(')
+            // $search must be the FULL matched "url('...')" text, not just
+            // the inner path -- otherwise str_replace() would only swap
+            // the bare path substring, leaving a broken, doubly-nested
+            // "url('url(...)')" behind.
+            ->and($result)->not->toContain("url('url(")
+            // getAbsoluteRootUrl(false), not (true) -- no scheme prefix.
+            ->and($result)->not->toContain('http://')
+            ->and($result)->not->toContain('https://');
+    } finally {
+        file_combiner_test_rrmdir($root);
+    }
+});
+
+test('process_css_rec only rewrites url() references starting with "/" when checking the FIRST character of the path, not the last or second', function (): void {
+    $root = sys_get_temp_dir() . '/piwigo-file-combiner-url-slash-edge-' . bin2hex(random_bytes(8));
+    mkdir($root . '/themes/default/css', 0o777, true);
+    file_put_contents(
+        $root . '/themes/default/css/main.css',
+        "a{background: url('/absolute/path.png');}\n"
+        . "b{background: url('a/b.png');}\n"
+        . "c{background: url('rel/path/');}\n"
+    );
+
+    $combinable = new Combinable('main-css', 'themes/default/css/main.css');
+    $combiner = new FileCombiner('css', new UrlService(new HtmlService()), Paths::fromRoot($root), []);
+
+    try {
+        $header = '';
+        $result = invokeProcessCombinable($combiner, $combinable, true, false, $header);
+
+        // Absolute path (starts with '/') is left completely untouched.
+        expect($result)->toContain("url('/absolute/path.png')")
+            // 'a/b.png' doesn't start with '/' (even though its SECOND
+            // character is '/') -- must still be rewritten.
+            ->and($result)->not->toContain("url('a/b.png')")
+            // 'rel/path/' doesn't start with '/' (even though its LAST
+            // character is '/') -- must still be rewritten.
+            ->and($result)->not->toContain("url('rel/path/')");
+    } finally {
+        file_combiner_test_rrmdir($root);
+    }
+});
+
+test('process_css_rec resolves a relative url() reference against the CSS file\'s own subdirectory, not the combined root', function (): void {
+    // main.css lives in a subdirectory -- $relative must be dir+match,
+    // not just one side or the other, or a swapped concatenation.
+    $root = sys_get_temp_dir() . '/piwigo-file-combiner-url-subdir-' . bin2hex(random_bytes(8));
+    mkdir($root . '/themes/default/css/sub', 0o777, true);
+    file_put_contents($root . '/themes/default/css/sub/main.css', "body{background: url(\"../img/bg.png\");}\n");
+
+    $combinable = new Combinable('main-css', 'themes/default/css/sub/main.css');
+    $urlService = new UrlService(new HtmlService());
+    $combiner = new FileCombiner('css', $urlService, Paths::fromRoot($root), []);
+
+    try {
+        $header = '';
+        $result = invokeProcessCombinable($combiner, $combinable, true, false, $header);
+
+        $expectedRelative = 'themes/default/css/sub' . '/../img/bg.png';
+        $expectedEmbellished = $urlService->embellishUrl($urlService->getAbsoluteRootUrl(false) . $expectedRelative);
+        expect($result)->toBe("body{background: url({$expectedEmbellished});}\n");
+    } finally {
+        file_combiner_test_rrmdir($root);
+    }
+});
+
+test('process_css_rec leaves a remote or data-URI url() reference untouched', function (): void {
+    $root = sys_get_temp_dir() . '/piwigo-file-combiner-url-skip-' . bin2hex(random_bytes(8));
+    mkdir($root . '/themes/default/css', 0o777, true);
+    file_put_contents(
+        $root . '/themes/default/css/main.css',
+        "a{background: url('https://cdn.example.com/x.png');}\nb{background: url('data:image/png;base64,AAA');}\n"
+    );
+
+    $combinable = new Combinable('main-css', 'themes/default/css/main.css');
+    $combiner = new FileCombiner('css', new UrlService(new HtmlService()), Paths::fromRoot($root), []);
+
+    try {
+        $header = '';
+        $result = invokeProcessCombinable($combiner, $combinable, true, false, $header);
+
+        expect($result)->toContain("url('https://cdn.example.com/x.png')")
+            ->and($result)->toContain("url('data:image/png;base64,AAA')");
+    } finally {
+        file_combiner_test_rrmdir($root);
+    }
+});
+
+test('process_css_rec resolves a doubly-nested @import against the correct subdirectory at each level', function (): void {
+    // Distinguishes the recursive call's own $dir argument from a
+    // corrupted computation -- a wrong dir here would make the deepest
+    // import's is_readable() check miss, stripping it into $header
+    // instead of inlining "DEEPEST" below.
+    $root = sys_get_temp_dir() . '/piwigo-file-combiner-nested-dir-' . bin2hex(random_bytes(8));
+    mkdir($root . '/themes/default/css/subdir', 0o777, true);
+    file_put_contents($root . '/themes/default/css/main.css', "@import 'subdir/sub.css';\n");
+    file_put_contents($root . '/themes/default/css/subdir/sub.css', "@import 'nested.css';\n");
+    file_put_contents($root . '/themes/default/css/subdir/nested.css', "p{color:green;}\n");
+
+    $combinable = new Combinable('main-css', 'themes/default/css/main.css');
+    $combiner = new FileCombiner('css', new UrlService(new HtmlService()), Paths::fromRoot($root), []);
+
+    try {
+        $header = '';
+        $result = invokeProcessCombinable($combiner, $combinable, true, false, $header);
+
+        // Each nesting level compounds an extra trailing newline from its
+        // own source file's line ending after the @import statement --
+        // "p{color:green;}\n" from nested.css itself, plus one from
+        // sub.css's own line, plus one from main.css's own line.
+        expect($result)->toBe("p{color:green;}\n\n\n")
+            ->and($header)->toBe('');
+    } finally {
+        file_combiner_test_rrmdir($root);
+    }
+});
+
+test('process_combinable throws for a non-template combinable whose file cannot be read', function (): void {
+    $root = sys_get_temp_dir() . '/piwigo-file-combiner-nontemplate-missing-' . bin2hex(random_bytes(8));
+    mkdir($root, 0o777, true);
+
+    $combinable = new Combinable('missing', 'themes/default/js/does-not-exist.js');
+    $combiner = new FileCombiner('js', new UrlService(new HtmlService()), Paths::fromRoot($root), []);
+
+    set_error_handler(static fn (): bool => true);
+    try {
+        $header = '';
+        invokeProcessCombinable($combiner, $combinable, true, false, $header);
+    } finally {
+        restore_error_handler();
+        file_combiner_test_rrmdir($root);
+    }
+})->throws(Exception::class, 'do_combine(): unable to read themes/default/js/does-not-exist.js');
+
+test('process_combinable dispatches a non-template combinable to process_js when read successfully', function (): void {
+    $root = sys_get_temp_dir() . '/piwigo-file-combiner-nontemplate-js-' . bin2hex(random_bytes(8));
+    mkdir($root . '/themes/default/js', 0o777, true);
+    file_put_contents($root . '/themes/default/js/foo.js', "  var a = 1;  ;;\n");
+
+    $combinable = new Combinable('foo', 'themes/default/js/foo.js');
+    $combiner = new FileCombiner('js', new UrlService(new HtmlService()), Paths::fromRoot($root), []);
+
+    try {
+        $header = '';
+        $result = invokeProcessCombinable($combiner, $combinable, true, false, $header);
+
+        expect($result)->toBe("var a = 1;\n");
+    } finally {
+        file_combiner_test_rrmdir($root);
+    }
+});
+
+test('process_combinable registers the template file under a handle combining the loader type and combinable id', function (): void {
+    $root = sys_get_temp_dir() . '/piwigo-file-combiner-handle-' . bin2hex(random_bytes(8));
+    mkdir($root . '/themes/default/js', 0o777, true);
+    file_put_contents($root . '/themes/default/js/foo.js', "var a = 1;\n");
+    CurrentPaths::set(Paths::fromRoot($root));
+    CurrentConfig::setDataLocation('_data/');
+    CurrentConfig::setDataDirChecked('1');
+
+    $combiner = new FileCombiner('js', new UrlService(new HtmlService()), Paths::fromRoot($root), []);
+    $template = new Template();
+
+    try {
+        CurrentTemplate::set($template);
+        $combinable = new Combinable('my-handle-id', 'themes/default/js/foo.js');
+        $combinable->is_template = true;
+        $header = '';
+
+        invokeProcessCombinable($combiner, $combinable, false, false, $header);
+
+        expect($template->files)->toHaveKey('js.my-handle-id');
+    } finally {
+        CurrentTemplate::reset();
+        file_combiner_test_rrmdir($root);
+        CurrentPaths::reset();
+    }
+});
+
+test('process_combinable notifies combinable_preparse listeners before parsing a template combinable', function (): void {
+    $root = sys_get_temp_dir() . '/piwigo-file-combiner-preparse-notify-' . bin2hex(random_bytes(8));
+    mkdir($root . '/themes/default/js', 0o777, true);
+    file_put_contents($root . '/themes/default/js/foo.js', "var a = 1;\n");
+    CurrentPaths::set(Paths::fromRoot($root));
+    CurrentConfig::setDataLocation('_data/');
+    CurrentConfig::setDataDirChecked('1');
+
+    $notifiedWith = null;
+    EventDispatcher::get()->addEventHandler('combinable_preparse', function (mixed ...$args) use (&$notifiedWith): void {
+        $notifiedWith = $args;
+    });
+
+    $combiner = new FileCombiner('js', new UrlService(new HtmlService()), Paths::fromRoot($root), []);
+
+    try {
+        CurrentTemplate::set(new Template());
+        $combinable = new Combinable('foo-js', 'themes/default/js/foo.js');
+        $combinable->is_template = true;
+        $header = '';
+
+        invokeProcessCombinable($combiner, $combinable, false, false, $header);
+
+        expect($notifiedWith)->not->toBeNull()
+            ->and($notifiedWith[1])->toBe($combinable);
+    } finally {
+        EventDispatcher::reset();
+        CurrentTemplate::reset();
+        file_combiner_test_rrmdir($root);
+        CurrentPaths::reset();
+    }
+});
+
+test('process_js trims whitespace/semicolons even from a null content argument', function (): void {
+    $method = new ReflectionMethod(FileCombiner::class, 'process_js');
+
+    expect($method->invoke(null, null))->toBe(";\n")
+        ->and($method->invoke(null, "  var a=1;  \n"))->toBe("var a=1;\n");
 });

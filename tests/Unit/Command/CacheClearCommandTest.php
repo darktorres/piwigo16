@@ -6,16 +6,19 @@ use Piwigo\Command\CacheClearCommand;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Component\Console\Tester\CommandTester;
 
-// Latte cache dir path is hardcoded relative to the source file (same
-// convention as CacheFactory's own _data/cache/ path), so this exercises
-// the real project _data/templates_c/latte/ dir rather than an injected
-// fake -- matching CacheFactoryTest's own precedent of touching the real
-// relative _data/ tree.
-$latteDir = dirname(__DIR__, 3) . '/_data/templates_c/latte';
+// Latte cache dir path is injected here (CacheClearCommand's own
+// $latteCacheDir constructor param, defaulting to the real hardcoded
+// project path when omitted) -- these tests exercise the real
+// removeDir() recursion, so they point it at an isolated sys_get_temp_dir()
+// fixture instead of ever touching this project's own _data/ tree. The
+// fixture still ends in .../templates_c/latte to satisfy
+// looksLikeLatteCacheDir()'s own basename guard, same shape the real path
+// has.
+$latteDir = sys_get_temp_dir() . '/piwigo-cache-clear-test-' . bin2hex(random_bytes(8)) . '/templates_c/latte';
 
 afterEach(function () use ($latteDir): void {
     if (is_dir($latteDir)) {
-        exec('rm -rf ' . escapeshellarg($latteDir));
+        exec('rm -rf ' . escapeshellarg(dirname($latteDir)));
     }
 });
 
@@ -23,7 +26,7 @@ test('removes an existing Latte compiled-template cache dir', function () use ($
     mkdir($latteDir, 0o775, true);
     file_put_contents($latteDir . '/some_compiled.php', '<?php // fixture');
 
-    $command = new CacheClearCommand(new ArrayAdapter());
+    $command = new CacheClearCommand(new ArrayAdapter(), $latteDir);
     $tester = new CommandTester($command);
     $exitCode = $tester->execute([]);
 
@@ -33,11 +36,7 @@ test('removes an existing Latte compiled-template cache dir', function () use ($
 });
 
 test('reports an already-empty Latte cache dir without erroring', function () use ($latteDir): void {
-    if (is_dir($latteDir)) {
-        exec('rm -rf ' . escapeshellarg($latteDir));
-    }
-
-    $command = new CacheClearCommand(new ArrayAdapter());
+    $command = new CacheClearCommand(new ArrayAdapter(), $latteDir);
     $tester = new CommandTester($command);
     $exitCode = $tester->execute([]);
 
@@ -50,13 +49,59 @@ test('removes a Latte compiled-template cache dir containing a nested subdirecto
     file_put_contents($latteDir . '/top-level.php', '<?php // fixture');
     file_put_contents($latteDir . '/2026/07/nested.php', '<?php // fixture');
 
-    $command = new CacheClearCommand(new ArrayAdapter());
+    $command = new CacheClearCommand(new ArrayAdapter(), $latteDir);
     $tester = new CommandTester($command);
     $exitCode = $tester->execute([]);
 
     expect($exitCode)->toBe(0)
         ->and(is_dir($latteDir))->toBeFalse()
         ->and($tester->getDisplay())->toContain('Removed Latte compiled-template cache');
+});
+
+test('refuses to clear a resolved path that does not look like the Latte cache dir', function (): void {
+    // Guards against exactly the failure mode that motivated this guard:
+    // a corrupted path computation (bug, or a mutation testing run
+    // actually executing mutated production code) resolving somewhere
+    // real and much broader than the Latte cache -- confirms execute()
+    // refuses to recurse-delete rather than silently doing it anyway.
+    $wrongDir = sys_get_temp_dir() . '/piwigo-cache-clear-test-' . bin2hex(random_bytes(8)) . '/not-the-latte-dir';
+    mkdir($wrongDir, 0o775, true);
+    file_put_contents($wrongDir . '/innocent-bystander.txt', 'must survive');
+
+    try {
+        $command = new CacheClearCommand(new ArrayAdapter(), $wrongDir);
+        $tester = new CommandTester($command);
+
+        expect(fn () => $tester->execute([]))->toThrow(RuntimeException::class);
+        expect(is_dir($wrongDir))->toBeTrue();
+        expect(file_exists($wrongDir . '/innocent-bystander.txt'))->toBeTrue();
+    } finally {
+        exec('rm -rf ' . escapeshellarg($wrongDir));
+    }
+});
+
+test('the Latte cache dir guard requires both the "latte" name and the "templates_c" parent, not just one', function (): void {
+    // A dir literally named "latte" but with an unrelated parent must
+    // still be refused -- proves the guard is a real AND, not an OR that
+    // would accept either signal alone.
+    $wrongDir = sys_get_temp_dir() . '/piwigo-cache-clear-test-' . bin2hex(random_bytes(8)) . '/unrelated-parent/latte';
+    mkdir($wrongDir, 0o775, true);
+
+    try {
+        $command = new CacheClearCommand(new ArrayAdapter(), $wrongDir);
+        $tester = new CommandTester($command);
+
+        expect(fn () => $tester->execute([]))->toThrow(RuntimeException::class);
+        expect(is_dir($wrongDir))->toBeTrue();
+    } finally {
+        exec('rm -rf ' . escapeshellarg(dirname($wrongDir)));
+    }
+});
+
+test('defaultLatteCacheDir resolves to _data/templates_c/latte under the real project root', function (): void {
+    $method = new ReflectionMethod(CacheClearCommand::class, 'defaultLatteCacheDir');
+
+    expect($method->invoke(null))->toBe(dirname(__DIR__, 3) . '/_data/templates_c/latte');
 });
 
 test('removeDir returns without removing anything when a subdirectory cannot be listed (permission denied)', function () use ($latteDir): void {
@@ -106,5 +151,6 @@ test('clears the injected PSR-6 cache pool', function (): void {
     $tester = new CommandTester($command);
     $tester->execute([]);
 
-    expect($pool->getItem('some-key')->isHit())->toBeFalse();
+    expect($pool->getItem('some-key')->isHit())->toBeFalse()
+        ->and($tester->getDisplay())->toContain('Cleared the PSR-6 cache pool.');
 });

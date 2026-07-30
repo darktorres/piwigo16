@@ -309,10 +309,12 @@ final class PasswordController implements ControllerInterface
         $conn = DbConnection::build();
 
         // retrievies user by email is not try by username
-        $user_id_raw = self::userService()->getUserIdByEmail($username_or_email);
+        $emailOrNull = \Piwigo\Common\ValueObject\Email::tryFrom($username_or_email);
+        $user_id_raw = $emailOrNull === null ? null : self::userService()->getUserIdByEmail($emailOrNull);
 
         if ($user_id_raw === null) {
-            $user_id_raw = self::userService()->getUserId($username_or_email);
+            $usernameOrNull = \Piwigo\Common\ValueObject\Username::tryFrom($username_or_email);
+            $user_id_raw = $usernameOrNull === null ? null : self::userService()->getUserId($usernameOrNull);
         }
 
         // when no user is found, we assign guest_id instead of stopping.

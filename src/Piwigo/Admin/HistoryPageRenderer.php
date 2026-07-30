@@ -117,8 +117,9 @@ final class HistoryPageRenderer
             $user_fields = \Piwigo\Config\CurrentConfig::userFields();
 
             $form_param_user_id = \Piwigo\Common\ValueObject\UserId::tryFrom($form_param['user_id']);
-            $form_param['user_name'] = $form_param_user_id === null ? null : \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class)
+            $form_param_username = $form_param_user_id === null ? null : \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class)
                 ->findUsernameById($form_param_user_id, $user_fields['id'], $user_fields['username']);
+            $form_param['user_name'] = $form_param_username?->value;
             $form_param['user_id'] = $form_param['user_name'] === null ? -1 : $form_param['user_id'];
         }
 

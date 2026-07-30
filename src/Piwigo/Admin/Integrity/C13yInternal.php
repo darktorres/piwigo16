@@ -212,7 +212,7 @@ final class C13yInternal
                     if (isset($name)) {
                         $name_ok = false;
                         while (! $name_ok) {
-                            $name_ok = (self::userService()->getUserId($name) === null);
+                            $name_ok = (self::userService()->getUserId(\Piwigo\Common\ValueObject\Username::from($name)) === null);
                             if (! $name_ok) {
                                 $name .= SessionService::get()->generateKey(1);
                             }
@@ -262,7 +262,7 @@ final class C13yInternal
                             );
 
                         $updated_username = self::userService()->getUsername(\Piwigo\Common\ValueObject\UserId::from($id));
-                        \Piwigo\Core\PageState::current()->addInfo(sprintf(Lang::t('Status of user "%s" updated'), $updated_username === false ? '' : $updated_username));
+                        \Piwigo\Core\PageState::current()->addInfo(sprintf(Lang::t('Status of user "%s" updated'), $updated_username === null ? '' : $updated_username->value));
 
                         $result = true;
                     }

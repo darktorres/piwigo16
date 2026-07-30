@@ -869,7 +869,7 @@ final class PwgUsers
         $lost_user_id = \Piwigo\Common\ValueObject\UserId::from($params['user_id']);
 
         // check if user exist
-        if (self::userService()->getUsername($lost_user_id) === false) {
+        if (self::userService()->getUsername($lost_user_id) === null) {
             return new PwgError(WsError::INVALID_PARAM, 'This user does not exist.');
         }
 
@@ -956,7 +956,7 @@ final class PwgUsers
         $new_main_user_id = \Piwigo\Common\ValueObject\UserId::from($params['user_id']);
 
         // checl if user exist
-        if (self::userService()->getUsername($new_main_user_id) === false) {
+        if (self::userService()->getUsername($new_main_user_id) === null) {
             return new PwgError(WsError::INVALID_PARAM, 'This user does not exist.');
         }
 

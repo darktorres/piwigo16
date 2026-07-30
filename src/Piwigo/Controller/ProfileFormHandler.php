@@ -214,7 +214,8 @@ final class ProfileFormHandler
                 $username_for_update = $post['username'] ?? null;
                 if (is_string($username_for_update) and $username_for_update !== '' and $username_for_update !== '0') {
                     $username = $username_for_update;
-                    if ($username !== $userdata['username'] and (bool) self::userService()->getUserId($username)) {
+                    $usernameVo = \Piwigo\Common\ValueObject\Username::tryFrom($username);
+                    if ($username !== $userdata['username'] and $usernameVo !== null and self::userService()->getUserId($usernameVo) !== null) {
                         \Piwigo\Core\PageState::current()->addError(Lang::t('this login is already used'));
                         unset($post['redirect']);
                     } else {

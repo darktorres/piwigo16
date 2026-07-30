@@ -15,8 +15,10 @@ use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\Dto\PaginatedResult;
+use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Common\ValueObject\Username;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\DefaultLanguageProviderInterface;
@@ -111,7 +113,8 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             return '';
         }
 
-        if (! \Piwigo\Validation\InputValidator::checkEmailFormat($mailAddress)) {
+        $email = \Piwigo\Validation\InputValidator::checkEmailFormat($mailAddress) ? Email::tryFrom($mailAddress) : null;
+        if ($email === null) {
             return Lang::t('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
         }
 
@@ -119,7 +122,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             /** @var array<string, string> $user_fields */
             $user_fields = \Piwigo\Config\CurrentConfig::userFields();
 
-            if ($this->repo->emailExists($mailAddress, $user_fields['email'], $user_fields['id'], $userId)) {
+            if ($this->repo->emailExists($email, $user_fields['email'], $user_fields['id'], $userId)) {
                 return Lang::t('this email address is already in use');
             }
         }
@@ -134,11 +137,12 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     public function validateLoginCase(string $login): string
     {
 
-        if (\Piwigo\Core\InstallationFlag::isActive()) {
+        $username = Username::tryFrom($login);
+        if (\Piwigo\Core\InstallationFlag::isActive() && $username !== null) {
             /** @var array<string, string> $user_fields */
             $user_fields = \Piwigo\Config\CurrentConfig::userFields();
 
-            if ($this->repo->usernameExistsCaseInsensitive($login, $user_fields['username'])) {
+            if ($this->repo->usernameExistsCaseInsensitive($username, $user_fields['username'])) {
                 return Lang::t('this login is already used');
             }
         }
@@ -171,7 +175,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         return $usersFound[0];
     }
 
-    public function getUserId(string $username): ?UserId
+    public function getUserId(Username $username): ?UserId
     {
 
         /** @var array<string, string> $user_fields */
@@ -180,7 +184,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         return $this->repo->findIdByUsername($username, $user_fields['id'], $user_fields['username']);
     }
 
-    public function getUserIdByEmail(string $email): ?UserId
+    public function getUserIdByEmail(Email $email): ?UserId
     {
 
         /** @var array<string, string> $user_fields */
@@ -193,8 +197,10 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      * Ported from admin/include/functions.php's get_username() (P23 batch
      * 8d), unchanged logic (including the stripslashes() call -- a real,
      * already-established precedent in this same file, not legacy cruft).
+     * stripslashes() only ever removes chars, so a value that was already
+     * a valid Username (it came from this exact column) stays valid.
      */
-    public function getUsername(UserId $userId): false|string
+    public function getUsername(UserId $userId): ?Username
     {
 
         /** @var array<string, string> $user_fields */
@@ -202,7 +208,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         $username = $this->repo->findUsernameById($userId, $user_fields['id'], $user_fields['username']);
 
-        return $username === null ? false : stripslashes($username);
+        return $username === null ? null : Username::from(stripslashes($username->value));
     }
 
     /**
@@ -283,7 +289,8 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         if (preg_match('/^ .*$/', $login) === 1) {
             $errors[] = Lang::t('login mustn\'t start with a space character');
         }
-        if ($this->getUserId($login) !== null) {
+        $loginUsername = Username::tryFrom($login);
+        if ($loginUsername !== null && $this->getUserId($loginUsername) !== null) {
             $duplicateUsername = true;
         }
         if ($login !== strip_tags($login)) {
@@ -1134,7 +1141,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         }
 
         if (count($user_ids) === 1) {
-            if ($this->getUsername(UserId::from($user_ids[0])) === false) {
+            if ($this->getUsername(UserId::from($user_ids[0])) === null) {
                 return [
                     'error' => [
                         'code' => WsError::INVALID_PARAM,
@@ -1146,7 +1153,8 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             if (! self::emptyValue($params['username'] ?? null)) {
                 $username_param = $params['username'];
                 assert(is_string($username_param));
-                $user_id = $this->getUserId($username_param);
+                $username_param_vo = Username::tryFrom($username_param);
+                $user_id = $username_param_vo === null ? null : $this->getUserId($username_param_vo);
                 if ($user_id !== null and $user_id->value !== $user_ids[0]) {
                     return [
                         'error' => [
@@ -1518,7 +1526,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         return array_map(static fn (UserId $id): int => $id->value, $this->repo->findAdminIds($includeWebmaster));
     }
 
-    public function getUsernameById(UserId $userId, string $idColumn, string $usernameColumn): ?string
+    public function getUsernameById(UserId $userId, string $idColumn, string $usernameColumn): ?Username
     {
         return $this->repo->findUsernameById($userId, $idColumn, $usernameColumn);
     }

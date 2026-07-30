@@ -102,7 +102,8 @@ final class UserBootstrap
             $remote_user = self::resolveApacheRemoteUser($_SERVER);
 
             if ($remote_user !== null) {
-                if (! (bool) ($user['id'] = $userService->getUserId($remote_user)?->value)) {
+                $remoteUsername = \Piwigo\Common\ValueObject\Username::tryFrom($remote_user);
+                if (! (bool) ($user['id'] = $remoteUsername === null ? null : $userService->getUserId($remoteUsername)?->value)) {
                     $user['id'] = $userService
                         ->registerUser($remote_user, '', '', new UrlService(new HtmlService()), false)['userId'] ?? false;
                 }

@@ -358,7 +358,7 @@ final class PictureModifyPageRenderer
         $added_by_username = $row_added_by === null ? null : \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class)
             ->findUsernameById($row_added_by, $uf_id, $uf_username);
         if ($added_by_username !== null) {
-            $row['added_by'] = $added_by_username;
+            $row['added_by'] = $added_by_username->value;
         }
 
         $row_file = is_string($row['file']) ? $row['file'] : '';

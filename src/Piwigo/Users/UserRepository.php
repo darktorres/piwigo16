@@ -7,7 +7,9 @@ namespace Piwigo\Users;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityRepository;
 use Piwigo\Common\Dto\PaginatedResult;
+use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Common\ValueObject\Username;
 use Piwigo\Db\Tables;
 use Piwigo\Users\Projection\UserInfo;
 
@@ -81,7 +83,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
         return is_string($email) ? $email : '';
     }
 
-    public function findIdByUsername(string $username, string $idColumn, string $usernameColumn): ?UserId
+    public function findIdByUsername(Username $username, string $idColumn, string $usernameColumn): ?UserId
     {
         $value = $this->getEntityManager()
             ->getConnection()
@@ -89,14 +91,14 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             ->select($idColumn)
             ->from(Tables::users())
             ->where($usernameColumn . ' = :username')
-            ->setParameter('username', $username)
+            ->setParameter('username', $username->value)
             ->executeQuery()
             ->fetchOne();
 
         return UserId::tryFrom($value);
     }
 
-    public function findIdByEmail(string $email, string $idColumn, string $emailColumn): ?UserId
+    public function findIdByEmail(Email $email, string $idColumn, string $emailColumn): ?UserId
     {
         $value = $this->getEntityManager()
             ->getConnection()
@@ -104,7 +106,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             ->select($idColumn)
             ->from(Tables::users())
             ->where('UPPER(' . $emailColumn . ') = UPPER(:email)')
-            ->setParameter('email', $email)
+            ->setParameter('email', $email->value)
             ->executeQuery()
             ->fetchOne();
 
@@ -141,7 +143,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
         ];
     }
 
-    public function usernameExistsCaseInsensitive(string $username, string $usernameColumn): bool
+    public function usernameExistsCaseInsensitive(Username $username, string $usernameColumn): bool
     {
         $value = $this->getEntityManager()
             ->getConnection()
@@ -149,14 +151,14 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             ->select('COUNT(*)')
             ->from(Tables::users())
             ->where('LOWER(' . $usernameColumn . ') = LOWER(:username)')
-            ->setParameter('username', $username)
+            ->setParameter('username', $username->value)
             ->executeQuery()
             ->fetchOne();
 
         return is_numeric($value) && (int) $value > 0;
     }
 
-    public function emailExists(string $email, string $emailColumn, string $idColumn, ?UserId $excludeUserId): bool
+    public function emailExists(Email $email, string $emailColumn, string $idColumn, ?UserId $excludeUserId): bool
     {
         $qb = $this->getEntityManager()
             ->getConnection()
@@ -164,7 +166,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             ->select('COUNT(*)')
             ->from(Tables::users())
             ->where('UPPER(' . $emailColumn . ') = UPPER(:email)')
-            ->setParameter('email', $email);
+            ->setParameter('email', $email->value);
 
         if ($excludeUserId !== null) {
             $qb->andWhere($idColumn . ' != :excludeUserId')
@@ -177,7 +179,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
         return is_numeric($value) && (int) $value > 0;
     }
 
-    public function findUsernameById(UserId $userId, string $idColumn, string $usernameColumn): ?string
+    public function findUsernameById(UserId $userId, string $idColumn, string $usernameColumn): ?Username
     {
         $value = $this->getEntityManager()
             ->getConnection()
@@ -189,7 +191,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             ->executeQuery()
             ->fetchOne();
 
-        return is_string($value) ? $value : null;
+        return Username::tryFrom($value);
     }
 
     /**

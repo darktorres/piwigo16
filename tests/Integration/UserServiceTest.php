@@ -159,13 +159,13 @@ namespace Piwigo\Tests\Integration {
 
         public function test_get_user_id_finds_a_fixture_user(): void
         {
-            self::assertEquals(UserId::from(1), $this->service->getUserId('fixture_admin'));
-            self::assertNull($this->service->getUserId('does-not-exist'));
+            self::assertEquals(UserId::from(1), $this->service->getUserId(\Piwigo\Common\ValueObject\Username::from('fixture_admin')));
+            self::assertNull($this->service->getUserId(\Piwigo\Common\ValueObject\Username::from('does-not-exist')));
         }
 
         public function test_get_user_id_by_email_finds_a_fixture_user(): void
         {
-            self::assertEquals(UserId::from(1), $this->service->getUserIdByEmail('fixture_admin@example.test'));
+            self::assertEquals(UserId::from(1), $this->service->getUserIdByEmail(\Piwigo\Common\ValueObject\Email::from('fixture_admin@example.test')));
         }
 
         public function test_get_default_user_info_and_value(): void
@@ -303,12 +303,12 @@ namespace Piwigo\Tests\Integration {
 
         public function test_get_username_returns_the_real_username_for_a_known_user(): void
         {
-            self::assertSame('fixture_admin', $this->service->getUsername(UserId::from(1)));
+            self::assertEquals(\Piwigo\Common\ValueObject\Username::from('fixture_admin'), $this->service->getUsername(UserId::from(1)));
         }
 
         public function test_get_username_returns_false_for_an_unknown_user(): void
         {
-            self::assertFalse($this->service->getUsername(UserId::from(999999)));
+            self::assertNull($this->service->getUsername(UserId::from(999999)));
         }
 
         public function test_check_and_save_user_infos_rejects_an_empty_username(): void

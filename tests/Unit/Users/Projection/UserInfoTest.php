@@ -62,12 +62,36 @@ test('fromRow falls back to safe defaults for every field except user_id', funct
     expect($info->status)->toBe('guest');
     expect($info->language)->toBe('');
     expect($info->expand)->toBeFalse();
+    expect($info->showNbComments)->toBeFalse();
+    expect($info->showNbHits)->toBeFalse();
+    expect($info->recentPeriod)->toBe(0);
     expect($info->theme)->toBe('');
     expect($info->registrationDate)->toBeNull();
+    expect($info->enabledHigh)->toBeFalse();
     expect($info->level)->toBe(0);
     expect($info->activationKey)->toBeNull();
+    expect($info->lastVisitFromHistory)->toBeFalse();
     expect($info->lastmodified)->toBe('');
     expect($info->preferences)->toBeNull();
+});
+
+test('fromRow reads a truthy show_nb_comments value, not just the coalesce fallback', function (): void {
+    // Existing coverage only ever sets show_nb_comments to a falsy present
+    // value (0) or leaves it absent, both of which happen to equal the
+    // `?? false` fallback -- this pins the case where the raw column value
+    // must actually be read, not just its "was this key ever set" branch.
+    $info = UserInfo::fromRow(['user_id' => 1, 'show_nb_comments' => 1]);
+
+    expect($info->showNbComments)->toBeTrue();
+});
+
+test('fromRow drops non-string preference keys after decoding JSON', function (): void {
+    $info = UserInfo::fromRow([
+        'user_id' => 1,
+        'preferences' => json_encode(['valid_key' => 'v', 0 => 'dropped']),
+    ]);
+
+    expect($info->preferences)->toBe(['valid_key' => 'v']);
 });
 
 test('fromRow throws for a missing or invalid user_id', function (): void {

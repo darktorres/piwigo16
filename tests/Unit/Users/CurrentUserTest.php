@@ -31,6 +31,9 @@ test('attachGlobals seeds a guest user', function (): void {
     $user = CurrentUser::get();
 
     expect($user->status)->toBe(UserStatus::Guest)
+        ->and($user->username)->toBe('')
+        ->and($user->email)->toBe('')
+        ->and($user->enabledHigh)->toBeFalse()
         ->and($user->language)->toBe(AppInfo::DEFAULT_LANGUAGE)
         ->and($user->theme)->toBe(AppInfo::DEFAULT_TEMPLATE)
         ->and($user->id->value)->toBe(CurrentConfig::guestId());
@@ -59,4 +62,13 @@ test('updateLanguage replaces the instance with a language-updated copy', functi
     CurrentUser::updateLanguage('fr_FR');
 
     expect(CurrentUser::get()->language)->toBe('fr_FR');
+});
+
+test('reset clears the real-user-resolved flag back to false', function (): void {
+    CurrentUser::markRealUserResolved();
+    expect(CurrentUser::wasRealUserResolved())->toBeTrue();
+
+    CurrentUser::reset();
+
+    expect(CurrentUser::wasRealUserResolved())->toBeFalse();
 });

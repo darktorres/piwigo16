@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Config;
 
 use Doctrine\ORM\EntityRepository;
+use Piwigo\Db\BatchWriter;
+use Piwigo\Db\Tables;
 
 /**
  * `find()`/`findAll()` are inherited from EntityRepository for free --
@@ -47,6 +49,31 @@ final class ConfigRepository extends EntityRepository
         $em = $this->getEntityManager();
         $em->remove($entry);
         $em->flush();
+    }
+
+    /**
+     * Bulk plain-UPDATE (not upsert()'s own insert-or-update semantics --
+     * every row here is expected to already exist) -- Admin\Upload\
+     * UploadService::saveUploadFormConfig()'s own "apply every validated
+     * upload-setting field at once" step.
+     *
+     * @param list<array{param: string, value: mixed}> $updates
+     */
+    public function massUpdateValues(array $updates): void
+    {
+        if ($updates === []) {
+            return;
+        }
+
+        new BatchWriter($this->getEntityManager()->getConnection())
+            ->massUpdate(
+                Tables::config(),
+                [
+                    'primary' => ['param'],
+                    'update' => ['value'],
+                ],
+                $updates
+            );
     }
 
     /**

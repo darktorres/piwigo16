@@ -17,9 +17,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Core\WsError;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Tag\TagService;
 
 /**
@@ -339,33 +337,22 @@ final class PwgTags
 
         $existing_names = self::tagService()->getOtherNames($tag_id);
 
-        $update = [];
-
         if (in_array($tag_name, $existing_names, true)) {
             return new PwgError(WsError::INVALID_PARAM, 'This name is already token');
-        }
-        if ($tag_name !== '') {
-            // realEscapeString() dropped: BatchWriter::singleUpdate() below
-            // parameterizes $update['name'] instead of interpolating it,
-            // same "dead pre-escaping" rationale as
-            // Bootstrap\UserBootstrap's HTTP_X_PIWIGO_API fix (Phase 1d).
-            $update = [
-                'name' => $tag_name,
-                'url_name' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_url', $tag_name),
-            ];
-
         }
 
         self::activityService($conn)->record('tag', $tag_id, 'edit');
 
-        new BatchWriter($conn)
-            ->singleUpdate(
-                Tables::tags(),
-                $update,
-                [
-                    'id' => $tag_id,
-                ]
-            );
+        if ($tag_name !== '') {
+            $url_name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_url', $tag_name);
+            if (! is_string($url_name)) {
+                // a misbehaving plugin handler could return a non-string;
+                // fall back to the untransformed tag name rather than
+                // propagate it -- same rule as TagService::tagIdFromTagName().
+                $url_name = $tag_name;
+            }
+            self::tagService()->renameTag(TagId::from($tag_id), $tag_name, $url_name);
+        }
         \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
         $renamed_tag = self::tagService()->getById(TagId::from($tag_id));
@@ -414,16 +401,12 @@ final class PwgTags
             return new PwgError(WsError::INVALID_PARAM, 'This name is already taken.');
         }
 
-        new BatchWriter($conn)
-            ->singleInsert(
-                Tables::tags(),
-                [
-                    'name' => $copy_name,
-                    'url_name' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_url', $copy_name),
-                ]
-            );
+        $copy_url_name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_url', $copy_name);
+        if (! is_string($copy_url_name)) {
+            $copy_url_name = $copy_name;
+        }
+        $destination_tag_id = self::tagService()->duplicateTag($copy_name, $copy_url_name)->value;
         \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
-        $destination_tag_id = (int) $conn->lastInsertId();
 
         self::activityService($conn)->record('tag', $destination_tag_id, 'add', [
             'action' => 'duplicate',
@@ -445,13 +428,7 @@ final class PwgTags
         }
 
         if (count($inserts) > 0) {
-            new BatchWriter($conn)
-                ->massInsert(
-                    Tables::imageTag(),
-                    array_keys($inserts[0]),
-                    $inserts
-                );
-            \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+            self::tagService()->copyImageTagAssociations($inserts);
         }
 
         return [
@@ -505,16 +482,7 @@ final class PwgTags
             ];
         }
 
-        new BatchWriter($conn)
-            ->massInsert(
-                Tables::imageTag(),
-                ['tag_id', 'image_id'],
-                $inserts,
-                [
-                    'ignore' => true,
-                ]
-            );
-        \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+        self::tagService()->copyImageTagAssociations($inserts, ignore: true);
 
         self::activityService($conn)->record('tag', $params['destination_tag_id'], 'edit');
         foreach ($image_to_add as $image_id) {

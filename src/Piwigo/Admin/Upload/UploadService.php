@@ -11,10 +11,8 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
-use Piwigo\Db\Tables;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeParams;
@@ -186,14 +184,8 @@ final class UploadService
         }
 
         if (count($errors) === 0) {
-            new BatchWriter(DbConnection::build())->massUpdate(
-                Tables::config(),
-                [
-                    'primary' => ['param'],
-                    'update' => ['value'],
-                ],
-                $updates
-            );
+            \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Config\ConfigEntry::class)
+                ->massUpdateValues($updates);
             \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
             return true;
         }
@@ -218,10 +210,9 @@ final class UploadService
      *   PwgServer $service param) pass it through; BatchUploadHandler
      *   passes nothing.
      */
-    public function addUploadedFile(string $source_filepath, UrlServiceInterface $urlService, ?string $original_filename = null, ?array $categories = null, ?int $level = null, ?int $image_id = null, ?string $original_md5sum = null, ?PwgServer $service = null): int|string
+    public function addUploadedFile(string $source_filepath, UrlServiceInterface $urlService, ?string $original_filename = null, ?array $categories = null, ?int $level = null, ?int $image_id = null, ?string $original_md5sum = null, ?PwgServer $service = null): int
     {
         $logger = \Piwigo\Core\CurrentLogger::get();
-        $conn = DbConnection::build();
 
         if ($original_filename !== null) {
             $original_filename = htmlspecialchars($original_filename);
@@ -486,14 +477,7 @@ final class UploadService
                 $update['level'] = $level;
             }
 
-            new BatchWriter($conn)
-                ->singleUpdate(
-                    Tables::images(),
-                    $update,
-                    [
-                        'id' => $image_id,
-                    ]
-                );
+            \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->updateFields($image_id, $update);
         } else {
             // database registration
             $file = $original_filename ?? basename($file_path);
@@ -526,10 +510,7 @@ final class UploadService
                 $insert['representative_ext'] = $representative_ext;
             }
 
-            new BatchWriter($conn)
-                ->singleInsert(Tables::images(), $insert);
-
-            $image_id = $conn->lastInsertId();
+            $image_id = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->insertImage($insert);
             \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
                 ->record('photo', $image_id, 'add');
         }
@@ -542,7 +523,7 @@ final class UploadService
             \Piwigo\Config\CurrentConfig::setUseExif(false);
         }
         \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService()
-            ->syncMetadata([(int) $image_id]);
+            ->syncMetadata([$image_id]);
 
         // cache a derivative
         //
@@ -582,7 +563,7 @@ final class UploadService
     /**
      * @param int[]|null $categories
      */
-    private function addUploadedFileAddToCategories(int|string $image_id, ?array $categories): void
+    private function addUploadedFileAddToCategories(int $image_id, ?array $categories): void
     {
 
         if (! \Piwigo\Config\CurrentConfig::loungeActive()) {
@@ -603,7 +584,7 @@ final class UploadService
                 // carry non-sequential/string keys, so reindex to guarantee it.
                 $imageService->fillLounge([$image_id], array_values($categories));
             } else {
-                $imageService->associateImagesToCategories([(int) $image_id], $categories);
+                $imageService->associateImagesToCategories([$image_id], $categories);
             }
         }
 
@@ -692,7 +673,6 @@ final class UploadService
             throw new ImageProcessingException('[' . __METHOD__ . '] unexpected format extension "' . $format_ext . '" (authorized extensions: ' . implode(', ', $authorized_format_exts) . ')');
         }
 
-        $conn = DbConnection::build();
         $images = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->getPathsForIds([$format_of]);
 
         if (! isset($images[0])) {
@@ -739,27 +719,17 @@ final class UploadService
             'filesize' => $file_infos['filesize'],
         ];
 
+        $filesize = (int) $file_infos['filesize'];
+
         $existing_format_id = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->getFormatIdByImageAndExt((int) $format_of, $format_ext);
         if ($existing_format_id !== null) {
-            $set_fields = [
-                'filesize' => $file_infos['filesize'],
-            ];
-            $where_fields = [
-                'format_id' => $existing_format_id,
-                'image_id' => $format_of,
-                'ext' => $format_ext,
-            ];
-            new BatchWriter($conn)
-                ->singleUpdate(Tables::imageFormat(), $set_fields, $where_fields);
+            \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->updateFormatFilesize($existing_format_id, $filesize);
             $format_id = $existing_format_id;
             $add_status = 'update';
         } else {
-            new BatchWriter($conn)
-                ->singleInsert(Tables::imageFormat(), $insert);
-            $format_id = $conn->lastInsertId();
+            $format_id = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->insertFormat((int) $format_of, $format_ext, $filesize);
             $add_status = 'add';
         }
-        \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
         \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
             ->record('photo', $format_of, 'edit', [

@@ -610,6 +610,79 @@ final readonly class ImageService
     }
 
     /**
+     * @param array<int, int> $imageIds
+     */
+    public function updateTextFieldForImages(array $imageIds, string $field, ?string $value): void
+    {
+        $this->repo->updateTextFieldForImages($imageIds, $field, $value);
+    }
+
+    /**
+     * @param array{primary: string[], update: string[]} $dbfields
+     * @param array<int, array<string, mixed>> $datas
+     */
+    public function massUpdateFields(array $dbfields, array $datas, int $flags = 0): void
+    {
+        $this->repo->massUpdateFields($dbfields, $datas, $flags);
+    }
+
+    /**
+     * A null parameter means "not supplied" -- see
+     * ImageRepository::updateDescriptiveFields()'s own docblock.
+     */
+    public function updateDescriptiveFields(
+        int $imageId,
+        ?string $name = null,
+        ?string $author = null,
+        ?string $comment = null,
+        ?string $dateCreation = null,
+    ): void {
+        $this->repo->updateDescriptiveFields($imageId, $name, $author, $comment, $dateCreation);
+    }
+
+    /**
+     * @param array<string, mixed> $updates
+     */
+    public function updateFields(int $imageId, array $updates): void
+    {
+        $this->repo->updateFields($imageId, $updates);
+    }
+
+    /**
+     * @param array<string, mixed> $insert
+     */
+    public function insertImage(array $insert): int
+    {
+        return $this->repo->insertImage($insert);
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $inserts
+     */
+    public function massInsertImages(array $inserts): void
+    {
+        $this->repo->massInsertImages($inserts);
+    }
+
+    public function updateFormatFilesize(int $formatId, ?int $filesize): void
+    {
+        $this->repo->updateFormatFilesize($formatId, $filesize);
+    }
+
+    public function insertFormat(int $imageId, string $ext, ?int $filesize): int
+    {
+        return $this->repo->insertFormat($imageId, $ext, $filesize);
+    }
+
+    /**
+     * @param  list<array{image_id: int, ext: string, filesize: ?int}>  $inserts
+     */
+    public function massInsertFormats(array $inserts): void
+    {
+        $this->repo->massInsertFormats($inserts);
+    }
+
+    /**
      * @param array<array-key, int|string|float|bool> $imageIds
      * @return list<array<string, mixed>>
      */
@@ -707,6 +780,21 @@ final readonly class ImageService
     public function deleteImageCategoryLinksForCategoryIds(int $imageId, array $categoryIds): void
     {
         $this->repo->deleteImageCategoryLinksForCategoryIds($imageId, $categoryIds);
+    }
+
+    /**
+     * Raw `image_category` link insert, rows already built by the caller --
+     * Ws\PwgImages's own "set category relations for one image, honoring
+     * caller-supplied per-category ranks" step, unlike
+     * associateImagesToCategories() above which always auto-assigns the
+     * next rank. $rank is optional per row -- see ImageRepository::
+     * massInsertImageCategory()'s own docblock.
+     *
+     * @param  list<array{image_id: int|string, category_id: int|string, rank?: int|string}>  $inserts
+     */
+    public function insertImageCategoryLinks(array $inserts): void
+    {
+        $this->repo->massInsertImageCategory($inserts);
     }
 
     /**

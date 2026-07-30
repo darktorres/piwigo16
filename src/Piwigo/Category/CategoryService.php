@@ -1224,6 +1224,31 @@ final readonly class CategoryService
     }
 
     /**
+     * @param array<string, mixed> $data
+     */
+    public function updateFields(int $categoryId, array $data): void
+    {
+        $this->repo->updateFields($categoryId, $data);
+    }
+
+    /**
+     * @param string[] $dbfields
+     * @param array<int, array<string, mixed>> $inserts
+     */
+    public function massInsertCategories(array $dbfields, array $inserts): void
+    {
+        $this->repo->massInsertCategories($dbfields, $inserts);
+    }
+
+    /**
+     * @param array<int, array{group_id: int, cat_id: int}> $inserts
+     */
+    public function massInsertGroupAccess(array $inserts, bool $ignore = false): void
+    {
+        $this->repo->massInsertGroupAccess($inserts, $ignore);
+    }
+
+    /**
      * Clears the representative picture of a set of categories (they fall
      * back to a random/none representant per
      * CurrentConfig::representativeCacheOnLevel() the next time one is needed).

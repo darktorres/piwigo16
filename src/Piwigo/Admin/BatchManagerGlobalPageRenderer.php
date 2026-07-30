@@ -11,9 +11,7 @@ use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageService;
@@ -316,23 +314,7 @@ final class BatchManagerGlobalPageRenderer
                     $post['author'] = null;
                 }
 
-                $datas = [];
-                foreach ($collection as $image_id) {
-                    $datas[] = [
-                        'id' => $image_id,
-                        'author' => $post['author'] ?? null,
-                    ];
-                }
-
-                new BatchWriter($conn)
-                    ->massUpdate(
-                        Tables::images(),
-                        [
-                            'primary' => ['id'],
-                            'update' => ['author'],
-                        ],
-                        $datas
-                    );
+                $imageService->updateTextFieldForImages($collection, 'author', is_string($post['author'] ?? null) ? $post['author'] : null);
                 \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
                 \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
@@ -347,23 +329,7 @@ final class BatchManagerGlobalPageRenderer
                     $post['title'] = null;
                 }
 
-                $datas = [];
-                foreach ($collection as $image_id) {
-                    $datas[] = [
-                        'id' => $image_id,
-                        'name' => $post['title'] ?? null,
-                    ];
-                }
-
-                new BatchWriter($conn)
-                    ->massUpdate(
-                        Tables::images(),
-                        [
-                            'primary' => ['id'],
-                            'update' => ['name'],
-                        ],
-                        $datas
-                    );
+                $imageService->updateTextFieldForImages($collection, 'name', is_string($post['title'] ?? null) ? $post['title'] : null);
                 \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
                 \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
@@ -377,26 +343,10 @@ final class BatchManagerGlobalPageRenderer
                 if (isset($post['remove_date_creation']) || ($post['date_creation'] ?? '') === '') {
                     $date_creation = null;
                 } else {
-                    $date_creation = $post['date_creation'] ?? null;
+                    $date_creation = is_string($post['date_creation'] ?? null) ? $post['date_creation'] : null;
                 }
 
-                $datas = [];
-                foreach ($collection as $image_id) {
-                    $datas[] = [
-                        'id' => $image_id,
-                        'date_creation' => $date_creation,
-                    ];
-                }
-
-                new BatchWriter($conn)
-                    ->massUpdate(
-                        Tables::images(),
-                        [
-                            'primary' => ['id'],
-                            'update' => ['date_creation'],
-                        ],
-                        $datas
-                    );
+                $imageService->updateTextFieldForImages($collection, 'date_creation', $date_creation);
                 \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
                 \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
@@ -407,23 +357,7 @@ final class BatchManagerGlobalPageRenderer
 
             // privacy_level
             elseif ($action === 'level') {
-                $datas = [];
-                foreach ($collection as $image_id) {
-                    $datas[] = [
-                        'id' => $image_id,
-                        'level' => $post['level'],
-                    ];
-                }
-
-                new BatchWriter($conn)
-                    ->massUpdate(
-                        Tables::images(),
-                        [
-                            'primary' => ['id'],
-                            'update' => ['level'],
-                        ],
-                        $datas
-                    );
+                $imageService->updateLevelForImages($collection, is_numeric($post['level']) ? (int) $post['level'] : 0);
                 \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
                 \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()

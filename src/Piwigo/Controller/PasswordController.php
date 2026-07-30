@@ -11,9 +11,7 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
@@ -591,16 +589,13 @@ final class PasswordController implements ControllerInterface
 
         $conn = DbConnection::build();
 
-        new BatchWriter($conn)
-            ->singleUpdate(
-                Tables::users(),
-                [
-                    $user_fields['password'] => self::passwordService()->hash($new_password),
-                ],
-                [
-                    $user_fields['id'] => $user_id,
-                ]
-            );
+        self::userService()->updateAccountFields(
+            $user_id,
+            $user_fields['id'],
+            [
+                $user_fields['password'] => self::passwordService()->hash($new_password),
+            ]
+        );
 
         $reset_session = $_SESSION['valid_reset_password_code'] ?? null;
         $reset_session_email = is_array($reset_session) ? ($reset_session['email'] ?? null) : null;

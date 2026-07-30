@@ -100,4 +100,12 @@ final readonly class NotificationByMailService
     {
         $this->repo->deleteByQuotedCheckKeys($quotedCheckKeyList);
     }
+
+    /**
+     * @param array<int, array{user_id: mixed, check_key: string, enabled: int}> $inserts
+     */
+    public function insertNotifications(array $inserts): void
+    {
+        $this->repo->insertNotifications($inserts);
+    }
 }

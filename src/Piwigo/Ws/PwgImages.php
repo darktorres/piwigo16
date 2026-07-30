@@ -26,7 +26,6 @@ use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Core\WsError;
-use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
@@ -105,7 +104,6 @@ final class PwgImages
      */
     private static function addImageCategoryRelations(int $image_id, string $categories_string, bool $replace_mode = false): true|PwgError
     {
-        $categoryConn = DbConnection::build();
         $categoryService = self::categoryService();
 
         // let's add links between the image and the categories
@@ -212,12 +210,7 @@ final class PwgImages
             ];
         }
 
-        new BatchWriter($categoryConn)
-            ->massInsert(
-                Tables::imageCategory(),
-                array_keys($inserts[0]),
-                $inserts
-            );
+        self::imageService()->insertImageCategoryLinks($inserts);
 
         $categoryService->updateCategory($new_cat_ids);
         return true;
@@ -1290,8 +1283,6 @@ final class PwgImages
             ), 'WS');
         }
 
-        $conn = DbConnection::build();
-
         if ($params['image_id'] > 0) {
             if (! self::imageService()->existsById($params['image_id'])) {
                 return new PwgError(404, 'image_id not found');
@@ -1351,24 +1342,13 @@ final class PwgImages
             'date_creation',
         ];
 
-        $update = [];
-        foreach ($info_columns as $key) {
-            if (isset($params[$key])) {
-                $update[$key] = $params[$key];
-            }
-        }
-
-        if (count(array_keys($update)) > 0) {
-            new BatchWriter($conn)
-                ->singleUpdate(
-                    Tables::images(),
-                    $update,
-                    [
-                        'id' => $image_id,
-                    ]
-                );
-            \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
-        }
+        self::imageService()->updateDescriptiveFields(
+            $image_id,
+            name: is_string($params['name'] ?? null) ? $params['name'] : null,
+            author: is_string($params['author'] ?? null) ? $params['author'] : null,
+            comment: is_string($params['comment'] ?? null) ? $params['comment'] : null,
+            dateCreation: is_string($params['date_creation'] ?? null) ? $params['date_creation'] : null,
+        );
 
         $url_params = [
             'image_id' => $image_id,
@@ -1376,7 +1356,7 @@ final class PwgImages
 
         // let's add links between the image and the categories
         if (isset($params['categories'])) {
-            self::addImageCategoryRelations((int) $image_id, $params['categories']);
+            self::addImageCategoryRelations($image_id, $params['categories']);
 
             if ((bool) preg_match('/^\d+/', $params['categories'], $matches)) {
                 $category_id = $matches[0];
@@ -1393,7 +1373,7 @@ final class PwgImages
             self::tagService()
                 ->setTags(
                     array_values(array_filter(array_map(TagId::tryFrom(...), explode(',', $params['tag_ids'])))),
-                    (int) $image_id
+                    $image_id
                 );
         }
 
@@ -1448,8 +1428,6 @@ final class PwgImages
             return new PwgError(500, $message);
         }
 
-        $conn = DbConnection::build();
-
         if ($params['image_id'] > 0) {
             if (! self::imageService()->existsById($params['image_id'])) {
                 return new PwgError(404, 'image_id not found');
@@ -1473,29 +1451,15 @@ final class PwgImages
                 $service
             );
 
-        $info_columns = [
-            'name',
-            'author',
-            'comment',
-            'level',
-            'date_creation',
-        ];
+        self::imageService()->updateLevelForImages([$image_id], $params['level']);
 
-        $update = [];
-        foreach ($info_columns as $key) {
-            if (isset($params[$key])) {
-                $update[$key] = $params[$key];
-            }
-        }
-
-        new BatchWriter($conn)
-            ->singleUpdate(
-                Tables::images(),
-                $update,
-                [
-                    'id' => $image_id,
-                ]
-            );
+        self::imageService()->updateDescriptiveFields(
+            $image_id,
+            name: is_string($params['name'] ?? null) ? $params['name'] : null,
+            author: is_string($params['author'] ?? null) ? $params['author'] : null,
+            comment: is_string($params['comment'] ?? null) ? $params['comment'] : null,
+            dateCreation: is_string($params['date_creation'] ?? null) ? $params['date_creation'] : null,
+        );
         \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
         if (isset($params['tags']) and $params['tags'] !== '' and $params['tags'] !== []) {
@@ -1518,7 +1482,7 @@ final class PwgImages
                 }
             }
 
-            $tagService->addTags($tag_ids, [(int) $image_id]);
+            $tagService->addTags($tag_ids, [$image_id]);
         }
 
         $url_params = [
@@ -1535,7 +1499,7 @@ final class PwgImages
         // update metadata from the uploaded file (exif/iptc), even if the sync
         // was already performed by add_uploaded_file().
         \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService()
-            ->syncMetadata([(int) $image_id]);
+            ->syncMetadata([$image_id]);
 
         return [
             'image_id' => $image_id,
@@ -1707,7 +1671,7 @@ final class PwgImages
                     $service
                 );
 
-            $image_infos = self::imageService()->getUploadResultInfoById((int) $image_id);
+            $image_infos = self::imageService()->getUploadResultInfoById($image_id);
             if ($image_infos === null) {
                 throw new Exception('ws_images_upload(): image fetch failed right after inserting it');
             }
@@ -1936,36 +1900,18 @@ final class PwgImages
             self::tagService()
                 ->setTags(
                     array_values(array_filter(array_map(TagId::tryFrom(...), explode(',', $params['tag_ids'])))),
-                    (int) $image_id
+                    $image_id
                 );
         }
 
         // time to set other infos
-        $info_columns = [
-            'name',
-            'author',
-            'comment',
-            'date_creation',
-        ];
-
-        $update = [];
-        foreach ($info_columns as $key) {
-            if (isset($params[$key])) {
-                $update[$key] = $params[$key];
-            }
-        }
-
-        if (count(array_keys($update)) > 0) {
-            new BatchWriter(DbConnection::build())
-                ->singleUpdate(
-                    Tables::images(),
-                    $update,
-                    [
-                        'id' => $image_id,
-                    ]
-                );
-            \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
-        }
+        self::imageService()->updateDescriptiveFields(
+            $image_id,
+            name: is_string($params['name'] ?? null) ? $params['name'] : null,
+            author: is_string($params['author'] ?? null) ? $params['author'] : null,
+            comment: is_string($params['comment'] ?? null) ? $params['comment'] : null,
+            dateCreation: is_string($params['date_creation'] ?? null) ? $params['date_creation'] : null,
+        );
 
         // final step, reset user cache
         PermissionCacheInvalidator::invalidate();
@@ -2414,19 +2360,10 @@ final class PwgImages
         }
 
         if (count(array_keys($update)) > 0) {
-            $update['id'] = $params['image_id'];
-
-            new BatchWriter($conn)
-                ->singleUpdate(
-                    Tables::images(),
-                    $update,
-                    [
-                        'id' => $update['id'],
-                    ]
-                );
+            self::imageService()->updateFields($params['image_id'], $update);
             \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
-            self::activityService($conn)->record('photo', $update['id'], 'edit');
+            self::activityService($conn)->record('photo', $params['image_id'], 'edit');
         }
 
         if (isset($params['categories'])) {

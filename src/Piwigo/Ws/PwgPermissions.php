@@ -14,9 +14,6 @@ namespace Piwigo\Ws;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\WsError;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\BatchWriter;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Permission\PermissionService;
 
 /**
@@ -155,8 +152,6 @@ final class PwgPermissions
             return new PwgError(403, 'Invalid security token');
         }
 
-        $conn = DbConnection::build();
-
         if (isset($params['group_id']) && $params['group_id'] !== []) {
             $cat_ids = self::categoryService()->getUppercatIds($params['cat_id']);
             if ($params['recursive']) {
@@ -175,16 +170,7 @@ final class PwgPermissions
                 }
             }
 
-            new BatchWriter($conn)
-                ->massInsert(
-                    Tables::groupAccess(),
-                    ['group_id', 'cat_id'],
-                    $inserts,
-                    [
-                        'ignore' => true,
-                    ]
-                );
-            \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+            self::categoryService()->massInsertGroupAccess($inserts, ignore: true);
         }
 
         if (isset($params['user_id']) && $params['user_id'] !== []) {

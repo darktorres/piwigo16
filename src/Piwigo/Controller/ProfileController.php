@@ -8,10 +8,7 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\BatchWriter;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
-use Piwigo\Db\Tables;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
@@ -91,15 +88,9 @@ final class ProfileController implements ControllerInterface
             }
 
             \Piwigo\Users\CurrentUser::updateLanguage($cookie_lang);
-            new BatchWriter(DbConnection::build())->singleUpdate(
-                Tables::userInfos(),
-                [
-                    'language' => $cookie_lang,
-                ],
-                [
-                    'user_id' => \Piwigo\Users\CurrentUser::get()->id->value,
-                ]
-            );
+            self::userService()->updateInfosForUser(\Piwigo\Users\CurrentUser::get()->id, [
+                'language' => $cookie_lang,
+            ]);
             \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
             Lang::load('common.lang', '', [

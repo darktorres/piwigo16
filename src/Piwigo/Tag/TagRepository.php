@@ -476,6 +476,27 @@ final class TagRepository extends EntityRepository
     }
 
     /**
+     * Renames a tag -- Ws\PwgTags::rename()'s own single-tag name/url_name
+     * update. Goes through the ORM entity (unlike insert()/
+     * insertWithoutTimestamp() above) since this mutates an already-persisted
+     * row rather than creating one -- Doctrine's change-tracking only
+     * writes the name/url_name columns that actually changed, `lastmodified`
+     * untouched, same as the original raw UPDATE.
+     */
+    public function updateNameAndUrlName(TagId $id, string $name, string $urlName): void
+    {
+        $entity = $this->find($id);
+        if ($entity === null) {
+            return;
+        }
+
+        $entity->name = $name;
+        $entity->urlName = $urlName;
+        $this->getEntityManager()
+            ->flush();
+    }
+
+    /**
      * Executes an arbitrary, already fully-built `SELECT id, name` query and
      * returns the raw rows -- real callers (PictureModifyPageRenderer/
      * BatchManagerUnitPageRenderer/FilterPanelRenderer) each build their own
@@ -498,9 +519,14 @@ final class TagRepository extends EntityRepository
     }
 
     /**
+     * $ignore matches Category\CategoryRepository::massInsertGroupAccess()'s
+     * own `ignore` convention -- Ws\PwgTags::merge() needs INSERT IGNORE so
+     * an image already tagged with the destination tag doesn't collide with
+     * one it's picking up from a merged-away tag.
+     *
      * @param  list<array{image_id: int|string, tag_id: int|string}>  $inserts
      */
-    public function massInsertImageTags(array $inserts): void
+    public function massInsertImageTags(array $inserts, bool $ignore = false): void
     {
         if ($inserts === []) {
             return;
@@ -508,7 +534,9 @@ final class TagRepository extends EntityRepository
 
         $em = $this->getEntityManager();
         new BatchWriter($em->getConnection())
-            ->massInsert(Tables::imageTag(), array_keys($inserts[0]), $inserts);
+            ->massInsert(Tables::imageTag(), array_keys($inserts[0]), $inserts, [
+                'ignore' => $ignore,
+            ]);
         $em->clear();
     }
 

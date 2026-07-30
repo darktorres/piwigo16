@@ -28,7 +28,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsError;
-use Piwigo\Db\BatchWriter;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -826,11 +825,37 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
     /**
      * Adds a single favorite -- Controller\PictureController's own
-     * "add_to_favorites" action.
+     * "add_to_favorites" action. $ignoreDuplicate: see
+     * UserRepository::addFavorite()'s own docblock.
      */
-    public function addFavorite(UserId $userId, int $imageId): void
+    public function addFavorite(UserId $userId, int $imageId, bool $ignoreDuplicate = false): void
     {
-        $this->repo->addFavorite($userId, $imageId);
+        $this->repo->addFavorite($userId, $imageId, $ignoreDuplicate);
+    }
+
+    /**
+     * Raw `users` row insert -- Admin\Integrity\C13yInternal's own
+     * "recreate a missing guest/default/webmaster user row, with its
+     * exact known id" repair step. Unlike this method's other real
+     * caller (registration, always auto-increment), $columns here
+     * includes an explicit 'id' -- UserRepository::insertUser() already
+     * builds its INSERT from whichever columns it's given, and MySQL's
+     * LAST_INSERT_ID() reflects an explicitly-inserted auto_increment
+     * value, so the returned UserId is correct either way.
+     *
+     * @param array<string, mixed> $columns
+     */
+    public function insertUserRow(array $columns): UserId
+    {
+        return $this->repo->insertUser($columns);
+    }
+
+    /**
+     * @param list<UserId> $userIds
+     */
+    public function updateStatusForUsers(array $userIds, string $status): void
+    {
+        $this->repo->updateStatusForUsers($userIds, $status);
     }
 
     /**
@@ -938,6 +963,34 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     public function getCurrentLanguage(): ?string
     {
         return CurrentUser::isInitialized() ? CurrentUser::get()->language : null;
+    }
+
+    /**
+     * Persists a `user_infos` field update for a single user --
+     * Controller\ProfileController's "sync the DB row to the just-switched
+     * `lang` cookie" step and Controller\ProfileFormHandler's own profile
+     * form save, both single-user specializations of
+     * UserRepository::updateInfosForUsers()'s bulk shape.
+     *
+     * @param array<string, mixed> $updates
+     */
+    public function updateInfosForUser(UserId $userId, array $updates): void
+    {
+        $this->repo->updateInfosForUsers([$userId], $updates);
+    }
+
+    /**
+     * Persists a `users` (account) field update for a single user --
+     * Controller\ProfileFormHandler's own profile form save
+     * (username/email/password, whichever changed). $idColumn stays a raw
+     * column-name parameter, same dynamic field-name-mapping reasoning as
+     * UserRepository::updateAccountFields()'s own docblock.
+     *
+     * @param array<string, mixed> $updates
+     */
+    public function updateAccountFields(int $userId, string $idColumn, array $updates): void
+    {
+        $this->repo->updateAccountFields($userId, $idColumn, $updates);
     }
 
     /**
@@ -1356,14 +1409,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         }
 
         // perform updates
-        new BatchWriter($this->conn)
-            ->singleUpdate(
-                Tables::users(),
-                $updates,
-                [
-                    $user_fields['id'] => $user_ids[0],
-                ]
-            );
+        $this->repo->updateAccountFields($user_ids[0], $user_fields['id'], $updates);
 
         $authService = new AuthService(
             new AuthRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)),
@@ -1430,19 +1476,10 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             // group is associated
 
             if (count($group_ids) > 0) {
-                $inserts = [];
-
+                $memberIds = array_map(static fn (int $id): UserId => UserId::from($id), $user_ids);
                 foreach ($group_ids as $group_id) {
-                    foreach ($user_ids as $user_id) {
-                        $inserts[] = [
-                            'user_id' => $user_id,
-                            'group_id' => $group_id,
-                        ];
-                    }
+                    $this->groupRepo->addMembers(GroupId::from($group_id), $memberIds);
                 }
-
-                new BatchWriter($this->conn)
-                    ->massInsert(Tables::userGroup(), array_keys($inserts[0]), $inserts);
             }
         }
 

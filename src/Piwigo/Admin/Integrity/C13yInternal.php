@@ -13,11 +13,9 @@ namespace Piwigo\Admin\Integrity;
 
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
-use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\SqlDialect;
-use Piwigo\Db\Tables;
 use Piwigo\Session\SessionService;
 use Piwigo\Users\UserService;
 
@@ -192,7 +190,6 @@ final class C13yInternal
         $webmaster_id = \Piwigo\Config\CurrentConfig::webmasterId();
 
         $result = false;
-        $conn = DbConnection::build();
 
         if ($id !== 0) {
             switch ($action) {
@@ -218,15 +215,11 @@ final class C13yInternal
                             }
                         }
 
-                        $inserts = [
-                            [
-                                'id' => $id,
-                                'username' => addslashes($name),
-                                'password' => $password,
-                            ],
-                        ];
-                        new BatchWriter($conn)
-                            ->massInsert(Tables::users(), array_keys($inserts[0]), $inserts);
+                        self::userService()->insertUserRow([
+                            'id' => $id,
+                            'username' => addslashes($name),
+                            'password' => $password,
+                        ]);
 
                         self::userService()->createUserInfos([\Piwigo\Common\ValueObject\UserId::from($id)]);
 
@@ -245,21 +238,7 @@ final class C13yInternal
                     }
 
                     if (isset($status)) {
-                        $updates = [
-                            [
-                                'user_id' => $id,
-                                'status' => $status,
-                            ],
-                        ];
-                        new BatchWriter($conn)
-                            ->massUpdate(
-                                Tables::userInfos(),
-                                [
-                                    'primary' => ['user_id'],
-                                    'update' => ['status'],
-                                ],
-                                $updates
-                            );
+                        self::userService()->updateStatusForUsers([\Piwigo\Common\ValueObject\UserId::from($id)], $status);
 
                         $updated_username = self::userService()->getUsername(\Piwigo\Common\ValueObject\UserId::from($id));
                         \Piwigo\Core\PageState::current()->addInfo(sprintf(Lang::t('Status of user "%s" updated'), $updated_username === null ? '' : $updated_username->value));

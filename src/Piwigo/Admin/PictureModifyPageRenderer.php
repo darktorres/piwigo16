@@ -10,7 +10,6 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
@@ -180,14 +179,8 @@ final class PictureModifyPageRenderer
             }
 
             /** @var array<string, mixed> $data */
-            new BatchWriter($conn)
-                ->singleUpdate(
-                    Tables::images(),
-                    $data,
-                    [
-                        'id' => $image_id,
-                    ]
-                );
+            unset($data['id']);
+            $imageService->updateFields($image_id, $data);
             \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
             // time to deal with tags

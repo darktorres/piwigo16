@@ -160,4 +160,21 @@ final class NotificationByMailRepository extends AbstractRepository
             DELETE FROM {$userMailNotificationTable} WHERE check_key IN ({$quotedCheckKeysCsv})
             SQL);
     }
+
+    /**
+     * Bulk-inserts new `user_mail_notification` rows --
+     * Controller\Admin\NotificationByMailSubController's own "add every
+     * user without a notification row yet" step.
+     *
+     * @param array<int, array{user_id: mixed, check_key: string, enabled: int}> $inserts
+     */
+    public function insertNotifications(array $inserts): void
+    {
+        if ($inserts === []) {
+            return;
+        }
+
+        $this->batchWriter()
+            ->massInsert(Tables::userMailNotification(), ['user_id', 'check_key', 'enabled'], $inserts);
+    }
 }

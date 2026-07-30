@@ -10,7 +10,6 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
@@ -171,15 +170,13 @@ final class BatchManagerUnitPageRenderer
                 $tagService->setTags($tag_ids, $image_id);
             }
 
-            new BatchWriter($conn)
-                ->massUpdate(
-                    Tables::images(),
-                    [
-                        'primary' => ['id'],
-                        'update' => ['name', 'author', 'level', 'comment', 'date_creation'],
-                    ],
-                    $datas
-                );
+            self::imageService()->massUpdateFields(
+                [
+                    'primary' => ['id'],
+                    'update' => ['name', 'author', 'level', 'comment', 'date_creation'],
+                ],
+                $datas
+            );
             \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
             \Piwigo\Core\PageState::current()->addInfo(Lang::t('Photo informations updated'));

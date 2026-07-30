@@ -21,10 +21,8 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Category\CategoryTreeCache;
 use Piwigo\Core\WsError;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
-use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Permission\PermissionService;
@@ -1042,15 +1040,9 @@ final class PwgCategories
         }
 
         if ($perform_update) {
-            new BatchWriter($categoryConn)
-                ->singleUpdate(
-                    Tables::categories(),
-                    $update,
-                    [
-                        'id' => $update['id'],
-                    ]
-                );
-            \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+            $updateFields = $update;
+            unset($updateFields['id']);
+            $categoryService->updateFields($params['category_id'], $updateFields);
         }
 
         self::activityService()->record('album', $params['category_id'], 'edit', [

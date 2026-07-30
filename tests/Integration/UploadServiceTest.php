@@ -318,7 +318,7 @@ final class UploadServiceTest extends IntegrationTestCase
         self::assertIsString($expectedMd5);
 
         $imageId = new UploadService()->addUploadedFile($source, $this->urlService, 'holiday.png');
-        $id = (int) $imageId;
+        $id = $imageId;
         self::assertGreaterThan(0, $id);
         $this->imageIdsToDelete[] = $id;
 
@@ -363,7 +363,7 @@ final class UploadServiceTest extends IntegrationTestCase
             original_md5sum: '2e7ee450c4a4cffe42945205029782b9',
         );
 
-        self::assertSame(1, (int) $result);
+        self::assertSame(1, $result);
         self::assertFileDoesNotExist($source);
 
         // No second row was inserted -- the short-circuit returned the
@@ -392,7 +392,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $firstSource = $this->marker . '/first.png';
         $this->makeImage($firstSource, 'png', 40, 30);
         $firstId = $service->addUploadedFile($firstSource, $this->urlService, 'first.png');
-        $id = (int) $firstId;
+        $id = $firstId;
         $this->imageIdsToDelete[] = $id;
 
         $countBefore = $this->countRows('SELECT COUNT(*) FROM ' . Tables::images());
@@ -405,7 +405,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $result = $service->addUploadedFile($secondSource, $this->urlService, 'second.png', image_id: $id);
 
         // Same id back -- an UPDATE, not a fresh INSERT.
-        self::assertSame($id, (int) $result);
+        self::assertSame($id, $result);
         $countAfter = $this->countRows('SELECT COUNT(*) FROM ' . Tables::images());
         self::assertSame($countBefore, $countAfter);
 
@@ -445,7 +445,7 @@ final class UploadServiceTest extends IntegrationTestCase
             $this->makeImage($source, $gdFormat, 10, 8);
 
             $imageId = $service->addUploadedFile($source, $this->urlService, 'incoming.dat');
-            $id = (int) $imageId;
+            $id = $imageId;
             $this->imageIdsToDelete[] = $id;
 
             $row = $this->fetchImageRow($id);
@@ -477,7 +477,7 @@ final class UploadServiceTest extends IntegrationTestCase
         file_put_contents($source, "PK\x03\x04" . str_repeat('x', 32));
 
         $imageId = new UploadService()->addUploadedFile($source, $this->urlService, 'archive.zip');
-        $id = (int) $imageId;
+        $id = $imageId;
         $this->imageIdsToDelete[] = $id;
 
         $row = $this->fetchImageRow($id);
@@ -557,7 +557,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $this->makeImage($source, 'png', 10, 8);
 
         $imageId = new UploadService()->addUploadedFile($source, $this->urlService, 'threshold.png');
-        $this->imageIdsToDelete[] = (int) $imageId;
+        $this->imageIdsToDelete[] = $imageId;
 
         // addUploadedFileAddToCategories()'s own COUNT(*) check (running
         // right after the insert, so it already sees the new row) now
@@ -574,7 +574,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $this->makeImage($source, 'png', 10, 8);
 
         $imageId = new UploadService()->addUploadedFile($source, $this->urlService, 'associate.png', categories: [1]);
-        $id = (int) $imageId;
+        $id = $imageId;
         $this->imageIdsToDelete[] = $id;
 
         // setUp()'s own high default threshold keeps the lounge inactive

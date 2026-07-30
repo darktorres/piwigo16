@@ -13,10 +13,8 @@ use Piwigo\Auth\AuthService;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
-use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
-use Piwigo\Db\Tables;
 use Piwigo\Template\Template;
 use Piwigo\Users\UserService;
 
@@ -250,15 +248,11 @@ final class ProfileFormHandler
                     }
                 }
 
-                new BatchWriter($conn)
-                    ->massUpdate(
-                        Tables::users(),
-                        [
-                            'primary' => [$user_fields['id']],
-                            'update' => $fields,
-                        ],
-                        [$data]
-                    );
+                $accountUpdates = [];
+                foreach ($fields as $field) {
+                    $accountUpdates[$field] = $data[$field];
+                }
+                self::userService()->updateAccountFields($user_id, $user_fields['id'], $accountUpdates);
 
                 if ($mail_address !== $userdata['email']) {
                     self::authService()->deactivatePasswordResetKey($user_id);
@@ -301,15 +295,9 @@ final class ProfileFormHandler
 
                     $data[$field] = $value;
                 }
-                new BatchWriter($conn)
-                    ->massUpdate(
-                        Tables::userInfos(),
-                        [
-                            'primary' => ['user_id'],
-                            'update' => $fields,
-                        ],
-                        [$data]
-                    );
+                $infosUpdates = $data;
+                unset($infosUpdates['user_id']);
+                self::userService()->updateInfosForUser(\Piwigo\Common\ValueObject\UserId::from($user_id), $infosUpdates);
                 \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
                 $activity_details_tables[] = 'user_infos';

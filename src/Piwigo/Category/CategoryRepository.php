@@ -1630,10 +1630,52 @@ final class CategoryRepository extends EntityRepository
     }
 
     /**
+     * Bulk category insert -- Controller\Admin\SiteUpdateSubController's
+     * own filesystem-sync "add every newly-discovered directory at once"
+     * step. Same "dynamic column map" reasoning as insertCategory() above,
+     * just batched.
+     *
+     * @param string[] $dbfields
+     * @param array<int, array<string, mixed>> $inserts
+     */
+    public function massInsertCategories(array $dbfields, array $inserts): void
+    {
+        if ($inserts === []) {
+            return;
+        }
+
+        $em = $this->getEntityManager();
+        new BatchWriter($em->getConnection())
+            ->massInsert(Tables::categories(), $dbfields, $inserts);
+        $em->clear();
+    }
+
+    /**
      * @param array<string, mixed> $data
      */
     public function updateCategoryAfterInsert(int|string $id, array $data): void
     {
+        $em = $this->getEntityManager();
+        new BatchWriter($em->getConnection())
+            ->singleUpdate(Tables::categories(), $data, [
+                'id' => $id,
+            ]);
+        $em->clear();
+    }
+
+    /**
+     * Same generic dynamic-field update as updateCategoryAfterInsert()
+     * above, distinct name/call site -- Ws\PwgCategories::setInfo()'s own
+     * name/comment edit, not a post-insert patch.
+     *
+     * @param array<string, mixed> $data
+     */
+    public function updateFields(int $id, array $data): void
+    {
+        if ($data === []) {
+            return;
+        }
+
         $em = $this->getEntityManager();
         new BatchWriter($em->getConnection())
             ->singleUpdate(Tables::categories(), $data, [

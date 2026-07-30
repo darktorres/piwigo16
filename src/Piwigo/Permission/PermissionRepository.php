@@ -139,14 +139,19 @@ final readonly class PermissionRepository
     }
 
     /**
-     * $ignore (always true here) matters for the same reason as
-     * Category\CategoryRepository::massInsertGroupAccess()'s own docblock
-     * -- stays raw DBAL (BatchWriter), persist()+flush() has no INSERT
-     * IGNORE equivalent.
+     * $ignore matters for the same reason as Category\CategoryRepository::
+     * massInsertGroupAccess()'s own docblock -- stays raw DBAL
+     * (BatchWriter), persist()+flush() has no INSERT IGNORE equivalent.
+     * Defaults to true, matching this method's only caller before
+     * Controller\Admin\SiteUpdateSubController's own "brand-new
+     * categories can't already have an access row" insert reused it with
+     * false (its own $insert_granted_users is already deduplicated via
+     * array_unique() beforehand, so INSERT IGNORE's collision-swallowing
+     * would only ever mask a genuine bug, not a real duplicate).
      *
      * @param  list<array{user_id: int, cat_id: int}>  $inserts
      */
-    public function massInsertUserAccess(array $inserts): void
+    public function massInsertUserAccess(array $inserts, bool $ignore = true): void
     {
         if ($inserts === []) {
             return;
@@ -154,7 +159,7 @@ final readonly class PermissionRepository
 
         new BatchWriter($this->em->getConnection())
             ->massInsert(Tables::userAccess(), ['user_id', 'cat_id'], $inserts, [
-                'ignore' => true,
+                'ignore' => $ignore,
             ]);
         $this->em->clear();
     }

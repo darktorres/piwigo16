@@ -440,9 +440,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                         'id', 'dir', 'name', 'site_id', 'id_uppercat', 'uppercats', 'commentable',
                         'visible', 'status', 'rank', 'global_rank',
                     ];
-                    new BatchWriter($conn)
-                        ->massInsert(Tables::categories(), $dbfields, $inserts);
-                    \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+                    self::categoryService()->massInsertCategories($dbfields, $inserts);
 
                     // add default permissions to categories
                     $category_ids = [];
@@ -495,12 +493,9 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                                 }
                             }
                         }
-                        new BatchWriter($conn)
-                            ->massInsert(Tables::groupAccess(), ['group_id', 'cat_id'], $insert_granted_grps);
-                        $insert_granted_users = array_unique($insert_granted_users, SORT_REGULAR);
-                        new BatchWriter($conn)
-                            ->massInsert(Tables::userAccess(), ['user_id', 'cat_id'], $insert_granted_users);
-                        \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+                        self::categoryService()->massInsertGroupAccess($insert_granted_grps);
+                        $insert_granted_users = array_values(array_unique($insert_granted_users, SORT_REGULAR));
+                        self::permissionService()->massInsertUserAccess($insert_granted_users, ignore: false);
                     } else {
                         self::permissionService()
                             ->addPermissionOnCategory($category_ids, array_map(
@@ -634,7 +629,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                             $insert_formats[] = [
                                 'image_id' => $insert['id'],
                                 'ext' => $ext,
-                                'filesize' => $filesize,
+                                'filesize' => (int) $filesize,
                             ];
 
                             $infos[] = [
@@ -705,7 +700,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                             $insert_formats[] = [
                                 'image_id' => $image_id,
                                 'ext' => $ext,
-                                'filesize' => $filesize,
+                                'filesize' => (int) $filesize,
                             ];
 
                             $infos[] = [
@@ -720,20 +715,10 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             if (! $simulate) {
                 // inserts all new elements
                 if (count($inserts) > 0) {
-                    new BatchWriter($conn)
-                        ->massInsert(
-                            Tables::images(),
-                            array_keys($inserts[0]),
-                            $inserts
-                        );
+                    self::imageService($conn)->massInsertImages($inserts);
 
                     // inserts all links between new elements and their storage category
-                    new BatchWriter($conn)
-                        ->massInsert(
-                            Tables::imageCategory(),
-                            array_keys($insert_links[0]),
-                            $insert_links
-                        );
+                    self::imageService($conn)->insertImageCategoryLinks($insert_links);
                     \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
                     self::activityService()->record('photo', $caddiables, 'add', [
@@ -748,13 +733,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
 
                 // inserts all formats
                 if (count($insert_formats) > 0) {
-                    new BatchWriter($conn)
-                        ->massInsert(
-                            Tables::imageFormat(),
-                            array_keys($insert_formats[0]),
-                            $insert_formats
-                        );
-                    \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+                    self::imageService($conn)->massInsertFormats($insert_formats);
                 }
 
                 if (count($formats_to_delete) > 0) {
@@ -844,16 +823,13 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
 
                 $counts['upd_elements'] = count($datas);
                 if (! $simulate and count($datas) > 0) {
-                    new BatchWriter($conn)
-                        ->massUpdate(
-                            Tables::images(),
-                            // fields
-                            [
-                                'primary' => ['id'],
-                                'update' => $site_reader->get_update_attributes(),
-                            ],
-                            $datas
-                        );
+                    self::imageService($conn)->massUpdateFields(
+                        [
+                            'primary' => ['id'],
+                            'update' => $site_reader->get_update_attributes(),
+                        ],
+                        $datas
+                    );
                     \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
                 }
                 $template->append('footer_elements', '<!-- update files : '
@@ -948,26 +924,23 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
 
             if (! $simulate) {
                 if (count($datas) > 0) {
-                    new BatchWriter($conn)
-                        ->massUpdate(
-                            Tables::images(),
-                            // fields
-                            [
-                                'primary' => ['id'],
-                                'update' => array_values(array_unique(
-                                    array_merge(
-                                        array_diff(
-                                            $site_reader->get_metadata_attributes(),
-                                            // keywords and tags fields are managed separately
-                                            ['keywords', 'tags']
-                                        ),
-                                        ['date_metadata_update']
-                                    )
-                                )),
-                            ],
-                            $datas,
-                            isset($post['meta_empty_overrides']) ? 0 : BatchWriter::SKIP_EMPTY
-                        );
+                    self::imageService($conn)->massUpdateFields(
+                        [
+                            'primary' => ['id'],
+                            'update' => array_values(array_unique(
+                                array_merge(
+                                    array_diff(
+                                        $site_reader->get_metadata_attributes(),
+                                        // keywords and tags fields are managed separately
+                                        ['keywords', 'tags']
+                                    ),
+                                    ['date_metadata_update']
+                                )
+                            )),
+                        ],
+                        $datas,
+                        isset($post['meta_empty_overrides']) ? 0 : BatchWriter::SKIP_EMPTY
+                    );
                     \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
                 }
                 $tagService->setTagsOf($tags_of);

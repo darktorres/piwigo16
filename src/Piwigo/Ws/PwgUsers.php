@@ -22,7 +22,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Core\WsError;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\SqlDialect;
@@ -747,19 +746,7 @@ final class PwgUsers
             return new PwgError(404, 'image_id not found');
         }
 
-        $conn = DbConnection::build();
-
-        new BatchWriter($conn)
-            ->singleInsert(
-                Tables::favorites(),
-                [
-                    'image_id' => $params['image_id'],
-                    'user_id' => \Piwigo\Users\CurrentUser::get()->id->value,
-                ],
-                [
-                    'ignore' => true,
-                ]
-            );
+        self::userService()->addFavorite(\Piwigo\Users\CurrentUser::get()->id, $params['image_id'], ignoreDuplicate: true);
 
         return true;
     }

@@ -235,6 +235,14 @@ final readonly class PermissionService
     }
 
     /**
+     * @param  list<array{user_id: int, cat_id: int}>  $inserts
+     */
+    public function massInsertUserAccess(array $inserts, bool $ignore = true): void
+    {
+        $this->repo->massInsertUserAccess($inserts, $ignore);
+    }
+
+    /**
      * Grants direct user-category access. Thin wrapper around
      * addPermissionOnCategory() -- that method is also called from
      * create_virtual_category()'s own inheritance logic (P21 Albums

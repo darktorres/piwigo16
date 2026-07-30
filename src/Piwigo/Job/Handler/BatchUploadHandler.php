@@ -34,7 +34,7 @@ final class BatchUploadHandler
 
     public function __invoke(BatchUploadJob $job): int
     {
-        $imageId = new UploadService()
+        return new UploadService()
             ->addUploadedFile(
                 $job->sourceFilepath,
                 $this->urlService,
@@ -44,15 +44,5 @@ final class BatchUploadHandler
                 $job->imageId,
                 $job->originalMd5sum,
             );
-
-        // UploadService::addUploadedFile() is declared int|string, but its
-        // only two real `return` statements both return $image_id, which
-        // is always int by that point -- a real (pre-existing, harmless)
-        // over-broad declared type; narrow explicitly (PHPStan can't
-        // trace this through the method-call boundary) rather than
-        // widening this method's own return type to match it.
-        assert(is_int($imageId));
-
-        return $imageId;
     }
 }

@@ -488,6 +488,31 @@ final readonly class TagService
     }
 
     /**
+     * Inserts a brand-new tag row from an already-validated name/url_name
+     * pair -- Ws\PwgTags::duplicate()'s own "copy this tag under a new
+     * name" step, unlike tagIdFromTagName() below which looks up an
+     * existing tag first. Stays without an explicit `lastmodified`, same
+     * as TagRepository::insertWithoutTimestamp()'s own docblock.
+     */
+    public function duplicateTag(string $name, string $urlName): TagId
+    {
+        return $this->repo->insertWithoutTimestamp($name, $urlName);
+    }
+
+    /**
+     * Raw {tag_id, image_id} association copy, bypassing addTags()'s
+     * before/after comparison and updateImagesLastmodified() side effect --
+     * Ws\PwgTags::duplicate()/merge() already know exactly which rows to
+     * copy and log their own activity entries separately.
+     *
+     * @param  list<array{image_id: int|string, tag_id: int|string}>  $inserts
+     */
+    public function copyImageTagAssociations(array $inserts, bool $ignore = false): void
+    {
+        $this->repo->massInsertImageTags($inserts, $ignore);
+    }
+
+    /**
      * Returns a tag id from its name. If nothing found, create a new tag.
      */
     public function tagIdFromTagName(string $tagName): TagId
@@ -781,6 +806,14 @@ final readonly class TagService
     public function getOtherNames(int $excludeId): array
     {
         return $this->repo->findOtherNames($excludeId);
+    }
+
+    /**
+     * Renames a tag -- Ws\PwgTags::rename()'s own single-tag update.
+     */
+    public function renameTag(TagId $id, string $name, string $urlName): void
+    {
+        $this->repo->updateNameAndUrlName($id, $name, $urlName);
     }
 
     /**

@@ -90,6 +90,45 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
+     * Applies whichever of name/author/comment/date_creation the caller
+     * actually supplied -- Ws\PwgImages::addChunk()'s own "apply the
+     * caller-supplied upload metadata fields, sparse" step. A null
+     * parameter means "not supplied", not "clear this field" -- these 4
+     * fields are never intentionally nulled through this path.
+     */
+    public function updateDescriptiveFields(
+        int $imageId,
+        ?string $name = null,
+        ?string $author = null,
+        ?string $comment = null,
+        ?string $dateCreation = null,
+    ): void {
+        $entity = $this->find($imageId);
+        if ($entity === null) {
+            return;
+        }
+
+        if ($name !== null) {
+            $entity->name = $name;
+        }
+
+        if ($author !== null) {
+            $entity->author = $author;
+        }
+
+        if ($comment !== null) {
+            $entity->comment = $comment;
+        }
+
+        if ($dateCreation !== null) {
+            $entity->dateCreation = $dateCreation;
+        }
+
+        $this->getEntityManager()
+            ->flush();
+    }
+
+    /**
      * @param array<int, int|string> $imageIds
      * @return list<array{image_id: int, ext: string}>
      */
@@ -115,6 +154,64 @@ final class ImageRepository extends EntityRepository
             ->find(ImageFormatEntity::class, $formatId);
 
         return $entity === null ? null : ImageFormat::fromEntity($entity);
+    }
+
+    /**
+     * Updates an existing format row's filesize -- Admin\Upload\
+     * UploadService::addFormat()'s own re-add-same-format branch.
+     */
+    public function updateFormatFilesize(int $formatId, ?int $filesize): void
+    {
+        $entity = $this->getEntityManager()
+            ->find(ImageFormatEntity::class, $formatId);
+        if ($entity === null) {
+            return;
+        }
+
+        $entity->filesize = $filesize;
+        $this->getEntityManager()
+            ->flush();
+    }
+
+    /**
+     * Inserts a brand-new format row -- Admin\Upload\UploadService::
+     * addFormat()'s own "no existing row for this (image, ext)" branch.
+     */
+    public function insertFormat(int $imageId, string $ext, ?int $filesize): int
+    {
+        $em = $this->getEntityManager();
+        $entity = new ImageFormatEntity($imageId, $ext, $filesize);
+        $em->persist($entity);
+        $em->flush();
+
+        assert($entity->formatId !== null);
+
+        return $entity->formatId;
+    }
+
+    /**
+     * Bulk format-row insert -- Controller\Admin\SiteUpdateSubController's
+     * own filesystem-sync "add every newly-discovered format at once"
+     * step, unlike insertFormat() above's single-row shape. Goes through
+     * the ORM (one flush for the whole batch) rather than BatchWriter --
+     * unlike Image\ImageRepository::massInsertImages()'s own dynamic
+     * column-map reasoning, every row here is the same fixed
+     * image_id/ext/filesize shape ImageFormatEntity already maps.
+     *
+     * @param  list<array{image_id: int, ext: string, filesize: ?int}>  $inserts
+     */
+    public function massInsertFormats(array $inserts): void
+    {
+        if ($inserts === []) {
+            return;
+        }
+
+        $em = $this->getEntityManager();
+        foreach ($inserts as $insert) {
+            $em->persist(new ImageFormatEntity($insert['image_id'], $insert['ext'], $insert['filesize']));
+        }
+
+        $em->flush();
     }
 
     /**
@@ -292,6 +389,131 @@ final class ImageRepository extends EntityRepository
                 SET level={$level}
                 WHERE id IN ({$idsCsv})
                 SQL);
+    }
+
+    /**
+     * Bulk-sets one scalar `images` text field to the same value across a
+     * batch of image ids -- Admin\BatchManagerGlobalPageRenderer's own
+     * per-action batch edit (author/name/date_creation), same "many ids,
+     * one shared value" shape as updateLevelForImages() above but for a
+     * text column, so $value is bound rather than interpolated. $field is
+     * a fixed, non-caller-controlled column name at every real call site
+     * (author/name/date_creation), never built from user input.
+     *
+     * @param array<int, int> $imageIds
+     */
+    public function updateTextFieldForImages(array $imageIds, string $field, ?string $value): void
+    {
+        if ($imageIds === []) {
+            return;
+        }
+
+        $imagesTable = Tables::images();
+        $idsCsv = implode(',', $imageIds);
+        $protectedField = SqlDialect::protectColumnName($field);
+
+        $this->getEntityManager()
+            ->getConnection()
+            ->executeStatement(
+                <<<SQL
+                UPDATE {$imagesTable}
+                SET {$protectedField} = ?
+                WHERE id IN ({$idsCsv})
+                SQL
+                ,
+                [$value]
+            );
+    }
+
+    /**
+     * Bulk per-row `images` field update, each id getting its own values --
+     * Admin\BatchManagerUnitPageRenderer's own "unit mode" save, unlike
+     * updateTextFieldForImages() above which applies one shared value to
+     * every id. $dbfields/$datas/$flags match BatchWriter::massUpdate()'s
+     * own shape directly (raw column names, one row per image; $flags is
+     * Controller\Admin\SiteUpdateSubController's own metadata-sync
+     * BatchWriter::SKIP_EMPTY toggle).
+     *
+     * @param array{primary: string[], update: string[]} $dbfields
+     * @param array<int, array<string, mixed>> $datas
+     */
+    public function massUpdateFields(array $dbfields, array $datas, int $flags = 0): void
+    {
+        if ($datas === []) {
+            return;
+        }
+
+        new BatchWriter($this->getEntityManager()->getConnection())
+            ->massUpdate(Tables::images(), $dbfields, $datas, $flags);
+    }
+
+    /**
+     * Applies a dynamic subset of `images` scalar fields, raw column names
+     * as caller-supplied keys -- Ws\PwgImages::setInfo()'s own
+     * "single_value_mode fill_if_empty/replace" business logic decides at
+     * runtime which of name/author/comment/level/date_creation/file
+     * actually changes, so this stays a generic column=>value bag rather
+     * than typed parameters (unlike updateDescriptiveFields() above's
+     * fixed 4-field shape). Bypasses the ORM -- caller must clear the
+     * EntityManager afterward, same convention as updateLevelForImages()
+     * above. Also reused (unrelated caller) by Admin\Upload\UploadService::
+     * addUploadedFile()'s own re-upload branch -- same "dynamic column set,
+     * caller already knows which fields changed" shape.
+     *
+     * @param array<string, mixed> $updates
+     */
+    public function updateFields(int $imageId, array $updates): void
+    {
+        if ($updates === []) {
+            return;
+        }
+
+        new BatchWriter($this->getEntityManager()->getConnection())
+            ->singleUpdate(Tables::images(), $updates, [
+                'id' => $imageId,
+            ]);
+    }
+
+    /**
+     * Raw `images` INSERT, column names as caller-supplied keys -- Admin\
+     * Upload\UploadService::addUploadedFile()'s own "brand-new photo" branch.
+     * Stays raw DBAL rather than an ORM persist() (unlike Tag\TagRepository::
+     * insert()'s equivalent) since the caller's $insert set is itself
+     * dynamic (level/representative_ext only present conditionally),
+     * mirroring updateFields() above rather than a fixed-shape entity
+     * construction.
+     *
+     * @param array<string, mixed> $insert
+     */
+    public function insertImage(array $insert): int
+    {
+        $em = $this->getEntityManager();
+
+        new BatchWriter($em->getConnection())
+            ->singleInsert(Tables::images(), $insert);
+
+        return (int) $em->getConnection()
+            ->lastInsertId();
+    }
+
+    /**
+     * Bulk `images` insert -- Controller\Admin\SiteUpdateSubController's
+     * own filesystem-sync "add every newly-discovered photo at once" step.
+     * Same "dynamic column map" reasoning as insertImage() above, just
+     * batched, dbfields taken from the first row (the caller already
+     * builds every row with the same keyset, same convention as
+     * Tag\TagRepository::massInsertImageTags()).
+     *
+     * @param array<int, array<string, mixed>> $inserts
+     */
+    public function massInsertImages(array $inserts): void
+    {
+        if ($inserts === []) {
+            return;
+        }
+
+        new BatchWriter($this->getEntityManager()->getConnection())
+            ->massInsert(Tables::images(), array_keys($inserts[0]), $inserts);
     }
 
     /**
@@ -1230,7 +1452,12 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * @param  list<array{image_id: int|string, category_id: int|string, rank: int}>  $inserts
+     * $rank is optional per row -- Controller\Admin\SiteUpdateSubController's
+     * own filesystem-sync insert omits it entirely (leaves it to the
+     * schema's own DEFAULT), unlike ImageService::associateImagesToCategories()'s
+     * own caller which always supplies it.
+     *
+     * @param  list<array{image_id: int|string, category_id: int|string, rank?: int|string}>  $inserts
      */
     public function massInsertImageCategory(array $inserts): void
     {

@@ -10,6 +10,7 @@ use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
+use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 use Piwigo\Users\Projection\UserInfo;
 
@@ -631,20 +632,27 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
     /**
      * Adds a single favorite -- Controller\PictureController's own
      * "add_to_favorites" action, unlike deleteFavoritesForImages() above
-     * which is a bulk removal.
+     * which is a bulk removal. $ignoreDuplicate matches
+     * Category\CategoryRepository::massInsertGroupAccess()'s own `ignore`
+     * convention -- Ws\PwgUsers::favoritesAdd() needs INSERT IGNORE so a
+     * repeat "add favorite" call for an already-favorited image (the
+     * `(user_id, image_id)` primary key) stays a no-op instead of a
+     * duplicate-key error; PictureController's own call keeps the
+     * pre-existing plain-INSERT default unchanged.
      */
-    public function addFavorite(UserId $userId, int $imageId): void
+    public function addFavorite(UserId $userId, int $imageId, bool $ignoreDuplicate = false): void
     {
-        $favoritesTable = Tables::favorites();
-
-        $this->getEntityManager()
-            ->getConnection()
-            ->executeStatement(<<<SQL
-                INSERT INTO {$favoritesTable}
-                    (image_id,user_id)
-                VALUES
-                    ({$imageId},{$userId->value})
-                SQL);
+        new BatchWriter($this->getEntityManager()->getConnection())
+            ->singleInsert(
+                Tables::favorites(),
+                [
+                    'image_id' => $imageId,
+                    'user_id' => $userId->value,
+                ],
+                [
+                    'ignore' => $ignoreDuplicate,
+                ]
+            );
     }
 
     /**
@@ -801,6 +809,26 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
         $this->getEntityManager()
             ->getConnection()
             ->executeStatement($query);
+    }
+
+    /**
+     * Single-row `users` table update -- UserService::checkAndSaveUserInfos()'s
+     * account-field branch (username/email/password, whichever changed).
+     * $updates/$idColumn stay raw column => value / column-name, same
+     * dynamic field-name-mapping reasoning as fetchBasicUserRow() above.
+     *
+     * @param array<string, mixed> $updates
+     */
+    public function updateAccountFields(int $userId, string $idColumn, array $updates): void
+    {
+        if ($updates === []) {
+            return;
+        }
+
+        new BatchWriter($this->getEntityManager()->getConnection())
+            ->singleUpdate(Tables::users(), $updates, [
+                $idColumn => $userId,
+            ]);
     }
 
     /**

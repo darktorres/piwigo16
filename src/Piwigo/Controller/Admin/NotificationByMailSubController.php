@@ -12,10 +12,8 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
-use Piwigo\Db\Tables;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\NotificationByMailSender;
 use Piwigo\Template\Template;
@@ -472,8 +470,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
             }
 
             // Insert new nbm_users
-            new BatchWriter($conn)
-                ->massInsert(Tables::userMailNotification(), ['user_id', 'check_key', 'enabled'], $inserts);
+            $notificationByMailService->insertNotifications($inserts);
             // Update field enabled with specific function
             $check_key_treated = $nbmSender->doSubscribeUnsubscribeNotificationByMail(
                 true,

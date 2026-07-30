@@ -11,6 +11,7 @@ use PHPUnit\Framework\TestCase;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigRepository;
 use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\TablePrefixListener;
@@ -120,7 +121,10 @@ abstract class IntegrationTestCase extends TestCase
         // to this file while test-mode is active regardless of which test
         // wrote it last; starting each test from an empty file is what lets
         // assertNoPhpErrors() attribute an entry to the request that just
-        // ran, not a previous test.
+        // ran, not a previous test. _data/logs/ isn't guaranteed to exist
+        // yet on a fresh checkout (see ErrorCollector::writeTestErrorsLog()'s
+        // own identical guard) -- ensure it before truncating.
+        FilesystemHelper::mkgetdir(dirname(__DIR__, 2) . '/_data/logs', FilesystemHelper::MKGETDIR_RECURSIVE);
         file_put_contents(dirname(__DIR__, 2) . '/_data/logs/test_errors.log', '');
         // ConfigService::allRowsFromCacheOrDb()'s cache is real,
         // cross-process-persistent storage in this environment -- ext-apcu

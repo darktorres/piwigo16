@@ -336,9 +336,18 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
     public function test_derivatives_with_type_all_clears_the_whole_cache(): void
     {
         $_GET['type'] = 'all';
+        // DerivativeCacheService::clearDerivativeCache()'s own @opendir()
+        // (the real derivative-image cache dir, _data/i/, may not exist
+        // yet in this shared process) is already suppressed at the source
+        // and handled gracefully (returns early on false) -- @ alone
+        // doesn't stop PHPUnit's own ErrorHandler from surfacing it,
+        // matching this file's own test_compiled_templates_fatal_errors_*
+        // set_error_handler() precedent for the identical reason.
+        set_error_handler(static fn (): bool => true);
         try {
             $this->dispatcher->dispatch('derivatives');
         } finally {
+            restore_error_handler();
             unset($_GET['type']);
         }
 
@@ -348,9 +357,12 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
     public function test_derivatives_with_underscore_joined_types_clears_each_one(): void
     {
         $_GET['type'] = 'thumb_2small';
+        // Same real _data/i/-may-not-exist-yet reasoning as the test above.
+        set_error_handler(static fn (): bool => true);
         try {
             $this->dispatcher->dispatch('derivatives');
         } finally {
+            restore_error_handler();
             unset($_GET['type']);
         }
 
@@ -387,6 +399,14 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         CurrentTemplate::set(new Template(CurrentPaths::get()->root . 'themes/admin', 'default'));
         \Piwigo\Cache\CurrentPersistentCache::set(new \Piwigo\Cache\PersistentFileCache());
 
+        // FileCombiner::clear_combined_files()'s own opendir() (the real
+        // combined-CSS/JS cache dir, _data/combined/, may not exist yet in
+        // this shared process -- another test may have just deleted it) is
+        // unsuppressed but already handled gracefully in production
+        // (returns early on false); PHPUnit's own ErrorHandler still
+        // surfaces the warning, matching this file's own
+        // test_derivatives_* tests' identical reasoning above.
+        set_error_handler(static fn (): bool => true);
         try {
             $this->dispatcher->dispatch('compiled-templates');
 
@@ -395,6 +415,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
                 \Piwigo\Core\PageState::current()->infos
             );
         } finally {
+            restore_error_handler();
             \Piwigo\Cache\CurrentPersistentCache::reset();
         }
     }

@@ -152,7 +152,16 @@ final class ErrorCollector
         }
 
         $path = CurrentPaths::get()->logs . 'test_errors.log';
-        file_put_contents($path, $entry . "\n", FILE_APPEND);
+        $written = @file_put_contents($path, $entry . "\n", FILE_APPEND);
+        if ($written === false) {
+            // _data/logs/ isn't guaranteed to exist yet -- Monolog's own
+            // RotatingFileHandler (piwigo.log) self-heals via its own
+            // createDir(), but this bare file_put_contents() doesn't; a
+            // fresh checkout with no prior HTTP traffic hits this on the
+            // very first test-mode error.
+            FilesystemHelper::mkgetdir(dirname($path), FilesystemHelper::MKGETDIR_RECURSIVE);
+            file_put_contents($path, $entry . "\n", FILE_APPEND);
+        }
     }
 
     /**

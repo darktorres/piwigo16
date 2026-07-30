@@ -101,6 +101,41 @@ test('writeTestErrorsLog is a no-op when test mode is not active, never touching
     expect(true)->toBeTrue(); // reaching here without CurrentPaths ever throwing is the assertion
 });
 
+test('writeTestErrorsLog creates _data/logs/ when it does not exist yet, instead of silently failing', function (): void {
+    // Real bug, found live: a fresh checkout (no prior HTTP traffic, so
+    // Monolog's own RotatingFileHandler for piwigo.log has never run its
+    // own self-healing createDir()) has no _data/logs/ directory at all --
+    // the bare file_put_contents() this method used to call silently
+    // returns false (a PHP warning, not a fatal error) in that case.
+    $root = sys_get_temp_dir() . '/piwigo-error-collector-logs-' . bin2hex(random_bytes(8)) . '/';
+    mkdir($root);
+
+    try {
+        \Piwigo\Core\CurrentPaths::set(\Piwigo\Core\Paths::fromRoot($root));
+
+        $method = new ReflectionMethod(ErrorCollector::class, 'writeTestErrorsLog');
+        // @ suppression alone doesn't stop PHPUnit's own ErrorHandler from
+        // surfacing the warning of the method's own first, expected-to-fail
+        // write attempt -- a real no-op handler for the duration of this
+        // one call is the reliable way to swallow it, matching
+        // PersistentFileCacheTest.php's own established pattern.
+        set_error_handler(static fn (): bool => true);
+        try {
+            $method->invoke(null, '[WARNING] irrelevant in file.php:1');
+        } finally {
+            restore_error_handler();
+        }
+
+        $logPath = $root . '_data/logs/test_errors.log';
+        expect(is_dir($root . '_data/logs'))->toBeTrue()
+            ->and(file_exists($logPath))->toBeTrue()
+            ->and(file_get_contents($logPath))->toContain('[WARNING] irrelevant in file.php:1');
+    } finally {
+        \Piwigo\Core\CurrentPaths::reset();
+        exec('rm -rf ' . escapeshellarg($root));
+    }
+});
+
 test('flush returns immediately when nothing was collected', function (): void {
     seedCollected([]);
 

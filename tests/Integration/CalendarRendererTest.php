@@ -9,6 +9,7 @@ use Piwigo\Calendar\CalendarBase;
 use Piwigo\Calendar\CalendarRenderer;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -17,6 +18,22 @@ use Piwigo\Lang\Translator;
 use Piwigo\Template\Template;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
+
+function calendar_renderer_test_rrmdir(string $dir): void
+{
+    if (! is_dir($dir)) {
+        return;
+    }
+    $nodes = scandir($dir);
+    foreach ($nodes !== false ? $nodes : [] as $node) {
+        if ($node === '.' || $node === '..') {
+            continue;
+        }
+        $path = $dir . '/' . $node;
+        is_dir($path) ? calendar_renderer_test_rrmdir($path) : unlink($path);
+    }
+    rmdir($dir);
+}
 
 /**
  * End-to-end tests for the real, unmodified CalendarRenderer::render()
@@ -85,6 +102,17 @@ final class CalendarRendererTest extends IntegrationTestCase
     #[\Override]
     protected function tearDown(): void
     {
+        // CurrentConfig::setDataLocation('data/') above only redirects
+        // Template::__construct()'s own mkgetdir(..., 'templates_c') call
+        // away from the real, shared _data/ tree -- CurrentPaths itself is
+        // never sandboxed to a temp root here (unlike every Unit test
+        // using this same 'data/' trick, e.g. TemplateInstanceTest.php),
+        // since these tests need the real themes/ tree for calendar
+        // template rendering. That leaves a genuine, persistent data/
+        // directory at the real project root with nothing to clean it up
+        // -- real bug, found live (a stray data/templates_c/index.htm
+        // showed up as untracked repo debris after a coverage run).
+        calendar_renderer_test_rrmdir(CurrentPaths::get()->root . 'data');
         Lang::reset();
         Translator::reset();
         parent::tearDown();

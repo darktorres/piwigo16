@@ -10,11 +10,28 @@ use Piwigo\Calendar\CalendarRepository;
 use Piwigo\Calendar\CalendarWeekly;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Lang\Translator;
 use Piwigo\Template\Template;
+
+function calendar_weekly_test_rrmdir(string $dir): void
+{
+    if (! is_dir($dir)) {
+        return;
+    }
+    $nodes = scandir($dir);
+    foreach ($nodes !== false ? $nodes : [] as $node) {
+        if ($node === '.' || $node === '..') {
+            continue;
+        }
+        $path = $dir . '/' . $node;
+        is_dir($path) ? calendar_weekly_test_rrmdir($path) : unlink($path);
+    }
+    rmdir($dir);
+}
 
 /**
  * Covers CalendarBase's shared logic (initialize()/build_nav_bar()/
@@ -82,6 +99,17 @@ final class CalendarWeeklyTest extends IntegrationTestCase
     #[\Override]
     protected function tearDown(): void
     {
+        // CurrentConfig::setDataLocation('data/') above only redirects
+        // Template::__construct()'s own mkgetdir(..., 'templates_c') call
+        // away from the real, shared _data/ tree -- CurrentPaths itself
+        // stays pointed at the real project root throughout (unlike every
+        // Unit test using this same 'data/' trick, e.g.
+        // TemplateInstanceTest.php, which sandboxes CurrentPaths to a temp
+        // root too). That leaves a genuine, persistent data/ directory at
+        // the real project root with nothing to clean it up -- real bug,
+        // found live (a stray data/templates_c/index.htm showed up as
+        // untracked repo debris after a coverage run).
+        calendar_weekly_test_rrmdir(CurrentPaths::get()->root . 'data');
         Lang::reset();
         Translator::reset();
         parent::tearDown();

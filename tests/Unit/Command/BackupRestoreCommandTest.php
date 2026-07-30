@@ -7,6 +7,14 @@ use Piwigo\Command\BackupRestoreCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
+function backup_restore_resolve_target_database(mixed $database): string
+{
+    $method = new ReflectionMethod(BackupRestoreCommand::class, 'resolveTargetDatabase');
+
+    /** @var string */
+    return $method->invoke(null, $database);
+}
+
 // Destructive-operation guards only -- these must reject before ever
 // touching BackupService::restore() (drops/recreates the target DB,
 // overwrites galleries/), so a real BackupService instance is safe to use
@@ -28,7 +36,12 @@ test('aborts when the file argument is an empty string', function (): void {
     $exitCode = $tester->execute(['file' => '']);
 
     expect($exitCode)->toBe(Command::INVALID)
-        ->and($tester->getDisplay())->toContain('Missing required argument: file');
+        ->and($tester->getDisplay())->toContain('Missing required argument: file')
+        // Proves the missing-argument branch actually returns instead of
+        // falling through into the is_file() check below it -- an empty
+        // $file would also fail that check, printing its own "not found"
+        // error, which toContain() alone wouldn't catch layering on top of.
+        ->and($tester->getDisplay())->not->toContain('not found');
 });
 
 test('aborts when the file does not exist', function (): void {
@@ -79,5 +92,21 @@ test('a valid file with --force reaches the backup service', function (): void {
             ->and($tester->getDisplay())->toContain('Restore failed');
     } finally {
         unlink($tmpFile);
+    }
+});
+
+test('resolveTargetDatabase prefers a real --database value over the env fallback', function (): void {
+    expect(backup_restore_resolve_target_database('my_custom_db'))->toBe('my_custom_db');
+});
+
+test('resolveTargetDatabase falls back to DbCredentials::fromEnv() for an empty or absent --database', function (): void {
+    $original = getenv('PIWIGO_DB_BASE');
+    putenv('PIWIGO_DB_BASE=fallback_db');
+
+    try {
+        expect(backup_restore_resolve_target_database(''))->toBe('fallback_db')
+            ->and(backup_restore_resolve_target_database(null))->toBe('fallback_db');
+    } finally {
+        putenv($original === false ? 'PIWIGO_DB_BASE' : 'PIWIGO_DB_BASE=' . $original);
     }
 });

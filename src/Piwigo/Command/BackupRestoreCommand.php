@@ -66,8 +66,7 @@ final class BackupRestoreCommand extends Command
             return Command::INVALID;
         }
 
-        $database = $input->getOption('database');
-        $targetDatabase = is_string($database) && $database !== '' ? $database : DbCredentials::fromEnv()->database;
+        $targetDatabase = self::resolveTargetDatabase($input->getOption('database'));
 
         try {
             $this->backupService->restore($file, $targetDatabase);
@@ -80,5 +79,10 @@ final class BackupRestoreCommand extends Command
         $output->writeln("Restored {$file} into database '{$targetDatabase}'.");
 
         return Command::SUCCESS;
+    }
+
+    private static function resolveTargetDatabase(mixed $database): string
+    {
+        return is_string($database) && $database !== '' ? $database : DbCredentials::fromEnv()->database;
     }
 }

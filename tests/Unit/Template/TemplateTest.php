@@ -43,6 +43,22 @@ test('get_php_str_val returns null for a string too short to be quoted', functio
     expect(Template::get_php_str_val("'"))->toBeNull();
 });
 
+test('get_php_str_val evaluates a minimal 2-character empty single-quoted string', function (): void {
+    expect(Template::get_php_str_val("''"))->toBe('');
+});
+
+test('get_php_str_val checks the first character for a matching quote, not just the last', function (): void {
+    // Ends with a single quote but does not start with one -- under a
+    // buggy "only check the last character" implementation this would
+    // wrongly look like a valid quoted literal and attempt to eval() the
+    // syntactically invalid "5'", instead of returning null cleanly.
+    expect(Template::get_php_str_val("5'"))->toBeNull();
+});
+
+test('get_php_str_val checks the first character for a matching double-quote, not just the last', function (): void {
+    expect(Template::get_php_str_val('5"'))->toBeNull();
+});
+
 test('modcompiler_translate returns a cached lang lookup when compiled_template_cache_language is on', function (): void {
     CurrentConfig::setCompiledTemplateCacheLanguage(true);
     Lang::loadArray(['Comment' => 'Commentaire']);
@@ -153,4 +169,17 @@ test('postfilter_language handles a double-quoted literal and leaves non-matchin
     $result = Template::postfilter_language("<?php echo \"Bonjour\";?>\n<?php \$x = 1; ?>\n", new Smarty\Smarty());
 
     expect($result)->toBe("Bonjour<?php \$x = 1; ?>\n");
+});
+
+test('prefilter_white_space strips leading whitespace before every recognized tag, and their closing counterparts where applicable', function (): void {
+    // Trailing "END" sentinel line: without something after the last real
+    // tag, \s*$ (greedy, multiline) would swallow the source string's own
+    // final newline too -- a pre-existing quirk of this regex, not
+    // something this test is trying to pin down.
+    $source = "  {if x}\n  {/if}\n  {foreach x}\n  {/foreach}\n  {section x}\n  {/section}\n  {footer_script}\n  {/footer_script}\n  {include x}\n  {else}\n  {combine_script x}\n  {html_head}\nEND\n";
+
+    $result = Template::prefilter_white_space($source, new Smarty\Smarty());
+
+    $expected = "{if x}\n{/if}\n{foreach x}\n{/foreach}\n{section x}\n{/section}\n{footer_script}\n{/footer_script}\n{include x}\n{else}\n{combine_script x}\n{html_head}\nEND\n";
+    expect($result)->toBe($expected);
 });

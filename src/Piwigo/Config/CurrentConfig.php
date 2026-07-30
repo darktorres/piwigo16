@@ -4267,6 +4267,26 @@ final class CurrentConfig
 
     public static function chmodValue(): int
     {
+        // Real bug, found live: this SAPI-only heuristic (byte-identical to
+        // the pre-rewrite $conf['chmod_value'] default) assumes whichever
+        // single process creates a directory is the only one that will
+        // ever need to write to it -- true for a real standalone
+        // deployment, false in this test environment, where CLI-run suites
+        // (Unit/Integration, as `torres`) and real Apache-served suites
+        // (Contract/Browser, as `www-data`) share the same _data/ tree
+        // within one composer test:coverage:all run. Whichever side's
+        // mkgetdir() call creates a shared directory first "wins" its mode
+        // for the rest of the run -- a CLI test creating _data/templates_c
+        // first left it torres-only (0755), and every subsequent
+        // Apache-served request 500'd the moment it needed that same
+        // directory (took down an entire Contract suite run this way).
+        // Env::testModeIsActive() also covers a real Apache-served
+        // Browser-test request (loopback + header), so this doesn't
+        // narrow that side at all -- it only widens the CLI side to match.
+        if (\Piwigo\Core\Env::testModeIsActive()) {
+            return self::$chmodValue ?? 0777;
+        }
+
         return self::$chmodValue ?? (substr_compare(\PHP_SAPI, 'apa', 0, 3) === 0 ? 0777 : 0755);
     }
 

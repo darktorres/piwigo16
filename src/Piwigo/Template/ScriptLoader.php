@@ -136,7 +136,9 @@ final class ScriptLoader
      * @param string|null $path null defers to fill_well_known()'s
      *   self::$known_paths lookup by $id — this method's own UI-core-dependency
      *   recursion below passes null deliberately
-     * @param string $version
+     * @param string|false $version false disables version-based cache
+     *   busting, mirroring Script::__construct()'s own contract (this
+     *   method just forwards $version straight into `new Script(...)`)
      */
     public function add($id, $load_mode, $require, $path, $version = '0', bool $is_template = false): void
     {

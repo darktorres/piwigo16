@@ -151,6 +151,9 @@ test('computeForce is false for an admin JS combine with no cache-busting header
 
 // --- initialKey() ---
 
+/**
+ * @return string[]
+ */
 function invokeInitialKey(FileCombiner $combiner): array
 {
     $method = new ReflectionMethod($combiner, 'initialKey');
@@ -1028,6 +1031,11 @@ test('process_combinable notifies combinable_preparse listeners before parsing a
 
         invokeProcessCombinable($combiner, $combinable, false, false, $header);
 
+        // $notifiedWith is captured by-ref inside the closure above --
+        // PHPStan can't narrow it past that boundary from the expect()
+        // assertion alone (a by-ref/closure narrowing loss, same class as
+        // this codebase's other instances of the same limitation).
+        assert(is_array($notifiedWith) && array_key_exists(1, $notifiedWith));
         expect($notifiedWith)->not->toBeNull()
             ->and($notifiedWith[1])->toBe($combinable);
     } finally {

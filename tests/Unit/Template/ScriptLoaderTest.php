@@ -597,7 +597,14 @@ test('get_head_scripts computes and uses each script\'s topological order to sor
         $loader->get_head_scripts();
 
         $ids = array_keys(scriptLoaderRegistered($loader));
-        expect(array_search('base', $ids, true))->toBeLessThan(array_search('dependent', $ids, true));
+        $basePos = array_search('base', $ids, true);
+        $dependentPos = array_search('dependent', $ids, true);
+        // Both scripts were just registered above, so both are genuinely
+        // present in $ids -- array_search()'s own false-if-not-found case
+        // is unreachable here, narrowing it away for toBeLessThan()'s
+        // numeric-only parameter type.
+        assert(is_int($basePos) && is_int($dependentPos));
+        expect($basePos)->toBeLessThan($dependentPos);
     } finally {
         file_combiner_test_rrmdir_scriptloader($root);
         CurrentConfig::reset();

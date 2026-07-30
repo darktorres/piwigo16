@@ -85,14 +85,44 @@ test('dumpForLog redacts sensitive properties', function (): void {
         ->and($dump['galleryTitle'])->toBe('Visible');
 });
 
-test('chmodValue falls back to a SAPI-dependent default, overridable via a plain nullable int', function (): void {
-    expect(CurrentConfig::chmodValue())->toBe(0755); // non-Apache SAPI in a CLI test run
+test('chmodValue defaults to 0777 in test mode regardless of SAPI, overridable via a plain nullable int', function (): void {
+    // Real bug, found live: this test used to assert 0755 here ("non-Apache
+    // SAPI in a CLI test run") -- true of the raw SAPI-only heuristic, but
+    // wrong for this actual test environment, where CLI-run suites (Unit/
+    // Integration, as torres) and real Apache-served suites (Contract/
+    // Browser, as www-data) share the same _data/ tree within one
+    // composer test:coverage:all run. Whichever side's mkgetdir() call
+    // creates a shared directory first used to "win" its mode for the
+    // rest of the run -- a CLI test creating a directory first left it
+    // torres-only (0755), and the next Apache-served request 500'd the
+    // moment it needed that same directory (took down an entire Contract
+    // suite run this way). chmodValue() now special-cases test mode to
+    // 0777 unconditionally, since Env::testModeIsActive() is true on both
+    // sides here (CLI always; Apache via loopback + header).
+    expect(CurrentConfig::chmodValue())->toBe(0777);
 
     CurrentConfig::setChmodValue(0700);
     expect(CurrentConfig::chmodValue())->toBe(0700);
 
     CurrentConfig::setChmodValue(null);
-    expect(CurrentConfig::chmodValue())->toBe(0755);
+    expect(CurrentConfig::chmodValue())->toBe(0777);
+});
+
+test('chmodValue falls back to the plain SAPI-dependent default outside test mode', function (): void {
+    $original = $_SERVER['HTTP_X_PIWIGO_ENV'] ?? null;
+    unset($_SERVER['HTTP_X_PIWIGO_ENV']);
+
+    try {
+        // PHP_SAPI is 'cli' for this whole process (see tests/bootstrap.php's
+        // own docblock) -- with the test-mode header cleared,
+        // Env::testModeIsActive() is false, so this reaches the original
+        // SAPI-only heuristic unchanged.
+        expect(CurrentConfig::chmodValue())->toBe(0755);
+    } finally {
+        if ($original !== null) {
+            $_SERVER['HTTP_X_PIWIGO_ENV'] = $original;
+        }
+    }
 });
 
 test('orderByCustom/orderByInsideCategoryCustom are plain nullable raw-SQL-fragment strings', function (): void {

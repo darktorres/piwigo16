@@ -283,8 +283,8 @@ final class ActivityRepository extends EntityRepository
                 GROUP BY activity_day, object, action
                 SQL
                 , [
-                                'since_date' => $sinceDate,
-                            ]);
+                    'since_date' => $sinceDate,
+                ]);
 
         return array_map(
             static fn (array $row): array => [

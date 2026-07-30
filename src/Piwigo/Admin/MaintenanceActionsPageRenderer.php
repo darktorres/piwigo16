@@ -82,14 +82,10 @@ final class MaintenanceActionsPageRenderer
         }
         $purge_urls[Lang::t(ImageStdParams::CUSTOM)] = ImageStdParams::CUSTOM;
 
-        $conn = DbConnection::build();
+        $dbInfo = new DbInfo(DbConnection::build());
         $php_current_timestamp = date('Y-m-d H:i:s');
-        $db_version = new DbInfo($conn)
-            ->version();
-        $row = $conn->fetchNumeric(<<<SQL
-            SELECT now()
-            SQL);
-        $db_current_date = $row !== false ? $row[0] : null;
+        $db_version = $dbInfo->version();
+        $db_current_date = $dbInfo->currentDateTime();
 
         // \Piwigo\Config\CurrentConfig::cacheSizes() is a serialized 4-row [name, value] list produced by
         // ws_getCacheSize() (cache_size, msizes, tsizes, last_date_calc); row 3's

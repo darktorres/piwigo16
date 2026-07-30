@@ -26,6 +26,23 @@ final readonly class DbInfo
     }
 
     /**
+     * The DB server's own current date/time, read live (not via
+     * Env::now(), which is invisible to this and would defeat the whole
+     * point) -- Admin\MaintenanceActionsPageRenderer/MaintenanceEnvPageRenderer's
+     * own "does the DB server's clock match the PHP server's clock"
+     * diagnostic display, and PiwigoInfosSender's own equivalent
+     * `db_datetime` telemetry field.
+     */
+    public function currentDateTime(): ?string
+    {
+        $v = $this->conn->fetchOne(<<<SQL
+            SELECT NOW()
+            SQL);
+
+        return is_string($v) ? $v : null;
+    }
+
+    /**
      * Parses a column's live ENUM definition
      * (`enum('blue','green','black')` -> `['blue', 'green', 'black']`) --
      * matches the original `MysqliDb::getEnums()`'s own `DESC` +

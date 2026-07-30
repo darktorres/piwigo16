@@ -817,6 +817,14 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     }
 
     /**
+     * @return list<int>
+     */
+    public function getFavoriteImageIds(UserId $userId): array
+    {
+        return $this->repo->findFavoriteImageIds($userId);
+    }
+
+    /**
      * Adds a single favorite -- Controller\PictureController's own
      * "add_to_favorites" action.
      */
@@ -903,6 +911,22 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     {
         $language = $this->getDefaultUserValue('language', AppInfo::DEFAULT_LANGUAGE);
         return is_string($language) ? $language : AppInfo::DEFAULT_LANGUAGE;
+    }
+
+    /**
+     * @return array<string, int> keyed by theme
+     */
+    public function getThemeUsageCounts(): array
+    {
+        return $this->repo->findThemeUsageCounts();
+    }
+
+    /**
+     * @return array<string, int> keyed by language
+     */
+    public function getLanguageUsageCounts(): array
+    {
+        return $this->repo->findLanguageUsageCounts();
     }
 
     /**

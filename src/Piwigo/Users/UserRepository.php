@@ -826,6 +826,68 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
     }
 
     /**
+     * Every distinct `theme` value's user count -- Admin\
+     * PiwigoInfosSender's own telemetry theme-usage breakdown.
+     *
+     * @return array<string, int> keyed by theme
+     */
+    public function findThemeUsageCounts(): array
+    {
+        $userInfosTable = Tables::userInfos();
+
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative(<<<SQL
+                SELECT
+                    theme,
+                    COUNT(*) AS theme_counter
+                FROM {$userInfosTable}
+                GROUP BY theme
+                ORDER BY theme
+                SQL);
+
+        $byTheme = [];
+        foreach ($rows as $row) {
+            if (is_string($row['theme'] ?? null) && is_numeric($row['theme_counter'] ?? null)) {
+                $byTheme[$row['theme']] = (int) $row['theme_counter'];
+            }
+        }
+
+        return $byTheme;
+    }
+
+    /**
+     * Every distinct `language` value's user count -- Admin\
+     * PiwigoInfosSender's own telemetry language-usage breakdown.
+     *
+     * @return array<string, int> keyed by language
+     */
+    public function findLanguageUsageCounts(): array
+    {
+        $userInfosTable = Tables::userInfos();
+
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative(<<<SQL
+                SELECT
+                    language,
+                    COUNT(*) AS language_counter
+                FROM {$userInfosTable}
+                GROUP BY language
+                ORDER BY language
+                SQL);
+
+        $byLanguage = [];
+        foreach ($rows as $row) {
+            if (is_string($row['language'] ?? null) && is_numeric($row['language_counter'] ?? null)) {
+                $byLanguage[$row['language']] = (int) $row['language_counter'];
+            }
+        }
+
+        return $byLanguage;
+    }
+
+    /**
      * Distinct "YYYY-MM" registration months among every user --
      * Admin\UserListPageRenderer's own registration-date filter dropdown.
      *

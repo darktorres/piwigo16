@@ -5,11 +5,21 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\BatchManager\FilterResolver;
+use Piwigo\Caddie\CaddieRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\Tables;
+use Piwigo\Html\HtmlService;
+use Piwigo\Image\ImageService;
+use Piwigo\Mail\MailService;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
+use Piwigo\Users\UserService;
 
 /**
  * Fixture data used by these tests (tests/Fixtures/piwigo-17.0.sql, all
@@ -44,7 +54,31 @@ final class FilterResolverTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->resolver = new FilterResolver($this->conn);
+
+        $em = EntityManagerFactory::build($this->conn);
+        $imageService = new ImageService(
+            $em->getRepository(\Piwigo\Image\ImageEntity::class),
+            new ActivityService($em->getRepository(\Piwigo\Activity\ActivityEntity::class)),
+        );
+        $categoryService = new CategoryService(
+            $em->getRepository(\Piwigo\Category\CategoryEntity::class),
+            new PermissionService(
+                new PermissionRepository($em),
+                $em->getRepository(\Piwigo\Group\GroupEntity::class),
+                $em->getRepository(\Piwigo\Category\CategoryEntity::class),
+            ),
+        );
+        $caddieRepo = new CaddieRepository($this->conn);
+        $userService = new UserService(
+            $em->getRepository(\Piwigo\Users\UserInfoEntity::class),
+            $em->getRepository(\Piwigo\Group\GroupEntity::class),
+            new MailService(),
+            new ActivityService($em->getRepository(\Piwigo\Activity\ActivityEntity::class)),
+            new HtmlService(),
+            $this->conn,
+        );
+
+        $this->resolver = new FilterResolver($imageService, $categoryService, $caddieRepo, $userService);
     }
 
     public function test_resolve_prefilter_favorites_returns_the_users_favorite_image_ids(): void

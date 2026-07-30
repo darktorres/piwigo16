@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\BatchManager;
 
-use Doctrine\DBAL\ArrayParameterType;
-use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\Query\QueryBuilder;
-use Piwigo\Db\SqlDialect;
-use Piwigo\Db\Tables;
+use Piwigo\Caddie\CaddieRepository;
+use Piwigo\Category\CategoryService;
+use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Image\ImageService;
+use Piwigo\Users\UserService;
 
 /**
  * Resolves the batch manager's session-held filter criteria
@@ -18,6 +18,14 @@ use Piwigo\Db\Tables;
  * file and its 2 tab siblings is $_POST/$_GET/$_SESSION parsing and
  * template glue, kept inline per this phase's established "extract data
  * access, keep page/template glue inline" pattern).
+ *
+ * Originally built directly on a raw Connection (P21); its own SQL
+ * moved into ImageRepository/CategoryRepository/CaddieRepository/
+ * UserRepository during the Controller/Ws/Admin -> Service -> Repository
+ * migration -- this class now only orchestrates (validates/builds the
+ * caller-composed WHERE fragments its filters need, then delegates
+ * execution), matching the 3-hop chain every other L4 admin class in
+ * this migration already follows.
  *
  * Deliberately does NOT re-implement filters that already have a correct,
  * tested implementation elsewhere (Piwigo\Image\ImageService::getOrphans()/
@@ -37,7 +45,10 @@ use Piwigo\Db\Tables;
 final readonly class FilterResolver
 {
     public function __construct(
-        private Connection $conn,
+        private ImageService $imageService,
+        private CategoryService $categoryService,
+        private CaddieRepository $caddieRepo,
+        private UserService $userService,
     ) {}
 
     /**
@@ -68,13 +79,7 @@ final readonly class FilterResolver
      */
     private function caddiePhotoIds(int $userId): array
     {
-        return $this->fetchIntColumn(
-            $this->conn->createQueryBuilder()
-                ->select('element_id')
-                ->from(Tables::caddie())
-                ->where('user_id = :user_id')
-                ->setParameter('user_id', $userId)
-        );
+        return $this->caddieRepo->findElementIdsForUser($userId);
     }
 
     /**
@@ -82,13 +87,7 @@ final readonly class FilterResolver
      */
     private function favoritePhotoIds(int $userId): array
     {
-        return $this->fetchIntColumn(
-            $this->conn->createQueryBuilder()
-                ->select('image_id')
-                ->from(Tables::favorites())
-                ->where('user_id = :user_id')
-                ->setParameter('user_id', $userId)
-        );
+        return $this->userService->getFavoriteImageIds(UserId::from($userId));
     }
 
     /**
@@ -101,25 +100,7 @@ final readonly class FilterResolver
      */
     private function lastImportPhotoIds(): array
     {
-        $lastDate = $this->conn->createQueryBuilder()
-            ->select('MAX(date_available) AS max_date')
-            ->from(Tables::images())
-            ->executeQuery()
-            ->fetchOne();
-
-        if (! is_string($lastDate) || $lastDate === '') {
-            return [];
-        }
-
-        $imagesTable = Tables::images();
-        $recentPeriodExpr = SqlDialect::getRecentPeriodExpression(1, $lastDate);
-        $sql = <<<SQL
-            SELECT id FROM {$imagesTable} WHERE date_available BETWEEN {$recentPeriodExpr} AND :last_date
-            SQL;
-
-        return $this->fetchIntColumnSql($sql, [
-            'last_date' => $lastDate,
-        ]);
+        return $this->imageService->getIdsAddedSameDayAsLatest();
     }
 
     /**
@@ -130,32 +111,9 @@ final readonly class FilterResolver
      */
     private function noVirtualAlbumPhotoIds(): array
     {
-        $allImageIds = $this->fetchIntColumn(
-            $this->conn->createQueryBuilder()
-                ->select('id')
-                ->from(Tables::images())
-        );
+        $virtualCategoryIds = $this->categoryService->getIdsByDirNull(true);
 
-        $virtualCategoryIds = $this->fetchIntColumn(
-            $this->conn->createQueryBuilder()
-                ->select('id')
-                ->from(Tables::categories())
-                ->where('dir IS NULL')
-        );
-
-        if ($virtualCategoryIds === []) {
-            return $allImageIds;
-        }
-
-        $linkedToVirtual = $this->fetchIntColumn(
-            $this->conn->createQueryBuilder()
-                ->select('DISTINCT(image_id)')
-                ->from(Tables::imageCategory())
-                ->where('category_id IN (:ids)')
-                ->setParameter('ids', $virtualCategoryIds, ArrayParameterType::INTEGER)
-        );
-
-        return array_values(array_diff($allImageIds, $linkedToVirtual));
+        return $this->imageService->getIdsNotInCategories($virtualCategoryIds);
     }
 
     /**
@@ -163,13 +121,7 @@ final readonly class FilterResolver
      */
     private function noTagPhotoIds(): array
     {
-        $imagesTable = Tables::images();
-        $imageTagTable = Tables::imageTag();
-        $sql = <<<SQL
-            SELECT id FROM {$imagesTable} LEFT JOIN {$imageTagTable} ON id = image_id WHERE tag_id IS NULL
-            SQL;
-
-        return $this->fetchIntColumnSql($sql, []);
+        return $this->imageService->getIdsWithNoTag();
     }
 
     /**
@@ -192,37 +144,7 @@ final readonly class FilterResolver
      */
     public function duplicatePhotoIds(array $fields): array
     {
-        if ($fields === []) {
-            return [];
-        }
-
-        $qb = $this->conn->createQueryBuilder()
-            ->select('GROUP_CONCAT(id) AS ids')
-            ->from(Tables::images());
-
-        if (in_array('md5sum', $fields, true)) {
-            $qb->where('md5sum IS NOT NULL');
-        }
-
-        $qb->groupBy(implode(',', $fields))
-            ->having('COUNT(*) > 1');
-
-        $idLists = $qb->executeQuery()
-            ->fetchFirstColumn();
-
-        $ids = [];
-        foreach ($idLists as $idList) {
-            if (! is_string($idList)) {
-                continue;
-            }
-            foreach (explode(',', rtrim($idList, ',')) as $id) {
-                if (is_numeric($id)) {
-                    $ids[] = (int) $id;
-                }
-            }
-        }
-
-        return $ids;
+        return $this->imageService->getIdsGroupedByDuplicateFields($fields);
     }
 
     /**
@@ -260,25 +182,12 @@ final readonly class FilterResolver
      */
     private function allPhotoIds(string $orderBy): array
     {
-        $imagesTable = Tables::images();
-        $sql = <<<SQL
-            SELECT id FROM {$imagesTable} {$orderBy}
-            SQL;
-
-        return $this->fetchIntColumnSql($sql, []);
+        return $this->imageService->getIdsWithConditions([], [], $orderBy);
     }
 
     public function categoryExists(int $categoryId): bool
     {
-        $count = $this->conn->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from(Tables::categories())
-            ->where('id = :id')
-            ->setParameter('id', $categoryId)
-            ->executeQuery()
-            ->fetchOne();
-
-        return is_numeric($count) && (int) $count > 0;
+        return $this->categoryService->existsById($categoryId);
     }
 
     /**
@@ -287,17 +196,7 @@ final readonly class FilterResolver
      */
     public function categoryImageIds(array $categoryIds): array
     {
-        if ($categoryIds === []) {
-            return [];
-        }
-
-        return $this->fetchIntColumn(
-            $this->conn->createQueryBuilder()
-                ->select('DISTINCT(image_id)')
-                ->from(Tables::imageCategory())
-                ->where('category_id IN (:ids)')
-                ->setParameter('ids', $categoryIds, ArrayParameterType::INTEGER)
-        );
+        return $this->imageService->getIdsInCategories($categoryIds);
     }
 
     /**
@@ -306,14 +205,14 @@ final readonly class FilterResolver
     public function levelPhotoIds(int $level, bool $includeLower, string $orderBy): array
     {
         $operator = $includeLower ? '<=' : '=';
-        $imagesTable = Tables::images();
-        $sql = <<<SQL
-            SELECT id FROM {$imagesTable} WHERE level {$operator} :level {$orderBy}
-            SQL;
 
-        return $this->fetchIntColumnSql($sql, [
-            'level' => $level,
-        ]);
+        return $this->imageService->getIdsWithConditions(
+            ["level {$operator} :level"],
+            [
+                'level' => $level,
+            ],
+            $orderBy
+        );
     }
 
     /**
@@ -367,13 +266,7 @@ final readonly class FilterResolver
             return null;
         }
 
-        $imagesTable = Tables::images();
-        $whereSql = implode(' AND ', $where);
-        $sql = <<<SQL
-            SELECT id FROM {$imagesTable} WHERE {$whereSql} {$orderBy}
-            SQL;
-
-        return $this->fetchIntColumnSql($sql, $params);
+        return $this->imageService->getIdsWithConditions($where, $params, $orderBy);
     }
 
     /**
@@ -402,51 +295,6 @@ final readonly class FilterResolver
             return null;
         }
 
-        $imagesTable = Tables::images();
-        $whereSql = implode(' AND ', $where);
-        $sql = <<<SQL
-            SELECT id FROM {$imagesTable} WHERE {$whereSql} {$orderBy}
-            SQL;
-
-        return $this->fetchIntColumnSql($sql, $params);
-    }
-
-    /**
-     * @return list<int>
-     */
-    private function fetchIntColumn(QueryBuilder $qb): array
-    {
-        $values = $qb->executeQuery()
-            ->fetchFirstColumn();
-
-        return $this->toIntList($values);
-    }
-
-    /**
-     * @param array<string, int|float|string> $params
-     * @return list<int>
-     */
-    private function fetchIntColumnSql(string $sql, array $params): array
-    {
-        $values = $this->conn->executeQuery($sql, $params)
-            ->fetchFirstColumn();
-
-        return $this->toIntList($values);
-    }
-
-    /**
-     * @param list<mixed> $values
-     * @return list<int>
-     */
-    private function toIntList(array $values): array
-    {
-        $ints = [];
-        foreach ($values as $value) {
-            if (is_numeric($value)) {
-                $ints[] = (int) $value;
-            }
-        }
-
-        return $ints;
+        return $this->imageService->getIdsWithConditions($where, $params, $orderBy);
     }
 }

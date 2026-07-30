@@ -22,7 +22,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Http\RequestFactory;
 use Piwigo\Image\ImageService;
 use Piwigo\Session\SessionService;
@@ -310,31 +309,17 @@ final class AdminShell
             $template->assign('U_COMMENTS', $link_start . 'comments');
 
             // pending comments
-            $commentsTable = Tables::comments();
-            $query = <<<SQL
-                SELECT COUNT(*)
-                FROM {$commentsTable}
-                WHERE validated=0
-                SQL;
-            $row = $conn->fetchNumeric($query);
-            $nb_comments = $row !== false ? $row[0] : 0;
+            $nb_comments = \Piwigo\Bootstrap\ExtendedDomainAccessor::commentService()->countUnvalidated();
 
             if ($nb_comments > 0) {
                 $template->assign('NB_PENDING_COMMENTS', $nb_comments);
-                \Piwigo\Core\PageState::current()->setNbPendingComments(is_numeric($nb_comments) ? (int) $nb_comments : 0);
+                \Piwigo\Core\PageState::current()->setNbPendingComments($nb_comments);
             }
         }
 
         // any photo in the caddie?
         $user_id = \Piwigo\Users\CurrentUser::get()->id->value;
-        $caddieTable = Tables::caddie();
-        $query = <<<SQL
-            SELECT COUNT(*)
-            FROM {$caddieTable}
-            WHERE user_id = {$user_id}
-            SQL;
-        $row = $conn->fetchNumeric($query);
-        $nb_photos_in_caddie = $row !== false ? $row[0] : 0;
+        $nb_photos_in_caddie = count(new \Piwigo\Caddie\CaddieRepository($conn)->findElementIdsForUser($user_id));
 
         if ($nb_photos_in_caddie > 0) {
             $template->assign(
@@ -366,12 +351,7 @@ final class AdminShell
         // only calculate number of orphans on all pages if the number of images is "not huge"
         $nb_orphans = 0;
 
-        $imagesTable = Tables::images();
-        $row = $conn->fetchNumeric(<<<SQL
-            SELECT COUNT(*) FROM {$imagesTable}
-            SQL);
-        $nb_photos_total_raw = $row !== false ? $row[0] : 0;
-        $nb_photos_total = is_numeric($nb_photos_total_raw) ? (int) $nb_photos_total_raw : 0;
+        $nb_photos_total = self::imageService()->getTotalImageCount();
         if ($nb_photos_total < 100000) { // 100k is already a big gallery
             $nb_orphans = self::imageService()
                 ->countOrphans();

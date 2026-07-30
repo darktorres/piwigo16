@@ -1782,6 +1782,31 @@ final class CategoryRepository extends EntityRepository
     }
 
     /**
+     * Ids of categories with no physical directory (virtual) or with one
+     * (physical) -- Admin\BatchManager\FilterResolver's own
+     * "no_virtual_album" prefilter. Id-only sibling of countByDirNull()
+     * below.
+     *
+     * @return list<int>
+     */
+    public function findIdsByDirNull(bool $dirIsNull): array
+    {
+        $categoriesTable = Tables::categories();
+        $dirCondition = $dirIsNull ? 'NULL' : 'NOT NULL';
+
+        return array_map(
+            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+            $this->getEntityManager()
+                ->getConnection()
+                ->fetchFirstColumn(<<<SQL
+                    SELECT id
+                    FROM {$categoriesTable}
+                    WHERE dir IS {$dirCondition}
+                    SQL)
+        );
+    }
+
+    /**
      * Count of categories with no physical directory (virtual) or with
      * one (physical) -- Ws\PwgCore::getInfos()'s own "nb_virtual"/
      * "nb_physical" summary figures.
@@ -1797,6 +1822,30 @@ final class CategoryRepository extends EntityRepository
                 SELECT COUNT(*)
                 FROM {$categoriesTable}
                 WHERE dir IS {$dirCondition}
+                SQL);
+
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /**
+     * Count of categories whose `visible` matches $visible --
+     * Controller\Admin\IntroSubController's own "locked album" dashboard
+     * warning. `visible` is a real bool column now, not the legacy
+     * `enum('true','false')` string the original inline query's own
+     * `WHERE visible = 'false'` predated (see Comment's own commentable/
+     * validated retype for the same bug class).
+     */
+    public function countByVisible(bool $visible): int
+    {
+        $categoriesTable = Tables::categories();
+        $visibleValue = $visible ? 1 : 0;
+
+        $value = $this->getEntityManager()
+            ->getConnection()
+            ->fetchOne(<<<SQL
+                SELECT COUNT(*)
+                FROM {$categoriesTable}
+                WHERE visible = {$visibleValue}
                 SQL);
 
         return is_numeric($value) ? (int) $value : 0;

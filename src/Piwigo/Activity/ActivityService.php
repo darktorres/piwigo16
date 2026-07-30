@@ -208,4 +208,36 @@ final readonly class ActivityService implements ActivityLoggerInterface
     {
         return $this->repo->findPaginated($whereClause, $limit, $offset);
     }
+
+    /**
+     * @return list<array{activity_day: string, object: string, action: string, counter: int}>
+     */
+    public function getDailyActionCountsSince(string $sinceDate): array
+    {
+        return $this->repo->findDailyActionCountsSince($sinceDate);
+    }
+
+    /**
+     * @return list<array{action: string, occured_on: ?string, details: ?string}>
+     */
+    public function getCoreUpdateHistory(): array
+    {
+        return $this->repo->findCoreUpdateHistory();
+    }
+
+    /**
+     * @return list<array{object: string, object_id: int, action: string, counter: int}>
+     */
+    public function getSystemActionCountsByObjectId(): array
+    {
+        return $this->repo->findSystemActionCountsByObjectId();
+    }
+
+    /**
+     * @return list<array{user_agent: ?string, counter: int, first_encounter: ?string, last_encounter: ?string}>
+     */
+    public function getUserAgentBreakdown(): array
+    {
+        return $this->repo->findUserAgentBreakdown();
+    }
 }

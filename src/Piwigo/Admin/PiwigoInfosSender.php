@@ -8,7 +8,6 @@ use Piwigo\Admin\Extensions\ExtensionRepository;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Image\PwgImage;
-use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\ArrayHelper;
 use Piwigo\Core\ContainerDetector;
@@ -16,7 +15,6 @@ use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UniqueExecLock;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
-use Piwigo\Db\Tables;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Users\UserService;
@@ -107,10 +105,8 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
         }
 
         $conn = DbConnection::build();
-        $row = $conn->fetchNumeric(<<<SQL
-            SELECT now()
-            SQL);
-        $dbCurrentDate = $row !== false ? $row[0] : null;
+        $dbInfo = new DbInfo($conn);
+        $dbCurrentDate = $dbInfo->currentDateTime();
 
         if (\Piwigo\Config\CurrentConfig::sendPiwigoInfosOriginHash() === null) {
             \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('send_piwigo_infos_origin_hash', sha1(random_bytes(1000)), true);
@@ -126,8 +122,7 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
                 'os_version' => PHP_OS,
                 'container_type' => $containerType,
                 'container_version' => $containerVersion,
-                'db_version' => new DbInfo($conn)
-                    ->version(),
+                'db_version' => $dbInfo->version(),
                 'php_datetime' => date('Y-m-d H:i:s'),
                 'db_datetime' => $dbCurrentDate,
                 'graphics_library' => PwgImage::get_graphics_library(),
@@ -145,61 +140,39 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
         $piwigoInfos['general_stats']['last_photo'] = null;
 
         if ($piwigoInfos['general_stats']['nb_photos'] > 0) {
-            $imagesTable = Tables::images();
-            $query = <<<SQL
-                SELECT
-                    COUNT(*) AS counter
-                FROM `{$imagesTable}`
-                WHERE storage_category_id IS NOT NULL
-                SQL;
-            if (array_column($conn->fetchAllAssociative($query), 'counter')[0] > 0) {
-                // slow SQL query, but necessary if you have files added by sync
-                $query = <<<SQL
-                    SELECT
-                        IF(storage_category_id IS NULL, 'api', 'sync') AS add_method,
-                        MAX(date_available) AS last_added_on,
-                        COUNT(*) AS nb_files
-                    FROM `{$imagesTable}`
-                    GROUP BY add_method
-                    SQL;
-                $filesAddedBy = array_column($conn->fetchAllAssociative($query), null, 'add_method');
+            $imageService = \Piwigo\Bootstrap\CoreDomainAccessor::imageService();
 
+            if ($imageService->countWithStorageCategory() > 0) {
+                // slow SQL query, but necessary if you have files added by sync
+                $filesAddedBy = [];
+                foreach ($imageService->getAddMethodBreakdown() as $addMethodRow) {
+                    $filesAddedBy[$addMethodRow['add_method']] = $addMethodRow;
+                }
+
+                // storage_category_id IS NOT NULL matched at least one row
+                // above, so the 'sync' group is always present here.
                 $piwigoInfos['general_stats']['nb_photos_synced'] = $filesAddedBy['sync']['nb_files'];
                 $piwigoInfos['general_stats']['last_photo_synced'] = $filesAddedBy['sync']['last_added_on'];
 
                 $methodOfLastPhoto = 'sync';
-                $apiLastAdded = $filesAddedBy['api']['last_added_on'] ?? null;
-                $syncLastAdded = $filesAddedBy['sync']['last_added_on'] ?? null;
-                $apiLastAddedStr = is_scalar($apiLastAdded) ? (string) $apiLastAdded : '';
-                $syncLastAddedStr = is_scalar($syncLastAdded) ? (string) $syncLastAdded : '';
+                $apiLastAddedStr = $filesAddedBy['api']['last_added_on'] ?? '';
+                $syncLastAddedStr = $filesAddedBy['sync']['last_added_on'] ?? '';
                 if (isset($filesAddedBy['api']) and strtotime($apiLastAddedStr) > strtotime($syncLastAddedStr)) {
                     $methodOfLastPhoto = 'api';
                 }
                 $piwigoInfos['general_stats']['last_photo'] = $filesAddedBy[$methodOfLastPhoto]['last_added_on'];
             } else {
                 // much faster SQL query, but valid only if you do not use sync to add photos
-                $query = <<<SQL
-                    SELECT
-                        date_available
-                    FROM `{$imagesTable}`
-                    ORDER BY id DESC
-                    LIMIT 1
-                    SQL;
-                $images = $conn->fetchAllAssociative($query);
-                if (count($images) > 0) {
-                    $piwigoInfos['general_stats']['last_photo'] = $images[0]['date_available'];
+                $mostRecentDateAvailable = $imageService->getMostRecentDateAvailable();
+                if ($mostRecentDateAvailable !== null) {
+                    $piwigoInfos['general_stats']['last_photo'] = $mostRecentDateAvailable;
                 }
             }
 
-            $query = <<<SQL
-                SELECT
-                    SUBSTRING_INDEX(path,".",-1) AS ext,
-                    COUNT(*) AS counter,
-                    SUM(filesize) AS filesize
-                FROM `{$imagesTable}`
-                GROUP BY ext
-                SQL;
-            $piwigoInfos['file_extensions'] = array_column($conn->fetchAllAssociative($query), null, 'ext');
+            $piwigoInfos['file_extensions'] = [];
+            foreach ($imageService->getExtensionBreakdown() as $extRow) {
+                $piwigoInfos['file_extensions'][$extRow['ext']] = $extRow;
+            }
         }
 
         // $conf['pem_plugins_category'] = 12;
@@ -364,57 +337,30 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
         $piwigoInfos['general_stats']['default_theme'] = $defaultTheme;
 
         $piwigoInfos['themes_usage'] = [];
-        $userInfosTable = Tables::userInfos();
-        $query = <<<SQL
-            SELECT
-                theme,
-                COUNT(*) AS theme_counter
-            FROM {$userInfosTable}
-            GROUP BY theme
-            ORDER BY theme
-            SQL;
-        $themesUsed = array_column($conn->fetchAllAssociative($query), 'theme_counter', 'theme');
+        $themesUsed = self::userService()->getThemeUsageCounts();
         // built as a separate local accumulator (rather than mutating
         // $piwigoInfos directly with a dynamic key) so PHPStan keeps tracking
         // a precise array<string, int> type instead of widening the whole
         // $piwigoInfos shape to mixed after a non-literal-key write.
         $themesUsage = [];
-        foreach ($themesUsed as $themeUsed => $counter) {
+        foreach ($themesUsed as $themeUsed => $counterValue) {
             if (isset($privateThemes[$themeUsed])) {
                 $themeUsed = 'private theme';
             }
 
-            $counterValue = is_numeric($counter) ? (int) $counter : 0;
             $themesUsage[$themeUsed] = ($themesUsage[$themeUsed] ?? 0) + $counterValue;
         }
         $piwigoInfos['themes_usage'] = $themesUsage;
 
         $piwigoInfos['general_stats']['default_language'] = self::userService()->getDefaultLanguage();
 
-        $query = <<<SQL
-            SELECT
-                language,
-                COUNT(*) AS language_counter
-            FROM {$userInfosTable}
-            GROUP BY language
-            ORDER BY language
-            SQL;
-        $piwigoInfos['languages_usage'] = array_column($conn->fetchAllAssociative($query), 'language_counter', 'language');
+        $piwigoInfos['languages_usage'] = self::userService()->getLanguageUsageCounts();
 
         $piwigoInfos['activities'] = [];
         $piwigoInfos['general_stats']['nb_activities'] = 0;
 
-        $activityTable = Tables::activity();
-        $query = <<<SQL
-            SELECT
-                object,
-                action,
-                COUNT(*) AS counter
-            FROM {$activityTable}
-            WHERE object != 'system'
-            GROUP BY object, action
-            SQL;
-        $activities = $conn->fetchAllAssociative($query);
+        $activityService = \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService();
+
         // 'activities' is heterogeneous by design: every object except 'system'
         // (queried here, WHERE object != 'system') stores a flat action=>counter
         // map; 'system' (queried below) stores an extra label-bucketing level.
@@ -422,20 +368,13 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
         // consistent, so PHPStan can track a precise nested type for each) and
         // merged at the end -- the two queries' WHERE clauses guarantee
         // disjoint $object keys, so the merge never overwrites either side.
-        /** @var array<string, array<string, string|null>> $piwigoActivitiesFlat */
+        /** @var array<string, array<string, int>> $piwigoActivitiesFlat */
         $piwigoActivitiesFlat = [];
         // separate local accumulator for the same reason as $themesUsage above.
         $nbActivities = 0;
-        foreach ($activities as $activity) {
-            $counterValue = is_numeric($activity['counter']) ? (int) $activity['counter'] : 0;
-            $nbActivities += $counterValue;
-
-            // piwigo_activity.object/action are `NOT NULL` in the schema.
-            $object = $activity['object'];
-            assert(is_string($object));
-            $action = $activity['action'];
-            assert(is_string($action));
-            $piwigoActivitiesFlat[$object][$action] = $activity['counter'];
+        foreach ($activityService->getActionCounts(null) as $activity) {
+            $nbActivities += $activity['counter'];
+            $piwigoActivitiesFlat[$activity['object']][$activity['action']] = $activity['counter'];
         }
 
         $labelForSystemObjectId = [
@@ -444,47 +383,16 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
             3 => 'theme',
         ];
 
-        $query = <<<SQL
-            SELECT
-                object,
-                object_id,
-                action,
-                COUNT(*) AS counter
-            FROM {$activityTable}
-            WHERE object = 'system'
-            GROUP BY object, object_id, action
-            SQL;
-        $activities = $conn->fetchAllAssociative($query);
-        /** @var array<string, array<string, array<string, string|null>>> $piwigoActivitiesSystem */
+        /** @var array<string, array<string, array<string, int>>> $piwigoActivitiesSystem */
         $piwigoActivitiesSystem = [];
-        foreach ($activities as $activity) {
-            // piwigo_activity.object/object_id/action are `NOT NULL` in the schema.
-            $object = $activity['object'];
-            assert(is_string($object));
-            $objectId = $activity['object_id'];
-            assert(is_numeric($objectId));
-            $action = $activity['action'];
-            assert(is_string($action));
-
-            $label = $labelForSystemObjectId[(int) $objectId] ?? 'undefined';
-            $piwigoActivitiesSystem[$object][$label][$action] = $activity['counter'];
+        foreach ($activityService->getSystemActionCountsByObjectId() as $activity) {
+            $label = $labelForSystemObjectId[$activity['object_id']] ?? 'undefined';
+            $piwigoActivitiesSystem[$activity['object']][$label][$activity['action']] = $activity['counter'];
         }
         $piwigoInfos['activities'] = $piwigoActivitiesFlat + $piwigoActivitiesSystem;
         $piwigoInfos['general_stats']['nb_activities'] = $nbActivities;
 
-        $activitySystemCore = ActivitySystem::Core;
-        $query = <<<SQL
-            SELECT
-                action,
-                occured_on,
-                details
-            FROM {$activityTable}
-            WHERE object = 'system'
-                AND object_id = {$activitySystemCore}
-                AND action IN ('update', 'autoupdate')
-            ORDER BY activity_id ASC
-            SQL;
-        $updates = $conn->fetchAllAssociative($query);
+        $updates = $activityService->getCoreUpdateHistory();
         foreach ($updates as $update) {
             $updateDetails = $update['details'];
             if (! is_string($updateDetails)) {
@@ -515,17 +423,7 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
         // which remote apps have been used?
         $remoteAppsStartTime = TimingHelper::getMoment();
 
-        $query = <<<SQL
-            SELECT
-                user_agent,
-                COUNT(*) AS counter,
-                MIN(occured_on) AS first_encounter,
-                MAX(occured_on) AS last_encounter
-            FROM {$activityTable}
-            WHERE user_agent NOT LIKE 'Mozilla/5%'
-            GROUP BY user_agent
-            SQL;
-        $activities = $conn->fetchAllAssociative($query);
+        $activities = $activityService->getUserAgentBreakdown();
         $apps = [];
 
         $appsPattern = [
@@ -543,26 +441,25 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
         ];
 
         foreach ($activities as $activity) {
-            $activity_user_agent = is_scalar($activity['user_agent']) ? (string) $activity['user_agent'] : '';
+            $activity_user_agent = $activity['user_agent'] ?? '';
             foreach ($appsPattern as $appName => $pattern) {
                 if ((bool) preg_match($pattern, $activity_user_agent)) {
                     // $apps is written with a dynamic ($appName) key, so PHPStan
                     // can't track a precise per-key value type for it and every
                     // read below comes back mixed; narrow explicitly instead of
                     // bare-casting.
-                    $counterValue = is_numeric($activity['counter']) ? (int) $activity['counter'] : 0;
                     $currentCounter = $apps[$appName]['counter'] ?? 0;
                     $currentCounter = is_numeric($currentCounter) ? (int) $currentCounter : 0;
-                    $apps[$appName]['counter'] = $currentCounter + $counterValue;
+                    $apps[$appName]['counter'] = $currentCounter + $activity['counter'];
 
-                    $activityFirstEncounter = is_string($activity['first_encounter']) ? $activity['first_encounter'] : '';
+                    $activityFirstEncounter = $activity['first_encounter'] ?? '';
                     $knownFirstEncounter = $apps[$appName]['first_encounter'] ?? null;
                     $knownFirstEncounter = is_string($knownFirstEncounter) ? $knownFirstEncounter : null;
                     if ($knownFirstEncounter === null or strtotime($knownFirstEncounter) > strtotime($activityFirstEncounter)) {
                         $apps[$appName]['first_encounter'] = $activity['first_encounter'];
                     }
 
-                    $activityLastEncounter = is_string($activity['last_encounter']) ? $activity['last_encounter'] : '';
+                    $activityLastEncounter = $activity['last_encounter'] ?? '';
                     $knownLastEncounter = $apps[$appName]['last_encounter'] ?? null;
                     $knownLastEncounter = is_string($knownLastEncounter) ? $knownLastEncounter : null;
                     if ($knownLastEncounter === null or strtotime($knownLastEncounter) < strtotime($activityLastEncounter)) {

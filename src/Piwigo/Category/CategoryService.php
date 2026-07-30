@@ -1922,6 +1922,19 @@ final readonly class CategoryService
     }
 
     /**
+     * @return list<int>
+     */
+    public function getIdsByDirNull(bool $dirIsNull): array
+    {
+        return $this->repo->findIdsByDirNull($dirIsNull);
+    }
+
+    public function countByVisible(bool $visible): int
+    {
+        return $this->repo->countByVisible($visible);
+    }
+
+    /**
      * @return list<array<string, mixed>>
      */
     public function getChildrenOfParent(?int $parentId): array

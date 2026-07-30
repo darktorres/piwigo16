@@ -72,14 +72,10 @@ final class MaintenanceEnvPageRenderer
         }
         $purge_urls[Lang::t(ImageStdParams::CUSTOM)] = sprintf($url_format, 'derivatives') . '&amp;type=' . ImageStdParams::CUSTOM;
 
-        $conn = DbConnection::build();
+        $dbInfo = new DbInfo(DbConnection::build());
         $php_current_timestamp = date('Y-m-d H:i:s');
-        $db_version = new DbInfo($conn)
-            ->version();
-        $row = $conn->fetchNumeric(<<<SQL
-            SELECT now()
-            SQL);
-        $db_current_date = $row !== false ? $row[0] : null;
+        $db_version = $dbInfo->version();
+        $db_current_date = $dbInfo->currentDateTime();
 
         [$container_name, $container_version] = \Piwigo\Core\ContainerDetector::detect();
 

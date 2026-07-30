@@ -1113,4 +1113,99 @@ final readonly class ImageService
     {
         return $this->repo->findImageIdsAndExtsByFormatIds($formatIds);
     }
+
+    /**
+     * @param list<int> $categoryIds
+     * @return list<int>
+     */
+    public function getIdsInCategories(array $categoryIds): array
+    {
+        return $this->repo->findIdsInCategories($categoryIds);
+    }
+
+    /**
+     * @param list<int> $categoryIds
+     * @return list<int>
+     */
+    public function getIdsNotInCategories(array $categoryIds): array
+    {
+        return $this->repo->findIdsNotInCategories($categoryIds);
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function getIdsAddedSameDayAsLatest(): array
+    {
+        return $this->repo->findIdsAddedSameDayAsLatest();
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function getIdsWithNoTag(): array
+    {
+        return $this->repo->findIdsWithNoTag();
+    }
+
+    /**
+     * @param list<string> $fields
+     * @return list<int>
+     */
+    public function getIdsGroupedByDuplicateFields(array $fields): array
+    {
+        return $this->repo->findIdsGroupedByDuplicateFields($fields);
+    }
+
+    /**
+     * @param list<string> $whereClauses
+     * @param array<string, int|float|string> $params
+     * @return list<int>
+     */
+    public function getIdsWithConditions(array $whereClauses, array $params, string $orderBySql): array
+    {
+        return $this->repo->findIdsWithConditions($whereClauses, $params, $orderBySql);
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function getIdsVisibleInCategoriesRecentlyAvailable(string $categoryIdsCsv, string $recentPeriodExpr): array
+    {
+        return $this->repo->findIdsVisibleInCategoriesRecentlyAvailable($categoryIdsCsv, $recentPeriodExpr);
+    }
+
+    public function getMostRecentDateAvailable(): ?string
+    {
+        return $this->repo->findMostRecentDateAvailable();
+    }
+
+    public function countWithStorageCategory(): int
+    {
+        return $this->repo->countWithStorageCategory();
+    }
+
+    /**
+     * @return list<array{add_method: string, last_added_on: ?string, nb_files: int}>
+     */
+    public function getAddMethodBreakdown(): array
+    {
+        return $this->repo->findAddMethodBreakdown();
+    }
+
+    /**
+     * @return list<array{ext: string, counter: int, filesize: int}>
+     */
+    public function getExtensionBreakdown(): array
+    {
+        return $this->repo->findExtensionBreakdown();
+    }
+
+    /**
+     * @return list<array{ext: string, counter: int, filesize: int}>
+     */
+    public function getFormatExtensionBreakdown(): array
+    {
+        return $this->repo->findFormatExtensionBreakdown();
+    }
 }

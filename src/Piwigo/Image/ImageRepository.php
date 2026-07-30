@@ -9,6 +9,7 @@ use Doctrine\ORM\EntityRepository;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Core\Env;
 use Piwigo\Db\BatchWriter;
+use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Image\Projection\Image;
 use Piwigo\Image\Projection\ImageFormat;
@@ -394,6 +395,48 @@ final class ImageRepository extends EntityRepository
             ],
             $rows
         );
+    }
+
+    /**
+     * `date_available` for the oldest photo still in the lounge, alongside
+     * the DB server's own NOW() (so age can be computed without relying
+     * on PHP's own clock) -- LoungeMaintenance::needsEmptying()'s own "is
+     * the oldest lounge photo older than the max wait time" check.
+     * Returns null when the lounge is empty.
+     *
+     * @return ?array{dateAvailable: string, dbNow: string}
+     */
+    public function findOldestLoungeAgeInfo(): ?array
+    {
+        $loungeTable = Tables::lounge();
+        $imagesTable = Tables::images();
+
+        $row = $this->getEntityManager()
+            ->getConnection()
+            ->fetchAssociative(<<<SQL
+                SELECT
+                    date_available,
+                    NOW() AS dbnow
+                FROM {$loungeTable}
+                    JOIN {$imagesTable} ON image_id = id
+                ORDER BY image_id ASC
+                LIMIT 1
+                SQL);
+
+        if ($row === false) {
+            return null;
+        }
+
+        $dateAvailable = $row['date_available'];
+        $dbNow = $row['dbnow'];
+        if (! is_scalar($dateAvailable) || ! is_scalar($dbNow)) {
+            return null;
+        }
+
+        return [
+            'dateAvailable' => (string) $dateAvailable,
+            'dbNow' => (string) $dbNow,
+        ];
     }
 
     /**
@@ -2427,5 +2470,389 @@ final class ImageRepository extends EntityRepository
         }
 
         return $byId;
+    }
+
+    /**
+     * Distinct image ids linked (via image_category) to any of
+     * $categoryIds -- Admin\BatchManager\FilterResolver's own
+     * "categories" prefilter.
+     *
+     * @param list<int> $categoryIds
+     * @return list<int>
+     */
+    public function findIdsInCategories(array $categoryIds): array
+    {
+        if ($categoryIds === []) {
+            return [];
+        }
+
+        return array_map(
+            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+            $this->getEntityManager()
+                ->getConnection()
+                ->createQueryBuilder()
+                ->select('DISTINCT(image_id)')
+                ->from(Tables::imageCategory())
+                ->where('category_id IN (:ids)')
+                ->setParameter('ids', $categoryIds, ArrayParameterType::INTEGER)
+                ->executeQuery()
+                ->fetchFirstColumn()
+        );
+    }
+
+    /**
+     * Every image id NOT linked (via image_category) to any of
+     * $categoryIds -- an empty $categoryIds returns every image,
+     * unfiltered. Admin\BatchManager\FilterResolver's own
+     * "no_virtual_album" prefilter (paired with
+     * CategoryRepository::findIdsByDirNull() above).
+     *
+     * @param list<int> $categoryIds
+     * @return list<int>
+     */
+    public function findIdsNotInCategories(array $categoryIds): array
+    {
+        $imagesTable = Tables::images();
+
+        if ($categoryIds === []) {
+            return array_map(
+                static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+                $this->getEntityManager()
+                    ->getConnection()
+                    ->fetchFirstColumn(<<<SQL
+                        SELECT id
+                        FROM {$imagesTable}
+                        SQL)
+            );
+        }
+
+        $imageCategoryTable = Tables::imageCategory();
+
+        return array_map(
+            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+            $this->getEntityManager()
+                ->getConnection()
+                ->createQueryBuilder()
+                ->select('id')
+                ->from($imagesTable)
+                ->where('id NOT IN (
+                    SELECT DISTINCT(image_id) FROM ' . $imageCategoryTable . ' WHERE category_id IN (:ids)
+                )')
+                ->setParameter('ids', $categoryIds, ArrayParameterType::INTEGER)
+                ->executeQuery()
+                ->fetchFirstColumn()
+        );
+    }
+
+    /**
+     * Ids of every image added on the same day as the most recently
+     * added one -- Admin\BatchManager\FilterResolver's own "last_import"
+     * prefilter. "Day" per SqlDialect::getRecentPeriodExpression()'s own
+     * DB-specific date arithmetic. Returns [] when there are no images at
+     * all.
+     *
+     * @return list<int>
+     */
+    public function findIdsAddedSameDayAsLatest(): array
+    {
+        $imagesTable = Tables::images();
+        $conn = $this->getEntityManager()
+            ->getConnection();
+
+        $lastDate = $conn->createQueryBuilder()
+            ->select('MAX(date_available) AS max_date')
+            ->from($imagesTable)
+            ->executeQuery()
+            ->fetchOne();
+
+        if (! is_string($lastDate) || $lastDate === '') {
+            return [];
+        }
+
+        $recentPeriodExpr = SqlDialect::getRecentPeriodExpression(1, $lastDate);
+
+        return array_map(
+            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+            $conn->executeQuery(
+                <<<SQL
+                    SELECT id FROM {$imagesTable} WHERE date_available BETWEEN {$recentPeriodExpr} AND :last_date
+                    SQL
+                ,
+                [
+                    'last_date' => $lastDate,
+                ],
+            )->fetchFirstColumn()
+        );
+    }
+
+    /**
+     * Ids of every image with no linked tag -- Admin\BatchManager\
+     * FilterResolver's own "no_tag" prefilter.
+     *
+     * @return list<int>
+     */
+    public function findIdsWithNoTag(): array
+    {
+        $imagesTable = Tables::images();
+        $imageTagTable = Tables::imageTag();
+
+        return array_map(
+            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+            $this->getEntityManager()
+                ->getConnection()
+                ->fetchFirstColumn(<<<SQL
+                    SELECT id FROM {$imagesTable} LEFT JOIN {$imageTagTable} ON id = image_id WHERE tag_id IS NULL
+                    SQL)
+        );
+    }
+
+    /**
+     * Ids of images that share the same value across every column in
+     * $fields with at least one other image -- Admin\BatchManager\
+     * FilterResolver's own "duplicates" prefilter. $fields is a
+     * caller-validated column-name allowlist (file/md5sum/date_creation/
+     * width+height), never raw user input -- same "caller composes
+     * trusted fragments" contract as findWithConditionsPaginated() above.
+     * GROUP_CONCAT truncates at 1024 chars by default, so a duplicate
+     * group larger than ~250 ids silently loses members -- a pre-existing
+     * limitation, not introduced here.
+     *
+     * @param list<string> $fields
+     * @return list<int>
+     */
+    public function findIdsGroupedByDuplicateFields(array $fields): array
+    {
+        if ($fields === []) {
+            return [];
+        }
+
+        $qb = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
+            ->select('GROUP_CONCAT(id) AS ids')
+            ->from(Tables::images());
+
+        if (in_array('md5sum', $fields, true)) {
+            $qb->where('md5sum IS NOT NULL');
+        }
+
+        $qb->groupBy(implode(',', $fields))
+            ->having('COUNT(*) > 1');
+
+        $idLists = $qb->executeQuery()
+            ->fetchFirstColumn();
+
+        $ids = [];
+        foreach ($idLists as $idList) {
+            if (! is_string($idList)) {
+                continue;
+            }
+            foreach (explode(',', rtrim($idList, ',')) as $id) {
+                if (is_numeric($id)) {
+                    $ids[] = (int) $id;
+                }
+            }
+        }
+
+        return $ids;
+    }
+
+    /**
+     * Image ids matching already-built $whereClauses (ANDed together; []
+     * means unfiltered), in $orderBySql order -- Admin\BatchManager\
+     * FilterResolver's own several id-only prefilters (all_photos/level/
+     * dimension/filesize). Same "caller composes trusted fragments"
+     * contract as findWithConditionsPaginated() above: $whereClauses are
+     * trusted SQL boolean expressions, $params are the bound values
+     * referenced by any named placeholders inside them.
+     *
+     * @param list<string> $whereClauses
+     * @param array<string, int|float|string> $params
+     * @return list<int>
+     */
+    public function findIdsWithConditions(array $whereClauses, array $params, string $orderBySql): array
+    {
+        $imagesTable = Tables::images();
+        $whereSql = $whereClauses === [] ? '' : 'WHERE ' . implode(' AND ', $whereClauses);
+
+        return array_map(
+            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+            $this->getEntityManager()
+                ->getConnection()
+                ->executeQuery(
+                    <<<SQL
+                        SELECT id FROM {$imagesTable} {$whereSql} {$orderBySql}
+                        SQL
+                    ,
+                    $params,
+                )->fetchFirstColumn()
+        );
+    }
+
+    /**
+     * Distinct image ids linked to any category in $categoryIdsCsv (an
+     * already-built comma-separated category id list, or the literal
+     * "-1" sentinel meaning "none"), added on/after $recentPeriodExpr (an
+     * already-built SqlDialect date expression) -- Filter\FilterService's
+     * own recent-content filter computation. Same "caller composes
+     * trusted fragments" contract as findWithConditionsPaginated() above.
+     *
+     * @return list<int>
+     */
+    public function findIdsVisibleInCategoriesRecentlyAvailable(string $categoryIdsCsv, string $recentPeriodExpr): array
+    {
+        $imageCategoryTable = Tables::imageCategory();
+        $imagesTable = Tables::images();
+
+        return array_map(
+            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+            $this->getEntityManager()
+                ->getConnection()
+                ->fetchFirstColumn(<<<SQL
+                    SELECT DISTINCT image_id
+                    FROM {$imageCategoryTable} INNER JOIN {$imagesTable} ON image_id = id
+                    WHERE category_id IN ({$categoryIdsCsv})
+                        AND date_available >= {$recentPeriodExpr}
+                    SQL)
+        );
+    }
+
+    /**
+     * Most recent `date_available` among every image -- Admin\
+     * PiwigoInfosSender's own "much faster" fallback when no sync-added
+     * photo exists (see findAddMethodBreakdown() below). Descending
+     * counterpart of findEarliestDateAvailable() above.
+     */
+    public function findMostRecentDateAvailable(): ?string
+    {
+        $imagesTable = Tables::images();
+
+        $value = $this->getEntityManager()
+            ->getConnection()
+            ->fetchOne(<<<SQL
+                SELECT date_available
+                FROM {$imagesTable}
+                ORDER BY id DESC
+                LIMIT 1
+                SQL);
+
+        return is_string($value) ? $value : null;
+    }
+
+    /**
+     * Number of images with a non-null `storage_category_id` (added via
+     * filesystem sync, not the API) -- Admin\PiwigoInfosSender's own
+     * "is it worth running the slower sync-vs-api breakdown query" guard.
+     */
+    public function countWithStorageCategory(): int
+    {
+        $imagesTable = Tables::images();
+
+        $value = $this->getEntityManager()
+            ->getConnection()
+            ->fetchOne(<<<SQL
+                SELECT COUNT(*)
+                FROM {$imagesTable}
+                WHERE storage_category_id IS NOT NULL
+                SQL);
+
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /**
+     * Per add-method (sync = filesystem sync, api = everything else)
+     * counts and most recent `date_available` -- Admin\PiwigoInfosSender's
+     * own "how were most photos added" telemetry breakdown.
+     *
+     * @return list<array{add_method: string, last_added_on: ?string, nb_files: int}>
+     */
+    public function findAddMethodBreakdown(): array
+    {
+        $imagesTable = Tables::images();
+
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative(<<<SQL
+                SELECT
+                    IF(storage_category_id IS NULL, 'api', 'sync') AS add_method,
+                    MAX(date_available) AS last_added_on,
+                    COUNT(*) AS nb_files
+                FROM {$imagesTable}
+                GROUP BY add_method
+                SQL);
+
+        return array_map(
+            static fn (array $row): array => [
+                'add_method' => is_string($row['add_method']) ? $row['add_method'] : '',
+                'last_added_on' => is_string($row['last_added_on'] ?? null) ? $row['last_added_on'] : null,
+                'nb_files' => is_numeric($row['nb_files']) ? (int) $row['nb_files'] : 0,
+            ],
+            $rows
+        );
+    }
+
+    /**
+     * Per-extension row count and total filesize across every image --
+     * Controller\Admin\IntroSubController's own storage chart and Admin\
+     * PiwigoInfosSender's own telemetry breakdown, both keyed by ext.
+     *
+     * @return list<array{ext: string, counter: int, filesize: int}>
+     */
+    public function findExtensionBreakdown(): array
+    {
+        $imagesTable = Tables::images();
+
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative(<<<SQL
+                SELECT
+                    SUBSTRING_INDEX(path, ".", -1) AS ext,
+                    COUNT(*) AS counter,
+                    SUM(filesize) AS filesize
+                FROM {$imagesTable}
+                GROUP BY ext
+                SQL);
+
+        return array_map(
+            static fn (array $row): array => [
+                'ext' => is_string($row['ext']) ? $row['ext'] : '',
+                'counter' => is_numeric($row['counter']) ? (int) $row['counter'] : 0,
+                'filesize' => is_numeric($row['filesize']) ? (int) $row['filesize'] : 0,
+            ],
+            $rows
+        );
+    }
+
+    /**
+     * Per-extension row count and total filesize across every generated
+     * format file -- Controller\Admin\IntroSubController's own storage
+     * chart "Formats" bucket. Id-list sibling of findExtensionBreakdown()
+     * above, but against `image_format`, not `images`.
+     *
+     * @return list<array{ext: string, counter: int, filesize: int}>
+     */
+    public function findFormatExtensionBreakdown(): array
+    {
+        $imageFormatTable = Tables::imageFormat();
+
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative(<<<SQL
+                SELECT
+                    ext,
+                    COUNT(*) AS counter,
+                    SUM(filesize) AS filesize
+                FROM {$imageFormatTable}
+                GROUP BY ext
+                SQL);
+
+        return array_map(
+            static fn (array $row): array => [
+                'ext' => is_string($row['ext']) ? $row['ext'] : '',
+                'counter' => is_numeric($row['counter']) ? (int) $row['counter'] : 0,
+                'filesize' => is_numeric($row['filesize']) ? (int) $row['filesize'] : 0,
+            ],
+            $rows
+        );
     }
 }

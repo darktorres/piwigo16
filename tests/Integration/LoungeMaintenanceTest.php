@@ -6,16 +6,17 @@ namespace Piwigo\Tests\Integration;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\LoungeMaintenance;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Image\LoungeMaintenance;
 
 /**
- * Piwigo\Core\LoungeMaintenance::needsEmptying() -- had zero dedicated
- * coverage (see /home/torres/.claude/plans/piped-enchanting-spark.md,
- * Wave 1). loungeActive defaults false, so every real caller's happy path
- * never reaches this method's own real logic without deliberately
- * enabling it.
+ * Piwigo\Image\LoungeMaintenance::needsEmptying() (relocated from
+ * Piwigo\Core -- an Image-domain concern, not L1Infrastructure) -- had
+ * zero dedicated coverage before this test (see
+ * /home/torres/.claude/plans/piped-enchanting-spark.md, Wave 1).
+ * loungeActive defaults false, so every real caller's happy path never
+ * reaches this method's own real logic without deliberately enabling it.
  */
 final class LoungeMaintenanceTest extends IntegrationTestCase
 {

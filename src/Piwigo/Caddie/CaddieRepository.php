@@ -40,6 +40,24 @@ final class CaddieRepository extends AbstractRepository
     }
 
     /**
+     * Every element_id in $userId's own caddie -- Admin\BatchManager\
+     * FilterResolver's own "caddie" prefilter.
+     *
+     * @return list<int>
+     */
+    public function findElementIdsForUser(int $userId): array
+    {
+        return array_map(
+            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+            $this->conn->fetchFirstColumn(
+                'SELECT element_id FROM ' . Tables::caddie() . ' WHERE user_id = ?',
+                [$userId],
+                [ParameterType::INTEGER],
+            )
+        );
+    }
+
+    /**
      * Empties $userId's caddie then adds $elementIds -- Admin\
      * PhotosAddDirectPageRenderer's own "batch" action, unlike
      * addElements() above which only ever adds on top of what's there.

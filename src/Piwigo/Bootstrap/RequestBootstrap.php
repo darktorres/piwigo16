@@ -415,10 +415,7 @@ final class RequestBootstrap
 
         // Check if last major update conf is set if not set it
         if (\Piwigo\Config\CurrentConfig::lastMajorUpdate() === null) {
-            $dbnow = $conn->fetchOne(<<<SQL
-                SELECT NOW()
-                SQL);
-            assert(is_string($dbnow));
+            $dbnow = Env::now()->format('Y-m-d H:i:s');
             $configService->confUpdateParam('last_major_update', $dbnow, updateGlobal: true);
         }
 
@@ -437,7 +434,7 @@ final class RequestBootstrap
             \Piwigo\Config\CurrentConfig::setOrderByInsideCategory($orderByInsideCategoryCustom);
         }
 
-        if (\Piwigo\Core\LoungeMaintenance::needsEmptying()) {
+        if (\Piwigo\Image\LoungeMaintenance::needsEmptying()) {
             new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), self::activityService($conn))
                 ->emptyLounge();
         }

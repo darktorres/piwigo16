@@ -16,7 +16,6 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Template\Template;
 use Psr\Http\Message\ServerRequestInterface;
@@ -138,14 +137,8 @@ final class IntroSubController implements AdminSubControllerInterface
         }
 
         // locked album ?
-        $categoriesTable = Tables::categories();
-        $query = <<<SQL
-            SELECT COUNT(*)
-            FROM {$categoriesTable}
-            WHERE visible ='false'
-            SQL;
-        $locked_album = $conn->fetchOne($query);
-        if (is_numeric($locked_album) && $locked_album > 0) {
+        $locked_album = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService()->countByVisible(false);
+        if ($locked_album > 0) {
             $locked_album_url = $this->urlService->getRootUrl() . 'admin.php?page=cat_options&section=visible';
 
             $message = '<a href="' . $locked_album_url . '"><i class="icon-cone"></i>';
@@ -166,33 +159,13 @@ final class IntroSubController implements AdminSubControllerInterface
         ]);
 
         if (\Piwigo\Config\CurrentConfig::showNewsletterSubscription() and (bool) \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService()->getParam('show_newsletter_subscription', true)) {
-            $userInfosTable = Tables::userInfos();
-            $query = <<<SQL
-                SELECT registration_date
-                FROM {$userInfosTable}
-                WHERE registration_date IS NOT NULL
-                ORDER BY user_id ASC
-                LIMIT 1
-                SQL;
-            $register_date = $conn->fetchOne($query);
-
-            $query = <<<SQL
-                SELECT COUNT(*)
-                FROM {$categoriesTable}
-                SQL;
-            $nb_cats = $conn->fetchOne($query);
-            $nb_cats = is_numeric($nb_cats) ? $nb_cats : 0;
-
-            $newsletterImagesTable = Tables::images();
-            $query = <<<SQL
-                SELECT COUNT(*)
-                FROM {$newsletterImagesTable}
-                SQL;
-            $nb_images = $conn->fetchOne($query);
-            $nb_images = is_numeric($nb_images) ? $nb_images : 0;
+            $register_date = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class)
+                ->findEarliestRegistrationDate();
+            $nb_cats = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService()->countAllCategories();
+            $nb_images = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->getTotalImageCount();
 
             // To see the newsletter promote, the account must have 2 weeks ancient, 3 albums created and 30 photos uploaded
-            $register_date_str = is_scalar($register_date) ? (string) $register_date : '';
+            $register_date_str = is_string($register_date) ? $register_date : '';
 
             if (strtotime($register_date_str) < strtotime('2 weeks ago') and $nb_cats >= 3 and $nb_images >= 30) {
                 $currentUser = \Piwigo\Users\CurrentUser::get();
@@ -238,13 +211,7 @@ final class IntroSubController implements AdminSubControllerInterface
         );
 
         if (\Piwigo\Config\CurrentConfig::activateComments()) {
-            $commentsTable = Tables::comments();
-            $query = <<<SQL
-                SELECT COUNT(*)
-                FROM {$commentsTable}
-                SQL;
-            $nb_comments = $conn->fetchOne($query);
-            $template->assign('NB_COMMENTS', $nb_comments);
+            $template->assign('NB_COMMENTS', \Piwigo\Bootstrap\ExtendedDomainAccessor::commentService()->countAll());
         } else {
             $template->assign('NB_COMMENTS', 0);
         }
@@ -320,24 +287,11 @@ final class IntroSubController implements AdminSubControllerInterface
         if ($session_cache_calculated_on === null or $session_cache_calculated_on < Env::now()->getTimestamp() - 300) {
             $start_time = \Piwigo\Core\TimingHelper::getMoment();
 
-            $activityTable = Tables::activity();
-            $query = <<<SQL
-                SELECT
-                    DATE_FORMAT(occured_on , '%Y-%m-%d') AS activity_day,
-                    object,
-                    action,
-                    COUNT(*) AS activity_counter
-                FROM `{$activityTable}`
-                WHERE occured_on >= '{$date_string}'
-                GROUP BY activity_day, object, action
-                SQL;
-            $activity_actions = $conn->fetchAllAssociative($query);
+            $activity_actions = \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()->getDailyActionCountsSince($date_string);
 
             foreach ($activity_actions as $action) {
                 // set the time to 12:00 (midday) so that it doesn't goes to previous/next day due to timezone offset
-                $activity_day = $action['activity_day'];
-                $activity_day = is_scalar($activity_day) ? (string) $activity_day : '';
-                $day_date = new DateTime($activity_day . ' 12:00:00');
+                $day_date = new DateTime($action['activity_day'] . ' 12:00:00');
 
                 $week = 0;
                 for ($i = 0; $i < $nb_weeks; $i++) {
@@ -347,14 +301,10 @@ final class IntroSubController implements AdminSubControllerInterface
                 }
                 $day_nb = $day_date->format('N');
 
-                // COUNT(*) always returns a numeric string from the DB layer.
-                $activity_counter = $action['activity_counter'] ?? null;
-                $activity_counter = is_numeric($activity_counter) ? (int) $activity_counter : 0;
+                $activity_counter = $action['counter'];
 
                 $action_object = $action['object'];
-                $action_object = is_scalar($action_object) ? (string) $action_object : '';
                 $action_action = $action['action'];
-                $action_action = is_scalar($action_action) ? (string) $action_action : '';
 
                 $activity_last_weeks[$week][$day_nb]['details'][ucfirst($action_object)][ucfirst($action_action)] = $activity_counter;
 
@@ -498,35 +448,21 @@ final class IntroSubController implements AdminSubControllerInterface
         $picture_ext = \Piwigo\Config\CurrentConfig::pictureExtensions();
 
         // Select files in Image_Table
-        $imagesTable = Tables::images();
-        $query = <<<SQL
-            SELECT
-                COUNT(*) AS ext_counter,
-                SUBSTRING_INDEX(path,".",-1) AS ext,
-                SUM(filesize) AS filesize
-            FROM `{$imagesTable}`
-            GROUP BY ext
-            SQL;
+        $imageService = \Piwigo\Bootstrap\CoreDomainAccessor::imageService();
 
-        $file_extensions = array_column($conn->fetchAllAssociative($query), null, 'ext');
-
-        foreach ($file_extensions as $ext => $ext_details) {
+        foreach ($imageService->getExtensionBreakdown() as $ext_details) {
+            $ext = $ext_details['ext'];
             $type = null;
-            if (in_array(strtolower((string) $ext), $picture_ext, true)) {
+            if (in_array(strtolower($ext), $picture_ext, true)) {
                 $type = 'Photos';
-            } elseif (in_array(strtolower((string) $ext), $video_format, true)) {
+            } elseif (in_array(strtolower($ext), $video_format, true)) {
                 $type = 'Videos';
             } else {
                 $type = 'Other';
             }
 
-            // SUM()/COUNT(*) always return numeric strings (or NULL for an empty
-            // group) from the DB layer.
-            $ext_filesize = $ext_details['filesize'] ?? null;
-            $ext_filesize = is_numeric($ext_filesize) ? (float) $ext_filesize : 0.0;
-
-            $ext_counter = $ext_details['ext_counter'] ?? null;
-            $ext_counter = is_numeric($ext_counter) ? (int) $ext_counter : 0;
+            $ext_filesize = (float) $ext_details['filesize'];
+            $ext_counter = $ext_details['counter'];
 
             $current_filesize = $data_storage[$type]['total']['filesize'] ?? 0;
             $current_filesize = is_numeric($current_filesize) ? (float) $current_filesize : 0.0;
@@ -536,34 +472,19 @@ final class IntroSubController implements AdminSubControllerInterface
             $current_nb_files = is_numeric($current_nb_files) ? (int) $current_nb_files : 0;
             $data_storage[$type]['total']['nb_files'] = $current_nb_files + $ext_counter;
 
-            $data_storage[$type]['details'][strtoupper((string) $ext)] = [
+            $data_storage[$type]['details'][strtoupper($ext)] = [
                 'filesize' => $ext_filesize,
                 'nb_files' => $ext_counter,
             ];
         }
 
         // Select files from format table
-        $imageFormatTable = Tables::imageFormat();
-        $query = <<<SQL
-            SELECT
-                COUNT(*) AS ext_counter,
-                ext,
-                SUM(filesize) AS filesize
-            FROM `{$imageFormatTable}`
-            GROUP BY ext
-            SQL;
-
-        $file_extensions = array_column($conn->fetchAllAssociative($query), null, 'ext');
-        foreach ($file_extensions as $ext => $ext_details) {
+        foreach ($imageService->getFormatExtensionBreakdown() as $ext_details) {
+            $ext = $ext_details['ext'];
             $type = 'Formats';
 
-            // SUM()/COUNT(*) always return numeric strings (or NULL for an empty
-            // group) from the DB layer.
-            $ext_filesize = $ext_details['filesize'] ?? null;
-            $ext_filesize = is_numeric($ext_filesize) ? (float) $ext_filesize : 0.0;
-
-            $ext_counter = $ext_details['ext_counter'] ?? null;
-            $ext_counter = is_numeric($ext_counter) ? (int) $ext_counter : 0;
+            $ext_filesize = (float) $ext_details['filesize'];
+            $ext_counter = $ext_details['counter'];
 
             $current_filesize = $data_storage[$type]['total']['filesize'] ?? 0;
             $current_filesize = is_numeric($current_filesize) ? (float) $current_filesize : 0.0;
@@ -573,7 +494,7 @@ final class IntroSubController implements AdminSubControllerInterface
             $current_nb_files = is_numeric($current_nb_files) ? (int) $current_nb_files : 0;
             $data_storage[$type]['total']['nb_files'] = $current_nb_files + $ext_counter;
 
-            $data_storage[$type]['details'][strtoupper((string) $ext)] = [
+            $data_storage[$type]['details'][strtoupper($ext)] = [
                 'filesize' => $ext_filesize,
                 'nb_files' => $ext_counter,
             ];

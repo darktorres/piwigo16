@@ -258,4 +258,150 @@ final class ActivityRepository extends EntityRepository
                 LIMIT {$limit} OFFSET {$offset}
                 SQL);
     }
+
+    /**
+     * Per (day, object, action) counts among rows on/after $sinceDate --
+     * Controller\Admin\IntroSubController's own dashboard "recent
+     * activity" chart data.
+     *
+     * @return list<array{activity_day: string, object: string, action: string, counter: int}>
+     */
+    public function findDailyActionCountsSince(string $sinceDate): array
+    {
+        $activityTable = Tables::activity();
+
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative(<<<SQL
+                SELECT
+                    DATE_FORMAT(occured_on, '%Y-%m-%d') AS activity_day,
+                    object,
+                    action,
+                    COUNT(*) AS activity_counter
+                FROM {$activityTable}
+                WHERE occured_on >= :since_date
+                GROUP BY activity_day, object, action
+                SQL
+                , [
+                                'since_date' => $sinceDate,
+                            ]);
+
+        return array_map(
+            static fn (array $row): array => [
+                'activity_day' => is_string($row['activity_day']) ? $row['activity_day'] : '',
+                'object' => is_string($row['object']) ? $row['object'] : '',
+                'action' => is_string($row['action']) ? $row['action'] : '',
+                'counter' => is_numeric($row['activity_counter']) ? (int) $row['activity_counter'] : 0,
+            ],
+            $rows
+        );
+    }
+
+    /**
+     * Every action/occured_on/details row for core (Piwigo\Core\
+     * ActivitySystem::Core) update/autoupdate system-activity entries,
+     * oldest first -- Admin\PiwigoInfosSender's own "version upgrade
+     * history" telemetry field.
+     *
+     * @return list<array{action: string, occured_on: ?string, details: ?string}>
+     */
+    public function findCoreUpdateHistory(): array
+    {
+        $activityTable = Tables::activity();
+        $activitySystemCore = \Piwigo\Core\ActivitySystem::Core;
+
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative(<<<SQL
+                SELECT
+                    action,
+                    occured_on,
+                    details
+                FROM {$activityTable}
+                WHERE object = 'system'
+                    AND object_id = {$activitySystemCore}
+                    AND action IN ('update', 'autoupdate')
+                ORDER BY activity_id ASC
+                SQL);
+
+        return array_map(
+            static fn (array $row): array => [
+                'action' => is_string($row['action']) ? $row['action'] : '',
+                'occured_on' => is_string($row['occured_on'] ?? null) ? $row['occured_on'] : null,
+                'details' => is_string($row['details'] ?? null) ? $row['details'] : null,
+            ],
+            $rows
+        );
+    }
+
+    /**
+     * Per (object_id, action) counts among object='system' rows --
+     * Admin\PiwigoInfosSender's own telemetry "activities.system" bucket.
+     * Unlike findSystemObjectLogWithUsernames() above, this doesn't join
+     * `users` (only the counts matter here, not who performed each one).
+     *
+     * @return list<array{object: string, object_id: int, action: string, counter: int}>
+     */
+    public function findSystemActionCountsByObjectId(): array
+    {
+        $activityTable = Tables::activity();
+
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative(<<<SQL
+                SELECT
+                    object,
+                    object_id,
+                    action,
+                    COUNT(*) AS counter
+                FROM {$activityTable}
+                WHERE object = 'system'
+                GROUP BY object, object_id, action
+                SQL);
+
+        return array_map(
+            static fn (array $row): array => [
+                'object' => is_string($row['object']) ? $row['object'] : '',
+                'object_id' => is_numeric($row['object_id']) ? (int) $row['object_id'] : 0,
+                'action' => is_string($row['action']) ? $row['action'] : '',
+                'counter' => is_numeric($row['counter']) ? (int) $row['counter'] : 0,
+            ],
+            $rows
+        );
+    }
+
+    /**
+     * Per non-browser `user_agent` counts and first/last-seen dates --
+     * Admin\PiwigoInfosSender's own "which apps have been used" telemetry
+     * breakdown. Excludes real browser traffic (Mozilla/5.x user agents).
+     *
+     * @return list<array{user_agent: ?string, counter: int, first_encounter: ?string, last_encounter: ?string}>
+     */
+    public function findUserAgentBreakdown(): array
+    {
+        $activityTable = Tables::activity();
+
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->fetchAllAssociative(<<<SQL
+                SELECT
+                    user_agent,
+                    COUNT(*) AS counter,
+                    MIN(occured_on) AS first_encounter,
+                    MAX(occured_on) AS last_encounter
+                FROM {$activityTable}
+                WHERE user_agent NOT LIKE 'Mozilla/5%'
+                GROUP BY user_agent
+                SQL);
+
+        return array_map(
+            static fn (array $row): array => [
+                'user_agent' => is_string($row['user_agent'] ?? null) ? $row['user_agent'] : null,
+                'counter' => is_numeric($row['counter']) ? (int) $row['counter'] : 0,
+                'first_encounter' => is_string($row['first_encounter'] ?? null) ? $row['first_encounter'] : null,
+                'last_encounter' => is_string($row['last_encounter'] ?? null) ? $row['last_encounter'] : null,
+            ],
+            $rows
+        );
+    }
 }

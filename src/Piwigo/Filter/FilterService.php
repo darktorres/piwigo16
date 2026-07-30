@@ -9,7 +9,6 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Core\FilterUpdaterInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
-use Piwigo\Db\Tables;
 use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -169,30 +168,16 @@ final class FilterService implements FilterUpdaterInterface
                     $filter['visible_categories'] = -1;
                 }
 
-                $imageCategoryTable = Tables::imageCategory();
-                $imagesTable = Tables::images();
-                $query = <<<SQL
-                    SELECT
-                      distinct image_id
-                    FROM {$imageCategoryTable} INNER JOIN {$imagesTable} ON image_id = id
-                    WHERE
-                    SQL;
                 // $filter['visible_categories'] is always non-empty here: either a
                 // non-empty string (from the implode() above) or the literal -1
                 // fallback set right above when that implode() was empty.
-                $query .= <<<SQL
-
-                      category_id  IN ({$filter['visible_categories']}) and
-                    SQL;
                 $recentPeriodExpr = SqlDialect::getRecentPeriodExpression($filter_recent_period);
-                $query .= <<<SQL
-
-                        date_available >= {$recentPeriodExpr}
-                    SQL;
+                $visibleCategoriesCsv = is_string($filter['visible_categories']) ? $filter['visible_categories'] : (string) $filter['visible_categories'];
 
                 $visible_image_ids = array_map(
-                    static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
-                    $categoryConn->fetchFirstColumn($query)
+                    strval(...),
+                    \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Image\ImageEntity::class)
+                        ->findIdsVisibleInCategoriesRecentlyAvailable($visibleCategoriesCsv, $recentPeriodExpr)
                 );
                 $filter['visible_images'] = implode(',', $visible_image_ids);
 

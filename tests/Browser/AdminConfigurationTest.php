@@ -1679,15 +1679,26 @@ it('watermark tab: reports a write-access error for a genuinely unwritable uploa
         // makes) currently has in local/watermarks/, rather than deleting
         // it outright, so this test is fully restorable regardless of what
         // an earlier run left behind.
+        // None of rename()/rmdir()/mkdir() below are @-suppressed or
+        // success-checked by accident: a silent failure here would leave
+        // $watermarksDir in some unknown intermediate state (e.g. non-empty,
+        // still www-data-owned) while the rest of this test keeps assuming
+        // its own "fresh torres-owned 0555 directory" setup succeeded --
+        // exactly the kind of gap that let leaked debris accumulate
+        // silently before (see the finally block's own docblock below).
         $entries = scandir($watermarksDir);
         foreach ($entries !== false ? $entries : [] as $entry) {
             if ($entry === '.' || $entry === '..') {
                 continue;
             }
-            rename($watermarksDir . '/' . $entry, $holdingDir . '/' . $entry);
+            if (! rename($watermarksDir . '/' . $entry, $holdingDir . '/' . $entry)) {
+                throw new RuntimeException("Failed to move existing entry \"{$entry}\" out of {$watermarksDir} while seeding the unwritable-directory fixture.");
+            }
             $preserved[] = $entry;
         }
-        rmdir($watermarksDir);
+        if (! rmdir($watermarksDir)) {
+            throw new RuntimeException("Failed to remove {$watermarksDir} while seeding the unwritable-directory fixture.");
+        }
 
         // A real, deterministic unwritable directory: torres owns it (mode
         // 0555, no write bit for owner/group/other), which the live Apache
@@ -1701,7 +1712,9 @@ it('watermark tab: reports a write-access error for a genuinely unwritable uploa
         // local/watermarks/ as www-data, which torres cannot chmod()
         // (confirmed live: chmod() requires file ownership, group
         // membership alone isn't enough).
-        mkdir($watermarksDir, 0555);
+        if (! mkdir($watermarksDir, 0555)) {
+            throw new RuntimeException("Failed to recreate {$watermarksDir} while seeding the unwritable-directory fixture.");
+        }
         chmod($watermarksDir, 0555);
 
         $cookieJar = tempnam(sys_get_temp_dir(), 'pwg_browser_watermark_unwritable_');
@@ -1788,6 +1801,23 @@ it('watermark tab: reports a write-access error for a genuinely unwritable uploa
             @mkdir($watermarksDir, 0777);
         }
         @chmod($watermarksDir, 0777);
+        // Real bug, found live: this used to only restore $preserved,
+        // never removing anything else -- if the upload attempt above
+        // ever actually succeeded (a race against the 0555 setup, or a
+        // prior interrupted run leaving watermarksDir mid-swap), the
+        // resulting file was never in $preserved and stayed as permanent,
+        // accumulating debris (confirmed live: numbered
+        // ct_unwritable_watermark-1.png/-2.png etc. from repeated leaks).
+        // Clear anything currently there before restoring the genuinely
+        // pre-existing entries, so a single bad run can never leave this
+        // shared fixture directory in a dirty state for every later one.
+        $currentEntries = scandir($watermarksDir);
+        foreach ($currentEntries !== false ? $currentEntries : [] as $entry) {
+            if ($entry === '.' || $entry === '..') {
+                continue;
+            }
+            @unlink($watermarksDir . '/' . $entry);
+        }
         foreach ($preserved as $entry) {
             $from = $holdingDir . '/' . $entry;
             if (file_exists($from)) {

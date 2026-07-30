@@ -905,10 +905,19 @@ function pictureCookieJarSessionId(string $cookieJar): string
 /**
  * Reads the real `pwg_picture_deriv` session var straight out of the
  * DB-backed `sessions` table (Piwigo\Session\PwgSession's own save
- * handler), keyed the same way that handler stores it: a literal '7F00'
- * prefix in front of the session id carried by the `pwg_id` cookie
- * (confirmed live -- the same fixed prefix appears for every session id
- * regardless of client, not an IP-derived value despite the hex look).
+ * handler), keyed the same way that handler stores it:
+ * SessionService::remoteAddrHash() . $pwgIdCookieValue. The hash prefix
+ * is IP-derived (the first 2 octets of an IPv4 REMOTE_ADDR, hex-encoded
+ * -- see SessionService::remoteAddrHash()'s own docblock), and empty for
+ * IPv6 or no-IP requests -- NOT a fixed value, and NOT safe to hardcode:
+ * whether the test runner's `localhost` base URL resolves to an IPv4 or
+ * IPv6 loopback address depends on this machine's own resolver
+ * configuration (confirmed live: `getent hosts localhost` on this
+ * environment returns `::1`, IPv6, giving an empty hash), which this
+ * test has no business depending on. A suffix match on the raw cookie
+ * value sidesteps the hash entirely -- PHP's session id is already a
+ * long, cryptographically random string, so a `LIKE '%<id>'` match is
+ * unambiguous regardless of what (if anything) is prepended to it.
  * Session data uses PHP's own default `session.serialize_handler` format,
  * and every real session var this app writes is itself namespaced with a
  * `pwg_` prefix (SessionService's own convention) -- a plain regex avoids
@@ -919,7 +928,7 @@ function pictureSessionDerivType(string $pwgIdCookieValue): ?string
 {
     $db = pictureDbConnect();
     $result = $db->query(sprintf(
-        "SELECT data FROM %ssessions WHERE id = '7F00%s'",
+        "SELECT data FROM %ssessions WHERE id LIKE '%%%s'",
         pictureDbPrefix(),
         $db->real_escape_string($pwgIdCookieValue)
     ));

@@ -126,6 +126,7 @@
       "@php vendor/bin/pest --testsuite Browser --group=visual-regression"
     ],
     "test:install": "@php vendor/bin/pest --testsuite Browser --group=install-flow",
+    "test:mutate": "@php vendor/bin/pest --mutate --testsuite Unit --parallel --everything --covered-only",
     "require-checker": "@php vendor/bin/composer-require-checker check --config-file=composer-require-checker.json composer.json",
     "unused": "@php vendor/bin/composer-unused --configuration=composer-unused.php",
     "bench": "@php vendor/bin/phpbench run",

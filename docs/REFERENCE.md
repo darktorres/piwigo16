@@ -431,6 +431,7 @@ baseline specifically didn't survive).
 | `composer test:visual` | Visual regression only — **run in isolation**, see below |
 | `composer test:install` | Install-flow E2E only (its own Browser group) |
 | `composer test:fixture-regen` | Rebuilds `tests/Fixtures/piwigo-17.0.sql` from a fresh install + seed |
+| `composer test:mutate` | Pest Mutate (`pestphp/pest-plugin-mutate`) against `Unit`, scoped to `src/Piwigo` via `phpunit.xml.dist`'s `<source>` block — local-only, not run in CI, no `--min` gate yet |
 
 Tests run against a throw-away `piwigo_test` database, never production.
 `PIWIGO_BASE_URL` must point at a running webserver for this checkout —

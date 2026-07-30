@@ -19,12 +19,14 @@ beforeEach(function () use ($envVars, &$originalEnvVars): void {
         $originalEnvVars[$var] = $value === false ? null : $value;
         putenv($var);
     }
+    DbCredentials::reset();
 });
 
 afterEach(function () use ($envVars, &$originalEnvVars): void {
     foreach ($envVars as $var) {
         putenv($originalEnvVars[$var] === null ? $var : $var . '=' . $originalEnvVars[$var]);
     }
+    DbCredentials::reset();
 });
 
 test('fromEnv() falls back to defaults when no env vars are set', function (): void {

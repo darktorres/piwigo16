@@ -85,7 +85,7 @@ final class MailService implements MailerInterface
      */
     public function __construct(
         private readonly ?WebmasterMailProviderInterface $webmasterMailProvider = null,
-        private readonly ?MailRecipientRepository $mailRecipientRepo = null,
+        private readonly ?MailRecipientRepositoryInterface $mailRecipientRepo = null,
         private readonly ?\Piwigo\Auth\AuthService $authService = null,
     ) {}
 
@@ -102,7 +102,7 @@ final class MailService implements MailerInterface
      * $webmasterMailProvider above -- ~50 `new MailService()` construction
      * sites, most of which never reach mailAdmins()/mailGroup().
      */
-    private function recipientRepo(): MailRecipientRepository
+    private function recipientRepo(): MailRecipientRepositoryInterface
     {
         return $this->mailRecipientRepo
             ?? new MailRecipientRepository(\Piwigo\Db\DbConnection::build());

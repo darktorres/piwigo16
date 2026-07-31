@@ -501,6 +501,18 @@ test('makeSectionInUrl builds a tags section in the default id-name style', func
     expect($result)->toBe('/tags/3-nature');
 });
 
+test('makeSectionInUrl defaults a non-array tags entry gracefully', function (): void {
+    CurrentConfig::setTagUrlStyle('id-tag');
+    $service = new UrlService(new HtmlService());
+
+    // Same "reset to []" defaulting as the analogous combined_categories
+    // entry above -- a non-array tag contributes its own '/' + '' (id)
+    // segment (no '-name' suffix, since url_name is also unset once reset).
+    $result = $service->makeSectionInUrl(['section' => 'tags', 'tags' => ['not-an-array', ['id' => 3, 'url_name' => 'nature']]]);
+
+    expect($result)->toBe('/tags//3-nature');
+});
+
 test('makeSectionInUrl builds a search section', function (): void {
     $service = new UrlService(new HtmlService());
 

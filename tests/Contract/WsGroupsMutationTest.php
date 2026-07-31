@@ -4,6 +4,20 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+/**
+ * Ws\PwgGroups::delete()'s own `if ($deleted_groups === false) { return
+ * new PwgError(500, 'There is no group to delete'); }` branch is NOT
+ * chased here: GroupService::delete() only returns `false` when
+ * `count($groupIds) === 0`, but `group_id` is registered with
+ * WsParamFlag::FORCE_ARRAY and no WsParamFlag::OPTIONAL/'default' key
+ * (mandatory) -- PwgServer::invoke() itself rejects any request that
+ * doesn't supply at least one real element before this method's own body
+ * ever runs (confirmed live: a bare `group_id=` -- or the key omitted
+ * entirely -- fails at the WS layer with "Missing parameters: group_id"
+ * first, and PwgServer::checkType() rejects any non-positive-integer
+ * element with its own error too). Genuinely unreachable through the real
+ * WS route, not a gap in test coverage.
+ */
 final class WsGroupsMutationTest extends ContractTestCase
 {
     private ?int $groupId = null;
@@ -107,6 +121,34 @@ final class WsGroupsMutationTest extends ContractTestCase
         self::assertSame('ok', $response['stat']);
         self::assertMatchesSchema('pwg.groups.getList', $response);
         self::assertSame($newName, self::firstItemName($response, 'groups'));
+    }
+
+    /**
+     * setInfo()'s own `if (isset($params['is_default'])) { $updates['is_default']
+     * = $params['is_default']; }` branch -- test_setInfo_renames_group()
+     * above only ever sends 'name'.
+     */
+    public function test_setInfo_updates_is_default(): void
+    {
+        $name = 'ct_group_' . uniqid();
+        $add  = $this->callWs('pwg.groups.add', ['name' => $name]);
+        $this->groupId = self::firstItemId($add, 'groups');
+
+        $token    = $this->getPwgToken();
+        $response = $this->callWs('pwg.groups.setInfo', [
+            'group_id'   => $this->groupId,
+            'is_default' => true,
+            'pwg_token'  => $token,
+        ]);
+
+        self::assertSame('ok', $response['stat']);
+        $result = $response['result'] ?? null;
+        self::assertIsArray($result, 'WS response "result" is not an array');
+        $groups = $result['groups'] ?? null;
+        self::assertIsArray($groups, 'WS response "result.groups" is not an array');
+        $group = $groups[0] ?? null;
+        self::assertIsArray($group, 'WS response "result.groups[0]" is not an array');
+        self::assertTrue((bool) $group['is_default']);
     }
 
     public function test_addUser_and_deleteUser_return_group_shape(): void

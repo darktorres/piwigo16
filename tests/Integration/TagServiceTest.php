@@ -327,6 +327,76 @@ namespace Piwigo\Tests\Integration {
             self::assertSame([], $this->service->getAvailableTags([999999]));
         }
 
+        /**
+         * getAvailableTags()'s own `if (! isset($tagCounters[$tag->id->value])) { continue; }`
+         * is unreachable below TagRepository::findByIdsOrAll()'s own 1000-id
+         * threshold: with fewer than 1000 ids, that method's own `WHERE
+         * t.id IN (:ids)` filters to *exactly* the id set $tagCounters was
+         * just built from, so every returned tag is always a hit. Past
+         * 1000 ids it intentionally (per its own docblock: "matches the
+         * original's own 'IN() clause too large' avoidance") returns EVERY
+         * tag instead, "letting the caller filter down by its own id set"
+         * -- this is that filter-down, and this is the only way to
+         * genuinely reach it: 1000 disposable tags all linked to the same
+         * real, visible fixture image (giving $tagCounters exactly 1000+
+         * keys), plus one more disposable tag with zero image links at all
+         * (present in the tags table, absent from $tagCounters).
+         */
+        public function test_get_available_tags_skips_a_tag_absent_from_the_counters_once_past_the_1000_id_threshold(): void
+        {
+            CurrentUser::set(new User(
+                id: \Piwigo\Common\ValueObject\UserId::from(2),
+                username: 'fixture_guest',
+                email: '',
+                language: '',
+                theme: '',
+                status: UserStatus::Guest,
+                enabledHigh: false,
+            ));
+
+            $tagsTable = Tables::tags();
+            $imageTagTable = Tables::imageTag();
+            $suffix = bin2hex(random_bytes(4));
+
+            $tagValues = [];
+            for ($i = 0; $i < 1000; $i++) {
+                $name = "p18-test-bulk-{$suffix}-{$i}";
+                $tagValues[] = "('{$name}', '{$name}', NOW())";
+            }
+            $this->conn->executeStatement("INSERT INTO {$tagsTable} (name, url_name, lastmodified) VALUES " . implode(',', $tagValues));
+            $bulkIds = array_map(
+                static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+                $this->conn->fetchFirstColumn("SELECT id FROM {$tagsTable} WHERE name LIKE 'p18-test-bulk-{$suffix}-%'")
+            );
+            self::assertCount(1000, $bulkIds);
+
+            // Fixture image 1 is already in a public/visible category
+            // (category 1) -- reused rather than uploading a disposable
+            // image of this test's own, since only its FandF-visibility
+            // matters here, not its content.
+            $imageTagValues = [];
+            foreach ($bulkIds as $tagId) {
+                $imageTagValues[] = "(1, {$tagId})";
+            }
+            $this->conn->executeStatement("INSERT INTO {$imageTagTable} (image_id, tag_id) VALUES " . implode(',', $imageTagValues));
+
+            $extraName = "p18-test-bulk-extra-{$suffix}";
+            $this->conn->executeStatement("INSERT INTO {$tagsTable} (name, url_name, lastmodified) VALUES ('{$extraName}', '{$extraName}', NOW())");
+            $extraId = (int) $this->conn->lastInsertId();
+
+            try {
+                $result = $this->service->getAvailableTags();
+
+                $ids = array_column($result, 'id');
+                self::assertNotContains($extraId, $ids);
+                self::assertContains($bulkIds[0], $ids);
+                self::assertContains($bulkIds[999], $ids);
+            } finally {
+                $this->conn->executeStatement("DELETE FROM {$imageTagTable} WHERE tag_id IN (" . implode(',', $bulkIds) . ')');
+                $this->conn->executeStatement("DELETE FROM {$tagsTable} WHERE id IN (" . implode(',', $bulkIds) . ", {$extraId})");
+            }
+        }
+
         // --- getImageIdsForTags() -------------------------------------------
 
         public function test_get_image_ids_for_tags_returns_empty_for_no_tag_ids(): void

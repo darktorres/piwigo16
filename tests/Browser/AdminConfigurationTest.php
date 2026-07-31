@@ -1895,3 +1895,356 @@ it('watermark tab: lowering the size threshold bumps last_mod_time for a still-e
         H::restoreDerivativeConfig($snapshot);
     }
 });
+
+it('default tab: reaches the no-op massaging branch when submitted via the generic "submit" flag', function (): void {
+    // handle()'s own per-tab POST-massaging switch only runs when
+    // ConfigurationRequest::isSubmitted (isset($_POST['submit'])) is true
+    // -- the "saves the default tab" test above submits via 'validate'
+    // (ProfileFormHandler::saveFromPost()'s own field), never 'submit', so
+    // it never enters this switch at all. The real profile_content.tpl
+    // form for this tab never posts 'submit' either (there's no generic
+    // config value for the "default"/guest-profile tab to massage), but
+    // this is a public HTTP endpoint keyed only on $_GET['section'] and
+    // $_POST['submit'] -- a client can genuinely combine
+    // section=default with submit=1, landing on the switch's own
+    // otherwise-empty `case 'default':` branch (the generic config-row
+    // update loop right after it then runs too, same as every other
+    // section, just with no massaged fields to pick up).
+    $page = H::loginAsAdmin($this);
+    H::navigateOk($page, ctConfigSection('default'));
+    $token = H::pwgToken($page);
+
+    $result = H::adminPost($page, ctConfigSection('default'), [
+        'submit' => '1',
+        'pwg_token' => $token,
+    ]);
+
+    expect($result['status'])->toBe(200);
+    expect($result['body'])->not->toContain('Fatal error');
+});
+
+it('main tab: strips HTML tags from the gallery title when HTML descriptions are disabled', function (): void {
+    // CurrentConfig::$allowHtmlDescriptions defaults to true, so the
+    // strip_tags() branch inside the generic config-save loop (only
+    // reached when it's explicitly turned off) is never exercised by the
+    // plain "saves the main tab" test above, which never touches
+    // allow_html_descriptions and posts a plain-text title anyway.
+    $page = H::loginAsAdmin($this);
+    H::navigateOk($page, ctConfigSection('main'));
+    $token = H::pwgToken($page);
+
+    $snapshot = H::snapshotConfig(array_merge(
+        ['gallery_title', 'order_by', 'order_by_inside_category', 'email_admin_on_new_user', 'allow_html_descriptions'],
+        ctMainCheckboxes()
+    ));
+
+    try {
+        H::setConfigValue('allow_html_descriptions', H::jsonEncode(false));
+
+        $rawTitle = '<b>CT HTML Title ' . uniqid() . '</b>';
+
+        $result = H::adminPost($page, ctConfigSection('main'), [
+            'submit' => '1',
+            'pwg_token' => $token,
+            'gallery_title' => $rawTitle,
+            'order_by' => ['id ASC'],
+            'email_admin_on_new_user_filter' => 'all',
+        ]);
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->not->toContain('Fatal error');
+        expect(H::configValue('gallery_title'))->toBe(json_encode(strip_tags($rawTitle)));
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+it('sizes/watermark tabs: a plain "admin"-status user\'s submission is silently ignored (webmaster-only gate)', function (): void {
+    // processSizes()/processWatermark() each gate their OWN write behind
+    // is_webmaster() -- the only thing gating either tab's save, since
+    // handle()'s own generic config-row UPDATE loop explicitly excludes
+    // both 'sizes'/'watermark' from its own is_webmaster() check. Every
+    // existing "sizes tab"/"watermark tab" save test runs as the real
+    // fixture webmaster, so this early-return branch (reached by a
+    // logged-in, but merely "admin"-status, non-webmaster user) is never
+    // exercised elsewhere in this file.
+    $page = H::loginAsAdmin($this);
+    $username = 'config_ct_nonweb_' . uniqid();
+    $password = 'a-strong-test-password-1';
+
+    $addResult = H::wsCall($page, 'pwg.users.add', [
+        'username' => $username,
+        'password' => $password,
+        'password_confirm' => $password,
+        'pwg_token' => H::pwgToken($page),
+    ]);
+    $userId = wsAddedUserId($addResult);
+
+    $prefix = getenv('PIWIGO_DB_PREFIX');
+    $prefix = $prefix !== false ? $prefix : 'piwigo_';
+    $db = new mysqli(
+        (string) getenv('PIWIGO_DB_HOST'),
+        (string) getenv('PIWIGO_DB_USER'),
+        (string) getenv('PIWIGO_DB_PASSWORD'),
+        (string) getenv('PIWIGO_DB_BASE')
+    );
+    $db->query(sprintf("UPDATE %suser_infos SET status = 'admin' WHERE user_id = %d", $prefix, $userId));
+
+    $derivativeSnapshot = H::snapshotDerivativeConfig();
+
+    try {
+        $adminPage = H::visitPwg($this, '/identification.php');
+        H::assertNoServerErrors($adminPage, 'plain-admin identification page');
+        $adminPage = $adminPage->fill('username', $username)->fill('password', $password)->click('login');
+        H::assertNoServerErrors($adminPage, 'plain-admin post-login page');
+
+        $sizesToken = H::pwgToken($adminPage);
+        $sizesResult = H::adminPost($adminPage, ctConfigSection('sizes'), [
+            'pwg_token' => $sizesToken,
+            'submit' => '1',
+            'resize_quality' => '90',
+            'd' => ctDerivativesPayload(),
+        ]);
+        expect($sizesResult['status'])->toBe(200);
+        expect($sizesResult['body'])->not->toContain('Your configuration settings are saved');
+        expect($sizesResult['body'])->not->toContain('Fatal error');
+
+        $watermarkToken = H::pwgToken($adminPage);
+        $watermarkResult = H::adminPost($adminPage, ctConfigSection('watermark'), [
+            'pwg_token' => $watermarkToken,
+            'submit' => '1',
+            'w' => [
+                'file' => '',
+                'position' => 'topleft',
+                'xpos' => '0',
+                'ypos' => '0',
+                'xrepeat' => '0',
+                'yrepeat' => '0',
+                'opacity' => '50',
+                'minw' => '10',
+                'minh' => '10',
+            ],
+        ]);
+        expect($watermarkResult['status'])->toBe(200);
+        expect($watermarkResult['body'])->not->toContain('Your configuration settings are saved');
+        expect($watermarkResult['body'])->not->toContain('Fatal error');
+    } finally {
+        H::restoreDerivativeConfig($derivativeSnapshot);
+        $db->query(sprintf('DELETE FROM %suser_infos WHERE user_id = %d', $prefix, $userId));
+        $db->query(sprintf('DELETE FROM %susers WHERE id = %d', $prefix, $userId));
+        $db->close();
+    }
+});
+
+it('sizes tab: ignores a malformed non-array "d" entry instead of crashing', function (): void {
+    $snapshot = H::snapshotDerivativeConfig();
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $token = H::pwgToken($page);
+
+        // A tampered/malformed field: d[bogus_type] posted as a plain
+        // scalar rather than a nested d[bogus_type][w]/[h]/... array --
+        // processSizes()'s own normalization loop (see its own docblock)
+        // must drop it rather than treat the string as an array.
+        // 'bogus_type' also isn't a real ImageStdParams type, so even if
+        // it survived normalization it would never be read back out by
+        // the step-2/step-3 loops (both iterate get_all_types()).
+        $result = H::adminPost($page, ctConfigSection('sizes'), [
+            'pwg_token' => $token,
+            'submit' => '1',
+            'resize_quality' => '90',
+            'd' => array_merge(ctDerivativesPayload(), ['bogus_type' => 'not-an-array']),
+        ]);
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->toContain('Your configuration settings are saved');
+        expect($result['body'])->not->toContain('Fatal error');
+    } finally {
+        H::restoreDerivativeConfig($snapshot);
+    }
+});
+
+it('sizes tab: rejects a thumb size with a non-positive width and height', function (): void {
+    $snapshot = H::snapshotDerivativeConfig();
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $token = H::pwgToken($page);
+
+        // Exercises processSizes()'s THUMB-specific `$w <= 0`/`$h <= 0`
+        // checks directly -- distinct from "rejects a thumb size that is
+        // not strictly larger than the square size" above, which submits
+        // a positive-but-too-small thumb size and only ever trips the
+        // later `max($w, $h) <= $prev_w` check, never these two.
+        $result = H::adminPost($page, ctConfigSection('sizes'), [
+            'pwg_token' => $token,
+            'submit' => '1',
+            'resize_quality' => '90',
+            'd' => ctDerivativesPayload(['thumb' => ['w' => 0, 'h' => 0]]),
+        ]);
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->not->toContain('Your configuration settings are saved');
+        expect($result['body'])->not->toContain('Fatal error');
+    } finally {
+        H::restoreDerivativeConfig($snapshot);
+    }
+});
+
+it('sizes tab: rejects an out-of-range sharpen value for a derivative type', function (): void {
+    $snapshot = H::snapshotDerivativeConfig();
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $token = H::pwgToken($page);
+
+        $payload = ctDerivativesPayload();
+        $payload['medium']['sharpen'] = '150';
+
+        $result = H::adminPost($page, ctConfigSection('sizes'), [
+            'pwg_token' => $token,
+            'submit' => '1',
+            'resize_quality' => '90',
+            'd' => $payload,
+        ]);
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->not->toContain('Your configuration settings are saved');
+        expect($result['body'])->not->toContain('Fatal error');
+    } finally {
+        H::restoreDerivativeConfig($snapshot);
+    }
+});
+
+it('sizes tab: changing an already-enabled type\'s own dimensions bumps its last_mod_time', function (): void {
+    $snapshot = H::snapshotDerivativeConfig();
+
+    try {
+        $page = H::loginAsAdmin($this);
+
+        $token = H::pwgToken($page);
+        $baseline = H::adminPost($page, ctConfigSection('sizes'), [
+            'pwg_token' => $token,
+            'submit' => '1',
+            'resize_quality' => '90',
+            'd' => ctDerivativesPayload(),
+        ]);
+        expect($baseline['status'])->toBe(200);
+        expect($baseline['body'])->toContain('Your configuration settings are saved');
+
+        $lastModBefore = ctDecodedDerivatives()['d']['4xlarge']->last_mod_time;
+
+        // A real elapsed-time gap -- same rationale as the "resubmitting
+        // identical derivative values" test above.
+        sleep(2);
+
+        // '4xlarge' stays enabled both times -- only its own ideal_size
+        // grows (still > '3xlarge', so ordering validation still passes)
+        // -- exercising the "already enabled, size/crop genuinely
+        // changed" branch, distinct from the enable/disable toggle test
+        // above (which never changes an already-enabled type's own size).
+        $token = H::pwgToken($page);
+        $changed = H::adminPost($page, ctConfigSection('sizes'), [
+            'pwg_token' => $token,
+            'submit' => '1',
+            'resize_quality' => '90',
+            'd' => ctDerivativesPayload(['4xlarge' => ['w' => 3200, 'h' => 2400]]),
+        ]);
+        expect($changed['status'])->toBe(200);
+        expect($changed['body'])->toContain('Your configuration settings are saved');
+
+        $lastModAfter = ctDecodedDerivatives()['d']['4xlarge']->last_mod_time;
+        expect($lastModAfter)->toBeGreaterThan($lastModBefore);
+    } finally {
+        H::restoreDerivativeConfig($snapshot);
+    }
+});
+
+it('sizes tab: reconciles a min_size that drifted out of sync with an unchanged ideal_size', function (): void {
+    $snapshot = H::snapshotDerivativeConfig();
+
+    try {
+        $decoded = ctDecodedDerivatives();
+        expect($decoded['d'])->toHaveKey('small');
+
+        // A real, if unusual, state a hand-edited or legacy-migrated
+        // derivative_size row can be in: max_crop is non-zero (a crop
+        // threshold is active) but min_size was never kept in sync with
+        // the type's own ideal_size -- processSizes()'s own step-1
+        // sanitize always keeps the two 1:1 whenever this form's own
+        // "d[type][crop]" field is submitted (see its own docblock), so
+        // this specific inconsistency can't be produced through the form
+        // itself and is seeded directly at the DB layer instead, the same
+        // "direct DB fixture, not a mock of the class under test"
+        // technique the watermark last_mod_time test above already uses.
+        [$idealW, $idealH] = $decoded['d']['small']->sizing->ideal_size;
+        $decoded['d']['small']->sizing = new \Piwigo\Image\SizingParams(
+            [$idealW, $idealH],
+            1.0,
+            [$idealW - 76, $idealH - 57]
+        );
+        $seededLastMod = time() - 100_000;
+        $decoded['d']['small']->last_mod_time = $seededLastMod;
+        ctSetDecodedDerivatives($decoded);
+
+        $page = H::loginAsAdmin($this);
+        $token = H::pwgToken($page);
+
+        $payload = ctDerivativesPayload();
+        // Same ideal_size as seeded above, but now WITH the "crop" field
+        // submitted -- max_crop stays non-zero on both sides (so the
+        // ideal_size/max_crop comparison alone doesn't already flag a
+        // change), isolating the min_size-only mismatch this branch
+        // detects.
+        $payload['small']['w'] = (string) $idealW;
+        $payload['small']['h'] = (string) $idealH;
+        $payload['small']['crop'] = '1';
+
+        $result = H::adminPost($page, ctConfigSection('sizes'), [
+            'pwg_token' => $token,
+            'submit' => '1',
+            'resize_quality' => '90',
+            'd' => $payload,
+        ]);
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->toContain('Your configuration settings are saved');
+
+        $reconciled = ctDecodedDerivatives()['d']['small'];
+        expect($reconciled->last_mod_time)->toBeGreaterThan($seededLastMod);
+        expect($reconciled->sizing->min_size)->toBe([$idealW, $idealH]);
+    } finally {
+        H::restoreDerivativeConfig($snapshot);
+    }
+});
+
+it('sizes tab: renders age labels for existing custom derivatives without error', function (): void {
+    $snapshot = H::snapshotDerivativeConfig();
+
+    try {
+        $decoded = ctDecodedDerivatives();
+        $freshKey = 'ct_custom_fresh_' . uniqid();
+        $oldKey = 'ct_custom_old_' . uniqid();
+        // One inside the "<= 24h" window (renders via Lang::t('today'))
+        // and one well outside it (renders via DateHelper::timeSince()) --
+        // both branches of handle()'s own 'custom_derivatives' ternary.
+        // configuration_sizes.tpl assigns 'custom_derivatives' but never
+        // actually reads it in the current admin theme, so this test can
+        // only assert the render completes cleanly with real
+        // custom-derivative fixture rows present (both ages), not the
+        // specific rendered text.
+        $decoded['c'][$freshKey] = time();
+        $decoded['c'][$oldKey] = time() - (3 * 24 * 3600);
+        ctSetDecodedDerivatives($decoded);
+
+        $page = H::loginAsAdmin($this);
+        $page = H::navigateOk($page, ctConfigSection('sizes'));
+        $page->assertNoJavaScriptErrors();
+
+        expect(ctDecodedDerivatives()['c'])->toHaveKey($freshKey);
+        expect(ctDecodedDerivatives()['c'])->toHaveKey($oldKey);
+    } finally {
+        H::restoreDerivativeConfig($snapshot);
+    }
+});

@@ -1086,8 +1086,25 @@ final class PictureController implements ControllerInterface
         }
 
         // related categories
+        //
+        // Real bug, found while adding coverage for this branch:
+        // findVisibleCategoriesForImage()'s own 'id' column comes back as a
+        // native PHP int (DbConnection::params()'s own
+        // MYSQLI_OPT_INT_AND_FLOAT_NATIVE => true, confirmed live), never a
+        // string. The old code left $related_cat0_id at that native int
+        // type but force-cast $page_category['id'] to string before
+        // comparing them with strict `===` -- `5 === "5"` is always false,
+        // so this "single category, no need to go to db" fast path could
+        // never actually be taken through any real request; every view
+        // silently fell through to the else branch's extra SQL query
+        // below, even for the common case of a photo viewed via its own
+        // single album. Normalizing both sides to int|null (matching this
+        // file's own is_numeric()-then-cast idiom used everywhere else,
+        // e.g. $category_id above) makes the comparison type-consistent
+        // and the fast path reachable again.
         $related_cat0_id = $related_categories[0]['id'] ?? null;
-        $page_category_id_for_compare = $page_category !== null && is_scalar($page_category['id'] ?? null) ? (string) $page_category['id'] : null;
+        $related_cat0_id = is_numeric($related_cat0_id) ? (int) $related_cat0_id : null;
+        $page_category_id_for_compare = $page_category !== null && is_numeric($page_category['id'] ?? null) ? (int) $page_category['id'] : null;
         if (count($related_categories) === 1 and
             $page_category !== null and
             $related_cat0_id !== null and $related_cat0_id === $page_category_id_for_compare) { // no need to go to db, we have all the info

@@ -264,6 +264,30 @@ test('add() does not warn for a footer-mode script even after the head has been 
     expect($caught)->toBeNull();
 });
 
+test('add() warns when adding a script (any load_mode) after the footer has already been written', function (): void {
+    // Distinct from the two tests above: those exercise did_head's own
+    // warning (and footer-mode's exemption from it) -- this is add()'s
+    // OTHER warning arm, the `elseif ((bool) $this->did_footer)` branch,
+    // never reached by any existing test calling add() directly (only
+    // indirectly, via add_inline()'s own separate did_footer warning).
+    $loader = new ScriptLoader();
+    new ReflectionProperty($loader, 'did_footer')->setValue($loader, true);
+
+    $caught = null;
+    set_error_handler(static function (int $errno, string $errstr) use (&$caught): bool {
+        $caught = $errstr;
+
+        return true;
+    }, E_USER_WARNING);
+    try {
+        $loader->add('late-script', 1, [], 'themes/default/js/late.js');
+    } finally {
+        restore_error_handler();
+    }
+
+    expect($caught)->toBe('Attempt to add script late-script but the footer has been written');
+});
+
 test('add() runs fill_well_known against a newly-registered script', function (): void {
     $loader = new ScriptLoader();
 
@@ -611,6 +635,41 @@ test('get_head_scripts computes and uses each script\'s topological order to sor
     }
 });
 
+test('cmp_by_mode_and_order sorts a remote script before a same-mode, same-order local one, regardless of registration order', function (): void {
+    // Both scripts have load_mode=0 and topological order=0 (no
+    // precedents) -- cmp_by_mode_and_order()'s own mode/order tiebreaks
+    // both resolve equal, reaching its final `$s1->extra['order'] === 0
+    // and (...) xor (...)` remote/local tiebreak. Registered in two
+    // different orders across the two loaders below so the outcome can't
+    // be an artifact of whichever side uasort() happens to pass as $s1.
+    ScriptLoader::setUrlService(new UrlService(new HtmlService()));
+    $root = sys_get_temp_dir() . '/piwigo-scriptloader-remote-tiebreak-' . bin2hex(random_bytes(8));
+    mkdir($root . '/themes/default/js', 0o777, true);
+    file_put_contents($root . '/themes/default/js/local.js', 'var a=1;');
+    CurrentPaths::set(Paths::fromRoot($root));
+    CurrentConfig::setDataLocation('_data/');
+    CurrentConfig::setDataDirChecked('1');
+    CurrentConfig::setTemplateCombineFiles(false);
+
+    try {
+        $remoteFirst = new ScriptLoader();
+        $remoteFirst->add('remote-script', 0, [], 'https://cdn.example.com/remote.js');
+        $remoteFirst->add('local-script', 0, [], 'themes/default/js/local.js');
+        $headA = $remoteFirst->get_head_scripts();
+
+        $localFirst = new ScriptLoader();
+        $localFirst->add('local-script', 0, [], 'themes/default/js/local.js');
+        $localFirst->add('remote-script', 0, [], 'https://cdn.example.com/remote.js');
+        $headB = $localFirst->get_head_scripts();
+
+        expect(array_map(fn ($s) => $s->id, $headA))->toBe(['remote-script', 'local-script'])
+            ->and(array_map(fn ($s) => $s->id, $headB))->toBe(['remote-script', 'local-script']);
+    } finally {
+        file_combiner_test_rrmdir_scriptloader($root);
+        CurrentConfig::reset();
+    }
+});
+
 test('get_head_scripts collects every mode=0 script up to (not including) the first non-head script', function (): void {
     ScriptLoader::setUrlService(new UrlService(new HtmlService()));
     $root = sys_get_temp_dir() . '/piwigo-scriptloader-head-stops-' . bin2hex(random_bytes(8));
@@ -771,6 +830,26 @@ test('check_load_dep converges over multiple passes for a 3-level async dependen
     } finally {
         CurrentConfig::reset();
     }
+});
+
+test('check_load_dep skips a precedent id that was never registered, instead of erroring', function (): void {
+    // load_known_required_script() only auto-registers KNOWN precedent ids
+    // (jquery/jquery.ui.*/etc.) -- an unrecognized one, like this test's,
+    // stays permanently unregistered, so check_load_dep()'s own
+    // `foreach precedents` loop must skip it via its `! isset($scripts
+    // [$precedent])` guard rather than fatal on the undefined index.
+    $loader = new ScriptLoader();
+    $loader->add('has-unknown-precedent', 1, ['totally-unrecognized-id'], 'themes/default/js/x.js');
+    $registered = scriptLoaderRegistered($loader);
+    expect($registered)->not->toHaveKey('totally-unrecognized-id');
+
+    $method = new ReflectionMethod(ScriptLoader::class, 'check_load_dep');
+    $method->invoke(null, $registered);
+
+    // Reaching here (no PHP warning about an undefined array key, no
+    // exception) is itself the assertion -- the script's own load_mode is
+    // untouched since it has no real precedent to downgrade against.
+    expect(scriptLoaderRegistered($loader)['has-unknown-precedent']->load_mode)->toBe(1);
 });
 
 test('fill_well_known adds jquery as a precedent for any jquery.* script', function (): void {
@@ -945,6 +1024,29 @@ test('compute_script_topological_order fatal-errors exactly one level past the r
     // fatalError()'s own $showTrace=true default appends a backtrace
     // after the message.
     expect($caught)->toStartWith('combined script circular dependency');
+});
+
+test('compute_script_topological_order warns and returns 0 for a script id that was never registered', function (): void {
+    // Reachable when a precedent id slips past add()'s own auto-load
+    // attempt (an unrecognized id, same setup as check_load_dep's sibling
+    // test above) yet still gets passed into this method -- confirmed via
+    // direct invocation with a bare, never-registered id.
+    $loader = new ScriptLoader();
+
+    $caught = null;
+    set_error_handler(static function (int $errno, string $errstr) use (&$caught): bool {
+        $caught = $errstr;
+
+        return true;
+    }, E_USER_WARNING);
+    try {
+        $order = scriptLoaderTopologicalOrder($loader, 'never-registered-id');
+    } finally {
+        restore_error_handler();
+    }
+
+    expect($caught)->toBe('Undefined script never-registered-id is required by someone')
+        ->and($order)->toBe(0);
 });
 
 test('compute_script_topological_order does not recompute an already-memoized order', function (): void {

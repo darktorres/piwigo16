@@ -62,23 +62,21 @@ test('a second drain after a first returns empty', function (): void {
  * file's own top docblock) -- invoked directly via Reflection instead,
  * same rationale as seedCollected() above.
  *
- * flush()'s own two remaining red branches are genuinely unreachable from
- * any test in this repo, not just unexercised:
- *  - The `error_get_last()`-is-a-fatal-type branch (E_ERROR/E_PARSE/
- *    E_CORE_ERROR/E_COMPILE_ERROR): these 4 types are, by PHP's own design,
- *    the ones set_error_handler() can never intercept -- the only way to
- *    produce one for real is to actually crash the interpreter, which
- *    would also kill this test process. error_get_last() itself has no
- *    injection seam (a bare global function, and shadowing it with a
- *    same-named Piwigo\Core\error_get_last() stub would permanently hijack
- *    every other bare call to it from anywhere else in that namespace for
- *    the rest of this shared PHPUnit process -- confirmed by testing the
- *    fallback-resolution behavior live).
- *  - The header-emission loop (only reached when `self::$collected !==
- *    [] && ! headers_sent()`): PHP's CLI SAPI hardwires headers_sent() to
- *    true unconditionally (confirmed live, fresh process, zero prior
- *    output) -- there is no HTTP response to attach headers to outside of
- *    a real web SAPI request, which no Unit test runs under.
+ * flush()'s own header-emission loop (only reached when `self::$collected
+ * !== [] && ! headers_sent()`) stays genuinely unreachable from any test in
+ * this repo: PHP's CLI SAPI hardwires headers_sent() to true
+ * unconditionally (confirmed live, fresh process, zero prior output) --
+ * there is no HTTP response to attach headers to outside of a real web SAPI
+ * request, which no Unit test runs under.
+ *
+ * flush()'s OTHER remaining branch -- the `error_get_last()`-is-a-fatal-type
+ * body (E_ERROR/E_PARSE/E_CORE_ERROR/E_COMPILE_ERROR) -- was believed
+ * unreachable for the same reason (producing one of those 4 types for real
+ * means crashing the interpreter, which would kill whatever process runs
+ * it) until this sweep found the same escape hatch this file's sibling
+ * ShutdownHandlerTest.php uses for its own SIGTERM-exit(143) branch: crash
+ * a genuinely separate PHP subprocess instead of this shared worker. See
+ * the dedicated subprocess test further down.
  */
 test('writeTestErrorsLog is a no-op when test mode is not active, never touching CurrentPaths', function (): void {
     // CurrentPaths is deliberately left uninitialised: if the
@@ -145,6 +143,71 @@ test('flush returns immediately when nothing was collected', function (): void {
     expect(ErrorCollector::collected())->toBe([]);
 });
 
+test('flush records a synthetic entry for a genuine E_ERROR fatal (memory-limit exhaustion) in a real subprocess', function (): void {
+    // register_shutdown_function() callbacks -- including flush() itself,
+    // via ErrorCollector::install() -- DO still run after PHP's own
+    // "Allowed memory size exhausted" fatal, and error_get_last() DOES
+    // report it as a real E_ERROR at that point: both confirmed live. A
+    // deliberately tiny memory_limit, set only inside this isolated
+    // subprocess, triggers that fatal for real without risking (or even
+    // touching) this shared PHPUnit worker -- same subprocess-crash
+    // technique as ShutdownHandlerTest.php's own SIGTERM test, applied to
+    // this class's sibling "can only be produced by really crashing"
+    // branch.
+    $autoloadPath = dirname(__DIR__, 3) . '/vendor/autoload.php';
+    expect(is_file($autoloadPath))->toBeTrue();
+    $marker = sys_get_temp_dir() . '/piwigo-error-collector-oom-' . bin2hex(random_bytes(8)) . '.json';
+
+    $script = '<?php' . "\n"
+        . "ini_set('memory_limit', '32M');\n"
+        . 'require ' . var_export($autoloadPath, true) . ";\n"
+        . "\\Piwigo\\Core\\ErrorCollector::install();\n"
+        . "register_shutdown_function(function () {\n"
+        . '    file_put_contents(' . var_export($marker, true) . ", json_encode(\\Piwigo\\Core\\ErrorCollector::collected()));\n"
+        . "});\n"
+        . "\$sink = [];\n"
+        . "while (true) {\n"
+        . "    \$sink[] = str_repeat('a', 1024 * 1024);\n"
+        . "}\n";
+
+    $scriptFile = sys_get_temp_dir() . '/piwigo-error-collector-oom-script-' . bin2hex(random_bytes(8)) . '.php';
+    file_put_contents($scriptFile, $script);
+
+    $descriptors = [
+        0 => ['file', '/dev/null', 'r'],
+        1 => ['pipe', 'w'],
+        2 => ['pipe', 'w'],
+    ];
+    $proc = proc_open([PHP_BINARY, $scriptFile], $descriptors, $pipes);
+    expect($proc)->toBeResource();
+    if ($proc === false) {
+        throw new RuntimeException('proc_open failed');
+    }
+
+    $stdout = stream_get_contents($pipes[1]);
+    fclose($pipes[1]);
+    $stderr = stream_get_contents($pipes[2]);
+    fclose($pipes[2]);
+    $exit = proc_close($proc);
+    @unlink($scriptFile);
+
+    try {
+        // A memory-exhaustion fatal is PHP's own uncatchable "Fatal error"
+        // -- the subprocess exits non-zero (it never reaches a normal
+        // `exit(0)`), same as any other fatal PHP error.
+        expect($exit)->not->toBe(0)
+            ->and(file_exists($marker))->toBeTrue('ErrorCollector OOM subprocess never wrote its marker: stdout=' . $stdout . ' stderr=' . $stderr);
+
+        /** @var list<string> $collected */
+        $collected = json_decode((string) file_get_contents($marker), true);
+        expect($collected)->toHaveCount(1)
+            ->and($collected[0])->toStartWith('[ERROR] Allowed memory size of')
+            ->and($collected[0])->toContain('exhausted');
+    } finally {
+        @unlink($marker);
+    }
+});
+
 test('label maps E_NOTICE/E_USER_NOTICE to the NOTICE code', function (): void {
     $method = new ReflectionMethod(ErrorCollector::class, 'label');
 
@@ -193,15 +256,15 @@ test('label falls back to the PHP code for a type matching none of the known cat
  * A later coverage-gap sweep re-flagged flush()'s own fatal-error branch
  * (the `error_get_last()`-is-fatal body) and its X-PHP-Error-N header-
  * emission loop as closable. Re-investigated independently of this
- * file's own docblock above and reached the identical conclusion, with
- * two additional, concrete confirmations:
+ * file's own docblock above; the header-emission loop reached the
+ * identical unreachable conclusion, with two additional, concrete
+ * confirmations:
  *  - eval() of malformed PHP raises a catchable \ParseError (PHP turned
  *    eval()'s own E_PARSE into a real Throwable years ago) and never
  *    touches error_get_last() at all -- confirmed live: `var_dump
  *    (error_get_last())` right after catching that ParseError prints
- *    NULL. So eval() is not the injection seam either; nothing short of
- *    actually crashing the interpreter produces one of the four fatal
- *    types flush() checks for.
+ *    NULL. So eval() is not an injection seam for the fatal-type branch
+ *    either (see the dedicated subprocess test further down for what IS).
  *  - PHPUnit's own console output (vendor/phpunit/phpunit/src/TextUI/
  *    Output/Printer/DefaultPrinter.php) writes every dot/summary line via
  *    a raw fwrite() to an explicitly fopen()'d php://stdout stream, never

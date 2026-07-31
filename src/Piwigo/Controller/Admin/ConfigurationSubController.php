@@ -1273,6 +1273,20 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                         fclose($watermark_stream);
                         $pwatermark['file'] = substr($file_path, strlen($paths->root));
                     } else {
+                        // Left without a dedicated Browser test: by this point
+                        // getimagesize($watermark_tmp_name) has already
+                        // successfully read this exact file (the IMAGETYPE_PNG
+                        // check above), which requires the same read access
+                        // fopen('rb') needs here -- reaching this branch means
+                        // the file vanished, or its permissions changed, in the
+                        // narrow window between the two calls (e.g. an external
+                        // tmp-file-cleanup process, a filesystem quota/race).
+                        // That's a real defensive branch, not dead code, but a
+                        // genuine race a black-box HTTP test can't deterministically
+                        // force without mocking fopen() itself -- something this
+                        // project's Browser suite doesn't do for the class under
+                        // test (see this file's own "no mocks of the class under
+                        // test" convention).
                         \Piwigo\Core\PageState::current()->addError($errors['watermarkImage'] = "{$file_path} " . Lang::t('no write access'));
                     }
                 } else {

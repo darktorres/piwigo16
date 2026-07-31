@@ -134,6 +134,33 @@ test('sanitizeSvgIfNeeded leaves malformed XML untouched rather than throwing', 
     expect(file_get_contents($path))->toBe('<svg><unclosed>');
 });
 
+test('sanitizeSvgIfNeeded returns without modifying anything when the source file cannot be read', function (): void {
+    // A real, unreadable file (0000, torres owns it but no read bit for
+    // anyone) -- file_get_contents() genuinely returns false here, not a
+    // mock, matching this suite's own filesystem-safety convention (see
+    // this file's own docblock). torres is a non-root user in this
+    // environment (confirmed via `id`), so owning a file does not bypass
+    // its own permission bits, unlike a common misconception.
+    $path = upload_service_test_marker() . '/unreadable.svg';
+    file_put_contents($path, '<svg xmlns="http://www.w3.org/2000/svg"><circle r="5"/></svg>');
+    chmod($path, 0o000);
+
+    // file_get_contents() on a permission-denied file emits a real PHP
+    // warning ("failed to open stream: Permission denied") that
+    // phpunit.xml's failOnWarning="true" would otherwise turn into a
+    // failure right at the call site -- same suppression pattern as
+    // addUploadedFile's own md5_file()-read-failure test further down.
+    set_error_handler(static fn (): bool => true);
+    try {
+        upload_service_call_sanitize($path, 'image/svg+xml');
+    } finally {
+        restore_error_handler();
+        chmod($path, 0o644);
+    }
+
+    expect(file_get_contents($path))->toContain('circle');
+});
+
 test('getUploadFormConfig returns the 4 known fields', function (): void {
     $config = new UploadService()->getUploadFormConfig();
 
@@ -211,6 +238,25 @@ test('isValidImageExtension returns the lowercased, deduplicated picture extensi
     expect($result)->toContain('jpg');
 });
 
+test('isValidImageExtension returns the lowercased, deduplicated file extensions when all types are allowed', function (): void {
+    CurrentConfig::setUploadFormAllTypes(true);
+    try {
+        $service = new UploadService();
+        $result = $service->isValidImageExtension('PDF');
+
+        expect($result)->toBe(array_unique($result));
+        foreach ($result as $extension) {
+            expect($extension)->toBe(strtolower($extension));
+        }
+        // 'pdf' is a CurrentConfig::fileExtensions() default entry but not a
+        // CurrentConfig::pictureExtensions() one -- only reachable here
+        // through the uploadFormAllTypes()-true branch above.
+        expect($result)->toContain('pdf');
+    } finally {
+        CurrentConfig::setUploadFormAllTypes(false);
+    }
+});
+
 test('addUploadError appends to, rather than replaces, an existing upload_id\'s error list', function (): void {
     $_SESSION['uploads_error'] = [];
     $service = new UploadService();
@@ -223,6 +269,37 @@ test('addUploadError appends to, rather than replaces, an existing upload_id\'s 
         '42' => ['first error', 'second error'],
         '99' => ['unrelated upload'],
     ]);
+
+    $_SESSION['uploads_error'] = [];
+});
+
+/**
+ * A real unset(), but performed through a by-ref parameter rather than a
+ * literal `unset($_SESSION[...])` in the test body -- PHPStan otherwise
+ * remembers the removed key as permanently absent from $_SESSION even
+ * past the addUploadError() call below that puts it back, since it has
+ * no visibility into that method's own $_SESSION write.
+ * @param array<array-key, mixed> $superglobal
+ */
+function upload_service_unset_key(array &$superglobal, string $key): void
+{
+    unset($superglobal[$key]);
+}
+
+test('addUploadError initializes uploads_error when it is missing or not an array', function (): void {
+    upload_service_unset_key($_SESSION, 'uploads_error');
+    $service = new UploadService();
+
+    $service->addUploadError('7', 'boom');
+
+    expect($_SESSION['uploads_error'])->toBe(['7' => ['boom']]);
+
+    // The `! is_array(...)` half of the same guard -- a stray non-array
+    // value (e.g. left over from unrelated code) is replaced, not merged
+    // into.
+    $_SESSION['uploads_error'] = 'not-an-array';
+    $service->addUploadError('8', 'also boom');
+    expect($_SESSION['uploads_error'])->toBe(['8' => ['also boom']]);
 
     $_SESSION['uploads_error'] = [];
 });
@@ -261,6 +338,25 @@ test('pwgImageInfos returns null width/height when getimagesize() can\'t read th
     expect($infos['filesize'])->toBeFloat();
 });
 
+test('pwgImageInfos throws when filesize() fails for a path that does not exist at all', function (): void {
+    $service = new UploadService();
+    $missing = upload_service_test_marker() . '/does-not-exist-anywhere.jpg';
+
+    // getimagesize() on a missing path also warns (handled the same way the
+    // Unit "returns null width/height" test above already accepts, via its
+    // own $width/$height=null fallback), then falls through to filesize(),
+    // which warns and returns false too -- both real PHP warnings
+    // suppressed for the duration of this one expected-to-warn call, same
+    // pattern as addUploadedFile's own md5_file()-read-failure test below.
+    set_error_handler(static fn (): bool => true);
+    try {
+        expect(fn () => $service->pwgImageInfos($missing))
+            ->toThrow(Exception::class, 'filesize() failed for ' . $missing);
+    } finally {
+        restore_error_handler();
+    }
+});
+
 function upload_service_need_resize(string $path, int $maxWidth, int $maxHeight): bool
 {
     $service = new UploadService();
@@ -294,6 +390,69 @@ test('needResize is true when the image exceeds either max bound', function (): 
 
 test('needResize is false for a non-picture extension, without even reading the file', function (): void {
     expect(upload_service_need_resize(upload_service_test_marker() . '/definitely-missing.svg', 1, 1))->toBeFalse();
+});
+
+test('needResize is false when getimagesize() cannot decode a picture-extension file, instead of throwing', function (): void {
+    // '.jpg' passes needResize()'s own extension whitelist (unlike the
+    // non-picture-extension test above, which never even reaches
+    // getimagesize()), but the real content here isn't a decodable image at
+    // all -- can't determine dimensions, so can't tell whether a resize is
+    // needed.
+    $path = upload_service_test_marker() . '/broken.jpg';
+    file_put_contents($path, 'not a real jpeg at all');
+
+    expect(upload_service_need_resize($path, 100, 100))->toBeFalse();
+});
+
+/**
+ * Builds a real, minimal JPEG (via GD) with a hand-built EXIF APP1 segment
+ * spliced in right after the SOI marker -- same technique (and same
+ * rationale: neither ImageMagick's `-set/-define exif:Orientation=` nor a
+ * synthetic `xc:` canvas actually persists an EXIF profile) as
+ * tests/Unit/Admin/Image/PwgImageTest.php's own pwgImageMakeJpegWithOrientation(),
+ * duplicated locally (rather than shared) since that file declares it in
+ * the same global namespace this one also uses -- kept self-contained
+ * instead of relying on cross-file load-order for a global function.
+ * Parameterized by width/height (unlike the original, hardcoded 20x20)
+ * so the caller can build a genuinely non-square source, needed to make
+ * needResize()'s own width/height swap for a rotated orientation
+ * observable via its bool return.
+ */
+function upload_service_make_jpeg_with_orientation(int $orientation, int $width, int $height): string
+{
+    $tiff = 'II' . pack('v', 42) . pack('V', 8);
+    $ifd = pack('v', 1)
+        . pack('v', 0x0112) . pack('v', 3) . pack('V', 1) . pack('v', $orientation) . pack('v', 0)
+        . pack('V', 0);
+    $exifHeader = "Exif\x00\x00" . $tiff . $ifd;
+    $app1 = "\xFF\xE1" . pack('n', strlen($exifHeader) + 2) . $exifHeader;
+
+    assert($width >= 1 && $height >= 1);
+    $img = imagecreatetruecolor($width, $height);
+    if ($img === false) {
+        throw new RuntimeException('imagecreatetruecolor failed');
+    }
+    ob_start();
+    imagejpeg($img);
+    // ob_get_clean() can only return false when there's no active output
+    // buffer -- ob_start() immediately above guarantees one here.
+    $base = ob_get_clean();
+
+    return substr($base, 0, 2) . $app1 . substr($base, 2);
+}
+
+test('needResize swaps width/height for a rotated EXIF orientation before comparing against the max bounds', function (): void {
+    // Raw pixel dims are portrait (50x200); EXIF orientation 6 makes
+    // PwgImage::get_rotation_angle() report a 270-degree rotation (see
+    // PwgImageTest's own comment for the same orientation value), meaning a
+    // real viewer displays this landscape at 200x50 -- without the
+    // width/height swap this method's own docblock explains, a
+    // max_width=100 threshold would never catch a photo that is genuinely
+    // 200px wide once rotated.
+    $path = upload_service_test_marker() . '/rotated.jpg';
+    file_put_contents($path, upload_service_make_jpeg_with_orientation(6, 50, 200));
+
+    expect(upload_service_need_resize($path, 100, 300))->toBeTrue();
 });
 
 test('saveUploadFormConfig returns false without writing anything when given no data', function (): void {
@@ -516,6 +675,27 @@ test('prepareDirectoryStatic fixes permissions on an existing unwritable directo
     expect(is_writable($dir))->toBeTrue();
 });
 
+test('prepareDirectoryStatic throws when mkdir() fails under a real unwritable parent directory', function (): void {
+    // A real, deterministic mkdir() failure: torres owns $parent (mode
+    // 0555, no write bit), so @mkdir() genuinely cannot create a new entry
+    // under it -- same real-permission-bits convention as
+    // tests/Browser/AdminConfigurationTest.php's own watermark
+    // write-access test (see that file's docblock), not a mock. torres
+    // being the owner does not bypass its own permission bits (confirmed
+    // via `id`: this process runs as a non-root user).
+    $parent = upload_service_test_marker() . '/locked-parent';
+    mkdir($parent, 0o555, true);
+    $target = $parent . '/never-created';
+
+    try {
+        expect(fn () => upload_service_prepare_directory($target))
+            ->toThrow(ImageProcessingException::class, 'cannot create directory "' . $target . '"');
+        expect(is_dir($target))->toBeFalse();
+    } finally {
+        chmod($parent, 0o777);
+    }
+});
+
 test('addFormat throws when formats are disabled', function (): void {
     CurrentConfig::setIsFormatsEnabled(false);
     $service = new UploadService();
@@ -561,6 +741,25 @@ test('the 6 upload_file_* representative-generation handlers no-op for a non-mat
     expect(UploadService::uploadFilePsd(null, $path))->toBeNull();
     expect(UploadService::uploadFileEps(null, $path))->toBeNull();
     expect(UploadService::uploadFileVideo(null, $path))->toBeNull();
+});
+
+test('the 5 ext_imagick-only handlers return the incoming representative_ext unmodified when the graphics library is not ext_imagick', function (): void {
+    // Forces PwgImage::get_library() to resolve to 'gd' instead of this
+    // environment's real default 'ext_imagick' (see this file's own
+    // "converts a real ... via the ext_imagick CLI" tests further down) --
+    // each of these 5 handlers checks the library BEFORE its own extension
+    // whitelist, so a bogus, never-read path is enough here; no real
+    // PDF/HEIC/TIFF/PSD/EPS fixture or exec() call is reached.
+    CurrentConfig::setGraphicsLibrary('gd');
+    try {
+        expect(UploadService::uploadFilePdf(null, '/tmp/whatever.pdf'))->toBeNull();
+        expect(UploadService::uploadFileHeic(null, '/tmp/whatever.heic'))->toBeNull();
+        expect(UploadService::uploadFileTiff(null, '/tmp/whatever.tif'))->toBeNull();
+        expect(UploadService::uploadFilePsd(null, '/tmp/whatever.psd'))->toBeNull();
+        expect(UploadService::uploadFileEps(null, '/tmp/whatever.eps'))->toBeNull();
+    } finally {
+        CurrentConfig::setGraphicsLibrary('auto');
+    }
 });
 
 /** @return array{0: int, 1: int} */
@@ -667,4 +866,29 @@ test('uploadFileEps converts a real EPS into a representative png via the ext_im
     $representativePath = $dir . '/pwg_representative/vector.png';
     expect(file_exists($representativePath))->toBeTrue();
     expect(filesize($representativePath))->toBeGreaterThan(0);
+});
+
+test('uploadFileTiff appends the -quality 98 flag and converts to jpg when tiffRepresentativeExt is configured to jpg', function (): void {
+    // CurrentConfig::tiffRepresentativeExt()'s own default is 'png' (see
+    // the "converts a real TIFF..." test above, which never touches this
+    // config) -- forcing it to 'jpg' here is the only way to reach this
+    // method's own `if ($representative_ext === 'jpg') { $exec .= '
+    // -quality 98'; }` branch.
+    CurrentConfig::setTiffRepresentativeExt('jpg');
+    try {
+        $dir = upload_service_test_marker();
+        $png = $dir . '/source-jpgext.png';
+        $tiff = $dir . '/photo-jpgext.tiff';
+        upload_service_make_sample_png($png);
+        upload_service_convert_sample($png, $tiff);
+
+        $result = UploadService::uploadFileTiff(null, $tiff);
+
+        expect($result)->toBe('jpg');
+        $representativePath = $dir . '/pwg_representative/photo-jpgext.jpg';
+        expect(file_exists($representativePath))->toBeTrue();
+        expect(filesize($representativePath))->toBeGreaterThan(0);
+    } finally {
+        CurrentConfig::setTiffRepresentativeExt('png');
+    }
 });

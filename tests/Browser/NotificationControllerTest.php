@@ -92,6 +92,33 @@ it('updates last_check once the feed is actually fetched', function (): void {
     expect($rowAfter['lastCheck'])->not->toBeNull();
 });
 
+/**
+ * Closes the guest branch (lines ~59-61): for a guest visitor,
+ * U_FEED_IMAGE_ONLY is the bare feed.php root URL (no `?feed=` query at
+ * all -- feed.php's own guest-identity default already forces
+ * image_only), distinct from the logged-in branch's
+ * `feed_url . '&amp;image_only'` shape the 3 tests above exercise via
+ * H::loginAsAdmin().
+ */
+it('gives a guest visitor a bare feed.php URL (no query string) for the image-only link', function (): void {
+    $html = H::httpBody('/notification.php');
+    $feedId = extractFeedId($html);
+
+    $row = userFeedRow($feedId);
+    if ($row === null) {
+        throw new \RuntimeException('expected a real user_feed row for feed id ' . $feedId);
+    }
+    // Config::guestId()'s real user id, not the fixture admin's.
+    expect($row['userId'])->not->toBe(1);
+
+    // getRootUrl() resolves to '' for a plain root-level page like
+    // notification.php (no gallery SectionContextRegistry context, 0
+    // RequestMountDepth), so U_FEED_IMAGE_ONLY is the bare relative
+    // "feed.php" href -- no leading slash/domain, no query string at all.
+    expect($html)->toContain('href="feed.php">')
+        ->and($html)->toContain('feed.php?feed=' . $feedId);
+});
+
 it('mints a distinct feed id on each visit', function (): void {
     $page = H::loginAsAdmin($this);
 

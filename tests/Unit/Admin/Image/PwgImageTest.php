@@ -17,7 +17,18 @@ use Piwigo\Admin\Image\PwgImage;
  * `default => throw ... "unknown image library"` match arm (only
  * reachable if get_library() itself somehow returned a 4th string, which
  * its own switch can never produce) and get_library()'s final `return
- * false;` (only reached if even 'gd' fails) untestable here too.
+ * false;` (only reached if even 'gd' fails) untestable here too: all
+ * three require GD itself to become unavailable mid-process, and GD (a
+ * compiled-in extension, not a php.ini-toggleable one) can't be disabled
+ * except by starting a whole new PHP engine without it -- which would
+ * also rule out the 'gd' fallback these branches exist to guard against,
+ * so no PHP process, subprocess or otherwise, can ever exercise them.
+ * That's a genuinely different situation from the sibling
+ * `function_exists('exif_read_data')` / `function_exists('exec')` guards
+ * elsewhere in this class (see the subprocess-based tests further down):
+ * those gate on php.ini's `disable_functions`, which a real, separate
+ * `php -d disable_functions=...` subprocess genuinely enforces without
+ * needing GD itself to go away.
  */
 
 /**
@@ -57,6 +68,53 @@ function pwgImageTestMarker(): string
     static $marker = null;
 
     return $marker ??= sys_get_temp_dir() . '/piwigo-pwg-image-test-' . bin2hex(random_bytes(8));
+}
+
+/**
+ * Runs $script (appended after `require '<real vendor/autoload.php>';`)
+ * in a genuinely separate `php` CLI process started with $flags -- see
+ * tests/Unit/Core/ContainerDetectorTest.php's own docblock for why this
+ * is the established pattern in this suite for closing branches gated on
+ * a real PHP-engine-level fact (a disabled function, an unloaded
+ * extension) that this class has no injection seam for: a real PHP
+ * engine genuinely enforcing real `-d`/`-n` flags, not a mock of
+ * PwgImage or of any global function it calls, and the subprocess exits
+ * on its own without leaking any state back into this shared PHPUnit
+ * process the way an in-process override would.
+ *
+ * @param array<int, string> $flags
+ * @return array{exit: int, stdout: string, stderr: string}
+ */
+function pwgImageRunSubprocess(array $flags, string $script): array
+{
+    $autoloadPath = dirname(__DIR__, 4) . '/vendor/autoload.php';
+    if (! is_file($autoloadPath)) {
+        throw new RuntimeException('autoload.php not found at ' . $autoloadPath);
+    }
+
+    $cmd = [PHP_BINARY, ...$flags, '-r', 'require ' . var_export($autoloadPath, true) . ';' . $script];
+
+    $descriptors = [
+        0 => ['file', '/dev/null', 'r'],
+        1 => ['pipe', 'w'],
+        2 => ['pipe', 'w'],
+    ];
+    $proc = proc_open($cmd, $descriptors, $pipes);
+    if (! is_resource($proc)) {
+        throw new RuntimeException('proc_open failed');
+    }
+
+    $stdout = stream_get_contents($pipes[1]);
+    fclose($pipes[1]);
+    $stderr = stream_get_contents($pipes[2]);
+    fclose($pipes[2]);
+    $exit = proc_close($proc);
+
+    return [
+        'exit' => $exit,
+        'stdout' => $stdout !== false ? $stdout : '',
+        'stderr' => $stderr !== false ? $stderr : '',
+    ];
 }
 
 beforeEach(function (): void {
@@ -571,4 +629,97 @@ test('get_graphics_library reports a real ImageMagick PHP-extension version when
     } finally {
         \Piwigo\Config\CurrentConfig::setExtImagickDir($original);
     }
+});
+
+test('webp_info throws when fread() fails after a successful fopen()', function (): void {
+    // fopen(<directory>, 'rb') genuinely succeeds on Linux -- it returns a
+    // real, valid stream resource -- but any subsequent fread() on that
+    // resource genuinely fails (EISDIR). Confirmed live. This is real
+    // filesystem behavior, not a mock of fopen()/fread() or of webp_info()
+    // itself, and it's the only way to reach webp_info()'s `$buf === false`
+    // branch: every other realistic fread() failure mode (already-closed
+    // handle, truncated read) either can't happen with a fresh handle right
+    // after a successful fopen(), or simply returns a short (not false)
+    // string. fread() emits a real E_WARNING here, which phpunit.xml's
+    // failOnWarning="true" would otherwise turn into a failure -- same
+    // swallow-for-one-call pattern as this file's other fopen()/
+    // getimagesize() warning tests.
+    $dir = pwgImageTestMarker();
+
+    set_error_handler(static fn (): bool => true);
+    try {
+        expect(fn () => PwgImage::webp_info($dir))
+            ->toThrow(\Exception::class, "webp_info(): fread({$dir}): Failed");
+    } finally {
+        restore_error_handler();
+    }
+});
+
+test('get_rotation_angle returns null when exif_read_data() is unavailable, without ever calling it', function (): void {
+    $path = pwgImageTestMarker() . '/exif-disabled.jpg';
+    // Orientation 6 would normally map to a 270-degree rotation (see the
+    // "maps EXIF orientation 6" test above) -- proving that the null this
+    // test asserts really comes from the `function_exists('exif_read_data')`
+    // guard short-circuiting before exif_read_data() is ever reached, not
+    // from the file happening to lack a real orientation tag.
+    file_put_contents($path, pwgImageMakeJpegWithOrientation(6));
+
+    $script = 'echo json_encode(['
+        . '"exif_available" => function_exists("exif_read_data"), '
+        . '"result" => \Piwigo\Admin\Image\PwgImage::get_rotation_angle(' . var_export($path, true) . '),'
+        . ']);';
+    // php.ini's disable_functions genuinely makes the disabled function
+    // both uncallable and, crucially, function_exists()-false -- a real
+    // engine-level fact, confirmed live, with no in-process seam to fake it
+    // (function_exists('exif_read_data') here checks the real global
+    // function table, not anything this class can inject into).
+    $proc = pwgImageRunSubprocess(['-d', 'disable_functions=exif_read_data'], $script);
+
+    expect($proc['exit'])->toBe(0, 'subprocess failed: ' . $proc['stderr']);
+    $decoded = json_decode($proc['stdout'], true);
+    expect($decoded)->toBe(['exif_available' => false, 'result' => null]);
+});
+
+test('is_ext_imagick returns false when exec() itself is unavailable, without ever calling it', function (): void {
+    $script = 'echo json_encode(['
+        . '"exec_available" => function_exists("exec"), '
+        . '"result" => \Piwigo\Admin\Image\PwgImage::is_ext_imagick(),'
+        . ']);';
+    // Same disable_functions technique as the exif_read_data test above,
+    // targeting is_ext_imagick()'s own `function_exists('exec')` guard.
+    $proc = pwgImageRunSubprocess(['-d', 'disable_functions=exec'], $script);
+
+    expect($proc['exit'])->toBe(0, 'subprocess failed: ' . $proc['stderr']);
+    $decoded = json_decode($proc['stdout'], true);
+    expect($decoded)->toBe(['exec_available' => false, 'result' => false]);
+});
+
+test('get_graphics_library resolves through the gd case and appends a real GD version string', function (): void {
+    $script = '\Piwigo\Config\CurrentConfig::setExtImagickDir("/totally/nonexistent/dir/");'
+        . 'echo json_encode(['
+        . '"imagick_extension_loaded" => extension_loaded("imagick"), '
+        . '"result" => \Piwigo\Admin\Image\PwgImage::get_graphics_library(),'
+        . ']);';
+    // `-n` starts PHP with none of this host's configured extensions
+    // loaded, then `-d extension=gd` loads only GD back -- a real,
+    // independent PHP engine that genuinely has no imagick extension
+    // (unlike the "ext_imagick itself is unavailable" test above, which
+    // only rules out the ext_imagick *CLI* and still resolves to the real
+    // 'imagick' PHP extension present in this main test process). Setting
+    // ext_imagick_dir to a nonexistent path (same technique as the
+    // is_ext_imagick() test above) rules out the ext_imagick CLI too, so
+    // get_library()'s 'auto' chain falls all the way through to 'gd' --
+    // exercising get_graphics_library()'s 'gd' case (gd_info(), the
+    // ?? null fallback, the is_string() narrowing, and the version-suffix
+    // concatenation) for real.
+    $proc = pwgImageRunSubprocess(['-n', '-d', 'extension=gd'], $script);
+
+    expect($proc['exit'])->toBe(0, 'subprocess failed: ' . $proc['stderr']);
+    $decoded = json_decode($proc['stdout'], true);
+    expect($decoded)->toBeArray();
+    assert(is_array($decoded));
+    expect($decoded['imagick_extension_loaded'])->toBeFalse();
+    expect($decoded['result'])->toBeString();
+    expect($decoded['result'])->toStartWith('gd/');
+    expect($decoded['result'])->not->toBe('gd/');
 });

@@ -99,4 +99,49 @@ final class SiteRepositoryTest extends IntegrationTestCase
 
         self::assertContains($url, $urls);
     }
+
+    public function test_find_category_and_image_counts_by_site_groups_by_site_and_ignores_categories_with_no_site(): void
+    {
+        // Every real fixture category has site_id NULL (a single-site
+        // install) -- 2 disposable categories (of this method's own real
+        // "multi-site synced gallery" shape) are the only way to reach
+        // this method's own real work at all. One gets a storage-synced
+        // image (storage_category_id, distinct from the image_category
+        // link table every other fixture image uses) so nb_images is
+        // genuinely non-zero, not just structurally present.
+        $url = 'p17-test-' . bin2hex(random_bytes(4));
+        $this->repo->insert($url);
+        $siteId = (int) $this->queryScalar(sprintf("SELECT id FROM `%ssites` WHERE galleries_url = '%s'", $this->dbPrefix, $url));
+
+        $db = $this->newMysqli($this->dbName);
+        $db->query(sprintf(
+            "INSERT INTO `%1\$scategories` (name, site_id, uppercats) VALUES ('p17-test-site-cat-with-image', %2\$d, '999901')",
+            $this->dbPrefix,
+            $siteId
+        ));
+        $catWithImageId = (int) $db->insert_id;
+        $db->query(sprintf(
+            "INSERT INTO `%1\$scategories` (name, site_id, uppercats) VALUES ('p17-test-site-cat-without-image', %2\$d, '999902')",
+            $this->dbPrefix,
+            $siteId
+        ));
+        $catWithoutImageId = (int) $db->insert_id;
+        $db->query(sprintf(
+            "INSERT INTO `%1\$simages` (file, path, storage_category_id) VALUES ('p17-test-site.jpg', 'p17-test-site.jpg', %2\$d)",
+            $this->dbPrefix,
+            $catWithImageId
+        ));
+        $imageId = (int) $db->insert_id;
+
+        try {
+            $counts = $this->repo->findCategoryAndImageCountsBySite();
+
+            self::assertArrayHasKey($siteId, $counts);
+            self::assertSame(['nb_categories' => 2, 'nb_images' => 1], $counts[$siteId]);
+        } finally {
+            $db->query(sprintf('DELETE FROM `%1$simages` WHERE id = %2$d', $this->dbPrefix, $imageId));
+            $db->query(sprintf('DELETE FROM `%1$scategories` WHERE id IN (%2$d, %3$d)', $this->dbPrefix, $catWithImageId, $catWithoutImageId));
+            $db->close();
+        }
+    }
 }

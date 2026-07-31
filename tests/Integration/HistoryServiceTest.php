@@ -386,6 +386,33 @@ final class HistoryServiceTest extends IntegrationTestCase
         self::assertContains($oldId2, $remaining);
     }
 
+    /**
+     * add()'s own `$historyId % 1000 === 0` summarize(50000) trigger is a
+     * hardcoded constant (unlike history_autopurge_every, which the sibling
+     * test above sets to 1 to fire on every insert) -- the only way to land
+     * a real logVisit() insert exactly on a multiple of 1000 deterministically,
+     * without actually inserting 999 real rows first, is to force the
+     * table's own AUTO_INCREMENT counter directly.
+     */
+    public function test_log_visit_summarizes_when_the_new_id_lands_on_a_multiple_of_1000(): void
+    {
+        $this->insertHistoryLine(1, '2026-07-12', '03:00:00');
+        self::assertNull($this->fetchSummaryNbPages(2026, 7, 12, null));
+
+        $this->conn->executeStatement('ALTER TABLE ' . Tables::history() . ' AUTO_INCREMENT = 1000');
+
+        self::assertTrue($this->service->logVisit());
+
+        $newIds = $this->allHistoryIds();
+        self::assertContains(1000, $newIds);
+
+        // summarize(50000) ran as a direct side effect of that logVisit()
+        // call (never called separately in this test) -- the earlier,
+        // previously-unsummarized 2026-07-12 line is now rolled up into a
+        // real history_summary row.
+        self::assertSame(1, $this->fetchSummaryNbPages(2026, 7, 12, null));
+    }
+
     private function fetchLastHistoryColumn(string $column): mixed
     {
         return $this->conn->createQueryBuilder()

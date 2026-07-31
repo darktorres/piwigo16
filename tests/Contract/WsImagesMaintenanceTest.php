@@ -98,6 +98,11 @@ final class WsImagesMaintenanceTest extends ContractTestCase
     }
 
     // ---------------------------------------------------------- syncMetadata
+    //
+    // syncMetadata()'s own preg_split() failure guard (image_id, same
+    // `/[\s,;\|]/` pattern as formats.delete()'s below) is unreachable here
+    // for the same reason -- see the note at the bottom of the
+    // formats.delete section of this file.
 
     public function test_syncMetadata_invalid_token_returns_error(): void
     {
@@ -270,6 +275,36 @@ final class WsImagesMaintenanceTest extends ContractTestCase
 
     // ---------------------------------------------------- formats.searchImage
 
+    public function test_formatsSearchImage_reports_no_candidates_for_invalid_json(): void
+    {
+        // json_decode() failure (not the "valid JSON, but a non-string
+        // entry" branch covered below) -- $candidates falls back to [], so
+        // the whole per-candidate loop never runs and the result is empty.
+        $response = $this->callWs('pwg.images.formats.searchImage', [
+            'filename_list' => 'this is not valid json at all {{{',
+        ]);
+
+        self::assertSame('ok', $response['stat']);
+        self::assertSame([], $response['result']);
+    }
+
+    public function test_formatsSearchImage_reports_not_found_for_a_recognized_extension_with_no_matching_photo(): void
+    {
+        // Distinct from test_formatsSearchImage_reports_not_found_for_unrecognized_extension()
+        // above: this filename's extension *is* one of
+        // CurrentConfig::formatExtensions()'s known format extensions (so
+        // the preg_match() that strips it succeeds and
+        // $candidate_filename_wo_ext is a real, non-empty string), but no
+        // photo in the fixture has that basename at all -- the final
+        // fallback branch, past the isset($unique_filenames_db[...]) check.
+        $response = $this->callWs('pwg.images.formats.searchImage', [
+            'filename_list' => json_encode(['a' => 'totally-nonexistent-basename-' . uniqid() . '.tif']),
+        ]);
+
+        self::assertSame('ok', $response['stat']);
+        self::assertSame(['a' => ['status' => 'not found']], $response['result']);
+    }
+
     public function test_formatsSearchImage_reports_not_found_for_non_string_entry(): void
     {
         $response = $this->callWs('pwg.images.formats.searchImage', [
@@ -381,4 +416,102 @@ final class WsImagesMaintenanceTest extends ContractTestCase
         self::assertIsNumeric($remaining);
         self::assertSame(0, (int) $remaining);
     }
+
+    public function test_formatsDelete_skips_physical_deletion_for_a_remote_path(): void
+    {
+        $filename = 'remote-format-' . uniqid() . '.jpg';
+        $this->conn->executeStatement(
+            'INSERT INTO ' . Tables::images() . ' (file, path, md5sum) VALUES (?, ?, ?)',
+            [$filename, 'https://example.test/remote/' . $filename, md5($filename)]
+        );
+        $imageId = (int) $this->conn->lastInsertId();
+        $this->insertedImageIds[] = $imageId;
+
+        $formatId = $this->insertImageFormat($imageId, 'zip');
+
+        $response = $this->callWs('pwg.images.formats.delete', [
+            'format_id' => $formatId,
+            'pwg_token' => $this->pwgToken(),
+        ]);
+
+        self::assertSame('ok', $response['stat']);
+        // UrlService::urlIsRemote() 'continue's past the physical-unlink
+        // attempt for this row entirely -- $ok stays true, and the format
+        // row is still deleted from the DB below regardless.
+        self::assertSame(true, $response['result']);
+
+        $remaining = $this->conn->fetchOne(
+            'SELECT COUNT(*) FROM ' . Tables::imageFormat() . ' WHERE format_id = ?',
+            [$formatId]
+        );
+        self::assertSame(0, is_numeric($remaining) ? (int) $remaining : -1);
+    }
+
+    public function test_formatsDelete_reports_failure_when_a_format_file_cannot_be_unlinked(): void
+    {
+        // A dedicated, throwaway directory tree this test process itself
+        // creates and owns (unlike the shared upload/ tree, which is
+        // www-data-owned in this environment and can't be chmod()'d from a
+        // CLI test process -- see WsImagesUploadGapsTest's own doc note),
+        // so locking it down to force a real unlink() failure is safe and
+        // fully isolated.
+        $slug = 'unlink-fail-' . uniqid();
+        $root = dirname(__DIR__, 2);
+        $baseDir = $root . '/upload/' . $slug;
+        $formatDir = $baseDir . '/pwg_format';
+        mkdir($formatDir, 0o777, true);
+
+        $filename = 'photo.jpg';
+        $imagePath = 'upload/' . $slug . '/' . $filename;
+        $formatFile = $formatDir . '/photo.zip';
+        file_put_contents($formatFile, 'stand-in format file content');
+
+        $this->conn->executeStatement(
+            'INSERT INTO ' . Tables::images() . ' (file, path, md5sum) VALUES (?, ?, ?)',
+            [$filename, $imagePath, md5($slug)]
+        );
+        $imageId = (int) $this->conn->lastInsertId();
+        $this->insertedImageIds[] = $imageId;
+
+        $formatId = $this->insertImageFormat($imageId, 'zip');
+
+        // unlink() needs write+execute on the *containing* directory, not
+        // on the file itself -- locking pwg_format/ down to r-x for
+        // everyone (owner included) makes the real delete attempt below
+        // fail deterministically for whichever user runs the WS request.
+        chmod($formatDir, 0o555);
+
+        try {
+            $response = $this->callWs('pwg.images.formats.delete', [
+                'format_id' => $formatId,
+                'pwg_token' => $this->pwgToken(),
+            ]);
+
+            self::assertSame('ok', $response['stat']);
+            self::assertSame(false, $response['result']);
+
+            // The format row is still deleted from the DB even though the
+            // physical file deletion failed -- formatsDelete()'s own
+            // unconditional deleteFormatsByIds() call, same as every other
+            // test in this section.
+            $remaining = $this->conn->fetchOne(
+                'SELECT COUNT(*) FROM ' . Tables::imageFormat() . ' WHERE format_id = ?',
+                [$formatId]
+            );
+            self::assertSame(0, is_numeric($remaining) ? (int) $remaining : -1);
+        } finally {
+            chmod($formatDir, 0o755);
+            @unlink($formatFile);
+            @rmdir($formatDir);
+            @rmdir($baseDir);
+        }
+    }
+
+    // formatsDelete()'s own preg_split() failure guard (format_id, same
+    // `/[\s,;\|]/` pattern) is unreachable from a black-box Contract test
+    // for the same reason documented at the top of WsImagesTest.php's
+    // exist() section -- a plain non-backtracking character class can't be
+    // made to exceed the default PCRE backtrack/recursion budget, and this
+    // test process can't reach the separate Apache process's php.ini to
+    // lower that budget either.
 }

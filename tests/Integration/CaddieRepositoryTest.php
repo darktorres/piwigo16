@@ -99,6 +99,35 @@ final class CaddieRepositoryTest extends IntegrationTestCase
         }
     }
 
+    public function test_remove_elements_for_user_deletes_only_the_given_elements(): void
+    {
+        try {
+            $this->repo->addElements(1, [1, 2, 3]);
+
+            $this->repo->removeElementsForUser(1, [2]);
+
+            self::assertSame([1, 3], $this->fetchElementIds(1));
+        } finally {
+            $this->clearCaddie(1);
+        }
+    }
+
+    public function test_remove_elements_for_user_is_a_no_op_for_an_empty_list(): void
+    {
+        try {
+            $this->repo->addElements(1, [1, 2]);
+
+            $this->repo->removeElementsForUser(1, []);
+
+            // Guards against building `DELETE ... WHERE element_id IN ()`
+            // for an empty list -- the real rows just inserted above must
+            // survive untouched.
+            self::assertSame([1, 2], $this->fetchElementIds(1));
+        } finally {
+            $this->clearCaddie(1);
+        }
+    }
+
     private function clearCaddie(int $userId): void
     {
         $this->conn->createQueryBuilder()

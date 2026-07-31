@@ -191,6 +191,118 @@ final class WsImagesSetInfoTest extends ContractTestCase
         }
     }
 
+    // The `$info_columns = ['name', 'author', 'comment', 'level',
+    // 'date_creation']` array-literal's own opening-line statement (~2312)
+    // shows as "uncovered" in raw line-coverage despite every test above
+    // reaching and exercising it -- a known OPcache constant-array-folding
+    // artifact (see MEMORY.md feedback_opcache_constant_array_folding_coverage_artifact.md):
+    // a pure-literal array with no variables gets folded at compile time,
+    // so Xdebug can't attribute a real hit to that source line. Not a real
+    // gap; no test added for it here.
+
+    public function test_setInfo_file_param_is_forbidden_on_synchronized_photos(): void
+    {
+        // storage_category_id != 0 marks a photo as added by directory
+        // synchronization rather than upload -- setInfo() refuses to let
+        // the `file` column be edited for those.
+        $filename = 'sync-photo-' . uniqid() . '.jpg';
+        $this->conn->executeStatement(
+            'INSERT INTO ' . Tables::images() . ' (file, path, md5sum, storage_category_id) VALUES (?, ?, ?, ?)',
+            [$filename, 'upload/' . $filename, md5($filename), 1]
+        );
+        $imageId = (int) $this->conn->lastInsertId();
+
+        try {
+            $response = $this->callWsAllowingServerError('pwg.images.setInfo', [
+                'image_id' => $imageId,
+                'file' => 'new-name.jpg',
+                'pwg_token' => $this->pwgToken(),
+            ]);
+
+            self::assertSame('fail', $response['stat']);
+            self::assertSame(500, $response['err']);
+            self::assertSame(
+                '[ws_images_setInfo] updating "file" is forbidden on photos added by synchronization',
+                $response['message']
+            );
+        } finally {
+            $this->conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+        }
+    }
+
+    public function test_setInfo_file_param_that_strips_to_empty_is_silently_dropped(): void
+    {
+        // strip_tags('0') is still '0' (nothing to strip) -- the explicit
+        // === '0' check exists precisely so a literal "0" filename isn't
+        // treated as a real value, matching PHP's own "0" == falsy
+        // convention. Since 'file' is the *only* field sent, $update ends
+        // up empty and updateFields() is never even called.
+        $original = $this->conn->fetchOne('SELECT file FROM ' . Tables::images() . ' WHERE id = 1');
+        self::assertIsString($original);
+
+        $response = $this->callWs('pwg.images.setInfo', [
+            'image_id' => 1,
+            'file' => '0',
+            'pwg_token' => $this->pwgToken(),
+        ]);
+
+        self::assertSame('ok', $response['stat']);
+
+        $newFile = $this->conn->fetchOne('SELECT file FROM ' . Tables::images() . ' WHERE id = 1');
+        self::assertSame($original, $newFile);
+    }
+
+    public function test_setInfo_tag_list_and_tag_ids_together_is_rejected(): void
+    {
+        // tag_list is the batch-manager unit mode's own temporary
+        // $_REQUEST['tag_list'] array param (TagListRequest) -- mutually
+        // exclusive with the public tag_ids param.
+        $response = $this->callWsAllowingServerError('pwg.images.setInfo', [
+            'image_id' => 1,
+            'tag_ids' => '1',
+            'tag_list' => ['tag-list-conflict-' . uniqid()],
+            'pwg_token' => $this->pwgToken(),
+        ]);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(1003, $response['err']);
+        self::assertSame('Do not use tag_list and tag_ids at the same time.', $response['message']);
+    }
+
+    public function test_setInfo_tag_list_creates_and_sets_tags_by_name(): void
+    {
+        $originalTags = $this->conn->fetchFirstColumn(
+            'SELECT tag_id FROM ' . Tables::imageTag() . ' WHERE image_id = 1'
+        );
+        $tagName = 'setinfo-taglist-' . uniqid();
+
+        try {
+            $response = $this->callWs('pwg.images.setInfo', [
+                'image_id' => 1,
+                'tag_list' => [$tagName],
+                'pwg_token' => $this->pwgToken(),
+            ]);
+
+            self::assertSame('ok', $response['stat'], (string) json_encode($response));
+
+            $afterTagNames = $this->conn->fetchFirstColumn(
+                'SELECT t.name FROM ' . Tables::tags() . ' t
+                 INNER JOIN ' . Tables::imageTag() . ' it ON it.tag_id = t.id
+                 WHERE it.image_id = 1'
+            );
+            self::assertContains($tagName, $afterTagNames);
+        } finally {
+            $this->conn->executeStatement('DELETE FROM ' . Tables::imageTag() . ' WHERE image_id = 1');
+            foreach ($originalTags as $tagId) {
+                $this->conn->executeStatement(
+                    'INSERT INTO ' . Tables::imageTag() . ' (image_id, tag_id) VALUES (1, ?)',
+                    [$tagId]
+                );
+            }
+            $this->conn->executeStatement('DELETE FROM ' . Tables::tags() . ' WHERE name = ?', [$tagName]);
+        }
+    }
+
     public function test_setInfo_strips_disallowed_html_tags_when_html_descriptions_are_disabled(): void
     {
         $original = $this->conn->fetchOne('SELECT comment FROM ' . Tables::images() . ' WHERE id = 1');

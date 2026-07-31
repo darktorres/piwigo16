@@ -274,6 +274,15 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
         }
     }
 
+    // purgeSessionsForDeletedUsers()'s `if (! is_string($data)) { continue;
+    // }` guard (its own line 209) is left uncovered: `piwigo_sessions.data`
+    // is `mediumtext NOT NULL` (confirmed via install/piwigo_structure-mysql.sql
+    // and this file's own fixture schema) -- DBAL always returns a TEXT
+    // column as a PHP string, and the column can never hold NULL. There is
+    // no real row this branch could `continue` past; pure static-analysis
+    // narrowing for `$session['data']` (a raw DBAL row typing as
+    // `array<string, mixed>`), not a reachable runtime state.
+
     private function countRows(string $table): int
     {
         $value = $this->conn->createQueryBuilder()

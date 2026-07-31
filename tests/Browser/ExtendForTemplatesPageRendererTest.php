@@ -45,6 +45,41 @@ it('saves a real template replacement and echoes it back on the next render', fu
     }
 });
 
+// The "saves a real template replacement" test above always posts a real
+// 'url' value ('category'), so it never exercises the '----------' ->
+// 'N/A' normalization for url_keyword specifically (only for bound_tpl,
+// whose own '----------' it does post). This isolates that branch.
+it('normalizes a "----------" url keyword to N/A in the persisted replacement', function (): void {
+    $snapshot = H::snapshotConfig(['extents_for_templates']);
+
+    try {
+        $page = H::loginAsAdmin($this);
+
+        $result = H::adminPost($page, '/admin.php?page=extend_for_templates', [
+            'pwg_token' => H::pwgToken($page),
+            'submit' => '1',
+            'reptpl' => ['distributed/samples/my-header.tpl'],
+            'original' => ['about.tpl'],
+            'url' => ['----------'],
+            'bound' => ['----------'],
+        ]);
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->toContain('Templates configuration has been recorded');
+
+        $raw = H::configValue('extents_for_templates');
+        expect($raw)->not->toBeNull();
+        $decoded = json_decode((string) $raw, true);
+        if (! is_array($decoded) || ! is_array($decoded['distributed/samples/my-header.tpl'] ?? null)) {
+            throw new RuntimeException('expected a real replacement entry, got: ' . var_export($decoded, true));
+        }
+        // [handle, url_keyword, bound_tpl] -- index 1 is url_keyword.
+        expect($decoded['distributed/samples/my-header.tpl'][1])->toBe('N/A');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
 it('skips a malformed replacement row (non-string field) without erroring', function (): void {
     $snapshot = H::snapshotConfig(['extents_for_templates']);
 

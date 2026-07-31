@@ -88,6 +88,103 @@ function feedRawGet(string $query = ''): array
     return ['status' => $status, 'headers' => strtolower($headers), 'body' => $body];
 }
 
+/** Extracts the 50-char feed id from the U_FEED href notification.tpl renders. */
+function feedExtractFeedId(string $html): string
+{
+    if (preg_match('/feed\.php\?feed=([0-9A-Za-z]{50})/', $html, $matches) !== 1) {
+        throw new RuntimeException('Could not find a feed.php?feed=<id> link in: ' . $html);
+    }
+
+    return $matches[1];
+}
+
+/** @return array{lastCheck: ?string}|null */
+function feedUserFeedRow(string $feedId): ?array
+{
+    $db = feedDbConnect();
+    $prefix = feedDbPrefix();
+    $result = $db->query(sprintf(
+        "SELECT last_check FROM %suser_feed WHERE id = '%s'",
+        $prefix,
+        $db->real_escape_string($feedId)
+    ));
+    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
+    $db->close();
+
+    if (! is_array($row)) {
+        return null;
+    }
+
+    $lastCheck = $row['last_check'];
+
+    return ['lastCheck' => is_string($lastCheck) ? $lastCheck : null];
+}
+
+/**
+ * Logs into a real curl cookie jar (ws.php pwg.session.login), mirroring
+ * BrowserTestHelpers::uploadPhotoViaApi()'s own cookie-jar-login shape --
+ * needed here for a real, non-guest *session* (rather than an
+ * un-authenticated plain curl GET, which is already indistinguishable
+ * from a guest) hitting feed.php directly, outside of pest-plugin-
+ * browser's own Playwright context (which has no cookie-jar access for
+ * reuse against a raw curl request).
+ * @return non-empty-string
+ */
+function feedAdminCookieJar(): string
+{
+    $cookieJar = tempnam(sys_get_temp_dir(), 'pwg_feed_cookies_');
+    if ($cookieJar === false) {
+        throw new RuntimeException('tempnam failed');
+    }
+
+    $ch = curl_init(H::baseUrl() . '/ws.php?format=json');
+    if ($ch === false) {
+        throw new RuntimeException('curl_init failed');
+    }
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, [
+        'method' => 'pwg.session.login',
+        'username' => H::ADMIN_USER,
+        'password' => H::ADMIN_PASS,
+    ]);
+    curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
+    curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, H::testHeaders());
+    curl_exec($ch);
+    unset($ch);
+
+    return $cookieJar;
+}
+
+/**
+ * @param non-empty-string $cookieJar
+ * @return array{status: int, headers: string, body: string}
+ */
+function feedRawGetWithCookies(string $cookieJar, string $query = ''): array
+{
+    $ch = curl_init(H::baseUrl() . '/feed.php' . $query);
+    if ($ch === false) {
+        throw new RuntimeException('curl_init failed');
+    }
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HEADER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, H::testHeaders());
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
+    curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
+    $response = curl_exec($ch);
+    if (! is_string($response)) {
+        throw new RuntimeException('curl_exec returned no response');
+    }
+    $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+    unset($ch);
+
+    [$headers, $body] = explode("\r\n\r\n", $response, 2) + ['', ''];
+
+    return ['status' => $status, 'headers' => strtolower($headers), 'body' => $body];
+}
+
 const FEED_FIXED_DATE = '2020-06-15 12:00:00';
 
 it('serves a well-formed RSS2 XML feed with the real Content-Type header and exactly 1 recent-post-date item', function (): void {
@@ -186,4 +283,97 @@ it('returns a 404 page-not-found for a well-formed but unknown personal feed id'
     $unknownFeedId = bin2hex(random_bytes(25)); // 50 hex chars -- matches /^[0-9a-z]{50}$/i but never inserted
     expect(H::httpStatus('feed.php?feed=' . $unknownFeedId))->toBe(404);
     expect(H::httpBody('feed.php?feed=' . $unknownFeedId))->toContain('Page not found');
+});
+
+/**
+ * Closes the "feed owner differs from the request's own current user"
+ * branch (lines ~67-71, plus private userService() itself, line ~41): an
+ * admin-owned personal feed token, fetched by a genuinely anonymous
+ * (guest-identity) visitor, forces this request's CurrentUser over to the
+ * feed's real owner (buildUser() + CurrentUser::set()) so the feed
+ * content reflects the admin's own view, not the guest's -- distinct from
+ * NotificationControllerTest.php's own "updates last_check" test, which
+ * always re-fetches with the SAME admin session that minted the id (so
+ * `$feed_row['userId'] !== CurrentUser::get()->id->value` is never true
+ * there).
+ */
+it('switches the current user to a personal feed\'s real owner when fetched anonymously', function (): void {
+    $page = H::loginAsAdmin($this);
+    $page = H::navigateOk($page, '/notification.php');
+    $feedId = feedExtractFeedId(H::rawWebpage($page)->content());
+
+    // Genuinely anonymous curl GET -- no cookie jar at all, unlike the
+    // admin session that minted $feedId above.
+    $result = feedRawGet('?feed=' . $feedId);
+
+    expect($result['status'])->toBe(200);
+    $xml = simplexml_load_string($result['body']);
+    if ($xml === false) {
+        throw new \RuntimeException('feed body is not well-formed XML: ' . $result['body']);
+    }
+    // rss_title's " (as <username>)" suffix reflects the feed OWNER
+    // (fixture_admin), not the anonymous requester's own guest identity.
+    expect((string) $xml->channel->title)->toContain(' (as ' . H::ADMIN_USER . ')');
+});
+
+/**
+ * Closes the "no feed token, but the request arrived with a real
+ * non-guest session" branch (lines ~75-78): the very first
+ * "well-formed RSS2 feed" test above already exercises the `$feed_id ===
+ * ''` path, but via a genuinely anonymous curl GET (no cookie jar) --
+ * already-guest, so `! isAGuest()` is false there and this identity-reset
+ * never actually runs. A real logged-in cookie jar (ws.php
+ * pwg.session.login) hitting bare feed.php (no `feed` param) is the only
+ * way to make `! isAGuest()` true going into this branch.
+ */
+it('resets an authenticated session back to guest identity for the generic (tokenless) feed', function (): void {
+    $cookieJar = feedAdminCookieJar();
+
+    try {
+        $result = feedRawGetWithCookies($cookieJar);
+
+        expect($result['status'])->toBe(200);
+        $xml = simplexml_load_string($result['body']);
+        if ($xml === false) {
+            throw new \RuntimeException('feed body is not well-formed XML: ' . $result['body']);
+        }
+        // Same guest-identity title suffix the anonymous test above
+        // asserts -- proving the admin session got reset for this
+        // request, not just that an anonymous request happens to already
+        // be guest.
+        expect((string) $xml->channel->title)->toContain(' (as guest)');
+    } finally {
+        @unlink($cookieJar);
+    }
+});
+
+/**
+ * Closes the periodic last_check "touch" branch (lines ~140-147): with
+ * `image_only` forcing `$news` to stay the empty array it's initialized
+ * to (never even calling notificationService->news()), the
+ * `count($news) === 0` condition is deterministic regardless of the
+ * live dev DB's own ambient comment/upload history -- unlike
+ * NotificationControllerTest.php's own "updates last_check" test, whose
+ * pass/fail is silent either way this branch or the real-news branch
+ * (lines ~108-136) is the one that actually sets last_check.
+ */
+it('touches last_check via the periodic-refresh path (not real news) when image_only forces an empty news list', function (): void {
+    $page = H::loginAsAdmin($this);
+    $page = H::navigateOk($page, '/notification.php');
+    $feedId = feedExtractFeedId(H::rawWebpage($page)->content());
+
+    $rowBefore = feedUserFeedRow($feedId);
+    if ($rowBefore === null) {
+        throw new \RuntimeException('expected a real user_feed row for feed id ' . $feedId);
+    }
+    expect($rowBefore['lastCheck'])->toBeNull();
+
+    $result = feedRawGet('?feed=' . $feedId . '&image_only');
+    expect($result['status'])->toBe(200);
+
+    $rowAfter = feedUserFeedRow($feedId);
+    if ($rowAfter === null) {
+        throw new \RuntimeException('expected a real user_feed row for feed id ' . $feedId);
+    }
+    expect($rowAfter['lastCheck'])->not->toBeNull();
 });

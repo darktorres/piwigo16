@@ -113,6 +113,55 @@ final class WsTopLevelTest extends ContractTestCase
         self::assertSame(0, $values['tsizes'] % 1024, 'tsizes must be a whole multiple of 1024 (KB parsed from du, times 1024)');
     }
 
+    /**
+     * getCacheSize()'s own per-type `msizes` loop: `$added_size =
+     * @$msizes[DerivativeUrlCodec::derivativeToUrl($size_type)]; $added_size
+     * = is_int($added_size) ? $added_size : 0;` -- the method's own
+     * docblock (see PwgCore::getCacheSize()) explains this undefined-key
+     * fallback is a *real* runtime guard: FilesystemHelper::
+     * getCacheSizeDerivatives() only returns a key for a derivative size
+     * that genuinely has cached files on disk, so a defined type with no
+     * cached files at all hits the `: 0` fallback for real. The Contract
+     * suite's own real _data/i/ cache (grown by every other Contract/
+     * Browser test that generates a derivative) always has *some* but
+     * never *every* defined type cached, so both the int (cache hit) and
+     * `0` (fallback) arms of the ternary run across the loop's 12
+     * iterations (11 defined types + 'custom') -- 'all' is asserted as
+     * their exact sum, which only holds if every iteration actually wrote
+     * a real, correctly-typed int into $infos['msizes'].
+     */
+    public function test_getCacheSize_msizes_breaks_down_by_derivative_type_with_a_correct_total(): void
+    {
+        $response = $this->wsAdmin('pwg.getCacheSize');
+
+        self::assertSame('ok', $response['stat']);
+        $result = $response['result'];
+        self::assertIsArray($result);
+        $infos = $result['infos'];
+        self::assertIsArray($infos);
+
+        $values = array_column($infos, 'value', 'name');
+        self::assertArrayHasKey('msizes', $values);
+        $msizes = $values['msizes'];
+        self::assertIsArray($msizes);
+
+        foreach (['square', 'thumb', '2small', 'xsmall', 'small', 'medium', 'large', 'xlarge', 'xxlarge', '3xlarge', '4xlarge', 'custom', 'all'] as $key) {
+            self::assertArrayHasKey($key, $msizes, "msizes must always report a '{$key}' entry");
+            self::assertIsInt($msizes[$key]);
+            self::assertGreaterThanOrEqual(0, $msizes[$key]);
+        }
+
+        $sumOfParts = 0;
+        foreach ($msizes as $key => $value) {
+            if ($key === 'all') {
+                continue;
+            }
+            self::assertIsInt($value);
+            $sumOfParts += $value;
+        }
+        self::assertSame($sumOfParts, $msizes['all'], "'all' must equal the sum of every other msizes entry");
+    }
+
     public function test_getMissingDerivatives_returns_url_list(): void
     {
         $response = $this->wsAdmin('pwg.getMissingDerivatives', ['max_urls' => 10]);
@@ -170,6 +219,168 @@ final class WsTopLevelTest extends ContractTestCase
         self::assertIsInt($result['next_page']);
         self::assertGreaterThan(0, $result['next_page']);
         self::assertNotEmpty($result['urls']);
+    }
+
+    /**
+     * getMissingDerivatives()'s `if ($image_count === 0) { return []; }`
+     * early-out -- unreachable through the real WS route while the shared
+     * Contract fixture (5 images, read by dozens of other test files) is
+     * loaded, and deleting/restoring it across a real HTTP round-trip
+     * would risk corrupting every other Contract file's own state (the
+     * images table cascades into image_category/image_tag/comments/rate/
+     * favorites/lounge/image_format/caddie -- see each table's own
+     * ON DELETE CASCADE). Instead, this calls PwgCore::getMissingDerivatives()
+     * directly (bypassing the WS/HTTP layer entirely) inside a transaction
+     * on the exact same Doctrine Connection its own container-resolved
+     * ImageService/ImageRepository will use
+     * (Bootstrap\InfrastructureAccessor::entityManager()'s own docblock:
+     * "the container's own single, per-request EntityManagerInterface
+     * instance -- the one every container-resolved repository shares"),
+     * then rolls the delete back in `finally` -- the identical
+     * "wrap the fixture's own images-table deletion in a transaction on
+     * the exact connection the code under test reads through, always
+     * rolling it back" technique tests/Integration/
+     * NoPhotoYetRendererTest.php already established for this exact
+     * "empty images table" scenario. `Kernel::boot()`/`Kernel::reset()`
+     * from a test file are architecturally allowed (tests/ is exempted
+     * from the "Kernel::container() only from Bootstrap/" arch test, and
+     * `Kernel::reset()` is explicitly test-only) -- same pattern already
+     * used by tests/Integration/CategoryAdminServiceTest.php to reach a
+     * container-resolved service without a full RequestBootstrap.
+     */
+    public function test_getMissingDerivatives_with_an_empty_gallery_returns_an_empty_array_early(): void
+    {
+        \Piwigo\Core\Kernel::boot();
+
+        try {
+            $conn = \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->getConnection();
+            $conn->beginTransaction();
+
+            try {
+                $conn->executeStatement('DELETE FROM ' . Tables::images());
+
+                $service = new \Piwigo\Ws\PwgServer();
+                $params = [
+                    'types' => [],
+                    'ids' => [],
+                    'max_urls' => 200,
+                    'prev_page' => null,
+                    'f_min_rate' => null,
+                    'f_max_rate' => null,
+                    'f_min_hit' => null,
+                    'f_max_hit' => null,
+                    'f_min_ratio' => null,
+                    'f_max_ratio' => null,
+                    'f_max_level' => null,
+                    'f_min_date_available' => null,
+                    'f_max_date_available' => null,
+                    'f_min_date_created' => null,
+                    'f_max_date_created' => null,
+                ];
+                $result = \Piwigo\Ws\PwgCore::getMissingDerivatives($params, $service);
+
+                self::assertSame([], $result);
+            } finally {
+                $conn->rollBack();
+            }
+        } finally {
+            \Piwigo\Core\Kernel::reset();
+        }
+    }
+
+    /**
+     * getMissingDerivatives()'s inner `if ($src_image->is_mimetype()) {
+     * continue; }` -- skips a row entirely (no type is even considered)
+     * when SrcImage falls back to a generic theme mimetype icon instead
+     * of a real derivable photo, which only happens for a non-picture
+     * extension (outside CurrentConfig::pictureExtensions(), default
+     * jpg/jpeg/png/gif/webp) with no representative_ext of its own. Same
+     * "insert a throwaway images row directly, never touched by any other
+     * test" technique as WsTopLevelTest's own anonymous-rate test / the
+     * WsHistoryTest dangling-image-id tests -- no real PDF file needs to
+     * exist on disk: SrcImage falls back to the theme's own bundled
+     * mimetypes/pdf.png icon (or unknown.png) purely from the extension.
+     */
+    public function test_getMissingDerivatives_skips_a_non_picture_file_rendered_as_a_mimetype_icon(): void
+    {
+        $this->conn->executeStatement(
+            'INSERT INTO ' . Tables::images() . ' (file, path) VALUES (?, ?)',
+            ['pwgcore-mimetype-' . uniqid() . '.pdf', 'upload/pwgcore-mimetype-throwaway.pdf']
+        );
+        $imageId = (int) $this->conn->lastInsertId();
+
+        try {
+            $response = $this->wsAdmin('pwg.getMissingDerivatives', ['ids' => [$imageId], 'max_urls' => 5000]);
+
+            self::assertSame('ok', $response['stat']);
+            $result = $response['result'];
+            self::assertIsArray($result);
+            self::assertSame([], $result['urls']);
+        } finally {
+            $this->conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+        }
+    }
+
+    /**
+     * getMissingDerivatives()'s inner `if ($type !== $derivative->get_type())
+     * { continue; }` -- DerivativeImage::build() resolves a requested type
+     * whose ideal size isn't bigger than the source image's own real size
+     * to `null` params (no upsampling), making get_type() return
+     * 'Original' instead of the requested type string. Every fixture
+     * image is 200x150 (real, deliberately small px), well under
+     * '4xlarge' (3000x2250) -- confirmed via DerivativeParams::is_identity().
+     */
+    public function test_getMissingDerivatives_skips_a_type_the_source_is_already_big_enough_for(): void
+    {
+        $response = $this->wsAdmin('pwg.getMissingDerivatives', [
+            'ids' => [1],
+            'types' => ['4xlarge'],
+            'max_urls' => 5000,
+        ]);
+
+        self::assertSame('ok', $response['stat']);
+        $result = $response['result'];
+        self::assertIsArray($result);
+        self::assertSame([], $result['urls']);
+    }
+
+    /**
+     * getMissingDerivatives()'s `if (count($urls) >= $max_urls and !
+     * $is_last) { break; }` -- stops scanning the *current* fetched batch
+     * of rows mid-`foreach` once max_urls is reached, distinct from the
+     * do/while loop's own top-of-loop exit (already exercised by
+     * test_getMissingDerivatives_paginates_when_max_urls_is_reached
+     * above). A dedicated throwaway image (6000x4500 -- bigger than every
+     * defined type up to '4xlarge', so DerivativeParams::is_identity()
+     * is false for all of them and every one of the 11 default types
+     * genuinely needs a derivative) makes a *single* processed row
+     * contribute far more URLs than max_urls=2 by itself, guaranteeing
+     * the break fires with real fixture images still left below it (this
+     * doesn't depend on any other test file's own on-disk derivative
+     * cache state, unlike the plain max_urls=1 pagination test above).
+     */
+    public function test_getMissingDerivatives_stops_mid_batch_once_max_urls_is_reached(): void
+    {
+        $this->conn->executeStatement(
+            'INSERT INTO ' . Tables::images() . ' (file, path, width, height) VALUES (?, ?, ?, ?)',
+            ['pwgcore-huge-' . uniqid() . '.jpg', 'upload/pwgcore-huge-throwaway.jpg', 6000, 4500]
+        );
+        $imageId = (int) $this->conn->lastInsertId();
+
+        try {
+            $response = $this->wsAdmin('pwg.getMissingDerivatives', ['max_urls' => 2]);
+
+            self::assertSame('ok', $response['stat']);
+            $result = $response['result'];
+            self::assertIsArray($result);
+            self::assertArrayHasKey('next_page', $result);
+            self::assertIsInt($result['next_page']);
+            $urls = $result['urls'];
+            self::assertIsArray($urls);
+            self::assertGreaterThanOrEqual(2, count($urls));
+        } finally {
+            $this->conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+        }
     }
 
     public function test_ratesDelete_removes_all_rates_for_a_user(): void

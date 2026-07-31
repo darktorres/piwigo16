@@ -142,6 +142,22 @@ final class UrlServiceParseSectionUrlTestRedirectService implements RedirectServ
  * (DbConnection::build()), so they need a real fixture DB. Fixture
  * category 1 ('Sample Album') is the root, category 2 ('Nested Sub
  * Album') its child; fixture tags 1/2/3 are 'nature'/'travel'/'family'.
+ *
+ * The 'categories' loop's own `$loop_counter++ > count($tokens) + 10`
+ * `fatalError('infinite loop?')` guard is NOT chased here: every one of
+ * the loop's 3 outcomes per iteration either advances $nextToken by at
+ * least 1 (a numeric-id match, or a resolved permalink) or calls
+ * fatalError()/pageNotFound() itself (both `: never` on the real
+ * HtmlRenderingInterface -- confirmed via this file's own
+ * UrlServiceParseSectionUrlTestHtmlRenderer, which throws instead of
+ * exiting but still never returns), or `break`s the loop outright on a
+ * recognised boundary token. There is no branch that leaves $nextToken
+ * unchanged and lets the loop continue, so with a finite $tokens array
+ * the loop can run at most count($tokens) times -- never enough to trip a
+ * count($tokens)+10 threshold. Forcing it open would need a
+ * HtmlRenderingInterface double that (unlike every real implementation)
+ * doesn't actually halt on pageNotFound(), which wouldn't reflect any
+ * reachable real behavior.
  */
 final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
 {
@@ -254,6 +270,55 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
         self::assertSame(2, $i);
     }
 
+    public function test_parse_section_url_resolves_a_multi_segment_permalink(): void
+    {
+        // A permalink value can itself contain a literal '/' (a
+        // "path-style" permalink, independent of the real category
+        // hierarchy) -- the sibling test above only ever builds a
+        // single-token $maybe_permalinks entry, never exercising the
+        // progressive-join accumulation (`$maybe_permalinks[] =
+        // $maybe_permalinks[count-1] . '/' . $tokens[$current_token]`)
+        // that a 2nd token needs.
+        $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET permalink = 'parent-word/child-word' WHERE id = 2");
+
+        $i = 0;
+        $page = $this->service()->parseSectionUrl(['category', 'parent-word', 'child-word'], $i, $this->redirect());
+
+        self::assertIsArray($page['category']);
+        self::assertSame(2, $page['category']['id']);
+        self::assertSame(['cat_permalink' => 'parent-word/child-word'], $page['hit_by']);
+        // Both tokens consumed -- the match was found at the longest
+        // (2-token) combination, not a shorter prefix.
+        self::assertSame(3, $i);
+    }
+
+    public function test_parse_section_url_resolves_a_second_combined_category_via_permalink(): void
+    {
+        $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET permalink = 'sub-album' WHERE id = 2");
+
+        $i = 0;
+        // Primary category resolved by plain numeric id (category 1); the
+        // 2nd token resolves via permalink instead of a numeric id --
+        // exercises the permalink branch's own "$category !== null" ->
+        // combined_category_ids[] arm (test_parse_section_url_resolves_combined_categories()
+        // above only exercises that arm via 2 numeric ids).
+        $page = $this->service()->parseSectionUrl(['category', '1', 'sub-album'], $i, $this->redirect());
+
+        self::assertIsArray($page['category']);
+        self::assertSame(1, $page['category']['id']);
+        self::assertIsArray($page['combined_categories']);
+        self::assertCount(1, $page['combined_categories']);
+        $combined0 = $page['combined_categories'][0];
+        self::assertIsArray($combined0);
+        self::assertSame(2, $combined0['id']);
+        // Only the primary category's own permalink hit is ever recorded
+        // into hit_by (see the "$category === null" branch just above
+        // this one in the source) -- a combined category resolved via
+        // permalink leaves hit_by empty.
+        self::assertArrayNotHasKey('hit_by', $page);
+        self::assertSame(3, $i);
+    }
+
     public function test_parse_section_url_page_not_founds_for_an_unresolvable_permalink(): void
     {
         $htmlRenderer = new UrlServiceParseSectionUrlTestHtmlRenderer();
@@ -272,6 +337,25 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
     {
         $i = 0;
         $page = $this->service()->parseSectionUrl(['tags', '1'], $i, $this->redirect());
+
+        self::assertSame('tags', $page['section']);
+        self::assertIsArray($page['tags']);
+        self::assertCount(1, $page['tags']);
+        $tag0 = $page['tags'][0];
+        self::assertIsArray($tag0);
+        self::assertSame(1, $tag0['id']);
+        self::assertSame(2, $i);
+    }
+
+    public function test_parse_section_url_resolves_tags_by_url_name(): void
+    {
+        // A non-numeric token (or CurrentConfig::tagUrlStyle() === 'tag',
+        // forcing even a numeric-looking token down this path) is
+        // collected into $requested_tag_url_names instead of
+        // $requested_tag_ids -- the sibling test above only ever exercises
+        // the numeric-id arm.
+        $i = 0;
+        $page = $this->service()->parseSectionUrl(['tags', 'nature'], $i, $this->redirect());
 
         self::assertSame('tags', $page['section']);
         self::assertIsArray($page['tags']);

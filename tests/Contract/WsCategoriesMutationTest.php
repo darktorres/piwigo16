@@ -442,6 +442,28 @@ final class WsCategoriesMutationTest extends ContractTestCase
         self::assertSame(0, (int) $after);
     }
 
+    /**
+     * setInfo()'s `$info_columns = ['name', 'comment']` shared loop is only
+     * ever exercised via the 'name' element elsewhere in this file
+     * (test_setInfo_updates_name) -- 'comment' has its own isset()/
+     * strip_tags()-vs-allowHtmlDescriptions() branch through the exact same
+     * loop iteration and was never independently verified.
+     */
+    public function test_setInfo_updates_comment(): void
+    {
+        $categoryId = $this->createCategory('ct_album_' . uniqid());
+
+        $response = $this->callWs('pwg.categories.setInfo', [
+            'category_id' => $categoryId,
+            'comment' => 'a fresh comment ' . uniqid(),
+        ]);
+
+        self::assertSame('ok', $response['stat']);
+        $stored = $this->conn->fetchOne('SELECT comment FROM ' . Tables::categories() . ' WHERE id = ?', [$categoryId]);
+        self::assertIsString($stored);
+        self::assertStringContainsString('a fresh comment', $stored);
+    }
+
     public function test_setInfo_sets_commentable_and_applies_to_subalbums(): void
     {
         $parentId = $this->createCategory('ct_commentable_parent_' . uniqid());
@@ -520,6 +542,36 @@ final class WsCategoriesMutationTest extends ContractTestCase
         self::assertSame('category_id not found', $response['message']);
     }
 
+    /**
+     * allow_random_representative defaults to false (not present in the
+     * fixture config table, so CurrentConfig falls back to its own
+     * default) -- deleteRepresentative() refuses to clear the
+     * representative of a category that still has direct images, since it
+     * would have no random substitute to fall back to for the thumbnail.
+     * test_deleteRepresentative_returns_ok above only covers the opposite
+     * (no images) path.
+     */
+    public function test_deleteRepresentative_with_images_and_random_representative_disallowed_returns_401(): void
+    {
+        $categoryId = $this->createCategory('ct_album_' . uniqid());
+        $imageId = $this->insertThrowawayImage();
+        $token = $this->getPwgToken();
+        $assoc = $this->callWs('pwg.images.setCategory', [
+            'image_id' => [$imageId],
+            'category_id' => $categoryId,
+            'pwg_token' => $token,
+        ]);
+        self::assertSame('ok', $assoc['stat']);
+
+        $response = $this->callWsAllowingServerError('pwg.categories.deleteRepresentative', [
+            'category_id' => $categoryId,
+        ]);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(401, $response['err']);
+        self::assertSame('not permitted', $response['message']);
+    }
+
     // ---------------------------------------------------- refreshRepresentative
 
     public function test_refreshRepresentative_unknown_category_returns_404(): void
@@ -541,6 +593,25 @@ final class WsCategoriesMutationTest extends ContractTestCase
         self::assertSame(401, $response['err']);
         self::assertSame('not permitted', $response['message']);
     }
+
+    // refreshRepresentative()'s own `$representative_picture_id === null`
+    // guard (-> `PwgError(500, 'unable to determine a new representative
+    // picture for this category')`) is NOT chased: `setRandomRepresentant()`
+    // (CategoryService::setRandomRepresentant() ->
+    // CategoryRepository::findRandomImageIdInCategory()) queries
+    // `image_category` with the exact same `category_id = X` condition
+    // `hasImages()` already checked immediately above it (also a bare query
+    // against `image_category`, no other filter) -- if `hasImages()` is
+    // true there is necessarily at least one row for
+    // `findRandomImageIdInCategory()`'s `ORDER BY RAND() LIMIT 1` to pick
+    // (`image_id` is a NOT NULL column), so the representative can't still
+    // be null afterwards within one synchronous request. The legacy
+    // include/ws_functions/pwg.categories.php equivalent
+    // (ws_categories_refreshRepresentative()) had no such guard at all --
+    // it read `representative_picture_id` straight off the re-fetched row
+    // with no null check -- confirming this is a rewrite-added guard for
+    // getCategoryRepresentantProperties()'s stricter `int` parameter type,
+    // not a reachable real-world branch.
 
     public function test_refreshRepresentative_returns_new_representative_properties(): void
     {
@@ -566,6 +637,19 @@ final class WsCategoriesMutationTest extends ContractTestCase
         self::assertIsNumeric($representativeId);
         self::assertSame($imageId, (int) $representativeId, 'the only associated image must become the new representative');
     }
+
+    // delete()'s and move()'s own `preg_split() === false` guards (both the
+    // same `/[\s,;\|]/` pattern used by several Ws\PwgImages methods, for
+    // the scalar-string `category_id` branch) are unreachable from a
+    // black-box Contract test: preg_split() only returns false on a genuine
+    // PCRE engine error, this pattern has no quantifiers/groups to ever
+    // backtrack, and this test process (a separate curl client) has no way
+    // to lower the *server* process's pcre.backtrack_limit/
+    // pcre.recursion_limit to force one artificially either -- see
+    // WsImagesTest's exist() section (and WsImagesMutationTest's delete()
+    // section) for the full writeup, and MetadataServiceTest for the
+    // Integration-level technique that only works because that test runs
+    // in-process against the real PHP settings instead of over HTTP.
 
     // ---------------------------------------------------------------- delete
 
@@ -715,6 +799,32 @@ final class WsCategoriesMutationTest extends ContractTestCase
         self::assertStringContainsString('is not a virtual category, you cannot move it', $message);
     }
 
+    /**
+     * CategoryService::moveCategories()'s own uppercats-prefix guard (`you
+     * cannot move a category into a sub-category or itself`) records its
+     * failure onto PageState::current() via addError() rather than
+     * returning it directly -- move()'s own `$pageState->hasErrors()` check
+     * afterwards is what turns that into the WS-level PwgError this test
+     * verifies. Genuinely reachable via a real WS call: attempting to move
+     * a parent album into its own child.
+     */
+    public function test_move_into_its_own_subcategory_returns_error(): void
+    {
+        $parentId = $this->createCategory('ct_move_into_own_child_' . uniqid());
+        $childId = $this->createCategory('ct_move_into_own_child_sub_' . uniqid(), $parentId);
+        $token = $this->getPwgToken();
+
+        $response = $this->callWs('pwg.categories.move', [
+            'category_id' => $parentId,
+            'parent' => $childId,
+            'pwg_token' => $token,
+        ]);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(403, $response['err']);
+        self::assertSame('You cannot move an album in its own sub album', $response['message']);
+    }
+
     // -------------------------------------------------------- calculateOrphans
 
     public function test_calculateOrphans_counts_images_that_would_become_orphan(): void
@@ -758,6 +868,89 @@ final class WsCategoriesMutationTest extends ContractTestCase
             'action' => 'dissociate',
             'pwg_token' => $token,
         ]);
+    }
+
+    /**
+     * calculateOrphans()'s "else" branch (`$category['nb_images_recursive']
+     * >= 1000`) recomputes the same orphan/associated-outside split in PHP
+     * (array_flip()+isset()+array_diff()) instead of delegating to MySQL
+     * (CategoryRepository::findNonOrphanImageIds()/
+     * findImageIdsOutsideCategories(), the branch
+     * test_calculateOrphans_counts_images_that_would_become_orphan() above
+     * exercises) -- a genuinely different code path, only reachable with a
+     * real fixture at or above that threshold. Builds 1000 real `images`
+     * rows via a single `WITH RECURSIVE` bulk INSERT (not 1000 individual
+     * round trips -- image_category.image_id has a real FK to images.id,
+     * ON DELETE CASCADE, see the fk_image_category_image_id constraint in
+     * install/piwigo_structure-mysql.sql, so bare image_category rows
+     * aren't an option), 4 of which are additionally associated with
+     * fixture category 1 so they count as "associated outside" rather than
+     * "becoming orphan".
+     */
+    public function test_calculateOrphans_at_1000_images_uses_the_php_based_computation(): void
+    {
+        $categoryId = $this->createCategory('ct_orphans_bulk_' . uniqid());
+        $prefix = 'ct_orphans_bulk_' . uniqid() . '_';
+
+        try {
+            $this->conn->executeStatement(
+                'INSERT INTO ' . Tables::images() . ' (file, path, md5sum, date_available)
+                 SELECT CONCAT(?, n), CONCAT(?, n), MD5(CONCAT(?, n)), ?
+                 FROM (
+                     WITH RECURSIVE seq AS (
+                         SELECT 1 AS n
+                         UNION ALL
+                         SELECT n + 1 FROM seq WHERE n < 1000
+                     )
+                     SELECT n FROM seq
+                 ) bulk_seq',
+                [$prefix, $prefix, $prefix, '2026-08-01 00:00:00']
+            );
+
+            $imageIds = $this->conn->fetchFirstColumn(
+                'SELECT id FROM ' . Tables::images() . ' WHERE file LIKE ? ORDER BY id',
+                [$prefix . '%']
+            );
+            self::assertCount(1000, $imageIds, 'bulk insert must have produced exactly 1000 real image rows');
+
+            $this->conn->executeStatement(
+                'INSERT INTO ' . Tables::imageCategory() . ' (image_id, category_id)
+                 SELECT id, ? FROM ' . Tables::images() . ' WHERE file LIKE ?',
+                [$categoryId, $prefix . '%']
+            );
+
+            // Only the first 4 images also get a link to fixture category 1
+            // -- these are the ones expected in nb_images_associated_outside,
+            // the remaining 996 are only ever linked to $categoryId and are
+            // expected in nb_images_becoming_orphan.
+            $sharedImageIds = array_slice($imageIds, 0, 4);
+            foreach ($sharedImageIds as $imageId) {
+                self::assertIsNumeric($imageId);
+                $this->conn->executeStatement(
+                    'INSERT INTO ' . Tables::imageCategory() . ' (image_id, category_id) VALUES (?, ?)',
+                    [(int) $imageId, 1]
+                );
+            }
+
+            $response = $this->callWs('pwg.categories.calculateOrphans', [
+                'category_id' => [$categoryId],
+            ]);
+
+            self::assertSame('ok', $response['stat']);
+            $result = $response['result'];
+            self::assertIsArray($result);
+            $first = $result[0] ?? null;
+            self::assertIsArray($first);
+            self::assertSame(1000, $first['nb_images_recursive']);
+            self::assertSame(4, $first['nb_images_associated_outside']);
+            self::assertSame(996, $first['nb_images_becoming_orphan']);
+        } finally {
+            // images.id -> image_category.image_id is ON DELETE CASCADE, so
+            // this single statement also removes both image_category rows
+            // per shared image (the $categoryId link and the fixture
+            // category 1 link) as well as the 996 orphan-only links.
+            $this->conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE file LIKE ?', [$prefix . '%']);
+        }
     }
 
     /**

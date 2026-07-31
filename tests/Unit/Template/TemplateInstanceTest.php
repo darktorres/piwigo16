@@ -365,6 +365,16 @@ test('set_filename delegates to set_filenames for a single handle', function ():
     expect($t->files['tail'])->toBe('footer.tpl');
 });
 
+test('set_filenames unsets an already-registered handle when its mapped filename is explicitly null', function (): void {
+    $t = new Template();
+    $t->set_filename('tail', 'footer.tpl');
+
+    $result = $t->set_filenames(['tail' => null]);
+
+    expect($result)->toBeTrue()
+        ->and($t->files)->not->toHaveKey('tail');
+});
+
 test('set_extents returns false for a non-array argument', function (): void {
     $t = new Template();
 
@@ -523,6 +533,42 @@ test('clear_assign removes a previously assigned template variable', function ()
     $t->clear_assign('foo');
 
     expect($t->get_template_vars('foo'))->toBeNull();
+});
+
+// --- p() ---------------------------------------------------------------
+
+test('p flushes the output buffer, then appends a working Smarty debug console when template debugging is on', function (): void {
+    // Real bug, found live while adding this test: Smarty\Debug::display_debug()
+    // (vendor/smarty/smarty/src/Debug.php) unconditionally calls
+    // $obj->getSource() -- passing the bare $this->smarty engine (as this
+    // method used to) always threw `Error: Call to undefined method
+    // Smarty\Smarty::getSource()`, since only Smarty\Template implements
+    // that method. See p()'s own updated call site for the minimal fix
+    // (a throwaway 'string:' resource template instead of the bare engine).
+    CurrentConfig::setDebugTemplate(true);
+    $t = new Template();
+    $t->output = 'body-output';
+
+    ob_start();
+    $t->p();
+    $output = ob_get_clean();
+
+    expect($output)->toStartWith('body-output')
+        ->and($output)->toContain('Smarty Debug Console')
+        ->and($t->get_template_vars('AAAA_DEBUG_TOTAL_TIME__'))->toBeString();
+});
+
+test('p does not attempt to build a debug console when template debugging is off', function (): void {
+    CurrentConfig::setDebugTemplate(false);
+    $t = new Template();
+    $t->output = 'body-output';
+
+    ob_start();
+    $t->p();
+    $output = ob_get_clean();
+
+    expect($output)->toBe('body-output')
+        ->and($t->get_template_vars('AAAA_DEBUG_TOTAL_TIME__'))->toBeNull();
 });
 
 // --- parse -----------------------------------------------------------------
@@ -725,6 +771,23 @@ test('load_external_filters derives the callback_key from the debug type when th
     $t->load_external_filters('tail');
 
     $expected = $before . '.' . base_convert(hash('crc32b', 'preClosure'), 16, 36);
+    expect($t->smarty->compile_id)->toBe($expected);
+    $t->unload_external_filters('tail');
+});
+
+test('load_external_filters derives the callback_key from an [object, method] array callback, joining each element\'s own string (or debug-type fallback)', function (): void {
+    $t = new Template();
+    // A real, valid callable ([$t, 'get_extent']) -- Smarty's own
+    // registerFilter() calls is_callable() and throws otherwise. The
+    // object element (not a string) exercises array_map()'s
+    // get_debug_type() fallback; the 'get_extent' element exercises its
+    // is_string() branch -- both sides of the same ternary in one call.
+    $t->set_prefilter('tail', [$t, 'get_extent']);
+    $before = $t->smarty->compile_id;
+
+    $t->load_external_filters('tail');
+
+    $expected = $before . '.' . base_convert(hash('crc32b', 'pre' . Template::class . 'get_extent'), 16, 36);
     expect($t->smarty->compile_id)->toBe($expected);
     $t->unload_external_filters('tail');
 });
@@ -1049,6 +1112,28 @@ test('func_get_combined_scripts omits the version query string entirely for a co
     expect($result)->toContain('<script type="text/javascript" src="')
         ->and($result)->not->toContain('?v');
 });
+
+test('make_script_src (via func_get_combined_scripts) uses a remote script\'s own path verbatim, with no root URL prefix or version suffix', function (): void {
+    $t = new Template();
+    $t->func_combine_script(['id' => 'remote-script', 'path' => 'https://cdn.example.com/foo.js', 'load' => 'footer']);
+
+    $result = $t->func_get_combined_scripts(['load' => 'footer']);
+
+    expect($result)->toBe('<script type="text/javascript" src="https://cdn.example.com/foo.js"></script>');
+});
+
+test('make_script_src (via func_get_combined_scripts) throws when a combined_script event listener returns a non-string value', function (): void {
+    $t = new Template();
+    file_put_contents(CurrentPaths::get()->root . '/sync.js', 'console.log(1);');
+    $t->func_combine_script(['id' => 'sync-script', 'path' => 'sync.js', 'load' => 'footer']);
+    EventDispatcher::get()->addEventHandler('combined_script', static fn (): int => 42);
+
+    try {
+        $t->func_get_combined_scripts(['load' => 'footer']);
+    } finally {
+        EventDispatcher::reset();
+    }
+})->throws(Exception::class, "make_script_src(): a 'combined_script' event listener returned a non-string value");
 
 // --- block_footer_script ----------------------------------------------------
 

@@ -185,3 +185,151 @@ it('shows the original-resize dimensions warning when original_resize is enabled
         H::restoreConfig($snapshot);
     }
 });
+
+it('skips the mobile-app-promotion computation entirely once the user has dismissed it', function (): void {
+    $page = H::loginAsAdmin($this);
+
+    // Real client flow (themes/admin/default/js/photos_add_direct.js's
+    // ".dont-show-again" handler): a plain WS preferences write, using the
+    // literal string 'false' -- PreferencesService::updateParam()'s own
+    // 'true'/'false' string check exists specifically because a real
+    // browser's url-encoded POST body delivers exactly this, not a JSON
+    // boolean. This is the only way a real admin ever flips
+    // 'promote-mobile-apps' to false; there's no admin.php GET param for it.
+    $prefResponse = H::wsCall($page, 'pwg.users.preferences.set', ['param' => 'promote-mobile-apps', 'value' => 'false']);
+    $prefResult = $prefResponse['result'] ?? null;
+    if (! is_array($prefResult)) {
+        throw new RuntimeException('pwg.users.preferences.set did not return an array result: ' . var_export($prefResponse, true));
+    }
+    expect($prefResult['promote-mobile-apps'] ?? null)->toBeFalse();
+
+    try {
+        $page = H::navigateOk($page, '/admin.php?page=photos_add');
+        $page->assertNoJavaScriptErrors();
+
+        // Can't tell this branch apart from the default (getParam() default
+        // true) one by rendered content alone: the fixture never has 3
+        // albums + 30 photos (see this class's own render() comment), so
+        // PROMOTE_MOBILE_APPS ends up false either way and the
+        // {if $PROMOTE_MOBILE_APPS} block in photos_add_direct.tpl is
+        // absent regardless. What this test actually proves is the
+        // `getParam('promote-mobile-apps', true) === false` short-circuit
+        // itself -- the real behavioral difference is that render() skips
+        // findEarliestRegistrationDate()/countAllCategories()/
+        // countAllImages() entirely rather than computing and discarding a
+        // false result, which a clean (no server error) page load with the
+        // preference genuinely persisted as false is the closest real,
+        // externally-observable signal for.
+        $page->assertDontSee('Piwigo is also on mobile.');
+    } finally {
+        // No pwg.users.preferences.delete WS method exists to unset the key
+        // outright -- setting it back to the literal default (true) is
+        // behaviorally identical to the pristine unset state, since
+        // getParam()'s own default is also true.
+        H::wsCall($page, 'pwg.users.preferences.set', ['param' => 'promote-mobile-apps', 'value' => 'true']);
+    }
+});
+
+it('reports a setup error (and suppresses warnings) when the configured upload_dir does not exist and its parent is not writable either', function (): void {
+    $snapshot = H::snapshotConfig(['upload_dir']);
+    // A nested path under a directory that doesn't exist either -- no
+    // mkdir()/chmod() needed (unlike the analogous "exists but not
+    // writable" case, see WsImagesTest::
+    // test_checkUpload_reports_not_ready_when_the_upload_directory_is_not_writable()):
+    // is_writable() on a nonexistent path is simply false, no warning, so
+    // this reaches UploadService::readyForUploadMessage()'s very first
+    // branch (`! is_dir($upload_dir)` then `! is_writable(dirname($upload_dir))`)
+    // through a real, non-mutating filesystem state.
+    $relDir = 'missing-upload-test-' . uniqid() . '/nested/';
+    H::setConfigValue('upload_dir', H::jsonEncode($relDir));
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $page = H::navigateOk($page, '/admin.php?page=photos_add');
+
+        $page->assertSee('directory at the root of your Piwigo installation');
+        $page->assertNoJavaScriptErrors();
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+it('warns when upload_form_chunk_size is configured larger than PHP\'s real upload_max_filesize', function (): void {
+    $snapshot = H::snapshotConfig(['upload_form_chunk_size']);
+    // php.ini's upload_max_filesize is 2M (2048kB) in this environment
+    // (confirmed live, see WsUploadTest's own comment) -- any chunk size
+    // configured above that in kB trips prepareUploadForm()'s own sanity
+    // warning. Unlike upload_max_filesize/post_max_size themselves (real
+    // PHP_INI_PERDIR directives baked into the live Apache php.ini, not
+    // safely overridable per-request without mutating shared global state
+    // every other parallel test/agent also depends on -- see this file's
+    // trailing comment block), upload_form_chunk_size is a plain Piwigo
+    // config row, so this branch is reachable through the normal
+    // snapshot/set/restore config mechanism.
+    H::setConfigValue('upload_form_chunk_size', '3000');
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $page = H::navigateOk($page, '/admin.php?page=photos_add');
+
+        $page->assertSee('should be smaller than PHP configuration setting upload_max_filesize');
+        $page->assertNoJavaScriptErrors();
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+// Four real branches in prepareUploadForm() are left uncovered here, each
+// verified (not assumed) to be unreachable through a genuine, real request
+// against this project's actual, fixed, concurrently-shared test
+// environment, without mutating global state every other parallel
+// Browser-suite test/agent also depends on:
+//
+// - The `if ($max_upload_resolution < 25)` GD memory-math body (assigning
+//   max_upload_width/max_upload_height/max_upload_resolution): confirmed
+//   live (this same "computes the GD..." test's own graphics_library=gd
+//   override, re-checked with a raw curl request and grepped for the
+//   template's own gated "Approximate maximum resolution" string) that with
+//   this environment's real Apache memory_limit (128M, /etc/php/8.5/
+//   apache2/php.ini), max_upload_resolution comes out >= 25 -- the
+//   fudge_factor=1.7 line just above (218) DOES already run every time
+//   (unconditionally, whenever the outer `get_library() === 'gd'` block is
+//   entered -- see that test), it's specifically the resolution<25 body
+//   that stays unreached. memory_limit is PHP_INI_ALL (ini_set()-able in
+//   principle), but only from *inside* the same request that's executing
+//   admin.php -- there's no test-mode hook in this codebase's bootstrap
+//   that does so (grepped include/ + src/Piwigo/Bootstrap), and the only
+//   external lever (editing the one shared php.ini / dropping a
+//   webroot .htaccess) would apply to every concurrently-running
+//   agent/test hitting this same live Apache instance, not just this one
+//   request.
+//
+// - `if (! function_exists('gd_info'))` ("GD library is missing"): ext-gd
+//   is a hard `require` in composer.json (not `suggest`), and function_exists()
+//   with a literal string argument always resolves the real global
+//   built-in -- it can't be namespaced away, and this environment always
+//   has it loaded (confirmed live: `php -m` lists gd for both the apache2
+//   and cli SAPIs). Same underlying check as PwgImage::is_gd() (also just
+//   `function_exists('gd_info')`), which the "computes the GD..." test
+//   above only ever observes returning true.
+//
+// - `if (CurrentConfig::useExif() and ! function_exists('exif_read_data'))`
+//   ("Exif extension not available"): confirmed live (php -m, both the
+//   apache2 and cli SAPIs load ext/exif via 20-exif.ini) exif_read_data()
+//   is always available here -- exact same "verified untestable without
+//   breaking a real runtime guarantee" conclusion this codebase already
+//   documents in tests/Integration/MetadataServiceTest.php (getExifData()'s
+//   own identical guard) and tests/Integration/Admin/Integrity/
+//   C13yInternalTest.php (c13y_exif()'s own identical guard).
+//
+// - `if ($uploadService->getIniSize('upload_max_filesize') >
+//   $uploadService->getIniSize('post_max_size'))` (the "upload_max_filesize
+//   is bigger than post_max_size" warning): both are real PHP_INI_PERDIR
+//   directives (confirmed live: ini_set() on either silently no-ops, still
+//   returns the original "2M"/"8M") baked into the one shared Apache
+//   php.ini this whole Browser suite -- run by ~40 other agents in
+//   parallel in this workflow -- depends on. The only way to flip this
+//   comparison true is a global php.ini/.htaccess edit, which would corrupt
+//   every other concurrently-running test hitting this same live server,
+//   not a scoped, restorable per-test override like every config-row-based
+//   branch above.

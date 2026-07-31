@@ -46,6 +46,53 @@ it('shows the time-since-last-calculation when a real cache_sizes config value i
     }
 });
 
+it('runs the real phpinfo maintenance action over a live HTTP request and returns the curated server-info page', function (): void {
+    // Piwigo\Admin\Maintenance\MaintenanceActionDispatcher's own 'phpinfo'
+    // case does a genuine `echo new ServerInfoService()->renderHtml();
+    // exit();` -- an uncatchable process termination (unlike
+    // RedirectServiceInterface::redirect()/HtmlRenderingInterface::
+    // fatalError(), both `never`-typed but implemented via the catchable
+    // Piwigo\Http\ResponseReadyException). tests/Integration/
+    // MaintenanceActionDispatcherTest.php's own docblock documents exactly
+    // why calling dispatch('phpinfo') directly there would kill the whole
+    // shared PHPUnit/Pest CLI process mid-suite. Over a real HTTP request
+    // the exit() runs inside the live Apache/php-fpm worker process
+    // instead -- a completely separate process from this test runner,
+    // where it just ends that one request normally. This is also the ONLY
+    // way these 3 lines are ever measured for coverage credit at all:
+    // composer test:coverage:web's PIWIGO_COVERAGE=1 header makes
+    // Piwigo\Core\CoverageCollector dump real per-request pcov coverage
+    // from this server-side process (see that class's own docblock), later
+    // merged in by tools/coverage-merge.php.
+    $page = H::loginAsAdmin($this);
+    $token = H::pwgToken($page);
+
+    $response = H::rawGet($page, '/admin.php?page=maintenance&tab=env&action=phpinfo&pwg_token=' . $token);
+
+    expect($response['status'])->toBe(200);
+    // Curated content from ServerInfoService::renderHtml() (SEC-22) --
+    // already Unit-tested directly in ServerInfoServiceTest.php; these
+    // assertions are only about the dispatcher's own call site actually
+    // reaching and echoing it, not re-verifying that class's own logic.
+    expect($response['body'])->toContain('<h1>Server information</h1>');
+    expect($response['body'])->toContain(PHP_VERSION);
+    expect($response['body'])->toContain('Loaded extensions');
+});
+
+it('rejects a maintenance action request with a missing/invalid CSRF token', function (): void {
+    // Request\MaintenanceDispatchRequest::requiresCsrfCheck is true purely
+    // from `isset($_GET['action'])` -- the CSRF gate (~lines 76-78) runs
+    // (and fails, no pwg_token at all here) BEFORE MaintenanceActionDispatcher
+    // ever sees the 'phpinfo' action, distinct from the real-phpinfo test
+    // above's own valid-token, successful-dispatch path through the exact
+    // same 2 lines.
+    $page = H::loginAsAdmin($this);
+
+    $response = H::rawGet($page, '/admin.php?page=maintenance&tab=env&action=phpinfo');
+
+    expect($response['status'])->toBe(400);
+});
+
 it('renders successfully with the gallery locked (U_MAINT_UNLOCK_GALLERY branch)', function (): void {
     $snapshot = H::snapshotConfig(['gallery_locked']);
     H::setConfigValue('gallery_locked', 'true');

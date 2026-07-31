@@ -1,0 +1,201 @@
+<?php
+
+declare(strict_types=1);
+
+use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
+
+/**
+ * Piwigo\Controller\Admin\PermalinksSubController (admin.php?page=
+ * permalinks) -- category-permalink CRUD (set/clear/permanently-delete via
+ * Piwigo\Permalink\PermalinkService) plus the GET-driven sort-link builder
+ * shared by its "active permalinks" and "permalink history" tables.
+ *
+ * Every mutating test uses the real fixture's category id 2 ("Nested Sub
+ * Album", uppercats "1,2") with a uniquely-suffixed permalink value
+ * (uniqid()) -- `categories.permalink` carries a UNIQUE KEY and
+ * `old_permalinks.permalink` is that table's own PRIMARY KEY, so a fixed
+ * literal could collide with a concurrently-running test/suite -- and
+ * restores both tables to their pre-test state via try/finally regardless
+ * of where an assertion fails, since `categories`/`old_permalinks` are
+ * shared, global state across the whole Browser suite run (same rationale
+ * as BrowserTestHelpers::snapshotConfig()'s own docblock).
+ */
+function permalinksDbPrefix(): string
+{
+    $prefix = getenv('PIWIGO_DB_PREFIX');
+
+    return $prefix !== false ? $prefix : 'piwigo_';
+}
+
+function permalinksDb(): mysqli
+{
+    return new mysqli(
+        (string) getenv('PIWIGO_DB_HOST'),
+        (string) getenv('PIWIGO_DB_USER'),
+        (string) getenv('PIWIGO_DB_PASSWORD'),
+        (string) getenv('PIWIGO_DB_BASE')
+    );
+}
+
+/**
+ * Reads a single category's current `permalink` column, or null if unset
+ * (or the row doesn't exist). `is_array($row) && is_string($row['permalink']
+ * ?? null)` mirrors BrowserTestHelpers::configValue()'s own narrowing --
+ * mysqli::query() is typed `mysqli_result|bool` and fetch_assoc() is typed
+ * `array|null|false`, so both a query error and a genuinely empty result
+ * need guarding before any offset access.
+ */
+function permalinksCategoryPermalink(mysqli $db, string $prefix, int $catId): ?string
+{
+    $result = $db->query(sprintf('SELECT permalink FROM %scategories WHERE id = %d', $prefix, $catId));
+    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
+
+    return is_array($row) && is_string($row['permalink'] ?? null) ? $row['permalink'] : null;
+}
+
+/**
+ * Reads the `cat_id` of a single `old_permalinks` row by its `permalink`
+ * (that table's own PRIMARY KEY), or null if no such row exists -- same
+ * narrowing rationale as permalinksCategoryPermalink() above.
+ */
+function permalinksOldPermalinkCatId(mysqli $db, string $prefix, string $permalink): ?int
+{
+    $result = $db->query(sprintf(
+        "SELECT cat_id FROM %sold_permalinks WHERE permalink = '%s'",
+        $prefix,
+        $db->real_escape_string($permalink)
+    ));
+    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
+
+    return is_array($row) && is_numeric($row['cat_id'] ?? null) ? (int) $row['cat_id'] : null;
+}
+
+it('rejects a set_permalink submission without a valid CSRF token', function (): void {
+    $page = H::loginAsAdmin($this);
+
+    $result = H::adminPost($page, '/admin.php?page=permalinks', [
+        'cat_id' => '2',
+        'set_permalink' => '1',
+        'permalink' => 'should-not-be-set',
+    ]);
+
+    expect($result['status'])->toBe(400);
+    expect($result['body'])->toContain('missing token');
+
+    $db = permalinksDb();
+    $prefix = permalinksDbPrefix();
+    $permalinkValue = permalinksCategoryPermalink($db, $prefix, 2);
+    $db->close();
+    expect($permalinkValue)->toBeNull();
+});
+
+it('rejects a delete_permanent request without a valid CSRF token', function (): void {
+    $page = H::loginAsAdmin($this);
+
+    $result = H::rawGet($page, '/admin.php?page=permalinks&delete_permanent=does-not-matter');
+
+    expect($result['status'])->toBe(400);
+    expect($result['body'])->toContain('missing token');
+});
+
+it('sets a category permalink, lists it among active permalinks, clears it into history, then permanently deletes the history entry', function (): void {
+    $page = H::loginAsAdmin($this);
+    $token = H::pwgToken($page);
+    $catId = 2;
+    $permalink = 'permalinks-subctrl-' . uniqid();
+    $db = permalinksDb();
+    $prefix = permalinksDbPrefix();
+
+    try {
+        // set_permalink + a non-empty permalink value -> the
+        // PermalinkService::setCatPermalink() branch.
+        $setResult = H::adminPost($page, '/admin.php?page=permalinks', [
+            'pwg_token' => $token,
+            'cat_id' => (string) $catId,
+            'set_permalink' => '1',
+            'permalink' => $permalink,
+        ]);
+        expect($setResult['status'])->toBe(200);
+        // The very same response re-lists active permalinks *after* the
+        // mutation -- this string only appears once the just-set permalink
+        // round-trips through the "active permalinks" foreach (the
+        // uppercats-narrowing + getCatDisplayNameCache() lines).
+        expect($setResult['body'])->toContain($permalink);
+
+        expect(permalinksCategoryPermalink($db, $prefix, $catId))->toBe($permalink);
+
+        // set_permalink + an empty permalink value + save=1 -> the
+        // PermalinkService::deleteCatPermalink() branch. Since a real
+        // permalink now exists for this category and save=1, it also
+        // records the old value into old_permalinks (needed by the next
+        // step below).
+        $clearResult = H::adminPost($page, '/admin.php?page=permalinks', [
+            'pwg_token' => $token,
+            'cat_id' => (string) $catId,
+            'set_permalink' => '1',
+            'permalink' => '',
+            'save' => '1',
+        ]);
+        expect($clearResult['status'])->toBe(200);
+
+        expect(permalinksCategoryPermalink($db, $prefix, $catId))->toBeNull();
+
+        expect(permalinksOldPermalinkCatId($db, $prefix, $permalink))->toBe($catId);
+
+        // delete_permanent (GET, CSRF-gated) -> PermalinkService::
+        // deleteOldPermalinkByValue(), permanently removing the history row.
+        $deleteResult = H::rawGet(
+            $page,
+            '/admin.php?page=permalinks&delete_permanent=' . urlencode($permalink) . '&pwg_token=' . $token
+        );
+        expect($deleteResult['status'])->toBe(200);
+
+        expect(permalinksOldPermalinkCatId($db, $prefix, $permalink))->toBeNull();
+    } finally {
+        $db->query(sprintf('UPDATE %scategories SET permalink = NULL WHERE id = %d', $prefix, $catId));
+        $db->query(sprintf(
+            "DELETE FROM %sold_permalinks WHERE permalink = '%s'",
+            $prefix,
+            $db->real_escape_string($permalink)
+        ));
+        $db->close();
+    }
+});
+
+it('fatal-errors on an unexpected URL GET key while building the sort links', function (): void {
+    $page = H::loginAsAdmin($this);
+
+    // Any GET key other than page/psf/dpsf/pwg_token/delete_permanent is
+    // rejected by parseSortVariables()'s own allowlist -- confirmed live
+    // this is the deliberate "an attacker-controlled unknown key is on the
+    // querystring" guard, not a typo, since `page` (present on every real
+    // navigation) is itself allow-listed.
+    $result = H::rawGet($page, '/admin.php?page=permalinks&unexpected_key=1');
+
+    expect($result['status'])->toBe(500);
+    expect($result['body'])->toContain('unexpected URL get key');
+});
+
+it('marks the active-permalinks sort column as already-selected when psf matches it', function (): void {
+    $page = H::loginAsAdmin($this);
+
+    $result = H::rawGet($page, '/admin.php?page=permalinks&psf=id');
+
+    expect($result['status'])->toBe(200);
+    // parseSortVariables() builds its base URL from $_SERVER['REQUEST_URI']
+    // (the app-root path, e.g. "/piwigo17", plus "/admin.php") -- not
+    // hardcoded, since it depends on where this environment's app root is
+    // mounted (see .env.test's PIWIGO_BASE_URL).
+    $appRootPath = (string) parse_url(H::baseUrl(), PHP_URL_PATH);
+    // Matched field ('id' === psf): parseSortVariables() skips its own
+    // addUrlParams() call (so the link's href stays the bare base URL,
+    // with no "psf=id" appended) and wraps the sort arrow in <em> to mark
+    // it as the currently-active column.
+    expect($result['body'])->toContain(
+        '<a href="' . $appRootPath . '/admin.php?page=permalinks" title="Sort order"><em>' . "\u{2193}" . '</em></a>'
+    );
+    // Contrast: an unmatched field ('permalink') still gets a real
+    // switch-to-this-column link, proving the two fields took different
+    // branches for the very same request.
+    expect($result['body'])->toContain('psf=permalink');
+});

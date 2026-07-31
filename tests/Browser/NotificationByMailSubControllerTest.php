@@ -17,6 +17,19 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * check_key 'ghijkl9876543210', disabled) -- real, restorable state to
  * drive the subscribe/unsubscribe/send actions without needing new users.
  *
+ * handle()'s own `if ($nbm_user['param'] === '') { continue; }` guard
+ * (~line 160, inside the 'param' tab's config-save loop) is unreachable
+ * via any real request: `$nbm_user` comes straight from
+ * ConfigService::getParamsAndValuesLike(), whose own
+ * ConfigRepository::findParamsAndValuesLike() already defensively coerces
+ * a non-string `param` column value to `''` (`is_string($row['param']) ?
+ * ... : ''`) -- but `config.param` is that table's own VARCHAR PRIMARY
+ * KEY, so a real row's `param` is both never NULL and never actually the
+ * empty string (Doctrine/PDO also always returns VARCHAR columns as PHP
+ * strings to begin with). That inner fallback -- and therefore this
+ * `continue` -- is a pure static-analysis narrowing guard with no real,
+ * DB-backed row that can ever trigger it.
+ *
  * The timeout/"must repost" branch (NotificationByMailSender::
  * isSendmailTimeout()) IS covered below, via nbmForceInstantSendmailTimeout().
  * Neither nbm_max_treatment_timeout_percent nor nbm_treatment_timeout_default
@@ -291,6 +304,93 @@ it('sends a notification email to selected users', function (): void {
         expect($result['body'])->not->toContain('Fatal error');
     } finally {
         nbmSetUserMailNotificationRow(1, $snapshot);
+    }
+});
+
+/**
+ * Closes the "still enabled after a failed unsubscribe" branch of the
+ * subscribe tab's own redisplay loop (~lines 284-287): unlike
+ * doTimeoutTreatment() (only entered when checkSendmailTimeout() itself
+ * reports a timeout), a real per-user delivery *failure* leaves
+ * `$post['cat_true']` completely untouched (doTimeoutTreatment() is never
+ * even called down that path) -- so a user whose real mail send fails
+ * stays `enabled=1` in the DB (NotificationByMailSender::
+ * doSubscribeUnsubscribeNotificationByMail()'s own `$doUpdate = false`)
+ * while STILL being present in the resubmitted `cat_true` list, landing
+ * both in $opt_true (still enabled) AND $opt_true_selected (still in
+ * $post['cat_true']) on redisplay -- the "unsubscribes a user..." test
+ * above only exercises the opposite (successful) outcome, where the user
+ * moves to $opt_false instead. Forces a deterministic delivery failure
+ * via a closed local port, same technique as NotificationByMailSenderTest
+ * (Integration)'s own docblock: pointing smtp_host at 127.0.0.1:1 makes
+ * Symfony Mailer's EsmtpTransport fail the TCP connection itself, fast
+ * and deterministically, without depending on a real reachable MTA.
+ */
+it('keeps a user enabled and pre-selected on redisplay when the real unsubscribe mail delivery fails', function (): void {
+    $page = H::loginAsAdmin($this);
+    $token = H::pwgToken($page);
+
+    $smtpSnapshot = H::snapshotConfig(['smtp_host']);
+    H::setConfigValue('smtp_host', '"127.0.0.1:1"');
+
+    $originalMailAddress = nbmUserMailAddress(4);
+    nbmSetUserMailAddress(4, 'ct00nbm285@example.test');
+    nbmSetUserMailNotificationRow(4, ['check_key' => 'ct00mailfail285', 'enabled' => 1, 'last_send' => null]);
+
+    try {
+        $result = nbmPost($page, 'subscribe', [
+            'pwg_token' => $token,
+            'falsify' => '1',
+            'cat_true' => ['ct00mailfail285'],
+        ]);
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->not->toContain('Fatal error');
+        // doSubscribeUnsubscribeNotificationByMail()'s own delivery-failure
+        // message (msgError, 'falsify' => unsubscribe wording).
+        expect($result['body'])->toContain('was not removed from the subscription list');
+
+        // Real DB state: the failed send means $doUpdate stayed false, so
+        // `enabled` was never actually flipped.
+        $updated = nbmUserMailNotificationRow(4);
+        expect($updated)->not->toBeNull();
+        assert($updated !== null);
+        expect($updated['enabled'])->toBe(1);
+
+        // {html_options ... selected=$category_option_true_selected} --
+        // still listed under "Subscribed" (opt_true) AND rendered
+        // pre-selected (opt_true_selected), since $post['cat_true'] was
+        // never touched by doTimeoutTreatment() (no timeout occurred).
+        expect($result['body'])->toContain('value="ct00mailfail285" selected="selected"');
+    } finally {
+        nbmSetUserMailNotificationRow(4, null);
+        nbmSetUserMailAddress(4, $originalMailAddress);
+        H::restoreConfig($smtpSnapshot);
+    }
+});
+
+/**
+ * Closes renderGlobalCustomizeMailContent()'s own `else` arm (~line 511):
+ * with nbmSendHtmlMail() defaulting to true and nbm_complementary_mail_
+ * content's own default not starting with '<', every OTHER test in this
+ * file that reaches the 'send' tab display (sendMailNotifications
+ * ('list_to_send') runs unconditionally there, whenever count($dataUsers)
+ * > 0 -- true for this fixture's own real, enabled, non-null-email user
+ * 1) lands on the nl2br()/htmlspecialchars() `if` branch instead. Forcing
+ * nbm_send_html_mail=false flips the condition's own first half to make
+ * this the only real code path.
+ */
+it('returns the customize-mail-content unchanged when nbm_send_html_mail is disabled', function (): void {
+    $page = H::loginAsAdmin($this);
+    $snapshot = H::snapshotConfig(['nbm_send_html_mail']);
+    H::setConfigValue('nbm_send_html_mail', 'false');
+
+    try {
+        $page = H::navigateOk($page, '/admin.php?page=notification_by_mail&mode=send');
+        $page->assertNoJavaScriptErrors();
+        H::assertNoServerErrors($page, 'notification_by_mail send tab, nbm_send_html_mail=false');
+    } finally {
+        H::restoreConfig($snapshot);
     }
 });
 

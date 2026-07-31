@@ -178,6 +178,28 @@ final class WsImagesCategoryRelationsTest extends ContractTestCase
         self::assertSame([self::FIXTURE_CAT_ID], $this->categoryIdsOf($imageId));
     }
 
+    public function test_categories_mixed_valid_and_invalid_tokens_skips_the_invalid_one(): void
+    {
+        $freshCatId = $this->createFreshCategory();
+        $imageId = $this->insertThrowawayImage();
+
+        $response = $this->callWs('pwg.images.setInfo', [
+            'image_id' => $imageId,
+            // 'not-a-digit' fails the '/^\d+$/' per-token filter and hits
+            // the loop's own `continue` -- distinct from
+            // test_categories_with_no_valid_digit_tokens_..._is_a_noop
+            // above, where *every* token is filtered out and cat_ids ends
+            // up empty. Here one real, known category token survives
+            // alongside the skipped one.
+            'categories' => 'not-a-digit;' . $freshCatId,
+            'multiple_value_mode' => 'append',
+            'pwg_token' => $this->pwgToken(),
+        ]);
+
+        self::assertSame('ok', $response['stat']);
+        self::assertSame([$freshCatId], $this->categoryIdsOf($imageId));
+    }
+
     public function test_categories_auto_rank_on_a_brand_new_category_starts_at_one(): void
     {
         $freshCatId = $this->createFreshCategory();

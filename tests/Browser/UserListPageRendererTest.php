@@ -99,6 +99,56 @@ it('shows the local-webmaster_id deprecation warning only when config.inc.php se
     $page->assertDontSee('is deprecated, please remove it');
 });
 
+// Positive counterpart to the test above: webmasterIdIsLocal() is a real
+// filesystem presence check against local/config/config.inc.php, so this
+// temporarily creates that file (it doesn't exist at all in the committed
+// test environment -- only local/config/index.php does) with a real
+// `$conf['webmaster_id']` assignment, then deletes it again in finally().
+// Also sets `$conf['local_dir_site']` so the same request exercises
+// webmasterIdIsLocal()'s own 2nd @include (siteLocal defaults to the same
+// path as local when PWG_LOCAL_DIR is unset, as it is in .env.test, so
+// this re-reads the identical file rather than a distinct one -- still a
+// real 2nd include of a real path, not a no-op).
+it('shows the local-webmaster_id deprecation warning when config.inc.php really sets it locally', function (): void {
+    $configPath = dirname(__DIR__, 2) . '/local/config/config.inc.php';
+    expect(file_exists($configPath))->toBeFalse();
+
+    file_put_contents($configPath, "<?php\n\$conf['webmaster_id'] = 999;\n\$conf['local_dir_site'] = true;\n");
+    chmod($configPath, 0o666);
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $page = H::navigateOk($page, '/admin.php?page=user_list');
+
+        $page->assertSee('is deprecated, please remove it');
+    } finally {
+        unlink($configPath);
+    }
+});
+
+// getDefaultUserInfo() returning false (no user_infos row for the
+// configured default_user_id) is the only way to reach render()'s own
+// fatalError('Default user not found') -- a real production state (a
+// dangling/misconfigured default_user_id, e.g. after that user was
+// deleted directly in the DB rather than through the app). Config has no
+// real 'default_user_id' row in the fixture (CurrentConfig's own class
+// default is 2), so this inserts one pointing at an id nothing in
+// piwigo_user_infos will ever have.
+it('shows a fatal error when the configured default_user_id matches no real user_infos row', function (): void {
+    $snapshot = H::snapshotConfig(['default_user_id']);
+    H::setConfigValue('default_user_id', '999999');
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $result = H::rawGet($page, '/admin.php?page=user_list');
+
+        expect($result['status'])->toBe(500);
+        expect($result['body'])->toContain('Default user not found');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
 function userListPageRendererDbPrefix(): string
 {
     $prefix = getenv('PIWIGO_DB_PREFIX');

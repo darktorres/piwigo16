@@ -17,12 +17,13 @@ use Piwigo\Mail\Projection\MailRecipient;
  * (resolved by the caller, matching Piwigo\Auth\AuthRepository's own
  * pattern for the same reason).
  */
-final class MailRecipientRepository extends AbstractRepository
+final class MailRecipientRepository extends AbstractRepository implements MailRecipientRepositoryInterface
 {
     /**
      * @param  list<string>  $userStatuses
      * @return list<MailRecipient>
      */
+    #[\Override]
     public function findAdminsAndWebmasters(
         string $idColumn,
         string $usernameColumn,
@@ -64,6 +65,7 @@ final class MailRecipientRepository extends AbstractRepository
     /**
      * @return list<string>
      */
+    #[\Override]
     public function findDistinctLanguagesInGroup(
         string $idColumn,
         string $emailColumn,
@@ -93,6 +95,7 @@ final class MailRecipientRepository extends AbstractRepository
     /**
      * @return list<MailRecipient>
      */
+    #[\Override]
     public function findByGroupAndLanguage(
         string $idColumn,
         string $usernameColumn,

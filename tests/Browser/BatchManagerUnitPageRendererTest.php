@@ -13,15 +13,30 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * real photo instead, and exercises the unit-mode form submission
  * (name/author/level/description/date/tags, per image).
  *
- * Not exercised: 3 "row id/category_id is not a real scalar" defensive
- * guards (both id columns are NOT NULL primary keys, so a real query can
- * never produce that shape); the display=Config-fallback-to-5 branch
- * (needs a non-standard batch_manager_images_per_page_unit config value);
- * and the 'duplicates'-prefilter ORDER BY override (needs
- * `$_SESSION['bulk_manager_filter']['prefilter'] === 'duplicates'`, session
- * state BatchManagerSubControllerTest already covers extensively without
- * combining it with a unit-mode visit) -- all narrow, low-value branches
- * relative to the setup they'd need.
+ * Not exercised, genuinely unreachable via real inputs (coverage-gap
+ * closure pass confirmed each via the real merged HTML coverage report,
+ * not just static reading):
+ *
+ *  - 3 "row id"/"category_id" is-not-a-real-scalar defensive guards (the
+ *    `continue;` bodies around $row['id'] and $item['category_id']/
+ *    ['uppercats']) -- Tables::images().id and Tables::imageCategory().
+ *    category_id/Tables::categories().uppercats are all NOT NULL columns
+ *    (auto_increment PK for id), so a real query can never produce the
+ *    shape these guard against.
+ *  - The `if ($row_cat_id !== null and in_array(...))` true-branch (the
+ *    5-line makePictureUrl() call building U_JUMPTO from $row['cat_id'])
+ *    -- findBatchManagerUnitRows()'s own `SELECT * FROM images [JOIN
+ *    image_category ON id = image_id]` can never populate a 'cat_id' key:
+ *    neither piwigo_images nor piwigo_image_category has a column by that
+ *    name (only `id`/`image_id` and `category_id`). $row_cat_id is
+ *    therefore always null for real data, so `in_array($row_cat_id, ...)`
+ *    on the right side of that `and` never even evaluates (PHP
+ *    short-circuits), and every real request falls straight into the
+ *    always-live `else` foreach beneath it instead -- this predates the
+ *    17.x rewrite entirely (the original admin/batch_manager_unit.php had
+ *    the exact same `isset($row['cat_id'])` shape against the exact same
+ *    query), so per this class's own "mechanical port doesn't fold in
+ *    unrelated fixes" precedent it stays as-is, not "fixed" here.
  */
 function batchManagerUnitDbPrefix(): string
 {
@@ -278,4 +293,153 @@ it('strips HTML tags from the description when HTML descriptions are disabled', 
     } finally {
         H::restoreConfig($snapshot);
     }
+});
+
+it('fatal-errors on an invalid whole_set element (the "Hacking attempt" guard)', function (): void {
+    $page = H::loginAsAdmin($this);
+
+    // Every whole_set element must match /^\d+$/ -- one non-digit element
+    // ('not-a-digit') is enough to fail the per-element preg_match() loop
+    // and hit HtmlRenderingInterface::fatalError(), a real 500 HTML error
+    // page (Piwigo\Html\HtmlService::fatalError()), not an exception
+    // PHPUnit would otherwise swallow.
+    $result = H::adminPost($page, '/admin.php?page=batch_manager&mode=unit', [
+        'setSelected' => '1',
+        'whole_set' => '1,2,not-a-digit',
+    ]);
+
+    expect($result['status'])->toBe(500);
+    expect($result['body'])->toContain('[Hacking attempt] the input parameter "whole_set" is not valid');
+});
+
+it('falls back to 5 images per page when the configured value is not 5/10/50 and no display param is given', function (): void {
+    $snapshot = H::snapshotConfig(['batch_manager_images_per_page_unit']);
+    // 7 is deliberately outside the [5, 10, 50] allow-list the renderer
+    // checks with in_array(..., true) -- forces the final `else` fallback
+    // to the literal 5, distinct from both the display=<n> GET-param
+    // branch and the "config value is one of 5/10/50" branch.
+    H::setConfigValue('batch_manager_images_per_page_unit', '7');
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $page = H::navigateOk($page, '/admin.php?page=batch_manager&mode=unit');
+        $page->assertNoJavaScriptErrors();
+        H::assertNoServerErrors($page, 'batch_manager unit-mode per-page fallback-to-5');
+
+        // per_page drives batch_manager_unit.tpl's own pagination-size
+        // links -- the "5" link only gets the selected-pagination class
+        // when $per_page === 5, a real behavioral signal that the
+        // fallback (not the unconfigured config value 7, and not a
+        // display= override) is what the renderer actually used.
+        expect(H::rawWebpage($page)->content())->toContain('selected-pagination">5</a>');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+it('applies the duplicates-prefilter ORDER BY override ("file, id") when the session prefilter is "duplicates"', function (): void {
+    $page = H::loginAsAdmin($this);
+    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Unit Dup Album ' . uniqid()]);
+    $albumResult = $album['result'] ?? null;
+    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $albumResult['id'];
+
+    // Two photos with distinct pixel content (distinct md5sum, so
+    // UploadService's own md5-based duplicate detection -- on by default
+    // -- doesn't collapse them into a single image) but the exact same
+    // uploaded basename, so they land in the same `file`-column duplicate
+    // group findIdsGroupedByDuplicateFields(['file']) groups by.
+    $dupBasename = 'dup_' . uniqid() . '.jpg';
+    $dirA = sys_get_temp_dir() . '/pwg_dupA_' . uniqid();
+    $dirB = sys_get_temp_dir() . '/pwg_dupB_' . uniqid();
+    mkdir($dirA);
+    mkdir($dirB);
+    $pathA = $dirA . '/' . $dupBasename;
+    $pathB = $dirB . '/' . $dupBasename;
+    rename(H::makeTestImage('Batch Unit Dup A'), $pathA);
+    rename(H::makeTestImage('Batch Unit Dup B'), $pathB);
+
+    $imageIdA = H::uploadPhotoViaApi($pathA, $albumId, 'Batch Unit Dup A');
+    $imageIdB = H::uploadPhotoViaApi($pathB, $albumId, 'Batch Unit Dup B');
+    @unlink($pathA);
+    @unlink($pathB);
+    @rmdir($dirA);
+    @rmdir($dirB);
+
+    // filter_prefilter_use + filter_prefilter=duplicates with none of the
+    // filter_duplicates_* option checkboxes set defaults to grouping by
+    // filename alone (BatchManagerSubController::resolveSessionFilter()'s
+    // own "!$has_options" branch) -- exactly the 'file' grouping our two
+    // same-basename photos above satisfy.
+    $filterResult = H::adminPost($page, '/admin.php?page=batch_manager', [
+        'pwg_token' => H::pwgToken($page),
+        'submitFilter' => '1',
+        'filter_prefilter_use' => '1',
+        'filter_prefilter' => 'duplicates',
+    ]);
+    expect($filterResult['status'])->toBe(200);
+
+    // display=1000 so our pair (which may not sort first among any other
+    // real duplicate-filename groups already in the fixture) is never
+    // pushed past the first page by the default 5-per-page limit.
+    $page = H::navigateOk($page, '/admin.php?page=batch_manager&mode=unit&display=1000');
+    $page->assertNoJavaScriptErrors();
+    H::assertNoServerErrors($page, 'batch_manager unit-mode duplicates-prefilter ORDER BY');
+
+    $html = H::rawWebpage($page)->content();
+    expect($html)->toContain('value="Batch Unit Dup A"');
+    expect($html)->toContain('value="Batch Unit Dup B"');
+
+    // Real behavioral check of the ORDER BY itself, not just that the page
+    // didn't 500: both rows tie on `file` (identical basename), so "file,
+    // id" breaks the tie by id ascending -- A (uploaded, thus assigned a
+    // lower id, first) must render before B.
+    $posA = strpos($html, 'value="Batch Unit Dup A"');
+    $posB = strpos($html, 'value="Batch Unit Dup B"');
+    expect($imageIdA)->toBeLessThan($imageIdB);
+    expect($posA)->not->toBeFalse();
+    expect($posB)->not->toBeFalse();
+    assert(is_int($posA) && is_int($posB));
+    expect($posA)->toBeLessThan($posB);
+});
+
+it('sets the "see-out" jump-to link when the current admin is authorized for the photo\'s only category', function (): void {
+    $page = H::loginAsAdmin($this);
+    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Unit Jumpto Album ' . uniqid()]);
+    $albumResult = $album['result'] ?? null;
+    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $albumResult['id'];
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Batch Unit Jumpto Photo');
+    @unlink($image);
+
+    $filterResult = H::adminPost($page, '/admin.php?page=batch_manager', [
+        'pwg_token' => H::pwgToken($page),
+        'submitFilter' => '1',
+        'filter_category_use' => '1',
+        'filter_category' => (string) $albumId,
+    ]);
+    expect($filterResult['status'])->toBe(200);
+
+    $page = H::navigateOk($page, '/admin.php?page=batch_manager&mode=unit');
+    $page->assertNoJavaScriptErrors();
+    H::assertNoServerErrors($page, 'batch_manager unit-mode jump-to link');
+
+    // U_JUMPTO (and therefore the tpl's "see-out" link) is only assigned
+    // when $url_img got set inside the per-image loop's authorized-
+    // categories foreach -- since $row['cat_id'] is always null for real
+    // data (see this file's own top docblock), the *only* code path that
+    // can ever set it is the `else` branch's single-iteration foreach
+    // over $authorizeds, which this fresh public album + its one photo
+    // satisfies (the admin test user is authorized for every public
+    // category). A real "see-out" anchor rendering is therefore a real
+    // behavioral signal that foreach body -- through its terminal
+    // break -- actually ran, not just that the page returned 200.
+    $html = H::rawWebpage($page)->content();
+    expect($html)->toContain('class="see-out"');
+    expect($html)->toContain('/picture');
 });

@@ -137,3 +137,57 @@ it('silently drops a well-formed JSON body missing required fields -- still 204'
     expect($status)->toBe(204);
     expect(vitalsFindLogEntry($uniqueId))->toBeNull();
 });
+
+it('silently drops a completely empty request body -- still 204, nothing logged', function (): void {
+    $ch = curl_init(H::baseUrl() . '/analytics/vitals');
+    expect($ch)->not->toBeFalse();
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    // Deliberately no CURLOPT_POSTFIELDS at all -- parseMetric()'s own
+    // `$rawBody === ''` early return, distinct from the malformed
+    // (non-empty, non-JSON) body test above, which reaches the
+    // JSON_THROW_ON_ERROR catch branch instead.
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [...H::testHeaders(), 'Content-Type: application/json']);
+    curl_exec($ch);
+    $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+    unset($ch);
+
+    expect($status)->toBe(204);
+});
+
+it('silently drops a well-formed JSON body that decodes to a non-array -- still 204, nothing logged', function (): void {
+    $ch = curl_init(H::baseUrl() . '/analytics/vitals');
+    expect($ch)->not->toBeFalse();
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    // A bare JSON string is valid JSON (json_decode() succeeds, no
+    // JsonException), but decodes to a plain PHP string, not an array --
+    // parseMetric()'s own `! is_array($data)` guard, distinct from the
+    // malformed-JSON test above.
+    curl_setopt($ch, CURLOPT_POSTFIELDS, '"just a string"');
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [...H::testHeaders(), 'Content-Type: application/json']);
+    curl_exec($ch);
+    $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+    unset($ch);
+
+    expect($status)->toBe(204);
+});
+
+it('silently drops a metric with a non-string id/rating/url -- still 204', function (): void {
+    // id/rating/url all real, present keys, but the wrong type --
+    // parseMetric()'s own `! is_string($id) || ! is_string($rating) ||
+    // ! is_string($url)` guard, distinct from the "missing 'value'" test
+    // above (which exercises the *value* type-check instead). Nothing
+    // gets logged on this branch (same as the malformed-body/non-array
+    // tests above), so -- like those -- there is no distinguishing log
+    // content to assert on beyond the 204 status itself.
+    $status = vitalsPostJson([
+        'name' => 'FCP',
+        'value' => 42,
+        'id' => 12345,
+        'rating' => true,
+        'url' => ['not', 'a', 'string'],
+    ]);
+
+    expect($status)->toBe(204);
+});

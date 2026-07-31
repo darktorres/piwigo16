@@ -86,3 +86,37 @@ test('getLatestNews returns null when the fresh cache holds a serialized null (n
 
     expect($result)->toBeNull();
 });
+
+test('getLatestNews attempts a live fetch and returns an empty array when the cache is stale and the upstream host is unreachable', function (): void {
+    // No cache file at all (is_file() false) -- the simplest way to force
+    // the "stale" branch without racing a real 24h mtime boundary.
+    // AppInfo::URL points at 'upstream.example.invalid' (RFC 2606 --
+    // guaranteed never to resolve, see AppInfo::DOMAIN's own docblock), so
+    // HttpClientService::fetch() fails fast and deterministically here (a
+    // DNS/transport failure, not a flaky real piwigo.org round trip) --
+    // the same "fork-safe PEM domain never resolves" property this
+    // project's own HttpClientServiceTest.php / ExtensionUpdateCheckerTest.php /
+    // PiwigoInfosSenderTest.php already rely on for the identical class of
+    // "talks to piwigo.org via the static, non-injectable
+    // HttpClientService::fetch()" code. Real exercise of getLatestNews()'s
+    // own `$content !== false` === false branch (the `else { return []; }`),
+    // not a mock of HttpClientService or of IntroSubController itself.
+    //
+    // The *opposite* branch (a successful fetch: JSON decode, the $news
+    // array build, and the on-disk cache write) has no reachable path in
+    // this fork at all -- HttpClientService::fetch() is a bare static call
+    // with no injectable client seam (confirmed via HttpClientServiceTest.php's
+    // own "guardedFetch() ... deliberately NOT chased here" note: every
+    // caller of fetch()/fetchToFile() always constructs `new self(...)`
+    // internally against the hardcoded real defaultClient(), with no
+    // parameter anywhere in the static call chain to substitute a
+    // MockHttpClient), and the one real network target it can ever reach
+    // from here (AppInfo::URL) is deliberately, permanently non-resolving.
+    // Left uncovered rather than faked.
+    $path = intronewsCachePath();
+    @unlink($path);
+
+    $result = intronewsInvoke();
+
+    expect($result)->toBe([]);
+});

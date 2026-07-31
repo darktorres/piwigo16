@@ -620,6 +620,131 @@ final class WsUsersMutationTest extends ContractTestCase
         }
     }
 
+    /**
+     * activate_comments=false unsets show_nb_comments from $params before
+     * checkAndSaveUserInfos() runs -- same "silently ignored, not applied"
+     * shape as allow_user_customization above, but for a different config
+     * flag/field pair. fixture_admin's show_nb_comments starts at 0 (see
+     * the fixture's own piwigo_user_infos row), so requesting `true` here
+     * would be a real, detectable change if it weren't dropped.
+     */
+    public function test_setMyInfo_ignores_show_nb_comments_when_comments_are_disabled(): void
+    {
+        $this->conn->executeStatement(
+            "UPDATE " . Tables::config() . " SET value = 'false' WHERE param = 'activate_comments'"
+        );
+        \Piwigo\Cache\CachePools::config()->clear();
+
+        try {
+            $token = $this->getPwgToken();
+            $before = $this->conn->fetchOne('SELECT show_nb_comments FROM ' . Tables::userInfos() . ' WHERE user_id = 1');
+
+            $response = $this->callWs('pwg.users.setMyInfo', [
+                'show_nb_comments' => true,
+                'pwg_token' => $token,
+            ]);
+
+            self::assertSame('ok', $response['stat']);
+            $after = $this->conn->fetchOne('SELECT show_nb_comments FROM ' . Tables::userInfos() . ' WHERE user_id = 1');
+            self::assertSame($before, $after, 'show_nb_comments must be silently dropped, not applied, while comments are disabled gallery-wide');
+        } finally {
+            $this->conn->executeStatement("UPDATE " . Tables::config() . " SET value = 'true' WHERE param = 'activate_comments'");
+            \Piwigo\Cache\CachePools::config()->clear();
+        }
+    }
+
+    /**
+     * SPECIAL_USER unsets password/theme/language whenever the *currently
+     * logged-in* user's own id equals CurrentConfig::defaultUserId() (the
+     * account whose settings serve as defaults for new registrations) --
+     * a distinct condition from AccessControl::isAGuest() (checked by
+     * session *status*, not id), so a real, logged-in 'normal'-status
+     * throwaway user can hit it by pointing default_user_id at their own
+     * id without ever being treated as a guest.
+     */
+    public function test_setMyInfo_special_user_branch_drops_password_theme_and_language(): void
+    {
+        $username = 'ct_special_' . uniqid();
+        $password = 'Test1234!';
+        $userId = $this->createUser($username, $password);
+
+        $originalDefaultUserId = $this->conn->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'default_user_id'");
+
+        $this->conn->executeStatement(
+            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('default_user_id', ?)
+             ON DUPLICATE KEY UPDATE value = VALUES(value)",
+            [(string) $userId]
+        );
+        \Piwigo\Cache\CachePools::config()->clear();
+
+        try {
+            $before = $this->conn->fetchAssociative(
+                'SELECT theme, language FROM ' . Tables::userInfos() . ' WHERE user_id = ?',
+                [$userId]
+            );
+            self::assertIsArray($before);
+
+            $login = $this->callWs('pwg.session.login', ['username' => $username, 'password' => $password]);
+            self::assertSame('ok', $login['stat']);
+            $token = $this->getPwgToken();
+
+            $response = $this->callWs('pwg.users.setMyInfo', [
+                'password' => $password,
+                'new_password' => 'ShouldBeIgnored123!',
+                'conf_new_password' => 'ShouldBeIgnored123!',
+                'theme' => 'a_theme_that_should_be_ignored',
+                'language' => 'a_lang_that_should_be_ignored',
+                'pwg_token' => $token,
+            ]);
+
+            self::assertSame('ok', $response['stat'], 'SPECIAL_USER must silently drop password/theme/language, not error');
+            self::assertSame('Your changes have been applied.', $response['result']);
+
+            $after = $this->conn->fetchAssociative(
+                'SELECT theme, language FROM ' . Tables::userInfos() . ' WHERE user_id = ?',
+                [$userId]
+            );
+            self::assertSame($before, $after, 'theme/language must be unchanged -- SPECIAL_USER must have dropped them');
+
+            $this->loginAsAdmin();
+            $reLogin = $this->callWs('pwg.session.login', ['username' => $username, 'password' => $password]);
+            self::assertSame('ok', $reLogin['stat'], 'password must be unchanged -- SPECIAL_USER must have dropped it too');
+        } finally {
+            $this->loginAsAdmin();
+            if ($originalDefaultUserId === false) {
+                $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'default_user_id'");
+            } else {
+                $this->conn->executeStatement(
+                    "UPDATE " . Tables::config() . " SET value = ? WHERE param = 'default_user_id'",
+                    [$originalDefaultUserId]
+                );
+            }
+            \Piwigo\Cache\CachePools::config()->clear();
+        }
+    }
+
+    /**
+     * setMyInfo()'s error branch (checkAndSaveUserInfos() returning
+     * ['error' => [...]]) is reachable through a malformed 'email' --
+     * 'email' is the only field setMyInfo() ever forwards that
+     * checkAndSaveUserInfos() actually validates (username/status/level/
+     * group_id/enabled_high are always unset by setMyInfo() itself before
+     * that call).
+     */
+    public function test_setMyInfo_invalid_email_format_returns_error(): void
+    {
+        $token = $this->getPwgToken();
+
+        $response = $this->callWs('pwg.users.setMyInfo', [
+            'email' => 'not-a-valid-email',
+            'pwg_token' => $token,
+        ]);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(1003, $response['err']);
+        self::assertSame('mail address must be like xxx@yyy.eee (example : jack@altern.org)', $response['message']);
+    }
+
     // -------------------------------------------------------- preferencesSet
 
     public function test_preferencesSet_invalid_param_name_returns_error(): void
@@ -779,6 +904,129 @@ final class WsUsersMutationTest extends ContractTestCase
         self::assertIsString($result['time_validation'] ?? null);
     }
 
+    /**
+     * fixture_admin is 'webmaster' (see WsUsersMutationTest's own
+     * test_delete_as_a_non_webmaster_admin_also_protects_other_admins
+     * docblock), which is always allowed to target another webmaster --
+     * only a non-webmaster 'admin' session exercises generatePasswordLink()'s
+     * own "only webmaster can reset another webmaster's password" guard.
+     */
+    public function test_generatePasswordLink_admin_cannot_target_a_webmaster(): void
+    {
+        $adminToken = $this->getPwgToken();
+        $selfId = $this->conn->fetchOne('SELECT id FROM ' . Tables::users() . ' WHERE username = ?', ['fixture_admin']);
+        self::assertIsNumeric($selfId);
+
+        $username = 'ct_nonwm_admin_' . uniqid();
+        $password = 'Test1234!';
+        $newAdminId = $this->createUser($username, $password);
+        $this->callWs('pwg.users.setInfo', [
+            'user_id' => $newAdminId,
+            'status' => 'admin',
+            'pwg_token' => $adminToken,
+        ]);
+
+        $login = $this->callWs('pwg.session.login', ['username' => $username, 'password' => $password]);
+        self::assertSame('ok', $login['stat']);
+        $nonWebmasterToken = $this->getPwgToken();
+
+        $response = $this->callWsAllowingServerError('pwg.users.generatePasswordLink', [
+            'user_id' => (int) $selfId,
+            'pwg_token' => $nonWebmasterToken,
+        ]);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(403, $response['err']);
+        self::assertSame('You cannot perform this action', $response['message']);
+
+        $this->loginAsAdmin();
+    }
+
+    /**
+     * send_by_mail=true drives generatePasswordLink() through both of its
+     * own mail-content branches on the *same* throwaway user:
+     * AuthService::hasAlreadyLoggedIn() (misleadingly named -- true means
+     * "no login history yet") starts true for a brand-new user, selecting
+     * generateSetPasswordMail(); logging that user in once (recording a
+     * real 'login' activity row -- see AuthService::authenticate()) flips
+     * it to false, selecting generateResetPasswordMail() on the second
+     * call instead.
+     *
+     * Both calls point smtp_host at a real, unreachable-but-instantly-
+     * refusing loopback address (127.0.0.1:1 -- nothing ever listens on
+     * TCP port 1) so MailService::mail()'s real Symfony EsmtpTransport
+     * genuinely attempts, and genuinely fails, a real connection, landing
+     * on the `false` result branch -- deterministically and in
+     * milliseconds, unlike this sandbox's default `native://default`
+     * sendmail_path transport, whose real local `sendmail` binary hangs
+     * for many seconds trying to actually deliver (confirmed empirically:
+     * `sendmail -t -i` against a throwaway message did not return within
+     * 12s here; see also RegisterControllerTest's own docblock for the
+     * same real transport, now bounded by
+     * Piwigo\Mail\BoundedSendmailTransport). This sandbox has no reachable
+     * SMTP relay at all, so the *success* branch
+     * ($send_by_mail_response = 'Mail sent at : ...') is not reachable
+     * through any real send from here without standing up dedicated mail
+     * infrastructure this suite has no existing precedent for -- left
+     * genuinely untested; called out explicitly in this task's own
+     * coverage-closure report rather than silently skipped.
+     */
+    public function test_generatePasswordLink_send_by_mail_covers_both_first_login_and_returning_user(): void
+    {
+        $token = $this->getPwgToken();
+        $username = 'ct_pwdlink_' . uniqid();
+        $password = 'Test1234!';
+        $email = $username . '@example.test';
+        $userId = $this->createUser($username, $password, $email);
+
+        $originalSmtpHost = $this->conn->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'smtp_host'");
+        $this->conn->executeStatement(
+            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('smtp_host', '\"127.0.0.1:1\"')
+             ON DUPLICATE KEY UPDATE value = VALUES(value)"
+        );
+        \Piwigo\Cache\CachePools::config()->clear();
+
+        try {
+            $first = $this->callWs('pwg.users.generatePasswordLink', [
+                'user_id' => $userId,
+                'send_by_mail' => true,
+                'pwg_token' => $token,
+            ]);
+            self::assertSame('ok', $first['stat']);
+            $firstResult = $first['result'];
+            self::assertIsArray($firstResult);
+            self::assertArrayHasKey('send_by_mail', $firstResult);
+            self::assertFalse($firstResult['send_by_mail']);
+
+            $login = $this->callWs('pwg.session.login', ['username' => $username, 'password' => $password]);
+            self::assertSame('ok', $login['stat']);
+            $this->loginAsAdmin();
+            $token = $this->getPwgToken();
+
+            $second = $this->callWs('pwg.users.generatePasswordLink', [
+                'user_id' => $userId,
+                'send_by_mail' => true,
+                'pwg_token' => $token,
+            ]);
+            self::assertSame('ok', $second['stat']);
+            $secondResult = $second['result'];
+            self::assertIsArray($secondResult);
+            self::assertArrayHasKey('send_by_mail', $secondResult);
+            self::assertFalse($secondResult['send_by_mail']);
+        } finally {
+            $this->loginAsAdmin();
+            if ($originalSmtpHost === false) {
+                $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'smtp_host'");
+            } else {
+                $this->conn->executeStatement(
+                    "UPDATE " . Tables::config() . " SET value = ? WHERE param = 'smtp_host'",
+                    [$originalSmtpHost]
+                );
+            }
+            \Piwigo\Cache\CachePools::config()->clear();
+        }
+    }
+
     // --------------------------------------------------------- setMainUser
 
     public function test_setMainUser_invalid_token_returns_error(): void
@@ -790,6 +1038,42 @@ final class WsUsersMutationTest extends ContractTestCase
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(403, $response['err']);
+    }
+
+    /**
+     * setMainUser() checks AccessControl::isWebmaster() *before* the
+     * pwg_token check (see its own source order) -- the invalid-token test
+     * above still passes only because fixture_admin (this class's own
+     * setUp() session) already is a webmaster and clears that first guard
+     * for free. A real, logged-in non-webmaster 'admin' session is needed
+     * to exercise this guard itself.
+     */
+    public function test_setMainUser_forbidden_for_a_non_webmaster(): void
+    {
+        $adminToken = $this->getPwgToken();
+        $username = 'ct_nonwm_' . uniqid();
+        $password = 'Test1234!';
+        $newAdminId = $this->createUser($username, $password);
+        $this->callWs('pwg.users.setInfo', [
+            'user_id' => $newAdminId,
+            'status' => 'admin',
+            'pwg_token' => $adminToken,
+        ]);
+
+        $login = $this->callWs('pwg.session.login', ['username' => $username, 'password' => $password]);
+        self::assertSame('ok', $login['stat']);
+        $nonWebmasterToken = $this->getPwgToken();
+
+        $response = $this->callWsAllowingServerError('pwg.users.setMainUser', [
+            'user_id' => 1,
+            'pwg_token' => $nonWebmasterToken,
+        ]);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(403, $response['err']);
+        self::assertSame('You cannot perform this action', $response['message']);
+
+        $this->loginAsAdmin();
     }
 
     public function test_setMainUser_unknown_user_returns_error(): void
@@ -1016,6 +1300,30 @@ final class WsUsersMutationTest extends ContractTestCase
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(403, $response['err']);
+    }
+
+    /**
+     * editApiKey() checks AccessControl::isAGuest() and
+     * ApiKeyService::connectedWithPwgUi() as two *separate* `if`
+     * statements (unlike createApiKey()/revokeApiKey(), which combine
+     * both into one `or` condition) -- this class's own setUp() already
+     * authenticates the shared cookie jar via pwg.session.login (not
+     * identification.php), so isAGuest() is false but connectedWithPwgUi()
+     * is still false too, isolating that second guard on its own line.
+     */
+    public function test_editApiKey_forbidden_when_not_connected_via_pwg_ui(): void
+    {
+        $token = $this->getPwgToken();
+
+        $response = $this->callWsAllowingServerError('pwg.users.api_key.edit', [
+            'key_name' => 'irrelevant',
+            'pkid' => 'pkid-20260101-abcdefghijklmnopqrst',
+            'pwg_token' => $token,
+        ]);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(401, $response['err']);
+        self::assertSame('Acces Denied', $response['message']);
     }
 
     public function test_editApiKey_edits_the_name(): void

@@ -243,14 +243,56 @@ namespace Piwigo\Tests\Integration {
             self::assertNull($this->repo->find(ExtensionType::Plugin, $id));
         }
 
-        // The enable_extensions_install=false guard (performAction()'s own
-        // top-level check) calls die() directly, matching
-        // plugins.class.php::perform_action()'s exact original behavior --
-        // confirmed by direct read, not something this batch changed. Not
-        // covered by an automated test here: die() terminates the whole PHP
-        // process (this test runner included), so it isn't a catchable
-        // \Throwable PHPUnit's expectException() can assert against without
-        // separate-process isolation this suite doesn't use elsewhere.
+        public function test_plugin_delete_with_a_filesystem_entry_also_removes_the_plugin_directory(): void
+        {
+            // Unlike the sibling test above, $fsEntry is non-null here, so
+            // this reaches the real fs_version bookkeeping AND the
+            // FilesystemHelper::deltree() call against
+            // PluginLoader::pluginsPath() . $id -- a synthetic, never-
+            // on-disk id (see this class's own docblock), so deltree()'s
+            // own `if (is_dir($path))` guard makes this a real, safe no-op.
+            $id = $this->pluginId();
+            $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, ['version' => '1.0']);
+
+            $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'delete', $id, ['version' => '1.0']);
+
+            self::assertSame([], $errors);
+            self::assertNull($this->repo->find(ExtensionType::Plugin, $id));
+        }
+
+        public function test_delete_when_extensions_install_is_disabled_fatally_errors(): void
+        {
+            // performAction()'s own top-level guard (only 'delete' is
+            // checked here -- matches plugins.class.php::perform_action()'s
+            // exact original behavior, confirmed by direct read) calls
+            // HtmlService::fatalError(), `never`-typed via
+            // trigger_error(E_USER_ERROR). That hard-halts the whole PHP
+            // process UNLESS something intercepts it and returns true, in
+            // which case fatalError() falls through to throw a catchable
+            // ResponseReadyException instead -- real requests get that
+            // interception from Piwigo\Core\ErrorCollector::install() (see
+            // HtmlService::fatalError()'s own docblock), never called here
+            // (a real set_error_handler()/register_shutdown_function() pair
+            // would leak into every later test in this shared process, same
+            // reasoning as MaintenanceActionDispatcherTest's identical local
+            // handler).
+            CurrentConfig::setEnableExtensionsInstall(false);
+
+            set_error_handler(static fn (): bool => true);
+            try {
+                $this->lifecycle->performAction(ExtensionType::Plugin, 'delete', $this->pluginId(), null);
+                self::fail('Expected ExtensionLifecycle::performAction() to throw ResponseReadyException');
+            } catch (\Piwigo\Http\ResponseReadyException) {
+            } finally {
+                restore_error_handler();
+            }
+        }
+
+        // The enable_extensions_install=false guard only ever gates a
+        // top-level 'delete' call (see this class's own docblock) -- other
+        // actions (install/update/activate/...) never reach it, which is
+        // why every other test in this file leaves enable_extensions_install
+        // at the true value setUp() configures.
 
         // ----------------------------------------------------------- theme
 
@@ -594,19 +636,62 @@ namespace Piwigo\Tests\Integration {
             $this->lifecycle->performAction(ExtensionType::Plugin, 'update', $this->pluginId(), ['version' => '1.0'], []);
         }
 
-        // The 'update' action's real extraction-succeeds branch
-        // (ExtensionLifecycle.php lines ~163-177: rescanning the plugin,
-        // calling PluginMaintain::update(), bumping the stored version) is
-        // gated entirely behind PemCatalog::extractArchive(), which itself
-        // calls the static, non-injectable HttpClientService::fetchToFile()
-        // against the real piwigo.org PEM server -- PemCatalog is `final
-        // readonly` (no interface, no fake-able seam) and is already on this
-        // effort's own documented skip list (see UploadServiceTest and
-        // PemCatalogTest's siblings). In this environment extractArchive()
-        // always returns a non-'ok' status, so only the ELSE branch
-        // (activityDetails['result'] = 'error') is reachable -- already
-        // covered indirectly by test_plugin_update_without_a_revision_option_throws's
-        // sibling network-failure path in the wider suite. Not chased further.
+        public function test_plugin_update_with_an_unreachable_pem_server_marks_activity_as_error(): void
+        {
+            // The 'update' action's real extraction-succeeds branch
+            // (ExtensionLifecycle.php's own 'update' case: rescanning the
+            // plugin, calling PluginMaintain::update(), bumping the stored
+            // version) is gated entirely behind PemCatalog::extractArchive()
+            // actually returning status 'ok', which itself requires the
+            // static, non-injectable HttpClientService::fetchToFile() to
+            // succeed against a real PEM server -- PemCatalog is `final
+            // readonly` (no interface, no fake-able seam) and is already on
+            // this effort's own documented skip list (see
+            // HttpClientServiceTest's and PemCatalogTest's own identical
+            // "no fake-able seam" limitation). That 'ok'-branch body is not
+            // chased here.
+            //
+            // The extraction ATTEMPT itself and its non-'ok' ELSE branch
+            // ARE reachable deterministically and offline, though: pointing
+            // RequestBootstrap::pemUrl() at a loopback address makes
+            // HttpClientService's own SSRF guard (assertUrlIsSafe()) throw
+            // HttpClientSsrfException before any real network I/O is
+            // attempted (no DNS lookup, no connect, no 10s timeout) --
+            // guardedFetch() catches that (HttpClientSsrfException
+            // implements PSR-18's RequestExceptionInterface, itself a
+            // ClientExceptionInterface) and returns null, so fetchToFile()
+            // returns false and extractArchive() falls through to its real
+            // 'dl_archive_error' status -- exercising the real
+            // extraction-attempt + non-'ok' branch without ever touching
+            // the network.
+            //
+            // guardedFetch() exempts the target host from the SSRF guard
+            // entirely (both the https-only and private-IP checks) when it
+            // matches $_SERVER['HTTP_HOST'] (a same-host "self-request" --
+            // see HttpClientService's own $trustedSelfHost docblock); this
+            // shared PHPUnit/Pest process may have HTTP_HOST left over from
+            // an earlier test file (e.g. InstallWizardTest sets it to
+            // 'example.test' and never restores it), so pin it to a value
+            // that can never equal the loopback host below, guaranteeing
+            // the guard -- not a real (and here, unpredictable) TCP attempt
+            // to 127.0.0.1 -- is what actually produces the failure.
+            $previousHttpHost = $_SERVER['HTTP_HOST'] ?? null;
+            $_SERVER['HTTP_HOST'] = 'extension-lifecycle-test.invalid';
+            CurrentConfig::setAlternativePemUrl('https://127.0.0.1/pem-unreachable');
+
+            try {
+                $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'update', $this->pluginId(), ['version' => '1.0'], ['revision' => '42']);
+
+                self::assertSame(['dl_archive_error'], $errors);
+            } finally {
+                CurrentConfig::setAlternativePemUrl('');
+                if ($previousHttpHost === null) {
+                    unset($_SERVER['HTTP_HOST']);
+                } else {
+                    $_SERVER['HTTP_HOST'] = $previousHttpHost;
+                }
+            }
+        }
 
         public function test_plugin_install_failure_marks_activity_as_error_and_does_not_insert_a_row(): void
         {
@@ -803,6 +888,64 @@ PHP);
             }
         }
 
+        public function test_theme_delete_of_a_theme_not_installed_but_on_disk_succeeds(): void
+        {
+            // dbRow === null (never activated via performAction()) AND
+            // fsEntry !== null AND no child theme depends on it -- the one
+            // real success path through performThemeAction()'s 'delete'
+            // case, reaching buildThemeMaintain()/PluginMaintain::delete()
+            // (falls back to DummyThemeMaintain -- no maintain.inc.php
+            // written here) and the real FilesystemHelper::deltree() call
+            // against the real on-disk theme directory writeThemeConf()
+            // below just created.
+            $id = $this->themeIdNoHyphens();
+            $this->writeThemeConf($id, ['name' => 'On Disk Theme']);
+
+            try {
+                $errors = $this->lifecycle->performAction(
+                    ExtensionType::Theme,
+                    'delete',
+                    $id,
+                    ['version' => '1.0', 'name' => 'On Disk Theme'],
+                );
+
+                self::assertSame([], $errors);
+                self::assertNull($this->repo->find(ExtensionType::Theme, $id));
+            } finally {
+                // deltree() already removed the real directory on success;
+                // this is a safe no-op if so (removeThemeDir()'s own
+                // rrmdir() checks is_dir() first) and a real cleanup if the
+                // assertion above failed before deltree() ran.
+                $this->removeThemeDir($id);
+            }
+        }
+
+        public function test_theme_set_default_via_the_public_action_reassigns_users(): void
+        {
+            // Same real behavior as test_set_default_theme_reassigns_every_
+            // user_on_the_fallback_default_theme below, but through the
+            // public performAction('set_default', ...) entry point instead
+            // of Reflection -- covers performThemeAction()'s own
+            // 'set_default' case (a 1-line delegation to the private
+            // setDefaultTheme(), otherwise only ever exercised directly).
+            $new = $this->themeId();
+            $before = $this->conn->fetchAllAssociative("SELECT user_id, theme FROM " . Tables::userInfos() . " WHERE theme = 'default'");
+
+            try {
+                $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'set_default', $new, null);
+
+                self::assertSame([], $errors);
+                foreach ($before as $row) {
+                    $current = $this->conn->fetchOne('SELECT theme FROM ' . Tables::userInfos() . ' WHERE user_id = ?', [$row['user_id']]);
+                    self::assertSame($new, $current);
+                }
+            } finally {
+                foreach ($before as $row) {
+                    $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . ' SET theme = ? WHERE user_id = ?', [$row['theme'], $row['user_id']]);
+                }
+            }
+        }
+
         public function test_missing_parent_theme_recurses_through_a_real_intermediate_theme(): void
         {
             $middle = $this->themeIdNoHyphens();
@@ -837,30 +980,70 @@ PHP);
             $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'mobile_theme'");
         }
 
+        public function test_theme_deactivate_of_the_real_default_theme_reassigns_a_replacement_default(): void
+        {
+            // performThemeAction()'s own `$id === getDefaultTheme()` gate
+            // (guarding the pickReplacementDefaultTheme()/setDefaultTheme()
+            // call, inside the 'deactivate' case) is unreachable through the
+            // public performAction() API under this class's own setUp():
+            // ThemeCatalog::checkThemeInstalled() composes
+            // `CurrentPaths::get()->root . CurrentConfig::themesDir()`, but
+            // setUp() sets themesDir() to an ALREADY-absolute path (`root .
+            // 'themes'`) for a different, unrelated reason (buildThemeMaintain()/
+            // ExtensionScanner need the absolute form) -- composing root
+            // with an already-absolute themesDir() double-prefixes the
+            // path, so checkThemeInstalled() (confirmed live) returns false
+            // for every theme id under that setup, and
+            // UserService::getDefaultTheme() always falls through to its
+            // hard 'default' fallback, which can never match a real
+            // performAction()-installed theme id (see the docblock further
+            // below, still true for the pickReplacementDefaultTheme()/
+            // setDefaultTheme() Reflection tests that keep relying on it).
+            //
+            // Overriding themesDir() back to the production-shaped relative
+            // default here makes checkThemeInstalled() compose a real,
+            // correct, single-prefixed path instead, so getDefaultTheme()
+            // can genuinely resolve to a real installed theme id --
+            // reaching the actual call site instead of only its callees.
+            // buildThemeMaintain() (called later in this same 'deactivate'
+            // flow) tolerates the relative value fine either way: a failed
+            // file_exists() there just falls back to DummyThemeMaintain, a
+            // real, already-exercised no-op path elsewhere in this suite.
+            CurrentConfig::setThemesDir('themes');
+
+            $default = $this->themeId();
+            $other = $this->themeId();
+            $this->writeThemeConf($default, ['name' => 'Real Default']);
+            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $default, ['version' => '1.0', 'name' => 'Real Default']);
+            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $other, ['version' => '1.0', 'name' => 'Other']);
+
+            $defaultUserId = \Piwigo\Config\CurrentConfig::defaultUserId();
+            $before = $this->conn->fetchOne('SELECT theme FROM ' . Tables::userInfos() . ' WHERE user_id = ?', [$defaultUserId]);
+            $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . ' SET theme = ? WHERE user_id = ?', [$default, $defaultUserId]);
+
+            try {
+                $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'deactivate', $default, ['version' => '1.0', 'name' => 'Real Default']);
+
+                self::assertSame([], $errors);
+                self::assertNull($this->repo->find(ExtensionType::Theme, $default));
+                $reassigned = $this->conn->fetchOne('SELECT theme FROM ' . Tables::userInfos() . ' WHERE user_id = ?', [$defaultUserId]);
+                self::assertSame($other, $reassigned, 'deactivating the real default theme must pick the remaining installed theme as the new default');
+            } finally {
+                $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . ' SET theme = ? WHERE user_id = ?', [$before, $defaultUserId]);
+                $this->removeThemeDir($default);
+            }
+        }
+
         /**
-         * performThemeAction()'s own `$id === getDefaultTheme()` gate
-         * (guarding the pickReplacementDefaultTheme()/setDefaultTheme()
-         * call) is unreachable through the public performAction() API in
-         * this specific Integration harness: ThemeCatalog::
-         * checkThemeInstalled() composes `CurrentPaths::get()->root .
-         * CurrentConfig::themesDir()`, but this class's own setUp() (line
-         * ~79) sets themesDir() to an ALREADY-absolute path (`root .
-         * 'themes'`) for a different, unrelated reason (buildThemeMaintain()/
-         * ExtensionScanner need the absolute form) -- composing root with an
-         * already-absolute themesDir() double-prefixes the path, so
-         * checkThemeInstalled() (confirmed live) returns false for every
-         * theme id, including 'default' itself. getPwgThemes() is filtered
-         * through that same check, so it's always empty, and
-         * UserService::getDefaultTheme() always falls through to its own
-         * hard 'default' fallback -- which can never match a real
-         * performAction()-installed theme id ('default' itself can never
-         * get a DB row, since performThemeAction()'s own 'activate' case
-         * short-circuits for `$id === 'default'`). Exercising
-         * pickReplacementDefaultTheme()/setDefaultTheme() directly (both
-         * private, already covered read-only elsewhere in this class) via
-         * Reflection instead -- same tactic as buildPluginMaintain()/
-         * buildThemeMaintain() above -- is the only way to reach their real
-         * bodies at all in this harness.
+         * pickReplacementDefaultTheme()/setDefaultTheme() themselves (both
+         * private) are exercised directly via Reflection below, independent
+         * of the wider 'deactivate' flow the test above already covers end
+         * to end -- this lets
+         * test_pick_replacement_default_theme_falls_back_to_default_when_none_other_exists()
+         * assert the "nothing else installed" fallback without needing a
+         * second real theme, and keeps these tests decoupled from the
+         * themesDir()-override the call-site test above needs -- same
+         * tactic as buildPluginMaintain()/buildThemeMaintain() above.
          */
         public function test_pick_replacement_default_theme_returns_any_other_installed_theme(): void
         {

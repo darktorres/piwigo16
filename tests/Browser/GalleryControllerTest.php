@@ -18,12 +18,30 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * enough real, permission-free data to drive every branch below without
  * any fixture mutation beyond a couple of restorable config/DB toggles.
  *
- * Deliberately skips the `section === 'search'` branch entirely (~35 of
- * this file's 237 uncovered lines) -- that requires a real search_id
- * minted by SearchController/SearchService first, and the Search domain
- * (SearchFilterRenderer/SearchService, 920 uncovered lines) is its own
- * separate, not-yet-started Wave 1 item; testing it properly belongs
- * there, not bolted onto this file.
+ * The `section === 'search'` qsearch-details block (lines 394-434) IS
+ * covered below, via `galInsertQuickSearch()` -- a direct `piwigo_search`
+ * row insert with a bare top-level 'q' rule, the exact same shape
+ * SearchServiceTest.php already uses to drive SearchService::
+ * getQuickSearchResults() itself. No first-party controller
+ * (QSearchController -> SearchController) ever produces that shape --
+ * SearchController always nests the query under `fields.allwords.words`,
+ * confirmed by SearchTest.php's own comment on that exact gap -- so this
+ * is the only way to reach the block through a real request; search_uuid
+ * stays NULL so SearchService::getValidatedSearchInfo() accepts the
+ * plain numeric id (its "not reachable with its id" guard only fires
+ * once a row already has a search_uuid).
+ *
+ * NOT chased here: GalleryController.php:88-91's `! $section_context
+ * instanceof SectionContext` RuntimeException guard. Its own docblock
+ * (GalleryController.php:83-87) is explicit that this is real, not dead
+ * code, but SectionPopulator::populate() -- this controller's only
+ * caller of SectionContextRegistry::set() -- always calls it as the
+ * very last thing it does, in the same request, with no legitimate HTTP
+ * input able to land between that call and this read. There's no real
+ * front door to null it out from a Browser test; forcing it would mean
+ * reaching into SectionContextRegistry's static state from outside a
+ * real request, which is closer to testing the guard's own wiring than
+ * to testing GalleryController's behavior.
  */
 function galDbPrefix(): string
 {
@@ -62,6 +80,46 @@ function galClearCaddie(int $userId): void
 {
     $db = galDbConnect();
     $db->query(sprintf('DELETE FROM %scaddie WHERE user_id = %d', galDbPrefix(), $userId));
+    $db->close();
+}
+
+function galSetNbImagePage(int $userId, int $value): void
+{
+    $db = galDbConnect();
+    $db->query(sprintf('UPDATE %suser_infos SET nb_image_page = %d WHERE user_id = %d', galDbPrefix(), $value, $userId));
+    $db->close();
+}
+
+/**
+ * Inserts a real `piwigo_search` row shaped like
+ * SearchRepository::insertSearch()'s own `rules` column (a bare `{"q":
+ * ...}` object, the shape SearchService::getSearchResults() checks
+ * `isset($search['q'])` against to route into getQuickSearchResults()
+ * instead of getRegularSearchResults()) -- `search_uuid` is left NULL
+ * (an old-style numeric-only id, same as Ws\PwgCore::historySearch()'s
+ * own ephemeral inserts) so it's reachable via `/index.php?/search/<id>`
+ * without tripping SearchService::getValidatedSearchInfo()'s
+ * search_uuid-required guard. Returns the new row's id.
+ */
+function galInsertQuickSearch(string $q): int
+{
+    $db = galDbConnect();
+    $rulesJson = json_encode(['q' => $q], JSON_THROW_ON_ERROR);
+    $db->query(sprintf(
+        "INSERT INTO %ssearch (search_uuid, created_on, created_by, forked_from, rules) VALUES (NULL, NOW(), 1, NULL, '%s')",
+        galDbPrefix(),
+        $db->real_escape_string($rulesJson)
+    ));
+    $searchId = (int) $db->insert_id;
+    $db->close();
+
+    return $searchId;
+}
+
+function galDeleteSearch(int $searchId): void
+{
+    $db = galDbConnect();
+    $db->query(sprintf('DELETE FROM %ssearch WHERE id = %d', galDbPrefix(), $searchId));
     $db->close();
 }
 
@@ -169,4 +227,127 @@ it('renders the recent-albums page, exercising CategoryCatsRenderer\'s isRecentC
     $page = H::loginAsAdmin($this);
     $page = H::navigateOk($page, '/index.php?/recent_cats');
     $page->assertNoJavaScriptErrors();
+});
+
+it('builds a navigation bar when the section holds more items than the page size', function (): void {
+    // GalleryController.php:151-154 -- only built when
+    // count($page_items) > $page_nb_image_page; the fixture's own
+    // 3-photo category 1 never exceeds the real 15-per-page default, so
+    // this temporarily narrows the admin user's own nb_image_page
+    // preference (piwigo_user_infos, same "restorable DB toggle" pattern
+    // as galSetCategoryComment()/galClearCaddie() above) instead of
+    // faking a bigger fixture.
+    $page = H::loginAsAdmin($this);
+
+    try {
+        galSetNbImagePage(1, 1);
+
+        $page = H::navigateOk($page, '/index.php?/category/1');
+        $page->assertNoJavaScriptErrors();
+    } finally {
+        galSetNbImagePage(1, 15);
+    }
+});
+
+it('snaps the canonical URL start back a full page once it lands past the last item', function (): void {
+    // GalleryController.php:164-174 (U_CANONICAL) -- with nb_image_page
+    // pinned to 2 and category 2's real 2-photo fixture, requesting
+    // start-1 computes $start = 2 * round(1/2) = 2, which is >= the
+    // 2-item count -- GalleryController.php:168-169 then snaps it back
+    // down by one full page before building the canonical URL. start-1
+    // itself stays valid (1 < count($page_items) = 2), so this never
+    // trips the earlier page_not_found() gate at GalleryController.php:105.
+    $page = H::loginAsAdmin($this);
+
+    try {
+        galSetNbImagePage(1, 2);
+
+        $page = H::navigateOk($page, '/index.php?/category/2/start-1');
+        $page->assertNoJavaScriptErrors();
+    } finally {
+        galSetNbImagePage(1, 15);
+    }
+});
+
+it('renders a category filtered by posted chronology, exercising the alternate-field icon link', function (): void {
+    // Mirror of the existing 'created-monthly' test above, but with the
+    // chronology fields swapped: GalleryController.php:242-250 computes
+    // the *other* field's link (the one NOT currently being browsed), so
+    // starting from chronology_field=posted exercises the branch that
+    // resolves to 'created' (GalleryController.php:245) and reads
+    // indexCreatedDateIcon() (GalleryController.php:248) -- the
+    // 'created-monthly' test above only ever reaches the mirror-image
+    // 'posted' resolution.
+    $page = H::loginAsAdmin($this);
+    $page = H::navigateOk($page, '/index.php?/category/1/posted-monthly');
+    $page->assertNoJavaScriptErrors();
+});
+
+it('redirects to the slideshow when the slideshow param is present', function (): void {
+    // GalleryController.php:538-540 -- $galleryDisplay->hasSlideshow
+    // (the `slideshow` GET param) short-circuits straight to a
+    // redirect(), only reachable once CategoryDefaultRenderer::render()
+    // actually produced a real slideshow URL (i.e. $page_items isn't
+    // empty), so this needs a real photo-bearing category, not the
+    // homepage.
+    $page = H::loginAsAdmin($this);
+    $page = H::navigateOk($page, '/index.php?/category/1&slideshow');
+    $page->assertNoJavaScriptErrors();
+});
+
+it('renders quick-search category/tag hints and an unmatched term alongside real results', function (): void {
+    // "Sample" full-text-matches category 1's name ("Sample Album") and
+    // "nature" matches tag 1 -- tag 1 tags images 1,2,3, exactly category
+    // 1's own photos, so the implicit AND between the two terms still
+    // resolves to the same non-empty [1,2,3] (qsearchGetCategories()/
+    // qsearchGetTags() populate all_cats/all_tags from name/tag matches
+    // independently of qsearchEval()'s own id-intersection). The 3rd
+    // term never matches anything at all (image, tag, or category), so
+    // it becomes an unmatched/ignored term without narrowing the first
+    // two terms' result -- qsearchEval() only intersects on a
+    // *qualifying* term (SearchService.php:1045-1048).
+    //
+    // Exercises GalleryController.php:394-431 end to end: matching_cats
+    // (398, 404-411), matching_tags (399, 414, 416-420), and the
+    // non-empty-items "unmatched_terms" branch (423, 427-431).
+    // `matching_cats_no_images` (398) itself is never a real, populated
+    // key anywhere in this codebase -- confirmed dead even in the
+    // legacy 16.x reference (functions_search.inc.php never writes it,
+    // only reads it via index.php's own `@$page[...]`) -- so its ternary
+    // always takes the `[]` branch here; the assignment line itself
+    // still genuinely executes on every real search request, which is
+    // all line coverage requires.
+    $searchId = galInsertQuickSearch('Sample nature quxfrobnicate42');
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $page = H::navigateOk($page, '/index.php?/search/' . $searchId);
+        $page->assertNoJavaScriptErrors();
+        $page->assertSee('Album results for');
+        $page->assertSee('Sample Album');
+        $page->assertSee('Tag results for');
+        $page->assertSee('nature');
+        $page->assertSee('No results for');
+        $page->assertSee('quxfrobnicate42');
+    } finally {
+        galDeleteSearch($searchId);
+    }
+});
+
+it('renders the empty quick-search state when no term matches anything', function (): void {
+    // Exercises GalleryController.php's OTHER branch of the same `if`
+    // (423-425): with zero matching images, $page_items stays empty, so
+    // the "no results" text renders the raw query instead of the
+    // unmatched-terms list the test above exercises.
+    $searchId = galInsertQuickSearch('zzzqfrobnomatch77');
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $page = H::navigateOk($page, '/index.php?/search/' . $searchId);
+        $page->assertNoJavaScriptErrors();
+        $page->assertSee('No results for');
+        $page->assertSee('zzzqfrobnomatch77');
+    } finally {
+        galDeleteSearch($searchId);
+    }
 });

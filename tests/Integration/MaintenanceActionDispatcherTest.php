@@ -185,7 +185,15 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
     // exactly the same hazard ExtensionLifecycleTest's own die()-guard
     // documents. ServerInfoService::renderHtml() itself (the real
     // curated-output logic) is already Unit-tested directly in
-    // ServerInfoServiceTest.php.
+    // ServerInfoServiceTest.php. This dispatcher's own call site (the
+    // `echo`/`exit()` lines themselves) IS exercised, over a real HTTP
+    // request against the live Apache/php-fpm process instead -- a
+    // completely separate process from this shared CLI one, where exit()
+    // just ends that one request normally -- see
+    // tests/Browser/MaintenanceEnvPageRendererTest.php's own
+    // "runs the real phpinfo maintenance action..." test, and
+    // Piwigo\Core\CoverageCollector's own docblock for how that Browser
+    // request's coverage gets measured at all (composer test:coverage:web).
 
     public function test_lock_gallery_persists_gallery_locked_and_redirects(): void
     {
@@ -393,6 +401,46 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             restore_error_handler();
         }
     }
+
+    public function test_check_upgrade_reports_a_real_error_when_the_forks_permanently_unreachable_domain_cannot_be_fetched(): void
+    {
+        // AppInfo::URL points at 'upstream.example.invalid' (RFC 2606 --
+        // guaranteed to never resolve, see AppInfo::DOMAIN's own docblock),
+        // so HttpClientService::fetch() fails fast and deterministically
+        // here (a real DNS/transport failure caught by guardedFetch()'s own
+        // ClientExceptionInterface catch, not a flaky live piwigo.org round
+        // trip) -- the same "fork-safe domain never resolves" property this
+        // project's own HttpClientServiceTest.php / ExtensionUpdateCheckerTest.php /
+        // CoreUpdateServiceTest.php / IntroSubControllerGetLatestNewsTest.php
+        // already rely on for the identical class of "talks to piwigo.org
+        // via the static, non-injectable HttpClientService::fetch()" code.
+        // Real exercise of this dispatcher's own `$result === false`
+        // branch, not a mock of HttpClientService or of
+        // MaintenanceActionDispatcher itself.
+        $this->dispatcher->dispatch('check_upgrade');
+
+        self::assertContains('Unable to check for upgrade.', \Piwigo\Core\PageState::current()->errors);
+    }
+
+    // The entire `else` branch of the 'check_upgrade' case above (the
+    // real-fetch-succeeded path: BSF-vs-stable version-line selection,
+    // BSF date.time splitting, and the final version_compare()-driven
+    // info/error message) has NO reachable path in this fork at all, for
+    // the exact same reason the test above exercises the `$result ===
+    // false` branch instead of the success branch: HttpClientService::fetch()
+    // is a bare static call with no injectable client seam (confirmed via
+    // HttpClientServiceTest.php's own "guardedFetch() ... deliberately NOT
+    // chased here" note -- every caller of fetch()/fetchToFile() always
+    // constructs `new self(...)` internally against the hardcoded real
+    // defaultClient(), with no parameter anywhere in the static call chain
+    // to substitute a MockHttpClient), and the one real network target this
+    // dispatcher can ever reach (AppInfo::URL) is deliberately, permanently
+    // non-resolving (see AppInfo::DOMAIN's own docblock -- this fork
+    // intentionally never calls back to the real piwigo.org). Left
+    // uncovered rather than faked, same choice this project's own
+    // IntroSubControllerGetLatestNewsTest.php/ExtensionUpdateCheckerTest.php/
+    // CoreUpdateServiceTest.php already document for the identical class of
+    // code.
 
     public function test_compiled_templates_purges_a_real_initialized_persistent_cache(): void
     {

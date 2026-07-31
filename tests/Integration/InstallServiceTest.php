@@ -219,6 +219,19 @@ final class InstallServiceTest extends IntegrationTestCase
         self::assertStringContainsString('piwigo_test_db_that_does_not_exist_xyz', $errors[0]);
     }
 
+    // installDbConnect()'s "your MySQL version is too old" throw (its own
+    // line 131, guarding `version_compare($version, SqlDialect::
+    // REQUIRED_MYSQL_VERSION, '<')`) is left uncovered: REQUIRED_MYSQL_VERSION
+    // is '5.0.0' (a `public const string`, immutable -- no seam to lower
+    // it from a test), and installDbConnect() builds its own Connection
+    // internally via DbConnection::build()/DbCredentials::current() with no
+    // parameter to substitute a fake one reporting an old `SELECT
+    // VERSION()` result. Reaching this branch for real would need an
+    // actual MySQL/MariaDB server built before 5.0 (released 2005)
+    // reachable from this environment, which doesn't exist here; every
+    // real server this suite (or any real deployment) can connect to
+    // reports a modern version well above the floor.
+
     // ------------------------------------------------------ activateCoreThemes
 
     // Doctrine\DBAL\Connection::fetchOne() is declared mixed|false -- narrow

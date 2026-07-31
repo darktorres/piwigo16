@@ -16,6 +16,15 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * Album" regardless of any per-category private/public mutation, while the
  * private-albums double-select only starts showing content once a category
  * is actually marked private.
+ *
+ * Not exercised: the `$category['uppercats'] === null || ! is_string(...)`
+ * defensive `continue` inside the group-authorized-categories loop.
+ * findCategoriesAuthorizedViaGroupsForUser()'s own query always selects
+ * `c.uppercats` from a real `piwigo_categories` row, a genuine `NOT NULL
+ * DEFAULT ''` column (tests/Fixtures/piwigo-17.0.sql's own CREATE TABLE),
+ * so a real row's value is always a string -- the "power_user" test below
+ * already drives this exact loop with real data (category 1) without ever
+ * tripping it.
  */
 afterEach(function (): void {
     H::setCategoryPrivate(2, private: false);

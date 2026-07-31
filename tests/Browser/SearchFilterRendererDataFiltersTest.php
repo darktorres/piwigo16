@@ -84,6 +84,43 @@ function searchFilterDataAdminUserId(): int
     return (int) $row['id'];
 }
 
+/**
+ * `added_by` is nullable (`ON DELETE SET NULL` on its FK to users) but no
+ * WS setter exists for it -- every real upload always records the
+ * uploading user's own id.
+ */
+function searchFilterDataSetAddedByNull(int $imageId): void
+{
+    $db = searchFilterDataDb();
+    $prefix = searchFilterDataDbPrefix();
+    $db->query(sprintf('UPDATE %simages SET added_by = NULL WHERE id = %d', $prefix, $imageId));
+    $db->close();
+}
+
+/**
+ * `width`/`height` are both nullable -- no WS setter for either, same
+ * established fact this file's own docblock already documents for
+ * filesize/rating_score/date_creation.
+ */
+function searchFilterDataSetImageDimsNull(int $imageId): void
+{
+    $db = searchFilterDataDb();
+    $prefix = searchFilterDataDbPrefix();
+    $db->query(sprintf('UPDATE %simages SET width = NULL, height = NULL WHERE id = %d', $prefix, $imageId));
+    $db->close();
+}
+
+/**
+ * `filesize` is nullable -- no WS setter for it either.
+ */
+function searchFilterDataSetImageFilesizeNull(int $imageId): void
+{
+    $db = searchFilterDataDb();
+    $prefix = searchFilterDataDbPrefix();
+    $db->query(sprintf('UPDATE %simages SET filesize = NULL WHERE id = %d', $prefix, $imageId));
+    $db->close();
+}
+
 it('renders real per-filter numeric buckets, author/added_by lookups, and a 3+-filter intersection, across a cache-miss and a cache-hit load', function (): void {
     $snapshot = H::snapshotConfig(['filters_views']);
     $filtersViews = json_encode([
@@ -290,6 +327,545 @@ it('renders ALBUMS_FOUND/TAGS_FOUND search hints for an allwords match on both a
         H::assertNoServerErrors($page, 'search allwords album/tag hint');
         $page->assertNoJavaScriptErrors();
         $page->assertSee('ALBUMS_FOUND Hint Photo');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+/**
+ * Closes the "single active filter" cache-branch gap left by the big
+ * multi-filter test above: with expert/author/added_by/cat/tags/ratios/
+ * ratings/filesize/height/width ALL active at once, getItemsForFilter()
+ * always finds at least one OTHER active filter for every single one of
+ * them, so getClauseForFilter() always builds an 'image_id IN (...)'
+ * clause there -- never the plain permissions-only clause that's the ONLY
+ * shape making `$this->cacheGet($cacheKey)`/`cacheSet($cacheKey, ...)`
+ * (the `author_rows_<user>` cache pool entry, lines ~284-289) actually run.
+ * Each of the 4 tests below isolates exactly one such facet as the sole
+ * active field, matching the precedent
+ * SearchFilterRendererExtraFiltersTest.php's own "date-only search" test
+ * already set for date_created.
+ */
+it('serves the author-rows cache pool across a cache-miss then cache-hit load when author is the only active search filter', function (): void {
+    $snapshot = H::snapshotConfig(['filters_views']);
+    $filtersViews = json_encode([
+        'author' => ['access' => 'everybody', 'default' => true],
+    ]);
+    if ($filtersViews === false) {
+        throw new RuntimeException('json_encode failed for the filters_views config value');
+    }
+    H::setConfigValue('filters_views', $filtersViews);
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Search Author Only Album ' . uniqid()]);
+        $albumResult = $album['result'] ?? null;
+        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        }
+        $albumId = (int) $albumResult['id'];
+        $image = H::makeTestImage(uniqid());
+        $imageId = H::uploadPhotoViaApi($image, $albumId, 'Search Author Only Photo');
+        @unlink($image);
+        $authorName = 'Author Only ' . uniqid();
+        H::wsCall($page, 'pwg.images.setInfo', ['image_id' => $imageId, 'author' => $authorName]);
+
+        // 'authors' alone (no categories/tags/...) is the ONLY active
+        // search field.
+        $search = H::wsCall($page, 'pwg.images.filteredSearch.create', [
+            'authors' => $authorName,
+        ]);
+        $searchResult = $search['result'] ?? null;
+        if (! is_array($searchResult) || ! is_string($searchResult['search_url'] ?? null)) {
+            throw new RuntimeException('pwg.images.filteredSearch.create did not return a search_url: ' . var_export($search, true));
+        }
+        $searchUrl = $searchResult['search_url'];
+
+        H::rawWebpage($page)->navigate($searchUrl);
+        H::assertNoServerErrors($page, 'author-only search (1st load, cache miss)');
+        $page->assertNoJavaScriptErrors();
+        $page->assertSee('Search Author Only Photo');
+
+        H::rawWebpage($page)->navigate($searchUrl);
+        H::assertNoServerErrors($page, 'author-only search (2nd load, cache hit)');
+        $page->assertNoJavaScriptErrors();
+        $page->assertSee('Search Author Only Photo');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+/**
+ * Same "sole active filter" cache-branch gap as the author-only test
+ * above, for the `added_by_rows_<user>` cache pool entry (lines ~394-399).
+ * Also closes the `! is_string($addedById)` continue guard (line ~442)
+ * that skips enriching a NULL `added_by` group with a username: a second,
+ * unrelated photo has `added_by` forced to NULL via raw SQL (no WS setter
+ * for it -- every real upload always records the uploading user's own
+ * id), landing in the same unscoped `added_by AS added_by_id` GROUP BY
+ * result set this search's own permissions-only clause scans.
+ */
+it('serves the added_by-rows cache pool across a cache-miss then cache-hit load, skipping a NULL added_by row along the way', function (): void {
+    $snapshot = H::snapshotConfig(['filters_views']);
+    $filtersViews = json_encode([
+        'added_by' => ['access' => 'everybody', 'default' => true],
+    ]);
+    if ($filtersViews === false) {
+        throw new RuntimeException('json_encode failed for the filters_views config value');
+    }
+    H::setConfigValue('filters_views', $filtersViews);
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $adminId = searchFilterDataAdminUserId();
+        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Search Added By Only Album ' . uniqid()]);
+        $albumResult = $album['result'] ?? null;
+        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        }
+        $albumId = (int) $albumResult['id'];
+        $image = H::makeTestImage(uniqid());
+        H::uploadPhotoViaApi($image, $albumId, 'Search Added By Only Photo');
+        @unlink($image);
+
+        $nullImage = H::makeTestImage(uniqid());
+        $nullImageId = H::uploadPhotoViaApi($nullImage, $albumId, 'Search Added By Null Photo');
+        @unlink($nullImage);
+        searchFilterDataSetAddedByNull($nullImageId);
+
+        // 'added_by' alone (no categories/tags/...) is the ONLY active
+        // search field.
+        $search = H::wsCall($page, 'pwg.images.filteredSearch.create', [
+            'added_by' => $adminId,
+        ]);
+        $searchResult = $search['result'] ?? null;
+        if (! is_array($searchResult) || ! is_string($searchResult['search_url'] ?? null)) {
+            throw new RuntimeException('pwg.images.filteredSearch.create did not return a search_url: ' . var_export($search, true));
+        }
+        $searchUrl = $searchResult['search_url'];
+
+        H::rawWebpage($page)->navigate($searchUrl);
+        H::assertNoServerErrors($page, 'added_by-only search (1st load, cache miss)');
+        $page->assertNoJavaScriptErrors();
+        $page->assertSee('Search Added By Only Photo');
+
+        H::rawWebpage($page)->navigate($searchUrl);
+        H::assertNoServerErrors($page, 'added_by-only search (2nd load, cache hit)');
+        $page->assertNoJavaScriptErrors();
+        $page->assertSee('Search Added By Only Photo');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+/**
+ * Same "sole active filter" cache-branch gap, for the `height_rows_<user>`
+ * cache pool entry (lines ~805-810). BrowserTestHelpers::makeTestImage()'s
+ * fixed 200x150 dimensions (no per-test override needed) already fall
+ * inside this range.
+ */
+it('serves the height-rows cache pool across a cache-miss then cache-hit load when height is the only active search filter', function (): void {
+    $snapshot = H::snapshotConfig(['filters_views']);
+    $filtersViews = json_encode([
+        'height' => ['access' => 'everybody', 'default' => true],
+    ]);
+    if ($filtersViews === false) {
+        throw new RuntimeException('json_encode failed for the filters_views config value');
+    }
+    H::setConfigValue('filters_views', $filtersViews);
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Search Height Only Album ' . uniqid()]);
+        $albumResult = $album['result'] ?? null;
+        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        }
+        $albumId = (int) $albumResult['id'];
+        $image = H::makeTestImage(uniqid());
+        H::uploadPhotoViaApi($image, $albumId, 'Search Height Only Photo');
+        @unlink($image);
+
+        // 'height_min'/'height_max' alone (no categories/tags/...) is the
+        // ONLY active search field.
+        $search = H::wsCall($page, 'pwg.images.filteredSearch.create', [
+            'height_min' => 100,
+            'height_max' => 200,
+        ]);
+        $searchResult = $search['result'] ?? null;
+        if (! is_array($searchResult) || ! is_string($searchResult['search_url'] ?? null)) {
+            throw new RuntimeException('pwg.images.filteredSearch.create did not return a search_url: ' . var_export($search, true));
+        }
+        $searchUrl = $searchResult['search_url'];
+
+        H::rawWebpage($page)->navigate($searchUrl);
+        H::assertNoServerErrors($page, 'height-only search (1st load, cache miss)');
+        $page->assertNoJavaScriptErrors();
+        $page->assertSee('Search Height Only Photo');
+
+        H::rawWebpage($page)->navigate($searchUrl);
+        H::assertNoServerErrors($page, 'height-only search (2nd load, cache hit)');
+        $page->assertNoJavaScriptErrors();
+        $page->assertSee('Search Height Only Photo');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+/**
+ * Same "sole active filter" cache-branch gap, for the `width_rows_<user>`
+ * cache pool entry (lines ~864-869).
+ */
+it('serves the width-rows cache pool across a cache-miss then cache-hit load when width is the only active search filter', function (): void {
+    $snapshot = H::snapshotConfig(['filters_views']);
+    $filtersViews = json_encode([
+        'width' => ['access' => 'everybody', 'default' => true],
+    ]);
+    if ($filtersViews === false) {
+        throw new RuntimeException('json_encode failed for the filters_views config value');
+    }
+    H::setConfigValue('filters_views', $filtersViews);
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Search Width Only Album ' . uniqid()]);
+        $albumResult = $album['result'] ?? null;
+        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        }
+        $albumId = (int) $albumResult['id'];
+        $image = H::makeTestImage(uniqid());
+        H::uploadPhotoViaApi($image, $albumId, 'Search Width Only Photo');
+        @unlink($image);
+
+        // 'width_min'/'width_max' alone (no categories/tags/...) is the
+        // ONLY active search field.
+        $search = H::wsCall($page, 'pwg.images.filteredSearch.create', [
+            'width_min' => 100,
+            'width_max' => 300,
+        ]);
+        $searchResult = $search['result'] ?? null;
+        if (! is_array($searchResult) || ! is_string($searchResult['search_url'] ?? null)) {
+            throw new RuntimeException('pwg.images.filteredSearch.create did not return a search_url: ' . var_export($search, true));
+        }
+        $searchUrl = $searchResult['search_url'];
+
+        H::rawWebpage($page)->navigate($searchUrl);
+        H::assertNoServerErrors($page, 'width-only search (1st load, cache miss)');
+        $page->assertNoJavaScriptErrors();
+        $page->assertSee('Search Width Only Photo');
+
+        H::rawWebpage($page)->navigate($searchUrl);
+        H::assertNoServerErrors($page, 'width-only search (2nd load, cache hit)');
+        $page->assertNoJavaScriptErrors();
+        $page->assertSee('Search Width Only Photo');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+/**
+ * Same "sole active filter" cache-branch gap, for the `ratios_<user>`
+ * cache pool entry (lines ~778-783) -- distinct from the ratio-bucket
+ * *counting* test below, which deliberately keeps 'cat' active alongside
+ * 'ratios' for an exact, scoped bucket count instead (the two concerns
+ * can't be satisfied by the same request: any other active filter is
+ * exactly what makes getClauseForFilter() skip the cache pool).
+ * makeTestImage()'s fixed 200x150 dimensions are already a real
+ * "Landscape" ratio (200/150 ≈ 1.33).
+ */
+it('serves the ratios cache pool across a cache-miss then cache-hit load when ratios is the only active search filter', function (): void {
+    $snapshot = H::snapshotConfig(['filters_views']);
+    $filtersViews = json_encode([
+        'ratio' => ['access' => 'everybody', 'default' => true],
+    ]);
+    if ($filtersViews === false) {
+        throw new RuntimeException('json_encode failed for the filters_views config value');
+    }
+    H::setConfigValue('filters_views', $filtersViews);
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Search Ratios Only Album ' . uniqid()]);
+        $albumResult = $album['result'] ?? null;
+        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        }
+        $albumId = (int) $albumResult['id'];
+        $image = H::makeTestImage(uniqid());
+        H::uploadPhotoViaApi($image, $albumId, 'Search Ratios Only Photo');
+        @unlink($image);
+
+        // 'ratios' alone (no categories/tags/...) is the ONLY active
+        // search field.
+        $search = H::wsCall($page, 'pwg.images.filteredSearch.create', [
+            'ratios' => 'Landscape',
+        ]);
+        $searchResult = $search['result'] ?? null;
+        if (! is_array($searchResult) || ! is_string($searchResult['search_url'] ?? null)) {
+            throw new RuntimeException('pwg.images.filteredSearch.create did not return a search_url: ' . var_export($search, true));
+        }
+        $searchUrl = $searchResult['search_url'];
+
+        H::rawWebpage($page)->navigate($searchUrl);
+        H::assertNoServerErrors($page, 'ratios-only search (1st load, cache miss)');
+        $page->assertNoJavaScriptErrors();
+        $page->assertSee('Search Ratios Only Photo');
+
+        H::rawWebpage($page)->navigate($searchUrl);
+        H::assertNoServerErrors($page, 'ratios-only search (2nd load, cache hit)');
+        $page->assertNoJavaScriptErrors();
+        $page->assertSee('Search Ratios Only Photo');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+/**
+ * Same "sole active filter" cache-branch gap, for the `ratings_<user>`
+ * cache pool entry (line ~641's cacheSet() call specifically -- distinct
+ * from that same block's own access-denied unset branch, lines ~645-646,
+ * which SearchFilterRendererExtraFiltersTest.php's own access-denied test
+ * closes).
+ */
+it('serves the ratings cache pool across a cache-miss then cache-hit load when ratings is the only active search filter', function (): void {
+    $snapshot = H::snapshotConfig(['filters_views', 'rate']);
+    $filtersViews = json_encode([
+        'rating' => ['access' => 'everybody', 'default' => true],
+    ]);
+    if ($filtersViews === false) {
+        throw new RuntimeException('json_encode failed for the filters_views config value');
+    }
+    H::setConfigValue('filters_views', $filtersViews);
+    H::setConfigValue('rate', 'true');
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Search Ratings Only Album ' . uniqid()]);
+        $albumResult = $album['result'] ?? null;
+        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        }
+        $albumId = (int) $albumResult['id'];
+        $image = H::makeTestImage(uniqid());
+        $imageId = H::uploadPhotoViaApi($image, $albumId, 'Search Ratings Only Photo');
+        @unlink($image);
+        // rating 2.5 -> bucket r=3 (see the big multi-filter test above's
+        // own comment on this bucketing rule).
+        searchFilterDataSetImageStats($imageId, 200, 150, 2.5, 500, null);
+
+        // 'ratings' alone (no categories/tags/...) is the ONLY active
+        // search field.
+        $search = H::wsCall($page, 'pwg.images.filteredSearch.create', [
+            'ratings' => '3',
+        ]);
+        $searchResult = $search['result'] ?? null;
+        if (! is_array($searchResult) || ! is_string($searchResult['search_url'] ?? null)) {
+            throw new RuntimeException('pwg.images.filteredSearch.create did not return a search_url: ' . var_export($search, true));
+        }
+        $searchUrl = $searchResult['search_url'];
+
+        H::rawWebpage($page)->navigate($searchUrl);
+        H::assertNoServerErrors($page, 'ratings-only search (1st load, cache miss)');
+        $page->assertNoJavaScriptErrors();
+        $page->assertSee('Search Ratings Only Photo');
+
+        H::rawWebpage($page)->navigate($searchUrl);
+        H::assertNoServerErrors($page, 'ratings-only search (2nd load, cache hit)');
+        $page->assertNoJavaScriptErrors();
+        $page->assertSee('Search Ratings Only Photo');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+/**
+ * Closes the `filetypes`-is-the-only-active-filter branch (line ~585):
+ * with no OTHER active filter, getClauseForFilter('filetypes', ...)
+ * returns the plain permissions-only clause (not 'image_id IN (...)'), so
+ * `$allExts` (every visible extension's own count, unnarrowed by the
+ * search) is assigned straight to the FILETYPES template var instead of
+ * the per-extension-intersected `$exts` the big multi-filter test above
+ * exercises.
+ */
+it('assigns the un-narrowed FILETYPES extension counts when filetypes is the only active search filter', function (): void {
+    $snapshot = H::snapshotConfig(['filters_views']);
+    $filtersViews = json_encode([
+        'file_type' => ['access' => 'everybody', 'default' => true],
+    ]);
+    if ($filtersViews === false) {
+        throw new RuntimeException('json_encode failed for the filters_views config value');
+    }
+    H::setConfigValue('filters_views', $filtersViews);
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Search Filetypes Only Album ' . uniqid()]);
+        $albumResult = $album['result'] ?? null;
+        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        }
+        $albumId = (int) $albumResult['id'];
+        $image = H::makeTestImage(uniqid());
+        H::uploadPhotoViaApi($image, $albumId, 'Search Filetypes Only Photo');
+        @unlink($image);
+
+        // 'filetypes' alone (no categories/tags/...) is the ONLY active
+        // search field -- every test photo in this suite is a real .jpg
+        // upload (BrowserTestHelpers::makeTestImage()).
+        $search = H::wsCall($page, 'pwg.images.filteredSearch.create', [
+            'filetypes' => 'jpg',
+        ]);
+        $searchResult = $search['result'] ?? null;
+        if (! is_array($searchResult) || ! is_string($searchResult['search_url'] ?? null)) {
+            throw new RuntimeException('pwg.images.filteredSearch.create did not return a search_url: ' . var_export($search, true));
+        }
+        $searchUrl = $searchResult['search_url'];
+
+        H::rawWebpage($page)->navigate($searchUrl);
+        H::assertNoServerErrors($page, 'filetypes-only search');
+        $page->assertNoJavaScriptErrors();
+        $page->assertSee('Search Filetypes Only Photo');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+/**
+ * Closes the "Landscape" ratio-bucket increment (the one bucket the big
+ * multi-filter test above's own Portrait/square/Panorama fixture set never
+ * exercises) together with the ratio-bucket loop's own defensive skips:
+ * a non-numeric width/height row (`continue`, line ~751 -- width/height
+ * forced NULL via raw SQL, no WS setter for either) and a
+ * both-dimensions-zero row (`$rowWidth <= 0 and $rowHeight <= 0`, line
+ * ~757-758). Deliberately scoped via 'cat' (unlike the ratios-only cache
+ * test above) so the bucket counts below are exact and not diluted by
+ * every other visible photo in the whole gallery.
+ */
+it('counts the "Landscape" ratio bucket and skips non-numeric/zero-dimension rows when computing ratio buckets', function (): void {
+    $snapshot = H::snapshotConfig(['filters_views']);
+    $filtersViews = json_encode([
+        'album' => ['access' => 'everybody', 'default' => true],
+        'ratio' => ['access' => 'everybody', 'default' => true],
+    ]);
+    if ($filtersViews === false) {
+        throw new RuntimeException('json_encode failed for the filters_views config value');
+    }
+    H::setConfigValue('filters_views', $filtersViews);
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Search Ratio Landscape Album ' . uniqid()]);
+        $albumResult = $album['result'] ?? null;
+        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        }
+        $albumId = (int) $albumResult['id'];
+
+        // 200/150 ≈ 1.33 -> Landscape (> 1.05 and < 2).
+        $landscapeImage = H::makeTestImage(uniqid());
+        H::uploadPhotoViaApi($landscapeImage, $albumId, 'Search Ratio Landscape Photo');
+        @unlink($landscapeImage);
+
+        $zeroImage = H::makeTestImage(uniqid());
+        $zeroId = H::uploadPhotoViaApi($zeroImage, $albumId, 'Search Ratio Zero Dims Photo');
+        @unlink($zeroImage);
+        searchFilterDataSetImageStats($zeroId, 0, 0, null, 500, null);
+
+        $nullDimsImage = H::makeTestImage(uniqid());
+        $nullDimsId = H::uploadPhotoViaApi($nullDimsImage, $albumId, 'Search Ratio Null Dims Photo');
+        @unlink($nullDimsImage);
+        searchFilterDataSetImageDimsNull($nullDimsId);
+
+        $search = H::wsCall($page, 'pwg.images.filteredSearch.create', [
+            'categories' => $albumId,
+            'ratios' => 'Landscape',
+        ]);
+        $searchResult = $search['result'] ?? null;
+        if (! is_array($searchResult) || ! is_string($searchResult['search_url'] ?? null)) {
+            throw new RuntimeException('pwg.images.filteredSearch.create did not return a search_url: ' . var_export($search, true));
+        }
+        $searchUrl = $searchResult['search_url'];
+
+        H::rawWebpage($page)->navigate($searchUrl);
+        H::assertNoServerErrors($page, 'ratio bucket landscape/zero/null-dims search');
+        $page->assertNoJavaScriptErrors();
+        $page->assertSee('Search Ratio Landscape Photo');
+
+        $html = H::rawWebpage($page)->content();
+        // Only the Landscape photo counts -- the zero-dims and null-dims
+        // rows are both skipped by the loop's own defensive guards, so
+        // Portrait/square/Panorama all stay at their zero-count, disabled
+        // state (same assertion style as the big multi-filter test's own
+        // ratio-bucket assertions above).
+        expect($html)->toMatch('/<input type="checkbox" id="ratio-Landscape"[^>]*>(?!.*disabled)/')
+            ->and($html)->toContain('<label for="ratio-Landscape">')
+            ->and(substr($html, (int) strpos($html, '<label for="ratio-Landscape">'), 400))->toContain('<span class="ratio-badge">1</span>')
+            ->and($html)->toMatch('/<input type="checkbox" id="ratio-Portrait" [^>]*disabled/')
+            ->and($html)->toMatch('/<input type="checkbox" id="ratio-square" [^>]*disabled/')
+            ->and($html)->toMatch('/<input type="checkbox" id="ratio-Panorama" [^>]*disabled/');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+/**
+ * Closes the filesize-bucket loop's own `! is_numeric($row['filesize'])`
+ * continue guard (line ~673, filesize forced NULL via raw SQL, no WS
+ * setter for it) together with the "no bucket values at all" arbitrary
+ * fallback array (line ~679-686) it feeds into when every row in scope
+ * gets skipped that way -- distinguishable from a genuinely-empty gallery
+ * by its exact, fixed bounds (0..15), asserted below via the slider's own
+ * `data-min`/`data-max` attributes (search_filters.inc.tpl).
+ */
+it('falls back to the arbitrary filesize bucket set when every filesize row in scope is NULL', function (): void {
+    $snapshot = H::snapshotConfig(['filters_views']);
+    $filtersViews = json_encode([
+        'album' => ['access' => 'everybody', 'default' => true],
+        'file_size' => ['access' => 'everybody', 'default' => true],
+    ]);
+    if ($filtersViews === false) {
+        throw new RuntimeException('json_encode failed for the filters_views config value');
+    }
+    H::setConfigValue('filters_views', $filtersViews);
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Search Filesize Null Album ' . uniqid()]);
+        $albumResult = $album['result'] ?? null;
+        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        }
+        $albumId = (int) $albumResult['id'];
+        $image = H::makeTestImage(uniqid());
+        $imageId = H::uploadPhotoViaApi($image, $albumId, 'Search Filesize Null Photo');
+        @unlink($image);
+        searchFilterDataSetImageFilesizeNull($imageId);
+
+        // 'cat' scopes the filesize-bucket query to just this one,
+        // NULL-filesize photo -- 'filesize_min'/'filesize_max' themselves
+        // never match it (`filesize BETWEEN ? AND ?` is unknown/false for
+        // a NULL filesize), so the search's own overall result is empty;
+        // that's fine here, this test targets the sidebar bucket
+        // computation, not the search's own item list.
+        $search = H::wsCall($page, 'pwg.images.filteredSearch.create', [
+            'categories' => $albumId,
+            'filesize_min' => 100,
+            'filesize_max' => 4000,
+        ]);
+        $searchResult = $search['result'] ?? null;
+        if (! is_array($searchResult) || ! is_string($searchResult['search_url'] ?? null)) {
+            throw new RuntimeException('pwg.images.filteredSearch.create did not return a search_url: ' . var_export($search, true));
+        }
+        $searchUrl = $searchResult['search_url'];
+
+        H::rawWebpage($page)->navigate($searchUrl);
+        H::assertNoServerErrors($page, 'filesize bucket fallback search (every row NULL)');
+        $page->assertNoJavaScriptErrors();
+
+        $html = H::rawWebpage($page)->content();
+        expect($html)->toContain('data-min="0"')
+            ->and($html)->toContain('data-max="15"');
     } finally {
         H::restoreConfig($snapshot);
     }

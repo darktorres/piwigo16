@@ -270,4 +270,95 @@ final class TagRepositoryTest extends IntegrationTestCase
     {
         self::assertNull($this->repo->findIdByWhereFragment("name = 'no-such-tag'"));
     }
+
+    public function test_update_name_and_url_name_renames_an_existing_tag(): void
+    {
+        $id = $this->repo->insert('p18-test-' . bin2hex(random_bytes(4)), 'p18-test-' . bin2hex(random_bytes(4)));
+
+        $this->repo->updateNameAndUrlName($id, 'p18-test-renamed', 'p18-test-renamed-url');
+
+        $renamedId = $this->repo->findIdByName('p18-test-renamed');
+        self::assertNotNull($renamedId);
+        self::assertSame($id->value, $renamedId->value);
+
+        $this->repo->deleteByIds([$id]);
+    }
+
+    public function test_update_name_and_url_name_is_a_silent_noop_for_a_nonexistent_id(): void
+    {
+        $this->repo->updateNameAndUrlName(TagId::from(999_999), 'p18-test-should-not-exist', 'p18-test-should-not-exist');
+
+        self::assertNull($this->repo->findIdByName('p18-test-should-not-exist'));
+    }
+
+    public function test_count_images_per_tag_unrestricted_counts_every_image_tag_link_regardless_of_permissions(): void
+    {
+        // A disposable tag, not one of the fixture's own shared 1/2/3 --
+        // this whole DB is shared across every Integration suite in one
+        // process, so a fixture tag's own counter isn't safe to assert on
+        // exactly (another suite's own temporary image_tag row could be
+        // alive at the same moment). Fixture images 4/5 have no tags of
+        // their own (only image 1/2/3 do -- this file's own class
+        // docblock-adjacent fixture description), so linking this
+        // brand-new tag id to them gives an exact, collision-proof count.
+        $tagId = $this->repo->insert('p18-test-' . bin2hex(random_bytes(4)), 'p18-test-' . bin2hex(random_bytes(4)));
+        $this->repo->massInsertImageTags([
+            ['image_id' => 4, 'tag_id' => $tagId->value],
+            ['image_id' => 5, 'tag_id' => $tagId->value],
+        ]);
+
+        try {
+            $counters = $this->repo->countImagesPerTagUnrestricted();
+
+            self::assertSame(2, $counters[$tagId->value] ?? null);
+        } finally {
+            $this->conn->executeStatement('DELETE FROM ' . Tables::imageTag() . ' WHERE tag_id = ?', [$tagId->value]);
+            $this->repo->deleteByIds([$tagId]);
+        }
+    }
+
+    // countImagesPerTagUnrestricted()'s own `! is_numeric($tagId)` `continue`
+    // guard is not chased here: `image_tag.tag_id` is part of a composite
+    // NOT NULL primary key (tests/Fixtures/piwigo-17.0.sql), always a
+    // native int under this project's DBAL driver, so it's unreachable
+    // through any real fetched row -- same shape as this project's other
+    // documented "id is a native-int NOT NULL [primary/foreign] key"
+    // residuals (see SearchRepositoryTest's own).
+
+    public function test_find_comma_joined_tag_ids_by_image_ids_groups_by_image(): void
+    {
+        $byImageId = $this->repo->findCommaJoinedTagIdsByImageIds([1, 2, 3], [1, 2, 3]);
+
+        $tagIdsForImage1 = array_map('intval', explode(',', $byImageId[1] ?? ''));
+        sort($tagIdsForImage1);
+        self::assertSame([1, 2, 3], $tagIdsForImage1);
+        self::assertSame('1', $byImageId[2] ?? null);
+        self::assertSame('1', $byImageId[3] ?? null);
+    }
+
+    public function test_find_comma_joined_tag_ids_by_image_ids_returns_empty_for_empty_tag_ids(): void
+    {
+        self::assertSame([], $this->repo->findCommaJoinedTagIdsByImageIds([], [1, 2, 3]));
+    }
+
+    public function test_find_comma_joined_tag_ids_by_image_ids_returns_empty_for_empty_image_ids(): void
+    {
+        self::assertSame([], $this->repo->findCommaJoinedTagIdsByImageIds([1, 2, 3], []));
+    }
+
+    // findCommaJoinedTagIdsByImageIds()'s own `! is_numeric($imageId)`
+    // `continue` guard is not chased here -- same "native-int NOT NULL
+    // primary key" reasoning as countImagesPerTagUnrestricted()'s own
+    // guard just above (`image_tag.image_id` is the other half of that
+    // same composite primary key).
+
+    public function test_count_existing_ids_counts_only_the_ids_that_exist(): void
+    {
+        self::assertSame(2, $this->repo->countExistingIds([1, 2, 999_999]));
+    }
+
+    public function test_count_existing_ids_returns_zero_for_an_empty_input(): void
+    {
+        self::assertSame(0, $this->repo->countExistingIds([]));
+    }
 }

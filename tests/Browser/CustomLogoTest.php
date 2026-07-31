@@ -28,6 +28,27 @@ it('serves the configured custom logo through logo.php and 404s when none is con
     expect(H::httpBody('logo.php'))->toBe($png);
 });
 
+/**
+ * Closes the `! $disk->fileExists($path)` 404 branch (~line 56) --
+ * distinct from the "none is configured" 404 above (`standardPagesSelectedLogoPath()`
+ * itself null/empty, ~line 50): here the config path is real and
+ * non-empty, but nothing exists on the 'local' disk at that path (e.g. a
+ * theme switch or a manual file deletion after the config was set).
+ */
+it('404s when a real, non-empty logo path is configured but no file exists on disk', function (): void {
+    $png = H::makeTestPng();
+    H::setCustomLogo(CUSTOM_LOGO_RELATIVE_PATH, $png);
+    expect(H::httpStatus('logo.php'))->toBe(200);
+
+    // Delete the on-disk file directly (bypassing clearCustomLogo(), which
+    // would also clear the config rows) -- config still points at
+    // CUSTOM_LOGO_RELATIVE_PATH, but the file itself is now gone.
+    @unlink(dirname(__DIR__, 2) . '/local/' . CUSTOM_LOGO_RELATIVE_PATH);
+
+    expect(H::httpStatus('logo.php'))->toBe(404);
+    expect(H::httpBody('logo.php'))->toContain('Not found');
+});
+
 it('renders a working custom-logo <img> on the identification page once the standard_pages theme is active', function (): void {
     H::setGuestTheme('standard_pages');
     H::setCustomLogo(CUSTOM_LOGO_RELATIVE_PATH, H::makeTestPng());

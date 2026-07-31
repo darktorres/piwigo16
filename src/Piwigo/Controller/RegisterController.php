@@ -40,6 +40,20 @@ final class RegisterController implements ControllerInterface
         // different shape than PageState::$errors' plain list<string>.
         $errors = [];
 
+        // Real bug, found while adding coverage for the invalid-key branch
+        // below: same root cause as PictureController's own documented
+        // recent_pics fix (see that class's docblock) -- Http\ResponseEmitter::
+        // emit() always sends `header(..., true, $response->getStatusCode())`,
+        // which unconditionally overwrites whatever a prior raw
+        // HtmlService::setStatusHeader() call already sent. This method's own
+        // final `return ResponseFactory::html($body)` defaults to 200, so a
+        // bare setStatusHeader(403) call here was silently dead -- confirmed
+        // live, an invalid/expired form key came back 200, never the intended
+        // 403. Threading the real status through the Response object built at
+        // the end (instead of a separate, now-dead setStatusHeader() call) is
+        // the fix, matching PictureController's own chosen pattern.
+        $status = 200;
+
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Free);
 
         if (! \Piwigo\Config\CurrentConfig::allowUserRegistration()) {
@@ -53,8 +67,7 @@ final class RegisterController implements ControllerInterface
 
         if ($registerSubmit->isSubmitted) {
             if (! new \Piwigo\Auth\EphemeralKeyService()->verify($registerSubmit->key)) {
-                \Piwigo\Bootstrap\PresentationAccessor::htmlService()
-                    ->setStatusHeader(403);
+                $status = 403;
                 $errors['register_page_error'] = Lang::t('Invalid/expired form key');
             }
 
@@ -243,6 +256,6 @@ final class RegisterController implements ControllerInterface
         $template->parse('register');
         $body = \Piwigo\Bootstrap\PageTail::renderToString();
 
-        return ResponseFactory::html($body);
+        return ResponseFactory::html($body, $status);
     }
 }

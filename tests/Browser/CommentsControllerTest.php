@@ -547,3 +547,123 @@ it("shows an anonymous comment's own email when no linked user account has one",
     $page = H::navigateOk($page, '/comments.php?author=' . urlencode($author));
     $page->assertPresent('a[href="mailto:' . $email . '"]');
 });
+
+/**
+ * Closes the comment-edit dispatch switch's own `default:` arm (~line
+ * 303) -- CommentService::updateComment()'s `user_comment_check` event
+ * hook has no whitelist on its return value
+ * (`$commentAction = is_string($result) ? $result : 'reject';`), so a
+ * REAL plugin returning an arbitrary string reaches this controller's
+ * switch with a value matching none of 'moderate'/'validate'/'reject',
+ * landing on `trigger_error('Invalid comment action ...', E_USER_WARNING)`.
+ * ErrorCollector (installed on every real request) surfaces that as an
+ * `X-PHP-Error-1` response header rather than corrupting the page body --
+ * asserted on directly here via a raw in-browser fetch() (matching
+ * H::adminPost()'s own technique, extended to also read response
+ * headers, which neither adminPost() nor rawGet() exposes).
+ */
+function commentsPluginsPath(): string
+{
+    return dirname(__DIR__, 2) . '/plugins/';
+}
+
+it('trigger_errors on an unrecognized comment_action from a real user_comment_check hook', function (): void {
+    $pluginId = 'ct-comments-hook-' . uniqid();
+    $dir = commentsPluginsPath() . $pluginId;
+    if (! is_dir($dir)) {
+        mkdir($dir, 0o777, true);
+    }
+    file_put_contents($dir . '/main.inc.php', <<<'PHP'
+    <?php
+
+    declare(strict_types=1);
+
+    /*
+    Plugin Name: Comments Controller Test -- user_comment_check Hook
+    Version: 1.0.0
+    Description: Test-only fixture plugin (tests/Browser/CommentsControllerTest.php).
+    */
+
+    \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler(
+        'user_comment_check',
+        static fn (mixed $action): mixed => 'ct_unknown_action'
+    );
+    PHP);
+
+    $db = commentsDbConnect();
+    $prefix = commentsDbPrefix();
+    $db->query(sprintf(
+        "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0.0')",
+        $prefix,
+        $db->real_escape_string($pluginId)
+    ));
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Comments Hook Album ' . uniqid()]);
+        $albumResult = $album['result'] ?? null;
+        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        }
+        $albumId = (int) $albumResult['id'];
+        $image = H::makeTestImage('Comments Hook Photo');
+        $imageId = H::uploadPhotoViaApi($image, $albumId, 'Comments Hook Photo');
+        @unlink($image);
+
+        $commentId = commentsInsert($imageId, 'browser-comments-hook-' . uniqid(), 'Before the hook edit.', true);
+
+        $page = H::navigateOk($page, '/comments.php?edit=' . $commentId);
+        $html = H::rawWebpage($page)->content();
+        if (preg_match('/name="key" value="([^"]+)"/', $html, $matches) !== 1) {
+            throw new RuntimeException('Could not find the rendered ephemeral key input');
+        }
+        $key = html_entity_decode($matches[1]);
+
+        // EphemeralKeyService::generate(2, ...)'s own anti-rapid-submit
+        // window, same as every other real edit-submission test above.
+        sleep(3);
+
+        $url = H::baseUrl() . '/comments.php?edit=' . $commentId;
+        $body = http_build_query([
+            'content' => 'This never becomes a real registered comment.',
+            'key' => $key,
+            'image_id' => (string) $imageId,
+            'website_url' => '',
+            'pwg_token' => H::pwgToken($page),
+        ]);
+        $js = <<<JS
+        fetch('{$url}', {
+            method: 'POST',
+            redirect: 'manual',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: '{$body}'
+        }).then(async r => JSON.stringify({
+            status: r.status,
+            phpError1: r.headers.get('x-php-error-1'),
+        }))
+        JS;
+        $result = $page->script($js);
+        if (! is_string($result)) {
+            throw new RuntimeException('fetch() did not return a string result: ' . var_export($result, true));
+        }
+        $decoded = json_decode($result, true);
+        if (! is_array($decoded)) {
+            throw new RuntimeException('fetch() result did not decode to an array: ' . $result);
+        }
+
+        expect($decoded['status'] ?? null)->toBe(200);
+        $phpError1 = $decoded['phpError1'] ?? null;
+        if (! is_string($phpError1)) {
+            throw new RuntimeException('expected an X-PHP-Error-1 response header, got: ' . var_export($phpError1, true));
+        }
+        expect($phpError1)->toContain('Invalid comment action ct_unknown_action');
+    } finally {
+        $db = commentsDbConnect();
+        $db->query(sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, $db->real_escape_string($pluginId)));
+        $db->close();
+        @unlink($dir . '/main.inc.php');
+        if (is_dir($dir)) {
+            rmdir($dir);
+        }
+    }
+});

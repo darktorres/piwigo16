@@ -168,6 +168,39 @@ test('set_compression_quality and strip both report success', function (): void 
         ->and($image->strip())->toBeTrue();
 });
 
+test('sharpen applies a real convolution and reports success, actually changing the pixel data', function (): void {
+    imageImagickTestSkipIfUnavailable();
+
+    $path = imageImagickTestMarker() . '/sharpen.jpg';
+    // A flat-color fill would sharpen to itself (no local contrast to
+    // amplify) -- a filled rectangle over part of the canvas gives the
+    // convolution a real edge to act on, so the output can genuinely
+    // differ byte-for-byte from the untouched source.
+    $im = imagecreatetruecolor(40, 40);
+    if ($im === false) {
+        throw new \RuntimeException('imagecreatetruecolor() failed building the test fixture image.');
+    }
+    $color = imagecolorallocate($im, 200, 50, 50);
+    if ($color === false) {
+        throw new \RuntimeException('imagecolorallocate() failed building the test fixture image.');
+    }
+    imagefilledrectangle($im, 10, 10, 29, 29, $color);
+    imagejpeg($im, $path);
+
+    $image = new ImageImagick($path);
+
+    $result = $image->sharpen(50);
+
+    expect($result)->toBeTrue();
+
+    $sharpenedPath = imageImagickTestMarker() . '/sharpened-out.jpg';
+    $untouchedPath = imageImagickTestMarker() . '/sharpen-untouched.jpg';
+    $image->write($sharpenedPath);
+    (new ImageImagick($path))->write($untouchedPath);
+
+    expect(md5_file($sharpenedPath))->not->toBe(md5_file($untouchedPath), 'sharpen() must actually alter the pixel data via a real convolveImage() call');
+});
+
 test('write persists the image to the destination path with the current dimensions', function (): void {
     imageImagickTestSkipIfUnavailable();
 

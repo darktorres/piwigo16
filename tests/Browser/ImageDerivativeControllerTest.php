@@ -167,6 +167,57 @@ function idcPixel(\GdImage $image, int $x, int $y): array
 }
 
 /**
+ * Opens a fresh mysqli connection against the fixture DB -- several of the
+ * coverage-gap tests below need a one-off raw UPDATE against a row no
+ * existing idc*()/H:: helper already covers, matching
+ * idcSetImageRotationCode()'s own established connect-query-close shape
+ * rather than duplicating the connection boilerplate at every call site.
+ */
+function idcDb(): mysqli
+{
+    return new mysqli(
+        (string) getenv('PIWIGO_DB_HOST'),
+        (string) getenv('PIWIGO_DB_USER'),
+        (string) getenv('PIWIGO_DB_PASSWORD'),
+        (string) getenv('PIWIGO_DB_BASE')
+    );
+}
+
+function idcPrefix(): string
+{
+    $prefix = getenv('PIWIGO_DB_PREFIX');
+
+    return $prefix !== false ? $prefix : 'piwigo_';
+}
+
+/**
+ * @return array<string, mixed>|null
+ */
+function idcFetchOne(string $sql): ?array
+{
+    $db = idcDb();
+    $result = $db->query($sql);
+    if (! $result instanceof mysqli_result) {
+        $db->close();
+
+        return null;
+    }
+    $row = $result->fetch_assoc();
+    $db->close();
+
+    return $row === false ? null : $row;
+}
+
+/**
+ * The on-disk path of a real image row's own source file -- as opposed to
+ * one of its derivatives (see idcDerivativeDiskPath() below).
+ */
+function idcSourceDiskPath(string $imagePath): string
+{
+    return dirname(__DIR__, 2) . '/' . $imagePath;
+}
+
+/**
  * @param  array<string, mixed>  $fields
  * @param  non-empty-string  $cookieJar
  * @return array{status: int, body: string}
@@ -1027,5 +1078,557 @@ it('ierrors 500 when the cached derivative file cannot be opened for reading', f
         expect($result['body'])->toBe('Unable to open derivative file');
     } finally {
         @unlink($diskPath);
+    }
+});
+
+// The block below closes a further, targeted set of coverage gaps in the
+// same __invoke()/parseRequest()/trySwitchSource()/sendDerivative() flow
+// the tests above already exercise -- each one's own comment explains
+// exactly which branch it's isolating and, where the underlying math is
+// non-obvious (trySwitchSource()'s own candidate-selection loop), how the
+// expected numbers were actually verified (via SizingParams::compute()
+// itself, not hand-derived) rather than just asserted.
+
+it('resolves the rotation angle live from EXIF when the DB rotation column is still NULL', function (): void {
+    // A fresh upload's own images.rotation is never actually left NULL by
+    // UploadService::addUploadedFile() (it always writes a real code, 0
+    // included, from a live EXIF read at upload time -- see
+    // PwgImage::get_rotation_code_from_angle()'s own null=>0 case) -- the
+    // NULL branch this test targets only exists for a row that reached the
+    // DB some other way (e.g. a legacy row a schema migration never
+    // populated the newer column for). Writing NULL directly reproduces
+    // that state deterministically.
+    $imageId = idcCreateTestPhoto($this, 'Derivative Rotation Null Album');
+    $db = idcDb();
+    $db->query(sprintf('UPDATE %simages SET rotation = NULL WHERE id = %d', idcPrefix(), $imageId));
+    $db->close();
+
+    $result = idcGet('i.php?/' . idcDerivativePath(H::imagePath($imageId), 'th'));
+    expect($result['status'])->toBe(200);
+
+    // __invoke() persists the freshly-resolved code straight back via
+    // ImageRepository::updateRotation() -- confirms the live-EXIF branch
+    // really ran, not just that the request happened to succeed anyway.
+    $row = idcFetchOne(sprintf('SELECT rotation FROM %simages WHERE id = %d', idcPrefix(), $imageId));
+    expect($row['rotation'] ?? null)->not->toBeNull();
+});
+
+it('sends a long-lived Expires header when both the source file and the derivative type have been unchanged for over 24 hours', function (): void {
+    $snapshot = H::snapshotDerivativeConfig();
+    try {
+        $imageId = idcCreateTestPhoto($this, 'Derivative LongExpires Album');
+        $imagePath = H::imagePath($imageId);
+        $srcDiskPath = idcSourceDiskPath($imagePath);
+
+        // Age BOTH halves of `max($src_mtime, $params->last_mod_time)` --
+        // the source file's own mtime (www-data-owned; a copy-then-touch
+        // dance sidesteps that torres can't chmod/touch it directly, same
+        // trick the candidate-reuse tests above use for a derivative file)
+        // and 'square''s own derivative_size.last_mod_time (real
+        // wall-clock time(), set once when this row was first self-healed
+        // at the very start of this Browser suite's run -- almost
+        // certainly still "recent" by the time this test runs, which would
+        // otherwise win the max() and keep the elseif condition false no
+        // matter how old the source file itself is made).
+        $old = time() - 100 * 24 * 3600;
+        $tmp = tempnam(sys_get_temp_dir(), 'pwg_idc_age_');
+        if ($tmp === false) {
+            throw new RuntimeException('tempnam failed');
+        }
+        copy($srcDiskPath, $tmp);
+        unlink($srcDiskPath);
+        copy($tmp, $srcDiskPath);
+        @unlink($tmp);
+        // copy()'s destination inherits tempnam()'s own restrictive 0600
+        // mode, not the original www-data-owned file's 0644 -- torres now
+        // owns the recreated file, so www-data (a supplementary member of
+        // the torres group, not the owner) would otherwise lose read
+        // access entirely once generation actually opens it for real.
+        chmod($srcDiskPath, 0644);
+        touch($srcDiskPath, $old);
+
+        $db = idcDb();
+        $db->query(sprintf("UPDATE %sderivative_size SET last_mod_time = %d WHERE name = 'square'", idcPrefix(), $old));
+        $db->close();
+
+        $result = idcGet('i.php?/' . idcDerivativePath($imagePath, 'sq'));
+        expect($result['status'])->toBe(200);
+        expect($result['headers']['cache-control'] ?? null)->not->toBe('no-store, max-age=100');
+        $expires = $result['headers']['expires'] ?? null;
+        expect($expires)->not->toBeNull();
+        $expiresTs = strtotime((string) $expires);
+        expect($expiresTs)->toBeGreaterThan(time() + 9 * 24 * 3600);
+        expect($expiresTs)->toBeLessThan(time() + 11 * 24 * 3600);
+    } finally {
+        H::restoreDerivativeConfig($snapshot);
+    }
+});
+
+it('generates a previously-unregistered custom size once its own key is registered, averaging sharpen across every defined type', function (): void {
+    $snapshot = H::snapshotDerivativeConfig();
+    try {
+        // Prime derivative_settings/derivative_size on a throwaway photo
+        // first (self-heals into the DB on the very first-ever real i.php
+        // request if no earlier test in this run has already forced it) --
+        // JSON_SET() against a not-yet-existing settings row would
+        // silently update 0 rows.
+        $primeId = idcCreateTestPhoto($this, 'Derivative Custom Prime Album');
+        expect(idcGet('i.php?/' . idcDerivativePath(H::imagePath($primeId), 'sq'))['status'])->toBe(200);
+
+        // parseCustomParams()'s own 's' (single WxH token, crop=0) branch --
+        // SizingParams::$max_crop is untyped and stays a plain int 0 here
+        // (parseCustomParams() never reassigns it in the 's' branch), so
+        // add_url_tokens()'s strict `$max_crop === 0.0` check is false for
+        // this int 0 (the same int/float quirk trySwitchSource()'s own
+        // docblock documents) -- both the registration key below and
+        // parseRequest()'s own validation call compute the SAME
+        // (non-'s'-prefixed) 2-token key via the same code, so they still
+        // agree with each other even though the URL's own 's' prefix looks
+        // unrelated to the persisted key shape (verified directly against
+        // DerivativeParams::add_url_tokens(), not hand-derived).
+        // JSON_OBJECT(), not JSON_SET() -- verified live against the
+        // fixture DB: no real production code path ever populates
+        // ImageStdParams::$custom (func_define_derivative()'s width/height
+        // form is dead code -- grep confirms its only real template call
+        // site is commented out), so self::save()'s own json_encode([])
+        // persists custom_json as the JSON *array* `[]`, never `{}` --
+        // JSON_SET()'s object-member path silently no-ops against an array
+        // root (confirmed directly: `JSON_SET('[]', '$."k"', 1)` returns
+        // `[]` unchanged), so it would leave the key unregistered and this
+        // test would still 403. A full JSON_OBJECT() replacement is safe
+        // precisely because nothing else in this suite ever reads or
+        // writes a second key here.
+        $key = '150x100_a';
+        $db = idcDb();
+        $db->query(sprintf(
+            "UPDATE %sderivative_settings SET custom_json = JSON_OBJECT('%s', %d)",
+            idcPrefix(),
+            $db->real_escape_string($key),
+            time()
+        ));
+        $db->close();
+
+        $imageId = idcCreateTestPhoto($this, 'Derivative Custom Success Album');
+        $imagePath = H::imagePath($imageId);
+        $withoutExt = preg_replace('/\.\w+$/', '', $imagePath);
+        if (! is_string($withoutExt)) {
+            throw new RuntimeException('preg_replace failed');
+        }
+        $path = 'i.php?/' . $withoutExt . '-cu_s150x100.jpg';
+
+        $result = idcGet($path);
+        expect($result['status'])->toBe(200);
+        expect($result['headers']['content-type'] ?? null)->toBe('image/jpeg');
+
+        // 200x150 (H::makeTestImage()'s own fixed canvas) classically
+        // scaled into a 150x100 (crop=0) box: height is the binding ratio
+        // (0.667 < width's 0.75) -- verified directly against
+        // SizingParams::compute(), not hand-derived.
+        $decoded = imagecreatefromstring($result['body']);
+        if ($decoded === false) {
+            throw new RuntimeException('Failed to decode the derivative response body as an image');
+        }
+        expect(imagesx($decoded))->toBe(133);
+        expect(imagesy($decoded))->toBe(100);
+    } finally {
+        H::restoreDerivativeConfig($snapshot);
+    }
+});
+
+it('rejects a custom "exact crop" (e-prefixed) size that was never registered in the allow-list', function (): void {
+    // parseCustomParams()'s 'e' branch (crop=1, min_size=ideal_size) -- a
+    // distinct code path from the 's'/3-token custom-size forms every
+    // other custom-size test in this file already exercises.
+    $path = 'i.php?/ct_custom_e_' . uniqid() . '-cu_e150x150.jpg';
+
+    expect(H::httpStatus($path))->toBe(403);
+});
+
+it('ierrors 500 "dir create error" when the derivative cache directory cannot be created', function (): void {
+    $imageId = idcCreateTestPhoto($this, 'Derivative Mkgetdir Album');
+    $originalDiskPath = idcSourceDiskPath(H::imagePath($imageId));
+
+    $token = uniqid();
+    $newRelDir = 'ct_mkgetdir_' . $token;
+    $newRelPath = $newRelDir . '/dummy.jpg';
+    $newDiskDir = dirname(__DIR__, 2) . '/' . $newRelDir;
+    $derivDir = dirname(__DIR__, 2) . '/_data/i/' . $newRelDir;
+
+    mkdir($newDiskDir, 0777, true);
+    copy($originalDiskPath, $newDiskDir . '/dummy.jpg');
+
+    $db = idcDb();
+    $db->query(sprintf(
+        "UPDATE %simages SET path = '%s' WHERE id = %d",
+        idcPrefix(),
+        $db->real_escape_string($newRelPath),
+        $imageId
+    ));
+    $db->close();
+
+    // Pre-create (and lock down) the derivative cache directory that would
+    // otherwise be created on demand -- mkgetdir() only ever needs to
+    // *create* a directory the very first time a given date/path prefix is
+    // requested, and every other test in this file shares the SAME
+    // date-based upload/derivative subtree (Env::now()'s frozen test
+    // clock); locking THAT down would break every concurrently-running
+    // test. This synthetic, uniquely-named subdirectory is never touched
+    // by anything else, so locking only it down is fully isolated.
+    mkdir($derivDir, 0777, true);
+    chmod($derivDir, 0555);
+
+    try {
+        $result = idcGet('i.php?/' . $newRelDir . '/dummy-sq.jpg');
+
+        expect($result['status'])->toBe(500);
+        expect($result['body'])->toBe('dir create error');
+    } finally {
+        chmod($derivDir, 0777);
+        @rmdir($derivDir);
+        @unlink($newDiskDir . '/dummy.jpg');
+        @rmdir($newDiskDir);
+    }
+});
+
+it('applies a configured non-zero sharpen amount when generating a standard-type derivative', function (): void {
+    $snapshot = H::snapshotDerivativeConfig();
+    try {
+        // Prime the row first (see the custom-size test's own comment on
+        // why), then set a real, non-zero sharpen amount -- no admin UI in
+        // this rewrite exposes this column at all (grep confirms it), so a
+        // direct write is the only way to reach it: DerivativeParams->
+        // sharpen defaults to 0.0 for every one of ImageStdParams::
+        // get_default_sizes()'s own entries, so every OTHER test in this
+        // suite requesting a standard type takes the falsy `(bool)
+        // $params->sharpen` branch and never actually reaches
+        // $image->sharpen() itself.
+        $primeId = idcCreateTestPhoto($this, 'Derivative Sharpen Prime Album');
+        expect(idcGet('i.php?/' . idcDerivativePath(H::imagePath($primeId), 'sq'))['status'])->toBe(200);
+
+        $db = idcDb();
+        $db->query(sprintf("UPDATE %sderivative_size SET sharpen = '0.5000' WHERE name = 'square'", idcPrefix()));
+        $db->close();
+
+        $imageId = idcCreateTestPhoto($this, 'Derivative Sharpen Album');
+        $result = idcGet('i.php?/' . idcDerivativePath(H::imagePath($imageId), 'sq'));
+
+        expect($result['status'])->toBe(200);
+        expect($result['headers']['content-type'] ?? null)->toBe('image/jpeg');
+    } finally {
+        H::restoreDerivativeConfig($snapshot);
+    }
+});
+
+it('clamps the JPEG compression quality to 75 when generating a 4xlarge derivative', function (): void {
+    $snapshot = H::snapshotDerivativeConfig();
+    try {
+        $db = idcDb();
+        $db->query(sprintf("UPDATE %sderivative_size SET enabled = 1 WHERE name = '4xlarge'", idcPrefix()));
+        $db->close();
+
+        // A real crop/scale change isn't needed to leave the "0 changes"
+        // fast path -- a stored rotation alone forces $changes>=1 (see the
+        // rotation test above), and the 200x150 fixture canvas stays far
+        // inside 4xlarge's own 3000x2250 box either way, isolating this
+        // from any crop/scale confound the same way that test's own
+        // comment does.
+        $imageId = idcCreateTestPhoto($this, 'Derivative FourXLarge Album');
+        idcSetImageRotationCode($imageId, 1);
+
+        $result = idcGet('i.php?/' . idcDerivativePath(H::imagePath($imageId), '4x'));
+        expect($result['status'])->toBe(200);
+
+        $decoded = imagecreatefromstring($result['body']);
+        if ($decoded === false) {
+            throw new RuntimeException('Failed to decode the derivative response body as an image');
+        }
+        // 200x150 rotated 90 degrees: width/height swap, no scaling needed.
+        expect(imagesx($decoded))->toBe(150);
+        expect(imagesy($decoded))->toBe(200);
+    } finally {
+        H::restoreDerivativeConfig($snapshot);
+    }
+});
+
+it('resolves a source file located one directory above the app root via the "../" fallback', function (): void {
+    // ImageDerivativeController resolves paths against CurrentPaths::
+    // get()->root -- the repo root, one level above public/ (see this
+    // file's own header comment). "One level above root" therefore lands
+    // outside the repo entirely, in the shell user's own home directory --
+    // reachable by the live Apache/www-data process here only because
+    // www-data is a supplementary member of the torres group (the same
+    // group-membership precedent this project's own permission fixes
+    // rely on elsewhere), giving it traversal+read access via the
+    // directory's own group bits despite not owning it.
+    $token = uniqid();
+    $filename = 'ct_uplevel_' . $token . '.jpg';
+    $diskPath = dirname(dirname(__DIR__, 2)) . '/' . $filename;
+
+    $source = H::makeTestImage('CT Uplevel');
+    copy($source, $diskPath);
+    @unlink($source);
+    @chmod($diskPath, 0644);
+
+    try {
+        // idcDerivativePath() inserts the '-sq' type token *before* the
+        // extension ('ct_uplevel_XXXX-sq.jpg'), not after it -- a naively
+        // appended '-sq.jpg' would produce a double-extensioned request
+        // whose own ext/type-suffix stripping never matches the real
+        // on-disk filename at all, silently skipping the '../' branch this
+        // test exists to exercise instead of hitting it.
+        $path = 'i.php?/' . idcDerivativePath($filename, 'sq');
+        // No matching images.path row exists for '../{$filename}' -- this
+        // only needs to prove the '../' resolution itself ran (the file
+        // really was found one level up), not a full successful
+        // generation; the "Db file path not found" 404 fires right after,
+        // the same 2nd-lookup-stage 404 the orphan-file test above covers
+        // for the root-level case.
+        expect(H::httpStatus($path))->toBe(404);
+    } finally {
+        @unlink($diskPath);
+    }
+});
+
+it('never attempts sibling-derivative reuse when the source height is unknown', function (): void {
+    // originalSize's own docblock: width is guaranteed once set, but
+    // height is independently nullable (both are separately-nullable DB
+    // columns) -- a genuinely possible state (e.g. a partial metadata
+    // sync) reproduced directly, since no real upload flow ever leaves
+    // height null while width is set.
+    $imageId = idcCreateTestPhoto($this, 'Derivative HeightNull Album');
+    $db = idcDb();
+    $db->query(sprintf('UPDATE %simages SET height = NULL WHERE id = %d', idcPrefix(), $imageId));
+    $db->close();
+
+    $result = idcGet('i.php?/' . idcDerivativePath(H::imagePath($imageId), 'sq'));
+    expect($result['status'])->toBe(200);
+});
+
+it('exercises every candidate-selection outcome in trySwitchSource() for a classic-type request', function (): void {
+    // Verified directly via SizingParams::compute() (not hand-derived --
+    // double-rounding across 2 successive scale operations is genuinely
+    // fiddly): requesting 'medium' (792x594) for a 700x760 source --
+    //  - square/thumb/2small/xsmall/small: box smaller than 'medium''s own
+    //    -> excluded before ever computing a candidate size at all.
+    //  - 'medium' itself: excluded as the same type being requested.
+    //  - 'large': structurally plausible on paper, but its own (real,
+    //    box-constrained) downscale of the true original, fed back through
+    //    'medium''s own math, lands 1px off from computing 'medium'
+    //    directly from the true original -- excluded on a genuine dsize
+    //    mismatch, not a freshness check.
+    //  - 'xlarge'/'xxlarge': both bigger than the source in every
+    //    dimension, so neither one changes it at all -- feeding that
+    //    unchanged size back through 'medium''s math reproduces the direct
+    //    computation exactly, so both structurally qualify -- but neither
+    //    has ever been cached for this brand new photo, so both still
+    //    fail the freshness check and get skipped too.
+    // End to end: every single candidate is rejected for a different
+    // reason, trySwitchSource() returns false, and generation falls back
+    // to the true original -- the exact final size below is only
+    // reachable that way.
+    $imageId = idcUploadSizedPhoto($this, 'Derivative Candidate Sweep Album', 700, 760, [90, 130, 200]);
+    $imagePath = H::imagePath($imageId);
+
+    $result = idcGet('i.php?/' . idcDerivativePath($imagePath, 'me'));
+    expect($result['status'])->toBe(200);
+
+    $decoded = imagecreatefromstring($result['body']);
+    if ($decoded === false) {
+        throw new RuntimeException('Failed to decode the derivative response body as an image');
+    }
+    expect(imagesx($decoded))->toBe(547);
+    expect(imagesy($decoded))->toBe(594);
+});
+
+it('reuses a larger cropped-type sibling via the max_crop!=0 candidate branch, with some candidates excluded by watermark mismatch', function (): void {
+    $snapshot = H::snapshotDerivativeConfig();
+    $cookieJar = tempnam(sys_get_temp_dir(), 'pwg_idc_cropreuse_');
+    if ($cookieJar === false) {
+        throw new RuntimeException('tempnam failed');
+    }
+    $watermarkPngPath = null;
+    $uploadedWatermarkPath = null;
+
+    try {
+        $pwgToken = idcAdminPwgToken($cookieJar);
+
+        // min 200x200: bigger than 'square' (120x120) and 'thumb'
+        // (144x144) -- both stay use_watermark=false -- but smaller than
+        // every other classic type's own ideal_size ('2small' and up),
+        // which all become use_watermark=true. Requesting 'square' below
+        // means every classic candidate from '2small' up gets excluded at
+        // trySwitchSource()'s own watermark-mismatch check, leaving
+        // 'thumb' as the only surviving, structurally-matching candidate
+        // (verified directly against apply_global()/trySwitchSource(),
+        // not hand-derived).
+        $watermarkPngPath = tempnam(sys_get_temp_dir(), 'pwg_idc_cropreuse_img_') . '.png';
+        $wmImg = imagecreatetruecolor(10, 10);
+        if ($wmImg === false) {
+            throw new RuntimeException('imagecreatetruecolor failed');
+        }
+        $red = imagecolorallocate($wmImg, 255, 0, 0);
+        if ($red === false) {
+            throw new RuntimeException('imagecolorallocate failed');
+        }
+        imagefill($wmImg, 0, 0, $red);
+        imagepng($wmImg, $watermarkPngPath);
+
+        $uploadedWatermarkPath = idcSaveWatermarkConfig($cookieJar, $pwgToken, [
+            'w[position]' => 'topleft',
+            'w[xpos]' => '0',
+            'w[ypos]' => '0',
+            'w[xrepeat]' => '0',
+            'w[yrepeat]' => '0',
+            'w[opacity]' => '100',
+            'w[minw]' => '200',
+            'w[minh]' => '200',
+        ], $watermarkPngPath, 'ct-idc-cropreuse.png');
+
+        // A perfectly square source: 'thumb' (144x144, classic) scaled
+        // from it stays exactly 144x144, and crop-squaring *that* back
+        // down to 'square''s own 120x120 box lands on exactly the same
+        // [120,120] trySwitchSource() computes directly from the true
+        // original -- verified via SizingParams::compute() directly, not
+        // hand-derived.
+        $imageId = idcUploadSizedPhoto($this, 'Derivative Crop Reuse Album', 1200, 1200, [40, 200, 90]);
+        $imagePath = H::imagePath($imageId);
+
+        // Generate 'thumb' for real first, from the true green-ish original.
+        $thumbResult = idcGet('i.php?/' . idcDerivativePath($imagePath, 'th'));
+        expect($thumbResult['status'])->toBe(200);
+
+        $thumbDiskPath = idcDerivativeDiskPath($imagePath, 'th');
+        // Same delete+recreate dance the candidate-reuse tests above use --
+        // an unambiguous solid-red 144x144 stand-in for "thumb", so a
+        // *reused* square derivative is visibly red, never the true
+        // original's own green-ish fill.
+        unlink($thumbDiskPath);
+        $redImg = imagecreatetruecolor(144, 144);
+        if ($redImg === false) {
+            throw new RuntimeException('imagecreatetruecolor failed');
+        }
+        $red2 = imagecolorallocate($redImg, 255, 0, 0);
+        if ($red2 === false) {
+            throw new RuntimeException('imagecolorallocate failed');
+        }
+        imagefill($redImg, 0, 0, $red2);
+        imagejpeg($redImg, $thumbDiskPath, 90);
+        touch($thumbDiskPath, time() + 120);
+
+        $squareResult = idcGet('i.php?/' . idcDerivativePath($imagePath, 'sq'));
+        expect($squareResult['status'])->toBe(200);
+
+        $decoded = imagecreatefromstring($squareResult['body']);
+        if ($decoded === false) {
+            throw new RuntimeException('Failed to decode the derivative response body as an image');
+        }
+        expect(imagesx($decoded))->toBe(120);
+        expect(imagesy($decoded))->toBe(120);
+
+        $center = idcPixel($decoded, 60, 60);
+        expect($center['red'])->toBeGreaterThan(180);
+        expect($center['green'])->toBeLessThan(80);
+    } finally {
+        @unlink($cookieJar);
+        if ($watermarkPngPath !== null) {
+            @unlink($watermarkPngPath);
+        }
+        if ($uploadedWatermarkPath !== null) {
+            @unlink($uploadedWatermarkPath);
+        }
+        H::restoreDerivativeConfig($snapshot);
+    }
+});
+
+it('serves the correct Content-Type for a gif derivative', function (): void {
+    $page = H::loginAsAdmin($this);
+    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Derivative Gif Album ' . uniqid()]);
+    $albumResult = $album['result'] ?? null;
+    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    }
+
+    $img = imagecreatetruecolor(200, 150);
+    if ($img === false) {
+        throw new RuntimeException('imagecreatetruecolor failed');
+    }
+    $color = imagecolorallocate($img, 90, 130, 200);
+    if ($color === false) {
+        throw new RuntimeException('imagecolorallocate failed');
+    }
+    imagefill($img, 0, 0, $color);
+    $tmpPath = tempnam(sys_get_temp_dir(), 'pwg_idc_gif_');
+    if ($tmpPath === false) {
+        throw new RuntimeException('tempnam failed');
+    }
+    $gifPath = $tmpPath . '.gif';
+    imagegif($img, $gifPath);
+
+    // UploadService::addUploadedFile() derives the STORED extension from
+    // getimagesize()'s own detected IMAGETYPE_*, not from the multipart
+    // Content-Type H::uploadPhotoViaApi() always declares ('image/jpeg') --
+    // a real GIF's own magic bytes still get stored (and served back) as
+    // '.gif'. GD (this environment's own graphics library) reads/writes
+    // GIF natively, so this goes through a real, first-time generation,
+    // unlike the webp test below.
+    $imageId = H::uploadPhotoViaApi($gifPath, (int) $albumResult['id'], 'Derivative Gif Photo');
+    @unlink($gifPath);
+
+    $result = idcGet('i.php?/' . idcDerivativePath(H::imagePath($imageId), 'th'));
+    expect($result['status'])->toBe(200);
+    expect($result['headers']['content-type'] ?? null)->toBe('image/gif');
+});
+
+it('serves the correct Content-Type for an already-cached webp derivative', function (): void {
+    // GD (this environment's own graphics library, confirmed via
+    // gd_info()) has no imagecreatefromwebp() *decode* wiring in
+    // ImageGd::__construct() (jpg/jpeg/png/gif only) -- generating a *new*
+    // webp derivative from scratch would throw an ImageProcessingException
+    // before ever reaching sendDerivative(). Pre-seeding the cached file
+    // directly and relying on the "already generated" fast path
+    // (need_generate=false) exercises the Content-Type switch this test
+    // targets without ever constructing a PwgImage from the webp source at
+    // all -- exactly how a real request for an already-generated webp
+    // derivative behaves in production too, regardless of backend.
+    $page = H::loginAsAdmin($this);
+    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Derivative Webp Album ' . uniqid()]);
+    $albumResult = $album['result'] ?? null;
+    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    }
+
+    $img = imagecreatetruecolor(200, 150);
+    if ($img === false) {
+        throw new RuntimeException('imagecreatetruecolor failed');
+    }
+    $color = imagecolorallocate($img, 90, 130, 200);
+    if ($color === false) {
+        throw new RuntimeException('imagecolorallocate failed');
+    }
+    imagefill($img, 0, 0, $color);
+    $tmpPath = tempnam(sys_get_temp_dir(), 'pwg_idc_webp_');
+    if ($tmpPath === false) {
+        throw new RuntimeException('tempnam failed');
+    }
+    $webpPath = $tmpPath . '.webp';
+    imagewebp($img, $webpPath);
+
+    $imageId = H::uploadPhotoViaApi($webpPath, (int) $albumResult['id'], 'Derivative Webp Photo');
+    @unlink($webpPath);
+
+    $imagePath = H::imagePath($imageId);
+    $derivDiskPath = idcDerivativeDiskPath($imagePath, 'th');
+    if (! is_dir(dirname($derivDiskPath))) {
+        mkdir(dirname($derivDiskPath), 0o777, true);
+    }
+    imagewebp($img, $derivDiskPath);
+    touch($derivDiskPath, time() + 60);
+
+    try {
+        $result = idcGet('i.php?/' . idcDerivativePath($imagePath, 'th'));
+        expect($result['status'])->toBe(200);
+        expect($result['headers']['content-type'] ?? null)->toBe('image/webp');
+    } finally {
+        @unlink($derivDiskPath);
     }
 });

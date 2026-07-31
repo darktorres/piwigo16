@@ -102,6 +102,66 @@ it('theme page reports a missing admin.inc.php for a real, scanned theme', funct
         ->and($page->content())->toContain('default/admin/admin.inc.php');
 });
 
+/**
+ * Closes ThemeSubController's 3rd, remaining branch (the real
+ * `include_once $filename;`, line ~47): needs a theme with BOTH a
+ * themeconf.inc.php (so ExtensionScanner::scan() finds it -- a pure
+ * filesystem scan, `is_dir()` + `file_exists()` read via file(), never
+ * `include`d itself, so its content only needs to parse via a plain
+ * regex, not be valid PHP) AND its own admin/admin.inc.php, which
+ * neither bundled theme ships (see the test above). Same throwaway-
+ * fixture-under-the-live-root technique as the plugin fixture tests
+ * above -- unlike ThemesInstalledPageRendererTest.php's own documented
+ * reason for avoiding this (a real activate/deactivate/delete STATE
+ * transition, visible to every other test that lists installed/active
+ * themes), this never touches the `theme` config row or any DB table at
+ * all -- ExtensionScanner::scan() is a pure filesystem read, so a
+ * same-it()-scoped, finally-cleaned-up directory carries none of that
+ * cross-test state risk.
+ */
+function themeSubThemesPath(): string
+{
+    return dirname(__DIR__, 2) . '/themes/';
+}
+
+function themeSubWriteFixtureTheme(string $themeId): void
+{
+    $dir = themeSubThemesPath() . $themeId;
+    $adminDir = $dir . '/admin';
+    if (! is_dir($adminDir)) {
+        mkdir($adminDir, 0o777, true);
+    }
+    file_put_contents($dir . '/themeconf.inc.php', "<?php\n// Theme Name: " . $themeId . "\n");
+    file_put_contents($adminDir . '/admin.inc.php', "<?php\necho '<!--CT_THEMESUB_INCLUDED-->';\n");
+}
+
+function themeSubRemoveFixtureTheme(string $themeId): void
+{
+    $dir = themeSubThemesPath() . $themeId;
+    @unlink($dir . '/admin/admin.inc.php');
+    if (is_dir($dir . '/admin')) {
+        rmdir($dir . '/admin');
+    }
+    @unlink($dir . '/themeconf.inc.php');
+    if (is_dir($dir)) {
+        rmdir($dir);
+    }
+}
+
+it('theme page includes a real admin.inc.php for a theme that ships one', function (): void {
+    $themeId = 'ct-themesub-active-' . uniqid();
+    themeSubWriteFixtureTheme($themeId);
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $page = H::navigateOk($page, '/admin.php?page=theme&theme=' . $themeId);
+
+        expect($page->content())->toContain('CT_THEMESUB_INCLUDED');
+    } finally {
+        themeSubRemoveFixtureTheme($themeId);
+    }
+});
+
 it('updates ext tab checks every extension type and reports the PEM server as unreachable', function (): void {
     $page = H::loginAsAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=updates&tab=ext');
@@ -247,6 +307,88 @@ it('admin popuphelp rejects a page parameter with invalid characters', function 
     expect($page->content())->toContain('Hacking attempt!');
 });
 
+/**
+ * Closes the `$help_content === false` fallback (~line 95): a
+ * well-formed (charset-valid) `page` value with no matching
+ * `help/<page>.html` under any real/parent/force_fallback('en_UK')/
+ * default language -- distinct from the "rejects invalid characters" test
+ * above, which never even reaches Lang::load() at all.
+ */
+it('admin popuphelp falls back to empty content for a well-formed but nonexistent help topic', function (): void {
+    $page = H::loginAsAdmin($this);
+    // H::rawGet() (not navigateOk()+content()): Playwright's own content()
+    // always DOM-normalizes a navigation into a full <html><head>
+    // </head><body>...</body></html> document even for a truly empty
+    // response body (confirmed by the "content_only output" test above's
+    // own docblock, for the same underlying reason) -- rawGet() reads the
+    // real, raw HTTP response body instead, needed for an exact-empty
+    // assertion.
+    $result = H::rawGet($page, '/admin/popuphelp.php?page=zzz_nonexistent_help_topic&output=content_only');
+
+    expect($result['status'])->toBe(200);
+    expect($result['body'])->toBe('');
+});
+
+/**
+ * Closes the `get_popup_help_content` hook's own non-string-return
+ * fallback (~line 100) -- EventDispatcher::triggerChange()'s pass-through
+ * default (no handler registered) always returns $help_content unchanged,
+ * already a string, so this needs a REAL plugin registering the hook,
+ * same throwaway-fixture-plugin technique as the PluginSubController
+ * tests above.
+ */
+it('admin popuphelp falls back to empty content when a real get_popup_help_content hook returns a non-string', function (): void {
+    $pluginId = 'ct-popuphelp-hook-' . uniqid();
+    $dir = pluginSubPluginsPath() . $pluginId;
+    if (! is_dir($dir)) {
+        mkdir($dir, 0o777, true);
+    }
+    file_put_contents($dir . '/main.inc.php', <<<'PHP'
+    <?php
+
+    declare(strict_types=1);
+
+    /*
+    Plugin Name: Admin Popuphelp Test -- get_popup_help_content Hook
+    Version: 1.0.0
+    Description: Test-only fixture plugin (tests/Browser/AdminUncoveredPagesSmokeTest.php).
+    */
+
+    \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler(
+        'get_popup_help_content',
+        static fn (mixed $content): mixed => null
+    );
+    PHP);
+    $db = pluginSubDb();
+    $prefix = pluginSubDbPrefix();
+    $db->query(sprintf(
+        "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0.0')",
+        $prefix,
+        $db->real_escape_string($pluginId)
+    ));
+    $db->close();
+
+    try {
+        $page = H::loginAsAdmin($this);
+        // A real, existing help topic -- proves the fallback specifically
+        // discards the hook's null return (which would otherwise leave
+        // HELP_CONTENT as a literal empty string too, indistinguishable
+        // from the "nonexistent topic" test above without this real
+        // topic's own non-empty starting content to overwrite). Raw
+        // rawGet(), not navigateOk()+content(), for the same exact-empty
+        // reason as that test.
+        $result = H::rawGet($page, '/admin/popuphelp.php?page=cat_options&output=content_only');
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->toBe('');
+    } finally {
+        $db = pluginSubDb();
+        $db->query(sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, $db->real_escape_string($pluginId)));
+        $db->close();
+        pluginSubRemoveFixturePlugin($pluginId);
+    }
+});
+
 it('rating by user page renders its own tab and ratings table', function (): void {
     $page = H::loginAsAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=rating_user');
@@ -268,4 +410,111 @@ it('plugin page rejects a section with fewer than 2 slash-separated segments', f
     $page = H::navigateOk($page, '/admin.php?page=plugin&section=onlyonesegment');
 
     expect($page->content())->toContain('[Hacking attempt] the input parameter "section" is not valid');
+});
+
+/**
+ * Both tests below need a plugin PluginLoader::loadPlugins() actually
+ * loads (a real `plugins` DB row with state='active' AND a matching
+ * plugins/<id>/main.inc.php on disk -- LoadedPlugins::get() only gets
+ * populated for a plugin satisfying both), reaching PluginSubController's
+ * own remaining 2 branches (line ~42 onward: an active plugin whose
+ * requested section file does/doesn't exist) that neither test above can
+ * reach (both use a plugin id LoadedPlugins never even contains). Same
+ * throwaway-fixture-under-the-live-plugins-root technique
+ * PluginsInstalledPageRendererTest.php's own docblock already establishes
+ * (single it()-scoped, sequential Browser suite, cleaned up in a finally
+ * block).
+ */
+function pluginSubDbPrefix(): string
+{
+    $prefix = getenv('PIWIGO_DB_PREFIX');
+
+    return $prefix !== false ? $prefix : 'piwigo_';
+}
+
+function pluginSubDb(): mysqli
+{
+    return new mysqli(
+        (string) getenv('PIWIGO_DB_HOST'),
+        (string) getenv('PIWIGO_DB_USER'),
+        (string) getenv('PIWIGO_DB_PASSWORD'),
+        (string) getenv('PIWIGO_DB_BASE')
+    );
+}
+
+function pluginSubPluginsPath(): string
+{
+    return dirname(__DIR__, 2) . '/plugins/';
+}
+
+function pluginSubWriteFixturePlugin(string $pluginId): void
+{
+    $dir = pluginSubPluginsPath() . $pluginId;
+    if (! is_dir($dir)) {
+        mkdir($dir, 0o777, true);
+    }
+    file_put_contents($dir . '/main.inc.php', "<?php\n");
+    file_put_contents($dir . '/ct_settings.php', "<?php\necho '<!--CT_PLUGINSUB_INCLUDED-->';\n");
+}
+
+function pluginSubRemoveFixturePlugin(string $pluginId): void
+{
+    $dir = pluginSubPluginsPath() . $pluginId;
+    @unlink($dir . '/main.inc.php');
+    @unlink($dir . '/ct_settings.php');
+    if (is_dir($dir)) {
+        rmdir($dir);
+    }
+}
+
+it('plugin page includes a real settings file from an active on-disk plugin', function (): void {
+    $pluginId = 'ct-pluginsub-active-' . uniqid();
+    pluginSubWriteFixturePlugin($pluginId);
+    $db = pluginSubDb();
+    $prefix = pluginSubDbPrefix();
+    $db->query(sprintf(
+        "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0')",
+        $prefix,
+        $db->real_escape_string($pluginId)
+    ));
+    $db->close();
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $page = H::navigateOk($page, '/admin.php?page=plugin&section=' . $pluginId . '/ct_settings.php');
+
+        expect($page->content())->toContain('CT_PLUGINSUB_INCLUDED');
+    } finally {
+        $db = pluginSubDb();
+        $db->query(sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, $db->real_escape_string($pluginId)));
+        $db->close();
+        pluginSubRemoveFixturePlugin($pluginId);
+    }
+});
+
+it('plugin page fatal-errors on a missing section file for a real active plugin', function (): void {
+    $pluginId = 'ct-pluginsub-missing-' . uniqid();
+    pluginSubWriteFixturePlugin($pluginId);
+    $db = pluginSubDb();
+    $prefix = pluginSubDbPrefix();
+    $db->query(sprintf(
+        "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0')",
+        $prefix,
+        $db->real_escape_string($pluginId)
+    ));
+    $db->close();
+
+    try {
+        $page = H::loginAsAdmin($this);
+        // ct_missing.php is deliberately never written to disk.
+        $page = H::navigateOk($page, '/admin.php?page=plugin&section=' . $pluginId . '/ct_missing.php');
+
+        expect($page->content())->toContain('Missing file')
+            ->and($page->content())->toContain($pluginId . '/ct_missing.php');
+    } finally {
+        $db = pluginSubDb();
+        $db->query(sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, $db->real_escape_string($pluginId)));
+        $db->close();
+        pluginSubRemoveFixturePlugin($pluginId);
+    }
 });

@@ -159,6 +159,22 @@ final class FatalSignalHtmlRenderer implements HtmlRenderingInterface
 }
 
 /**
+ * A real class that deliberately does NOT implement InflectorInterface --
+ * class_alias()'d onto a fake 'Piwigo\Search\Inflector\Inflector_zz' FQCN
+ * by the Inflector-guard test below, standing in for exactly the real-world
+ * scenario that guard defends against (a 3rd-party language pack shipping
+ * a broken Inflector_xx.php for its own 2-letter code). Every real
+ * Inflector_* class under src/Piwigo/Search/Inflector (currently only 'en'
+ * and 'fr') correctly implements the interface, so there is no way to
+ * reach this branch through any real language code -- class_alias() is a
+ * genuine PHP class-resolution mechanism, not a mock of SearchService
+ * itself.
+ */
+final class SearchServiceTestNotAnInflector
+{
+}
+
+/**
  * Same fixture shape as CategoryRepositoryTest/SearchRepositoryTest:
  * images 1-5 (1,2,3 in category 1, 4,5 in category 2, all 200x150,
  * fixture-photo-N.jpg / "Photo N"), tags 1 "nature", 2 "travel", 3
@@ -170,10 +186,15 @@ final class FatalSignalHtmlRenderer implements HtmlRenderingInterface
  * is always a native-int NOT NULL primary key under this project's DBAL
  * driver, so those branches are unreachable through any real fetched row.
  * qsearchGetTextTokenSearchSql()'s `preg_split() failed` throw and
- * splitAllwords()'s own `preg_split() failed` throw are likewise not
- * chased -- both guard a `preg_split()` call against a fixed, always-valid
- * pattern, which PCRE has no real way to fail on for a plain string
- * input. SearchService::getValidatedSearchInfo()/getValidatedSearchArray()'s
+ * splitAllwords()'s own `preg_split() failed` throw ARE exercised below
+ * (not left as documented-dead-code like the `is_numeric()` pair above):
+ * no *crafted input string* can make either fail, but a real PCRE
+ * resource-exhaustion error is still reachable in-process via
+ * `ini_set('pcre.backtrack_limit', '0')`, the exact same technique
+ * MetadataServiceTest::test_parse_svg_dimensions_returns_null_when_preg_replace_hits_the_backtrack_limit()
+ * already confirmed live works even for a plain, non-catastrophic
+ * pattern -- see the 2 tests near the end of this file.
+ * SearchService::getValidatedSearchInfo()/getValidatedSearchArray()'s
  * `fatalError()`/`badRequest()` gates ARE exercised below, via a
  * dedicated {@see FatalSignalHtmlRenderer} test double (built with
  * {@see makeServiceWithRenderer()}) instead of the real HtmlService, since
@@ -374,6 +395,21 @@ final class SearchServiceTest extends IntegrationTestCase
     public function test_split_allwords_returns_null_for_blank_input(): void
     {
         self::assertNull(SearchService::splitAllwords('   '));
+    }
+
+    public function test_split_allwords_throws_when_preg_split_hits_the_backtrack_limit(): void
+    {
+        $originalLimit = ini_get('pcre.backtrack_limit');
+        ini_set('pcre.backtrack_limit', '0');
+
+        try {
+            $this->expectException(\Exception::class);
+            $this->expectExceptionMessage('splitAllwords(): preg_split() failed');
+
+            SearchService::splitAllwords('nature travel');
+        } finally {
+            ini_set('pcre.backtrack_limit', $originalLimit === false ? '1000000' : $originalLimit);
+        }
     }
 
     public function test_qsearch_get_text_token_search_sql_is_injection_safe(): void
@@ -813,6 +849,27 @@ final class SearchServiceTest extends IntegrationTestCase
         self::assertSame(['MATCH(name, comment) AGAINST(' . $expectedQuoted . ' IN BOOLEAN MODE)'], $clauses);
     }
 
+    public function test_qsearch_get_text_token_search_sql_throws_when_preg_split_hits_the_backtrack_limit(): void
+    {
+        // 'helloworld' (>3 chars, unquoted, no wildcard) forces $useFt=true
+        // so the preg_split() branch actually runs -- same
+        // ini_set('pcre.backtrack_limit', '0') technique as
+        // MetadataServiceTest::test_parse_svg_dimensions_returns_null_when_preg_replace_hits_the_backtrack_limit(),
+        // confirmed live to fail even this plain, non-catastrophic
+        // character-class pattern.
+        $originalLimit = ini_get('pcre.backtrack_limit');
+        ini_set('pcre.backtrack_limit', '0');
+
+        try {
+            $this->expectException(\Exception::class);
+            $this->expectExceptionMessage('qsearchGetTextTokenSearchSql(): preg_split() failed');
+
+            $this->service->qsearchGetTextTokenSearchSql(new QSingleToken('helloworld', 0, null), ['name']);
+        } finally {
+            ini_set('pcre.backtrack_limit', $originalLimit === false ? '1000000' : $originalLimit);
+        }
+    }
+
     public function test_get_quick_search_results_no_cache_matches_the_author_scope_when_populated(): void
     {
         // Every fixture image has a NULL author -- a non-empty author:
@@ -1078,6 +1135,47 @@ final class SearchServiceTest extends IntegrationTestCase
         self::assertSame([1, 2, 3, 4, 5], $items);
     }
 
+    public function test_get_quick_search_results_no_cache_finds_no_subalbums_for_a_leaf_category_match_with_subalbums_enabled(): void
+    {
+        // findSubcategoryIds() matches on `uppercats`, which always
+        // contains a category's own id -- so with real, uncorrupted data
+        // getSubcatIds() can never return [] for a category that itself
+        // just matched (it always matches at least itself). Temporarily
+        // corrupting category 2's own `uppercats` (simulating the same
+        // kind of stale/broken hierarchy row Admin\CategoryRepairService
+        // exists to fix) is the only way to make findSubcategoryIds([2])
+        // genuinely return [], exercising qsearchGetCategories()'s own
+        // "$subcatIds === []" ternary branch -- as opposed to the sibling
+        // test above, whose category 1 always DOES have a real child.
+        CurrentConfig::setQuickSearchIncludeSubAlbums(true);
+        $originalUppercats = $this->conn->fetchOne('SELECT uppercats FROM ' . Tables::categories() . ' WHERE id = 2');
+        self::assertIsString($originalUppercats);
+        $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET uppercats = '999' WHERE id = 2");
+
+        try {
+            // "Nested" matches category 2 ("Nested Sub Album") by name only.
+            $results = $this->service->getQuickSearchResultsNoCache('Nested', []);
+
+            self::assertSame([], $results['items']);
+        } finally {
+            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET uppercats = ? WHERE id = 2', [$originalUppercats]);
+        }
+    }
+
+    public function test_get_quick_search_results_no_cache_or_keyword_unions_two_tag_matches(): void
+    {
+        // "family" tags image 1 only; "nature" tags images 1,2,3. The
+        // literal "OR" keyword sets QST_OR on the following token
+        // (QMultiToken::parse()), exercising qsearchEval()'s own
+        // OR-modifier union branch -- every other multi-term search test
+        // in this file exercises the implicit AND/intersection instead.
+        $results = $this->service->getQuickSearchResultsNoCache('family OR nature', []);
+
+        $items = $results['items'];
+        sort($items);
+        self::assertSame([1, 2, 3], $items);
+    }
+
     public function test_get_quick_search_results_no_cache_evaluates_a_parenthesized_sub_group(): void
     {
         // "(nature)" is a nested QMultiToken sub-expression -- exercises
@@ -1239,6 +1337,33 @@ final class SearchServiceTest extends IntegrationTestCase
         $results = $this->service->getSearchResults((string) $id, true, '');
 
         self::assertSame([1], $results['items']);
+    }
+
+    public function test_get_quick_search_results_no_cache_throws_when_the_default_users_language_resolves_to_an_inflector_class_that_does_not_implement_the_interface(): void
+    {
+        // See SearchServiceTestNotAnInflector's own docblock above for why
+        // class_alias() is the only real way in.
+        if (! class_exists('Piwigo\\Search\\Inflector\\Inflector_zz', false)) {
+            class_alias(SearchServiceTestNotAnInflector::class, 'Piwigo\\Search\\Inflector\\Inflector_zz');
+        }
+
+        $originalLanguage = $this->conn->fetchOne('SELECT language FROM ' . Tables::userInfos() . ' WHERE user_id = 2');
+        self::assertIsString($originalLanguage);
+        // user_id=2 is CurrentConfig::defaultUserId()'s own default (the
+        // guest account) -- getDefaultLanguage() reads *this* row, entirely
+        // independent of CurrentUser (id=1 in this file's own setUp()).
+        $this->conn->executeStatement("UPDATE " . Tables::userInfos() . " SET language = 'zz_ZZ' WHERE user_id = 2");
+        \Piwigo\Core\ProcessCache::forget('default_user');
+
+        try {
+            $this->expectException(\LogicException::class);
+            $this->expectExceptionMessage('Inflector_zz does not implement InflectorInterface');
+
+            $this->service->getQuickSearchResultsNoCache('nature', []);
+        } finally {
+            $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . ' SET language = ? WHERE user_id = 2', [$originalLanguage]);
+            \Piwigo\Core\ProcessCache::forget('default_user');
+        }
     }
 
     // A test forcing getAvailableSearchUuid()'s internal retry-on-collision

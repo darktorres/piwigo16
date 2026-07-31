@@ -3,11 +3,13 @@
 declare(strict_types=1);
 
 use Piwigo\Bootstrap\RequestBootstrap;
+use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ServerTiming;
+use Piwigo\Tests\Support\KernelContainerOverride;
 use Piwigo\Users\CurrentUser;
 
 beforeEach(function (): void {
@@ -93,3 +95,20 @@ test('CurrentConfigService::get throws when nothing has ever been set', function
 
     CurrentConfigService::get();
 })->throws(LogicException::class, 'CurrentConfigService not initialised -- call Piwigo\Bootstrap\RequestBootstrap::bootEntryPoint() or Piwigo\Bootstrap\CliBootstrap::buildApplication() first.');
+
+test('bootConfigOnly throws when the container returns an unexpected type for ConfigService', function (): void {
+    // CurrentConfigService::isSet() is false (reset in beforeEach above), so
+    // bootConfigOnly() takes the "resolve from the container" branch instead
+    // of reusing an already-set instance -- the real container always
+    // autowires a genuine ConfigService for this class-string, so this
+    // \LogicException guard is otherwise unreachable through the public
+    // API. KernelContainerOverride rebinds just this one class to a plain
+    // stdClass (see its own docblock), matching the identical pattern
+    // tests/Integration/InstallBootstrapTest.php's own
+    // test_activateConfigService_throws_when_the_container_returns_an_unexpected_type
+    // uses for InstallBootstrap's sibling guard.
+    KernelContainerOverride::withWrongTypeFor(
+        ConfigService::class,
+        static fn () => RequestBootstrap::bootConfigOnly(Paths::fromRoot(sys_get_temp_dir()))
+    );
+})->throws(LogicException::class, 'Container returned an unexpected type for ' . ConfigService::class);

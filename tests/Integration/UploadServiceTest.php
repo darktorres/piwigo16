@@ -6,6 +6,7 @@ namespace Piwigo\Tests\Integration;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Image\ImageProcessingException;
+use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
@@ -21,6 +22,7 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Url\UrlService;
 
@@ -226,6 +228,11 @@ final class UploadServiceTest extends IntegrationTestCase
         // disturbing image 1 itself, which every other test in this class
         // still relies on for duplicate-detection.
         $this->conn->executeStatement('DELETE FROM ' . Tables::imageCategory() . ' WHERE image_id = 1 AND category_id = 2');
+        // Same belt-and-suspenders reasoning as the image_category cleanup
+        // above -- addFormat()'s own tests write real piwigo_image_format
+        // rows against the shared fixture image 1, not a throwaway id this
+        // class deletes wholesale.
+        $this->conn->executeStatement('DELETE FROM ' . Tables::imageFormat() . ' WHERE image_id = 1');
         $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param IN ('lounge_active', 'count_orphans')");
 
         StorageRegistry::reset();
@@ -427,6 +434,57 @@ final class UploadServiceTest extends IntegrationTestCase
         self::assertSame(15, $size[1]);
     }
 
+    public function test_addUploadedFile_throws_when_the_given_image_id_does_not_exist(): void
+    {
+        $source = $this->marker . '/orphan-update.png';
+        $this->makeImage($source, 'png', 10, 8);
+
+        $countBefore = $this->countRows('SELECT COUNT(*) FROM ' . Tables::images());
+
+        $threw = null;
+        try {
+            new UploadService()->addUploadedFile($source, $this->urlService, 'orphan.png', image_id: 999_999);
+        } catch (ImageProcessingException $e) {
+            $threw = $e;
+        }
+
+        self::assertNotNull($threw, 'addUploadedFile() should have thrown for a nonexistent image_id');
+        self::assertStringContainsString('this photo does not exist in the database', $threw->getMessage());
+
+        // Nothing was inserted or deleted -- the throw happens before any
+        // write, unlike the SVG-mismatch/forbidden-type rejection tests
+        // below, which unlink() the source first.
+        self::assertFileExists($source);
+        $countAfter = $this->countRows('SELECT COUNT(*) FROM ' . Tables::images());
+        self::assertSame($countBefore, $countAfter);
+    }
+
+    public function test_addUploadedFile_updates_the_level_when_given_on_the_update_branch(): void
+    {
+        $service = new UploadService();
+
+        $first = $this->marker . '/lvl-first.png';
+        $this->makeImage($first, 'png', 20, 20);
+        $id = $service->addUploadedFile($first, $this->urlService, 'lvl-first.png');
+        $this->imageIdsToDelete[] = $id;
+
+        // The stock fixture/default insert path never sets a non-zero
+        // level -- confirm the baseline before proving the update branch's
+        // own `if (isset($level)) { $update['level'] = $level; }` really
+        // changed it.
+        $before = $this->fetchImageRow($id);
+        self::assertSame(0, $this->rowInt($before['level']));
+
+        $second = $this->marker . '/lvl-second.png';
+        $this->makeImage($second, 'png', 15, 15);
+
+        $result = $service->addUploadedFile($second, $this->urlService, 'lvl-second.png', image_id: $id, level: 4);
+
+        self::assertSame($id, $result);
+        $row = $this->fetchImageRow($id);
+        self::assertSame(4, $this->rowInt($row['level']));
+    }
+
     public function test_addUploadedFile_dispatches_the_correct_extension_for_each_raster_image_type(): void
     {
         $service = new UploadService();
@@ -488,6 +546,90 @@ final class UploadServiceTest extends IntegrationTestCase
         self::assertFileExists($absolutePath);
     }
 
+    /**
+     * addUploadedFile()'s own `if (PwgImage::get_library() !== 'gd')`
+     * guard around originalResize()/needResize()/pwg_resize() -- this
+     * environment's real ImageMagick CLI makes CurrentConfig::
+     * graphicsLibrary()'s own 'auto' default resolve to 'ext_imagick'
+     * before ever considering 'gd' (see tests/Unit/Admin/Upload/
+     * UploadServiceTest.php's own "converts a real ... via the ext_imagick
+     * CLI" tests for the same reasoning), so this real trigger path is
+     * genuinely reachable without touching any library config -- only
+     * skipped, defensively, on an environment where it truly isn't.
+     */
+    public function test_addUploadedFile_resizes_the_original_when_it_exceeds_the_configured_max_dimensions(): void
+    {
+        if (PwgImage::get_library() === 'gd') {
+            self::markTestSkipped('No non-GD image library (ext_imagick/imagick) available in this environment -- addUploadedFile() never reaches its own originalResize()/needResize()/pwg_resize() block when PwgImage::get_library() is gd.');
+        }
+
+        CurrentConfig::setOriginalResize(true);
+        CurrentConfig::setOriginalResizeMaxwidth(50);
+        CurrentConfig::setOriginalResizeMaxheight(50);
+        CurrentConfig::setOriginalResizeQuality(90);
+
+        $source = $this->marker . '/big.jpg';
+        $this->makeImage($source, 'jpeg', 200, 150);
+
+        $imageId = new UploadService()->addUploadedFile($source, $this->urlService, 'big.jpg');
+        $id = $imageId;
+        $this->imageIdsToDelete[] = $id;
+
+        $row = $this->fetchImageRow($id);
+        self::assertLessThanOrEqual(50, $this->rowInt($row['width']));
+        self::assertLessThanOrEqual(50, $this->rowInt($row['height']));
+
+        // The resize happens in place, against the same $file_path the row
+        // itself points at -- the real on-disk bytes are genuinely smaller
+        // too, not just the DB-recorded dimensions.
+        self::assertIsString($row['path']);
+        $absolutePath = $this->marker . '/' . $row['path'];
+        $size = getimagesize($absolutePath);
+        self::assertIsArray($size);
+        self::assertLessThanOrEqual(50, $size[0]);
+        self::assertLessThanOrEqual(50, $size[1]);
+    }
+
+    /**
+     * addUploadedFile()'s own "new photo" insert branch only sets
+     * `$insert['representative_ext']` when the 'upload_file' PluginConfig
+     * event actually returns one -- those 6 handlers are normally
+     * registered by Bootstrap\RequestBootstrap (a real HTTP-request
+     * bootstrap this Integration suite's own Kernel::boot() call never
+     * runs, see this class's own docblock), so every other test in this
+     * file uploads against an empty 'upload_file' handler chain. Registers
+     * just the one handler this test needs directly instead, same
+     * established pattern as RateServiceTest's own
+     * EventDispatcher::get()->addEventHandler()/EventDispatcher::reset()
+     * pair.
+     */
+    public function test_addUploadedFile_stores_the_representative_ext_when_an_upload_file_handler_matches(): void
+    {
+        CurrentConfig::setUploadFormAllTypes(true);
+
+        EventDispatcher::get()->addEventHandler('upload_file', UploadService::uploadFilePdf(...));
+
+        try {
+            $png = $this->marker . '/pdf-source.png';
+            $this->makeImage($png, 'png', 40, 40);
+            $pdf = $this->marker . '/document.pdf';
+            $cmd = 'convert ' . escapeshellarg($png) . ' ' . escapeshellarg($pdf) . ' 2>&1';
+            exec($cmd, $out, $status);
+            if ($status !== 0) {
+                self::markTestSkipped('ImageMagick convert failed to build a PDF fixture: ' . implode("\n", $out));
+            }
+
+            $imageId = new UploadService()->addUploadedFile($pdf, $this->urlService, 'document.pdf');
+            $id = $imageId;
+            $this->imageIdsToDelete[] = $id;
+
+            $row = $this->fetchImageRow($id);
+            self::assertSame('jpg', $row['representative_ext']);
+        } finally {
+            EventDispatcher::reset();
+        }
+    }
+
     public function test_addUploadedFile_rejects_a_mismatched_svg_mime_type_and_deletes_the_source_file(): void
     {
         CurrentConfig::setUploadFormAllTypes(true);
@@ -511,6 +653,38 @@ final class UploadServiceTest extends IntegrationTestCase
 
         self::assertNotNull($threw, 'addUploadedFile() should have thrown for a mismatched SVG MIME type');
         self::assertStringContainsString('does not match file MIME type', $threw->getMessage());
+
+        self::assertFileDoesNotExist($source);
+        $countAfter = $this->countRows('SELECT COUNT(*) FROM ' . Tables::images());
+        self::assertSame($countBefore, $countAfter);
+    }
+
+    public function test_addUploadedFile_rejects_an_extension_absent_from_fileExtensions_even_when_all_types_are_allowed(): void
+    {
+        CurrentConfig::setUploadFormAllTypes(true);
+
+        // Real, non-image bytes with an extension that is NOT one of
+        // CurrentConfig::fileExtensions()'s own default entries -- unlike
+        // the finfo-fallback test above, which deliberately uses '.zip', a
+        // member of that list. getimagesize() fails (not a picture), and
+        // finfo sniffs some non-SVG mimetype here (no MIME/extension
+        // mismatch to catch), so this reaches addUploadedFile()'s own
+        // conf_file_ext whitelist check instead -- a distinct rejection
+        // path from the SVG-mismatch test above.
+        $source = $this->marker . '/payload.exe';
+        file_put_contents($source, "MZ\x90\x00" . str_repeat('x', 32));
+
+        $countBefore = $this->countRows('SELECT COUNT(*) FROM ' . Tables::images());
+
+        $threw = null;
+        try {
+            new UploadService()->addUploadedFile($source, $this->urlService, 'payload.exe');
+        } catch (ImageProcessingException $e) {
+            $threw = $e;
+        }
+
+        self::assertNotNull($threw, 'addUploadedFile() should have thrown for an extension absent from fileExtensions()');
+        self::assertSame('unexpected file type', $threw->getMessage());
 
         self::assertFileDoesNotExist($source);
         $countAfter = $this->countRows('SELECT COUNT(*) FROM ' . Tables::images());
@@ -621,5 +795,191 @@ final class UploadServiceTest extends IntegrationTestCase
         // The per-page sibling was renamed away, not left behind alongside
         // the recovered file.
         self::assertFileDoesNotExist($this->marker . '/pwg_representative/multi-0.' . $result);
+    }
+
+    public function test_addFormat_throws_when_the_format_of_image_does_not_exist(): void
+    {
+        CurrentConfig::setIsFormatsEnabled(true);
+        CurrentConfig::setFormatExtensions(['tif']);
+
+        try {
+            $service = new UploadService();
+            $source = $this->marker . '/orphan-format.tif';
+            file_put_contents($source, 'not a real tiff, just needs bytes on disk');
+
+            $threw = null;
+            try {
+                $service->addFormat($source, 'tif', 999_999);
+            } catch (ImageProcessingException $e) {
+                $threw = $e;
+            }
+
+            self::assertNotNull($threw, 'addFormat() should have thrown for a nonexistent format_of image id');
+            self::assertStringContainsString('this photo does not exist in the database', $threw->getMessage());
+        } finally {
+            CurrentConfig::setIsFormatsEnabled(false);
+            CurrentConfig::setFormatExtensions(['cr2', 'tif', 'tiff', 'nef', 'dng', 'ai', 'psd']);
+        }
+    }
+
+    /**
+     * addFormat()'s own getFormatIdByImageAndExt()-then-branch: a first
+     * call for a given (image, ext) pair inserts a new
+     * piwigo_image_format row ('add'); a second call for the exact same
+     * pair updates that same row's filesize in place instead of inserting
+     * a duplicate ('update') -- neither status was exercised by any
+     * existing test before this one (only the two disabled-formats/
+     * unauthorized-extension guard tests existed in
+     * tests/Unit/Admin/Upload/UploadServiceTest.php).
+     */
+    public function test_addFormat_inserts_then_updates_the_same_format_row_on_a_second_call(): void
+    {
+        CurrentConfig::setIsFormatsEnabled(true);
+        CurrentConfig::setFormatExtensions(['tif']);
+
+        try {
+            $service = new UploadService();
+
+            $sourceV1 = $this->marker . '/format-v1.tif';
+            file_put_contents($sourceV1, str_repeat('a', 128));
+            $result1 = $service->addFormat($sourceV1, 'tif', 1);
+            self::assertSame('add', $result1);
+
+            $sourceV2 = $this->marker . '/format-v2.tif';
+            file_put_contents($sourceV2, str_repeat('b', 512));
+            $result2 = $service->addFormat($sourceV2, 'tif', 1);
+            self::assertSame('update', $result2);
+
+            $count = $this->countRows('SELECT COUNT(*) FROM ' . Tables::imageFormat() . " WHERE image_id = 1 AND ext = 'tif'");
+            self::assertSame(1, $count, 'a second addFormat() call for the same image/ext should UPDATE, not duplicate, the row');
+        } finally {
+            CurrentConfig::setIsFormatsEnabled(false);
+            CurrentConfig::setFormatExtensions(['cr2', 'tif', 'tiff', 'nef', 'dng', 'ai', 'psd']);
+        }
+    }
+
+    /**
+     * uploadFileHeic() calls getOptimalDimensionsForRepresentative()
+     * (private, static) right before its own real `convert` invocation --
+     * that helper's own per-type loop is dead in
+     * tests/Unit/Admin/Upload/UploadServiceTest.php's own "returns a
+     * positive width/height pair" test (that suite never calls
+     * ImageStdParams::load_from_db(), so every type's own $params stays
+     * null there), unlike here, where this class's own setUp() already
+     * does -- genuinely exercising it. Whether or not this environment's
+     * ImageMagick build carries a libheif delegate (unconfirmed, unlike
+     * the ext_imagick binary itself -- see this file's own uploadFileTiff/
+     * Pdf/Psd/Eps tests), uploadFileHeic() always reaches its own tail
+     * `return $representative_ext;`: null if the real `convert`
+     * invocation failed to produce a file, 'jpg' if a genuinely available
+     * delegate succeeded.
+     */
+    public function test_upload_file_heic_reaches_its_tail_return_via_getOptimalDimensionsForRepresentative(): void
+    {
+        $heic = $this->marker . '/photo.heic';
+        file_put_contents($heic, 'not a genuine heic payload -- only the .heic extension needs to dispatch here');
+
+        $result = UploadService::uploadFileHeic(null, $heic);
+
+        self::assertTrue($result === null || $result === 'jpg');
+
+        if ($result === 'jpg') {
+            $representativePath = $this->marker . '/pwg_representative/photo.jpg';
+            self::assertFileExists($representativePath);
+        }
+    }
+
+    /**
+     * uploadFileVideo()'s isset($representative_ext) early return never
+     * touches ffmpeg/ffprobe or the filesystem -- included here for
+     * symmetry with the other uploadFile*() branch tests in this class,
+     * even though tests/Unit/Admin/Upload/UploadServiceTest.php's own "6
+     * upload_file_* handlers pass an already-set representative_ext
+     * straight through" test already exercises the same 2 lines.
+     */
+    public function test_upload_file_video_passes_through_an_already_set_representative_ext(): void
+    {
+        $result = UploadService::uploadFileVideo('already-set', $this->marker . '/whatever.mp4');
+
+        self::assertSame('already-set', $result);
+    }
+
+    /**
+     * uploadFileVideo()'s main success path: a real, valid MP4 (synthesized
+     * with ffmpeg's own lavfi test source at test time, not a checked-in
+     * binary -- same "real CLI fixture" convention as this class's own
+     * TIFF test above) makes ffprobe report a real, parseable duration,
+     * exercising the isset($O[0])-true branch that computes $second from
+     * it; ffmpeg then genuinely extracts a poster frame from that second.
+     * The 3s duration / 2s poster-second gap (the method's own `min(...,
+     * 2)` cap) leaves enough margin that seeking never lands past EOF
+     * (confirmed live).
+     *
+     * This same real ffmpeg 8.0.1 build also always writes a couple of
+     * diagnostic lines to stderr for this exact command shape
+     * (`-frames:v 1` into a bare `image2` output path, no `-update`:
+     * "does not contain an image sequence pattern ... Use ... -update
+     * ...") even on a fully successful run -- captured into $FO via the
+     * method's own `2>&1` redirection -- so this one real fixture also
+     * exercises the isset($FO[0])-true debug-log branch (confirmed live,
+     * not assumed): a successful run is never silent on this ffmpeg
+     * build, so there is no separate "success but still logs stderr"
+     * fixture to contrive here.
+     */
+    public function test_upload_file_video_generates_a_poster_from_a_real_video_and_logs_ffmpegs_stderr_output(): void
+    {
+        $video = $this->marker . '/clip.mp4';
+        $cmd = 'ffmpeg -y -f lavfi -i ' . escapeshellarg('color=c=blue:s=64x64:d=3') . ' -t 3 -pix_fmt yuv420p ' . escapeshellarg($video) . ' 2>&1';
+        exec($cmd, $out, $status);
+        if ($status !== 0) {
+            self::markTestSkipped('ffmpeg failed to synthesize the test video fixture: ' . implode("\n", $out));
+        }
+
+        $result = UploadService::uploadFileVideo(null, $video);
+
+        self::assertSame('jpg', $result);
+        $posterPath = $this->marker . '/pwg_representative/clip.jpg';
+        self::assertFileExists($posterPath);
+        self::assertGreaterThan(0, filesize($posterPath));
+    }
+
+    /**
+     * uploadFileVideo()'s failure path, all in one real, un-contrived
+     * fixture: a plain text file saved with a video-like extension is
+     * exactly what a corrupt/non-decodable upload looks like in
+     * production -- not a synthetic mock of ffmpeg/ffprobe.
+     *
+     * ffprobe (run without this method's own `2>&1`, unlike the ffmpeg/
+     * avconv calls below) genuinely fails to open the file at all: it
+     * writes its "moov atom not found" error to stderr only, leaving $O a
+     * genuinely empty array (isset($O[0]) is false) -- precisely the
+     * $second = 0 fallback branch. Confirmed live that this is the *only*
+     * real way to reach that fallback: ffprobe and ffmpeg share the same
+     * demuxer/probing code, so any input that leaves ffprobe's $O empty is,
+     * for that same reason, also undecodable by the ffmpeg poster-
+     * extraction call immediately below -- this single fixture is the
+     * genuine way both branches occur together in production, not a
+     * contrivance stitching two unrelated scenarios into one test.
+     *
+     * ffmpeg's own attempt then fails outright (it still writes its
+     * version banner to stderr, captured via the method's `2>&1`, so
+     * isset($FO[0]) is true there too) and no poster file is produced, so
+     * the method falls through to the avconv retry. avconv itself is not
+     * installable in this environment (see this repo's own project notes
+     * on avconv), so the retry also fails -- but the shell's own "avconv:
+     * not found" message is what lands in $AO[0] (confirmed live), which
+     * is exactly the real, genuine behavior of this code path in any
+     * environment where avconv truly isn't available, exercising the
+     * isset($AO[0]) debug branch too. The method then returns null.
+     */
+    public function test_upload_file_video_returns_null_and_falls_back_through_avconv_when_ffmpeg_cannot_decode_the_file(): void
+    {
+        $fake = $this->marker . '/broken.mp4';
+        file_put_contents($fake, "this is not a video file, just plain text with a video-like extension\n");
+
+        $result = UploadService::uploadFileVideo(null, $fake);
+
+        self::assertNull($result);
+        self::assertFileDoesNotExist($this->marker . '/pwg_representative/broken.jpg');
     }
 }

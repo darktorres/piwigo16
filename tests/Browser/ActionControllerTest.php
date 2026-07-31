@@ -8,6 +8,27 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * Piwigo\Controller\ActionController (replaces action.php) -- the
  * permission-checked original/representative/format-file download
  * handler, reached as a plain top-level route (not under /admin.php).
+ *
+ * Two of __invoke()'s own lines are dead code from any real request,
+ * given Request\ActionRequest's own shape:
+ * - `if ($file === '') { return $this->doError(404, ...); }` (~line 169):
+ *   `$get_part` can only ever be 'e'/'r'/'f' -- either the
+ *   format-resolved path hardcodes it (line ~88) or
+ *   ActionRequest::fromArray() itself already collapses anything else to
+ *   null (`in_array($part_raw, ['e', 'r', 'f'], true) ? $part_raw :
+ *   null`, caught by the earlier `id/part` 400 branch). Every one of the
+ *   3 switch cases either returns an error itself before falling through,
+ *   or unconditionally assigns a real, non-empty $file (images.path is a
+ *   NOT NULL varchar; ImagePathHelper::getElementPath() prefixes it with
+ *   CurrentPaths::get()->root either way) -- there is no route through
+ *   the switch that reaches line ~168 with $file still ''.
+ * - `if ($format_row === null) { return $this->doError(400, ...); }`
+ *   inside the history-logging `elseif ($get_part === 'f')` branch
+ *   (~line 181): by the time $get_part could equal 'f' here, the switch's
+ *   OWN case 'f' (line ~158) already performed the identical
+ *   `$format_row === null` check and returned early if it failed --
+ *   $format_row is never reassigned in between, so this second check can
+ *   never itself be the one that's true.
  */
 it('downloads a photo\'s original file via part=e', function (): void {
     $page = H::loginAsAdmin($this);
@@ -189,6 +210,67 @@ function actionImagePath(int $imageId): string
 
     return $row['path'];
 }
+
+/**
+ * Closes the `guessMimeType()` call site itself (`if ($ctype === null) {
+ * $ctype = $this->guessMimeType(...); }`, ~line 226) -- distinct from
+ * ActionControllerTest.php (Unit)'s own reflection-based coverage of
+ * guessMimeType()'s internal match arms. A remote (`images.path` starting
+ * `http://`/`https://`) image entirely skips the local
+ * is_readable()/mime_content_type() block ($ctype stays its initial
+ * null), unconditionally reaching this call for ANY remote path,
+ * regardless of extension -- no real outbound network round trip is
+ * needed for that alone. Pointing the remote path at a closed local port
+ * (127.0.0.1:1, same deterministic-failure technique
+ * NotificationByMailSenderTest's own docblock establishes for
+ * MailService::mail()) makes the *later*, unavoidable
+ * `@file_get_contents($file)` body-read fail fast and deterministically
+ * too, rather than hang or flake against a real remote host.
+ */
+it('serves a remote-storage photo through the guessMimeType() fallback when mime_content_type() is never consulted', function (): void {
+    $page = H::loginAsAdmin($this);
+    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Action Controller Remote Album ' . uniqid()]);
+    $albumResult = $album['result'] ?? null;
+    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $albumResult['id'];
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Action Controller Remote Photo');
+    @unlink($image);
+
+    $db = actionDbConnect();
+    $db->query(sprintf(
+        "UPDATE %simages SET path = 'http://127.0.0.1:1/ct-remote-photo.jpg' WHERE id = %d",
+        actionDbPrefix(),
+        $imageId
+    ));
+    $db->close();
+
+    try {
+        // A matching pwg_token flips is_admin_download=true (bypassing the
+        // is_original()-and-no-HD-access derivative check entirely, same
+        // established technique as the admin-download test above) --
+        // irrelevant to the remote-path branch itself, just the simplest
+        // way to reach it without also needing a real, non-original image.
+        $result = H::rawGet($page, '/action.php?id=' . $imageId . '&part=e&pwg_token=' . H::pwgToken($page));
+
+        expect($result['status'])->toBe(200);
+        // The remote fetch itself fails fast (connection refused) --
+        // @file_get_contents() returns false, cast to '' -- but the
+        // Content-Type header was already resolved via guessMimeType()
+        // before that read was ever attempted.
+        expect($result['body'])->toBe('');
+    } finally {
+        // No need to restore images.path -- the category delete below
+        // (force_delete) removes this image's whole row along with it.
+        H::wsCall($page, 'pwg.categories.delete', [
+            'category_id' => $albumId,
+            'photo_deletion_mode' => 'force_delete',
+            'pwg_token' => H::pwgToken($page),
+        ]);
+    }
+});
 
 it('serves a photo through a real registered format id, logging a "high" visit', function (): void {
     $snapshot = H::snapshotConfig(['enable_formats']);

@@ -95,6 +95,33 @@ function imageExtImagickTestFrameCount(string $path): int
     return count($out);
 }
 
+/**
+ * Builds a hand-crafted, deliberately truncated WebP: a real RIFF/WEBP/VP8X
+ * header (25 bytes, the minimum PwgImage::webp_info() itself reads) with
+ * the animation flag bit set, but cut off before the width/height fields
+ * that follow it in a real VP8X chunk. webp_info() only inspects byte 15
+ * ('X') and byte 20 (the flags byte) -- both present here -- so it reports
+ * has-animation=true, but getimagesize() genuinely can't extract real
+ * dimensions from a file this short and returns false (confirmed live).
+ * No external ImageMagick CLI involved in building this fixture.
+ */
+function imageExtImagickTestMakeTruncatedAnimatedWebp(string $path): void
+{
+    $vp8xPayload = "\x02\x00\x00\x00"; // flags (animation bit set) + 3 reserved bytes, width/height omitted
+    $vp8xChunk = 'VP8X' . pack('V', 10) . $vp8xPayload;
+    $riffPayload = 'WEBP' . $vp8xChunk;
+    $riff = 'RIFF' . pack('V', strlen($riffPayload)) . $riffPayload;
+
+    // Pad up to exactly the 25 bytes webp_info() reads (fread() would
+    // otherwise return fewer, tripping its own "not a valid webp image"
+    // guard instead of the branch this fixture targets).
+    if (strlen($riff) < 25) {
+        $riff .= str_repeat("\x00", 25 - strlen($riff));
+    }
+
+    file_put_contents($path, $riff);
+}
+
 beforeEach(function (): void {
     mkdir(imageExtImagickTestMarker(), 0o777, true);
     CurrentLogger::set(new Logger(['severity' => Logger::OFF]));
@@ -132,6 +159,49 @@ test('construct detects an animated WebP and reads dimensions via getimagesize i
     expect($image->is_animated_webp)->toBeTrue()
         ->and($image->get_width())->toBe(20)
         ->and($image->get_height())->toBe(14);
+});
+
+test('construct throws when an animated webp is too short for getimagesize to read despite a valid VP8X header', function (): void {
+    imageExtImagickTestSkipIfUnavailable();
+
+    $path = imageExtImagickTestMarker() . '/truncated-animated.webp';
+    imageExtImagickTestMakeTruncatedAnimatedWebp($path);
+    expect(PwgImage::webp_info($path)['has-animation'])->toBeTrue();
+    expect(getimagesize($path))->toBeFalse();
+
+    expect(fn () => new ImageExtImagick($path))
+        ->toThrow(\Exception::class, "ImageExtImagick(): getimagesize({$path}): Failed");
+});
+
+test('construct sets MAGICK_THREAD_LIMIT=1 when SCRIPT_FILENAME starts with /kunden/ (1and1 hosting)', function (): void {
+    imageExtImagickTestSkipIfUnavailable();
+
+    $path = imageExtImagickTestMarker() . '/kunden-src.jpg';
+    imageExtImagickTestMakeJpeg($path, 10, 10, 1, 2, 3);
+
+    $originalScriptFilename = $_SERVER['SCRIPT_FILENAME'] ?? null;
+    $originalThreadLimit = getenv('MAGICK_THREAD_LIMIT');
+    $_SERVER['SCRIPT_FILENAME'] = '/kunden/homepages/1/example/htdocs/i.php';
+
+    try {
+        new ImageExtImagick($path);
+
+        expect(getenv('MAGICK_THREAD_LIMIT'))->toBe('1');
+    } finally {
+        if ($originalScriptFilename === null) {
+            unset($_SERVER['SCRIPT_FILENAME']);
+        } else {
+            $_SERVER['SCRIPT_FILENAME'] = $originalScriptFilename;
+        }
+        // putenv($var)-to-unset must be a real, deliberate restore (not a
+        // bare clear) -- see this project's own
+        // feedback_putenv_unset_must_restore note.
+        if ($originalThreadLimit === false) {
+            putenv('MAGICK_THREAD_LIMIT');
+        } else {
+            putenv('MAGICK_THREAD_LIMIT=' . $originalThreadLimit);
+        }
+    }
 });
 
 test('rotate by 0 degrees is a no-op that adds no command', function (): void {
@@ -318,6 +388,21 @@ test('write throws when the destination directory cannot be resolved', function 
 
     expect(fn () => $image->write($dest))
         ->toThrow(\Exception::class, "write(): unable to resolve directory {$missingDir}");
+});
+
+test('write throws when the destination path has no directory component at all', function (): void {
+    imageExtImagickTestSkipIfUnavailable();
+
+    $path = imageExtImagickTestMarker() . '/emptydest-src.jpg';
+    imageExtImagickTestMakeJpeg($path, 10, 10, 5, 5, 5);
+    $image = new ImageExtImagick($path);
+
+    // pathinfo('') is the one real value that omits the 'dirname' key
+    // entirely (confirmed live: only 'basename'/'filename' come back, both
+    // empty strings) -- every non-empty path, even a bare filename with no
+    // slash, still gets a 'dirname' of '.'.
+    expect(fn () => $image->write(''))
+        ->toThrow(\Exception::class, 'write(): unable to determine directory for ');
 });
 
 test('write triggers E_USER_WARNING for each line of real CLI failure output', function (): void {

@@ -321,3 +321,98 @@ test('extract returns null for a corrupt (non-zip) archive file', function (): v
 
     expect($result)->toBeNull();
 });
+
+test('extract returns null when the archive has more than MAX_ENTRIES entries', function (): void {
+    $archive = zip_extractor_test_marker() . '/entry-bomb.zip';
+    $zip = new ZipArchive();
+    $zip->open($archive, ZipArchive::CREATE);
+    // MAX_ENTRIES is 20000 (private const, confirmed by direct read) --
+    // 20001 empty entries is the smallest archive that trips it, and
+    // addFromString('') keeps this fast (well under a second, confirmed
+    // empirically) despite the entry count.
+    for ($i = 0; $i < 20001; $i++) {
+        $zip->addFromString('f' . $i . '.txt', '');
+    }
+    $zip->close();
+    $dest = zip_extractor_test_marker() . '/extracted';
+
+    $result = new ZipExtractor()->extract($archive, $dest, '.');
+
+    expect($result)->toBeNull();
+    expect(is_dir($dest))->toBeFalse();
+});
+
+test('extract returns null when the archive\'s total uncompressed size exceeds MAX_UNCOMPRESSED_BYTES', function (): void {
+    $archive = zip_extractor_test_marker() . '/size-bomb.zip';
+    $bigFile = zip_extractor_test_marker() . '/big.bin';
+
+    // MAX_UNCOMPRESSED_BYTES is 500 * 1024 * 1024 (private const, confirmed
+    // by direct read) -- a genuinely 501MB-on-disk fixture would be slow to
+    // write and wasteful to keep around, so this uses a *sparse* file
+    // instead: fseek() past the end + a single fwrite() sets the file's
+    // logical size (what filesize()/ZipArchive read for the entry's
+    // uncompressed size) to 525,000,000 bytes while the filesystem only
+    // allocates a few real disk blocks for it (confirmed via `du` showing
+    // 4.0K of actual usage against a 501M logical size) -- and the
+    // resulting archive compresses those actual zero bytes down to ~500KB
+    // in well under a second, since DEFLATE handles a run of zeros
+    // trivially.
+    $size = 525_000_000;
+    $handle = fopen($bigFile, 'wb');
+    if ($handle === false) {
+        throw new RuntimeException('Could not open ' . $bigFile . ' for writing');
+    }
+    fseek($handle, $size - 1);
+    fwrite($handle, "\0");
+    fclose($handle);
+
+    $zip = new ZipArchive();
+    $zip->open($archive, ZipArchive::CREATE);
+    $zip->addFile($bigFile, 'big.bin');
+    $zip->close();
+    unlink($bigFile);
+    $dest = zip_extractor_test_marker() . '/extracted';
+
+    $result = new ZipExtractor()->extract($archive, $dest, '.');
+
+    expect($result)->toBeNull();
+    expect(is_dir($dest))->toBeFalse();
+});
+
+test('extract strips a leading "./" from destPath before writing', function (): void {
+    $archive = zip_extractor_test_marker() . '/a.zip';
+    zip_extractor_build_archive($archive, [
+        'plugin_id/main.inc.php' => '<?php // main',
+    ]);
+    // A relative destPath prefixed with './' -- extract() must strip the
+    // prefix before joining entry names onto it (otherwise every written
+    // path would carry a literal "./" segment).
+    $dest = './' . zip_extractor_test_marker() . '/extracted';
+
+    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id');
+
+    expect($result)->not->toBeNull();
+    expect(file_get_contents(zip_extractor_test_marker() . '/extracted/main.inc.php'))->toBe('<?php // main');
+});
+
+// ZipExtractor::listFilenames()/extract() each guard `$zip->statIndex($i)
+// === false` for every $i in [0, $zip->numFiles) -- ZipArchive's own
+// documented `array|false` return contract for statIndex(). Verified
+// empirically (not assumed) that this cannot actually happen once open()
+// has succeeded, across every corruption strategy a real attacker or a
+// genuinely damaged download could produce: an out-of-range filename-length
+// field in one central-directory record (cascades into a full open()
+// failure, error 21/ZIP_ER_INCONS, before any entry is ever iterated),
+// invalid UTF-8 bytes in a name with the EFS flag set (same -- rejected at
+// open(), not per-entry), a truncated/malformed Zip64 extra field (same),
+// and even a TOCTOU truncation of the underlying file *after* a successful
+// open() (libzip has already parsed and cached the whole central directory
+// in memory by then, confirmed via a live truncate-then-statIndex() spike --
+// every entry still stat'd correctly). Every real-world path that could
+// make one specific entry unstat-able instead makes the whole archive
+// unopenable, which the `$zip->open($archive) !== true` guard already
+// covers and this suite already tests. Left uncovered rather than
+// papered over with a fake ZipArchive subclass: ZipExtractor constructs
+// `new ZipArchive()` directly (no injection seam), and subclassing/mocking
+// the class under test's own collaborator to force a return value the real
+// library never produces would assert nothing about real behavior.

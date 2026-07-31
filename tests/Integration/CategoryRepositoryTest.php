@@ -533,5 +533,105 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         }
     }
 
+    public function test_find_id_name_permalink_by_id_returns_null_for_a_missing_category(): void
+    {
+        self::assertNull($this->repo->findIdNamePermalinkById(999999));
+    }
+
+    public function test_find_image_ids_outside_categories_returns_ids_linked_to_other_categories(): void
+    {
+        // Excluding category 2 leaves only category 1's own image_category
+        // rows (images 1, 2, 3) -- category 2's images (4, 5) are dropped,
+        // proving the NOT IN condition actually reaches the query.
+        $ids = $this->repo->findImageIdsOutsideCategories([2]);
+        sort($ids);
+
+        self::assertSame([1, 2, 3], $ids);
+    }
+
+    public function test_mass_insert_categories_is_a_no_op_for_no_inserts(): void
+    {
+        $before = $this->countRows(Tables::categories());
+
+        $this->repo->massInsertCategories(['name'], []);
+
+        $after = $this->countRows(Tables::categories());
+        self::assertSame($before, $after);
+    }
+
+    public function test_update_fields_is_a_no_op_for_no_data(): void
+    {
+        $this->repo->updateFields(1, []);
+
+        $cat = $this->repo->findById(1);
+        self::assertNotNull($cat);
+        self::assertSame('Sample Album', $cat->name);
+    }
+
+    public function test_set_representative_image_for_categories_is_a_no_op_for_no_ids(): void
+    {
+        $this->repo->setRepresentativeImageForCategories([], 5);
+
+        $repId = $this->conn->createQueryBuilder()
+            ->select('representative_picture_id')
+            ->from(Tables::categories())
+            ->where('id = 1')
+            ->executeQuery()
+            ->fetchOne();
+
+        self::assertSame(1, is_numeric($repId) ? (int) $repId : null);
+    }
+
+    public function test_set_representative_image_for_categories_updates_every_listed_category(): void
+    {
+        try {
+            $this->repo->setRepresentativeImageForCategories([1, 2], 3);
+
+            $repId1 = $this->conn->createQueryBuilder()->select('representative_picture_id')->from(Tables::categories())->where('id = 1')->executeQuery()->fetchOne();
+            $repId2 = $this->conn->createQueryBuilder()->select('representative_picture_id')->from(Tables::categories())->where('id = 2')->executeQuery()->fetchOne();
+
+            self::assertSame(3, is_numeric($repId1) ? (int) $repId1 : null);
+            self::assertSame(3, is_numeric($repId2) ? (int) $repId2 : null);
+        } finally {
+            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = 1 WHERE id = 1');
+            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = 4 WHERE id = 2');
+        }
+    }
+
+    public function test_find_dirs_by_ids_returns_empty_for_no_ids(): void
+    {
+        self::assertSame([], $this->repo->findDirsByIds([]));
+    }
+
+    public function test_find_galleries_url_for_category_returns_null_when_the_category_has_no_linked_site(): void
+    {
+        // Both fixture categories have site_id NULL -- the s.id = c.site_id
+        // join predicate is never satisfied against a NULL, so the query
+        // returns no row and this exercises the false/null branch. The
+        // joined real-value branch isn't among the flagged gap lines, so it
+        // isn't exercised here.
+        self::assertNull($this->repo->findGalleriesUrlForCategory(1));
+    }
+
+    public function test_find_existing_ids_returns_empty_for_no_ids(): void
+    {
+        self::assertSame([], $this->repo->findExistingIds([]));
+    }
+
+    public function test_find_subcategory_counts_by_parent_returns_empty_for_no_parent_ids(): void
+    {
+        self::assertSame([], $this->repo->findSubcategoryCountsByParent([]));
+    }
+
+    public function test_find_rank_info_by_ids_returns_empty_for_no_ids(): void
+    {
+        self::assertSame([], $this->repo->findRankInfoByIds([]));
+    }
+
+    public function test_find_move_details_by_ids_returns_empty_for_no_ids(): void
+    {
+        self::assertSame([], $this->repo->findMoveDetailsByIds([]));
+    }
+
 }
 }

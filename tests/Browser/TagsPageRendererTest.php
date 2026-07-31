@@ -14,10 +14,13 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * `tag_ids` param only accepts existing numeric tag ids (not names) --
  * pwg.tags.add is the real way to create a brand-new tag over the WS API.
  *
- * Not exercised: the 'alt_names' assign (only set when a
- * 'get_tag_alt_names' event handler returns a non-empty list) -- this
- * offline test env has no plugins registered to answer that hook, so
- * $alt_names is always empty.
+ * The 'alt_names' assign (only set when a 'get_tag_alt_names' event
+ * handler returns a non-empty list) has no plugin registered to answer it
+ * by default in this env, but IS reachable via a real plugin -- exercised
+ * below the same way tests/Browser/PluginsInstalledPageRendererTest.php's
+ * own get_admin_plugin_menu_links tests do: a throwaway, self-cleaning
+ * plugin directory written directly under the live, Apache-shared
+ * plugins/ root for the duration of a single it().
  */
 function tagsPageAddTag(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $name): int
 {
@@ -145,5 +148,97 @@ it('rejects a delete_orphans request without a valid CSRF token', function (): v
         $listPage->assertSee($tagName);
     } finally {
         tagsPageDeleteTag($tagId);
+    }
+});
+
+function tagsPagePluginsPath(): string
+{
+    return dirname(__DIR__, 2) . '/plugins/';
+}
+
+function tagsPageWriteFixturePlugin(string $pluginId, string $mainIncPhpSource): void
+{
+    $dir = tagsPagePluginsPath() . $pluginId;
+    if (! is_dir($dir)) {
+        mkdir($dir, 0o777, true);
+    }
+    file_put_contents($dir . '/main.inc.php', $mainIncPhpSource);
+}
+
+function tagsPageRemoveFixturePlugin(string $pluginId): void
+{
+    $dir = tagsPagePluginsPath() . $pluginId;
+    @unlink($dir . '/main.inc.php');
+    if (is_dir($dir)) {
+        rmdir($dir);
+    }
+}
+
+it('joins real get_tag_alt_names hook results into a comma-separated alt_names value', function (): void {
+    $pluginId = 'pwgtest-tags-alt-names';
+    $tagName = 'pwgtest-tags-alt-names-target-' . uniqid();
+
+    // Deliberately keyed off the exact raw tag name so this plugin never
+    // affects any other tag's own rendering (including other Browser tests'
+    // tags sharing this same live plugins/ install for the duration of
+    // this it()).
+    tagsPageWriteFixturePlugin($pluginId, <<<'PHP'
+    <?php
+
+    declare(strict_types=1);
+
+    /*
+    Plugin Name: Tags Page Test -- Alt Names Hook
+    Version: 1.0.0
+    Description: Test-only fixture plugin (tests/Browser/TagsPageRendererTest.php).
+    */
+
+    \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler(
+        'get_tag_alt_names',
+        static function (mixed $data, mixed $rawName): mixed {
+            if ($rawName === '__TAGS_PAGE_ALT_NAMES_TARGET__') {
+                return ['Alt Name One', 'Alt Name Two'];
+            }
+
+            return is_array($data) ? $data : [];
+        }
+    );
+    PHP);
+    $pluginSourcePath = tagsPagePluginsPath() . $pluginId . '/main.inc.php';
+    file_put_contents(
+        $pluginSourcePath,
+        str_replace('__TAGS_PAGE_ALT_NAMES_TARGET__', $tagName, (string) file_get_contents($pluginSourcePath))
+    );
+
+    $db = new mysqli(
+        (string) getenv('PIWIGO_DB_HOST'),
+        (string) getenv('PIWIGO_DB_USER'),
+        (string) getenv('PIWIGO_DB_PASSWORD'),
+        (string) getenv('PIWIGO_DB_BASE')
+    );
+    $prefix = tagsPageDbPrefix();
+    $db->query(sprintf(
+        "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0.0')",
+        $prefix,
+        $db->real_escape_string($pluginId)
+    ));
+
+    $page = H::loginAsAdmin($this);
+    $tagId = tagsPageAddTag($page, $tagName);
+
+    try {
+        $result = H::rawGet($page, '/admin.php?page=tags');
+
+        expect($result['status'])->toBe(200);
+        // The `data` template var (every tag, including 'alt_names' when
+        // set) is JSON-encoded verbatim into .tag-container's own
+        // data-tags="..." HTML attribute -- see tags.tpl. implode(', ', ...)
+        // joins both real hook-returned names.
+        expect($result['body'])->toContain('Alt Name One, Alt Name Two');
+    } finally {
+        tagsPageDeleteTag($tagId);
+        $db->query(sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, $db->real_escape_string($pluginId)));
+        $db->close();
+        tagsPageRemoveFixturePlugin($pluginId);
     }
 });

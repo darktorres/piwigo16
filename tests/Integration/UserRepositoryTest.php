@@ -261,15 +261,197 @@ final class UserRepositoryTest extends IntegrationTestCase
         self::assertSame($countBefore, $countAfter);
     }
 
-    // findAdminIds()'s `$row['userId'] instanceof UserId` defensive throw
-    // (line 336) is not exercised here -- `user_id` is mapped through the
-    // 'user_id' custom Doctrine type (see UserInfoEntity), which converts
-    // every hydrated value to a real UserId instance unconditionally, DQL
-    // scalar selects included. There is no way to make the ORM hand back a
-    // non-UserId value through this method's public contract without
-    // bypassing the type system entirely (which findAdminIds deliberately
-    // doesn't do, precisely so this conversion always applies) -- same
-    // "verified untestable without breaking the framework's own guarantee"
-    // shape as the HttpClientService-gated skip list, just a different
-    // concrete cause.
+    public function test_delete_favorites_for_images_with_no_image_ids_is_a_noop(): void
+    {
+        // A marker row distinct from the fixture's own (1,1)/(1,3)/(1,5)
+        // favorites rows, so this assertion doesn't depend on what other
+        // tests may already have inserted/removed against user 1's real
+        // favorites.
+        $this->conn->executeStatement('INSERT INTO ' . Tables::favorites() . ' (user_id, image_id) VALUES (1, 999901)');
+
+        $this->repo->deleteFavoritesForImages(\Piwigo\Common\ValueObject\UserId::from(1), []);
+
+        $count = $this->conn->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from(Tables::favorites())
+            ->where('user_id = 1 AND image_id = 999901')
+            ->executeQuery()
+            ->fetchOne();
+
+        self::assertSame(1, $count);
+
+        $this->conn->executeStatement('DELETE FROM ' . Tables::favorites() . ' WHERE user_id = 1 AND image_id = 999901');
+    }
+
+    public function test_update_status_for_users_with_no_ids_is_a_noop(): void
+    {
+        $before = $this->conn->createQueryBuilder()
+            ->select('status')
+            ->from(Tables::userInfos())
+            ->where('user_id = 1')
+            ->executeQuery()
+            ->fetchOne();
+
+        $this->repo->updateStatusForUsers([], 'guest');
+
+        $after = $this->conn->createQueryBuilder()
+            ->select('status')
+            ->from(Tables::userInfos())
+            ->where('user_id = 1')
+            ->executeQuery()
+            ->fetchOne();
+
+        self::assertSame($before, $after);
+    }
+
+    public function test_update_infos_for_users_with_no_ids_is_a_noop(): void
+    {
+        $before = $this->conn->createQueryBuilder()
+            ->select('nb_image_page')
+            ->from(Tables::userInfos())
+            ->where('user_id = 1')
+            ->executeQuery()
+            ->fetchOne();
+
+        $this->repo->updateInfosForUsers([], ['nb_image_page' => 999]);
+
+        $after = $this->conn->createQueryBuilder()
+            ->select('nb_image_page')
+            ->from(Tables::userInfos())
+            ->where('user_id = 1')
+            ->executeQuery()
+            ->fetchOne();
+
+        self::assertSame($before, $after);
+    }
+
+    public function test_update_infos_for_users_with_no_updates_is_a_noop(): void
+    {
+        $before = $this->conn->createQueryBuilder()
+            ->select('nb_image_page')
+            ->from(Tables::userInfos())
+            ->where('user_id = 1')
+            ->executeQuery()
+            ->fetchOne();
+
+        $this->repo->updateInfosForUsers([\Piwigo\Common\ValueObject\UserId::from(1)], []);
+
+        $after = $this->conn->createQueryBuilder()
+            ->select('nb_image_page')
+            ->from(Tables::userInfos())
+            ->where('user_id = 1')
+            ->executeQuery()
+            ->fetchOne();
+
+        self::assertSame($before, $after);
+    }
+
+    public function test_find_theme_usage_counts_includes_a_freshly_inserted_user(): void
+    {
+        $username = 'p18-test-' . bin2hex(random_bytes(4));
+        $theme = 'p18-test-theme-' . bin2hex(random_bytes(4));
+
+        $id = $this->repo->insertUser([
+            'username' => $username,
+            'password' => 'irrelevant-hash',
+            'mail_address' => null,
+        ]);
+        $this->repo->insertUserInfos([$id], [
+            'status' => 'normal',
+            'theme' => $theme,
+        ]);
+
+        $counts = $this->repo->findThemeUsageCounts();
+
+        self::assertArrayHasKey($theme, $counts);
+        self::assertSame(1, $counts[$theme]);
+
+        $this->conn->executeStatement('DELETE FROM ' . Tables::userInfos() . ' WHERE user_id = ' . $id->value);
+        $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ' . $id->value);
+    }
+
+    public function test_find_language_usage_counts_includes_a_freshly_inserted_user(): void
+    {
+        $username = 'p18-test-' . bin2hex(random_bytes(4));
+        $language = 'p18-test-lang-' . bin2hex(random_bytes(4));
+
+        $id = $this->repo->insertUser([
+            'username' => $username,
+            'password' => 'irrelevant-hash',
+            'mail_address' => null,
+        ]);
+        $this->repo->insertUserInfos([$id], [
+            'status' => 'normal',
+            'language' => $language,
+        ]);
+
+        $counts = $this->repo->findLanguageUsageCounts();
+
+        self::assertArrayHasKey($language, $counts);
+        self::assertSame(1, $counts[$language]);
+
+        $this->conn->executeStatement('DELETE FROM ' . Tables::userInfos() . ' WHERE user_id = ' . $id->value);
+        $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ' . $id->value);
+    }
+
+    public function test_find_notification_recipients_by_ids_with_no_ids_returns_empty(): void
+    {
+        self::assertSame([], $this->repo->findNotificationRecipientsByIds([], 'id', 'username', 'mail_address'));
+    }
+
+    public function test_find_usernames_by_ids_with_no_ids_returns_empty(): void
+    {
+        self::assertSame([], $this->repo->findUsernamesByIds(['username' => 'username', 'id' => 'id'], []));
+    }
+
+    public function test_find_registration_date_by_id_returns_null_for_a_nonexistent_user(): void
+    {
+        // No user_infos row exists at all for this id (not even one with a
+        // NULL registration_date) -- fetchAllAssociative() returns [],
+        // reaching the `$rows === []` guard rather than the `is_string()`
+        // check below it.
+        self::assertNull($this->repo->findRegistrationDateById(999999));
+    }
+
+    public function test_find_status_by_ids_with_no_ids_returns_empty(): void
+    {
+        self::assertSame([], $this->repo->findStatusByIds('id', []));
+    }
+
+    // Five defensive branches in this class stay genuinely unreached by any
+    // real caller, confirmed rather than assumed:
+    //
+    // - findAdminIds()'s `$row['userId'] instanceof UserId` throw: `user_id`
+    //   is mapped through the 'user_id' custom Doctrine type (see
+    //   UserInfoEntity), which converts every hydrated value to a real
+    //   UserId instance unconditionally, DQL scalar selects included. There
+    //   is no way to make the ORM hand back a non-UserId value through this
+    //   method's public contract without bypassing the type system entirely
+    //   (which findAdminIds deliberately doesn't do, precisely so this
+    //   conversion always applies).
+    //
+    // - findUserCountsByStatus()'s `! is_string($status)` continue and
+    //   findUserCountsByLevel()'s `! is_numeric($level)` continue: both
+    //   read straight off `user_infos` with no JOIN, and
+    //   install/piwigo_structure-mysql.sql declares `status` an
+    //   `enum(...) NOT NULL` column and `level` a `tinyint unsigned NOT
+    //   NULL` column -- neither can ever surface as a non-string /
+    //   non-numeric value through mysqli's native int/float typing
+    //   (DbConnection::params()'s MYSQLI_OPT_INT_AND_FLOAT_NATIVE), so
+    //   these `continue`s have no reachable real row shape.
+    //
+    // - findMinRegistrationDateAfter()'s `$rows === []` guard: the query is
+    //   a bare `MIN(...)` aggregate with no GROUP BY, which the SQL
+    //   standard (confirmed here against the real test DB, including
+    //   against a genuinely empty temporary table) guarantees always
+    //   returns exactly one row -- NULL in the aggregate column, never zero
+    //   rows. fetchAllAssociative() can therefore never return [] here; the
+    //   null-result case is instead reached one line down, via
+    //   `is_string($minRegistrationDate)` on the real NULL value.
+    //
+    // - findStatusByIds()'s `! is_int($id) && ! is_string($id)` continue:
+    //   `id` comes from `u.{$idColumn}`, the left/outer side of the LEFT
+    //   JOIN against `users`' own primary key (never NULL), typed
+    //   int/string by the same native mysqli casting as above -- there is
+    //   no real row shape where it becomes anything else.
 }

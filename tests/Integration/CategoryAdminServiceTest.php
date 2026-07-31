@@ -13,6 +13,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -39,6 +40,50 @@ final class CategoryAdminServiceFakeActivityLogger implements ActivityLoggerInte
             'action' => $action,
             'details' => $details,
         ];
+    }
+}
+
+/**
+ * saveImageOrder()'s pageNotFound() branch calls
+ * `Piwigo\Bootstrap\PresentationAccessor::htmlService()->pageNotFound()`,
+ * a fixed accessor returning the real HtmlService -- but HtmlService's own
+ * pageNotFound() just forwards to whatever RedirectServiceInterface it was
+ * given as a parameter, so passing this fake through saveImageOrder()'s own
+ * $redirectService parameter is enough to intercept it without needing a
+ * real Location-header/Template round trip. Same
+ * capture-then-throw-a-marker convention as
+ * HtmlServiceTestCapturingRedirectHtmlService.
+ */
+final class CategoryAdminServiceFakeCapturingRedirectService implements RedirectServiceInterface
+{
+    public ?string $capturedUrl = null;
+
+    public ?string $capturedMsg = null;
+
+    public ?int $capturedRefreshTime = null;
+
+    public ?int $capturedStatus = null;
+
+    #[\Override]
+    public function redirectHttp(string $url, int $status = 302): never
+    {
+        throw new \LogicException('not used by saveImageOrder()\'s pageNotFound() call');
+    }
+
+    #[\Override]
+    public function redirectHtml(string $url, string $msg = '', int $refresh_time = 0, int $status = 200): never
+    {
+        $this->capturedUrl = $url;
+        $this->capturedMsg = $msg;
+        $this->capturedRefreshTime = $refresh_time;
+        $this->capturedStatus = $status;
+        throw new \RuntimeException('CATEGORY_ADMIN_SERVICE_TEST_PAGE_NOT_FOUND_MARKER');
+    }
+
+    #[\Override]
+    public function redirect(string $url, string $msg = '', int $refresh_time = 0): never
+    {
+        throw new \LogicException('not used by saveImageOrder()\'s pageNotFound() call');
     }
 }
 
@@ -238,6 +283,26 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         self::assertSame([], $logger->calls);
     }
 
+    public function test_set_category_option_with_an_unrecognized_section_changes_nothing_but_still_logs_activity(): void
+    {
+        // The match statement's `default => null` arm (every real section
+        // name is one of the 4 explicit cases) -- the activity-log call
+        // sits *after* the match, unconditionally, so it still fires even
+        // though nothing about the category itself was touched.
+        $before = $this->fetchCategory(1);
+        $logger = new CategoryAdminServiceFakeActivityLogger();
+
+        $this->service->setCategoryOption([1], 'not_a_real_section', true, $logger);
+
+        $after = $this->fetchCategory(1);
+        self::assertSame($before, $after);
+        self::assertCount(1, $logger->calls);
+        self::assertSame(
+            ['section' => 'not_a_real_section', 'action' => 'trueify'],
+            $logger->calls[0]['details']
+        );
+    }
+
     public function test_save_image_order_updates_the_category_row_only_when_subcats_is_false(): void
     {
         $this->service->saveImageOrder(2, '`rank` ASC', false, new RedirectService());
@@ -387,5 +452,39 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         $this->service->setCategoryPermissions(1, 'public', 'private', false, [], [2]);
 
         self::assertSame([2], $this->userAccessFor(1));
+    }
+
+    public function test_set_category_permissions_switches_status_without_touching_permission_tables_when_new_status_is_not_private(): void
+    {
+        $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET status = 'private' WHERE id = 2");
+        $groupsBefore = $this->groupAccessFor(2);
+        self::assertNotSame([], $groupsBefore, 'fixture precondition: cat 2 must already have a real group grant');
+
+        // `$newStatus !== 'private'` (line 201-203) returns immediately
+        // after the status UPDATE -- passing empty $groupIds/$userIds would
+        // deny every existing grant if the deny/grant block below it ran,
+        // so an unchanged groupAccessFor(2) is direct proof the guard
+        // short-circuited before reaching it.
+        $this->service->setCategoryPermissions(2, 'private', 'public', false, [], []);
+
+        $category = $this->fetchCategory(2);
+        self::assertNotNull($category);
+        self::assertSame('public', $category['status']);
+        self::assertSame($groupsBefore, $this->groupAccessFor(2));
+    }
+
+    public function test_save_image_order_calls_page_not_found_for_a_nonexistent_category_when_applying_to_subcats(): void
+    {
+        $redirectService = new CategoryAdminServiceFakeCapturingRedirectService();
+
+        try {
+            $this->service->saveImageOrder(999999, 'id ASC', true, $redirectService);
+            self::fail('Expected saveImageOrder() to reach pageNotFound() and throw.');
+        } catch (\RuntimeException $e) {
+            self::assertSame('CATEGORY_ADMIN_SERVICE_TEST_PAGE_NOT_FOUND_MARKER', $e->getMessage());
+        }
+
+        self::assertSame(404, $redirectService->capturedStatus);
+        self::assertStringContainsString('Requested album does not exist', (string) $redirectService->capturedMsg);
     }
 }

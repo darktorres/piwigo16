@@ -70,6 +70,26 @@ final class WsImagesTest extends ContractTestCase
         self::assertSame(404, $status, 'Missing image_id must return HTTP 404');
     }
 
+    // exist()'s two preg_split() failure guards (md5sum_list/filename_list,
+    // both `preg_split('/[\s,;\|]/', ..., PREG_SPLIT_NO_EMPTY)`) are not
+    // exercised anywhere in this file: preg_split() only returns false on a
+    // genuine PCRE engine error (PREG_BACKTRACK_LIMIT_ERROR/
+    // PREG_RECURSION_LIMIT_ERROR/etc, see
+    // MetadataServiceTest::test_parse_svg_dimensions_returns_null_when_preg_replace_hits_the_backtrack_limit()
+    // for the standard way this codebase forces one -- ini_set()'ing
+    // pcre.backtrack_limit down before the call). This pattern is a plain,
+    // non-backtracking character class with no quantifiers/groups at all,
+    // so no crafted subject string can make it exceed the default 1,000,000
+    // backtrack/recursion budget (verified: `php -i | grep pcre.` on this
+    // box's own apache2 SAPI shows the untouched defaults). And since
+    // Contract tests only ever reach this code over real HTTP
+    // (ContractTestCase always curl()s a separate, already-running Apache
+    // process -- see its own docblock), an ini_set() in this test process
+    // can't reach the server process's PCRE settings either, unlike the
+    // Integration-level MetadataServiceTest technique. Confirmed
+    // unreachable from a black-box Contract test in this environment, not
+    // just unattempted.
+
     public function test_exist_response_matches_schema(): void
     {
         $response = $this->wsAdmin('pwg.images.exist', [
@@ -150,5 +170,48 @@ final class WsImagesTest extends ContractTestCase
         self::assertIsArray($result);
         self::assertArrayHasKey('ready_for_upload', $result);
         self::assertIsBool($result['ready_for_upload']);
+    }
+
+    public function test_checkUpload_reports_not_ready_when_the_upload_directory_is_not_writable(): void
+    {
+        // UploadService::readyForUploadMessage()'s "directory exists but
+        // isn't writable" branch: point CurrentConfig::uploadDir() (a plain
+        // 'upload_dir' config row, same override mechanism as every other
+        // config toggle in this file) at a dedicated directory this test
+        // process itself creates and owns -- unlike the real shared
+        // upload/buffer/ (owned by www-data, see WsImagesUploadGapsTest's
+        // own doc note on why that one can't be chmod()'d from here), this
+        // one genuinely is owned by this CLI process, so chmod() on it
+        // actually takes effect. readyForUploadMessage() then also tries
+        // `@chmod($upload_dir, 0777)` as a self-heal -- that attempt is made
+        // by the *www-data* WS worker, which doesn't own this directory
+        // either, so it silently fails and the non-writable state sticks.
+        $relDir = 'readonly-upload-test-' . uniqid() . '/';
+        $absDir = dirname(__DIR__, 2) . '/' . $relDir;
+        mkdir($absDir);
+
+        $this->conn->executeStatement(
+            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('upload_dir', ?)
+             ON DUPLICATE KEY UPDATE value = VALUES(value)",
+            [json_encode($relDir)]
+        );
+        \Piwigo\Cache\CachePools::config()->clear();
+        chmod($absDir, 0o555);
+
+        try {
+            $response = $this->wsAdmin('pwg.images.checkUpload');
+
+            self::assertSame('ok', $response['stat']);
+            $result = $response['result'];
+            self::assertIsArray($result);
+            self::assertFalse($result['ready_for_upload']);
+            self::assertIsString($result['message']);
+            self::assertStringContainsString('chmod 777', $result['message']);
+        } finally {
+            chmod($absDir, 0o755);
+            $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'upload_dir'");
+            \Piwigo\Cache\CachePools::config()->clear();
+            rmdir($absDir);
+        }
     }
 }

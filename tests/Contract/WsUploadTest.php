@@ -67,7 +67,6 @@ final class WsUploadTest extends ContractTestCase
             self::assertNotFalse($ch);
 
             $cookieJar = $this->cookieJar();
-            assert($cookieJar !== '');
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_USERAGENT, self::USER_AGENT);
@@ -109,7 +108,6 @@ final class WsUploadTest extends ContractTestCase
 
             $userAgent = self::USER_AGENT;
             $cookieJar = $this->cookieJar();
-            assert($cookieJar !== '');
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_USERAGENT, $userAgent);
@@ -154,9 +152,12 @@ final class WsUploadTest extends ContractTestCase
      * mandatory, so http_build_query()-based callWs() can't express this
      * request.
      * @param array<string, mixed> $fields
+     * @param ?string $fileContents overrides the default tiny-PNG fixture --
+     *   used to build an intentionally-oversized file for the
+     *   UPLOAD_ERR_INI_SIZE test below
      * @return array<string, mixed>
      */
-    private function addSimpleMultipart(array $fields, bool $withFile = true): array
+    private function addSimpleMultipart(array $fields, bool $withFile = true, ?string $fileContents = null): array
     {
         $tmpFile = null;
         $postFields = $fields;
@@ -164,7 +165,7 @@ final class WsUploadTest extends ContractTestCase
             $tmpName = tempnam(sys_get_temp_dir(), 'pwg_ct_addsimple_');
             self::assertNotFalse($tmpName);
             $tmpFile = $tmpName . '.png';
-            file_put_contents($tmpFile, $this->pngBytes());
+            file_put_contents($tmpFile, $fileContents ?? $this->pngBytes());
             $postFields['image'] = new \CURLFile($tmpFile, 'image/png', 'addsimple.png');
         }
         $postFields['method'] = 'pwg.images.addSimple';
@@ -175,7 +176,6 @@ final class WsUploadTest extends ContractTestCase
             self::assertNotFalse($ch);
 
             $cookieJar = $this->cookieJar();
-            assert($cookieJar !== '');
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_USERAGENT, self::USER_AGENT);
@@ -213,6 +213,199 @@ final class WsUploadTest extends ContractTestCase
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(404, $response['err']);
+    }
+
+    /**
+     * Raw multipart POST body, hand-built (not via CURLOPT_POSTFIELDS/
+     * CURLFile) so field order and content are fully controlled -- needed
+     * for the MAX_FILE_SIZE and empty-file-selection UPLOAD_ERR_* triggers
+     * below, neither of which curl's own -F/CURLFile machinery can express.
+     * @param list<string> $rawParts pre-built "Content-Disposition: ..." (+
+     *   optional Content-Type + blob) part bodies, without their own
+     *   boundary delimiters
+     * @return array<string, mixed>
+     */
+    private function rawMultipart(array $rawParts): array
+    {
+        $boundary = 'PiwigoContractTestBoundary' . uniqid();
+        $body = '';
+        foreach ($rawParts as $part) {
+            $body .= '--' . $boundary . "\r\n" . $part . "\r\n";
+        }
+        $body .= '--' . $boundary . "--\r\n";
+
+        $url = $this->baseUrl . '/ws.php?format=json';
+        $ch  = curl_init($url);
+        self::assertNotFalse($ch);
+
+        $cookieJar = $this->cookieJar();
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_USERAGENT, self::USER_AGENT);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+        curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
+        curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array_merge($this->testHeader(), [
+            'Content-Type: multipart/form-data; boundary=' . $boundary,
+        ]));
+
+        $body = curl_exec($ch);
+        unset($ch);
+
+        self::assertIsString($body);
+        $decoded = json_decode($body, true);
+        self::assertIsArray($decoded);
+        /** @var array<string, mixed> $decoded */
+        return $decoded;
+    }
+
+    private static function formDataPart(string $name, string $value): string
+    {
+        return 'Content-Disposition: form-data; name="' . $name . '"' . "\r\n\r\n" . $value;
+    }
+
+    /**
+     * addSimple()'s own UPLOAD_ERR_* `match` -- PHP itself sets $_FILES['image']['error']
+     * from real upload-processing outcomes, so each arm needs a genuinely
+     * different trigger, not an attacker-suppliable value:
+     *   - UPLOAD_ERR_PARTIAL (a real interrupted transfer) and
+     *     UPLOAD_ERR_NO_TMP_DIR/UPLOAD_ERR_CANT_WRITE/UPLOAD_ERR_EXTENSION
+     *     (all real server misconfiguration/environment conditions) aren't
+     *     reachable from a black-box HTTP test without an actually broken
+     *     server -- not chased here.
+     *   - the `default` arm requires an $_FILES['error'] PHP itself never
+     *     sets (0-4, 6-8 are the only real values) -- also not chased.
+     */
+    public function test_addSimple_upload_exceeding_ini_size_limit_returns_error(): void
+    {
+        // php.ini's upload_max_filesize is 2M in this environment (confirmed
+        // live) -- comfortably smaller than post_max_size (8M), so the POST
+        // itself isn't rejected outright, only this one file field.
+        $response = $this->addSimpleMultipart(['category' => 1], fileContents: random_bytes(2_200_000));
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(500, $response['err']);
+        self::assertSame('The uploaded file exceeds the upload_max_filesize directive in php.ini.', $response['message']);
+    }
+
+    public function test_addSimple_upload_exceeding_declared_max_file_size_returns_error(): void
+    {
+        // A "MAX_FILE_SIZE" field *before* the file field in the multipart
+        // body is a real, PHP-enforced convention (rfc1867) -- PHP itself
+        // sets UPLOAD_ERR_FORM_SIZE when the file that follows exceeds it,
+        // independent of upload_max_filesize.
+        $response = $this->rawMultipart([
+            self::formDataPart('method', 'pwg.images.addSimple'),
+            self::formDataPart('category', '1'),
+            self::formDataPart('MAX_FILE_SIZE', '10'),
+            'Content-Disposition: form-data; name="image"; filename="toolarge.png"' . "\r\n"
+                . "Content-Type: image/png\r\n\r\n" . $this->pngBytes(),
+        ]);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(500, $response['err']);
+        self::assertSame(
+            'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.',
+            $response['message']
+        );
+    }
+
+    public function test_addSimple_empty_file_selection_returns_no_file_was_uploaded_error(): void
+    {
+        // A file part with an empty filename -- the exact shape a browser
+        // sends for a <input type=file> submitted with nothing chosen --
+        // gives $_FILES['image'] with error=UPLOAD_ERR_NO_FILE, not an
+        // absent key: ->present is still true (present checks *key*
+        // existence only), so this reaches the match arm rather than the
+        // earlier "(file) is missing" guard.
+        $response = $this->rawMultipart([
+            self::formDataPart('method', 'pwg.images.addSimple'),
+            self::formDataPart('category', '1'),
+            'Content-Disposition: form-data; name="image"; filename=""' . "\r\n"
+                . "Content-Type: application/octet-stream\r\n\r\n",
+        ]);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(500, $response['err']);
+        self::assertSame('No file was uploaded.', $response['message']);
+    }
+
+    public function test_addSimple_array_style_file_field_has_no_temp_name(): void
+    {
+        // image[]=@... makes PHP populate $_FILES['image']['error']/
+        // ['tmp_name'] as *arrays* (multi-file bracket syntax), not scalars
+        // -- UploadedFileRequest::fromArray()'s is_int()/is_string() guards
+        // then store both as null, which bypasses the UPLOAD_ERR_* match
+        // entirely (error stays null) and instead hits the dedicated
+        // "missing uploaded file temp name" guard just past it.
+        $tmpName = tempnam(sys_get_temp_dir(), 'pwg_ct_arrayfile_');
+        self::assertNotFalse($tmpName);
+        $tmpFile = $tmpName . '.png';
+        file_put_contents($tmpFile, $this->pngBytes());
+
+        try {
+            $url = $this->baseUrl . '/ws.php?format=json';
+            $ch  = curl_init($url);
+            self::assertNotFalse($ch);
+            $cookieJar = $this->cookieJar();
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_USERAGENT, self::USER_AGENT);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, [
+                'method' => 'pwg.images.addSimple',
+                'category' => 1,
+                'image[]' => new \CURLFile($tmpFile, 'image/png', 'arraystyle.png'),
+            ]);
+            curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
+            curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $this->testHeader());
+            $body = curl_exec($ch);
+            unset($ch);
+        } finally {
+            @unlink($tmpFile);
+        }
+
+        self::assertIsString($body);
+        $response = json_decode($body, true);
+        self::assertIsArray($response);
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(500, $response['err']);
+        self::assertSame('[ws_images_addSimple] missing uploaded file temp name', $response['message']);
+    }
+
+    /**
+     * addSimple()'s own `preg_split() === false` guard (a hand-typed
+     * `throw new Exception(...)`, for the comma-separated-string `tags`
+     * branch) is NOT chased here: the pattern is a fixed, cheap negative
+     * lookbehind assertion with no realistic catastrophic-backtracking
+     * shape, so triggering a genuine PCRE engine failure (the only way
+     * preg_split() returns false) would need pcre.backtrack_limit/
+     * pcre.recursion_limit tuned down on the *server* process -- not
+     * reachable from a black-box HTTP request.
+     */
+    public function test_addSimple_tags_as_an_array_are_resolved_and_associated(): void
+    {
+        $response = $this->addSimpleMultipart([
+            'category' => 1,
+            'name' => 'Contract Test addSimple array tags ' . uniqid(),
+            'tags' => ['addsimple-array-tag-one', 'addsimple-array-tag-two'],
+        ]);
+
+        self::assertSame('ok', $response['stat'], (string) json_encode($response));
+        $result = $response['result'];
+        self::assertIsArray($result);
+        $imageId = $result['image_id'];
+        self::assertIsNumeric($imageId);
+        $this->uploadedImageId = (int) $imageId;
+
+        $tagNames = $this->conn->fetchFirstColumn(
+            'SELECT t.name FROM ' . Tables::tags() . ' t
+             INNER JOIN ' . Tables::imageTag() . ' it ON it.tag_id = t.id
+             WHERE it.image_id = ?',
+            [(int) $imageId]
+        );
+        self::assertContains('addsimple-array-tag-one', $tagNames);
+        self::assertContains('addsimple-array-tag-two', $tagNames);
     }
 
     public function test_addSimple_sets_info_columns_and_tags_and_returns_the_category_url(): void
@@ -298,7 +491,6 @@ final class WsUploadTest extends ContractTestCase
                 self::assertNotFalse($ch, 'curl_init failed');
 
                 $cookieJar = $this->cookieJar();
-                assert($cookieJar !== '');
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
                 curl_setopt($ch, CURLOPT_POST, true);
                 curl_setopt($ch, CURLOPT_USERAGENT, self::USER_AGENT);
@@ -370,6 +562,63 @@ final class WsUploadTest extends ContractTestCase
         self::assertSame(1, $category['id']);
         self::assertIsInt($category['nb_photos']);
         self::assertGreaterThanOrEqual(1, $category['nb_photos']);
+    }
+
+    /**
+     * upload()'s update_mode=true branch (Ws\PwgImages.php ~1654-1660):
+     * looks up an existing photo by its stored `file` value within the
+     * target category and, if found, replaces that photo's file in place
+     * (add_status='update', same image_id) instead of inserting a new row.
+     *
+     * This exact "replace an existing photo's file" pipeline
+     * (UploadService::addUploadedFile()'s $id_image-not-null path) used to
+     * 500 in this environment -- see WsImagesUploadGapsTest's own docblock,
+     * written before commit 6abce47d17 fixed both underlying bugs (the
+     * relative-vs-absolute $file_path prefix, and the missing `file` column
+     * in the "cache a derivative" SELECT). Now that both are fixed, this
+     * branch is real and testable.
+     *
+     * One line just past this branch (upload()'s own "image fetch failed
+     * right after inserting it" throw, ~1676) stays genuinely unreachable
+     * from a black-box HTTP test either way: getUploadResultInfoById() re-
+     * reads the very row addUploadedFile() just inserted/updated by primary
+     * key, in the same request/same connection -- there is no legitimate,
+     * non-racy way to make that SELECT miss without either a second
+     * concurrent request racing the delete of that exact row (unprovable
+     * without real OS-level concurrency) or patching production code to
+     * fake it, which would just encode a synthetic condition as expected
+     * behavior.
+     */
+    public function test_upload_update_mode_replaces_an_existing_photo_by_filename_in_category(): void
+    {
+        $name = 'update-mode-gap-' . uniqid() . '.jpg';
+
+        $created = $this->uploadMultipart([
+            'pwg_token' => $this->getPwgToken(),
+            'category'  => 1,
+            'name'      => $name,
+        ]);
+        self::assertSame('ok', $created['stat'], (string) json_encode($created));
+        $createdResult = $created['result'];
+        self::assertIsArray($createdResult);
+        $originalImageId = $createdResult['image_id'];
+        self::assertIsNumeric($originalImageId);
+        $this->uploadedImageId = (int) $originalImageId;
+
+        $response = $this->uploadMultipart([
+            'pwg_token'   => $this->getPwgToken(),
+            'category'    => 1,
+            'name'        => $name,
+            'update_mode' => true,
+        ]);
+
+        self::assertSame('ok', $response['stat'], (string) json_encode($response));
+        $result = $response['result'];
+        self::assertIsArray($result);
+        self::assertSame('update', $result['add_status']);
+        $updatedImageId = $result['image_id'];
+        self::assertIsNumeric($updatedImageId);
+        self::assertSame((int) $originalImageId, (int) $updatedImageId);
     }
 
     public function test_upload_format_of_disabled_returns_error(): void

@@ -15,6 +15,18 @@ namespace Piwigo\Tests\Contract;
  * mutate (confirmed live -- a plain "Photo" query already matched several
  * non-fixture rows left over from other suites), so only order and
  * membership are asserted, never a fixed total.
+ *
+ * search()'s own `! is_array($search_items)` fallback (defends
+ * SearchService::getQuickSearchResults()'s 'items' key, widened to `mixed`
+ * only because a `qsearch_results` plugin hook could theoretically replace
+ * it) is NOT chased here: getQuickSearchResultsNoCache() already
+ * re-normalizes 'items' back to a real array immediately after firing that
+ * exact hook (`is_array(...) ? array_values(...) : []`), and unconditionally
+ * overwrites it with a guaranteed array (`$ids`) again before returning --
+ * no legitimate WS-level request can make it anything else, and v17
+ * doesn't load any plugin that could register a rogue handler for that hook
+ * anyway (see project memory: "v17.0 intentionally breaks all PEM
+ * extensions").
  */
 final class WsImagesSearchTest extends ContractTestCase
 {

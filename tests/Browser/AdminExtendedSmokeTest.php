@@ -64,6 +64,11 @@ $routes = [
     'admin photos_add (applications)' => '/admin.php?page=photos_add&section=applications',
     'admin photos_add (ftp)'          => '/admin.php?page=photos_add&section=ftp',
     'admin photos_add (invalid tab)'  => '/admin.php?page=photos_add&section=bogus',
+    // PhotosAddSubController's own backward-compatibility alias
+    // ('ploader' -> 'applications', predating the current tab-name
+    // scheme) -- not exercised by the "(applications)" route above,
+    // which uses the real tab name directly.
+    'admin photos_add (ploader alias)' => '/admin.php?page=photos_add&section=ploader',
     // P21 Albums batch: cat_list is the one page in this batch with no
     // prior Browser coverage anywhere (albums/album/cat_options already
     // covered by AdminSmokeTest/AlbumTreeTest/ConsoleCleanTest/
@@ -91,6 +96,13 @@ $routes = [
     'admin themes (installed)'        => '/admin.php?page=themes',
     'admin themes (new)'              => '/admin.php?page=themes&tab=new',
     'admin themes (update)'           => '/admin.php?page=themes&tab=update',
+    // ThemesSubController's own 'standard_pages' tab dispatch branch --
+    // distinct from the standalone /admin.php?page=themes_standard_pages
+    // route (ThemesStandardPagesSubController, already covered by
+    // ThemesStandardPagesPageRendererTest.php), which is the only variant
+    // exercised elsewhere despite this tab being documented as "also
+    // reachable" this way.
+    'admin themes (standard_pages tab)' => '/admin.php?page=themes&tab=standard_pages',
     'admin languages (installed)'     => '/admin.php?page=languages',
     'admin languages (new)'           => '/admin.php?page=languages&tab=new',
     'admin languages (update)'        => '/admin.php?page=languages&tab=update',

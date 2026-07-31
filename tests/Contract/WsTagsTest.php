@@ -80,4 +80,56 @@ final class WsTagsTest extends ContractTestCase
         self::assertIsArray($result);
         self::assertArrayHasKey('images', $result);
     }
+
+    /**
+     * getImages()'s own `if ($order_by !== '') { $order_by = 'ORDER BY '
+     * . $order_by; }` branch -- test_getImages_returns_paged_image_list()
+     * above never passes an 'order' param at all.
+     */
+    public function test_getImages_accepts_an_order_param(): void
+    {
+        // fixture tag 1 ("nature") is attached to images 1, 2 and 3, per
+        // piwigo_image_tag -- confirmed live via a direct DB read.
+        $response = $this->wsAdmin('pwg.tags.getImages', ['tag_id' => [1], 'order' => 'id asc']);
+
+        self::assertSame('ok', $response['stat']);
+        $result = $response['result'];
+        self::assertIsArray($result);
+        $images = $result['images'];
+        self::assertIsArray($images);
+        $ids = array_values(array_map(
+            static fn (mixed $image): int => is_array($image) && is_numeric($image['id']) ? (int) $image['id'] : 0,
+            $images
+        ));
+        self::assertSame([1, 2, 3], $ids);
+    }
+
+    /**
+     * getList()'s `if ($params['sort_by_counter'])` branch --
+     * test_getList_returns_only_used_tags() above never passes
+     * sort_by_counter at all (default false, alphabetical
+     * tagAlphaCompare() sort).
+     */
+    public function test_getList_sorts_by_counter_when_requested(): void
+    {
+        $response = $this->ws('pwg.tags.getList', ['sort_by_counter' => true]);
+
+        self::assertSame('ok', $response['stat']);
+        $result = $response['result'];
+        self::assertIsArray($result);
+        $tags = $result['tags'];
+        self::assertIsArray($tags);
+        self::assertGreaterThanOrEqual(3, count($tags), 'fixture must contain at least the 3 seeded tags');
+
+        $counters = array_map(static function (mixed $tag): int {
+            self::assertIsArray($tag);
+            self::assertIsNumeric($tag['counter']);
+
+            return (int) $tag['counter'];
+        }, $tags);
+
+        $sortedDescending = $counters;
+        rsort($sortedDescending, SORT_NUMERIC);
+        self::assertSame($sortedDescending, $counters, 'sort_by_counter must return tags ordered by counter descending');
+    }
 }

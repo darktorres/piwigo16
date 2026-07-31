@@ -21,15 +21,44 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * path for free) or fall back to that same real resync in a `finally`
  * block as cleanup.
  *
- * Deliberately light on: the private-category permission-inheritance
- * branch (`inheritance_by_default`), `enable_formats`, a
- * `subcats-included=0` scoped-to-one-category sync, and
- * `meta_empty_overrides` -- each is a real but narrow combinatorial
- * branch of an already very large handler; render + guard-clause + the
- * core create/simulate/delete/metadata/quick_sync flows cover the large
- * majority of this file's real gap without the disproportionate setup
- * those would need (matching AdminConfigurationTest's own documented
- * scoping precedent).
+ * Deliberately light on: `enable_formats` beyond the one dedicated test
+ * below, and `meta_empty_overrides` -- each is a real but narrow
+ * combinatorial branch of an already very large handler; render +
+ * guard-clause + the core create/simulate/delete/metadata/quick_sync
+ * flows cover the large majority of this file's real gap without the
+ * disproportionate setup those would need (matching AdminConfigurationTest's
+ * own documented scoping precedent).
+ *
+ * Two lines of the "directories / categories" block are deliberately left
+ * uncovered below, not silently skipped:
+ *
+ * - `CategoryService::getNextRanksByParent()`'s row-shape narrowing
+ *   `continue` (reached when a row's `id_uppercat` is neither `int` nor
+ *   `string`) is provably unreachable under this project's own DB driver
+ *   configuration: `id_uppercat` is a nullable `smallint unsigned`
+ *   column, and `DbConnection::build()` sets
+ *   `MYSQLI_OPT_INT_AND_FLOAT_NATIVE`, so a raw `fetchAllAssociative()`
+ *   row always yields either `int` (non-null) or `null` for it -- and the
+ *   controller's own preceding `isset($row['id_uppercat']) or === ''`
+ *   normalization already rewrites every `null`/`''` case to the string
+ *   `'NULL'` before this check runs. There is no third native-MySQL
+ *   column type this branch could ever observe.
+ * - The `substr_compare($fulldir, '../', 0, 3)` prefix-strip (a
+ *   category's on-disk fulldir starting with a literal `../`) is a
+ *   holdover from legacy Piwigo's relative-`galleries_url` convention.
+ *   Both of this rewrite's real write paths for a site row
+ *   (`InstallWizard`'s own site-1 seed, and `SiteManagerSubController`'s
+ *   "add a new site" form -- see that controller's own inline comment)
+ *   always anchor `galleries_url` to `CurrentPaths::get()->root`, an
+ *   absolute path, so no fulldir built from
+ *   `CategoryService::getFulldirs()` can ever start with `../` for data
+ *   this application itself wrote. It remains reachable only via a
+ *   pre-rewrite-migrated site row a legacy install left with a relative
+ *   URL -- this suite deliberately does not fabricate that here, since
+ *   doing so would mean creating a real directory outside this repo's own
+ *   `galleries/`/`_data/` sandbox (one level above the project root, in
+ *   the host's actual home directory) purely to satisfy
+ *   `LocalSiteReader::open()`'s `is_dir()` check.
  */
 function suDbPrefix(): string
 {
@@ -176,6 +205,75 @@ function suHasUserAccess(int $userId, int $catId): bool
     return $found;
 }
 
+function suSetCategoryVisible(int $catId, bool $visible): void
+{
+    $db = suConnect();
+    $db->query(sprintf(
+        'UPDATE %scategories SET visible = %d WHERE id = %d',
+        suDbPrefix(),
+        $visible ? 1 : 0,
+        $catId
+    ));
+    $db->close();
+}
+
+function suCategoryVisible(int $catId): ?bool
+{
+    $db = suConnect();
+    $result = $db->query(sprintf('SELECT visible FROM %scategories WHERE id = %d', suDbPrefix(), $catId));
+    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
+    $db->close();
+
+    return is_array($row) && isset($row['visible']) ? (bool) $row['visible'] : null;
+}
+
+function suSetCategoryGlobalRankNull(int $catId): void
+{
+    $db = suConnect();
+    $db->query(sprintf('UPDATE %scategories SET global_rank = NULL WHERE id = %d', suDbPrefix(), $catId));
+    $db->close();
+}
+
+/**
+ * @return list<string>
+ */
+function suImageTagNames(int $imageId): array
+{
+    $db = suConnect();
+    $result = $db->query(sprintf(
+        'SELECT t.name FROM %stags t INNER JOIN %simage_tag it ON it.tag_id = t.id WHERE it.image_id = %d ORDER BY t.name',
+        suDbPrefix(),
+        suDbPrefix(),
+        $imageId
+    ));
+    $names = [];
+    if ($result instanceof mysqli_result) {
+        while (($row = $result->fetch_assoc()) !== null) {
+            if (is_array($row) && is_string($row['name'] ?? null)) {
+                $names[] = $row['name'];
+            }
+        }
+    }
+    $db->close();
+
+    return $names;
+}
+
+/**
+ * @param  list<string>  $names
+ */
+function suDeleteTagsByName(array $names): void
+{
+    if ($names === []) {
+        return;
+    }
+
+    $db = suConnect();
+    $quoted = array_map(static fn (string $name): string => "'" . $db->real_escape_string($name) . "'", $names);
+    $db->query(sprintf('DELETE FROM %stags WHERE name IN (%s)', suDbPrefix(), implode(',', $quoted)));
+    $db->close();
+}
+
 function suInsertRemoteSite(string $url): int
 {
     $db = suConnect();
@@ -200,6 +298,28 @@ function suDeleteSite(int $id): void
 function suGalleriesRoot(): string
 {
     return dirname(__DIR__, 2) . '/galleries/';
+}
+
+function suRoot(): string
+{
+    return dirname(__DIR__, 2) . '/';
+}
+
+/**
+ * Mirrors SiteUpdateSubController's own to-delete-derivative-dir
+ * computation for a top-level category `dir` directly under site 1's
+ * `galleries/` root: `CurrentPaths::get()->root . CurrentConfig::
+ * derivativeDir() . $fulldir`, where `$fulldir` is itself already
+ * absolute (site 1's `galleries_url` fixture row is an absolute path) --
+ * `root` is embedded twice by design, mirroring the full source path
+ * under `_data/i/` (Piwigo's standard derivative-cache-path-mirrors-
+ * source-path convention).
+ */
+function suDerivativeCacheDirFor(string $dir): string
+{
+    $root = suRoot();
+
+    return $root . '_data/i' . $root . 'galleries/' . $dir;
 }
 
 function suMakeTempDir(string $name): string
@@ -233,6 +353,53 @@ function suRemoveDirRecursive(string $dir): void
     }
 
     @rmdir($dir);
+}
+
+/**
+ * A real, minimal JPEG (via GD) with a hand-built Photoshop-IRB APP13
+ * segment (the real "8BIM"/0x0404 IPTC-NAA resource block format)
+ * carrying one IPTC record 2 / dataset 25 (Keywords) entry per given
+ * keyword -- same technique as MetadataServiceTest's own
+ * makeJpegWithApp13Iptc() helper, needed because getimagesize()/
+ * iptcparse() require genuinely valid marker-segment bytes, not a
+ * fabricated string. Caller is responsible for unlink()-ing the returned
+ * path.
+ *
+ * @param  list<string>  $keywords
+ */
+function suMakeJpegWithIptcKeywords(array $keywords): string
+{
+    $iptcData = '';
+    foreach ($keywords as $keyword) {
+        $iptcData .= "\x1c" . chr(2) . chr(25) . pack('n', strlen($keyword)) . $keyword;
+    }
+    $nameField = chr(0) . "\x00";
+    $blockData = $iptcData;
+    if (strlen($blockData) % 2 !== 0) {
+        $blockData .= "\x00";
+    }
+    $block = '8BIM' . pack('n', 0x0404) . $nameField . pack('N', strlen($iptcData)) . $blockData;
+    $psHeader = "Photoshop 3.0\x00" . $block;
+    $app13 = "\xFF\xED" . pack('n', strlen($psHeader) + 2) . $psHeader;
+
+    $img = imagecreatetruecolor(200, 150);
+    if ($img === false) {
+        throw new RuntimeException('imagecreatetruecolor failed');
+    }
+    ob_start();
+    imagejpeg($img, null, 80);
+    $base = ob_get_clean();
+
+    $bytes = substr($base, 0, 2) . $app13 . substr($base, 2);
+
+    $tmpPath = tempnam(sys_get_temp_dir(), 'pwg_browser_iptc_');
+    if ($tmpPath === false) {
+        throw new RuntimeException('tempnam failed');
+    }
+    $path = $tmpPath . '.jpg';
+    file_put_contents($path, $bytes);
+
+    return $path;
 }
 
 /**
@@ -827,6 +994,305 @@ it('quick_sync performs a real full local synchronization via the GET shortcut',
         expect(suImageIdByFile($file))->not->toBeNull();
     } finally {
         suRemoveDirRecursive($tempDir);
+        H::adminPost($page, suPath(), [
+            'submit' => '1',
+            'pwg_token' => $token,
+            'sync' => 'files',
+            'subcats-included' => '1',
+            'privacy_level' => '0',
+            'simulate' => '0',
+        ]);
+    }
+});
+
+it('creates a new sub-category successfully when its parent has a null global_rank', function (): void {
+    $parentDir = 'ct_site_nullrank_parent_' . uniqid();
+    $parentTemp = suMakeTempDir($parentDir);
+
+    $page = H::loginAsAdmin($this);
+    $token = H::pwgToken($page);
+
+    try {
+        $created = suSync($page, $token);
+        expect($created['status'])->toBe(200);
+        $parentId = suCategoryIdByDir(1, $parentDir);
+        expect($parentId)->not->toBeNull();
+        assert($parentId !== null);
+
+        // Force a genuinely null global_rank on the parent -- the column
+        // is nullable (schema default NULL) and this is the only real way
+        // to reach it with a truly null value in this rewrite: every real
+        // write path (the insert-with-parent block below, or the
+        // updateGlobalRank() recompute that runs at the end of every real
+        // non-simulate sync) always stamps a real string/int value.
+        suSetCategoryGlobalRankNull($parentId);
+
+        $childDir = $parentDir . '/ct_child_nullrank_' . uniqid();
+        mkdir(suGalleriesRoot() . $childDir, 0777, true);
+
+        // cat-scoped so $db_categories[$parent] is re-read fresh from the
+        // DB row just nulled above (getSyncCandidatesForSite()), not a
+        // same-request freshly-inserted entry -- this is what actually
+        // exercises SiteUpdateSubController's own
+        // `$parent_global_rank = ''` null-narrowing fallback. The child's
+        // own final global_rank column always gets overwritten by this
+        // same request's later updateGlobalRank() recompute (system-wide,
+        // self-healing off of rank/uppercats, not the literal
+        // just-inserted global_rank string), so there is no distinct
+        // persisted value left to assert on afterwards -- a successful,
+        // uncrashed creation off a real null-global_rank parent is the
+        // real, observable proof this branch was taken.
+        $scoped = suSync($page, $token, ['cat' => (string) $parentId, 'subcats-included' => '1']);
+
+        expect($scoped['status'])->toBe(200);
+        expect($scoped['body'])->not->toContain('Fatal error');
+        expect($scoped['body'])->toContain('1 albums added in the database');
+        expect(suCategoryIdByDir(1, basename($childDir)))->not->toBeNull();
+    } finally {
+        suRemoveDirRecursive($parentTemp);
+        H::adminPost($page, suPath(), [
+            'submit' => '1',
+            'pwg_token' => $token,
+            'sync' => 'files',
+            'subcats-included' => '1',
+            'privacy_level' => '0',
+            'simulate' => '0',
+        ]);
+    }
+});
+
+it('forces a new sub-category invisible when its parent category is not visible', function (): void {
+    $parentDir = 'ct_site_invisible_parent_' . uniqid();
+    $parentTemp = suMakeTempDir($parentDir);
+
+    $page = H::loginAsAdmin($this);
+    $token = H::pwgToken($page);
+
+    try {
+        $created = suSync($page, $token);
+        expect($created['status'])->toBe(200);
+        $parentId = suCategoryIdByDir(1, $parentDir);
+        expect($parentId)->not->toBeNull();
+        assert($parentId !== null);
+
+        // newcat_default_visible defaults to true -- flipping this one,
+        // already-created category's own `visible` column directly is the
+        // only way to get an existing parent that's invisible without
+        // every *other* newly-synced category (including the parent
+        // itself) also defaulting to invisible.
+        suSetCategoryVisible($parentId, false);
+
+        $childDir = $parentDir . '/ct_child_invis_' . uniqid();
+        mkdir(suGalleriesRoot() . $childDir, 0777, true);
+
+        $scoped = suSync($page, $token, ['cat' => (string) $parentId, 'subcats-included' => '1']);
+        expect($scoped['status'])->toBe(200);
+        expect($scoped['body'])->toContain('1 albums added in the database');
+
+        $childId = suCategoryIdByDir(1, basename($childDir));
+        expect($childId)->not->toBeNull();
+        assert($childId !== null);
+
+        // Unlike global_rank, `visible` is never touched by the
+        // updateCategory()/updateGlobalRank() recompute at the end of the
+        // request -- the inherited-invisible value set at insert time is
+        // exactly what's still in the database afterwards.
+        expect(suCategoryVisible($childId))->toBeFalse();
+    } finally {
+        suRemoveDirRecursive($parentTemp);
+        H::adminPost($page, suPath(), [
+            'submit' => '1',
+            'pwg_token' => $token,
+            'sync' => 'files',
+            'subcats-included' => '1',
+            'privacy_level' => '0',
+            'simulate' => '0',
+        ]);
+    }
+});
+
+it('clears a deleted category\'s cached derivative directory when one exists on disk', function (): void {
+    $dir = 'ct_site_deriv_' . uniqid();
+    $tempDir = suMakeTempDir($dir);
+    $imagePath = H::makeTestImage('CT Derivative Cache');
+    copy($imagePath, $tempDir . '/photo.jpg');
+    @unlink($imagePath);
+
+    $page = H::loginAsAdmin($this);
+    $token = H::pwgToken($page);
+    $derivDir = suDerivativeCacheDirFor($dir);
+
+    try {
+        $created = suSync($page, $token);
+        expect($created['status'])->toBe(200);
+        expect(suCategoryIdByDir(1, $dir))->not->toBeNull();
+
+        // A real on-disk derivative-cache directory for this category,
+        // mirroring what real thumbnail/derivative generation would have
+        // left behind -- www-data (the real Apache request process) must
+        // be able to unlink()/rmdir() it, hence the explicit umask(0)
+        // rather than relying on the ambient 0002 umask's 0775 result
+        // (torres-owned, group-writable only, not world-writable).
+        $previousUmask = umask(0);
+        mkdir($derivDir, 0777, true);
+        umask($previousUmask);
+        file_put_contents($derivDir . '/thumb.jpg', 'fake-cached-derivative-bytes');
+        expect(is_dir($derivDir))->toBeTrue();
+
+        suRemoveDirRecursive($tempDir);
+
+        $deleted = suSync($page, $token);
+        expect($deleted['status'])->toBe(200);
+        expect($deleted['body'])->toContain('1 albums deleted in the database');
+
+        // DerivativeCacheService::clearDerivativeCacheRecursive() removed
+        // every file it found (pattern '#.+#' matches anything) and, since
+        // nothing was left over, rmdir()'d the now-empty directory itself.
+        expect(is_dir($derivDir))->toBeFalse();
+    } finally {
+        suRemoveDirRecursive($tempDir);
+        suRemoveDirRecursive($derivDir);
+    }
+});
+
+it('silently skips a photo whose containing directory has no matching category', function (): void {
+    $dir = 'ct_site_root_skip_' . uniqid();
+    $file = $dir . '.jpg';
+    $tempDir = suMakeTempDir($dir);
+    $imagePath = H::makeTestImage('CT Root Skip');
+    copy($imagePath, $tempDir . '/' . $file);
+
+    // A second photo dropped directly at the gallery root: its
+    // dirname() is the site's own root directory, which the sync process
+    // never registers as a category (only named sub-directories under it
+    // become categories, never the root itself), so
+    // $db_fulldirs[dirname($path)] is never set for it -- the "storage
+    // category must exist" guard silently skips it, with no info/error
+    // entry either.
+    $orphanFile = 'ct_site_orphan_' . uniqid() . '.jpg';
+    copy($imagePath, suGalleriesRoot() . $orphanFile);
+    @unlink($imagePath);
+
+    $page = H::loginAsAdmin($this);
+    $token = H::pwgToken($page);
+
+    try {
+        $result = suSync($page, $token);
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->toContain('1 photos added in the database');
+        expect($result['body'])->toContain('0 errors during synchronization');
+
+        expect(suImageIdByFile($file))->not->toBeNull();
+        expect(suImageIdByFile($orphanFile))->toBeNull();
+    } finally {
+        suRemoveDirRecursive($tempDir);
+        @unlink(suGalleriesRoot() . $orphanFile);
+        H::adminPost($page, suPath(), [
+            'submit' => '1',
+            'pwg_token' => $token,
+            'sync' => 'files',
+            'subcats-included' => '1',
+            'privacy_level' => '0',
+            'simulate' => '0',
+        ]);
+    }
+});
+
+it('scopes metadata synchronization to a single category via cat, honoring subcats-included', function (): void {
+    $dir = 'ct_site_meta_cat_' . uniqid();
+    $file = $dir . '.jpg';
+    $tempDir = suMakeTempDir($dir);
+    $imagePath = H::makeTestImage('CT Meta Cat Scope');
+    copy($imagePath, $tempDir . '/' . $file);
+    @unlink($imagePath);
+
+    $page = H::loginAsAdmin($this);
+    $token = H::pwgToken($page);
+
+    try {
+        $created = suSync($page, $token);
+        expect($created['status'])->toBe(200);
+        $catId = suCategoryIdByDir(1, $dir);
+        expect($catId)->not->toBeNull();
+        assert($catId !== null);
+
+        $imageId = suImageIdByFile($file);
+        expect($imageId)->not->toBeNull();
+        assert($imageId !== null);
+        expect(suImageDateMetadataUpdate($imageId))->toBeNull();
+
+        // cat-scoped with subcats-included NOT '1': $opts['recursive']
+        // becomes false, restricting getFilelist() to this category alone
+        // (no descendants) -- the photo directly inside it is still a
+        // member of that one category, so it still gets its metadata
+        // synced.
+        $scoped = suSync($page, $token, [
+            'cat' => (string) $catId,
+            'subcats-included' => '0',
+            'sync_meta' => '1',
+            'meta_all' => '1',
+        ]);
+
+        expect($scoped['status'])->toBe(200);
+        expect($scoped['body'])->toContain("1 photos' information synchronized with files metadata");
+        expect($scoped['body'])->toContain('1 photos candidates for metadata synchronization');
+        expect(suImageDateMetadataUpdate($imageId))->not->toBeNull();
+    } finally {
+        suRemoveDirRecursive($tempDir);
+        H::adminPost($page, suPath(), [
+            'submit' => '1',
+            'pwg_token' => $token,
+            'sync' => 'files',
+            'subcats-included' => '1',
+            'privacy_level' => '0',
+            'simulate' => '0',
+        ]);
+    }
+});
+
+it('assigns tags from IPTC keywords during metadata synchronization', function (): void {
+    $dir = 'ct_site_meta_tags_' . uniqid();
+    $file = $dir . '.jpg';
+    $tempDir = suMakeTempDir($dir);
+    $keyword1 = 'ct_kw_nature_' . uniqid();
+    $keyword2 = 'ct_kw_travel_' . uniqid();
+    $imagePath = suMakeJpegWithIptcKeywords([$keyword1, $keyword2]);
+    copy($imagePath, $tempDir . '/' . $file);
+    @unlink($imagePath);
+
+    $page = H::loginAsAdmin($this);
+    $token = H::pwgToken($page);
+    $snapshot = H::snapshotConfig(['use_iptc']);
+
+    try {
+        // use_iptc_mapping is left at its own default (already includes
+        // 'keywords' => '2#025'), only use_iptc itself needs enabling --
+        // it defaults to false, and IPTC keywords are otherwise never
+        // read at all (LocalSiteReader::get_element_metadata() ->
+        // MetadataService::getSyncMetadata() only calls
+        // getSyncIptcData() when it's true).
+        H::setConfigValue('use_iptc', 'true');
+
+        $created = suSync($page, $token);
+        expect($created['status'])->toBe(200);
+        $imageId = suImageIdByFile($file);
+        expect($imageId)->not->toBeNull();
+        assert($imageId !== null);
+        expect(suImageTagNames($imageId))->toBe([]);
+
+        $result = suSync($page, $token, ['sync_meta' => '1', 'meta_all' => '1']);
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->toContain("1 photos' information synchronized with files metadata");
+
+        $expectedNames = [$keyword1, $keyword2];
+        sort($expectedNames);
+        expect(suImageTagNames($imageId))->toBe($expectedNames);
+    } finally {
+        H::restoreConfig($snapshot);
+        suRemoveDirRecursive($tempDir);
+        suDeleteTagsByName([$keyword1, $keyword2]);
         H::adminPost($page, suPath(), [
             'submit' => '1',
             'pwg_token' => $token,

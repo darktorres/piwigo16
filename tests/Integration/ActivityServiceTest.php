@@ -13,7 +13,9 @@ use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Core\ActivitySystem;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\Tables;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
@@ -312,6 +314,87 @@ final class ActivityServiceTest extends IntegrationTestCase
             self::assertInstanceOf(\Piwigo\Activity\Projection\UserActivityLogEntry::class, $row);
             self::assertSame('user', $row->object);
             self::assertSame('fixture_admin', $row->username);
+        }
+    }
+
+    public function test_get_system_action_counts_by_object_id_delegates_to_the_repository(): void
+    {
+        // Fixture: activity_id 1 (object='system', object_id=3, action=
+        // 'activate') and activity_id 2 (object='system', object_id=1,
+        // action='install') -- see ActivityRepositoryTest's own fixture
+        // docblock for the full row-by-row breakdown. Neither collides with
+        // any object_id/action pair the record()-based tests above insert
+        // (2/'restore').
+        $rows = $this->service->getSystemActionCountsByObjectId();
+
+        $activate = array_values(array_filter(
+            $rows,
+            static fn (array $row): bool => $row['object_id'] === 3 && $row['action'] === 'activate'
+        ));
+        self::assertCount(1, $activate);
+        self::assertSame('system', $activate[0]['object']);
+        self::assertSame(1, $activate[0]['counter']);
+
+        $install = array_values(array_filter(
+            $rows,
+            static fn (array $row): bool => $row['object_id'] === 1 && $row['action'] === 'install'
+        ));
+        self::assertCount(1, $install);
+        self::assertSame(1, $install[0]['counter']);
+    }
+
+    public function test_get_user_agent_breakdown_delegates_to_the_repository(): void
+    {
+        // Fixture: activity_id 3/4 (object='user', action='login', both
+        // performed_by fixture_admin) both carry user_agent=
+        // 'PiwigoFixtureRegen/1.0' -- see ActivityRepositoryTest's own
+        // fixture docblock. Distinct from every user-agent value the
+        // record()-based tests above insert ('TestAgent/1.0').
+        $rows = $this->service->getUserAgentBreakdown();
+
+        $matching = array_values(array_filter(
+            $rows,
+            static fn (array $row): bool => $row['user_agent'] === 'PiwigoFixtureRegen/1.0'
+        ));
+        self::assertCount(1, $matching);
+        self::assertSame(2, $matching[0]['counter']);
+    }
+
+    public function test_get_core_update_history_delegates_to_the_repository(): void
+    {
+        // No fixture row matches ('activity_id 2 is object_id=1/'install',
+        // not 'update'/'autoupdate' -- see findCoreUpdateHistory()'s own
+        // action filter), so this inserts its own disposable row directly
+        // via the repository, same technique/shape as
+        // ActivityRepositoryTest::test_find_core_update_history_filters_by_object_and_actions().
+        $repo = EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class);
+        self::assertInstanceOf(ActivityRepository::class, $repo);
+        $repo->insertMany([
+            [
+                'object' => 'system',
+                'objectId' => ActivitySystem::Core,
+                'action' => 'update',
+                'performedBy' => null,
+                'sessionIdx' => 'sess-1',
+                'ipAddress' => null,
+                'occuredOn' => '2026-07-10 00:00:00',
+                'details' => ['from_version' => '16.0.0', 'to_version' => '17.0.0'],
+                'userAgent' => null,
+            ],
+        ]);
+
+        try {
+            $rows = $this->service->getCoreUpdateHistory();
+
+            $matching = array_values(array_filter($rows, static fn (array $row): bool => $row['action'] === 'update'));
+            self::assertCount(1, $matching);
+            self::assertSame('2026-07-10 00:00:00', $matching[0]['occured_on']);
+            self::assertIsString($matching[0]['details']);
+            self::assertSame(['from_version' => '16.0.0', 'to_version' => '17.0.0'], json_decode($matching[0]['details'], true));
+        } finally {
+            $this->conn->executeStatement(
+                "DELETE FROM " . Tables::activity() . " WHERE object = 'system' AND action = 'update' AND object_id = " . ActivitySystem::Core
+            );
         }
     }
 

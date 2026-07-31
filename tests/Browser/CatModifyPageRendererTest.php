@@ -136,6 +136,49 @@ it('formats a multi-date info-title ("added between") when its photos span more 
     }
 });
 
+// Regression test for a real bug found+fixed alongside this test (see
+// CatModifyPageRenderer::render()'s own new comment at the
+// $category_id_uppercat call site): PARENT_CAT_ID used to always render as
+// 0 for every sub-album, because the narrowing there only accepted a
+// *string* id_uppercat (the old raw-mysqli-row assumption) while
+// Category\Projection\Category::toArray() actually hands back a real ?int.
+// Category 2's own fixture parent is category 1 (id_uppercat=1) -- this
+// asserts the real parent id reaches both cat_modify.tpl JS globals that
+// read PARENT_CAT_ID (the move-album jstree widget's initial selection).
+it('assigns the real parent id to PARENT_CAT_ID for a sub-album, not 0', function (): void {
+    $page = H::loginAsAdmin($this);
+    $result = H::rawGet($page, '/admin.php?page=album&cat_id=2&tab=properties');
+
+    expect($result['status'])->toBe(200);
+    expect($result['body'])->toContain('var parent_album = 1');
+    expect($result['body'])->toContain('related_categories_ids = ["2", "1"]');
+    // The old, buggy behavior this replaces -- guards against a partial
+    // fix that renders the right value in one JS global but not the other.
+    expect($result['body'])->not->toContain('var parent_album = 0');
+});
+
+// ALLOW_DELETE (the "remove current representant" action) needs BOTH
+// has_images AND allow_random_representative -- default config has the
+// latter off, so #deleteRepresentative is absent even though category 1
+// has images. Flipping the config on is the only real way to reach this
+// branch: category 1's own fixture representative_picture_id (1) is
+// already set, so has_images alone (already covered by the "parent album"
+// test above) isn't enough by itself.
+it('shows the delete-representative action when allow_random_representative is enabled', function (): void {
+    $snapshot = H::snapshotConfig(['allow_random_representative']);
+    H::setConfigValue('allow_random_representative', 'true');
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $page = H::navigateOk($page, '/admin.php?page=album&cat_id=1&tab=properties');
+        $page->assertNoJavaScriptErrors();
+
+        $page->assertPresent('#deleteRepresentative');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
 it('shows the real physical directory info for a non-virtual (disk-synced) album', function (): void {
     $page = H::loginAsAdmin($this);
 

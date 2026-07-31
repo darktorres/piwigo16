@@ -20,6 +20,21 @@ use Piwigo\Ws\PwgNamedStruct;
  * PwgError's constructor calls PresentationAccessor::htmlService() for
  * HTTP-range codes, which needs a booted container this Unit test
  * doesn't set up.
+ *
+ * Ws\Encoder\PwgResponseEncoder::flatten()'s own re-assertion guard (`$is_struct
+ * = self::is_struct($value); if (! is_array($value)) { return; }`,
+ * directly below the earlier `if (! is_array($value)) { return; }`) is not
+ * chased here or anywhere else: it exists purely because is_struct()
+ * takes `$data` by reference with a `mixed` type, so PHPStan discards the
+ * is_array() narrowing above across the call (see the source's own
+ * docblock) -- but is_struct()'s real body never actually writes to
+ * `$data` at all (confirmed by reading its full source: a plain read-only
+ * `is_array($data)`/`array_keys($data)` check, `return`s the whole way
+ * through). $value is therefore always still the same real array
+ * flatten() already confirmed just above, and this second `return;` can
+ * never execute through any real call. A pure static-analysis
+ * narrowing-loss guard, provably unreachable in real usage -- not a gap
+ * in test coverage.
  */
 test('encodeResponse serializes a PwgError as a fail/err/message triple', function (): void {
     $encoder = new PwgSerialPhpEncoder();

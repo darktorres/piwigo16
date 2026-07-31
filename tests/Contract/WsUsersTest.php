@@ -101,6 +101,22 @@ final class WsUsersTest extends ContractTestCase
         self::assertSame(['regular_user'], $usernames);
     }
 
+    public function test_getList_filter_also_matches_by_group_name(): void
+    {
+        // 'Reviewers' is a real fixture group (id 2) whose only member is
+        // regular_user (id 3, own email is NULL) -- per the fixture's
+        // piwigo_user_group rows. Neither regular_user's username nor its
+        // (null) email contains "Reviewers", so a match here only comes
+        // through getList()'s own self::groupService()->getIdsByNameLike()
+        // + "OR ug.group_id IN (...)" branch, not the plain username/email
+        // LIKE clauses.
+        $response = $this->wsAdmin('pwg.users.getList', ['display' => 'basics', 'filter' => 'Reviewers']);
+
+        self::assertSame('ok', $response['stat']);
+        $usernames = $this->usernameColumn($response);
+        self::assertSame(['regular_user'], $usernames);
+    }
+
     public function test_getList_min_register_valid_year_only_matches_all_fixture_users(): void
     {
         $response = $this->wsAdmin('pwg.users.getList', ['display' => 'basics', 'min_register' => '2026']);
@@ -138,6 +154,21 @@ final class WsUsersTest extends ContractTestCase
         self::assertSame('fail', $response['stat']);
         self::assertSame(1003, $response['err']);
         self::assertSame('Invalid input parameter max_register', $response['message']);
+    }
+
+    public function test_getList_max_register_with_explicit_day_is_used_directly(): void
+    {
+        // Sibling of the month-only test above, which takes the *else*
+        // branch (day computed via date('t')) -- supplying all three date
+        // tokens exercises getList()'s own isset($max_date_tokens[2])
+        // branch instead. Fixture users all registered on 2026-08-01, so
+        // capping max_register at that exact date must still include them
+        // (<= 2026-08-01 23:59:59).
+        $response = $this->wsAdmin('pwg.users.getList', ['display' => 'basics', 'max_register' => '2026-08-01']);
+
+        self::assertSame('ok', $response['stat']);
+        $usernames = $this->usernameColumn($response);
+        self::assertContains('fixture_admin', $usernames);
     }
 
     public function test_getList_filters_by_status(): void
@@ -192,6 +223,40 @@ final class WsUsersTest extends ContractTestCase
         self::assertContains('regular_user', $usernames);
     }
 
+    public function test_getList_filters_by_group_id(): void
+    {
+        // Group 3 ('Guests') has only power_user (id 4) as a member, per
+        // the fixture's piwigo_user_group rows -- exercises getList()'s
+        // own 'ug.group_id IN(...)' where-clause branch (distinct from the
+        // filter-by-group-name test above, which reaches the *same* SQL
+        // alias through a different param).
+        $response = $this->wsAdmin('pwg.users.getList', ['display' => 'basics', 'group_id' => [3]]);
+
+        self::assertSame('ok', $response['stat']);
+        $usernames = $this->usernameColumn($response);
+        self::assertSame(['power_user'], $usernames);
+    }
+
+    // getList()'s own group-membership merge loop (populating each
+    // returned user's 'groups' array from
+    // self::groupService()->getMembershipsForUserIds()) has a defensive
+    // `continue` guarded by `$group_user_id === null || $group_id === null
+    // || ! isset($users[$group_user_id]) || ! is_array($users[$group_user_id]['groups'] ?? null)`.
+    // Every 'basics'-display test above (which requests 'groups' and so
+    // sets $want_groups = true) already exercises this loop's *happy*
+    // path. The `continue` branch itself is provably unreachable through
+    // any real request: getMembershipsForUserIds() is called with exactly
+    // array_keys($users) as its own SQL `WHERE user_id IN (...)` filter
+    // (GroupRepository::findMembershipsForUserIds()), so every returned
+    // row's user_id is guaranteed to already be a key of $users, and
+    // user_id/group_id are real NOT NULL int columns (never non-numeric,
+    // the only way is_numeric(...) ? (int) ... : null yields null here);
+    // and every $users entry gets 'groups' => [] seeded up-front (line
+    // ~314) whenever $want_groups is true, so 'groups' is always already
+    // an array by the time this loop runs. A static-analysis-only
+    // narrowing guard, not a reachable real-usage gap -- no test added for
+    // it here.
+
     public function test_getList_excludes_given_user_ids(): void
     {
         $before = $this->wsAdmin('pwg.users.getList', ['display' => 'basics']);
@@ -209,6 +274,20 @@ final class WsUsersTest extends ContractTestCase
         $usernames = $this->usernameColumn($response);
         self::assertNotContains('fixture_admin', $usernames);
     }
+
+    // getList()'s own `$ui_fields = ['status', 'level', 'language', ...]`
+    // array-literal's opening lines show as "uncovered" in raw line
+    // coverage despite every 'basics'/'all'-display test in this file
+    // reaching and exercising it (that branch is unconditional once
+    // `$params['display'] !== 'none'`, which every such test satisfies) --
+    // a known OPcache constant-array-folding artifact (see MEMORY.md
+    // feedback_opcache_constant_array_folding_coverage_artifact.md, and
+    // the identical pattern already documented in
+    // WsImagesSetInfoTest::test_setInfo_file_param_is_forbidden_on_synchronized_photos's
+    // own preceding comment): a pure-literal array with no variables gets
+    // folded at compile time, so line-based coverage can't attribute a
+    // real hit to those specific source lines. Not a real gap; no
+    // additional test added for it here.
 
     public function test_getList_display_only_id_returns_bare_id_field(): void
     {

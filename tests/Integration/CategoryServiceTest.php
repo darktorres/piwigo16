@@ -999,5 +999,208 @@ final class CategoryServiceTest extends IntegrationTestCase
             $this->conn->executeStatement('DELETE FROM ' . Tables::userAccess() . ' WHERE cat_id = 1');
         }
     }
+
+    public function test_get_image_ids_for_categories_returns_empty_for_no_category_ids(): void
+    {
+        // the empty-input early return -- never reaches the repository or
+        // the permission-condition SQL building below it.
+        self::assertSame([], $this->service->getImageIdsForCategories([]));
+    }
+
+    public function test_update_category_with_a_scalar_id_clears_a_stale_representative_picture_id(): void
+    {
+        // updateCategory()'s own docblock: real WS callers
+        // (ws_functions/pwg.images.php) pass a raw, never-int-cast scalar
+        // category id, not an array -- calling with a bare int here
+        // exercises that '%s=' . $ids scalar branch directly (as opposed
+        // to the 'all' and array branches already covered elsewhere).
+        //
+        // representative_picture_id has a real FK to images.id (ON DELETE
+        // SET NULL, see fk_categories_representative_picture_id) -- a
+        // genuinely dangling value can only exist in practice from a bulk
+        // import/migration that ran with checks off (same rationale as
+        // UserServiceTest's own FK-disabled inserts), so that's
+        // reproduced here rather than a plain UPDATE, which the live FK
+        // would reject outright.
+        $this->conn->executeStatement('SET FOREIGN_KEY_CHECKS=0');
+        $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = 999999 WHERE id = 1');
+        $this->conn->executeStatement('SET FOREIGN_KEY_CHECKS=1');
+
+        try {
+            $result = $this->service->updateCategory(1);
+
+            self::assertNull($result);
+
+            $repId = $this->conn->createQueryBuilder()
+                ->select('representative_picture_id')
+                ->from(Tables::categories())
+                ->where('id = 1')
+                ->executeQuery()
+                ->fetchOne();
+            // the scalar '%s=1' substitution scoped the wrong-representative
+            // sweep to just category 1 (proving the scalar branch built
+            // valid, correctly-targeted SQL rather than e.g. a malformed
+            // "WHERE 1=1"-style fragment, which would have matched every
+            // category) -- clearRepresentativePictureIds() nulls the bogus
+            // 999999, then the immediately-following
+            // !allowRandomRepresentative() repair branch (default false,
+            // not itself one of this test's target lines) repicks a real
+            // image from category 1's own 3 fixture images, proving the
+            // bogus id didn't survive the sweep.
+            self::assertContains(is_numeric($repId) ? (int) $repId : null, [1, 2, 3]);
+        } finally {
+            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = 1 WHERE id = 1');
+        }
+    }
+
+    public function test_set_cat_visible_with_unlock_child_unlocks_descendant_categories_too(): void
+    {
+        $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET visible = 0 WHERE id = 2');
+
+        try {
+            // unlockChild=true merges getSubcatIds([1]) (== [1, 2]) into
+            // the ancestor-only list getUppercatIds([1]) would otherwise
+            // produce (just [1], category 1 has no parent of its own) --
+            // category 2 only ends up unlocked because of that merge.
+            $this->service->setCatVisible([1], true, true);
+
+            $visible = $this->conn->createQueryBuilder()
+                ->select('visible')
+                ->from(Tables::categories())
+                ->where('id = 2')
+                ->executeQuery()
+                ->fetchOne();
+            self::assertSame(1, is_numeric($visible) ? (int) $visible : null);
+        } finally {
+            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET visible = 1 WHERE id = 2');
+        }
+    }
+
+    public function test_move_categories_returns_early_for_no_category_ids(): void
+    {
+        PageState::reset();
+        $activityLogger = new CategoryServiceFakeActivityLogger();
+
+        $this->service->moveCategories([], $activityLogger);
+
+        // the count()===0 early return skips updateCategoryParent(),
+        // updateUppercats()/updateGlobalRank(), the PageState::addInfo()
+        // summary and the activity-log record below it entirely -- an
+        // empty $categoryIds reaching any of that would still "succeed"
+        // silently, so the only observable proof of the early return is
+        // that none of it ran.
+        self::assertSame([], $activityLogger->calls);
+        self::assertSame([], PageState::current()->infos);
+    }
+
+    public function test_move_categories_to_root_sets_parent_status_public(): void
+    {
+        PageState::reset();
+        $activityLogger = new CategoryServiceFakeActivityLogger();
+
+        try {
+            // default $newParent = -1 -> $newParentSql = 'NULL' -> moving
+            // to root, the branch that hardcodes $parentStatus = 'public'
+            // rather than looking an actual parent category up.
+            $this->service->moveCategories([2], $activityLogger);
+
+            $idUppercat = $this->conn->createQueryBuilder()
+                ->select('id_uppercat')
+                ->from(Tables::categories())
+                ->where('id = 2')
+                ->executeQuery()
+                ->fetchOne();
+            self::assertNull($idUppercat);
+            self::assertSame('public', $this->repo->findCategoryStatus(2));
+        } finally {
+            $this->conn->executeStatement(
+                "UPDATE " . Tables::categories() . " SET id_uppercat = 1, uppercats = '1,2', global_rank = '1.1' WHERE id = 2"
+            );
+        }
+    }
+
+    public function test_move_categories_into_a_private_parent_cascades_private_status(): void
+    {
+        PageState::reset();
+        $activityLogger = new CategoryServiceFakeActivityLogger();
+
+        $privateParent = $this->service->createVirtualCategory(
+            'ct_move_private_parent_' . uniqid(),
+            $activityLogger,
+            null,
+            ['status' => 'private']
+        );
+        $privateParentIdRaw = $privateParent['id'] ?? null;
+        self::assertTrue(is_numeric($privateParentIdRaw));
+        $privateParentId = (int) $privateParentIdRaw;
+
+        try {
+            // moving into a real, non-root parent (status looked up via
+            // findCategoryStatus()) that happens to be private -- the
+            // setCatStatus(..., 'private') cascade onto the moved
+            // categories themselves only fires on this branch.
+            $this->service->moveCategories([2], $activityLogger, $privateParentId);
+
+            self::assertSame('private', $this->repo->findCategoryStatus(2));
+        } finally {
+            $this->conn->executeStatement(
+                "UPDATE " . Tables::categories() . " SET id_uppercat = 1, uppercats = '1,2', global_rank = '1.1', status = 'public' WHERE id = 2"
+            );
+            $this->conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id = ' . $privateParentId);
+        }
+    }
+
+    public function test_create_virtual_category_with_last_position_ranks_after_existing_siblings(): void
+    {
+        CurrentConfig::setNewcatDefaultPosition('last');
+
+        try {
+            $result = $this->service->createVirtualCategory('ct_last_position_' . uniqid(), new CategoryServiceFakeActivityLogger());
+            $newIdRaw = $result['id'] ?? null;
+            self::assertTrue(is_numeric($newIdRaw));
+            $newId = (int) $newIdRaw;
+
+            $rank = $this->conn->createQueryBuilder()
+                ->select('`rank`')
+                ->from(Tables::categories())
+                ->where('id = ' . $newId)
+                ->executeQuery()
+                ->fetchOne();
+            // category 1 is the only other root-level album, at rank 1 --
+            // newcatDefaultPosition=last must place the new sibling right
+            // after it rather than at the default rank 0.
+            self::assertSame(2, is_numeric($rank) ? (int) $rank : null);
+
+            $this->conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id = ' . $newId);
+        } finally {
+            CurrentConfig::setNewcatDefaultPosition('first');
+        }
+    }
+
+    public function test_set_representative_image_for_categories_updates_both_categories(): void
+    {
+        try {
+            $this->service->setRepresentativeImageForCategories([1, 2], 3);
+
+            $repIds = $this->conn->fetchFirstColumn(
+                'SELECT representative_picture_id FROM ' . Tables::categories() . ' WHERE id IN (1, 2) ORDER BY id'
+            );
+            self::assertSame([3, 3], array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $repIds));
+        } finally {
+            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = 1 WHERE id = 1');
+            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = 4 WHERE id = 2');
+        }
+    }
+
+    public function test_get_image_ids_outside_categories_excludes_the_given_category(): void
+    {
+        // category 1 owns images 1-3, category 2 owns images 4-5 (see this
+        // file's own fixture docblock) -- excluding category 1 leaves only
+        // category 2's images.
+        $ids = $this->service->getImageIdsOutsideCategories([1]);
+        sort($ids);
+
+        self::assertSame([4, 5], $ids);
+    }
 }
 }

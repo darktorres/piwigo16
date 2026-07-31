@@ -145,3 +145,123 @@ it('shows the pending-comments counter when at least one unvalidated comment exi
         H::restoreConfig($snapshot);
     }
 });
+
+it('re-runs the filesystem quick check when the last check is older than the configured period', function (): void {
+    $snapshot = H::snapshotConfig(['fs_quick_check_period', 'fs_quick_check_last_check']);
+    H::setConfigValue('fs_quick_check_period', '60');
+    $staleCheck = date('c', strtotime('-1 hour'));
+    H::setConfigValue('fs_quick_check_last_check', H::jsonEncode($staleCheck));
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $page = H::navigateOk($page, '/admin.php?page=intro');
+        $page->assertNoJavaScriptErrors();
+
+        // FilesystemIntegrityChecker::fsQuickCheck() unconditionally
+        // rewrites 'fs_quick_check_last_check' to date('c') the instant it
+        // actually runs (confirmed in FilesystemIntegrityCheckerTest) -- a
+        // fresh timestamp, different from the stale one seeded above, is
+        // direct proof AdminShell's own elapsed-period guard (the
+        // strtotime() comparison) decided to call it, not merely that the
+        // request didn't error.
+        $after = H::configValue('fs_quick_check_last_check');
+        expect($after)->not->toBe(H::jsonEncode($staleCheck));
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+it('synchronizes users against the base table when externalAuthentification is enabled', function (): void {
+    $repoRoot = dirname(__DIR__, 2);
+    $localConfigPath = $repoRoot . '/local/config/config.php';
+
+    // local/config/ is torres-owned in this dev environment (same
+    // direct-filesystem-fixture precedent as this repo's own
+    // AdminConfigurationTest local/config/config.inc.php write) -- a plain
+    // direct file write is safe. DeploymentPolicy::current() memoizes only
+    // for the lifetime of a single PHP request (a plain static property,
+    // reinitialized by the SAPI's own per-request teardown like every other
+    // class static -- there is no persistent worker state in this mod_php
+    // prefork deployment), so writing this file only for the duration of
+    // one real HTTP request below cannot leak into any other
+    // concurrently-scoped request.
+    if (file_exists($localConfigPath)) {
+        throw new RuntimeException("Refusing to overwrite a pre-existing {$localConfigPath} -- clean up a prior failed run first.");
+    }
+
+    // Login first, while the default (externalAuthentification: false)
+    // DeploymentPolicy is still in effect -- this branch only needs to be
+    // active for the admin.php request itself.
+    $page = H::loginAsAdmin($this);
+
+    file_put_contents(
+        $localConfigPath,
+        "<?php\nreturn new \\Piwigo\\Config\\DeploymentPolicy(externalAuthentification: true);\n"
+    );
+
+    try {
+        $page = H::navigateOk($page, '/admin.php?page=intro');
+        $page->assertNoJavaScriptErrors();
+        H::assertNoServerErrors($page, 'externalAuthentification syncUsers branch');
+    } finally {
+        @unlink($localConfigPath);
+    }
+});
+
+it('purges stale whats_new_* preferences and shows the whats-new popin for a user registered before the last major update', function (): void {
+    $prefix = getenv('PIWIGO_DB_PREFIX');
+    $prefix = $prefix !== false ? $prefix : 'piwigo_';
+    $db = new mysqli(
+        (string) getenv('PIWIGO_DB_HOST'),
+        (string) getenv('PIWIGO_DB_USER'),
+        (string) getenv('PIWIGO_DB_PASSWORD'),
+        (string) getenv('PIWIGO_DB_BASE')
+    );
+
+    $original = H::fetchAssocOrFail($db, "SELECT registration_date, preferences FROM {$prefix}user_infos WHERE user_id = 1");
+
+    // fixture_admin (user_id 1, confirmed via tests/Fixtures/piwigo-17.0.sql)
+    // registers *after* the fixture's own last_major_update and already
+    // carries {"show_whats_new_16": false} -- neither reaches AdminShell's
+    // "purge stale whats_new_*" branch (the outer getParam(...,true) check
+    // would come back false, and even if it didn't, registration_date >
+    // lastMajorUpdate takes the OTHER branch), so both are overridden here
+    // and restored in the finally block below.
+    $db->query(sprintf(
+        "UPDATE %suser_infos SET registration_date = '2020-01-01 00:00:00', preferences = '%s' WHERE user_id = 1",
+        $prefix,
+        $db->real_escape_string(H::jsonEncode(['whats_new_15' => true]))
+    ));
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $page = H::navigateOk($page, '/admin.php?page=intro');
+        $page->assertNoJavaScriptErrors();
+
+        // assertSee() matches visible text (Playwright getByText()), which
+        // can't see an id attribute -- the whats-new popin markup itself is
+        // the only observable proof $show_whats_new (a purely local
+        // variable) actually came back true, so this reads the raw HTML
+        // instead (same H::rawWebpage()->content() technique
+        // IntroSubControllerTest already uses).
+        expect(H::rawWebpage($page)->content())->toContain('id="whats_new_popin"');
+
+        $after = H::fetchAssocOrFail($db, "SELECT preferences FROM {$prefix}user_infos WHERE user_id = 1");
+        $prefsAfter = json_decode((string) $after['preferences'], true);
+        expect($prefsAfter)->not->toHaveKey('whats_new_15');
+    } finally {
+        $restoreRegistration = $original['registration_date'] === null
+            ? 'NULL'
+            : "'" . $db->real_escape_string((string) $original['registration_date']) . "'";
+        $restorePreferences = $original['preferences'] === null
+            ? 'NULL'
+            : "'" . $db->real_escape_string((string) $original['preferences']) . "'";
+        $db->query(sprintf(
+            "UPDATE %suser_infos SET registration_date = %s, preferences = %s WHERE user_id = 1",
+            $prefix,
+            $restoreRegistration,
+            $restorePreferences
+        ));
+        $db->close();
+    }
+});

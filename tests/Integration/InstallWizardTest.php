@@ -88,6 +88,43 @@ use Piwigo\Session\SessionService;
  * logic doesn't touch* (webmaster/guest users, sites, config, activated
  * language, the written .env/database.inc.php/install stamp) is already
  * fully covered below via performInstall() directly.
+ *
+ * Three real branches are deliberately left uncovered, not silently
+ * skipped -- each is a genuine behavioral guard whose own triggering
+ * condition is provably unreachable from a real InstallWizard call in
+ * this environment, the same reasoning
+ * tests/Unit/Core/CoverageCollectorTest.php's own docblock already
+ * documents for CoverageCollector::registerIfActive()'s own
+ * `! extension_loaded('pcov')` guard:
+ *  - boot()'s `! extension_loaded('mysqli')` check: every test in this
+ *    whole file already requires a real mysqli-backed DB connection in
+ *    this exact PHP process, so the negation can never be true here
+ *    (confirmed live: `php -m` lists mysqli).
+ *  - boot()'s `version_compare(PHP_VERSION, AppInfo::REQUIRED_PHP_VERSION,
+ *    '<')` check: PHP_VERSION is fixed for this whole process's lifetime,
+ *    and AppInfo::REQUIRED_PHP_VERSION is a compile-time class constant
+ *    ('8.5.0', at or below the actual PHP version this suite runs on,
+ *    confirmed live) -- nothing reachable from a real InstallWizard call
+ *    can make this comparison true.
+ *  - render()'s step-2 `$login_user_id` narrowing (the
+ *    `elseif (is_string($raw_login_user_id) && is_numeric(...))`/`else`
+ *    arms): $raw_login_user_id always comes from
+ *    UserService::buildUser(1)'s own 'id' key, ultimately
+ *    `{prefix}users.id` (a `mediumint unsigned` column) read through this
+ *    project's real mysqli DBAL driver config, which returns integer
+ *    columns as native PHP int (confirmed live with a throwaway
+ *    `fetchAssociative('SELECT 1 AS id')` against this same driver
+ *    config: `int(1)`, not `"1"`) -- so the `if (is_int(...))` branch
+ *    always wins in practice. The one real knob that could produce a
+ *    non-int 'id' here, `$conf['user_fields']['id']` (a genuine
+ *    external-auth column remap -- see e.g.
+ *    AlbumNotificationPageRenderer's own comment on it), cannot be set to
+ *    anything but its 'id'=>'id' default at install time: the config
+ *    table this wizard itself is creating doesn't exist with any
+ *    admin-set override until well after this exact call returns. Faking
+ *    it here via CurrentConfig::setUserFields() would force a state no
+ *    real InstallWizard call can ever actually be in, not a genuine
+ *    input.
  */
 final class InstallWizardTest extends IntegrationTestCase
 {
@@ -417,7 +454,79 @@ final class InstallWizardTest extends IntegrationTestCase
         self::assertStringNotContainsString('Congratulations', $output);
     }
 
+    /**
+     * render()'s own `if (count($this->errors) !== 0)` guard -- every
+     * other render() test in this file either has zero errors (a fresh
+     * step-1 form) or asserts hasErrors() is false before ever calling
+     * render(), so this is the first one to reach render() with real,
+     * analyzeForm()-collected errors still present. Verified both via the
+     * template's own assigned var directly (matching the config-write-
+     * fallback test's own use of get_template_vars() elsewhere in this
+     * file) and via install.tpl's real `{if isset($errors)}` HTML
+     * rendering of it.
+     */
+    public function test_render_assigns_the_collected_validation_errors_to_the_template(): void
+    {
+        $this->bootInstallBootstrap();
+
+        $wizard = $this->submit([
+            'dbhost' => $this->dbHost,
+            'dbuser' => $this->dbUser,
+            'dbpasswd' => $this->dbPass,
+            'dbname' => $this->dbName,
+            'admin_name' => '',
+            'admin_pass1' => 'first-password',
+            'admin_pass2' => 'a-totally-different-password',
+            'admin_mail' => '',
+            'install' => '1',
+        ]);
+        $wizard->analyzeForm();
+        self::assertTrue($wizard->hasErrors());
+        // step stays 1 -- performInstall() never runs -- so render() takes
+        // its step-1 branch and reaches this guard with $this->errors still
+        // populated from analyzeForm() above.
+
+        ob_start();
+        $wizard->render();
+        $output = ob_get_clean();
+        self::assertIsString($output);
+
+        $template = $this->reflectPrivate($wizard, 'template');
+        self::assertInstanceOf(\Piwigo\Template\Template::class, $template);
+        self::assertSame($this->reflectPrivate($wizard, 'errors'), $template->get_template_vars('errors'));
+
+        self::assertStringContainsString('please enter the webmaster username', $output);
+    }
+
     // ------------------------------------------------------------ performInstall()
+
+    /**
+     * performInstall()'s own mirror of render()'s "reached step 2 before a
+     * successful connection" guard (see
+     * test_render_throws_when_step_2_is_reached_without_a_successful_connection
+     * below) -- the entry shell itself only ever calls performInstall()
+     * once hasErrors() is false, which requires analyzeForm() to have
+     * already built a real connection (per this method's own docblock), so
+     * this is reachable only by a caller that skips straight to
+     * performInstall() the way this test does.
+     */
+    public function test_performInstall_throws_when_called_before_a_successful_connection(): void
+    {
+        $this->bootInstallBootstrap();
+
+        $wizard = $this->submit([
+            'dbhost' => $this->dbHost,
+            'dbuser' => $this->dbUser,
+            'dbpasswd' => $this->dbPass,
+            'dbname' => $this->dbName,
+        ]);
+        // conn defaults to null until analyzeForm() runs -- never called here.
+
+        $this->expectException(\LogicException::class);
+        $this->expectExceptionMessage('performInstall() called before a successful analyzeForm() connection.');
+
+        $wizard->performInstall();
+    }
 
     public function test_performInstall_creates_the_real_schema_webmaster_user_and_site_config(): void
     {
@@ -595,16 +704,97 @@ final class InstallWizardTest extends IntegrationTestCase
         self::assertFileExists($this->tempRoot . '.env');
     }
 
-    // performInstall()'s OWN config-write-failure fallback (secureDirectory()
-    // + a tmp pwg_<hash> file under _data/, template 'config_creation_failed'
-    // flag) is deliberately not chased here: it needs the *prod-mode* legacy
-    // database.inc.php write (already isolated to one test above, which
-    // temporarily unsets the test-mode header) to ALSO fail its own
-    // fopen($this->configFile, 'w'), which needs local/config/ itself made
-    // unwritable at exactly that moment -- stacking that on top of the
-    // already-delicate umask/header save-restore dance above, for a
-    // secondary fallback-of-a-fallback path, was judged not worth the added
-    // fragility risk versus this batch's remaining scope.
+    /**
+     * performInstall()'s OWN config-write-failure fallback
+     * (FilesystemHelper::secureDirectory() + a tmp pwg_<hash> file under
+     * _data/ + the template's own 'config_creation_failed'/'config_url'/
+     * 'config_file_content' vars) -- needs the *prod-mode* legacy
+     * database.inc.php write (same header-unset trick as the sibling
+     * prod-mode test above) to ALSO fail its own
+     * fopen($this->configFile, 'w'), achieved here by making
+     * local/config/ itself genuinely unwritable (0555 -- still
+     * traversable, just no write bit) at exactly that moment, without
+     * touching any other directory performInstall() writes into (the
+     * root-level .env file, or _data/ for the fallback's own tmp file).
+     * The source's own `@fopen($this->configFile, 'w')` genuinely emits a
+     * real E_WARNING once that permission denial actually happens -- the
+     * bare `@` does NOT stop PHPUnit's ErrorHandler from still surfacing
+     * it (same constraint as this file's own renderSuppressingHeaderWarnings()
+     * elsewhere), so the call is wrapped in a real no-op handler below.
+     */
+    public function test_performInstall_falls_back_to_a_downloadable_config_file_when_the_legacy_write_target_is_unwritable(): void
+    {
+        $this->bootInstallBootstrap();
+        $freshDb = $this->createFreshDatabase();
+        // The fallback's own secureDirectory()/tmp-file write both target
+        // confDataLocation ('_data/') -- genuinely absent until something
+        // creates it; unlike the ?dl= download tests above, nothing
+        // earlier in this flow creates it on its own.
+        mkdir($this->tempRoot . '_data', 0777, true);
+
+        $wizard = $this->submit([
+            'dbhost' => $this->dbHost,
+            'dbuser' => $this->dbUser,
+            'dbpasswd' => $this->dbPass,
+            'dbname' => $freshDb,
+            'admin_name' => 'p17cfgfallback',
+            'admin_pass1' => 'Cfg-Fallback-Secret-1!',
+            'admin_pass2' => 'Cfg-Fallback-Secret-1!',
+            'admin_mail' => 'cfgfallback@example.test',
+            'install' => '1',
+        ]);
+        $wizard->analyzeForm();
+        self::assertFalse($wizard->hasErrors(), 'unexpected validation/connection errors: ' . $this->reflectErrorsJoined($wizard));
+
+        $savedHeader = $_SERVER['HTTP_X_PIWIGO_ENV'] ?? null;
+        unset($_SERVER['HTTP_X_PIWIGO_ENV']);
+        chmod($this->tempRoot . 'local/config', 0o555);
+        set_error_handler(static fn (): bool => true);
+        try {
+            $wizard->performInstall();
+        } finally {
+            restore_error_handler();
+            chmod($this->tempRoot . 'local/config', 0o777);
+            if ($savedHeader !== null) {
+                $_SERVER['HTTP_X_PIWIGO_ENV'] = $savedHeader;
+            }
+        }
+
+        self::assertFileDoesNotExist($this->paths->siteLocal . 'config/database.inc.php');
+
+        $template = $this->reflectPrivate($wizard, 'template');
+        self::assertInstanceOf(\Piwigo\Template\Template::class, $template);
+        self::assertTrue($template->get_template_vars('config_creation_failed'));
+
+        $configUrl = $template->get_template_vars('config_url');
+        self::assertIsString($configUrl);
+        self::assertStringStartsWith('install.php?dl=', $configUrl);
+        $tmpHash = substr($configUrl, strlen('install.php?dl='));
+        self::assertMatchesRegularExpression('/^[a-f0-9]{32}$/', $tmpHash);
+
+        $configFileContent = $template->get_template_vars('config_file_content');
+        self::assertIsString($configFileContent);
+        self::assertStringContainsString("\$conf['db_base'] = '" . $freshDb . "';", $configFileContent);
+        self::assertStringContainsString("define('PHPWG_INSTALLED', true);", $configFileContent);
+
+        // The fallback's own tmp file -- the one a real
+        // config_url=install.php?dl=<hash> download would serve (see the
+        // ?dl= tests above) -- was genuinely written to disk, with the
+        // exact same content assigned to the template.
+        $tmpFile = $this->tempRoot . '_data/pwg_' . $tmpHash;
+        self::assertFileExists($tmpFile);
+        $tmpFileContent = file_get_contents($tmpFile);
+        self::assertSame($configFileContent, $tmpFileContent);
+
+        // This fallback doesn't push an entry to $this->errors (only the
+        // template flag) and the rest of performInstall() (schema/user/
+        // site creation) still ran to completion despite the legacy config
+        // write failing.
+        self::assertSame([], $this->reflectPrivate($wizard, 'errors'));
+        $webmaster = $this->queryOne($freshDb, 'SELECT username FROM itest_users WHERE id = 1');
+        self::assertIsArray($webmaster);
+        self::assertSame('p17cfgfallback', $webmaster['username']);
+    }
 
     public function test_performInstall_records_an_error_when_the_env_file_cannot_be_written(): void
     {
@@ -741,6 +931,55 @@ final class InstallWizardTest extends IntegrationTestCase
         // the ResponseReadyException-based replacement preserves that
         // exactly (unlink() happens before the throw, not in some
         // finally/emitter step this test would otherwise miss).
+        self::assertFileDoesNotExist($tmpFile);
+    }
+
+    /**
+     * Line-coverage gap-closure companion to the valid-dl test above: this
+     * exact branch's own `$fileContent = '';` fallback (see boot()'s own
+     * inline comment right above it) handles file_get_contents() genuinely
+     * failing on a file that DOES exist (a permissions issue, a race) --
+     * a real unreadable file (chmod 0000, not a mock) proves that fallback
+     * line actually runs and the response still gets built, with an empty
+     * body, instead of a PHP warning breaking the response.
+     */
+    public function test_boot_serves_an_empty_body_when_the_matched_dl_file_exists_but_cannot_be_read(): void
+    {
+        $this->bootInstallBootstrap();
+
+        mkdir($this->tempRoot . '_data', 0777, true);
+        $hash = md5('install-wizard-dl-unreadable-fixture');
+        $tmpFile = $this->tempRoot . '_data/pwg_' . $hash;
+        file_put_contents($tmpFile, 'irrelevant, unreadable content');
+        chmod($tmpFile, 0000);
+
+        $body = null;
+        $contentLength = null;
+        // file_get_contents() genuinely emits a real E_WARNING for the
+        // unreadable file -- not a bug (the source's own
+        // `$fileContent === false` fallback is exactly what handles it),
+        // and a bare `@` does NOT stop PHPUnit's ErrorHandler from still
+        // surfacing it (see e.g. this file's own
+        // renderSuppressingHeaderWarnings() for the same constraint
+        // elsewhere in this suite), so a real no-op handler is the only
+        // reliable way to swallow it here.
+        set_error_handler(static fn (): bool => true);
+        try {
+            $this->submit([], ['dl' => $hash]);
+            self::fail('expected boot() to throw ResponseReadyException for a valid, existing dl= file');
+        } catch (ResponseReadyException $e) {
+            $response = $e->response();
+            $body = (string) $response->getBody();
+            $contentLength = $response->getHeader('Content-Length');
+        } finally {
+            restore_error_handler();
+        }
+
+        self::assertSame('', $body);
+        self::assertSame(['0'], $contentLength);
+        // Same real cleanup as the sibling valid-file test above -- unlink()
+        // only needs the containing directory's write bit, not the target
+        // file's own (now-0000) permission bits, so it still succeeds.
         self::assertFileDoesNotExist($tmpFile);
     }
 

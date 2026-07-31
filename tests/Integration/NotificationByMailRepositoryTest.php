@@ -8,6 +8,7 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\Tables;
 use Piwigo\Notification\NotificationByMailRepository;
 
 /**
@@ -96,5 +97,38 @@ final class NotificationByMailRepositoryTest extends IntegrationTestCase
         // "everything comes back as string|null" convention every other
         // domain's own Projection has already moved away from.
         self::assertSame(1, $rows[0]->userId);
+    }
+
+    public function test_delete_by_quoted_check_keys_is_a_no_op_for_an_empty_list(): void
+    {
+        $before = $this->countNotificationRows();
+
+        $this->repo->deleteByQuotedCheckKeys([]);
+
+        // Guards against building `DELETE FROM ... WHERE check_key IN ()`
+        // -- invalid SQL -- for an empty list; the fixture's 2 real rows
+        // must survive untouched, proving the early return (not a real,
+        // scoped-to-nothing DELETE) is what actually ran.
+        self::assertSame($before, $this->countNotificationRows());
+    }
+
+    public function test_insert_notifications_is_a_no_op_for_an_empty_list(): void
+    {
+        $before = $this->countNotificationRows();
+
+        $this->repo->insertNotifications([]);
+
+        self::assertSame($before, $this->countNotificationRows());
+    }
+
+    private function countNotificationRows(): int
+    {
+        $value = $this->conn->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from(Tables::userMailNotification())
+            ->executeQuery()
+            ->fetchOne();
+
+        return is_numeric($value) ? (int) $value : 0;
     }
 }

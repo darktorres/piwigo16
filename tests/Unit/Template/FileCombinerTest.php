@@ -721,6 +721,45 @@ test('process_combinable builds and writes a new combined CSS file on a cache mi
     }
 });
 
+test('process_combinable returns rendered content directly for a template combinable when return_content is true, instead of writing a single-item cache file', function (): void {
+    // Every other is_template test in this file calls with
+    // $returnContent=false (flush_pending()'s count===1 branch) -- this is
+    // the OTHER real caller, its count>1 multi-item merge branch, which
+    // always passes $return_content=true so each item's own rendered
+    // content gets concatenated straight into the combined output instead
+    // of being cached to its own separate file.
+    $root = sys_get_temp_dir() . '/piwigo-file-combiner-template-return-content-' . bin2hex(random_bytes(8));
+    mkdir($root . '/themes/default/js', 0o777, true);
+    file_put_contents($root . '/themes/default/js/foo.js', "var a = {\$value};\n");
+    CurrentPaths::set(Paths::fromRoot($root));
+    CurrentConfig::setDataLocation('_data/');
+    CurrentConfig::setDataDirChecked('1');
+
+    $combiner = new FileCombiner('js', new UrlService(new HtmlService()), Paths::fromRoot($root), []);
+
+    try {
+        $template = new Template();
+        $template->assign('value', 42);
+        CurrentTemplate::set($template);
+        $combinable = new Combinable('foo-js', 'themes/default/js/foo.js');
+        $combinable->is_template = true;
+        $header = '';
+
+        $result = invokeProcessCombinable($combiner, $combinable, true, false, $header);
+
+        expect($result)->toBe("var a = 42;\n")
+            // Unlike the $return_content=false branch, the combinable's own
+            // path/version are left completely untouched -- no cache file
+            // was ever written for it.
+            ->and($combinable->path)->toBe('themes/default/js/foo.js')
+            ->and(is_dir($root . '/_data/combined'))->toBeFalse();
+    } finally {
+        CurrentTemplate::reset();
+        file_combiner_test_rrmdir($root);
+        CurrentPaths::reset();
+    }
+});
+
 test('process_combinable throws when a template combinable points at a file that does not exist', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-file-combiner-missing-real-path-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
@@ -808,6 +847,42 @@ test('process_css_rec strips path-traversal, remote, and unreadable @import dire
         file_combiner_test_rrmdir($root);
     }
 });
+
+test('process_css_rec throws when an @import target passes the is_readable() check but file_get_contents() still fails to read it', function (): void {
+    // A Unix domain socket at the target path is the one realistic,
+    // deterministic way to reach this: is_readable() is true for it (usual
+    // permission bits), but file_get_contents() still fails to open it as
+    // a regular file and returns false rather than throwing itself --
+    // same technique as tests/Unit/Cache/PersistentFileCacheTest.php's own
+    // established "unreadable despite existing" test. Distinct from the
+    // sibling test above (missing/traversal/remote @import targets), which
+    // never reach file_get_contents() at all -- this is the only path that
+    // does, and gets false back instead of real content.
+    $root = sys_get_temp_dir() . '/piwigo-file-combiner-import-unreadable-' . bin2hex(random_bytes(8));
+    mkdir($root . '/themes/default/css', 0o777, true);
+    $socketPath = $root . '/themes/default/css/blocked.css';
+    file_put_contents($root . '/themes/default/css/main.css', "@import 'blocked.css';\n");
+
+    $socket = socket_create(AF_UNIX, SOCK_STREAM, 0);
+    if (! $socket instanceof Socket) {
+        throw new RuntimeException('socket_create failed');
+    }
+    expect(socket_bind($socket, $socketPath))->toBeTrue();
+
+    $combinable = new Combinable('main-css', 'themes/default/css/main.css');
+    $combiner = new FileCombiner('css', new UrlService(new HtmlService()), Paths::fromRoot($root), []);
+
+    set_error_handler(static fn (): bool => true);
+    try {
+        $header = '';
+        invokeProcessCombinable($combiner, $combinable, true, false, $header);
+    } finally {
+        restore_error_handler();
+        socket_close($socket);
+        file_combiner_test_rrmdir($root);
+    }
+})->throws(Exception::class, 'process_css_rec(): unable to read themes/default/css/blocked.css')
+    ->skip(! extension_loaded('sockets'), 'requires ext-sockets to create a Unix domain socket file');
 
 test('process_css_rec rewrites a relative url() reference into an embellished absolute URL', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-file-combiner-url-rewrite-' . bin2hex(random_bytes(8));

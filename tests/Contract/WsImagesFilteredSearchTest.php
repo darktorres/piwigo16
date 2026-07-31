@@ -16,6 +16,16 @@ use Piwigo\Db\Tables;
  * I/O -- every branch is reachable through the WS route itself, so
  * assertions read back the persisted `rules` JSON column directly rather
  * than just checking `stat === 'ok'`.
+ *
+ * Three of filteredSearchCreate()'s own per-element `preg_match('/^\d+$/', ...)`
+ * digit checks are NOT chased here (`tags`, `categories`, `added_by`, each
+ * "Invalid parameter <name>"): all three are registered in
+ * WsDefaultMethods.php with WsParamFlag::FORCE_ARRAY|WsParamType::ID, and
+ * PwgServer::checkType() already rejects any non-positive-integer array
+ * element at the WS layer itself -- with a *different* message ("<name>
+ * must only contain positive and not null integers") -- before
+ * filteredSearchCreate() ever runs. Confirmed live: a non-numeric tags[]
+ * entry never reaches PwgImages.php's own check at all.
  */
 final class WsImagesFilteredSearchTest extends ContractTestCase
 {

@@ -822,3 +822,383 @@ it('rejects a whole_set value containing a non-digit element as a hacking attemp
     expect($result['body'])->toContain('[Hacking attempt]');
     expect($result['body'])->toContain('whole_set');
 });
+
+/**
+ * Coverage-gap closure batch (resolveSessionFilter()'s URL-filter
+ * dimension/filesize bound validation, the defensive non-array session
+ * guard, the 'no_sync_md5sum' prefilter, computeCurrentSet()'s 2
+ * plugin-non-array fallbacks, the quick-search unmatched-terms branch,
+ * and computeDimensionOptions()'s ratio-bucket aggregation) --
+ * BatchManagerSubController.php lines ~410/433/455/489/536/543/544/548/
+ * 641/642/652/727/729/732/733.
+ *
+ * NOT closed here, deliberately: computeDimensionOptions()'s own
+ * "arbitrary values, only used when no photos on the gallery" fallback
+ * (widths === [] at ~690-693) and computeFilesizeOptions()'s identical
+ * fallback (filesizes === [] at ~773-774). Both read
+ * ImageRepository::findDistinctDimensions()/findDistinctFilesizes(),
+ * confirmed by direct source read to be UNCONDITIONAL queries over the
+ * whole piwigo_images table -- no category/album/search scoping of any
+ * kind, unlike SearchFilterRenderer's own sibling "arbitrary bucket"
+ * fallback (closed in SearchFilterRendererDataFiltersTest.php), which
+ * IS reachable because its equivalent query is scoped to a single
+ * search/category. This repo's `_data` DB is a permanent, shared dev
+ * fixture (site 1's "Sample Album" etc., relied on elsewhere in this
+ * very file and in GalleryControllerTest.php) that has accumulated real
+ * uploaded photos with real width/height/filesize for a long time, and
+ * this same Browser suite runs many concurrent test files that upload
+ * more real photos into it continuously -- so `widths === []`/
+ * `filesizes === []` can never genuinely occur here without truncating
+ * the whole images table, which would corrupt every other concurrently-
+ * running Browser test against this shared server. Left uncovered
+ * rather than built around a destructive shared-state mutation.
+ */
+function bmSetImageDimensions(int $imageId, int $width, int $height): void
+{
+    $db = bmDbConnect();
+    $db->query(sprintf(
+        'UPDATE %simages SET width = %d, height = %d WHERE id = %d',
+        bmDbPrefix(),
+        $width,
+        $height,
+        $imageId
+    ));
+    $db->close();
+}
+
+/**
+ * Raw curl through a persistent cookie jar, following redirects, using
+ * the given credentials to log in first -- same shape as
+ * PictureControllerTest.php's own pictureCurlLoginSession() (duplicated,
+ * not shared: plain global test functions have no per-file namespacing
+ * in this suite). Needed instead of this file's own Playwright-driven
+ * H::loginAsAdmin() for the session-corruption test below, which has to
+ * read/write the real DB-backed session row for its own request's
+ * cookie -- pest-plugin-browser has no cookie-jar access of its own to
+ * correlate a Playwright page with its own session row.
+ *
+ * @return array{curl: Closure(string, array<string, string>=): array{status: int, body: string}, cookieJar: non-empty-string, baseUrl: string}
+ */
+function bmCurlLoginSession(string $username, string $password): array
+{
+    $cookieJar = tempnam(sys_get_temp_dir(), 'pwg_browser_session_');
+    if ($cookieJar === false) {
+        throw new RuntimeException('tempnam failed');
+    }
+
+    /** @param array<string, string> $fields */
+    $curl = static function (string $url, array $fields = []) use ($cookieJar): array {
+        $ch = curl_init($url);
+        if ($ch === false) {
+            throw new RuntimeException('curl_init failed');
+        }
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
+        curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, H::testHeaders());
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        if ($fields !== []) {
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($fields));
+        }
+        $body = curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+        unset($ch);
+
+        return ['status' => $status, 'body' => is_string($body) ? $body : ''];
+    };
+
+    $baseUrl = H::baseUrl();
+    $curl($baseUrl . '/identification.php');
+    $curl($baseUrl . '/identification.php', [
+        'username' => $username,
+        'password' => $password,
+        'login' => 'Login',
+    ]);
+
+    return ['curl' => $curl, 'cookieJar' => $cookieJar, 'baseUrl' => $baseUrl];
+}
+
+/**
+ * Reads the `pwg_id` session cookie's raw value out of a curl cookie-jar
+ * file (Netscape format) -- same technique as PictureControllerTest.php's
+ * own pictureCookieJarSessionId().
+ */
+function bmCookieJarSessionId(string $cookieJar): string
+{
+    $contents = file_get_contents($cookieJar);
+    if ($contents === false) {
+        throw new RuntimeException('failed to read cookie jar: ' . $cookieJar);
+    }
+    foreach (explode("\n", $contents) as $line) {
+        $fields = explode("\t", $line);
+        if (($fields[5] ?? null) === 'pwg_id' && isset($fields[6])) {
+            return trim($fields[6]);
+        }
+    }
+
+    throw new RuntimeException('pwg_id cookie not found in jar: ' . $cookieJar);
+}
+
+/**
+ * Reads the real session `data` blob straight out of the DB-backed
+ * `sessions` table (Piwigo\Session\PwgSession's own save handler) for the
+ * given `pwg_id` cookie value -- a `LIKE '%<id>'` suffix match sidesteps
+ * SessionService::getRemoteAddrSessionHash()'s own IP-derived prefix
+ * entirely (same rationale as PasswordControllerTest.php's own
+ * passwordSessionData()).
+ */
+function bmSessionData(string $pwgIdCookieValue): string
+{
+    $db = bmDbConnect();
+    $result = $db->query(sprintf(
+        "SELECT data FROM %ssessions WHERE id LIKE '%%%s'",
+        bmDbPrefix(),
+        $db->real_escape_string($pwgIdCookieValue)
+    ));
+    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
+    $db->close();
+
+    return is_array($row) && is_string($row['data'] ?? null) ? $row['data'] : '';
+}
+
+/**
+ * Corrupts $_SESSION['bulk_manager_filter'] into a plain (non-array)
+ * string by appending a well-formed `name|value;` pair directly onto the
+ * real session row's `data` blob -- PHP's default "php" session
+ * serialize-handler format has no separator between pairs and no
+ * duplicate-key protection, so CONCAT-appending a fresh pair is exactly
+ * how a real $_SESSION write is represented on disk (same technique as
+ * IntroSubControllerTest.php's own session-corruption test and
+ * PictureControllerTest.php's own pwg_picture_deriv one). Only safe to
+ * call on a session that has never gone through
+ * BatchManagerSubController::resolveSessionFilter() before (no prior
+ * `bulk_manager_filter|...` pair to shadow) -- bmCurlLoginSession()'s
+ * own fresh login, never used above, guarantees that.
+ */
+function bmCorruptSessionBulkManagerFilter(string $pwgIdCookieValue): void
+{
+    $db = bmDbConnect();
+    $prefix = bmDbPrefix();
+    $fragment = 'bulk_manager_filter|' . serialize('not-an-array');
+    $likePattern = '%' . $pwgIdCookieValue;
+    $stmt = $db->prepare("UPDATE {$prefix}sessions SET data = CONCAT(data, ?) WHERE id LIKE ?");
+    if (! $stmt instanceof mysqli_stmt) {
+        throw new RuntimeException('mysqli::prepare() failed for the session-corruption UPDATE');
+    }
+    $stmt->bind_param('ss', $fragment, $likePattern);
+    $stmt->execute();
+    $db->close();
+}
+
+it('marks the dimension and filesize URL-filter tokens invalid when a bound value fails validation, still rendering the other valid bounds', function (): void {
+    // resolveSessionFilter()'s URL-filter 'dimension'/'filesize' cases
+    // validate each '-'-separated bound part independently ($valid is
+    // reset to true per part) -- 'hbogus..2000' fails FILTER_VALIDATE_INT
+    // (height dropped entirely) while the sibling 'w10..1000'/
+    // 'r0.5..2' parts stay valid (width/ratio both kept), and
+    // 'filesize-bogus..10' fails FILTER_VALIDATE_FLOAT the same way (the
+    // whole filesize bound dropped, since that case has only one
+    // min/max pair, not per-part).
+    $page = H::loginAsAdmin($this);
+
+    $filter = implode(',', [
+        'dimension-w10..1000-hbogus..2000-r0.5..2',
+        'filesize-bogus..10',
+    ]);
+
+    $page = H::navigateOk($page, '/admin.php?page=batch_manager&filter=' . rawurlencode($filter));
+    $page->assertNoJavaScriptErrors();
+});
+
+it('applies the no_sync_md5sum prefilter via a URL filter token', function (): void {
+    $page = H::loginAsAdmin($this);
+    $page = H::navigateOk($page, '/admin.php?page=batch_manager&filter=prefilter-no_sync_md5sum');
+    $page->assertNoJavaScriptErrors();
+});
+
+it('resets a corrupted (non-array) session bulk_manager_filter back to the default caddie prefilter', function (): void {
+    $session = bmCurlLoginSession(H::ADMIN_USER, H::ADMIN_PASS);
+    $cookieJarSessionId = bmCookieJarSessionId($session['cookieJar']);
+
+    bmCorruptSessionBulkManagerFilter($cookieJarSessionId);
+    expect(bmSessionData($cookieJarSessionId))->toContain('bulk_manager_filter|s:');
+
+    // Plain GET, no submitFilter/filter param -- neither of
+    // resolveSessionFilter()'s own 2 write branches runs, so the only
+    // thing that can still touch bulk_manager_filter this request is the
+    // defensive `! is_array(...)` guard.
+    $result = ($session['curl'])($session['baseUrl'] . '/admin.php?page=batch_manager');
+    expect($result['status'])->toBe(200);
+    expect($result['body'])->not->toContain('Fatal error');
+
+    // The corrupted string was replaced with a real array before this
+    // same request finished rendering -- array_shift()/array_intersect()
+    // further down computeCurrentSet() would otherwise have thrown a
+    // TypeError against a non-array $_SESSION['bulk_manager_filter'].
+    expect(bmSessionData($cookieJarSessionId))->toContain('bulk_manager_filter|a:1:{s:9:"prefilter";s:6:"caddie";}');
+
+    @unlink($session['cookieJar']);
+});
+
+it('falls back to an empty filter set when a plugin-registered prefilter/filter-sets hook returns a non-array value', function (): void {
+    // computeCurrentSet() has 2 independent "plugin handler must return
+    // an array" defensive fallbacks: perform_batch_manager_prefilters
+    // (only invoked when the prefilter itself is unrecognized, i.e.
+    // FilterResolver::resolvePrefilter() returns null) and
+    // batch_manager_perform_filters (always invoked, at the very end).
+    // Neither can return non-array through any real, unhooked request --
+    // reaching them needs a real plugin, same mechanism a genuine
+    // misbehaving 3rd-party plugin would use (PluginLoader::
+    // loadPlugins() include_once()s every DB-active plugin's
+    // main.inc.php on every request). Both handlers below are gated on
+    // this test's own unique marker prefilter value, so they're a
+    // complete no-op for every other concurrent request against this
+    // shared dev server while active (matches PictureControllerTest.php's
+    // own "bogus comment action" fixture-plugin test).
+    $marker = 'pwgtest_bogus_prefilter_' . uniqid();
+    $pluginId = 'pwgtest-batch-manager-bogus-prefilter';
+    $pluginDir = dirname(__DIR__, 2) . '/plugins/' . $pluginId;
+
+    if (! is_dir($pluginDir) && ! mkdir($pluginDir, 0o777, true) && ! is_dir($pluginDir)) {
+        throw new RuntimeException('failed to create plugin dir: ' . $pluginDir);
+    }
+    $mainFile = $pluginDir . '/main.inc.php';
+    file_put_contents($mainFile, <<<PHP
+        <?php
+
+        declare(strict_types=1);
+
+        /*
+        Plugin Name: BatchManagerSubController Test -- Bogus Prefilter Non-Array Hook
+        Version: 1.0.0
+        Description: Test-only fixture plugin (tests/Browser/BatchManagerSubControllerTest.php).
+        */
+
+        \\Piwigo\\PluginConfig\\EventDispatcher::get()->addEventHandler(
+            'perform_batch_manager_prefilters',
+            static function (mixed \$filterSets, mixed \$prefilter): mixed {
+                if (\$prefilter === '{$marker}') {
+                    return 'not-an-array-prefilters';
+                }
+
+                return \$filterSets;
+            }
+        );
+
+        \\Piwigo\\PluginConfig\\EventDispatcher::get()->addEventHandler(
+            'batch_manager_perform_filters',
+            static function (mixed \$filterSets, mixed \$bulkFilter): mixed {
+                if (is_array(\$bulkFilter) && (\$bulkFilter['prefilter'] ?? null) === '{$marker}') {
+                    return 'not-an-array-filters';
+                }
+
+                return \$filterSets;
+            }
+        );
+
+        PHP);
+
+    $pluginDb = bmDbConnect();
+    $pluginDb->query(sprintf(
+        "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0.0')",
+        bmDbPrefix(),
+        $pluginId
+    ));
+    $pluginDb->close();
+
+    try {
+        $page = H::loginAsAdmin($this);
+        H::navigateOk($page, '/admin.php?page=batch_manager');
+
+        $result = bmPost($page, [
+            'submitFilter' => '1',
+            'filter_prefilter_use' => '1',
+            'filter_prefilter' => $marker,
+        ]);
+
+        // If either fallback (BatchManagerSubController.php:548/652) had
+        // NOT reset $filter_sets back to a real array, the very next line
+        // in each case -- array_shift()/the array_filter()+foreach loop
+        // below it -- would throw a TypeError against a string argument,
+        // a real fatal surfaced as a 500 here.
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->not->toContain('Fatal error');
+    } finally {
+        $cleanupDb = bmDbConnect();
+        $cleanupDb->query(sprintf("DELETE FROM %splugins WHERE id = '%s'", bmDbPrefix(), $pluginId));
+        $cleanupDb->close();
+        @unlink($mainFile);
+        @rmdir($pluginDir);
+    }
+});
+
+it('renders unmatched search terms as "No results for" alongside real matched items', function (): void {
+    $page = H::loginAsAdmin($this);
+    H::navigateOk($page, '/admin.php?page=batch_manager');
+
+    // 'Sample' full-text-matches category 1's permanent fixture name
+    // ('Sample Album') and 'nature' matches fixture tag 1 (this file's
+    // own tag tests above already rely on tag 1 being 'nature') -- same
+    // stable base-install fixture terms GalleryControllerTest.php's own
+    // "Sample nature quxfrobnicate42" test already relies on.
+    // qsearchEval() only ever intersects on a *qualifying* term, so the
+    // bogus 3rd term is simply dropped into unmatched_terms rather than
+    // zeroing the whole result -- $res_items stays > 0 from the other 2
+    // terms' category/tag matches.
+    $result = bmPost($page, [
+        'submitFilter' => '1',
+        'filter_search_use' => '1',
+        'q' => 'Sample nature quxfrobnicate42',
+    ]);
+
+    expect($result['status'])->toBe(200);
+    expect($result['body'])->not->toContain('Fatal error');
+    expect($result['body'])->toContain('No results for');
+    expect($result['body'])->toContain('quxfrobnicate42');
+});
+
+it('aggregates portrait/square/panorama ratio buckets from real distinct image dimensions', function (): void {
+    // computeDimensionOptions() reads ImageRepository::
+    // findDistinctDimensions() unscoped (the whole piwigo_images table,
+    // no category/search filter) -- so uploading these 3 photos anywhere
+    // and forcing their width/height via raw SQL is enough for the
+    // global ratio-bucket aggregation to pick them up on the very next
+    // batch_manager page load, regardless of which album they live in.
+    // 200x150 (H::makeTestImage()'s own fixed size, ratio 1.33) already
+    // covers the 'landscape' bucket elsewhere in this suite -- only
+    // portrait (<0.95), square (0.95..1.05) and panorama (>=2) are new.
+    $page = H::loginAsAdmin($this);
+    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Ratio Buckets Album ' . uniqid()]);
+    $albumResult = $album['result'] ?? null;
+    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $albumResult['id'];
+
+    $portraitImage = H::makeTestImage(uniqid());
+    $portraitId = H::uploadPhotoViaApi($portraitImage, $albumId, 'Batch Ratio Portrait Photo');
+    @unlink($portraitImage);
+    bmSetImageDimensions($portraitId, 300, 1000); // ratio 0.30
+
+    $squareImage = H::makeTestImage(uniqid());
+    $squareId = H::uploadPhotoViaApi($squareImage, $albumId, 'Batch Ratio Square Photo');
+    @unlink($squareImage);
+    bmSetImageDimensions($squareId, 1000, 1000); // ratio 1.00
+
+    $panoramaImage = H::makeTestImage(uniqid());
+    $panoramaId = H::uploadPhotoViaApi($panoramaImage, $albumId, 'Batch Ratio Panorama Photo');
+    @unlink($panoramaImage);
+    bmSetImageDimensions($panoramaId, 5000, 1000); // ratio 5.00
+
+    $page = H::navigateOk($page, '/admin.php?page=batch_manager');
+    $html = H::rawWebpage($page)->content();
+
+    // batch_manager_filter.inc.tpl only ever renders these `<a
+    // class="slider-choice" ...>` ratio-bucket links inside their own
+    // `{if isset($dimensions.ratio_*)}` guard -- their mere presence
+    // proves the portrait/square/panorama keys got set.
+    expect($html)->toContain('>Portrait</a>')
+        ->and($html)->toContain('>square</a>')
+        ->and($html)->toContain('>Panorama</a>');
+});

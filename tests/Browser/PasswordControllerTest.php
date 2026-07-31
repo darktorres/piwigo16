@@ -115,9 +115,16 @@ function passwordDbPrefix(): string
  * AuthService::hasAlreadyLoggedIn() -- countLoginActivity() === 0 -- is
  * true, exercising __invoke()'s $first_login/"Welcome" branch too.
  *
+ * $status defaults to 'normal' (every pre-existing call site relies on
+ * that default); the guest/generic-rejection test below passes 'guest' to
+ * reuse this same real-bcrypt-match machinery for
+ * checkPasswordResetKey()'s own isAGuest()/isGeneric() branch, which needs
+ * a real matching key on a guest/generic row specifically -- not just
+ * status alone.
+ *
  * @return array{userId: int, plainKey: string}
  */
-function passwordInsertResetUser(): array
+function passwordInsertResetUser(string $status = 'normal'): array
 {
     $db = passwordDbConnect();
     $prefix = passwordDbPrefix();
@@ -134,14 +141,236 @@ function passwordInsertResetUser(): array
     $userId = (int) $db->insert_id;
 
     $db->query(sprintf(
-        "INSERT INTO %suser_infos (user_id, status, activation_key, activation_key_expire) VALUES (%d, 'normal', '%s', DATE_ADD(NOW(), INTERVAL 1 HOUR))",
+        "INSERT INTO %suser_infos (user_id, status, activation_key, activation_key_expire) VALUES (%d, '%s', '%s', DATE_ADD(NOW(), INTERVAL 1 HOUR))",
         $prefix,
         $userId,
+        $db->real_escape_string($status),
         $db->real_escape_string($hashedKey)
     ));
     $db->close();
 
     return ['userId' => $userId, 'plainKey' => $plainKey];
+}
+
+/**
+ * Inserts a `user_infos` row with a non-expired activation_key_expire but
+ * an EMPTY (not NULL) activation_key -- findPendingActivationKeyRows()'s
+ * own SQL filter is `activation_key IS NOT NULL`, which a real empty
+ * string still satisfies, so this kind of row genuinely reaches
+ * checkPasswordResetKey()'s own scan loop. That loop's very first check is
+ * `if ($activationKeyRow->activationKey === '') { continue; }`, skipping
+ * straight past it (never calling PasswordService::verify() against an
+ * empty hash) -- covered by this row's mere presence during any reset-key
+ * lookup, not by anything this row's own owner ever does.
+ *
+ * @return int the userId, for cleanup via passwordDeleteUser()
+ */
+function passwordInsertEmptyActivationKeyUser(): int
+{
+    $db = passwordDbConnect();
+    $prefix = passwordDbPrefix();
+    $username = 'pwnoise_' . uniqid();
+
+    $db->query(sprintf(
+        "INSERT INTO %susers (username, password, mail_address) VALUES ('%s', '%s', NULL)",
+        $prefix,
+        $db->real_escape_string($username),
+        $db->real_escape_string(password_hash('original-password', PASSWORD_BCRYPT, ['cost' => 4]))
+    ));
+    $userId = (int) $db->insert_id;
+
+    $db->query(sprintf(
+        "INSERT INTO %suser_infos (user_id, status, activation_key, activation_key_expire) VALUES (%d, 'normal', '', DATE_ADD(NOW(), INTERVAL 1 HOUR))",
+        $prefix,
+        $userId
+    ));
+    $db->close();
+
+    return $userId;
+}
+
+/**
+ * A resolvable, normal-status user with NO email address at all
+ * (mail_address NULL) -- processVerificationCode()'s own early
+ * guest/generic block doesn't apply (status is 'normal'), so this user
+ * reaches the real code-generation/session-write path with `$skip_mail`
+ * true purely because the address is missing, exercising
+ * processPasswordRequest()'s own separate "no email" fallback rejection
+ * (a different source line than the guest/generic checks above) once the
+ * (locally-known, never-mailed) code is submitted back.
+ *
+ * @return array{userId: int, username: string}
+ */
+function passwordInsertNormalUserNoEmail(): array
+{
+    $db = passwordDbConnect();
+    $prefix = passwordDbPrefix();
+    $username = 'pwnoemail_' . uniqid();
+
+    $db->query(sprintf(
+        "INSERT INTO %susers (username, password, mail_address) VALUES ('%s', '%s', NULL)",
+        $prefix,
+        $db->real_escape_string($username),
+        $db->real_escape_string(password_hash('original-password', PASSWORD_BCRYPT, ['cost' => 4]))
+    ));
+    $userId = (int) $db->insert_id;
+
+    $db->query(sprintf(
+        "INSERT INTO %suser_infos (user_id, status, language) VALUES (%d, 'normal', 'en_UK')",
+        $prefix,
+        $userId
+    ));
+    $db->close();
+
+    return ['userId' => $userId, 'username' => $username];
+}
+
+/**
+ * @return string a fresh cookie-jar path
+ */
+function passwordFreshCookieJar(): string
+{
+    $jar = tempnam(sys_get_temp_dir(), 'pwg_password_test_');
+    if ($jar === false) {
+        throw new RuntimeException('tempnam failed');
+    }
+
+    return $jar;
+}
+
+/**
+ * Plain curl + cookie jar, matching RegisterControllerTest.php's own
+ * established style -- needed (instead of this file's own Playwright-driven
+ * $page->fill()/->click() tests above) for the session-code tests below,
+ * which read the real `secret` straight out of the DB-backed `sessions`
+ * table between requests (see passwordSessionResetCodeSecret()) --
+ * pest-plugin-browser has no cookie-jar access of its own to correlate a
+ * Playwright page with its own session row (same constraint
+ * uploadPhotoViaApi()'s own docblock documents for a different reason).
+ *
+ * @param  array<string, string>  $fields
+ * @return array{status: int, body: string, url: string}
+ */
+function passwordCurlSession(string $cookieJar, string $path, array $fields = [], ?int $timeoutSeconds = null): array
+{
+    if ($cookieJar === '') {
+        throw new RuntimeException('passwordCurlSession(): cookieJar must not be empty');
+    }
+    $ch = curl_init(H::baseUrl() . '/' . ltrim($path, '/'));
+    if ($ch === false) {
+        throw new RuntimeException('curl_init failed');
+    }
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
+    curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, H::testHeaders());
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    if ($timeoutSeconds !== null) {
+        curl_setopt($ch, CURLOPT_TIMEOUT, $timeoutSeconds);
+    }
+    if ($fields !== []) {
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($fields));
+    }
+    $body = curl_exec($ch);
+    $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+    $url = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
+    if (! is_string($body)) {
+        throw new RuntimeException('curl_exec failed');
+    }
+
+    return ['status' => $status, 'body' => $body, 'url' => $url];
+}
+
+/** Extracts password.tpl's hidden pwg_token value from a response body. */
+function passwordExtractToken(string $html): string
+{
+    if (preg_match('/name="pwg_token" value="([^"]+)"/', $html, $matches) !== 1) {
+        throw new RuntimeException('could not find the pwg_token field in: ' . $html);
+    }
+
+    return $matches[1];
+}
+
+/**
+ * Reads the `pwg_id` session cookie's raw value out of a curl cookie-jar
+ * file (Netscape format) -- same technique as PictureControllerTest.php's
+ * own pictureCookieJarSessionId(), duplicated (not shared) since PHP has no
+ * per-file namespacing for these plain global test functions.
+ */
+function passwordCookieJarSessionId(string $cookieJar): string
+{
+    $contents = file_get_contents($cookieJar);
+    if ($contents === false) {
+        throw new RuntimeException('failed to read cookie jar: ' . $cookieJar);
+    }
+    foreach (explode("\n", $contents) as $line) {
+        $fields = explode("\t", $line);
+        if (($fields[5] ?? null) === 'pwg_id' && isset($fields[6])) {
+            return trim($fields[6]);
+        }
+    }
+
+    throw new RuntimeException('pwg_id cookie not found in jar: ' . $cookieJar);
+}
+
+/**
+ * Reads the real session `data` blob straight out of the DB-backed
+ * `sessions` table (Piwigo\Session\PwgSession's own save handler) for the
+ * given `pwg_id` cookie value -- same suffix-match rationale as
+ * PictureControllerTest.php's own pictureSessionDerivType() (the
+ * IP-derived hash PwgSession prepends to the raw id isn't safe to
+ * hardcode).
+ */
+function passwordSessionData(string $pwgIdCookieValue): string
+{
+    $db = passwordDbConnect();
+    $result = $db->query(sprintf(
+        "SELECT data FROM %ssessions WHERE id LIKE '%%%s'",
+        passwordDbPrefix(),
+        $db->real_escape_string($pwgIdCookieValue)
+    ));
+    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
+    $db->close();
+
+    return is_array($row) && is_string($row['data'] ?? null) ? $row['data'] : '';
+}
+
+/**
+ * Extracts `$_SESSION['reset_password_code']['secret']` straight out of the
+ * real session row PHP's own default (non-igbinary) session serialize
+ * format -- lets this suite compute a genuinely valid verification code
+ * with \Piwigo\Auth\PwgTOTP::generateCode() (the exact same algorithm
+ * AuthService::verifyUserCode() itself calls) without ever needing to read
+ * a real, undeliverable test email, mirroring how passwordInsertResetUser()
+ * above sidesteps mail for the reset-key flow. 'secret' is written first in
+ * processVerificationCode()'s own array literal, so it's always the first
+ * key PHP's serialize() emits, but the `.*?` here doesn't depend on that.
+ */
+function passwordSessionResetCodeSecret(string $pwgIdCookieValue): ?string
+{
+    $data = passwordSessionData($pwgIdCookieValue);
+    if (preg_match('/reset_password_code\|a:\d+:\{.*?s:6:"secret";s:\d+:"([^"]*)"/s', $data, $matches) === 1) {
+        return $matches[1];
+    }
+
+    return null;
+}
+
+/**
+ * Computes a real, currently-valid TOTP code for a secret read straight out
+ * of the session (see passwordSessionResetCodeSecret()) -- reads the live
+ * `password_reset_code_duration` config value rather than assuming the
+ * install-time default, since AuthService::generateUserCode()/
+ * verifyUserCode() both derive the TOTP "period" from that same live value
+ * (min()-capped at 900s).
+ */
+function passwordComputeValidCode(string $secret): string
+{
+    $durationRaw = H::configValue('password_reset_code_duration');
+    $duration = $durationRaw !== null && is_numeric($durationRaw) ? (int) $durationRaw : 300;
+
+    return \Piwigo\Auth\PwgTOTP::generateCode($secret, min($duration, 900));
 }
 
 /** @return array{password: string}|null */
@@ -550,5 +779,295 @@ it('switches to a valid, different lang cookie and shows the French translation'
         $db2 = passwordDbConnect();
         $db2->query(sprintf("DELETE FROM %slanguages WHERE id = 'fr_FR'", passwordDbPrefix()));
         $db2->close();
+    }
+});
+
+/**
+ * The tests below drive the verification-code + session-based half of the
+ * reset flow (processVerificationCode() succeeding all the way through
+ * processPasswordRequest()'s own tail, resetPasswordKey()'s "no key at
+ * all" branch, and resetPasswordCode()) -- distinct from the reset-KEY
+ * flow above (a real emailed link's `?key=`), which never reaches any of
+ * that code. Driven with passwordCurlSession()'s plain curl + cookie jar
+ * (see its own docblock) instead of Playwright, so a real
+ * $_SESSION['reset_password_code']['secret'] can be read directly out of
+ * the DB-backed `sessions` table between requests and fed through the same
+ * \Piwigo\Auth\PwgTOTP::generateCode() algorithm AuthService::
+ * verifyUserCode() itself uses -- without ever needing to read a real,
+ * undeliverable test email (see this file's own top-of-file docblock for
+ * why mail delivery isn't observable in this environment either).
+ */
+
+it('completes a full verification-code password reset: session round-trip, success email, and api-key lookup', function (): void {
+    $email = 'ct-pwcode-' . uniqid() . '@example.test';
+    $fixture = passwordInsertNormalUserWithEmail($email);
+    $userId = $fixture['userId'];
+    $originalHash = passwordUserRow($userId)['password'] ?? null;
+
+    $jar = passwordFreshCookieJar();
+
+    try {
+        $get = passwordCurlSession($jar, '/password.php');
+        expect($get['status'])->toBe(200);
+        $token = passwordExtractToken($get['body']);
+
+        // Step 1: 'lost' -- resolves a real user_id, generates a real TOTP
+        // secret, and writes it to $_SESSION['reset_password_code']
+        // (mail() itself is best-effort here, tolerated even on failure --
+        // see MailService::mail()'s own bounded-transport docblock -- this
+        // suite reads the secret straight out of the session instead of
+        // the mail).
+        $lost = passwordCurlSession($jar, '/password.php?action=lost', [
+            'username_or_email' => $email,
+            'submit' => 'Change my password',
+            'pwg_token' => $token,
+        ], timeoutSeconds: 30);
+        expect($lost['status'])->toBe(200);
+        expect($lost['body'])->toContain('If your account exists, a verification code has been sent to your email address.');
+
+        $sessionId = passwordCookieJarSessionId($jar);
+        $secret = passwordSessionResetCodeSecret($sessionId);
+        expect($secret)->not->toBeNull();
+        assert(is_string($secret));
+        $code = passwordComputeValidCode($secret);
+
+        // Step 2: 'lost_code' with the real code -- processPasswordRequest()'s
+        // own full-success tail (unset the pending code, resolve+switch
+        // CurrentUser, delete the lockout preference, write
+        // $_SESSION['valid_reset_password_code'], and return true) --
+        // __invoke() then adds the "Verification successful!" info and
+        // advances straight to the 'reset' form within this SAME response.
+        $verify = passwordCurlSession($jar, '/password.php?action=lost_code', [
+            'user_code' => $code,
+            'submit' => 'Verify',
+            'pwg_token' => $token,
+        ]);
+        expect($verify['status'])->toBe(200);
+        expect($verify['body'])->toContain('Verification successful! You can now choose a new password.');
+        expect($verify['body'])->toContain('name="use_new_pwd"');
+
+        $sessionDataAfterVerify = passwordSessionData($sessionId);
+        expect($sessionDataAfterVerify)->toContain('valid_reset_password_code');
+
+        // Session round-trip: a FRESH request (still the same cookie jar,
+        // i.e. a real separate HTTP round trip, not just in-memory state
+        // from the request above) for the bare 'reset' action must still
+        // show the reset form instead of redirecting home -- proving
+        // __invoke()'s own `isset($_SESSION['valid_reset_password_code'])`
+        // guard reads real, persisted session state.
+        $revisit = passwordCurlSession($jar, '/password.php?action=reset');
+        expect($revisit['status'])->toBe(200);
+        expect($revisit['body'])->toContain('name="use_new_pwd"');
+
+        // Step 3: 'reset' -- no `key` at all (resetPasswordKey()'s own
+        // "not reached via a key link" branch), falling through to
+        // resetPasswordCode() reading the real
+        // $_SESSION['valid_reset_password_code']['user_id'] this suite just
+        // proved is there. Also exercises the successful-reset confirmation
+        // email branch (a real, non-empty session email) and its
+        // ApiKeyService::getAvailable() lookup.
+        $newPassword = 'a-brand-new-code-password-1';
+        $reset = passwordCurlSession($jar, '/password.php?action=reset', [
+            'use_new_pwd' => $newPassword,
+            'passwordConf' => $newPassword,
+            'submit' => 'Submit',
+            'pwg_token' => $token,
+        ], timeoutSeconds: 30);
+        expect($reset['status'])->toBe(200);
+        expect($reset['body'])->toContain('Your password has been reset');
+
+        $newHash = passwordUserRow($userId)['password'] ?? null;
+        expect($newHash)->not->toBeNull();
+        expect($newHash)->not->toBe($originalHash);
+    } finally {
+        passwordDeleteUser($userId);
+        @unlink($jar);
+    }
+});
+
+it('short-circuits a "lost_code" submission with no pending session code and redirects home', function (): void {
+    // processPasswordRequest()'s own `if (! is_array($state)) { return
+    // true; }` -- a bare/direct POST to ?action=lost_code with no prior
+    // 'lost' step at all, so $_SESSION['reset_password_code'] was never
+    // written. __invoke() still treats that `true` as success (advances to
+    // action='reset'), but with no key and no
+    // $_SESSION['valid_reset_password_code'] either, its own guard
+    // immediately redirects a guest away from the reset form.
+    $jar = passwordFreshCookieJar();
+
+    try {
+        $get = passwordCurlSession($jar, '/password.php');
+        $token = passwordExtractToken($get['body']);
+
+        $result = passwordCurlSession($jar, '/password.php?action=lost_code', [
+            'user_code' => '000000',
+            'submit' => 'Verify',
+            'pwg_token' => $token,
+        ]);
+
+        expect($result['status'])->toBe(200);
+        expect($result['url'])->toBe(H::baseUrl() . '/');
+    } finally {
+        @unlink($jar);
+    }
+});
+
+it('rejects a correct verification code for an unresolvable (unknown) account with "Invalid verification code"', function (): void {
+    // [SEC-31]-style enumeration safety means an unknown username_or_email
+    // still gets a real secret + a real $_SESSION['reset_password_code']
+    // entry (with 'user_id' => null) -- submitting the genuinely correct
+    // code for it still fails, but via processPasswordRequest()'s own
+    // `! $has_valid_user_id` branch, a different source line from every
+    // WRONG-code rejection covered above.
+    $jar = passwordFreshCookieJar();
+
+    try {
+        $get = passwordCurlSession($jar, '/password.php');
+        $token = passwordExtractToken($get['body']);
+
+        $unknownEmail = 'no-such-account-' . uniqid() . '@example.test';
+        $lost = passwordCurlSession($jar, '/password.php?action=lost', [
+            'username_or_email' => $unknownEmail,
+            'submit' => 'Change my password',
+            'pwg_token' => $token,
+        ]);
+        expect($lost['body'])->toContain('If your account exists, a verification code has been sent to your email address.');
+
+        $sessionId = passwordCookieJarSessionId($jar);
+        $secret = passwordSessionResetCodeSecret($sessionId);
+        expect($secret)->not->toBeNull();
+        assert(is_string($secret));
+        $code = passwordComputeValidCode($secret);
+
+        $verify = passwordCurlSession($jar, '/password.php?action=lost_code', [
+            'user_code' => $code,
+            'submit' => 'Verify',
+            'pwg_token' => $token,
+        ]);
+        expect($verify['status'])->toBe(200);
+        expect($verify['body'])->toContain('Invalid verification code');
+        expect($verify['body'])->not->toContain('name="use_new_pwd"');
+    } finally {
+        @unlink($jar);
+    }
+});
+
+it('rejects a correct verification code for a resolvable user with no email address', function (): void {
+    // processVerificationCode()'s own early guest/generic block doesn't
+    // apply (status is 'normal'), so this reaches the real code-generation
+    // path with `$skip_mail` true purely because mail_address is NULL --
+    // processPasswordRequest()'s own tail then rejects it anyway via its
+    // separate "don't send mail when ... doesn't have email" fallback
+    // check, a different source line from both the unresolvable-account
+    // case above and the guest/generic checks in processVerificationCode().
+    $fixture = passwordInsertNormalUserNoEmail();
+    $userId = $fixture['userId'];
+    $username = $fixture['username'];
+
+    $jar = passwordFreshCookieJar();
+
+    try {
+        $get = passwordCurlSession($jar, '/password.php');
+        $token = passwordExtractToken($get['body']);
+
+        // No email on this account -- submit the username instead, the
+        // same fallback path processVerificationCode()'s own
+        // UserService::getUserIdByEmail()/getUserId() pair provides.
+        $lost = passwordCurlSession($jar, '/password.php?action=lost', [
+            'username_or_email' => $username,
+            'submit' => 'Change my password',
+            'pwg_token' => $token,
+        ]);
+        expect($lost['body'])->toContain('If your account exists, a verification code has been sent to your email address.');
+
+        $sessionId = passwordCookieJarSessionId($jar);
+        $secret = passwordSessionResetCodeSecret($sessionId);
+        expect($secret)->not->toBeNull();
+        assert(is_string($secret));
+        $code = passwordComputeValidCode($secret);
+
+        $verify = passwordCurlSession($jar, '/password.php?action=lost_code', [
+            'user_code' => $code,
+            'submit' => 'Verify',
+            'pwg_token' => $token,
+        ]);
+        expect($verify['status'])->toBe(200);
+        expect($verify['body'])->toContain('Password reset is not allowed for this user');
+        expect($verify['body'])->not->toContain('name="use_new_pwd"');
+    } finally {
+        passwordDeleteUser($userId);
+        @unlink($jar);
+    }
+});
+
+it('skips past a pending activation-key row with an empty key, then still finds the real match', function (): void {
+    // findPendingActivationKeyRows()'s own SQL filter is `activation_key IS
+    // NOT NULL`, which a real empty string still satisfies -- so a row like
+    // this genuinely reaches checkPasswordResetKey()'s scan loop, whose very
+    // first check (`activationKey === '' -> continue`) must skip past it
+    // without ever calling PasswordService::verify() against an empty hash.
+    // A real, matching key for a SEPARATE normal-status user is inserted
+    // alongside it, so this proves the loop doesn't just survive the noise
+    // row -- it still finds and returns that real match afterward too
+    // (`$user_id = ...; break;`), landing on the real 'reset' form.
+    $noiseUserId = passwordInsertEmptyActivationKeyUser();
+    $fixture = passwordInsertResetUser();
+    $userId = $fixture['userId'];
+
+    try {
+        $page = H::gotoOk($this, '/password.php?key=' . $fixture['plainKey']);
+
+        $page->assertPresent('input[name="use_new_pwd"]');
+    } finally {
+        passwordDeleteUser($userId);
+        passwordDeleteUser($noiseUserId);
+    }
+});
+
+it('rejects a real matching reset key for a guest-status account', function (): void {
+    // checkPasswordResetKey()'s own isAGuest()/isGeneric() branch -- unlike
+    // the guest-rejection test in the 'lost' flow above (a DIFFERENT
+    // source line, processVerificationCode()'s own early block), this one
+    // only fires once PasswordService::verify() has already matched a real
+    // key against a real guest-status row.
+    $fixture = passwordInsertResetUser('guest');
+    $userId = $fixture['userId'];
+
+    try {
+        $page = H::gotoOk($this, '/password.php?key=' . $fixture['plainKey']);
+
+        $page->assertSee('Password reset is not allowed for this user');
+        $page->assertMissing('input[name="use_new_pwd"]');
+    } finally {
+        passwordDeleteUser($userId);
+    }
+});
+
+it('rejects a "reset" submission with a well-formed but unmatched key, reporting a combined "Invalid key or code" error', function (): void {
+    // resetPasswordKey()'s own `$this->request->key !== null` branch (a
+    // real key that fails checkPasswordResetKey()'s own DB match), falling
+    // through to resetPasswordCode() -- which, for this fresh guest session
+    // with no $_SESSION['valid_reset_password_code'] either, hits its own
+    // "no session state at all" rejection too. resetPassword() then reports
+    // its own combined "Invalid key or code" error since neither path
+    // produced a usable user_id.
+    $jar = passwordFreshCookieJar();
+
+    try {
+        $get = passwordCurlSession($jar, '/password.php');
+        $token = passwordExtractToken($get['body']);
+
+        $newPassword = 'irrelevant-password-1';
+        $result = passwordCurlSession($jar, '/password.php?action=reset&key=xxxxxxxxxxxxxxxxxxxx', [
+            'use_new_pwd' => $newPassword,
+            'passwordConf' => $newPassword,
+            'submit' => 'Submit',
+            'pwg_token' => $token,
+        ]);
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->toContain('Invalid key or code');
+    } finally {
+        @unlink($jar);
     }
 });

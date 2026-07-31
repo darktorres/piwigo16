@@ -44,6 +44,30 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  */
 
 /**
+ * Every test below needs self-registration genuinely open to reach
+ * anything past RegisterController::__invoke()'s own pageForbidden() gate
+ * -- `allow_user_registration` is shared, global config across the whole
+ * Browser suite run (same caveat every H::setConfigValue()-using file in
+ * this suite already documents), and this is confirmed live, not just
+ * theoretical: while writing this file, a concurrent process had already
+ * left it set to `false`, and a bare curl request against /register.php
+ * came back the real "User registration closed" 403 instead of the
+ * register form. Resetting it to the fixture's own documented default
+ * ('true', see tests/Fixtures/piwigo-17.0.sql) both before AND after each
+ * test (not a snapshot/restore round trip) matches
+ * CatOptionsPageRendererTest.php's own established pattern of restoring a
+ * contended piece of shared state to its known-good fixture value rather
+ * than whatever a snapshot happened to capture.
+ */
+beforeEach(function (): void {
+    H::setConfigValue('allow_user_registration', 'true');
+});
+
+afterEach(function (): void {
+    H::setConfigValue('allow_user_registration', 'true');
+});
+
+/**
  * @param array<string, string> $fields
  * @return array{status: int, body: string}
  */
@@ -121,6 +145,79 @@ function registerFreshCookieJar(): string
     }
 
     return $jar;
+}
+
+/**
+ * Plain anonymous GET carrying a raw `Cookie:` header, for exercising
+ * RegisterController's own $_COOKIE['lang'] handling directly --
+ * registerCurl()'s CURLOPT_COOKIEFILE/COOKIEJAR pair only ever replays a
+ * real Set-Cookie the server itself sent, it can't send an arbitrary,
+ * hand-crafted Cookie header like the ones below need (including one that
+ * isn't even a valid string value).
+ *
+ * @return array{status: int, body: string}
+ */
+function registerCurlWithRawCookie(string $path, string $rawCookieHeader): array
+{
+    $ch = curl_init(H::baseUrl() . '/' . ltrim($path, '/'));
+    if ($ch === false) {
+        throw new RuntimeException('curl_init failed');
+    }
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array_merge(H::testHeaders(), ['Cookie: ' . $rawCookieHeader]));
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    $body = curl_exec($ch);
+    $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+    unset($ch);
+
+    return ['status' => $status, 'body' => is_string($body) ? $body : ''];
+}
+
+function registerDbPrefix(): string
+{
+    $prefix = getenv('PIWIGO_DB_PREFIX');
+
+    return $prefix !== false ? $prefix : 'piwigo_';
+}
+
+/**
+ * Temporarily registers a language row in `piwigo_languages` -- this
+ * fixture only ever ships `en_UK` (confirmed via the fixture SQL dump),
+ * but LangService::getLanguages() requires a real DB row (on top of a
+ * real on-disk `language/<code>/` directory, which `fr_FR` genuinely has)
+ * before RegisterController's own `array_key_exists($lang_cookie, ...)`
+ * check accepts it. Caller must pair this with registerRemoveLanguage().
+ */
+function registerAddLanguage(string $code, string $name): void
+{
+    $db = new mysqli(
+        (string) getenv('PIWIGO_DB_HOST'),
+        (string) getenv('PIWIGO_DB_USER'),
+        (string) getenv('PIWIGO_DB_PASSWORD'),
+        (string) getenv('PIWIGO_DB_BASE')
+    );
+    $prefix = registerDbPrefix();
+    $db->query(sprintf(
+        "INSERT INTO %slanguages (id, version, name) VALUES ('%s', '16.3.0', '%s') ON DUPLICATE KEY UPDATE version = VALUES(version)",
+        $prefix,
+        $db->real_escape_string($code),
+        $db->real_escape_string($name)
+    ));
+    $db->close();
+}
+
+/** Reverts registerAddLanguage(). */
+function registerRemoveLanguage(string $code): void
+{
+    $db = new mysqli(
+        (string) getenv('PIWIGO_DB_HOST'),
+        (string) getenv('PIWIGO_DB_USER'),
+        (string) getenv('PIWIGO_DB_PASSWORD'),
+        (string) getenv('PIWIGO_DB_BASE')
+    );
+    $prefix = registerDbPrefix();
+    $db->query(sprintf("DELETE FROM %slanguages WHERE id = '%s'", $prefix, $db->real_escape_string($code)));
+    $db->close();
 }
 
 it('registers a brand-new user, auto-logs them in, and creates the real DB row', function (): void {
@@ -275,4 +372,223 @@ it('[SEC-31] handles a duplicate username indistinguishably from a real success,
     expect(registerUserCount(H::ADMIN_USER))->toBe(1);
 
     @unlink($jar);
+});
+
+it('shows a Forbidden page and never renders the form when registration is closed', function (): void {
+    // beforeEach() above already forced allow_user_registration to 'true'
+    // for this test like every other one in this file -- override it back
+    // to 'false' here, this test's own subject. afterEach() resets it back
+    // to 'true' again afterward regardless of how this test finishes.
+    H::setConfigValue('allow_user_registration', 'false');
+
+    $jar = registerFreshCookieJar();
+    $result = registerCurl($jar, '/register.php');
+
+    // RegisterController::__invoke()'s own pageForbidden() call -- unlike
+    // the invalid-key branch below, this real 403 already threads through
+    // correctly (HtmlService::pageForbidden() passes its status straight
+    // into RedirectServiceInterface::redirectHtml(), which builds its own
+    // Response and throws before this controller ever reaches its own
+    // final return).
+    expect($result['status'])->toBe(403);
+    expect($result['body'])->toContain('Forbidden');
+    expect($result['body'])->toContain('User registration closed');
+    // Never got as far as building the actual register form.
+    expect($result['body'])->not->toContain('name="register_form"');
+
+    @unlink($jar);
+});
+
+it('rejects an invalid/expired form key with a real 403 and does not attempt registration', function (): void {
+    // Regression test for a fixed bug, found while writing this test:
+    // RegisterController::__invoke()'s invalid-key branch used to call
+    // HtmlService::setStatusHeader(403) directly -- a bare header() call
+    // that Http\ResponseEmitter::emit() always overwrites with the final
+    // Response's own status code (see PictureController's identical,
+    // already-documented recent_pics bug for the same root cause). Since
+    // this method's own final `return ResponseFactory::html($body)` used
+    // to hard-code 200, an invalid/expired key always came back 200, never
+    // the intended 403 -- confirmed live via a bare curl request before
+    // this test existed. Fixed by threading a local $status through to
+    // that final Response instead of the dead setStatusHeader() call; this
+    // test both closes the coverage gap and pins the fix.
+    //
+    // No real GET-then-sleep(7) dance needed here (unlike every other test
+    // in this file) -- an arbitrary malformed key fails
+    // EphemeralKeyService::verify()'s very first structural check
+    // (explode(':', $key) not having exactly 3 parts) regardless of age,
+    // so there's no real form key to mint first.
+    $jar = registerFreshCookieJar();
+
+    $username = 'browser_reg_badkey_' . uniqid();
+
+    expect(registerUserExists($username))->toBeFalse();
+
+    $result = registerCurl($jar, '/register.php', [
+        'login' => $username,
+        'password' => 'SomePassword123!',
+        'password_conf' => 'SomePassword123!',
+        'mail_address' => $username . '@example.test',
+        'key' => 'not-a-real-key-at-all',
+        'submit' => 'Register',
+    ]);
+
+    expect($result['status'])->toBe(403);
+    expect($result['body'])->toContain('Invalid/expired form key');
+    expect(registerUserExists($username))->toBeFalse();
+
+    @unlink($jar);
+});
+
+it('shows "password is missing" and does not create an account when the password is empty', function (): void {
+    $jar = registerFreshCookieJar();
+    $get = registerCurl($jar, '/register.php');
+    $key = registerExtractKey($get['body']);
+    sleep(7);
+
+    $username = 'browser_reg_emptypw_' . uniqid();
+
+    expect(registerUserExists($username))->toBeFalse();
+
+    $result = registerCurl($jar, '/register.php', [
+        'login' => $username,
+        'password' => '',
+        'password_conf' => '',
+        'mail_address' => $username . '@example.test',
+        'key' => $key,
+        'submit' => 'Register',
+    ]);
+
+    expect($result['status'])->toBe(200);
+    expect($result['body'])->toContain('Password is missing. Please enter the password.');
+    expect(registerUserExists($username))->toBeFalse();
+
+    @unlink($jar);
+});
+
+it('shows "password confirmation is missing" and does not create an account when only password_conf is empty', function (): void {
+    $jar = registerFreshCookieJar();
+    $get = registerCurl($jar, '/register.php');
+    $key = registerExtractKey($get['body']);
+    sleep(7);
+
+    $username = 'browser_reg_emptypwconf_' . uniqid();
+
+    expect(registerUserExists($username))->toBeFalse();
+
+    $result = registerCurl($jar, '/register.php', [
+        'login' => $username,
+        // Non-empty and NOT equal to password_conf -- this must hit the
+        // dedicated "confirmation is missing" branch, not fall through to
+        // the (already-covered) "passwords do not match" one.
+        'password' => 'SomePassword123!',
+        'password_conf' => '',
+        'mail_address' => $username . '@example.test',
+        'key' => $key,
+        'submit' => 'Register',
+    ]);
+
+    expect($result['status'])->toBe(200);
+    expect($result['body'])->toContain('Password confirmation is missing. Please confirm the chosen password.');
+    expect(registerUserExists($username))->toBeFalse();
+
+    @unlink($jar);
+});
+
+it("surfaces registerUser()'s own validation errors (invalid email format) and does not create an account", function (): void {
+    // Distinct from the [SEC-31] duplicate-username case above:
+    // registerUser() returns a real, non-empty errors array here (not the
+    // duplicate-username userId:null/errors:[] shape), which is the branch
+    // that appends implode(' ', $registration_errors) onto
+    // $errors['register_form_error'].
+    $jar = registerFreshCookieJar();
+    $get = registerCurl($jar, '/register.php');
+    $key = registerExtractKey($get['body']);
+    sleep(7);
+
+    $username = 'browser_reg_bademail_' . uniqid();
+
+    expect(registerUserExists($username))->toBeFalse();
+
+    $result = registerCurl($jar, '/register.php', [
+        'login' => $username,
+        'password' => 'SomePassword123!',
+        'password_conf' => 'SomePassword123!',
+        'mail_address' => 'not-an-email-address',
+        'key' => $key,
+        'submit' => 'Register',
+    ]);
+
+    expect($result['status'])->toBe(200);
+    expect($result['body'])->toContain('mail address must be like');
+    expect(registerUserExists($username))->toBeFalse();
+
+    @unlink($jar);
+});
+
+it('treats a non-string lang cookie (PHP array syntax) as a hacking attempt and returns a fatal 500', function (): void {
+    // `Cookie: lang[]=x` parses into $_COOKIE['lang'] as a genuine PHP
+    // array (PHP applies the same bracket-name parsing to cookies as it
+    // does to GET/POST params) -- confirmed live before writing this
+    // assertion. HtmlService::fatalError() always responds 500 regardless
+    // of its specific message (see that method's own docblock: it
+    // trigger_error()s E_USER_ERROR, which this app's own installed error
+    // handler lets fall through to a real thrown 500 Response rather than
+    // terminate the process) -- independent of the $status-threading fix
+    // above, since this path throws its own ResponseReadyException long
+    // before RegisterController's own final `return` is ever reached.
+    $result = registerCurlWithRawCookie('/register.php', 'lang[]=fr_FR');
+
+    expect($result['status'])->toBe(500);
+    expect($result['body'])->toContain('[Hacking attempt] the input parameter "lang" is not valid');
+});
+
+it('treats an unregistered lang cookie value as a hacking attempt and returns a fatal 500', function (): void {
+    // A syntactically fine string, but not a language LangService::
+    // getLanguages() recognizes (the fixture only ships `en_UK`) -- a
+    // different fatalError() call than the array case above, with the
+    // attempted value interpolated into the message.
+    $result = registerCurlWithRawCookie('/register.php', 'lang=zz_ZZ');
+
+    expect($result['status'])->toBe(500);
+    expect($result['body'])->toContain('[Hacking attempt] the input parameter "zz_ZZ" is not valid');
+});
+
+it("applies a valid, different lang cookie: switches CurrentUser's language, loads its translations, and swaps in the French help link", function (): void {
+    // The fixture only ships `en_UK` in `piwigo_languages` (this file's
+    // own docblock) -- LangService::getLanguages()'s own
+    // array_key_exists() check against a `lang` cookie never accepts
+    // anything else without a real DB row first. `fr_FR` is a real,
+    // on-disk core language pack (language/fr_FR/common.po exists), just
+    // not registered in this fixture's DB -- registering it temporarily is
+    // the minimal state needed to exercise
+    // CurrentUser::updateLanguage()/Lang::load() for real, rather than
+    // just inferring they ran from a bare 200 status.
+    registerAddLanguage('fr_FR', 'Français');
+
+    // The default theme's own register.tpl never references {$HELP_LINK}
+    // at all (confirmed by reading it) -- only standard_pages' register.tpl
+    // renders it (`<a href="{$HELP_LINK}">`), so swapping the guest's
+    // theme is what makes this test's own French-help-link assertion a
+    // real, visible behavior rather than an inference. Same rationale as
+    // H::setGuestTheme()'s own docblock.
+    H::setGuestTheme('standard_pages');
+
+    try {
+        $result = registerCurlWithRawCookie('/register.php', 'lang=fr_FR');
+
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->not->toContain('[Hacking attempt]');
+        // The French help-link branch itself (str_starts_with(..., 'fr')).
+        expect($result['body'])->toContain('https://upstream.example.invalid/help/fr/');
+        // Lang::load('common.lang', ..., ['language' => 'fr_FR']) really
+        // loaded French translations -- standard_pages' own register.tpl
+        // heading is real, translated body content, not just metadata.
+        expect($result['body'])->toContain('Créez un compte');
+        // current_language template var reflects CurrentUser::updateLanguage().
+        expect($result['body'])->toContain('id="selected-language">Français<');
+    } finally {
+        H::setGuestTheme('default');
+        registerRemoveLanguage('fr_FR');
+    }
 });

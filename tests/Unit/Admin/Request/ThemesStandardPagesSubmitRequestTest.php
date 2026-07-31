@@ -65,6 +65,29 @@ test('fromArrays reports no upload when tmp_name is empty', function (): void {
         ->and($request->logoName)->toBe('');
 });
 
+test('fromArrays accepts a real tmp_name but falls back to an empty logoName when name is absent', function (): void {
+    $request = ThemesStandardPagesSubmitRequest::fromArrays([], [
+        'std_pgs_logo' => ['tmp_name' => '/tmp/phpXXXX'],
+    ], THEMES_STD_PAGES_LOGO_OPTIONS, THEMES_STD_PAGES_SKIN_OPTIONS);
+
+    expect($request->logoTmpName)->toBe('/tmp/phpXXXX')
+        ->and($request->logoName)->toBe('');
+});
+
+test('fromArrays accepts a real tmp_name but falls back to an empty logoName when name is not a string', function (): void {
+    $request = ThemesStandardPagesSubmitRequest::fromArrays([], [
+        // A real multipart upload always sends 'name' as a string --
+        // this is PHP's own $_FILES superglobal shape, taken here as a
+        // plain array<array-key, mixed>, so a non-string 'name' is still
+        // a genuine input this method's own type checks must reject
+        // without a TypeError.
+        'std_pgs_logo' => ['tmp_name' => '/tmp/phpYYYY', 'name' => 12345],
+    ], THEMES_STD_PAGES_LOGO_OPTIONS, THEMES_STD_PAGES_SKIN_OPTIONS);
+
+    expect($request->logoTmpName)->toBe('/tmp/phpYYYY')
+        ->and($request->logoName)->toBe('');
+});
+
 test('fromArrays reports no upload when the file field is absent', function (): void {
     $request = ThemesStandardPagesSubmitRequest::fromArrays([], [], THEMES_STD_PAGES_LOGO_OPTIONS, THEMES_STD_PAGES_SKIN_OPTIONS);
 

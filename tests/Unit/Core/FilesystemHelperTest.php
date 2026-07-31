@@ -239,6 +239,59 @@ test('mkgetdir throws when an already-existing directory has lost its write perm
         ->toThrow(\RuntimeException::class, $dir . ' no write access');
 });
 
+test('nearestExistingAncestor walks up to the dirname()-fixed-point root and stops there when no ancestor is ever visible', function (): void {
+    // Every real ancestor on this actual filesystem (up to and including
+    // '/') genuinely exists, so is_dir() always finds a stopping point
+    // long before dirname() reaches its own fixed point ('/') -- the
+    // `$parent === $dir` break is only reachable when is_dir() itself is
+    // denied for every single ancestor, all the way up to '/'. A real
+    // open_basedir restriction (confined to this project's own root) does
+    // exactly that for a target path entirely outside it: is_dir() is
+    // denied (not merely "returns false because missing") for every
+    // ancestor, including '/' itself. Run in a genuine subprocess, same
+    // convention as ContainerDetectorTest's own open_basedir test --
+    // ini_set()-narrowing open_basedir can only be widened by restarting
+    // the process, so this can't run inline in the shared worker. Bare
+    // CLI subprocess coverage isn't ingested by this project's own
+    // coverage-merge tooling (see that file's own docblock), but this is
+    // still real, deterministic proof of the branch's behavior.
+    $projectRoot = dirname(__DIR__, 3);
+    $autoloadPath = $projectRoot . '/vendor/autoload.php';
+    expect(is_file($autoloadPath))->toBeTrue();
+
+    $targetOutsideOpenBasedir = '/etc/definitely-not-a-real-piwigo-path/deep/nested/dir';
+    $script = 'require ' . var_export($autoloadPath, true) . ';'
+        . 'set_error_handler(static fn (): bool => true);'
+        . '$method = new ReflectionMethod(\Piwigo\Core\FilesystemHelper::class, "nearestExistingAncestor");'
+        . 'echo json_encode(["result" => $method->invoke(null, ' . var_export($targetOutsideOpenBasedir, true) . ')]);';
+
+    $cmd = [
+        PHP_BINARY,
+        '-d', 'open_basedir=' . $projectRoot,
+        '-r', $script,
+    ];
+
+    $descriptors = [
+        0 => ['file', '/dev/null', 'r'],
+        1 => ['pipe', 'w'],
+        2 => ['pipe', 'w'],
+    ];
+    $proc = proc_open($cmd, $descriptors, $pipes);
+    expect($proc)->toBeResource();
+    if ($proc === false) {
+        throw new RuntimeException('proc_open failed');
+    }
+
+    $stdout = stream_get_contents($pipes[1]);
+    fclose($pipes[1]);
+    $stderr = stream_get_contents($pipes[2]);
+    fclose($pipes[2]);
+    $exit = proc_close($proc);
+
+    expect($exit)->toBe(0, 'nearestExistingAncestor subprocess failed: ' . ($stderr === '' ? '(no stderr)' : $stderr));
+    expect(json_decode($stdout, true))->toBe(['result' => '/']);
+});
+
 test('deltree returns null immediately for a path that is not a directory', function (): void {
     expect(FilesystemHelper::deltree($this->root . '/does-not-exist'))->toBeNull();
 });
@@ -289,6 +342,38 @@ test('deltree takes the trash_path branch and returns null when rmdir fails, eve
 
     $trashEntries = array_values(array_diff(scandir($trash) !== false ? scandir($trash) : [], ['.', '..']));
     expect($trashEntries)->toBe(['.htaccess']);
+});
+
+test('deltree actually renames an undeletable directory into the trash path when its own parent stays writable', function (): void {
+    // The real-rename counterpart to the skipped-rename test above: rename()
+    // needs write access on $victim's own parent (here left untouched,
+    // 0755) plus write access on $victim itself -- NOT execute -- confirmed
+    // live (chmod 0555, r-x, blocks rename(); chmod 0644, rw-, does not).
+    // $victim is chmod'd rw- (no execute) so its own child can never be
+    // unlink()'d (unlink needs write+execute on the *containing* dir) --
+    // genuinely non-empty, so rmdir($victim) fails with ENOTEMPTY, not a
+    // permission error, distinguishing this from the sibling test above.
+    $victim = $this->root . '/undeletable-but-renamable';
+    mkdir($victim);
+    file_put_contents($victim . '/leaf.txt', 'leaf contents');
+    chmod($victim, 0o644);
+    $trash = $this->root . '/trash-bin-2';
+
+    set_error_handler(static fn (): bool => true);
+    try {
+        $result = FilesystemHelper::deltree($victim, $trash);
+    } finally {
+        restore_error_handler();
+    }
+
+    expect($result)->toBeNull()
+        ->and(is_dir($victim))->toBeFalse();
+
+    $trashEntries = array_values(array_diff(scandir($trash) !== false ? scandir($trash) : [], ['.', '..', '.htaccess']));
+    expect($trashEntries)->toHaveCount(1);
+    $movedDir = $trash . '/' . $trashEntries[0];
+    chmod($movedDir, 0o755); // restore so this test's own afterEach cleanup can traverse it
+    expect(file_get_contents($movedDir . '/leaf.txt'))->toBe('leaf contents');
 });
 
 test('getCacheSizeDerivatives sums file sizes per two-character derivative code across nested directories', function (): void {

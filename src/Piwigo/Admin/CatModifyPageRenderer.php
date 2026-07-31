@@ -120,9 +120,27 @@ final class CatModifyPageRenderer
         $base_url = $urlService->getRootUrl() . 'admin.php?page=';
         $cat_list_url = $base_url . 'albums';
 
-        // 'id_uppercat' is one of the nullable fields normalized to '' above;
-        // otherwise it is the parent category id, a numeric string from the DB.
-        $category_id_uppercat = is_string($category['id_uppercat']) ? $category['id_uppercat'] : '';
+        // 'id_uppercat' is one of the nullable fields normalized to '' above
+        // (root category); otherwise it is the parent category id.
+        //
+        // Bug found while writing coverage for this branch: this used to be
+        // `is_string($category['id_uppercat']) ? ... : ''`, which assumed
+        // the pre-ORM raw-row shape (mysqli hands back every column as a
+        // string). $category actually comes from
+        // Category\Projection\Category::toArray() (see this method's own
+        // top-of-file docblock), whose 'id_uppercat' key is a real ?int --
+        // so `is_string(...)` was always false for every category that
+        // actually has a parent, silently collapsing $category_id_uppercat
+        // to '' and PARENT_CAT_ID (below) to 0 for every sub-album. That fed
+        // straight into cat_modify.tpl's own `var parent_album`/
+        // `related_categories_ids` JS globals, which the move-album jstree
+        // widget (themes/admin/default/js/cat_modify.js) uses to preselect
+        // the album's real current parent -- always showing root selected
+        // instead. Accept int or string here, same pattern this file's own
+        // site_id handling already uses just below (representative_picture_id
+        // decision, ~L299).
+        $category_id_uppercat_raw = $category['id_uppercat'];
+        $category_id_uppercat = (is_int($category_id_uppercat_raw) || is_string($category_id_uppercat_raw)) ? $category_id_uppercat_raw : '';
 
         $self_url = $cat_list_url;
         if ($category_id_uppercat !== '') {

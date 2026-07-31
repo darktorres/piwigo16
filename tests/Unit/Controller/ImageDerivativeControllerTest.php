@@ -78,3 +78,42 @@ test('derivativeUrlPath prefixes the app-mount-relative i.php URL, unaware of th
     expect($result)->toBe('i.php?/upload/2026/08/01/foo-la.jpg');
     expect($result)->not->toContain('..');
 });
+
+// parseCustomParams()'s own null-token guard: every real HTTP request path
+// guarantees at least 2 tokens remain after the method's first
+// array_shift() (its own `count($tokens) < 2` check a few lines up runs
+// *before* the 2 further shift()s below), so a null $token there is
+// provably unreachable from a real derivative URL -- the method still
+// guards it explicitly rather than relying on assert() (a total no-op in
+// this environment, zend.assertions=-1). @param string[] $tokens isn't
+// enforced by PHP at runtime for a plain array literal, so reflection with
+// a deliberately malformed array (a literal null third element, not just
+// an absent one) is the only way to exercise this branch at all -- exactly
+// the kind of defensive-guard case this method's own docblock describes.
+test('parseCustomParams() 400s its own "impossible" null-token guard when invoked with a malformed token array', function (): void {
+    \Piwigo\Core\CurrentLogger::set(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::OFF]));
+
+    $controller = new ImageDerivativeController(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)));
+    $method = new ReflectionMethod(ImageDerivativeController::class, 'parseCustomParams');
+
+    $exception = null;
+    try {
+        // '150x100' has no leading 's'/'e', forcing the 3-token branch;
+        // 'a' is a valid crop-fraction token; the literal null in the 3rd
+        // slot stands in for what only a non-HTTP caller could ever
+        // produce.
+        $method->invoke($controller, ['150x100', 'a', null]);
+    } catch (\Piwigo\Http\ResponseReadyException $e) {
+        $exception = $e;
+    }
+
+    expect($exception)->toBeInstanceOf(\Piwigo\Http\ResponseReadyException::class);
+    if (! $exception instanceof \Piwigo\Http\ResponseReadyException) {
+        return; // unreachable -- the assertion above already failed the test otherwise.
+    }
+    $response = $exception->response();
+    expect($response->getStatusCode())->toBe(400)
+        ->and((string) $response->getBody())->toBe('Sizing arr');
+
+    \Piwigo\Core\CurrentLogger::reset();
+});

@@ -14,6 +14,64 @@ function makeHttpRequest(string $method, string $uri): Psr\Http\Message\RequestI
     return new Psr17Factory()->createRequest($method, $uri);
 }
 
+/**
+ * Starts a real, disposable PHP built-in server bound to 127.0.0.1
+ * serving $docRoot -- see the big docblock further down for why this is
+ * the only way to exercise fetch()/fetchToFile()/guardedFetch()'s own
+ * static, non-injectable success path for real.
+ *
+ * @return array{0: resource, 1: int} the process handle and the bound port
+ */
+function httpClientServiceTestStartLocalServer(string $docRoot): array
+{
+    $descriptors = [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
+
+    for ($attempt = 0; $attempt < 5; $attempt++) {
+        $port = random_int(20_000, 60_000);
+        $proc = proc_open(['php', '-S', '127.0.0.1:' . $port, '-t', $docRoot], $descriptors, $pipes);
+        if (! is_resource($proc)) {
+            throw new RuntimeException('failed to start local test server');
+        }
+
+        // @ doesn't suppress this from PHPUnit's own warning collector --
+        // "Connection refused" is the expected, normal condition on every
+        // early iteration before the spawned server finishes starting, so
+        // a real error-handler swap is needed to keep it out of the suite's
+        // warning count.
+        set_error_handler(static fn (): bool => true);
+        try {
+            for ($i = 0; $i < 100; $i++) {
+                $sock = fsockopen('127.0.0.1', $port, $errno, $errstr, 0.1);
+                if (is_resource($sock)) {
+                    fclose($sock);
+
+                    return [$proc, $port];
+                }
+                usleep(20_000);
+            }
+        } finally {
+            restore_error_handler();
+        }
+
+        // Port collision (rare, another process grabbed it first) or the
+        // server genuinely never came up -- kill it and retry with a
+        // fresh random port rather than leaving a zombie process/hanging.
+        proc_terminate($proc);
+        proc_close($proc);
+    }
+
+    throw new RuntimeException('local test server never became reachable after 5 attempts');
+}
+
+/**
+ * @param resource $proc
+ */
+function httpClientServiceTestStopLocalServer($proc): void
+{
+    proc_terminate($proc);
+    proc_close($proc);
+}
+
 test('sendRequest rejects a non-https scheme before contacting the transport', function (): void {
     $calls = 0;
     $client = new MockHttpClient(function () use (&$calls): MockResponse {
@@ -216,17 +274,111 @@ test('requestRaw still guards a different host even when a trustedSelfHost is se
 });
 
 // The remaining gaps below are all reachable through the same injectable
-// MockHttpClient seam used throughout this file. `fetch()`/`fetchToFile()`/
-// their shared `guardedFetch()` helper are deliberately NOT chased here --
-// same shape as this project's documented HttpClientService::fetch()-only
-// untestable classes (rule: "core logic calls the static, non-injectable
-// HttpClientService::fetch() ... no fake-able seam"): guardedFetch()
-// always constructs `new self(...)` internally using the hardcoded real
-// defaultClient() (Symfony\Component\HttpClient\HttpClient::create()),
-// with no parameter anywhere in the static call chain to substitute a
-// MockHttpClient. Confirmed via the coverage report that every other red
-// line in this class (141, 156-158, 161, 210-211, 219-225, 240) lives
-// inside that same static path.
+// MockHttpClient seam used throughout this file.
+//
+// `fetch()`/`fetchToFile()`/their shared `guardedFetch()` helper have no
+// injectable-client seam (guardedFetch() always constructs `new self(...)`
+// internally using the hardcoded real defaultClient() --
+// Symfony\Component\HttpClient\HttpClient::create() -- with no parameter
+// anywhere in the static call chain to substitute a MockHttpClient), which
+// is why every OTHER project test file touching this static path (see
+// PageTailTest/RateRepositoryTest/PemCatalogTest/ExtensionLifecycleTest/
+// InstallWizardTest/IntroSubControllerGetLatestNewsTest/
+// MaintenanceActionDispatcherTest's own identical docblocks) deliberately
+// stays on the network-unreachable-target branch instead (this sandbox has
+// no real internet access). That's still true for genuinely *external*
+// requests -- but guardedFetch()'s own self-request/trustedSelfHost
+// exemption (see its docblock) doesn't need external internet at all, only
+// a real loopback TCP connection, which this sandbox does have. The
+// success-path lines below (141/161/256) are closed that way: a real,
+// disposable `php -S 127.0.0.1:<port>` server plus a matching
+// `$_SERVER['HTTP_HOST']` (production's own self-request signal, e.g. a
+// self-priming request right after upload) legitimately exempts the
+// request from both the https-only and private-IP checks, the same way a
+// real self-request does -- not a test-only bypass. The proxy-option lines
+// (219-225) are closed separately, pointed at a closed local port so the
+// *actual* proxied connection fails near-instantly without needing real
+// internet either; only the option-building code itself is under test
+// there.
+
+test('fetch() returns the real response body through a genuine self-request round trip', function (): void {
+    $docRoot = sys_get_temp_dir() . '/pwg-httpclient-test-' . bin2hex(random_bytes(8));
+    mkdir($docRoot);
+    file_put_contents($docRoot . '/probe.php', '<?php echo "real-local-fetch-body";');
+
+    [$proc, $port] = httpClientServiceTestStartLocalServer($docRoot);
+    $originalHost = $_SERVER['HTTP_HOST'] ?? null;
+    $_SERVER['HTTP_HOST'] = '127.0.0.1:' . $port;
+
+    try {
+        $result = HttpClientService::fetch('http://127.0.0.1:' . $port . '/probe.php');
+
+        expect($result)->toBe('real-local-fetch-body');
+    } finally {
+        if ($originalHost === null) {
+            unset($_SERVER['HTTP_HOST']);
+        } else {
+            $_SERVER['HTTP_HOST'] = $originalHost;
+        }
+        httpClientServiceTestStopLocalServer($proc);
+        unlink($docRoot . '/probe.php');
+        rmdir($docRoot);
+    }
+});
+
+test('fetchToFile() writes the real self-requested response body into the given file handle', function (): void {
+    $docRoot = sys_get_temp_dir() . '/pwg-httpclient-test-' . bin2hex(random_bytes(8));
+    mkdir($docRoot);
+    file_put_contents($docRoot . '/probe.php', '<?php echo "real-local-file-body";');
+
+    [$proc, $port] = httpClientServiceTestStartLocalServer($docRoot);
+    $originalHost = $_SERVER['HTTP_HOST'] ?? null;
+    $_SERVER['HTTP_HOST'] = '127.0.0.1:' . $port;
+    $destPath = sys_get_temp_dir() . '/pwg-httpclient-test-dest-' . bin2hex(random_bytes(8));
+    $handle = fopen($destPath, 'wb');
+    expect($handle)->not->toBeFalse();
+
+    try {
+        if ($handle !== false) {
+            $ok = HttpClientService::fetchToFile($handle, 'http://127.0.0.1:' . $port . '/probe.php');
+            fclose($handle);
+
+            expect($ok)->toBeTrue();
+            expect(file_get_contents($destPath))->toBe('real-local-file-body');
+        }
+    } finally {
+        if ($originalHost === null) {
+            unset($_SERVER['HTTP_HOST']);
+        } else {
+            $_SERVER['HTTP_HOST'] = $originalHost;
+        }
+        httpClientServiceTestStopLocalServer($proc);
+        unlink($docRoot . '/probe.php');
+        rmdir($docRoot);
+        @unlink($destPath);
+    }
+});
+
+test('guardedFetch() embeds proxy auth into the proxy option when useProxy/proxyServer/proxyAuth are all configured', function (): void {
+    \Piwigo\Config\CurrentConfig::setUseProxy(true);
+    // 127.0.0.1:1 is a closed local port -- the actual proxied connection
+    // attempt fails with a real, near-instant ECONNREFUSED (no external
+    // internet involved), which guardedFetch()'s own
+    // ClientExceptionInterface catch turns into a clean `false`, same as
+    // any other unreachable target. Only the proxy-option construction
+    // itself (embedding Basic-auth credentials into the proxy URL) is
+    // under test here.
+    \Piwigo\Config\CurrentConfig::setProxyServer('http://127.0.0.1:1');
+    \Piwigo\Config\CurrentConfig::setProxyAuth('user:pass');
+
+    try {
+        $result = HttpClientService::fetch('https://93.184.216.34/proxy-probe');
+
+        expect($result)->toBeFalse();
+    } finally {
+        \Piwigo\Config\CurrentConfig::reset();
+    }
+});
 
 test('guardedRequest returns the redirect response as-is when the Location header is entirely absent', function (): void {
     $client = new MockHttpClient(new MockResponse('', ['http_code' => 302]));

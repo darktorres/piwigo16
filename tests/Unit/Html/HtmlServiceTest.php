@@ -255,6 +255,32 @@ test('getCombinedCategoriesContentTitle appends a remove-tag link referencing th
     expect($title)->toBe($expected);
 });
 
+test('getCombinedCategoriesContentTitle folds every other category into combined_categories on the remove-link when combining 3 or more', function (): void {
+    // With only 2 total categories (the sibling test above),
+    // array_shift($other_cats) empties $other_cats entirely (1 element
+    // left after unset(), then shifted out), so `combined_categories`
+    // never gets set -- 3 total is the minimum shape where $other_cats
+    // still has something left (2 left after unset(), 1 remains after the
+    // shift) to reach that branch at all.
+    $service = new HtmlService();
+    $catA = ['id' => 3, 'name' => 'Nature', 'permalink' => null];
+    $catB = ['id' => 7, 'name' => 'Portraits', 'permalink' => null];
+    $catC = ['id' => 9, 'name' => 'Travel', 'permalink' => null];
+
+    $urlService = new UrlService($service);
+    // catA's own remove-link: array_shift() takes catB (the lowest-keyed
+    // remaining element after unset()), leaving catC to fold into
+    // combined_categories.
+    $removeLinkA = $urlService->makeIndexUrl(['category' => $catB, 'combined_categories' => [$catC]]);
+    // catC's own remove-link: array_shift() takes catA, leaving catB.
+    $removeLinkC = $urlService->makeIndexUrl(['category' => $catA, 'combined_categories' => [$catB]]);
+
+    $title = $service->getCombinedCategoriesContentTitle($catA, [$catB, $catC]);
+
+    expect($title)->toContain($removeLinkA)
+        ->and($title)->toContain($removeLinkC);
+});
+
 test('setStatusHeader accepts every well-known status code and the default fallback without a fatal/warning', function (): void {
     $service = new HtmlService();
 

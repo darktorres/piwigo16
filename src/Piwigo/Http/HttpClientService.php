@@ -191,9 +191,24 @@ final readonly class HttpClientService implements ClientInterface
         // attacker-influenceable, so it must not be held to the guard's
         // https-only + no-private-IP rules the way a genuinely external
         // target is.
+        // Bug found live via HttpClientServiceTest's own real self-request
+        // round trip against a non-default-port local test server: PHP_URL_HOST
+        // alone strips the port, but $_SERVER['HTTP_HOST'] (and therefore a
+        // same-process-built self-request URL, see UrlService::
+        // getAbsoluteRootUrl()) includes it whenever the request came in on
+        // a non-standard port -- comparing host-only against host[:port]
+        // meant a self-request was NEVER recognized as one on any
+        // non-default port, silently defeating both the X-Piwigo-Env
+        // forwarding above and the SSRF exemption below for exactly the
+        // deployment shape this class's own docblock calls out (a
+        // Docker-mapped "localhost:8080" install). Reattaching the port
+        // here mirrors assertUrlIsSafe()'s own identical host[:port]
+        // comparison for $trustedSelfHost.
         $srcHost = parse_url($url, PHP_URL_HOST);
+        $srcPort = parse_url($url, PHP_URL_PORT);
+        $srcHostAndPort = is_string($srcHost) ? $srcHost . (is_int($srcPort) ? ':' . $srcPort : '') : null;
         $currentHost = $_SERVER['HTTP_HOST'] ?? null;
-        $isSelfRequest = $srcHost !== null && $srcHost === $currentHost;
+        $isSelfRequest = $srcHostAndPort !== null && $srcHostAndPort === $currentHost;
 
         if ($isSelfRequest && Env::testModeIsActive()) {
             $headerValue = Env::testModeHeader();
@@ -226,7 +241,7 @@ final readonly class HttpClientService implements ClientInterface
         }
 
         try {
-            $response = new self(trustedSelfHost: $isSelfRequest && is_string($currentHost) ? $currentHost : null)
+            $response = new self(trustedSelfHost: $isSelfRequest ? $currentHost : null)
                 ->requestRaw($method, $url, $headers, $body, $extraOptions);
             $status = $response->getStatusCode();
         } catch (ClientExceptionInterface) {

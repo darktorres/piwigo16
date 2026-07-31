@@ -171,3 +171,16 @@ it('shows a fatal error when group_id is missing', function (): void {
 
     $page->assertSee('group_id URL parameter is missing');
 });
+
+// A genuinely distinct branch from the test above: group_id IS present
+// (groupIdPresent is true, so the first fatalError call site is skipped
+// entirely) but GroupId::tryFrom() itself rejects it -- 0 is not a valid
+// GroupId (positive-int value object), matching this class's own comment
+// that tryFrom() now correctly rejects a 0/negative group_id that
+// is_numeric() alone used to silently let through.
+it('shows a fatal error when group_id is present but not a valid positive group id', function (): void {
+    $page = H::loginAsAdmin($this);
+    $page = H::navigateOk($page, '/admin.php?page=group_perm&group_id=0');
+
+    $page->assertSee('group_id URL parameter is missing');
+});

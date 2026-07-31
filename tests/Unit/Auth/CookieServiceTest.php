@@ -69,6 +69,16 @@ test('cookiePath normalizes back to the real app root when the entry file is one
     // entry file) says it's one level deeper than the app's real root --
     // the '../' it appends must normalize back to '/piwigo/', not stay as
     // '/piwigo/admin/../'.
+    //
+    // This exercises the while loop's own "converged, $new === $scr" break
+    // (cookiePath()'s normalization loop). Its sibling "$new === null"
+    // break is not chased by any test here: the pattern
+    // ('#[^/]+/\.\.(/|$)#') is a fixed string literal, and preg_replace()
+    // only ever returns null for a pattern compile error -- there is no
+    // real-world SCRIPT_NAME/mount-depth input that changes the pattern
+    // itself, so that branch is provably unreachable (the source's own
+    // inline comment right above `if ($new === null)` already documents
+    // the same conclusion).
     $_SERVER['SCRIPT_NAME'] = '/piwigo/admin/popuphelp.php';
     RequestMountDepth::set(1);
 

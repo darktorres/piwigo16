@@ -782,7 +782,22 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
                     'AAAA_DEBUG_TOTAL_TIME__' => \Piwigo\Core\TimingHelper::getElapsedTime(\Piwigo\Core\PageState::current()->requestStart, \Piwigo\Core\TimingHelper::getMoment()),
                 ]
             );
-            (new \Smarty\Debug())->display_debug($this->smarty);
+            // Genuine bug, found live while closing this line's own
+            // coverage gap (never previously exercised by any test):
+            // Smarty\Debug::display_debug() unconditionally calls
+            // $obj->getSource() (vendor/smarty/smarty/src/Debug.php) before
+            // ever checking its own `$obj instanceof Smarty` branch --
+            // Smarty\Smarty itself has no getSource() method (only
+            // Smarty\Template/Smarty\Template\Cached do), so passing the
+            // bare engine here always threw `Error: Call to undefined
+            // method Smarty\Smarty::getSource()`, confirmed via a real
+            // debugging=true call. A throwaway 'string:' resource template
+            // gives display_debug() a real getSource() to read, taking its
+            // Template branch instead (labels the console 'string:' rather
+            // than aggregating per-template timings) -- debug.tpl's own
+            // markup treats template_name/template_data as optional, so
+            // this degrades gracefully instead of reproducing the crash.
+            (new \Smarty\Debug())->display_debug($this->smarty->createTemplate('string:'), true);
         }
     }
 

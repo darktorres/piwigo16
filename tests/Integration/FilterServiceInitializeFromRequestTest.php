@@ -77,6 +77,22 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
     }
 
     /**
+     * Reads a $_SESSION value through an honestly-mixed-typed boundary.
+     * PHPStan otherwise keeps tracking a $_SESSION key's last-assigned
+     * literal type straight through an intervening real method call (it
+     * has no visibility into that call's own writes to the superglobal),
+     * so a plain `$_SESSION[$key]` read a few lines after assigning a
+     * scalar literal to that same key gets reported as still holding that
+     * exact literal -- even once the method under test has genuinely
+     * overwritten it. Confirmed via a standalone \PHPStan\dumpType()
+     * reproduction.
+     */
+    private function sessionValue(string $key): mixed
+    {
+        return $_SESSION[$key] ?? null;
+    }
+
+    /**
      * @return list<int>
      */
     private function sortedVisibleIds(string $csv): array
@@ -226,5 +242,53 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         new FilterService($this->conn)->initializeFromRequest();
 
         self::assertFalse(FilterState::isEnabled());
+    }
+
+    public function test_initialize_falls_back_to_the_default_check_key_when_the_cached_session_value_is_malformed(): void
+    {
+        $_SESSION['pwg_filter_enabled'] = true;
+        // Genuinely malformed -- not even an array, unlike the "different
+        // user"/"stale timestamp" tests above which both start from a
+        // well-shaped array. initializeFromRequest()'s own
+        // `! is_array($filter_key) || ! isset(...)` guard exists precisely
+        // for this shape of corruption (its own inline comment: real
+        // session data is only ever written in the well-shaped form by
+        // this same method) -- simulates a corrupted/foreign session value
+        // rather than one this method itself could ever have written.
+        $_SESSION['pwg_filter_check_key'] = 'not-an-array';
+
+        new FilterService($this->conn)->initializeFromRequest();
+
+        self::assertTrue(FilterState::isEnabled());
+        // Recomputed from the fallback default (time=0 unconditionally
+        // forces the "stale" recompute branch) -- the check-key now
+        // reflects the real current user/request, not the malformed
+        // session value.
+        $checkKey = $this->sessionValue('pwg_filter_check_key');
+        self::assertIsArray($checkKey);
+        self::assertSame(1, $checkKey['user']);
+        self::assertEqualsCanonicalizing([1, 2], array_keys(FilterState::categories()));
+    }
+
+    public function test_initialize_falls_back_to_a_sentinel_when_every_category_is_forbidden(): void
+    {
+        // forbidden_categories excludes both fixture categories (1, 2) --
+        // findComputedCategoriesRollup()'s own `c.id NOT IN (...)` filter
+        // then matches zero rows, so getComputedCategories() returns an
+        // empty categories array. implode(',', array_keys([])) is '',
+        // which initializeFromRequest()'s own "must be not empty" guards
+        // replace with the -1 sentinel -- for visible_categories directly
+        // (the empty implode()), and for visible_images too since
+        // `category_id IN (-1)` then matches no real image_category row
+        // either.
+        CurrentUser::set(User::fromUserArray(['id' => 1, 'status' => 'admin', 'level' => 8, 'forbidden_categories' => '1,2', 'recent_period' => 7]));
+        $_GET['filter'] = 'start-recent-30';
+
+        new FilterService($this->conn)->initializeFromRequest();
+
+        self::assertTrue(FilterState::isEnabled());
+        self::assertSame([], FilterState::categories());
+        self::assertSame('-1', FilterState::visibleCategories());
+        self::assertSame('-1', FilterState::visibleImages());
     }
 }

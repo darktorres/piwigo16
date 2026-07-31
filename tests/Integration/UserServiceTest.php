@@ -940,6 +940,54 @@ namespace Piwigo\Tests\Integration {
         // "verified unreachable through the real API" shape as
         // UserRepositoryTest's findAdminIds() note.
 
+        public function test_get_theme_usage_counts_delegates_to_the_repository(): void
+        {
+            $username = 'p24-longtail-theme-' . bin2hex(random_bytes(4));
+            $theme = 'p24-longtail-theme-' . bin2hex(random_bytes(4));
+            $this->conn->executeStatement(
+                "INSERT INTO " . Tables::users() . " (username, password, mail_address) VALUES (?, NULL, NULL)",
+                [$username]
+            );
+            $tempId = (int) $this->conn->lastInsertId();
+            $this->conn->executeStatement(
+                'INSERT INTO ' . Tables::userInfos() . ' (user_id, theme) VALUES (?, ?)',
+                [$tempId, $theme]
+            );
+
+            try {
+                $counts = $this->service->getThemeUsageCounts();
+
+                self::assertArrayHasKey($theme, $counts);
+                self::assertSame(1, $counts[$theme]);
+            } finally {
+                $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ?', [$tempId]);
+            }
+        }
+
+        public function test_get_language_usage_counts_delegates_to_the_repository(): void
+        {
+            $username = 'p24-longtail-lang-' . bin2hex(random_bytes(4));
+            $language = 'p24-longtail-lang-' . bin2hex(random_bytes(4));
+            $this->conn->executeStatement(
+                "INSERT INTO " . Tables::users() . " (username, password, mail_address) VALUES (?, NULL, NULL)",
+                [$username]
+            );
+            $tempId = (int) $this->conn->lastInsertId();
+            $this->conn->executeStatement(
+                'INSERT INTO ' . Tables::userInfos() . ' (user_id, language) VALUES (?, ?)',
+                [$tempId, $language]
+            );
+
+            try {
+                $counts = $this->service->getLanguageUsageCounts();
+
+                self::assertArrayHasKey($language, $counts);
+                self::assertSame(1, $counts[$language]);
+            } finally {
+                $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ?', [$tempId]);
+            }
+        }
+
         public function test_get_user_data_creates_missing_user_infos_when_external_authentification_is_active(): void
         {
             $this->conn->executeStatement(

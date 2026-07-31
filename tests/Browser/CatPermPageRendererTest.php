@@ -15,6 +15,25 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * "some groups are granted") catches a renderer that queried the wrong
  * category's group_access rows. piwigo_user_access has no rows at all in
  * this fixture, so users_selected is always empty regardless of category.
+ *
+ * render()'s own bare `$users = []`/`$user_granted_indirect_ids = []`
+ * literal-array-assignment lines (~L126/141) execute on every request this
+ * file makes (both sit unconditionally ahead of the first real branch, and
+ * the category-1 test below drives $group_granted_ids to all 3 fixture
+ * groups, definitely entering the `count($group_granted_ids) > 0` block
+ * that follows L141) -- a coverage tool still reporting either as
+ * uncovered is the documented OPcache constant-array-folding artifact
+ * (see tests/Browser/CatListPageRendererTest.php's own docblock), not a
+ * real gap.
+ *
+ * Not exercised: the `(! is_int($row_group_id) && ! is_string($row_group_id))
+ * || (...)` defensive `continue` inside the indirect-membership loop.
+ * piwigo_user_group's own group_id/user_id columns are both real `NOT
+ * NULL` numeric columns (tests/Fixtures/piwigo-17.0.sql's own CREATE
+ * TABLE), so a genuine row from getMembersByGroupIds() is always int or a
+ * numeric string -- this branch is provably unreachable through real
+ * data, same class of guard as CatModifyPageRenderer's own
+ * representative_picture_id narrowing.
  */
 afterEach(function (): void {
     H::setCategoryPrivate(2, private: false);

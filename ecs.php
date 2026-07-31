@@ -22,6 +22,9 @@ return ECSConfig::configure()
         __DIR__ . '/language',
         __DIR__ . '/local',
         __DIR__ . '/node_modules',
+        // Fake class redeclarations for PHPStan's stubFiles mechanism (see
+        // phpstan.neon) -- not real application code to lint.
+        __DIR__ . '/phpstan-stubs',
         __DIR__ . '/tests',
         __DIR__ . '/vendor',
         // Too aggressive on ~500 files of untouched legacy docblocks this phase.

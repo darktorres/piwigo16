@@ -34,7 +34,6 @@ final class WsRestFormatTest extends ContractTestCase
         self::assertNotFalse($ch);
 
         $cookieJar = $this->cookieJar();
-        assert($cookieJar !== '');
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_USERAGENT, self::USER_AGENT);

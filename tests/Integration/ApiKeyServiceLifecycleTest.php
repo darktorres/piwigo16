@@ -53,11 +53,18 @@ final class ApiKeyServiceLifecycleTestSpyMailer implements MailerInterface
  * and notifyExpiration()'s plural-days wording.
  *
  * get()'s own `str2DateTime() failed` \Exception guard is not chased here:
- * expired_on/created_on are real `datetime NOT NULL` columns, and
- * str2DateTime() only ever returns false for `false`/''/0/'0' input --
- * forcing that would need writing an actually-invalid value into a NOT
- * NULL DB column, which the schema itself rejects. Left uncovered as a
- * genuinely unreachable defensive guard, not overlooked.
+ * expired_on/created_on are real `datetime NOT NULL` columns. str2DateTime()
+ * (no explicit $format given, so its "unknown date format" branch runs) also
+ * returns false when strtok()-ing the input on `- :/` yields fewer than 3
+ * parts, not just for `false`/''/0/'0' input -- but MySQL only ever hands
+ * back a `datetime` column's value in canonical 'Y-m-d H:i:s' form, which
+ * always tokenizes into exactly 6 parts, and (confirmed live: `UPDATE ...
+ * SET expired_on = 'corrupted'` against this same column) strict SQL mode
+ * (STRICT_TRANS_TABLES) rejects any raw write that isn't a valid datetime
+ * literal with `ERROR 1292 Incorrect datetime value` before it ever reaches
+ * PHP. Forcing either false-returning path would need a value the schema
+ * itself won't store. Left uncovered as a genuinely unreachable defensive
+ * guard, not overlooked.
  */
 final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
 {

@@ -115,6 +115,57 @@ test('set then get round-trips the exact cached value', function (): void {
         ->and($value)->toBe(['section' => 'best_rated', 'count' => 5]);
 });
 
+test('set self-heals by creating the missing cache dir when the first write attempt fails, then succeeds', function (): void {
+    // Undoes beforeEach's own pre-created cache dir (see that block's own
+    // docblock) so the first @file_put_contents() attempt genuinely fails
+    // against a not-yet-existing directory, reaching set()'s own
+    // mkgetdir()-then-retry fallback for real.
+    $dir = CurrentPaths::get()->root . CurrentConfig::dataLocation() . 'cache/';
+    rmdir($dir);
+    $cache = new PersistentFileCache();
+    $key = $cache->make_key(['self-heal']);
+
+    set_error_handler(static fn (): bool => true);
+    try {
+        $written = $cache->set($key, 'healed-value');
+    } finally {
+        restore_error_handler();
+    }
+
+    expect($written)->toBeTrue()
+        ->and(is_dir($dir))->toBeTrue();
+
+    $value = null;
+    expect($cache->get($key, $value))->toBeTrue()
+        ->and($value)->toBe('healed-value');
+});
+
+test('set returns false when both the initial write and the mkgetdir-then-retry attempt fail', function (): void {
+    // Same starting point as the self-heal test above (cache dir removed),
+    // but the data/ dir housing it is also made non-writable -- mkgetdir()
+    // itself then fails to (re)create cache/ (MKGETDIR_DIE_ON_ERROR is
+    // stripped from the flags passed here, so it returns false quietly
+    // instead of throwing), and the retry file_put_contents() still
+    // targets a directory that was never actually created.
+    $dataRoot = CurrentPaths::get()->root . CurrentConfig::dataLocation();
+    $dir = $dataRoot . 'cache/';
+    rmdir($dir);
+    chmod($dataRoot, 0o555);
+    $cache = new PersistentFileCache();
+    $key = $cache->make_key(['self-heal-fails']);
+
+    set_error_handler(static fn (): bool => true);
+    try {
+        $written = $cache->set($key, 'unwritten-value');
+    } finally {
+        restore_error_handler();
+        // Restore before afterEach's own recursive cleanup runs.
+        chmod($dataRoot, 0o755);
+    }
+
+    expect($written)->toBeFalse();
+});
+
 test('get returns false for a value whose lifetime already expired', function (): void {
     $cache = new PersistentFileCache();
     $key = $cache->make_key(['already_expired']);

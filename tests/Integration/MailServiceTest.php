@@ -20,6 +20,8 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Html\HtmlService;
+use Piwigo\Mail\MailRecipientRepository;
+use Piwigo\Mail\MailRecipientRepositoryInterface;
 use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Users\CurrentUser;
@@ -68,13 +70,18 @@ use Piwigo\Users\UserStatus;
  * relying on fragile, version-specific internal Emogrifier behavior.
  *
  * mailGroup()'s own `if ($language === '')` and `if ($users === [])`
- * guards are both structurally unreachable through the real
+ * guards are both structurally unreachable through the *real*
  * MailRecipientRepository pair: findDistinctLanguagesInGroup() already
  * filters out empty-string languages via array_filter(), and
  * findByGroupAndLanguage() runs the identical group/email/language join
  * conditions -- any language the first query returns is guaranteed at
- * least one row in the second. Left uncovered as genuinely dead defensive
- * code, not overlooked.
+ * least one row in the second. Both are still exercised (see
+ * test_mailGroup_skips_an_empty_string_language_entry() and
+ * test_mailGroup_skips_a_language_whose_per_language_lookup_comes_back_with_no_users()
+ * below) via MailService's own second constructor parameter -- an
+ * explicit substitution seam its own docblock documents as existing for
+ * exactly this ("unit tests ... pass a fake implementation") -- rather
+ * than left permanently uncovered.
  */
 final class MailServiceTest extends IntegrationTestCase
 {
@@ -382,6 +389,47 @@ final class MailServiceTest extends IntegrationTestCase
         }
     }
 
+    public function test_switchLangTo_replays_every_registered_plugin_language_file_for_a_language_not_yet_cached(): void
+    {
+        // Simulates what a real plugin's own 'loading_lang' handler would
+        // have registered earlier in the request: Lang::load() with a
+        // non-empty dirname tracks into Lang::languageFiles() (see
+        // Core\Lang::load()'s own tracking guard, and its sibling test in
+        // LangTest.php). switchLangTo()'s re-init branch for a language
+        // not yet cached (same branch the sibling test above exercises)
+        // must replay every one of those registered files for the new
+        // target language -- this is the only path that reaches that
+        // foreach's own body (MailService.php lines ~453-456), not just
+        // the empty-map zero-iteration case the sibling test alone would
+        // leave covered.
+        Lang::load('missing.lang', 'my-plugin/', ['language' => 'en_UK']);
+
+        try {
+            // Must not throw/warn even though 'my-plugin/missing.lang.php'
+            // doesn't exist on disk -- Lang::load() resolves that to a
+            // quiet `return false;` (file_exists() found nothing), same as
+            // a real plugin whose language file is missing for the target
+            // language.
+            $this->mailer->switchLangTo('de_DE');
+
+            // The re-registration inside the replay loop hits Lang::load()'s
+            // own "already tracked" guard (isset() short-circuits before
+            // overwrite), so the original entry -- not the 'de_DE' the loop
+            // passed through -- is what's still on record afterward.
+            self::assertSame(
+                ['language' => 'en_UK'],
+                Lang::languageFiles()['my-plugin/']['missing.lang']
+            );
+        } finally {
+            $this->mailer->switchLangBack();
+            // Lang::$languageFiles is static/process-shared and this test
+            // is the only one in the suite that ever populates it --
+            // without this, the 'my-plugin/' entry above would leak into
+            // every later test in this process.
+            Lang::reset();
+        }
+    }
+
     public function test_switchLangBack_is_a_no_op_when_the_stack_is_empty(): void
     {
         // A fresh MailService::reset() (this file's own setUp()) starts
@@ -408,6 +456,94 @@ final class MailServiceTest extends IntegrationTestCase
         $result = $this->suppressMailerWarning(fn () => $this->mailer->mailGroup(1, ['content' => 'hi', 'language_selected' => 'en_UK']));
 
         self::assertFalse($result);
+    }
+
+    public function test_mailGroup_skips_an_empty_string_language_entry(): void
+    {
+        // MailRecipientRepository::findDistinctLanguagesInGroup()'s own
+        // real implementation already array_filter()s out empty-string
+        // languages before returning (is_string($language) &&
+        // $language !== '') -- no genuine DB read can ever hand
+        // MailService::mailGroup() an empty-string language element to
+        // skip via the real repository. mailGroup()'s own second
+        // constructor parameter exists precisely for this kind of
+        // substitution (see MailService::__construct()'s own docblock:
+        // "unit tests ... pass a fake implementation"), so overriding just
+        // this one read method -- while still exercising every other real
+        // MailService/MailRecipientRepository code path -- is the only way
+        // to reach this guard's own continue branch. MailRecipientRepository
+        // is final, so the substitute wraps a real instance (composition)
+        // and delegates every method it doesn't need to override to it,
+        // rather than extending the final class directly.
+        $realRepo = new MailRecipientRepository($this->conn);
+        $repo = new class ($realRepo) implements MailRecipientRepositoryInterface {
+            public function __construct(private readonly MailRecipientRepositoryInterface $real) {}
+
+            #[\Override]
+            public function findAdminsAndWebmasters(string $idColumn, string $usernameColumn, string $emailColumn, array $userStatuses, ?int $groupId, ?int $excludeUserId): array
+            {
+                return $this->real->findAdminsAndWebmasters($idColumn, $usernameColumn, $emailColumn, $userStatuses, $groupId, $excludeUserId);
+            }
+
+            #[\Override]
+            public function findDistinctLanguagesInGroup(string $idColumn, string $emailColumn, int $groupId, ?string $languageFilter): array
+            {
+                return [''];
+            }
+
+            #[\Override]
+            public function findByGroupAndLanguage(string $idColumn, string $usernameColumn, string $emailColumn, int $groupId, string $language): array
+            {
+                return $this->real->findByGroupAndLanguage($idColumn, $usernameColumn, $emailColumn, $groupId, $language);
+            }
+        };
+        $mailer = new MailService(mailRecipientRepo: $repo);
+
+        // The single '' entry is `continue`d over without ever reaching
+        // findByGroupAndLanguage()/switchLangTo() -- $return stays at its
+        // initial `true`, same as the real "no matching users" outcome.
+        self::assertTrue($mailer->mailGroup(1, ['content' => 'hi']));
+    }
+
+    public function test_mailGroup_skips_a_language_whose_per_language_lookup_comes_back_with_no_users(): void
+    {
+        // findDistinctLanguagesInGroup() and findByGroupAndLanguage() run
+        // the exact same WHERE predicates (group_id + non-empty email [+
+        // language]) against the same 3 joined tables -- for a single
+        // sequential DB read with no concurrent writer, any language the
+        // first query returns is therefore guaranteed to have >=1 matching
+        // row in the second. This guard defends mailGroup() against a real
+        // production race (another admin changing group membership/
+        // language between those two queries) that a single-connection
+        // test can't reproduce by timing alone -- overriding
+        // findByGroupAndLanguage() to come back empty is the only
+        // deterministic way to exercise it, same reasoning/seam as the
+        // empty-string-language test above.
+        $realRepo = new MailRecipientRepository($this->conn);
+        $repo = new class ($realRepo) implements MailRecipientRepositoryInterface {
+            public function __construct(private readonly MailRecipientRepositoryInterface $real) {}
+
+            #[\Override]
+            public function findAdminsAndWebmasters(string $idColumn, string $usernameColumn, string $emailColumn, array $userStatuses, ?int $groupId, ?int $excludeUserId): array
+            {
+                return $this->real->findAdminsAndWebmasters($idColumn, $usernameColumn, $emailColumn, $userStatuses, $groupId, $excludeUserId);
+            }
+
+            #[\Override]
+            public function findDistinctLanguagesInGroup(string $idColumn, string $emailColumn, int $groupId, ?string $languageFilter): array
+            {
+                return ['en_UK'];
+            }
+
+            #[\Override]
+            public function findByGroupAndLanguage(string $idColumn, string $usernameColumn, string $emailColumn, int $groupId, string $language): array
+            {
+                return [];
+            }
+        };
+        $mailer = new MailService(mailRecipientRepo: $repo);
+
+        self::assertTrue($mailer->mailGroup(1, ['content' => 'hi']));
     }
 
     public function test_mailGroup_builds_an_auth_key_link_for_the_optional_IMG_assign_slot_too(): void

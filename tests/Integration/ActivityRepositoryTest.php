@@ -10,6 +10,7 @@ use Piwigo\Activity\Projection\SystemActivityLogEntry;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Core\ActivitySystem;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 
@@ -102,6 +103,17 @@ final class ActivityRepositoryTest extends IntegrationTestCase
         }
     }
 
+    public function test_insert_many_with_an_empty_array_is_a_no_op(): void
+    {
+        $countBefore = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::activity());
+
+        $this->repo->insertMany([]);
+
+        $countAfter = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::activity());
+
+        self::assertSame($countBefore, $countAfter);
+    }
+
     public function test_count_by_user_matches_the_fixture(): void
     {
         $counts = $this->repo->countByUser();
@@ -133,6 +145,37 @@ final class ActivityRepositoryTest extends IntegrationTestCase
             // entry, see InstallService's docblock), which a broader
             // `action != 'install'` filter would incorrectly delete too.
             $this->conn->executeStatement("DELETE FROM " . Tables::activity() . " WHERE object = 'system' AND action = 'test'");
+        }
+    }
+
+    public function test_count_by_user_skips_a_row_with_a_null_performed_by(): void
+    {
+        // A non-'system' row whose acting user was since deleted (ON
+        // DELETE SET NULL on activity.performed_by, see this method's own
+        // docblock) genuinely has performed_by = NULL. The raw GROUP BY
+        // query groups it under its own NULL bucket; the `continue` guard
+        // (line 88) must skip that bucket rather than mis-cast NULL to an
+        // int(0) group key that would collide with a real user id 0 could
+        // never actually be.
+        $this->repo->insertMany([[
+            'object' => 'disposable',
+            'objectId' => 1,
+            'action' => 'test',
+            'performedBy' => null,
+            'sessionIdx' => 'sess-1',
+            'ipAddress' => null,
+            'occuredOn' => '2026-07-12 00:00:00',
+            'details' => [],
+            'userAgent' => null,
+        ]]);
+
+        try {
+            $counts = $this->repo->countByUser();
+
+            self::assertCount(1, $counts, 'the NULL-performed_by row must not add its own bucket');
+            self::assertSame(17, $counts[1]);
+        } finally {
+            $this->conn->executeStatement("DELETE FROM " . Tables::activity() . " WHERE object = 'disposable'");
         }
     }
 
@@ -267,6 +310,164 @@ final class ActivityRepositoryTest extends IntegrationTestCase
             // see test_count_by_user_excludes_system_object's own comment
             // for why a broader `action != 'install'` filter is wrong now.
             $this->conn->executeStatement("DELETE FROM " . Tables::activity() . " WHERE object = 'system' AND action = 'update'");
+        }
+    }
+
+    public function test_find_core_update_history_returns_core_update_and_autoupdate_rows_oldest_first(): void
+    {
+        // The fixture's own row 2 (object='system', object_id=1=Core,
+        // action='install') deliberately doesn't match the action IN
+        // ('update', 'autoupdate') filter -- Admin\PiwigoInfosSender's own
+        // "version upgrade history" telemetry only cares about the two
+        // real upgrade-path actions, not the one-time install.
+        $this->repo->insertMany([
+            [
+                'object' => 'system',
+                'objectId' => ActivitySystem::Core,
+                'action' => 'update',
+                'performedBy' => null,
+                'sessionIdx' => 'sess-1',
+                'ipAddress' => null,
+                'occuredOn' => '2026-07-10 00:00:00',
+                'details' => ['from_version' => '16.0.0', 'to_version' => '17.0.0'],
+                'userAgent' => null,
+            ],
+            [
+                'object' => 'system',
+                'objectId' => ActivitySystem::Core,
+                'action' => 'autoupdate',
+                'performedBy' => null,
+                'sessionIdx' => 'sess-1',
+                'ipAddress' => null,
+                'occuredOn' => '2026-07-11 00:00:00',
+                'details' => ['from_version' => '17.0.0', 'to_version' => '17.0.1'],
+                'userAgent' => null,
+            ],
+        ]);
+
+        try {
+            $rows = $this->repo->findCoreUpdateHistory();
+
+            self::assertCount(2, $rows, 'only the 2 Core update/autoupdate rows just inserted should match');
+
+            self::assertSame('update', $rows[0]['action']);
+            self::assertSame('2026-07-10 00:00:00', $rows[0]['occured_on']);
+            self::assertIsString($rows[0]['details']);
+            self::assertSame(['from_version' => '16.0.0', 'to_version' => '17.0.0'], json_decode($rows[0]['details'], true));
+
+            // oldest first (ORDER BY activity_id ASC)
+            self::assertSame('autoupdate', $rows[1]['action']);
+            self::assertSame('2026-07-11 00:00:00', $rows[1]['occured_on']);
+        } finally {
+            $this->conn->executeStatement(
+                "DELETE FROM " . Tables::activity() . " WHERE object = 'system' AND action IN ('update', 'autoupdate') AND object_id = " . ActivitySystem::Core
+            );
+        }
+    }
+
+    public function test_find_system_action_counts_by_object_id_groups_by_object_id_and_action(): void
+    {
+        // The fixture's own row 2 is object='system', object_id=1=Core,
+        // action='install' -- object_id=Plugin here is chosen specifically
+        // so this test's own group can't merge with it.
+        $this->repo->insertMany([
+            [
+                'object' => 'system',
+                'objectId' => ActivitySystem::Plugin,
+                'action' => 'install',
+                'performedBy' => null,
+                'sessionIdx' => 'sess-1',
+                'ipAddress' => null,
+                'occuredOn' => '2026-07-10 00:00:00',
+                'details' => [],
+                'userAgent' => null,
+            ],
+            [
+                'object' => 'system',
+                'objectId' => ActivitySystem::Plugin,
+                'action' => 'install',
+                'performedBy' => null,
+                'sessionIdx' => 'sess-1',
+                'ipAddress' => null,
+                'occuredOn' => '2026-07-10 00:00:01',
+                'details' => [],
+                'userAgent' => null,
+            ],
+        ]);
+
+        try {
+            $rows = $this->repo->findSystemActionCountsByObjectId();
+
+            $matching = array_values(array_filter(
+                $rows,
+                static fn (array $row): bool => $row['object_id'] === ActivitySystem::Plugin && $row['action'] === 'install'
+            ));
+
+            self::assertCount(1, $matching, 'the 2 rows just inserted must collapse into a single grouped bucket');
+            self::assertSame('system', $matching[0]['object']);
+            self::assertSame(2, $matching[0]['counter']);
+        } finally {
+            $this->conn->executeStatement(
+                "DELETE FROM " . Tables::activity() . " WHERE object = 'system' AND action = 'install' AND object_id = " . ActivitySystem::Plugin
+            );
+        }
+    }
+
+    public function test_find_user_agent_breakdown_excludes_browser_traffic_and_aggregates_by_user_agent(): void
+    {
+        $this->repo->insertMany([
+            [
+                'object' => 'disposable',
+                'objectId' => 1,
+                'action' => 'test',
+                'performedBy' => 1,
+                'sessionIdx' => 'sess-1',
+                'ipAddress' => null,
+                'occuredOn' => '2026-07-10 00:00:00',
+                'details' => [],
+                'userAgent' => 'PiwigoRepoTestAgent/1.0',
+            ],
+            [
+                'object' => 'disposable',
+                'objectId' => 2,
+                'action' => 'test',
+                'performedBy' => 1,
+                'sessionIdx' => 'sess-1',
+                'ipAddress' => null,
+                'occuredOn' => '2026-07-11 00:00:00',
+                'details' => [],
+                'userAgent' => 'PiwigoRepoTestAgent/1.0',
+            ],
+            [
+                // real browser traffic (Mozilla/5.x) -- must be excluded by
+                // the `WHERE user_agent NOT LIKE 'Mozilla/5%'` filter.
+                'object' => 'disposable',
+                'objectId' => 3,
+                'action' => 'test',
+                'performedBy' => 1,
+                'sessionIdx' => 'sess-1',
+                'ipAddress' => null,
+                'occuredOn' => '2026-07-12 00:00:00',
+                'details' => [],
+                'userAgent' => 'Mozilla/5.0 (a real browser)',
+            ],
+        ]);
+
+        try {
+            $rows = $this->repo->findUserAgentBreakdown();
+
+            foreach ($rows as $row) {
+                self::assertFalse(str_starts_with($row['user_agent'] ?? '', 'Mozilla/5'), 'browser traffic must be excluded');
+            }
+
+            $matching = array_values(array_filter($rows, static fn (array $row): bool => $row['user_agent'] === 'PiwigoRepoTestAgent/1.0'));
+
+            self::assertCount(1, $matching);
+            self::assertSame(2, $matching[0]['counter']);
+            self::assertSame('2026-07-10 00:00:00', $matching[0]['first_encounter']);
+            self::assertSame('2026-07-11 00:00:00', $matching[0]['last_encounter']);
+        } finally {
+            $this->conn->executeStatement("DELETE FROM " . Tables::activity() . " WHERE object = 'disposable'");
         }
     }
 }

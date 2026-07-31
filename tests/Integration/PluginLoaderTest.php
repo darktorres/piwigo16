@@ -8,7 +8,10 @@ use Piwigo\Admin\LoadedPlugins;
 use Piwigo\Admin\PluginLoader;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Kernel;
+use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -17,11 +20,27 @@ use Piwigo\Db\Tables;
  * PluginLoader::loadPlugins()/loadPlugin() -- CurrentPaths is pointed at a
  * throwaway root (a real local/plugins/<id>/main.inc.php the test writes
  * itself), matching every other Unit/Integration test's own CurrentPaths::
- * set() convention. autoupdatePlugin()'s own maintain.class.php branch is
- * NOT covered here -- it dynamically constructs a plugin-supplied
- * `{$plugin_id}_maintain` class, which would mean writing and including a
- * second throwaway PHP class file per test; the version-comparison guard
- * that decides whether to enter that branch at all IS covered below.
+ * set() convention.
+ *
+ * autoupdatePlugin()'s own "filesystem version is newer" body (real
+ * `Version:` header parsing, dynamically loading a real
+ * `{$plugin_id}_maintain` class from a real maintain.class.php, the
+ * PageState::current()->errors round-trip through PluginMaintain::update()'s
+ * by-reference $errors param, persisting via PluginRepository::updateVersion(),
+ * and logging the 'autoupdate' activity row) IS covered below now, via the
+ * same "write a real throwaway maintain.class.php declaring a
+ * `{$id}_maintain` class" convention ExtensionLifecycleTest's own
+ * writePluginMaintainFile()/buildPluginMaintain() tests already established
+ * for the sibling ExtensionLifecycle::buildPluginMaintain() -- PluginLoader
+ * ships an independent copy of that same dynamic-class-load-and-check
+ * pattern, not a delegation to it. Kernel::boot()/Kernel::reset() are only
+ * needed for those tests (autoupdatePlugin() reaches
+ * Bootstrap\ExtendedDomainAccessor::activityService(), which is
+ * container-resolved) but are booted/reset for the whole class here,
+ * matching UploadServiceTest/CategoryAdminServiceTest's own "boot once in
+ * setUp() against the real CurrentPaths root, override CurrentPaths per
+ * test afterward" convention -- harmless for the plugins-disabled/
+ * missing-file/no-version-header tests below, which never reach that call.
  */
 final class PluginLoaderTest extends IntegrationTestCase
 {
@@ -42,13 +61,26 @@ final class PluginLoaderTest extends IntegrationTestCase
         CurrentConfig::reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
+
+        // See this class's own docblock -- booted here (against the real
+        // CurrentPaths root parent::setUp() already established) so the
+        // autoupdate tests below can reach ExtendedDomainAccessor::
+        // activityService(); a later CurrentPaths::set() override for the
+        // throwaway plugins root doesn't invalidate the already-built
+        // container.
+        Kernel::boot();
     }
 
     #[\Override]
     protected function tearDown(): void
     {
         DbConnection::build()->executeStatement('DELETE FROM ' . Tables::plugins());
+        DbConnection::build()->executeStatement(
+            'DELETE FROM ' . Tables::activity() . ' WHERE object = ? AND object_id = ? AND action = ?',
+            ['system', ActivitySystem::Plugin, 'autoupdate']
+        );
         CurrentPaths::reset();
+        Kernel::reset();
         parent::tearDown();
     }
 
@@ -58,6 +90,40 @@ final class PluginLoaderTest extends IntegrationTestCase
         static $marker = null;
 
         return $marker ??= sys_get_temp_dir() . '/piwigo-plugin-loader-test-' . bin2hex(random_bytes(8));
+    }
+
+    /**
+     * Writes a real plugins/<id>/main.inc.php whose "/* ... Version: X *\/"
+     * header sits on line 3 (well within autoupdatePlugin()'s own "lines 2
+     * to 10" fgets() window) -- the shape its regex
+     * `/Version:\s*([\w.-]+)/` genuinely matches, unlike the sibling
+     * test_load_plugins_loads_an_active_plugin_with_a_real_main_inc_php's
+     * own header-less main.inc.php above (which deliberately keeps
+     * autoupdatePlugin()'s "filesystem version is newer" body unreached).
+     */
+    private function writeVersionedPluginMainFile(string $root, string $id, string $version): void
+    {
+        $pluginDir = $root . 'plugins/' . $id;
+        mkdir($pluginDir, 0o777, true);
+        file_put_contents($pluginDir . '/main.inc.php', "<?php\n/*\nVersion: {$version}\n*/\n");
+    }
+
+    /**
+     * Writes a real plugins/<id>/maintain.class.php declaring a
+     * global-namespace `{$id}_maintain` class (hyphens folded to '_',
+     * matching autoupdatePlugin()'s own str_replace) -- same convention as
+     * ExtensionLifecycleTest::writePluginMaintainFile(), a separate local
+     * copy since that one is private to ExtensionLifecycleTest.
+     */
+    private function writePluginMaintainClass(string $root, string $id, bool $extendsBase, string $body = ''): void
+    {
+        $pluginDir = $root . 'plugins/' . $id;
+        $classname = str_replace('-', '_', $id . '_maintain');
+        $extends = $extendsBase ? ' extends \\Piwigo\\Admin\\PluginMaintain' : '';
+        file_put_contents(
+            $pluginDir . '/maintain.class.php',
+            "<?php\nclass {$classname}{$extends}\n{\n{$body}\n}\n"
+        );
     }
 
     public function test_load_plugins_stays_empty_and_skips_the_db_query_when_plugins_are_disabled(): void
@@ -125,5 +191,119 @@ final class PluginLoaderTest extends IntegrationTestCase
         PluginLoader::loadPlugins();
 
         expect(LoadedPlugins::get())->toBe([]);
+    }
+
+    // ---------------------------------------- autoupdatePlugin(), real update
+
+    public function test_autoupdate_plugin_runs_the_real_maintain_update_persists_the_new_version_and_logs_activity(): void
+    {
+        $id = 'pl-autoupdate-' . bin2hex(random_bytes(4));
+        $root = $this->pluginLoaderTestMarker() . '/autoupdate-ok/';
+        $this->writeVersionedPluginMainFile($root, $id, '2.0');
+        // update()'s real body pushes a message through the by-reference
+        // $errors param -- proves autoupdatePlugin() actually round-trips
+        // PageState::current()->errors into the call and the mutated array
+        // back out (not just that the call happens without erroring).
+        $this->writePluginMaintainClass($root, $id, extendsBase: true, body: <<<'PHP'
+    public function update($old_version, $new_version, &$errors = [])
+    {
+        $errors[] = "updated from {$old_version} to {$new_version}";
+    }
+PHP);
+        CurrentPaths::set(Paths::fromRoot($root));
+        CurrentConfig::setEnablePlugins(true);
+
+        DbConnection::build()->executeStatement(
+            "INSERT INTO " . Tables::plugins() . " (id, state, version) VALUES (?, 'active', '1.0')",
+            [$id]
+        );
+
+        PluginLoader::loadPlugins();
+
+        expect(PageState::current()->errors)->toBe(['updated from 1.0 to 2.0']);
+        expect(LoadedPlugins::get()[$id]['version'])->toBe('2.0');
+
+        $storedVersion = DbConnection::build()->fetchOne(
+            'SELECT version FROM ' . Tables::plugins() . ' WHERE id = ?',
+            [$id]
+        );
+        expect($storedVersion)->toBe('2.0');
+
+        $row = DbConnection::build()->fetchAssociative(
+            'SELECT object_id, details FROM ' . Tables::activity()
+            . " WHERE object = 'system' AND action = 'autoupdate' ORDER BY activity_id DESC LIMIT 1"
+        );
+        self::assertIsArray($row);
+        self::assertIsString($row['details']);
+        expect($row['object_id'])->toBe(ActivitySystem::Plugin);
+        expect(json_decode($row['details'], true))->toBe([
+            'plugin_id' => $id,
+            'from_version' => '1.0',
+            'to_version' => '2.0',
+        ]);
+    }
+
+    public function test_autoupdate_plugin_throws_when_the_maintain_class_does_not_extend_plugin_maintain(): void
+    {
+        // Same "does not extend" contract ExtensionLifecycleTest's own
+        // test_build_plugin_maintain_throws_when_the_class_php_class_does_not_extend_plugin_maintain()
+        // already proves for the sibling ExtensionLifecycle::
+        // buildPluginMaintain() -- exercised here through
+        // PluginLoader::autoupdatePlugin()'s own separate implementation of
+        // the same dynamic-class-load-and-check pattern.
+        $id = 'pl-badmaintain-' . bin2hex(random_bytes(4));
+        $root = $this->pluginLoaderTestMarker() . '/autoupdate-bad-maintain/';
+        $this->writeVersionedPluginMainFile($root, $id, '2.0');
+        $this->writePluginMaintainClass($root, $id, extendsBase: false);
+        $classname = str_replace('-', '_', $id . '_maintain');
+        CurrentPaths::set(Paths::fromRoot($root));
+        CurrentConfig::setEnablePlugins(true);
+
+        DbConnection::build()->executeStatement(
+            "INSERT INTO " . Tables::plugins() . " (id, state, version) VALUES (?, 'active', '1.0')",
+            [$id]
+        );
+
+        $this->expectException(\LogicException::class);
+        $this->expectExceptionMessage("PluginLoader::autoupdatePlugin(): {$classname} does not extend PluginMaintain");
+
+        PluginLoader::loadPlugins();
+    }
+
+    public function test_autoupdate_plugin_skips_the_db_and_activity_write_for_an_auto_to_auto_update(): void
+    {
+        // Bonus behavioral lock-in for the exact quirk autoupdatePlugin()'s
+        // own comment documents ("avoid registering an 'auto' to 'auto'
+        // update, which happens for each 'version=auto' plugin on each
+        // page load") -- not one of the specifically-uncovered lines this
+        // suite closes above (the guard at that line executes either way),
+        // but it's the one real scenario where $new_version === $old_version
+        // and the DB/activity write is skipped, so it's worth locking in
+        // directly rather than only via the differing-version case above.
+        $id = 'pl-autoauto-' . bin2hex(random_bytes(4));
+        $root = $this->pluginLoaderTestMarker() . '/autoupdate-auto-to-auto/';
+        $this->writeVersionedPluginMainFile($root, $id, 'auto');
+        CurrentPaths::set(Paths::fromRoot($root));
+        CurrentConfig::setEnablePlugins(true);
+
+        DbConnection::build()->executeStatement(
+            "INSERT INTO " . Tables::plugins() . " (id, state, version) VALUES (?, 'active', 'auto')",
+            [$id]
+        );
+
+        PluginLoader::loadPlugins();
+
+        $storedVersion = DbConnection::build()->fetchOne(
+            'SELECT version FROM ' . Tables::plugins() . ' WHERE id = ?',
+            [$id]
+        );
+        expect($storedVersion)->toBe('auto');
+
+        $activityCount = DbConnection::build()->fetchOne(
+            'SELECT COUNT(*) FROM ' . Tables::activity()
+            . " WHERE object = 'system' AND action = 'autoupdate' AND details LIKE ?",
+            ['%' . $id . '%']
+        );
+        expect(is_numeric($activityCount) ? (int) $activityCount : -1)->toBe(0);
     }
 }

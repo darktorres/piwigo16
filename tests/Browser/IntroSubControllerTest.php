@@ -352,3 +352,341 @@ it('shows the latest Piwigo news message from a pre-seeded, still-fresh on-disk 
         H::restoreConfig($snapshot);
     }
 });
+
+/**
+ * Bulk-inserts $count throwaway image rows in one round trip (a 5-column,
+ * 10-value-each cross join generates up to 100000 distinct integers 0..99999
+ * in a single INSERT ... SELECT) -- a 100000-row multi-VALUES literal would
+ * be unwieldy and a 100000-iteration PHP loop would be one round trip per
+ * row. None of these rows are linked into image_category, so every one of
+ * them is also a genuine orphan.
+ */
+function introBulkInsertImages(int $count, string $marker): void
+{
+    $db = introDbConnect();
+    $prefix = introDbPrefix();
+    $escapedMarker = $db->real_escape_string($marker);
+    $db->query(sprintf(
+        "INSERT INTO %simages (file, path, hit, level)
+         SELECT CONCAT('%s', n, '.jpg'), CONCAT('%s', n, '.jpg'), 0, 0
+         FROM (
+           SELECT (a.N + b.N*10 + c.N*100 + d.N*1000 + e.N*10000) AS n
+           FROM (SELECT 0 N UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) a
+           , (SELECT 0 N UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) b
+           , (SELECT 0 N UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) c
+           , (SELECT 0 N UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) d
+           , (SELECT 0 N UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) e
+         ) nums
+         WHERE n < %d",
+        $prefix,
+        $escapedMarker,
+        $escapedMarker,
+        $count
+    ));
+    $db->close();
+}
+
+function introDeleteMarkedImages(string $marker): void
+{
+    $db = introDbConnect();
+    $db->query(sprintf(
+        "DELETE FROM %simages WHERE file LIKE '%s%%'",
+        introDbPrefix(),
+        $db->real_escape_string($marker)
+    ));
+    $db->close();
+}
+
+it('forces a real orphan recount via ImageService::countOrphans() once the gallery is "big" (>= 100000 photos)', function (): void {
+    // AdminShell.php's own bootstrap-time orphan count only calls
+    // countOrphans() "if the number of images is not huge" (< 100000) --
+    // once nb_photos_total reaches 100000, it leaves PageState::nbOrphans
+    // at its 0 default ("but has not been calculated on a big gallery, so
+    // force it now" -- this class's own comment on the branch under test).
+    // The ONLY way this page can show a nonzero orphan count under a big
+    // gallery is IntroSubController::handle()'s own forced recompute, so a
+    // real "Orphans" banner here is a genuine, differential proof that
+    // branch ran -- not just that *some* orphan count happened to be
+    // nonzero already.
+    $page = H::loginAsAdmin($this);
+    $snapshot = H::snapshotConfig(['count_orphans']);
+    $marker = 'ct_intro_bignb_' . uniqid() . '_';
+
+    $db = introDbConnect();
+    $countRow = H::fetchAssocOrFail($db, 'SELECT COUNT(*) AS c FROM ' . introDbPrefix() . 'images');
+    $db->close();
+    $needed = max(1, 100000 - (int) $countRow['c']);
+
+    introBulkInsertImages($needed, $marker);
+
+    try {
+        H::setConfigValue('count_orphans', null);
+
+        $page = H::navigateOk($page, '/admin.php');
+        $page->assertNoJavaScriptErrors();
+        $page->assertSee('Orphans');
+    } finally {
+        introDeleteMarkedImages($marker);
+        H::restoreConfig($snapshot);
+    }
+});
+
+it('drops the storage-used decimal display once total disk usage exceeds 100GB', function (): void {
+    // images.filesize/image_format.filesize are both `mediumint unsigned`
+    // (max 16,777,215 KB, ~16GB) -- crossing the 100GB threshold this
+    // branch checks for needs several max-sized rows, not one huge one.
+    $page = H::loginAsAdmin($this);
+    $db = introDbConnect();
+    $prefix = introDbPrefix();
+    $marker = 'ct_intro_bigsize_' . uniqid();
+
+    for ($i = 0; $i < 7; $i++) {
+        $db->query(sprintf(
+            "INSERT INTO %simages (file, path, hit, level, filesize) VALUES ('%s_%d.jpg', '%s_%d.jpg', 0, 0, 16777215)",
+            $prefix,
+            $marker,
+            $i,
+            $marker,
+            $i
+        ));
+    }
+
+    $totalRow = H::fetchAssocOrFail($db, sprintf(
+        'SELECT (SELECT COALESCE(SUM(filesize),0) FROM %simages) + (SELECT COALESCE(SUM(filesize),0) FROM %simage_format) AS total_kb',
+        $prefix,
+        $prefix
+    ));
+    $db->close();
+
+    $totalKb = (float) $totalRow['total_kb'];
+    $expectedGb = $totalKb / (1024.0 * 1024.0);
+    expect($expectedGb)->toBeGreaterThan(100.0);
+    // InstallationStats::getGeneralStatistics()'s disk_usage feeds the exact
+    // same du_gb = disk_usage / (1024*1024) computation this asserts
+    // against, so number_format() here with decimals forced to 0 must match
+    // the rendered STORAGE_USED text byte-for-byte if (and only if) the
+    // `$du_gb > 100` branch really set $du_decimals = 0.
+    $expectedText = number_format($expectedGb, 0) . '&nbsp;GB';
+
+    try {
+        $page = H::navigateOk($page, '/admin.php');
+        $page->assertNoJavaScriptErrors();
+
+        $html = H::rawWebpage($page)->content();
+        expect($html)->toContain($expectedText);
+    } finally {
+        introDeleteMarkedImages($marker);
+    }
+});
+
+function introSetUserColumn(int $userId, string $column, ?string $value): void
+{
+    $db = introDbConnect();
+    $prefix = introDbPrefix();
+    if ($value === null) {
+        $db->query(sprintf('UPDATE %suser_infos SET %s = NULL WHERE user_id = %d', $prefix, $column, $userId));
+        $db->close();
+
+        return;
+    }
+    $stmt = $db->prepare(sprintf('UPDATE %suser_infos SET %s = ? WHERE user_id = ?', $prefix, $column));
+    if (! $stmt instanceof mysqli_stmt) {
+        throw new RuntimeException('mysqli::prepare() failed for introSetUserColumn()');
+    }
+    $stmt->bind_param('si', $value, $userId);
+    $stmt->execute();
+    $db->close();
+}
+
+it('shows the newsletter subscription promo panel for an account old enough with enough albums and photos', function (): void {
+    // The fixture's own registration_date is stamped to the frozen test
+    // "now" at build time (see RegenerateFixtureTest.php), so the "account
+    // must be 2+ weeks old" half of this branch's condition needs a real,
+    // deliberately-backdated row -- nb_cats/nb_images are already well over
+    // the 3/30 thresholds from the regenerated fixture itself (152
+    // categories, 131 photos), so only the date and the per-admin
+    // 'show_newsletter_subscription' preference (persistently flipped to
+    // false by this same file's own "hides the newsletter subscription
+    // banner" test, with no cleanup of its own) need forcing here.
+    $page = H::loginAsAdmin($this);
+    $db = introDbConnect();
+    $prefix = introDbPrefix();
+
+    $originalRegistration = H::fetchAssocOrFail($db, "SELECT registration_date FROM {$prefix}user_infos WHERE user_id = 1")['registration_date'];
+    $originalPreferences = H::fetchAssocOrFail($db, "SELECT preferences FROM {$prefix}user_infos WHERE user_id = 1")['preferences'];
+    $configSnapshot = H::snapshotConfig(['show_newsletter_subscription']);
+
+    $db->query("UPDATE {$prefix}user_infos SET registration_date = '2020-01-01 00:00:00' WHERE user_id = 1");
+    $db->query("UPDATE {$prefix}user_infos SET preferences = JSON_SET(COALESCE(preferences, JSON_OBJECT()), '\$.show_newsletter_subscription', TRUE) WHERE user_id = 1");
+    $db->close();
+
+    try {
+        H::setConfigValue('show_newsletter_subscription', 'true');
+
+        $page = H::navigateOk($page, '/admin.php');
+        $page->assertNoJavaScriptErrors();
+
+        $html = H::rawWebpage($page)->content();
+        expect($html)->toContain('class="promote-newsletter"');
+        expect($html)->toContain('value="fixture_admin@example.test"');
+        // AdminUiHelper::getOldNewslettersBaseUrl() -- AppInfo::URL (the
+        // fork-safe, RFC 2606 `.invalid` PEM-domain stand-in) + '/newsletter'.
+        expect($html)->toContain('href="https://upstream.example.invalid/newsletter"');
+    } finally {
+        $originalRegistrationStr = is_string($originalRegistration) ? $originalRegistration : '2026-08-01 00:00:00';
+        introSetUserColumn(1, 'registration_date', $originalRegistrationStr);
+        introSetUserColumn(1, 'preferences', is_string($originalPreferences) ? $originalPreferences : null);
+        H::restoreConfig($configSnapshot);
+    }
+});
+
+// NOT exercised, deliberately: IntroSubController::handle()'s activity-chart
+// "split days into circle sizes" while-loop (`$max_idx =
+// array_search(max($diff_x), $diff_x, true); if ($max_idx === false) {
+// break; }`) is a pure PHPStan by-ref/array_search-may-return-false
+// narrowing guard, not real, reachable behavior: $diff_x only ever holds
+// values built earlier in the SAME request from the SAME array (never
+// re-fetched, never mutated by anything else concurrently), so
+// max($diff_x) always returns one of $diff_x's own elements verbatim (same
+// value, same type, whether still a float ratio or an already-replaced int
+// -1 marker) -- a strict-mode array_search() for a value drawn from the
+// very array being searched cannot legitimately return false. Confirmed by
+// reading every assignment into $diff_x (IntroSubController.php ~372-392):
+// no path ever produces a value that isn't already present in the array
+// being searched. The `$split++`/`$split = 0` lines around it are real and
+// already covered by this file's own "smooths the activity chart into size
+// groups" test above (a real >120% jump), so only this one `break` is left
+// uncovered.
+
+it('skips malformed cached activity-week/day entries from a stale-but-still-"fresh" session without a fatal or warning', function (): void {
+    // $_SESSION['cache_activity_last_weeks'] is DB-backed (PwgSession /
+    // SessionService -- see Piwigo\Session\SessionRepository), keyed by the
+    // exact same value PHP's own session cookie carries, so a real
+    // malformed cache entry is reachable by writing directly into that row
+    // -- no mock of IntroSubController itself, just genuine session-store
+    // corruption (a real-world scenario: a stale row surviving a schema
+    // change, or a half-written value from a crashed request). A raw curl
+    // login (not the Playwright-driven H::loginAsAdmin(), which exposes no
+    // cookie-jar/session-id access) mirrors this file's own
+    // CatListPageRendererTest.php-style cookie-jar precedent.
+    $cookieJar = tempnam(sys_get_temp_dir(), 'pwg_intro_session_');
+    if ($cookieJar === false) {
+        throw new RuntimeException('tempnam failed');
+    }
+
+    $curl = static function (string $url, array $fields = []) use ($cookieJar): string {
+        $ch = curl_init($url);
+        if ($ch === false) {
+            throw new RuntimeException('curl_init failed');
+        }
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
+        curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, H::testHeaders());
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        if ($fields !== []) {
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($fields));
+        }
+        $response = curl_exec($ch);
+        if (! is_string($response)) {
+            throw new RuntimeException("curl to {$url} did not return a string response");
+        }
+
+        return $response;
+    };
+
+    try {
+        $curl(H::baseUrl() . '/identification.php');
+        $curl(H::baseUrl() . '/identification.php', [
+            'username' => H::ADMIN_USER,
+            'password' => H::ADMIN_PASS,
+            'login' => 'Login',
+        ]);
+
+        $jarContents = file_get_contents($cookieJar);
+        if ($jarContents === false || preg_match('/pwg_id\t([^\s]+)/', $jarContents, $m) !== 1) {
+            throw new RuntimeException('Could not find the pwg_id session cookie in the cookie jar: ' . var_export($jarContents, true));
+        }
+        $sessionSuffix = $m[1];
+
+        $db = introDbConnect();
+        $prefix = introDbPrefix();
+        $sessionId = null;
+        $result = $db->query("SELECT id FROM {$prefix}sessions");
+        if ($result instanceof mysqli_result) {
+            while (is_array($row = $result->fetch_assoc())) {
+                $candidate = (string) $row['id'];
+                if (str_ends_with($candidate, $sessionSuffix)) {
+                    $sessionId = $candidate;
+                    break;
+                }
+            }
+        }
+        if ($sessionId === null) {
+            $db->close();
+
+            throw new RuntimeException('Could not find the DB-backed session row for cookie suffix: ' . $sessionSuffix);
+        }
+
+        // Frozen "now" (see Piwigo\Core\Env::now()) -- must match what the
+        // live server considers fresh, not this test process's own real
+        // wall-clock time, or the >300s staleness check would trigger a
+        // real recompute instead of reading this malformed cache back.
+        $frozenNow = getenv('PIWIGO_TEST_NOW');
+        $frozenNow = $frozenNow !== false && $frozenNow !== '' ? $frozenNow : '2026-08-01T00:00:00';
+
+        // PHP's "php" session serialize handler format is bare
+        // `name|value` pairs concatenated with NO separator between them
+        // (serialize()'s own output for a scalar already ends in `;`, and
+        // for an array/object already ends in `}}` -- appending an extra
+        // trailing `;` after serialize()'s own array output corrupts the
+        // WHOLE session parse, silently wiping pwg_uid too, confirmed live
+        // via session_decode() while building this test).
+        $malformedValue = serialize([
+            'calculated_on' => strtotime($frozenNow),
+            'data' => [
+                // A non-array $i -- hits `if (! is_array($i)) { continue; }`.
+                0 => 'ct_intro_week_not_an_array',
+                // An array $i whose own $j is non-array -- hits the inner
+                // `if (! is_array($j)) { continue; }`.
+                1 => [
+                    0 => 'ct_intro_day_not_an_array',
+                ],
+            ],
+        ]);
+        $fragment = 'cache_activity_last_weeks|' . $malformedValue;
+
+        $stmt = $db->prepare("UPDATE {$prefix}sessions SET data = CONCAT(data, ?) WHERE id = ?");
+        if (! $stmt instanceof mysqli_stmt) {
+            throw new RuntimeException('mysqli::prepare() failed for the session-corruption UPDATE');
+        }
+        $stmt->bind_param('ss', $fragment, $sessionId);
+        $stmt->execute();
+        $db->close();
+
+        $html = $curl(H::baseUrl() . '/admin.php');
+
+        foreach ([
+            'Fatal error'       => '/Fatal error/i',
+            'Parse error'       => '/Parse error/i',
+            'Warning:'          => '/\bWarning:\s/',
+            'Notice:'           => '/\bNotice:\s/',
+            'Deprecated:'       => '/\bDeprecated:\s/',
+            'Strict Standards:' => '/\bStrict Standards:\s/',
+            'Stack trace:'      => '/Stack trace:/',
+            'Uncaught'          => '/\bUncaught\s/',
+        ] as $name => $pattern) {
+            expect(preg_match($pattern, $html))->toBe(0, "Server error marker '{$name}' found in the admin.php response");
+        }
+        expect($html)->toContain('Piwigo Administration');
+        // Both malformed entries were skipped via `continue` rather than
+        // processed, so $activity_last_weeks ends up entirely empty -- no
+        // real per-day activity count is ever rendered (contrast with this
+        // file's own "smooths the activity chart..." test, which asserts
+        // these exact patterns ARE present for genuine, well-formed data).
+        expect(preg_match('/\d+ Activit(y|ies)/', $html))->toBe(0);
+    } finally {
+        @unlink($cookieJar);
+    }
+});

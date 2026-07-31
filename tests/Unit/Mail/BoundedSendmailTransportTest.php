@@ -148,6 +148,28 @@ test('doSend throws a TransportException (not an unbounded hang) when sendmail e
     expect($elapsedSeconds)->toBeLessThan(4.0);
 });
 
+test('doSend throws a TransportException (via the non-timeout ProcessExceptionInterface branch) when sendmail is killed by a signal instead of exiting normally', function (): void {
+    // Process::wait() throws Symfony\Component\Process\Exception\
+    // ProcessSignaledException -- a RuntimeException that implements
+    // ExceptionInterface but is NOT a ProcessTimedOutException -- when the
+    // child is terminated by an uncaught signal rather than exiting.
+    // doSend()'s own second catch(ProcessExceptionInterface) block (as
+    // opposed to the first catch(ProcessTimedOutException) block the
+    // "exceeds the configured timeout" test above already covers) exists
+    // for exactly this kind of failure: a real MTA process crashing/
+    // getting killed mid-send, not just running too long. `kill -9 $$`
+    // inside the fake script deterministically reproduces that without any
+    // OS resource-limit trickery (confirmed via a standalone probe script).
+    $script = fakeSendmailScript("cat > /dev/null\nkill -9 \$\$\n");
+
+    $transport = new BoundedSendmailTransport($script, 5.0);
+
+    expect(static fn () => $transport->send(testEmail()))
+        ->toThrow(TransportException::class, 'Sendmail process could not be started');
+
+    cleanupFakeSendmail([$script]);
+});
+
 test('doSend throws a TransportException when sendmail exits non-zero', function (): void {
     [$script, $argvFile, $stdinFile] = fakeSendmailCapturing(exitCode: 1);
 

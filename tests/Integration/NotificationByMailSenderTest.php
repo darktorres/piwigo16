@@ -62,6 +62,16 @@ use Piwigo\Notification\Projection\UserMailNotification;
  * reachable mail transport -- no test anywhere in this codebase attempts
  * that (confirmed via a full-repo grep), by the same established design
  * this class's own docblock already documents for the failure trick.
+ *
+ * Re-confirmed during the "domain-longtail" coverage-gap batch (2026-07-30):
+ * both call sites construct `new MailService()` directly (no injectable
+ * mailer, unlike MailService::mailGroup()'s own recipient-repo seam), so
+ * there is no substitution point to force `mail()` to return true short of
+ * standing up a real SMTP listener -- out of scope for this batch, same
+ * conclusion as above. The 5 lines this leaves uncovered
+ * (NotificationByMailSender.php: 395, 659, 661, 662, 663) are exactly
+ * incMailSentSuccess()'s 2 call sites plus sendMailNotifications()'s own
+ * `$datas[] = [...]` success-branch append.
  */
 final class NotificationByMailSenderTest extends IntegrationTestCase
 {

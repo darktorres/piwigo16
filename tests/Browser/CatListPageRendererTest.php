@@ -12,6 +12,14 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * Not exercised: the `! is_string($uppercats)` defensive `continue` in the
  * sub-album-count loop (categories.uppercats is a real `NOT NULL DEFAULT
  * ''` column, so a genuine row's value is always a string).
+ *
+ * render()'s own 3 bare `$categories = []`/`$categories_with_images = []`
+ * literal-array-assignment lines (~L69/177/183) execute on every single
+ * request this file makes (they sit unconditionally ahead of the first
+ * real branch) -- if a coverage tool still reports them as uncovered, that's
+ * the documented OPcache constant-array-folding artifact (pure-literal
+ * arrays report 0%-covered regardless of real execution), not a genuine
+ * gap; no test change can move that.
  */
 function catListPageDbPrefix(): string
 {

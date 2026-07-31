@@ -27,12 +27,53 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 
 /**
- * Only exercises the guard-condition-false and nb_photos>0 branches --
- * the nb_photos===0 branch calls exit(), unsafe to invoke from a test
- * process (same "don't stub/exercise what would kill the test" reasoning
- * as fatal_error() elsewhere in this suite). The real fixture already
- * has 5 images, so the guard-passing path here naturally never reaches
- * that branch.
+ * Exercises the guard-condition-false branch, the nb_photos>0 branch, and
+ * (via the transaction+rollback trick documented above the 2 tests near
+ * the bottom of this file) the nb_photos===0 branch's 'browse'/'deactivate'
+ * GET-param sub-branches, both of which redirect via the catchable
+ * RedirectServiceInterface::redirect() before reaching real terminal
+ * behavior. The nb_photos===0 branch's remaining "neither browse nor
+ * deactivate" sub-branch (NoPhotoYetRenderer.php's own real body, roughly
+ * lines 76-111: the header()/set_filenames() calls, both isAdmin()
+ * template->assign() arms, the loc_end_no_photo_yet EventDispatcher
+ * notify, and finally $template->pparse() + a bare exit()) stays
+ * genuinely untested from here, for 2 independent reasons:
+ *
+ *  1. That exit() is a real, uncatchable process termination -- unlike
+ *     redirect(), it isn't routed through anything interceptable (see
+ *     NoPhotoYetRenderer's own class docblock), and $template->pparse()
+ *     against the real themes/default/template/no_photo_yet.tpl (which
+ *     does exist in this repo) has no reason to throw first, so calling
+ *     render() this way from this shared PHPUnit/Pest CLI process would
+ *     kill the whole process mid-suite -- same "don't stub/exercise what
+ *     would kill the test" reasoning as fatal_error() elsewhere in this
+ *     suite. No runkit/uopz extension is installed here to stub exit()
+ *     itself either (see Unit/Core/ErrorCollectorTest.php's own docblock
+ *     for the same constraint applied to headers_sent()).
+ *
+ *  2. Reaching it at all requires NoPhotoYetRepository::countAllImages()
+ *     (an unfiltered `SELECT COUNT(*) FROM images`) to observe zero rows
+ *     for a REAL request against the live Apache-served app -- which
+ *     rules out the same connection-local transaction+rollback trick the
+ *     2 tests below use for the 'browse'/'deactivate' sub-branches,
+ *     since Apache's own DB connection is a separate connection that
+ *     never sees this test's uncommitted work. The only way to make it
+ *     see zero rows for real is to actually empty the shared `images`
+ *     table (committed, not just uncommitted) for the duration of a live
+ *     HTTP request, then restore it -- but that table is cascade-linked
+ *     (ON DELETE CASCADE/SET NULL) from image_category, image_tag,
+ *     image_format, comments, favorites, caddie, lounge, rate,
+ *     categories.representative_picture_id and history.image_id, is
+ *     shared with every other Browser test file in the same suite run,
+ *     and (confirmed live) already holds far more rows than the
+ *     committed 5-image fixture ships. A byte-exact restore across that
+ *     many FK-linked tables is not something this pass can safely author
+ *     AND verify (verifying it would mean actually running it against
+ *     that same shared table), so it's deliberately left undone here
+ *     rather than risked -- see this repo's project-wide "extensive
+ *     passes, not narrow ones" / adversarial-validation discipline,
+ *     which cuts the other way once verification itself is the
+ *     unsafe step.
  */
 final class NoPhotoYetRendererTest extends IntegrationTestCase
 {
@@ -156,9 +197,12 @@ final class NoPhotoYetRendererTest extends IntegrationTestCase
     // which (per RedirectService's own docblock) throws the catchable
     // Piwigo\Http\ResponseReadyException instead of a real exit(), same
     // established pattern as MaintenanceActionDispatcherTest. The
-    // remaining "neither browse nor deactivate" sub-branch still ends in
-    // a real, uncatchable exit() after $template->pparse() and stays
-    // untested, same reasoning as this class's own docblock above.
+    // remaining "neither browse nor deactivate" sub-branch (roughly
+    // NoPhotoYetRenderer.php lines 76-111) still ends in a real,
+    // uncatchable exit() after $template->pparse() and stays untested --
+    // see this class's own docblock above for the full reasoning (both
+    // the uncatchable-exit() half and the separate "would require
+    // destructively emptying the shared images table" half).
 
     public function test_render_sets_the_browse_session_flag_and_redirects_when_the_gallery_is_empty(): void
     {

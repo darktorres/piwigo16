@@ -78,15 +78,20 @@ final class CategoryCatsRendererFakeActivityLogger implements ActivityLoggerInte
  * group_access grants groups 1/2/3 -> category 1, group 1 -> category 2.
  *
  * render()'s "category was deleted between the rollup and the full-row
- * fetch a moment later" `continue` branch is left uncovered -- confirmed
- * untestable without a production refactor, same shape as
- * CategoryTreeCacheTest's own identical gap: CategoryRepository is `final`
- * with no interface seam, and render() constructs its own internal
- * CategoryTreeCache from this renderer's own injected (also `final`)
- * CategoryRepository/CategoryService, so there's no fake-able collaborator
- * to make the rollup query and findFullCategoriesByIds() disagree about
- * which categories exist. The real race window only exists between two
- * sequential, non-transactional queries inside one synchronous PHP call.
+ * fetch a moment later" `continue` branch has no fake-able collaborator
+ * seam (CategoryRepository is `final`, and render() builds its own internal
+ * CategoryTreeCache from this renderer's own injected -- also `final` --
+ * CategoryRepository/CategoryService) -- but IS reachable another way: the
+ * rollup side ($tree) comes from CategoryTreeCache::getForUser(), backed by
+ * the same real, persistent CachePools::categoryTree() this file already
+ * manipulates directly for its own repr_* assertions above. Priming that
+ * cache with a real render() call, then deleting the category from the live
+ * DB *without* invalidating the cache, reproduces the exact race
+ * deterministically: the next render() call's $tree (a cache hit) still
+ * lists the now-gone category, but findFullCategoriesByIds() (always a live
+ * read) no longer finds it. See
+ * test_render_skips_a_category_present_in_a_stale_cached_tree_but_deleted_from_the_db()
+ * below.
  */
 final class CategoryCatsRendererTest extends IntegrationTestCase
 {
@@ -236,6 +241,53 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
 
             $html = $this->renderedCategoriesHtml();
             self::assertStringNotContainsString('Empty Recent Test', $html);
+        } finally {
+            $this->conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id = ' . $newId);
+        }
+    }
+
+    public function test_render_skips_a_category_present_in_a_stale_cached_tree_but_deleted_from_the_db(): void
+    {
+        $this->seedUser();
+
+        // A disposable root category with a real image, so it reaches
+        // count_images > 0 -- unlike createVirtualCategory()'s own
+        // zero-image "Empty Recent Test" sibling above (which never gets
+        // anywhere near findFullCategoriesByIds() at all).
+        $result = $this->categoryService->createVirtualCategory('Toctou Probe Album', new CategoryCatsRendererFakeActivityLogger());
+        $newIdRaw = $result['id'] ?? null;
+        self::assertTrue(is_numeric($newIdRaw));
+        $newId = (int) $newIdRaw;
+
+        $this->conn->executeStatement(
+            "INSERT INTO " . Tables::images() . " (file, path, date_available) VALUES ('toctou-probe.jpg', 'upload/toctou-probe.jpg', '2026-08-01 00:00:00')"
+        );
+        $newImageId = (int) $this->conn->lastInsertId();
+        $this->conn->executeStatement(
+            'INSERT INTO ' . Tables::imageCategory() . ' (image_id, category_id) VALUES (?, ?)',
+            [$newImageId, $newId]
+        );
+
+        try {
+            // Primes CachePools::categoryTree()'s per-user 'tree_*' entry
+            // (300s TTL, not cleared again until this test's own tearDown)
+            // with a snapshot that includes the new category.
+            $this->renderer->render('', null, 0);
+            self::assertStringContainsString('Toctou Probe Album', $this->renderedCategoriesHtml());
+
+            // Deleted from the live DB *without* touching the cache --
+            // simulates the real race: the next render() call's own $tree
+            // (a cache hit) still lists this category, but
+            // findFullCategoriesByIds() (always a live read) no longer
+            // finds it.
+            $this->conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id = ' . $newId);
+
+            // Must not throw/warn, and the real, still-existing category
+            // must still render normally around the now-vanished one.
+            $this->renderer->render('', null, 0);
+            $html = $this->renderedCategoriesHtml();
+            self::assertStringNotContainsString('Toctou Probe Album', $html);
+            self::assertStringContainsString('Sample Album', $html);
         } finally {
             $this->conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id = ' . $newId);
         }

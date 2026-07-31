@@ -16,6 +16,24 @@ use Piwigo\Db\Tables;
  * original_sum, pwg.images.add merges them and creates the photo. Distinct
  * from the newer addSimple/upload multipart flow covered in
  * WsUploadTest.php.
+ *
+ * Later addition: mergeChunks()'s own write-failure guard, addChunk()'s
+ * buffer-directory-creation guard, and addFile()'s 'high'-type/
+ * do_update=true branches (the latter two calling
+ * UploadService::addUploadedFile() with a non-null $id_image -- the
+ * "replace an existing photo's file" path WsImagesUploadGapsTest's own
+ * docblock once documented as a confirmed 500 in this environment; that
+ * was a real images.path double-root-path bug, since fixed in
+ * UploadService::addUploadedFile() -- see its own docblock -- so this path
+ * genuinely succeeds now).
+ *
+ * mergeChunks()'s *other* guard (is_file() still true right after its own
+ * unlink() call) is NOT chased here: upload/buffer is owned by www-data,
+ * not this test process, and unlink() only depends on the *directory's*
+ * write permission (which this process can't restrict without owning the
+ * directory or root) -- not on the target file's own permission bits, and
+ * the directory is world-writable with no sticky bit. No way to make
+ * unlink() fail there short of an actual disk/OS-level fault.
  */
 final class WsImagesChunkedUploadTest extends ContractTestCase
 {
@@ -162,7 +180,6 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
             self::assertNotFalse($ch);
 
             $cookieJar = $this->cookieJar();
-            assert($cookieJar !== '');
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_USERAGENT, self::USER_AGENT);
@@ -353,5 +370,187 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
 
         $bufferPath = dirname(__DIR__, 2) . '/upload/buffer/' . $md5sum . '-original';
         self::assertFileDoesNotExist($bufferPath);
+    }
+
+    /**
+     * Real, uncompressible-enough bytes to clear pwgImageInfos()'s
+     * floor(bytes/1024) KB rounding (see test_addFile_with_a_bigger_
+     * replacement_updates_the_original below) -- a plain solid-fill PNG
+     * compresses far too well to ever measure as more than 0KB.
+     */
+    private function biggerPngBytes(): string
+    {
+        $img = imagecreatetruecolor(64, 64);
+        self::assertNotFalse($img);
+        for ($y = 0; $y < 64; $y++) {
+            for ($x = 0; $x < 64; $x++) {
+                $color = imagecolorallocate($img, random_int(0, 255), random_int(0, 255), random_int(0, 255));
+                self::assertNotFalse($color);
+                imagesetpixel($img, $x, $y, $color);
+            }
+        }
+        ob_start();
+        imagepng($img);
+        $bytes = ob_get_clean();
+        self::assertGreaterThan(1024, strlen($bytes));
+
+        return $bytes;
+    }
+
+    // ----------------------------------------------------------- mergeChunks
+
+    public function test_add_with_a_stray_directory_shaped_like_a_chunk_skips_the_unlink_and_still_succeeds(): void
+    {
+        // mergeChunks()'s own `file_get_contents($chunk) === false` write-
+        // failure guard: its return value is never checked by either real
+        // caller (add()/addFile()), so a failing merge doesn't fail the WS
+        // call -- it just leaves that one "chunk" file on disk (its own
+        // unlink() is skipped by the guard's early return). A directory can
+        // never really collide with a chunk filename in production (only
+        // addChunk() ever names files this way, always as plain files) --
+        // this is only a vehicle to exercise the guard itself.
+        $sum = md5($this->pngBytes() . uniqid());
+
+        $chunk = $this->callWs('pwg.images.addChunk', [
+            'data' => self::TINY_PNG_B64, 'original_sum' => $sum, 'type' => 'file', 'position' => 0,
+        ]);
+        self::assertSame('ok', $chunk['stat']);
+
+        $bufferDir = dirname(__DIR__, 2) . '/upload/buffer/';
+        // Sorts after position 00000 above, so mergeChunks() processes the
+        // real chunk (which alone is already a complete, valid PNG) first.
+        $strayDir = $bufferDir . $sum . '-file-00001.block';
+        mkdir($strayDir);
+
+        try {
+            // The real photo-creation response is still 'ok' -- but this
+            // test environment's own strict-error-reporting layer promotes
+            // the underlying `file_get_contents(): ... Is a directory`
+            // NOTICE onto the real HTTP status line too (confirmed live:
+            // "HTTP/1.1 500 [merge_chunks] error while writting chunks for
+            // ..."), independent of and in addition to the JSON body's own
+            // 'ok' status -- callWsAllowingServerError() is needed here
+            // just to skip callWs()'s own `assertLessThan(500, $status)`
+            // guard, not because of a deliberately-returned PwgError (its
+            // usual rationale, see its own docblock).
+            $response = $this->callWsAllowingServerError('pwg.images.add', [
+                'original_sum' => $sum,
+                'check_uniqueness' => false,
+                'original_filename' => 'stray-dir-chunk-' . uniqid() . '.jpg',
+            ]);
+
+            self::assertSame('ok', $response['stat']);
+            $result = $response['result'];
+            self::assertIsArray($result);
+            $imageId = $result['image_id'];
+            self::assertIsNumeric($imageId);
+            $this->createdImageIds[] = (int) $imageId;
+
+            // The early return skips this chunk's own unlink() -- it's
+            // never cleaned up by mergeChunks() itself.
+            self::assertDirectoryExists($strayDir);
+        } finally {
+            rmdir($strayDir);
+        }
+    }
+
+    // -------------------------------------------------------------- addChunk
+
+    public function test_addChunk_buffer_directory_creation_failure_returns_error(): void
+    {
+        // FilesystemHelper::mkgetdir() only ever calls mkdir() when the
+        // target doesn't already exist as a directory -- upload/buffer is
+        // normally always present, and it's owned by www-data (not this
+        // test process), so its permissions can't be restricted from here.
+        // A plain *file* temporarily occupying that exact path makes
+        // mkdir() fail with EEXIST regardless of ownership, which is enough
+        // to reach the branch without root or www-data privileges.
+        $bufferDir = dirname(__DIR__, 2) . '/upload/buffer';
+        $backupDir = $bufferDir . '_test_backup_' . uniqid();
+
+        rename($bufferDir, $backupDir);
+        touch($bufferDir);
+
+        try {
+            $response = $this->callWsAllowingServerError('pwg.images.addChunk', [
+                'data' => self::TINY_PNG_B64,
+                'original_sum' => md5(uniqid()),
+                'type' => 'file',
+                'position' => 0,
+            ]);
+
+            self::assertSame('fail', $response['stat']);
+            self::assertSame(500, $response['err']);
+            self::assertSame('error during buffer directory creation', $response['message']);
+        } finally {
+            unlink($bufferDir);
+            rename($backupDir, $bufferDir);
+        }
+    }
+
+    // ---------------------------------------------------- addFile (continued)
+
+    public function test_addFile_high_type_always_replaces_the_original(): void
+    {
+        // Unlike 'file', the 'high' type never runs the do_update
+        // width/height/filesize comparison at all -- it unconditionally
+        // calls UploadService::addUploadedFile() with the existing
+        // image_id (the "replace an existing photo's file" path, see this
+        // file's own class docblock).
+        $md5sum = md5(uniqid());
+        $imageId = $this->insertThrowawayImage($md5sum);
+
+        $chunkResponse = $this->callWs('pwg.images.addChunk', [
+            'data' => base64_encode($this->biggerPngBytes()),
+            'original_sum' => $md5sum,
+            'type' => 'high',
+            'position' => 0,
+        ]);
+        self::assertSame('ok', $chunkResponse['stat']);
+
+        $response = $this->callWs('pwg.images.addFile', [
+            'image_id' => $imageId,
+            'type' => 'high',
+            'sum' => $md5sum,
+        ]);
+
+        self::assertSame('ok', $response['stat']);
+        self::assertNull($response['result']);
+    }
+
+    public function test_addFile_with_a_bigger_replacement_updates_the_original(): void
+    {
+        // Mirrors test_addFile_with_a_smaller_replacement_keeps_the_original
+        // above, but the replacement now wins the comparison -- do_update
+        // becomes true and addFile() proceeds to
+        // UploadService::addUploadedFile() (see this file's own class
+        // docblock about that path's previously-documented-broken status).
+        $md5sum = md5(uniqid());
+        $imageId = $this->insertThrowawayImage($md5sum);
+        // insertThrowawayImage()'s own fixed filesize (1000, i.e. ~1MB) is
+        // tuned for the "smaller" test above -- drop it low enough that
+        // even a modest real replacement clears it (do_update only needs
+        // *one* of width/height/filesize to grow).
+        $this->conn->executeStatement(
+            'UPDATE ' . Tables::images() . ' SET filesize = 0 WHERE id = ?',
+            [$imageId]
+        );
+
+        $chunkResponse = $this->callWs('pwg.images.addChunk', [
+            'data' => base64_encode($this->biggerPngBytes()),
+            'original_sum' => $md5sum,
+            'type' => 'file',
+            'position' => 0,
+        ]);
+        self::assertSame('ok', $chunkResponse['stat']);
+
+        $response = $this->callWs('pwg.images.addFile', [
+            'image_id' => $imageId,
+            'type' => 'file',
+            'sum' => $md5sum,
+        ]);
+
+        self::assertSame('ok', $response['stat']);
+        self::assertNull($response['result']);
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration {
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Cache\CachePools;
 use Piwigo\Calendar\CalendarBase;
 use Piwigo\Calendar\CalendarRenderer;
 use Piwigo\Config\ConfigLoader;
@@ -356,6 +357,52 @@ final class CalendarRendererTest extends IntegrationTestCase
         );
 
         self::assertSame([5, 4, 3, 2, 1], $result->items);
+    }
+
+    /**
+     * render()'s own categories-section cache_item lookup (only computed
+     * for section='categories', category=null, and an empty/'any'-only
+     * chronologyDate) is keyed on 'nav_' . user id . md5(date_field .
+     * order_by) -- forbidden_categories plays no part in that key. Fixture
+     * shape: piwigo_image_category puts images 1/2/3 in category 1 and
+     * images 4/5 in category 2 -- forbidding category 2 between the two
+     * calls below would make a genuine re-query return [3, 2, 1] instead of
+     * [5, 4, 3, 2, 1], so the second call only matching the first proves
+     * the cached list (is_array($cached_items) branch) was reused, not
+     * recomputed via a fresh findImageIds() call.
+     */
+    public function test_render_reuses_a_cached_categories_item_list_instead_of_re_querying(): void
+    {
+        CachePools::calendarNav()->clear();
+
+        $render = fn () => $this->makeRenderer()->render(
+            section: 'categories',
+            category: null,
+            items: [],
+            chronologyField: 'posted',
+            chronologyStyle: 'monthly',
+            chronologyView: CalendarBase::CAL_VIEW_LIST,
+            chronologyDate: [],
+            superOrderBy: false,
+        );
+
+        try {
+            $first = $render();
+            self::assertSame([5, 4, 3, 2, 1], $first->items);
+
+            CurrentUser::set(User::fromUserArray([
+                'id' => 1,
+                'forbidden_categories' => '2',
+                'level' => '0',
+                'image_access_type' => 'NOT IN',
+                'image_access_list' => '',
+            ]));
+
+            $second = $render();
+            self::assertSame($first->items, $second->items);
+        } finally {
+            CachePools::calendarNav()->clear();
+        }
     }
 
     /**

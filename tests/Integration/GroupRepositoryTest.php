@@ -213,6 +213,85 @@ final class GroupRepositoryTest extends IntegrationTestCase
         self::assertSame([1, 3], self::values($this->repo->findMemberUserIds(GroupId::from(1))));
     }
 
+    public function test_remove_all_memberships_for_users_deletes_every_membership_row_for_that_user_across_groups(): void
+    {
+        $groupA = $this->repo->insert('p18-test-' . bin2hex(random_bytes(4)), false);
+        $groupB = $this->repo->insert('p18-test-' . bin2hex(random_bytes(4)), false);
+        $this->repo->addMembers($groupA, [UserId::from(2)]);
+        $this->repo->addMembers($groupB, [UserId::from(2)]);
+
+        $this->repo->removeAllMembershipsForUsers([UserId::from(2)]);
+
+        self::assertSame([], $this->repo->findMemberUserIds($groupA));
+        self::assertSame([], $this->repo->findMemberUserIds($groupB));
+
+        $this->repo->delete([$groupA, $groupB]);
+    }
+
+    public function test_remove_all_memberships_for_users_with_an_empty_list_is_a_noop(): void
+    {
+        $this->repo->removeAllMembershipsForUsers([]);
+
+        self::assertSame([1, 3], self::values($this->repo->findMemberUserIds(GroupId::from(1))));
+    }
+
+    public function test_find_members_by_group_ids_returns_the_raw_user_id_group_id_pairs_for_the_given_groups(): void
+    {
+        $pairs = $this->repo->findMembersByGroupIds([1]);
+
+        $userIds = array_map(static fn (array $row): int => is_numeric($row['user_id']) ? (int) $row['user_id'] : 0, $pairs);
+        sort($userIds);
+        self::assertSame([1, 3], $userIds);
+    }
+
+    public function test_find_members_by_group_ids_returns_empty_for_an_empty_input(): void
+    {
+        self::assertSame([], $this->repo->findMembersByGroupIds([]));
+    }
+
+    public function test_find_memberships_for_user_ids_returns_the_raw_user_id_group_id_pairs_for_the_given_users(): void
+    {
+        $pairs = $this->repo->findMembershipsForUserIds([1]);
+
+        $groupIds = array_map(static fn (array $row): int => is_numeric($row['group_id']) ? (int) $row['group_id'] : 0, $pairs);
+        self::assertContains(1, $groupIds);
+    }
+
+    public function test_find_memberships_for_user_ids_returns_empty_for_an_empty_input(): void
+    {
+        self::assertSame([], $this->repo->findMembershipsForUserIds([]));
+    }
+
+    public function test_find_names_by_ids_returns_names_keyed_by_id(): void
+    {
+        $name = 'p18-test-' . bin2hex(random_bytes(4));
+        $groupId = $this->repo->insert($name, false);
+
+        $names = $this->repo->findNamesByIds([1, $groupId->value]);
+
+        self::assertSame('Editors', $names[1] ?? null);
+        self::assertSame($name, $names[$groupId->value] ?? null);
+
+        $this->repo->delete([$groupId]);
+    }
+
+    public function test_find_names_by_ids_returns_empty_for_an_empty_input(): void
+    {
+        self::assertSame([], $this->repo->findNamesByIds([]));
+    }
+
+    // findNamesByIds()'s own `! is_numeric($row['id']) || ! is_string($row['name'])`
+    // `continue` guard is not chased here -- same "id is a native-int
+    // NOT NULL AUTO_INCREMENT primary key, name is a native-string NOT
+    // NULL column" reasoning already documented for this file's sibling
+    // guards (`groups`.`id`/`groups`.`name`, tests/Fixtures/piwigo-17.0.sql),
+    // so it's unreachable through any real fetched row. Also
+    // GroupRepository::getAccessibleCategoryIdsForUser()'s own
+    // `! $row['catId'] instanceof CategoryId` `throw` (a couple hundred
+    // lines up) is already documented dead code right at its own call
+    // site -- a pure DQL-scalar-hydration narrowing guard PHPStan can't
+    // otherwise verify statically.
+
     public function test_delete_removes_groups_and_their_access_and_membership_rows(): void
     {
         $groupId = $this->repo->insert('p18-test-' . bin2hex(random_bytes(4)), false);

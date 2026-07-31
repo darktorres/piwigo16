@@ -196,6 +196,38 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
         ], $metadata[0]['lines']);
     }
 
+    public function test_render_translates_a_composite_exif_field_when_a_translation_exists_for_its_second_token(): void
+    {
+        CurrentConfig::setShowExif(true);
+        CurrentConfig::setShowIptc(false);
+        // 'COMPUTED;Height' is a real nested key exif_read_data() always
+        // populates, even with zero embedded EXIF tags (see the sibling
+        // test above). That test deliberately leaves 'exif_field_Height'
+        // untranslated (only 'exif_field_Artist', a *direct* field, gets
+        // one) to exercise the ';'-token arm's own Lang::has()-false
+        // sub-branch -- this one loads a translation for the composite
+        // field's own second token instead, reaching that same arm's
+        // Lang::has()-true sub-branch (distinct from the direct-field
+        // Lang::has()/Lang::t() pair a few lines above it in the source).
+        CurrentConfig::setShowExifFields(['COMPUTED;Height']);
+        Lang::loadArray(['exif_field_Height' => 'Hauteur']);
+
+        $relativePath = '_data/picture-metadata-renderer-test-scratch/exif-composite-translated.jpg';
+        file_put_contents(
+            dirname(__DIR__, 2) . '/' . $relativePath,
+            $this->makeJpegWithSegments($this->buildApp1ExifSegment([]))
+        );
+
+        $this->renderer->render($this->makePicture($relativePath));
+
+        $metadata = CurrentTemplate::get()->get_template_vars('metadata');
+        self::assertIsArray($metadata);
+        self::assertCount(1, $metadata);
+        self::assertIsArray($metadata[0]);
+        self::assertSame('EXIF Metadata', $metadata[0]['TITLE']);
+        self::assertSame(['Hauteur' => '6'], $metadata[0]['lines']);
+    }
+
     public function test_render_appends_nothing_for_exif_when_no_configured_field_matches(): void
     {
         CurrentConfig::setShowExif(true);

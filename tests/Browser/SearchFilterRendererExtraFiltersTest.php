@@ -66,6 +66,70 @@ function extraFiltersSettledContent(Webpage|PendingAwaitablePage|AwaitableWebpag
 }
 
 /**
+ * Inserts a `piwigo_search` row directly via raw SQL, bypassing
+ * SearchService::saveSearch()/the WS API entirely -- needed to construct
+ * `rules` shapes neither ever produces: a JSON object with no top-level
+ * "fields" key at all, or a per-field value that isn't the array shape
+ * every real writer (Ws\PwgImages::filteredSearchCreate()) always builds.
+ * SearchFilterRenderer::render()'s own defensive
+ * `!isset($mySearch['fields']) || !is_array($mySearch['fields'])` (and the
+ * per-field `! is_array($searchFields[x])`) re-narrowing only exists to
+ * guard against exactly this kind of malformed row, which no in-app code
+ * path can currently produce on its own. Returns the generated
+ * search_uuid (same `psk-YYYYMMDD-<10 chars>` shape
+ * SearchService::getAvailableSearchUuid() builds), navigable via
+ * `/index.php?/search/<uuid>` (confirmed URL shape, see
+ * SearchControllerTest.php's own docblock).
+ *
+ * @param array<string, mixed> $rules
+ */
+function extraFiltersInsertRawSearchRow(array $rules): string
+{
+    $db = new mysqli(
+        (string) getenv('PIWIGO_DB_HOST'),
+        (string) getenv('PIWIGO_DB_USER'),
+        (string) getenv('PIWIGO_DB_PASSWORD'),
+        (string) getenv('PIWIGO_DB_BASE')
+    );
+    $prefix = getenv('PIWIGO_DB_PREFIX');
+    $prefix = $prefix !== false ? $prefix : 'piwigo_';
+
+    $uuid = 'psk-' . date('Ymd') . '-' . substr(md5(uniqid('', true)), 0, 10);
+    $rulesJson = json_encode($rules);
+    if ($rulesJson === false) {
+        throw new RuntimeException('json_encode failed for raw search rules: ' . var_export($rules, true));
+    }
+
+    $db->query(sprintf(
+        "INSERT INTO %ssearch (rules, created_on, created_by, search_uuid, forked_from) VALUES ('%s', NOW(), NULL, '%s', NULL)",
+        $prefix,
+        $db->real_escape_string($rulesJson),
+        $db->real_escape_string($uuid)
+    ));
+    $db->close();
+
+    return $uuid;
+}
+
+/**
+ * Extracts the raw `global_params = {...};` JS statement body
+ * search_filters.inc.tpl emits from `$GP` (json_encode($mySearch),
+ * SearchFilterRenderer::render()'s own final template assignment) --
+ * scoping a "does the removed field's key still appear" check to just
+ * this blob, rather than the whole response body, avoids a false match
+ * against an unrelated same-named label elsewhere on the page (e.g. a
+ * photo's own "author" metadata display).
+ */
+function extraFiltersGlobalParamsJson(string $html): string
+{
+    if (preg_match('/global_params\s*=\s*(\{.*?\});/s', $html, $matches) !== 1) {
+        throw new RuntimeException('could not find the global_params JS assignment in the response body');
+    }
+
+    return $matches[1];
+}
+
+/**
  * Piwigo\Search\SearchFilterRenderer::render() -- the existing
  * SearchFilterRendererTest.php only exercises the 'tags'/'cat' per-filter
  * branches (the 2 fields SearchController's own GET-driven quick search
@@ -444,5 +508,233 @@ it('serves the date-filter row/counter data from cache on a second load of a dat
         expect(extraFiltersSettledContent($page))->toContain('Search Date Cache Photo');
     } finally {
         H::restoreConfig($snapshot);
+    }
+});
+
+/**
+ * Closes the render()-entry-shape gaps left after every test above (all of
+ * which reach SearchFilterRenderer::render() through a real
+ * pwg.images.filteredSearch.create()-persisted row, which always carries a
+ * `fields` key -- SearchController's own default-filter mechanism, driven
+ * through here, always pre-declares `'fields' => []` too): a directly
+ * persisted `piwigo_search` row whose `rules` JSON has no top-level
+ * "fields" key at all (render()'s own `$mySearch['fields'] = []`
+ * fallback), and one whose `fields.tags`/`fields.author` values aren't the
+ * array shape any real writer ever produces (render()'s own per-field
+ * `! is_array($searchFields[x])` re-narrowing, reached only after that
+ * field's own access check already passed).
+ */
+it('falls back to an empty search-fields array (and leaves has_filters_filled false) for a directly-persisted search row whose rules JSON has no "fields" key at all', function (): void {
+    $page = H::loginAsAdmin($this);
+
+    $uuid = extraFiltersInsertRawSearchRow(['mode' => 'AND']);
+
+    $page = H::navigateOk($page, '/index.php?/search/' . $uuid);
+    H::assertNoServerErrors($page, 'search row with rules missing the fields key entirely');
+    $page->assertNoJavaScriptErrors();
+});
+
+it('resets a non-array "tags"/"author" search-field value back to an empty array before use', function (): void {
+    $snapshot = H::snapshotConfig(['filters_views']);
+    $filtersViews = json_encode([
+        'album' => ['access' => 'everybody', 'default' => true],
+        'tags' => ['access' => 'everybody', 'default' => true],
+        'author' => ['access' => 'everybody', 'default' => true],
+    ]);
+    if ($filtersViews === false) {
+        throw new RuntimeException('json_encode failed for the filters_views config value');
+    }
+    H::setConfigValue('filters_views', $filtersViews);
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Search Malformed Fields Album ' . uniqid()]);
+        $albumResult = $album['result'] ?? null;
+        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        }
+        $albumId = (int) $albumResult['id'];
+        $image = H::makeTestImage(uniqid());
+        H::uploadPhotoViaApi($image, $albumId, 'Search Malformed Fields Photo');
+        @unlink($image);
+
+        // 'cat' carries a real, well-formed value so the search still
+        // finds this photo despite 'tags'/'author' being malformed --
+        // proving render() recovered from the bad shape rather than
+        // merely not-crashing on an otherwise-empty search.
+        $uuid = extraFiltersInsertRawSearchRow([
+            'fields' => [
+                'tags' => 'not-an-array',
+                'author' => 'not-an-array',
+                'cat' => ['words' => [$albumId], 'sub_inc' => false],
+            ],
+        ]);
+
+        $page = H::navigateOk($page, '/index.php?/search/' . $uuid);
+        H::assertNoServerErrors($page, 'search row with non-array tags/author field values');
+        $page->assertNoJavaScriptErrors();
+        $page->assertSee('Search Malformed Fields Photo');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+/**
+ * Closes render()'s own access-loop `else` branch (every configured
+ * filter's `$displayFilters[$filtName]['access'] = false`) together with
+ * the per-filter `elseif (isset($searchFields[x])) unset($searchFields[x])`
+ * access-denied branch it feeds -- for every filter type besides
+ * 'ratings'/'date_posted'/'date_created'/'cat', which prior coverage work
+ * already closed this exact shape for. 'nobody' is not a real
+ * filters_views access value (only 'everybody'/'admins-only'/
+ * 'registered-users' are) -- deliberately so, since it fails every branch
+ * of the access check regardless of which role is logged in, unlike
+ * 'admins-only' (which an admin session would actually satisfy).
+ */
+it('denies access to and unsets every per-filter search field whose own filters_views access rule matches nobody', function (): void {
+    $snapshot = H::snapshotConfig(['filters_views', 'rate']);
+    $filtersViews = json_encode([
+        'words' => ['access' => 'nobody', 'default' => true],
+        'expert' => ['access' => 'nobody', 'default' => true],
+        'tags' => ['access' => 'nobody', 'default' => true],
+        'album' => ['access' => 'everybody', 'default' => true],
+        'author' => ['access' => 'nobody', 'default' => true],
+        'added_by' => ['access' => 'nobody', 'default' => true],
+        'file_type' => ['access' => 'nobody', 'default' => true],
+        'ratio' => ['access' => 'nobody', 'default' => true],
+        'rating' => ['access' => 'nobody', 'default' => true],
+        'file_size' => ['access' => 'nobody', 'default' => true],
+        'height' => ['access' => 'nobody', 'default' => true],
+        'width' => ['access' => 'nobody', 'default' => true],
+    ]);
+    if ($filtersViews === false) {
+        throw new RuntimeException('json_encode failed for the filters_views config value');
+    }
+    H::setConfigValue('filters_views', $filtersViews);
+    // 'ratings' below is only persisted onto the search row when
+    // rateEnabled() is true at CREATE time (same 2-step dependency
+    // documented on the ratings-disabled test above) -- kept enabled at
+    // RENDER time too, unlike that test: this one targets the
+    // *access-denied* unset branch (rateEnabled()===true, 'rating' access
+    // false), not the rateEnabled()===false branch that test covers.
+    H::setConfigValue('rate', 'true');
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Search Access Denied Album ' . uniqid()]);
+        $albumResult = $album['result'] ?? null;
+        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        }
+        $albumId = (int) $albumResult['id'];
+        $image = H::makeTestImage(uniqid());
+        H::uploadPhotoViaApi($image, $albumId, 'Search Access Denied Photo');
+        @unlink($image);
+
+        $tag = H::wsCall($page, 'pwg.tags.add', ['name' => 'Search Access Denied Tag ' . uniqid()]);
+        $tagResult = $tag['result'] ?? null;
+        if (! is_array($tagResult) || ! is_numeric($tagResult['id'] ?? null)) {
+            throw new RuntimeException('pwg.tags.add did not return a numeric id: ' . var_export($tag, true));
+        }
+        $tagId = (int) $tagResult['id'];
+
+        $uniqueWord = 'accessdeniedword' . uniqid();
+
+        // Every one of these fields is a real, non-empty value --
+        // isset($searchFields[x]) is true for each below, so it's really
+        // render()'s own per-filter access-denied unset that removes it,
+        // not an absent field short-circuiting the check trivially. Only
+        // 'album' stays accessible (see filters_views above), so the
+        // search still finds a real photo through it.
+        $search = H::wsCall($page, 'pwg.images.filteredSearch.create', [
+            'allwords' => $uniqueWord,
+            'expert' => 'Data',
+            'tags' => $tagId,
+            'authors' => 'Access Denied Author',
+            'added_by' => 1,
+            'categories' => $albumId,
+            'filetypes' => 'jpg',
+            'ratios' => 'square',
+            'ratings' => '3',
+            'filesize_min' => 100,
+            'filesize_max' => 4000,
+            'height_min' => 50,
+            'height_max' => 1000,
+            'width_min' => 50,
+            'width_max' => 1000,
+        ]);
+        $searchResult = $search['result'] ?? null;
+        if (! is_array($searchResult) || ! is_string($searchResult['search_url'] ?? null)) {
+            throw new RuntimeException('pwg.images.filteredSearch.create did not return a search_url: ' . var_export($search, true));
+        }
+        $searchUrl = $searchResult['search_url'];
+
+        H::rawWebpage($page)->navigate($searchUrl);
+        H::assertNoServerErrors($page, 'search with every per-filter field denied except album');
+        $page->assertNoJavaScriptErrors();
+        expect(extraFiltersSettledContent($page))->toContain('Search Access Denied Photo');
+
+        // Proves each field was actually unset from $mySearch['fields']
+        // (not just hidden by a template gate): $GP is
+        // json_encode($mySearch) after every access-denied unset above
+        // has already run -- same technique the ratings-disabled test
+        // above uses, scoped here to just the `global_params` JS blob to
+        // rule out an unrelated same-named label elsewhere on the page.
+        $globalParams = extraFiltersGlobalParamsJson(H::rawWebpage($page)->content());
+        expect($globalParams)->not->toContain('"allwords"')
+            ->and($globalParams)->not->toContain('"expert"')
+            ->and($globalParams)->not->toContain('"tags"')
+            ->and($globalParams)->not->toContain('"author"')
+            ->and($globalParams)->not->toContain('"added_by"')
+            ->and($globalParams)->not->toContain('"filetypes"')
+            ->and($globalParams)->not->toContain('"ratios"')
+            ->and($globalParams)->not->toContain('"ratings"')
+            ->and($globalParams)->not->toContain('"filesize_min"')
+            ->and($globalParams)->not->toContain('"height_min"')
+            ->and($globalParams)->not->toContain('"width_min"')
+            ->and($globalParams)->toContain('"cat"');
+    } finally {
+        H::restoreConfig($snapshot);
+    }
+});
+
+/**
+ * Closes renderAlbumsFound()'s own forbidden-category early return: this
+ * method's own docblock documents that SearchService::searchAllwords()'s
+ * category-name/comment match applies no forbidden-categories condition at
+ * all, so `matching_cat_ids` can genuinely include a category the current
+ * viewer can't see -- filterAccessibleCategoryIds() is what's supposed to
+ * strip it back out before ALBUMS_FOUND ever gets assigned. Every other
+ * allwords/ALBUMS_FOUND test in this suite runs as admin, who bypasses
+ * category permissions entirely (forbiddenCategories always empty), so
+ * this needs a genuine anonymous viewer instead.
+ */
+it('skips the ALBUMS_FOUND search hint entirely when every allwords-matched album is forbidden for the current (guest) viewer', function (): void {
+    $page = H::loginAsAdmin($this);
+    $uniqueWord = 'forbiddenalbumhint' . uniqid();
+    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Album ' . $uniqueWord]);
+    $albumResult = $album['result'] ?? null;
+    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $albumResult['id'];
+
+    try {
+        H::setCategoryPrivate($albumId, true);
+
+        // A fresh visit() (not navigate() on the already-authenticated
+        // $page above) starts a brand-new browser context with no
+        // session cookie -- a genuine anonymous/guest viewer, whose own
+        // CurrentUser::get()->forbiddenCategories now really does include
+        // this just-privatized album (same mechanism
+        // DerivativePermissionTest.php's own "denies an anonymous
+        // request" tests already rely on).
+        $guestPage = H::gotoOk($this, '/search.php?q=' . urlencode($uniqueWord));
+        H::assertNoServerErrors($guestPage, 'guest allwords search matching only a forbidden album');
+        $guestPage->assertNoJavaScriptErrors();
+
+        expect(extraFiltersSettledContent($guestPage))->not->toContain($uniqueWord);
+    } finally {
+        H::setCategoryPrivate($albumId, false);
     }
 });

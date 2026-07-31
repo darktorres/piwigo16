@@ -148,6 +148,38 @@ test('encodeResponse renders a raw stdClass object via the object branch of the 
     expect($result)->toBe($expected);
 });
 
+test('encodeResponse renders a null field as an empty value tag via the switch fallthrough', function (): void {
+    // xmlrpcEncode()'s switch on gettype() has no case for 'NULL' (only
+    // boolean/integer/double/string/object/array) -- the bare `return '';`
+    // below the switch is what actually runs for a null value, producing
+    // an empty <value></value> (not valid per the XML-RPC spec's own
+    // <nil/> extension, but this is the real, pre-existing encoding
+    // behavior for a genuinely nullable WS response field, e.g.
+    // pwg.session.getStatus's own 'connected_with' before any login).
+    $encoder = new PwgXmlRpcEncoder();
+    $response = ['connected_with' => null];
+
+    $result = $encoder->encodeResponse($response);
+
+    $struct = "<struct>\n"
+        . "  <member><name>connected_with</name><value></value></member>\n"
+        . '</struct>';
+
+    $expected = <<<EOD
+    <methodResponse>
+      <params>
+        <param>
+          <value>
+            {$struct}
+          </value>
+        </param>
+      </params>
+    </methodResponse>
+    EOD;
+
+    expect($result)->toBe($expected);
+});
+
 test('getContentType returns text/xml', function (): void {
     expect(new PwgXmlRpcEncoder()->getContentType())->toBe('text/xml');
 });

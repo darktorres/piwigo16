@@ -14,6 +14,14 @@ use Piwigo\Db\Tables;
  * spark.md, Wave 1). admin_only, CSRF-token-gated; notifies the caller the
  * lounge should be emptied and returns the target category's fresh photo
  * count.
+ *
+ * uploadCompleted()'s own preg_split() failure guard (image_id, the same
+ * `/[\s,;\|]/` pattern used by several other Ws\PwgImages methods) is
+ * unreachable from a black-box Contract test in this environment -- see
+ * WsImagesTest's exist() section for the full writeup (a plain
+ * non-backtracking pattern can't be made to exceed PCRE's default
+ * backtrack/recursion budget, and this test process can't reach the
+ * separate Apache process's php.ini to lower that budget either).
  */
 final class WsImagesUploadCompletedTest extends ContractTestCase
 {

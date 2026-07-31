@@ -11,10 +11,34 @@ use Piwigo\Admin\Image\PwgImage;
  * P23 Stage 1e: __construct()'s 2 real failure branches (unsupported
  * extension, undecodable content) used to die() -- first test coverage
  * for this class, confirming both now throw ImageProcessingException
- * instead. The imagecreatetruecolor() failure branches (crop()/resize()/
- * compose()) stay untested -- that GD call essentially never fails for a
- * real, reasonable pixel size, no realistic way to trigger it without
- * mocking a global function this class has no seam to inject.
+ * instead.
+ *
+ * Gap-closure follow-up: crop()/resize() DO have a real, directly
+ * reachable imagecreatetruecolor() failure path after all -- unlike
+ * compose() (see below), crop($width, $height, ...)/resize($width,
+ * $height) pass their own method *arguments* straight into
+ * imagecreatetruecolor(), completely independent of the already-decoded
+ * source image's real size. Confirmed live: imagecreatetruecolor(100000,
+ * 100000) returns false with a real "product of memory allocation
+ * multiplication would exceed INT_MAX" warning (width*height*4 bytes >
+ * PHP_INT_MAX's 32-bit-truncated internal check) -- reachable by simply
+ * calling crop()/resize() with a pathologically large target size on any
+ * normally-decoded small source image, no mocking needed.
+ *
+ * compose()'s own imagecreatetruecolor($ow, $oh) call (line 179) is
+ * different: $ow/$oh come from imagesx()/imagesy() on an *already
+ * successfully decoded* overlay GdImage, not a caller-supplied argument.
+ * Reaching that failure would require a real, successfully-constructed
+ * GdImage whose own dimensions are already large enough to make a *second*
+ * identical imagecreatetruecolor() call fail -- a contradiction, since
+ * decoding a GdImage of dims (W,H) in the first place (whether via
+ * imagecreatetruecolor() directly or libgd's internal PNG/JPEG decode
+ * path, which hits the exact same allocation check) requires that same
+ * allocation to have just succeeded. Left uncovered with this comment
+ * rather than mocked: not a static-analysis-only guard, a real defensive
+ * check against a real `array|false`-shaped API, just one this class's own
+ * source-then-destination-of-the-same-dims data flow makes provably
+ * unreachable.
  */
 function imageGdTestMarker(): string
 {
@@ -352,6 +376,72 @@ test('compose throws when the overlay uses a different image backend', function 
 
     expect(fn () => $img->compose($overlay, 0, 0, 100))
         ->toThrow(LogicException::class, 'PwgImage::compose(): overlay must use the same image backend');
+});
+
+test('crop throws when the requested target size overflows GD\'s internal allocation check', function (): void {
+    $path = imageGdTestMarker() . '/crop-overflow.jpg';
+    $gdImg = imagecreatetruecolor(5, 5);
+    if ($gdImg === false) {
+        throw new RuntimeException('imagecreatetruecolor failed');
+    }
+    imagejpeg($gdImg, $path);
+    $img = new ImageGd($path);
+
+    // 100000 x 100000 x 4 bytes/pixel overflows imagecreatetruecolor()'s
+    // internal INT_MAX allocation-size check (confirmed live: it returns
+    // false with a real "product of memory allocation multiplication
+    // would exceed INT_MAX" warning) -- crop()'s own $width/$height
+    // arguments feed that call directly, regardless of the small 5x5
+    // source image actually decoded above.
+    set_error_handler(static fn (): bool => true, E_WARNING);
+    try {
+        expect(fn () => $img->crop(100000, 100000, 0, 0))
+            ->toThrow(ImageProcessingException::class, '[Image GD] imagecreatetruecolor() failed');
+    } finally {
+        restore_error_handler();
+    }
+});
+
+test('resize throws when the requested target size overflows GD\'s internal allocation check', function (): void {
+    $path = imageGdTestMarker() . '/resize-overflow.jpg';
+    $gdImg = imagecreatetruecolor(5, 5);
+    if ($gdImg === false) {
+        throw new RuntimeException('imagecreatetruecolor failed');
+    }
+    imagejpeg($gdImg, $path);
+    $img = new ImageGd($path);
+
+    set_error_handler(static fn (): bool => true, E_WARNING);
+    try {
+        expect(fn () => $img->resize(100000, 100000))
+            ->toThrow(ImageProcessingException::class, '[Image GD] imagecreatetruecolor() failed');
+    } finally {
+        restore_error_handler();
+    }
+});
+
+test('rotate returns false when imagerotate() itself fails', function (): void {
+    $path = imageGdTestMarker() . '/rotate-fail.jpg';
+    $gdImg = imagecreatetruecolor(5, 5);
+    if ($gdImg === false) {
+        throw new RuntimeException('imagecreatetruecolor failed');
+    }
+    imagejpeg($gdImg, $path);
+    $img = new ImageGd($path);
+
+    // NAN is a valid float (rotate()'s own signature accepts int|float),
+    // and libgd's imagerotate() rejects it at its own internal memory-
+    // allocation-multiplication check, confirmed live: returns false with
+    // a real "one parameter to a memory allocation multiplication is
+    // negative or zero" warning, rather than throwing.
+    set_error_handler(static fn (): bool => true, E_WARNING);
+    try {
+        $result = $img->rotate(NAN);
+    } finally {
+        restore_error_handler();
+    }
+
+    expect($result)->toBeFalse();
 });
 
 test('compose merges a same-backend overlay onto the base image', function (): void {

@@ -68,6 +68,30 @@ test('will_watermark is always false when use_watermark is off', function (): vo
     expect($params->will_watermark([600, 400]))->toBeFalse();
 });
 
+test('__serialize exposes last_mod_time, sizing, and sharpen -- not type or use_watermark', function (): void {
+    $sizing = SizingParams::classic(100, 100);
+    $params = new DerivativeParams($sizing);
+    $params->last_mod_time = 1785118235;
+    $params->sharpen = 0.5;
+    $params->use_watermark = true;
+
+    expect($params->__serialize())->toBe([
+        'last_mod_time' => 1785118235,
+        'sizing' => $sizing,
+        'sharpen' => 0.5,
+    ]);
+
+    // Confirms it's the real PHP serialization hook, not just a
+    // same-named public method: the config storage format this powers
+    // (see Fixtures/piwigo-17.0.sql's own `derivatives` config row) is a
+    // plain serialize() of a DerivativeParams tree, which only ever
+    // reaches __serialize() through this exact mechanism.
+    $serialized = serialize($params);
+    expect($serialized)->toContain('s:13:"last_mod_time";i:1785118235;');
+    expect($serialized)->toContain('s:7:"sharpen";d:0.5;');
+    expect($serialized)->not->toContain('use_watermark');
+});
+
 test('will_watermark is true once the output is at least as large as the watermark\'s min_size on either dimension', function (): void {
     $originalWatermark = ImageStdParams::get_watermark();
 

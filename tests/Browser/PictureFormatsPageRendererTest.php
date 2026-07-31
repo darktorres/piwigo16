@@ -10,10 +10,12 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * main JPEG).
  *
  * Not exercised: the `Lang::has('format ' . $ext)` translated-label
- * override -- confirmed via a direct grep that no `language/en_UK/*.po`
- * catalog defines any `"format XXX"` msgid at all, so this always
- * evaluates false and the plain `strtoupper($ext)` label is always used
- * in this environment's current translation data.
+ * override -- confirmed via a direct grep across every locale's .po
+ * catalog under `language/` in this repo (not just en_UK), and against
+ * the reference `/home/torres/piwigo16-rewrite` branch too, that no
+ * `"format XXX"` msgid is defined anywhere. Always evaluates false; the
+ * plain `strtoupper($ext)` label is the only reachable outcome with any
+ * real translation data this project ships.
  */
 function pictureFormatsDbPrefix(): string
 {
@@ -59,8 +61,11 @@ it('lists a real alternate-format file with its label, filesize in KB, and downl
         (string) getenv('PIWIGO_DB_BASE')
     );
     $prefix = pictureFormatsDbPrefix();
-    // filesize is stored in KB; 2048 -> 2.0 KB rendered ("format TIF" is a
-    // real translated label -- Lang::has('format TIF') branch).
+    // filesize is stored in KB; 2048 -> 2.0 KB rendered. NOT the
+    // Lang::has('format TIF') branch -- no catalog anywhere in this repo
+    // (including the reference 16.x branch) defines a "format XXX" msgid,
+    // see this file's own top docblock; the label here is always the plain
+    // strtoupper($ext) fallback ("TIF").
     $db->query(sprintf(
         "INSERT INTO %simage_format (image_id, ext, filesize) VALUES (%d, 'tif', 2048)",
         $prefix,

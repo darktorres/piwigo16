@@ -159,6 +159,35 @@ final class WsHistoryTest extends ContractTestCase
         }
     }
 
+    /**
+     * getActivityList()'s `if (isset($param['uid'])) { $where .= 'AND
+     * performed_by = ' . $param['uid']; }` -- distinct from the
+     * object_id ($param['id']) filter tested above: `uid` filters on
+     * *who performed* the action, not which object it targeted.
+     */
+    public function test_activityGetList_filters_by_performer_uid(): void
+    {
+        $adminId = $this->conn->fetchOne("SELECT id FROM " . Tables::users() . " WHERE username = 'fixture_admin'");
+        self::assertIsNumeric($adminId);
+
+        // Generates a real, fresh 'photo'/'edit' row performed by
+        // fixture_admin (wsAdmin() always logs in as fixture_admin first).
+        $this->wsAdmin('pwg.images.setPrivacyLevel', ['image_id' => [1], 'level' => 0]);
+
+        $response = $this->wsAdmin('pwg.activity.getList', ['object' => 'photo', 'action' => 'edit', 'uid' => (int) $adminId]);
+
+        self::assertSame('ok', $response['stat']);
+        $result = $response['result'];
+        self::assertIsArray($result);
+        $lines = $result['result_lines'];
+        self::assertIsArray($lines);
+        self::assertNotEmpty($lines);
+        foreach ($lines as $line) {
+            self::assertIsArray($line);
+            self::assertSame((string) (int) $adminId, $line['user_id']);
+        }
+    }
+
     public function test_activityGetList_excludes_logins_when_connections_display_is_none(): void
     {
         // Config values are always json_decode()'d on read
@@ -295,6 +324,109 @@ final class WsHistoryTest extends ContractTestCase
 
         $details = $line['details'];
         self::assertIsArray($details);
+        self::assertSame(['fixture_admin'], $details['users']);
+        self::assertSame('fixture_admin', $details['users_string']);
+    }
+
+    /**
+     * getActivityList()'s outer `while (count($output_lines) < $page_size
+     * and $more_rows_available)` loop fetches up to 10000 rows per DB
+     * query (nb_rows_to_fetch) in one go -- the `else { $more_rows_available
+     * = true; break; }` arm stops iterating that *already-fetched* PHP
+     * array once $page_size (100) concatenated lines have been built,
+     * distinct from the query itself running out of rows. 150 real rows
+     * with unique session_idx values (so none concatenate into an
+     * existing line) reliably exceeds 100 regardless of whatever
+     * unrelated 'photo'/'edit' noise earlier Contract test files may have
+     * already left in piwigo_activity (this file's own tearDown() doesn't
+     * scope its DELETE to these rows either, so leftover noise never
+     * accumulates across this file's own tests).
+     */
+    public function test_activityGetList_caps_a_single_batch_at_the_page_size(): void
+    {
+        $marker = 'pwgcore-pagesize-' . uniqid();
+        $rows = [];
+        for ($i = 0; $i < 150; $i++) {
+            $rows[] = sprintf(
+                "('photo', 1, 'edit', '%s-%d', NOW())",
+                $marker,
+                $i
+            );
+        }
+        $this->conn->executeStatement(
+            'INSERT INTO ' . Tables::activity() . ' (object, object_id, action, session_idx, occured_on) VALUES '
+            . implode(', ', $rows)
+        );
+
+        $response = $this->wsAdmin('pwg.activity.getList', ['object' => 'photo', 'action' => 'edit']);
+
+        self::assertSame('ok', $response['stat']);
+        $result = $response['result'];
+        self::assertIsArray($result);
+        $lines = $result['result_lines'];
+        self::assertIsArray($lines);
+        self::assertCount(100, $lines, 'a single batch must stop at page_size (100) even though 150 distinct lines matched');
+        self::assertFalse($result['end_page'], 'more matching rows remain beyond this page, so end_page must be false');
+    }
+
+    /**
+     * getActivityList()'s per-line `object==='user'` enrichment loop:
+     * `foreach ($output_line['object_id'] as $user_id) { if (!
+     * is_string($user_id)) { continue; } ... }` -- `object_id` is an
+     * `int unsigned NOT NULL` column (see piwigo_activity's own CREATE
+     * TABLE), and every element of `$output_line['object_id']` is built
+     * from it via `is_scalar($row['object_id']) ? (string) ... : null`
+     * (always scalar for a NOT NULL int column) -- `is_string($user_id)`
+     * is therefore always true for any row a real DB query can ever
+     * produce, and the `continue` is genuinely unreachable through this
+     * class's real callers. Not exercised by a test for that reason
+     * (same "provably unreachable, not silently skipped" rationale this
+     * coverage pass documents rather than works around).
+     */
+    public function test_activityGetList_resets_a_non_array_users_detail_before_appending(): void
+    {
+        $adminId = $this->conn->fetchOne("SELECT id FROM " . Tables::users() . " WHERE username = 'fixture_admin'");
+        self::assertIsNumeric($adminId);
+        $adminIdInt = (int) $adminId;
+
+        // A real 'user' activity row whose `details` JSON already has a
+        // 'users' key set to a non-array value -- no real
+        // ActivityLoggerInterface::record() call site ever does this
+        // (grep-confirmed: every 'user'-object record() call across
+        // UserService/GroupService/AuthService/PasswordController/
+        // RegisterController/ProfileFormHandler passes 'associated'/no
+        // extra details at all, never 'users'), so a raw INSERT is the
+        // only way to reach this guard for real -- same "reproduce the
+        // only real way this state could exist" rationale as
+        // WsHistoryTest's own dangling-image-id/dangling-user-id tests.
+        $this->conn->executeStatement(
+            "INSERT INTO " . Tables::activity() . " (object, object_id, action, session_idx, occured_on, details) VALUES ('user', ?, 'edit', ?, NOW(), ?)",
+            [$adminIdInt, 'pwgcore-malformed-users-' . uniqid(), json_encode(['users' => 'not-an-array'])]
+        );
+
+        $response = $this->wsAdmin('pwg.activity.getList', ['object' => 'user', 'action' => 'edit']);
+
+        self::assertSame('ok', $response['stat']);
+        $result = $response['result'];
+        self::assertIsArray($result);
+        $lines = $result['result_lines'];
+        self::assertIsArray($lines);
+
+        $line = null;
+        foreach ($lines as $candidate) {
+            self::assertIsArray($candidate);
+            if ($candidate['object_id'] === [(string) $adminIdInt]) {
+                $line = $candidate;
+                break;
+            }
+        }
+        self::assertNotNull($line, 'expected the malformed-details row to appear in the result');
+
+        $details = $line['details'];
+        self::assertIsArray($details);
+        // The malformed pre-existing string value must be discarded (reset
+        // to []), not concatenated onto -- otherwise this would be a
+        // non-array 'users' rather than the freshly-appended list.
         self::assertSame(['fixture_admin'], $details['users']);
         self::assertSame('fixture_admin', $details['users_string']);
     }
@@ -766,6 +898,174 @@ final class WsHistoryTest extends ContractTestCase
         self::assertNull($details['added_by'], 'documents the real bug: should reflect user 1, always null instead');
     }
 
+    /**
+     * historySearch()'s saved-search reconstruction loop has two guards
+     * around each `piwigo_search.rules` row it reads back via
+     * SearchRepository::findRulesByIds(): `if ($rules_full === null) {
+     * continue; }` (the `rules` column itself is NULL) and `$rules_search
+     * = isset($rules_full['fields']) && is_array($rules_full['fields']) ?
+     * $rules_full['fields'] : [];` (a non-NULL `rules` JSON blob with no
+     * 'fields' key at all). Neither is reachable via the real WS API --
+     * SearchRepository::insertSearch() (the only real writer, called from
+     * pwg.images.filteredSearch.create) always stores a real
+     * `{"fields": {...}}` shape -- so both rows are written directly, the
+     * same "reproduce the only real way this state could exist" rationale
+     * as this file's own dangling-image-id test. `rules` is `json DEFAULT
+     * NULL` (nullable), confirmed against piwigo_search's own CREATE TABLE.
+     */
+    public function test_historySearch_gracefully_skips_a_saved_search_with_malformed_or_null_rules(): void
+    {
+        $this->enableHistoryForAdmin();
+
+        $this->conn->executeStatement(
+            'INSERT INTO ' . Tables::search() . ' (search_uuid, rules) VALUES (?, NULL)',
+            ['pwgcoretst' . substr(uniqid(), 0, 13)]
+        );
+        $nullRulesSearchId = (int) $this->conn->lastInsertId();
+
+        $this->conn->executeStatement(
+            'INSERT INTO ' . Tables::search() . ' (search_uuid, rules) VALUES (?, ?)',
+            ['pwgcoretst' . substr(uniqid(), 0, 13), json_encode(['created_by' => 5])]
+        );
+        $noFieldsSearchId = (int) $this->conn->lastInsertId();
+
+        $this->wsAdmin('pwg.history.log', ['image_id' => 1]);
+        $this->wsAdmin('pwg.history.log', ['image_id' => 2]);
+        $this->conn->executeStatement(
+            'UPDATE ' . Tables::history() . ' SET search_id = ? WHERE image_id = 1',
+            [$nullRulesSearchId]
+        );
+        $this->conn->executeStatement(
+            'UPDATE ' . Tables::history() . ' SET search_id = ? WHERE image_id = 2',
+            [$noFieldsSearchId]
+        );
+
+        $response = $this->wsAdmin('pwg.history.search');
+
+        self::assertSame('ok', $response['stat']);
+        $result = $response['result'];
+        self::assertIsArray($result);
+        $lines = $result['lines'];
+        self::assertIsArray($lines);
+
+        $byImageId = [];
+        foreach ($lines as $line) {
+            self::assertIsArray($line);
+            $imageId = $line['IMAGEID'];
+            self::assertIsString($imageId);
+            $byImageId[$imageId] = $line;
+        }
+
+        // Neither malformed row crashes the request -- both degrade to an
+        // all-null SEARCH_DETAILS rather than propagating the missing/
+        // malformed rules shape.
+        foreach (['1', '2'] as $imageId) {
+            if (! array_key_exists($imageId, $byImageId)) {
+                throw new \RuntimeException("expected image #{$imageId} in the history search results");
+            }
+            $details = $byImageId[$imageId]['SEARCH_DETAILS'];
+            self::assertIsArray($details);
+            self::assertNull($details['allwords']);
+            self::assertNull($details['tags']);
+            self::assertNull($details['cat']);
+            self::assertNull($details['author']);
+            self::assertNull($details['added_by']);
+            self::assertNull($details['filetypes']);
+        }
+    }
+
+    /**
+     * historySearch()'s `$data = \Piwigo\PluginConfig\EventDispatcher::get()
+     * ->triggerChange('get_history', ...); if (! is_array($data)) { $data
+     * = []; }` -- historyGet() (this class's own 'get_history' handler,
+     * registered at the default priority 50) always returns a real array,
+     * so reaching the non-array fallback for real needs a second,
+     * higher-priority handler chained after it -- exactly the "a plugin
+     * can still override history search behavior by registering its own
+     * 'get_history' handler at a higher priority" scenario historyGet()'s
+     * own docblock describes. A real plugin file + `piwigo_plugins`
+     * activation row (PluginLoader::loadPlugins() include_once()s it on
+     * every real request, including ws.php) is the same established
+     * technique as tests/Browser/PictureControllerTest.php's own
+     * 'user_comment_check' misbehaving-plugin test -- EventDispatcher's
+     * own singleton lives in the real Apache-served process, not this
+     * Pest process, so it can't be reached by registering a handler here
+     * directly. Scoped to a throwaway image_id (never 1-5) so it's a
+     * complete no-op for every other concurrent request against this
+     * shared dev server while active.
+     */
+    public function test_historySearch_falls_back_to_an_empty_result_when_a_plugin_returns_a_non_array_history(): void
+    {
+        $this->conn->executeStatement(
+            'INSERT INTO ' . Tables::images() . ' (file, path) VALUES (?, ?)',
+            ['pwgcore-gethistory-' . uniqid() . '.jpg', 'upload/pwgcore-gethistory-throwaway.jpg']
+        );
+        $imageId = (int) $this->conn->lastInsertId();
+
+        $pluginId = 'pwgtest-gethistory-override';
+        $pluginDir = dirname(__DIR__, 2) . '/plugins/' . $pluginId;
+        $mainFile = $pluginDir . '/main.inc.php';
+
+        try {
+            $this->enableHistoryForAdmin();
+            $this->wsAdmin('pwg.history.log', ['image_id' => $imageId]);
+
+            // Sanity check first: without the plugin active, the real
+            // history row for this throwaway image is genuinely found.
+            $before = $this->wsAdmin('pwg.history.search', ['image_id' => $imageId]);
+            self::assertSame('ok', $before['stat']);
+            $beforeResult = $before['result'];
+            self::assertIsArray($beforeResult);
+            self::assertNotEmpty($beforeResult['lines']);
+
+            if (! is_dir($pluginDir) && ! mkdir($pluginDir, 0o777, true) && ! is_dir($pluginDir)) {
+                throw new \RuntimeException('failed to create plugin dir: ' . $pluginDir);
+            }
+            file_put_contents($mainFile, <<<PHP
+                <?php
+
+                declare(strict_types=1);
+
+                /*
+                Plugin Name: WsHistoryTest -- get_history Override
+                Version: 1.0.0
+                Description: Test-only fixture plugin (tests/Contract/WsHistoryTest.php).
+                */
+
+                \\Piwigo\\PluginConfig\\EventDispatcher::get()->addEventHandler(
+                    'get_history',
+                    static function (mixed \$data, array \$search, array \$types): mixed {
+                        \$fields = \$search['fields'] ?? null;
+                        \$imageId = is_array(\$fields) ? (\$fields['image_id'] ?? null) : null;
+                        if (\$imageId === {$imageId}) {
+                            return false;
+                        }
+                        return \$data;
+                    },
+                    51
+                );
+
+                PHP);
+
+            $this->conn->executeStatement(
+                "INSERT INTO " . Tables::plugins() . " (id, state, version) VALUES (?, 'active', '1.0.0')",
+                [$pluginId]
+            );
+
+            $after = $this->wsAdmin('pwg.history.search', ['image_id' => $imageId]);
+
+            self::assertSame('ok', $after['stat']);
+            $afterResult = $after['result'];
+            self::assertIsArray($afterResult);
+            self::assertSame([], $afterResult['lines'], 'a plugin returning a non-array must degrade to an empty result, not fatal');
+        } finally {
+            $this->conn->executeStatement('DELETE FROM ' . Tables::plugins() . " WHERE id = ?", [$pluginId]);
+            @unlink($mainFile);
+            @rmdir($pluginDir);
+            $this->conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+        }
+    }
+
     public function test_historySearch_computes_the_total_filesize_of_high_type_images(): void
     {
         $this->enableHistoryForAdmin();
@@ -835,6 +1135,107 @@ final class WsHistoryTest extends ContractTestCase
     }
 
     /**
+     * historySearch()'s per-line pagination-window guard, faithfully
+     * preserved from the pre-rewrite legacy include/ws_functions/pwg.php
+     * (`if ($i <= $first_line && $i >= $last_line) { continue; }`,
+     * grep-confirmed identical at piwigo16/include/ws_functions/pwg.php:941)
+     * -- with the real default nb_logs_page (300), $first_line
+     * ($page_start+1) and $last_line ($page_start+300) can never both
+     * bound the same $i, so this `continue` is realistically dead under
+     * the shipped default. nb_logs_page=1 is the only value where
+     * $first_line===$last_line (both equal $page_start+1), reaching it
+     * for real: with the default $page_start=0, exactly the line with
+     * $i===1 -- the chronologically *oldest* of the matched rows
+     * (historyCompare() sorts ascending by date+time) -- gets skipped.
+     * A real, if odd, legacy pagination quirk, not a rewrite regression.
+     */
+    public function test_historySearch_pagination_window_skips_one_line_when_nb_logs_page_is_one(): void
+    {
+        $this->enableHistoryForAdmin();
+        $this->conn->executeStatement(
+            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('nb_logs_page', '1')
+             ON DUPLICATE KEY UPDATE value = VALUES(value)"
+        );
+        \Piwigo\Cache\CachePools::config()->clear();
+
+        try {
+            $this->wsAdmin('pwg.history.log', ['image_id' => 1]);
+            $this->wsAdmin('pwg.history.log', ['image_id' => 2]);
+
+            $response = $this->wsAdmin('pwg.history.search');
+
+            self::assertSame('ok', $response['stat']);
+            $result = $response['result'];
+            self::assertIsArray($result);
+            $lines = $result['lines'];
+            self::assertIsArray($lines);
+            // Both rows are real, distinct, matched lines -- with the
+            // default nb_logs_page (300) both would appear; here exactly
+            // one is dropped by the pagination-window guard.
+            self::assertCount(1, $lines);
+            $line = $lines[0];
+            self::assertIsArray($line);
+            self::assertContains($line['IMAGEID'], ['1', '2']);
+        } finally {
+            $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'nb_logs_page'");
+            \Piwigo\Cache\CachePools::config()->clear();
+        }
+    }
+
+    /**
+     * historySearch()'s per-line `if (isset($username_of[$user_id_key]))
+     * {...} else { $user_string .= $user_id_key; }` -- the else arm (raw
+     * id instead of a resolved username) is only reachable for a user_id
+     * getUsernamesByIds() can't resolve. piwigo_history.user_id is
+     * `mediumint unsigned NOT NULL` with `fk_history_user_id ... ON
+     * DELETE CASCADE` (deleting a user deletes their own history rows
+     * too), so no genuine WS-API-driven history row can ever carry an
+     * unresolvable user_id -- same "reproduce the only real way this
+     * state could exist" raw-SQL-with-FK-checks-off technique as this
+     * file's own dangling-image-id test above.
+     */
+    public function test_historySearch_with_an_unrecognized_user_id_falls_back_to_the_raw_id(): void
+    {
+        $this->enableHistoryForAdmin();
+        $this->wsAdmin('pwg.history.log', ['image_id' => 1]);
+
+        $this->conn->executeStatement('SET FOREIGN_KEY_CHECKS=0');
+        $this->conn->executeStatement(
+            'UPDATE ' . Tables::history() . ' SET user_id = 999999 WHERE image_id = 1 ORDER BY id DESC LIMIT 1'
+        );
+        $this->conn->executeStatement('SET FOREIGN_KEY_CHECKS=1');
+
+        try {
+            $response = $this->wsAdmin('pwg.history.search', ['image_id' => 1]);
+
+            self::assertSame('ok', $response['stat']);
+            $result = $response['result'];
+            self::assertIsArray($result);
+            $lines = $result['lines'];
+            self::assertIsArray($lines);
+            self::assertNotEmpty($lines);
+            $line = $lines[0];
+            self::assertIsArray($line);
+            self::assertSame('999999', $line['USERID']);
+            self::assertSame('#unknown', $line['USERNAME']);
+            self::assertIsString($line['USER']);
+            self::assertStringStartsWith('999999&nbsp;<a href="', $line['USER']);
+        } finally {
+            // Restore a resolvable user_id before this file's own tearDown()
+            // deletes the row, and before any later test in this file reads
+            // history back -- avoids leaving a permanently dangling FK-off
+            // row behind for a test that runs after this one. fixture_admin
+            // (id 1, seeded by every Contract test's own shared fixture) is
+            // always present -- no assertion needed in a `finally` cleanup.
+            $this->conn->executeStatement('SET FOREIGN_KEY_CHECKS=0');
+            $this->conn->executeStatement(
+                "UPDATE " . Tables::history() . " SET user_id = (SELECT id FROM " . Tables::users() . " WHERE username = 'fixture_admin') WHERE user_id = 999999"
+            );
+            $this->conn->executeStatement('SET FOREIGN_KEY_CHECKS=1');
+        }
+    }
+
+    /**
      * historySearch()'s per-line image formatting is entirely skipped when
      * a history row's image_id is null -- IMAGE/IMAGENAME/IMAGEID/
      * EDIT_IMAGE all stay at their initial '' default (`if
@@ -855,7 +1256,6 @@ final class WsHistoryTest extends ContractTestCase
         $this->loginAsAdmin();
 
         $cookieJar = $this->cookieJar();
-        assert($cookieJar !== '');
         $ch = curl_init($this->baseUrl . '/index.php');
         self::assertNotFalse($ch);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -917,7 +1317,6 @@ final class WsHistoryTest extends ContractTestCase
         self::assertNotFalse($ch);
 
         $cookieJar = $this->cookieJar();
-        assert($cookieJar !== '');
         curl_setopt($ch, CURLOPT_HEADER, true);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
@@ -951,7 +1350,6 @@ final class WsHistoryTest extends ContractTestCase
         self::assertNotFalse($ch);
 
         $cookieJar = $this->cookieJar();
-        assert($cookieJar !== '');
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_USERAGENT, self::USER_AGENT);
@@ -1018,7 +1416,6 @@ final class WsHistoryTest extends ContractTestCase
         self::assertNotFalse($ch);
 
         $cookieJar = $this->cookieJar();
-        assert($cookieJar !== '');
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_USERAGENT, self::USER_AGENT);

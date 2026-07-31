@@ -16,6 +16,34 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * whose resolved name comes straight from static fixture rows (piwigo_images/
  * piwigo_categories/piwigo_groups) and is unaffected by how many logins have
  * accumulated.
+ *
+ * The `! is_string($filter_value)` "[Hacking attempt]" guard inside the
+ * additional-filters loop (render()'s own ~L141-144) is NOT exercised by
+ * any test here, deliberately: $filter_value comes from
+ * UserActivityRequest::filterValue(), which only ever returns null or a
+ * value that already passed InputValidator::validate(..., $isArray: false,
+ * ValidationPattern::ID) in UserActivityRequest::fromArray() -- that
+ * validate() call itself fatal-errors (a *different* call site, inside
+ * InputValidator) on anything not_scalar (e.g. the classic `?album[]=1`
+ * PHP array-parameter-pollution vector), and ValidationPattern::ID
+ * (`/^\d+$/`) only matches digit strings. Real `$_GET` values are also
+ * always strings natively (PHP's own querystring parser never produces a
+ * bare int/float/bool). So by the time render()'s own loop body reads
+ * $filter_value, it is either null (hasFilter() already false, loop body
+ * never entered) or a digit-only string -- `! is_string(...)` is
+ * unreachable through any real HTTP request. render() only ever
+ * constructs UserActivityRequest via ::fromGlobals() (no injection point
+ * for a hand-crafted non-string, is_scalar $source value either), so
+ * there's no way to reach this branch even at the Integration tier.
+ *
+ * render()'s own `$additional_filter_keys = ['photo', 'album', 'group'];`
+ * (a bare pure-literal array assignment) and the loop's own `break;` right
+ * after a filter resolves both execute on every "additional-filter" test
+ * below ('resolves the album/photo/group additional-filter...', 'prioritizes
+ * the photo filter...') -- if either still shows as an uncovered line, that
+ * is the documented OPcache constant-array-folding coverage artifact (see
+ * tests/Browser/CatListPageRendererTest.php's own docblock for the same
+ * note against a sibling class), not a real gap.
  */
 it('streams a CSV export via type=download_logs instead of rendering the normal page', function (): void {
     $page = H::loginAsAdmin($this);

@@ -118,6 +118,43 @@ function profileUserSettings(): array
     return ['nb_image_page' => (int) $row['nb_image_page'], 'recent_period' => (int) $row['recent_period']];
 }
 
+/**
+ * The 3 tinyint "boolean" user_infos columns saveFromPost()'s own
+ * $boolFields normalization loop (~L285-297) touches -- read together so
+ * a test can assert none of them moved after a POST that deliberately
+ * omits all 3, distinct from profileUserSettings()'s int columns above.
+ *
+ * @return array{expand: int, show_nb_hits: int, show_nb_comments: int}
+ */
+function profileUserToggleSettings(): array
+{
+    $db = new mysqli(
+        (string) getenv('PIWIGO_DB_HOST'),
+        (string) getenv('PIWIGO_DB_USER'),
+        (string) getenv('PIWIGO_DB_PASSWORD'),
+        (string) getenv('PIWIGO_DB_BASE')
+    );
+    $prefix = getenv('PIWIGO_DB_PREFIX');
+    $prefix = $prefix !== false ? $prefix : 'piwigo_';
+    $result = $db->query(sprintf(
+        "SELECT ui.expand, ui.show_nb_hits, ui.show_nb_comments FROM %suser_infos ui INNER JOIN %susers u ON u.id = ui.user_id WHERE u.username = '%s'",
+        $prefix,
+        $prefix,
+        $db->real_escape_string(PROFILE_TEST_USER)
+    ));
+    $row = $result instanceof mysqli_result ? $result->fetch_assoc() : null;
+    $db->close();
+    if (! is_array($row)) {
+        throw new RuntimeException('regular_user user_infos row not found');
+    }
+
+    return [
+        'expand' => (int) $row['expand'],
+        'show_nb_hits' => (int) $row['show_nb_hits'],
+        'show_nb_comments' => (int) $row['show_nb_comments'],
+    ];
+}
+
 it('saves nb_image_page/recent_period and redirects to the gallery home on success', function (): void {
     $page = profileLogin($this);
     $page = H::navigateOk($page, '/profile.php');
@@ -285,6 +322,79 @@ it('rejects a password change when the current password is wrong', function (): 
     expect($result['status'])->toBe(200);
     expect($result['body'])->toContain('Current password is wrong');
     expect(profileUserAuthRow())->toBe($before);
+});
+
+it('rejects a malformed mail_address and leaves the stored email address untouched', function (): void {
+    // Exercises UserService::validateMailAddress()'s own format-check
+    // failure surfacing through ProfileFormHandler::saveFromPost()'s
+    // `if ($mail_error !== '' && $mail_error !== '0') { $errors[] = $mail_error; }`
+    // (~L154-155) -- distinct from the password-mismatch/wrong-password
+    // $errors[] sites above, and from the "already in use" branch of the
+    // same validateMailAddress() call (not reachable without a 2nd real
+    // account's email on hand; the format-check failure needs no such
+    // fixture).
+    $page = profileLogin($this);
+    H::navigateOk($page, '/profile.php');
+    $before = profileUserAuthRow();
+
+    $result = H::adminPost($page, '/profile.php', profileBaselineFields([
+        'pwg_token' => H::pwgToken($page),
+        'mail_address' => 'not-a-valid-email-format',
+    ]));
+
+    expect($result['status'])->toBe(200);
+    // The rendered text is the real language/en_UK/common.po translation
+    // ("example:" with no space before the colon), not the literal
+    // Lang::t() source-code key ("example :") -- same rationale as this
+    // file's own 'rejects an empty nb_image_page...' test above.
+    expect($result['body'])->toContain('mail address must be like xxx@yyy.eee (example: jack@altern.org)');
+    expect(profileUserAuthRow())->toBe($before);
+});
+
+it('omits the 3 boolFields from the POST and leaves expand/show_nb_hits/show_nb_comments untouched', function (): void {
+    // Exercises saveFromPost()'s own
+    // `foreach ($fields as $field) { if (! isset($post[$field])) { continue; } ... }`
+    // guard (~L286-289) for each of 'expand'/'show_nb_hits'/
+    // 'show_nb_comments' -- a real HTML form submission always sends every
+    // one of these (profile_content.tpl renders a real <input> for each),
+    // so only a POST built by hand (not driven through the rendered form,
+    // matching this file's other adminPost()-based tests) can omit them.
+    // Confirms the continue really skips the column entirely -- via
+    // UserService::updateInfosForUser()'s own partial-SET semantics (see
+    // UserRepository::updateInfosForUsers()) -- rather than the loop
+    // defaulting an absent checkbox to false/0 and zeroing it out.
+    $page = profileLogin($this);
+    H::navigateOk($page, '/profile.php');
+
+    $beforeSettings = profileUserSettings();
+    $beforeToggles = profileUserToggleSettings();
+
+    try {
+        $result = H::adminPost($page, '/profile.php', [
+            'pwg_token' => H::pwgToken($page),
+            'validate' => '1',
+            'nb_image_page' => '23',
+            'recent_period' => '9',
+            'language' => 'en_UK',
+            'theme' => 'default',
+            'redirect' => '',
+            // 'expand' / 'show_nb_hits' / 'show_nb_comments' deliberately
+            // OMITTED -- the whole point of this test.
+        ]);
+
+        expect($result['status'])->toBe(200);
+
+        $afterSettings = profileUserSettings();
+        expect($afterSettings['nb_image_page'])->toBe(23);
+        expect($afterSettings['recent_period'])->toBe(9);
+
+        // The 3 boolFields columns must be byte-for-byte unchanged -- not
+        // just "still a valid tinyint" -- proving the continue really
+        // skipped them rather than coercing an absent value to 0/false.
+        expect(profileUserToggleSettings())->toBe($beforeToggles);
+    } finally {
+        profileSetImageSettings($beforeSettings['nb_image_page'], $beforeSettings['recent_period']);
+    }
 });
 
 function profileRestoreAuthRow(string $email, string $passwordHash): void
@@ -648,3 +758,46 @@ it('previews the guest-default values in the rendered form on reset-to-default, 
         profileSetImageSettings($before['nb_image_page'], $before['recent_period']);
     }
 });
+
+/**
+ * ProfileFormHandler::saveFromPost()'s own username-change block
+ * (src/Piwigo/Controller/ProfileFormHandler.php, roughly L211-249: the
+ * `if (is_string($username_for_update) ...)` body -- the "this login is
+ * already used" conflict check, the successful-rename field/data update,
+ * and the username-change notification email) is PROVABLY UNREACHABLE
+ * through either of this class's real production callers, confirmed by
+ * reading both call sites directly rather than assumed from a coverage
+ * report:
+ *
+ *  - ProfileController (this file's own subject, profile.php) never runs
+ *    behind admin.php/admin/popuphelp.php's own AdminContext::mark() call
+ *    -- confirmed via `grep -rln 'AdminContext::mark' src/ public/`, which
+ *    finds exactly those 2 entry shells and nowhere else -- so
+ *    saveFromPost()'s own `if (! \Piwigo\Core\AdminContext::isActive())
+ *    { unset($post['username']); }` (~L112-114) unconditionally strips
+ *    'username' from every profile.php submission before the
+ *    username-change block can ever be reached.
+ *  - Controller\Admin\ConfigurationSubController's "default" tab (this
+ *    class's only other real caller, admin.php's "Guest" default-settings
+ *    tab) always builds $edit_user from `UserId::from(CurrentConfig::guestId())`
+ *    -- always a $special_user, so saveFromPost()'s own EARLIER
+ *    `unset($post['username'], ...)` (~L99-107) strips it there too,
+ *    regardless of AdminContext.
+ *
+ * `grep -rn 'ProfileFormHandler\|saveFromPost' src/Piwigo/` confirms there
+ * is no 3rd real caller in this fork able to supply the one combination
+ * (a NON-special user, WITH AdminContext active) this block needs --
+ * there is no "admin renames another member's account" page wired
+ * through this class (Admin\UserListSubController's own username
+ * handling goes through the WS API layer, a wholly different code path).
+ *
+ * Same house style as Integration\Admin\
+ * IntroSubControllerGetLatestNewsTest.php's own 3rd test docblock (a
+ * different class, a different branch, same shape of gap: "no reachable
+ * path in this fork at all ... left uncovered rather than faked").
+ * Forcing coverage here would mean calling saveFromPost() directly with
+ * AdminContext::mark() plus a hand-picked non-special $userdata array --
+ * a combination no real HTTP request against this app can ever produce,
+ * i.e. exercising a scenario the real call graph doesn't have rather than
+ * genuine behavior. Left uncovered rather than faked.
+ */

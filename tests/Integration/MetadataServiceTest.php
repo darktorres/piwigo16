@@ -239,6 +239,24 @@ final class MetadataServiceTest extends IntegrationTestCase
         self::assertSame(2.0, $result['filesize']);
     }
 
+    // getSyncMetadata()'s own `if ($fs === false) { return false; }` guard
+    // right after `filesize($file)` is not chased here: it's only
+    // reachable if filesize() fails on a path is_readable() (the guard
+    // directly above it) just confirmed true -- confirmed live that a
+    // custom stream wrapper reporting a readable regular file via
+    // url_stat() (the ImageServiceTestFailedOpenStreamWrapper-style
+    // technique that isolates countPdfPages()'s analogous
+    // is_file()-then-file_get_contents() branch) can't isolate this one:
+    // PHP's own stream stat cache means is_readable()'s url_stat() call
+    // and filesize()'s subsequent one on the exact same path resolve from
+    // the *same* cached stat result (verified live: forcing url_stat() to
+    // fail on a 2nd call never fires a 2nd call at all without an explicit
+    // clearstatcache() between them, which getSyncMetadata() itself never
+    // does) -- so a path that is_readable() accepts always has its
+    // filesize() succeed too, both here and on a real filesystem. A
+    // genuine TOCTOU race (the file vanishing between the two calls) is
+    // the only real-world trigger, not deterministically reproducible.
+
     /**
      * [SEC-20] A malicious SVG with an internal DTD subset declaring a
      * SYSTEM entity that reads a local file must never leak that file's
@@ -333,6 +351,25 @@ final class MetadataServiceTest extends IntegrationTestCase
             'author' => 'Jane Photographer',
             'keywords' => 'nature|travel',
         ], $result);
+    }
+
+    public function test_get_iptc_data_skips_a_requested_map_field_that_the_photo_has_no_iptc_record_for(): void
+    {
+        // $map requests 'caption' (2#120), but the embedded IPTC data
+        // below only has a title (2#005) record -- exercises the
+        // "! isset($iptc[$iptcKey][0])" `continue` for the caption key,
+        // as opposed to the sibling "parses real fields" test above,
+        // whose $map matches the embedded records 1:1.
+        $bytes = $this->makeJpegWithApp13Iptc([[5, 'Sunset Over The Bay']]);
+        $path = $this->scratchDir . '/iptc-missing-field.jpg';
+        file_put_contents($path, $bytes);
+
+        $result = $this->service->getIptcData($path, [
+            'title' => '2#005',
+            'caption' => '2#120',
+        ]);
+
+        self::assertSame(['title' => 'Sunset Over The Bay'], $result);
     }
 
     public function test_get_iptc_data_strips_html_when_allow_html_in_metadata_is_disabled(): void
@@ -656,6 +693,34 @@ final class MetadataServiceTest extends IntegrationTestCase
         }
     }
 
+    public function test_get_sync_exif_data_skips_a_date_field_that_matches_neither_datetime_pattern(): void
+    {
+        CurrentConfig::setUseExifMapping(['date_creation' => 'DateTimeOriginal']);
+        $path = $this->scratchDir . '/exif-date-malformed.jpg';
+        file_put_contents($path, $this->makePlainJpeg());
+
+        $handler = static function (mixed $exif, string $filename, array $map): mixed {
+            $exif = is_array($exif) ? $exif : [];
+            // Matches neither the full-datetime nor the date-only regex --
+            // the else `continue` branch, distinct from the "0000-00-00"
+            // sibling test below (that one DOES match the full-datetime
+            // regex, then gets nulled and filtered by the later
+            // `$isEmpty` check instead).
+            $exif['DateTimeOriginal'] = 'not-a-real-date';
+
+            return $exif;
+        };
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('format_exif_data', $handler);
+
+        try {
+            $result = $this->service->getSyncExifData($path);
+
+            self::assertArrayNotHasKey('date_creation', $result);
+        } finally {
+            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler('format_exif_data', $handler);
+        }
+    }
+
     public function test_get_sync_exif_data_treats_the_zero_datetime_as_empty_and_skips_it(): void
     {
         CurrentConfig::setUseExifMapping(['date_creation' => 'DateTimeOriginal']);
@@ -872,6 +937,16 @@ final class MetadataServiceTest extends IntegrationTestCase
     // realistic input" shape as this file's other documented guards.
 
     // ------------------------------------------------------------- syncMetadata()
+
+    // syncMetadata()'s own `! is_int($id) && ! is_string($id)` `continue`
+    // guard (right after `$id = $data['id'] ?? null;`) is not chased here:
+    // $data comes from getSyncMetadata($row->toArray()), which returns its
+    // $infos argument verbatim (mutated in place, never rekeyed) -- and
+    // every real row reaching it is a MetadataImage::toArray(), whose own
+    // `id` is declared `public int $id` (fromRow() defaults even a
+    // malformed row to int 0, never null/non-scalar). $data['id'] is
+    // therefore always a genuine PHP int, never anything is_int()/
+    // is_string() would reject.
 
     public function test_sync_metadata_assigns_tags_from_a_keywords_csv_field(): void
     {

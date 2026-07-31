@@ -21,7 +21,13 @@ use Piwigo\Db\Tables;
  *  - Ws\WsDefaultMethods::register()'s available_permission_levels
  *    empty-config fallback (`[0, 1, 2, 4, 8]`), which exists specifically
  *    to keep `max($available_permission_levels)` from crashing when the
- *    config value is empty.
+ *    config value is empty. That fallback's own array-literal line is
+ *    fully exercised by test_empty_available_permission_levels_config_falls_back_to_the_default_set()
+ *    below, but stays flagged as a coverage gap regardless -- a bare
+ *    literal array (`[0, 1, 2, 4, 8]`) on its own line is exactly this
+ *    project's own documented "OPcache constant-array-folding coverage
+ *    artifact" precedent (see that feedback file / MEMORY.md); not a real
+ *    gap.
  */
 final class WsAlternateFormatsTest extends ContractTestCase
 {

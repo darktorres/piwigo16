@@ -85,6 +85,24 @@ final class BatchWriterTest extends IntegrationTestCase
         self::assertSame([], $this->fetchAllRows());
     }
 
+    public function testSingleUpdateIsANoOpForEmptyData(): void
+    {
+        $this->conn->executeStatement(
+            'INSERT INTO ' . self::TABLE . " (id, name, note) VALUES (20, 'unchanged', 'stays-put')"
+        );
+
+        // updateRow()'s own `if ($data === []) { return; }` guard, reached
+        // directly via singleUpdate() -- massUpdate()'s own per-row
+        // $updateData is only ever built from $dbfields['update'], so an
+        // empty 'update' list would hit this same guard indirectly, but
+        // singleUpdate() is the direct, minimal way in.
+        $this->writer->singleUpdate(self::TABLE, [], ['id' => 20]);
+
+        self::assertSame([
+            ['id' => 20, 'name' => 'unchanged', 'note' => 'stays-put'],
+        ], $this->fetchAllRows());
+    }
+
     public function testMassInsertRollsBackTheWholeBatchAndRethrowsOnAMidBatchUniqueViolation(): void
     {
         $thrown = null;

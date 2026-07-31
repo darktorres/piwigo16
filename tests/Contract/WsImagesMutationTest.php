@@ -81,6 +81,25 @@ final class WsImagesMutationTest extends ContractTestCase
         self::assertSame('ok', $response['stat']);
     }
 
+    public function test_setPrivacyLevel_with_a_level_outside_the_available_set_returns_error(): void
+    {
+        // 'level' is only registered with WsParamType::INT|POSITIVE plus a
+        // 'maxValue' (the highest of CurrentConfig::availablePermissionLevels(),
+        // 8 by default) at the WS layer -- a too-high value is silently
+        // *clamped* there (PwgServer::invoke()'s own maxValue handling), not
+        // rejected, so this needs a value that's positive, <= 8, and simply
+        // not one of the actual available levels ([0, 1, 2, 4, 8] by
+        // default) to reach setPrivacyLevel()'s own in_array() guard.
+        $response = $this->callWs('pwg.images.setPrivacyLevel', [
+            'image_id' => [self::FIXTURE_IMAGE_ID],
+            'level'    => 3,
+        ]);
+
+        self::assertSame('fail', $response['stat']);
+        self::assertSame(1003, $response['err']);
+        self::assertSame('Invalid level', $response['message']);
+    }
+
     public function test_setRank_returns_ok(): void
     {
         $response = $this->callWs('pwg.images.setRank', [
@@ -186,6 +205,15 @@ final class WsImagesMutationTest extends ContractTestCase
         self::assertIsNumeric($nowInNew);
         self::assertSame(1, (int) $nowInNew);
     }
+
+    // delete()'s own preg_split() failure guard (image_id, the same
+    // `/[\s,;\|]/` pattern used by several other Ws\PwgImages methods) is
+    // unreachable from a black-box Contract test: preg_split() only
+    // returns false on a genuine PCRE engine error, this pattern has no
+    // quantifiers/groups to ever backtrack, and this test process (a
+    // separate curl client) has no way to lower the *server* process's
+    // pcre.backtrack_limit/pcre.recursion_limit to force one artificially
+    // either -- see WsImagesTest's exist() section for the full writeup.
 
     public function test_delete_removes_the_image(): void
     {

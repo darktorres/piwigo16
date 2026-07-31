@@ -61,6 +61,23 @@ test('c13y_exif adds no anomaly when exif_read_data() is available', function ()
     expect($c13y->retrieve_list)->toBe([]);
 });
 
+// c13y_version()'s and c13y_exif()'s own add_anomaly()-calling branches
+// (the "PHP/MySQL version too low" and "exif extension missing" true
+// paths) are not exercised anywhere in this file, and can't genuinely be:
+// version_compare() only takes the anomaly path if the running PHP
+// predates AppInfo::REQUIRED_PHP_VERSION ('8.5.0'), which this project's
+// own composer.json ("php": "^8.5") makes structurally impossible to
+// satisfy from inside a real Composer-installed run -- there is no config
+// knob or fixture that flips this without editing the constant itself
+// (not a bug, so out of this pass's scope). SqlDialect::
+// REQUIRED_MYSQL_VERSION ('5.0.0') is equally unreachable against any DB
+// actually usable by this app. c13y_exif()'s branch is the exact same
+// "verified untestable without breaking a real runtime guarantee" shape
+// tests/Integration/MetadataServiceTest.php already documents for its own
+// exif_read_data() guard: function_exists() can't be forced to lie about
+// a real, loaded extension from inside a test process, and exif is loaded
+// in this environment.
+
 afterEach(function (): void {
     CurrentConfig::setGuestId(2);
     CurrentConfig::setDefaultUserId(2);
@@ -148,4 +165,124 @@ test('c13y_correction_user does nothing for id 0', function (): void {
 
 test('c13y_correction_user does nothing for an unrecognized action', function (): void {
     expect(new C13yInternal()->c13y_correction_user(1, 'not-a-real-action'))->toBeFalse();
+});
+
+test('c13y_user flags a configured default_user_id distinct from guest_id that has no matching user row', function (): void {
+    // Every other c13y_user() test in this file keeps guest_id and
+    // default_user_id equal (both the real fixture "guest" id, 2), so
+    // c13y_user()'s own `if ($guest_id !== $default_user_id)` guard around
+    // building the default_user_id slot of $c13y_users never actually ran.
+    // This is the one test that diverges them, isolating that branch the
+    // same way the existing webmaster test isolates its own slot.
+    CurrentConfig::setGuestId(2);
+    CurrentConfig::setDefaultUserId(999995);
+    CurrentConfig::setWebmasterId(1);
+
+    $c13y = c13yInternalTestCheckIntegrity();
+    new C13yInternal()->c13y_user($c13y);
+
+    expect($c13y->retrieve_list)->toHaveCount(1);
+    $anomaly = $c13y->retrieve_list[0];
+    expect($anomaly['correction_fct'])->toBe('c13y_correction_user');
+    expect($anomaly['correction_fct_args'])->toBe(['id' => 999995, 'action' => 'creation']);
+});
+
+test('c13y_correction_user creates the guest_id slot for a "creation" action, renaming around the real "guest" username collision', function (): void {
+    // guest_id itself is pointed at a synthetic, not-yet-existing id so the
+    // insert has nowhere to collide on the primary key, but the candidate
+    // *username* ("guest") is real (fixture id 2 is genuinely named
+    // "guest") -- this forces the `while (! $name_ok)` loop to actually
+    // retry with a generated suffix instead of succeeding on its first
+    // pass, covering both the `$id === $guest_id` branch and the
+    // rename-on-collision line inside the loop.
+    CurrentConfig::setGuestId(999997);
+    CurrentConfig::setDefaultUserId(2);
+    CurrentConfig::setWebmasterId(1);
+
+    $conn = DbConnection::build();
+    try {
+        $result = new C13yInternal()->c13y_correction_user(999997, 'creation');
+        expect($result)->toBeTrue();
+
+        $row = $conn->fetchAssociative('SELECT username, password FROM ' . \Piwigo\Db\Tables::users() . ' WHERE id = 999997');
+        expect($row)->not->toBeFalse();
+        expect(is_array($row) ? $row['username'] : null)->toStartWith('guest');
+        // Unlike the webmaster branch (tested above), the guest_id branch
+        // never sets $password -- it stays the loop's initial null.
+        expect(is_array($row) ? $row['password'] : 'unexpected-fetch-failure')->toBeNull();
+    } finally {
+        $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::userInfos() . ' WHERE user_id = 999997');
+        $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::users() . ' WHERE id = 999997');
+    }
+});
+
+test('c13y_correction_user creates the default_user_id slot for a "creation" action', function (): void {
+    CurrentConfig::setGuestId(2);
+    CurrentConfig::setDefaultUserId(999996);
+    CurrentConfig::setWebmasterId(1);
+
+    $conn = DbConnection::build();
+    try {
+        $result = new C13yInternal()->c13y_correction_user(999996, 'creation');
+        expect($result)->toBeTrue();
+
+        $row = $conn->fetchAssociative('SELECT username FROM ' . \Piwigo\Db\Tables::users() . ' WHERE id = 999996');
+        expect($row)->not->toBeFalse();
+        expect(is_array($row) ? $row['username'] : null)->toStartWith('guest');
+    } finally {
+        $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::userInfos() . ' WHERE user_id = 999996');
+        $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::users() . ' WHERE id = 999996');
+    }
+});
+
+test('c13y_correction_user sets a real user\'s status to "guest" when its id matches the configured guest_id', function (): void {
+    // Reuses a real, unrelated fixture row (id 3, "regular_user") purely as
+    // the stand-in guest_id slot to drive the `$id === $guest_id` branch of
+    // the 'status' action -- the same "hijack CurrentConfig, act on a real
+    // row" technique the existing webmaster-status test above uses for id 1.
+    CurrentConfig::setGuestId(3);
+    CurrentConfig::setDefaultUserId(2);
+    CurrentConfig::setWebmasterId(1);
+
+    $conn = DbConnection::build();
+    $originalStatus = $conn->fetchOne('SELECT status FROM ' . \Piwigo\Db\Tables::userInfos() . ' WHERE user_id = 3');
+    expect($originalStatus)->not->toBeFalse();
+
+    try {
+        $result = new C13yInternal()->c13y_correction_user(3, 'status');
+        expect($result)->toBeTrue();
+
+        $fixedStatus = $conn->fetchOne('SELECT status FROM ' . \Piwigo\Db\Tables::userInfos() . ' WHERE user_id = 3');
+        expect($fixedStatus)->toBe('guest');
+    } finally {
+        $conn->executeStatement(sprintf(
+            "UPDATE %s SET status = %s WHERE user_id = 3",
+            \Piwigo\Db\Tables::userInfos(),
+            $conn->quote(is_string($originalStatus) ? $originalStatus : 'normal')
+        ));
+    }
+});
+
+test('c13y_correction_user sets a real user\'s status to "guest" when its id matches the configured default_user_id', function (): void {
+    CurrentConfig::setGuestId(2);
+    CurrentConfig::setDefaultUserId(4);
+    CurrentConfig::setWebmasterId(1);
+
+    $conn = DbConnection::build();
+    $originalStatus = $conn->fetchOne('SELECT status FROM ' . \Piwigo\Db\Tables::userInfos() . ' WHERE user_id = 4');
+    expect($originalStatus)->not->toBeFalse();
+
+    try {
+        $result = new C13yInternal()->c13y_correction_user(4, 'status');
+        expect($result)->toBeTrue();
+
+        $fixedStatus = $conn->fetchOne('SELECT status FROM ' . \Piwigo\Db\Tables::userInfos() . ' WHERE user_id = 4');
+        expect($fixedStatus)->toBe('guest');
+    } finally {
+        $conn->executeStatement(sprintf(
+            "UPDATE %s SET status = %s WHERE user_id = 4",
+            \Piwigo\Db\Tables::userInfos(),
+            $conn->quote(is_string($originalStatus) ? $originalStatus : 'normal')
+        ));
+    }
 });

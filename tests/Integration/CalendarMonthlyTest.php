@@ -687,6 +687,39 @@ final class CalendarMonthlyTest extends IntegrationTestCase
     }
 
     /**
+     * build_next_prev()'s own `if (! isset($upper_items_rank[$current]))`
+     * guard (CalendarBase.php's own "just in case (external link)" comment
+     * right above it) fires when the requested chronology_date doesn't
+     * correspond to *any* real period at all -- unlike the 'any' test
+     * above, where the SQL's own uniform 'any' grouping happens to make the
+     * "current" period always exist in $upper_items regardless. 1999/6 has
+     * zero images in this fixture (real dates are 2024-03/2024-07/2025-01),
+     * so no '1999-6' row is ever returned by the period query -- exactly
+     * the shape of a hand-crafted/stale bookmark URL, not something any
+     * internal link this class itself generates would ever produce.
+     * version_compare() sorts '1999-6' before every real period, landing it
+     * at rank 0 once appended -- no previous, 'next' pointing at the
+     * chronologically-nearest real period, 2024-03.
+     */
+    public function test_build_next_prev_appends_the_current_period_when_no_real_period_matches_it(): void
+    {
+        $calendar = $this->makeCalendar();
+        $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
+        $calendar->chronology_date = [1999, 6];
+        $template = new Template();
+
+        $calendar->generate_category_content($template);
+
+        $nav = $this->digArray($template->get_template_vars('chronology_navigation_bars'), [0]);
+        self::assertArrayNotHasKey('previous', $nav);
+        self::assertSame('3 2024', $this->dig($nav, ['next', 'LABEL']));
+        self::assertSame(
+            '/fake-index?' . json_encode(['chronology_date' => ['2024', '3']]) . '|removed=' . json_encode(['start']),
+            $this->dig($nav, ['next', 'URL'])
+        );
+    }
+
+    /**
      * build_global_calendar() (case A: no year selected) bails out and
      * auto-narrows to a single real year instead of rendering a
      * pointless one-entry "choose a year" calendar -- scoped to images

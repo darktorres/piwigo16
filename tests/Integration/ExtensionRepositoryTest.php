@@ -64,6 +64,19 @@ final class ExtensionRepositoryTest extends IntegrationTestCase
         self::assertSame('English (Great Britain)', $rows['en_UK']['name']);
     }
 
+    // findAll()'s `if (! is_string($id)) { continue; }` guard (its own
+    // line 63) is left uncovered deliberately, not by oversight: `id` is
+    // the literal PRIMARY KEY on all 3 tables (plugins/themes/languages,
+    // confirmed via install/piwigo_structure-mysql.sql), and MySQL forces
+    // every PRIMARY KEY column NOT NULL regardless of its own nullability
+    // declaration -- there is no way to INSERT a NULL id even by dropping
+    // down to raw SQL against a real schema-conformant DB, and DBAL never
+    // returns a VARCHAR column as anything but a PHP string. A row this
+    // branch would `continue` past cannot exist in any real, constraint-
+    // enforced database. Pure static-analysis narrowing for `$row['id']`
+    // (raw DBAL rows type as `array<string, mixed>`), not a real runtime
+    // guard.
+
     public function test_find_returns_a_single_row(): void
     {
         $row = $this->repo->find(ExtensionType::Language, 'en_UK');
@@ -176,6 +189,20 @@ final class ExtensionRepositoryTest extends IntegrationTestCase
         sort($ids);
         self::assertSame(['1', '2', '3', '4'], $ids);
     }
+
+    // findUserIdsByTheme()'s `if (! $row['userId'] instanceof UserId) {
+    // throw ... }` guard (its own line 215) is left uncovered
+    // deliberately too: `ui.userId` is UserInfoEntity's own #[ORM\Id]
+    // column, mapped through the custom 'user_id' Doctrine type
+    // (confirmed via direct read of UserInfoEntity's own constructor
+    // property attribute) -- every real row Doctrine's DQL hydration
+    // produces for a `user_id` PRIMARY KEY column goes through that same
+    // type's convertToPHPValue(), which always returns a real UserId.
+    // There is no real DB row (user_id is NOT NULL, being the PK) or DQL
+    // hydration path that could produce anything else here; this guards
+    // against a hypothetical future change to the type mapping itself,
+    // not a real runtime state reachable through this method's own
+    // inputs.
 
     public function test_find_user_ids_by_theme_returns_empty_for_an_unused_theme(): void
     {

@@ -509,3 +509,113 @@ test('emptyLounge() returns null when a different, still-fresh execution already
         CurrentConfig::reset();
     }
 });
+
+test('deleteElementFiles() short-circuits on an empty id list without touching the repository or disk', function (): void {
+    [$conn, $repo] = imageServiceTestConnAndRepo();
+    $service = imageServiceTestNewService($repo, $conn);
+
+    expect($service->deleteElementFiles([], new ImageServiceTestFakeUrlService()))->toBe([]);
+});
+
+test('countPdfPages() returns false when the path passes is_file()/is_readable() but file_get_contents() itself fails', function (): void {
+    // A real chmod'd/missing/socket path can't isolate this branch: every
+    // one of those either fails is_file() or is_readable() first (see the
+    // socket test above), which never reaches file_get_contents() at all.
+    // A custom stream wrapper is the only way to make url_stat() report a
+    // real, readable regular file while stream_open() itself still fails
+    // -- the same technique tests/Integration/ThemesStandardPagesPageRendererTest's
+    // own ThemesStandardPagesLogoStreamWrapper uses for an analogous
+    // "passes the earlier guard, fails the later I/O call" branch.
+    $scheme = 'pwgtestcountpdf' . bin2hex(random_bytes(4));
+    stream_wrapper_register($scheme, ImageServiceTestFailedOpenStreamWrapper::class);
+
+    try {
+        set_error_handler(static fn (): bool => true);
+        try {
+            $result = new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)))->countPdfPages($scheme . '://fake.pdf');
+        } finally {
+            restore_error_handler();
+        }
+
+        expect($result)->toBeFalse();
+    } finally {
+        stream_wrapper_unregister($scheme);
+    }
+});
+
+test('updateFormatFilesize() delegates straight through to the repository', function (): void {
+    [$conn, $repo] = imageServiceTestConnAndRepo();
+    $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/updformatfilesize.jpg');
+    $formatId = $repo->insertFormat($imageId, 'webp', null);
+
+    try {
+        $service = imageServiceTestNewService($repo, $conn);
+
+        $service->updateFormatFilesize($formatId, 12345);
+
+        $filesize = $conn->fetchOne('SELECT filesize FROM ' . \Piwigo\Db\Tables::imageFormat() . ' WHERE format_id = ' . $formatId);
+        expect(is_numeric($filesize) ? (int) $filesize : null)->toBe(12345);
+    } finally {
+        $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::imageFormat() . ' WHERE format_id = ?', [$formatId]);
+        $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::images() . ' WHERE id = ?', [$imageId]);
+    }
+});
+
+test('getIdsByFilenameInCategory() delegates straight through to the repository', function (): void {
+    [$conn, $repo] = imageServiceTestConnAndRepo();
+    $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/filenameincat.jpg');
+    $conn->createQueryBuilder()
+        ->insert(\Piwigo\Db\Tables::imageCategory())
+        ->values(['image_id' => ':imageId', 'category_id' => ':categoryId', '`rank`' => ':rank'])
+        ->setParameter('imageId', $imageId)
+        ->setParameter('categoryId', 1)
+        ->setParameter('rank', 1)
+        ->executeStatement();
+
+    try {
+        $service = imageServiceTestNewService($repo, $conn);
+
+        expect($service->getIdsByFilenameInCategory('filenameincat.jpg', 1))->toBe([$imageId]);
+        expect($service->getIdsByFilenameInCategory('no-such-file.jpg', 1))->toBe([]);
+    } finally {
+        $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::imageCategory() . ' WHERE image_id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::images() . ' WHERE id = ?', [$imageId]);
+    }
+});
+
+test('getIdsVisibleInCategoriesRecentlyAvailable() delegates straight through to the repository', function (): void {
+    [$conn, $repo] = imageServiceTestConnAndRepo();
+    $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/recentlyavailable.jpg');
+    $conn->executeStatement('UPDATE ' . \Piwigo\Db\Tables::images() . ' SET date_available = NOW() WHERE id = ?', [$imageId]);
+    $conn->createQueryBuilder()
+        ->insert(\Piwigo\Db\Tables::imageCategory())
+        ->values(['image_id' => ':imageId', 'category_id' => ':categoryId', '`rank`' => ':rank'])
+        ->setParameter('imageId', $imageId)
+        ->setParameter('categoryId', 1)
+        ->setParameter('rank', 1)
+        ->executeStatement();
+
+    try {
+        $service = imageServiceTestNewService($repo, $conn);
+
+        $result = $service->getIdsVisibleInCategoriesRecentlyAvailable('1', 'DATE_SUB(NOW(), INTERVAL 1 DAY)');
+
+        expect($result)->toContain($imageId);
+    } finally {
+        $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::imageCategory() . ' WHERE image_id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::images() . ' WHERE id = ?', [$imageId]);
+    }
+});
+
+test('getAddMethodBreakdown() delegates straight through to the repository, grouped by add method', function (): void {
+    [$conn, $repo] = imageServiceTestConnAndRepo();
+    $service = imageServiceTestNewService($repo, $conn);
+
+    $result = $service->getAddMethodBreakdown();
+
+    expect($result)->toBeArray();
+    foreach ($result as $row) {
+        expect($row)->toHaveKeys(['add_method', 'last_added_on', 'nb_files']);
+        expect(in_array($row['add_method'], ['api', 'sync'], true))->toBeTrue();
+    }
+});

@@ -308,6 +308,67 @@ it('resolves a settings URL from a real get_admin_plugin_menu_links hook via bot
     }
 });
 
+// The `! is_array($value) || ! isset($value['URL']) || ! is_string($value['URL'])`
+// `continue` guard inside the deprecated-menu-links loop -- not exercised
+// by the "both regex fallbacks" test above, whose own fixture hook only
+// ever returns 2 well-formed entries. A malformed entry (mixed in here:
+// a bare non-array item, an array with no 'URL' key, and an array whose
+// 'URL' isn't a string) must be skipped without throwing, while the one
+// well-formed entry alongside it still resolves normally -- proving the
+// guard actually skips instead of e.g. always short-circuiting the loop.
+it('skips malformed get_admin_plugin_menu_links entries instead of erroring, and still resolves the well-formed one', function (): void {
+    $hooksId = 'pwgtest-plugins-installed-malformed-hooks';
+
+    pluginsInstalledWriteFixturePlugin($hooksId, <<<'PHP'
+    <?php
+
+    declare(strict_types=1);
+
+    /*
+    Plugin Name: Plugins Installed Test -- Malformed Menu Link Entries
+    Version: 1.0.0
+    Description: Test-only fixture plugin (tests/Browser/PluginsInstalledPageRendererTest.php).
+    */
+
+    \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler(
+        'get_admin_plugin_menu_links',
+        static function (mixed $links): mixed {
+            if (! is_array($links)) {
+                $links = [];
+            }
+
+            $links[] = 'not-an-array';
+            $links[] = ['no_url_key' => 'irrelevant'];
+            $links[] = ['URL' => ['not', 'a', 'string']];
+            $links[] = ['URL' => 'admin.php?page=plugin-pwgtest-plugins-installed-malformed-hooks'];
+
+            return $links;
+        }
+    );
+    PHP);
+
+    $db = pluginsInstalledDb();
+    $prefix = pluginsInstalledDbPrefix();
+    $db->query(sprintf(
+        "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0.0')",
+        $prefix,
+        $db->real_escape_string($hooksId)
+    ));
+
+    try {
+        $page = H::loginAsAdmin($this);
+        $page = H::navigateOk($page, '/admin.php?page=plugins');
+
+        $page->assertPresent('a[href="admin.php?page=plugin-pwgtest-plugins-installed-malformed-hooks"]');
+        $page->assertNoJavaScriptErrors();
+        H::assertNoServerErrors($page, 'plugins_installed malformed menu-link entries');
+    } finally {
+        $db->query(sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, $db->real_escape_string($hooksId)));
+        $db->close();
+        pluginsInstalledRemoveFixturePlugin($hooksId);
+    }
+});
+
 it('rewrites a piwigo-videojs settings URL from "plugin-piwigo-videojs" to "plugin-piwigo_videojs"', function (): void {
     $pluginId = 'piwigo-videojs';
 

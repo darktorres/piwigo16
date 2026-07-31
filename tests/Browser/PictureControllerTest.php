@@ -28,6 +28,18 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * ambient DB state -- exactly the kind of ambient-state fragility this
  * suite otherwise avoids. Scoping every request to the real album makes
  * PictureController's own `$page_category !== null` branch deterministic.
+ *
+ * Deliberately NOT covered: __invoke()'s own `if (! $section_context
+ * instanceof SectionContext) { throw new \RuntimeException(...); }` guard,
+ * right after `SectionPopulator::populate()`. That method's own real
+ * implementation unconditionally calls `SectionContextRegistry::set()` as
+ * the very last thing it does (confirmed via source read, see this
+ * controller's own docblock on that exact point) -- there is no real HTTP
+ * request shape that reaches this line with a null registry short of
+ * swapping in a fake SectionPopulator, which would be testing a mock of
+ * this controller's own collaborator, not real behavior. A pure
+ * defensive type-narrowing guard against the property's nullable type,
+ * not a reachable branch.
  */
 
 function pictureDbConnect(): mysqli
@@ -1713,6 +1725,18 @@ it('builds a download-format list with the URL fallback, strtoupper() label fall
         // deliberately exercises the strtoupper() fallback, the one real
         // path). 2048 KB -> exactly 2.0MB (2048/1024) once
         // sprintf('%.1fMB', ...) formats it.
+        //
+        // Re-confirmed during a later coverage-gap pass (`grep -rn '"format
+        // ' language/*/*.po` across every shipped catalog, zero hits):
+        // PictureController.php's own `Lang::t($lang_key)` call inside that
+        // true branch is left genuinely uncovered by this suite on purpose
+        // -- reaching it for real would need a fake plugin-installed
+        // language file providing a 'format <EXT>' translation, which
+        // exercises Lang::load()'s plugin-.po-loading machinery far more
+        // than it exercises anything in PictureController itself, for a
+        // single-line label-formatting branch with no other behavioral
+        // consequence. Left uncovered rather than built around a synthetic
+        // translation catalog.
         pictureInsertImageFormat($imageId, 'webp', 2048);
 
         $page = H::navigateOk($page, '/picture.php?/' . $imageId . '/category/' . $albumId);
@@ -1821,5 +1845,271 @@ it('assigns PDF_VIEWER_FILESIZE_THRESHOLD/PDF_NB_PAGES and renders the inline PD
         H::assertNoServerErrors($page, 'picture.php PDF viewer');
     } finally {
         @unlink($absolutePdfPath);
+    }
+});
+
+it('renders the legend/author/creation-date info block for a photo with a real comment, author, and creation date', function (): void {
+    // None of this file's other tests ever set the image's OWN comment
+    // (caption)/author/date_creation columns via pwg.images.setInfo --
+    // distinct from the piwigo_comments table entries this file's
+    // edit_comment/delete_comment/validate_comment tests exercise
+    // elsewhere. Every prior test's freshly-uploaded photo leaves those 3
+    // columns NULL, so PictureController::__invoke()'s own
+    // `is_string(...) && ... !== ''` guards around the "legend"/"author"/
+    // "creation date" blocks always fail, leaving COMMENT_IMG/
+    // INFO_AUTHOR/INFO_CREATION_DATE entirely unbuilt.
+    $page = H::loginAsAdmin($this);
+    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Legend Info Album ' . uniqid()]);
+    $albumResult = $album['result'] ?? null;
+    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $albumResult['id'];
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Legend Info Photo');
+    @unlink($image);
+
+    $commentMarker = 'Legend Comment ' . uniqid();
+    $authorName = 'Legend Author ' . uniqid();
+    // single_value_mode defaults 'fill_if_empty' (WsDefaultMethods's own
+    // pwg.images.setInfo registration) -- a fresh upload's author/comment/
+    // date_creation columns are all NULL, so the default mode alone is
+    // enough here, no need to pass single_value_mode explicitly.
+    $updateResult = H::wsCall($page, 'pwg.images.setInfo', [
+        'image_id' => (string) $imageId,
+        'comment' => $commentMarker,
+        'author' => $authorName,
+        'date_creation' => '2020-05-15 10:00:00',
+    ]);
+    expect($updateResult['stat'] ?? null)->toBe('ok');
+
+    // picture_informations defaults author=true/created_on=true (confirmed
+    // live against the fixture's own piwigo_config row) -- not overridden
+    // here, same as this file's own "format list" test relies on for its
+    // own tags=true default.
+    $page = H::navigateOk($page, '/picture.php?/' . $imageId . '/category/' . $albumId);
+    $body = H::rawWebpage($page)->content();
+
+    // legend (the image's own caption, rendered through the
+    // 'render_element_description' event -> HtmlService::pwgNl2br())
+    expect($body)->toContain('class="imageComment"');
+    expect($body)->toContain($commentMarker);
+
+    // author
+    $page->assertSee($authorName);
+
+    // creation date: DateHelper::formatDate() always includes the year,
+    // and PictureController's own chronology link is built from
+    // explode('-', substr($date_creation, 0, 10)) fed into
+    // UrlService::makeIndexUrl()'s own chronology segment
+    // (`{field}-{style}-{view}-{y}-{m}-{d}`, confirmed via source read of
+    // UrlService::addChronologyAndStartToUrl()).
+    expect($body)->toContain('2020');
+    expect($body)->toMatch('/<a href="[^"]*created-monthly-list-2020-05-15[^"]*" rel="nofollow">/');
+
+    $page->assertNoJavaScriptErrors();
+    H::assertNoServerErrors($page, 'picture.php legend/author/creation-date info block');
+});
+
+it('wraps around to the first photo via meta-refresh when a repeating slideshow reaches the last item', function (): void {
+    // Distinct from this file's own "renders slideshow mode..." test
+    // above, which views the FIRST item of its album (a real next item,
+    // so $next_item !== null takes the plain 'next' branch) --
+    // PictureController::__invoke()'s own repeat-wrap branch
+    // (`$next_item === null and $slideshow_params['repeat'] and
+    // $first_item !== null -> $id_pict_redirect = 'first'`) only fires
+    // when viewing the LAST item of a multi-photo section with repeat
+    // enabled, engineered here the same image_order=1-then-view technique
+    // as this file's own nav test uses to get a deterministic rank.
+    $page = H::loginAsAdmin($this);
+    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Slideshow Wrap Album ' . uniqid()]);
+    $albumResult = $album['result'] ?? null;
+    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $albumResult['id'];
+    $suffix = uniqid();
+    $imageA = H::makeTestImage($suffix . 'a');
+    $idA = H::uploadPhotoViaApi($imageA, $albumId, 'Wrap Photo A ' . $suffix);
+    @unlink($imageA);
+    $imageB = H::makeTestImage($suffix . 'b');
+    $idB = H::uploadPhotoViaApi($imageB, $albumId, 'Wrap Photo B ' . $suffix);
+    @unlink($imageB);
+
+    $cookieJar = tempnam(sys_get_temp_dir(), 'pwg_slideshow_wrap_');
+    if ($cookieJar === false) {
+        throw new RuntimeException('tempnam failed');
+    }
+
+    // image_order=1 is "Photo title, A -> Z" -- same session-persisted
+    // ordering technique as the nav test above, guaranteeing B is the
+    // section's real LAST rank (no next item of its own).
+    pictureGetWithCookies($cookieJar, '/index.php?/category/' . $albumId . '&image_order=1');
+
+    $body = pictureGetWithCookies($cookieJar, '/picture.php?/' . $idB . '/category/' . $albumId . '&slideshow=1');
+    @unlink($cookieJar);
+
+    expect($body)->not->toContain('Fatal error');
+    // play defaults true (ImageService::getDefaultSlideshowParams()) and
+    // repeat defaults true in this fixture (same default this file's own
+    // "renders slideshow mode..." test above already relies on) -- viewing
+    // B (no next item) therefore deterministically wraps to A, producing a
+    // real <meta http-equiv="refresh"> pointing at A's own picture URL.
+    expect($body)->toMatch('/<meta http-equiv="refresh" content="\d+;url=[^"]*\/' . $idA . '\/[^"]*">/');
+});
+
+it('falls back to the medium derivative size, without warnings, when the picture_deriv session value is corrupted to a non-string', function (): void {
+    // SessionService::getSessionVar('picture_deriv', ...) itself never
+    // legitimately stores anything but a real string -- the only writer,
+    // defaultPictureContent()'s own $_COOKIE['picture_deriv'] handling,
+    // already guards with is_string() before calling setSessionVar(), and
+    // CurrentConfig::derivativeDefaultSize() (the getSessionVar() default
+    // arg used when nothing was ever stored) is declared `string`. So
+    // PictureController's own `! is_string($deriv_type)` fallback (in
+    // BOTH __invoke()'s own prefetch block and defaultPictureContent()
+    // itself) can only be reached through a genuinely corrupted session
+    // row -- engineered here the same raw-DB-write-between-two-requests
+    // technique this file's own "remembers a picture_deriv cookie choice"
+    // test above uses, and the same PHP session serialize_handler format
+    // (`name|serialized_value;`) pictureSessionDerivType() already parses.
+    $session = pictureCurlLoginSession(H::ADMIN_USER, H::ADMIN_PASS);
+    $curl = $session['curl'];
+    $baseUrl = $session['baseUrl'];
+
+    $album = $curl($baseUrl . '/ws.php?format=json', ['method' => 'pwg.categories.add', 'name' => 'Deriv Corrupt Album ' . uniqid()]);
+    $albumData = json_decode($album['body'], true);
+    $albumResult = is_array($albumData) ? ($albumData['result'] ?? null) : null;
+    $albumIdRaw = is_array($albumResult) ? ($albumResult['id'] ?? null) : null;
+    $albumId = is_numeric($albumIdRaw) ? (int) $albumIdRaw : 0;
+    expect($albumId)->toBeGreaterThan(0);
+
+    $suffix = uniqid();
+    $imageA = H::makeTestImage($suffix . 'a');
+    $idA = H::uploadPhotoViaApi($imageA, $albumId, 'Deriv Corrupt Photo A ' . $suffix);
+    @unlink($imageA);
+    $imageB = H::makeTestImage($suffix . 'b');
+    H::uploadPhotoViaApi($imageB, $albumId, 'Deriv Corrupt Photo B ' . $suffix);
+    @unlink($imageB);
+
+    // image_order=1 (title A-Z), same technique as this file's own nav
+    // test, so idA deterministically has a real next item -- required for
+    // __invoke()'s own `isset($picture['next'])`-gated prefetch branch.
+    $curl($baseUrl . '/index.php?/category/' . $albumId . '&image_order=1');
+
+    $sessionId = pictureCookieJarSessionId($session['cookieJar']);
+    $db = pictureDbConnect();
+    // An int is the simplest genuinely non-string corruption -- appended
+    // (not replacing any existing key), since neither the login flow nor
+    // the plain index.php visit above ever writes a real
+    // 'pwg_picture_deriv' session var of their own.
+    $db->query(sprintf(
+        "UPDATE %ssessions SET data = CONCAT(data, 'pwg_picture_deriv|i:999;') WHERE id LIKE '%%%s'",
+        pictureDbPrefix(),
+        $db->real_escape_string($sessionId)
+    ));
+    $db->close();
+
+    $result = $curl($baseUrl . '/picture.php?/' . $idA . '/category/' . $albumId);
+    @unlink($session['cookieJar']);
+
+    expect($result['status'])->toBe(200);
+    expect($result['body'])->not->toContain('Fatal error');
+    expect($result['body'])->not->toContain('Warning:');
+    expect($result['body'])->not->toContain('Notice:');
+    // Both fallbacks land on ImageStdParams::MEDIUM -- the prefetch
+    // <link> (__invoke()'s own branch, reading the SAME corrupted session
+    // var) still gets a real, well-formed derivative URL rather than an
+    // "Illegal offset type"/array-to-string failure on
+    // `$picture['next']['derivatives'][$prefetch_deriv_type]`.
+    expect($result['body'])->toMatch('/<link rel="prefetch" href="[^"]+">/');
+});
+
+it('short-circuits the default element-content renderer when an earlier render_element_content plugin handler already produced content', function (): void {
+    // PictureController::__invoke() registers defaultPictureContent() as
+    // its OWN 'render_element_content' handler at EventDispatcher::
+    // addEventHandler()'s default priority (50). A plugin registering at a
+    // LOWER priority runs BEFORE it and, if it returns non-empty content,
+    // defaultPictureContent()'s own `if ($content !== '') { return
+    // $content; }` guard (its very first statement) short-circuits instead
+    // of ever building derivatives/assigning template vars -- the same
+    // real-plugin technique this file's own "logs a PHP warning..." test
+    // above uses for a different event, content-marker-gated by this
+    // photo's own real image_id so it's a no-op for every other concurrent
+    // request against this shared dev server while active.
+    $page = H::loginAsAdmin($this);
+    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Element Content Hook Album ' . uniqid()]);
+    $albumResult = $album['result'] ?? null;
+    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $albumResult['id'];
+    $image = H::makeTestImage(uniqid());
+    $imageId = H::uploadPhotoViaApi($image, $albumId, 'Element Content Hook Photo');
+    @unlink($image);
+
+    $pluginId = 'pwgtest-picture-element-content-hook';
+    $pluginDir = dirname(__DIR__, 2) . '/plugins/' . $pluginId;
+    $marker = 'PWGTEST_ELEMENT_CONTENT_MARKER_' . uniqid();
+
+    if (! is_dir($pluginDir) && ! mkdir($pluginDir, 0o777, true) && ! is_dir($pluginDir)) {
+        throw new RuntimeException('failed to create plugin dir: ' . $pluginDir);
+    }
+    $mainFile = $pluginDir . '/main.inc.php';
+    file_put_contents($mainFile, <<<PHP
+        <?php
+
+        declare(strict_types=1);
+
+        /*
+        Plugin Name: PictureController Test -- Element Content Hook
+        Version: 1.0.0
+        Description: Test-only fixture plugin (tests/Browser/PictureControllerTest.php).
+        */
+
+        \\Piwigo\\PluginConfig\\EventDispatcher::get()->addEventHandler(
+            'render_element_content',
+            static function (mixed \$content, array \$elementInfo): mixed {
+                \$id = \$elementInfo['id'] ?? null;
+                if (is_numeric(\$id) && (int) \$id === {$imageId}) {
+                    return '{$marker}';
+                }
+
+                return \$content;
+            },
+            10
+        );
+
+        PHP);
+
+    $pluginDb = pictureDbConnect();
+    $pluginDb->query(sprintf(
+        "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0.0')",
+        pictureDbPrefix(),
+        $pluginId
+    ));
+    $pluginDb->close();
+    // No cache-clear needed: PluginLoader::loadPlugins() always re-queries
+    // active plugins fresh on every request, same as this file's own
+    // "logs a PHP warning..." test above already established.
+
+    try {
+        $page = H::navigateOk($page, '/picture.php?/' . $imageId . '/category/' . $albumId);
+        $body = H::rawWebpage($page)->content();
+
+        expect($body)->toContain($marker);
+        // picture_content.tpl's own <img id="theMainImage" ...> wrapper
+        // (built entirely from $current.selected_derivative/
+        // $current.unique_derivatives, which defaultPictureContent() never
+        // reaches once it short-circuits) is genuinely absent -- proving
+        // the plugin's raw return value became ELEMENT_CONTENT verbatim,
+        // not merely that the plugin ran at all.
+        expect($body)->not->toContain('id="theMainImage"');
+        $page->assertNoJavaScriptErrors();
+    } finally {
+        $cleanupDb = pictureDbConnect();
+        $cleanupDb->query(sprintf("DELETE FROM %splugins WHERE id = '%s'", pictureDbPrefix(), $pluginId));
+        $cleanupDb->close();
+        @unlink($mainFile);
+        @rmdir($pluginDir);
     }
 });

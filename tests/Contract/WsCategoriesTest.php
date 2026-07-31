@@ -292,6 +292,35 @@ final class WsCategoriesTest extends ContractTestCase
         self::assertSame([3, 2, 1], $ids, 'category 1\'s own image_order (file DESC) must be used when no order param is given');
     }
 
+    // getImages()'s own `! is_int($image_id) { continue; }` guard (built
+    // from `$img['id'] ?? null`, right after the categories-of-image lookup
+    // is populated) and its sibling `! isset($categories_of_image[$image_id])
+    // { continue; }` guard are NOT chased here, for two different reasons:
+    //
+    // - `$img['id']` is always a real int by the time that loop runs: `id`
+    //   is images' NOT NULL auto-increment PK, selected wholesale via `i.*`
+    //   (ImageRepository::findWithConditionsPaginated()) and unconditionally
+    //   cast by the `foreach (['id', 'width', 'height', 'hit'] as $k)` loop
+    //   a few dozen lines above (same "native-int NOT NULL PK" reasoning as
+    //   SearchServiceTest's own documented residual for
+    //   qsearchGetTags()/qsearchGetCategories()). The pre-rewrite
+    //   include/ws_functions/pwg.categories.php never had this guard at
+    //   all -- it's a rewrite-added PHPStan narrowing check, not a branch
+    //   the original authors ever observed taken.
+    // - the `categories_of_image` guard IS inherited from that same legacy
+    //   file, unchanged (down to its own "it should not be possible at this
+    //   point, but let's consider a photo can be in no album" comment). But
+    //   every image that reaches this loop matched the earlier
+    //   `category_id IN (keys of $cats)` WHERE clause, and $cats itself was
+    //   already filtered by the identical `forbidden_categories` condition
+    //   reused (unmodified) for the `$image_category_rows` query below --
+    //   so the specific category link that made the image appear at all is
+    //   provably still present in `$categories_of_image` afterwards, within
+    //   one request/one transaction. Both guards defend against a
+    //   cross-request data race (the association being deleted between the
+    //   two queries), not something a single synchronous Contract-test call
+    //   can produce.
+
     // -------------------------------------------------------------- getList
 
     public function test_getList_invalid_thumbnail_size_returns_error(): void

@@ -42,25 +42,42 @@ namespace Piwigo\Tests\Integration {
      * duration-disabled branch, and generatePasswordLink()'s
      * firstLogin=false branch.
      *
-     * logUser()'s remaining lines (the lang-cookie-sync path once past the
-     * 2 hacking-attempt checks, the remember-me cookie set/clear, and the
-     * session_start()/session_regenerate_id() switch) plus all of
-     * autoLogin()'s remember-me-cookie-parsing and logoutUser() itself
-     * depend on setcookie()/real PHP session functions actually taking
-     * effect -- unlike CookieService's own setcookie() calls (safe to
-     * assert on directly, see CookieServiceTest.php), these specific paths
-     * were confirmed empirically (this same pass) to depend on session
-     * state that behaves inconsistently once many other tests have already
-     * run in this shared CLI process (matching
-     * tests/Unit/Http/Middleware/SessionMiddlewareTest.php's own documented
-     * finding for session_start()). Live-verified separately instead --
-     * same limitation as GroupService's own pwg_activity()-adjacent gaps,
-     * see tests/Integration/GroupServiceTest.php's class docblock.
-     * createUserAuthKey()'s candidate-collision retry branch
-     * (SessionService::generateKey(30) is a real CSPRNG read, not
-     * seedable) and generatePasswordLink()'s strtotime() failure guard (an
-     * always-valid duration never fails to parse) are both left uncovered
-     * as genuinely unreachable/impractical-to-force, not overlooked.
+     * logUser()'s lang-cookie-sync path (once past the 2 hacking-attempt
+     * checks) and autoLogin()'s own remember-me-cookie-parsing are now
+     * covered too (both wrapped in the same no-op set_error_handler()
+     * this suite's hacking-attempt tests already established, needed
+     * because the setcookie()/session_start() calls further down logUser()
+     * unavoidably run alongside them and emit a real
+     * E_WARNING("headers already sent") once Pest's own console output has
+     * already occurred in this shared CLI process -- the same limitation
+     * tests/Unit/Http/Middleware/SessionMiddlewareTest.php and
+     * InstallWizardTest.php's own renderSuppressingHeaderWarnings()
+     * document). logUser()'s remember-me-TRUE branch, the
+     * session_start()/session_regenerate_id() switch itself, and
+     * logoutUser() are exercised for real over genuine HTTP requests by
+     * tests/Browser/RememberMeTest.php and
+     * tests/Browser/IdentificationControllerTest.php instead -- those run
+     * against a live Apache process, a separate PHP runtime the CLI
+     * coverage collector attached to this Pest process can't see, so they
+     * legitimately don't move this file's own line-coverage numbers even
+     * though the behavior itself is real and tested.
+     *
+     * createUserAuthKey()'s candidate-collision retry branch is left
+     * uncovered as genuinely impractical to force: both AuthRepository and
+     * SessionService are `final` with no interface, so PHPUnit 12 refuses
+     * to double either one (ClassIsFinalException), and
+     * SessionService::generateKey(30)'s real random_bytes() CSPRNG can't be
+     * seeded to force a collision against a pre-inserted row either.
+     * generatePasswordLink()'s strtotime() failure guard is left uncovered
+     * as genuinely unreachable, not just impractical: empirically (`php
+     * -r`), every int $duration extreme enough to make
+     * strtotime('now -' . $duration . ' second') return false is *also*
+     * extreme enough that the earlier `(clone Env::now())->modify('+' .
+     * $duration . ' seconds')` call (both config-typed `int` durations
+     * this method reads always reach that line first) throws
+     * DateMalformedStringException before execution ever gets this far --
+     * confirmed across the full magnitude range where either function's
+     * behavior changes, no int value threads the gap between the two.
      */
     final class AuthServiceTest extends IntegrationTestCase
     {
@@ -251,6 +268,124 @@ namespace Piwigo\Tests\Integration {
             }
         }
 
+        public function test_log_user_syncs_the_language_preference_and_clears_the_lang_cookie_when_it_differs(): void
+        {
+            // Only 'en_UK' ships in this suite's fixture `languages` table
+            // (see the two hacking-attempt tests above, which rely on
+            // *every* other code being rejected by
+            // array_key_exists($lang_cookie, LangService::getLanguages()))
+            // -- insert a second real, on-disk language row for the
+            // duration of this test so this exact `if` has a genuinely
+            // different, valid language to accept.
+            $this->conn->executeStatement(
+                "INSERT INTO " . Tables::languages() . " (id, version, name) VALUES ('fr_FR', '16.3.0', 'Francais')"
+            );
+
+            CurrentUser::set(new User(
+                id: UserId::from(1),
+                username: 'fixture_admin',
+                email: '',
+                language: 'en_UK',
+                theme: '',
+                status: UserStatus::Webmaster,
+                enabledHigh: false,
+            ));
+            $_COOKIE['lang'] = 'fr_FR';
+
+            try {
+                // Past both hacking-attempt guards, logUser() unconditionally
+                // continues into the remember-me cookie set/clear and
+                // session_start()/session_regenerate_id() switch below --
+                // both setcookie() and session_start() emit a real
+                // E_WARNING("headers already sent") once Pest's own console
+                // output has already happened earlier in this shared CLI
+                // process (the same CLI-SAPI limitation documented by
+                // tests/Unit/Http/Middleware/SessionMiddlewareTest.php and
+                // InstallWizardTest.php's own
+                // renderSuppressingHeaderWarnings()); a plain `@` does not
+                // stop PHPUnit's own ErrorHandler from surfacing them, so
+                // this needs the same no-op error handler those suites use.
+                set_error_handler(static fn (): bool => true);
+                try {
+                    $this->service->logUser(1, false);
+                } finally {
+                    restore_error_handler();
+                }
+
+                $language = $this->conn->fetchOne('SELECT language FROM ' . Tables::userInfos() . ' WHERE user_id = 1');
+                self::assertSame('fr_FR', $language, 'logUser() should persist the lang cookie value to user_infos.language.');
+
+                // setcookie('lang', '', ['expires' => time() - 3600]) itself
+                // only ever mutates the outgoing response header -- this
+                // process's own $_COOKIE superglobal is never touched by
+                // setcookie() (that only affects the *next* real HTTP
+                // request) -- so there's nothing further in-process to
+                // assert on it directly; the DB write above plus the
+                // absence of any uncaught warning/exception together prove
+                // this exact branch (including the setcookie() call) ran.
+            } finally {
+                unset($_COOKIE['lang']);
+                $this->conn->executeStatement("DELETE FROM " . Tables::languages() . " WHERE id = 'fr_FR'");
+                $this->conn->executeStatement("UPDATE " . Tables::userInfos() . " SET language = 'en_UK' WHERE user_id = 1");
+                unset($_SESSION['pwg_uid']);
+            }
+        }
+
+        public function test_auto_login_succeeds_for_a_valid_remember_me_cookie_and_marks_the_session_ui_context(): void
+        {
+            $remember_me_name = CurrentConfig::rememberMeName();
+            $time = time();
+            $calculated = $this->service->calculateAutoLoginKey(1, $time);
+            self::assertIsString($calculated['key']);
+
+            $_COOKIE[$remember_me_name] = 1 . '-' . $time . '-' . $calculated['key'];
+
+            try {
+                // autoLogin()'s success path unconditionally reaches
+                // logUser(); see the lang-cookie-sync test above for why
+                // that needs the same no-op error handler.
+                set_error_handler(static fn (): bool => true);
+                try {
+                    $result = $this->service->autoLogin();
+                } finally {
+                    restore_error_handler();
+                }
+
+                self::assertTrue($result);
+                // PageFilterHelper::scriptBasename() resolves to this test
+                // binary's own invoking script name under CLI (never
+                // literally "ws"), so the pwg_ui branch always applies here.
+                self::assertSame('pwg_ui', $_SESSION['connected_with'] ?? null);
+            } finally {
+                unset($_COOKIE[$remember_me_name]);
+                unset($_SESSION['pwg_uid'], $_SESSION['connected_with']);
+            }
+        }
+
+        public function test_auto_login_clears_the_cookie_and_returns_false_for_a_malformed_remember_me_cookie(): void
+        {
+            $remember_me_name = CurrentConfig::rememberMeName();
+            // 5 dash-separated parts -- is_string() passes and explode()
+            // runs, but count($cookie) === 3 fails immediately,
+            // short-circuiting the rest of the compound condition. Exercises
+            // the fallback cleanup setcookie() at the bottom of autoLogin()
+            // instead of the success path the test above already covers.
+            $_COOKIE[$remember_me_name] = 'not-a-valid-cookie-format';
+
+            try {
+                set_error_handler(static fn (): bool => true);
+                try {
+                    $result = $this->service->autoLogin();
+                } finally {
+                    restore_error_handler();
+                }
+
+                self::assertFalse($result);
+            } finally {
+                unset($_COOKIE[$remember_me_name]);
+            }
+        }
+
         public function test_pwg_login_returns_true_immediately_when_success_is_already_true(): void
         {
             // The $success===true short-circuit at the very top of
@@ -327,6 +462,50 @@ namespace Piwigo\Tests\Integration {
                     'fake_user_cache',
                     $_SESSION,
                     'pwgLogin() should fast-reject a locked-out username before reaching generateFakeUser()/password_verify().'
+                );
+            } finally {
+                unset($_SESSION['fake_user_cache']);
+                $this->conn->executeStatement('DELETE FROM ' . Tables::userFailedLogins() . ' WHERE user_id = 1');
+            }
+        }
+
+        public function test_pwg_login_fast_rejects_a_locked_out_username_via_the_user_scoped_lockout_block_directly(): void
+        {
+            // A minimal, deterministic reproduction of the user-scoped
+            // lockout block itself, isolated from
+            // test_pwg_login_locks_out_the_username_after_max_attempts_even_with_the_correct_password()'s
+            // own 3-attempt loop above: with maxAttempts=1, the single
+            // real failure below is recorded by the *separate*
+            // "wrong password" block further down pwgLogin() (already
+            // covered by test_pwg_login_records_a_failed_login_row_for_a_
+            // wrong_password() above), and only the *second* call --
+            // this time with the correct password -- is old enough to be
+            // fast-rejected by the user-scoped lockout block itself.
+            CurrentConfig::setLoginLockoutMaxAttempts(1);
+
+            $countFailedLoginsForFixtureAdmin = function (): int {
+                $count = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::userFailedLogins() . ' WHERE user_id = 1');
+                return is_numeric($count) ? (int) $count : 0;
+            };
+
+            try {
+                self::assertFalse($this->service->pwgLogin(false, 'fixture_admin', 'definitely-wrong-password', false));
+                $afterFirstFailure = $countFailedLoginsForFixtureAdmin();
+
+                unset($_SESSION['fake_user_cache']);
+
+                $result = $this->service->pwgLogin(false, 'fixture_admin', 'fixture_admin', false);
+
+                self::assertFalse($result, 'Expected the user-scoped lockout block to reject even a correct password.');
+                self::assertArrayNotHasKey(
+                    'fake_user_cache',
+                    $_SESSION,
+                    'pwgLogin() should fast-reject via the lockout block before reaching generateFakeUser()/password_verify().'
+                );
+                self::assertSame(
+                    $afterFirstFailure + 1,
+                    $countFailedLoginsForFixtureAdmin(),
+                    'The lockout block itself calls recordFailure() a second time.'
                 );
             } finally {
                 unset($_SESSION['fake_user_cache']);

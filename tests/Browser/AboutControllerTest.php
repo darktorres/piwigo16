@@ -49,6 +49,55 @@ it('sets the About page title and body id', function (): void {
  * call is a real, preserved-as-is legacy plugin contract, not touched by
  * this pass).
  */
+/**
+ * Closes the "THEME_ABOUT" assignment (~line 73): gated on
+ * Lang::load('about.html', CurrentConfig::themesPath() . $user_theme .
+ * '/', ...) returning something other than false -- no bundled theme
+ * ships its own language/<lang>/about.html (confirmed via a real
+ * filesystem search, same absence this file's own top docblock already
+ * notes for the credits fallback), so this writes one directly under the
+ * live, Apache-shared themes/default/ root for the duration of this one
+ * test (same throwaway-fixture-under-a-live-root technique
+ * PluginsInstalledPageRendererTest.php's own docblock establishes for
+ * plugins/, scoped here to a NEW file+directories under an EXISTING
+ * theme rather than a whole new theme directory, so no other test's own
+ * theme enumeration is affected). H::setGuestTheme() pins the guest
+ * user's own theme to 'default' (deterministic regardless of test-order
+ * pollution from other files that also call it), matching about.php's
+ * own guest-accessible, no-login-required nature.
+ */
+it('assigns THEME_ABOUT when the active theme ships its own language-specific about.html', function (): void {
+    H::setGuestTheme('default');
+
+    $dir = dirname(__DIR__, 2) . '/themes/default/language/en_UK';
+    $languageDirExisted = is_dir(dirname($dir));
+    if (! is_dir($dir)) {
+        mkdir($dir, 0o777, true);
+    }
+    $file = $dir . '/about.html';
+    file_put_contents($file, '<p>CT theme-specific about content ' . uniqid() . '</p>');
+
+    try {
+        $page = H::gotoOk($this, '/about.php');
+
+        $page->assertSee('CT theme-specific about content');
+        // Still renders the credits body too -- THEME_ABOUT is additive,
+        // not a replacement (about.tpl's own `{if isset($THEME_ABOUT)}`
+        // block sits below `{$ABOUT_MESSAGE}`).
+        $page->assertSee('This photo gallery is based on Piwigo.');
+        $page->assertNoJavaScriptErrors();
+    } finally {
+        @unlink($file);
+        if (is_dir($dir)) {
+            @rmdir($dir);
+        }
+        if (! $languageDirExisted && is_dir(dirname($dir))) {
+            @rmdir(dirname($dir));
+        }
+        H::setGuestTheme('default');
+    }
+});
+
 it('renders the mbLinks menu block for configured links, honoring eval_visible and new_window', function (): void {
     $snapshot = H::snapshotConfig(['links']);
 

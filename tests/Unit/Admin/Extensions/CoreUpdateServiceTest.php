@@ -47,6 +47,10 @@ test('containerVersionCompare treats an identical version as no earlier suffix',
     expect(core_update_service()->containerVersionCompare('16.2.0a', '16.2.0a'))->toBeFalse();
 });
 
+test('containerVersionCompare treats a null v1 as always earlier', function (): void {
+    expect(core_update_service()->containerVersionCompare(null, '16.2.0a'))->toBeLessThan(0);
+});
+
 function core_update_service_test_marker(): string
 {
     /** @var string|null $marker */
@@ -99,15 +103,26 @@ function core_update_service_process_obsolete_list(CoreUpdateService $service, s
     $method->invoke($service, $file);
 }
 
-test('processObsoleteList deletes every listed file plus the list itself', function (): void {
+test('processObsoleteList deletes every listed file plus the list itself, leaving an unlisted file untouched', function (): void {
     $root = core_update_service_test_marker() . '/';
     file_put_contents($root . 'stale.php', 'old code');
+    file_put_contents($root . 'keep.php', 'still here');
     file_put_contents($root . 'obsolete.list', "stale.php\n");
 
     core_update_service_process_obsolete_list(core_update_service_at($root), 'obsolete.list');
 
     expect(file_exists($root . 'stale.php'))->toBeFalse();
     expect(file_exists($root . 'obsolete.list'))->toBeFalse();
+    // Real gap, found via mutation testing: a broken `$path = $this->paths
+    // ->root . $oldFile` (dropping $oldFile) makes $path resolve to the
+    // root directory itself on every loop iteration -- since the root is a
+    // real directory, that mutation still deletes stale.php/obsolete.list
+    // (via the is_dir() -> deltree() branch nuking the whole root), so
+    // checking only their own absence can't tell a targeted per-file
+    // delete from an accidental whole-root wipe. A 3rd, unlisted file
+    // surviving is what actually proves the deletion was scoped to the
+    // listed files.
+    expect(file_exists($root . 'keep.php'))->toBeTrue();
 });
 
 test('processObsoleteList does nothing when the list file does not exist', function (): void {
@@ -117,4 +132,15 @@ test('processObsoleteList does nothing when the list file does not exist', funct
     core_update_service_process_obsolete_list(core_update_service_at($root), 'no-such-list.txt');
 
     expect(file_exists($root . 'keep.php'))->toBeTrue();
+});
+
+test('processObsoleteList does nothing when the list file exists but is empty', function (): void {
+    $root = core_update_service_test_marker() . '/';
+    file_put_contents($root . 'keep.php', 'still here');
+    file_put_contents($root . 'obsolete.list', '');
+
+    core_update_service_process_obsolete_list(core_update_service_at($root), 'obsolete.list');
+
+    expect(file_exists($root . 'keep.php'))->toBeTrue();
+    expect(file_exists($root . 'obsolete.list'))->toBeTrue();
 });

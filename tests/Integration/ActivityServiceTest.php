@@ -390,7 +390,17 @@ final class ActivityServiceTest extends IntegrationTestCase
             self::assertCount(1, $matching);
             self::assertSame('2026-07-10 00:00:00', $matching[0]['occured_on']);
             self::assertIsString($matching[0]['details']);
-            self::assertSame(['from_version' => '16.0.0', 'to_version' => '17.0.0'], json_decode($matching[0]['details'], true));
+            // MySQL's JSON column type reorders object members (by key
+            // length, then lexicographically) independent of the original
+            // insertion order -- ksort() both sides, matching this
+            // codebase's own established convention for this gotcha (see
+            // tests/Contract/WsImagesFilteredSearchTest.php's docblock).
+            $expectedDetails = ['from_version' => '16.0.0', 'to_version' => '17.0.0'];
+            $actualDetails = json_decode($matching[0]['details'], true);
+            ksort($expectedDetails);
+            self::assertIsArray($actualDetails);
+            ksort($actualDetails);
+            self::assertSame($expectedDetails, $actualDetails);
         } finally {
             $this->conn->executeStatement(
                 "DELETE FROM " . Tables::activity() . " WHERE object = 'system' AND action = 'update' AND object_id = " . ActivitySystem::Core

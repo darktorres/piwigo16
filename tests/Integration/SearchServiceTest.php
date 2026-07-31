@@ -851,12 +851,16 @@ final class SearchServiceTest extends IntegrationTestCase
 
     public function test_qsearch_get_text_token_search_sql_throws_when_preg_split_hits_the_backtrack_limit(): void
     {
-        // 'helloworld' (>3 chars, unquoted, no wildcard) forces $useFt=true
-        // so the preg_split() branch actually runs -- same
+        // 'hello-world' (>3 chars, unquoted, no wildcard) forces
+        // $useFt=true so the preg_split() branch actually runs -- same
         // ini_set('pcre.backtrack_limit', '0') technique as
-        // MetadataServiceTest::test_parse_svg_dimensions_returns_null_when_preg_replace_hits_the_backtrack_limit(),
-        // confirmed live to fail even this plain, non-catastrophic
-        // character-class pattern.
+        // MetadataServiceTest::test_parse_svg_dimensions_returns_null_when_preg_replace_hits_the_backtrack_limit().
+        // Must contain at least one of the pattern's own delimiter
+        // characters (confirmed live: a plain 'helloworld' with none of
+        // them never makes preg_split() attempt any real matching work at
+        // all, so it never backtracks and backtrack_limit=0 has nothing
+        // to bite -- only a string the split pattern actually has to work
+        // on, like the real '-' here, reproduces PREG_BACKTRACK_LIMIT_ERROR).
         $originalLimit = ini_get('pcre.backtrack_limit');
         ini_set('pcre.backtrack_limit', '0');
 
@@ -864,7 +868,7 @@ final class SearchServiceTest extends IntegrationTestCase
             $this->expectException(\Exception::class);
             $this->expectExceptionMessage('qsearchGetTextTokenSearchSql(): preg_split() failed');
 
-            $this->service->qsearchGetTextTokenSearchSql(new QSingleToken('helloworld', 0, null), ['name']);
+            $this->service->qsearchGetTextTokenSearchSql(new QSingleToken('hello-world', 0, null), ['name']);
         } finally {
             ini_set('pcre.backtrack_limit', $originalLimit === false ? '1000000' : $originalLimit);
         }

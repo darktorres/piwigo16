@@ -9,6 +9,7 @@ use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Kernel;
@@ -79,6 +80,11 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
         EventDispatcher::reset();
 
         $this->configService = new ConfigService($this->buildConfigRepository());
+        // Template::__construct()'s own data_dir_checked first-time-setup
+        // flow reaches CurrentConfigService::get() -- same wiring every
+        // other Integration test constructing a real Template directly
+        // does (e.g. ThemesStandardPagesPageRendererTest's own setUp()).
+        CurrentConfigService::set($this->configService);
         CurrentTemplate::set(new Template(CurrentPaths::get()->root . 'themes/admin', 'default'));
 
         $urlService = new UrlService(new HtmlService());

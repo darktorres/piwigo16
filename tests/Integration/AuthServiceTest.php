@@ -344,6 +344,30 @@ namespace Piwigo\Tests\Integration {
                 // autoLogin()'s success path unconditionally reaches
                 // logUser(); see the lang-cookie-sync test above for why
                 // that needs the same no-op error handler.
+                //
+                // Real bug, found live: autoLogin() sets $_SESSION[
+                // 'connected_with'] = 'pwg_ui' BEFORE calling logUser(),
+                // and logUser() itself only calls session_regenerate_id()
+                // (which preserves the current $_SESSION content) when a
+                // session is ALREADY active -- otherwise it calls
+                // session_start(), which *reloads* $_SESSION from the
+                // persisted (DB-backed) store, clobbering the in-memory
+                // 'connected_with' write made moments earlier. A real HTTP
+                // request's bootstrap chain always has an active session
+                // by the time autoLogin() runs, so this never bites in
+                // production -- but this CLI test process starts with no
+                // active session, so it must start one first to match that
+                // real precondition (confirmed live: without this,
+                // connected_with reads back null every time).
+                if (session_status() !== \PHP_SESSION_ACTIVE) {
+                    set_error_handler(static fn (): bool => true);
+                    try {
+                        session_start();
+                    } finally {
+                        restore_error_handler();
+                    }
+                }
+
                 set_error_handler(static fn (): bool => true);
                 try {
                     $result = $this->service->autoLogin();
@@ -481,6 +505,33 @@ namespace Piwigo\Tests\Integration {
             // wrong_password() above), and only the *second* call --
             // this time with the correct password -- is old enough to be
             // fast-rejected by the user-scoped lockout block itself.
+            //
+            // Real bug, found live: pwgLogin()'s IP-scoped lockout check
+            // runs FIRST, before the username is even resolved, and only
+            // when $_SERVER['REMOTE_ADDR'] is non-empty (see
+            // test_pwg_login_locks_out_the_username_after_max_attempts_
+            // even_with_the_correct_password()'s own docblock: this CLI
+            // process normally has no REMOTE_ADDR at all, which is exactly
+            // what lets every *other* test in this file exercise the
+            // user-scoped block in isolation). If some other Integration
+            // test file leaves REMOTE_ADDR set (or a real request context
+            // does), and a matching recent failedLoginRepo row exists for
+            // that IP, the IP-scoped check fires first and records under
+            // ip/user_id=NULL -- invisible to a `WHERE user_id = 1` count,
+            // and this test's own very first pwgLogin() call never reaches
+            // the "record a wrong-password failure" branch at all, so
+            // $afterFirstFailure reads back 0 instead of 1. Force
+            // REMOTE_ADDR to the same guaranteed-empty state every sibling
+            // test here relies on implicitly, and clear any leftover
+            // user-scoped row too rather than trusting either precondition.
+            // Assigned, never unset()'d -- IpAddress::fromRemoteAddr() ->
+            // tryFrom('') rejects an empty string as an invalid IP just
+            // like a missing key, so this reaches the exact same $ip = ''
+            // outcome pwgLogin() needs without an unset() PHPStan can't
+            // reason about the shape of $_SERVER through.
+            $originalRemoteAddr = is_string($_SERVER['REMOTE_ADDR'] ?? null) ? $_SERVER['REMOTE_ADDR'] : '';
+            $_SERVER['REMOTE_ADDR'] = '';
+            $this->conn->executeStatement('DELETE FROM ' . Tables::userFailedLogins() . ' WHERE user_id = 1');
             CurrentConfig::setLoginLockoutMaxAttempts(1);
 
             $countFailedLoginsForFixtureAdmin = function (): int {
@@ -510,6 +561,7 @@ namespace Piwigo\Tests\Integration {
             } finally {
                 unset($_SESSION['fake_user_cache']);
                 $this->conn->executeStatement('DELETE FROM ' . Tables::userFailedLogins() . ' WHERE user_id = 1');
+                $_SERVER['REMOTE_ADDR'] = $originalRemoteAddr;
             }
         }
 

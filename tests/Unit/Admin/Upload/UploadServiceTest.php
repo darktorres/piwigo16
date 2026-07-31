@@ -687,11 +687,17 @@ test('prepareDirectoryStatic throws when mkdir() fails under a real unwritable p
     mkdir($parent, 0o555, true);
     $target = $parent . '/never-created';
 
+    // @mkdir() in prepareDirectoryStatic() doesn't suppress this from
+    // PHPUnit's own warning collector -- the real mkdir() failure below is
+    // the whole point of this test, not a bug, so a real error-handler
+    // swap is needed to keep it out of the suite's warning count.
+    set_error_handler(static fn (): bool => true);
     try {
         expect(fn () => upload_service_prepare_directory($target))
             ->toThrow(ImageProcessingException::class, 'cannot create directory "' . $target . '"');
         expect(is_dir($target))->toBeFalse();
     } finally {
+        restore_error_handler();
         chmod($parent, 0o777);
     }
 });

@@ -266,21 +266,24 @@ final class UserRepositoryTest extends IntegrationTestCase
         // A marker row distinct from the fixture's own (1,1)/(1,3)/(1,5)
         // favorites rows, so this assertion doesn't depend on what other
         // tests may already have inserted/removed against user 1's real
-        // favorites.
-        $this->conn->executeStatement('INSERT INTO ' . Tables::favorites() . ' (user_id, image_id) VALUES (1, 999901)');
+        // favorites. image_id must be a real fixture image (favorites.
+        // image_id has a real FK constraint onto images.id) -- image 2
+        // exists in the fixture and isn't one of user 1's own favorited
+        // images above.
+        $this->conn->executeStatement('INSERT INTO ' . Tables::favorites() . ' (user_id, image_id) VALUES (1, 2)');
 
         $this->repo->deleteFavoritesForImages(\Piwigo\Common\ValueObject\UserId::from(1), []);
 
         $count = $this->conn->createQueryBuilder()
             ->select('COUNT(*)')
             ->from(Tables::favorites())
-            ->where('user_id = 1 AND image_id = 999901')
+            ->where('user_id = 1 AND image_id = 2')
             ->executeQuery()
             ->fetchOne();
 
         self::assertSame(1, $count);
 
-        $this->conn->executeStatement('DELETE FROM ' . Tables::favorites() . ' WHERE user_id = 1 AND image_id = 999901');
+        $this->conn->executeStatement('DELETE FROM ' . Tables::favorites() . ' WHERE user_id = 1 AND image_id = 2');
     }
 
     public function test_update_status_for_users_with_no_ids_is_a_noop(): void

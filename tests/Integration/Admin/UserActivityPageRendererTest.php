@@ -7,6 +7,8 @@ namespace Piwigo\Tests\Integration\Admin;
 use Doctrine\DBAL\Connection;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\UserActivityPageRenderer;
+use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
@@ -88,6 +90,11 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
         EventDispatcher::get()->addEventHandler('tabsheet_before_select', CoreTabs::addCoreTabs(...));
 
         Lang::load('admin.lang');
+        // Template::__construct()'s own data_dir_checked first-time-setup
+        // flow reaches CurrentConfigService::get() -- same wiring every
+        // other Integration test constructing a real Template directly
+        // does (e.g. ThemesStandardPagesPageRendererTest's own setUp()).
+        CurrentConfigService::set(new ConfigService($this->buildConfigRepository()));
         CurrentTemplate::set(new Template(CurrentPaths::get()->root . 'themes/admin', 'default'));
 
         $_GET = [];

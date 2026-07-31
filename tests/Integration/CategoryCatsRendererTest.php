@@ -267,6 +267,21 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             'INSERT INTO ' . Tables::imageCategory() . ' (image_id, category_id) VALUES (?, ?)',
             [$newImageId, $newId]
         );
+        // Real bug, found live: without this, render()'s own representative-
+        // picture resolution (CategoryCatsRenderer, the class under test)
+        // has no cached representative, no explicit representative_picture_id,
+        // allowRandomRepresentative() is off by default, and this category
+        // has no sub-categories -- every resolution branch fails, so the
+        // category is legitimately, correctly skipped and logged as "no
+        // image_id found", not rendered at all. createVirtualCategory()
+        // itself never sets this (no images exist yet at creation time),
+        // and a raw image_category insert (unlike a real upload flow)
+        // doesn't either -- set it explicitly, matching what a real upload
+        // actually does.
+        $this->conn->executeStatement(
+            'UPDATE ' . Tables::categories() . ' SET representative_picture_id = ? WHERE id = ?',
+            [$newImageId, $newId]
+        );
 
         try {
             // Primes CachePools::categoryTree()'s per-user 'tree_*' entry

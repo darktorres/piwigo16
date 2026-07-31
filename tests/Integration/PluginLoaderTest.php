@@ -236,11 +236,21 @@ PHP);
         self::assertIsArray($row);
         self::assertIsString($row['details']);
         expect($row['object_id'])->toBe(ActivitySystem::Plugin);
-        expect(json_decode($row['details'], true))->toBe([
+        // MySQL's JSON column type reorders object members (by key length,
+        // then lexicographically) independent of the original insertion
+        // order -- ksort() both sides, matching this codebase's own
+        // established convention for this gotcha (see
+        // tests/Contract/WsImagesFilteredSearchTest.php's docblock).
+        $expectedDetails = [
             'plugin_id' => $id,
             'from_version' => '1.0',
             'to_version' => '2.0',
-        ]);
+        ];
+        $actualDetails = json_decode($row['details'], true);
+        ksort($expectedDetails);
+        self::assertIsArray($actualDetails);
+        ksort($actualDetails);
+        expect($actualDetails)->toBe($expectedDetails);
     }
 
     public function test_autoupdate_plugin_throws_when_the_maintain_class_does_not_extend_plugin_maintain(): void

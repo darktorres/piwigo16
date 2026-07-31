@@ -44,7 +44,15 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    @unlink(intronewsCachePath());
+    // @ doesn't suppress this from PHPUnit's own warning collector -- most
+    // tests here never create the cache file at all, so "already gone" is
+    // the common case, not a bug.
+    set_error_handler(static fn (): bool => true);
+    try {
+        unlink(intronewsCachePath());
+    } finally {
+        restore_error_handler();
+    }
 });
 
 test('getLatestNews reads a fresh cache file without hitting the network', function (): void {
@@ -114,7 +122,16 @@ test('getLatestNews attempts a live fetch and returns an empty array when the ca
     // from here (AppInfo::URL) is deliberately, permanently non-resolving.
     // Left uncovered rather than faked.
     $path = intronewsCachePath();
-    @unlink($path);
+    // @ doesn't suppress this from PHPUnit's own warning collector -- the
+    // cache file genuinely not existing yet is the expected, common case
+    // here (this is defensive pre-test cleanup, not an assertion that a
+    // prior run left one behind).
+    set_error_handler(static fn (): bool => true);
+    try {
+        unlink($path);
+    } finally {
+        restore_error_handler();
+    }
 
     $result = intronewsInvoke();
 

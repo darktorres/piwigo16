@@ -221,6 +221,18 @@ final class RequestBootstrapConnectTest extends IntegrationTestCase
     public function test_connect_records_an_autoupdate_activity_and_restamps_the_version_when_it_differs_from_appinfo(): void
     {
         $this->configService->confUpdateParam('piwigo_installed_version', '16.0.0');
+        // connect() resolves its own ConfigService through the DI
+        // container's shared EntityManager, a different instance from
+        // $this->configService's own standalone one above -- without
+        // this, that shared instance's identity map still holds
+        // whatever ConfigEntry object an earlier test's own connect()
+        // call already loaded (e.g. AppInfo::VERSION from the fresh-
+        // install test above), so CurrentConfig::piwigoInstalledVersion()
+        // reads that stale, already-current value instead of the '16.0.0'
+        // just written -- the version-differs branch never triggers, and
+        // the DB is never restamped. See
+        // feedback_entitymanagerfactory_not_memoized_needs_accessor.
+        \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
         try {
             RequestBootstrap::connect();

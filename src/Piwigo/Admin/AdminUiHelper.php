@@ -125,6 +125,10 @@ final class AdminUiHelper
     {
         $readable = ['', 'k', 'M'];
         $index = 0;
+        // Mutation-testing note: this int/float-0 normalization is
+        // behaviorally inert -- number_format(0, 0) and number_format(0.0, 0)
+        // both render '0', so no test can ever distinguish either branch of
+        // this ternary (confirmed live); not a coverage gap.
         $numbers = ($numbers === 0 || $numbers === 0.0) ? 0 : $numbers;
 
         while ($numbers >= 1000) {

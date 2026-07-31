@@ -162,3 +162,14 @@ test('numberFormatHumanReadable caps at "M" instead of overflowing past the know
     // billion-scale input, not a hypothetical.
     expect(AdminUiHelper::numberFormatHumanReadable(1_000_000_000))->toBe('1.0M');
 });
+
+test('numberFormatHumanReadable stops re-dividing once it has already stepped back to the capped tier', function (): void {
+    // A value large enough that even the post-cap value is still >= 1000
+    // (1 trillion: crosses the 1000 threshold a 4th time before the guard
+    // fires) distinguishes a real `break` from a `continue` here -- both
+    // land on index 2 ('M') after the guard's $index--, but `continue`
+    // would re-enter the loop (numbers is still >= 1000 at that point) and
+    // divide a 4th time, an extra, wrong step down to '1.0M' instead of
+    // stopping with the already-divided '1,000.0M'.
+    expect(AdminUiHelper::numberFormatHumanReadable(1_000_000_000_000))->toBe('1,000.0M');
+});

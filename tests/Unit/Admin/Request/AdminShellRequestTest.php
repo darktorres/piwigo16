@@ -33,10 +33,11 @@ test('fromArrays reports pluginsNewOrderPresent and passes the raw value through
 });
 
 test('fromArrays builds changeThemeUrlParams in page/tab/section order', function (): void {
-    $request = AdminShellRequest::fromArrays(['change_theme' => '1', 'section' => 'default', 'page' => 'configuration'], []);
+    $request = AdminShellRequest::fromArrays(['change_theme' => '1', 'section' => 'default', 'page' => 'configuration', 'tab' => 3], []);
 
-    expect(array_keys($request->changeThemeUrlParams))->toBe(['page', 'section'])
+    expect(array_keys($request->changeThemeUrlParams))->toBe(['page', 'tab', 'section'])
         ->and($request->changeThemeUrlParams['page'])->toBe('configuration')
+        ->and($request->changeThemeUrlParams['tab'])->toBe('3')
         ->and($request->changeThemeUrlParams['section'])->toBe('default');
 });
 

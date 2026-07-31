@@ -6,6 +6,7 @@ use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Html\HtmlService;
 use Piwigo\Url\UrlService;
@@ -35,7 +36,8 @@ test('an unrecognized tab id returns the sheets unchanged', function (): void {
 test('admin_home needs no context and adds the Administration Home tab', function (): void {
     $sheets = CoreTabs::addCoreTabs([], 'admin_home');
 
-    expect($sheets['']['url'])->toBe('admin.php');
+    expect($sheets['']['url'])->toBe('admin.php')
+        ->and($sheets['']['caption'])->toBe(Lang::t('Administration Home'));
 });
 
 test('tags reads myBaseUrl and adds a single List tab', function (): void {
@@ -43,7 +45,8 @@ test('tags reads myBaseUrl and adds a single List tab', function (): void {
 
     $sheets = CoreTabs::addCoreTabs([], 'tags');
 
-    expect($sheets['']['url'])->toBe('/admin.php?page=tags');
+    expect($sheets['']['url'])->toBe('/admin.php?page=tags')
+        ->and($sheets['']['caption'])->toBe('<span class="icon-menu"></span>' . Lang::t('List'));
 });
 
 test('tags throws when myBaseUrl was not set in the context', function (): void {
@@ -78,7 +81,13 @@ test('album reads adminAlbumBaseUrl and adds properties/sort_order/permissions/n
 
     expect(array_keys($sheets))->toBe(['properties', 'sort_order', 'permissions', 'notification']);
     expect($sheets['properties']['url'])->toBe('/admin.php?page=album-5-properties');
+    expect($sheets['sort_order']['url'])->toBe('/admin.php?page=album-5-sort_order');
+    expect($sheets['permissions']['url'])->toBe('/admin.php?page=album-5-permissions');
     expect($sheets['notification']['url'])->toBe('/admin.php?page=album-5-notification');
+    expect($sheets['properties']['caption'])->toBe('<span class="icon-pencil"></span>' . Lang::t('Properties'));
+    expect($sheets['sort_order']['caption'])->toBe('<span class="icon-shuffle"></span>' . Lang::t('Manage photo ranks'));
+    expect($sheets['permissions']['caption'])->toBe('<span class="icon-lock"></span>' . Lang::t('Permissions'));
+    expect($sheets['notification']['caption'])->toBe('<span class="icon-mail-alt"></span>' . Lang::t('Notification'));
 });
 
 test('albums reads myBaseUrl and adds list/permalinks', function (): void {
@@ -88,6 +97,9 @@ test('albums reads myBaseUrl and adds list/permalinks', function (): void {
 
     expect(array_keys($sheets))->toBe(['list', 'permalinks']);
     expect($sheets['list']['url'])->toBe('/admin.php?page=albums');
+    expect($sheets['permalinks']['url'])->toBe('/admin.php?page=permalinks');
+    expect($sheets['list']['caption'])->toBe('<span class="icon-menu"></span>' . Lang::t('List'));
+    expect($sheets['permalinks']['caption'])->toBe('<span class="icon-link-1"></span>' . Lang::t('Permalinks'));
 });
 
 test('users reads myBaseUrl and adds user_list/user_activity, not the dead duplicate case', function (): void {
@@ -96,6 +108,10 @@ test('users reads myBaseUrl and adds user_list/user_activity, not the dead dupli
     $sheets = CoreTabs::addCoreTabs([], 'users');
 
     expect(array_keys($sheets))->toBe(['user_list', 'user_activity']);
+    expect($sheets['user_list']['url'])->toBe('/admin.php?page=user_list');
+    expect($sheets['user_activity']['url'])->toBe('/admin.php?page=user_activity');
+    expect($sheets['user_list']['caption'])->toBe('<span class="icon-menu"></span>' . Lang::t('List'));
+    expect($sheets['user_activity']['caption'])->toBe('<span class="icon-pulse"></span>' . Lang::t('Activity'));
 });
 
 test('batch_manager reads managerLink and adds global/unit', function (): void {
@@ -105,6 +121,8 @@ test('batch_manager reads managerLink and adds global/unit', function (): void {
 
     expect($sheets['global']['url'])->toBe('/admin.php?page=batch_manager&mode=global');
     expect($sheets['unit']['url'])->toBe('/admin.php?page=batch_manager&mode=unit');
+    expect($sheets['global']['caption'])->toBe('<span class="icon-th"></span>' . Lang::t('global mode'));
+    expect($sheets['unit']['caption'])->toBe('<span class="icon-th-list"></span>' . Lang::t('unit mode'));
 });
 
 test('cat_options always adds status/visible, plus comments/representative only when their config is enabled', function (): void {
@@ -115,11 +133,19 @@ test('cat_options always adds status/visible, plus comments/representative only 
     try {
         $sheets = CoreTabs::addCoreTabs([], 'cat_options');
         expect(array_keys($sheets))->toBe(['status', 'visible']);
+        expect($sheets['status']['url'])->toBe('/admin.php?page=cat_options&amp;section=status');
+        expect($sheets['visible']['url'])->toBe('/admin.php?page=cat_options&amp;section=visible');
+        expect($sheets['status']['caption'])->toBe('<span class="icon-lock"></span>' . Lang::t('Public / Private'));
+        expect($sheets['visible']['caption'])->toBe('<span class="icon-block"></span>' . Lang::t('Lock'));
 
         CurrentConfig::setActivateComments(true);
         CurrentConfig::setAllowRandomRepresentative(true);
         $sheets = CoreTabs::addCoreTabs([], 'cat_options');
         expect(array_keys($sheets))->toBe(['status', 'visible', 'comments', 'representative']);
+        expect($sheets['comments']['url'])->toBe('/admin.php?page=cat_options&amp;section=comments');
+        expect($sheets['representative']['url'])->toBe('/admin.php?page=cat_options&amp;section=representative');
+        expect($sheets['comments']['caption'])->toBe('<span class="icon-chat"></span>' . Lang::t('Comments'));
+        expect($sheets['representative']['caption'])->toBe(Lang::t('Representative'));
     } finally {
         CurrentConfig::setActivateComments(false);
         CurrentConfig::setAllowRandomRepresentative(false);
@@ -131,7 +157,8 @@ test('comments reads myBaseUrl and adds a single List tab', function (): void {
 
     $sheets = CoreTabs::addCoreTabs([], 'comments');
 
-    expect($sheets['']['url'])->toBe('/admin.php?page=comments');
+    expect($sheets['']['url'])->toBe('/admin.php?page=comments')
+        ->and($sheets['']['caption'])->toBe('<span class="icon-menu"></span>' . Lang::t('List'));
 });
 
 test('groups reads myBaseUrl and adds a single List tab pointing at group_list', function (): void {
@@ -139,7 +166,8 @@ test('groups reads myBaseUrl and adds a single List tab pointing at group_list',
 
     $sheets = CoreTabs::addCoreTabs([], 'groups');
 
-    expect($sheets['']['url'])->toBe('/admin.php?page=group_list');
+    expect($sheets['']['url'])->toBe('/admin.php?page=group_list')
+        ->and($sheets['']['caption'])->toBe('<span class="icon-menu"> </span>' . Lang::t('List'));
 });
 
 test('configuration reads confLink and adds main/sizes/watermark/display/comments/search', function (): void {
@@ -148,6 +176,18 @@ test('configuration reads confLink and adds main/sizes/watermark/display/comment
     $sheets = CoreTabs::addCoreTabs([], 'configuration');
 
     expect(array_keys($sheets))->toBe(['main', 'sizes', 'watermark', 'display', 'comments', 'search']);
+    expect($sheets['main']['url'])->toBe('/admin.php?page=configuration&section=main');
+    expect($sheets['sizes']['url'])->toBe('/admin.php?page=configuration&section=sizes');
+    expect($sheets['watermark']['url'])->toBe('/admin.php?page=configuration&section=watermark');
+    expect($sheets['display']['url'])->toBe('/admin.php?page=configuration&section=display');
+    expect($sheets['comments']['url'])->toBe('/admin.php?page=configuration&section=comments');
+    expect($sheets['search']['url'])->toBe('/admin.php?page=configuration&section=search');
+    expect($sheets['main']['caption'])->toBe('<span class="icon-cog"></span>' . Lang::t('General'));
+    expect($sheets['sizes']['caption'])->toBe('<span class="icon-zoom-square"></span>' . Lang::t('Photo sizes'));
+    expect($sheets['watermark']['caption'])->toBe('<span class="icon-file-image"></span>' . Lang::t('Watermark'));
+    expect($sheets['display']['caption'])->toBe('<span class="icon-television"></span>' . Lang::t('Display'));
+    expect($sheets['comments']['caption'])->toBe('<span class="icon-chat"></span>' . Lang::t('Comments'));
+    expect($sheets['search']['caption'])->toBe('<span class="icon-search"></span>' . Lang::t('Search'));
 });
 
 test('help reads helpLink and adds add_photos/permissions/groups/virtual_links/misc', function (): void {
@@ -156,6 +196,16 @@ test('help reads helpLink and adds add_photos/permissions/groups/virtual_links/m
     $sheets = CoreTabs::addCoreTabs([], 'help');
 
     expect(array_keys($sheets))->toBe(['add_photos', 'permissions', 'groups', 'virtual_links', 'misc']);
+    expect($sheets['add_photos']['url'])->toBe('/admin.php?page=help&section=add_photos');
+    expect($sheets['permissions']['url'])->toBe('/admin.php?page=help&section=permissions');
+    expect($sheets['groups']['url'])->toBe('/admin.php?page=help&section=groups');
+    expect($sheets['virtual_links']['url'])->toBe('/admin.php?page=help&section=virtual_links');
+    expect($sheets['misc']['url'])->toBe('/admin.php?page=help&section=misc');
+    expect($sheets['add_photos']['caption'])->toBe(Lang::t('Add Photos'));
+    expect($sheets['permissions']['caption'])->toBe(Lang::t('Permissions'));
+    expect($sheets['groups']['caption'])->toBe(Lang::t('Groups'));
+    expect($sheets['virtual_links']['caption'])->toBe(Lang::t('Virtual Links'));
+    expect($sheets['misc']['caption'])->toBe(Lang::t('Miscellaneous'));
 });
 
 test('history reads linkStart and adds stats/history', function (): void {
@@ -165,6 +215,8 @@ test('history reads linkStart and adds stats/history', function (): void {
 
     expect($sheets['stats']['url'])->toBe('/admin.php?page=stats');
     expect($sheets['history']['url'])->toBe('/admin.php?page=history');
+    expect($sheets['stats']['caption'])->toBe('<span class="icon-signal"></span>' . Lang::t('Statistics'));
+    expect($sheets['history']['caption'])->toBe('<span class="icon-search"></span>' . Lang::t('Search'));
 });
 
 test('languages always adds installed, plus update/new only when extension installs are enabled', function (): void {
@@ -174,10 +226,16 @@ test('languages always adds installed, plus update/new only when extension insta
     try {
         $sheets = CoreTabs::addCoreTabs([], 'languages');
         expect(array_keys($sheets))->toBe(['installed']);
+        expect($sheets['installed']['url'])->toBe('/admin.php?page=languages&amp;tab=installed');
+        expect($sheets['installed']['caption'])->toBe('<span class="icon-menu"></span>' . Lang::t('List'));
 
         CurrentConfig::setEnableExtensionsInstall(true);
         $sheets = CoreTabs::addCoreTabs([], 'languages');
         expect(array_keys($sheets))->toBe(['installed', 'update', 'new']);
+        expect($sheets['update']['url'])->toBe('/admin.php?page=languages&amp;tab=update');
+        expect($sheets['new']['url'])->toBe('/admin.php?page=languages&amp;tab=new');
+        expect($sheets['update']['caption'])->toBe('<span class="icon-arrows-cw"></span>' . Lang::t('Check for updates'));
+        expect($sheets['new']['caption'])->toBe('<span class="icon-plus-circled"></span>' . Lang::t('Add New Language'));
     } finally {
         CurrentConfig::setEnableExtensionsInstall(false);
     }
@@ -188,7 +246,8 @@ test('menus reads myBaseUrl and adds a single List tab pointing at menubar', fun
 
     $sheets = CoreTabs::addCoreTabs([], 'menus');
 
-    expect($sheets['']['url'])->toBe('/admin.php?page=menubar');
+    expect($sheets['']['url'])->toBe('/admin.php?page=menubar')
+        ->and($sheets['']['caption'])->toBe('<span class="icon-menu"></span>' . Lang::t('List'));
 });
 
 test('nbm reads baseUrl and adds param/subscribe/send', function (): void {
@@ -198,6 +257,11 @@ test('nbm reads baseUrl and adds param/subscribe/send', function (): void {
 
     expect(array_keys($sheets))->toBe(['param', 'subscribe', 'send']);
     expect($sheets['param']['url'])->toBe('/root?page=notification_by_mail&amp;mode=param');
+    expect($sheets['subscribe']['url'])->toBe('/root?page=notification_by_mail&amp;mode=subscribe');
+    expect($sheets['send']['url'])->toBe('/root?page=notification_by_mail&amp;mode=send');
+    expect($sheets['param']['caption'])->toBe(Lang::t('Parameter'));
+    expect($sheets['subscribe']['caption'])->toBe(Lang::t('Subscribe'));
+    expect($sheets['send']['caption'])->toBe(Lang::t('Send'));
 });
 
 test('photo reads adminPhotoBaseUrl and adds properties/coi, plus formats only when the multi-format feature is enabled', function (): void {
@@ -207,10 +271,16 @@ test('photo reads adminPhotoBaseUrl and adds properties/coi, plus formats only w
     try {
         $sheets = CoreTabs::addCoreTabs([], 'photo');
         expect(array_keys($sheets))->toBe(['properties', 'coi']);
+        expect($sheets['properties']['url'])->toBe('/admin.php?page=photo-42-properties');
+        expect($sheets['coi']['url'])->toBe('/admin.php?page=photo-42-coi');
+        expect($sheets['properties']['caption'])->toBe('<span class="icon-file-image"></span>' . Lang::t('Properties'));
+        expect($sheets['coi']['caption'])->toBe('<span class="icon-crop"></span>' . Lang::t('Center of interest'));
 
         CurrentConfig::setIsFormatsEnabled(true);
         $sheets = CoreTabs::addCoreTabs([], 'photo');
         expect(array_keys($sheets))->toBe(['properties', 'coi', 'formats']);
+        expect($sheets['formats']['url'])->toBe('/admin.php?page=photo-42-formats');
+        expect($sheets['formats']['caption'])->toBe('<span class="icon-docs"></span>' . Lang::t('Formats'));
     } finally {
         CurrentConfig::setIsFormatsEnabled(false);
     }
@@ -222,10 +292,16 @@ test('photos_add needs no context, adds direct/applications, plus ftp only when 
     try {
         $sheets = CoreTabs::addCoreTabs([], 'photos_add');
         expect(array_keys($sheets))->toBe(['direct', 'applications']);
+        expect($sheets['direct']['url'])->toBe('admin.php?page=photos_add&amp;section=direct');
+        expect($sheets['applications']['url'])->toBe('admin.php?page=photos_add&amp;section=applications');
+        expect($sheets['direct']['caption'])->toBe('<span class="icon-upload"></span>' . Lang::t('Web Form'));
+        expect($sheets['applications']['caption'])->toBe('<span class="icon-network"></span>' . Lang::t('Applications'));
 
         CurrentConfig::setEnableSynchronization(true);
         $sheets = CoreTabs::addCoreTabs([], 'photos_add');
         expect(array_keys($sheets))->toBe(['direct', 'applications', 'ftp']);
+        expect($sheets['ftp']['url'])->toBe('admin.php?page=photos_add&amp;section=ftp');
+        expect($sheets['ftp']['caption'])->toBe('<span class="icon-exchange"></span>' . Lang::t('FTP + Synchronization'));
     } finally {
         CurrentConfig::setEnableSynchronization(false);
     }
@@ -238,6 +314,12 @@ test('plugins always adds installed, plus update/new only when extension install
     try {
         $sheets = CoreTabs::addCoreTabs([], 'plugins');
         expect(array_keys($sheets))->toBe(['installed', 'update', 'new']);
+        expect($sheets['installed']['url'])->toBe('/admin.php?page=plugins&amp;tab=installed');
+        expect($sheets['update']['url'])->toBe('/admin.php?page=plugins&amp;tab=update');
+        expect($sheets['new']['url'])->toBe('/admin.php?page=plugins&amp;tab=new');
+        expect($sheets['installed']['caption'])->toBe('<span class="icon-menu"></span>' . Lang::t('List'));
+        expect($sheets['update']['caption'])->toBe('<span class="icon-arrows-cw"></span>' . Lang::t('Check for updates'));
+        expect($sheets['new']['caption'])->toBe('<span class="icon-plus-circled"></span>' . Lang::t('Add New Plugin'));
     } finally {
         CurrentConfig::setEnableExtensionsInstall(false);
     }
@@ -247,6 +329,10 @@ test('rating needs no context and adds rating/rating_user', function (): void {
     $sheets = CoreTabs::addCoreTabs([], 'rating');
 
     expect(array_keys($sheets))->toBe(['rating', 'rating_user']);
+    expect($sheets['rating']['url'])->toBe('admin.php?page=rating');
+    expect($sheets['rating_user']['url'])->toBe('admin.php?page=rating_user');
+    expect($sheets['rating']['caption'])->toBe(Lang::t('Photos'));
+    expect($sheets['rating_user']['caption'])->toBe(Lang::t('Users'));
 });
 
 test('themes always adds installed/standard_pages, plus update/new only when extension installs are enabled', function (): void {
@@ -256,6 +342,17 @@ test('themes always adds installed/standard_pages, plus update/new only when ext
     try {
         $sheets = CoreTabs::addCoreTabs([], 'themes');
         expect(array_keys($sheets))->toBe(['installed', 'standard_pages']);
+        expect($sheets['installed']['url'])->toBe('/admin.php?page=themes&amp;tab=installed');
+        expect($sheets['standard_pages']['url'])->toBe('/admin.php?page=themes&amp;tab=standard_pages');
+        expect($sheets['installed']['caption'])->toBe('<span class="icon-menu"></span>' . Lang::t('List'));
+        expect($sheets['standard_pages']['caption'])->toBe('<span class="icon-cog-alt"></span>' . Lang::t('Standard pages'));
+
+        CurrentConfig::setEnableExtensionsInstall(true);
+        $sheets = CoreTabs::addCoreTabs([], 'themes');
+        expect($sheets['update']['url'])->toBe('/admin.php?page=themes&amp;tab=update');
+        expect($sheets['new']['url'])->toBe('/admin.php?page=themes&amp;tab=new');
+        expect($sheets['update']['caption'])->toBe('<span class="icon-arrows-cw"></span>' . Lang::t('Check for updates'));
+        expect($sheets['new']['caption'])->toBe('<span class="icon-plus-circled"></span>' . Lang::t('Add New Theme'));
     } finally {
         CurrentConfig::setEnableExtensionsInstall(false);
     }
@@ -270,11 +367,17 @@ test('updates adds pwg/ext independently, gated by their own separate config fla
         expect(array_keys(CoreTabs::addCoreTabs([], 'updates')))->toBe([]);
 
         CurrentConfig::setEnableCoreUpdate(true);
-        expect(array_keys(CoreTabs::addCoreTabs([], 'updates')))->toBe(['pwg']);
+        $sheets = CoreTabs::addCoreTabs([], 'updates');
+        expect(array_keys($sheets))->toBe(['pwg']);
+        expect($sheets['pwg']['url'])->toBe('/admin.php?page=updates');
+        expect($sheets['pwg']['caption'])->toBe(Lang::t('Piwigo core'));
 
         CurrentConfig::setEnableCoreUpdate(false);
         CurrentConfig::setEnableExtensionsInstall(true);
-        expect(array_keys(CoreTabs::addCoreTabs([], 'updates')))->toBe(['ext']);
+        $sheets = CoreTabs::addCoreTabs([], 'updates');
+        expect(array_keys($sheets))->toBe(['ext']);
+        expect($sheets['ext']['url'])->toBe('/admin.php?page=updates&amp;tab=ext');
+        expect($sheets['ext']['caption'])->toBe(Lang::t('Extensions'));
 
         CurrentConfig::setEnableCoreUpdate(true);
         expect(array_keys(CoreTabs::addCoreTabs([], 'updates')))->toBe(['pwg', 'ext']);
@@ -291,6 +394,9 @@ test('site_update reads myBaseUrl and adds synchronization/site_maager', functio
 
     expect(array_keys($sheets))->toBe(['synchronization', 'site_maager']);
     expect($sheets['synchronization']['url'])->toBe('/admin.php?page=site_update&site=1');
+    expect($sheets['site_maager']['url'])->toBe('/admin.php?page=site_manager');
+    expect($sheets['synchronization']['caption'])->toBe('<span class="icon-exchange"></span>' . Lang::t('Synchronization'));
+    expect($sheets['site_maager']['caption'])->toBe('<span class="icon-flow-branch"></span>' . Lang::t('Site manager'));
 });
 
 test('maintenance reads myBaseUrl and adds actions/env/sys', function (): void {
@@ -299,6 +405,12 @@ test('maintenance reads myBaseUrl and adds actions/env/sys', function (): void {
     $sheets = CoreTabs::addCoreTabs([], 'maintenance');
 
     expect(array_keys($sheets))->toBe(['actions', 'env', 'sys']);
+    expect($sheets['actions']['url'])->toBe('/admin.php?page=maintenance&tab=actions');
+    expect($sheets['env']['url'])->toBe('/admin.php?page=maintenance&tab=env');
+    expect($sheets['sys']['url'])->toBe('/admin.php?page=maintenance&tab=sys');
+    expect($sheets['actions']['caption'])->toBe('<span class="icon-tools"></span>' . Lang::t('Actions'));
+    expect($sheets['env']['caption'])->toBe('<span class="icon-television"></span>' . Lang::t('Environment'));
+    expect($sheets['sys']['caption'])->toBe('<span class="icon-pulse"></span>' . Lang::t('System Activities'));
 });
 
 test('urlService() throws when setUrlService() was never called', function (): void {

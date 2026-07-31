@@ -163,6 +163,22 @@ test('get_resize_dimensions scales down on the height-bound side', function (): 
     expect($result)->toBe(['width' => 200.0, 'height' => 400]);
 });
 
+test('get_resize_dimensions rounds (not floors) the width-bound side when the fraction is >= 0.5', function (): void {
+    // Real gap, found via mutation testing: the sibling test above lands
+    // on a whole-number ratio (round(400/2) = 200 exactly), so round()
+    // and floor() coincide there. height=401 (vs. 400) shifts the raw
+    // value to 200.5, where round() (201) and floor() (200) differ.
+    $result = PwgImage::get_resize_dimensions(800, 401, 400, 400);
+
+    expect($result)->toBe(['width' => 400, 'height' => 201.0]);
+});
+
+test('get_resize_dimensions rounds (not floors) the height-bound side when the fraction is >= 0.5', function (): void {
+    $result = PwgImage::get_resize_dimensions(401, 800, 400, 400);
+
+    expect($result)->toBe(['width' => 201.0, 'height' => 400]);
+});
+
 test('get_resize_dimensions crops a portrait image against a landscape-ish max, swapping max dimensions via follow_orientation', function (): void {
     // width(100) < height(300) and follow_orientation=true -> max_width/
     // max_height swap to (120, 160) first; dest_ratio(0.75) > img_ratio
@@ -189,6 +205,49 @@ test('get_resize_dimensions crops a landscape image, selecting the destWidth/x-c
         'width' => 100.0,
         'height' => 100,
         'crop' => ['width' => 100.0, 'height' => 100, 'x' => 100.0, 'y' => 0],
+    ]);
+});
+
+test('get_resize_dimensions rounds (not floors) the destHeight/y crop math when the fraction is >= 0.5', function (): void {
+    // Real gap, found via mutation testing: the sibling portrait test
+    // above has a raw destHeight of 133.333 -- round() and floor() both
+    // land on 133 there, so a round()->floor() mutation is invisible.
+    // width=101 (vs. 100) shifts the fraction to 134.667/82.5, where
+    // round() (135/83) and floor() (134/82) genuinely differ.
+    $result = PwgImage::get_resize_dimensions(101, 300, 160, 120, null, true, true);
+
+    expect($result)->toBe([
+        'width' => 101,
+        'height' => 135.0,
+        'crop' => ['width' => 101, 'height' => 135.0, 'x' => 0, 'y' => 83.0],
+    ]);
+});
+
+test('get_resize_dimensions rounds (not floors) the destWidth/x crop math when the fraction is >= 0.5', function (): void {
+    // Same "round vs floor coincide" gap as the sibling test above, for
+    // the destWidth/x-crop branch instead: height=101, max 200x150
+    // yields a raw destWidth of 134.667/x of 82.667, where round()
+    // (135/83) and floor() (134/82) genuinely differ.
+    $result = PwgImage::get_resize_dimensions(300, 101, 200, 150, null, true);
+
+    expect($result)->toBe([
+        'width' => 135.0,
+        'height' => 101,
+        'crop' => ['width' => 135.0, 'height' => 101, 'x' => 83.0, 'y' => 0],
+    ]);
+});
+
+test('get_resize_dimensions does not swap max dimensions for a square (tied width/height) image', function (): void {
+    // Real gap, found via mutation testing: `$width < $height` becoming
+    // `<=` only matters when width and height are exactly equal -- a
+    // square source with a non-square max makes the (wrongly) swapped
+    // vs. not-swapped outcome genuinely different.
+    $result = PwgImage::get_resize_dimensions(200, 200, 160, 120, null, true);
+
+    expect($result)->toBe([
+        'width' => 160,
+        'height' => 120.0,
+        'crop' => ['width' => 200, 'height' => 150.0, 'x' => 0, 'y' => 25.0],
     ]);
 });
 
@@ -266,6 +325,25 @@ test('get_sharpen_matrix returns a normalized 3x3 kernel centered on the amount-
     expect($matrix[1][1])->not->toBe($matrix[0][0]);
 });
 
+test('get_sharpen_matrix computes exact, real weight values for a known amount', function (): void {
+    // Real gap, found via mutation testing: the sibling test above only
+    // checks structural shape, never a real computed value -- amount=50's
+    // pre-normalization center weight is round(abs(-48.0 + 50*0.38), 2) =
+    // 29.0, and every cell (corners included) is that raw matrix summed
+    // then divided by the same norm, so the center/corner *ratio* -29.0
+    // is exact and stable regardless of floating-point precision in the
+    // individual cells.
+    $matrix = PwgImage::get_sharpen_matrix(50);
+
+    expect($matrix[1][1] / $matrix[0][0])->toBe(-29.0);
+    // The center/corner ratio alone can't tell a real normalization pass
+    // from a skipped one (dividing -- or not -- every cell by the same
+    // norm doesn't change their ratio to each other) -- the raw center
+    // weight itself (29.0 pre-normalization, ~1.38 after dividing by the
+    // real norm of 21) is what actually proves the /=$norm loop ran.
+    expect($matrix[1][1])->toBeGreaterThan(1.0)->toBeLessThan(2.0);
+});
+
 test('webp_info detects the simple lossy VP8 format', function (): void {
     $path = pwgImageTestMarker() . '/lossy.webp';
     file_put_contents($path, 'RIFF' . "\x00\x00\x00\x00" . 'WEBP' . 'VP8' . ' ' . str_repeat("\x00", 9));
@@ -313,6 +391,35 @@ test('webp_info detects an animated, transparent extended VP8X format', function
     ]);
 });
 
+test('webp_info detects an extended VP8X format that is animated but not transparent', function (): void {
+    // Real gap, found via mutation testing: the sibling test above sets
+    // both flag bits together, so a mutation on either individual bit
+    // check (0x02 for animation, 0x10 for transparency) can't be told
+    // apart from a mutation on the other -- only a flags byte with just
+    // one bit set can.
+    $path = pwgImageTestMarker() . '/extended-animated-only.webp';
+    $buf = 'RIFF' . "\x00\x00\x00\x00" . 'WEBP' . 'VP8' . 'X' . str_repeat("\x00", 4) . chr(0x02) . str_repeat("\x00", 4);
+    file_put_contents($path, $buf);
+
+    expect(PwgImage::webp_info($path))->toBe([
+        'type' => 'VP8X',
+        'has-animation' => true,
+        'has-transparent' => false,
+    ]);
+});
+
+test('webp_info detects an extended VP8X format that is transparent but not animated', function (): void {
+    $path = pwgImageTestMarker() . '/extended-transparent-only.webp';
+    $buf = 'RIFF' . "\x00\x00\x00\x00" . 'WEBP' . 'VP8' . 'X' . str_repeat("\x00", 4) . chr(0x10) . str_repeat("\x00", 4);
+    file_put_contents($path, $buf);
+
+    expect(PwgImage::webp_info($path))->toBe([
+        'type' => 'VP8X',
+        'has-animation' => false,
+        'has-transparent' => true,
+    ]);
+});
+
 test('webp_info throws for a file that is not a real WEBP container', function (): void {
     $path = pwgImageTestMarker() . '/not-webp.webp';
     file_put_contents($path, str_repeat('x', 30));
@@ -339,10 +446,16 @@ test('get_library falls back to auto for an unrecognized library name, resolving
 });
 
 test('get_graphics_library_label formats the resolved library and version', function (): void {
+    // Real gap, found via mutation testing: only checking "non-empty
+    // string" can't tell a real label/version pair apart from a mangled
+    // concatenation -- ext_imagick (a real `magick` binary is installed
+    // in this environment, confirmed via `command -v magick`) is
+    // get_library()'s first real "auto" pick, so this asserts the exact,
+    // real label format for it.
     $label = PwgImage::get_graphics_library_label();
 
-    expect($label)->toBeString();
-    expect($label)->not->toBe('');
+    expect($label)->toStartWith('External ImageMagick ')
+        ->and($label)->toMatch('/^External ImageMagick \d+\.\d+\.\d+/');
 });
 
 test('constructor uses a plugin-provided image instance and skips its own library resolution entirely', function (): void {
@@ -462,6 +575,15 @@ test('pwg_resize copies the source unchanged when it already fits within the max
     }
     expect($destSize[0])->toBe(40);
     expect($destSize[1])->toBe(30);
+    // Real gap, found via mutation testing: no existing pwg_resize test
+    // ever checked source/destination/size/library -- only width/height
+    // and the destination file's own existence.
+    expect($result['source'])->toBe($source)
+        ->and($result['destination'])->toBe($dest)
+        ->and($result['library'])->toBe('gd')
+        ->and($result['size'])->toEndWith(' KB')
+        ->and((float) $result['size'])->toBeGreaterThanOrEqual(0.0)
+        ->and($result['time'])->toEndWith(' ms');
 });
 
 test('pwg_resize scales a real oversized image down and writes the resized destination', function (): void {
@@ -612,6 +734,20 @@ test('is_ext_imagick returns false when the configured binary directory has no r
     } finally {
         \Piwigo\Config\CurrentConfig::setExtImagickDir($original);
     }
+});
+
+test('is_ext_imagick detects the real, installed magick binary and parses its version', function (): void {
+    // Real gap, found via mutation testing: every other is_ext_imagick()
+    // test forces a nonexistent binary directory to hit the false path
+    // (both the get_ext_imagick_command() 'magick'-vs-'convert' probe and
+    // the version-string preg_match were never exercised for real). A
+    // real `magick` CLI is genuinely installed in this environment
+    // (confirmed via `command -v magick`), so this exercises the actual
+    // success path end to end, not a mock.
+    \Piwigo\Admin\Image\PwgImage::$ext_imagick_version = '';
+
+    expect(PwgImage::is_ext_imagick())->toBeTrue()
+        ->and(PwgImage::$ext_imagick_version)->toMatch('/^\d+\.\d+\.\d+/');
 });
 
 test('get_graphics_library reports a real ImageMagick PHP-extension version when ext_imagick itself is unavailable', function (): void {

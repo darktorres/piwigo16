@@ -100,6 +100,24 @@ test('construct decodes a real PNG', function (): void {
     expect($img->get_height())->toBe(21);
 });
 
+test('construct decodes a real .jpeg (not just .jpg) extension', function (): void {
+    // Real gap, found via mutation testing: every existing jpeg-flavored
+    // test here uses a .jpg path -- removing 'jpeg' from the
+    // in_array(['jpg', 'jpeg']) check was invisible without a real
+    // .jpeg-suffixed file.
+    $path = imageGdTestMarker() . '/photo.jpeg';
+    $gdImg = imagecreatetruecolor(19, 11);
+    if ($gdImg === false) {
+        throw new RuntimeException('imagecreatetruecolor failed');
+    }
+    imagejpeg($gdImg, $path);
+
+    $img = new ImageGd($path);
+
+    expect($img->get_width())->toBe(19);
+    expect($img->get_height())->toBe(11);
+});
+
 test('construct decodes a real GIF', function (): void {
     $path = imageGdTestMarker() . '/photo.gif';
     $gdImg = imagecreatetruecolor(17, 9);
@@ -189,6 +207,29 @@ test('crop produces a real image of exactly the requested size, taken from the c
     expect($rgb['blue'])->toBe(255);
 });
 
+test('crop accepts real float width/height/x/y without a TypeError', function (): void {
+    // Real gap, found via mutation testing: every existing crop() test
+    // passes int literals, never exercising the (int) casts this
+    // method's own docblock says were added specifically because GD's
+    // native functions throw a TypeError on a float argument -- a real
+    // caller (i.php's ImageRect::crop_h()/crop_v(), per that same
+    // comment) always passes floats. Removing any of the 4 casts would
+    // crash this call, not just silently misbehave.
+    $path = imageGdTestMarker() . '/crop-float.png';
+    $gdImg = imagecreatetruecolor(20, 20);
+    if ($gdImg === false) {
+        throw new RuntimeException('imagecreatetruecolor failed');
+    }
+    imagepng($gdImg, $path);
+
+    $img = new ImageGd($path);
+    $result = $img->crop(10.0, 20.0, 10.0, 0.0);
+
+    expect($result)->toBeTrue();
+    expect($img->get_width())->toBe(10);
+    expect($img->get_height())->toBe(20);
+});
+
 test('resize produces a real image scaled to exactly the requested dimensions', function (): void {
     $path = imageGdTestMarker() . '/resize.jpg';
     $gdImg = imagecreatetruecolor(80, 40);
@@ -199,6 +240,22 @@ test('resize produces a real image scaled to exactly the requested dimensions', 
     $img = new ImageGd($path);
 
     $result = $img->resize(40, 20);
+
+    expect($result)->toBeTrue();
+    expect($img->get_width())->toBe(40);
+    expect($img->get_height())->toBe(20);
+});
+
+test('resize accepts real float width/height without a TypeError', function (): void {
+    $path = imageGdTestMarker() . '/resize-float.jpg';
+    $gdImg = imagecreatetruecolor(80, 40);
+    if ($gdImg === false) {
+        throw new RuntimeException('imagecreatetruecolor failed');
+    }
+    imagejpeg($gdImg, $path);
+    $img = new ImageGd($path);
+
+    $result = $img->resize(40.0, 20.0);
 
     expect($result)->toBeTrue();
     expect($img->get_width())->toBe(40);

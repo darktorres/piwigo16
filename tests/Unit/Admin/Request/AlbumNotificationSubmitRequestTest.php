@@ -76,3 +76,21 @@ test('fromArray normalizes a non-string mail_content to an empty string', functi
 
     expect($request->mailContent)->toBe('');
 });
+
+test('fromArray passes a real string mail_content through unchanged', function (): void {
+    $request = AlbumNotificationSubmitRequest::fromArray(['mail_content' => 'Hello there']);
+
+    expect($request->mailContent)->toBe('Hello there');
+});
+
+test('fromArray never validates group when who is not group, even for an invalid group value', function (): void {
+    // `who === 'group'` is the only real gate on group validation (see the
+    // source comment on line 63) -- an invalid group value must be
+    // completely ignored whenever who isn't 'group'.
+    $request = AlbumNotificationSubmitRequest::fromArray([
+        'who' => 'users',
+        'group' => 'not-a-number',
+    ]);
+
+    expect($request->group)->toBe('not-a-number');
+});

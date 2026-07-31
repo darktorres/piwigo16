@@ -90,6 +90,11 @@ final readonly class CatOptionsRequest
         $section_raw = is_string($section_param) ? $section_param : '';
 
         $section = $get['section'] ?? 'status';
+        // 'status' in this whitelist is unobservable on its own: the
+        // fallback value below is that same literal 'status', so whether
+        // an explicit 'status' input matches via in_array() or falls
+        // through to the ternary's else branch, the result is identical
+        // either way. Confirmed while investigating a mutation-testing gap.
         $section = (is_string($section) and in_array($section, ['comments', 'visible', 'status', 'representative'], true))
             ? $section
             : 'status';

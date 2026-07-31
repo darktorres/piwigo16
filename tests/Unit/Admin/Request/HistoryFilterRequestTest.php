@@ -37,3 +37,26 @@ test('fromArray rejects a malformed filter_image_id', function (): void {
     expect(fn (): HistoryFilterRequest => HistoryFilterRequest::fromArray(['filter_image_id' => 'abc']))
         ->toThrow(RuntimeException::class);
 });
+
+test('fromArray rejects a malformed filter_user_id', function (): void {
+    expect(fn (): HistoryFilterRequest => HistoryFilterRequest::fromArray(['filter_user_id' => 'abc']))
+        ->toThrow(RuntimeException::class);
+});
+
+test('fromArray defaults userId to -1 when filter_user_id is present but empty', function (): void {
+    // '' is "empty" per InputValidator's own emptyValue() check (so
+    // validate() no-ops without checking the digit pattern) but is NOT
+    // is_numeric(), distinguishing the isset()+is_numeric() AND from an OR.
+    $request = HistoryFilterRequest::fromArray(['filter_user_id' => '']);
+
+    expect($request->userId)->toBe(-1);
+});
+
+test('fromArray reports hasAnyFilter true when only filter_ip is present', function (): void {
+    // Distinct from the ip+image_id-together case above -- exactly one of
+    // the first two isset() checks true (not both) is what actually
+    // distinguishes `||` from a `&&` mixed into the same chain.
+    $request = HistoryFilterRequest::fromArray(['filter_ip' => '192.168.1.1']);
+
+    expect($request->hasAnyFilter)->toBeTrue();
+});

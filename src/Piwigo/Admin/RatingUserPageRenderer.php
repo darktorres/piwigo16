@@ -214,6 +214,18 @@ final class RatingUserPageRenderer
      * cross-domain generic-row-reader pattern used for comparators
      * elsewhere (e.g. {@see \Piwigo\Category\CategoryService::compareByGlobalRank()}).
      *
+     * Two mutation-testing-confirmed-equivalent shapes repeated across all 4
+     * numeric comparators below (found while investigating a coverage gap):
+     * - Each side's `(float)` cast, taken alone, can't change $d's numeric
+     *   VALUE (is_numeric() already guarantees an int/float/numeric-string,
+     *   which all coerce identically under `-`) -- it can only affect $d's
+     *   TYPE, and only if BOTH sides lose their cast simultaneously (which a
+     *   single mutation never does: the other side's still-active cast
+     *   always forces the subtraction result back to float).
+     * - `$d < 0` is only ever reached after `$d === 0.0` has already failed,
+     *   so $d is guaranteed nonzero there -- `$d <= 0` would behave
+     *   identically to `$d < 0` in that reduced domain.
+     *
      * @param array<string, mixed> $a
      * @param array<string, mixed> $b
      */

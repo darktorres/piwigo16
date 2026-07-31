@@ -45,6 +45,12 @@ test('fromArrays keeps a valid image_order_choice', function (): void {
     expect($request->imageOrderChoice)->toBe('rank');
 });
 
+test('fromArrays keeps user_define as a valid image_order_choice', function (): void {
+    $request = ElementSetRanksRequest::fromArrays([], ['image_order_choice' => 'user_define']);
+
+    expect($request->imageOrderChoice)->toBe('user_define');
+});
+
 test('fromArrays falls back to default for an unknown image_order_choice', function (): void {
     $request = ElementSetRanksRequest::fromArrays([], ['image_order_choice' => 'not_a_real_choice']);
 

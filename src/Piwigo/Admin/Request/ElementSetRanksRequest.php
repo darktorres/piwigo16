@@ -71,6 +71,11 @@ final readonly class ElementSetRanksRequest
         }
 
         $image_order_choice_raw = $post['image_order_choice'] ?? null;
+        // 'default' in this list is unobservable on its own: the fallback
+        // value below is that same literal 'default', so whether an
+        // explicit 'default' input matches via in_array() or falls through
+        // to the ternary's else branch, the result is identical either
+        // way. Confirmed while investigating a mutation-testing gap.
         $image_order_choice = in_array($image_order_choice_raw, ['default', 'rank', 'user_define'], true)
             ? $image_order_choice_raw
             : 'default';

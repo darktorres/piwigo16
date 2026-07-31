@@ -31,6 +31,11 @@ test('fromArrays rejects a non-digit cat_true element', function (): void {
         ->toThrow(RuntimeException::class);
 });
 
+test('fromArrays rejects a non-digit cat_false element', function (): void {
+    expect(fn (): GroupPermSubmitRequest => GroupPermSubmitRequest::fromArrays([], ['cat_false' => ['1; DROP TABLE']]))
+        ->toThrow(RuntimeException::class);
+});
+
 test('fromArrays passes group_id through from GET', function (): void {
     $request = GroupPermSubmitRequest::fromArrays(['group_id' => '42'], []);
 

@@ -34,9 +34,20 @@ test('fromArrays rejects a non-digit cat_true element', function (): void {
         ->toThrow(RuntimeException::class);
 });
 
+test('fromArrays rejects a non-digit cat_false element', function (): void {
+    expect(fn (): CatOptionsRequest => CatOptionsRequest::fromArrays([], ['cat_false' => ['1; DROP TABLE']]))
+        ->toThrow(RuntimeException::class);
+});
+
 test('fromArrays rejects a malformed section when POST is non-empty', function (): void {
     expect(fn (): CatOptionsRequest => CatOptionsRequest::fromArrays(['section' => 'bad;section'], ['falsify' => '1']))
         ->toThrow(RuntimeException::class);
+});
+
+test('fromArrays defaults sectionRaw to an empty string when section is present but not a string', function (): void {
+    $request = CatOptionsRequest::fromArrays(['section' => ['x']], []);
+
+    expect($request->sectionRaw)->toBe('');
 });
 
 test('fromArrays defaults section to status for an unrecognized value', function (): void {

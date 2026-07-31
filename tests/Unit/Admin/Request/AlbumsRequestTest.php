@@ -50,3 +50,16 @@ test('fromArrays rejects a malformed id when an auto-order flag is set', functio
         'id' => 'abc',
     ]))->toThrow(RuntimeException::class);
 });
+
+test('fromArrays defaults id to an empty string when present but not a string', function (): void {
+    // A non-string id that's still scalar (so validate() passes it as-is
+    // against the digit pattern) must fall back to '', not some other
+    // placeholder -- rawId keeps the original non-string value.
+    $request = AlbumsRequest::fromArrays([], [
+        'simpleAutoOrder' => '1',
+        'id' => -1,
+    ]);
+
+    expect($request->id)->toBe('')
+        ->and($request->rawId)->toBe(-1);
+});

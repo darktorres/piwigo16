@@ -37,6 +37,15 @@ test('fromArrays rejects a malformed element_ids', function (): void {
         ->toThrow(RuntimeException::class);
 });
 
+test('fromArrays defaults element_ids to an empty string when present but not a string', function (): void {
+    // A non-string element_ids that's still scalar (so validate() passes
+    // it as-is against the digit-list pattern) must fall back to '', not
+    // some other placeholder.
+    $request = BatchManagerUnitRequest::fromArrays([], ['submit' => '1', 'element_ids' => 123]);
+
+    expect($request->elementIds)->toBe('');
+});
+
 test('fromArrays parses nb_photos_deleted', function (): void {
     $request = BatchManagerUnitRequest::fromArrays([], ['nb_photos_deleted' => '5']);
 
@@ -47,6 +56,17 @@ test('fromArrays parses nb_photos_deleted', function (): void {
 test('fromArrays rejects a malformed nb_photos_deleted', function (): void {
     expect(fn (): BatchManagerUnitRequest => BatchManagerUnitRequest::fromArrays([], ['nb_photos_deleted' => '1; DROP TABLE']))
         ->toThrow(RuntimeException::class);
+});
+
+test('fromArrays defaults nb_photos_deleted to 0 when present but empty', function (): void {
+    // '' is "empty" per InputValidator's own emptyValue() check (so
+    // validate() no-ops without even checking the digit pattern) but is
+    // NOT is_numeric(), so this is the only way to reach the `: 0`
+    // fallback on a present key without a validation throw.
+    $request = BatchManagerUnitRequest::fromArrays([], ['nb_photos_deleted' => '']);
+
+    expect($request->nbPhotosDeletedPresent)->toBeTrue()
+        ->and($request->nbPhotosDeleted)->toBe(0);
 });
 
 test('fromArrays reports isSetSelected and the raw whole_set string', function (): void {
@@ -80,4 +100,16 @@ test('fromArrays parses display', function (): void {
 test('fromArrays treats display=0 and display= as not requested', function (): void {
     expect(BatchManagerUnitRequest::fromArrays(['display' => '0'], [])->displayRequested)->toBeFalse()
         ->and(BatchManagerUnitRequest::fromArrays(['display' => ''], [])->displayRequested)->toBeFalse();
+});
+
+test('fromArrays defaults display to 0 when requested but not purely numeric', function (): void {
+    // display_requested can be true off a non-numeric-but-non-empty raw
+    // value -- intval() on a leading-digit non-numeric string like
+    // '42abc' returns 42 (not 0), so an AND-vs-OR mix-up here is only
+    // observable with a value is_numeric() rejects but intval() doesn't
+    // parse as plain 0.
+    $request = BatchManagerUnitRequest::fromArrays(['display' => '42abc'], []);
+
+    expect($request->displayRequested)->toBeTrue()
+        ->and($request->display)->toBe(0);
 });

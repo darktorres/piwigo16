@@ -134,6 +134,12 @@ final class AccessControl
 
         // null means the comment is anonymous (no owner to compare
         // against) -- only an admin, already handled above, can manage it.
+        // This early return is unobservable on its own: without it,
+        // $commentAuthorId stays null and (int) null === 0 below, but
+        // UserId::from()'s own invariant guarantees $currentUserId is
+        // always a positive integer -- 0 can never match it, so the
+        // fall-through path already lands on the same `return false`.
+        // Confirmed while investigating a mutation-testing gap.
         if ($commentAuthorId === null) {
             return false;
         }

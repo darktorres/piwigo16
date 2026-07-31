@@ -114,6 +114,17 @@ test('canManageComment denies a guest regardless of action or authorship', funct
         ->and(AccessControl::canManageComment('delete', 5))->toBeFalse();
 });
 
+test('canManageComment denies a guest even when they own the comment and editing is enabled', function (): void {
+    // userCanEditComment() defaults to false, so the test above alone
+    // can't prove the guest check runs first (both give false either way)
+    // -- enabling it, and matching the guest's own id to the comment
+    // author, is the only way a skipped guest-guard would flip the result.
+    seedAccessControlUser(UserStatus::Guest, id: 5);
+    CurrentConfig::setUserCanEditComment(true);
+
+    expect(AccessControl::canManageComment('edit', 5))->toBeFalse();
+});
+
 test('canManageComment denies an action outside delete/edit/validate', function (): void {
     seedAccessControlUser(UserStatus::Admin);
 
@@ -163,6 +174,13 @@ test('canManageComment compares the string-typed author id numerically', functio
     CurrentConfig::setUserCanEditComment(true);
 
     expect(AccessControl::canManageComment('edit', '7'))->toBeTrue();
+});
+
+test('canManageComment compares a string-typed author id numerically for delete too', function (): void {
+    seedAccessControlUser(UserStatus::Normal, id: 7);
+    CurrentConfig::setUserCanDeleteComment(true);
+
+    expect(AccessControl::canManageComment('delete', '7'))->toBeTrue();
 });
 
 test('canManageComment denies a normal user on a null (anonymous) author id without throwing', function (): void {
@@ -247,6 +265,46 @@ test('checkStatus calls the installed HtmlRenderingInterface accessDenied() befo
             ->and($renderer->accessDeniedWasCalled)->toBeTrue();
     } finally {
         accessControlTestSetRenderer(null);
+        accessControlTestSetRedirectService(null);
+    }
+});
+
+test('checkStatus skips accessDenied() and throws the plain fallback when only htmlRenderer is wired', function (): void {
+    // Both instanceof checks are required (a real AND, not an OR) -- with
+    // only htmlRenderer set and redirectService still null, accessDenied()
+    // must NOT be called (calling it would pass null where
+    // RedirectServiceInterface is required and throw a TypeError instead
+    // of the plain fallback below).
+    seedAccessControlUser(UserStatus::Guest);
+
+    $renderer = new AccessControlTestFakeHtmlRendererDeniesAccess();
+    accessControlTestSetRenderer($renderer);
+
+    try {
+        $thrown = null;
+        try {
+            AccessControl::checkStatus(\Piwigo\Core\AccessLevel::Classic);
+        } catch (\Throwable $e) {
+            $thrown = $e;
+        }
+
+        expect($thrown)->toBeInstanceOf(RuntimeException::class)
+            ->and($thrown?->getMessage())->toBe('Access denied')
+            ->and($renderer->accessDeniedWasCalled)->toBeFalse();
+    } finally {
+        accessControlTestSetRenderer(null);
+    }
+});
+
+test('checkStatus skips accessDenied() and throws the plain fallback when only redirectService is wired', function (): void {
+    seedAccessControlUser(UserStatus::Guest);
+
+    accessControlTestSetRedirectService(new AccessControlTestFakeRedirectServiceNeverCalled());
+
+    try {
+        expect(fn () => AccessControl::checkStatus(\Piwigo\Core\AccessLevel::Classic))
+            ->toThrow(RuntimeException::class, 'Access denied');
+    } finally {
         accessControlTestSetRedirectService(null);
     }
 });

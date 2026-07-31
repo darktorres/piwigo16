@@ -197,6 +197,10 @@ final class ThemesInstalledPageRenderer
             $tpl_theme['STATE'] = 'inactive';
 
             // is the theme "activable" ?
+            // The (bool) cast is redundant: `!` already coerces its operand
+            // to bool, so removing the cast can't change this condition's
+            // truth value. Confirmed while investigating a mutation-testing
+            // gap.
             if (isset($fs_theme['activable']) and ! (bool) $fs_theme['activable']) {
                 $tpl_theme['ACTIVABLE'] = false;
                 $tpl_theme['ACTIVABLE_TOOLTIP'] = Lang::t('This theme was not designed to be directly activated');
@@ -222,6 +226,12 @@ final class ThemesInstalledPageRenderer
             if (count($children) > 0) {
                 $tpl_theme['DELETABLE'] = false;
 
+                // array_filter() here is defense-in-depth, not covering a
+                // reachable case: getChildrenThemes()'s own loop already
+                // only ever appends a value after its own is_string() guard,
+                // so $children is provably all-strings before this line
+                // ever sees it. Confirmed while investigating a
+                // mutation-testing gap.
                 $tpl_theme['DELETE_TOOLTIP'] = Lang::t(
                     'Impossible to delete this theme. Other themes depends on it: %s',
                     implode(', ', array_filter($children, is_string(...)))
@@ -238,11 +248,22 @@ final class ThemesInstalledPageRenderer
      */
     private function compareThemes(array $a, array $b): int
     {
+        // 'active'=>0 and 'inactive'=>1 are the only 2 weights this map can
+        // ever produce (every other STATE falls through the `?? 1` below,
+        // landing on 1 too) -- so the only comparisons that ever happen are
+        // 0-vs-1. Decrementing 'active' to -1, or dropping the 'inactive'
+        // entry entirely (its own `?? 1` fallback already equals its
+        // removed value), can't change any `>=` outcome in that reduced
+        // 2-value domain. Confirmed while investigating a mutation-testing
+        // gap.
         $s = [
             'active' => 0,
             'inactive' => 1,
         ];
 
+        // The (bool) casts below are redundant: if() already coerces its
+        // condition to bool, so removing either cast can't change which
+        // branch runs. Confirmed while investigating a mutation-testing gap.
         if ((bool) ($a['IS_DEFAULT'] ?? false)) {
             return -1;
         }
@@ -268,6 +289,15 @@ final class ThemesInstalledPageRenderer
             return strcasecmp($a_name, $b_name);
         }
 
+        // $a's own `?? 1` fallback and this whole comparison's left operand
+        // being hardcoded to a fixed literal instead of reading $s[$b_state]
+        // are both unobservable here: with only {0, 1} as real weights,
+        // `>=` against any value in {0, 1} is decided entirely by whether
+        // the OTHER side is exactly 0 -- and $a_state/$b_state being equal
+        // (the only case where $a's own weight-vs-2-vs-1 distinction could
+        // matter) is already handled by the strcasecmp() branch above,
+        // never reaching this line. Confirmed while investigating a
+        // mutation-testing gap.
         return ($s[$a_state] ?? 1) >= ($s[$b_state] ?? 1) ? 1 : -1;
     }
 }

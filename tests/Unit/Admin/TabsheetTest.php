@@ -193,6 +193,31 @@ test('select discards a handler-returned entry that does not match the expected 
     }
 });
 
+test('select discards a well-shaped sheet entry keyed by an int, not just a malformed one', function (): void {
+    // Distinct from the malformed-shape test above: here the *value* is a
+    // perfectly valid ['caption'=>string, 'url'=>string] array -- only the
+    // *key* is wrong (an int, not a string). Both checks (is_string($key)
+    // and is_array($value)) must independently hold; this proves the key
+    // check alone can't be skipped just because the value looks fine.
+    $handler = function (array $sheets): array {
+        $sheets[] = ['caption' => 'Int Keyed', 'url' => '/int-keyed'];
+
+        return $sheets;
+    };
+    EventDispatcher::get()->addEventHandler('tabsheet_before_select', $handler);
+
+    try {
+        $tabsheet = new Tabsheet();
+        $tabsheet->add('general', 'General', '/general');
+
+        $tabsheet->select('general');
+
+        expect($tabsheet->sheets)->toBe(['general' => ['caption' => 'General', 'url' => '/general']]);
+    } finally {
+        EventDispatcher::get()->removeEventHandler('tabsheet_before_select', $handler);
+    }
+});
+
 test('select keeps the current sheets unchanged when a handler returns a non-array value', function (): void {
     $handler = fn (array $sheets): string => 'not-an-array';
     EventDispatcher::get()->addEventHandler('tabsheet_before_select', $handler);
@@ -207,6 +232,28 @@ test('select keeps the current sheets unchanged when a handler returns a non-arr
     } finally {
         EventDispatcher::get()->removeEventHandler('tabsheet_before_select', $handler);
     }
+});
+
+test('assign makes the sheets array available to the tabsheet.tpl template before rendering', function (): void {
+    file_put_contents(CurrentPaths::get()->root . '/tabsheet.tpl', 'CAPTION:{$tabsheet.general.caption}');
+
+    $tabsheet = new Tabsheet('MY_TABSHEET', 'MY_TITLE');
+    $tabsheet->add('general', 'General Settings', '/general');
+
+    $tabsheet->assign();
+
+    $template = CurrentTemplate::get();
+    expect($template->get_template_vars('MY_TABSHEET'))->toBe('CAPTION:General Settings');
+});
+
+test('assign clears the temporary tabsheet template var after compiling it', function (): void {
+    $tabsheet = new Tabsheet('MY_TABSHEET', 'MY_TITLE');
+    $tabsheet->add('general', 'General', '/general');
+
+    $tabsheet->assign();
+
+    $template = CurrentTemplate::get();
+    expect($template->get_template_vars('tabsheet'))->toBeNull();
 });
 
 test('set_titlename overwrites titlename and returns the new value', function (): void {

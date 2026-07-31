@@ -61,6 +61,33 @@ test('fromRow defaults every nullable column to null when absent', function (): 
     // fetched row, since these are NOT NULL DB columns.
 });
 
+test('fromRow defaults the NOT NULL columns to their type\'s zero value when absent', function (): void {
+    $row = fullAuditLogEntryRow();
+    foreach (['id', 'action', 'entity_type', 'created_at', 'row_hash'] as $key) {
+        $row[$key] = null;
+    }
+
+    $entry = AuditLogEntry::fromRow($row);
+
+    expect($entry->id)->toBe(0)
+        ->and($entry->action)->toBe('')
+        ->and($entry->entityType)->toBe('')
+        ->and($entry->createdAt)->toBe('')
+        ->and($entry->rowHash)->toBe('');
+});
+
+test('fromRow passes a real before_json string through unchanged', function (): void {
+    // fullAuditLogEntryRow()'s own before_json is null (the create-action
+    // case, matching AuditRepository's real usage) -- this covers the
+    // update-action case where a real before-state snapshot exists.
+    $row = fullAuditLogEntryRow();
+    $row['before_json'] = '{"username":"old-name"}';
+
+    $entry = AuditLogEntry::fromRow($row);
+
+    expect($entry->beforeJson)->toBe('{"username":"old-name"}');
+});
+
 test('toArray round-trips the exact same DB column shape fromRow narrowed', function (): void {
     $roundTripped = AuditLogEntry::fromRow(fullAuditLogEntryRow())->toArray();
 
@@ -77,4 +104,13 @@ test('toArray round-trips the exact same DB column shape fromRow narrowed', func
         'prev_hash' => str_repeat('a', 64),
         'row_hash' => str_repeat('b', 64),
     ]);
+});
+
+test('toArray does not crash when ipAddress is null', function (): void {
+    $row = fullAuditLogEntryRow();
+    $row['ip_address'] = null;
+
+    $roundTripped = AuditLogEntry::fromRow($row)->toArray();
+
+    expect($roundTripped['ip_address'])->toBeNull();
 });

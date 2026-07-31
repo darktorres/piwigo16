@@ -97,6 +97,25 @@ test('identical state and name compare equal', function (): void {
     expect(callCompareThemes($a, $b))->toBe(0);
 });
 
+test('a theme with no IS_DEFAULT key at all on the $a side is treated as not default', function (): void {
+    // Every other test explicitly sets IS_DEFAULT => false -- distinct
+    // from a genuinely absent key, which also falls back to false via the
+    // same `?? false`.
+    $noKeyA = ['STATE' => 'active', 'NAME' => 'aaa'];
+    $withDefault = ['IS_DEFAULT' => true, 'STATE' => 'inactive', 'NAME' => 'zzz'];
+
+    expect(callCompareThemes($noKeyA, $withDefault))->toBe(1);
+});
+
+test('a theme with no IS_DEFAULT key at all on the $b side is treated as not default', function (): void {
+    // $a must clear its own IS_DEFAULT check first (real, not a
+    // short-circuit) for this to reach $b's own fallback.
+    $active = ['IS_DEFAULT' => false, 'STATE' => 'active', 'NAME' => 'aaa'];
+    $noKeyB = ['STATE' => 'inactive', 'NAME' => 'zzz'];
+
+    expect(callCompareThemes($active, $noKeyB))->toBe(-1);
+});
+
 test('an unrecognized STATE value falls back to the same sort weight as inactive', function (): void {
     // $s only maps 'active'=>0/'inactive'=>1; any other string (or a
     // missing key entirely) reads through the `?? 1` fallback -- confirmed
@@ -104,9 +123,33 @@ test('an unrecognized STATE value falls back to the same sort weight as inactive
     $unrecognized = ['IS_DEFAULT' => false, 'STATE' => 'quarantined', 'NAME' => 'zzz'];
     $inactive = ['IS_DEFAULT' => false, 'STATE' => 'inactive', 'NAME' => 'aaa'];
 
-    // Both resolve to weight 1, so this falls through to the name
-    // tie-break ('aaa' < 'zzz') rather than a state-based ordering.
+    // 'quarantined' !== 'inactive' as strings, so this does NOT take the
+    // strcasecmp() name tie-break (that requires $a_state === $b_state
+    // exactly) -- it falls through to the final weight comparison, where
+    // both sides resolve to 1 and `1 >= 1` deterministically returns 1
+    // regardless of either NAME.
     expect(callCompareThemes($unrecognized, $inactive))->toBeGreaterThan(0);
+});
+
+test('an active theme sorts before a same-weight-1 unrecognized-state theme, not the reverse', function (): void {
+    // Distinguishes the real $s[$b_state]??1 lookup from a hardcoded
+    // literal 1: $b's real weight here (0, 'active') differs from its own
+    // fallback (1), which only shows up when $a's weight is the boundary
+    // value 1 itself... except that's 'inactive'/unrecognized, both of
+    // which map to 1 -- so this specific direction (active vs
+    // unrecognized) is what proves $b_state's fallback participates in the
+    // comparison at all, as opposed to some unrelated defect.
+    $active = ['IS_DEFAULT' => false, 'STATE' => 'active', 'NAME' => 'x'];
+    $unrecognized = ['IS_DEFAULT' => false, 'STATE' => 'quarantined', 'NAME' => 'y'];
+
+    expect(callCompareThemes($active, $unrecognized))->toBe(-1);
+});
+
+test('an inactive theme and a same-weight-1 unrecognized-state theme deterministically sort inactive second', function (): void {
+    $inactive = ['IS_DEFAULT' => false, 'STATE' => 'inactive', 'NAME' => 'x'];
+    $unrecognized = ['IS_DEFAULT' => false, 'STATE' => 'quarantined', 'NAME' => 'y'];
+
+    expect(callCompareThemes($inactive, $unrecognized))->toBe(1);
 });
 
 test('a missing STATE key on both sides is treated as the empty string, not a crash', function (): void {
@@ -114,6 +157,14 @@ test('a missing STATE key on both sides is treated as the empty string, not a cr
     $b = ['IS_DEFAULT' => false, 'NAME' => 'zzz'];
 
     expect(callCompareThemes($a, $b))->toBeLessThan(0);
+});
+
+test('a non-string NAME on either side is treated as the empty string, not a crash', function (): void {
+    $nonStringName = ['IS_DEFAULT' => false, 'STATE' => 'active', 'NAME' => ['not-a-string']];
+    $realName = ['IS_DEFAULT' => false, 'STATE' => 'active', 'NAME' => 'aaa'];
+
+    expect(callCompareThemes($nonStringName, $realName))->toBeLessThan(0)
+        ->and(callCompareThemes($realName, $nonStringName))->toBeGreaterThan(0);
 });
 
 // ---------------------------------------------------------------------
@@ -216,6 +267,44 @@ afterEach(function () use (&$themesInstalledFixtureRoot): void {
         FilesystemHelper::deltree($themesInstalledFixtureRoot);
     }
     $themesInstalledFixtureRoot = null;
+});
+
+test('buildTplTheme maps every fs_theme field to its own distinct template key', function (): void {
+    // Every key below uses a distinct, non-symmetric value so that a
+    // dropped key, a swapped key, or a coalesced-to-null optional field is
+    // independently observable.
+    $tpl = callBuildTplTheme('theme-a', fsThemeEntry([
+        'name' => 'A Real Theme',
+        'uri' => 'https://example.test/theme',
+        'version' => '2.5.1',
+        'description' => 'A real description',
+        'author' => 'Real Author',
+        'author uri' => 'https://example.test/author',
+        'parent' => 'a-real-parent',
+        'screenshot' => '/path/to/screenshot.png',
+        'mobile' => true,
+        'admin_uri' => '/admin/theme-a',
+    ]), [], 'default', themesInstalledLifecycle());
+
+    expect($tpl['ID'])->toBe('theme-a')
+        ->and($tpl['NAME'])->toBe('A Real Theme')
+        ->and($tpl['VISIT_URL'])->toBe('https://example.test/theme')
+        ->and($tpl['VERSION'])->toBe('2.5.1')
+        ->and($tpl['DESC'])->toBe('A real description')
+        ->and($tpl['AUTHOR'])->toBe('Real Author')
+        ->and($tpl['AUTHOR_URL'])->toBe('https://example.test/author')
+        ->and($tpl['PARENT'])->toBe('a-real-parent')
+        ->and($tpl['SCREENSHOT'])->toBe('/path/to/screenshot.png')
+        ->and($tpl['IS_MOBILE'])->toBeTrue()
+        ->and($tpl['ADMIN_URI'])->toBe('/admin/theme-a');
+});
+
+test('buildTplTheme defaults author_uri/parent/admin_uri to null when absent from fs_theme', function (): void {
+    $tpl = callBuildTplTheme('theme-a', fsThemeEntry(), [], 'default', themesInstalledLifecycle());
+
+    expect($tpl['AUTHOR_URL'])->toBeNull()
+        ->and($tpl['PARENT'])->toBeNull()
+        ->and($tpl['ADMIN_URI'])->toBeNull();
 });
 
 // --- active state / is-default / deactivation eligibility ---

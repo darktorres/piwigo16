@@ -315,6 +315,12 @@ final class StatsPageRenderer
      */
     public static function getDateObject(array $row): DateTime
     {
+        // Every (string) cast below (on the is_numeric()-true branch only)
+        // is redundant: $year/$month/$day/$hour are int|string per this
+        // method's own docblock, and `.` concatenation stringifies an int
+        // operand identically to an explicit (string) cast -- removing the
+        // cast can't change the built $date_string. Confirmed while
+        // investigating a mutation-testing gap.
         $year = $row['year'];
         $date_string = is_numeric($year) ? (string) $year : '';
 

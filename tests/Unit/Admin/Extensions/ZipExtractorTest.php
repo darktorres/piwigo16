@@ -342,6 +342,26 @@ test('extract returns null when the archive has more than MAX_ENTRIES entries', 
     expect(is_dir($dest))->toBeFalse();
 });
 
+test('extract accepts an archive with exactly MAX_ENTRIES entries', function (): void {
+    // Real gap, found via mutation testing: the sibling "more than
+    // MAX_ENTRIES" test above uses 20001 (one past the boundary), which
+    // can't tell a `>` from a `>=` -- both reject 20001. Exactly 20000
+    // must still be *accepted* to prove the real boundary.
+    $archive = zip_extractor_test_marker() . '/entry-boundary.zip';
+    $zip = new ZipArchive();
+    $zip->open($archive, ZipArchive::CREATE);
+    for ($i = 0; $i < 20000; $i++) {
+        $zip->addFromString('f' . $i . '.txt', '');
+    }
+    $zip->close();
+    $dest = zip_extractor_test_marker() . '/extracted';
+
+    $result = new ZipExtractor()->extract($archive, $dest, '.');
+
+    expect($result)->not->toBeNull();
+    expect(is_dir($dest))->toBeTrue();
+});
+
 test('extract returns null when the archive\'s total uncompressed size exceeds MAX_UNCOMPRESSED_BYTES', function (): void {
     $archive = zip_extractor_test_marker() . '/size-bomb.zip';
     $bigFile = zip_extractor_test_marker() . '/big.bin';
@@ -377,6 +397,35 @@ test('extract returns null when the archive\'s total uncompressed size exceeds M
 
     expect($result)->toBeNull();
     expect(is_dir($dest))->toBeFalse();
+});
+
+test('extract accepts an archive whose total uncompressed size is exactly MAX_UNCOMPRESSED_BYTES', function (): void {
+    // Same "off by one from the boundary" reasoning as the MAX_ENTRIES
+    // test above -- 525,000,000 can't tell `>` from `>=`. Exactly
+    // 500*1024*1024 must still be *accepted*. Same sparse-file trick.
+    $archive = zip_extractor_test_marker() . '/size-boundary.zip';
+    $bigFile = zip_extractor_test_marker() . '/big-boundary.bin';
+
+    $size = 500 * 1024 * 1024;
+    $handle = fopen($bigFile, 'wb');
+    if ($handle === false) {
+        throw new RuntimeException('Could not open ' . $bigFile . ' for writing');
+    }
+    fseek($handle, $size - 1);
+    fwrite($handle, "\0");
+    fclose($handle);
+
+    $zip = new ZipArchive();
+    $zip->open($archive, ZipArchive::CREATE);
+    $zip->addFile($bigFile, 'big.bin');
+    $zip->close();
+    unlink($bigFile);
+    $dest = zip_extractor_test_marker() . '/extracted';
+
+    $result = new ZipExtractor()->extract($archive, $dest, '.');
+
+    expect($result)->not->toBeNull();
+    expect(is_dir($dest))->toBeTrue();
 });
 
 test('extract strips a leading "./" from destPath before writing', function (): void {

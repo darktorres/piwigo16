@@ -99,6 +99,7 @@ function extensionScannerFixturePlugin(string $root, string $id): void
         /*
         Plugin Name: Full Fixture Plugin
         Version: 2.3.4
+        Plugin URI: https://example.com/extension_view.php?eid=777
         Author: Fixture Author
         Author URI: https://example.com/author
         Has Settings: webmaster
@@ -126,8 +127,10 @@ function extensionScannerFixtureTheme(string $root, string $id): void
         Author URI: https://example.com/theme-author
         */
         \$theme_conf = array(
+            'parent' => 'parent_theme_id',
             'activable' => true,
             'mobile' => true,
+            'use_standard_pages' => true,
         );
         PHP);
     mkdir($dir . '/language/en_UK', 0o777, true);
@@ -173,6 +176,94 @@ test('scan skips a plugin directory with no main.inc.php', function (): void {
         $found = new ExtensionScanner()->scan(ExtensionType::Plugin, new UrlService(new HtmlService()));
 
         expect($found)->not->toHaveKey('no_main_plugin');
+    } finally {
+        FilesystemHelper::deltree($root);
+    }
+});
+
+test('scan trims trailing whitespace from every regex-captured plugin header value', function (): void {
+    // Real gap, found via mutation testing: the "full fixture plugin"
+    // header block has no trailing whitespace on any line, so trim()
+    // never actually had anything to strip -- these patterns' `.+`
+    // capture is greedy up to the newline, so trailing spaces before it
+    // land in the captured group and only trim() removes them.
+    $root = extensionScannerFixtureRoot();
+    try {
+        $dir = $root . 'plugins/padded_header_plugin';
+        mkdir($dir, 0o777, true);
+        // Trailing tabs (not spaces) after each value -- unambiguous and
+        // won't get silently stripped by an editor/tool trimming trailing
+        // whitespace the way a trailing space could.
+        file_put_contents($dir . '/main.inc.php', "<?php\n/*\n"
+            . "Plugin Name: Padded Plugin\t\n"
+            . "Version: 1.2.3\t\n"
+            . "Plugin URI: https://example.com/padded\t\n"
+            . "Description: Padded description\t\n"
+            . "Author: Padded Author\t\n"
+            . "Author URI: https://example.com/padded-author\t\n"
+            . "*/\n");
+
+        $found = new ExtensionScanner()->scan(ExtensionType::Plugin, new UrlService(new HtmlService()));
+
+        expect($found)->toHaveKey('padded_header_plugin');
+        $plugin = $found['padded_header_plugin'];
+        expect($plugin['name'])->toBe('Padded Plugin')
+            ->and($plugin['version'])->toBe('1.2.3')
+            ->and($plugin['uri'])->toBe('https://example.com/padded')
+            ->and($plugin['description'])->toBe('Padded description')
+            ->and($plugin['author'])->toBe('Padded Author')
+            ->and($plugin['author uri'])->toBe('https://example.com/padded-author');
+    } finally {
+        FilesystemHelper::deltree($root);
+    }
+});
+
+test('scan skips a directory entry with an invalid id but keeps scanning the rest', function (): void {
+    // Real gap, found via mutation testing: a directory containing only
+    // '.'/'..' plus valid-id entries never actually reaches the
+    // regex-mismatch branch at all (both are caught by the earlier '.'/
+    // '..' guard), so `continue` vs `break` there was never exercised.
+    // An entry with a dot in its name fails the [a-zA-Z0-9-_]+ id regex
+    // (invalid) placed alphabetically *before* a real, valid plugin id
+    // forces `continue` to matter: `break` would stop scanning right
+    // there and never reach the valid one afterward.
+    $root = extensionScannerFixtureRoot();
+    try {
+        mkdir($root . 'plugins/a.invalid.name', 0o777, true);
+        mkdir($root . 'plugins/zzz_valid_plugin', 0o777, true);
+        file_put_contents($root . 'plugins/zzz_valid_plugin/main.inc.php', "<?php\n/*\nPlugin Name: Valid\n*/\n");
+
+        $found = new ExtensionScanner()->scan(ExtensionType::Plugin, new UrlService(new HtmlService()));
+
+        expect($found)->not->toHaveKey('a.invalid.name')
+            ->and($found)->toHaveKey('zzz_valid_plugin');
+    } finally {
+        FilesystemHelper::deltree($root);
+    }
+});
+
+test('scan defaults name/version/uri/description/author for a plugin whose main.inc.php has no matching headers', function (): void {
+    // Real gap, found via mutation testing: every other plugin test uses
+    // a fully-populated header block, so nothing ever exercised the
+    // initial $plugin = [...] default values themselves (name falls back
+    // to the directory id, version to '0', the rest to '').
+    $root = extensionScannerFixtureRoot();
+    try {
+        mkdir($root . 'plugins/headerless_plugin', 0o777, true);
+        file_put_contents($root . 'plugins/headerless_plugin/main.inc.php', "<?php\n// no header block at all\n");
+
+        $found = new ExtensionScanner()->scan(ExtensionType::Plugin, new UrlService(new HtmlService()));
+
+        expect($found)->toHaveKey('headerless_plugin');
+        $plugin = $found['headerless_plugin'];
+        expect($plugin['name'])->toBe('headerless_plugin')
+            ->and($plugin['version'])->toBe('0')
+            ->and($plugin['uri'])->toBe('')
+            ->and($plugin['description'])->toBe('')
+            ->and($plugin['author'])->toBe('')
+            ->and($plugin['hasSettings'])->toBeFalse()
+            ->and($plugin)->not->toHaveKey('author uri')
+            ->and($plugin)->not->toHaveKey('extension');
     } finally {
         FilesystemHelper::deltree($root);
     }
@@ -226,6 +317,11 @@ test('scan reports hasSettings=true for a webmaster-gated plugin when the curren
 
         expect($found)->toHaveKey('webmaster_gated_plugin')
             ->and($found['webmaster_gated_plugin']['hasSettings'])->toBeTrue()
+            ->and($found['webmaster_gated_plugin']['name'])->toBe('Full Fixture Plugin')
+            ->and($found['webmaster_gated_plugin']['version'])->toBe('2.3.4')
+            ->and($found['webmaster_gated_plugin']['uri'])->toBe('https://example.com/extension_view.php?eid=777')
+            ->and($found['webmaster_gated_plugin']['extension'])->toBe('777')
+            ->and($found['webmaster_gated_plugin']['author'])->toBe('Fixture Author')
             ->and($found['webmaster_gated_plugin']['description'])->toBe('A fixture plugin description for coverage.')
             ->and($found['webmaster_gated_plugin']['author uri'])->toBe('https://example.com/author');
     } finally {
@@ -247,6 +343,85 @@ test('scan reports hasSettings=false for a webmaster-gated plugin when the curre
         // settings page behind webmaster status.
         expect($found)->toHaveKey('webmaster_gated_plugin_normal_user')
             ->and($found['webmaster_gated_plugin_normal_user']['hasSettings'])->toBeFalse();
+    } finally {
+        FilesystemHelper::deltree($root);
+    }
+});
+
+test('scan trims trailing whitespace from every regex-captured theme header value', function (): void {
+    $root = extensionScannerFixtureRoot();
+    try {
+        $dir = $root . 'themes/padded_header_theme';
+        mkdir($dir . '/admin', 0o777, true);
+        file_put_contents($dir . '/themeconf.inc.php', "<?php\n/*\n"
+            . "Theme Name: Padded Theme\t\n"
+            . "Version: 4.5.6\t\n"
+            . "Theme URI: https://example.com/padded-theme\t\n"
+            . "Description: Padded theme description\t\n"
+            . "Author: Padded Theme Author\t\n"
+            . "Author URI: https://example.com/padded-theme-author\t\n"
+            . "*/\n");
+        file_put_contents($dir . '/screenshot.png', 'fixture');
+
+        $found = new ExtensionScanner()->scan(ExtensionType::Theme, new UrlService(new HtmlService()));
+
+        expect($found)->toHaveKey('padded_header_theme');
+        $theme = $found['padded_header_theme'];
+        expect($theme['name'])->toBe('Padded Theme')
+            ->and($theme['version'])->toBe('4.5.6')
+            ->and($theme['uri'])->toBe('https://example.com/padded-theme')
+            ->and($theme['description'])->toBe('Padded theme description')
+            ->and($theme['author'])->toBe('Padded Theme Author')
+            ->and($theme['author uri'])->toBe('https://example.com/padded-theme-author');
+    } finally {
+        FilesystemHelper::deltree($root);
+    }
+});
+
+test('scan escapes special HTML characters in every string field it returns', function (): void {
+    // "IMPORTANT SECURITY!" pass (scanPlugin()'s/scanTheme()'s/
+    // scanLanguage()'s own htmlspecialchars() call) -- never actually
+    // exercised with a value containing anything to escape.
+    $root = extensionScannerFixtureRoot();
+    try {
+        $dir = $root . 'plugins/xss_plugin';
+        mkdir($dir, 0o777, true);
+        file_put_contents($dir . '/main.inc.php', "<?php\n/*\n"
+            . "Plugin Name: <script>alert(1)</script> & \"Quoted\"\n"
+            . "*/\n");
+
+        $found = new ExtensionScanner()->scan(ExtensionType::Plugin, new UrlService(new HtmlService()));
+
+        expect($found)->toHaveKey('xss_plugin')
+            ->and($found['xss_plugin']['name'])->toBe('&lt;script&gt;alert(1)&lt;/script&gt; &amp; &quot;Quoted&quot;');
+    } finally {
+        FilesystemHelper::deltree($root);
+    }
+});
+
+test('scan defaults id/name/version/uri/description/author for a theme whose themeconf.inc.php has no matching headers', function (): void {
+    $root = extensionScannerFixtureRoot();
+    try {
+        mkdir($root . 'themes/headerless_theme/admin', 0o777, true);
+        file_put_contents($root . 'themes/headerless_theme/themeconf.inc.php', "<?php\n// no header block at all\n");
+        file_put_contents($root . 'themes/headerless_theme/screenshot.png', 'fixture');
+
+        $found = new ExtensionScanner()->scan(ExtensionType::Theme, new UrlService(new HtmlService()));
+
+        expect($found)->toHaveKey('headerless_theme');
+        $theme = $found['headerless_theme'];
+        expect($theme['id'])->toBe('headerless_theme')
+            ->and($theme['name'])->toBe('headerless_theme')
+            ->and($theme['version'])->toBe('0')
+            ->and($theme['uri'])->toBe('')
+            ->and($theme['description'])->toBe('')
+            ->and($theme['author'])->toBe('')
+            ->and($theme['mobile'])->toBeFalse()
+            ->and($theme)->not->toHaveKey('author uri')
+            ->and($theme)->not->toHaveKey('extension')
+            ->and($theme)->not->toHaveKey('parent')
+            ->and($theme)->not->toHaveKey('activable')
+            ->and($theme)->not->toHaveKey('use_standard_pages');
     } finally {
         FilesystemHelper::deltree($root);
     }
@@ -287,15 +462,20 @@ test('scan extracts every optional theme header field from a fully-populated the
 
         expect($found)->toHaveKey('full_fixture_theme');
         $theme = $found['full_fixture_theme'];
-        expect($theme['uri'])->toBe('https://example.com/extension_view.php?eid=999')
+        expect($theme['name'])->toBe('Full Fixture Theme')
+            ->and($theme['version'])->toBe('3.1.4')
+            ->and($theme['author'])->toBe('Fixture Theme Author')
+            ->and($theme['uri'])->toBe('https://example.com/extension_view.php?eid=999')
             ->and($theme['description'])->toBe('A fixture theme description for coverage.')
             ->and($theme['author uri'])->toBe('https://example.com/theme-author')
             // extractExtensionId() parses the eid straight out of the URI
             // above -- real end-to-end behaviour, not a separately-mocked
             // value.
             ->and($theme['extension'])->toBe('999')
+            ->and($theme['parent'])->toBe('parent_theme_id')
             ->and($theme['activable'])->toBeTrue()
             ->and($theme['mobile'])->toBeTrue()
+            ->and($theme['use_standard_pages'])->toBeTrue()
             // Real string, not a bool -- htmlspecialchars() escaping (the
             // "IMPORTANT SECURITY!" pass) turns '&' into '&amp;', so this
             // deliberately checks for a substring rather than an exact
@@ -307,6 +487,30 @@ test('scan extracts every optional theme header field from a fully-populated the
     } finally {
         FilesystemHelper::deltree($root);
     }
+});
+
+function extensionScannerExtractExtensionId(string $uri): ?string
+{
+    $method = new ReflectionMethod(ExtensionScanner::class, 'extractExtensionId');
+    $result = $method->invoke(new ExtensionScanner(), $uri);
+
+    return is_string($result) ? $result : null;
+}
+
+test('extractExtensionId returns null for an empty uri', function (): void {
+    expect(extensionScannerExtractExtensionId(''))->toBeNull();
+});
+
+test('extractExtensionId returns null for a uri with no eid marker', function (): void {
+    expect(extensionScannerExtractExtensionId('https://example.com/'))->toBeNull();
+});
+
+test('extractExtensionId returns null for a non-numeric eid', function (): void {
+    expect(extensionScannerExtractExtensionId('https://example.com/extension_view.php?eid=not-a-number'))->toBeNull();
+});
+
+test('extractExtensionId returns the eid for a real, numeric extension_view.php uri', function (): void {
+    expect(extensionScannerExtractExtensionId('https://example.com/extension_view.php?eid=42'))->toBe('42');
 });
 
 test('scan skips a language whose common.po cannot be read', function (): void {
@@ -329,6 +533,35 @@ test('scan skips a language whose common.po cannot be read', function (): void {
         }
 
         expect($found)->not->toHaveKey('unreadable_lang');
+    } finally {
+        FilesystemHelper::deltree($root);
+    }
+});
+
+test('scan does not append an empty, whitespace-only X-Piwigo-Country to the language name', function (): void {
+    // Real gap, found via mutation testing: the real bundled en_UK fixture
+    // (see the very first test in this file) always has a genuinely
+    // non-empty country ("Great Britain"), so it can't tell a real
+    // trim()-then-empty-check from a removed one -- a header value that's
+    // whitespace only exercises both: without trim(), "   " !== '' would
+    // wrongly append "(   )"; without the empty check, it would append
+    // "()" -- only the real, correct behaviour skips it entirely.
+    $root = extensionScannerFixtureRoot();
+    $poFile = $root . 'language/blank_country_lang/common.po';
+    try {
+        mkdir($root . 'language/blank_country_lang', 0o777, true);
+        file_put_contents($poFile, <<<PO
+            msgid ""
+            msgstr ""
+            "X-Piwigo-Language-Name: Blank Country Language\\n"
+            "X-Piwigo-Country:    \\n"
+
+            PO);
+
+        $found = new ExtensionScanner()->scan(ExtensionType::Language, new UrlService(new HtmlService()), 'utf-8');
+
+        expect($found)->toHaveKey('blank_country_lang')
+            ->and($found['blank_country_lang']['name'])->toBe('Blank Country Language');
     } finally {
         FilesystemHelper::deltree($root);
     }

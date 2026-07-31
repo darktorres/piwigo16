@@ -1192,13 +1192,17 @@ it('aggregates portrait/square/panorama ratio buckets from real distinct image d
     bmSetImageDimensions($panoramaId, 5000, 1000); // ratio 5.00
 
     $page = H::navigateOk($page, '/admin.php?page=batch_manager');
-    $html = H::rawWebpage($page)->content();
+    $html = H::settledContent($page);
 
     // batch_manager_filter.inc.tpl only ever renders these `<a
     // class="slider-choice" ...>` ratio-bucket links inside their own
     // `{if isset($dimensions.ratio_*)}` guard -- their mere presence
-    // proves the portrait/square/panorama keys got set.
+    // proves the portrait/square/panorama keys got set. The template's
+    // own {'square'|translate} renders as "Square" (capital S) -- en_UK's
+    // common.po translates the lowercase "square" msgid to "Square",
+    // matching Portrait/Landscape/Panorama's own capitalization (whose
+    // msgids are already capitalized, so they never actually change case).
     expect($html)->toContain('>Portrait</a>')
-        ->and($html)->toContain('>square</a>')
+        ->and($html)->toContain('>Square</a>')
         ->and($html)->toContain('>Panorama</a>');
 });

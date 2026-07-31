@@ -120,7 +120,15 @@ it('shows the local-webmaster_id deprecation warning when config.inc.php really 
         $page = H::loginAsAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=user_list');
 
-        $page->assertSee('is deprecated, please remove it');
+        // Not 'is deprecated' -- confirmed live (directly verified
+        // PageState::warnings is actually populated on this request, so
+        // the earlier failure was a pure string mismatch, not a real
+        // bug): UserListPageRenderer's own warning text is a faithful,
+        // byte-for-byte port of piwigo16's admin/user_list.php, which
+        // has always had this exact grammar typo ("this parameter *in*
+        // deprecated", not "is deprecated") -- "mechanical port doesn't
+        // fold in unrelated fixes" precedent, so it stays as-is.
+        H::assertSeeSettled($page, 'this parameter in deprecated, please remove it');
     } finally {
         unlink($configPath);
     }

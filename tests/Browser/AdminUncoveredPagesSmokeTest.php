@@ -154,9 +154,20 @@ it('theme page includes a real admin.inc.php for a theme that ships one', functi
 
     try {
         $page = H::loginAsAdmin($this);
-        $page = H::navigateOk($page, '/admin.php?page=theme&theme=' . $themeId);
 
-        expect($page->content())->toContain('CT_THEMESUB_INCLUDED');
+        // H::rawGet(), not navigateOk()+content() -- confirmed live:
+        // ThemeSubController::handle() echoes this marker via include_once
+        // *before* the surrounding admin template's own <!DOCTYPE html> is
+        // ever emitted, which really is present in the raw HTTP response
+        // body, but Playwright's page.content() returns
+        // document.documentElement.outerHTML (a DOM serialization), not
+        // the raw response -- a comment positioned before <html> is a
+        // sibling of the <html> element in the parsed document, not a
+        // descendant, so outerHTML never includes it. rawGet()'s in-browser
+        // fetch().text() reads the real, unparsed response body instead.
+        $result = H::rawGet($page, '/admin.php?page=theme&theme=' . $themeId);
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->toContain('CT_THEMESUB_INCLUDED');
     } finally {
         themeSubRemoveFixtureTheme($themeId);
     }
@@ -459,16 +470,31 @@ function pluginSubWriteFixturePlugin(string $pluginId): void
 
 function pluginSubRemoveFixturePlugin(string $pluginId): void
 {
+    // Real file_exists() guards, not a bare @unlink() -- @ only suppresses
+    // the ini display_errors output, not Pest/PHPUnit's own conversion of
+    // a real E_WARNING into a test WARNING outcome (confirmed live: some
+    // callers of this helper never write ct_settings.php at all, e.g. the
+    // "admin popuphelp" test, which only writes main.inc.php).
     $dir = pluginSubPluginsPath() . $pluginId;
-    @unlink($dir . '/main.inc.php');
-    @unlink($dir . '/ct_settings.php');
+    if (file_exists($dir . '/main.inc.php')) {
+        unlink($dir . '/main.inc.php');
+    }
+    if (file_exists($dir . '/ct_settings.php')) {
+        unlink($dir . '/ct_settings.php');
+    }
     if (is_dir($dir)) {
         rmdir($dir);
     }
 }
 
 it('plugin page includes a real settings file from an active on-disk plugin', function (): void {
-    $pluginId = 'ct-pluginsub-active-' . uniqid();
+    // AdminShellRequest::fromArrays()'s own 'section' validation (top-level,
+    // ahead of PluginSectionRequest's plugin-specific check) is a faithful
+    // port of legacy Piwigo's own /^[a-z]+[a-z_\/-]*(\.php)?$/i -- no
+    // digits anywhere in the value. A bare uniqid() plugin id would trip
+    // it (real 401/hacking-attempt page, confirmed live), so the digits
+    // get mapped to letters here instead of dropping uniqueness.
+    $pluginId = 'ct-pluginsub-active-' . strtr(uniqid(), '0123456789', 'abcdefghij');
     pluginSubWriteFixturePlugin($pluginId);
     $db = pluginSubDb();
     $prefix = pluginSubDbPrefix();
@@ -481,9 +507,20 @@ it('plugin page includes a real settings file from an active on-disk plugin', fu
 
     try {
         $page = H::loginAsAdmin($this);
-        $page = H::navigateOk($page, '/admin.php?page=plugin&section=' . $pluginId . '/ct_settings.php');
 
-        expect($page->content())->toContain('CT_PLUGINSUB_INCLUDED');
+        // H::rawGet(), not navigateOk()+content() -- confirmed live:
+        // PluginSubController::handle() echoes this marker via
+        // include_once *before* the surrounding admin template's own
+        // <!DOCTYPE html> is ever emitted, which really is present in the
+        // raw HTTP response body, but Playwright's page.content() returns
+        // document.documentElement.outerHTML (a DOM serialization), not
+        // the raw response -- a comment positioned before <html> is a
+        // sibling of the <html> element in the parsed document, not a
+        // descendant, so outerHTML never includes it. rawGet()'s in-browser
+        // fetch().text() reads the real, unparsed response body instead.
+        $result = H::rawGet($page, '/admin.php?page=plugin&section=' . $pluginId . '/ct_settings.php');
+        expect($result['status'])->toBe(200);
+        expect($result['body'])->toContain('CT_PLUGINSUB_INCLUDED');
     } finally {
         $db = pluginSubDb();
         $db->query(sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, $db->real_escape_string($pluginId)));
@@ -493,7 +530,9 @@ it('plugin page includes a real settings file from an active on-disk plugin', fu
 });
 
 it('plugin page fatal-errors on a missing section file for a real active plugin', function (): void {
-    $pluginId = 'ct-pluginsub-missing-' . uniqid();
+    // Same reasoning as the plugin-page-includes test above -- 'section'
+    // must stay digit-free.
+    $pluginId = 'ct-pluginsub-missing-' . strtr(uniqid(), '0123456789', 'abcdefghij');
     pluginSubWriteFixturePlugin($pluginId);
     $db = pluginSubDb();
     $prefix = pluginSubDbPrefix();

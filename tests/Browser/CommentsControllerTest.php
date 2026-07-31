@@ -631,32 +631,45 @@ it('trigger_errors on an unrecognized comment_action from a real user_comment_ch
             'website_url' => '',
             'pwg_token' => H::pwgToken($page),
         ]);
+        // Not the X-PHP-Error-1 response header -- TestErrorsController's
+        // own docblock documents exactly why: it "may never surface to
+        // the test client" ("a failed/redirected request" -- confirmed
+        // live, this real one too: the switch's default branch falls
+        // straight through into the controller's own normal full-page
+        // render, which has already streamed real body output -- and
+        // therefore already sent HTTP headers -- long before
+        // ErrorCollector::flush()'s shutdown-function header() calls ever
+        // get a chance to run; flush()'s own headers_sent() guard then
+        // silently skips them.
+        //
+        // Also not GET /__test/errors -- confirmed live that doesn't
+        // reliably work either: ErrorCollector's buffer is per-worker-
+        // process, and a second, separate fetch() has no guarantee of
+        // landing on the same Apache prefork worker that handled the
+        // POST (empty errors array observed live). ErrorCollector::
+        // writeTestErrorsLog() is the one path that's genuinely reliable
+        // here: it writes synchronously inside handleError() itself (not
+        // deferred to the shutdown function), straight to a real shared
+        // file (_data/logs/test_errors.log) both the Apache worker and
+        // this CLI test process can read -- no header/worker-affinity
+        // assumption needed.
         $js = <<<JS
         fetch('{$url}', {
             method: 'POST',
             redirect: 'manual',
             headers: {'Content-Type': 'application/x-www-form-urlencoded'},
             body: '{$body}'
-        }).then(async r => JSON.stringify({
-            status: r.status,
-            phpError1: r.headers.get('x-php-error-1'),
-        }))
+        }).then(r => r.status)
         JS;
-        $result = $page->script($js);
-        if (! is_string($result)) {
-            throw new RuntimeException('fetch() did not return a string result: ' . var_export($result, true));
-        }
-        $decoded = json_decode($result, true);
-        if (! is_array($decoded)) {
-            throw new RuntimeException('fetch() result did not decode to an array: ' . $result);
-        }
+        $status = $page->script($js);
+        expect($status)->toBe(200);
 
-        expect($decoded['status'] ?? null)->toBe(200);
-        $phpError1 = $decoded['phpError1'] ?? null;
-        if (! is_string($phpError1)) {
-            throw new RuntimeException('expected an X-PHP-Error-1 response header, got: ' . var_export($phpError1, true));
+        $testErrorsLogPath = dirname(__DIR__, 2) . '/_data/logs/test_errors.log';
+        $testErrorsLog = is_file($testErrorsLogPath) ? file_get_contents($testErrorsLogPath) : false;
+        if (! is_string($testErrorsLog)) {
+            throw new RuntimeException("Could not read {$testErrorsLogPath}");
         }
-        expect($phpError1)->toContain('Invalid comment action ct_unknown_action');
+        expect($testErrorsLog)->toContain('Invalid comment action ct_unknown_action');
     } finally {
         $db = commentsDbConnect();
         $db->query(sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, $db->real_escape_string($pluginId)));

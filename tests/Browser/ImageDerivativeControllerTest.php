@@ -16,14 +16,14 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * 301 redirect to the true original via action.php.
  */
 
-function idcDerivativePath(string $imagePath, string $suffix): string
+function idcDerivativePath(string $imagePath, string $suffix, string $ext = 'jpg'): string
 {
     $withoutExt = preg_replace('/\.\w+$/', '', $imagePath);
     if (! is_string($withoutExt)) {
         throw new RuntimeException("idcDerivativePath(): preg_replace() failed for '{$imagePath}'");
     }
 
-    return $withoutExt . '-' . $suffix . '.jpg';
+    return $withoutExt . '-' . $suffix . '.' . $ext;
 }
 
 function idcCreateTestPhoto(object $test, string $albumName): int
@@ -149,9 +149,9 @@ function idcSetImageRotationCode(int $imageId, int $rotationCode): void
  * public/ -- same root idcCreateTestPhoto()'s own orphan-file test above
  * uses) joined with CurrentConfig::derivativeDir() ('_data/i/').
  */
-function idcDerivativeDiskPath(string $imagePath, string $suffix): string
+function idcDerivativeDiskPath(string $imagePath, string $suffix, string $ext = 'jpg'): string
 {
-    return dirname(__DIR__, 2) . '/_data/i/' . idcDerivativePath($imagePath, $suffix);
+    return dirname(__DIR__, 2) . '/_data/i/' . idcDerivativePath($imagePath, $suffix, $ext);
 }
 
 /** @return array{red: int, green: int, blue: int} */
@@ -1574,7 +1574,16 @@ it('serves the correct Content-Type for a gif derivative', function (): void {
     $imageId = H::uploadPhotoViaApi($gifPath, (int) $albumResult['id'], 'Derivative Gif Photo');
     @unlink($gifPath);
 
-    $result = idcGet('i.php?/' . idcDerivativePath(H::imagePath($imageId), 'th'));
+    // ImageDerivativeController::parseRequest() derives BOTH the disk
+    // lookup path and the Content-Type header from the request URL's own
+    // extension token (derivativeExt), not from the underlying file's
+    // real magic bytes -- idcDerivativePath()'s default 'jpg' extension
+    // would request a '-th.jpg' derivative path that was never generated
+    // (this real .gif original only ever produces a '-th.gif' one),
+    // a genuine 404, not a Content-Type bug. Confirmed live via
+    // ImageDerivativeController.php's own `case '.gif': $ctype =
+    // 'image/gif';` switch.
+    $result = idcGet('i.php?/' . idcDerivativePath(H::imagePath($imageId), 'th', 'gif'));
     expect($result['status'])->toBe(200);
     expect($result['headers']['content-type'] ?? null)->toBe('image/gif');
 });
@@ -1616,8 +1625,12 @@ it('serves the correct Content-Type for an already-cached webp derivative', func
     $imageId = H::uploadPhotoViaApi($webpPath, (int) $albumResult['id'], 'Derivative Webp Photo');
     @unlink($webpPath);
 
+    // Same reasoning as the gif test above -- the disk cache path and the
+    // request URL both need the real 'webp' extension token, not the
+    // 'jpg' default, or the server looks up (and reports Content-Type
+    // for) a completely different, never-generated path.
     $imagePath = H::imagePath($imageId);
-    $derivDiskPath = idcDerivativeDiskPath($imagePath, 'th');
+    $derivDiskPath = idcDerivativeDiskPath($imagePath, 'th', 'webp');
     if (! is_dir(dirname($derivDiskPath))) {
         mkdir(dirname($derivDiskPath), 0o777, true);
     }
@@ -1625,7 +1638,7 @@ it('serves the correct Content-Type for an already-cached webp derivative', func
     touch($derivDiskPath, time() + 60);
 
     try {
-        $result = idcGet('i.php?/' . idcDerivativePath($imagePath, 'th'));
+        $result = idcGet('i.php?/' . idcDerivativePath($imagePath, 'th', 'webp'));
         expect($result['status'])->toBe(200);
         expect($result['headers']['content-type'] ?? null)->toBe('image/webp');
     } finally {

@@ -143,8 +143,12 @@ it('falls back to the raw tag name in letters mode when a real render_tag_name h
         // Without the `! is_string($tag_name)` fallback, a null 'name'
         // would make mb_substr()/StringHelper::pwgTransliterate() choke
         // on a non-string and/or render an empty/broken letter grouping
-        // instead of this real, raw tag name.
-        $page->assertSee($tagName);
+        // instead of this real, raw tag name. assertSeeSettled(), not
+        // $page->assertSee() -- confirmed live: assertSee()'s own polling
+        // reported failure "on the page initially with the url
+        // [.../identification.php]" (the pre-navigation page), a known
+        // Playwright race (see BrowserTestHelpers::settledContent()).
+        H::assertSeeSettled($page, $tagName);
         $page->assertNoJavaScriptErrors();
     } finally {
         $db->query(sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, $db->real_escape_string($pluginId)));

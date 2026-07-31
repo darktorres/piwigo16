@@ -238,7 +238,7 @@ it('renders real per-filter numeric buckets, author/added_by lookups, and a 3+-f
         H::rawWebpage($page)->navigate($searchUrl);
         H::assertNoServerErrors($page, 'search data filters (1st load, cache miss)');
         $page->assertNoJavaScriptErrors();
-        $page->assertSee('Square Data Filter Photo');
+        H::assertSeeSettled($page, 'Square Data Filter Photo');
 
         // Real gap, found via adversarial mutation testing: nothing in
         // this suite ever asserted on SearchFilterRenderer::render()'s own
@@ -326,7 +326,7 @@ it('renders ALBUMS_FOUND/TAGS_FOUND search hints for an allwords match on both a
         H::rawWebpage($page)->navigate($searchUrl);
         H::assertNoServerErrors($page, 'search allwords album/tag hint');
         $page->assertNoJavaScriptErrors();
-        $page->assertSee('ALBUMS_FOUND Hint Photo');
+        H::assertSeeSettled($page, 'ALBUMS_FOUND Hint Photo');
     } finally {
         H::restoreConfig($snapshot);
     }
@@ -384,12 +384,12 @@ it('serves the author-rows cache pool across a cache-miss then cache-hit load wh
         H::rawWebpage($page)->navigate($searchUrl);
         H::assertNoServerErrors($page, 'author-only search (1st load, cache miss)');
         $page->assertNoJavaScriptErrors();
-        $page->assertSee('Search Author Only Photo');
+        H::assertSeeSettled($page, 'Search Author Only Photo');
 
         H::rawWebpage($page)->navigate($searchUrl);
         H::assertNoServerErrors($page, 'author-only search (2nd load, cache hit)');
         $page->assertNoJavaScriptErrors();
-        $page->assertSee('Search Author Only Photo');
+        H::assertSeeSettled($page, 'Search Author Only Photo');
     } finally {
         H::restoreConfig($snapshot);
     }
@@ -447,12 +447,12 @@ it('serves the added_by-rows cache pool across a cache-miss then cache-hit load,
         H::rawWebpage($page)->navigate($searchUrl);
         H::assertNoServerErrors($page, 'added_by-only search (1st load, cache miss)');
         $page->assertNoJavaScriptErrors();
-        $page->assertSee('Search Added By Only Photo');
+        H::assertSeeSettled($page, 'Search Added By Only Photo');
 
         H::rawWebpage($page)->navigate($searchUrl);
         H::assertNoServerErrors($page, 'added_by-only search (2nd load, cache hit)');
         $page->assertNoJavaScriptErrors();
-        $page->assertSee('Search Added By Only Photo');
+        H::assertSeeSettled($page, 'Search Added By Only Photo');
     } finally {
         H::restoreConfig($snapshot);
     }
@@ -465,7 +465,7 @@ it('serves the added_by-rows cache pool across a cache-miss then cache-hit load,
  * inside this range.
  */
 it('serves the height-rows cache pool across a cache-miss then cache-hit load when height is the only active search filter', function (): void {
-    $snapshot = H::snapshotConfig(['filters_views']);
+    $snapshot = H::snapshotConfig(['filters_views', 'order_by']);
     $filtersViews = json_encode([
         'height' => ['access' => 'everybody', 'default' => true],
     ]);
@@ -473,6 +473,25 @@ it('serves the height-rows cache pool across a cache-miss then cache-hit load wh
         throw new RuntimeException('json_encode failed for the filters_views config value');
     }
     H::setConfigValue('filters_views', $filtersViews);
+    // height_min/max is deliberately non-selective (every makeTestImage()
+    // fixture is an identical 200x150 real .jpg, so it matches every test
+    // photo ever created, not just this test's own upload) -- the default
+    // sort (`date_available DESC, file ASC, id ASC`) can't tell them apart
+    // either, since every fixture photo shares the same frozen test-clock
+    // date_available (confirmed live: '2026-08-01 00:00:00' on every row,
+    // old and new alike), leaving `id ASC` as the real tie-break and
+    // burying this test's own just-created (highest id) photo past page 1
+    // once enough prior suite runs have piled up matching rows. Ordering
+    // by id DESC instead puts it on page 1 deterministically, regardless
+    // of how much test history the shared DB already carries.
+    H::setConfigValue('order_by', H::jsonEncode('ORDER BY id DESC'));
+    // The height_rows_<user> cache key (30s TTL) isn't scoped by search
+    // criteria, only by user id -- an unrelated earlier test's own height
+    // search by the same admin user, still within its TTL, would otherwise
+    // make this test's own "1st load" a stale cache hit that predates the
+    // photo uploaded below. Confirmed live: this test passes in isolation
+    // but flakes in the full suite without this clear.
+    \Piwigo\Cache\CachePools::searchResults()->clear();
 
     try {
         $page = H::loginAsAdmin($this);
@@ -501,12 +520,12 @@ it('serves the height-rows cache pool across a cache-miss then cache-hit load wh
         H::rawWebpage($page)->navigate($searchUrl);
         H::assertNoServerErrors($page, 'height-only search (1st load, cache miss)');
         $page->assertNoJavaScriptErrors();
-        $page->assertSee('Search Height Only Photo');
+        H::assertSeeSettled($page, 'Search Height Only Photo');
 
         H::rawWebpage($page)->navigate($searchUrl);
         H::assertNoServerErrors($page, 'height-only search (2nd load, cache hit)');
         $page->assertNoJavaScriptErrors();
-        $page->assertSee('Search Height Only Photo');
+        H::assertSeeSettled($page, 'Search Height Only Photo');
     } finally {
         H::restoreConfig($snapshot);
     }
@@ -517,7 +536,7 @@ it('serves the height-rows cache pool across a cache-miss then cache-hit load wh
  * cache pool entry (lines ~864-869).
  */
 it('serves the width-rows cache pool across a cache-miss then cache-hit load when width is the only active search filter', function (): void {
-    $snapshot = H::snapshotConfig(['filters_views']);
+    $snapshot = H::snapshotConfig(['filters_views', 'order_by']);
     $filtersViews = json_encode([
         'width' => ['access' => 'everybody', 'default' => true],
     ]);
@@ -525,6 +544,14 @@ it('serves the width-rows cache pool across a cache-miss then cache-hit load whe
         throw new RuntimeException('json_encode failed for the filters_views config value');
     }
     H::setConfigValue('filters_views', $filtersViews);
+    // Same "buries this test's own photo past page 1" reasoning as the
+    // height-rows test above -- see its own comment.
+    H::setConfigValue('order_by', H::jsonEncode('ORDER BY id DESC'));
+    // Same reasoning as the height-rows test above -- width_rows_<user> is
+    // keyed only by user id, so a nearby earlier width search by the same
+    // admin user can serve this test a stale, pre-upload cache hit on its
+    // own "1st load" within the pool's 30s TTL.
+    \Piwigo\Cache\CachePools::searchResults()->clear();
 
     try {
         $page = H::loginAsAdmin($this);
@@ -553,12 +580,12 @@ it('serves the width-rows cache pool across a cache-miss then cache-hit load whe
         H::rawWebpage($page)->navigate($searchUrl);
         H::assertNoServerErrors($page, 'width-only search (1st load, cache miss)');
         $page->assertNoJavaScriptErrors();
-        $page->assertSee('Search Width Only Photo');
+        H::assertSeeSettled($page, 'Search Width Only Photo');
 
         H::rawWebpage($page)->navigate($searchUrl);
         H::assertNoServerErrors($page, 'width-only search (2nd load, cache hit)');
         $page->assertNoJavaScriptErrors();
-        $page->assertSee('Search Width Only Photo');
+        H::assertSeeSettled($page, 'Search Width Only Photo');
     } finally {
         H::restoreConfig($snapshot);
     }
@@ -575,7 +602,7 @@ it('serves the width-rows cache pool across a cache-miss then cache-hit load whe
  * "Landscape" ratio (200/150 ≈ 1.33).
  */
 it('serves the ratios cache pool across a cache-miss then cache-hit load when ratios is the only active search filter', function (): void {
-    $snapshot = H::snapshotConfig(['filters_views']);
+    $snapshot = H::snapshotConfig(['filters_views', 'order_by']);
     $filtersViews = json_encode([
         'ratio' => ['access' => 'everybody', 'default' => true],
     ]);
@@ -583,6 +610,17 @@ it('serves the ratios cache pool across a cache-miss then cache-hit load when ra
         throw new RuntimeException('json_encode failed for the filters_views config value');
     }
     H::setConfigValue('filters_views', $filtersViews);
+    // Same "buries this test's own photo past page 1" reasoning as the
+    // height-rows test above -- see its own comment. "Landscape" is
+    // exactly as non-selective as height/width here (every makeTestImage()
+    // fixture's fixed 200x150 dimensions already fall in that ratio
+    // bucket).
+    H::setConfigValue('order_by', H::jsonEncode('ORDER BY id DESC'));
+    // Same reasoning as the height-rows test above -- ratios_<user> is
+    // keyed only by user id, so a nearby earlier ratios search by the same
+    // admin user can serve this test a stale, pre-upload cache hit on its
+    // own "1st load" within the pool's 30s TTL.
+    \Piwigo\Cache\CachePools::searchResults()->clear();
 
     try {
         $page = H::loginAsAdmin($this);
@@ -610,12 +648,12 @@ it('serves the ratios cache pool across a cache-miss then cache-hit load when ra
         H::rawWebpage($page)->navigate($searchUrl);
         H::assertNoServerErrors($page, 'ratios-only search (1st load, cache miss)');
         $page->assertNoJavaScriptErrors();
-        $page->assertSee('Search Ratios Only Photo');
+        H::assertSeeSettled($page, 'Search Ratios Only Photo');
 
         H::rawWebpage($page)->navigate($searchUrl);
         H::assertNoServerErrors($page, 'ratios-only search (2nd load, cache hit)');
         $page->assertNoJavaScriptErrors();
-        $page->assertSee('Search Ratios Only Photo');
+        H::assertSeeSettled($page, 'Search Ratios Only Photo');
     } finally {
         H::restoreConfig($snapshot);
     }
@@ -668,12 +706,12 @@ it('serves the ratings cache pool across a cache-miss then cache-hit load when r
         H::rawWebpage($page)->navigate($searchUrl);
         H::assertNoServerErrors($page, 'ratings-only search (1st load, cache miss)');
         $page->assertNoJavaScriptErrors();
-        $page->assertSee('Search Ratings Only Photo');
+        H::assertSeeSettled($page, 'Search Ratings Only Photo');
 
         H::rawWebpage($page)->navigate($searchUrl);
         H::assertNoServerErrors($page, 'ratings-only search (2nd load, cache hit)');
         $page->assertNoJavaScriptErrors();
-        $page->assertSee('Search Ratings Only Photo');
+        H::assertSeeSettled($page, 'Search Ratings Only Photo');
     } finally {
         H::restoreConfig($snapshot);
     }
@@ -689,7 +727,7 @@ it('serves the ratings cache pool across a cache-miss then cache-hit load when r
  * exercises.
  */
 it('assigns the un-narrowed FILETYPES extension counts when filetypes is the only active search filter', function (): void {
-    $snapshot = H::snapshotConfig(['filters_views']);
+    $snapshot = H::snapshotConfig(['filters_views', 'order_by']);
     $filtersViews = json_encode([
         'file_type' => ['access' => 'everybody', 'default' => true],
     ]);
@@ -697,6 +735,16 @@ it('assigns the un-narrowed FILETYPES extension counts when filetypes is the onl
         throw new RuntimeException('json_encode failed for the filters_views config value');
     }
     H::setConfigValue('filters_views', $filtersViews);
+    // Same "buries this test's own photo past page 1" reasoning as the
+    // height-rows test above -- see its own comment. 'jpg' is exactly as
+    // non-selective as height/width here (every makeTestImage() fixture is
+    // a real .jpg upload).
+    H::setConfigValue('order_by', H::jsonEncode('ORDER BY id DESC'));
+    // Same reasoning as the height-rows test above -- file_exts_<user> is
+    // keyed only by user id, so a nearby earlier filetypes search by the
+    // same admin user can serve this test a stale, pre-upload cache hit
+    // within the pool's 30s TTL.
+    \Piwigo\Cache\CachePools::searchResults()->clear();
 
     try {
         $page = H::loginAsAdmin($this);
@@ -725,7 +773,7 @@ it('assigns the un-narrowed FILETYPES extension counts when filetypes is the onl
         H::rawWebpage($page)->navigate($searchUrl);
         H::assertNoServerErrors($page, 'filetypes-only search');
         $page->assertNoJavaScriptErrors();
-        $page->assertSee('Search Filetypes Only Photo');
+        H::assertSeeSettled($page, 'Search Filetypes Only Photo');
     } finally {
         H::restoreConfig($snapshot);
     }
@@ -790,7 +838,7 @@ it('counts the "Landscape" ratio bucket and skips non-numeric/zero-dimension row
         H::rawWebpage($page)->navigate($searchUrl);
         H::assertNoServerErrors($page, 'ratio bucket landscape/zero/null-dims search');
         $page->assertNoJavaScriptErrors();
-        $page->assertSee('Search Ratio Landscape Photo');
+        H::assertSeeSettled($page, 'Search Ratio Landscape Photo');
 
         $html = H::rawWebpage($page)->content();
         // Only the Landscape photo counts -- the zero-dims and null-dims

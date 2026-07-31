@@ -92,6 +92,15 @@ final class TagsController implements ControllerInterface
                 $tag_name = $tag['name'];
                 if (! is_string($tag_name)) {
                     $tag_name = $tag['name_raw'];
+                    // Real bug found live: without this, the fallback below
+                    // only ever fixed up the local $tag_name (used to
+                    // compute the grouping letter) -- the still-broken
+                    // $tag['name'] (a render_tag_name hook's non-string
+                    // return value) flowed straight into the template via
+                    // array_merge($tag, [...]) below, rendering a real but
+                    // completely empty <a>...</a> link (confirmed live via
+                    // tags.tpl's {$tag.name}) instead of this raw fallback.
+                    $tag['name'] = $tag_name;
                 }
                 $pwgCharset = \Piwigo\Core\CharsetHelper::getPwgCharset();
                 $tag_letter = mb_strtoupper(mb_substr(\Piwigo\Core\StringHelper::pwgTransliterate($tag_name), 0, 1, $pwgCharset), $pwgCharset);

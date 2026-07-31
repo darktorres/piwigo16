@@ -2123,12 +2123,27 @@ it('sizes tab: changing an already-enabled type\'s own dimensions bumps its last
     try {
         $page = H::loginAsAdmin($this);
 
+        // ImageStdParams::load_from_db() self-heals disabled_type_map back
+        // to ImageStdParams::get_disabled_default_sizes() (3xlarge/4xlarge)
+        // whenever it reads back empty -- a faithful port of piwigo16's own
+        // include/derivative_std_params.inc.php load_from_db(), not a
+        // rewrite bug. ctDerivativesPayload()'s default submits every type
+        // (including 3xlarge) as enabled, which leaves disabled_type_map
+        // genuinely empty after a save -- confirmed live: the very next
+        // request's own load_from_db() then silently resets 4xlarge back
+        // to disabled, so it can never reach the "already enabled" branch
+        // this test means to exercise. Keeping 3xlarge disabled (omitting
+        // its own 'enabled' key) avoids that self-heal without touching
+        // production behavior.
+        $baselinePayload = ctDerivativesPayload();
+        unset($baselinePayload['3xlarge']['enabled']);
+
         $token = H::pwgToken($page);
         $baseline = H::adminPost($page, ctConfigSection('sizes'), [
             'pwg_token' => $token,
             'submit' => '1',
             'resize_quality' => '90',
-            'd' => ctDerivativesPayload(),
+            'd' => $baselinePayload,
         ]);
         expect($baseline['status'])->toBe(200);
         expect($baseline['body'])->toContain('Your configuration settings are saved');
@@ -2144,12 +2159,15 @@ it('sizes tab: changing an already-enabled type\'s own dimensions bumps its last
         // -- exercising the "already enabled, size/crop genuinely
         // changed" branch, distinct from the enable/disable toggle test
         // above (which never changes an already-enabled type's own size).
+        $changedPayload = ctDerivativesPayload(['4xlarge' => ['w' => 3200, 'h' => 2400]]);
+        unset($changedPayload['3xlarge']['enabled']);
+
         $token = H::pwgToken($page);
         $changed = H::adminPost($page, ctConfigSection('sizes'), [
             'pwg_token' => $token,
             'submit' => '1',
             'resize_quality' => '90',
-            'd' => ctDerivativesPayload(['4xlarge' => ['w' => 3200, 'h' => 2400]]),
+            'd' => $changedPayload,
         ]);
         expect($changed['status'])->toBe(200);
         expect($changed['body'])->toContain('Your configuration settings are saved');

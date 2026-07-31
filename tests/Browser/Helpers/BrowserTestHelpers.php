@@ -142,39 +142,42 @@ final class BrowserTestHelpers
     }
 
     /**
-     * Fails if the rendered HTML contains a PHP error/warning/notice marker.
-     * Call after every navigation or form submission that should produce a
-     * normal page — this catches server-side breakage that JS-error
-     * assertions (assertNoJavaScriptErrors()) can't see.
+     * content() is a one-shot read, not a pollable condition — same
+     * reasoning as rawWebpage(), and the same fix. Confirmed needed, not
+     * just theoretical: this exact call is where the photo editor page
+     * (heavier DOM than plain listing pages) kept failing with "Timeout
+     * 5000ms exceeded" even after navigate() was fixed.
+     *
+     * A second, distinct race lives here too (task #426): Playwright's
+     * real server-side "page is navigating and changing the content"
+     * error can fire from content() even when goto()'s own "waitUntil:
+     * load" RPC call already returned -- confirmed live (git-stash A/B,
+     * 5 isolated reruns, ~3/5 fail rate) that explicitly waiting on the
+     * page for 'load'/'networkidle' after the preceding click() doesn't
+     * prevent it, and the Apache access log shows only one real POST per
+     * click (no double-submit from AwaitableWebpage's own click()
+     * retry-wrap) -- so this is a genuine client/engine-level lag
+     * between the frame's navigation-committed bookkeeping and the
+     * network response, not a bug in this test's own call sequence.
+     * Unlike retrying navigate()/click() (which redo a real mutating
+     * action), content() is a pure read with no side effects, so a
+     * short bounded retry scoped to exactly this one Playwright error
+     * message is safe and idempotent, not a blind catch-all.
+     *
+     * Extracted as its own method (previously inlined only in
+     * assertNoServerErrors()) because $page->assertSee()'s own internal
+     * polling is subject to the exact same race but doesn't get the
+     * benefit of this retry -- confirmed live: assertSee() reported a
+     * failure "on the page initially with the url [.../identification.php]"
+     * (the *pre*-navigation page) even though a subsequent content() call
+     * on the same $page already returned the real, correct post-navigation
+     * HTML. assertSeeSettled() below is the fix for that call shape.
      */
-    public static function assertNoServerErrors(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $context = ''): void
+    public static function settledContent(Webpage|PendingAwaitablePage|AwaitableWebpage $page): string
     {
-        // content() is a one-shot read, not a pollable condition — same
-        // reasoning as rawWebpage(), and the same fix. Confirmed needed, not
-        // just theoretical: this exact call is where the photo editor page
-        // (heavier DOM than plain listing pages) kept failing with "Timeout
-        // 5000ms exceeded" even after navigate() was fixed.
-        //
-        // A second, distinct race lives here too (task #426): Playwright's
-        // real server-side "page is navigating and changing the content"
-        // error can fire from content() even when goto()'s own "waitUntil:
-        // load" RPC call already returned -- confirmed live (git-stash A/B,
-        // 5 isolated reruns, ~3/5 fail rate) that explicitly waiting on the
-        // page for 'load'/'networkidle' after the preceding click() doesn't
-        // prevent it, and the Apache access log shows only one real POST per
-        // click (no double-submit from AwaitableWebpage's own click()
-        // retry-wrap) -- so this is a genuine client/engine-level lag
-        // between the frame's navigation-committed bookkeeping and the
-        // network response, not a bug in this test's own call sequence.
-        // Unlike retrying navigate()/click() (which redo a real mutating
-        // action), content() is a pure read with no side effects, so a
-        // short bounded retry scoped to exactly this one Playwright error
-        // message is safe and idempotent, not a blind catch-all.
-        $html = '';
         for ($attempt = 1; $attempt <= 5; ++$attempt) {
             try {
-                $html = self::rawWebpage($page)->content();
-                break;
+                return self::rawWebpage($page)->content();
             } catch (ExpectationFailedException $e) {
                 if (! str_contains($e->getMessage(), 'page is navigating and changing the content') || $attempt === 5) {
                     throw $e;
@@ -182,6 +185,32 @@ final class BrowserTestHelpers
                 usleep(200_000);
             }
         }
+
+        throw new ExpectationFailedException('unreachable');
+    }
+
+    /**
+     * Same intent as $page->assertSee($text), but goes through
+     * settledContent() instead of Playwright's own assertSee() polling --
+     * see settledContent()'s own docblock for why that polling isn't
+     * reliable immediately after navigate()/click().
+     */
+    public static function assertSeeSettled(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $text): void
+    {
+        if (! str_contains(self::settledContent($page), $text)) {
+            throw new ExpectationFailedException("Expected to see text [{$text}] in the settled page content, but it was not found.");
+        }
+    }
+
+    /**
+     * Fails if the rendered HTML contains a PHP error/warning/notice marker.
+     * Call after every navigation or form submission that should produce a
+     * normal page — this catches server-side breakage that JS-error
+     * assertions (assertNoJavaScriptErrors()) can't see.
+     */
+    public static function assertNoServerErrors(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $context = ''): void
+    {
+        $html = self::settledContent($page);
         $hits = [];
         foreach (self::serverErrorPatterns() as $name => $pattern) {
             if (preg_match($pattern, $html) === 1) {
@@ -394,6 +423,35 @@ final class BrowserTestHelpers
      * returns the post-login page. Asserts the logout link is present,
      * proving the session is actually authenticated (not just redirected).
      */
+    /**
+     * AuthService::pwgLogin()'s IP-scoped lockout (user_failed_logins,
+     * see that method's own docblock) counts *every* recent failed login
+     * from a given IP, regardless of which test caused it -- every request
+     * in this suite comes from the same machine/IP, so a deliberate
+     * failed-login test elsewhere (e.g. IdentificationControllerTest)
+     * silently poisons this IP's attempt count for whichever *unrelated*
+     * test happens to log in next, once the count crosses
+     * loginLockoutMaxAttempts() within the lockout window. Confirmed live:
+     * a real, legitimate admin login started failing with a genuine 401
+     * "Access denied" purely from this cross-test accumulation, not from
+     * a credentials problem. Called from both loginAsAdmin() and
+     * uploadPhotoViaApi() (which does its own separate curl-based login)
+     * so every real login path in this suite is immune to it.
+     */
+    public static function clearLoginLockout(): void
+    {
+        $db = new \mysqli(
+            (string) getenv('PIWIGO_DB_HOST'),
+            (string) getenv('PIWIGO_DB_USER'),
+            (string) getenv('PIWIGO_DB_PASSWORD'),
+            (string) getenv('PIWIGO_DB_BASE')
+        );
+        $prefix = getenv('PIWIGO_DB_PREFIX');
+        $prefix = $prefix !== false ? $prefix : 'piwigo_';
+        $db->query(sprintf('DELETE FROM %suser_failed_logins', $prefix));
+        $db->close();
+    }
+
     // PHPStan infers fill()/click() always resolve through Webpage's
     // InteractsWithElements trait (returning self: Webpage) and claims this
     // method can never return AwaitableWebpage/PendingAwaitablePage — but
@@ -405,6 +463,7 @@ final class BrowserTestHelpers
     // @phpstan-ignore return.unusedType, return.unusedType
     public static function loginAsAdmin(object $test): Webpage|PendingAwaitablePage|AwaitableWebpage
     {
+        self::clearLoginLockout();
         $page = self::visitPwg($test, '/identification.php');
         self::assertNoServerErrors($page, 'identification page');
 
@@ -1147,8 +1206,16 @@ final class BrowserTestHelpers
     /** Reverts setCustomLogo() -- deletes the file and the 2 config keys it set (leaves use_standard_pages, already true by default). */
     public static function clearCustomLogo(string $relativePath): void
     {
+        // Real file_exists() guard, not a bare @unlink() -- @ only
+        // suppresses the ini display_errors output, not Pest/PHPUnit's own
+        // conversion of a real E_WARNING into a test WARNING outcome
+        // (confirmed live: a caller testing the "404 when the logo file
+        // was never written" case still reaches this same cleanup call).
         $repoRoot = dirname(__DIR__, 3);
-        @unlink($repoRoot . '/local/' . $relativePath);
+        $logoPath = $repoRoot . '/local/' . $relativePath;
+        if (file_exists($logoPath)) {
+            unlink($logoPath);
+        }
 
         $db = new \mysqli(
             (string) getenv('PIWIGO_DB_HOST'),
@@ -1232,6 +1299,8 @@ final class BrowserTestHelpers
      */
     public static function uploadPhotoViaApi(string $imagePath, int $albumId, string $name): int
     {
+        self::clearLoginLockout();
+
         $cookieJar = tempnam(sys_get_temp_dir(), 'pwg_browser_cookies_');
         if ($cookieJar === false) {
             throw new ExpectationFailedException('tempnam failed');

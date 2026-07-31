@@ -733,7 +733,16 @@ it('skips the ALBUMS_FOUND search hint entirely when every allwords-matched albu
         H::assertNoServerErrors($guestPage, 'guest allwords search matching only a forbidden album');
         $guestPage->assertNoJavaScriptErrors();
 
-        expect(extraFiltersSettledContent($guestPage))->not->toContain($uniqueWord);
+        // Not a bare ->not->toContain($uniqueWord) -- confirmed live: the
+        // search page's own "you searched for" summary (.search-words) and
+        // its global_params JS blob both legitimately echo back the raw
+        // query text regardless of whether anything matched, so that
+        // assertion could never pass for *any* search term. The real
+        // security-relevant signal is renderAlbumsFound() actually assigning
+        // ALBUMS_FOUND -- which only ever renders a link to the matched
+        // category, via getCatDisplayNameCache() -- so the meaningful check
+        // is that no such link to this specific forbidden category exists.
+        expect(extraFiltersSettledContent($guestPage))->not->toContain('/category/' . $albumId);
     } finally {
         H::setCategoryPrivate($albumId, false);
     }

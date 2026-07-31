@@ -347,8 +347,12 @@ it('keeps a user enabled and pre-selected on redisplay when the real unsubscribe
         expect($result['status'])->toBe(200);
         expect($result['body'])->not->toContain('Fatal error');
         // doSubscribeUnsubscribeNotificationByMail()'s own delivery-failure
-        // message (msgError, 'falsify' => unsubscribe wording).
-        expect($result['body'])->toContain('was not removed from the subscription list');
+        // message (msgError, 'falsify' => unsubscribe wording) --
+        // NotificationByMailSender.php's own source msgid says "was not
+        // removed", but en_UK/admin.po's real msgstr for it drops "was"
+        // ("User %s [%s] not removed from the subscription list."),
+        // confirmed live in the actual rendered response body.
+        expect($result['body'])->toContain('not removed from the subscription list');
 
         // Real DB state: the failed send means $doUpdate stayed false, so
         // `enabled` was never actually flipped.
@@ -361,6 +365,7 @@ it('keeps a user enabled and pre-selected on redisplay when the real unsubscribe
         // still listed under "Subscribed" (opt_true) AND rendered
         // pre-selected (opt_true_selected), since $post['cat_true'] was
         // never touched by doTimeoutTreatment() (no timeout occurred).
+        file_put_contents(dirname(__DIR__, 2) . '/_data/debug_nbm2.txt', $result['body']);
         expect($result['body'])->toContain('value="ct00mailfail285" selected="selected"');
     } finally {
         nbmSetUserMailNotificationRow(4, null);

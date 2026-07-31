@@ -322,6 +322,34 @@ it('falls back to 5 images per page when the configured value is not 5/10/50 and
 
     try {
         $page = H::loginAsAdmin($this);
+
+        // batch_manager_unit.tpl only renders the per-page pagination
+        // links at all inside a `{if !empty($elements)}` guard -- with
+        // the default, unfiltered (empty caddie) filter this file's own
+        // top docblock documents, $elements is empty and the whole block
+        // (including the "5" link) never appears, regardless of what
+        // $per_page was computed as. A real category+photo filter (same
+        // setup as "renders the per-image thumbnail grid...” above) is
+        // needed so $elements is non-empty and the pagination widget
+        // actually renders.
+        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Unit Per Page Album ' . uniqid()]);
+        $albumResult = $album['result'] ?? null;
+        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+        }
+        $albumId = (int) $albumResult['id'];
+        $image = H::makeTestImage(uniqid());
+        H::uploadPhotoViaApi($image, $albumId, 'Batch Unit Per Page Photo');
+        @unlink($image);
+
+        $filterResult = H::adminPost($page, '/admin.php?page=batch_manager', [
+            'pwg_token' => H::pwgToken($page),
+            'submitFilter' => '1',
+            'filter_category_use' => '1',
+            'filter_category' => (string) $albumId,
+        ]);
+        expect($filterResult['status'])->toBe(200);
+
         $page = H::navigateOk($page, '/admin.php?page=batch_manager&mode=unit');
         $page->assertNoJavaScriptErrors();
         H::assertNoServerErrors($page, 'batch_manager unit-mode per-page fallback-to-5');
@@ -331,7 +359,10 @@ it('falls back to 5 images per page when the configured value is not 5/10/50 and
         // when $per_page === 5, a real behavioral signal that the
         // fallback (not the unconfigured config value 7, and not a
         // display= override) is what the renderer actually used.
-        expect(H::rawWebpage($page)->content())->toContain('selected-pagination">5</a>');
+        // H::settledContent(), not H::rawWebpage($page)->content() -- see
+        // that method's own docblock for the known Playwright
+        // stale-pre-navigation race.
+        expect(H::settledContent($page))->toContain('selected-pagination">5</a>');
     } finally {
         H::restoreConfig($snapshot);
     }
@@ -439,7 +470,18 @@ it('sets the "see-out" jump-to link when the current admin is authorized for the
     // category). A real "see-out" anchor rendering is therefore a real
     // behavioral signal that foreach body -- through its terminal
     // break -- actually ran, not just that the page returned 200.
-    $html = H::rawWebpage($page)->content();
-    expect($html)->toContain('class="see-out"');
-    expect($html)->toContain('/picture');
+    // H::settledContent(), not H::rawWebpage($page)->content() -- see that
+    // method's own docblock for the known Playwright stale-pre-navigation
+    // race.
+    //
+    // 'class="see-out"' alone isn't specific enough -- the tpl's own
+    // disabled fallback (no U_JUMPTO) renders 'class="see-out disabled"',
+    // which also contains that substring, so a bare check can't tell the
+    // two apart. UrlService::makePictureUrl() also confirmed live to
+    // build a *relative* URL ('picture.php?/...', no leading '/' --
+    // getRootUrl() is empty in this admin-page context), so the real
+    // signal is the exact enabled-variant markup plus the relative
+    // picture.php URL, not a leading-slash '/picture' substring.
+    $html = H::settledContent($page);
+    expect($html)->toContain('class="see-out" href="picture.php');
 });

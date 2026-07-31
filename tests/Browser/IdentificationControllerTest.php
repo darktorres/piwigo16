@@ -63,6 +63,31 @@ function identCurl(string $cookieJar, array $fields = []): array
         throw new RuntimeException('identCurl(): cookieJar must not be empty');
     }
 
+    // IdentificationController's own cookies-blocked check (line ~76) is
+    // isset($_COOKIE[session_name()]) -- true only when *this* request
+    // sends back a session cookie an *earlier* response already set.
+    // login=Submit alone, straight into a brand-new/empty $cookieJar, has
+    // nothing to send back yet (the server can't set a cookie the client
+    // returns within the very same request) -- confirmed live: it always
+    // hits the "cookies blocked" branch instead of the real username/
+    // password check, regardless of credentials. A real browser visits
+    // the login page first (receiving the session cookie), then submits
+    // the form -- this priming GET reproduces that, matching what this
+    // function's own docblock elsewhere calls "a real round trip", unlike
+    // identCurlNoCookies()'s deliberate single-request no-cookie case.
+    if ($fields !== []) {
+        $primeCh = curl_init(H::baseUrl() . '/identification.php');
+        if ($primeCh === false) {
+            throw new RuntimeException('curl_init failed');
+        }
+        curl_setopt($primeCh, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($primeCh, CURLOPT_COOKIEJAR, $cookieJar);
+        curl_setopt($primeCh, CURLOPT_COOKIEFILE, $cookieJar);
+        curl_setopt($primeCh, CURLOPT_HTTPHEADER, H::testHeaders());
+        curl_exec($primeCh);
+        unset($primeCh);
+    }
+
     $ch = curl_init(H::baseUrl() . '/identification.php');
     if ($ch === false) {
         throw new RuntimeException('curl_init failed');

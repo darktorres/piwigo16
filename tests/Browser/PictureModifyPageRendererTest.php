@@ -709,13 +709,20 @@ it('swaps width/height and flips the FORMAT flag for a photo with a stored 90/27
     $result = H::rawGet($page, '/admin.php?page=photo&image_id=' . $imageId);
 
     expect($result['status'])->toBe(200);
-    // FORMAT (0=horizontal, 1=vertical) is computed from $row['width']/
-    // $row['height'] AFTER this renderer's own swap -- picture_modify.tpl
-    // renders a different inline style for each value on the two preview
-    // <img> tags. Unrotated, this 200x150 image is FORMAT=0 ("max-width:
-    // 100%; height:100%;"); only a real width/height swap flips it to
-    // FORMAT=1 ("width:100%; max-height:100%;").
-    expect($result['body'])->toContain('width:100%; max-height:100%;');
+    // FORMAT is computed from $row['width']/$row['height'] AFTER this
+    // renderer's own swap, as `($row['width'] >= $row['height']) ? 1 : 0`
+    // (a faithful, byte-for-byte port of piwigo16's own
+    // admin/picture_modify.php -- its own comment, "0:horizontal,
+    // 1:vertical", is itself stale/inverted relative to what the
+    // expression actually computes; kept verbatim, not "fixed", per this
+    // codebase's own no-unrelated-changes-during-a-port precedent).
+    // picture_modify.tpl renders a different inline style for each value
+    // on the two preview <img> tags: {if $FORMAT}width:100%;
+    // max-height:100%;{else}max-width:100%; height:100%;{/if}. Unrotated,
+    // this 200x150 (width >= height) image is FORMAT=1 -- only a real
+    // width/height swap (150x200, width < height) flips it to FORMAT=0
+    // ("max-width:100%; height:100%;"), confirmed live.
+    expect($result['body'])->toContain('max-width:100%; height:100%;');
 });
 
 it('resolves storage_category_id from a filesystem-synced photo, marks it unlinkable-storage, and lists its multi-format sizes', function (): void {

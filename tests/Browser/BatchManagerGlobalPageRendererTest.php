@@ -598,7 +598,6 @@ function bmMakeNamedTestImage(string $basename): string
     }
     imagefill($img, 0, 0, $bg);
     imagejpeg($img, $path, 80);
-    imagedestroy($img);
 
     return $path;
 }

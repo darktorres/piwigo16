@@ -122,7 +122,7 @@ function searchFilterDataSetImageFilesizeNull(int $imageId): void
 }
 
 it('renders real per-filter numeric buckets, author/added_by lookups, and a 3+-filter intersection, across a cache-miss and a cache-hit load', function (): void {
-    $snapshot = H::snapshotConfig(['filters_views']);
+    $snapshot = H::snapshotConfig(['filters_views', 'rate']);
     $filtersViews = json_encode([
         'words' => ['access' => 'everybody', 'default' => true],
         'expert' => ['access' => 'everybody', 'default' => true],
@@ -140,6 +140,16 @@ it('renders real per-filter numeric buckets, author/added_by lookups, and a 3+-f
         throw new RuntimeException('json_encode failed for the filters_views config value');
     }
     H::setConfigValue('filters_views', $filtersViews);
+    // Explicitly enabled (rather than relying on whatever `rate` happens
+    // to already be) -- this test's own 'ratings' criterion (rating_score
+    // 2-3, the only bucket the "square" photo satisfies) is what narrows
+    // the 3+-filter intersection down to it; PwgImages::filteredSearchCreate()
+    // only persists 'ratings' onto the search row when rateEnabled() is
+    // true at creation time, so an ambient-disabled `rate` silently drops
+    // it from the active-filter set, breaking the ratio-bucket assertions
+    // below the same way SearchFilterRendererExtraFiltersTest.php's own
+    // rate-disable test's docblock already documents.
+    H::setConfigValue('rate', 'true');
 
     try {
         $page = H::loginAsAdmin($this);
@@ -406,7 +416,7 @@ it('serves the author-rows cache pool across a cache-miss then cache-hit load wh
  * result set this search's own permissions-only clause scans.
  */
 it('serves the added_by-rows cache pool across a cache-miss then cache-hit load, skipping a NULL added_by row along the way', function (): void {
-    $snapshot = H::snapshotConfig(['filters_views']);
+    $snapshot = H::snapshotConfig(['filters_views', 'order_by']);
     $filtersViews = json_encode([
         'added_by' => ['access' => 'everybody', 'default' => true],
     ]);
@@ -414,6 +424,11 @@ it('serves the added_by-rows cache pool across a cache-miss then cache-hit load,
         throw new RuntimeException('json_encode failed for the filters_views config value');
     }
     H::setConfigValue('filters_views', $filtersViews);
+    // Same "buries this test's own photo past page 1" reasoning as the
+    // height-rows test below -- see its own comment. added_by=$adminId is
+    // exactly as non-selective as height/width/ratios/filetypes here
+    // (every fixture photo is uploaded via the same H::ADMIN_USER).
+    H::setConfigValue('order_by', H::jsonEncode('ORDER BY id DESC'));
 
     try {
         $page = H::loginAsAdmin($this);

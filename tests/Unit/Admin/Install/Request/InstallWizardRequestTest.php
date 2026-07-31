@@ -33,6 +33,24 @@ test('fromArrays rejects a malformed dl', function (): void {
         ->toThrow(RuntimeException::class);
 });
 
+test('fromArrays falls back to the localhost default when dbhost is explicitly submitted empty', function (): void {
+    // Real gap, found via mutation testing: the "defaults for an empty
+    // GET/POST" test above only covers a *missing* dbhost key -- an
+    // explicitly-submitted empty string is a different code path
+    // (is_string() is true, only the `!== ''` check routes it to the
+    // 'localhost' default) that a bare "not present at all" case can't
+    // distinguish.
+    $request = InstallWizardRequest::fromArrays([], ['dbhost' => '']);
+
+    expect($request->dbhost)->toBe('localhost');
+});
+
+test('fromArrays treats an explicitly empty dl the same as a missing one', function (): void {
+    $request = InstallWizardRequest::fromArrays(['dl' => ''], []);
+
+    expect($request->dl)->toBeNull();
+});
+
 test('fromArrays parses db credentials from POST', function (): void {
     $request = InstallWizardRequest::fromArrays([], [
         'dbhost' => 'db.example.test',

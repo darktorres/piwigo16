@@ -77,4 +77,29 @@ final class MenubarPageRendererMakeConsecutiveTest extends \PHPUnit\Framework\Te
 
         self::assertSame([], $orders);
     }
+
+    public function test_make_consecutive_treats_a_zero_position_as_shown_not_hidden(): void
+    {
+        // The sign check is `$pos < 0` (strictly negative), so 0 itself
+        // must land on the positive/shown side of the boundary.
+        $orders = [
+            'zero' => 0,
+        ];
+
+        MenubarPageRenderer::makeConsecutive($orders);
+
+        self::assertSame(50, $orders['zero']);
+    }
+
+    public function test_make_consecutive_treats_negative_one_as_hidden(): void
+    {
+        // The other side of the same `$pos < 0` boundary.
+        $orders = [
+            'negative_one' => -1,
+        ];
+
+        MenubarPageRenderer::makeConsecutive($orders);
+
+        self::assertSame(-50, $orders['negative_one']);
+    }
 }

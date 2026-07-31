@@ -91,6 +91,28 @@ test('core maintenance action falls back to the raw action name when unknown to 
         ->and($detail['text'])->toBe('some_future_action');
 });
 
+test('core maintenance action with a non-string/non-int maintenance_action falls back to an empty lookup key', function (): void {
+    // A leftover legacy bool/array payload can't be used as an array key at
+    // all, so the real code substitutes '' -- verified by making that ''
+    // itself a hit in $maintActions (a mutated fallback string would miss
+    // this lookup and fall through to the generic icon-cone/raw-$action_detail
+    // default instead).
+    $maintActions = [
+        '' => ['icon' => 'icon-fallback-key', 'label' => 'Fallback key label'],
+    ];
+    $entry = new ActivityLogEntryFormatter()->format(
+        makeActivityRow([
+            'action' => 'maintenance',
+            'details' => ['maintenance_action' => true],
+        ]),
+        $maintActions
+    );
+
+    $detail = is_array($entry['detail']) ? $entry['detail'] : [];
+    expect($detail['icon'])->toBe('icon-fallback-key')
+        ->and($detail['text'])->toBe('Fallback key label');
+});
+
 test('core config action with a known section', function (): void {
     $entry = new ActivityLogEntryFormatter()->format(
         makeActivityRow([
@@ -127,6 +149,62 @@ test('plugin delete action reports db and filesystem version details', function 
         ->and($detail[1])->toBe(['icon' => 'icon-flow-branch', 'text' => 'filesystem : 1.2.4']);
 });
 
+test('plugin_id present but non-string is left unused, not passed to str_replace', function (): void {
+    // isset() is true but is_string() is false here -- real code requires
+    // BOTH (an OR would instead try str_replace() on a non-string $subject,
+    // which throws a TypeError under strict_types=1).
+    $entry = new ActivityLogEntryFormatter()->format(
+        makeActivityRow(['object_id' => ActivitySystem::Plugin, 'details' => ['plugin_id' => 123]]),
+        []
+    );
+
+    expect($entry['object'])->toBe('Plugin');
+});
+
+test('db_version present but non-string is left out of the delete detail', function (): void {
+    $entry = new ActivityLogEntryFormatter()->format(
+        makeActivityRow([
+            'object_id' => ActivitySystem::Plugin,
+            'action' => 'delete',
+            'details' => ['plugin_id' => 'x', 'db_version' => 123],
+        ]),
+        []
+    );
+
+    expect($entry['detail'])->toBe(['type' => 'empty']);
+});
+
+test('fs_version present but non-string is left out of the delete detail', function (): void {
+    $entry = new ActivityLogEntryFormatter()->format(
+        makeActivityRow([
+            'object_id' => ActivitySystem::Plugin,
+            'action' => 'delete',
+            'details' => ['plugin_id' => 'x', 'fs_version' => 123],
+        ]),
+        []
+    );
+
+    expect($entry['detail'])->toBe(['type' => 'empty']);
+});
+
+test('theme_id present but non-string is left unused, not passed to str_replace', function (): void {
+    $entry = new ActivityLogEntryFormatter()->format(
+        makeActivityRow(['object_id' => ActivitySystem::Theme, 'details' => ['theme_id' => 123]]),
+        []
+    );
+
+    expect($entry['object'])->toBe('Theme');
+});
+
+test('theme_id with both an underscore and a hyphen gets both replaced with spaces', function (): void {
+    $entry = new ActivityLogEntryFormatter()->format(
+        makeActivityRow(['object_id' => ActivitySystem::Theme, 'details' => ['theme_id' => 'my_theme-name']]),
+        []
+    );
+
+    expect($entry['object'])->toBe('My Theme Name');
+});
+
 test('theme set_default action', function (): void {
     $entry = new ActivityLogEntryFormatter()->format(
         makeActivityRow([
@@ -142,7 +220,7 @@ test('theme set_default action', function (): void {
         ->and($entry['action'])->toBe('Set as default');
 });
 
-test('unknown object_id falls through to empty icon/object', function (): void {
+test('unknown object_id falls through to empty icon/object/color and the default empty detail', function (): void {
     $entry = new ActivityLogEntryFormatter()->format(
         makeActivityRow(['object_id' => 999]),
         []
@@ -150,7 +228,9 @@ test('unknown object_id falls through to empty icon/object', function (): void {
 
     expect($entry['object_icon'])->toBe('')
         ->and($entry['object'])->toBe('')
-        ->and($entry['action_icon'])->toBe('');
+        ->and($entry['action_icon'])->toBe('')
+        ->and($entry['action_color'])->toBe('')
+        ->and($entry['detail'])->toBe(['type' => 'empty']);
 });
 
 test('from_version detail overrides the object/action-specific detail', function (): void {
@@ -167,6 +247,26 @@ test('from_version detail overrides the object/action-specific detail', function
     expect($detail['type'])->toBe('from_to')
         ->and($detail[0])->toBe(['icon' => 'icon-flow-branch', 'text' => '1.0'])
         ->and($detail[1])->toBe(['icon' => 'icon-flow-branch', 'text' => '2.0']);
+});
+
+test('from_version detail with no to_version falls back to the result value', function (): void {
+    $entry = new ActivityLogEntryFormatter()->format(
+        makeActivityRow(['details' => ['from_version' => '1.0', 'result' => 'failed']]),
+        []
+    );
+
+    $detail = is_array($entry['detail']) ? $entry['detail'] : [];
+    expect($detail[1])->toBe(['icon' => 'icon-block', 'text' => 'failed']);
+});
+
+test('from_version detail with neither to_version nor result falls back to an empty text', function (): void {
+    $entry = new ActivityLogEntryFormatter()->format(
+        makeActivityRow(['details' => ['from_version' => '1.0']]),
+        []
+    );
+
+    $detail = is_array($entry['detail']) ? $entry['detail'] : [];
+    expect($detail[1])->toBe(['icon' => 'icon-block', 'text' => '']);
 });
 
 test('version-only detail is formatted as a version badge', function (): void {
@@ -378,5 +478,6 @@ test('date and hour are split from occured_on and id/user/username pass through'
     expect($entry['id'])->toBe(7)
         ->and($entry['user_id'])->toBe(3)
         ->and($entry['username'])->toBe('someone')
+        ->and($entry['date'])->toBe(\Piwigo\Core\DateHelper::formatDate('2026-08-01'))
         ->and($entry['hour'])->toBe('09:15:30');
 });

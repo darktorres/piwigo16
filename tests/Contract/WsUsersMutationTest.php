@@ -742,7 +742,7 @@ final class WsUsersMutationTest extends ContractTestCase
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(1003, $response['err']);
-        self::assertSame('mail address must be like xxx@yyy.eee (example : jack@altern.org)', $response['message']);
+        self::assertSame('mail address must be like xxx@yyy.eee (example: jack@altern.org)', $response['message']);
     }
 
     // -------------------------------------------------------- preferencesSet

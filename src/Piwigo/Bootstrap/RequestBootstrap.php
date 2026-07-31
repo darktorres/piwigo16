@@ -447,6 +447,36 @@ final class RequestBootstrap
         // and re-sync around this call (Track A batch A3 kept it live
         // "until every consumer is retargeted off the raw global";
         // Bucket C's own consumer-side work, 8h/8i, was the last one).
+        //
+        // Real bug, found live: try_log_user's own handler used to be
+        // registered down in finalize() (relocated there from the deleted
+        // include/functions_user.inc.php, "has to live somewhere that
+        // always executes"), which runs strictly *after* connect()
+        // returns -- but UserBootstrap::initialize() right below reaches
+        // AuthService::tryLogUser() directly on its own
+        // pwg.images.uploadAsync username/password credential path (see
+        // that method's own docblock), well before finalize() ever gets a
+        // chance to register anything. EventDispatcher::triggerChange()
+        // with no matching handler just returns its own $default (false)
+        // unmodified, so every real uploadAsync credential login silently
+        // failed with "Invalid username/password" regardless of how
+        // correct the credentials were -- confirmed live via a raw curl
+        // reproduction against this exact request shape. Registering here
+        // instead, immediately before the one call site that needs it
+        // this early, fixes that without disturbing finalize()'s own
+        // still-later registration timing for every other real caller of
+        // tryLogUser() (the normal pwg.session.login WS dispatch, which
+        // runs during RequestPipeline::handle() -- after bootEntryPoint()
+        // (connect()+finalize()) has fully returned, so it was never
+        // actually affected by this ordering bug).
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('try_log_user', new AuthService(
+            new AuthRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
+            self::activityService($conn),
+            new HtmlService(),
+            new PasswordService(new PasswordRepository($conn)),
+            new CookieService(),
+            \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class),
+        )->pwgLogin(...));
         new UserBootstrap(new RedirectService(), new UrlService(new HtmlService()))
             ->initialize();
     }
@@ -658,20 +688,9 @@ final class RequestBootstrap
         // bound first-class-callable form rather than a bare [Class::class, 'method']
         // array.
         \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('user_comment_check', new CommentService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), new MailService(), new HtmlService(), new UrlService(new HtmlService()))->checkForSpam(...));
-        // Relocated from include/functions_user.inc.php (deleted, P23 batch 8d) --
-        // same reasoning as user_comment_check above: every real caller of
-        // AuthService::tryLogUser() now constructs AuthService directly instead of
-        // including the old file, so this registration has to live somewhere that
-        // always executes. pwgLogin() is a bound instance method, same
-        // first-class-callable shape as checkForSpam() above.
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('try_log_user', new AuthService(
-            new AuthRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
-            self::activityService($conn),
-            new HtmlService(),
-            new PasswordService(new PasswordRepository($conn)),
-            new CookieService(),
-            \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class),
-        )->pwgLogin(...));
+        // try_log_user's own handler is registered in connect() instead,
+        // before UserBootstrap::initialize() -- see that registration's
+        // own comment for why.
         // Relocated from admin/include/functions_upload.inc.php (deleted in P23
         // sub-batch 8b-3) -- must stay after PluginLoader::loadPlugins() (in
         // connect() above) so a plugin's own 'upload_file' handler (if any)

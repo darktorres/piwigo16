@@ -125,10 +125,16 @@ final class WsTopLevelTest extends ContractTestCase
      * suite's own real _data/i/ cache (grown by every other Contract/
      * Browser test that generates a derivative) always has *some* but
      * never *every* defined type cached, so both the int (cache hit) and
-     * `0` (fallback) arms of the ternary run across the loop's 12
-     * iterations (11 defined types + 'custom') -- 'all' is asserted as
-     * their exact sum, which only holds if every iteration actually wrote
-     * a real, correctly-typed int into $infos['msizes'].
+     * `0` (fallback) arms of the ternary run across the loop's iterations
+     * (every currently-*enabled* defined type, plus 'custom') -- 'all' is
+     * asserted as their exact sum, which only holds if every iteration
+     * actually wrote a real, correctly-typed int into $infos['msizes'].
+     * '3xlarge'/'4xlarge' are deliberately NOT asserted here even though
+     * ImageStdParams defines them: both are disabled by default on a
+     * fresh install (ImageStdParams::$disabled_types_by_default), so a
+     * default fixture's own msizes genuinely never reports them -- assert
+     * against the real, current enabled set instead of a hardcoded list
+     * that assumes every defined type is active.
      */
     public function test_getCacheSize_msizes_breaks_down_by_derivative_type_with_a_correct_total(): void
     {
@@ -145,7 +151,8 @@ final class WsTopLevelTest extends ContractTestCase
         $msizes = $values['msizes'];
         self::assertIsArray($msizes);
 
-        foreach (['square', 'thumb', '2small', 'xsmall', 'small', 'medium', 'large', 'xlarge', 'xxlarge', '3xlarge', '4xlarge', 'custom', 'all'] as $key) {
+        $expectedKeys = [...array_keys(\Piwigo\Image\ImageStdParams::get_defined_type_map()), 'custom', 'all'];
+        foreach ($expectedKeys as $key) {
             self::assertArrayHasKey($key, $msizes, "msizes must always report a '{$key}' entry");
             self::assertIsInt($msizes[$key]);
             self::assertGreaterThanOrEqual(0, $msizes[$key]);
@@ -328,13 +335,20 @@ final class WsTopLevelTest extends ContractTestCase
      * to `null` params (no upsampling), making get_type() return
      * 'Original' instead of the requested type string. Every fixture
      * image is 200x150 (real, deliberately small px), well under
-     * '4xlarge' (3000x2250) -- confirmed via DerivativeParams::is_identity().
+     * 'xxlarge' (1656x1242) -- confirmed via DerivativeParams::is_identity().
+     * Deliberately not '3xlarge'/'4xlarge': both are disabled by default
+     * (ImageStdParams::$disabled_types_by_default), so
+     * getMissingDerivatives()'s own array_intersect() against the enabled
+     * type map would reject either as an "Invalid types" PwgError before
+     * ever reaching the skip logic this test targets -- 'xxlarge' is the
+     * largest type that's still enabled by default, and 200x150 is well
+     * under it too, so it exercises the exact same code path.
      */
     public function test_getMissingDerivatives_skips_a_type_the_source_is_already_big_enough_for(): void
     {
         $response = $this->wsAdmin('pwg.getMissingDerivatives', [
             'ids' => [1],
-            'types' => ['4xlarge'],
+            'types' => ['xxlarge'],
             'max_urls' => 5000,
         ]);
 

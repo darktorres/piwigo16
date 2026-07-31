@@ -385,10 +385,22 @@ final class WsUploadTest extends ContractTestCase
      */
     public function test_addSimple_tags_as_an_array_are_resolved_and_associated(): void
     {
+        // Real bug, found live: curl_setopt(CURLOPT_POSTFIELDS, $array)
+        // does NOT bracket-encode a nested-array field value for a
+        // multipart request the way http_build_query() would -- it just
+        // sends two literal, identically-named 'tags' fields, which PHP's
+        // own $_POST parser collapses to whichever arrives last as a
+        // plain string (confirmed live via a server-side dump: $params
+        // ['tags'] came back as the bare string 'addsimple-array-tag-two',
+        // silently dropping the first tag entirely). Explicit bracket-
+        // indexed keys are this suite's own established convention for a
+        // real multipart array field (see 'image[]'/'file[]' elsewhere in
+        // this file and WsImagesUploadStartTest.php).
         $response = $this->addSimpleMultipart([
             'category' => 1,
             'name' => 'Contract Test addSimple array tags ' . uniqid(),
-            'tags' => ['addsimple-array-tag-one', 'addsimple-array-tag-two'],
+            'tags[0]' => 'addsimple-array-tag-one',
+            'tags[1]' => 'addsimple-array-tag-two',
         ]);
 
         self::assertSame('ok', $response['stat'], (string) json_encode($response));
@@ -591,26 +603,91 @@ final class WsUploadTest extends ContractTestCase
      */
     public function test_upload_update_mode_replaces_an_existing_photo_by_filename_in_category(): void
     {
-        $name = 'update-mode-gap-' . uniqid() . '.jpg';
+        // Real bug, found live: update_mode's own match
+        // (Ws\PwgImages::getIdsByFilenameInCategory()'s `WHERE i.file =
+        // :filename AND ic.category_id = :categoryId`, an INNER JOIN onto
+        // image_category) can only ever find a photo that's genuinely
+        // associated with the target category through image_category --
+        // but this fixture's own 'lounge_active' config defaults to true,
+        // and UploadService::addUploadedFileAddToCategories() routes every
+        // upload through fillLounge() instead of
+        // associateImagesToCategories() whenever it's on, which never
+        // touches image_category at all (confirmed live: a real upload
+        // with lounge_active=true left zero image_category rows for the
+        // new photo). Disabling it for this test's duration, same raw-
+        // write + CachePools::config()->clear() pattern
+        // BrowserTestHelpers::setConfigValue() already established for
+        // Browser tests reaching across this same CLI-to-Apache boundary.
+        //
+        // Second real bug found live, same method: whenever lounge_active
+        // is false, addUploadedFileAddToCategories() re-checks the gallery's
+        // total photo count against 'lounge_activate_threshold' (default 1,
+        // CurrentConfig::$loungeActivateThreshold) on *every* upload, and
+        // auto-flips lounge_active back to true in the DB the moment the
+        // count meets it -- a real, legitimate auto-activation feature.
+        // This fixture's DB already holds far more than 1 photo, so the
+        // very first uploadMultipart() call below silently re-enables
+        // lounge_active before the second (update_mode) call ever runs,
+        // undoing the override above. Pinning the threshold absurdly high
+        // for the test's duration keeps that legitimate feature from firing
+        // without disabling or working around it.
+        $originalLoungeActive = $this->conn->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'lounge_active'");
+        $originalLoungeThreshold = $this->conn->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'lounge_activate_threshold'");
+        $this->conn->executeStatement(
+            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('lounge_active', 'false') ON DUPLICATE KEY UPDATE value = VALUES(value)"
+        );
+        $this->conn->executeStatement(
+            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('lounge_activate_threshold', '999999999') ON DUPLICATE KEY UPDATE value = VALUES(value)"
+        );
+        \Piwigo\Cache\CachePools::config()->clear();
 
-        $created = $this->uploadMultipart([
-            'pwg_token' => $this->getPwgToken(),
-            'category'  => 1,
-            'name'      => $name,
-        ]);
-        self::assertSame('ok', $created['stat'], (string) json_encode($created));
-        $createdResult = $created['result'];
-        self::assertIsArray($createdResult);
-        $originalImageId = $createdResult['image_id'];
-        self::assertIsNumeric($originalImageId);
-        $this->uploadedImageId = (int) $originalImageId;
+        // update_mode's 'name' param is matched against the stored `file`
+        // column (confirmed live: UploadService::addUploadedFile() does
+        // store the client-supplied $original_filename there, not a
+        // server-generated name) -- both calls must use the exact same
+        // 'name' value for the match to succeed, by design: this is how a
+        // real client signals "replace the photo I previously uploaded
+        // under this exact name".
+        $name = 'Contract Test update_mode ' . uniqid();
 
-        $response = $this->uploadMultipart([
-            'pwg_token'   => $this->getPwgToken(),
-            'category'    => 1,
-            'name'        => $name,
-            'update_mode' => true,
-        ]);
+        try {
+            $created = $this->uploadMultipart([
+                'pwg_token' => $this->getPwgToken(),
+                'category'  => 1,
+                'name'      => $name,
+            ]);
+            self::assertSame('ok', $created['stat'], (string) json_encode($created));
+            $createdResult = $created['result'];
+            self::assertIsArray($createdResult);
+            $originalImageId = $createdResult['image_id'];
+            self::assertIsNumeric($originalImageId);
+            $this->uploadedImageId = (int) $originalImageId;
+
+            $response = $this->uploadMultipart([
+                'pwg_token'   => $this->getPwgToken(),
+                'category'    => 1,
+                'name'        => $name,
+                'update_mode' => true,
+            ]);
+        } finally {
+            if (is_string($originalLoungeActive)) {
+                $this->conn->executeStatement(
+                    "UPDATE " . Tables::config() . " SET value = ? WHERE param = 'lounge_active'",
+                    [$originalLoungeActive]
+                );
+            } else {
+                $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'lounge_active'");
+            }
+            if (is_string($originalLoungeThreshold)) {
+                $this->conn->executeStatement(
+                    "UPDATE " . Tables::config() . " SET value = ? WHERE param = 'lounge_activate_threshold'",
+                    [$originalLoungeThreshold]
+                );
+            } else {
+                $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'lounge_activate_threshold'");
+            }
+            \Piwigo\Cache\CachePools::config()->clear();
+        }
 
         self::assertSame('ok', $response['stat'], (string) json_encode($response));
         $result = $response['result'];

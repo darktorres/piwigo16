@@ -52,6 +52,15 @@ test('fromArrays reports formatsTruthy and formatsId when enabled and present', 
         ->and($request->formatsId)->toBe('5');
 });
 
+test('fromArrays defaults formatsId to an empty string when formats is present but not a string', function (): void {
+    // A non-string formats value that's still scalar (so validate() passes
+    // it as-is against the digit pattern) must fall back to '', not some
+    // other placeholder.
+    $request = PhotosAddDirectRequest::fromArrays(['formats' => 123], [], true);
+
+    expect($request->formatsId)->toBe('');
+});
+
 test('fromArrays rejects a malformed formats id when enabled and present', function (): void {
     expect(fn (): PhotosAddDirectRequest => PhotosAddDirectRequest::fromArrays(['formats' => '1; DROP TABLE'], [], true))
         ->toThrow(RuntimeException::class);

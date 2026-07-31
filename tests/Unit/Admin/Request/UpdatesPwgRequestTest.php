@@ -16,6 +16,12 @@ test('fromArrays parses a numeric step', function (): void {
     expect($request->step)->toBe(2);
 });
 
+test('fromArrays defaults step to 0 when present but neither a string nor an int', function (): void {
+    $request = UpdatesPwgRequest::fromArrays(['step' => 12.5], [], 'none');
+
+    expect($request->step)->toBe(0);
+});
+
 test('fromArrays strips a trailing letter suffix from "to" for the Official container', function (): void {
     $request = UpdatesPwgRequest::fromArrays(['to' => '16.2.0a'], [], 'Official');
 
@@ -31,6 +37,32 @@ test('fromArrays keeps "to" as-is for a non-Official environment', function (): 
 test('fromArrays rejects a non-Official "to" with a letter suffix', function (): void {
     expect(fn (): UpdatesPwgRequest => UpdatesPwgRequest::fromArrays(['to' => '16.2.0a'], [], 'none'))
         ->toThrow(RuntimeException::class);
+});
+
+test('fromArrays rejects a malformed "to" for the Official container', function (): void {
+    expect(fn (): UpdatesPwgRequest => UpdatesPwgRequest::fromArrays(['to' => 'not-a-version'], [], 'Official'))
+        ->toThrow(RuntimeException::class);
+});
+
+test('fromArrays defaults upgradeTo to an empty string when "to" is present but not a string, Official', function (): void {
+    // false is "empty" per InputValidator's own emptyValue() check (so
+    // validate() no-ops without checking the pattern) but is not a string,
+    // reaching the ternary's is_string()-false branch.
+    $request = UpdatesPwgRequest::fromArrays(['to' => false], [], 'Official');
+
+    expect($request->upgradeTo)->toBe('');
+});
+
+test('fromArrays defaults upgradeTo to an empty string when "to" is absent, non-Official', function (): void {
+    $request = UpdatesPwgRequest::fromArrays([], [], 'none');
+
+    expect($request->upgradeTo)->toBe('');
+});
+
+test('fromArrays defaults upgradeTo to an empty string when "to" is present but not a string, non-Official', function (): void {
+    $request = UpdatesPwgRequest::fromArrays(['to' => false], [], 'none');
+
+    expect($request->upgradeTo)->toBe('');
 });
 
 test('fromArrays recognizes a valid upgrade submission', function (): void {

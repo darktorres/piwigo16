@@ -47,6 +47,12 @@ final readonly class UpdatesPwgRequest
             new InputValidator()
                 ->validate('to', $get, false, '/^\d+\.\d+\.\d+[a-z]?$/');
             $get_to = $get['to'] ?? null;
+            // preg_replace() only returns null on a genuine PCRE engine
+            // error (e.g. hitting the backtrack limit) -- unreachable for
+            // this trivial single-trailing-letter pattern against a
+            // validate()-bounded version string, so the `?? ''` fallback
+            // here can't be exercised. Confirmed while investigating a
+            // mutation-testing gap.
             $upgradeTo = is_string($get_to) ? (preg_replace('/[a-z]$/', '', $get_to) ?? '') : '';
         } else {
             new InputValidator()

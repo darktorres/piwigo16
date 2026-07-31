@@ -25,6 +25,15 @@ test('fromArray exposes filter presence and values for photo/album/group', funct
         ->and($request->filterValue('album'))->toBeNull();
 });
 
+test('fromArray accepts a valid scalar album/group filter without throwing', function (): void {
+    // album/group are validated as scalars (is_scalar, not is_array) --
+    // a valid digit value must NOT throw.
+    $request = UserActivityRequest::fromArray(['album' => '7', 'group' => '3']);
+
+    expect($request->filterValue('album'))->toBe('7')
+        ->and($request->filterValue('group'))->toBe('3');
+});
+
 test('fromArray rejects a non-digit photo filter', function (): void {
     expect(fn (): UserActivityRequest => UserActivityRequest::fromArray(['photo' => '1; DROP TABLE']))
         ->toThrow(RuntimeException::class);

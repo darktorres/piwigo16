@@ -31,6 +31,11 @@ test('fromArrays rejects a non-digit cat_true element', function (): void {
         ->toThrow(RuntimeException::class);
 });
 
+test('fromArrays rejects a non-digit cat_false element', function (): void {
+    expect(fn (): UserPermSubmitRequest => UserPermSubmitRequest::fromArrays([], ['cat_false' => ['1; DROP TABLE']]))
+        ->toThrow(RuntimeException::class);
+});
+
 test('fromArrays passes user_id through from GET', function (): void {
     $request = UserPermSubmitRequest::fromArrays(['user_id' => '42'], []);
 

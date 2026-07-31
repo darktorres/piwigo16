@@ -51,6 +51,13 @@ test('fromArrays normalizes a non-string name to null, not empty string', functi
     expect($request->nameField)->toBeNull();
 });
 
+test('fromArrays passes author/comment strings through unchanged', function (): void {
+    $request = PictureModifyRequest::fromArrays([], ['author' => 'Alice', 'comment' => 'A nice photo']);
+
+    expect($request->authorField)->toBe('Alice')
+        ->and($request->commentField)->toBe('A nice photo');
+});
+
 test('fromArrays parses a valid date_creation', function (): void {
     $request = PictureModifyRequest::fromArrays([], ['date_creation' => '2026-01-15 10:00:00']);
 
@@ -84,6 +91,11 @@ test('fromArrays filters represent to numeric values only', function (): void {
     $request = PictureModifyRequest::fromArrays([], ['represent' => ['2', '4']]);
 
     expect($request->represent)->toBe([2, 4]);
+});
+
+test('fromArrays rejects a non-digit represent element', function (): void {
+    expect(fn (): PictureModifyRequest => PictureModifyRequest::fromArrays([], ['represent' => ['1; DROP TABLE']]))
+        ->toThrow(RuntimeException::class);
 });
 
 test('fromArrays passes tagsRaw through unvalidated', function (): void {

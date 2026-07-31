@@ -28,3 +28,9 @@ test('fromArray coerces a non-string revision to an empty string while staying n
 
     expect($request->revision)->toBe('');
 });
+
+test('fromArray coerces a non-string installstatus to an empty string while staying non-null', function (): void {
+    $request = LanguagesNewInstallRequest::fromArray(['installstatus' => ['x']]);
+
+    expect($request->installStatus)->toBe('');
+});

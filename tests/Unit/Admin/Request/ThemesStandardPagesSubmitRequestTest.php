@@ -27,6 +27,15 @@ test('fromArrays treats "0" as unchecked and any other value as checked', functi
         ->and($checked->useStandardPages)->toBeTrue();
 });
 
+test('fromArrays treats an explicitly empty use_standard_pages as unchecked', function (): void {
+    // Distinct from the "0"/missing cases above -- '' is its own explicit
+    // rejection branch (`$use_standard_pages_raw !== ''`), not covered by
+    // either.
+    $request = ThemesStandardPagesSubmitRequest::fromArrays(['use_standard_pages' => ''], [], THEMES_STD_PAGES_LOGO_OPTIONS, THEMES_STD_PAGES_SKIN_OPTIONS);
+
+    expect($request->useStandardPages)->toBeFalse();
+});
+
 test('fromArrays accepts a logo/skin matching the given option lists', function (): void {
     $request = ThemesStandardPagesSubmitRequest::fromArrays([
         'std_pgs_display_logo' => 'custom_logo',
@@ -86,6 +95,35 @@ test('fromArrays accepts a real tmp_name but falls back to an empty logoName whe
 
     expect($request->logoTmpName)->toBe('/tmp/phpYYYY')
         ->and($request->logoName)->toBe('');
+});
+
+test('fromArrays requires a real array, not just an ArrayAccess-like value, for the upload field', function (): void {
+    // The upload guard is a 4-way AND (is_array/isset/is_string/!=='') --
+    // is_array() specifically (not just "has a 'tmp_name' key") is
+    // required. An ArrayAccess object can satisfy every other clause
+    // while failing is_array(), which is the only way to prove the first
+    // AND isn't accidentally an OR with the isset() check next to it.
+    $fakeUpload = new class implements ArrayAccess {
+        public function offsetExists(mixed $offset): bool
+        {
+            return true;
+        }
+
+        public function offsetGet(mixed $offset): mixed
+        {
+            return '/tmp/from-arrayaccess';
+        }
+
+        public function offsetSet(mixed $offset, mixed $value): void {}
+
+        public function offsetUnset(mixed $offset): void {}
+    };
+
+    $request = ThemesStandardPagesSubmitRequest::fromArrays([], [
+        'std_pgs_logo' => $fakeUpload,
+    ], THEMES_STD_PAGES_LOGO_OPTIONS, THEMES_STD_PAGES_SKIN_OPTIONS);
+
+    expect($request->logoTmpName)->toBeNull();
 });
 
 test('fromArrays reports no upload when the file field is absent', function (): void {

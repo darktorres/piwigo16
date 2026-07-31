@@ -55,7 +55,23 @@ test('fromArrays computes a 4-char coi code when l is a non-empty string', funct
         ->and(strlen($request->coi))->toBe(4);
 });
 
-test('fromArrays treats a non-numeric t/r/b as a zero fraction', function (): void {
+test('fromArrays computes the exact coi code, in l/t/r/b order', function (): void {
+    // 4 distinct, non-symmetric fractions -- 0.0/0.25/0.5/1.0 map to
+    // distinct chars ('a'/'g'/'n'/'z'), so this catches both a swapped
+    // concatenation order and a dropped t/r/b read (which would silently
+    // fall back to l's own value or a null-derived 'a').
+    $request = PictureCoiRequest::fromArrays([], [
+        'submit' => '1',
+        'l' => '0',
+        't' => '0.25',
+        'r' => '0.5',
+        'b' => '1',
+    ]);
+
+    expect($request->coi)->toBe('agnz');
+});
+
+test('fromArrays treats a non-numeric t/r/b as an exact zero fraction, not some other placeholder', function (): void {
     $request = PictureCoiRequest::fromArrays([], [
         'submit' => '1',
         'l' => '0',
@@ -64,7 +80,5 @@ test('fromArrays treats a non-numeric t/r/b as a zero fraction', function (): vo
         'b' => 'not-a-number',
     ]);
 
-    \PHPUnit\Framework\Assert::assertIsString($request->coi);
-    expect($request->coi)->toBeString()
-        ->and(strlen($request->coi))->toBe(4);
+    expect($request->coi)->toBe('aaaa');
 });

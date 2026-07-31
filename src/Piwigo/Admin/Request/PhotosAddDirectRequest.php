@@ -58,9 +58,20 @@ final readonly class PhotosAddDirectRequest
         $batch = is_string($batch_raw) ? $batch_raw : '';
 
         $display_formats = $isFormatsEnabled && isset($get['formats']);
+        // The (bool) cast is redundant: `&&` itself always produces a
+        // genuine bool result regardless of its right operand's type, so
+        // removing the cast can't change $formats_truthy's value or type.
+        // Confirmed while investigating a mutation-testing gap.
         $formats_truthy = $display_formats && (bool) $get['formats'];
         $formats_id = '';
         if ($formats_truthy) {
+            // $mandatory=false below is also unobservable here: reaching
+            // this branch already requires $get['formats'] to be
+            // PHP-truthy (the check above), and every value InputValidator
+            // ::emptyValue() treats as "empty" (null/''/0/0.0/'0'/false/[])
+            // is PHP-falsy -- the two sets are complementary, so
+            // validate()'s own emptyValue() short-circuit (the only place
+            // $mandatory is read) can never trigger on this call.
             new InputValidator()
                 ->validate('formats', $get, false, ValidationPattern::ID, false);
             $formats_raw = $get['formats'] ?? null;

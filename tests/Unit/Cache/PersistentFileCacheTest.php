@@ -166,6 +166,24 @@ test('set returns false when both the initial write and the mkgetdir-then-retry 
     expect($written)->toBeFalse();
 });
 
+test('get returns false at the exact expiry boundary (expire === now), not just strictly past it', function (): void {
+    // The "already expired" test below only ever uses a lifetime of -10
+    // (well past the boundary); this pins expire to the *exact* current
+    // second so `$expire > time()` (correct) and a mutated `>=` diverge
+    // -- get()'s own internal time() call happens microseconds after
+    // this one, on the same real clock tick in practice.
+    $cache = new PersistentFileCache();
+    $key = $cache->make_key(['exact-boundary-expiry']);
+    $dir = CurrentPaths::get()->root . CurrentConfig::dataLocation() . 'cache/';
+    file_put_contents($dir . $key . '.cache', serialize(['expire' => time(), 'data' => 'boundary-value']));
+
+    $value = 'sentinel-untouched';
+    $found = $cache->get($key, $value);
+
+    expect($found)->toBeFalse()
+        ->and($value)->toBe('sentinel-untouched');
+});
+
 test('get returns false for a value whose lifetime already expired', function (): void {
     $cache = new PersistentFileCache();
     $key = $cache->make_key(['already_expired']);
@@ -304,6 +322,108 @@ test('get returns false when the stored expire value is not an int', function ()
 
     expect($found)->toBeFalse()
         ->and($value)->toBe('sentinel-untouched');
+});
+
+test('set fires the opportunistic purge(false), not purge(true), on the exact 1-in-97 mt_rand() draw', function (): void {
+    // mt_srand() makes mt_rand()'s next draw fully deterministic (a fixed,
+    // portable Mt19937 implementation since PHP 7.1) -- seed 115's first
+    // draw is 421105033, where %97===0 (should fire) but %96 and %98 are
+    // both nonzero (so a mutated 97->96 or 97->98 divisor would NOT
+    // coincidentally also fire), distinguishing the modulus/divisor
+    // itself from the "fires at all" property the churn test below only
+    // proves probabilistically over thousands of calls.
+    $cache = new PersistentFileCache();
+    $dir = CurrentPaths::get()->root . CurrentConfig::dataLocation() . 'cache/';
+
+    $staleKey = $cache->make_key(['exact-seed-stale']);
+    $freshKey = $cache->make_key(['exact-seed-fresh']);
+    $cache->set($staleKey, 'stale-value');
+    $cache->set($freshKey, 'fresh-value');
+    touch($dir . $staleKey . '.cache', time() - $cache->default_lifetime - 60);
+
+    mt_srand(115);
+    $written = $cache->set($cache->make_key(['exact-seed-trigger']), 'trigger-value');
+
+    expect($written)->toBeTrue()
+        ->and(is_file($dir . $staleKey . '.cache'))->toBeFalse();
+    // purge(false), not purge(true): the still-fresh sibling written just
+    // before the triggering set() call must survive -- a mutated
+    // `purge(true)` would delete it too, unconditionally.
+    $freshValue = null;
+    expect($cache->get($freshKey, $freshValue))->toBeTrue()
+        ->and($freshValue)->toBe('fresh-value');
+});
+
+test('set does not fire the opportunistic purge on an mt_rand() draw one past the trigger value', function (): void {
+    // Seed 74's first draw is 434226127, where %97===1 -- correct code
+    // (`=== 0`) must NOT purge here, but a mutated `=== 1` (IncrementInteger
+    // on the literal 0) would. Proves the exact target value, not just
+    // that *some* modulus check exists.
+    $cache = new PersistentFileCache();
+    $dir = CurrentPaths::get()->root . CurrentConfig::dataLocation() . 'cache/';
+
+    $staleKey = $cache->make_key(['off-by-one-seed-stale']);
+    $cache->set($staleKey, 'stale-value');
+    touch($dir . $staleKey . '.cache', time() - $cache->default_lifetime - 60);
+
+    mt_srand(74);
+    $cache->set($cache->make_key(['off-by-one-seed-trigger']), 'trigger-value');
+
+    expect(is_file($dir . $staleKey . '.cache'))->toBeTrue();
+});
+
+test('purge is a no-op when glob() itself fails (an overlong pattern returns false, not [])', function (): void {
+    // glob() returns `false` -- not [] -- once the assembled pattern
+    // exceeds PHP's internal 4096-character limit (confirmed live via
+    // `glob(str_repeat('a', 5000))`). The sibling "no .cache files"
+    // test below only ever reaches the `=== []` half of this guard --
+    // foreach()-ing an empty array is *also* silently a no-op (a mere
+    // E_WARNING, not a TypeError -- confirmed live), so it can't tell a
+    // real `||` apart from a mutated `&&`/`true` (both of which would
+    // let a genuine `false` fall through to `foreach ($files as ...)`).
+    // The one real difference is *which* warning fires: glob() itself
+    // always warns about the overlong pattern regardless of the
+    // mutation, but only the mutated fall-through additionally warns
+    // about foreach()-ing a non-iterable -- a handler that recognizes
+    // and swallows only the expected glob() warning surfaces that.
+    $originalRoot = CurrentPaths::get()->root;
+    CurrentPaths::set(Paths::fromRoot(sys_get_temp_dir() . '/' . str_repeat('a', 4100)));
+    $cache = new PersistentFileCache();
+
+    $unexpectedWarning = null;
+    set_error_handler(function (int $errno, string $errstr) use (&$unexpectedWarning): bool {
+        if (! str_contains($errstr, 'Pattern exceeds the maximum allowed length')) {
+            $unexpectedWarning = $errstr;
+        }
+        return true;
+    });
+    try {
+        $cache->purge(true);
+        $cache->purge(false);
+    } finally {
+        restore_error_handler();
+        CurrentPaths::set(Paths::fromRoot($originalRoot));
+    }
+
+    expect($unexpectedWarning)->toBeNull();
+});
+
+test('purge(false) keeps a file exactly at the age cutoff boundary, not just strictly newer than it', function (): void {
+    // The existing "deletes only files older than default_lifetime" test
+    // backdates its stale file 60s past the cutoff -- this pins mtime to
+    // the *exact* $limit value so `filemtime($file) < $limit` (correct)
+    // and a mutated `<=` diverge; purge()'s own internal time() call
+    // happens microseconds after this one, on the same real clock tick
+    // in practice.
+    $cache = new PersistentFileCache();
+    $key = $cache->make_key(['exact-purge-boundary']);
+    $cache->set($key, 'boundary-value');
+    $dir = CurrentPaths::get()->root . CurrentConfig::dataLocation() . 'cache/';
+    touch($dir . $key . '.cache', time() - $cache->default_lifetime);
+
+    $cache->purge(false);
+
+    expect(is_file($dir . $key . '.cache'))->toBeTrue();
 });
 
 test('set eventually fires its opportunistic purge(false) over many calls, sweeping a stale file', function (): void {

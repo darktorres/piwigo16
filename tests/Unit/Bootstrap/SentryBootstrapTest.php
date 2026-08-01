@@ -3,7 +3,17 @@
 declare(strict_types=1);
 
 use Piwigo\Bootstrap\SentryBootstrap;
+use Sentry\Options;
 use Sentry\SentrySdk;
+
+function sentryBootstrapTestBoundOptions(): Options
+{
+    $options = SentrySdk::getCurrentHub()->getClient()?->getOptions();
+    if ($options === null) {
+        throw new LogicException('Expected a client to be bound after SentryBootstrap::init()');
+    }
+    return $options;
+}
 
 beforeEach(function (): void {
     SentrySdk::init(); // fresh hub, no client bound
@@ -75,9 +85,8 @@ test('init resolves the exact dsn/traces_sample_rate/environment across the vali
     putenv('SENTRY_TRACES_SAMPLE_RATE=0.75');
     putenv('SENTRY_ENVIRONMENT=testing');
     SentryBootstrap::init();
-    $options = SentrySdk::getCurrentHub()->getClient()?->getOptions();
-    expect($options)->not->toBeNull()
-        ->and((string) $options->getDsn())->toBe('https://fake@fake.ingest.sentry.io/1')
+    $options = sentryBootstrapTestBoundOptions();
+    expect((string) $options->getDsn())->toBe('https://fake@fake.ingest.sentry.io/1')
         ->and($options->getTracesSampleRate())->toBe(0.75)
         ->and($options->getEnvironment())->toBe('testing');
     restore_error_handler();
@@ -91,9 +100,8 @@ test('init resolves the exact dsn/traces_sample_rate/environment across the vali
     putenv('SENTRY_TRACES_SAMPLE_RATE');
     putenv('SENTRY_ENVIRONMENT');
     SentryBootstrap::init();
-    $options = SentrySdk::getCurrentHub()->getClient()?->getOptions();
-    expect($options)->not->toBeNull()
-        ->and($options->getTracesSampleRate())->toBeNull()
+    $options = sentryBootstrapTestBoundOptions();
+    expect($options->getTracesSampleRate())->toBeNull()
         ->and($options->getEnvironment())->toBeNull();
     restore_error_handler();
     restore_exception_handler();
@@ -105,9 +113,8 @@ test('init resolves the exact dsn/traces_sample_rate/environment across the vali
     putenv('SENTRY_TRACES_SAMPLE_RATE=');
     putenv('SENTRY_ENVIRONMENT=');
     SentryBootstrap::init();
-    $options = SentrySdk::getCurrentHub()->getClient()?->getOptions();
-    expect($options)->not->toBeNull()
-        ->and($options->getTracesSampleRate())->toBeNull()
+    $options = sentryBootstrapTestBoundOptions();
+    expect($options->getTracesSampleRate())->toBeNull()
         ->and($options->getEnvironment())->toBeNull();
     restore_error_handler();
     restore_exception_handler();

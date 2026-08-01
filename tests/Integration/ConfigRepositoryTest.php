@@ -15,6 +15,17 @@ use Piwigo\Config\ConfigRepository;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\TablePrefixListener;
 
+/**
+ * ConfigRepository has no Unit-level test file at all -- every public
+ * method here is a thin, direct ORM/DBAL call with no branching logic of
+ * its own worth exercising against a fake, so it's covered exclusively
+ * here. A Unit-scoped mutation-testing sweep (--testsuite Unit) flags
+ * deleteByParam()'s own `$em->remove($entry); $em->flush();` as untested
+ * as a result -- a genuine suite-scope mismatch, not a real gap:
+ * test_deleteByParam_removes_the_row() below re-fetches via a fresh
+ * repository (bypassing the identity map) and asserts the row is
+ * genuinely gone, which only a real remove()+flush() pair can satisfy.
+ */
 final class ConfigRepositoryTest extends IntegrationTestCase
 {
     private static bool $fixtureReady = false;

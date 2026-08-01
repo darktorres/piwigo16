@@ -29,6 +29,34 @@ test('fromArray reports hasImageOrder true but validImageOrder null for a non-po
         ->and($request->validImageOrder)->toBeNull();
 });
 
+test('fromArray rejects a fractional image_order whose int-cast is not itself positive', function (): void {
+    // Kills the RemoveIntegerCast mutant on the condition's own (int)
+    // cast: '0.5' is_numeric() but compares as 0.5 > 0 = true when
+    // compared raw (uncast) vs. (int) '0.5' = 0, 0 > 0 = false when
+    // properly cast first -- real and mutant disagree on whether
+    // validImageOrder ends up null or 0.
+    $request = GalleryDisplayRequest::fromArray(['image_order' => '0.5']);
+
+    expect($request->validImageOrder)->toBeNull();
+});
+
+test('fromArray rejects image_order exactly 0', function (): void {
+    // Kills both GreaterToGreaterOrEqual (> 0 -> >= 0) and
+    // DecrementInteger (> 0 -> > -1): only an exact-0 input makes both
+    // of those mutated conditions true while the real one is false.
+    $request = GalleryDisplayRequest::fromArray(['image_order' => '0']);
+
+    expect($request->validImageOrder)->toBeNull();
+});
+
+test('fromArray accepts image_order exactly 1', function (): void {
+    // Kills IncrementInteger (> 0 -> > 1): only an exact-1 input makes
+    // the real condition true while the mutated one is false.
+    $request = GalleryDisplayRequest::fromArray(['image_order' => '1']);
+
+    expect($request->validImageOrder)->toBe(1);
+});
+
 test('fromArray parses the display param as a string', function (): void {
     $request = GalleryDisplayRequest::fromArray(['display' => 'square']);
 

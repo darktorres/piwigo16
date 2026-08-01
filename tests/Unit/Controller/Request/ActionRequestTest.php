@@ -28,6 +28,18 @@ test('fromArray nulls part for an unrecognized value', function (): void {
     expect($request->part)->toBeNull();
 });
 
+test('fromArray accepts the "r" and "f" part values, not just "e"', function (): void {
+    // Kills 2 RemoveArrayItem mutants on the ['e', 'r', 'f'] allow-list
+    // (one drops 'r', the other drops 'f') -- the existing tests above
+    // only ever exercise 'e' (accepted) and 'x' (rejected), neither of
+    // which distinguishes those from a 2-element list missing 'r' or 'f'.
+    $r = ActionRequest::fromArray(['part' => 'r'], true);
+    expect($r->part)->toBe('r');
+
+    $f = ActionRequest::fromArray(['part' => 'f'], true);
+    expect($f->part)->toBe('f');
+});
+
 test('fromArray nulls id for a non-numeric value', function (): void {
     $request = ActionRequest::fromArray(['id' => 'abc', 'part' => 'e'], true);
 

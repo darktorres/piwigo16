@@ -24,6 +24,18 @@ use Piwigo\Users\UserStatus;
  * branch is a pure string builder (see PermissionServiceTest.php's own
  * getSqlConditionFandF() coverage, buildInnerSql()'s real dependency for
  * the "browse everything visible" branch).
+ *
+ * A Unit-scoped mutation-testing sweep (--testsuite Unit) flags the
+ * array_diff()/getSubcatIds([$categoryId]) line inside that same DB-bound
+ * branch as untested -- a genuine suite-scope mismatch, not a real gap:
+ * tests/Integration/CalendarServiceTest.php's own
+ * test_build_inner_sql_excludes_forbidden_subcategories already exercises
+ * a real array_diff() exclusion (forbidding category 2 removes it from
+ * the subcategory set without touching category 1), and
+ * test_build_inner_sql_for_a_specific_category exercises the
+ * [$categoryId] wrapping array with a real, non-empty result. Not chased
+ * here for the same reason BackupService's own DB/subprocess-bound gaps
+ * weren't -- already thorough at the suite that can actually reach it.
  */
 function makeCalendarService(): CalendarService
 {
@@ -93,6 +105,39 @@ test('buildInnerSql browses everything visible when there is no category context
         ' FROM ' . Tables::images()
         . "\nINNER JOIN " . Tables::imageCategory() . ' ON id = image_id'
         . "\n    WHERE (level<=0)"
+    );
+});
+
+test('buildInnerSql falls back to a forced 1 = 1 condition when no permission clause applies at all', function (): void {
+    // getSqlConditionFandF()'s own $forceOneCondition=true (this call's
+    // literal third argument) is only ever consulted when every one of
+    // the 3 requested conditions comes back empty -- both existing
+    // "browse everything visible" tests above always produce at least a
+    // level<=X clause (image_access_type !== 'NOT IN' by default), so
+    // neither can distinguish forceOneCondition=true from a mutated
+    // false. A user with no forbidden categories, no FilterState
+    // restriction, and image_access_type exactly 'NOT IN' with an empty
+    // image_access_list empties every one of the 3 conditions passed
+    // here (see PermissionService::getSqlConditionFandF()'s own
+    // visible_images/forbidden_images fallthrough case).
+    CurrentUser::set(new User(
+        id: \Piwigo\Common\ValueObject\UserId::from(1),
+        username: '',
+        email: '',
+        language: '',
+        theme: '',
+        status: UserStatus::Normal,
+        enabledHigh: false,
+        rawAttributes: ['image_access_type' => 'NOT IN', 'image_access_list' => ''],
+    ));
+    $service = makeCalendarService();
+
+    $sql = $service->buildInnerSql('categories', false, null, '', []);
+
+    expect($sql)->toBe(
+        ' FROM ' . Tables::images()
+        . "\nINNER JOIN " . Tables::imageCategory() . ' ON id = image_id'
+        . "\n    WHERE 1 = 1"
     );
 });
 

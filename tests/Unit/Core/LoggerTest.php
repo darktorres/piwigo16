@@ -379,10 +379,48 @@ test('getTimestamp computes a real, current sub-second microsecond value, not a 
     // systematic bias from that much natural noise without mocking the
     // clock, which isn't available for this private method's own bare
     // microtime() call.
+    // Also closes a FloorToRound mutation on this same line
+    // (`round($originalTime)` instead of `floor($originalTime)`,
+    // extracting the whole-seconds part before subtracting it back
+    // out): floor() and round() only disagree when the fractional part
+    // is >= 0.5 -- confirmed live that when they do, the mutant
+    // produces a negative $micro whose sprintf('%06d', ...) output
+    // either fails the digits-only regex below or, worse, crashes
+    // getTimestamp() outright with a DateMalformedStringException.
+    // Purely real-clock-driven, this only has ~50% odds of showing up
+    // on any single call, so the loop below keeps retrying (a handful
+    // of iterations, practically always well under the cap) until it
+    // genuinely observes that fractional-part window before making its
+    // assertions -- otherwise this test would only catch the mutation
+    // about half the time it happens to run.
     $dir = $this->root . '/timestamp-dir';
     $logger = new Logger(['directory' => $dir, 'filename' => 'ts.txt', 'dateFormat' => 'u']);
 
-    $before = microtime(true);
+    // Targets [0.5, 0.9) specifically, not the full [0.5, 1.0): a
+    // handful of microseconds of real work happen between this loop
+    // exiting and getTimestamp()'s own internal microtime() call, and
+    // without this margin, a fraction observed right near the 1.0
+    // rollover can cross into the next second (fraction back near 0)
+    // before that internal call runs, silently defeating the retry
+    // (confirmed live: without this margin, the test intermittently
+    // passed even against the actual FloorToRound mutant).
+    // usleep(), not a tight spin: a bare busy-loop's own iterations are
+    // fast enough that hundreds of them can complete within the SAME
+    // microsecond, never actually advancing the wall clock far enough
+    // to reach the target window -- confirmed live (a 400-iteration
+    // spin cap was reached with the fraction barely having moved at
+    // all). Small real sleeps between checks let wall-clock time
+    // actually pass.
+    $attempts = 0;
+    do {
+        $before = microtime(true);
+        $fraction = fmod($before, 1);
+        $attempts++;
+        if ($fraction < 0.5 || $fraction >= 0.9) {
+            usleep(10_000);
+        }
+    } while (($fraction < 0.5 || $fraction >= 0.9) && $attempts < 150);
+
     $logger->info('x');
     $after = microtime(true);
 

@@ -297,9 +297,19 @@ abstract class IntegrationTestCase extends TestCase
         // left for whichever test happens to read it first to discover it's
         // stale. tools/reimport-fixture.sh applies the identical correction
         // for its own separate (shell, not PHPUnit) import path.
+        //
+        // dirname(__DIR__, 2) rather than CurrentPaths::get()->root:
+        // ContractTestCase (a real loadFixture() caller) never calls
+        // parent::setUp(), so CurrentPaths is never initialised in its own
+        // process -- confirmed live (a Contract suite run threw "CurrentPaths
+        // not initialised" here before this fix). Computed directly instead,
+        // same technique this class's own setUp() below and
+        // tests/Browser/CatModifyPageRendererTest.php both already use for
+        // the identical "this checkout's real root" value -- self-contained,
+        // no initialization-order dependency.
         DbConnection::build()->executeStatement(
             'UPDATE ' . Tables::sites() . ' SET galleries_url = ? WHERE id = 1',
-            [CurrentPaths::get()->root . 'galleries/']
+            [dirname(__DIR__, 2) . '/galleries/']
         );
 
         $this->settleDatabase();

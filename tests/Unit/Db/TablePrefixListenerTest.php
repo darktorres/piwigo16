@@ -99,3 +99,13 @@ test('loadClassMetadata applies a custom, non-default prefix', function (): void
 
     expect($metadata->getTableName())->toBe('demo17_sessions');
 });
+
+/**
+ * Confirmed-equivalent: line 29's EmptyStringToNotEmpty on the `$prefix
+ * === ''` guard. str_starts_with($tableName, '') is always true for any
+ * $tableName (an empty needle always matches) -- the chain's own SECOND
+ * disjunct already independently returns early for an empty prefix, on
+ * its own, regardless of what the first disjunct's literal is mutated
+ * to. Confirmed live: the full suite in this file passes identically
+ * with the mutation applied.
+ */

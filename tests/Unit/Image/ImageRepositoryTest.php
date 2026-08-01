@@ -29,18 +29,49 @@ function imageRepositoryTestRepo(): ImageRepository
 }
 
 /**
+ * `empty_lounge_running` is a single GLOBAL row in the real `config`
+ * table, also directly manipulated by ImageServiceTest.php's own
+ * emptyLounge() tests. Under --parallel, Pest runs separate test FILES
+ * as separate worker processes concurrently, so a test here and a test
+ * there can genuinely race on this one row. Same lock name as
+ * ImageServiceTest.php's own identical helper -- MySQL's GET_LOCK()/
+ * RELEASE_LOCK() are server-wide, not connection-local, so they
+ * serialize both files' tests against each other for real.
+ */
+function imageRepositoryTestAcquireEmptyLoungeDbLock(\Doctrine\DBAL\Connection $conn): void
+{
+    $acquired = $conn->fetchOne("SELECT GET_LOCK('piwigo17-unit-tests-empty_lounge_running', 10)");
+    if (! is_numeric($acquired) || (int) $acquired !== 1) {
+        throw new RuntimeException('Could not acquire the empty_lounge_running test lock within 10s -- a concurrent test run may be stuck.');
+    }
+}
+
+function imageRepositoryTestReleaseEmptyLoungeDbLock(\Doctrine\DBAL\Connection $conn): void
+{
+    $conn->executeStatement("SELECT RELEASE_LOCK('piwigo17-unit-tests-empty_lounge_running')");
+}
+
+/**
  * Confirmed-equivalent: every remaining reported mutation in this file
  * after the tests below (UnwrapArrayMap/RemoveIntegerCast/
  * RemoveStringCast/DecrementInteger/IncrementInteger/
  * EmptyStringToNotEmpty across findPathsForFileDeletion(),
  * findLoungeRows(), findImageIdsWithoutMd5sum(), findPathsForMd5sum(),
  * findById(), findIdsByFilenameInCategory(), findIdsByMd5sum(),
- * findIdsVisibleInCategoriesRecentlyAvailable(), and
- * findAddMethodBreakdown() -- roughly 20 mutation IDs across 9
- * methods), plus line 745's TrueToFalse in tryAcquireLoungeLock()/
- * findLoungeLockValue() (documented separately, same root cause
- * category: a defensive normalization step that never actually does
- * anything on THIS driver's real output).
+ * findIdsVisibleInCategoriesRecentlyAvailable(),
+ * findAddMethodBreakdown(), findRepresentedCategoryIds(),
+ * findExistingAssociations(), and findMaxRanksByCategory() -- roughly
+ * 29 mutation IDs across 12 methods), plus line 745's TrueToFalse in
+ * tryAcquireLoungeLock()/findLoungeLockValue() (documented separately,
+ * same root cause category: a defensive normalization step that never
+ * actually does anything on THIS driver's real output).
+ * findRepresentedCategoryIds()'s, findExistingAssociations()'s, and
+ * findMaxRanksByCategory()'s own dedicated tests below prove the real
+ * logic (array grouping/shape, real aggregate value) directly; live
+ * sed-mutate-and-rerun confirmed their is_numeric()/(int) casts
+ * specifically are ALSO equivalent under this same root cause, same as
+ * every other method
+ * here.
  *
  * Root cause, confirmed live against every method above (each
  * array_map()/cast/find()-argument-cast was individually removed from
@@ -117,7 +148,10 @@ test('findLoungeRows returns image_id/category_id as real ints, ordered by categ
     // 'image_id' key) -- the exact-shape/exact-order assertion below
     // also closes line 615's TernaryNegated (is_numeric() negated would
     // fall to the 0 default for a genuinely numeric image_id) since
-    // both fixture ids used are non-zero.
+    // both fixture ids used are non-zero. Line 616's
+    // DecrementInteger/IncrementInteger/RemoveIntegerCast (the mirrored
+    // cast for 'category_id') is closed the identical way -- both rows
+    // use a non-zero category_id (1) too.
     $imageA = imageRepositoryTestInsertImage('upload/2026/07/lounge-a.jpg');
     $imageB = imageRepositoryTestInsertImage('upload/2026/07/lounge-b.jpg');
     $conn = DbConnection::build();
@@ -177,6 +211,244 @@ test('deleteLoungeUpTo removes only rows at or below the given image id', functi
     }
 });
 
+test('deleteElementReferences removes rows from every real referencing table, and clears the identity map', function (): void {
+    // Kills line 540/547's ForeachEmptyIterable and every RemoveArrayItem
+    // (one per table in either loop's array literal -- dropping any ONE
+    // leaves that specific table's row behind) and line 541/548's
+    // RemoveMethodCall (the executeStatement() call itself, inside
+    // either loop). One real row is seeded in EVERY table the method
+    // touches, so a per-table survival check after the call pinpoints
+    // exactly which array entry or loop a mutation would have dropped.
+    $repo = imageRepositoryTestRepo();
+    $cached = $repo->find(1);
+    expect($cached)->not->toBeNull();
+
+    $imageId = imageRepositoryTestInsertImage('upload/2026/07/references-test.jpg');
+    $conn = DbConnection::build();
+    $conn->createQueryBuilder()->insert(Tables::comments())
+        ->values(['image_id' => ':i', 'anonymous_id' => ':a'])
+        ->setParameter('i', $imageId)->setParameter('a', 'refs-test')->executeStatement();
+    $conn->createQueryBuilder()->insert(Tables::imageCategory())
+        ->values(['image_id' => ':i', 'category_id' => ':c'])
+        ->setParameter('i', $imageId)->setParameter('c', 1)->executeStatement();
+    $conn->createQueryBuilder()->insert(Tables::imageFormat())
+        ->values(['image_id' => ':i', 'ext' => ':e'])
+        ->setParameter('i', $imageId)->setParameter('e', 'webp')->executeStatement();
+    $conn->createQueryBuilder()->insert(Tables::imageTag())
+        ->values(['image_id' => ':i', 'tag_id' => ':t'])
+        ->setParameter('i', $imageId)->setParameter('t', 1)->executeStatement();
+    $conn->createQueryBuilder()->insert(Tables::favorites())
+        ->values(['user_id' => ':u', 'image_id' => ':i'])
+        ->setParameter('u', 1)->setParameter('i', $imageId)->executeStatement();
+    $conn->createQueryBuilder()->insert(Tables::rate())
+        ->values(['user_id' => ':u', 'element_id' => ':i'])
+        ->setParameter('u', 1)->setParameter('i', $imageId)->executeStatement();
+    $conn->createQueryBuilder()->insert(Tables::caddie())
+        ->values(['user_id' => ':u', 'element_id' => ':i'])
+        ->setParameter('u', 1)->setParameter('i', $imageId)->executeStatement();
+
+    try {
+        $repo->deleteElementReferences([$imageId]);
+
+        foreach ([Tables::comments(), Tables::imageCategory(), Tables::imageFormat(), Tables::imageTag(), Tables::favorites()] as $table) {
+            $count = $conn->fetchOne("SELECT COUNT(*) FROM {$table} WHERE image_id = {$imageId}");
+            expect(is_numeric($count) ? (int) $count : -1)->toBe(0);
+        }
+        foreach ([Tables::rate(), Tables::caddie()] as $table) {
+            $count = $conn->fetchOne("SELECT COUNT(*) FROM {$table} WHERE element_id = {$imageId}");
+            expect(is_numeric($count) ? (int) $count : -1)->toBe(0);
+        }
+
+        // Kills line 554's RemoveMethodCall ($em->clear()).
+        $refetched = $repo->find(1);
+        expect($refetched)->not->toBe($cached);
+    } finally {
+        // The image row itself isn't this method's job -- deleting it
+        // here cascades away any row the method under test failed to
+        // remove, so a genuine bug doesn't leak into later tests.
+        imageRepositoryTestDeleteImage($imageId);
+    }
+});
+
+/**
+ * Confirmed-equivalent: line 536's and line 585's DecrementInteger/
+ * IncrementInteger/UnwrapWordwrap (wordwrap($idsStr, 80, "\n")'s own
+ * width argument, and wordwrap() itself). wordwrap() here exists purely
+ * to keep the generated SQL readable in logs/profilers -- it only ever
+ * inserts extra newline characters into the numeric CSV id list at
+ * word (i.e. comma-separated number) boundaries, never splits a number
+ * or drops a character. MySQL's own tokenizer treats any run of
+ * whitespace inside a numeric IN(...) list identically regardless of
+ * where line breaks fall, so the wrap width (or its absence entirely)
+ * cannot change which ids the resulting query matches, for any id list.
+ * Live sed-verified (both the width literal and the wordwrap() call
+ * itself, removed independently) against the full suite too.
+ */
+test('deleteElementReferences deletes only the rows for the given ids, not every row in each table', function (): void {
+    // Also closes deleteElementReferences()'s own ForeachEmptyIterable/
+    // RemoveArrayItem mutations from the other direction: a table with
+    // BOTH a targeted and an untouched row proves the DELETE is scoped
+    // by id, not a blanket TRUNCATE-equivalent.
+    $repo = imageRepositoryTestRepo();
+    $targetId = imageRepositoryTestInsertImage('upload/2026/07/refs-target.jpg');
+    $bystanderId = imageRepositoryTestInsertImage('upload/2026/07/refs-bystander.jpg');
+    $conn = DbConnection::build();
+    foreach ([$targetId, $bystanderId] as $id) {
+        $conn->createQueryBuilder()->insert(Tables::comments())
+            ->values(['image_id' => ':i', 'anonymous_id' => ':a'])
+            ->setParameter('i', $id)->setParameter('a', 'refs-scope')->executeStatement();
+    }
+
+    try {
+        $repo->deleteElementReferences([$targetId]);
+
+        $targetCount = $conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::comments() . " WHERE image_id = {$targetId}");
+        expect(is_numeric($targetCount) ? (int) $targetCount : -1)->toBe(0);
+        $bystanderCount = $conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::comments() . " WHERE image_id = {$bystanderId}");
+        expect(is_numeric($bystanderCount) ? (int) $bystanderCount : -1)->toBe(1);
+    } finally {
+        imageRepositoryTestDeleteImage($targetId);
+        imageRepositoryTestDeleteImage($bystanderId);
+    }
+});
+
+test('deleteImages removes the row for real, and clears the identity map', function (): void {
+    // Kills line 574's RemoveMethodCall ($em->clear()) -- probed via a
+    // DIFFERENT, unrelated cached entity (fixture image 1), since the
+    // deleted row itself would read back as null either way regardless
+    // of whether the identity map was cleared.
+    $repo = imageRepositoryTestRepo();
+    $cached = $repo->find(1);
+    expect($cached)->not->toBeNull();
+
+    $imageId = imageRepositoryTestInsertImage('upload/2026/07/delete-images-test.jpg');
+
+    $repo->deleteImages([$imageId]);
+
+    $stillThere = DbConnection::build()->fetchOne('SELECT COUNT(*) FROM ' . Tables::images() . " WHERE id = {$imageId}");
+    expect(is_numeric($stillThere) ? (int) $stillThere : -1)->toBe(0);
+
+    $refetched = $repo->find(1);
+    expect($refetched)->not->toBe($cached);
+});
+
+test('findRepresentedCategoryIds returns real ints for every category whose representative points at one of the given images', function (): void {
+    // Kills line 588's AlwaysReturnEmptyArray/TernaryNegated (a real,
+    // non-empty result). Its sibling Decrement/IncrementInteger/
+    // RemoveIntegerCast/UnwrapArrayMap are confirmed-equivalent instead
+    // (live sed-mutate-and-rerun: this exact test still passes with
+    // each removed) -- fetchFirstColumn() already returns a real int
+    // for this NOT NULL int column on this driver, same root cause as
+    // the file's own top-of-file consolidated docblock.
+    // ImageService::deleteElements() (this method's only real caller)
+    // never reaches this method with a category whose representative
+    // still points at a live image -- the FK's own ON DELETE SET NULL
+    // already clears it first -- so a direct call here, bypassing that
+    // caller, is what actually exercises the non-empty path for real.
+    $repo = imageRepositoryTestRepo();
+    $imageId = imageRepositoryTestInsertImage('upload/2026/07/represents-test.jpg');
+    $conn = DbConnection::build();
+    $conn->executeStatement('INSERT INTO ' . Tables::categories() . " (name, representative_picture_id) VALUES ('mutation-sweep-repr-category', {$imageId})");
+    $categoryId = (int) $conn->lastInsertId();
+
+    try {
+        $result = $repo->findRepresentedCategoryIds([$imageId]);
+
+        expect($result)->toBe([$categoryId]);
+    } finally {
+        $conn->executeStatement("DELETE FROM " . Tables::categories() . " WHERE id = {$categoryId}");
+        imageRepositoryTestDeleteImage($imageId);
+    }
+});
+
+test('findExistingAssociations groups real int image ids under their real int category id', function (): void {
+    // Proves the real array-grouping shape (category_id => [image_ids]).
+    // Line 773's own two RemoveIntegerCast (the category_id key and the
+    // image_id value) are confirmed-equivalent instead (live
+    // sed-mutate-and-rerun: this exact test still passes with both
+    // removed) -- same mysqli-native-types root cause as the file's own
+    // top-of-file consolidated docblock (image_category's own image_id/
+    // category_id columns are NOT NULL ints).
+    $repo = imageRepositoryTestRepo();
+    $imageId = imageRepositoryTestInsertImage('upload/2026/07/existing-assoc-test.jpg');
+    $conn = DbConnection::build();
+    $conn->createQueryBuilder()->insert(Tables::imageCategory())
+        ->values(['image_id' => ':i', 'category_id' => ':c'])
+        ->setParameter('i', $imageId)->setParameter('c', 1)->executeStatement();
+
+    try {
+        $result = $repo->findExistingAssociations([$imageId], [1]);
+
+        expect($result)->toBe([1 => [$imageId]]);
+    } finally {
+        $conn->createQueryBuilder()->delete(Tables::imageCategory())
+            ->where('image_id = :i')->setParameter('i', $imageId)->executeStatement();
+        imageRepositoryTestDeleteImage($imageId);
+    }
+});
+
+test('findMaxRanksByCategory returns the real int max rank for a category with ranked images', function (): void {
+    // Kills line 800's AlwaysReturnEmptyArray (a real, non-empty
+    // result). Its sibling Decrement/IncrementInteger/RemoveIntegerCast/
+    // UnwrapArrayMap are confirmed-equivalent instead (live
+    // sed-mutate-and-rerun: this exact test still passes with each
+    // removed) -- fetchAllKeyValue() already returns a real int for
+    // this NOT NULL `rank` column on this driver, same root cause as
+    // the file's own top-of-file consolidated docblock. A fresh,
+    // private throwaway category is required here, not the shared
+    // fixture category 1 --
+    // MAX(rank) aggregates over EVERY image in the category, so under
+    // --parallel execution any concurrently-running test that also
+    // writes to category 1 races this assertion (caught live: a
+    // concurrent rank=8 write made this test observe 8, not the 7 it
+    // itself inserted).
+    $repo = imageRepositoryTestRepo();
+    $conn = DbConnection::build();
+    $conn->executeStatement("INSERT INTO " . Tables::categories() . " (name) VALUES ('mutation-sweep-max-rank-category')");
+    $categoryId = (int) $conn->lastInsertId();
+    $imageId = imageRepositoryTestInsertImage('upload/2026/07/max-rank-test.jpg');
+    $conn->createQueryBuilder()->insert(Tables::imageCategory())
+        ->values(['image_id' => ':i', 'category_id' => ':c', '`rank`' => ':r'])
+        ->setParameter('i', $imageId)->setParameter('c', $categoryId)->setParameter('r', 7)->executeStatement();
+
+    try {
+        $result = $repo->findMaxRanksByCategory([$categoryId]);
+
+        expect($result)->toBe([$categoryId => 7]);
+    } finally {
+        $conn->createQueryBuilder()->delete(Tables::imageCategory())
+            ->where('image_id = :i')->setParameter('i', $imageId)->executeStatement();
+        imageRepositoryTestDeleteImage($imageId);
+        $conn->executeStatement("DELETE FROM " . Tables::categories() . " WHERE id = {$categoryId}");
+    }
+});
+
+test('massInsertImageCategory persists every real row it is given', function (): void {
+    // Kills line 1470's RemoveMethodCall (clear() -- the identity map,
+    // via the same unrelated-cached-entity technique as the sibling
+    // tests above).
+    $repo = imageRepositoryTestRepo();
+    $cached = $repo->find(1);
+    expect($cached)->not->toBeNull();
+
+    $imageId = imageRepositoryTestInsertImage('upload/2026/07/mass-insert-test.jpg');
+
+    try {
+        $repo->massInsertImageCategory([
+            ['image_id' => $imageId, 'category_id' => 1, 'rank' => 3],
+        ]);
+
+        $rank = DbConnection::build()->fetchOne('SELECT `rank` FROM ' . Tables::imageCategory() . " WHERE image_id = {$imageId} AND category_id = 1");
+        expect($rank)->toBe(3);
+        $refetched = $repo->find(1);
+        expect($refetched)->not->toBe($cached);
+    } finally {
+        DbConnection::build()->createQueryBuilder()->delete(Tables::imageCategory())
+            ->where('image_id = :i')->setParameter('i', $imageId)->executeStatement();
+        imageRepositoryTestDeleteImage($imageId);
+    }
+});
+
 test('tryAcquireLoungeLock persists a real, JSON-round-trippable value, and clears the identity map', function (): void {
     // Kills line 731's RemoveMethodCall ($em->clear()) -- verified via
     // ImageEntity's own identity map: a prior find() on a real image
@@ -186,10 +458,12 @@ test('tryAcquireLoungeLock persists a real, JSON-round-trippable value, and clea
     // so this proves the *general* clear() mechanism via the same
     // repository instance instead of a same-table round-trip.
     $repo = imageRepositoryTestRepo();
+    $conn = DbConnection::build();
+    imageRepositoryTestAcquireEmptyLoungeDbLock($conn);
     $cached = $repo->find(1);
     expect($cached)->not->toBeNull();
 
-    DbConnection::build()->createQueryBuilder()->delete('piwigo_config')
+    $conn->createQueryBuilder()->delete('piwigo_config')
         ->where('param = :p')->setParameter('p', 'empty_lounge_running')
         ->executeStatement();
 
@@ -204,9 +478,10 @@ test('tryAcquireLoungeLock persists a real, JSON-round-trippable value, and clea
         $refetched = $repo->find(1);
         expect($refetched)->not->toBe($cached);
     } finally {
-        DbConnection::build()->createQueryBuilder()->delete('piwigo_config')
+        $conn->createQueryBuilder()->delete('piwigo_config')
             ->where('param = :p')->setParameter('p', 'empty_lounge_running')
             ->executeStatement();
+        imageRepositoryTestReleaseEmptyLoungeDbLock($conn);
     }
 });
 

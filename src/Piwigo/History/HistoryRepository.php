@@ -238,6 +238,9 @@ final class HistoryRepository extends EntityRepository
      */
     public function sumPageViews(): int
     {
+        // SQL-modernization audit: verified, zero interpolation of any
+        // kind (the table name is a structural Tables::xxx() constant),
+        // nothing to bind.
         $historySummaryTable = Tables::historySummary();
 
         $value = $this->getEntityManager()
@@ -262,76 +265,45 @@ final class HistoryRepository extends EntityRepository
      */
     public function findLastByType(string $type, int $limit): array
     {
-        $historySummaryTable = Tables::historySummary();
+        // SQL-modernization audit: $limit used to be spliced into
+        // `LIMIT {$limit}` (a real `int` param, but still a value in
+        // query text rather than bound) -- now setMaxResults().
+        $qb = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
+            ->select('year', 'month', 'day', 'hour', 'nb_pages')
+            ->from(Tables::historySummary())
+            ->setMaxResults($limit);
 
-        $sql = <<<SQL
-            SELECT
-                year,
-                month,
-                day,
-                hour,
-                nb_pages
-            FROM {$historySummaryTable}
-            SQL;
-
-        $sql .= match ($type) {
-            'hour' => <<<SQL
-
-                WHERE year IS NOT NULL
-                    AND month IS NOT NULL
-                    AND day IS NOT NULL
-                    AND hour IS NOT NULL
-                ORDER BY
-                    year DESC,
-                    month DESC,
-                    day DESC,
-                    hour DESC
-                LIMIT {$limit}
-                ;
-                SQL
-            ,
-            'day' => <<<SQL
-
-                WHERE year IS NOT NULL
-                    AND month IS NOT NULL
-                    AND day IS NOT NULL
-                    AND hour IS NULL
-                ORDER BY
-                    year DESC,
-                    month DESC,
-                    day DESC
-                LIMIT {$limit}
-                ;
-                SQL
-            ,
-            'month' => <<<SQL
-
-                WHERE year IS NOT NULL
-                    AND month IS NOT NULL
-                    AND day IS NULL
-                ORDER BY
-                    year DESC,
-                    month DESC
-                LIMIT {$limit}
-                ;
-                SQL
-            ,
-            default => <<<SQL
-
-                WHERE year IS NOT NULL
-                    AND month IS NULL
-                ORDER BY
-                    year DESC
-                LIMIT {$limit}
-                ;
-                SQL
-            ,
+        match ($type) {
+            'hour' => $qb->where('year IS NOT NULL')
+                ->andWhere('month IS NOT NULL')
+                ->andWhere('day IS NOT NULL')
+                ->andWhere('hour IS NOT NULL')
+                ->orderBy('year', 'DESC')
+                ->addOrderBy('month', 'DESC')
+                ->addOrderBy('day', 'DESC')
+                ->addOrderBy('hour', 'DESC'),
+            'day' => $qb->where('year IS NOT NULL')
+                ->andWhere('month IS NOT NULL')
+                ->andWhere('day IS NOT NULL')
+                ->andWhere('hour IS NULL')
+                ->orderBy('year', 'DESC')
+                ->addOrderBy('month', 'DESC')
+                ->addOrderBy('day', 'DESC'),
+            'month' => $qb->where('year IS NOT NULL')
+                ->andWhere('month IS NOT NULL')
+                ->andWhere('day IS NULL')
+                ->orderBy('year', 'DESC')
+                ->addOrderBy('month', 'DESC'),
+            default => $qb->where('year IS NOT NULL')
+                ->andWhere('month IS NULL')
+                ->orderBy('year', 'DESC'),
         };
 
         /** @var list<array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null}> */
-        return $this->getEntityManager()
-            ->getConnection()
-            ->fetchAllAssociative($sql);
+        return $qb->executeQuery()
+            ->fetchAllAssociative();
     }
 
     /**
@@ -343,35 +315,23 @@ final class HistoryRepository extends EntityRepository
      */
     public function findMonthlyRows(?int $limit): array
     {
-        $historySummaryTable = Tables::historySummary();
-
-        $sql = <<<SQL
-            SELECT
-              year,
-              month,
-              day,
-              hour,
-              nb_pages
-            FROM {$historySummaryTable}
-            WHERE month IS NOT NULL
-              AND day IS NULL
-            ORDER BY
-              year DESC,
-              month DESC
-            SQL;
+        $qb = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
+            ->select('year', 'month', 'day', 'hour', 'nb_pages')
+            ->from(Tables::historySummary())
+            ->where('month IS NOT NULL')
+            ->andWhere('day IS NULL')
+            ->orderBy('year', 'DESC')
+            ->addOrderBy('month', 'DESC');
 
         if ($limit !== null) {
-            $sql .= <<<SQL
-                 LIMIT {$limit}
-                SQL;
+            $qb->setMaxResults($limit);
         }
 
-        $sql .= ';';
-
         /** @var list<array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null}> */
-        return $this->getEntityManager()
-            ->getConnection()
-            ->fetchAllAssociative($sql);
+        return $qb->executeQuery()
+            ->fetchAllAssociative();
     }
 
     /**
@@ -384,31 +344,25 @@ final class HistoryRepository extends EntityRepository
      */
     public function findDailyRowsForMonths(int $year1, int $month1, int $year2, int $month2, int $year3, int $month3): array
     {
-        $historySummaryTable = Tables::historySummary();
-
         /** @var list<array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null}> */
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT
-                  year,
-                  month,
-                  day,
-                  hour,
-                  nb_pages
-                FROM {$historySummaryTable}
-                WHERE
-                  (
-                    (year = {$year1} AND month = {$month1})
-                    OR (year = {$year2} AND month = {$month2})
-                    OR (year = {$year3} AND month = {$month3})
-                  )
-                  AND day IS NOT NULL
-                  AND hour IS NULL
-                ORDER BY
-                  year DESC,
-                  month DESC
-                SQL);
+            ->createQueryBuilder()
+            ->select('year', 'month', 'day', 'hour', 'nb_pages')
+            ->from(Tables::historySummary())
+            ->where('(year = :year1 AND month = :month1) OR (year = :year2 AND month = :month2) OR (year = :year3 AND month = :month3)')
+            ->andWhere('day IS NOT NULL')
+            ->andWhere('hour IS NULL')
+            ->orderBy('year', 'DESC')
+            ->addOrderBy('month', 'DESC')
+            ->setParameter('year1', $year1)
+            ->setParameter('month1', $month1)
+            ->setParameter('year2', $year2)
+            ->setParameter('month2', $month2)
+            ->setParameter('year3', $year3)
+            ->setParameter('month3', $month3)
+            ->executeQuery()
+            ->fetchAllAssociative();
     }
 
     /**
@@ -419,25 +373,21 @@ final class HistoryRepository extends EntityRepository
      */
     public function findAverageDailyPageViewsSince(int $year, int $previousYear, int $afterMonth): ?float
     {
-        $historySummaryTable = Tables::historySummary();
-
         $value = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne(<<<SQL
-                SELECT
-                  AVG(nb_pages)
-                FROM {$historySummaryTable}
-                WHERE
-                  (
-                  year = {$year} OR
-                  (year = {$previousYear} and month > {$afterMonth})
-                  )
-                  AND day IS NOT NULL
-                  AND hour IS NULL
-                ORDER BY
-                  year DESC,
-                  month DESC
-                SQL);
+            ->createQueryBuilder()
+            ->select('AVG(nb_pages)')
+            ->from(Tables::historySummary())
+            ->where('year = :year OR (year = :previousYear AND month > :afterMonth)')
+            ->andWhere('day IS NOT NULL')
+            ->andWhere('hour IS NULL')
+            ->orderBy('year', 'DESC')
+            ->addOrderBy('month', 'DESC')
+            ->setParameter('year', $year)
+            ->setParameter('previousYear', $previousYear)
+            ->setParameter('afterMonth', $afterMonth)
+            ->executeQuery()
+            ->fetchOne();
 
         return is_numeric($value) ? (float) $value : null;
     }
@@ -641,6 +591,8 @@ final class HistoryRepository extends EntityRepository
      */
     public function getSectionEnumOptions(): array
     {
+        // SQL-modernization audit: verified, {$historyTable} is a
+        // structural Tables::history() constant, no real value spliced.
         $historyTable = Tables::history();
         $rows = $this->getEntityManager()
             ->getConnection()
@@ -672,6 +624,12 @@ final class HistoryRepository extends EntityRepository
      */
     public function alterSectionEnum(array $options): void
     {
+        // SQL-modernization audit: verified, not a target -- an ENUM
+        // column definition has no bind-able parameter position in any
+        // SQL dialect (DDL, same carve-out as Admin\Maintenance\
+        // DbMaintenanceRepository::repairOptimizeAllTables()), and
+        // $options is already regex-gated by the one real caller (see
+        // this method's own docblock) rather than raw user input.
         $enumList = implode(',', array_map(static fn (string $option): string => "'" . $option . "'", array_unique($options)));
 
         $historyTable = Tables::history();

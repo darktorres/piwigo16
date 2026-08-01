@@ -726,20 +726,4 @@ final class NotificationByMailSender
     {
         return $this->doSubscribeUnsubscribeNotificationByMail($isAdminRequest, false, $checkKeyList);
     }
-
-    /**
-     * Add quote to all elements of a check_key list.
-     *
-     * @param array<int, mixed> $checkKeyList
-     * @return string[] quoted check key list
-     */
-    public static function quoteCheckKeyList(array $checkKeyList = []): array
-    {
-        // $checkKeyList may come straight from $_POST (see
-        // NotificationByMailSubController), so its elements are only
-        // provably string-castable once filtered.
-        $stringCheckKeys = array_filter($checkKeyList, is_string(...));
-
-        return array_map(fn (string $s): string => '\'' . $s . '\'', $stringCheckKeys);
-    }
 }

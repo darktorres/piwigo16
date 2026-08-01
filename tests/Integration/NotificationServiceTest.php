@@ -96,11 +96,31 @@ final class NotificationServiceTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    public function test_get_sql_where_restrict_filter_with_no_forbidden_categories(): void
+    public function test_get_sql_where_restrict_condition_with_the_sentinel_forbidden_categories_value(): void
     {
-        $sql = $this->service->getSqlWhereRestrictFilter('WHERE', 'ic.image_id', true);
+        // SQL-modernization audit: was getSqlWhereRestrictFilter(),
+        // returning an already-'WHERE '-prefixed raw string -- now
+        // getSqlWhereRestrictCondition(), returning a SqlCondition whose
+        // own ->sql has no prefix (callers compose it via QueryBuilder::
+        // andWhere() instead).
+        //
+        // setUp() seeds forbiddenCategories: '0' -- PermissionService's
+        // own sentinel for "no real forbidden categories" (see
+        // PermissionService::getForbiddenCategories()'s own docblock:
+        // the list always contains at least 0, a nonexistent category,
+        // so `NOT IN (0)` is always true) -- not an EMPTY string, so this
+        // still produces a real (if practically always-true) bound NOT IN
+        // fragment, not $forceOneCondition's own '1 = 1' fallback. The
+        // original test's own name overclaimed "no forbidden categories"
+        // while only asserting the string started with 'WHERE' -- true
+        // either way, so it never actually distinguished the two.
+        $condition = $this->service->getSqlWhereRestrictCondition('ic.image_id', true);
 
-        self::assertStringStartsWith('WHERE', $sql);
+        self::assertFalse($condition->isEmpty());
+        self::assertStringContainsString('NOT IN', $condition->sql);
+        $key = array_key_first($condition->parameters);
+        self::assertIsString($key);
+        self::assertSame([0], $condition->parameters[$key]);
     }
 
     public function test_custom_notification_query_returns_null_for_an_unknown_type(): void

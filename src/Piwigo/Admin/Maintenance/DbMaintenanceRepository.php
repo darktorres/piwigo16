@@ -126,6 +126,14 @@ final readonly class DbMaintenanceRepository
      */
     public function repairOptimizeAllTables(): void
     {
+        // SQL-modernization audit: verified, all 5 heredoc blocks below
+        // splice only identifier-shaped values (table names from SHOW
+        // TABLES/the fixed DB prefix, column names from DESC results),
+        // never a real value -- REPAIR/OPTIMIZE/ALTER...ORDER BY have no
+        // bind-able parameter positions in SQL at all (unlike DML, table/
+        // column identifiers in DDL-ish statements can never be
+        // placeholders in any dialect), so there's no QueryBuilder/bound-
+        // parameter form to convert to here regardless.
         $conn = $this->em->getConnection();
         $prefix = DbCredentials::current()->prefix;
         $allTables = array_map(

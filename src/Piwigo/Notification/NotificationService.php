@@ -10,6 +10,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionService;
+use Piwigo\Permission\SqlCondition;
 
 /**
  * "What's new" aggregation, ported from the deleted
@@ -33,14 +34,21 @@ final readonly class NotificationService
     /**
      * The image/category junction table must be aliased "ic" in whatever
      * query this feeds into.
+     *
+     * SQL-modernization audit: was getSqlWhereRestrictFilter(), returning
+     * an already-prefixed ('AND '/'WHERE ') raw string via
+     * PermissionService::getSqlConditionFandF() -- now SqlCondition via
+     * getSqlConditionFandFAsCondition(); every caller composes
+     * conjunction through QueryBuilder::andWhere() instead of a string
+     * prefix, so $prefixCondition is gone.
      */
-    public function getSqlWhereRestrictFilter(?string $prefixCondition, string $imgField = 'ic.image_id', bool $forceOneCondition = false): string
+    public function getSqlWhereRestrictCondition(string $imgField = 'ic.image_id', bool $forceOneCondition = false): SqlCondition
     {
-        return $this->permissionService->getSqlConditionFandF([
+        return $this->permissionService->getSqlConditionFandFAsCondition([
             'forbidden_categories' => 'ic.category_id',
             'visible_categories' => 'ic.category_id',
             'visible_images' => $imgField,
-        ], $prefixCondition, $forceOneCondition);
+        ], $forceOneCondition);
     }
 
     private const array KNOWN_TYPES = ['new_comments', 'unvalidated_comments', 'new_elements', 'updated_categories', 'new_users'];
@@ -54,22 +62,22 @@ final readonly class NotificationService
             return null;
         }
 
-        $restrictSql = match ($type) {
-            'new_comments' => $this->getSqlWhereRestrictFilter('AND'),
-            'new_elements', 'updated_categories' => $this->getSqlWhereRestrictFilter('AND', 'id'),
-            default => '',
+        $restrictCondition = match ($type) {
+            'new_comments' => $this->getSqlWhereRestrictCondition(),
+            'new_elements', 'updated_categories' => $this->getSqlWhereRestrictCondition('id'),
+            default => new SqlCondition(''),
         };
 
         return match ($action) {
-            'count' => $this->repo->countByType($type, $start, $end, $restrictSql),
-            'info' => $this->repo->findIdsByType($type, $start, $end, $restrictSql),
+            'count' => $this->repo->countByType($type, $start, $end, $restrictCondition),
+            'info' => $this->repo->findIdsByType($type, $start, $end, $restrictCondition),
             default => null,
         };
     }
 
     public function nbNewComments(?string $start = null, ?string $end = null): int
     {
-        return $this->repo->countByType('new_comments', $start, $end, $this->getSqlWhereRestrictFilter('AND'));
+        return $this->repo->countByType('new_comments', $start, $end, $this->getSqlWhereRestrictCondition());
     }
 
     /**
@@ -77,17 +85,17 @@ final readonly class NotificationService
      */
     public function newComments(?string $start = null, ?string $end = null): array
     {
-        return $this->repo->findIdsByType('new_comments', $start, $end, $this->getSqlWhereRestrictFilter('AND'));
+        return $this->repo->findIdsByType('new_comments', $start, $end, $this->getSqlWhereRestrictCondition());
     }
 
     public function nbUnvalidatedComments(?string $start = null, ?string $end = null): int
     {
-        return $this->repo->countByType('unvalidated_comments', $start, $end, '');
+        return $this->repo->countByType('unvalidated_comments', $start, $end, new SqlCondition(''));
     }
 
     public function nbNewElements(?string $start = null, ?string $end = null): int
     {
-        return $this->repo->countByType('new_elements', $start, $end, $this->getSqlWhereRestrictFilter('AND', 'id'));
+        return $this->repo->countByType('new_elements', $start, $end, $this->getSqlWhereRestrictCondition('id'));
     }
 
     /**
@@ -95,12 +103,12 @@ final readonly class NotificationService
      */
     public function newElements(?string $start = null, ?string $end = null): array
     {
-        return $this->repo->findIdsByType('new_elements', $start, $end, $this->getSqlWhereRestrictFilter('AND', 'id'));
+        return $this->repo->findIdsByType('new_elements', $start, $end, $this->getSqlWhereRestrictCondition('id'));
     }
 
     public function nbUpdatedCategories(?string $start = null, ?string $end = null): int
     {
-        return $this->repo->countByType('updated_categories', $start, $end, $this->getSqlWhereRestrictFilter('AND', 'id'));
+        return $this->repo->countByType('updated_categories', $start, $end, $this->getSqlWhereRestrictCondition('id'));
     }
 
     /**
@@ -108,12 +116,12 @@ final readonly class NotificationService
      */
     public function updatedCategories(?string $start = null, ?string $end = null): array
     {
-        return $this->repo->findIdsByType('updated_categories', $start, $end, $this->getSqlWhereRestrictFilter('AND', 'id'));
+        return $this->repo->findIdsByType('updated_categories', $start, $end, $this->getSqlWhereRestrictCondition('id'));
     }
 
     public function nbNewUsers(?string $start = null, ?string $end = null): int
     {
-        return $this->repo->countByType('new_users', $start, $end, '');
+        return $this->repo->countByType('new_users', $start, $end, new SqlCondition(''));
     }
 
     /**
@@ -121,7 +129,7 @@ final readonly class NotificationService
      */
     public function newUsers(?string $start = null, ?string $end = null): array
     {
-        return $this->repo->findIdsByType('new_users', $start, $end, '');
+        return $this->repo->findIdsByType('new_users', $start, $end, new SqlCondition(''));
     }
 
     /**
@@ -155,9 +163,9 @@ final readonly class NotificationService
             }
         }
 
-        $whereSql = $this->getSqlWhereRestrictFilter('WHERE', 'i.id', true);
+        $restrictCondition = $this->getSqlWhereRestrictCondition('i.id', true);
 
-        $dates = $this->repo->findRecentPostDates($whereSql, $maxDates);
+        $dates = $this->repo->findRecentPostDates($restrictCondition, $maxDates);
 
         $result = [];
         foreach ($dates as $date) {
@@ -165,11 +173,11 @@ final readonly class NotificationService
             $dateAvailable = is_string($dateAvailable) ? $dateAvailable : '';
 
             if ($maxElements > 0) {
-                $date['elements'] = $this->repo->findRecentElementsForDate($whereSql, $dateAvailable, $maxElements);
+                $date['elements'] = $this->repo->findRecentElementsForDate($restrictCondition, $dateAvailable, $maxElements);
             }
 
             if ($maxCats > 0) {
-                $date['categories'] = $this->repo->findRecentCategoriesForDate($whereSql, $dateAvailable, $maxCats);
+                $date['categories'] = $this->repo->findRecentCategoriesForDate($restrictCondition, $dateAvailable, $maxCats);
             }
 
             $result[] = $date;

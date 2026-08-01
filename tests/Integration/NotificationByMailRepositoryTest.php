@@ -99,17 +99,41 @@ final class NotificationByMailRepositoryTest extends IntegrationTestCase
         self::assertSame(1, $rows[0]->userId);
     }
 
-    public function test_delete_by_quoted_check_keys_is_a_no_op_for_an_empty_list(): void
+    public function test_delete_by_check_keys_is_a_no_op_for_an_empty_list(): void
     {
         $before = $this->countNotificationRows();
 
-        $this->repo->deleteByQuotedCheckKeys([]);
+        $this->repo->deleteByCheckKeys([]);
 
         // Guards against building `DELETE FROM ... WHERE check_key IN ()`
         // -- invalid SQL -- for an empty list; the fixture's 2 real rows
         // must survive untouched, proving the early return (not a real,
         // scoped-to-nothing DELETE) is what actually ran.
         self::assertSame($before, $this->countNotificationRows());
+    }
+
+    /**
+     * SQL-modernization audit regression: check keys used to reach this
+     * method already quote-wrapped by NotificationByMailSender::
+     * quoteCheckKeyList() (`'\'' . $s . '\''`, zero escaping) and get
+     * spliced into the query text -- now bound, and quoteCheckKeyList()
+     * itself is gone (this was its only real caller). A check_key
+     * containing a literal single quote would have broken the old manual
+     * wrapping; confirms it deletes correctly instead.
+     */
+    public function test_delete_by_check_keys_removes_a_key_containing_a_single_quote(): void
+    {
+        $checkKey = "o'brien-" . bin2hex(random_bytes(4));
+        // user 2 (guest) has no notification row in the fixture -- see
+        // this class's own docblock.
+        $this->repo->insertNotifications([
+            ['user_id' => 2, 'check_key' => $checkKey, 'enabled' => 0],
+        ]);
+        self::assertSame(1, $this->repo->countByCheckKey($checkKey));
+
+        $this->repo->deleteByCheckKeys([$checkKey]);
+
+        self::assertSame(0, $this->repo->countByCheckKey($checkKey));
     }
 
     public function test_insert_notifications_is_a_no_op_for_an_empty_list(): void

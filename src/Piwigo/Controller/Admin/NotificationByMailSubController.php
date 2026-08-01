@@ -480,9 +480,9 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
 
             // On timeout simulate like tabsheet send
             if ($nbmSender->isSendmailTimeout()) {
-                $quoted_check_key_list = NotificationByMailSender::quoteCheckKeyList(array_diff($check_key_list, $check_key_treated));
-                if (count($quoted_check_key_list) !== 0) {
-                    $notificationByMailService->deleteByQuotedCheckKeys(array_values($quoted_check_key_list));
+                $untreated_check_key_list = array_values(array_diff($check_key_list, $check_key_treated));
+                if (count($untreated_check_key_list) !== 0) {
+                    $notificationByMailService->deleteByCheckKeys($untreated_check_key_list);
 
                     $redirectService->redirect($base_url . $urlService->getQueryStringDiff([], false), Lang::t('Operation in progress') . "\n" . Lang::t('Please wait...'));
                 }

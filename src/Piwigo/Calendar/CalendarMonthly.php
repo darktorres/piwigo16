@@ -20,6 +20,25 @@ use Piwigo\Image\SrcImage;
  */
 final class CalendarMonthly extends CalendarBase
 {
+    // SQL-modernization audit: verified, same shape as CalendarBase.php's
+    // own finding (see that file's docblock for the full trace) -- every
+    // heredoc block in this file (build_global_calendar()/
+    // build_year_calendar()/build_month_calendar()) only concatenates
+    // fixed SqlDialect::getYear()/getMonth()/getDayOfMonth()/
+    // getDayOfWeek()/DB_RANDOM_FUNCTION fragment expressions, never a raw
+    // value directly. get_date_where() below builds real value content
+    // (year/month/day) via string concatenation rather than binding --
+    // numeric-only in practice (chronology_date components are sanitized
+    // to real ints upstream by CalendarRenderer, or by this class's own
+    // int-keyed query results), not a live injection risk today, but
+    // still not a bound parameter. Fixing this properly means widening
+    // CalendarRepository::findRows()/findRow() to accept params (same
+    // move as CategoryRepository::fetchCallerBuiltQuery() got) and
+    // redesigning how CalendarService::buildInnerSql()/get_date_where()
+    // compose fragments through CalendarBase/CalendarMonthly/
+    // CalendarWeekly/CalendarRenderer together -- a genuinely separate,
+    // subsystem-wide redesign, not fixable piecemeal within this file's
+    // own stage. Tracked in the plan, not silently skipped.
     /**
      * Initialize the calendar.
      * @param string $inner_sql

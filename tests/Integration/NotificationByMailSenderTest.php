@@ -474,16 +474,6 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         $this->sender->endUsersEnv();
     }
 
-    public function test_quote_check_key_list_wraps_string_keys_in_single_quotes_and_drops_non_string_entries(): void
-    {
-        // array_filter()/array_map() both preserve the original, non-list
-        // keys (index 1 -- the non-string entry -- is dropped, not
-        // reindexed), so the exact expected shape keeps keys 0 and 2.
-        $result = NotificationByMailSender::quoteCheckKeyList(['abc', 123, 'def']);
-
-        self::assertSame([0 => "'abc'", 2 => "'def'"], $result);
-    }
-
     public function test_doSubscribeUnsubscribeNotificationByMail_ignores_an_empty_check_key_list(): void
     {
         $result = $this->sender->doSubscribeUnsubscribeNotificationByMail(true, false, []);

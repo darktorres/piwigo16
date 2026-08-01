@@ -38,9 +38,11 @@ final class NotificationByMailRepository extends AbstractRepository
      * as parameters anyway, SQL doesn't allow placeholders for
      * identifiers). $checkKeyList, by contrast, IS bound -- [SEC-18]-class
      * improvement over the original's unescaped `'\'' . $s . '\''`
-     * string-literal quoting (now `NotificationByMailSender::quoteCheckKeyList()`,
-     * still used unchanged by NotificationByMailSubController's own
-     * out-of-scope raw query, kept untouched here).
+     * string-literal quoting. `NotificationByMailSender::quoteCheckKeyList()`
+     * used to reproduce that same unescaped quoting for {@see deleteByCheckKeys()}'s
+     * own now-former "already-quoted" input -- removed in the
+     * SQL-modernization pass (its only real caller), see that method's
+     * own docblock.
      *
      * @param  list<string>  $checkKeyList
      * @return list<UserMailNotification>
@@ -101,6 +103,10 @@ final class NotificationByMailRepository extends AbstractRepository
      */
     public function nullifyBlankEmails(string $emailColumn): void
     {
+        // SQL-modernization audit: verified, both interpolated values are
+        // structural (Tables::users(), and $emailColumn is a trusted
+        // admin-configured column name -- see findUserNotifications()'s
+        // own docblock for the same reasoning), nothing to bind.
         $usersTable = Tables::users();
         $this->conn->executeStatement(<<<SQL
             UPDATE
@@ -122,6 +128,9 @@ final class NotificationByMailRepository extends AbstractRepository
      */
     public function findUsersWithoutNotificationRow(string $idColumn, string $usernameColumn, string $emailColumn): array
     {
+        // SQL-modernization audit: verified, same structural-only shape
+        // as nullifyBlankEmails() above -- table names + trusted
+        // admin-configured column names, nothing to bind.
         $usersTable = Tables::users();
         $userMailNotificationTable = Tables::userMailNotification();
 
@@ -141,24 +150,36 @@ final class NotificationByMailRepository extends AbstractRepository
     }
 
     /**
-     * Deletes rows by check_key. $quotedCheckKeyList is already-quoted SQL
-     * literals (NotificationByMailSender::quoteCheckKeyList()'s own
-     * output) -- see this class's own docblock on why that stays as-is
-     * rather than becoming bound parameters here.
+     * Deletes rows by check_key.
      *
-     * @param  list<string>  $quotedCheckKeyList
+     * SQL-modernization audit: $checkKeyList used to arrive already
+     * quoted by NotificationByMailSender::quoteCheckKeyList() (`'\'' . $s
+     * . '\''`, manual wrapping with zero escaping) and get spliced
+     * straight into the query text -- its own docblock said "$checkKeyList
+     * may come straight from $_POST", which would have made this a real
+     * SQL injection had that path ever been live. Traced the one real
+     * caller (Controller\Admin\NotificationByMailSubController::
+     * insertNewDataUserMailNotification()): its $check_key_list is always
+     * server-generated (NotificationByMailSender::findAvailableCheckKey()),
+     * never $_POST, so not exploitable today -- but the construction
+     * style itself is exactly this initiative's target regardless.
+     * quoteCheckKeyList() had this as its only real caller; removed
+     * entirely rather than left as unused dead code, and this method now
+     * takes plain, unquoted check keys and binds them.
+     *
+     * @param  list<string>  $checkKeyList
      */
-    public function deleteByQuotedCheckKeys(array $quotedCheckKeyList): void
+    public function deleteByCheckKeys(array $checkKeyList): void
     {
-        if ($quotedCheckKeyList === []) {
+        if ($checkKeyList === []) {
             return;
         }
 
-        $userMailNotificationTable = Tables::userMailNotification();
-        $quotedCheckKeysCsv = implode(',', $quotedCheckKeyList);
-        $this->conn->executeStatement(<<<SQL
-            DELETE FROM {$userMailNotificationTable} WHERE check_key IN ({$quotedCheckKeysCsv})
-            SQL);
+        $this->conn->createQueryBuilder()
+            ->delete(Tables::userMailNotification())
+            ->where('check_key IN (:checkKeys)')
+            ->setParameter('checkKeys', $checkKeyList, \Doctrine\DBAL\ArrayParameterType::STRING)
+            ->executeStatement();
     }
 
     /**

@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Notification;
 
+use Doctrine\DBAL\ParameterType;
+use Doctrine\DBAL\Query\QueryBuilder;
 use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\Tables;
+use Piwigo\Permission\SqlCondition;
 
 /**
  * Persistence layer for `custom_notification_query()`'s 5 known
@@ -13,23 +16,21 @@ use Piwigo\Db\Tables;
  * plus `get_recent_post_dates()`'s own 3-query cascade (dates, then
  * per-date thumbnails/categories).
  *
- * $restrictSql is always an already-built permission fragment
- * (NotificationService::getSqlWhereRestrictFilter(), itself
- * PermissionService::getSqlConditionFandF()) -- same "hand-written
- * parameterized SQL, permission fragments stay raw string concatenation"
- * split as every other P19 domain; $start/$end (the only genuinely
- * dynamic/external-origin values here) are always bound parameters.
+ * $restrictCondition is always an already-built permission fragment
+ * (NotificationService::getSqlWhereRestrictCondition(), itself
+ * PermissionService::getSqlConditionFandFAsCondition()) -- SQL-
+ * modernization audit: this and $start/$end (the only other genuinely
+ * dynamic/external-origin values here) are now always bound, via
+ * QueryBuilder throughout instead of hand-assembled heredoc SQL text.
  */
 final class NotificationRepository extends AbstractRepository
 {
-    public function countByType(string $type, ?string $start, ?string $end, string $restrictSql): int
+    public function countByType(string $type, ?string $start, ?string $end, SqlCondition $restrictCondition): int
     {
-        [$fromWhereSql, $fieldId, $params] = $this->buildFromWhere($type, $start, $end, $restrictSql);
+        [$qb, $fieldId] = $this->buildQuery($type, $start, $end, $restrictCondition);
 
-        $count = $this->conn->executeQuery(<<<SQL
-            SELECT COUNT(DISTINCT {$fieldId}) {$fromWhereSql}
-            SQL
-            , $params)
+        $count = $qb->select('COUNT(DISTINCT ' . $fieldId . ')')
+            ->executeQuery()
             ->fetchOne();
 
         return is_numeric($count) ? (int) $count : 0;
@@ -38,62 +39,49 @@ final class NotificationRepository extends AbstractRepository
     /**
      * @return list<int>
      */
-    public function findIdsByType(string $type, ?string $start, ?string $end, string $restrictSql): array
+    public function findIdsByType(string $type, ?string $start, ?string $end, SqlCondition $restrictCondition): array
     {
-        [$fromWhereSql, $fieldId, $params] = $this->buildFromWhere($type, $start, $end, $restrictSql);
+        [$qb, $fieldId] = $this->buildQuery($type, $start, $end, $restrictCondition);
 
-        $ids = $this->conn->executeQuery(<<<SQL
-            SELECT DISTINCT {$fieldId} {$fromWhereSql}
-            SQL
-            , $params)
+        $ids = $qb->select($fieldId)
+            ->distinct()
+            ->executeQuery()
             ->fetchFirstColumn();
 
         return array_values(array_map(intval(...), array_filter($ids, is_numeric(...))));
     }
 
     /**
-     * @return array{0: string, 1: string, 2: list<mixed>}
+     * @return array{0: QueryBuilder, 1: string}
      */
-    private function buildFromWhere(string $type, ?string $start, ?string $end, string $restrictSql): array
+    private function buildQuery(string $type, ?string $start, ?string $end, SqlCondition $restrictCondition): array
     {
-        $params = [];
+        $qb = $this->conn->createQueryBuilder();
 
         switch ($type) {
             case 'new_comments':
-                $commentsTable = Tables::comments();
-                $imageCategoryTable = Tables::imageCategory();
-                $sql = <<<SQL
-                     FROM {$commentsTable} AS c INNER JOIN {$imageCategoryTable} AS ic ON c.image_id = ic.image_id WHERE 1=1
-                    SQL;
+                $qb->from(Tables::comments(), 'c')
+                    ->innerJoin('c', Tables::imageCategory(), 'ic', 'c.image_id = ic.image_id');
                 $dateColumn = 'c.validation_date';
                 $fieldId = 'c.id';
 
                 break;
             case 'unvalidated_comments':
-                $commentsTable = Tables::comments();
-                $sql = <<<SQL
-                     FROM {$commentsTable} WHERE 1=1
-                    SQL;
+                $qb->from(Tables::comments());
                 $dateColumn = 'date';
                 $fieldId = 'id';
 
                 break;
             case 'new_elements':
             case 'updated_categories':
-                $imagesTable = Tables::images();
-                $imageCategoryTable = Tables::imageCategory();
-                $sql = <<<SQL
-                     FROM {$imagesTable} INNER JOIN {$imageCategoryTable} AS ic ON image_id = id WHERE 1=1
-                    SQL;
+                $qb->from(Tables::images(), 'i')
+                    ->innerJoin('i', Tables::imageCategory(), 'ic', 'i.id = ic.image_id');
                 $dateColumn = 'date_available';
                 $fieldId = $type === 'new_elements' ? 'image_id' : 'category_id';
 
                 break;
             case 'new_users':
-                $userInfosTable = Tables::userInfos();
-                $sql = <<<SQL
-                     FROM {$userInfosTable} WHERE 1=1
-                    SQL;
+                $qb->from(Tables::userInfos());
                 $dateColumn = 'registration_date';
                 $fieldId = 'user_id';
 
@@ -103,17 +91,13 @@ final class NotificationRepository extends AbstractRepository
         }
 
         if ($start !== null && $start !== '') {
-            $sql .= <<<SQL
-                 AND {$dateColumn} > ?
-                SQL;
-            $params[] = $start;
+            $qb->andWhere($dateColumn . ' > :start')
+                ->setParameter('start', $start);
         }
 
         if ($end !== null && $end !== '') {
-            $sql .= <<<SQL
-                 AND {$dateColumn} <= ?
-                SQL;
-            $params[] = $end;
+            $qb->andWhere($dateColumn . ' <= :end')
+                ->setParameter('end', $end);
         }
 
         if ($type === 'unvalidated_comments') {
@@ -124,31 +108,42 @@ final class NotificationRepository extends AbstractRepository
             // too, matching every row instead of filtering to unvalidated
             // ones (same bug class Category's own commentable/visible
             // retype found).
-            $sql .= <<<SQL
-                 AND validated = 0
-                SQL;
+            $qb->andWhere('validated = 0');
         }
 
-        $sql .= <<<SQL
-             {$restrictSql}
-            SQL;
+        self::applyCondition($qb, $restrictCondition);
 
-        return [$sql, $fieldId, $params];
+        return [$qb, $fieldId];
+    }
+
+    private static function applyCondition(QueryBuilder $qb, SqlCondition $condition): void
+    {
+        if ($condition->isEmpty()) {
+            return;
+        }
+
+        $qb->andWhere($condition->sql);
+        foreach ($condition->parameters as $name => $value) {
+            $qb->setParameter($name, $value, $condition->types[$name] ?? ParameterType::STRING);
+        }
     }
 
     /**
      * @return list<array{date_available: ?string, nb_elements: int, nb_cats: int}>
      */
-    public function findRecentPostDates(string $whereSql, int $maxDates): array
+    public function findRecentPostDates(SqlCondition $restrictCondition, int $maxDates): array
     {
-        $imagesTable = Tables::images();
-        $imageCategoryTable = Tables::imageCategory();
+        $qb = $this->conn->createQueryBuilder()
+            ->select('date_available', 'COUNT(DISTINCT id) AS nb_elements', 'COUNT(DISTINCT category_id) AS nb_cats')
+            ->from(Tables::images(), 'i')
+            ->innerJoin('i', Tables::imageCategory(), 'ic', 'id = image_id')
+            ->groupBy('date_available')
+            ->orderBy('date_available', 'DESC')
+            ->setMaxResults($maxDates);
+        self::applyCondition($qb, $restrictCondition);
 
-        $rows = $this->conn->executeQuery(
-            <<<SQL
-            SELECT date_available, COUNT(DISTINCT id) AS nb_elements, COUNT(DISTINCT category_id) AS nb_cats FROM {$imagesTable} i INNER JOIN {$imageCategoryTable} AS ic ON id = image_id {$whereSql} GROUP BY date_available ORDER BY date_available DESC LIMIT {$maxDates}
-            SQL
-        )->fetchAllAssociative();
+        $rows = $qb->executeQuery()
+            ->fetchAllAssociative();
 
         return array_map(
             static fn (array $row): array => [
@@ -167,36 +162,43 @@ final class NotificationRepository extends AbstractRepository
      *
      * @return list<array<string, mixed>>
      */
-    public function findRecentElementsForDate(string $whereSql, string $dateAvailable, int $maxElements): array
+    public function findRecentElementsForDate(SqlCondition $restrictCondition, string $dateAvailable, int $maxElements): array
     {
-        $imagesTable = Tables::images();
-        $imageCategoryTable = Tables::imageCategory();
+        $qb = $this->conn->createQueryBuilder()
+            ->select('i.*')
+            ->distinct()
+            ->from(Tables::images(), 'i')
+            ->innerJoin('i', Tables::imageCategory(), 'ic', 'id = image_id')
+            ->andWhere('date_available = :dateAvailable')
+            ->orderBy('RAND()')
+            ->setMaxResults($maxElements)
+            ->setParameter('dateAvailable', $dateAvailable);
+        self::applyCondition($qb, $restrictCondition);
 
-        return $this->conn->executeQuery(
-            <<<SQL
-            SELECT DISTINCT i.* FROM {$imagesTable} i INNER JOIN {$imageCategoryTable} AS ic ON id = image_id {$whereSql} AND date_available = ? ORDER BY RAND() LIMIT {$maxElements}
-            SQL
-            ,
-            [$dateAvailable]
-        )->fetchAllAssociative();
+        return $qb->executeQuery()
+            ->fetchAllAssociative();
     }
 
     /**
      * @return list<array{uppercats: string, img_count: int}>
      */
-    public function findRecentCategoriesForDate(string $whereSql, string $dateAvailable, int $maxCats): array
+    public function findRecentCategoriesForDate(SqlCondition $restrictCondition, string $dateAvailable, int $maxCats): array
     {
-        $imagesTable = Tables::images();
-        $imageCategoryTable = Tables::imageCategory();
-        $categoriesTable = Tables::categories();
+        $qb = $this->conn->createQueryBuilder()
+            ->select('c.uppercats', 'COUNT(DISTINCT i.id) AS img_count')
+            ->distinct()
+            ->from(Tables::images(), 'i')
+            ->innerJoin('i', Tables::imageCategory(), 'ic', 'i.id = image_id')
+            ->innerJoin('i', Tables::categories(), 'c', 'c.id = category_id')
+            ->andWhere('date_available = :dateAvailable')
+            ->groupBy('category_id', 'c.uppercats')
+            ->orderBy('img_count', 'DESC')
+            ->setMaxResults($maxCats)
+            ->setParameter('dateAvailable', $dateAvailable);
+        self::applyCondition($qb, $restrictCondition);
 
-        $rows = $this->conn->executeQuery(
-            <<<SQL
-            SELECT DISTINCT c.uppercats, COUNT(DISTINCT i.id) AS img_count FROM {$imagesTable} i INNER JOIN {$imageCategoryTable} AS ic ON i.id = image_id INNER JOIN {$categoriesTable} c ON c.id = category_id {$whereSql} AND date_available = ? GROUP BY category_id, c.uppercats ORDER BY img_count DESC LIMIT {$maxCats}
-            SQL
-            ,
-            [$dateAvailable]
-        )->fetchAllAssociative();
+        $rows = $qb->executeQuery()
+            ->fetchAllAssociative();
 
         return array_map(
             static fn (array $row): array => [

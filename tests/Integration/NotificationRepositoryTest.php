@@ -10,6 +10,7 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Notification\NotificationRepository;
+use Piwigo\Permission\SqlCondition;
 
 /**
  * The committed fixture seeds every comment/image/user at one uniform
@@ -69,14 +70,14 @@ final class NotificationRepositoryTest extends IntegrationTestCase
 
     public function test_count_by_type_counts_new_comments_in_range(): void
     {
-        $count = $this->repo->countByType('new_comments', '2026-07-07 05:02:37', '2026-07-07 05:02:39', '');
+        $count = $this->repo->countByType('new_comments', '2026-07-07 05:02:37', '2026-07-07 05:02:39', new SqlCondition(''));
 
         self::assertSame(4, $count);
     }
 
     public function test_find_ids_by_type_returns_new_comment_ids(): void
     {
-        $ids = $this->repo->findIdsByType('new_comments', '2026-07-07 05:02:37', '2026-07-07 05:02:39', '');
+        $ids = $this->repo->findIdsByType('new_comments', '2026-07-07 05:02:37', '2026-07-07 05:02:39', new SqlCondition(''));
 
         sort($ids);
         self::assertSame([1, 2, 3, 4], $ids);
@@ -84,7 +85,7 @@ final class NotificationRepositoryTest extends IntegrationTestCase
 
     public function test_count_by_type_excludes_comments_outside_the_range(): void
     {
-        $count = $this->repo->countByType('new_comments', '2026-07-07 05:02:39', '2026-07-07 05:02:40', '');
+        $count = $this->repo->countByType('new_comments', '2026-07-07 05:02:39', '2026-07-07 05:02:40', new SqlCondition(''));
 
         self::assertSame(0, $count);
     }
@@ -99,7 +100,7 @@ final class NotificationRepositoryTest extends IntegrationTestCase
             ['test author', '127.0.0.9', 'pending test comment', 0]
         );
 
-        $count = $this->repo->countByType('unvalidated_comments', null, null, '');
+        $count = $this->repo->countByType('unvalidated_comments', null, null, new SqlCondition(''));
 
         self::assertSame(2, $count);
 
@@ -108,14 +109,14 @@ final class NotificationRepositoryTest extends IntegrationTestCase
 
     public function test_count_by_type_counts_new_elements_in_range(): void
     {
-        $count = $this->repo->countByType('new_elements', '2026-07-07 05:02:36', '2026-07-07 05:02:38', '');
+        $count = $this->repo->countByType('new_elements', '2026-07-07 05:02:36', '2026-07-07 05:02:38', new SqlCondition(''));
 
         self::assertSame(3, $count);
     }
 
     public function test_find_ids_by_type_returns_new_element_ids(): void
     {
-        $ids = $this->repo->findIdsByType('new_elements', '2026-07-07 05:02:36', '2026-07-07 05:02:38', '');
+        $ids = $this->repo->findIdsByType('new_elements', '2026-07-07 05:02:36', '2026-07-07 05:02:38', new SqlCondition(''));
 
         sort($ids);
         self::assertSame([3, 4, 5], $ids);
@@ -125,21 +126,21 @@ final class NotificationRepositoryTest extends IntegrationTestCase
     {
         // updated_categories shares new_elements' image_category-driven
         // query shape, just aliased to category_id instead of image_id.
-        $count = $this->repo->countByType('updated_categories', '2026-07-07 05:02:36', '2026-07-07 05:02:38', '');
+        $count = $this->repo->countByType('updated_categories', '2026-07-07 05:02:36', '2026-07-07 05:02:38', new SqlCondition(''));
 
         self::assertSame(2, $count);
     }
 
     public function test_count_by_type_counts_new_users_in_range(): void
     {
-        $count = $this->repo->countByType('new_users', '2026-07-07 05:02:35', '2026-07-07 05:02:39', '');
+        $count = $this->repo->countByType('new_users', '2026-07-07 05:02:35', '2026-07-07 05:02:39', new SqlCondition(''));
 
         self::assertSame(2, $count);
     }
 
     public function test_find_ids_by_type_returns_new_user_ids(): void
     {
-        $ids = $this->repo->findIdsByType('new_users', '2026-07-07 05:02:35', '2026-07-07 05:02:39', '');
+        $ids = $this->repo->findIdsByType('new_users', '2026-07-07 05:02:35', '2026-07-07 05:02:39', new SqlCondition(''));
 
         sort($ids);
         self::assertSame([3, 4], $ids);
@@ -149,7 +150,7 @@ final class NotificationRepositoryTest extends IntegrationTestCase
     {
         // A restrict fragment that excludes every image_category row --
         // proves it's actually appended to the query, not ignored.
-        $count = $this->repo->countByType('new_elements', null, null, 'AND ic.category_id = -1');
+        $count = $this->repo->countByType('new_elements', null, null, new SqlCondition('ic.category_id = -1'));
 
         self::assertSame(0, $count);
     }
@@ -158,12 +159,12 @@ final class NotificationRepositoryTest extends IntegrationTestCase
     {
         $this->expectException(\InvalidArgumentException::class);
 
-        $this->repo->countByType('bogus_type', null, null, '');
+        $this->repo->countByType('bogus_type', null, null, new SqlCondition(''));
     }
 
     public function test_find_recent_post_dates_groups_by_date(): void
     {
-        $dates = $this->repo->findRecentPostDates('WHERE 1 = 1', 10);
+        $dates = $this->repo->findRecentPostDates(new SqlCondition('1 = 1'), 10);
 
         self::assertCount(3, $dates);
         $byDate = [];
@@ -180,7 +181,7 @@ final class NotificationRepositoryTest extends IntegrationTestCase
 
     public function test_find_recent_elements_for_date_returns_matching_rows(): void
     {
-        $rows = $this->repo->findRecentElementsForDate('WHERE 1 = 1', '2026-07-07 05:02:36', 10);
+        $rows = $this->repo->findRecentElementsForDate(new SqlCondition('1 = 1'), '2026-07-07 05:02:36', 10);
 
         $ids = array_column($rows, 'id');
         sort($ids);
@@ -189,7 +190,7 @@ final class NotificationRepositoryTest extends IntegrationTestCase
 
     public function test_find_recent_categories_for_date_returns_matching_rows(): void
     {
-        $rows = $this->repo->findRecentCategoriesForDate('WHERE 1 = 1', '2026-07-07 05:02:36', 10);
+        $rows = $this->repo->findRecentCategoriesForDate(new SqlCondition('1 = 1'), '2026-07-07 05:02:36', 10);
 
         self::assertNotSame([], $rows);
         self::assertArrayHasKey('uppercats', $rows[0]);

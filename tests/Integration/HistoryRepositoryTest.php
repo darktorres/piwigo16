@@ -245,6 +245,100 @@ final class HistoryRepositoryTest extends IntegrationTestCase
         }
     }
 
+    /**
+     * SQL-modernization audit: findLastByType()/findMonthlyRows()/
+     * findDailyRowsForMonths()/findAverageDailyPageViewsSince() had zero
+     * direct coverage before this pass -- Admin\StatsPageRenderer is
+     * their one real caller, and its own Browser test
+     * (tests/Browser/StatsPageRendererTest.php) can't run in this
+     * worktree (Playwright isn't installed here), so this closes what
+     * would otherwise be a real gap for these 4 converted methods.
+     */
+    public function test_find_last_by_type_filters_and_orders_per_hierarchy_level(): void
+    {
+        $this->insertSummary(2025, 6, 10, 2, 5, 1, 10);
+        $this->insertSummary(2026, 7, 12, 3, 20, 11, 30);
+        $this->insertSummary(2026, 7, 12, 4, 15, 31, 40);
+        $this->insertSummary(2026, null, null, null, 35, 1, 40); // month IS NULL "whole year" row
+
+        try {
+            $hours = $this->repo->findLastByType('hour', 10);
+            self::assertCount(3, $hours);
+            self::assertSame(4, $hours[0]['hour']);
+            self::assertSame(3, $hours[1]['hour']);
+            self::assertSame(2, $hours[2]['hour']);
+
+            $limited = $this->repo->findLastByType('hour', 1);
+            self::assertCount(1, $limited);
+
+            $default = $this->repo->findLastByType('year', 10);
+            self::assertCount(1, $default);
+            self::assertSame(2026, $default[0]['year']);
+            self::assertNull($default[0]['month']);
+        } finally {
+            $this->clearSummary();
+        }
+    }
+
+    public function test_find_monthly_rows_returns_month_level_rows_most_recent_first_and_respects_limit(): void
+    {
+        $this->insertSummary(2025, 6, null, null, 5, 1, 10);
+        $this->insertSummary(2026, 7, null, null, 20, 11, 30);
+        $this->insertSummary(2026, 7, 12, null, 20, 11, 30); // day-level, excluded
+
+        try {
+            $rows = $this->repo->findMonthlyRows(null);
+            self::assertCount(2, $rows);
+            self::assertSame(2026, $rows[0]['year']);
+            self::assertSame(2025, $rows[1]['year']);
+
+            self::assertCount(1, $this->repo->findMonthlyRows(1));
+        } finally {
+            $this->clearSummary();
+        }
+    }
+
+    public function test_find_daily_rows_for_months_matches_only_the_three_given_year_month_pairs(): void
+    {
+        $this->insertSummary(2026, 7, 5, null, 5, 1, 10);
+        $this->insertSummary(2026, 6, 5, null, 6, 11, 20);
+        $this->insertSummary(2025, 7, 5, null, 7, 21, 30);
+        $this->insertSummary(2024, 1, 5, null, 8, 31, 40); // not one of the 3 pairs, excluded
+
+        try {
+            $rows = $this->repo->findDailyRowsForMonths(2026, 7, 2026, 6, 2025, 7);
+
+            self::assertCount(3, $rows);
+            $years = array_column($rows, 'year');
+            sort($years);
+            self::assertSame([2025, 2026, 2026], $years);
+        } finally {
+            $this->clearSummary();
+        }
+    }
+
+    public function test_find_average_daily_page_views_since_averages_matching_day_level_rows(): void
+    {
+        $this->insertSummary(2026, 3, 1, null, 10, 1, 10);
+        $this->insertSummary(2026, 3, 2, null, 20, 11, 20);
+        $this->insertSummary(2025, 11, 1, null, 999, 21, 30); // previousYear but month <= afterMonth, excluded
+        $this->insertSummary(2025, 12, 1, null, 30, 31, 40); // previousYear, month > afterMonth, included
+
+        try {
+            $avg = $this->repo->findAverageDailyPageViewsSince(2026, 2025, 11);
+
+            self::assertNotNull($avg);
+            self::assertEqualsWithDelta(20.0, $avg, 0.001);
+        } finally {
+            $this->clearSummary();
+        }
+    }
+
+    public function test_find_average_daily_page_views_since_returns_null_when_nothing_matches(): void
+    {
+        self::assertNull($this->repo->findAverageDailyPageViewsSince(2026, 2025, 11));
+    }
+
     private function insertHistoryLine(int $userId, string $date, string $time): int
     {
         $this->conn->createQueryBuilder()

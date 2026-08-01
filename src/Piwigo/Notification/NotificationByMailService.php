@@ -94,11 +94,11 @@ final readonly class NotificationByMailService
     }
 
     /**
-     * @param  list<string>  $quotedCheckKeyList
+     * @param  list<string>  $checkKeyList
      */
-    public function deleteByQuotedCheckKeys(array $quotedCheckKeyList): void
+    public function deleteByCheckKeys(array $checkKeyList): void
     {
-        $this->repo->deleteByQuotedCheckKeys($quotedCheckKeyList);
+        $this->repo->deleteByCheckKeys($checkKeyList);
     }
 
     /**

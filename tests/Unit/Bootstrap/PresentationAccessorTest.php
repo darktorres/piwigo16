@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use Piwigo\Bootstrap\PresentationAccessor;
+use Piwigo\Core\Kernel;
+use Piwigo\Core\Paths;
 use Piwigo\Html\HtmlService;
 use Piwigo\Mail\MailService;
 use Piwigo\Mail\NotificationByMailSender;
@@ -16,9 +18,25 @@ use Piwigo\Url\UrlService;
  * accessors' own \LogicException guards had zero coverage even though
  * the happy path is exercised elsewhere (Ws\PwgExtensions.php/
  * Ws\PwgImages.php's own real usage, per this class's own docblock).
+ * Also true of the `instanceof` check itself -- the wrong-type tests
+ * below only prove the throw side; nothing proved a real, correctly
+ * -typed instance is let through. Same Kernel::boot()-with-a-real-Paths
+ * pattern as AdminAccessorTest.php's own docblock -- none of these 5
+ * services need CurrentTemplate/CurrentConfig seeded too, unlike the
+ * template-dependent renderers in that other file.
  */
 afterEach(function (): void {
     \Piwigo\Core\Kernel::reset();
+});
+
+test('every accessor returns its real, correctly-typed instance from a real container, without throwing', function (): void {
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
+
+    expect(PresentationAccessor::htmlService())->toBeInstanceOf(HtmlService::class);
+    expect(PresentationAccessor::mailService())->toBeInstanceOf(MailService::class);
+    expect(PresentationAccessor::urlService())->toBeInstanceOf(UrlService::class);
+    expect(PresentationAccessor::notificationByMailSender())->toBeInstanceOf(NotificationByMailSender::class);
+    expect(PresentationAccessor::pictureRateRenderer())->toBeInstanceOf(PictureRateRenderer::class);
 });
 
 test('htmlService throws when the container returns an unexpected type', function (): void {

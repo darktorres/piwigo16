@@ -43,6 +43,21 @@ test('fromRow defaults month/day/hour to null when absent, matching the year-onl
     // zero value instead -- never actually null for a real fetched row.
 });
 
+test('fromRow defaults year/history_id_to to 0 when absent or non-numeric', function (): void {
+    // Kills lines 31/35's DecrementInteger/IncrementInteger on the
+    // hardcoded 0 fallback for year/historyIdTo -- the sibling test
+    // above only asserts month/day/hour default to null, never checking
+    // the exact fallback value for these two NOT NULL columns.
+    $row = fullHistorySummaryCursorRow();
+    $row['year'] = null;
+    $row['history_id_to'] = null;
+
+    $cursor = HistorySummaryCursor::fromRow($row);
+
+    expect($cursor->year)->toBe(0)
+        ->and($cursor->historyIdTo)->toBe(0);
+});
+
 test('toArray round-trips the exact same DB column shape fromRow narrowed', function (): void {
     $roundTripped = HistorySummaryCursor::fromRow(fullHistorySummaryCursorRow())->toArray();
 

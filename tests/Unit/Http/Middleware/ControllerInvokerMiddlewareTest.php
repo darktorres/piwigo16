@@ -109,6 +109,31 @@ test('returns 404 when the route was not found', function (): void {
     expect($response->getStatusCode())->toBe(404);
 });
 
+test('returns 404 when the route matched but somehow has no handler', function (): void {
+    // Kills line 42's BooleanOrToBooleanAnd (`&&` instead of `||`).
+    // RouteResult's public API (found()/notFound()/methodNotAllowed())
+    // can never actually produce a Found status paired with a null
+    // handler -- this guard exists as defensive code against exactly
+    // that invariant being violated, which real callers can't
+    // constructively reach. Reflection bypasses the private constructor
+    // to build that otherwise-impossible state directly: confirmed live
+    // that real code (`||`) still returns 404, while the mutant (`&&`)
+    // proceeds to call the container with a null id and throws a
+    // TypeError instead.
+    $ref = new ReflectionClass(RouteResult::class);
+    $result = $ref->newInstanceWithoutConstructor();
+    $ref->getProperty('status')->setValue($result, \Piwigo\Routing\RouteMatchStatus::Found);
+    $ref->getProperty('handler')->setValue($result, null);
+    $ref->getProperty('args')->setValue($result, []);
+
+    $middleware = new ControllerInvokerMiddleware(containerInvokerFakeContainer(null));
+    $request = new ServerRequest('GET', '/')->withAttribute(RouteResult::class, $result);
+
+    $response = $middleware->process($request, containerInvokerNoopHandler());
+
+    expect($response->getStatusCode())->toBe(404);
+});
+
 test('returns 404 when the method is not allowed', function (): void {
     $middleware = new ControllerInvokerMiddleware(containerInvokerFakeContainer(null));
     $request = new ServerRequest('GET', '/')->withAttribute(RouteResult::class, RouteResult::methodNotAllowed());

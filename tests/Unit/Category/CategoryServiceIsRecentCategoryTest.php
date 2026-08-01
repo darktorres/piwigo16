@@ -11,6 +11,14 @@ use Piwigo\Category\CategoryService;
  * batch 4b) for get_recent_photos_sql()'s SQL fragment:
  * `$dbField >= LEAST(today - $recentPeriod days, $lastPhotoDate - 1 day)`.
  * Pure function, no DB/globals needed.
+ *
+ * A mutation-testing sweep found `$thresholdFromToday < $thresholdFromLastPhoto`
+ * (the LEAST() port) has a confirmed-equivalent `<` -> `<=` mutant: the two
+ * comparison operators can only ever disagree on *which* branch gets
+ * picked when the two thresholds are exactly equal -- and when they're
+ * equal, both branches hold the same date/time value, so $threshold ends
+ * up identical either way regardless of which operand's copy gets
+ * assigned. Not worth chasing.
  */
 final class CategoryServiceIsRecentCategoryTest extends \PHPUnit\Framework\TestCase
 {

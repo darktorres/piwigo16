@@ -175,6 +175,27 @@ test('filterMenuRows string-casts a non-string scalar uppercats value before exp
     expect(array_column($result, 'id'))->toBe([1, 2]);
 });
 
+// A mutation-testing sweep found 3 confirmed-equivalent mutants inside
+// getDisplayImagesCount()'s recursive direct/remainder split, none worth
+// chasing further:
+// - The `.=` building $displayText from the recursive call's own return
+//   value can't be told apart from a mutated `=`: $displayText is always
+//   '' at that exact point (its own first write in the method), so
+//   appending to '' and assigning outright produce the identical string.
+// - The recursive call's own literal `0` third argument
+//   (`self::getDisplayImagesCount($catNbImages, $catNbImages, 0, ...)`)
+//   is unobservable regardless of what it's mutated to: that call's
+//   first two arguments are always the *same* value, so inside that
+//   invocation `$catNbImages === $catCountImages` is unconditionally
+//   true, which alone satisfies line 341's `||` regardless of
+//   $catCountCategories -- the sub-album branch can never fire from this
+//   specific recursive call shape, no matter what value reaches it.
+// - `$catNbImages = 0;` right after the split: the only later read of
+//   $catNbImages is that same `===` comparison against the post-split
+//   $catCountImages, which is always strictly positive at that point
+//   (the split only runs when the original $catNbImages was strictly
+//   less than $catCountImages) -- 0 and a mutated -1 are equally never
+//   equal to it.
 test('getDisplayImagesCount reports a flat photo count when there are no sub-albums', function (): void {
     $result = CategoryService::getDisplayImagesCount(0, 12, 0);
 

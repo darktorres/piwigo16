@@ -49,6 +49,16 @@ test('safeJsonDecode returns an empty array for malformed JSON or a JSON scalar'
     expect(ArrayHelper::safeJsonDecode('42'))->toBe([]);
 });
 
+/**
+ * A mutation-testing sweep found the explicit `(string) $value` cast on
+ * the scalar branch is a confirmed-equivalent mutant: removing it leaves
+ * `$value` to be implicitly stringified by the surrounding `.` operator
+ * itself, which performs the exact same coercion for every scalar type
+ * (int, float, bool) that an explicit (string) cast would -- verified
+ * live via a temporary sed-applied mutation across a wide range of
+ * tricky values (large floats, scientific notation, -0.0, both bools),
+ * all producing byte-identical output either way.
+ */
 test('prependAppendArrayItems wraps every scalar value, preserving keys', function (): void {
     expect(ArrayHelper::prependAppendArrayItems(['a', 'b', 3], '[', ']'))->toBe(['[a]', '[b]', '[3]']);
     expect(ArrayHelper::prependAppendArrayItems(['x' => 'y'], '<', '>'))->toBe(['x' => '<y>']);

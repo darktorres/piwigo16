@@ -63,6 +63,11 @@ test('fromArrays validates comment_to_validate only when action is validate_comm
     expect($request->commentToValidate)->toBe('9');
 });
 
+test('fromArrays rejects a malformed comment_to_validate when action is validate_comment', function (): void {
+    expect(fn (): PictureRequest => PictureRequest::fromArrays(['action' => 'validate_comment', 'comment_to_validate' => 'bad'], []))
+        ->toThrow(RuntimeException::class);
+});
+
 test('fromArrays parses content/postKey/websiteUrl regardless of action', function (): void {
     $request = PictureRequest::fromArrays([], [
         'content' => 'Hello world',

@@ -77,3 +77,20 @@ test('fromArrays requires remember_me to be the literal string 1', function (): 
     expect(IdentificationSubmitRequest::fromArrays([], ['remember_me' => '0'])->isRememberMe)->toBeFalse()
         ->and(IdentificationSubmitRequest::fromArrays([], ['remember_me' => '1'])->isRememberMe)->toBeTrue();
 });
+
+/**
+ * A mutation-testing sweep found `isset($post['remember_me']) &&
+ * is_string($remember_me_raw)` carries a confirmed-equivalent
+ * BooleanAndToBooleanOr mutant (`&&` -> `||`): is_string($remember_me_raw)
+ * can only be true when the key was present as a string in the first
+ * place (absent/null both fail is_string()), so isset() is already
+ * implied by is_string() here -- and the one case where they'd otherwise
+ * diverge (present but non-string) still fails the subsequent `=== '1'`
+ * check identically either way, since a non-string can never strictly
+ * equal '1'. Verified live via a temporary sed-applied mutation across
+ * string/non-string/absent/explicit-null remember_me values, all
+ * producing the identical isRememberMe result either way.
+ */
+test('fromArrays treats a non-string remember_me the same as absent', function (): void {
+    expect(IdentificationSubmitRequest::fromArrays([], ['remember_me' => ['1']])->isRememberMe)->toBeFalse();
+});

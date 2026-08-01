@@ -63,3 +63,19 @@ test('fromArrays parses a full reset submission', function (): void {
         ->and($request->newPassword)->toBe('newpass')
         ->and($request->passwordConf)->toBe('newpass');
 });
+
+test('fromArrays falls back to an empty string for non-string user_code/use_new_pwd/passwordConf values', function (): void {
+    // The `?? ''` default on each of these 3 fields already covers the
+    // *absent* case (already string) -- a genuinely non-string but
+    // *present* value (an array) is the only way to reach each field's
+    // own is_string() ternary else-branch.
+    $request = PasswordRequest::fromArrays([], [
+        'user_code' => ['x'],
+        'use_new_pwd' => ['y'],
+        'passwordConf' => ['z'],
+    ]);
+
+    expect($request->userCode)->toBe('')
+        ->and($request->newPassword)->toBe('')
+        ->and($request->passwordConf)->toBe('');
+});

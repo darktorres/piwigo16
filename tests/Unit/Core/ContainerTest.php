@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Core\Container;
+use Piwigo\Core\Paths;
 use Psr\Container\ContainerInterface;
 
 use function DI\factory;
@@ -34,4 +35,25 @@ test('build honors extraDefinitions overrides', function (): void {
 
     $countable = $container->get(Countable::class);
     expect($countable instanceof Countable && $countable->count() === 42)->toBeTrue();
+});
+
+test('build without a $paths argument does not register a Paths definition at all', function (): void {
+    // Kills the InstanceOfToTrue mutation on the `$paths instanceof
+    // Paths` guard: without it, real code leaves Paths::class
+    // undefined and PHP-DI's own autowiring correctly fails (Paths'
+    // constructor needs concrete string arguments it can't guess). The
+    // mutant instead unconditionally registers `Paths::class => null`,
+    // so get() would return null instead of throwing -- confirmed live
+    // via a sed-applied mutation rerun.
+    $container = Container::build();
+
+    expect(fn () => $container->get(Paths::class))->toThrow(\DI\Definition\Exception\InvalidDefinition::class);
+});
+
+test('build with a $paths argument registers it so Paths::class resolves to that same instance', function (): void {
+    $paths = Paths::fromRoot('/home/torres/piwigo17-rewrite');
+
+    $container = Container::build(paths: $paths);
+
+    expect($container->get(Paths::class))->toBe($paths);
 });

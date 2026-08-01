@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\Paths;
 use Psr\Container\ContainerInterface;
 
 // P7-scoped: Kernel::boot() only builds a bare, zero-definition container at
@@ -50,3 +52,15 @@ test('reset makes container throw again', function (): void {
     Kernel::reset();
     Kernel::container();
 })->throws(LogicException::class);
+
+test('reset also resets CurrentPaths, not just its own booted/container state', function (): void {
+    // Kills the RemoveMethodCall mutation on Kernel::reset()'s own
+    // CurrentPaths::reset() call: without it, CurrentPaths::get() would
+    // keep returning the Paths from the last boot() instead of throwing.
+    Kernel::boot(Paths::fromRoot('/home/torres/piwigo17-rewrite'));
+    expect(CurrentPaths::get())->toBeInstanceOf(Paths::class);
+
+    Kernel::reset();
+
+    expect(fn () => CurrentPaths::get())->toThrow(LogicException::class);
+});

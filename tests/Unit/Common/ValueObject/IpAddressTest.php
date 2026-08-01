@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Unit\Common\ValueObject;
 
 use Piwigo\Common\ValueObject\IpAddress;
+use Piwigo\Common\ValueObject\Username;
 use Piwigo\Tests\Unit\Common\ValueObject\Contract\StringVoContract;
 
 /** @extends StringVoContract<IpAddress> */
@@ -20,6 +21,12 @@ final class IpAddressTest extends StringVoContract
     protected static function validSample(): string
     {
         return '203.0.113.42';
+    }
+
+    #[\Override]
+    protected static function otherVoClass(): string
+    {
+        return Username::class;
     }
 
     /** @return iterable<string, array{string}> */

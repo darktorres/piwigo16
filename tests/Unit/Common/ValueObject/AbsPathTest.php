@@ -23,6 +23,12 @@ final class AbsPathTest extends StringVoContract
         return '/var/www/piwigo/upload/2024';
     }
 
+    #[\Override]
+    protected static function otherVoClass(): string
+    {
+        return Username::class;
+    }
+
     /** @return iterable<string, array{string}> */
     #[\Override]
     public static function invalidSamples(): iterable
@@ -46,16 +52,5 @@ final class AbsPathTest extends StringVoContract
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('AbsPath must not be empty');
         AbsPath::from('');
-    }
-
-    public function testEqualsReturnsFalseForADifferentStringVoTypeWithTheSameWrappedValue(): void
-    {
-        // Kills a mutated `instanceof self` -> `true`: without the real
-        // type check, an equal-looking wrapped string from an entirely
-        // different VO would incorrectly compare as equal.
-        $path = AbsPath::from(self::validSample());
-        $username = Username::from(self::validSample());
-
-        self::assertFalse($path->equals($username));
     }
 }

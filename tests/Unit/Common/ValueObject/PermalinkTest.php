@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Unit\Common\ValueObject;
 
 use Piwigo\Common\ValueObject\Permalink;
+use Piwigo\Common\ValueObject\Username;
 use Piwigo\Tests\Unit\Common\ValueObject\Contract\StringVoContract;
 
 /** @extends StringVoContract<Permalink> */
@@ -20,6 +21,12 @@ final class PermalinkTest extends StringVoContract
     protected static function validSample(): string
     {
         return 'events/2024-summer';
+    }
+
+    #[\Override]
+    protected static function otherVoClass(): string
+    {
+        return Username::class;
     }
 
     /** @return iterable<string, array{string}> */
@@ -42,5 +49,38 @@ final class PermalinkTest extends StringVoContract
         self::assertNotNull(Permalink::tryFrom('simple-slug'));
         self::assertNotNull(Permalink::tryFrom('nested/path/here'));
         self::assertNotNull(Permalink::tryFrom('with_underscores'));
+    }
+
+    public function testFromRejectsEmptyStringWithItsOwnMessage(): void
+    {
+        // The shared contract's invalidSamples()-driven test only ever
+        // asserts the generic exception class -- an empty string also
+        // fails the very next check (the charset pattern requires at
+        // least one char), so a mutated `$value === ''` would still
+        // throw, just with the *other* message.
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Permalink must not be empty');
+        Permalink::from('');
+    }
+
+    public function testFromAcceptsTheExactBoundaryLengthOf64(): void
+    {
+        // 'over 64 chars' in invalidSamples() above is 65 chars --
+        // genuinely over the limit either way, so it can't tell `> 64`
+        // apart from a mutated `>= 64`. Only the exact boundary can.
+        $exactly64 = str_repeat('a', 64);
+
+        self::assertSame($exactly64, Permalink::from($exactly64)->value);
+    }
+
+    public function testFromRejectsAValueGenuinelyOverTheLengthBoundaryWithItsOwnMessage(): void
+    {
+        // Pins the exact message so a mutated concatenation (dropping the
+        // prefix/suffix/limit or swapping operand order) is caught.
+        $tooLong = str_repeat('a', 65);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage("Permalink exceeds 64 chars: '{$tooLong}'");
+        Permalink::from($tooLong);
     }
 }

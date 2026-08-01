@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Unit\Common\ValueObject;
 
 use Piwigo\Common\ValueObject\Md5Sum;
+use Piwigo\Common\ValueObject\Username;
 use Piwigo\Tests\Unit\Common\ValueObject\Contract\StringVoContract;
 
 /** @extends StringVoContract<Md5Sum> */
@@ -21,6 +22,12 @@ final class Md5SumTest extends StringVoContract
     {
         // md5('hello world')
         return '5eb63bbbe01eeed093cb22bb8f5acdc3';
+    }
+
+    #[\Override]
+    protected static function otherVoClass(): string
+    {
+        return Username::class;
     }
 
     /** @return iterable<string, array{string}> */

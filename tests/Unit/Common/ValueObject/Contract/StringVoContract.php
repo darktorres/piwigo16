@@ -29,6 +29,17 @@ abstract class StringVoContract extends TestCase
     /** @return iterable<string, array{string}> Sample inputs the VO must reject. */
     abstract protected static function invalidSamples(): iterable;
 
+    /**
+     * A different StringVo implementation whose own from() accepts this
+     * VO's validSample() unchanged -- used only by
+     * testEqualsReturnsFalseForADifferentStringVoTypeWithTheSameWrappedValue()
+     * below, to prove equals()'s own `instanceof self` check is real, not
+     * just its value comparison.
+     *
+     * @return class-string<StringVo>
+     */
+    abstract protected static function otherVoClass(): string;
+
     public function testFromAcceptsValidSample(): void
     {
         $class = static::voClass();
@@ -83,5 +94,19 @@ abstract class StringVoContract extends TestCase
         $b     = $class::from(static::validSample());
         self::assertTrue($a->equals($b));
         self::assertSame(static::validSample(), (string) $a);
+    }
+
+    public function testEqualsReturnsFalseForADifferentStringVoTypeWithTheSameWrappedValue(): void
+    {
+        // testEqualsAndStringable() above only ever compares two instances
+        // of the *same* voClass(), which can't tell a real `instanceof
+        // self` apart from a mutated bare `true` -- an equal-looking
+        // wrapped string from an entirely different VO must still compare
+        // unequal.
+        $class      = static::voClass();
+        $otherClass = static::otherVoClass();
+        $a          = $class::from(static::validSample());
+        $other      = $otherClass::from(static::validSample());
+        self::assertFalse($a->equals($other));
     }
 }

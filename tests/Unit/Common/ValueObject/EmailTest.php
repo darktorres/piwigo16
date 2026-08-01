@@ -23,6 +23,12 @@ final class EmailTest extends StringVoContract
         return 'user@example.com';
     }
 
+    #[\Override]
+    protected static function otherVoClass(): string
+    {
+        return Username::class;
+    }
+
     /** @return iterable<string, array{string}> */
     #[\Override]
     public static function invalidSamples(): iterable
@@ -90,16 +96,5 @@ final class EmailTest extends StringVoContract
         $b = Email::from('other@example.com');
 
         self::assertFalse($a->equals($b));
-    }
-
-    public function testEqualsReturnsFalseForADifferentStringVoTypeWithTheSameWrappedValue(): void
-    {
-        // Kills a mutated `instanceof self` -> `true`: without the real
-        // type check, an equal-looking wrapped string from an entirely
-        // different VO would incorrectly compare as equal.
-        $email = Email::from('user@example.com');
-        $username = Username::from('user@example.com');
-
-        self::assertFalse($email->equals($username));
     }
 }

@@ -2,9 +2,11 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Job\Handler\SendNotificationEmailHandler;
 use Piwigo\Job\SendNotificationEmailJob;
 use Piwigo\Mail\MailService;
+use Piwigo\PluginConfig\EventDispatcher;
 
 // P23 batch 8f-4: the get_webmaster_mail_address() function stub is gone
 // (free function deleted with include/functions.inc.php; MailService now
@@ -28,3 +30,64 @@ test('__invoke delegates to MailService::mail with the job to/args/tpl', functio
 
     $handler(new SendNotificationEmailJob(to: ''));
 })->throwsNoExceptions();
+
+test('__invoke actually reaches MailService::mail() with the job\'s exact to/args, not just avoids throwing', function (): void {
+    // Kills mail()'s own RemoveMethodCall inside __invoke() -- the
+    // sibling test above uses an empty $to specifically so mail() never
+    // gets past its own first guard, which makes it indistinguishable
+    // from the call being removed outright (both produce zero
+    // observable side effects). A non-empty $to pushes mail() past that
+    // guard for real; the 'before_send_mail' hook fires with the exact
+    // job arguments right before the real Transport would be touched,
+    // and returning false from it here stops mail() one line short of
+    // that real send -- this environment's own real sendmail_path
+    // config means letting it proceed further would attempt a genuine
+    // delivery, not a test double.
+    CurrentConfig::setMailSenderEmail('sender@example.test');
+    CurrentConfig::setMailSenderName('Test Sender');
+    // Skips the real theme's text/html mail templates -- header.tpl
+    // there reads lang_info['code'] directly, which needs a real
+    // Lang::load() to populate; the plain-text template mail() always
+    // also renders doesn't touch lang_info at all, and is sufficient to
+    // prove the real render+send pipeline genuinely ran.
+    CurrentConfig::setMailAllowHtml(false);
+    // Skips Template::__construct()'s own one-time data_dir_checked
+    // write (which otherwise needs a real, activated
+    // CurrentConfigService -- more bootstrap than this Unit test
+    // should need just to prove delegation).
+    CurrentConfig::setDataDirChecked('1');
+    // The real project root, not a throwaway temp dir -- getMailTemplate()
+    // needs the real themes/default/template/mail/text/plain/*.tpl files
+    // to actually parse (Smarty throws "Unable to load" otherwise), and
+    // fabricating stub templates would test Smarty's own file-loading
+    // rather than this handler's delegation. Same real-root pattern
+    // already used by ErrorCollectorTest/ShutdownHandlerTest/
+    // MessengerFactoryTest/ContainerDetectorTest.
+    \Piwigo\Core\CurrentPaths::set(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3) . '/'));
+
+    $capturedTo = null;
+    $capturedArgs = null;
+    $eventHandler = function (mixed $preResult, mixed $to, array $args, mixed $email) use (&$capturedTo, &$capturedArgs): bool {
+        $capturedTo = $to;
+        $capturedArgs = $args;
+
+        return false;
+    };
+    EventDispatcher::get()->addEventHandler('before_send_mail', $eventHandler);
+
+    try {
+        $handler = new SendNotificationEmailHandler(new MailService());
+
+        $handler(new SendNotificationEmailJob(to: 'someone@example.test', args: ['subject' => 'Test Subject']));
+
+        expect($capturedTo)->toBe('someone@example.test');
+        if ($capturedArgs === null) {
+            throw new RuntimeException('expected the before_send_mail handler to have captured real args');
+        }
+        expect($capturedArgs['subject'])->toBe('Test Subject');
+    } finally {
+        EventDispatcher::get()->removeEventHandler('before_send_mail', $eventHandler);
+        CurrentConfig::reset();
+        \Piwigo\Core\CurrentPaths::reset();
+    }
+});

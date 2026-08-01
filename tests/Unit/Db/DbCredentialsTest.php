@@ -41,6 +41,18 @@ test('fromEnv() falls back to defaults when no env vars are set', function (): v
         ->and($credentials->driver)->toBe('mysqli');
 });
 
+test('fromEnv() falls back to the default host when PIWIGO_DB_HOST is explicitly empty, not just when unset', function (): void {
+    // Kills line 127's EmptyStringToNotEmpty in the shared env()
+    // helper: the "no env vars" test above only reaches the $value
+    // === false branch; an explicitly empty (but set) var is a
+    // different code path through the same guard, for every one of
+    // the host/user/password/database/prefix fields this helper backs.
+    putenv('PIWIGO_DB_HOST=');
+    DbCredentials::reset();
+
+    expect(DbCredentials::fromEnv()->host)->toBe('localhost');
+});
+
 test('fromEnv() reads every PIWIGO_DB_* var when set', function (): void {
     putenv('PIWIGO_DB_HOST=db.example.test');
     putenv('PIWIGO_DB_USER=piwigo_app');
@@ -61,6 +73,66 @@ test('fromEnv() reads every PIWIGO_DB_* var when set', function (): void {
         ->and($credentials->driver)->toBe('pgsql');
 });
 
+test('fromEnv() treats an empty or non-numeric PIWIGO_DB_PORT the same as unset, not as port 0', function (): void {
+    // Kills line 59's BooleanAndToBooleanOr on the chain's LAST &&
+    // (`($portEnv !== false && $portEnv !== '') || is_numeric($portEnv)`):
+    // for a non-numeric string like 'abc', the left side is already
+    // true (it's a real, non-empty string), so the || makes the whole
+    // condition true regardless of is_numeric()'s own correct "no"
+    // answer, landing on (int) 'abc' (0) instead of null. Confirmed
+    // live: the existing "no env vars" test (port unset -> false) and
+    // "every var set" test (a genuinely numeric port) can't reach this
+    // divergence point -- only a non-numeric string does.
+    putenv('PIWIGO_DB_PORT=');
+    DbCredentials::reset();
+    expect(DbCredentials::fromEnv()->port)->toBeNull();
+
+    putenv('PIWIGO_DB_PORT=abc');
+    DbCredentials::reset();
+    expect(DbCredentials::fromEnv()->port)->toBeNull();
+});
+
+test('fromEnv() falls back to the default driver when PIWIGO_DB_DRIVER is explicitly empty, not just when unset', function (): void {
+    // Kills line 60's EmptyStringToNotEmpty: the existing "no env
+    // vars" test only reaches the $driverEnv === false branch; an
+    // explicitly empty (but set) driver env var is a different code
+    // path through the same guard.
+    putenv('PIWIGO_DB_DRIVER=');
+    DbCredentials::reset();
+
+    expect(DbCredentials::fromEnv()->driver)->toBe('mysqli');
+});
+
+/**
+ * Confirmed-equivalent: line 59's FalseToTrue (`$portEnv !== true`
+ * instead of `!== false`) and EmptyStringToNotEmpty (a placeholder
+ * instead of `''`). getenv() never returns the literal boolean `true`
+ * (only a string, or `false` on an unset var), so `$portEnv !== true`
+ * is unconditionally true regardless of $portEnv's real value --
+ * reducing the mutant's first condition to a no-op. And is_numeric()
+ * -- the chain's own third condition -- already independently rejects
+ * both `false` and `''` on its own (neither is numeric), so mutating
+ * just the '' comparison changes nothing about the final result for
+ * any real getenv() return value. Confirmed live across unset, empty,
+ * and non-numeric PIWIGO_DB_PORT values: identical output to real code
+ * for both mutations.
+ *
+ * Also confirmed-equivalent: line 59's OTHER BooleanAndToBooleanOr, on
+ * the chain's FIRST && (`($portEnv !== false || $portEnv !== '') &&
+ * is_numeric($portEnv)`). Initially assumed distinguishable from a
+ * quick reasoning pass that missed PHP's own && > || precedence --
+ * re-verified directly against pest's own exact mutated source (not
+ * a hand-written approximation) before trusting this: for ANY real
+ * getenv() return value (`false`, `''`, or any non-empty string),
+ * `$portEnv !== false` alone already makes the `||` side true whenever
+ * $portEnv is a string at all (since a string is never identical to
+ * `false`), so the mutated condition collapses to just
+ * `is_numeric($portEnv)` -- the exact same determining factor real
+ * code's full `&&` chain converges on for every one of those values.
+ * Confirmed live against the precise parenthesized mutation pest
+ * generates (not the differently-precedenced version this docblock's
+ * sibling test was originally verified against by mistake).
+ */
 test('current() memoizes across calls until reset()', function (): void {
     putenv('PIWIGO_DB_HOST=first.example.test');
 

@@ -3,6 +3,20 @@
 declare(strict_types=1);
 
 use Piwigo\Cache\CachePools;
+use Symfony\Component\Cache\Adapter\AbstractAdapter;
+
+/**
+ * @return int the pool's real, resolved defaultLifetime (private on
+ *             AbstractAdapter -- no public getter, so read via Reflection)
+ */
+function cachePoolsTestDefaultLifetime(\Psr\Cache\CacheItemPoolInterface $pool): int
+{
+    $lifetime = new ReflectionClass(AbstractAdapter::class)->getProperty('defaultLifetime')->getValue($pool);
+    if (! is_int($lifetime)) {
+        throw new LogicException('defaultLifetime was not an int');
+    }
+    return $lifetime;
+}
 
 // Filesystem-forced throughout: the real behavior under test is namespace
 // isolation between pools, not adapter selection (already covered by
@@ -48,6 +62,17 @@ test('a value saved in one pool is retrievable from a fresh call to the same met
     // pointed at the same namespace/backend -- proves pool identity is
     // namespace-derived, not tied to holding onto one object.
     expect(CachePools::categoryTree()->getItem('tree_key')->get())->toBe(['album_1' => 42]);
+});
+
+test('permissions/categoryTree/tagCloud pools carry their own documented TTL, not a neighboring value', function (): void {
+    // Namespace isolation (proven above) already kills a mutated
+    // namespace literal, but nothing asserted the actual configured
+    // defaultLifetime -- a mutated 30<->29/31 or 300<->299/301 on these
+    // lines would still build a distinctly-namespaced, fully functional
+    // pool, indistinguishable from the namespace tests' own assertions.
+    expect(cachePoolsTestDefaultLifetime(CachePools::permissions()))->toBe(30)
+        ->and(cachePoolsTestDefaultLifetime(CachePools::categoryTree()))->toBe(300)
+        ->and(cachePoolsTestDefaultLifetime(CachePools::tagCloud()))->toBe(300);
 });
 
 test('config, tagCloud and general pools are each independently addressable', function (): void {

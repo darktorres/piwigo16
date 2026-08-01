@@ -17,6 +17,14 @@ final class ImageIdTest extends TestCase
         self::assertSame(42, $id->value);
     }
 
+    public function testFromAcceptsTheExactBoundaryValueOfOne(): void
+    {
+        // testFromAcceptsPositiveInt() above (42) can't tell `$value <= 0`
+        // apart from a mutated `<= 1` -- both correctly accept 42.
+        $id = ImageId::from(1);
+        self::assertSame(1, $id->value);
+    }
+
     public function testFromRejectsZero(): void
     {
         $this->expectException(\InvalidArgumentException::class);
@@ -59,6 +67,17 @@ final class ImageIdTest extends TestCase
             self::assertNotNull($result);
             self::assertSame($expected, $result->value);
         }
+    }
+
+    public function testTryFromAcceptsTheExactBoundaryValueOfOneAsIntAndString(): void
+    {
+        // Same boundary gap as testFromAcceptsTheExactBoundaryValueOfOne,
+        // but for tryFrom()'s own separate int and numeric-string branches
+        // (`$value > 0`/`$int > 0`), each its own mutable `0` literal --
+        // 'positive int'/'numeric string' in tryFromCases() above (42)
+        // can't tell them apart from a mutated `> 1`.
+        self::assertSame(1, ImageId::tryFrom(1)?->value);
+        self::assertSame(1, ImageId::tryFrom('1')?->value);
     }
 
     public function testEqualsReturnsTrueForSameValue(): void

@@ -342,7 +342,17 @@ test('the real deferred shutdown handler writes a genuine per-request pcov dump 
         // both executed for real between \pcov\start() and \pcov\stop() in
         // THIS subprocess) prove real, non-fabricated pcov data, not an
         // empty/placeholder array.
-        $collectorFile = '/home/torres/piwigo17-rewrite/src/Piwigo/Core/CoverageCollector.php';
+        //
+        // Resolved via Reflection rather than hardcoded: the subprocess
+        // above requires ITS OWN vendor/autoload.php (line 273's
+        // dirname(__DIR__, 3), relative to THIS test file's own location),
+        // so whichever checkout/worktree this test runs from, both this
+        // process and the subprocess resolve CoverageCollector::class to
+        // the same real absolute path -- a hardcoded path baked in one
+        // worktree breaks under any other.
+        $collectorFile = (new ReflectionClass(CoverageCollector::class))->getFileName();
+        expect($collectorFile)->toBeString();
+        assert(is_string($collectorFile));
         expect($raw)->toHaveKey($collectorFile);
         expect($raw[$collectorFile][39] ?? null)->toBe(1);
         expect($raw[$collectorFile][40] ?? null)->toBe(1);

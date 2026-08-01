@@ -9,6 +9,7 @@ use Piwigo\Core\Paths;
 use Piwigo\Job\MessengerFactory;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
+use Symfony\Component\Messenger\Envelope;
 
 /**
  * transport()/sendingBus()/receivingBus()'s own real wiring is already
@@ -114,4 +115,46 @@ test('containerOf-built container throws Psr NotFoundExceptionInterface for a se
     }
 
     expect($threw)->toBeTrue();
+});
+
+test('config() reads config/messenger.php relative to CurrentPaths::get()->root, not the working directory', function (): void {
+    // Kills line 49's ConcatRemoveLeft (`require 'config/messenger.php'`
+    // instead of `require CurrentPaths::get()->root . 'config/...'`) --
+    // a bare relative require would instead resolve against the process's
+    // own working directory (the real project root when tests run via
+    // `vendor/bin/pest` from there), silently loading the REAL
+    // config/messenger.php instead of this test's own throwaway one.
+    // Also closes lines 114/115's RemoveArrayItem together: this fake
+    // config's table_name/queue_name only end up in the real, persisted
+    // row if BOTH survive transport()'s own createTransport() options
+    // array, since the query below targets the fake table name directly
+    // and asserts the exact queue_name column value.
+    $root = sys_get_temp_dir() . '/piwigo-messenger-factory-test-' . bin2hex(random_bytes(8));
+    mkdir($root . '/config', 0o777, true);
+    file_put_contents(
+        $root . '/config/messenger.php',
+        '<?php return ["transport_table" => "mutation_sweep_messages", "transport_queue" => "mutation_sweep_queue", "routing" => [], "handlers" => []];'
+    );
+    CurrentPaths::set(Paths::fromRoot($root));
+
+    try {
+        expect(MessengerFactory::config())->toBe([
+            'transport_table' => 'mutation_sweep_messages',
+            'transport_queue' => 'mutation_sweep_queue',
+            'routing' => [],
+            'handlers' => [],
+        ]);
+
+        $connection = DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true]);
+        $transport = MessengerFactory::transport($connection);
+
+        $transport->send(new Envelope(new stdClass()));
+
+        $rows = $connection->fetchAllAssociative('SELECT queue_name FROM mutation_sweep_messages');
+        expect($rows)->toBe([['queue_name' => 'mutation_sweep_queue']]);
+    } finally {
+        unlink($root . '/config/messenger.php');
+        rmdir($root . '/config');
+        rmdir($root);
+    }
 });

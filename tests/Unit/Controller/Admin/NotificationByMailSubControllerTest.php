@@ -25,6 +25,13 @@ use Piwigo\Mail\NotificationByMailSender;
  * $nbmSender->isSendmailTimeout()/->startTime() (both plain property
  * readers), matching ActionControllerTest.php's own "reflection reaches a
  * branch a full HTTP round trip structurally cannot" precedent.
+ *
+ * The 2 `(float)` casts on $post_count/$treated_count (both plain ints
+ * from count()) in that same ceil() expression are confirmed-equivalent
+ * mutants: the expression's own left operand (a getMoment() subtraction)
+ * is already a float, and PHP auto-promotes an int operand to float in
+ * any float-mixed arithmetic regardless of an explicit cast -- removing
+ * either cast changes nothing about the resulting value.
  */
 function nbmSubReflectSender(float $startTime, bool $isSendmailTimeout): NotificationByMailSender
 {
@@ -91,4 +98,77 @@ test('doTimeoutTreatment computes a real, positive estimated-time when some (but
         throw new RuntimeException('could not extract the estimated-time digit from: ' . $message);
     }
     expect((int) $matches[1])->toBeGreaterThan(0);
+});
+
+test('doTimeoutTreatment computes the exact ceil()\'d estimated-time, not floor() or round()', function (): void {
+    // The test above only asserts > 0, which can't tell ceil() apart
+    // from floor()/round(), the elapsed-time subtraction apart from a
+    // mutated addition, or the post_count/treated_count division apart
+    // from a mutated multiplication. Pinning startTime exactly 10s
+    // before a `getMoment()` read taken immediately beforehand makes the
+    // real elapsed time deterministically *slightly more* than 10.0 (a
+    // few microseconds of real execution time, confirmed live) --
+    // ceil() of that is reliably 11, never 10, regardless of the exact
+    // jitter. A 1:1 post_count:treated_count ratio isolates that
+    // division from affecting the expected value at all.
+    $before = TimingHelper::getMoment();
+    $sender = nbmSubReflectSender($before - 10.0, true);
+
+    $post = ['cat_true' => ['t1', 't2']];
+    $errorCountBefore = count(PageState::current()->errors);
+
+    nbmSubCallDoTimeoutTreatment($sender, 'cat_true', $post, ['t1', 't2']);
+
+    $errors = PageState::current()->errors;
+    $message = $errors[count($errors) - 1];
+    expect($message)->toEndWith('[Estimated time: 11 seconds].');
+    expect(count($errors))->toBe($errorCountBefore + 1);
+});
+
+test('doTimeoutTreatment leaves the estimated-time at exactly 0 when nobody has been treated yet', function (): void {
+    // Every other test in this file (Unit and Browser alike) either has
+    // 0 treated (the Browser suite's own forced-immediate-timeout) or
+    // some-but-not-all treated -- none pins treated_count to *exactly*
+    // 0 while also asserting the resulting value is exactly 0, which is
+    // what's needed to tell the real `!== 0` guard apart from a mutated
+    // `!== 1`/`!== -1` (either of which would wrongly divide by the real
+    // treated_count of 0 for this exact input).
+    $sender = nbmSubReflectSender(TimingHelper::getMoment() - 5.0, true);
+
+    $post = ['cat_true' => ['t1']];
+
+    nbmSubCallDoTimeoutTreatment($sender, 'cat_true', $post, []);
+
+    $errors = PageState::current()->errors;
+    $message = $errors[count($errors) - 1];
+    expect($message)->toEndWith('[Estimated time: 0 seconds].');
+});
+
+test('doTimeoutTreatment does nothing when the post key is set but not an array', function (): void {
+    // Every other test's $post[$post_keyname] is a real array (isset()
+    // and is_array() both true), which can't tell the real `and` apart
+    // from a mutated `or` -- a set-but-non-array value distinguishes
+    // them (isset() true, is_array() false).
+    $sender = nbmSubReflectSender(TimingHelper::getMoment() - 5.0, true);
+    $post = ['cat_true' => 'not-an-array'];
+    $errorCountBefore = count(PageState::current()->errors);
+
+    $result = nbmSubCallDoTimeoutTreatment($sender, 'cat_true', $post, ['t1']);
+
+    expect($result)->toBeFalse();
+    expect(count(PageState::current()->errors))->toBe($errorCountBefore);
+});
+
+test('doTimeoutTreatment drops non-string entries from the reposted selection', function (): void {
+    // The existing "computes a real... estimated-time" test's own post
+    // array is all-string, so array_filter(..., is_string(...)) never
+    // actually excludes anything -- can't tell it apart from a mutated
+    // unwrapped version that skips the filter entirely.
+    $sender = nbmSubReflectSender(TimingHelper::getMoment() - 5.0, true);
+    $post = ['cat_true' => ['t1', 42, 't2']];
+
+    nbmSubCallDoTimeoutTreatment($sender, 'cat_true', $post, []);
+
+    assert(is_array($post['cat_true']));
+    expect(array_values($post['cat_true']))->toBe(['t1', 't2']);
 });

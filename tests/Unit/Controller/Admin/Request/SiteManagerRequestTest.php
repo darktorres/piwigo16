@@ -34,6 +34,24 @@ test('fromArrays ignores a submission with an empty galleries_url', function ():
     expect($request->newSiteGalleriesUrl)->toBeNull();
 });
 
+test('fromArrays ignores a submission with a galleries_url of the string \'0\'', function (): void {
+    // Every other sentinel value in the in_array() list (null, false,
+    // 0, []) is already redundant with the very next `is_string()`
+    // check -- is_string() rejects them regardless of whether that
+    // specific value (or its exact literal, for false/0) is even in the
+    // sentinel list, since none of them is a string to begin with. A
+    // mutation-testing sweep confirmed all of FalseToTrue,
+    // DecrementInteger/IncrementInteger (the 0 literal), and
+    // RemoveArrayItem for null/false/0/[] are unobservable for this
+    // exact reason -- not chased further. '0' is the one sentinel value
+    // that both is_string() accepts AND the list must reject on its
+    // own, matching InputValidator::emptyValue()'s own identical
+    // "falsy string" case.
+    $request = SiteManagerRequest::fromArrays(['submit' => '1', 'galleries_url' => '0'], []);
+
+    expect($request->newSiteGalleriesUrl)->toBeNull();
+});
+
 test('fromArrays ignores a submission with no submit key', function (): void {
     $request = SiteManagerRequest::fromArrays(['galleries_url' => './galleries2'], []);
 

@@ -13,10 +13,12 @@ use Piwigo\Core\UrlServiceInterface;
  */
 final class DerivativeImageTestFakeUrlService implements UrlServiceInterface
 {
+    public function __construct(private readonly string $rootUrl = '') {}
+
     #[\Override]
     public function getRootUrl(): string
     {
-        return '';
+        return $this->rootUrl;
     }
 
     #[\Override]

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Db;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ParameterType;
 
 /**
  * Real DB round-trips for a `SqlDialect`-built date expression --
@@ -26,9 +27,21 @@ final class SqlDialectExecutor
      * The real cutoff date for "recent" (last $period days), computed
      * server-side for dialect consistency -- Core\RecentIconResolver's own
      * "is this photo/comment/category recent" comparison baseline.
+     *
+     * $period tightened to `int` alongside SqlDialect::
+     * getRecentPeriodExpression()'s own signature (SQL-modernization
+     * audit) -- this method's only real caller already passes a genuine
+     * `int`.
      */
-    public function fetchRecentCutoffDate(int|string $period, string $date = 'CURRENT_DATE'): string
+    public function fetchRecentCutoffDate(int $period, string $date = 'CURRENT_DATE'): string
     {
+        // $recentPeriodExpr's own $date-quoting defect lives inside
+        // SqlDialect::getRecentPeriodExpression() itself, not here -- see
+        // that method's own docblock (SQL-modernization audit finding,
+        // tracked for its 2 real non-default-$date callers' own staged
+        // conversion). This method's only real caller never passes $date,
+        // so the quoting branch never triggers here in practice; nothing
+        // for this heredoc itself to fix.
         $recentPeriodExpr = SqlDialect::getRecentPeriodExpression($period, $date);
         $value = $this->conn->fetchOne(<<<SQL
             SELECT {$recentPeriodExpr}
@@ -40,7 +53,8 @@ final class SqlDialectExecutor
     /**
      * NOW() + 1 day, computed server-side -- Controller\
      * ProfileFormHandler::loadIntoTemplate()'s own default API-key
-     * expiration date.
+     * expiration date. SQL-modernization audit: verified, no interpolation
+     * of any kind -- a fixed literal expression, nothing to bind.
      */
     public function fetchTomorrow(): string
     {
@@ -65,16 +79,22 @@ final class SqlDialectExecutor
             return [];
         }
 
-        $columns = [];
-        foreach ($days as $day) {
-            $columns[] = "ADDDATE(NOW(), INTERVAL {$day} DAY) as `{$day}`";
+        // SQL-modernization audit: the day count is real caller-supplied
+        // data (Controller\ProfileFormHandler's own $conf['api_key_duration']
+        // list) -- was spliced directly into INTERVAL {$day} DAY; now bound.
+        // The `` `{$day}` `` column alias stays interpolated: SQL has no
+        // bound-placeholder syntax for identifier/alias position, and $day
+        // is a real `int` (not attacker-controlled string content) by the
+        // time it reaches string interpolation there.
+        $qb = $this->conn->createQueryBuilder();
+        foreach ($days as $i => $day) {
+            $placeholder = 'day' . $i;
+            $qb->addSelect('ADDDATE(NOW(), INTERVAL :' . $placeholder . ' DAY) as `' . $day . '`');
+            $qb->setParameter($placeholder, $day, ParameterType::INTEGER);
         }
 
-        $columnsSql = implode(', ', $columns);
-        $row = $this->conn->fetchAssociative(<<<SQL
-            SELECT
-              {$columnsSql}
-            SQL);
+        $row = $qb->executeQuery()
+            ->fetchAssociative();
 
         if ($row === false) {
             return [];

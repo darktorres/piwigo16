@@ -60,6 +60,17 @@ final readonly class BatchWriter
             return;
         }
 
+        // SQL-modernization audit (recursive-cuddling-squid.md): verified,
+        // not a raw-string-splice defect -- {$ignore}/{$protectedTable}/
+        // {$columnsSql}/{$placeholdersSql} below are all structural
+        // (protected identifiers + bound-parameter placeholder syntax),
+        // every real value flows through $params/executeStatement()'s own
+        // binding. Stays on raw Connection rather than QueryBuilder::insert()
+        // deliberately: DBAL's QueryBuilder has no INSERT IGNORE support
+        // (confirmed against its own source), and IGNORE is a real,
+        // load-bearing behavior for callers of this method (see
+        // Permission\PermissionRepository::massInsertUserAccess()'s own
+        // docblock on the same constraint).
         $ignore = ($options['ignore'] ?? false) ? 'IGNORE' : '';
         $columns = array_map(SqlDialect::protectColumnName(...), array_keys($data));
         $placeholders = array_map(static fn (string $key): string => ':' . $key, array_keys($data));
@@ -97,6 +108,8 @@ final readonly class BatchWriter
             return;
         }
 
+        // SQL-modernization audit: same verified-safe, stays-raw shape as
+        // singleInsert() above -- see its own comment.
         $ignore = ($options['ignore'] ?? false) ? 'IGNORE' : '';
         $columns = array_map(SqlDialect::protectColumnName(...), $dbfields);
         $protectedTable = SqlDialect::protectColumnName($table);
@@ -179,8 +192,10 @@ final readonly class BatchWriter
             return;
         }
 
-        $setParts = [];
-        $params = [];
+        $qb = $this->conn->createQueryBuilder()
+            ->update(SqlDialect::protectColumnName($table));
+
+        $hasSetPart = false;
         $i = 0;
         foreach ($data as $key => $value) {
             $value = SqlDialect::booleanToInt($value);
@@ -189,39 +204,33 @@ final readonly class BatchWriter
                 if ((bool) ($flags & self::SKIP_EMPTY)) {
                     continue;
                 }
-                $setParts[] = SqlDialect::protectColumnName($key) . ' = NULL';
+                $qb->set(SqlDialect::protectColumnName($key), 'NULL');
+                $hasSetPart = true;
                 continue;
             }
 
             $placeholder = 'set' . $i++;
-            $setParts[] = SqlDialect::protectColumnName($key) . ' = :' . $placeholder;
-            $params[$placeholder] = $value;
+            $qb->set(SqlDialect::protectColumnName($key), ':' . $placeholder);
+            $qb->setParameter($placeholder, $value);
+            $hasSetPart = true;
         }
 
-        if ($setParts === []) {
+        if (! $hasSetPart) {
             return;
         }
 
-        $whereParts = [];
         $j = 0;
         foreach ($where as $key => $value) {
             $value = SqlDialect::booleanToInt($value);
             if (isset($value) && is_scalar($value)) {
                 $placeholder = 'where' . $j++;
-                $whereParts[] = SqlDialect::protectColumnName($key) . ' = :' . $placeholder;
-                $params[$placeholder] = $value;
+                $qb->andWhere(SqlDialect::protectColumnName($key) . ' = :' . $placeholder);
+                $qb->setParameter($placeholder, $value);
             } else {
-                $whereParts[] = SqlDialect::protectColumnName($key) . ' IS NULL';
+                $qb->andWhere(SqlDialect::protectColumnName($key) . ' IS NULL');
             }
         }
 
-        $protectedTable = SqlDialect::protectColumnName($table);
-        $setPartsSql = implode(', ', $setParts);
-        $wherePartsSql = implode(' AND ', $whereParts);
-        $query = <<<SQL
-            UPDATE {$protectedTable} SET {$setPartsSql} WHERE {$wherePartsSql}
-            SQL;
-
-        $this->conn->executeStatement($query, $params);
+        $qb->executeStatement();
     }
 }

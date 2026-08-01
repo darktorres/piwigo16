@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\ParameterType;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\FilterState;
@@ -285,6 +287,136 @@ test('getSqlConditionFandF throws for an unknown condition key', function (): vo
 
     $service->getSqlConditionFandF(['not_a_real_condition' => 'x']);
 })->throws(InvalidArgumentException::class, 'Unknown condition: not_a_real_condition');
+
+/**
+ * The one real placeholder name out of a single-condition SqlCondition --
+ * getSqlConditionFandFAsCondition()'s suffix is a monotonic per-process
+ * counter (see PermissionService::nextPlaceholderSuffix()), so tests can't
+ * assert a fixed name; they extract whatever name was actually generated
+ * instead.
+ */
+function singleParamKey(\Piwigo\Permission\SqlCondition $condition): string
+{
+    $key = array_key_first($condition->parameters);
+    expect($key)->toBeString();
+    assert(is_string($key));
+
+    return $key;
+}
+
+test('getSqlConditionFandFAsCondition returns an empty condition when nothing applies', function (): void {
+    $service = makePermissionService();
+
+    $condition = $service->getSqlConditionFandFAsCondition(['forbidden_categories' => 'category_id']);
+
+    expect($condition->sql)->toBe('')
+        ->and($condition->parameters)->toBe([])
+        ->and($condition->types)->toBe([]);
+});
+
+test('getSqlConditionFandFAsCondition forces a tautology when forceOneCondition is set and nothing applies', function (): void {
+    $service = makePermissionService();
+
+    $condition = $service->getSqlConditionFandFAsCondition(['forbidden_categories' => 'category_id'], true);
+
+    expect($condition->sql)->toBe('1 = 1')
+        ->and($condition->parameters)->toBe([]);
+});
+
+test('getSqlConditionFandFAsCondition builds a bound NOT IN clause from the user forbidden categories', function (): void {
+    seedPermissionUser(forbiddenCategories: '2,3');
+    $service = makePermissionService();
+
+    $condition = $service->getSqlConditionFandFAsCondition(['forbidden_categories' => 'category_id']);
+    $key = singleParamKey($condition);
+
+    expect($condition->sql)->toBe('(category_id NOT IN (:' . $key . '))')
+        ->and($condition->parameters)->toBe([$key => [2, 3]])
+        ->and($condition->types)->toBe([$key => ArrayParameterType::INTEGER]);
+});
+
+test('getSqlConditionFandFAsCondition builds bound IN clauses from FilterState visible categories/images', function (): void {
+    seedPermissionUser(imageAccessType: 'NOT IN');
+    FilterState::set(true, visibleCategories: '1,2', visibleImages: '10,11');
+    $service = makePermissionService();
+
+    $condition = $service->getSqlConditionFandFAsCondition([
+        'visible_categories' => 'category_id',
+        'visible_images' => 'id',
+    ]);
+
+    expect($condition->parameters)->toHaveCount(2);
+    [$catsKey, $imagesKey] = array_keys($condition->parameters);
+
+    expect($condition->sql)->toBe('(category_id IN (:' . $catsKey . ') AND id IN (:' . $imagesKey . '))')
+        ->and($condition->parameters)->toBe([$catsKey => [1, 2], $imagesKey => [10, 11]])
+        ->and($condition->types)->toBe([
+            $catsKey => ArrayParameterType::INTEGER,
+            $imagesKey => ArrayParameterType::INTEGER,
+        ]);
+});
+
+test('getSqlConditionFandFAsCondition falls through from visible_images into the bound level check', function (): void {
+    seedPermissionUser(level: 3);
+    FilterState::set(true, visibleImages: '10,11');
+    $service = makePermissionService();
+
+    $condition = $service->getSqlConditionFandFAsCondition(['visible_images' => 'id']);
+
+    expect($condition->parameters)->toHaveCount(2);
+    [$imagesKey, $levelKey] = array_keys($condition->parameters);
+
+    expect($condition->sql)->toBe('(id IN (:' . $imagesKey . ') AND level<=:' . $levelKey . ')')
+        ->and($condition->parameters[$levelKey])->toBe(3)
+        ->and($condition->types[$levelKey])->toBe(ParameterType::INTEGER);
+});
+
+test('getSqlConditionFandFAsCondition forbidden_images binds the level check for the i.id field', function (): void {
+    seedPermissionUser(level: 5);
+    $service = makePermissionService();
+
+    $condition = $service->getSqlConditionFandFAsCondition(['forbidden_images' => 'i.id']);
+    $key = singleParamKey($condition);
+
+    expect($condition->sql)->toBe('(i.level<=:' . $key . ')')
+        ->and($condition->parameters)->toBe([$key => 5])
+        ->and($condition->types)->toBe([$key => ParameterType::INTEGER]);
+});
+
+test('getSqlConditionFandFAsCondition forbidden_images binds the raw access-list clause for a non-id field', function (): void {
+    seedPermissionUser(imageAccessType: 'NOT IN', imageAccessList: '7,8');
+    $service = makePermissionService();
+
+    $condition = $service->getSqlConditionFandFAsCondition(['forbidden_images' => 'category_id']);
+    $key = singleParamKey($condition);
+
+    expect($condition->sql)->toBe('(category_id NOT IN (:' . $key . '))')
+        ->and($condition->parameters)->toBe([$key => [7, 8]])
+        ->and($condition->types)->toBe([$key => ArrayParameterType::INTEGER]);
+});
+
+test('getSqlConditionFandFAsCondition uses a distinct placeholder per call, not a fixed name', function (): void {
+    seedPermissionUser(forbiddenCategories: '9');
+    $service = makePermissionService();
+
+    $first = $service->getSqlConditionFandFAsCondition(['forbidden_categories' => 'category_id']);
+    $second = $service->getSqlConditionFandFAsCondition(['forbidden_categories' => 'category_id']);
+
+    expect(array_key_first($first->parameters))->not->toBe(array_key_first($second->parameters));
+});
+
+test('getSqlConditionFandFAsCondition throws for an unknown condition key', function (): void {
+    $service = makePermissionService();
+
+    $service->getSqlConditionFandFAsCondition(['not_a_real_condition' => 'x']);
+})->throws(InvalidArgumentException::class, 'Unknown condition: not_a_real_condition');
+
+test('getSqlConditionFandFAsCondition throws for a corrupted image_access_type', function (): void {
+    seedPermissionUser(imageAccessType: 'bogus', imageAccessList: '1');
+    $service = makePermissionService();
+
+    $service->getSqlConditionFandFAsCondition(['forbidden_images' => 'category_id']);
+})->throws(UnexpectedValueException::class, 'Unexpected image_access_type: bogus');
 
 test('getPrivacyLevelOptions labels level 0 as Everybody and stacks the rest', function (): void {
     $options = PermissionService::getPrivacyLevelOptions();

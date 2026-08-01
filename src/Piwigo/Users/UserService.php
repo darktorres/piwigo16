@@ -1076,10 +1076,17 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             return '0=1';
         }
 
-        // same narrowing as get_icon()'s $recent_period handling in
-        // functions.inc.php: a raw user_infos DB value, numeric string or int
+        // A raw user_infos DB value -- numeric string or int in practice,
+        // but rawAttributes is untyped mixed storage. SQL-modernization
+        // audit: the previous fallback kept a non-numeric string as-is
+        // (`is_string($recent_period) ? $recent_period : 0`), which would
+        // have spliced raw, unquoted string content straight into
+        // SqlDialect::getRecentPeriodExpression()'s SQL fragment below --
+        // that method's own $period param is now `int`-only, and a
+        // corrupted/non-numeric value correctly falls back to 0 like any
+        // other malformed input, rather than being passed through.
         $recent_period = $currentUser->rawAttributes['recent_period'] ?? null;
-        $recent_period = is_numeric($recent_period) ? (int) $recent_period : (is_string($recent_period) ? $recent_period : 0);
+        $recent_period = is_numeric($recent_period) ? (int) $recent_period : 0;
 
         $last_photo_date = $currentUser->rawAttributes['last_photo_date'];
         $last_photo_date = is_string($last_photo_date) ? $last_photo_date : '';

@@ -653,6 +653,41 @@ namespace Piwigo\Tests\Integration {
             self::assertStringEndsWith(')', $sql);
         }
 
+        /**
+         * SQL-modernization audit regression: a non-numeric
+         * rawAttributes['recent_period'] used to be kept as-is (`is_string(
+         * $recent_period) ? $recent_period : 0`) and spliced raw into
+         * SqlDialect::getRecentPeriodExpression()'s SQL fragment --
+         * SqlDialect::getRecentPeriodExpression() now requires a real
+         * `int`, so a corrupted value must fall back to 0 like any other
+         * malformed input, not reach the query verbatim.
+         */
+        public function test_get_recent_photos_sql_falls_back_to_zero_days_for_a_non_numeric_recent_period(): void
+        {
+            \Piwigo\Users\CurrentUser::set(new \Piwigo\Users\User(
+                id: UserId::from(1),
+                username: 'torres',
+                email: '',
+                language: '',
+                theme: '',
+                status: UserStatus::Normal,
+                enabledHigh: false,
+                rawAttributes: [
+                    'last_photo_date' => '2024-01-01',
+                    'recent_period' => 'not-a-number',
+                ],
+            ));
+
+            try {
+                $sql = $this->service->getRecentPhotosSql('i.date_available');
+            } finally {
+                CurrentUser::reset();
+            }
+
+            self::assertStringNotContainsString('not-a-number', $sql);
+            self::assertStringContainsString('INTERVAL 0 DAY', $sql);
+        }
+
         public function test_sync_users_creates_missing_user_infos_for_a_base_user(): void
         {
             $this->conn->executeStatement(

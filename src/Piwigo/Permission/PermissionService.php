@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Permission;
 
+use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\ParameterType;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\UserId;
@@ -218,6 +220,155 @@ final readonly class PermissionService
         }
 
         return $sql;
+    }
+
+    /**
+     * `SqlCondition`-returning sibling of `getSqlConditionFandF()` --
+     * transitional (see the SQL-modernization plan's "Bigger finding"
+     * section): each heredoc-SQL file's own staged conversion migrates
+     * its `getSqlConditionFandF()` call sites to this method as that
+     * file's own heredoc SQL gets converted to `QueryBuilder`/bound
+     * parameters. `getSqlConditionFandF()` (string) is deleted once
+     * every call site has migrated -- not a permanent parallel method.
+     *
+     * No `$prefixCondition` parameter: the string-returning method uses
+     * it to splice a raw `"\n  AND"`-shaped continuation directly into
+     * the returned string, but a `SqlCondition`-based caller composes
+     * conjunction via `QueryBuilder::andWhere()`/`SqlCondition::combine()`
+     * instead, so there's nothing for it to do here.
+     *
+     * Every placeholder name gets a per-call unique suffix (a monotonic
+     * counter, not fixed names): real call sites combine multiple
+     * `SqlCondition` results into one query, and Doctrine only supports
+     * one binding per named placeholder per query.
+     *
+     * @param array<string, string> $conditionFields condition name
+     *   (forbidden_categories|visible_categories|visible_images|
+     *   forbidden_images) => SQL field/table.column to filter on
+     */
+    public function getSqlConditionFandFAsCondition(
+        array $conditionFields,
+        bool $forceOneCondition = false,
+    ): SqlCondition {
+        $currentUser = \Piwigo\Users\CurrentUser::get();
+
+        $userForbiddenCategories = $currentUser->forbiddenCategories;
+        $filterVisibleCategories = \Piwigo\Core\FilterState::isInitialized() ? \Piwigo\Core\FilterState::visibleCategories() : '';
+        $filterVisibleImages = \Piwigo\Core\FilterState::isInitialized() ? \Piwigo\Core\FilterState::visibleImages() : '';
+        $userImageAccessType = $currentUser->rawAttributes['image_access_type'] ?? null;
+        $userImageAccessType = is_scalar($userImageAccessType) ? (string) $userImageAccessType : '';
+        $userImageAccessList = $currentUser->rawAttributes['image_access_list'] ?? null;
+        $userImageAccessList = is_scalar($userImageAccessList) ? (string) $userImageAccessList : '';
+
+        $suffix = self::nextPlaceholderSuffix();
+
+        $sqlParts = [];
+        $parameters = [];
+        $types = [];
+
+        foreach ($conditionFields as $condition => $fieldName) {
+            switch ($condition) {
+                case 'forbidden_categories':
+                    if ($userForbiddenCategories !== '') {
+                        $placeholder = 'forbidden_categories' . $suffix;
+                        $sqlParts[] = $fieldName . ' NOT IN (:' . $placeholder . ')';
+                        $parameters[$placeholder] = self::csvToIntList($userForbiddenCategories);
+                        $types[$placeholder] = ArrayParameterType::INTEGER;
+                    }
+
+                    break;
+
+                case 'visible_categories':
+                    if ($filterVisibleCategories !== '') {
+                        $placeholder = 'visible_categories' . $suffix;
+                        $sqlParts[] = $fieldName . ' IN (:' . $placeholder . ')';
+                        $parameters[$placeholder] = self::csvToIntList($filterVisibleCategories);
+                        $types[$placeholder] = ArrayParameterType::INTEGER;
+                    }
+
+                    break;
+
+                case 'visible_images':
+                    if ($filterVisibleImages !== '') {
+                        $placeholder = 'visible_images' . $suffix;
+                        $sqlParts[] = $fieldName . ' IN (:' . $placeholder . ')';
+                        $parameters[$placeholder] = self::csvToIntList($filterVisibleImages);
+                        $types[$placeholder] = ArrayParameterType::INTEGER;
+                    }
+
+                    // note there is no break - visible include forbidden
+                    // no break
+                case 'forbidden_images':
+                    if ($userImageAccessList !== '' || $userImageAccessType !== 'NOT IN') {
+                        $tablePrefix = null;
+                        if ($fieldName === 'id') {
+                            $tablePrefix = '';
+                        } elseif ($fieldName === 'i.id') {
+                            $tablePrefix = 'i.';
+                        }
+
+                        if ($tablePrefix !== null) {
+                            $placeholder = 'user_level' . $suffix;
+                            $sqlParts[] = $tablePrefix . 'level<=:' . $placeholder;
+                            $parameters[$placeholder] = $currentUser->level;
+                            $types[$placeholder] = ParameterType::INTEGER;
+                        } elseif ($userImageAccessList !== '' && $userImageAccessType !== '') {
+                            if (! in_array($userImageAccessType, ['IN', 'NOT IN'], true)) {
+                                // image_access_type is always either literal string
+                                // set by getuserdata() -- an unexpected value here
+                                // means the raw legacy read is corrupted, not a
+                                // real code path to silently tolerate.
+                                throw new \UnexpectedValueException('Unexpected image_access_type: ' . $userImageAccessType);
+                            }
+
+                            $placeholder = 'image_access_list' . $suffix;
+                            $sqlParts[] = $fieldName . ' ' . $userImageAccessType . ' (:' . $placeholder . ')';
+                            $parameters[$placeholder] = self::csvToIntList($userImageAccessList);
+                            $types[$placeholder] = ArrayParameterType::INTEGER;
+                        }
+                    }
+
+                    break;
+
+                default:
+                    throw new \InvalidArgumentException('Unknown condition: ' . $condition);
+            }
+        }
+
+        if ($sqlParts !== []) {
+            $sql = '(' . implode(' AND ', $sqlParts) . ')';
+        } else {
+            $sql = $forceOneCondition ? '1 = 1' : '';
+        }
+
+        return new SqlCondition($sql, $parameters, $types);
+    }
+
+    /**
+     * Monotonic per-process suffix for getSqlConditionFandFAsCondition()'s
+     * placeholder names. A `static` local rather than a class property:
+     * PermissionService is a class-level `readonly class`, and a static
+     * property there can't carry a mutable default/be incremented (PHP
+     * rejects a readonly static property outright).
+     */
+    private static function nextPlaceholderSuffix(): string
+    {
+        /** @var int $counter */
+        static $counter = 0;
+
+        return '_' . $counter++;
+    }
+
+    /**
+     * @return list<int>
+     */
+    private static function csvToIntList(string $csv): array
+    {
+        if ($csv === '') {
+            return [];
+        }
+
+        return array_map(intval(...), explode(',', $csv));
     }
 
     /**

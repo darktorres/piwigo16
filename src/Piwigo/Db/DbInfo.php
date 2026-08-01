@@ -55,6 +55,12 @@ final readonly class DbInfo
      */
     public function getEnums(string $table, string $field): array
     {
+        // SQL-modernization audit: {$table} verified structural, not a
+        // splice defect -- every real caller passes a fixed Db\Tables::xxx()
+        // constant (Admin\HistoryPageRenderer, Ws\PwgCore, Ws\PwgUsers,
+        // Admin\UserListPageRenderer), never request-derived. $field is
+        // never interpolated into SQL at all (used only in the PHP-side
+        // row filter below).
         $rows = $this->conn->executeQuery(<<<SQL
             DESC {$table}
             SQL)->fetchAllAssociative();
@@ -81,6 +87,11 @@ final readonly class DbInfo
      */
     public function getTableFingerprint(string $table): string
     {
+        // SQL-modernization audit: {$table} verified structural -- its one
+        // real caller (Admin\AdminUiHelper::getAdminClientCacheKeys())
+        // only ever passes a value drawn from a fixed Db\Tables::xxx()
+        // array via array_intersect() against that same array's own keys,
+        // never an arbitrary/request-derived table name.
         $value = $this->conn->fetchOne(<<<SQL
             SELECT CONCAT(
                 UNIX_TIMESTAMP(MAX(lastmodified)),

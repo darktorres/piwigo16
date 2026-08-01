@@ -120,7 +120,30 @@ final class SqlDialect
         return $var;
     }
 
-    public static function getRecentPeriodExpression(int|string $period, string $date = 'CURRENT_DATE'): string
+    /**
+     * SQL-modernization audit (recursive-cuddling-squid.md): $period was
+     * `int|string` -- tightened to `int` since every real caller (checked
+     * directly: `Core\RecentIconResolver`, `Filter\FilterService`,
+     * `Category\CategoryRepository::findComputedCategoriesRollup()`,
+     * `Controller\CommentsController`, `Users\UserService`,
+     * `Image\ImageRepository`) either already passes a real `int` or, in
+     * `UserService`'s case, had its own loose `is_numeric(...) ? (int) ...
+     * : (is_string(...) ? $recent_period : 0)` cast that silently let a
+     * non-numeric string through untouched -- fixed at that call site (P24
+     * gap-closure-adjacent bug found via this audit, not merely a type
+     * annotation tightening).
+     *
+     * $date's own manual `'\'' . $date . '\''` quote-wrap below is a real,
+     * separate raw-string-splice defect -- not fixed here. Only 2 real
+     * callers ever pass a non-default $date (`Users\UserService::
+     * getUserData()`'s `$last_photo_date`, `Image\ImageRepository::
+     * findRecentImageIdsQuick()`'s own equivalent), both DB-sourced
+     * datetime strings, not raw user input -- tracked as a cross-cutting
+     * finding to fix (a bound-parameter carrier, same shape as
+     * `Permission\SqlCondition`) when those two files reach their own
+     * staged conversion, not this Db/-infrastructure stage.
+     */
+    public static function getRecentPeriodExpression(int $period, string $date = 'CURRENT_DATE'): string
     {
         // Route the default through Env::now() rather than the raw
         // SQL keyword: Env::now() already resolves to PIWIGO_TEST_NOW in test

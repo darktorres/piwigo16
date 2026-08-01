@@ -43,6 +43,21 @@ test('fromRow defaults month/day/hour to null when absent, matching the year-onl
     // value instead -- never actually null for a real fetched row.
 });
 
+test('fromRow defaults year/nb_pages to 0 when absent or non-numeric', function (): void {
+    // Kills lines 31/35's DecrementInteger/IncrementInteger on the
+    // hardcoded 0 fallback for year/nb_pages -- the sibling test above
+    // only asserts month/day/hour default to null, never checking the
+    // exact fallback value for these two NOT NULL columns.
+    $row = fullHistorySummaryCountRow();
+    $row['year'] = null;
+    $row['nb_pages'] = null;
+
+    $count = HistorySummaryCount::fromRow($row);
+
+    expect($count->year)->toBe(0)
+        ->and($count->nbPages)->toBe(0);
+});
+
 test('toArray round-trips the exact same DB column shape fromRow narrowed', function (): void {
     $roundTripped = HistorySummaryCount::fromRow(fullHistorySummaryCountRow())->toArray();
 

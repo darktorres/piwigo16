@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
@@ -217,5 +218,45 @@ final class SearchRepositoryTest extends IntegrationTestCase
         $names = $this->repo->queryColumn('SELECT name FROM ' . Tables::tags() . ' ORDER BY id', 'name');
 
         self::assertSame(['nature', 'travel', 'family'], $names);
+    }
+
+    /**
+     * SQL-modernization audit: queryRows()/queryKeyedColumn()/queryColumn()
+     * gained optional $params/$types (Search\SearchFilterRenderer's own
+     * conversion needs it) -- this and the two tests below are the first
+     * direct coverage of that widening.
+     */
+    public function test_query_rows_binds_named_parameters(): void
+    {
+        $rows = $this->repo->queryRows(
+            'SELECT id, name FROM ' . Tables::tags() . ' WHERE id IN (:ids) ORDER BY id',
+            ['ids' => [1, 2]],
+            ['ids' => ArrayParameterType::INTEGER],
+        );
+
+        self::assertSame([['id' => '1', 'name' => 'nature'], ['id' => '2', 'name' => 'travel']], $rows);
+    }
+
+    public function test_query_keyed_column_binds_named_parameters(): void
+    {
+        $result = $this->repo->queryKeyedColumn(
+            'SELECT id, name FROM ' . Tables::tags() . ' WHERE id = :id',
+            'id',
+            'name',
+            ['id' => 3],
+        );
+
+        self::assertSame([3 => 'family'], $result);
+    }
+
+    public function test_query_column_binds_named_parameters(): void
+    {
+        $names = $this->repo->queryColumn(
+            'SELECT name FROM ' . Tables::tags() . ' WHERE id = :id',
+            'name',
+            ['id' => 2],
+        );
+
+        self::assertSame(['travel'], $names);
     }
 }

@@ -231,16 +231,26 @@ final class SearchRepository extends AbstractRepository
      * `int` instead -- those are fresh typed contracts, not a mimicked
      * legacy shape).
      *
+     * SQL-modernization audit: $params/$types added (both default `[]`,
+     * so existing zero-param callers are unaffected) -- lets a caller
+     * that builds its own bound-parameter fragment (e.g. via
+     * Permission\SqlCondition) pass real values through instead of
+     * having nowhere to put them but back into raw interpolated $sql
+     * text, same move as CategoryRepository::fetchCallerBuiltQuery().
+     * Search\SearchFilterRenderer is the real user of this.
+     *
+     * @param array<string, mixed> $params
+     * @param array<string, ArrayParameterType|\Doctrine\DBAL\ParameterType> $types
      * @return list<array<string, string|null>>
      */
-    public function queryRows(string $sql): array
+    public function queryRows(string $sql, array $params = [], array $types = []): array
     {
         return array_map(
             static fn (array $row): array => array_map(
                 static fn (mixed $value): ?string => is_scalar($value) ? (string) $value : null,
                 $row
             ),
-            $this->conn->executeQuery($sql)
+            $this->conn->executeQuery($sql, $params, $types)
                 ->fetchAllAssociative()
         );
     }
@@ -249,12 +259,14 @@ final class SearchRepository extends AbstractRepository
      * Same shape as {@see \Piwigo\Db\MysqliDb::query2Array()} with both a
      * key and a value column name.
      *
+     * @param array<string, mixed> $params
+     * @param array<string, ArrayParameterType|\Doctrine\DBAL\ParameterType> $types
      * @return array<string, string|null>
      */
-    public function queryKeyedColumn(string $sql, string $keyColumn, string $valueColumn): array
+    public function queryKeyedColumn(string $sql, string $keyColumn, string $valueColumn, array $params = [], array $types = []): array
     {
         $result = [];
-        foreach ($this->queryRows($sql) as $row) {
+        foreach ($this->queryRows($sql, $params, $types) as $row) {
             $key = $row[$keyColumn] ?? '';
             $result[$key] = $row[$valueColumn] ?? null;
         }
@@ -266,13 +278,15 @@ final class SearchRepository extends AbstractRepository
      * Same shape as {@see \Piwigo\Db\MysqliDb::query2Array()} with only a
      * value column name.
      *
+     * @param array<string, mixed> $params
+     * @param array<string, ArrayParameterType|\Doctrine\DBAL\ParameterType> $types
      * @return list<string|null>
      */
-    public function queryColumn(string $sql, string $column): array
+    public function queryColumn(string $sql, string $column, array $params = [], array $types = []): array
     {
         return array_map(
             static fn (array $row): ?string => $row[$column] ?? null,
-            $this->queryRows($sql)
+            $this->queryRows($sql, $params, $types)
         );
     }
 }

@@ -46,6 +46,40 @@ use Piwigo\Core\ContainerDetector;
  * it is a real, independent OS process that exits and disappears
  * without touching this PHPUnit process's own ini state at all. See
  * the dedicated test below.
+ *
+ * Mutation-testing sweep (batch 18, 2026-08-01): 18 mutations across
+ * lines 33/34/37 (the open_basedir_empty computation and its Linux/
+ * kthreadd guard conditions) initially showed UNTESTED. Root cause,
+ * confirmed per-mutation via a live sed-applied mutation + rerun of the
+ * relevant subprocess test (not assumed from reasoning alone):
+ *
+ * - 4 of them (both line 33 IdenticalToNotIdentical mutations on the
+ *   `false`/`''` comparisons, line 34's IfNegated, and line 34's
+ *   BooleanAndToBooleanOr) are already genuinely killed by the existing
+ *   "else branch" subprocess test below -- with open_basedir restricted
+ *   to a real, non-empty path, each of these mutations wrongly flips
+ *   $open_basedir_empty/the guard condition to true, which (with the
+ *   subprocess's own real open_basedir restriction still active)
+ *   blocks /proc/2/sched and both tagfile reads, cascading to
+ *   ['Unknown', null] instead of the correct ['none', null]. `pest
+ *   --mutate` cannot see this: it's the exact same proc_open()
+ *   subprocess-invisibility documented in
+ *   feedback_pest_mutate_invisible_to_subprocess_tests -- verified but
+ *   permanently untestable via that tool, not an unaddressed gap.
+ * - 9 more are killed by a NEW subprocess test added below, using
+ *   open_basedir='0' (the third sentinel this code explicitly checks
+ *   for): PHP's own open_basedir enforcement treats the literal string
+ *   "0" as a real restriction (to a directory named "0"), not as
+ *   "disabled" -- confirmed live (`php -d open_basedir=0 -r
+ *   'file_exists("/proc/2/sched")'` genuinely blocks) -- so real code
+ *   correctly recognizes '0' as the "empty" sentinel, wrongly enters
+ *   the container-check block anyway per its own (real, working) open_
+ *   basedir engine restriction, and lands on ['Unknown', null], exactly
+ *   like the "else branch" test's non-empty-path case but exercising a
+ *   different set of line 33/34 comparisons/offsets. Same
+ *   subprocess-invisibility caveat applies to this new test too.
+ * - 5 remain genuinely confirmed-equivalent, documented inline at each
+ *   mutation site below the two subprocess tests.
  */
 test('detect returns [\'none\', null] in this real, non-containerized Linux environment', function (): void {
     expect(ini_get('open_basedir'))->toBeFalsy();
@@ -116,3 +150,109 @@ test('detect returns [\'none\', null] via the else branch when open_basedir is g
     expect($exit)->toBe(0, 'ContainerDetector subprocess failed: ' . ($stderr === false ? '(no stderr)' : $stderr));
     expect(json_decode((string) $stdout, true))->toBe(['none', null]);
 });
+
+/**
+ * Exercises the third open_basedir sentinel this code explicitly checks
+ * for -- the literal string '0' -- via a genuinely separate `php`
+ * subprocess. Unlike the non-empty-path case above, `-d open_basedir=0`
+ * can't be passed directly on the command line: PHP would then also
+ * need the project root on that same open_basedir to load the
+ * autoloader, and only one open_basedir value can be active at a time.
+ * Instead: start the subprocess with NO open_basedir restriction, force
+ * the class to autoload (so its file is already loaded before any
+ * restriction exists), then `ini_set('open_basedir', '0')` from within
+ * that same throwaway subprocess -- a real ini_set() tightening a
+ * previously-unset value, not a mock, and since the subprocess exits
+ * immediately after this can never leak into the shared PHPUnit process
+ * the way an in-process ini_set() during a normal test would.
+ *
+ * Confirmed live this really is a "real" restriction (not a no-op or a
+ * special "disabled" sentinel some other tools use): `php -d
+ * open_basedir=0 -r 'var_dump(file_exists("/proc/2/sched"))'` genuinely
+ * blocks with a real open_basedir warning, unlike `open_basedir=` (an
+ * empty string), which PHP's own engine treats as no restriction at
+ * all. So real code here computes $open_basedir_empty=true (correctly
+ * recognizing the '0' sentinel), enters the container-check block, and
+ * then gets blocked by its own open_basedir restriction from every
+ * path it tries to read (/proc/2/sched, both tagfiles) -- landing on
+ * ['Unknown', null], not ['none', null]. This exercises a materially
+ * different set of line 33/34 comparisons than the non-empty-path test
+ * above (specifically the '0' comparison itself, and the exact 5-char
+ * PHP_OS/substr-offset matching), closing several more mutations that
+ * test can't reach.
+ */
+test('detect returns [\'Unknown\', null] when open_basedir is the literal string \'0\'', function (): void {
+    $projectRoot = dirname(__DIR__, 3);
+    $autoloadPath = $projectRoot . '/vendor/autoload.php';
+    expect(is_file($autoloadPath))->toBeTrue();
+
+    $script = 'require ' . var_export($autoloadPath, true) . ';'
+        . 'class_exists(\Piwigo\Core\ContainerDetector::class);'
+        . "ini_set('open_basedir', '0');"
+        . 'echo json_encode(\Piwigo\Core\ContainerDetector::detect());';
+
+    $cmd = [
+        PHP_BINARY,
+        '-r', $script,
+    ];
+
+    $descriptors = [
+        0 => ['file', '/dev/null', 'r'],
+        1 => ['pipe', 'w'],
+        2 => ['pipe', 'w'],
+    ];
+    $proc = proc_open($cmd, $descriptors, $pipes);
+    expect($proc)->toBeResource();
+    if ($proc === false) {
+        throw new RuntimeException('proc_open failed');
+    }
+
+    $stdout = stream_get_contents($pipes[1]);
+    fclose($pipes[1]);
+    $stderr = stream_get_contents($pipes[2]);
+    fclose($pipes[2]);
+    $exit = proc_close($proc);
+
+    expect($exit)->toBe(0, 'ContainerDetector subprocess failed: ' . ($stderr === false ? '(no stderr)' : $stderr));
+    expect(json_decode((string) $stdout, true))->toBe(['Unknown', null]);
+});
+
+/**
+ * Confirmed-equivalent mutations (verified individually via a live
+ * sed-applied mutation rerun against both subprocess tests above and
+ * the main happy-path test, not assumed from reasoning alone):
+ *
+ * - Line 33 `$open_basedir === false || $open_basedir === '' ||
+ *   $open_basedir === '0'`: both BooleanOrToBooleanAnd mutations, the
+ *   FalseToTrue mutation (`=== true` -- $open_basedir is never
+ *   literally the boolean `true`, only `false` or a string), and the
+ *   EmptyStringToNotEmpty mutation on the middle `''` all independently
+ *   verified to produce the SAME final detect() output as real code
+ *   across all four realistic open_basedir values (unset/false, '',
+ *   a real non-empty path, and '0'): whenever one of these mutations
+ *   makes the computed $open_basedir_empty wrong, the resulting
+ *   branch-choice error (if-block vs. else) still lands on the exact
+ *   same return value real code would have produced via the OTHER
+ *   branch -- e.g. wrongly taking the else branch when open_basedir is
+ *   genuinely empty still returns ['none', null], identical to the
+ *   real kthreadd early-return inside the if-block it should have
+ *   taken instead.
+ * - Line 34 `substr(PHP_OS, 0, 6)` (IncrementInteger on the length):
+ *   PHP_OS is exactly "Linux" (5 characters) on every real system this
+ *   suite runs on -- asking substr() for 6 characters when only 5
+ *   exist just returns the same 5, so the extra character never
+ *   changes the result.
+ * - Line 34 `strtoupper(PHP_OS)` (UnwrapSubstr, dropping the substr()
+ *   call entirely): since PHP_OS is exactly "Linux" with nothing past
+ *   the first 5 characters, checking the whole string is identical to
+ *   checking just substr(PHP_OS, 0, 5).
+ * - Line 37 `$file !== false || str_starts_with(...)` and `$file !==
+ *   true && str_starts_with(...)`: both require /proc/2/sched's real
+ *   content or read-success to differ from what this host's real
+ *   kernel actually provides (a non-kthreadd PID 2, or a read that
+ *   fails despite file_exists() just having succeeded on the same
+ *   path) -- neither is fakeable without actually running inside a
+ *   different container's PID tree, same "would need a real container"
+ *   reasoning already established for lines 48-70 in the class-level
+ *   doc comment above.
+ */

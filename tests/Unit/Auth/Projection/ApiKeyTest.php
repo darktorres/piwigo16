@@ -12,6 +12,12 @@ use Piwigo\Auth\UserAuthKeyEntity;
  * UserInfo/Plugin's own projection tests this session.
  */
 test('fromRow narrows a full real row', function (): void {
+    // revoked_on is a real, non-null string here -- both this and the
+    // all-defaults test below previously only ever exercised revoked_on
+    // as null, which can't distinguish a real `?? null` coalesce from one
+    // mutated to the bare literal `null` (CoalesceRemoveLeft): either way
+    // `is_string(null)` is false and revokedOn defaults to null. A real
+    // revoked key is a genuine row shape (see ApiKeyService revocation).
     $apiKey = ApiKey::fromRow([
         'auth_key_id' => '5',
         'auth_key' => 'ck12345',
@@ -22,7 +28,7 @@ test('fromRow narrows a full real row', function (): void {
         'duration' => '30',
         'expired_on' => '2026-08-01 10:00:00',
         'key_type' => 'api',
-        'revoked_on' => null,
+        'revoked_on' => '2026-07-25 08:00:00',
         'last_used_on' => '2026-07-15 09:00:00',
         'last_notified_on' => '2026-07-20 12:00:00',
     ]);
@@ -36,7 +42,7 @@ test('fromRow narrows a full real row', function (): void {
     expect($apiKey->duration)->toBe(30);
     expect($apiKey->expiredOn)->toBe('2026-08-01 10:00:00');
     expect($apiKey->keyType)->toBe('api');
-    expect($apiKey->revokedOn)->toBeNull();
+    expect($apiKey->revokedOn)->toBe('2026-07-25 08:00:00');
     expect($apiKey->lastUsedOn)->toBe('2026-07-15 09:00:00');
     expect($apiKey->lastNotifiedOn)->toBe('2026-07-20 12:00:00');
 });

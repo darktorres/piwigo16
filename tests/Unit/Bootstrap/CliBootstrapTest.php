@@ -56,13 +56,37 @@ test('the built Application also exposes the Console built-in commands', functio
         ->and($application->has('help'))->toBeTrue();
 });
 
+test('buildApplication attaches a real CurrentUser (guest) globally', function (): void {
+    \Piwigo\Users\CurrentUser::reset();
+
+    CliBootstrap::buildApplication();
+
+    expect(\Piwigo\Users\CurrentUser::get()->status)->toBe(\Piwigo\Users\UserStatus::Guest);
+
+    \Piwigo\Users\CurrentUser::reset();
+});
+
+test('buildApplication initializes CurrentConfigService with a real, resolved ConfigService', function (): void {
+    CliBootstrap::buildApplication();
+
+    expect(fn () => \Piwigo\Config\CurrentConfigService::get())->not->toThrow(LogicException::class);
+    expect(\Piwigo\Config\CurrentConfigService::get())->toBeInstanceOf(ConfigService::class);
+});
+
 test('run() installs the shutdown handler, builds the Application and executes the given argv', function (): void {
     // --quiet (not ob_start(): Symfony's ConsoleOutput writes straight to
     // the STDOUT stream resource, bypassing PHP's output buffer entirely
     // -- confirmed live, ob_start()/ob_get_clean() around this call does
     // not capture a single byte) suppresses the real 'list' output so
     // this test doesn't spam the suite's own console every run.
+    // Real SIG_DFL beforehand -- proves the handler this test checks for
+    // afterward genuinely came from run()'s own ShutdownHandler::install()
+    // call, not some earlier test in the same worker process.
+    pcntl_signal(SIGTERM, SIG_DFL);
+
     $exitCode = CliBootstrap::run(['piwigo', 'list', '--quiet']);
+
+    expect(pcntl_signal_get_handler(SIGTERM))->not->toBe(SIG_DFL);
 
     // Symfony Console's own Command::SUCCESS -- 'list' just enumerates
     // the registered commands, so a real, side-effect-free way to prove

@@ -51,6 +51,21 @@ test('fromRow defaults every other column to an empty string when absent', funct
         ->and($user->password)->toBe('');
 });
 
+test('fromRow casts a non-string scalar id (e.g. a real DBAL int) to string', function (): void {
+    // AuthUser::$id is `string`, and this file has strict_types=1 --
+    // without the `(string)` cast on fromRow()'s `id:` line, passing a raw
+    // int straight through would TypeError rather than silently coerce.
+    // AuthRepository::findByUsernameOrEmail() itself can hand back a
+    // native int id depending on the DBAL driver/platform, so this is a
+    // real, reachable shape, not just a hypothetical one.
+    $row = fullAuthUserRow();
+    $row['id'] = 1;
+
+    $user = AuthUser::fromRow($row);
+
+    expect($user->id)->toBe('1');
+});
+
 test('toArray round-trips the exact same DB column shape fromRow narrowed', function (): void {
     $roundTripped = AuthUser::fromRow(fullAuthUserRow())->toArray();
 

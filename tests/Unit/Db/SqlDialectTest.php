@@ -17,6 +17,18 @@ test('protectColumnName backtick-quotes a bare column name, and leaves an alread
     expect(SqlDialect::protectColumnName('`already_quoted`'))->toBe('`already_quoted`');
 });
 
+test('protectColumnName checks the FIRST character, not the last', function (): void {
+    // Kills line 41's DecrementInteger ($column_name[-1] instead of
+    // [0]). The existing test above always uses inputs where the first
+    // and last characters agree (both backtick, or both a regular
+    // letter), which can't distinguish which index the real check uses.
+    // A string that starts with a backtick but doesn't end with one (or
+    // vice versa) can: confirmed live that the two indices produce
+    // opposite wrap/no-wrap decisions for these inputs.
+    expect(SqlDialect::protectColumnName('`x'))->toBe('`x');
+    expect(SqlDialect::protectColumnName('x`'))->toBe('`x``');
+});
+
 test('concat wraps a comma-joined column list in CONCAT()', function (): void {
     expect(SqlDialect::concat(['a', 'b', 'c']))->toBe('CONCAT(a,b,c)');
 });
@@ -87,3 +99,12 @@ test('dateToTs wraps a date expression in UNIX_TIMESTAMP()', function (): void {
 test('getRecentPeriodExpression builds a SUBDATE(...) fragment for a caller-supplied literal date', function (): void {
     expect(SqlDialect::getRecentPeriodExpression(7, '2024-01-01'))->toBe("SUBDATE('2024-01-01',INTERVAL 7 DAY)");
 });
+
+/**
+ * Confirmed-equivalent: line 176's RemoveBooleanCast (dropping `(bool)`
+ * around `$mode` in getWeek()'s `if`). An `if` condition already coerces
+ * a nullable int to bool on its own -- 0/null are falsy, any other int
+ * is truthy either way, so the explicit cast changes nothing about
+ * which branch runs. Confirmed live: the full suite in this file passes
+ * identically with the cast removed.
+ */

@@ -593,7 +593,13 @@ test("load keeps a second PO file's explicit X-Domain out of the default lookup 
 // collapse to the same `=== []` inversion here, since neither has an
 // else branch) at once: real day/month entries make both $days and
 // $months non-empty, so all four mutations would leave mirroredStrings()
-// missing (or empty at) 'day'/'month'.
+// missing (or empty at) 'day'/'month'. Both indexes are deliberately
+// non-zero for at least one entry each (day uses 0 AND 1, month uses 5
+// alone): DecrementInteger on `$matches[1]` -> `$matches[0]` (the full,
+// non-numeric-leading regex match, e.g. "piwigo_month_5") would silently
+// (int)-cast to 0 too -- indistinguishable from the real index only when
+// the real index also happens to be 0, confirmed live (an earlier
+// "piwigo_month_0"-only fixture didn't kill this mutation at line 258).
 test("load reassembles piwigo_day_N/piwigo_month_N entries into mirroredStrings()'s nested day/month arrays", function (): void {
     file_put_contents((is_string($this->poFile) ? $this->poFile : ''), <<<'PO'
         msgid ""
@@ -606,16 +612,25 @@ test("load reassembles piwigo_day_N/piwigo_month_N entries into mirroredStrings(
         msgid "piwigo_day_1"
         msgstr "Monday"
 
-        msgid "piwigo_month_0"
-        msgstr "January"
+        msgid "piwigo_month_5"
+        msgstr "June"
         PO);
 
     Translator::get()->load('en', (is_string($this->poFile) ? $this->poFile : ''));
 
     $mirror = Translator::get()->mirroredStrings();
     expect($mirror['day'])->toBe([0 => 'Sunday', 1 => 'Monday'])
-        ->and($mirror['month'])->toBe([0 => 'January']);
+        ->and($mirror['month'])->toBe([5 => 'June']);
 });
+
+// Lines 256/258's own RemoveIntegerCast on `(int) $matches[1]` is
+// confirmed-equivalent: preg_match()'s `(\d+)` capture group only ever
+// yields pure-digit strings, and PHP's own array-key normalization
+// already coerces a pure-digit string key to int identically to an
+// explicit cast (`$arr['5']` and `$arr[(int) '5']` land on the same real
+// int key 5, confirmed via a standalone probe). Live-verified: mutated
+// line 258's cast away, the test above still passed unchanged, restored
+// byte-identical.
 
 // mirror()'s plural-original guard (line 275) chains four checks:
 // `$pluralOriginal !== null && $pluralOriginal !== '' && is_string(

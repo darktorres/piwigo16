@@ -151,6 +151,26 @@ final class ConfigServiceTest extends IntegrationTestCase
         self::assertNull($this->service->confGetParam($param));
     }
 
+    public function test_confDeleteParam_resets_the_backing_property_to_its_declared_default(): void
+    {
+        // Every existing confDeleteParam() call site in this file (the
+        // round-trip test above included) uses a genuinely dynamic,
+        // no-property key, so KEY_TO_PROPERTY's own lookup always misses
+        // and the method's reflection-based "reset to the property's own
+        // declared default" branch (lines 495-497) never actually runs --
+        // 'session_length' is a real property-backed key with no fixture
+        // row of its own (confirmed: absent from piwigo-17.0.sql), so
+        // deleting it afterward leaves the DB exactly as the fixture left
+        // it, no restore needed.
+        $this->service->confUpdateParam('session_length', 9999);
+        $this->service->loadConfFromDb('session_length');
+        self::assertSame(9999, CurrentConfig::sessionLength());
+
+        $this->service->confDeleteParam('session_length');
+
+        self::assertSame(3600, CurrentConfig::sessionLength());
+    }
+
     public function test_confUpdateParam_encodes_arrays_via_json(): void
     {
         $param = 'p14_service_array_' . bin2hex(random_bytes(4));

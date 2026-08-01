@@ -29,6 +29,39 @@ use Piwigo\Users\UserService;
  */
 afterEach(function (): void {
     \Piwigo\Core\Kernel::reset();
+    \Piwigo\Template\CurrentTemplate::reset();
+    \Piwigo\Config\CurrentConfig::reset();
+});
+
+test('every accessor returns its real, correctly-typed instance from a real container, without throwing', function (): void {
+    // Same "wrong-type tests below only prove the throw side" gap as
+    // AdminAccessorTest.php's own identical test -- see that file's
+    // docblock for the full rationale, including why Kernel::boot() needs
+    // a real Paths passed in. categoryDefaultRenderer()/categoryCatsRenderer()
+    // additionally need Piwigo\Template\CurrentTemplate seeded (a renderer
+    // dependency, itself needing dataDirChecked marked already-checked to
+    // avoid a real DB write) -- see ExtendedDomainAccessorTest.php's own
+    // identical setup for the full reasoning.
+    \Piwigo\Core\Kernel::reset();
+    \Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot(sys_get_temp_dir()));
+    \Piwigo\Config\CurrentConfig::setDataLocation('data/');
+    \Piwigo\Config\CurrentConfig::setDataDirChecked('1');
+    \Piwigo\Template\CurrentTemplate::set(new \Piwigo\Template\Template(sys_get_temp_dir()));
+
+    expect(CoreDomainAccessor::permissionService())->toBeInstanceOf(PermissionService::class);
+    expect(CoreDomainAccessor::categoryService())->toBeInstanceOf(CategoryService::class);
+    expect(CoreDomainAccessor::tagService())->toBeInstanceOf(TagService::class);
+    expect(CoreDomainAccessor::imageService())->toBeInstanceOf(ImageService::class);
+    expect(CoreDomainAccessor::userService())->toBeInstanceOf(UserService::class);
+    expect(CoreDomainAccessor::groupService())->toBeInstanceOf(GroupService::class);
+    expect(CoreDomainAccessor::passwordService())->toBeInstanceOf(PasswordService::class);
+    expect(CoreDomainAccessor::authService())->toBeInstanceOf(AuthService::class);
+    expect(CoreDomainAccessor::preferencesService())->toBeInstanceOf(PreferencesService::class);
+    expect(CoreDomainAccessor::apiKeyService())->toBeInstanceOf(ApiKeyService::class);
+    expect(CoreDomainAccessor::auditService())->toBeInstanceOf(AuditService::class);
+    expect(CoreDomainAccessor::imageVisibilityChecker())->toBeInstanceOf(ImageVisibilityChecker::class);
+    expect(CoreDomainAccessor::categoryDefaultRenderer())->toBeInstanceOf(CategoryDefaultRenderer::class);
+    expect(CoreDomainAccessor::categoryCatsRenderer())->toBeInstanceOf(CategoryCatsRenderer::class);
 });
 
 test('permissionService throws when the container returns an unexpected type', function (): void {

@@ -36,11 +36,24 @@ use Piwigo\Tests\Support\KernelContainerOverride;
  */
 beforeEach(function (): void {
     Kernel::reset();
-    Kernel::boot();
+    Kernel::boot(\Piwigo\Core\Paths::fromRoot(sys_get_temp_dir()));
+    // searchFilterRenderer()/sectionPopulator() additionally need
+    // Piwigo\Template\CurrentTemplate seeded (a renderer dependency), even
+    // though nothing here ever renders anything -- Template's own
+    // constructor reads CurrentPaths (hence the real Paths passed into
+    // Kernel::boot() just above) and, unless dataDirChecked is already
+    // marked '1', tries a real DB write via CurrentConfigService, which
+    // isn't booted here -- same "mark it already-checked" setup
+    // TabsheetTest.php's own Template construction uses.
+    \Piwigo\Config\CurrentConfig::setDataLocation('data/');
+    \Piwigo\Config\CurrentConfig::setDataDirChecked('1');
+    \Piwigo\Template\CurrentTemplate::set(new \Piwigo\Template\Template(sys_get_temp_dir()));
 });
 
 afterEach(function (): void {
     Kernel::reset();
+    \Piwigo\Template\CurrentTemplate::reset();
+    \Piwigo\Config\CurrentConfig::reset();
 });
 
 test('commentService resolves a real CommentService from the container', function (): void {
@@ -53,6 +66,38 @@ test('permalinkService resolves a real PermalinkService from the container', fun
 
 test('notificationByMailService resolves a real NotificationByMailService from the container', function (): void {
     expect(ExtendedDomainAccessor::notificationByMailService())->toBeInstanceOf(NotificationByMailService::class);
+});
+
+test('activityService resolves a real ActivityService from the container', function (): void {
+    expect(ExtendedDomainAccessor::activityService())->toBeInstanceOf(ActivityService::class);
+});
+
+test('searchService resolves a real SearchService from the container', function (): void {
+    expect(ExtendedDomainAccessor::searchService())->toBeInstanceOf(SearchService::class);
+});
+
+test('searchFilterRenderer resolves a real SearchFilterRenderer from the container', function (): void {
+    expect(ExtendedDomainAccessor::searchFilterRenderer())->toBeInstanceOf(SearchFilterRenderer::class);
+});
+
+test('metadataService resolves a real MetadataService from the container', function (): void {
+    expect(ExtendedDomainAccessor::metadataService())->toBeInstanceOf(MetadataService::class);
+});
+
+test('historyService resolves a real HistoryService from the container', function (): void {
+    expect(ExtendedDomainAccessor::historyService())->toBeInstanceOf(HistoryService::class);
+});
+
+test('rateService resolves a real RateService from the container', function (): void {
+    expect(ExtendedDomainAccessor::rateService())->toBeInstanceOf(RateService::class);
+});
+
+test('notificationService resolves a real NotificationService from the container', function (): void {
+    expect(ExtendedDomainAccessor::notificationService())->toBeInstanceOf(NotificationService::class);
+});
+
+test('sectionPopulator resolves a real SectionPopulator from the container', function (): void {
+    expect(ExtendedDomainAccessor::sectionPopulator())->toBeInstanceOf(SectionPopulator::class);
 });
 
 test('activityService throws when the container returns an unexpected type', function (): void {

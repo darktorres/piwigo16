@@ -45,6 +45,50 @@ use Piwigo\Tests\Support\KernelContainerOverride;
  */
 afterEach(function (): void {
     \Piwigo\Core\Kernel::reset();
+    \Piwigo\Core\CurrentPaths::reset();
+});
+
+test('every accessor returns its real, correctly-typed instance from a real container, without throwing', function (): void {
+    // The wrong-type tests below all prove the guard *fires* correctly --
+    // none of them prove it *doesn't* fire for the real, correctly-typed
+    // case, which is what every one of these 26 `! $x instanceof Y`
+    // checks actually gates day to day. A real, fully-booted container
+    // (not a KernelContainerOverride swap) is the only way to observe
+    // that -- some of these definitions transitively need Piwigo\Core\Paths,
+    // which Container::build() only binds when Kernel::boot() is given a
+    // real Paths instance up front (it's a value passed into the
+    // container builder, not something resolved from CurrentPaths at
+    // lookup time), so that needs seeding too even though nothing here
+    // ever touches the filesystem.
+    \Piwigo\Core\Kernel::reset();
+    \Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot(sys_get_temp_dir()));
+
+    expect(AdminAccessor::categoryAdminService())->toBeInstanceOf(CategoryAdminService::class);
+    expect(AdminAccessor::extensionUpdateChecker())->toBeInstanceOf(ExtensionUpdateChecker::class);
+    expect(AdminAccessor::coreUpdateService())->toBeInstanceOf(CoreUpdateService::class);
+    expect(AdminAccessor::dbMaintenanceRepository())->toBeInstanceOf(DbMaintenanceRepository::class);
+    expect(AdminAccessor::filterResolver())->toBeInstanceOf(FilterResolver::class);
+    expect(AdminAccessor::userPermPageRenderer())->toBeInstanceOf(UserPermPageRenderer::class);
+    expect(AdminAccessor::updatesPwgPageRenderer())->toBeInstanceOf(UpdatesPwgPageRenderer::class);
+    expect(AdminAccessor::themesNewPageRenderer())->toBeInstanceOf(ThemesNewPageRenderer::class);
+    expect(AdminAccessor::themesInstalledPageRenderer())->toBeInstanceOf(ThemesInstalledPageRenderer::class);
+    expect(AdminAccessor::tagsPageRenderer())->toBeInstanceOf(TagsPageRenderer::class);
+    expect(AdminAccessor::pluginsNewPageRenderer())->toBeInstanceOf(PluginsNewPageRenderer::class);
+    expect(AdminAccessor::pictureModifyPageRenderer())->toBeInstanceOf(PictureModifyPageRenderer::class);
+    expect(AdminAccessor::photosAddDirectPageRenderer())->toBeInstanceOf(PhotosAddDirectPageRenderer::class);
+    expect(AdminAccessor::maintenanceEnvPageRenderer())->toBeInstanceOf(MaintenanceEnvPageRenderer::class);
+    expect(AdminAccessor::maintenanceActionsPageRenderer())->toBeInstanceOf(MaintenanceActionsPageRenderer::class);
+    expect(AdminAccessor::languagesNewPageRenderer())->toBeInstanceOf(LanguagesNewPageRenderer::class);
+    expect(AdminAccessor::languagesInstalledPageRenderer())->toBeInstanceOf(LanguagesInstalledPageRenderer::class);
+    expect(AdminAccessor::groupListPageRenderer())->toBeInstanceOf(GroupListPageRenderer::class);
+    expect(AdminAccessor::elementSetRanksPageRenderer())->toBeInstanceOf(ElementSetRanksPageRenderer::class);
+    expect(AdminAccessor::catPermPageRenderer())->toBeInstanceOf(CatPermPageRenderer::class);
+    expect(AdminAccessor::catOptionsPageRenderer())->toBeInstanceOf(CatOptionsPageRenderer::class);
+    expect(AdminAccessor::catListPageRenderer())->toBeInstanceOf(CatListPageRenderer::class);
+    expect(AdminAccessor::batchManagerUnitPageRenderer())->toBeInstanceOf(BatchManagerUnitPageRenderer::class);
+    expect(AdminAccessor::albumNotificationPageRenderer())->toBeInstanceOf(AlbumNotificationPageRenderer::class);
+    expect(AdminAccessor::themesStandardPagesPageRenderer())->toBeInstanceOf(ThemesStandardPagesPageRenderer::class);
+    expect(AdminAccessor::pictureCoiPageRenderer())->toBeInstanceOf(PictureCoiPageRenderer::class);
 });
 
 test('categoryAdminService throws when the container returns an unexpected type', function (): void {

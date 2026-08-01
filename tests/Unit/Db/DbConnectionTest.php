@@ -61,6 +61,23 @@ test('params() reads host/user/password/dbname from DbCredentials', function ():
         ->and($params['driver'])->toBe('mysqli');
 });
 
+test('params() sets utf8mb4 charset and native int/float driverOptions for the mysqli driver', function (): void {
+    // Kills line 80's RemoveArrayItem (dropping 'charset' entirely) and
+    // lines 85/86's RemoveArrayItem on 'driverOptions' (dropping the key
+    // entirely, or emptying its inner array) -- none of this file's
+    // other mysqli-branch tests assert either key's presence or value.
+    putenv('PIWIGO_DB_HOST=db.example.test');
+    putenv('PIWIGO_DB_USER=piwigo_app');
+    putenv('PIWIGO_DB_PASSWORD=secret');
+    putenv('PIWIGO_DB_BASE=piwigo_prod');
+    DbCredentials::reset();
+
+    $params = DbConnection::params();
+
+    expect($params)->toHaveKey('charset', 'utf8mb4')
+        ->and($params)->toHaveKey('driverOptions', [MYSQLI_OPT_INT_AND_FLOAT_NATIVE => true]);
+});
+
 test('params() treats a host starting with / as a unix socket path', function (): void {
     putenv('PIWIGO_DB_HOST=/var/run/mysqld/mysqld.sock');
     putenv('PIWIGO_DB_USER=root');
@@ -86,6 +103,13 @@ test('params() switches to the native pgsql driver when db_driver is pgsql', fun
 
     expect($params['driver'])->toBe('pgsql')
         ->and($params)->toHaveKey('host', 'pg.example.test')
+        // Kills lines 63/64/65's RemoveArrayItem (dropping 'user',
+        // 'password', or 'dbname' from the pgsql params array) --
+        // the mysqli-branch test above covers these keys for mysqli,
+        // but nothing previously asserted them for the pgsql branch.
+        ->and($params)->toHaveKey('user', 'piwigo_app')
+        ->and($params)->toHaveKey('password', 'secret')
+        ->and($params)->toHaveKey('dbname', 'piwigo_prod')
         ->and($params)->not->toHaveKey('charset')
         ->and($params)->not->toHaveKey('driverOptions')
         ->and($params)->not->toHaveKey('unix_socket');

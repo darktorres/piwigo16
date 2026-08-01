@@ -2,7 +2,59 @@
 
 declare(strict_types=1);
 
+use Piwigo\Image\ImageEntity;
 use Piwigo\Image\Projection\Image;
+
+/**
+ * A transient (never-persisted) entity: real-looking scalar values for
+ * every other column, but $id left at its own real ?int default (null)
+ * -- Doctrine only ever assigns a real int once the entity is actually
+ * flushed (it's #[ORM\GeneratedValue]).
+ */
+function transientImageEntity(): ImageEntity
+{
+    return new ImageEntity(
+        file: 'photo.jpg',
+        dateAvailable: null,
+        dateCreation: null,
+        name: null,
+        comment: null,
+        author: null,
+        hit: 0,
+        filesize: null,
+        width: null,
+        height: null,
+        coi: null,
+        representativeExt: null,
+        dateMetadataUpdate: null,
+        ratingScore: null,
+        path: 'upload/2026/08/01/photo.jpg',
+        storageCategoryId: null,
+        level: 0,
+        md5sum: null,
+        addedBy: null,
+        rotation: null,
+        latitude: null,
+        longitude: null,
+        lastmodified: '2026-08-01 12:00:00',
+    );
+}
+
+test('fromEntity maps a real, already-persisted entity\'s own id, not the ?? 0 fallback', function (): void {
+    $entity = transientImageEntity();
+    $entity->id = 42;
+
+    expect(Image::fromEntity($entity)->id)->toBe(42);
+});
+
+test('fromEntity defaults id to exactly 0 for a transient (not-yet-persisted) entity, whose real id is still null', function (): void {
+    // Kills line 59's DecrementInteger/IncrementInteger (`?? -1`/`?? 1`
+    // instead of `?? 0`) -- unlike fromRow()'s own NOT-NULL-column
+    // fallbacks (never reachable against a real DB row), $entity->id is
+    // genuinely nullable pre-flush, so this default is real, reachable
+    // behavior, not a defensive guard.
+    expect(Image::fromEntity(transientImageEntity())->id)->toBe(0);
+});
 
 /**
  * @return array<string, mixed>
@@ -99,6 +151,18 @@ test('fromRow defaults every nullable column to null when absent', function (): 
     // helper in this codebase (is_numeric(...) ? (int) ... : 0, etc.) --
     // never actually null for a real fetched row, since these are NOT NULL
     // DB columns; this only guards a malformed/partial row.
+    //
+    // Confirmed-equivalent, same mysqli-native-types root cause as
+    // ImageRepository.php's own consolidated docblock: fromRow()'s
+    // Decrement/IncrementInteger on line 92's id default, line 99's hit
+    // default, and line 109's level default, plus EmptyStringToNotEmpty
+    // on line 93's file default, line 107's path default, and line
+    // 115's lastmodified default. Live sed-mutate-and-rerun spot-checked
+    // lines 92, 99, and 107 (one int-default and one string-default
+    // representative of each column position) against the full suite;
+    // the same reasoning generalizes identically to the other 3 (id/hit/
+    // level are all NOT NULL ints, file/path/lastmodified are all NOT
+    // NULL strings, on the exact same driver/query shape).
 });
 
 test('toArray round-trips the exact same DB column shape fromRow narrowed', function (): void {

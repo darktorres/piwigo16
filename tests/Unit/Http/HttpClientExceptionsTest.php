@@ -28,4 +28,7 @@ test('HttpClientNetworkException exposes the request that triggered it, with an 
     expect($exception->getRequest())->toBe($request);
     expect($exception->getMessage())->toBe('transport failure');
     expect($exception->getPrevious())->toBe($previous);
+    // Kills line 21's DecrementInteger/IncrementInteger on the
+    // hardcoded exception code (0) passed to parent::__construct().
+    expect($exception->getCode())->toBe(0);
 });

@@ -550,11 +550,15 @@ final readonly class TagService
             $existingId = $this->repo->findIdByUrlName($urlName);
 
             if ($existingId === null) {
-                // search by extended description (plugin sub name)
-                $subNameWhere = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_tag_name_like_where', [], $tagName);
-                $subNameWhere = is_array($subNameWhere) ? array_filter($subNameWhere, is_string(...)) : [];
-                if ($subNameWhere !== []) {
-                    $existingId = $this->repo->findIdByWhereFragment(implode(' OR ', $subNameWhere));
+                // search by extended description (plugin sub name) --
+                // SQL-modernization audit: the hook now returns LIKE
+                // pattern VALUES (bound as parameters), not raw SQL
+                // fragments -- see TagRepository::
+                // findIdByNameLikeAnyPattern()'s own docblock for why.
+                $namePatterns = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_tag_name_like_where', [], $tagName);
+                $namePatterns = is_array($namePatterns) ? array_values(array_filter($namePatterns, is_string(...))) : [];
+                if ($namePatterns !== []) {
+                    $existingId = $this->repo->findIdByNameLikeAnyPattern($namePatterns);
                 }
 
                 if ($existingId === null) {

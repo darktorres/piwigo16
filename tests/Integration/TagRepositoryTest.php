@@ -260,17 +260,54 @@ final class TagRepositoryTest extends IntegrationTestCase
         self::assertNull($this->repo->findIdByName('disposable-tag'));
     }
 
-    public function test_find_id_by_where_fragment_matches_a_raw_sql_condition(): void
+    public function test_find_id_by_name_like_any_pattern_matches_an_exact_pattern(): void
     {
-        $id = $this->repo->findIdByWhereFragment("name = 'nature'");
+        $id = $this->repo->findIdByNameLikeAnyPattern(['nature']);
 
         self::assertNotNull($id);
         self::assertSame(1, $id->value);
     }
 
-    public function test_find_id_by_where_fragment_returns_null_for_no_match(): void
+    public function test_find_id_by_name_like_any_pattern_matches_a_wildcard_pattern(): void
     {
-        self::assertNull($this->repo->findIdByWhereFragment("name = 'no-such-tag'"));
+        $id = $this->repo->findIdByNameLikeAnyPattern(['nat%']);
+
+        self::assertNotNull($id);
+        self::assertSame(1, $id->value);
+    }
+
+    public function test_find_id_by_name_like_any_pattern_tries_every_pattern_until_one_matches(): void
+    {
+        $id = $this->repo->findIdByNameLikeAnyPattern(['no-such-tag', 'trav%']);
+
+        self::assertNotNull($id);
+        self::assertSame(2, $id->value);
+    }
+
+    public function test_find_id_by_name_like_any_pattern_returns_null_for_no_match(): void
+    {
+        self::assertNull($this->repo->findIdByNameLikeAnyPattern(['no-such-tag']));
+    }
+
+    public function test_find_id_by_name_like_any_pattern_returns_null_for_an_empty_pattern_list(): void
+    {
+        self::assertNull($this->repo->findIdByNameLikeAnyPattern([]));
+    }
+
+    /**
+     * SQL-modernization audit / [SEC-19]: findIdByNameLikeAnyPattern()
+     * replaces the former findIdByWhereFragment(), which took an
+     * already-built raw SQL fragment straight from a plugin hook -- a
+     * real, unescaped SQL injection in the ExtendedDescription plugin's
+     * own real-world handler (confirmed against its actual source). This
+     * is the regression proof: a pattern value containing SQL syntax is
+     * now always treated as a literal LIKE value (bound as a parameter),
+     * never as SQL structure -- it matches nothing (no tag name actually
+     * contains this text) rather than injecting a tautology.
+     */
+    public function test_find_id_by_name_like_any_pattern_treats_sql_syntax_as_a_literal_value(): void
+    {
+        self::assertNull($this->repo->findIdByNameLikeAnyPattern(["nature' OR '1'='1"]));
     }
 
     public function test_update_name_and_url_name_renames_an_existing_tag(): void

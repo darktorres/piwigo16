@@ -495,18 +495,61 @@ namespace Piwigo\Tests\Integration {
          * sub-name matching) can resolve to an EXISTING tag even when the
          * exact name and url name both miss -- no new tag gets created in
          * that case.
+         *
+         * SQL-modernization audit / [SEC-19]: the handler now returns LIKE
+         * pattern VALUES (bound as parameters), not raw SQL fragments --
+         * see TagRepository::findIdByNameLikeAnyPattern()'s own docblock
+         * for why (a real injection in the ExtendedDescription plugin's
+         * actual handler, which built raw SQL from an unescaped tag name).
          */
-        public function test_tag_id_from_tag_name_matches_via_a_plugin_supplied_sql_fragment(): void
+        public function test_tag_id_from_tag_name_matches_via_a_plugin_supplied_like_pattern(): void
         {
             EventDispatcher::get()->addEventHandler(
                 'get_tag_name_like_where',
-                static fn (mixed $data, string $tagName): array => ["name = 'nature'"]
+                static fn (mixed $data, string $tagName): array => ['nature']
             );
 
             try {
                 self::assertEquals(TagId::from(1), $this->service->tagIdFromTagName('totally-unrelated-name-' . uniqid()));
             } finally {
                 EventDispatcher::reset();
+            }
+        }
+
+        /**
+         * [SEC-19] regression: a plugin handler returning SQL-shaped text
+         * (exactly the un-escaped shape the real ExtendedDescription
+         * plugin's own handler used to produce) is now always bound as a
+         * literal LIKE value -- it matches nothing and a brand-new tag
+         * gets created, instead of injecting a tautology that would have
+         * resolved to an arbitrary existing tag.
+         */
+        public function test_tag_id_from_tag_name_treats_a_plugin_supplied_sql_injection_attempt_as_a_literal_value(): void
+        {
+            EventDispatcher::get()->addEventHandler(
+                'get_tag_name_like_where',
+                static fn (mixed $data, string $tagName): array => ["' OR '1'='1"]
+            );
+
+            $tagName = 'p18-test-sec19-' . bin2hex(random_bytes(4));
+
+            try {
+                $id = $this->service->tagIdFromTagName($tagName);
+
+                self::assertNotEquals(TagId::from(1), $id);
+                self::assertSame(
+                    $tagName,
+                    $this->conn->createQueryBuilder()
+                        ->select('name')
+                        ->from(Tables::tags())
+                        ->where('id = :id')
+                        ->setParameter('id', $id->value)
+                        ->executeQuery()
+                        ->fetchOne()
+                );
+            } finally {
+                EventDispatcher::reset();
+                $this->conn->executeStatement('DELETE FROM ' . Tables::tags() . ' WHERE name = ?', [$tagName]);
             }
         }
 

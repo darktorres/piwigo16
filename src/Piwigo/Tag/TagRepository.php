@@ -437,29 +437,48 @@ final class TagRepository extends EntityRepository
     }
 
     /**
-     * $whereSql is a raw, already-built SQL WHERE-continuation fragment
-     * (plugin-supplied extended-description sub-name matching), unlike
-     * countImagesPerTag()'s former $fandFSql (now a bound SqlCondition)
-     * -- this one's producer is a plugin's `get_tag_name_like_where`
-     * EventDispatcher hook (Piwigo\Tag\TagService::tagIdFromTagName()),
-     * not internal domain code. Left untouched: a plugin handing back raw
-     * SQL is a pre-existing, accepted trust boundary (a plugin already
-     * runs arbitrary PHP with full DB access -- returning a SQL fragment
-     * isn't a new one), and every plugin's own contract is due for a
-     * full rewrite anyway (see the project's plugin-rewrite decision),
-     * not a target of this SQL-modernization initiative.
+     * First tag id whose `name` matches any of $patterns via SQL `LIKE`
+     * -- TagService::tagIdFromTagName()'s own "search by extended
+     * description (plugin sub name)" step, backing a plugin's
+     * `get_tag_name_like_where` EventDispatcher hook.
+     *
+     * SQL-modernization audit: replaces the former findIdByWhereFragment(),
+     * which took an already-built raw SQL WHERE-continuation fragment
+     * straight from the plugin hook -- a real, unescaped SQL injection
+     * when the ExtendedDescription plugin is active, confirmed against
+     * its actual piwigo16-plugins source (`ed_name_like_where()`): it
+     * splices the tag name into `name LIKE '...'` with zero escaping.
+     * The hook's own contract changes here from "return raw SQL
+     * fragments" to "return LIKE pattern VALUES" -- every pattern is now
+     * a bound parameter, so no plugin handler can inject SQL structure
+     * anymore regardless of what string it returns. Not a compat break
+     * in practice: no 17.x plugin implements this hook yet (it's a
+     * greenfield rewrite hook), so there's nothing real to migrate.
+     *
+     * @param list<string> $patterns
      */
-    public function findIdByWhereFragment(string $whereSql): ?TagId
+    public function findIdByNameLikeAnyPattern(array $patterns): ?TagId
     {
-        $tagsTable = Tables::tags();
+        if ($patterns === []) {
+            return null;
+        }
 
-        $id = $this->getEntityManager()
+        $qb = $this->getEntityManager()
             ->getConnection()
-            ->executeQuery(<<<SQL
-                SELECT id
-                FROM {$tagsTable}
-                WHERE {$whereSql}
-                SQL)->fetchOne();
+            ->createQueryBuilder()
+            ->select('id')
+            ->from(Tables::tags());
+
+        $likeExprs = [];
+        foreach ($patterns as $i => $pattern) {
+            $placeholder = 'pattern' . $i;
+            $likeExprs[] = $qb->expr()->like('name', ':' . $placeholder);
+            $qb->setParameter($placeholder, $pattern);
+        }
+
+        $id = $qb->where($qb->expr()->or(...$likeExprs))
+            ->executeQuery()
+            ->fetchOne();
 
         return is_numeric($id) ? TagId::from((int) $id) : null;
     }

@@ -8,6 +8,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
@@ -95,6 +96,18 @@ test('sanitizeSvgIfNeeded strips on*= event-handler attributes', function (): vo
         ->and($result)->not->toContain('alert');
 });
 
+test('sanitizeSvgIfNeeded strips a DOCTYPE declaration, not replacing it with some other text', function (): void {
+    $path = upload_service_test_marker() . '/doctype.svg';
+    file_put_contents($path, "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n" . '<svg xmlns="http://www.w3.org/2000/svg"><circle r="5"/></svg>');
+
+    upload_service_call_sanitize($path, 'image/svg+xml');
+
+    $result = file_get_contents($path);
+    expect($result)->not->toContain('DOCTYPE')
+        ->and($result)->not->toContain('DTD')
+        ->and($result)->toContain('circle');
+});
+
 test('sanitizeSvgIfNeeded leaves a clean SVG intact', function (): void {
     $path = upload_service_test_marker() . '/clean.svg';
     $original = '<svg xmlns="http://www.w3.org/2000/svg"><circle r="5" fill="red"/></svg>';
@@ -172,6 +185,43 @@ test('getUploadFormConfig returns the 4 known fields', function (): void {
     ]);
 });
 
+test('getUploadFormConfig returns the exact default/min/max/pattern/can_be_null shape for every field', function (): void {
+    $config = new UploadService()->getUploadFormConfig();
+
+    expect($config['original_resize'])->toBe([
+        'default' => false,
+        'min' => null,
+        'max' => null,
+        'pattern' => null,
+        'can_be_null' => false,
+        'error_message' => null,
+    ]);
+    expect($config['original_resize_maxwidth'])->toBe([
+        'default' => 2000,
+        'min' => 500,
+        'max' => 20000,
+        'pattern' => '/^\d+$/',
+        'can_be_null' => false,
+        'error_message' => Lang::t('The original maximum width must be a number between %d and %d'),
+    ]);
+    expect($config['original_resize_maxheight'])->toBe([
+        'default' => 2000,
+        'min' => 300,
+        'max' => 20000,
+        'pattern' => '/^\d+$/',
+        'can_be_null' => false,
+        'error_message' => Lang::t('The original maximum height must be a number between %d and %d'),
+    ]);
+    expect($config['original_resize_quality'])->toBe([
+        'default' => 95,
+        'min' => 50,
+        'max' => 98,
+        'pattern' => '/^\d+$/',
+        'can_be_null' => false,
+        'error_message' => Lang::t('The original image quality must be a number between %d and %d'),
+    ]);
+});
+
 test('fileUploadErrorMessage maps every UPLOAD_ERR_* constant to a non-empty message', function (): void {
     $service = new UploadService();
 
@@ -186,10 +236,23 @@ test('fileUploadErrorMessage maps every UPLOAD_ERR_* constant to a non-empty mes
     expect($service->fileUploadErrorMessage(-1))->toBe('Unknown upload error');
 });
 
+test('fileUploadErrorMessage embeds the real upload_max_filesize value for UPLOAD_ERR_INI_SIZE', function (): void {
+    $service = new UploadService();
+
+    expect($service->fileUploadErrorMessage(UPLOAD_ERR_INI_SIZE))
+        ->toBe('The uploaded file exceeds the upload_max_filesize directive in php.ini: ' . ini_get('upload_max_filesize') . 'B');
+});
+
 test('getIniSize converts a shorthand ini value to bytes', function (): void {
     $service = new UploadService();
 
     expect($service->getIniSize('memory_limit', true))->not->toBeFalse();
+});
+
+test('getIniSize returns the raw ini value unconverted when in_bytes is false', function (): void {
+    $service = new UploadService();
+
+    expect($service->getIniSize('upload_max_filesize', false))->toBe(ini_get('upload_max_filesize'));
 });
 
 function upload_service_convert_shorthand(string|false $value): int|string|false
@@ -236,6 +299,26 @@ test('isValidImageExtension returns the lowercased, deduplicated picture extensi
         expect($extension)->toBe(strtolower($extension));
     }
     expect($result)->toContain('jpg');
+});
+
+test('isValidImageExtension actually deduplicates case-variant extensions, not just extensions that happen not to collide', function (): void {
+    // The pre-existing tests only ever compare $result against its own
+    // array_unique() (`toBe(array_unique($result))`), which is trivially
+    // true for any array with no duplicates *before* array_unique() ran --
+    // real config data never has case-variant dupes, so those tests can't
+    // tell a real array_unique() call apart from a removed one. Injecting
+    // deliberate case-variant duplicates is the only way to prove
+    // dedup actually happens.
+    CurrentConfig::setPictureExtensions(['JPG', 'jpg', 'PNG']);
+    try {
+        $service = new UploadService();
+        $result = $service->isValidImageExtension('JPG');
+
+        expect($result)->toHaveCount(2)
+            ->and(array_values($result))->toBe(['jpg', 'png']);
+    } finally {
+        CurrentConfig::setPictureExtensions(['jpg', 'jpeg', 'png', 'gif', 'webp']);
+    }
 });
 
 test('isValidImageExtension returns the lowercased, deduplicated file extensions when all types are allowed', function (): void {
@@ -314,9 +397,16 @@ test('pwgImageInfos reads real width/height/filesize from a generated image', fu
 
     $service = new UploadService();
     $infos = $service->pwgImageInfos($path);
+    $realBytes = filesize($path);
+    if ($realBytes === false) {
+        throw new RuntimeException('filesize failed');
+    }
 
     expect($infos['width'])->toBe(37);
     expect($infos['height'])->toBe(21);
+    // Exact floor(bytes / 1024), not just "some float" -- distinguishes
+    // floor() from round()/ceil() and /1024 from *1024.
+    expect($infos['filesize'])->toBe(floor($realBytes / 1024));
     expect($infos['filesize'])->toBeFloat();
 });
 
@@ -455,6 +545,77 @@ test('needResize swaps width/height for a rotated EXIF orientation before compar
     expect(upload_service_need_resize($path, 100, 300))->toBeTrue();
 });
 
+test('needResize fully swaps both width AND height, not just one of them, for a 270-degree rotation', function (): void {
+    // The test above only proves the swap happened *somewhere* (width
+    // alone already triggers "too big"). Here neither raw axis exceeds
+    // its bound, but a swap that only reassigns $width (leaving $height at
+    // its original, unswapped value of 200) would wrongly still trip the
+    // max_height=100 bound -- isolating that a genuinely full swap landed
+    // both sides correctly (200x50, both within bounds) is only provable
+    // via a false result.
+    $path = upload_service_test_marker() . '/rotated-270-both-swapped.jpg';
+    file_put_contents($path, upload_service_make_jpeg_with_orientation(6, 50, 200));
+
+    expect(upload_service_need_resize($path, 300, 100))->toBeFalse();
+});
+
+test('needResize also swaps width/height for a 90-degree rotation (EXIF orientation 7/8)', function (): void {
+    // Orientation 6 above maps to a 270-degree rotation; 8 is the other
+    // real-world case (get_rotation_angle()'s own orientation 7/8 => 90
+    // mapping) -- a boundary distinct from 270, so this can't be satisfied
+    // by only recognizing 270 as "needs a swap".
+    $path = upload_service_test_marker() . '/rotated-90.jpg';
+    file_put_contents($path, upload_service_make_jpeg_with_orientation(8, 50, 200));
+
+    expect(upload_service_need_resize($path, 300, 100))->toBeFalse();
+});
+
+test('needResize does not resize when width/height exactly equal the max bounds', function (): void {
+    // Strictly `>`, not `>=` -- a photo exactly at the configured max
+    // dimensions doesn't need resizing.
+    $path = upload_service_test_marker() . '/exact-bounds.jpg';
+    $img = imagecreatetruecolor(200, 100);
+    if ($img === false) {
+        throw new RuntimeException('imagecreatetruecolor failed');
+    }
+    imagejpeg($img, $path);
+
+    expect(upload_service_need_resize($path, 200, 100))->toBeFalse();
+});
+
+test('needResize is case-insensitive about the file extension', function (): void {
+    $path = upload_service_test_marker() . '/uppercase.JPG';
+    $img = imagecreatetruecolor(500, 50);
+    if ($img === false) {
+        throw new RuntimeException('imagecreatetruecolor failed');
+    }
+    imagejpeg($img, $path);
+
+    expect(upload_service_need_resize($path, 200, 200))->toBeTrue();
+});
+
+test('needResize logs the exact current/max dimensions when a resize is needed', function (): void {
+    $logDir = upload_service_test_marker() . '/logs';
+    mkdir($logDir, 0o777, true);
+    CurrentLogger::set(new Logger(['severity' => Logger::INFO, 'directory' => $logDir, 'filename' => 'needresize.log']));
+
+    try {
+        $path = upload_service_test_marker() . '/logged-too-big.jpg';
+        $img = imagecreatetruecolor(500, 50);
+        if ($img === false) {
+            throw new RuntimeException('imagecreatetruecolor failed');
+        }
+        imagejpeg($img, $path);
+
+        upload_service_need_resize($path, 200, 20);
+
+        $logged = file_get_contents($logDir . '/needresize.log');
+        expect($logged)->toContain($path . ' is too big (current=500x50px Vs max=200x20px)');
+    } finally {
+        CurrentLogger::set(new Logger(['severity' => Logger::OFF]));
+    }
+});
+
 test('saveUploadFormConfig returns false without writing anything when given no data', function (): void {
     $service = new UploadService();
     $errors = [];
@@ -476,6 +637,128 @@ test('saveUploadFormConfig collects a range error and a field-keyed form_errors 
     expect($result)->toBeFalse();
     expect($errors)->toHaveCount(1);
     expect($formErrors)->toBe(['original_resize_maxwidth' => '[500 .. 20000]']);
+});
+
+test('saveUploadFormConfig keeps processing later fields after skipping an unknown one, not stopping the whole loop', function (): void {
+    Kernel::reset();
+    Kernel::boot();
+    try {
+        $service = new UploadService();
+        $errors = [];
+        $formErrors = [];
+
+        $result = $service->saveUploadFormConfig(
+            ['totally_unknown_field' => 'whatever', 'original_resize_maxheight' => '1500'],
+            $errors,
+            $formErrors
+        );
+
+        expect($result)->toBeTrue()
+            ->and($errors)->toBe([]);
+
+        $conn = DbConnection::build();
+        try {
+            $stored = $conn->fetchOne('SELECT value FROM ' . Tables::config() . " WHERE param = 'original_resize_maxheight'");
+            expect($stored)->toBe('1500');
+        } finally {
+            $conn->executeStatement("UPDATE " . Tables::config() . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
+            \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+        }
+    } finally {
+        Kernel::reset();
+    }
+});
+
+test('saveUploadFormConfig rejects a value that only satisfies the pattern check via a mixed-up and/or precedence', function (): void {
+    // Distinguishes `(pattern-matches and >=min) and <=max` from a
+    // precedence-shifted `pattern-matches or (>=min and <=max)` -- a
+    // leading-space value fails the digit pattern outright but PHP8's
+    // loose string/int comparison still finds it >=min and <=max, which a
+    // subtly-wrong `or` would incorrectly accept.
+    Kernel::reset();
+    Kernel::boot();
+    try {
+        $service = new UploadService();
+        $errors = [];
+        $formErrors = [];
+
+        $result = $service->saveUploadFormConfig(['original_resize_maxheight' => ' 15000'], $errors, $formErrors);
+
+        expect($result)->toBeFalse();
+        expect($errors)->toHaveCount(1);
+    } finally {
+        Kernel::reset();
+    }
+});
+
+test('saveUploadFormConfig rejects a below-minimum value that only satisfies the max check via a mixed-up and/or precedence', function (): void {
+    // The other and/or precedence shift: `(pattern-matches and >=min) or
+    // <=max` would wrongly accept any small, pattern-matching value just
+    // because it's trivially under the max.
+    Kernel::reset();
+    Kernel::boot();
+    try {
+        $service = new UploadService();
+        $errors = [];
+        $formErrors = [];
+
+        $result = $service->saveUploadFormConfig(['original_resize_maxheight' => '100'], $errors, $formErrors);
+
+        expect($result)->toBeFalse();
+        expect($errors)->toHaveCount(1);
+    } finally {
+        Kernel::reset();
+    }
+});
+
+test('saveUploadFormConfig accepts a value exactly at the min or max boundary', function (): void {
+    Kernel::reset();
+    Kernel::boot();
+    try {
+        $service = new UploadService();
+
+        $errorsMin = [];
+        $formErrorsMin = [];
+        $resultMin = $service->saveUploadFormConfig(['original_resize_maxheight' => '300'], $errorsMin, $formErrorsMin);
+        expect($resultMin)->toBeTrue()
+            ->and($errorsMin)->toBe([]);
+
+        $errorsMax = [];
+        $formErrorsMax = [];
+        $resultMax = $service->saveUploadFormConfig(['original_resize_maxheight' => '20000'], $errorsMax, $formErrorsMax);
+        expect($resultMax)->toBeTrue()
+            ->and($errorsMax)->toBe([]);
+
+        $conn = DbConnection::build();
+        $conn->executeStatement("UPDATE " . Tables::config() . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
+        \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+    } finally {
+        Kernel::reset();
+    }
+});
+
+test('saveUploadFormConfig accepts a real int value without a TypeError, not just a numeric string', function (): void {
+    // is_scalar() (the guard above) accepts int as readily as string -- a
+    // literal int posted value would throw a TypeError at preg_match()'s
+    // own strict `string $subject` parameter without the (string) cast.
+    Kernel::reset();
+    Kernel::boot();
+    try {
+        $service = new UploadService();
+        $errors = [];
+        $formErrors = [];
+
+        $result = $service->saveUploadFormConfig(['original_resize_maxheight' => 1500], $errors, $formErrors);
+
+        expect($result)->toBeTrue()
+            ->and($errors)->toBe([]);
+
+        $conn = DbConnection::build();
+        $conn->executeStatement("UPDATE " . Tables::config() . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
+        \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+    } finally {
+        Kernel::reset();
+    }
 });
 
 test('saveUploadFormConfig silently skips a field name absent from getUploadFormConfig()', function (): void {
@@ -663,6 +946,9 @@ test('prepareDirectoryStatic creates a missing directory tree', function (): voi
 
     expect(is_dir($dir))->toBeTrue();
     expect(is_writable($dir))->toBeTrue();
+    // secureDirectory()'s own index.htm write -- confirms that call
+    // actually runs, not just the mkdir()/chmod() above.
+    expect(file_get_contents($dir . '/index.htm'))->toBe('Not allowed!');
 });
 
 test('prepareDirectoryStatic fixes permissions on an existing unwritable directory', function (): void {
@@ -717,7 +1003,10 @@ test('addFormat throws for an unauthorized format extension', function (): void 
 
     try {
         expect(fn () => $service->addFormat('/tmp/whatever', 'exe', 1))
-            ->toThrow(ImageProcessingException::class);
+            ->toThrow(
+                ImageProcessingException::class,
+                '[Piwigo\Admin\Upload\UploadService::addFormat] unexpected format extension "exe" (authorized extensions: tif, psd)'
+            );
     } finally {
         CurrentConfig::setIsFormatsEnabled(false);
         CurrentConfig::setFormatExtensions(['cr2', 'tif', 'tiff', 'nef', 'dng', 'ai', 'psd']);
@@ -749,6 +1038,77 @@ test('the 6 upload_file_* representative-generation handlers no-op for a non-mat
     expect(UploadService::uploadFileVideo(null, $path))->toBeNull();
 });
 
+/**
+ * uploadFileVideo()'s extension whitelist check (is this file even worth
+ * trying ffmpeg on?) is fully reachable without ffmpeg/ffprobe ever
+ * actually running: prepareDirectoryStatic() is the very next call after
+ * the whitelist guard, well before any exec() -- making the file's parent
+ * directory read-only turns "did we pass the guard?" into a cheap,
+ * deterministic ImageProcessingException instead of a real (and much
+ * slower) ffmpeg round-trip. Same technique for both directions: a
+ * matching extension must reach (and therefore throw at)
+ * prepareDirectoryStatic(); a non-matching one must return null before
+ * ever reaching it.
+ */
+function upload_service_video_readonly_dir(): string
+{
+    $dir = upload_service_test_marker() . '/video-readonly-' . bin2hex(random_bytes(4));
+    mkdir($dir, 0o777, true);
+    chmod($dir, 0o555);
+
+    return $dir;
+}
+
+test('uploadFileVideo recognizes every one of its 17 ffmpeg-tested extensions', function (): void {
+    $dir = upload_service_video_readonly_dir();
+    try {
+        foreach ([
+            'wmv', 'mov', 'mkv', 'mp4', 'mpg', 'flv', 'asf', 'xvid', 'divx', 'mpeg',
+            'avi', 'rm', 'm4v', 'ogg', 'ogv', 'webm', 'webmv',
+        ] as $ext) {
+            expect(fn () => UploadService::uploadFileVideo(null, $dir . '/video.' . $ext))
+                ->toThrow(ImageProcessingException::class);
+        }
+    } finally {
+        chmod($dir, 0o777);
+    }
+});
+
+test('uploadFileVideo matches a video extension case-insensitively', function (): void {
+    $dir = upload_service_video_readonly_dir();
+    try {
+        expect(fn () => UploadService::uploadFileVideo(null, $dir . '/video.WMV'))
+            ->toThrow(ImageProcessingException::class);
+    } finally {
+        chmod($dir, 0o777);
+    }
+});
+
+test('uploadFileVideo returns null for a non-matching extension without even attempting to prepare a directory', function (): void {
+    $dir = upload_service_video_readonly_dir();
+    try {
+        expect(UploadService::uploadFileVideo(null, $dir . '/video.txt'))->toBeNull();
+    } finally {
+        chmod($dir, 0o777);
+    }
+});
+
+test('uploadFileVideo logs the exact file_path/representative_ext it was called with', function (): void {
+    $logDir = upload_service_test_marker() . '/video-logs';
+    mkdir($logDir, 0o777, true);
+    CurrentLogger::set(new Logger(['severity' => Logger::INFO, 'directory' => $logDir, 'filename' => 'video.log']));
+
+    try {
+        $path = upload_service_test_marker() . '/whatever.mp4';
+        UploadService::uploadFileVideo('already-set', $path);
+
+        $logged = file_get_contents($logDir . '/video.log');
+        expect($logged)->toContain('uploadFileVideo, $file_path = ' . $path . ', $representative_ext = already-set');
+    } finally {
+        CurrentLogger::set(new Logger(['severity' => Logger::OFF]));
+    }
+});
+
 test('the 5 ext_imagick-only handlers return the incoming representative_ext unmodified when the graphics library is not ext_imagick', function (): void {
     // Forces PwgImage::get_library() to resolve to 'gd' instead of this
     // environment's real default 'ext_imagick' (see this file's own
@@ -776,6 +1136,81 @@ function upload_service_optimal_dimensions(): array
     /** @var array{0: int, 1: int} */
     return $method->invoke(null);
 }
+
+test('getOptimalDimensionsForRepresentative computes the exact 1.5x margin from a real defined type', function (): void {
+    // The real default ImageStdParams state in this Unit test process
+    // happens to have no enabled/disabled type actually reachable via
+    // get_all_types() (every real call so far only proved "positive
+    // int", the untouched 2000x2000-default*1.5 fallback either way) --
+    // directly injecting one real, distinctly-sized DerivativeParams via
+    // reflection (then restoring the original maps) is the only way to
+    // prove the loop's own array_key_exists()/instanceof/(bool)/(float)
+    // cast/1.5 multiplication chain actually runs and computes correctly,
+    // rather than just returning the untouched safe default.
+    $typeMapProp = new ReflectionProperty(\Piwigo\Image\ImageStdParams::class, 'type_map');
+    $disabledMapProp = new ReflectionProperty(\Piwigo\Image\ImageStdParams::class, 'disabled_type_map');
+    $originalTypeMap = $typeMapProp->getValue();
+    $originalDisabledMap = $disabledMapProp->getValue();
+
+    try {
+        $typeMapProp->setValue(null, [
+            'xlarge' => new \Piwigo\Image\DerivativeParams(new \Piwigo\Image\SizingParams([1234, 5678])),
+        ]);
+        $disabledMapProp->setValue(null, []);
+
+        [$w, $h] = upload_service_optimal_dimensions();
+
+        expect($w)->toBe((int) (1234 * 1.5))
+            ->and($h)->toBe((int) (5678 * 1.5));
+    } finally {
+        $typeMapProp->setValue(null, $originalTypeMap);
+        $disabledMapProp->setValue(null, $originalDisabledMap);
+    }
+});
+
+test('getOptimalDimensionsForRepresentative also reads a disabled-by-default type, not just an enabled one', function (): void {
+    // Distinguishes `$disabled[$type] ?? null` from a dropped left side --
+    // the type above only ever exercised the *enabled* map.
+    $typeMapProp = new ReflectionProperty(\Piwigo\Image\ImageStdParams::class, 'type_map');
+    $disabledMapProp = new ReflectionProperty(\Piwigo\Image\ImageStdParams::class, 'disabled_type_map');
+    $originalTypeMap = $typeMapProp->getValue();
+    $originalDisabledMap = $disabledMapProp->getValue();
+
+    try {
+        $typeMapProp->setValue(null, []);
+        $disabledMapProp->setValue(null, [
+            'xlarge' => new \Piwigo\Image\DerivativeParams(new \Piwigo\Image\SizingParams([222, 444])),
+        ]);
+
+        [$w, $h] = upload_service_optimal_dimensions();
+
+        expect($w)->toBe((int) (222 * 1.5))
+            ->and($h)->toBe((int) (444 * 1.5));
+    } finally {
+        $typeMapProp->setValue(null, $originalTypeMap);
+        $disabledMapProp->setValue(null, $originalDisabledMap);
+    }
+});
+
+test('getOptimalDimensionsForRepresentative falls back to the exact 2000x2000 safe default when no type is defined at all', function (): void {
+    $typeMapProp = new ReflectionProperty(\Piwigo\Image\ImageStdParams::class, 'type_map');
+    $disabledMapProp = new ReflectionProperty(\Piwigo\Image\ImageStdParams::class, 'disabled_type_map');
+    $originalTypeMap = $typeMapProp->getValue();
+    $originalDisabledMap = $disabledMapProp->getValue();
+
+    try {
+        $typeMapProp->setValue(null, []);
+        $disabledMapProp->setValue(null, []);
+
+        [$w, $h] = upload_service_optimal_dimensions();
+
+        expect($w)->toBe(3000)
+            ->and($h)->toBe(3000);
+    } finally {
+        $typeMapProp->setValue(null, $originalTypeMap);
+        $disabledMapProp->setValue(null, $originalDisabledMap);
+    }
+});
 
 test('getOptimalDimensionsForRepresentative returns a positive width/height pair', function (): void {
     [$w, $h] = upload_service_optimal_dimensions();
@@ -897,4 +1332,255 @@ test('uploadFileTiff appends the -quality 98 flag and converts to jpg when tiffR
     } finally {
         CurrentConfig::setTiffRepresentativeExt('png');
     }
+});
+
+/**
+ * uploadFileHeic() genuinely reaches ImageMagick's real CLI conversion
+ * path in this environment too: the method never validates HEIC's magic
+ * bytes, only its extension, and the real `magick` binary auto-detects
+ * input format from file content regardless of the extension it's given
+ * (confirmed live: a plain PNG saved as `.heic` converts cleanly) -- so a
+ * PNG source dressed up with a `.heic` extension exercises the exact same
+ * real-CLI success path a genuine HEIC upload would, without needing a
+ * libheif delegate at all.
+ */
+function upload_service_make_fake_heic(string $path): void
+{
+    // ImageMagick in this environment can DECODE arbitrary content by
+    // magic bytes regardless of a misleading extension (confirmed live),
+    // but it has no HEIC *encode* delegate -- asking it to write directly
+    // to a `.heic`-named destination fails outright. Encoding a real PNG
+    // to a real .png path first, then copying those bytes verbatim onto
+    // the `.heic` path, gets a genuinely decodable "fake HEIC" without
+    // ever asking ImageMagick to encode HEIC.
+    $realPng = $path . '.real.png';
+    $exec = 'convert -size 40x40 xc:green ' . escapeshellarg($realPng) . ' 2>&1';
+    exec($exec, $out, $status);
+    if ($status !== 0) {
+        throw new RuntimeException('convert (fake heic source) failed: ' . implode("\n", $out));
+    }
+    rename($realPng, $path);
+}
+
+test('uploadFileHeic converts a real image into a representative jpg via the ext_imagick CLI', function (): void {
+    $dir = upload_service_test_marker();
+    $heic = $dir . '/photo.heic';
+    upload_service_make_fake_heic($heic);
+
+    $result = UploadService::uploadFileHeic(null, $heic);
+
+    expect($result)->toBe('jpg');
+    $representativePath = $dir . '/pwg_representative/photo.jpg';
+    expect(file_exists($representativePath))->toBeTrue();
+    expect(filesize($representativePath))->toBeGreaterThan(0);
+});
+
+test('uploadFileHeic logs its exact ImageMagick exec string, including the resize/quality flags', function (): void {
+    $logDir = upload_service_test_marker() . '/heic-logs';
+    mkdir($logDir, 0o777, true);
+    CurrentLogger::set(new Logger(['severity' => Logger::INFO, 'directory' => $logDir, 'filename' => 'heic.log']));
+
+    try {
+        $dir = upload_service_test_marker();
+        $heic = $dir . '/photo-logged.heic';
+        upload_service_make_fake_heic($heic);
+
+        UploadService::uploadFileHeic(null, $heic);
+
+        $logged = file_get_contents($logDir . '/heic.log');
+        expect($logged)->toContain('uploadFileHeic, exec = ')
+            ->toContain('-sampling-factor 4:2:0 -quality 85 -interlace JPEG -colorspace sRGB -auto-orient +repage -resize "');
+    } finally {
+        CurrentLogger::set(new Logger(['severity' => Logger::OFF]));
+    }
+});
+
+/**
+ * The isset($representative_ext) early return on each of the 5 handlers
+ * below is unobservable via a non-matching/missing fixture (both the real
+ * early return and a removed one land on the exact same unchanged
+ * "already-set" result once the fall-through path also fails to convert)
+ * -- only a genuinely convertible file proves the guard actually skips
+ * the real work: without it, a successful conversion would silently
+ * overwrite the caller-supplied representative_ext with the handler's own
+ * extension instead of leaving it alone.
+ */
+test('the 5 ext_imagick handlers leave an already-set representative_ext untouched even when the file would otherwise convert successfully', function (): void {
+    $dir = upload_service_test_marker();
+
+    $pdfPng = $dir . '/isset-guard-src.png';
+    upload_service_make_sample_png($pdfPng);
+    $pdf = $dir . '/isset-guard.pdf';
+    upload_service_convert_sample($pdfPng, $pdf);
+    expect(UploadService::uploadFilePdf('already-set', $pdf))->toBe('already-set');
+
+    $heic = $dir . '/isset-guard.heic';
+    upload_service_make_fake_heic($heic);
+    expect(UploadService::uploadFileHeic('already-set', $heic))->toBe('already-set');
+
+    $tiffPng = $dir . '/isset-guard-src2.png';
+    upload_service_make_sample_png($tiffPng);
+    $tiff = $dir . '/isset-guard.tiff';
+    upload_service_convert_sample($tiffPng, $tiff);
+    expect(UploadService::uploadFileTiff('already-set', $tiff))->toBe('already-set');
+
+    $psdPng = $dir . '/isset-guard-src3.png';
+    upload_service_make_sample_png($psdPng);
+    $psd = $dir . '/isset-guard.psd';
+    upload_service_convert_sample($psdPng, $psd);
+    expect(UploadService::uploadFilePsd('already-set', $psd))->toBe('already-set');
+
+    $epsPng = $dir . '/isset-guard-src4.png';
+    upload_service_make_sample_png($epsPng);
+    $eps = $dir . '/isset-guard.eps';
+    upload_service_convert_sample($epsPng, $eps);
+    expect(UploadService::uploadFileEps('already-set', $eps))->toBe('already-set');
+});
+
+/**
+ * Same rationale as the isset() guard test above -- only a genuinely
+ * convertible file, forced through a non-ext_imagick library setting,
+ * proves the library guard itself is what blocks the conversion (not the
+ * source file being unconvertible for some unrelated reason).
+ */
+test('the 5 ext_imagick handlers skip a real, otherwise-convertible file when the graphics library is not ext_imagick', function (): void {
+    $dir = upload_service_test_marker();
+    CurrentConfig::setGraphicsLibrary('gd');
+    try {
+        $pdfPng = $dir . '/library-guard-src.png';
+        upload_service_make_sample_png($pdfPng);
+        $pdf = $dir . '/library-guard.pdf';
+        upload_service_convert_sample($pdfPng, $pdf);
+        expect(UploadService::uploadFilePdf(null, $pdf))->toBeNull();
+
+        $heic = $dir . '/library-guard.heic';
+        upload_service_make_fake_heic($heic);
+        expect(UploadService::uploadFileHeic(null, $heic))->toBeNull();
+
+        $tiffPng = $dir . '/library-guard-src2.png';
+        upload_service_make_sample_png($tiffPng);
+        $tiff = $dir . '/library-guard.tiff';
+        upload_service_convert_sample($tiffPng, $tiff);
+        expect(UploadService::uploadFileTiff(null, $tiff))->toBeNull();
+
+        $psdPng = $dir . '/library-guard-src3.png';
+        upload_service_make_sample_png($psdPng);
+        $psd = $dir . '/library-guard.psd';
+        upload_service_convert_sample($psdPng, $psd);
+        expect(UploadService::uploadFilePsd(null, $psd))->toBeNull();
+
+        $epsPng = $dir . '/library-guard-src4.png';
+        upload_service_make_sample_png($epsPng);
+        $eps = $dir . '/library-guard.eps';
+        upload_service_convert_sample($epsPng, $eps);
+        expect(UploadService::uploadFileEps(null, $eps))->toBeNull();
+    } finally {
+        CurrentConfig::setGraphicsLibrary('auto');
+    }
+});
+
+/**
+ * Same rationale again, this time for the extension whitelist itself --
+ * a real PDF/TIFF/PSD/EPS source saved under the *wrong* extension is
+ * genuinely convertible content (ImageMagick sniffs format from magic
+ * bytes, same as the fake-HEIC technique above), so only this proves the
+ * extension check -- not some incidental file-content failure -- is what
+ * blocks it.
+ */
+test('the 5 ext_imagick handlers reject a real, otherwise-convertible file whose extension does not match', function (): void {
+    $dir = upload_service_test_marker();
+
+    $pdfPng = $dir . '/ext-guard-src.png';
+    upload_service_make_sample_png($pdfPng);
+    $mislabeledPdf = $dir . '/ext-guard-pdf.txt';
+    upload_service_convert_sample($pdfPng, $mislabeledPdf . '.pdf');
+    rename($mislabeledPdf . '.pdf', $mislabeledPdf);
+    expect(UploadService::uploadFilePdf(null, $mislabeledPdf))->toBeNull();
+
+    $mislabeledHeic = $dir . '/ext-guard.txt';
+    upload_service_make_fake_heic($mislabeledHeic);
+    expect(UploadService::uploadFileHeic(null, $mislabeledHeic))->toBeNull();
+
+    $tiffPng = $dir . '/ext-guard-src2.png';
+    upload_service_make_sample_png($tiffPng);
+    $mislabeledTiff = $dir . '/ext-guard-tiff.txt';
+    upload_service_convert_sample($tiffPng, $mislabeledTiff . '.tiff');
+    rename($mislabeledTiff . '.tiff', $mislabeledTiff);
+    expect(UploadService::uploadFileTiff(null, $mislabeledTiff))->toBeNull();
+
+    $psdPng = $dir . '/ext-guard-src3.png';
+    upload_service_make_sample_png($psdPng);
+    $mislabeledPsd = $dir . '/ext-guard-psd.txt';
+    upload_service_convert_sample($psdPng, $mislabeledPsd . '.psd');
+    rename($mislabeledPsd . '.psd', $mislabeledPsd);
+    expect(UploadService::uploadFilePsd(null, $mislabeledPsd))->toBeNull();
+
+    $epsPng = $dir . '/ext-guard-src4.png';
+    upload_service_make_sample_png($epsPng);
+    $mislabeledEps = $dir . '/ext-guard-eps.txt';
+    upload_service_convert_sample($epsPng, $mislabeledEps . '.eps');
+    rename($mislabeledEps . '.eps', $mislabeledEps);
+    expect(UploadService::uploadFileEps(null, $mislabeledEps))->toBeNull();
+});
+
+test('the 5 ext_imagick handlers log the exact file_path/representative_ext they were called with', function (): void {
+    $logDir = upload_service_test_marker() . '/handler-logs';
+    mkdir($logDir, 0o777, true);
+    CurrentLogger::set(new Logger(['severity' => Logger::INFO, 'directory' => $logDir, 'filename' => 'handlers.log']));
+
+    try {
+        UploadService::uploadFilePdf('pdf-ext', '/whatever/document.pdf');
+        UploadService::uploadFileHeic('heic-ext', '/whatever/photo.heic');
+        UploadService::uploadFileTiff('tiff-ext', '/whatever/photo.tiff');
+        UploadService::uploadFilePsd('psd-ext', '/whatever/layered.psd');
+        UploadService::uploadFileEps('eps-ext', '/whatever/vector.eps');
+
+        $logged = file_get_contents($logDir . '/handlers.log');
+        expect($logged)->toContain('uploadFilePdf, $file_path = /whatever/document.pdf, $representative_ext = pdf-ext')
+            ->toContain('uploadFileHeic, $file_path = /whatever/photo.heic, $representative_ext = heic-ext')
+            ->toContain('uploadFileTiff, $file_path = /whatever/photo.tiff, $representative_ext = tiff-ext')
+            ->toContain('uploadFilePsd, $file_path = /whatever/layered.psd, $representative_ext = psd-ext')
+            ->toContain('uploadFileEps, $file_path = /whatever/vector.eps, $representative_ext = eps-ext');
+    } finally {
+        CurrentLogger::set(new Logger(['severity' => Logger::OFF]));
+    }
+});
+
+test('uploadFilePdf actually applies pdfJpgQuality to the generated representative, not just a fixed default', function (): void {
+    // Comparing the SAME source converted at 2 wildly different qualities
+    // (rather than against ImageMagick's own unconfigured default, which
+    // is high enough to be a poor baseline) turns "was -quality even
+    // passed through?" into a reliable file-size signal.
+    $dir = upload_service_test_marker();
+    $png = $dir . '/quality-src.png';
+    $exec = 'convert -size 400x400 plasma: ' . escapeshellarg($png) . ' 2>&1';
+    exec($exec, $out, $status);
+    if ($status !== 0) {
+        throw new RuntimeException('convert (plasma source) failed: ' . implode("\n", $out));
+    }
+
+    CurrentConfig::setPdfJpgQuality(1);
+    try {
+        $lowPdf = $dir . '/quality-low.pdf';
+        upload_service_convert_sample($png, $lowPdf);
+        UploadService::uploadFilePdf(null, $lowPdf);
+        $lowSize = filesize($dir . '/pwg_representative/quality-low.jpg');
+    } finally {
+        CurrentConfig::setPdfJpgQuality(90);
+    }
+
+    CurrentConfig::setPdfJpgQuality(100);
+    try {
+        $highPdf = $dir . '/quality-high.pdf';
+        upload_service_convert_sample($png, $highPdf);
+        UploadService::uploadFilePdf(null, $highPdf);
+        $highSize = filesize($dir . '/pwg_representative/quality-high.jpg');
+    } finally {
+        CurrentConfig::setPdfJpgQuality(90);
+    }
+    if ($highSize === false) {
+        throw new RuntimeException('filesize (quality-high.jpg) failed');
+    }
+
+    expect($lowSize)->toBeLessThan((int) ($highSize / 2));
 });

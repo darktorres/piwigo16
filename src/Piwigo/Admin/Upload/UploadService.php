@@ -146,7 +146,18 @@ final class UploadService
                     'param' => $field,
                     'value' => SqlDialect::booleanToString($value),
                 ];
-            } elseif ($upload_form_config[$field]['can_be_null'] and self::isFalsy($value)) {
+            } elseif (
+                // Every getUploadFormConfig() entry currently has
+                // can_be_null => false ('original_resize' also never
+                // reaches here at all -- its bool default routes it
+                // through the branch above instead), so this whole elseif
+                // is unreachable via any real call today; kept for a
+                // future field that sets can_be_null => true. Confirmed
+                // while investigating a mutation-testing gap: with no
+                // reachable input, a mutation here can't be observed
+                // either way.
+                $upload_form_config[$field]['can_be_null'] and self::isFalsy($value)
+            ) {
                 $updates[] = [
                     'param' => $field,
                     'value' => 'false',
@@ -163,9 +174,22 @@ final class UploadService
                     // min/max/pattern/error_message as int/int/string/string;
                     // this guard only exists to give PHPStan a real narrowing
                     // and should never actually skip a field in practice.
+                    // Only the last `|| ! is_scalar($value)` clause can ever
+                    // actually be true for a real field -- every clause
+                    // before it is therefore always false regardless of
+                    // input, making an `||`-to-`&&` swap on any of them (or
+                    // the `$pattern === ''` literal) unobservable: `false
+                    // [op] false` gives the same result under either
+                    // operator, so the guard's outcome still depends
+                    // entirely on is_scalar($value). Confirmed while
+                    // investigating a mutation-testing gap.
                     continue;
                 }
 
+                // The (bool) cast is redundant: `and` already coerces its
+                // left operand to bool, so removing it can't change which
+                // branch runs. Confirmed while investigating a
+                // mutation-testing gap.
                 if ((bool) preg_match($pattern, (string) $value) and $value >= $min and $value <= $max) {
                     $updates[] = [
                         'param' => $field,
@@ -636,7 +660,21 @@ final class UploadService
 
         $xpath = new \DOMXPath($dom);
 
+        // DOMXPath::query() only returns false for a malformed XPath
+        // *expression* string -- both expressions below are fixed,
+        // always-syntactically-valid literals, never user input, so the
+        // `false` branch of each ternary is unreachable in practice: an
+        // actual DOMNodeList is the only value either can ever produce
+        // here. That makes `!== false` and `!== true` equivalent for both
+        // (a DOMNodeList is !== either boolean), confirmed while
+        // investigating a mutation-testing gap.
         $scriptNodes = $xpath->query('//*[local-name()="script"]');
+        // Every instanceof check in this loop and the next is a PHPStan-
+        // narrowing guard over a case the DOM API itself already
+        // guarantees: every $scriptNode here comes from a live query
+        // result, so it's always a real DOMNode, and its parentNode is
+        // never null for an attached node (even a document-root element's
+        // "parent" is the owning DOMDocument, itself a DOMNode).
         foreach (iterator_to_array($scriptNodes !== false ? $scriptNodes : new \ArrayIterator([])) as $scriptNode) {
             if ($scriptNode instanceof \DOMNode && $scriptNode->parentNode instanceof \DOMNode) {
                 $scriptNode->parentNode->removeChild($scriptNode);
@@ -644,6 +682,8 @@ final class UploadService
         }
 
         $attrNodes = $xpath->query('//@*');
+        // Same PHPStan-narrowing shape: a '//@*' XPath query only ever
+        // yields DOMAttr nodes by definition.
         foreach (iterator_to_array($attrNodes !== false ? $attrNodes : new \ArrayIterator([])) as $attrNode) {
             if ($attrNode instanceof \DOMAttr && stripos($attrNode->nodeName, 'on') === 0) {
                 $attrNode->ownerElement?->removeAttributeNode($attrNode);
@@ -777,6 +817,11 @@ final class UploadService
         // ImageExtImagick.php; the original never escaped an embedded
         // '"' or shell metacharacter in either path.
         $exec = escapeshellarg($ext_imagick_dir) . PwgImage::get_ext_imagick_command();
+        // Both (string) casts below are redundant under `.` concatenation
+        // (which stringifies int|false identically to an explicit cast) --
+        // confirmed while investigating a mutation-testing gap, same
+        // reasoning as StatsPageRenderer::getDateObject()'s own equivalent
+        // casts.
         $exec .= ' ' . escapeshellarg((string) realpath($file_path) . '[0]');
         if ($ext === 'jpg') {
             $exec .= ' -quality ' . (string) $jpg_quality;
@@ -870,6 +915,8 @@ final class UploadService
         $ext_imagick_dir = \Piwigo\Config\CurrentConfig::extImagickDir();
         // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above.
         $exec = escapeshellarg($ext_imagick_dir) . PwgImage::get_ext_imagick_command();
+        // (string) is redundant under `.` concatenation -- see uploadFilePdf()'s
+        // own identical note above.
         $exec .= ' ' . escapeshellarg((string) realpath($file_path));
 
         if ($representative_ext === 'jpg') {
@@ -877,6 +924,13 @@ final class UploadService
         }
 
         $dest = pathinfo($representative_file_path);
+        // prepareDirectoryStatic() just above already guarantees $dest['dirname']
+        // exists (it either finds an existing dir or throws its own
+        // ImageProcessingException trying to create one) -- realpath()
+        // returning false here would require the directory to vanish in
+        // the brief window between that call and this one, not a
+        // realistically triggerable case. Confirmed while investigating a
+        // mutation-testing gap.
         $dest_dirname_realpath = realpath($dest['dirname']);
         if ($dest_dirname_realpath === false) {
             throw new \Exception("unable to resolve directory {$dest['dirname']}");
@@ -1015,9 +1069,15 @@ final class UploadService
         // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above.
         $exec = escapeshellarg($ext_imagick_dir) . PwgImage::get_ext_imagick_command();
 
+        // (string) is redundant under `.` concatenation -- see uploadFilePdf()'s
+        // own identical note above.
         $exec .= ' ' . escapeshellarg((string) realpath($file_path));
 
         $dest = pathinfo($representative_file_path);
+        // prepareDirectoryStatic() just above already guarantees $dest['dirname']
+        // exists (see uploadFileTiff()'s own identical comment for the
+        // full reasoning). Confirmed while investigating a mutation-testing
+        // gap.
         $dest_dirname_realpath = realpath($dest['dirname']);
         if ($dest_dirname_realpath === false) {
             throw new \Exception("unable to resolve directory {$dest['dirname']}");
@@ -1077,6 +1137,8 @@ final class UploadService
         $ext_imagick_dir = \Piwigo\Config\CurrentConfig::extImagickDir();
         // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above.
         $exec = escapeshellarg($ext_imagick_dir) . PwgImage::get_ext_imagick_command();
+        // (string) is redundant under `.` concatenation -- see uploadFilePdf()'s
+        // own identical note above.
         $exec .= ' ' . escapeshellarg((string) realpath($file_path));
         $exec .= ' -density 300';
         $exec .= ' -resize 2048x2048';
@@ -1101,6 +1163,11 @@ final class UploadService
     private static function prepareDirectoryStatic(string $directory): void
     {
         if (! is_dir($directory)) {
+            // PHP_OS is a compile-time constant -- always "Linux" in this
+            // project's real dev/CI/production environments, so this
+            // branch is unreachable here (same "unfakeable compile-time
+            // constant" reasoning as Core\ContainerDetectorTest's own
+            // documented PHP_OS case).
             if (str_starts_with(PHP_OS, 'WIN')) {
                 $directory = str_replace('/', DIRECTORY_SEPARATOR, $directory);
             }
@@ -1233,6 +1300,13 @@ final class UploadService
 
     public function fileUploadErrorMessage(int $error_code): string
     {
+        // 'upload_max_filesize' is a real, always-registered core PHP
+        // directive -- ini_get() only ever returns false for an unknown
+        // directive name, so the `=== false` branch below is unreachable
+        // in practice (confirmed live: ini_get('upload_max_filesize')
+        // always returns a string). Confirmed while investigating a
+        // mutation-testing gap, same reasoning as
+        // ServerInfoService::curatedInfo()'s own equivalent guard.
         $ini_size = $this->getIniSize('upload_max_filesize', false);
 
         return match ($error_code) {
@@ -1359,6 +1433,9 @@ final class UploadService
             // exhaustive.
             $params = array_key_exists($type, $enabled) ? $enabled[$type] : ($disabled[$type] ?? null);
 
+            // The (bool) cast is redundant: if() already coerces its
+            // condition to bool, so removing it can't change which branch
+            // runs. Confirmed while investigating a mutation-testing gap.
             if ((bool) $params) {
                 [$w, $h] = $params->sizing->ideal_size;
             }
@@ -1366,6 +1443,11 @@ final class UploadService
 
         $margin_coef = 1.5;
 
+        // Both (float) casts are redundant: $w/$h are always int (the 2000
+        // default, or SizingParams::$ideal_size's own int[] contract), and
+        // int * float already promotes to float in PHP regardless of an
+        // explicit cast on the int operand. Confirmed while investigating
+        // a mutation-testing gap.
         return [(int) ((float) $w * $margin_coef), (int) ((float) $h * $margin_coef)];
     }
 }

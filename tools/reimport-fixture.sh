@@ -29,6 +29,17 @@
 # Reads DB credentials from .env.test, same variables IntegrationTestCase.php
 # uses (PIWIGO_DB_HOST/USER/PASSWORD/BASE/PREFIX) — no PIWIGO_DB_PORT support,
 # matching that class, which doesn't read one either.
+#
+# `piwigo_sites` id=1's own `galleries_url` is committed in the fixture as
+# an absolute filesystem path (Piwigo\Core\Paths::$root . 'galleries/',
+# matching exactly what Admin\Install\InstallWizard seeds it with on a real
+# install) -- inherently tied to wherever *that* install's checkout lived,
+# not portable data. Every checkout of this repo lives at a different path,
+# so this is corrected here, at fixture-load time, the same way PIWIGO_TEST_NOW
+# is environment-injected rather than baked into the fixture -- not a
+# one-off patch. IntegrationTestCase::loadFixture() applies the identical
+# correction for its own separate (non-shell-script) import path, since
+# PHPUnit's Integration/Contract suites never invoke this script.
 
 set -euo pipefail
 
@@ -58,6 +69,12 @@ done
 # for the whole suite) rather than per-test, now that a second file hit the
 # same wall.
 mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" -e "INSERT INTO ${PIWIGO_DB_PREFIX}themes (id, version, name) VALUES ('default', '1.0.0', 'Default') ON DUPLICATE KEY UPDATE name = 'Default';"
+
+# This script always runs from the project root (composer.json's own
+# `test:browser`/`test:visual` scripts invoke it as `bash tools/reimport-fixture.sh`
+# from there) -- $(pwd)/ is this checkout's real Paths::$root value.
+real_root="$(pwd)/"
+mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" -e "UPDATE ${PIWIGO_DB_PREFIX}sites SET galleries_url = '${real_root}galleries/' WHERE id = 1;"
 
 sudo rm -rf _data/cache/piwigo.*/
 sudo rm -rf _data/combined/*

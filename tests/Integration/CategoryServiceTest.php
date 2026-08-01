@@ -12,6 +12,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Config\CurrentConfigService;
     use Piwigo\Core\ActivityLoggerInterface;
+    use Piwigo\Core\CurrentPaths;
     use Piwigo\Core\HtmlRenderingInterface;
     use Piwigo\Core\PageState;
     use Piwigo\Core\RedirectServiceInterface;
@@ -917,7 +918,13 @@ final class CategoryServiceTest extends IntegrationTestCase
                 ->where('id = 1')
                 ->executeQuery()
                 ->fetchOne();
-            self::assertSame('/home/torres/piwigo17-rewrite/galleries/sample-album/fixture-photo-1.jpg', $path);
+            // Piwigo\Core\Paths::$root-derived, not a hardcoded literal --
+            // same "machine-specific, not portable" reasoning as
+            // SiteRepositoryTest's own galleries_url assertion; site id=1's
+            // own galleries_url (this method's real data source) is
+            // corrected to match at fixture-load time, see
+            // IntegrationTestCase::loadFixture()'s own docblock.
+            self::assertSame(CurrentPaths::get()->root . 'galleries/sample-album/fixture-photo-1.jpg', $path);
         } finally {
             $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET dir = NULL, site_id = NULL WHERE id = 1");
             $this->conn->executeStatement("UPDATE " . Tables::images() . " SET storage_category_id = NULL, path = 'upload/2026/08/01/20260801000000-2e7e64c7.jpg' WHERE id = 1");

@@ -14,6 +14,7 @@ use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\Tables;
 use Piwigo\Db\TablePrefixListener;
 
 /**
@@ -284,6 +285,22 @@ abstract class IntegrationTestCase extends TestCase
         // keep serving whatever config rows it cached before this fixture
         // replaced them.
         \Piwigo\Cache\CachePools::config()->clear();
+
+        // `piwigo_sites` id=1's own `galleries_url` is committed in the
+        // fixture as an absolute filesystem path (Piwigo\Core\Paths::$root
+        // . 'galleries/', matching exactly what Admin\Install\InstallWizard
+        // seeds it with on a real install) -- inherently tied to wherever
+        // *that* install's checkout lived, not portable data. Every
+        // checkout of this repo lives at a different path, so this is
+        // corrected here, at fixture-load time (same "environment-injected,
+        // never fixture-baked" treatment as PIWIGO_TEST_NOW), rather than
+        // left for whichever test happens to read it first to discover it's
+        // stale. tools/reimport-fixture.sh applies the identical correction
+        // for its own separate (shell, not PHPUnit) import path.
+        DbConnection::build()->executeStatement(
+            'UPDATE ' . Tables::sites() . ' SET galleries_url = ? WHERE id = 1',
+            [CurrentPaths::get()->root . 'galleries/']
+        );
 
         $this->settleDatabase();
     }

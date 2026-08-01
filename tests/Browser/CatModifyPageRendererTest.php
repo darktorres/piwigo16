@@ -196,8 +196,11 @@ it('shows the real physical directory info for a non-virtual (disk-synced) album
     // tests/Fixtures/piwigo-17.0.sql's own INSERT INTO piwigo_categories
     // row. A non-virtual (site-synced) album needs a real `dir` + `site_id`,
     // which only a direct raw-SQL row can provide here; site_id=1 is the
-    // fixture's own real `piwigo_sites` row
-    // ('/home/torres/piwigo17-rewrite/galleries/').
+    // fixture's own real `piwigo_sites` row, its `galleries_url` corrected
+    // to this checkout's own Paths::$root at fixture-load time (not the
+    // literal committed in the fixture -- see
+    // tools/reimport-fixture.sh's own docblock for why it can't be).
+    $realRoot = dirname(__DIR__, 2) . '/';
     $dirName = 'physical_test_dir_' . uniqid();
     $db->query(sprintf(
         "INSERT INTO %scategories (name, dir, site_id, status, uppercats) VALUES ('Physical Test Album', '%s', 1, 'public', '0')",
@@ -222,7 +225,7 @@ it('shows the real physical directory info for a non-virtual (disk-synced) album
         $page->assertAttribute(
             '.cat-modify-info-subcontent.directory',
             'title',
-            '/home/torres/piwigo17-rewrite/galleries/' . $dirName
+            $realRoot . 'galleries/' . $dirName
         );
     } finally {
         $db->query(sprintf('DELETE FROM %scategories WHERE id = %d', $prefix, $albumId));

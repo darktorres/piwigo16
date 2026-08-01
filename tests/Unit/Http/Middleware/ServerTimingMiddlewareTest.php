@@ -40,6 +40,20 @@ test('no header when disabled', function (): void {
     expect($response->hasHeader('Server-Timing'))->toBeFalse();
 });
 
+test('no header when explicitly set to an empty string, not just when unset', function (): void {
+    // Kills line 28's EmptyStringToNotEmpty: the existing "no header
+    // when disabled" test above only reaches the $enabled === false
+    // branch (a genuinely unset env var) -- an explicitly empty (but
+    // set) value is a different code path through the same guard.
+    putenv('SERVER_TIMING_ENABLED=');
+    ServerTiming::start('boot');
+    ServerTiming::stop('boot');
+
+    $response = new ServerTimingMiddleware()->process(new ServerRequest('GET', '/'), serverTimingPassthroughHandler());
+
+    expect($response->hasHeader('Server-Timing'))->toBeFalse();
+});
+
 test('no header when enabled but nothing was recorded', function (): void {
     putenv('SERVER_TIMING_ENABLED=1');
 

@@ -46,3 +46,9 @@ test('guessMimeType maps both html-family extensions to text/html', function ():
     expect(callGuessMimeType('html'))->toBe('text/html')
         ->and(callGuessMimeType('htm'))->toBe('text/html');
 });
+
+test('guessMimeType matches case-insensitively', function (): void {
+    // Every case above passes a pre-lowercased extension, which can't
+    // tell the real strtolower() call apart from a mutated no-op.
+    expect(callGuessMimeType('JPG'))->toBe('image/jpeg');
+});

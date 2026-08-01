@@ -41,6 +41,18 @@ test('add* methods accumulate into the singleton', function (): void {
         ->and($state->hasErrors())->toBeTrue();
 });
 
+test('addDebugOutput appends to prior debug output rather than replacing it', function (): void {
+    // Kills line 308's ConcatEqualToEqual (`=` instead of `.=`): a
+    // single call can't distinguish append from overwrite (both start
+    // from the same empty string) -- a second call is needed to prove
+    // the first line survives.
+    $state = PageState::current();
+    $state->addDebugOutput('first line');
+    $state->addDebugOutput('second line');
+
+    expect($state->debugOutput)->toBe('first linesecond line');
+});
+
 test('setMetaRobots replaces the whole map, setMetaRobotsFlag adds to it', function (): void {
     $state = PageState::current();
     $state->setMetaRobots(['noindex' => 1]);

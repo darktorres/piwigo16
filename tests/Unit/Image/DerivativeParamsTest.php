@@ -31,6 +31,14 @@ test('add_url_tokens delegates to the sizing object', function (): void {
     expect($tokens)->toBe(['s100x200']);
 });
 
+/**
+ * Confirmed-equivalent: line 72's UnwrapArrayMap (`array_map(intval(...),
+ * $scale_size)` instead of the bare $scale_size). Every assignment to
+ * $scale_size[0]/[1] inside SizingParams::compute()'s non-null branch is
+ * already an int -- either $this->ideal_size[N] (documented `int[]`) or
+ * an explicit `(int) floor(...)` cast -- so by the time compute_final_size()
+ * reads it back, array_map(intval(...)) has nothing left to convert.
+ */
 test('compute_final_size returns the scaled-down size when scaling occurs', function (): void {
     $params = new DerivativeParams(SizingParams::classic(100, 100));
     $params->sizing->max_crop = 0.0;
@@ -59,6 +67,26 @@ test('is_identity is true only when the input fits within the ideal size on both
     expect($params->is_identity([100, 100]))->toBeTrue();
     expect($params->is_identity([200, 50]))->toBeFalse();
     expect($params->is_identity([50, 200]))->toBeFalse();
+});
+
+test('is_identity compares width against width and height against height independently, not a swapped pair', function (): void {
+    // Kills line 97's IncrementInteger and line 98's DecrementInteger
+    // (both swap which ideal_size element a given in_size element is
+    // compared against) -- indistinguishable from the sibling test above
+    // with its square 100x100 ideal_size, since swapping identical
+    // values changes nothing observable. A non-square ideal_size is
+    // required.
+    $params = new DerivativeParams(SizingParams::classic(200, 100));
+
+    // Fits ideal width (200) but exceeds ideal height (100) when read
+    // straight; a width<->height swap on the FIRST comparison would
+    // instead check in_size[0] against ideal_size[1] (100), wrongly
+    // failing this on width alone.
+    expect($params->is_identity([150, 50]))->toBeTrue();
+    // Fits ideal height (100) but exceeds ideal width (200) when read
+    // straight; a swap on the SECOND comparison would instead check
+    // in_size[1] against ideal_size[0] (200), wrongly passing this.
+    expect($params->is_identity([50, 150]))->toBeFalse();
 });
 
 test('will_watermark is always false when use_watermark is off', function (): void {
@@ -105,6 +133,44 @@ test('will_watermark is true once the output is at least as large as the waterma
 
         expect($params->will_watermark([600, 400]))->toBeTrue();
         expect($params->will_watermark([400, 400]))->toBeFalse();
+    } finally {
+        ImageStdParams::set_watermark($originalWatermark);
+    }
+});
+
+test('will_watermark compares each dimension independently, against exactly its own min_size element, not a swapped or off-by-one pair', function (): void {
+    // Kills line 112's SmallerOrEqualToSmaller/IncrementInteger and line
+    // 113's SmallerOrEqualToSmaller/DecrementInteger (x2) -- the sibling
+    // test above uses a SQUARE min_size (500x500), so a width<->height
+    // element swap on either comparison changes nothing observable. A
+    // non-square min_size, plus boundary (`<=` vs `<`) values, is
+    // required to distinguish all 5.
+    $originalWatermark = ImageStdParams::get_watermark();
+
+    try {
+        $watermark = new WatermarkParams();
+        $watermark->min_size = [100, 300];
+        ImageStdParams::set_watermark($watermark);
+
+        $params = new DerivativeParams(SizingParams::classic(800, 600));
+        $params->use_watermark = true;
+
+        // Exactly meets the WIDTH condition (100 <= 100) at the boundary;
+        // fails the height condition outright -- kills the first
+        // comparison's `<=`->`<` (would now read 100<100, false) and its
+        // min_size[0]->min_size[1] swap (would compare 300<=100, also
+        // false), either of which would wrongly flip this to false.
+        expect($params->will_watermark([100, 50]))->toBeTrue();
+        // Exactly meets the HEIGHT condition (300 <= 300) at the
+        // boundary; fails the width condition outright -- kills the
+        // second comparison's `<=`->`<` and its out_size[1]->out_size[0]
+        // swap (would compare 300<=50, false), either of which would
+        // wrongly flip this to false.
+        expect($params->will_watermark([50, 300]))->toBeTrue();
+        // Fails both conditions when read straight -- but the second
+        // comparison's min_size[1]->min_size[0] swap would instead check
+        // 100<=150 (true), wrongly flipping this to true.
+        expect($params->will_watermark([50, 150]))->toBeFalse();
     } finally {
         ImageStdParams::set_watermark($originalWatermark);
     }

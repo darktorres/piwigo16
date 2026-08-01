@@ -160,6 +160,62 @@ afterEach(function (): void {
     CurrentConfig::reset();
 });
 
+test('mkgetdir applies the requested mode exactly, via a real umask(0) during creation', function (): void {
+    // Kills line 102's IncrementInteger (umask(0) -> umask(1)): a
+    // non-zero process umask strips bits from the requested mode during
+    // mkdir() -- a chmod value with every bit set is the only way to
+    // observe ANY stripped bit, regardless of which specific one.
+    CurrentConfig::setChmodValue(0o777);
+    $dir = $this->root . '/full-perms';
+
+    FilesystemHelper::mkgetdir($dir);
+
+    expect(fileperms($dir) & 0o777)->toBe(0o777);
+});
+
+test('mkgetdir restores the process umask after creating a directory, not leaving it at 0', function (): void {
+    // Kills line 111's RemoveFunctionCall: leaving the process-wide
+    // umask at 0 would silently affect every other file/directory this
+    // same process creates afterward, including unrelated ones. Pinned
+    // to an explicit, known value (not just "whatever umask() reads
+    // right now") -- a real, separate bug elsewhere in this codebase
+    // (UploadService::prepare_directory(), itself calling a bare
+    // umask(0000) with no restore of its own) can leave the process-wide
+    // umask corrupted at 0 for the rest of a shared PHPUnit/Pest worker,
+    // which would make a before/after comparison against the ambient
+    // value pass even under this exact mutation.
+    $originalUmask = umask(0o022);
+    $dir = $this->root . '/umask-restore-check';
+
+    try {
+        FilesystemHelper::mkgetdir($dir);
+
+        expect(umask())->toBe(0o022);
+    } finally {
+        umask($originalUmask);
+    }
+});
+
+test('mkgetdir does not create a missing parent when the recursive flag is unset', function (): void {
+    // Kills line 110's BitwiseAndToBitwiseOr and FalseToTrue: without
+    // MKGETDIR_RECURSIVE, mkdir()'s own recursive argument must stay
+    // false -- a multi-level missing path can only be created non-
+    // recursively when its own immediate parent already exists.
+    $dir = $this->root . '/missing-parent/child';
+
+    // mkdir()'s own non-recursive failure on a missing immediate parent
+    // is a real PHP warning, not `@`-suppressed at the source call site.
+    set_error_handler(static fn (): bool => true);
+    try {
+        $result = FilesystemHelper::mkgetdir($dir, FilesystemHelper::MKGETDIR_NONE);
+    } finally {
+        restore_error_handler();
+    }
+
+    expect($result)->toBeFalse()
+        ->and(is_dir($dir))->toBeFalse();
+});
+
 test('mkgetdir creates a new directory and protects it with index.htm under the default flags', function (): void {
     $dir = $this->root . '/gallery';
 
@@ -239,6 +295,29 @@ test('mkgetdir throws when an already-existing directory has lost its write perm
         ->toThrow(\RuntimeException::class, $dir . ' no write access');
 });
 
+/**
+ * A mutation-testing sweep found several more confirmed-equivalent
+ * mutants in mkgetdir(), all verified live via temporary sed-applied
+ * mutations against this file's own existing test suite:
+ * - Line 99's `str_starts_with(PHP_OS, 'WIN')` (IfNegated,
+ *   StrStartsWithToStrEndsWith): the same platform-gated dead branch
+ *   this file's own top docblock already documents -- PHP_OS is fixed
+ *   for the whole process on this Linux environment.
+ * - Line 110's RemoveBooleanCast (on the ternary's own recursive-flag
+ *   condition) and every other RemoveBooleanCast in this method (lines
+ *   118/121/123/125/127/131, all `(bool) (...)` inside an `if`/`!`/`or`
+ *   context): the surrounding boolean context already coerces its
+ *   operand the same way an explicit cast would.
+ * - Line 117's whole `$mkd === false && ! is_dir($dir)` guard
+ *   (IdenticalToNotIdentical, BooleanAndToBooleanOr, FalseToTrue,
+ *   RemoveNot, all 4 verified together) and line 119's own
+ *   RemoveEarlyReturn (`return false;` right after it): every mutated
+ *   variant either still enters the fail branch (where DIE_ON_ERROR-set
+ *   already threw a line earlier, making the return itself unreachable
+ *   either way) or falls through to the structurally identical `!
+ *   is_writable($dir)` guard a few lines below, which throws/returns
+ *   the exact same message either way.
+ */
 test('nearestExistingAncestor walks up to the dirname()-fixed-point root and stops there when no ancestor is ever visible', function (): void {
     // Every real ancestor on this actual filesystem (up to and including
     // '/') genuinely exists, so is_dir() always finds a stopping point
@@ -290,6 +369,80 @@ test('nearestExistingAncestor walks up to the dirname()-fixed-point root and sto
 
     expect($exit)->toBe(0, 'nearestExistingAncestor subprocess failed: ' . ($stderr === '' ? '(no stderr)' : $stderr));
     expect(json_decode($stdout, true))->toBe(['result' => '/']);
+});
+
+test('deltree returns true when rmdir succeeds directly, with no trash_path needed', function (): void {
+    $victim = $this->root . '/empty-deletable';
+    mkdir($victim);
+
+    expect(FilesystemHelper::deltree($victim))->toBeTrue()
+        ->and(is_dir($victim))->toBeFalse();
+});
+
+test('deltree does not crash when opendir fails on a directory it cannot list', function (): void {
+    // Kills line 225's FalseToTrue: opendir() only ever returns a
+    // resource or false, never the literal boolean true -- a mutated
+    // `!== true` check is ALWAYS true regardless of success/failure,
+    // wrongly entering the while loop and calling readdir() on a bare
+    // `false`, a real TypeError (confirmed live via a temporary
+    // sed-applied mutation). 0000 permissions (not just non-executable,
+    // which this sandboxed environment's own CAP_DAC_READ_SEARCH-like
+    // behavior tolerates -- confirmed live) reliably makes opendir()
+    // fail while is_dir() still reports true.
+    $victim = $this->root . '/unlistable';
+    mkdir($victim);
+    chmod($victim, 0o000);
+
+    set_error_handler(static fn (): bool => true);
+    try {
+        $result = FilesystemHelper::deltree($victim);
+    } finally {
+        restore_error_handler();
+        // rmdir() only needs write access on $victim's own parent (this
+        // test's $this->root, untouched), so a successful deltree()
+        // already removed $victim entirely -- nothing left to chmod.
+        if (is_dir($victim)) {
+            chmod($victim, 0o755);
+        }
+    }
+
+    expect($result)->toBeTrue();
+});
+
+test('deltree treats an empty-string trash_path the same as no trash_path at all', function (): void {
+    // Kills line 247's EmptyStringToNotEmpty.
+    $parent = $this->root . '/undeletable-parent-empty-trash';
+    mkdir($parent);
+    $victim = $parent . '/victim';
+    mkdir($victim);
+    chmod($parent, 0o555);
+
+    $result = FilesystemHelper::deltree($victim, '');
+
+    chmod($parent, 0o755);
+    expect($result)->toBeFalse();
+});
+
+test('deltree creates a genuinely nested trash_path, proving the recursive flag survives the flags computation', function (): void {
+    // Kills line 249's BitwiseOrToBitwiseAnd: pairing MKGETDIR_RECURSIVE
+    // & MKGETDIR_DIE_ON_ERROR (instead of |) zeroes out both bits,
+    // leaving only MKGETDIR_PROTECT_HTACCESS -- every other trash_path
+    // test in this file uses a single-level trash dir directly under an
+    // already-existing root, where non-recursive creation would
+    // silently succeed anyway; a genuinely multi-level missing
+    // trash_path is the only way to observe the recursive bit's loss.
+    $parent = $this->root . '/undeletable-parent-nested-trash';
+    mkdir($parent);
+    $victim = $parent . '/victim';
+    mkdir($victim);
+    chmod($parent, 0o555);
+    $trash = $this->root . '/deep/nested/trash';
+
+    $result = FilesystemHelper::deltree($victim, $trash);
+
+    chmod($parent, 0o755);
+    expect($result)->toBeNull()
+        ->and(is_dir($trash))->toBeTrue();
 });
 
 test('deltree returns null immediately for a path that is not a directory', function (): void {
@@ -371,11 +524,34 @@ test('deltree actually renames an undeletable directory into the trash path when
 
     $trashEntries = array_values(array_diff(scandir($trash) !== false ? scandir($trash) : [], ['.', '..', '.htaccess']));
     expect($trashEntries)->toHaveCount(1);
+    // Kills line 251's UnwrapMd5: an md5() hash is always exactly 32
+    // lowercase hex characters, unlike uniqid()'s own raw (timestamp +
+    // entropy) format -- proves the hashing actually ran, not just that
+    // *some* unique-looking name was used.
+    expect($trashEntries[0])->toMatch('/^[a-f0-9]{32}$/');
     $movedDir = $trash . '/' . $trashEntries[0];
     chmod($movedDir, 0o755); // restore so this test's own afterEach cleanup can traverse it
     expect(file_get_contents($movedDir . '/leaf.txt'))->toBe('leaf contents');
 });
 
+/**
+ * Also confirmed-equivalent this sweep (both verified live via
+ * temporary sed-applied mutations against this file's own existing
+ * suite): line 251's own RemoveBooleanCast (redundant, same `while`-
+ * context coercion pattern as the mkgetdir() cluster above) and
+ * TrueToFalse (uniqid()'s own more-entropy flag never changes the
+ * OUTPUT FORMAT md5() then normalizes away, only its underlying
+ * randomness source); line 260's RemoveEarlyReturn (the trash_path
+ * branch's own `return null;`, once removed, falls through to this
+ * same method's final line -- also a bare `return null;`, identical
+ * either way); and lines 236/296's RemoveFunctionCall on closedir() (in
+ * deltree() and getCacheSizeDerivatives() respectively) -- PHP's own
+ * refcounted resource GC already closes a directory handle once its
+ * local variable goes out of scope at function return, confirmed live
+ * via a real /proc/self/fd descriptor-count check across 10 repeated
+ * calls with the closedir() call removed: the count never grows past
+ * its first-call baseline, ruling out a genuine per-call leak.
+ */
 test('getCacheSizeDerivatives sums file sizes per two-character derivative code across nested directories', function (): void {
     $root = $this->root . '/cache-sizes';
     mkdir($root);
@@ -407,3 +583,37 @@ test('getCacheSizeDerivatives returns an empty array for a directory with no mat
 test('getCacheSizeDerivatives returns an empty array for a non-existent path', function (): void {
     expect(FilesystemHelper::getCacheSizeDerivatives($this->root . '/never-existed'))->toBe([]);
 });
+
+test('getCacheSizeDerivatives accumulates multiple files sharing the same size code within one directory', function (): void {
+    // Kills line 288's CoalesceRemoveLeft: the "sums file sizes...
+    // nested directories" test above only ever repeats a size code
+    // ACROSS directories (via the separate cross-directory merge a few
+    // lines down), never within the SAME directory's own flat
+    // accumulation -- forcing that `?? 0` to always be 0 (discarding
+    // whatever was already accumulated) is invisible unless two files
+    // with the identical code live side by side in one directory.
+    $root = $this->root . '/cache-sizes-same-code';
+    mkdir($root);
+    file_put_contents($root . '/photo1-sq.jpg', str_repeat('a', 50));
+    file_put_contents($root . '/photo2-sq.jpg', str_repeat('b', 70));
+
+    expect(FilesystemHelper::getCacheSizeDerivatives($root))->toBe(['sq' => 120]);
+});
+
+/**
+ * Not chased further this sweep, both confirmed-equivalent for every
+ * realistic input (verified live via temporary sed-applied mutations):
+ * line 287's FalseToTrue/DecrementInteger/IncrementInteger, guarding
+ * `filesize() === false` -- a broken symlink (the only realistic way a
+ * directory entry's filesize() could fail) already fails this method's
+ * own preceding is_file() check, so the guarded branch is never
+ * reachable to begin with; and line 289's ConcatRemoveRight,
+ * `is_dir($path . '/' . $node)` -> `is_dir($path . '/')` (always true,
+ * since we're already inside `if (is_dir($path))`) -- the RECURSIVE
+ * CALL's own argument is a separate, unmutated expression, so a real
+ * subdirectory still recurses into the exact same real path either way,
+ * and a non-file/non-dir entry (e.g. a broken symlink) recurses into a
+ * non-existent nested path under both real and mutant code, which
+ * harmlessly returns an empty array either way (confirmed live with a
+ * broken symlink present).
+ */

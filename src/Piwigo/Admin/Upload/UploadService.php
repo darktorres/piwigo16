@@ -1171,9 +1171,19 @@ final class UploadService
             if (str_starts_with(PHP_OS, 'WIN')) {
                 $directory = str_replace('/', DIRECTORY_SEPARATOR, $directory);
             }
-            umask(0000);
+            // Real bug, found live via mutation testing on FilesystemHelper::
+            // mkgetdir()'s own sibling umask(0)/restore pair: this method
+            // never restored the process-wide umask afterward, permanently
+            // corrupting it to 0 for the rest of the request (or, in a
+            // shared PHPUnit/Pest worker, for every later test too) --
+            // matches piwigo16-rewrite's own reference UploadService, which
+            // delegates directory creation to Filesystem::mkgetdir() instead
+            // of reimplementing it here without the restore.
+            $umask = umask(0000);
             $recursive = true;
-            if (! @mkdir($directory, 0777, $recursive)) {
+            $created = @mkdir($directory, 0777, $recursive);
+            umask($umask);
+            if (! $created) {
                 throw new ImageProcessingException('[prepare_directory] cannot create directory "' . $directory . '"');
             }
         }

@@ -39,7 +39,45 @@ use Piwigo\Core\Paths;
  *   this method registers is a guaranteed no-op by the time it actually
  *   runs -- it can't collide with anything.
  *
- * Given both of those, the first test below now triggers the real
+ * Mutation-testing sweep (batch 18, 2026-08-01): 14 mutations initially
+ * showed UNTESTED. Each verified individually via a live sed-applied
+ * mutation rerun (not assumed from reasoning alone):
+ *
+ * - 10 of them (lines 29, 33, 37, 39, and 40's whole shutdown-closure
+ *   removal) are already genuinely killed by the two existing
+ *   subprocess tests below (the `-n`-without-pcov one, and the "real
+ *   deferred shutdown handler" one): each mutation either makes the
+ *   guard return too early (no dump file gets written where real code
+ *   writes one) or too late (a dump file gets written under a
+ *   corrupted path/using a `\pcov\start()` that never happened, where
+ *   real code correctly skips it), and the shutdown-handler test's own
+ *   `is_dir()`/`glob()`/`unserialize()` assertions catch every one of
+ *   these. `pest --mutate` can't see it: the same proc_open()
+ *   subprocess-invisibility as
+ *   feedback_pest_mutate_invisible_to_subprocess_tests, not an
+ *   unaddressed gap.
+ * - 2 more (line 25's RemoveNot and line 26's RemoveEarlyReturn) need a
+ *   genuinely NEW subprocess test: both existing subprocess tests set
+ *   testModeIsActive() to TRUE (via HTTP_X_PIWIGO_ENV), so the `if (!
+ *   active)` branch's own `return;` is never even reached in either of
+ *   them -- a mutation to code that never executes can't be observed no
+ *   matter what the rest of the test asserts. See the dedicated new
+ *   test below (testModeIsActive() genuinely false, everything else
+ *   passing) added specifically to reach it.
+ * - 1 more (line 30's RemoveEarlyReturn) has the same problem in
+ *   reverse: both existing subprocess tests set the coverage header to
+ *   '1', so line 30's `return;` (which only fires when the header is
+ *   ABSENT or wrong) never executes there either. See the second new
+ *   test below (testModeIsActive() true, coverage header genuinely
+ *   absent).
+ * - The remaining 2 (line 25's IfNegated and line 33's IfNegated) are
+ *   genuinely, provably equivalent regardless of any test: both turn
+ *   `if (!X)` into `if (!!X)`, and double negation is definitionally
+ *   identical to the original for any boolean X -- there is no value
+ *   of Env::testModeIsActive() or extension_loaded('pcov') for which
+ *   `!X` and `!!X` could ever disagree.
+ *
+ * Given both of the pcov-safety findings above, the first test below now triggers the real
  * activation path (both guards passing, pcov loaded) directly in-process,
  * the same way the existing two guard tests already did for the first two
  * early returns -- this is what gives lines 33 and 37 real, tool-attributed
@@ -308,6 +346,115 @@ test('the real deferred shutdown handler writes a genuine per-request pcov dump 
         expect($raw)->toHaveKey($collectorFile);
         expect($raw[$collectorFile][39] ?? null)->toBe(1);
         expect($raw[$collectorFile][40] ?? null)->toBe(1);
+    } finally {
+        exec('rm -rf ' . escapeshellarg($tmpRoot));
+    }
+});
+
+/**
+ * Closes line 25's RemoveNot and line 26's RemoveEarlyReturn: neither
+ * mutation is observable from either subprocess test above, since both
+ * of those set testModeIsActive() to true (making the `if (! active)`
+ * branch's own `return;` dead code from their point of view). This
+ * test genuinely sets testModeIsActive() to FALSE (no HTTP_X_PIWIGO_ENV
+ * header at all) while leaving the coverage header and pcov both
+ * correctly primed to pass, so the ONLY thing standing between real
+ * code and a dump file is this specific guard -- confirmed live via a
+ * sed-applied RemoveNot/RemoveEarlyReturn mutation rerun: real code
+ * writes 0 dump files here, either mutation writes 1.
+ */
+test('registerIfActive writes no dump file when test mode is genuinely not active, even with pcov loaded and the coverage header set', function (): void {
+    $autoloadPath = dirname(__DIR__, 3) . '/vendor/autoload.php';
+    expect(is_file($autoloadPath))->toBeTrue();
+
+    $tmpRoot = sys_get_temp_dir() . '/piwigo-coverage-collector-inactive-' . bin2hex(random_bytes(8)) . '/';
+
+    $script = 'require ' . var_export($autoloadPath, true) . ';'
+        // Deliberately no HTTP_X_PIWIGO_ENV -- Env::testModeIsActive() must
+        // be false here for the guard under test to mean anything.
+        . '$_SERVER["HTTP_X_PIWIGO_COVERAGE"] = "1";'
+        . 'if (! extension_loaded("pcov")) { fwrite(STDERR, "pcov not loaded"); exit(2); }'
+        . '$paths = \Piwigo\Core\Paths::fromRoot(' . var_export($tmpRoot, true) . ');'
+        . '\Piwigo\Core\CoverageCollector::registerIfActive($paths);'
+        . 'echo "registered\n";';
+
+    $cmd = [PHP_BINARY, '-r', $script];
+    $descriptors = [
+        0 => ['file', '/dev/null', 'r'],
+        1 => ['pipe', 'w'],
+        2 => ['pipe', 'w'],
+    ];
+    $proc = proc_open($cmd, $descriptors, $pipes);
+    expect($proc)->toBeResource();
+    if ($proc === false) {
+        throw new RuntimeException('proc_open failed');
+    }
+
+    $stdout = stream_get_contents($pipes[1]);
+    fclose($pipes[1]);
+    $stderr = stream_get_contents($pipes[2]);
+    fclose($pipes[2]);
+    $exit = proc_close($proc);
+
+    try {
+        expect($exit)->toBe(0, 'CoverageCollector inactive subprocess failed: ' . ($stderr === false ? '(no stderr)' : $stderr));
+        expect(trim((string) $stdout))->toBe('registered');
+
+        $dumpDir = $tmpRoot . '_data/coverage-raw/web/';
+        $files = is_dir($dumpDir) ? glob($dumpDir . '*.raw') : [];
+        expect($files !== false ? $files : [])->toBe([]);
+    } finally {
+        exec('rm -rf ' . escapeshellarg($tmpRoot));
+    }
+});
+
+/**
+ * Closes line 30's RemoveEarlyReturn -- the mirror case of the test
+ * above: testModeIsActive() true (so the coverage-header guard is the
+ * only thing left standing between real code and a dump file), but the
+ * coverage header itself genuinely absent this time. Confirmed live the
+ * same way: real code writes 0 dump files here, the RemoveEarlyReturn
+ * mutation writes 1.
+ */
+test('registerIfActive writes no dump file when the coverage header is absent, even with test mode active and pcov loaded', function (): void {
+    $autoloadPath = dirname(__DIR__, 3) . '/vendor/autoload.php';
+    expect(is_file($autoloadPath))->toBeTrue();
+
+    $tmpRoot = sys_get_temp_dir() . '/piwigo-coverage-collector-noheader-' . bin2hex(random_bytes(8)) . '/';
+
+    $script = 'require ' . var_export($autoloadPath, true) . ';'
+        . '$_SERVER["HTTP_X_PIWIGO_ENV"] = "test";'
+        // Deliberately no HTTP_X_PIWIGO_COVERAGE header this time.
+        . 'if (! extension_loaded("pcov")) { fwrite(STDERR, "pcov not loaded"); exit(2); }'
+        . '$paths = \Piwigo\Core\Paths::fromRoot(' . var_export($tmpRoot, true) . ');'
+        . '\Piwigo\Core\CoverageCollector::registerIfActive($paths);'
+        . 'echo "registered\n";';
+
+    $cmd = [PHP_BINARY, '-r', $script];
+    $descriptors = [
+        0 => ['file', '/dev/null', 'r'],
+        1 => ['pipe', 'w'],
+        2 => ['pipe', 'w'],
+    ];
+    $proc = proc_open($cmd, $descriptors, $pipes);
+    expect($proc)->toBeResource();
+    if ($proc === false) {
+        throw new RuntimeException('proc_open failed');
+    }
+
+    $stdout = stream_get_contents($pipes[1]);
+    fclose($pipes[1]);
+    $stderr = stream_get_contents($pipes[2]);
+    fclose($pipes[2]);
+    $exit = proc_close($proc);
+
+    try {
+        expect($exit)->toBe(0, 'CoverageCollector no-header subprocess failed: ' . ($stderr === false ? '(no stderr)' : $stderr));
+        expect(trim((string) $stdout))->toBe('registered');
+
+        $dumpDir = $tmpRoot . '_data/coverage-raw/web/';
+        $files = is_dir($dumpDir) ? glob($dumpDir . '*.raw') : [];
+        expect($files !== false ? $files : [])->toBe([]);
     } finally {
         exec('rm -rf ' . escapeshellarg($tmpRoot));
     }

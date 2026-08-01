@@ -19,6 +19,13 @@ afterEach(function (): void {
 // unreachable under PHP 8.5: confirmed empirically that session_id() only
 // ever returns '' (no session started) or a real id string, never false --
 // so there's no reachable case to exercise here.
+//
+// Confirmed-equivalent: line 63's FalseToTrue (`$session_id === true`
+// instead of `=== false`). Since session_id() never returns a bool at
+// all (only a string), neither comparison can ever be true -- the guard
+// is unreachable either way, for the exact same reason above. Confirmed
+// live: the full suite in this file passes identically with the
+// mutation applied.
 
 test('getToken is stable for the same session id and secret key', function (): void {
     session_id('fixed-test-session-id');

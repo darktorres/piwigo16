@@ -35,6 +35,22 @@ test('fromRow defaults representative_ext to null when absent', function (): voi
     // instead -- never actually null for a real fetched row.
 });
 
+test('fromRow defaults id to 0 when absent or non-numeric', function (): void {
+    $row = fullMetadataImageRow();
+    unset($row['id']);
+
+    expect(MetadataImage::fromRow($row)->id)->toBe(0)
+        ->and(MetadataImage::fromRow(['id' => 'not-numeric'] + $row)->id)->toBe(0);
+});
+
+test('fromRow defaults path to an empty string when absent or non-string', function (): void {
+    $row = fullMetadataImageRow();
+    unset($row['path']);
+
+    expect(MetadataImage::fromRow($row)->path)->toBe('')
+        ->and(MetadataImage::fromRow(['path' => 123] + $row)->path)->toBe('');
+});
+
 test('toArray round-trips the exact same DB column shape fromRow narrowed', function (): void {
     $roundTripped = MetadataImage::fromRow(fullMetadataImageRow())->toArray();
 

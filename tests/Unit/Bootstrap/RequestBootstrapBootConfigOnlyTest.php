@@ -7,11 +7,27 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ServerTiming;
+use Piwigo\Lang\Translator;
 use Piwigo\Tests\Support\KernelContainerOverride;
 use Piwigo\Users\CurrentUser;
+use Sentry\SentrySdk;
 
+/**
+ * A mutation-testing sweep found 2 confirmed-equivalent RemoveMethodCall
+ * mutants in bootConfigOnly() itself, neither worth a dedicated test:
+ * - `ConfigLoader::applyDefaults()`/`applyEnvOverrides()` are genuine
+ *   no-op method bodies today (`public static function applyDefaults():
+ *   void {}` -- confirmed via direct source read, same finding already
+ *   documented in Piwigo\Bootstrap\CliBootstrap's own source comment).
+ * - `PageState::attachGlobals()` is `self::$instance ??= new self();` --
+ *   byte-identical to what `PageState::current()` already does on its
+ *   own on first real access, so removing the eager call here changes
+ *   nothing any consumer can observe (unlike Lang::attachGlobals() just
+ *   below, which does a real, non-idempotent snapshot copy).
+ */
 beforeEach(function (): void {
     Kernel::reset();
     ServerTiming::reset();
@@ -23,6 +39,10 @@ beforeEach(function (): void {
     // earlier test would make these tests skip that resolve-and-load path
     // entirely and silently pass/fail on stale state.
     CurrentConfigService::reset();
+    Lang::reset();
+    Translator::reset();
+    SentrySdk::init();
+    putenv('SENTRY_DSN');
 });
 
 afterEach(function (): void {
@@ -31,6 +51,10 @@ afterEach(function (): void {
     CurrentConfig::reset();
     CurrentUser::reset();
     CurrentConfigService::reset();
+    Lang::reset();
+    Translator::reset();
+    SentrySdk::init();
+    putenv('SENTRY_DSN');
 });
 
 test('bootConfigOnly boots the Kernel', function (): void {
@@ -71,6 +95,50 @@ test('bootConfigOnly attaches a guest CurrentUser', function (): void {
     RequestBootstrap::bootConfigOnly(Paths::fromRoot(sys_get_temp_dir()));
 
     expect(CurrentUser::isInitialized())->toBeTrue();
+});
+
+test('bootConfigOnly initializes Sentry when SENTRY_DSN is set', function (): void {
+    putenv('SENTRY_DSN=https://fake@fake.ingest.sentry.io/1');
+
+    RequestBootstrap::bootConfigOnly(Paths::fromRoot(sys_get_temp_dir()));
+
+    expect(SentrySdk::getCurrentHub()->getClient())->not->toBeNull();
+
+    // Same reasoning as SentryBootstrapTest's own "binds a client" test --
+    // a real DSN registers real global PHP error/exception handlers.
+    restore_error_handler();
+    restore_exception_handler();
+});
+
+test('bootConfigOnly sets CurrentConfigService when resolving a fresh instance from the container', function (): void {
+    // The "seeds CurrentConfig..." and "merges DB-persisted..." tests
+    // above both call bootConfigOnly() fresh (CurrentConfigService reset
+    // in beforeEach) too, but only ever assert on CurrentConfig's own
+    // static state, populated by $configService->loadConfFromDb() acting
+    // directly on the local variable -- neither can tell whether
+    // CurrentConfigService::set($configService) itself actually ran.
+    expect(CurrentConfigService::isSet())->toBeFalse();
+
+    RequestBootstrap::bootConfigOnly(Paths::fromRoot(sys_get_temp_dir()));
+
+    expect(fn () => CurrentConfigService::get())->not->toThrow(LogicException::class);
+    expect(CurrentConfigService::get())->toBeInstanceOf(ConfigService::class);
+});
+
+test('bootConfigOnly attaches Lang globals from whatever the Translator has loaded', function (): void {
+    // Lang::attachGlobals() snapshots Translator::get()->mirroredStrings()
+    // into Lang's own static $data -- a real, non-idempotent copy (unlike
+    // PageState::attachGlobals()'s own `??=` lazy-init, which current()
+    // already performs identically on its own, making that one call
+    // genuinely unobservable and not chased here). loadArray() seeds a
+    // known string directly, matching Translator's own documented
+    // test-helper shape.
+    Translator::get()->loadArray(['bootconfigonly_probe' => 'probe-value']);
+
+    RequestBootstrap::bootConfigOnly(Paths::fromRoot(sys_get_temp_dir()));
+
+    expect(Lang::has('bootconfigonly_probe'))->toBeTrue()
+        ->and(Lang::snapshot()['bootconfigonly_probe'])->toBe('probe-value');
 });
 
 test('bootConfigOnly reuses an already-set CurrentConfigService instead of resolving a new one', function (): void {

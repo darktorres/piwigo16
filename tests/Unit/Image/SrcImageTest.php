@@ -145,6 +145,28 @@ test('get_size() delegates the fatal message to the installed HtmlRenderingInter
     expect($renderer->lastMessage)->toBe('SrcImage dimensions required but not provided');
 });
 
+test('constructor narrows a numeric-string id to a real int', function (): void {
+    // Kills line 171's RemoveIntegerCast.
+    $src = new SrcImage([
+        'id' => '7',
+        'path' => 'upload/2026/07/photo.jpg',
+        'file' => 'photo.jpg',
+    ]);
+
+    expect($src->id)->toBe(7);
+});
+
+test('constructor defaults id to exactly 0 for a non-numeric id', function (): void {
+    // Kills line 171's DecrementInteger/IncrementInteger.
+    $src = new SrcImage([
+        'id' => 'not-numeric',
+        'path' => 'upload/2026/07/photo.jpg',
+        'file' => 'photo.jpg',
+    ]);
+
+    expect($src->id)->toBe(0);
+});
+
 test('constructor builds a pwg_representative path when the extension is not a picture extension but a representative_ext is given', function (): void {
     $src = new SrcImage([
         'id' => 1,
@@ -156,6 +178,20 @@ test('constructor builds a pwg_representative path when the extension is not a p
     expect($src->rel_path)->toBe('upload/2026/07/pwg_representative/doc.jpg');
     expect($src->is_original())->toBeFalse();
     expect($src->is_mimetype())->toBeFalse();
+});
+
+test('constructor matches a picture extension case-insensitively', function (): void {
+    // Kills line 174's UnwrapStrtolower -- CurrentConfig::pictureExtensions()'s
+    // own default set is all-lowercase; an uppercase real-world extension
+    // only matches it through strtolower().
+    $src = new SrcImage([
+        'id' => 1,
+        'path' => 'upload/2026/07/photo.JPG',
+        'file' => 'photo.JPG',
+    ]);
+
+    expect($src->is_original())->toBeTrue();
+    expect($src->rel_path)->toBe('upload/2026/07/photo.JPG');
 });
 
 test('constructor swaps width/height for an odd rotation code but not for an even one', function (): void {
@@ -277,6 +313,280 @@ test('get_size() re-reads real dimensions from disk when width/height columns ar
         expect($src->get_size())->toBe([33, 22]);
         expect($src->has_size())->toBeTrue();
     } finally {
+        srcImageTestRrmdir($root);
+    }
+});
+
+/**
+ * Confirmed-equivalent: line 173's TernaryNegated (the `is_string(...)
+ * ? null : $infos['file']` inversion for $file) and line 175's
+ * UnwrapStrtolower (`strtolower(StringHelper::getExtension($file))`).
+ * $file's ONLY use anywhere in this class is feeding
+ * `$infos['file_ext'] = ...` -- and $infos['file_ext'] is itself never
+ * read again, by this class or any real caller ($infos is a local
+ * constructor parameter, never stored or returned). Both mutations are
+ * therefore dead code, not just untested. Live sed-verified both
+ * independently against the full suite too.
+ *
+ * Also confirmed-equivalent: line 213's, line 222's, and line 294's
+ * RemoveBooleanCast (`(bool) $this->size`, `(bool) ($this->rotation %
+ * 2)`, `(bool) ($this->flags & self::DIM_NOT_GIVEN)`). An `if()`
+ * condition already coerces its operand to bool on its own -- `if
+ * ((bool) X)` and `if (X)` evaluate identically for every possible X,
+ * a universal PHP semantics fact. Live sed-verified all 3 against the
+ * full suite too.
+ */
+test('constructor treats a missing path as an empty string, not null, when building the representative path -- not a dead default', function (): void {
+    // Kills line 172's EmptyStringToNotEmpty. Unlike $file above, $path
+    // is NOT dead: it feeds $this->rel_path directly in the
+    // representative_ext branch (ImagePathHelper::originalToRepresentative()),
+    // so its own is_string() default is real, observable behavior for a
+    // malformed/partial row, confirmed by hand-tracing
+    // originalToRepresentative('', 'jpg') vs the mutant's non-empty
+    // placeholder value producing genuinely different results.
+    $src = new SrcImage([
+        'id' => 1,
+        'path' => null,
+        'file' => 'doc.pdf',
+        'representative_ext' => 'jpg',
+    ]);
+
+    expect($src->rel_path)->toBe('pjpg');
+});
+
+test('constructor falls back to the pre-filter mimetype location when a get_mimetype_location handler returns a non-string', function (): void {
+    // Kills line 194's TernaryNegated -- every sibling mimetype-icon
+    // test above has NO handler registered for 'get_mimetype_location',
+    // so triggerChange() returns $data (the pre-filter value itself)
+    // unchanged, which is always already a string -- never reaching
+    // this ternary's false branch. Deliberately does NOT create an
+    // unknown.png fallback: if the mutation corrupts rel_path with the
+    // handler's raw non-string return value instead of falling back,
+    // the resulting bogus file_exists() check fails and cascades into
+    // the "no fallback icon either" Exception, distinguishing it from
+    // real code's clean success -- an unknown.png fallback present
+    // would silently re-repair rel_path a few lines later regardless of
+    // this specific mutation, masking it (confirmed live).
+    $root = sys_get_temp_dir() . '/piwigo-srcimage-test-' . bin2hex(random_bytes(8));
+    CurrentPaths::set(Paths::fromRoot($root));
+    srcImageTestSetThemeConfProvider(new SrcImageTestFakeThemeConfProvider('themes/default/icon/mimetypes/'));
+    srcImageTestMakePng($root . '/themes/default/icon/mimetypes/zzz.png', 16, 12);
+
+    $handler = static fn (): int => 42;
+    \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('get_mimetype_location', $handler);
+
+    try {
+        $src = new SrcImage([
+            'id' => 1,
+            'path' => 'upload/2026/07/file.zzz',
+            'file' => 'file.zzz',
+        ]);
+
+        expect($src->rel_path)->toBe('themes/default/icon/mimetypes/zzz.png');
+        expect($src->get_size())->toBe([16, 12]);
+    } finally {
+        \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler('get_mimetype_location', $handler);
+        srcImageTestRrmdir($root);
+    }
+});
+
+test('constructor throws when neither the per-extension icon nor the shared unknown.png fallback exist on disk', function (): void {
+    // Kills line 205's FalseToTrue (`$size = ... : true` instead of
+    // `: false`) -- the sibling .svg test above reaches a DIFFERENT
+    // file_exists() check (the original path, not unknown.png) for its
+    // own fallback. A non-svg extension with no per-extension icon AND
+    // no unknown.png on disk at all is what actually reaches line 205's
+    // own file_exists() with a genuinely false result.
+    $root = sys_get_temp_dir() . '/piwigo-srcimage-test-' . bin2hex(random_bytes(8));
+    CurrentPaths::set(Paths::fromRoot($root));
+    srcImageTestSetThemeConfProvider(new SrcImageTestFakeThemeConfProvider('themes/default/icon/mimetypes/'));
+
+    try {
+        expect(fn () => new SrcImage([
+            'id' => 1,
+            'path' => 'upload/2026/07/file.qqq',
+            'file' => 'file.qqq',
+        ]))->toThrow(\Exception::class, 'SrcImage: unable to read size of fallback icon themes/default/icon/mimetypes/unknown.png');
+    } finally {
+        srcImageTestRrmdir($root);
+    }
+});
+
+test('constructor never reads $infos[\'height\'] when only width is present, leaving size unset for a later lazy read', function (): void {
+    // Kills line 214's BooleanAndToBooleanOr -- with 'height' key
+    // genuinely absent (not just null), the mutant's `||` would enter
+    // this block on 'width' alone and hit an undefined array key
+    // reading $infos['height'], setting a bogus [width, 0] size instead
+    // of correctly leaving $this->size null for get_size()'s own lazy
+    // disk re-read.
+    $root = sys_get_temp_dir() . '/piwigo-srcimage-test-' . bin2hex(random_bytes(8));
+    CurrentPaths::set(Paths::fromRoot($root));
+    srcImageTestMakePng($root . '/upload/2026/07/width-only.png', 55, 44);
+
+    try {
+        $src = new SrcImage([
+            'id' => 1,
+            'path' => 'upload/2026/07/width-only.png',
+            'file' => 'width-only.png',
+            'width' => 300,
+        ]);
+
+        expect($src->has_size())->toBeFalse();
+        expect($src->get_size())->toBe([55, 44]);
+    } finally {
+        srcImageTestRrmdir($root);
+    }
+});
+
+test('constructor narrows a numeric-string width to a real int, and defaults a non-numeric height to exactly 0', function (): void {
+    // Kills line 215's RemoveIntegerCast (numeric-string width survives
+    // as a string without the cast) and line 216's DecrementInteger/
+    // IncrementInteger (a non-numeric-but-present height's own 0
+    // default).
+    $src = new SrcImage([
+        'id' => 1,
+        'path' => 'upload/2026/07/photo.jpg',
+        'file' => 'photo.jpg',
+        'width' => '150',
+        'height' => 'not-numeric',
+        'rotation' => 2,
+    ]);
+
+    expect($src->get_size())->toBe([150, 0]);
+});
+
+test('constructor defaults a non-numeric width to exactly 0, and narrows a numeric-string height to a real int', function (): void {
+    // Kills line 215's DecrementInteger/IncrementInteger (a
+    // non-numeric-but-present width's own 0 default) and line 216's
+    // RemoveIntegerCast (numeric-string height survives as a string
+    // without the cast) -- the sibling test above only ever exercises
+    // width's cast and height's default, never the other pairing.
+    $src = new SrcImage([
+        'id' => 1,
+        'path' => 'upload/2026/07/photo.jpg',
+        'file' => 'photo.jpg',
+        'width' => 'not-numeric',
+        'height' => '90',
+        'rotation' => 2,
+    ]);
+
+    expect($src->get_size())->toBe([0, 90]);
+});
+
+test('constructor defaults rotation to exactly 0 when the column is absent, not just non-numeric', function (): void {
+    // Kills line 219's DecrementInteger/IncrementInteger -- every
+    // sibling test above always supplies a real numeric 'rotation'.
+    $src = new SrcImage([
+        'id' => 1,
+        'path' => 'upload/2026/07/photo.jpg',
+        'file' => 'photo.jpg',
+        'width' => 300,
+        'height' => 200,
+    ]);
+
+    expect($src->rotation)->toBe(0);
+    expect($src->get_size())->toBe([300, 200]);
+});
+
+test('get_url() for a real original image requests part "e" without download, through the non-mimetype branch', function (): void {
+    // Kills line 270's TernaryNegated (is_original() ? 'e' : 'r') and
+    // line 271's FalseToTrue (the literal `false` $download argument) --
+    // every sibling get_url() test above only exercises the mimetype-icon
+    // branch, never this one.
+    $fakeUrlService = new SrcImageTestFakeUrlService();
+    srcImageTestSetUrlService($fakeUrlService);
+
+    $src = new SrcImage([
+        'id' => 7,
+        'path' => 'upload/2026/07/photo.jpg',
+        'file' => 'photo.jpg',
+    ]);
+
+    expect($src->is_original())->toBeTrue();
+    expect($src->get_url())->toBe('/action/7/e');
+    expect($fakeUrlService->lastActionUrlArgs)->toBe([7, 'e', false]);
+});
+
+test('get_url() for a real representative image requests part "r"', function (): void {
+    // Kills line 270's TernaryNegated from the other direction.
+    $fakeUrlService = new SrcImageTestFakeUrlService();
+    srcImageTestSetUrlService($fakeUrlService);
+
+    $src = new SrcImage([
+        'id' => 8,
+        'path' => 'upload/2026/07/doc.pdf',
+        'file' => 'doc.pdf',
+        'representative_ext' => 'jpg',
+    ]);
+
+    expect($src->is_original())->toBeFalse();
+    expect($src->get_url())->toBe('/action/8/r');
+    expect($fakeUrlService->lastActionUrlArgs)->toBe([8, 'r', false]);
+});
+
+test('get_url() falls back to the pre-filter url when a get_src_image_url handler returns a non-string', function (): void {
+    // Kills line 277's TernaryNegated -- every sibling non-mimetype
+    // get_url() test above has NO handler registered for
+    // 'get_src_image_url', so triggerChange() returns the pre-filter
+    // url unchanged (already a string), never reaching this ternary's
+    // false branch.
+    $fakeUrlService = new SrcImageTestFakeUrlService();
+    srcImageTestSetUrlService($fakeUrlService);
+
+    $handler = static fn (): int => 42;
+    \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('get_src_image_url', $handler);
+
+    try {
+        $src = new SrcImage([
+            'id' => 7,
+            'path' => 'upload/2026/07/photo.jpg',
+            'file' => 'photo.jpg',
+        ]);
+
+        expect($src->get_url())->toBe('/action/7/e');
+    } finally {
+        \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler('get_src_image_url', $handler);
+    }
+});
+
+test('get_size() persists the real, correctly-ordered width/height back onto the image repository', function (): void {
+    // Kills line 300's 4 index-swap mutations (DecrementInteger/
+    // IncrementInteger on $size[0]/$size[1]) -- a real image with
+    // DISTINCT width/height (anti-transposition) and a real
+    // ImageRepository persisting the call proves both arguments land in
+    // their own correct column, not swapped or duplicated.
+    $conn = \Piwigo\Db\DbConnection::build();
+    $repo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class);
+    expect($repo)->toBeInstanceOf(\Piwigo\Image\ImageRepository::class);
+    srcImageTestSetImageRepository($repo);
+
+    $conn->createQueryBuilder()
+        ->insert(\Piwigo\Db\Tables::images())
+        ->values(['file' => ':file', 'path' => ':path'])
+        ->setParameter('file', 'update-dimensions.jpg')
+        ->setParameter('path', 'upload/2026/07/update-dimensions.jpg')
+        ->executeStatement();
+    $imageId = (int) $conn->lastInsertId();
+
+    $root = sys_get_temp_dir() . '/piwigo-srcimage-test-' . bin2hex(random_bytes(8));
+    CurrentPaths::set(Paths::fromRoot($root));
+    srcImageTestMakePng($root . '/upload/2026/07/update-dimensions.jpg', 77, 55);
+
+    try {
+        $src = new SrcImage([
+            'id' => $imageId,
+            'path' => 'upload/2026/07/update-dimensions.jpg',
+            'file' => 'update-dimensions.jpg',
+            'width' => null,
+            'height' => null,
+        ]);
+
+        expect($src->get_size())->toBe([77, 55]);
+
+        $row = $conn->fetchAssociative('SELECT width, height FROM ' . \Piwigo\Db\Tables::images() . " WHERE id = {$imageId}");
+        expect($row)->toBe(['width' => 77, 'height' => 55]);
+    } finally {
+        $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::images() . ' WHERE id = ?', [$imageId]);
         srcImageTestRrmdir($root);
     }
 });

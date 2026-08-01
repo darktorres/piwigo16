@@ -14,6 +14,11 @@ use Piwigo\Core\UrlServiceInterface;
  */
 final class SrcImageTestFakeUrlService implements UrlServiceInterface
 {
+    /**
+     * @var array{0: int|string, 1: string, 2: bool}|null
+     */
+    public ?array $lastActionUrlArgs = null;
+
     #[\Override]
     public function getRootUrl(): string
     {
@@ -71,7 +76,9 @@ final class SrcImageTestFakeUrlService implements UrlServiceInterface
     #[\Override]
     public function getActionUrl($id, $whatPart, bool $download): string
     {
-        throw new \LogicException('not used by the mimetype-icon branch');
+        $this->lastActionUrlArgs = [$id, $whatPart, $download];
+
+        return '/action/' . $id . '/' . $whatPart;
     }
 
     #[\Override]

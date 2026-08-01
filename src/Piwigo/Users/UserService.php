@@ -34,6 +34,7 @@ use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\EffectiveForbiddenCategoriesCache;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
+use Piwigo\Permission\SqlCondition;
 use Piwigo\Session\SessionService;
 
 /**
@@ -799,12 +800,9 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         $authorizeds = $this->repo->findAuthorizedFavoriteImageIds(
             $currentUser->id,
             $this->permissionService()
-                ->getSqlConditionFandF(
-                    [
-                        'forbidden_categories' => 'ic.category_id',
-                    ],
-                    'AND'
-                )
+                ->getSqlConditionFandFAsCondition([
+                    'forbidden_categories' => 'ic.category_id',
+                ])
         );
 
         $favorites = $this->repo->findFavoriteImageIds($currentUser->id);
@@ -896,17 +894,17 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     /**
      * @return list<string|null>
      */
-    public function getVisibleFavoriteImageIds(UserId $userId, string $permissionCondition, string $orderBySql): array
+    public function getVisibleFavoriteImageIds(UserId $userId, SqlCondition $condition, string $orderBySql): array
     {
-        return $this->repo->findVisibleFavoriteImageIds($userId, $permissionCondition, $orderBySql);
+        return $this->repo->findVisibleFavoriteImageIds($userId, $condition, $orderBySql);
     }
 
     /**
      * @return list<array<string, mixed>>
      */
-    public function getVisibleFavoriteImages(UserId $userId, string $permissionCondition, string $orderBySql): array
+    public function getVisibleFavoriteImages(UserId $userId, SqlCondition $condition, string $orderBySql): array
     {
-        return $this->repo->findVisibleFavoriteImages($userId, $permissionCondition, $orderBySql);
+        return $this->repo->findVisibleFavoriteImages($userId, $condition, $orderBySql);
     }
 
     /**
@@ -1643,6 +1641,8 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     /**
      * @param  array<string, string>  $displayColumns
      * @param  list<string>  $whereClauses
+     * @param array<string, mixed> $params
+     * @param array<string, \Doctrine\DBAL\ArrayParameterType|\Doctrine\DBAL\ParameterType> $types
      * @return PaginatedResult<array<string, mixed>>
      */
     public function getListForWs(
@@ -1653,8 +1653,10 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         string $orderBy,
         bool $includeTotalCount,
         ?int $limit,
-        int $offset
+        int $offset,
+        array $params = [],
+        array $types = []
     ): PaginatedResult {
-        return $this->repo->findListForWs($idColumn, $displayColumns, $includeLastVisitFromHistory, $whereClauses, $orderBy, $includeTotalCount, $limit, $offset);
+        return $this->repo->findListForWs($idColumn, $displayColumns, $includeLastVisitFromHistory, $whereClauses, $orderBy, $includeTotalCount, $limit, $offset, $params, $types);
     }
 }

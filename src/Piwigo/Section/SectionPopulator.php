@@ -468,9 +468,9 @@ final readonly class SectionPopulator
                         [
                             'items' => $this->userService->getVisibleFavoriteImageIds(
                                 $current_user_id,
-                                $this->permissionService->getSqlConditionFandF([
+                                $this->permissionService->getSqlConditionFandFAsCondition([
                                     'visible_images' => 'id',
-                                ], 'AND'),
+                                ]),
                                 $order_by
                             ),
                         ]

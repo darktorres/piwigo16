@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Users;
 
 use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\ParameterType;
+use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\ORM\EntityRepository;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\Email;
@@ -12,6 +14,7 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
+use Piwigo\Permission\SqlCondition;
 use Piwigo\Users\Projection\UserInfo;
 
 /**
@@ -41,6 +44,25 @@ use Piwigo\Users\Projection\UserInfo;
  */
 final class UserRepository extends EntityRepository implements \Piwigo\Core\WebmasterMailProviderInterface
 {
+    /**
+     * Applies a permission/filter `SqlCondition` via `andWhere()`, binding
+     * every one of its parameters -- same shared-helper shape as
+     * `Image\ImageRepository::applyCondition()`/`Notification\
+     * NotificationRepository::applyCondition()`/`Tag\TagRepository::
+     * applyCondition()`.
+     */
+    private static function applyCondition(QueryBuilder $qb, SqlCondition $condition): void
+    {
+        if ($condition->isEmpty()) {
+            return;
+        }
+
+        $qb->andWhere($condition->sql);
+        foreach ($condition->parameters as $name => $value) {
+            $qb->setParameter($name, $value, $condition->types[$name] ?? ParameterType::STRING);
+        }
+    }
+
     /**
      * Returns the webmaster's email address (the users row whose id
      * column matches \Piwigo\Config\CurrentConfig::webmasterId()).
@@ -223,15 +245,13 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function findAllUsernamesById(string $idColumn, string $usernameColumn): array
     {
-        $usersTable = Tables::users();
-
         return array_column($this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT {$idColumn} AS id,
-                       {$usernameColumn} AS username
-                FROM {$usersTable}
-                SQL), 'username', 'id');
+            ->createQueryBuilder()
+            ->select($idColumn . ' AS id', $usernameColumn . ' AS username')
+            ->from(Tables::users())
+            ->executeQuery()
+            ->fetchAllAssociative(), 'username', 'id');
     }
 
     /**
@@ -490,24 +510,21 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function fetchBasicUserRow(UserId $userId, array $userFields): array|false
     {
-        $usersTable = Tables::users();
-
         $columnPairs = [];
         foreach ($userFields as $pwgfield => $dbfield) {
             $columnPairs[] = "{$dbfield} AS {$pwgfield}";
         }
-        $columnsSql = implode("\n     , ", $columnPairs);
         $idField = $userFields['id'];
-
-        $query = <<<SQL
-            SELECT {$columnsSql}
-            FROM {$usersTable}
-            WHERE {$idField} = '{$userId->value}'
-            SQL;
 
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAssociative($query);
+            ->createQueryBuilder()
+            ->select(...$columnPairs)
+            ->from(Tables::users())
+            ->where($idField . ' = :userId')
+            ->setParameter('userId', $userId->value)
+            ->executeQuery()
+            ->fetchAssociative();
     }
 
     /**
@@ -518,19 +535,17 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function countUserInfosRows(UserId $userId): int
     {
-        $userInfosTable = Tables::userInfos();
-        $themesTable = Tables::themes();
-
         $row = $this->getEntityManager()
             ->getConnection()
-            ->fetchNumeric(<<<SQL
-                SELECT
-                    COUNT(1) AS counter
-                FROM {$userInfosTable} AS ui
-                    LEFT JOIN {$themesTable} AS t ON t.id = ui.theme
-                WHERE ui.user_id = {$userId->value}
-                GROUP BY ui.user_id
-                SQL);
+            ->createQueryBuilder()
+            ->select('COUNT(1) AS counter')
+            ->from(Tables::userInfos(), 'ui')
+            ->leftJoin('ui', Tables::themes(), 't', 't.id = ui.theme')
+            ->where('ui.user_id = :userId')
+            ->groupBy('ui.user_id')
+            ->setParameter('userId', $userId->value)
+            ->executeQuery()
+            ->fetchNumeric();
 
         return $row !== false && is_numeric($row[0]) ? (int) $row[0] : 0;
     }
@@ -543,48 +558,44 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function fetchUserInfosWithThemeName(UserId $userId): array|false
     {
-        $userInfosTable = Tables::userInfos();
-        $themesTable = Tables::themes();
-
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAssociative(<<<SQL
-                SELECT
-                    ui.*,
-                    t.name AS theme_name
-                FROM {$userInfosTable} AS ui
-                    LEFT JOIN {$themesTable} AS t ON t.id = ui.theme
-                WHERE ui.user_id = {$userId->value}
-                SQL);
+            ->createQueryBuilder()
+            ->select('ui.*', 't.name AS theme_name')
+            ->from(Tables::userInfos(), 'ui')
+            ->leftJoin('ui', Tables::themes(), 't', 't.id = ui.theme')
+            ->where('ui.user_id = :userId')
+            ->setParameter('userId', $userId->value)
+            ->executeQuery()
+            ->fetchAssociative();
     }
 
     /**
-     * Favorite image ids for $userId restricted to $forbiddenCondition --
+     * Favorite image ids for $userId restricted to $condition --
      * UserService::checkUserFavorites()'s own "images still in an
-     * authorized category" half of the comparison. $forbiddenCondition is
-     * PermissionService::getSqlConditionFandF()'s own raw SQL fragment,
-     * embedded as text like every other forbidden-categories fragment in
-     * this codebase (see Permission\PermissionRepository's own methods for
-     * the same shape).
+     * authorized category" half of the comparison.
+     *
+     * SQL-modernization audit: $forbiddenCondition (raw
+     * getSqlConditionFandF() output) replaced with a bound SqlCondition,
+     * migrated together with this method's one real caller
+     * (UserService::checkUserFavorites()).
      *
      * @return list<int>
      */
-    public function findAuthorizedFavoriteImageIds(UserId $userId, string $forbiddenCondition): array
+    public function findAuthorizedFavoriteImageIds(UserId $userId, SqlCondition $condition): array
     {
-        $favoritesTable = Tables::favorites();
-        $imageCategoryTable = Tables::imageCategory();
-
-        $rows = $this->getEntityManager()
+        $qb = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT DISTINCT f.image_id
-                FROM {$favoritesTable} AS f INNER JOIN {$imageCategoryTable} AS ic
-                    ON f.image_id = ic.image_id
-                WHERE f.user_id = {$userId->value}
-                {$forbiddenCondition}
-                SQL);
+            ->createQueryBuilder()
+            ->select('DISTINCT f.image_id')
+            ->from(Tables::favorites(), 'f')
+            ->innerJoin('f', Tables::imageCategory(), 'ic', 'f.image_id = ic.image_id')
+            ->where('f.user_id = :userId')
+            ->setParameter('userId', $userId->value);
 
-        return self::toIntList(array_column($rows, 'image_id'));
+        self::applyCondition($qb, $condition);
+
+        return self::toIntList(array_column($qb->executeQuery()->fetchAllAssociative(), 'image_id'));
     }
 
     /**
@@ -595,15 +606,15 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function findFavoriteImageIds(UserId $userId): array
     {
-        $favoritesTable = Tables::favorites();
-
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT image_id
-                FROM {$favoritesTable}
-                WHERE user_id = {$userId->value}
-                SQL);
+            ->createQueryBuilder()
+            ->select('image_id')
+            ->from(Tables::favorites())
+            ->where('user_id = :userId')
+            ->setParameter('userId', $userId->value)
+            ->executeQuery()
+            ->fetchAllAssociative();
 
         return self::toIntList(array_column($rows, 'image_id'));
     }
@@ -617,16 +628,15 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             return;
         }
 
-        $favoritesTable = Tables::favorites();
-        $imageIdsCsv = implode(',', $imageIds);
-
         $this->getEntityManager()
             ->getConnection()
-            ->executeStatement(<<<SQL
-                DELETE FROM {$favoritesTable}
-                WHERE image_id IN ({$imageIdsCsv})
-                    AND user_id = {$userId->value}
-                SQL);
+            ->createQueryBuilder()
+            ->delete(Tables::favorites())
+            ->where('image_id IN (:imageIds)')
+            ->andWhere('user_id = :userId')
+            ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER)
+            ->setParameter('userId', $userId->value)
+            ->executeStatement();
     }
 
     /**
@@ -661,16 +671,17 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function isFavorite(UserId $userId, int $imageId): bool
     {
-        $favoritesTable = Tables::favorites();
-
         $value = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne(<<<SQL
-                SELECT COUNT(*)
-                FROM {$favoritesTable}
-                WHERE image_id = {$imageId}
-                    AND user_id = {$userId->value}
-                SQL);
+            ->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from(Tables::favorites())
+            ->where('image_id = :imageId')
+            ->andWhere('user_id = :userId')
+            ->setParameter('imageId', $imageId, ParameterType::INTEGER)
+            ->setParameter('userId', $userId->value)
+            ->executeQuery()
+            ->fetchOne();
 
         return is_numeric($value) && (int) $value !== 0;
     }
@@ -682,14 +693,13 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function deleteAllFavorites(UserId $userId): void
     {
-        $favoritesTable = Tables::favorites();
-
         $this->getEntityManager()
             ->getConnection()
-            ->executeStatement(<<<SQL
-                DELETE FROM {$favoritesTable}
-                WHERE user_id = {$userId->value}
-                SQL);
+            ->createQueryBuilder()
+            ->delete(Tables::favorites())
+            ->where('user_id = :userId')
+            ->setParameter('userId', $userId->value)
+            ->executeStatement();
     }
 
     /**
@@ -700,23 +710,45 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * merges this directly alongside that repository's sibling section
      * queries into the same $page['items'] slot.
      *
+     * SQL-modernization audit: $permissionCondition (raw
+     * getSqlConditionFandF() output) replaced with a bound SqlCondition,
+     * migrated together with this method's one real caller
+     * (Section\SectionPopulator.php). $orderBySql stays a raw fragment
+     * (CurrentConfig::orderBy(), trusted internal config, same "caller
+     * composes trusted fragments" contract used throughout this codebase).
+     *
      * @return list<string|null>
      */
-    public function findVisibleFavoriteImageIds(UserId $userId, string $permissionCondition, string $orderBySql): array
+    public function findVisibleFavoriteImageIds(UserId $userId, SqlCondition $condition, string $orderBySql): array
     {
         $favoritesTable = Tables::favorites();
         $imagesTable = Tables::images();
 
+        $whereSql = 'WHERE user_id = :userId';
+        $params = [
+            'userId' => $userId->value,
+        ];
+        $types = [];
+        if (! $condition->isEmpty()) {
+            $whereSql .= ' AND ' . $condition->sql;
+            $params = array_merge($params, $condition->parameters);
+            $types = $condition->types;
+        }
+
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchFirstColumn(<<<SQL
+            ->executeQuery(
+                <<<SQL
                 SELECT image_id
                 FROM {$favoritesTable}
                     INNER JOIN {$imagesTable} ON image_id = id
-                WHERE user_id = {$userId->value}
-                {$permissionCondition}
+                {$whereSql}
                 {$orderBySql}
-                SQL);
+                SQL
+                ,
+                $params,
+                $types
+            )->fetchFirstColumn();
 
         return array_map(
             static fn (mixed $v): ?string => is_scalar($v) ? (string) $v : null,
@@ -726,29 +758,49 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
 
     /**
      * Every column of every favorite image for $userId matching
-     * $permissionCondition -- Ws\PwgUsers::favoritesGetList()'s own full
-     * row listing, a different contract from
+     * $condition -- Ws\PwgUsers::favoritesGetList()'s own full row
+     * listing, a different contract from
      * {@see findVisibleFavoriteImageIds()} above (that one is
      * `image_id`-only, this one is `i.*`).
      *
+     * SQL-modernization audit: $permissionCondition replaced with a bound
+     * SqlCondition, migrated together with this method's one real caller
+     * (Ws\PwgUsers::favoritesGetList()). $orderBySql stays a raw fragment,
+     * same reasoning as findVisibleFavoriteImageIds() above.
+     *
      * @return list<array<string, mixed>>
      */
-    public function findVisibleFavoriteImages(UserId $userId, string $permissionCondition, string $orderBySql): array
+    public function findVisibleFavoriteImages(UserId $userId, SqlCondition $condition, string $orderBySql): array
     {
         $favoritesTable = Tables::favorites();
         $imagesTable = Tables::images();
 
+        $whereSql = 'WHERE user_id = :userId';
+        $params = [
+            'userId' => $userId->value,
+        ];
+        $types = [];
+        if (! $condition->isEmpty()) {
+            $whereSql .= ' AND ' . $condition->sql;
+            $params = array_merge($params, $condition->parameters);
+            $types = $condition->types;
+        }
+
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative(<<<SQL
+            ->executeQuery(
+                <<<SQL
                 SELECT
                     i.*
                 FROM {$favoritesTable}
                     INNER JOIN {$imagesTable} i ON image_id = i.id
-                WHERE user_id = {$userId->value}
-                {$permissionCondition}
+                {$whereSql}
                 {$orderBySql}
-                SQL);
+                SQL
+                ,
+                $params,
+                $types
+            )->fetchAllAssociative();
     }
 
     /**
@@ -763,16 +815,15 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             return;
         }
 
-        $userInfosTable = Tables::userInfos();
-        $userIdsCsv = implode(',', array_map(static fn (UserId $id): string => (string) $id->value, $userIds));
-
         $this->getEntityManager()
             ->getConnection()
-            ->executeStatement(<<<SQL
-                UPDATE {$userInfosTable} SET
-                    status = "{$status}"
-                WHERE user_id IN({$userIdsCsv})
-                SQL);
+            ->createQueryBuilder()
+            ->update(Tables::userInfos())
+            ->set('status', ':status')
+            ->where('user_id IN (:userIds)')
+            ->setParameter('status', $status)
+            ->setParameter('userIds', array_map(static fn (UserId $id): int => $id->value, $userIds), ArrayParameterType::INTEGER)
+            ->executeStatement();
     }
 
     /**
@@ -791,24 +842,21 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             return;
         }
 
-        $userInfosTable = Tables::userInfos();
+        $qb = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
+            ->update(Tables::userInfos())
+            ->where('user_id IN (:userIds)')
+            ->setParameter('userIds', array_map(static fn (UserId $id): int => $id->value, $userIds), ArrayParameterType::INTEGER);
 
-        $setPairs = [];
         foreach ($updates as $field => $value) {
             assert(is_scalar($value));
-            $setPairs[] = $field . ' = "' . (string) $value . '"';
+            $placeholder = 'v_' . $field;
+            $qb->set($field, ':' . $placeholder)
+                ->setParameter($placeholder, $value);
         }
-        $setSql = implode(', ', $setPairs);
-        $userIdsCsv = implode(',', array_map(static fn (UserId $id): string => (string) $id->value, $userIds));
 
-        $query = <<<SQL
-            UPDATE {$userInfosTable} SET {$setSql}
-            WHERE user_id IN({$userIdsCsv})
-            SQL;
-
-        $this->getEntityManager()
-            ->getConnection()
-            ->executeStatement($query);
+        $qb->executeStatement();
     }
 
     /**
@@ -954,18 +1002,16 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function findUserCountsByStatus(int $excludeUserId): array
     {
-        $userInfosTable = Tables::userInfos();
-
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT
-                    status,
-                    COUNT(*) AS nb_users_of
-                FROM {$userInfosTable}
-                WHERE user_id != {$excludeUserId}
-                GROUP BY status
-                SQL);
+            ->createQueryBuilder()
+            ->select('status', 'COUNT(*) AS nb_users_of')
+            ->from(Tables::userInfos())
+            ->where('user_id != :excludeUserId')
+            ->groupBy('status')
+            ->setParameter('excludeUserId', $excludeUserId, ParameterType::INTEGER)
+            ->executeQuery()
+            ->fetchAllAssociative();
 
         $byStatus = [];
         foreach ($rows as $row) {
@@ -988,18 +1034,16 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function findUserCountsByLevel(int $excludeUserId): array
     {
-        $userInfosTable = Tables::userInfos();
-
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT
-                    level,
-                    COUNT(*) AS nb_users_of
-                FROM {$userInfosTable}
-                WHERE user_id != {$excludeUserId}
-                GROUP BY level
-                SQL);
+            ->createQueryBuilder()
+            ->select('level', 'COUNT(*) AS nb_users_of')
+            ->from(Tables::userInfos())
+            ->where('user_id != :excludeUserId')
+            ->groupBy('level')
+            ->setParameter('excludeUserId', $excludeUserId, ParameterType::INTEGER)
+            ->executeQuery()
+            ->fetchAllAssociative();
 
         $byLevel = [];
         foreach ($rows as $row) {
@@ -1031,6 +1075,18 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * @param  list<string>  $whereClauses
      * @return PaginatedResult<array<string, mixed>>
      */
+    /**
+     * SQL-modernization audit: $params/$types widened additively (both
+     * default `[]`) so a caller building a bound fragment into
+     * $whereClauses can bind its own values instead of splicing them;
+     * $limit/$offset (previously spliced) always bound directly.
+     *
+     * @param  array<string, string>  $displayColumns
+     * @param  list<string>  $whereClauses
+     * @param array<string, mixed> $params
+     * @param array<string, ArrayParameterType|ParameterType> $types
+     * @return PaginatedResult<array<string, mixed>>
+     */
     public function findListForWs(
         string $idColumn,
         array $displayColumns,
@@ -1039,7 +1095,9 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
         string $orderBy,
         bool $includeTotalCount,
         ?int $limit,
-        int $offset
+        int $offset,
+        array $params = [],
+        array $types = []
     ): PaginatedResult {
         $conn = $this->getEntityManager()
             ->getConnection();
@@ -1074,15 +1132,19 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
         if ($limit !== null) {
             $sql .= <<<SQL
 
-                    LIMIT {$limit}
-                    OFFSET {$offset};
+                    LIMIT :limit
+                    OFFSET :offset;
 
                 SQL;
+            $params['limit'] = $limit;
+            $params['offset'] = $offset;
+            $types['limit'] = ParameterType::INTEGER;
+            $types['offset'] = ParameterType::INTEGER;
         }
 
         $sql .= ';';
 
-        $rows = $conn->fetchAllAssociative($sql);
+        $rows = $conn->fetchAllAssociative($sql, $params, $types);
 
         $total = null;
         if ($includeTotalCount) {
@@ -1137,23 +1199,16 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             return [];
         }
 
-        $userInfosTable = Tables::userInfos();
-        $usersTable = Tables::users();
-        $userIdsCsv = implode(',', $userIds);
-
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT
-                    ui.user_id,
-                    ui.status,
-                    ui.language,
-                    u.{$emailColumn} AS email,
-                    u.{$usernameColumn} AS username
-                FROM {$userInfosTable} AS ui
-                    JOIN {$usersTable} AS u ON u.{$idColumn} = ui.user_id
-                WHERE ui.user_id IN ({$userIdsCsv})
-                SQL);
+            ->createQueryBuilder()
+            ->select('ui.user_id', 'ui.status', 'ui.language', 'u.' . $emailColumn . ' AS email', 'u.' . $usernameColumn . ' AS username')
+            ->from(Tables::userInfos(), 'ui')
+            ->innerJoin('ui', Tables::users(), 'u', 'u.' . $idColumn . ' = ui.user_id')
+            ->where('ui.user_id IN (:userIds)')
+            ->setParameter('userIds', array_map(strval(...), $userIds), ArrayParameterType::STRING)
+            ->executeQuery()
+            ->fetchAllAssociative();
     }
 
     /**
@@ -1172,20 +1227,18 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             return [];
         }
 
-        $usersTable = Tables::users();
         $usernameField = $userFields['username'];
         $idField = $userFields['id'];
-        $userIdsCsv = implode(',', $userIds);
 
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT
-                    {$usernameField} AS username,
-                    {$idField} AS id
-                FROM {$usersTable}
-                WHERE {$idField} IN ( {$userIdsCsv} )
-                SQL);
+            ->createQueryBuilder()
+            ->select($usernameField . ' AS username', $idField . ' AS id')
+            ->from(Tables::users())
+            ->where($idField . ' IN (:userIds)')
+            ->setParameter('userIds', array_map(strval(...), $userIds), ArrayParameterType::STRING)
+            ->executeQuery()
+            ->fetchAllAssociative();
     }
 
     /**
@@ -1195,16 +1248,15 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function findRegistrationDateById(int $userId): ?string
     {
-        $userInfosTable = Tables::userInfos();
-
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT
-                    registration_date
-                FROM {$userInfosTable}
-                WHERE user_id = {$userId}
-                SQL);
+            ->createQueryBuilder()
+            ->select('registration_date')
+            ->from(Tables::userInfos())
+            ->where('user_id = :userId')
+            ->setParameter('userId', $userId, ParameterType::INTEGER)
+            ->executeQuery()
+            ->fetchAllAssociative();
 
         if ($rows === []) {
             return null;
@@ -1223,16 +1275,15 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      */
     public function findMinRegistrationDateAfter(string $afterDate): ?string
     {
-        $userInfosTable = Tables::userInfos();
-
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT
-                    MIN(registration_date) AS min_registration_date
-                FROM {$userInfosTable}
-                WHERE registration_date > '{$afterDate}'
-                SQL);
+            ->createQueryBuilder()
+            ->select('MIN(registration_date) AS min_registration_date')
+            ->from(Tables::userInfos())
+            ->where('registration_date > :afterDate')
+            ->setParameter('afterDate', $afterDate)
+            ->executeQuery()
+            ->fetchAllAssociative();
 
         if ($rows === []) {
             return null;
@@ -1277,19 +1328,16 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             return [];
         }
 
-        $usersTable = Tables::users();
-        $userInfosTable = Tables::userInfos();
-        $idsCsv = implode(',', $ids);
-
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT u.{$idColumn} AS id, ui.status
-                FROM {$usersTable} AS u
-                    LEFT JOIN {$userInfosTable} AS ui
-                        ON u.{$idColumn} = ui.user_id
-                WHERE u.{$idColumn} IN ({$idsCsv})
-                SQL);
+            ->createQueryBuilder()
+            ->select('u.' . $idColumn . ' AS id', 'ui.status')
+            ->from(Tables::users(), 'u')
+            ->leftJoin('u', Tables::userInfos(), 'ui', 'u.' . $idColumn . ' = ui.user_id')
+            ->where('u.' . $idColumn . ' IN (:ids)')
+            ->setParameter('ids', array_map(strval(...), $ids), ArrayParameterType::STRING)
+            ->executeQuery()
+            ->fetchAllAssociative();
 
         $byId = [];
         foreach ($rows as $row) {

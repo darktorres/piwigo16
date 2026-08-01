@@ -407,6 +407,91 @@ final class UserRepositoryTest extends IntegrationTestCase
         self::assertSame([], $this->repo->findUsernamesByIds(['username' => 'username', 'id' => 'id'], []));
     }
 
+    public function test_find_all_usernames_by_id_returns_every_fixture_user(): void
+    {
+        $byId = $this->repo->findAllUsernamesById('id', 'username');
+
+        $normalized = [];
+        foreach ($byId as $id => $username) {
+            $normalized[(string) $id] = $username;
+        }
+        ksort($normalized);
+
+        self::assertSame([
+            '1' => 'fixture_admin',
+            '2' => 'guest',
+            '3' => 'regular_user',
+            '4' => 'power_user',
+        ], $normalized);
+    }
+
+    public function test_find_distinct_registration_year_months_returns_formatted_periods(): void
+    {
+        // Every fixture user_infos row shares the same registration_date
+        // (2026-08-01), so this only has one distinct period to prove the
+        // year/month formatting -- not the DISTINCT/ORDER BY grouping
+        // itself.
+        self::assertSame(['2026-08'], $this->repo->findDistinctRegistrationYearMonths());
+    }
+
+    public function test_find_user_counts_by_status_excludes_the_given_user_and_groups_by_status(): void
+    {
+        // Excluding user 2 (guest) leaves user 1 (webmaster) and users 3/4
+        // (both normal).
+        self::assertSame([
+            'webmaster' => 1,
+            'normal' => 2,
+        ], $this->repo->findUserCountsByStatus(2));
+    }
+
+    public function test_find_user_counts_by_level_excludes_the_given_user_and_groups_by_level(): void
+    {
+        // Excluding user 2 (guest) leaves user 1 at level 8 and users 3/4
+        // both at level 0.
+        self::assertSame([
+            8 => 1,
+            0 => 2,
+        ], $this->repo->findUserCountsByLevel(2));
+    }
+
+    public function test_find_user_ids_excluding_status_omits_matching_rows(): void
+    {
+        $ids = $this->repo->findUserIdsExcludingStatus('guest');
+
+        sort($ids);
+        self::assertSame(['1', '3', '4'], $ids);
+    }
+
+    public function test_is_favorite_reflects_real_favorites_rows(): void
+    {
+        self::assertTrue($this->repo->isFavorite(\Piwigo\Common\ValueObject\UserId::from(1), 1));
+        self::assertFalse($this->repo->isFavorite(\Piwigo\Common\ValueObject\UserId::from(1), 2));
+        self::assertFalse($this->repo->isFavorite(\Piwigo\Common\ValueObject\UserId::from(3), 1));
+    }
+
+    public function test_add_favorite_inserts_a_row_that_is_favorite_then_reports(): void
+    {
+        // User 3 / image 2: a combination distinct from the fixture's own
+        // user-1 favorites, so this doesn't collide with other tests.
+        self::assertFalse($this->repo->isFavorite(\Piwigo\Common\ValueObject\UserId::from(3), 2));
+
+        $this->repo->addFavorite(\Piwigo\Common\ValueObject\UserId::from(3), 2);
+
+        self::assertTrue($this->repo->isFavorite(\Piwigo\Common\ValueObject\UserId::from(3), 2));
+
+        $this->repo->addFavorite(\Piwigo\Common\ValueObject\UserId::from(3), 2, ignoreDuplicate: true);
+
+        $count = $this->conn->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from(Tables::favorites())
+            ->where('user_id = 3 AND image_id = 2')
+            ->executeQuery()
+            ->fetchOne();
+        self::assertSame(1, $count);
+
+        $this->conn->executeStatement('DELETE FROM ' . Tables::favorites() . ' WHERE user_id = 3 AND image_id = 2');
+    }
+
     public function test_find_registration_date_by_id_returns_null_for_a_nonexistent_user(): void
     {
         // No user_infos row exists at all for this id (not even one with a

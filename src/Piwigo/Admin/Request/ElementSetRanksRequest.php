@@ -11,11 +11,10 @@ namespace Piwigo\Admin\Request;
  *
  * `isCatIdValid`/`catId` split the original's `isset(...) or ! is_numeric(...)`
  * guard from its own unconditional `(int) $_GET['cat_id']` cast that
- * follows it -- the original's `trigger_error(..., E_USER_ERROR)` call in
- * that guard doesn't actually halt (this codebase's ErrorCollector
- * intercepts E_USER_ERROR and returns true rather than the PHP default of
- * terminating the script; only an explicit throw/return does that), so
- * execution falls through to the cast either way, same as here.
+ * follows it -- the original's fatal-signal call in that guard
+ * (ErrorCollector::recordFatal(), see HtmlService::fatalError()'s own
+ * docblock) doesn't actually halt; only an explicit throw/return does
+ * that, so execution falls through to the cast either way, same as here.
  *
  * `imageOrderChoice` folds the original's two-part check
  * (`! in_array(..., [null, false, 0, '0', '', []], true) && in_array(...,

@@ -265,17 +265,17 @@ namespace Piwigo\Tests\Integration {
             // performAction()'s own top-level guard (only 'delete' is
             // checked here -- matches plugins.class.php::perform_action()'s
             // exact original behavior, confirmed by direct read) calls
-            // HtmlService::fatalError(), `never`-typed via
-            // trigger_error(E_USER_ERROR). That hard-halts the whole PHP
-            // process UNLESS something intercepts it and returns true, in
-            // which case fatalError() falls through to throw a catchable
-            // ResponseReadyException instead -- real requests get that
-            // interception from Piwigo\Core\ErrorCollector::install() (see
-            // HtmlService::fatalError()'s own docblock), never called here
-            // (a real set_error_handler()/register_shutdown_function() pair
-            // would leak into every later test in this shared process, same
-            // reasoning as MaintenanceActionDispatcherTest's identical local
-            // handler).
+            // HtmlService::fatalError(), `never`-typed and always throwing
+            // a catchable ResponseReadyException regardless of
+            // ErrorCollector::isActive() (see that method's own docblock).
+            // This handler is now just belt-and-suspenders against any
+            // incidental warning along the way, not load-bearing for the
+            // throw itself. Left local rather than a real
+            // Piwigo\Core\ErrorCollector::install() (a real
+            // set_error_handler()/register_shutdown_function() pair would
+            // leak into every later test in this shared process, same
+            // reasoning as MaintenanceActionDispatcherTest's identical
+            // local handler).
             CurrentConfig::setEnableExtensionsInstall(false);
 
             set_error_handler(static fn (): bool => true);

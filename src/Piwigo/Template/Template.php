@@ -16,6 +16,7 @@ use Piwigo\Core\AdminContext;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\DeviceHelper;
+use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Lang;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\UrlServiceInterface;
@@ -1051,14 +1052,13 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
     public function func_combine_script(array $params): void
     {
         if (! isset($params['id']) || ! is_string($params['id'])) {
-            trigger_error("combine_script: missing 'id' parameter", E_USER_ERROR);
-            // Genuinely reachable, not just defensive: include/error_collector.inc.php
-            // installs a set_error_handler() that intercepts E_USER_ERROR and returns
-            // true (suppressing PHP's normal fatal-and-terminate behavior), so this
-            // return prevents $params['id'] from being read below when it's genuinely
-            // missing/non-string — static analysis has no way to know
-            // set_error_handler() changes trigger_error()'s termination behavior.
-            // @phpstan-ignore deadCode.unreachable
+            // Used to be trigger_error(..., E_USER_ERROR) -- deprecated as
+            // of PHP 8.4, see HtmlService::fatalError()'s own docblock for
+            // the real replacement/reasoning. This return is what actually
+            // prevents $params['id'] from being read below when it's
+            // genuinely missing/non-string.
+            ErrorCollector::recordFatal("combine_script: missing 'id' parameter");
+
             return;
         }
         $id = $params['id'];
@@ -1070,7 +1070,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
                     break;
                 case 'async': $load = 2;
                     break;
-                default: trigger_error("combine_script: invalid 'load' parameter", E_USER_ERROR);
+                default: ErrorCollector::recordFatal("combine_script: invalid 'load' parameter");
             }
         }
 
@@ -1104,7 +1104,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
     public function func_get_combined_scripts(array $params): string
     {
         if (! isset($params['load'])) {
-            trigger_error("get_combined_scripts: missing 'load' parameter", E_USER_ERROR);
+            ErrorCollector::recordFatal("get_combined_scripts: missing 'load' parameter");
         }
         $load = $params['load'] === 'header' ? 0 : 1;
         $content = [];

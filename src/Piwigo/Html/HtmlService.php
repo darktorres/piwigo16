@@ -6,6 +6,7 @@ namespace Piwigo\Html;
 
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -455,8 +456,9 @@ final class HtmlService implements HtmlRenderingInterface
     /**
      * Workstream C3: throws Piwigo\Http\ResponseReadyException (a 500
      * page) instead of exiting directly, after still logging via
-     * trigger_error() -- see this method's own body for why that call is
-     * genuinely reachable.
+     * ErrorCollector::recordFatal() -- see this method's own body for the
+     * full reasoning (this used to be a trigger_error(E_USER_ERROR) call,
+     * deprecated as of PHP 8.4).
      * @todo nice display if $template loaded
      */
     #[\Override]
@@ -489,14 +491,33 @@ final class HtmlService implements HtmlRenderingInterface
             ini_set('display_errors', false);
         }
         error_reporting(E_ALL);
-        trigger_error(strip_tags($msg) . $btrace_msg, E_USER_ERROR);
-        // Genuinely reachable, not just defensive: include/error_collector.inc.php
-        // installs a set_error_handler() that intercepts E_USER_ERROR and returns
-        // true (suppressing PHP's normal fatal-and-terminate behavior), so
-        // trigger_error() above can actually return here when that handler is
-        // active (installed for every real request via common.inc.php) — static
-        // analysis has no way to know set_error_handler() changes this.
-        // @phpstan-ignore deadCode.unreachable
+
+        // Used to be trigger_error(strip_tags($msg) . $btrace_msg,
+        // E_USER_ERROR) -- relying on ErrorCollector's installed
+        // set_error_handler() to intercept E_USER_ERROR and return true
+        // (suppressing PHP's normal fatal-and-terminate behavior) so
+        // execution could continue to the throw below. PHP 8.4 deprecates
+        // passing E_USER_ERROR to trigger_error() at all.
+        //
+        // An earlier version of this fix called exit() when ErrorCollector
+        // wasn't active, reasoning that was the old mechanism's real
+        // default behavior with no handler installed. That's true, but
+        // wrong to imitate: ErrorCollector::installIfConfigured() only
+        // installs when the deployment policy's showPhpErrorsOnFrontend is
+        // *also* true -- a real, valid config (showPhpErrors on,
+        // showPhpErrorsOnFrontend off) leaves isActive() false on every
+        // request, where hard-exiting instead of returning the real 500
+        // page below would be a genuine regression, not a faithful port.
+        // It also broke this codebase's own established test pattern
+        // (ScriptLoaderTest.php/TemplateInstanceTest.php among others)
+        // of installing a throwaway set_error_handler() around a
+        // fatalError()-reaching call and asserting on what it captured --
+        // exit() bypasses every handler unconditionally, silently killing
+        // the whole test process instead. Always recording (regardless of
+        // isActive()) and always falling through to the real error page
+        // below is both simpler and correct for every one of these cases.
+        ErrorCollector::recordFatal(strip_tags($msg) . $btrace_msg);
+
         throw new ResponseReadyException(ResponseFactory::html($display, 500));
     }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Html;
 
+use Piwigo\Core\ErrorCollector;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseReadyException;
 
@@ -20,8 +21,12 @@ use Piwigo\Http\ResponseReadyException;
 final class HtmlServiceTestFatalErrorCaller
 {
     /**
-     * The exact message trigger_error() was called with -- captures
-     * $errstr, the custom handler's own 2nd argument.
+     * fatalError()'s ErrorCollector::recordFatal() message, captured via
+     * ErrorCollector::collected() -- the real recording path it now uses
+     * instead of trigger_error(E_USER_ERROR) (deprecated as of PHP 8.4).
+     * Called unconditionally by fatalError() regardless of
+     * ErrorCollector::isActive(), so no install()/Reflection state setup
+     * is needed here.
      */
     public ?string $capturedErrorMessage = null;
 
@@ -44,23 +49,8 @@ final class HtmlServiceTestFatalErrorCaller
 
     public function call(HtmlService $service, string $msg, ?string $title, bool $showTrace): string
     {
-        // trigger_error(E_USER_ERROR) is deprecated-but-still-fires as of
-        // PHP 8.4 with no custom handler installed; production installs
-        // one via error_collector.inc.php (see fatalError()'s own
-        // docblock) that intercepts and returns true, letting execution
-        // continue to the real `throw` below -- this mirrors that here.
-        // No $error_types filter (matches ErrorCollectorTest.php's own
-        // established pattern): passing E_USER_ERROR to trigger_error()
-        // itself raises a separate E_DEPRECATED notice under PHP 8.4+
-        // that a level-filtered handler wouldn't also catch.
         $this->capturedErrorMessage = null;
-        set_error_handler(function (int $errno, string $errstr): bool {
-            if ($errno === \E_USER_ERROR) {
-                $this->capturedErrorMessage = $errstr;
-            }
-
-            return true;
-        });
+        ErrorCollector::drain();
         // fatalError() is `never`-typed and always throws
         // ResponseReadyException -- no fallback return needed after the
         // try/catch (matches HtmlServiceTest.php's own established
@@ -69,11 +59,11 @@ final class HtmlServiceTestFatalErrorCaller
             $this->preCallDepth = count(debug_backtrace());
             $service->fatalError($msg, $title, $showTrace);
         } catch (ResponseReadyException $e) {
+            $collected = ErrorCollector::drain();
+            $this->capturedErrorMessage = $collected === [] ? null : preg_replace('/^\[ERROR\] /', '', $collected[0]);
             $this->capturedStatusCode = $e->response()->getStatusCode();
 
             return (string) $e->response()->getBody();
-        } finally {
-            restore_error_handler();
         }
     }
 }

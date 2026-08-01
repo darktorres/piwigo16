@@ -531,12 +531,10 @@ it('treats a non-string lang cookie (PHP array syntax) as a hacking attempt and 
     // array (PHP applies the same bracket-name parsing to cookies as it
     // does to GET/POST params) -- confirmed live before writing this
     // assertion. HtmlService::fatalError() always responds 500 regardless
-    // of its specific message (see that method's own docblock: it
-    // trigger_error()s E_USER_ERROR, which this app's own installed error
-    // handler lets fall through to a real thrown 500 Response rather than
-    // terminate the process) -- independent of the $status-threading fix
-    // above, since this path throws its own ResponseReadyException long
-    // before RegisterController's own final `return` is ever reached.
+    // of its specific message (see that method's own docblock) --
+    // independent of the $status-threading fix above, since this path
+    // throws its own ResponseReadyException long before RegisterController's
+    // own final `return` is ever reached.
     $result = registerCurlWithRawCookie('/register.php', 'lang[]=fr_FR');
 
     expect($result['status'])->toBe(500);

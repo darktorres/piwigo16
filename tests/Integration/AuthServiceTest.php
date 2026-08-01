@@ -212,14 +212,16 @@ namespace Piwigo\Tests\Integration {
             ));
             $_COOKIE['lang'] = ['unexpected', 'array'];
 
-            // HtmlService::fatalError()'s own trigger_error(E_USER_ERROR)
-            // hard-halts the script unless something intercepts it and
-            // returns true -- real requests get this from
-            // Piwigo\Core\ErrorCollector::install(), never called here (a
-            // real set_error_handler()/register_shutdown_function() pair
-            // would leak into every later test in this shared process,
-            // same reasoning as TemplateDefineDerivativeTest's own
-            // identical local handler).
+            // HtmlService::fatalError() always throws ResponseReadyException
+            // regardless of ErrorCollector::isActive() (see its own
+            // docblock) -- this handler is now just belt-and-suspenders
+            // against any incidental warning along the way, not load-
+            // bearing for the throw itself. Left local rather than a real
+            // Piwigo\Core\ErrorCollector::install() (a real
+            // set_error_handler()/register_shutdown_function() pair would
+            // leak into every later test in this shared process, same
+            // reasoning as TemplateDefineDerivativeTest's own identical
+            // local handler).
             set_error_handler(static fn (): bool => true);
             try {
                 $this->service->logUser(1, false);
@@ -249,9 +251,7 @@ namespace Piwigo\Tests\Integration {
             ));
             $_COOKIE['lang'] = 'zz_NOT_A_REAL_LANGUAGE';
 
-            // See the previous test's own comment: a local, scoped error
-            // handler is what lets fatalError()'s trigger_error(E_USER_ERROR)
-            // return instead of hard-halting the script.
+            // See the previous test's own comment.
             set_error_handler(static fn (): bool => true);
             try {
                 $this->service->logUser(1, false);

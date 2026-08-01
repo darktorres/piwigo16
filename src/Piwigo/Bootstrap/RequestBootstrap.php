@@ -329,7 +329,7 @@ final class RequestBootstrap
         // Route errors to DevTools (X-PHP-Error-N response headers) instead
         // of inline output, which corrupts JSON/XML/binary responses -- and
         // is also load-bearing for HtmlService::fatalError()'s own
-        // trigger_error(E_USER_ERROR)+throw sequence (see
+        // recordFatal()+throw sequence (see
         // ErrorCollector::installIfConfigured()'s own docblock).
         ErrorCollector::installIfConfigured();
 

@@ -58,12 +58,11 @@ final class CatModifyPageRenderer
         //
         // P27/SEC-40: this replaces a real bug found while auditing raw
         // superglobal reads -- the original `isset($_GET['cat_id']) &&
-        // is_numeric(...)` check called trigger_error(..., E_USER_ERROR)
-        // on failure without a following throw, but this codebase's own
-        // ErrorCollector intercepts E_USER_ERROR and lets execution
-        // continue (see HtmlService::fatalError()'s own comment on the
-        // same mechanism), so that check never actually halted anything.
-        // The very next line then concatenated raw $_GET['cat_id']
+        // is_numeric(...)` check logged a fatal signal (ErrorCollector::
+        // recordFatal(), see HtmlService::fatalError()'s own docblock for
+        // why that never actually halts) on failure without a following
+        // throw, so that check never actually halted anything. The very
+        // next line then concatenated raw $_GET['cat_id']
         // directly into SQL with zero escaping -- a real, if
         // Administrator-gated, SQL injection shape. $category['id'] (this
         // method's own $category parameter, already the real DB row

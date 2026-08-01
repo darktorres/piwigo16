@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Html\HtmlService;
@@ -829,54 +830,38 @@ test('parse fatal-errors for a handle with no registered filename', function ():
 // --- func_combine_script / func_get_combined_scripts -----------------------
 
 test('func_combine_script trigger_errors when id is missing', function (): void {
+    // func_combine_script() logs via ErrorCollector::recordFatal() (not
+    // trigger_error(E_USER_ERROR), deprecated as of PHP 8.4 -- see
+    // HtmlService::fatalError()'s own docblock) and simply returns, no
+    // exception thrown -- checked directly via drain() instead of a
+    // throwaway set_error_handler().
     $t = new Template();
+    ErrorCollector::drain();
 
-    $caught = null;
-    set_error_handler(static function (int $errno, string $errstr) use (&$caught): bool {
-        $caught = $errstr;
-        return true;
-    }, E_USER_ERROR);
-    try {
-        $t->func_combine_script([]);
-    } finally {
-        restore_error_handler();
-    }
+    $t->func_combine_script([]);
 
-    expect($caught)->toBe("combine_script: missing 'id' parameter");
+    $collected = ErrorCollector::drain();
+    expect($collected)->toBe(["[ERROR] combine_script: missing 'id' parameter"]);
 });
 
 test('func_combine_script requires id to be a string even when the key is set', function (): void {
     $t = new Template();
+    ErrorCollector::drain();
 
-    $caught = null;
-    set_error_handler(static function (int $errno, string $errstr) use (&$caught): bool {
-        $caught = $errstr;
-        return true;
-    }, E_USER_ERROR);
-    try {
-        $t->func_combine_script(['id' => 42, 'path' => 'x.js']);
-    } finally {
-        restore_error_handler();
-    }
+    $t->func_combine_script(['id' => 42, 'path' => 'x.js']);
 
-    expect($caught)->toBe("combine_script: missing 'id' parameter");
+    $collected = ErrorCollector::drain();
+    expect($collected)->toBe(["[ERROR] combine_script: missing 'id' parameter"]);
 });
 
 test('func_combine_script trigger_errors for an invalid load value', function (): void {
     $t = new Template();
+    ErrorCollector::drain();
 
-    $caught = null;
-    set_error_handler(static function (int $errno, string $errstr) use (&$caught): bool {
-        $caught = $errstr;
-        return true;
-    }, E_USER_ERROR);
-    try {
-        $t->func_combine_script(['id' => 'x', 'load' => 'bogus']);
-    } finally {
-        restore_error_handler();
-    }
+    $t->func_combine_script(['id' => 'x', 'load' => 'bogus']);
 
-    expect($caught)->toBe("combine_script: invalid 'load' parameter");
+    $collected = ErrorCollector::drain();
+    expect($collected)->toBe(["[ERROR] combine_script: invalid 'load' parameter"]);
 });
 
 test('func_combine_script maps load="footer" to load_mode 1', function (): void {
@@ -1025,12 +1010,12 @@ test('func_combine_script sets is_template to true when the template param is tr
 
 test('func_get_combined_scripts trigger_errors when load is missing', function (): void {
     $t = new Template();
+    ErrorCollector::drain();
 
-    // Unrestricted (no 3rd-arg level mask): the suppressed E_USER_ERROR
-    // trigger_error() call falls through to the very next line, which
-    // reads the still-missing $params['load'] key directly (no isset())
-    // -- a real "Undefined array key" E_WARNING this handler must also
-    // absorb, confirmed live.
+    // The fatal signal (ErrorCollector::recordFatal(), no exception) falls
+    // through to the very next line, which reads the still-missing
+    // $params['load'] key directly (no isset()) -- a real "Undefined
+    // array key" E_WARNING this handler must still absorb, confirmed live.
     $caught = [];
     set_error_handler(static function (int $errno, string $errstr) use (&$caught): bool {
         $caught[] = $errstr;
@@ -1042,7 +1027,9 @@ test('func_get_combined_scripts trigger_errors when load is missing', function (
         restore_error_handler();
     }
 
-    expect($caught)->toContain("get_combined_scripts: missing 'load' parameter");
+    $collected = ErrorCollector::drain();
+    expect($collected)->toBe(["[ERROR] get_combined_scripts: missing 'load' parameter"]);
+    expect($caught)->toContain('Undefined array key "load"');
     // $params['load'] === 'header' is false for the missing/null case, so
     // it still falls through to the footer-scripts branch.
     expect($result)->toBe('');

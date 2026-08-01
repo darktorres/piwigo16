@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
@@ -74,7 +75,13 @@ final class ElementSetRanksPageRenderer
         $elementSetRanksRequest = Request\ElementSetRanksRequest::fromGlobals();
 
         if (! $elementSetRanksRequest->isCatIdValid) {
-            trigger_error('missing cat_id param', E_USER_ERROR);
+            // Used to be trigger_error(..., E_USER_ERROR) -- deprecated as
+            // of PHP 8.4, see HtmlService::fatalError()'s own docblock for
+            // the real replacement/reasoning. Execution always fell
+            // through to the cast below regardless (see
+            // ElementSetRanksRequest's own docblock), so nothing else
+            // changes here.
+            ErrorCollector::recordFatal('missing cat_id param');
         }
 
         $category_id = $elementSetRanksRequest->catId;

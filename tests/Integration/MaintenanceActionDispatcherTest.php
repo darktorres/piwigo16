@@ -385,13 +385,16 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         // this test never boots a full RequestBootstrap.
         CurrentTemplate::set(new Template(CurrentPaths::get()->root . 'themes/admin', 'default'));
 
-        // HtmlService::fatalError()'s own trigger_error(E_USER_ERROR) hard-
-        // halts the script unless something intercepts it and returns true
-        // -- real requests get this from Piwigo\Core\ErrorCollector::install(),
-        // never called here (a real set_error_handler()/
-        // register_shutdown_function() pair would leak into every later
-        // test in this shared process, same reasoning as
-        // TemplateDefineDerivativeTest's own identical local handler).
+        // HtmlService::fatalError() always throws ResponseReadyException
+        // regardless of ErrorCollector::isActive() (see its own docblock)
+        // -- this handler is now just belt-and-suspenders against any
+        // incidental warning along the way, not load-bearing for the
+        // throw itself. Left local rather than a real
+        // Piwigo\Core\ErrorCollector::install() (a real
+        // set_error_handler()/register_shutdown_function() pair would
+        // leak into every later test in this shared process, same
+        // reasoning as TemplateDefineDerivativeTest's own identical local
+        // handler).
         set_error_handler(static fn (): bool => true);
         try {
             $this->dispatcher->dispatch('compiled-templates');

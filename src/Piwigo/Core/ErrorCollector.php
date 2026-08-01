@@ -113,6 +113,33 @@ final class ErrorCollector
     }
 
     /**
+     * Records a fatal application-level error directly, bypassing
+     * trigger_error() + set_error_handler() interception entirely -- PHP
+     * 8.4 deprecates passing E_USER_ERROR to trigger_error(), which is
+     * the mechanism HtmlService::fatalError() used to rely on to let its
+     * own throw continue running past a "fatal" signal instead of PHP
+     * hard-halting the script right there. HtmlService::fatalError() is
+     * this method's only real caller, and calls it unconditionally
+     * (regardless of isActive()) -- when inactive, this just accumulates
+     * into $collected harmlessly (nothing ever flush()es it without
+     * install() having registered the shutdown hook) and still reaches
+     * error_log(), matching handleError()'s own "Apache error log is the
+     * authoritative record" reasoning either way.
+     *
+     * Doesn't call writeTestErrorsLog() (unlike handleError()): that log
+     * is a belt-and-suspenders fallback specifically for errors whose
+     * response never reaches the client (a hard PHP fatal, an exit()).
+     * fatalError()'s own caller always gets back a real 500 response
+     * instead, so the normal collected()/flush()-header path this method
+     * already feeds is never bypassed here.
+     */
+    public static function recordFatal(string $message): void
+    {
+        self::$collected[] = '[ERROR] ' . $message;
+        error_log('PHP Fatal error: ' . $message);
+    }
+
+    /**
      * @internal registered via set_error_handler() — trailing params are
      * optional to match the callable(int, string, string=, int=, array=):bool
      * signature set_error_handler() expects.

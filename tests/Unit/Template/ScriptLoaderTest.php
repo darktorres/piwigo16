@@ -997,28 +997,19 @@ test('compute_script_topological_order fatal-errors exactly one level past the r
         $loader->add("a{$i}", 0, ["a" . ($i - 1)], "themes/default/js/a{$i}.js");
     }
 
-    // HtmlService::fatalError() trigger_error()s E_USER_ERROR before its
-    // own throw new ResponseReadyException(...) -- under Pest/PHPUnit's
-    // default error handler (no error_collector.inc.php installed here)
-    // that trigger_error() call itself throws first, matching this
-    // codebase's established set_error_handler capture pattern (e.g.
-    // TemplateInstanceTest's func_combine_script tests) rather than
-    // asserting on a specific thrown exception class.
+    // HtmlService::fatalError() always calls ErrorCollector::recordFatal()
+    // then throws ResponseReadyException -- caught directly here rather
+    // than via a throwaway set_error_handler() (this class no longer
+    // triggers a PHP-level error at all: trigger_error(E_USER_ERROR) was
+    // deprecated as of PHP 8.4, see HtmlService::fatalError()'s own
+    // docblock for the real replacement).
+    \Piwigo\Core\ErrorCollector::drain();
     $caught = null;
-    set_error_handler(static function (int $errno, string $errstr) use (&$caught): bool {
-        $caught = $errstr;
-
-        return true;
-    }, E_USER_ERROR);
     try {
         scriptLoaderTopologicalOrder($loader, 'a5');
-    } catch (\Throwable) {
-        // PHPUnit's own error handler may still convert this to a thrown
-        // ErrorException despite the handler above (registered without a
-        // priority override) -- either way, $caught below is what proves
-        // the fatal path was reached.
-    } finally {
-        restore_error_handler();
+    } catch (\Piwigo\Http\ResponseReadyException) {
+        $collected = \Piwigo\Core\ErrorCollector::drain();
+        $caught = $collected === [] ? null : preg_replace('/^\[ERROR\] /', '', $collected[0]);
     }
 
     // fatalError()'s own $showTrace=true default appends a backtrace

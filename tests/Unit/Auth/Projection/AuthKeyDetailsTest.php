@@ -14,10 +14,15 @@ function fullAuthKeyDetailsRow(): array
         'user_id' => '1',
         'auth_key' => str_repeat('a', 30),
         'expired_on' => '2026-08-01 00:00:00',
-        'revoked_on' => null,
+        // Real, non-null values (a genuine revoked/notified/apikey row
+        // shape) -- all null would leave every `?? null` coalesce on
+        // these 3 columns unable to tell a real value apart from one
+        // mutated to a bare `null` literal (CoalesceRemoveLeft): either
+        // way is_scalar(null) is false and the column defaults to null.
+        'revoked_on' => '2026-07-25 08:00:00',
         'last_used_on' => '2026-07-20 12:00:00',
-        'last_notified_on' => null,
-        'apikey_secret' => null,
+        'last_notified_on' => '2026-07-22 09:00:00',
+        'apikey_secret' => 'fixture-secret',
         'status' => 'normal',
         'username' => 'fixture_admin',
         'email' => 'fixture_admin@example.test',
@@ -31,13 +36,59 @@ test('fromRow narrows every column to its real type', function (): void {
         ->and($key->userId)->toBe('1')
         ->and($key->authKey)->toBe(str_repeat('a', 30))
         ->and($key->expiredOn)->toBe('2026-08-01 00:00:00')
-        ->and($key->revokedOn)->toBeNull()
+        ->and($key->revokedOn)->toBe('2026-07-25 08:00:00')
         ->and($key->lastUsedOn)->toBe('2026-07-20 12:00:00')
-        ->and($key->lastNotifiedOn)->toBeNull()
-        ->and($key->apikeySecret)->toBeNull()
+        ->and($key->lastNotifiedOn)->toBe('2026-07-22 09:00:00')
+        ->and($key->apikeySecret)->toBe('fixture-secret')
         ->and($key->status)->toBe('normal')
         ->and($key->username)->toBe('fixture_admin')
         ->and($key->email)->toBe('fixture_admin@example.test');
+});
+
+test('fromRow casts a non-string scalar (e.g. a real DBAL int/float) to string for every string-typed column', function (): void {
+    // Every column here is_scalar()-guarded, not is_string()-guarded --
+    // fullAuthKeyDetailsRow()'s own values are already strings, which
+    // can't tell the (string) cast apart from its own removal (strings
+    // pass through a `(string)` cast unchanged). A real int/float scalar
+    // (as a DBAL driver can hand back for a numeric column) exercises
+    // the cast for real, since AuthKeyDetails's own properties are
+    // `string`/`?string` and this file has strict_types=1.
+    $row = fullAuthKeyDetailsRow();
+    $row['auth_key_id'] = 5;
+    $row['user_id'] = 1;
+    $row['auth_key'] = 999888777;
+    $row['expired_on'] = 20260801;
+    $row['revoked_on'] = 20260701;
+    $row['last_used_on'] = 3.5;
+    $row['last_notified_on'] = 42;
+    $row['apikey_secret'] = 7;
+
+    $key = AuthKeyDetails::fromRow($row);
+
+    expect($key->authKeyId)->toBe('5')
+        ->and($key->userId)->toBe('1')
+        ->and($key->authKey)->toBe('999888777')
+        ->and($key->expiredOn)->toBe('20260801')
+        ->and($key->revokedOn)->toBe('20260701')
+        ->and($key->lastUsedOn)->toBe('3.5')
+        ->and($key->lastNotifiedOn)->toBe('42')
+        ->and($key->apikeySecret)->toBe('7');
+});
+
+test('fromRow defaults every NOT NULL column to an empty string when absent', function (): void {
+    // fullAuthKeyDetailsRow()-derived tests never exercise these 7
+    // columns' own is_scalar()/is_string() failure branch, since the
+    // fixture always supplies a real string for them -- only the
+    // nullable columns' absence is covered below.
+    $key = AuthKeyDetails::fromRow([]);
+
+    expect($key->authKeyId)->toBe('')
+        ->and($key->userId)->toBe('')
+        ->and($key->authKey)->toBe('')
+        ->and($key->expiredOn)->toBe('')
+        ->and($key->status)->toBe('')
+        ->and($key->username)->toBe('')
+        ->and($key->email)->toBe('');
 });
 
 test('fromRow defaults every nullable column to null when absent', function (): void {
@@ -65,10 +116,10 @@ test('toArray round-trips the exact same DB column shape fromRow narrowed', func
         'user_id' => '1',
         'auth_key' => str_repeat('a', 30),
         'expired_on' => '2026-08-01 00:00:00',
-        'revoked_on' => null,
+        'revoked_on' => '2026-07-25 08:00:00',
         'last_used_on' => '2026-07-20 12:00:00',
-        'last_notified_on' => null,
-        'apikey_secret' => null,
+        'last_notified_on' => '2026-07-22 09:00:00',
+        'apikey_secret' => 'fixture-secret',
         'status' => 'normal',
         'username' => 'fixture_admin',
         'email' => 'fixture_admin@example.test',

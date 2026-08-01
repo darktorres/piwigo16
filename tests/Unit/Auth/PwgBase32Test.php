@@ -11,6 +11,24 @@ use Piwigo\Auth\PwgBase32;
  * against this class's own algorithm (5-bit regrouping + alphabet
  * lookup + '='-padding to a 40-bit/8-char boundary) to confirm it's a
  * faithful RFC 4648 implementation before trusting the vector.
+ *
+ * A mutation-testing sweep found several confirmed-equivalent mutants in
+ * this class, none worth chasing further:
+ * - encode()'s `if ($input === '') { return ''; }` early return: without
+ *   it, str_split('') and str_split('', 5) both already return [] on
+ *   this PHP version, so the rest of the function still produces '' --
+ *   the guard is real but its removal is unobservable.
+ * - `self::$map[(int) base_convert(...)]` (line 85): base_convert(...,
+ *   2, 10) never emits a leading-zero string, so PHP's own "canonical
+ *   decimal string" array-key coercion already casts it to int with or
+ *   without the explicit cast.
+ * - `strlen($binaryString) % 40) !== 0` (line 88): $x is always a
+ *   multiple of 8 (0/8/16/24/32) by construction, so `!== -1`/`!== 1`
+ *   behave identically to `!== 0` for every reachable value.
+ * - decode()'s final `max(0, min(255, ...))` clamp (line 142): the value
+ *   being clamped comes from `base_convert()` of an exactly-8-character
+ *   binary string, which can only ever represent 0-255 -- the clamp
+ *   bounds are unreachable in either direction.
  */
 test('encode returns an empty string for empty input', function (): void {
     expect(PwgBase32::encode(''))->toBe('');
@@ -62,6 +80,25 @@ test('decode rejects padding characters that are not at the very end', function 
 test('decode rejects an invalid leading character of an 8-char block', function (): void {
     // '1' and '0' are not in the base32 alphabet (only 2-7 are used).
     expect(PwgBase32::decode('1AAAAAAA'))->toBeFalse();
+});
+
+test('decode rejects a padding count of 6 when those chars are not the true trailing block', function (): void {
+    // 'AB======' + a full valid second block: substr_count() sees 6 '='
+    // total (an allowed count), but they sit at the end of the FIRST
+    // block, not the end of the whole string -- the loop's
+    // `substr($input, -6) !== '======'` check (index 0, allowedValues[0]
+    // === 6) is the only thing that rejects this; without it, rtrim()
+    // silently strips the misplaced '=' run per-block and this decodes
+    // "successfully" to a wrong value instead of failing.
+    expect(PwgBase32::decode('AB======' . 'ABCDEFGH'))->toBeFalse();
+});
+
+test('decode rejects a padding count of 1 when that char is not the true trailing block', function (): void {
+    // Same shape as the count-6 case above, but for allowedValues[3] ===
+    // 1 -- 'ABCDEFG=' ends its own (non-final) block in a single '=',
+    // followed by a full valid block, so the misplaced pad char would
+    // otherwise rtrim() away silently instead of being rejected.
+    expect(PwgBase32::decode('ABCDEFG=' . 'ABCDEFGH'))->toBeFalse();
 });
 
 test('decode a lone padding character returns an empty string', function (): void {

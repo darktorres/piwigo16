@@ -134,15 +134,30 @@ final class ConfigRepository extends EntityRepository
      */
     public function insertIgnoreRawValue(string $param, string $value): void
     {
+        // SQL-modernization audit: $param/$value used to be spliced
+        // directly into the query text (manual '"..."' quote-wrapping,
+        // no escaping) -- now bound. INSERT ... SET (rather than
+        // QueryBuilder::insert()->values()) stays: this is the one
+        // place in the codebase MySQL's SET-form INSERT IGNORE syntax
+        // was used, and QueryBuilder has no INSERT IGNORE support at all
+        // (see Db\BatchWriter::singleInsert()'s own docblock on the same
+        // constraint) -- bound placeholders work identically in either
+        // INSERT syntax, so the fix doesn't require picking the
+        // VALUES-form instead.
         $configTable = \Piwigo\Db\Tables::config();
+        $query = <<<SQL
+            INSERT IGNORE
+            INTO {$configTable}
+            SET param = :param
+                , value = :value
+            SQL;
+
         $this->getEntityManager()
             ->getConnection()
-            ->executeStatement(<<<SQL
-                INSERT IGNORE
-                INTO {$configTable}
-                SET param="{$param}"
-                    , value="{$value}"
-                SQL);
+            ->executeStatement($query, [
+                'param' => $param,
+                'value' => $value,
+            ]);
     }
 
     /**
@@ -156,27 +171,30 @@ final class ConfigRepository extends EntityRepository
      */
     public function findRawValue(string $param): string|false
     {
-        $configTable = \Piwigo\Db\Tables::config();
         $value = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne(<<<SQL
-                SELECT value FROM {$configTable} WHERE param = "{$param}"
-                SQL);
+            ->createQueryBuilder()
+            ->select('value')
+            ->from(\Piwigo\Db\Tables::config())
+            ->where('param = :param')
+            ->setParameter('param', $param)
+            ->executeQuery()
+            ->fetchOne();
 
         return is_string($value) ? $value : false;
     }
 
     public function countByParam(string $param): int
     {
-        $configTable = \Piwigo\Db\Tables::config();
         $value = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne(<<<SQL
-                SELECT
-                    COUNT(*)
-                FROM {$configTable}
-                WHERE param = "{$param}"
-                SQL);
+            ->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from(\Piwigo\Db\Tables::config())
+            ->where('param = :param')
+            ->setParameter('param', $param)
+            ->executeQuery()
+            ->fetchOne();
 
         return is_numeric($value) ? (int) $value : 0;
     }

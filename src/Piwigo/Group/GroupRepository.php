@@ -556,16 +556,15 @@ final class GroupRepository extends EntityRepository
             return [];
         }
 
-        $userGroupTable = \Piwigo\Db\Tables::userGroup();
-        $groupIdsCsv = implode(',', $groupIds);
-
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT user_id, group_id
-                FROM {$userGroupTable}
-                WHERE group_id IN ({$groupIdsCsv})
-                SQL);
+            ->createQueryBuilder()
+            ->select('user_id', 'group_id')
+            ->from(\Piwigo\Db\Tables::userGroup())
+            ->where('group_id IN (:groupIds)')
+            ->setParameter('groupIds', $groupIds, ArrayParameterType::INTEGER)
+            ->executeQuery()
+            ->fetchAllAssociative();
     }
 
     /**
@@ -584,16 +583,15 @@ final class GroupRepository extends EntityRepository
             return [];
         }
 
-        $userGroupTable = \Piwigo\Db\Tables::userGroup();
-        $userIdsCsv = implode(',', $userIds);
-
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT user_id, group_id
-                FROM {$userGroupTable}
-                WHERE user_id IN ({$userIdsCsv})
-                SQL);
+            ->createQueryBuilder()
+            ->select('user_id', 'group_id')
+            ->from(\Piwigo\Db\Tables::userGroup())
+            ->where('user_id IN (:userIds)')
+            ->setParameter('userIds', $userIds, ArrayParameterType::INTEGER)
+            ->executeQuery()
+            ->fetchAllAssociative();
     }
 
     /**
@@ -602,12 +600,13 @@ final class GroupRepository extends EntityRepository
      */
     public function countAll(): int
     {
-        $groupsTable = \Piwigo\Db\Tables::groups();
         $value = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne(<<<SQL
-                SELECT COUNT(*) FROM `{$groupsTable}`
-                SQL);
+            ->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from(\Piwigo\Db\Tables::groups())
+            ->executeQuery()
+            ->fetchOne();
 
         return is_numeric($value) ? (int) $value : 0;
     }
@@ -626,19 +625,16 @@ final class GroupRepository extends EntityRepository
             return [];
         }
 
-        $groupsTable = \Piwigo\Db\Tables::groups();
-        $groupIdsCsv = implode(',', $groupIds);
-
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT
-                    id,
-                    name
-                FROM `{$groupsTable}`
-                WHERE id IN ({$groupIdsCsv})
-                ORDER BY name ASC
-                SQL);
+            ->createQueryBuilder()
+            ->select('id', 'name')
+            ->from(\Piwigo\Db\Tables::groups())
+            ->where('id IN (:groupIds)')
+            ->orderBy('name', 'ASC')
+            ->setParameter('groupIds', $groupIds, ArrayParameterType::INTEGER)
+            ->executeQuery()
+            ->fetchAllAssociative();
 
         $byId = [];
         foreach ($rows as $row) {

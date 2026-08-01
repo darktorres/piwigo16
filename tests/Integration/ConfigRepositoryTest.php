@@ -150,6 +150,63 @@ final class ConfigRepositoryTest extends IntegrationTestCase
         self::assertNull($fresh->find($param));
     }
 
+    public function test_insert_ignore_raw_value_creates_a_row_then_is_a_silent_noop_on_a_second_call(): void
+    {
+        $param = 'p14_test_insert_ignore_' . bin2hex(random_bytes(4));
+
+        $this->repo->insertIgnoreRawValue($param, 'first-value');
+        self::assertSame('first-value', $this->repo->findRawValue($param));
+
+        // INSERT IGNORE: (param) is the primary key, so a second call for
+        // the same $param is a silent no-op, not an overwrite -- the real
+        // reason Core\UniqueExecLock uses this method at all (see its own
+        // docblock: only the process that wins the race gets its value
+        // stored).
+        $this->repo->insertIgnoreRawValue($param, 'second-value-should-be-ignored');
+        self::assertSame('first-value', $this->repo->findRawValue($param));
+
+        $this->repo->deleteByParam($param);
+    }
+
+    /**
+     * SQL-modernization audit regression: $param/$value used to be
+     * spliced directly into `INSERT IGNORE ... SET param="{$param}",
+     * value="{$value}"` (manual double-quote wrapping, no escaping) --
+     * now bound. A value containing a literal double quote would have
+     * broken out of the old manual quoting (`"..."`.$value.`"..."`
+     * shape) into raw SQL text; confirms it now round-trips as inert
+     * data instead.
+     */
+    public function test_insert_ignore_raw_value_and_find_raw_value_round_trip_a_value_containing_a_double_quote(): void
+    {
+        $param = 'p14_test_quote_' . bin2hex(random_bytes(4));
+        $value = 'value with a " double quote and a \' single quote';
+
+        $this->repo->insertIgnoreRawValue($param, $value);
+
+        self::assertSame($value, $this->repo->findRawValue($param));
+
+        $this->repo->deleteByParam($param);
+    }
+
+    public function test_find_raw_value_returns_false_for_a_missing_param(): void
+    {
+        self::assertFalse($this->repo->findRawValue('this_param_does_not_exist_anywhere'));
+    }
+
+    public function test_count_by_param_reflects_presence_and_absence(): void
+    {
+        $param = 'p14_test_count_' . bin2hex(random_bytes(4));
+
+        self::assertSame(0, $this->repo->countByParam($param));
+
+        $this->repo->insertIgnoreRawValue($param, 'x');
+        self::assertSame(1, $this->repo->countByParam($param));
+
+        $this->repo->deleteByParam($param);
+        self::assertSame(0, $this->repo->countByParam($param));
+    }
+
     /**
      * A fresh EntityManager/repository, bypassing the first one's identity
      * map -- otherwise find() would return the same in-memory object

@@ -7,6 +7,7 @@ namespace Piwigo\Activity;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\Env;
+use Piwigo\Permission\SqlCondition;
 use Piwigo\Users\CurrentUser;
 
 /**
@@ -204,9 +205,9 @@ final readonly class ActivityService implements ActivityLoggerInterface
     /**
      * @return list<array<string, mixed>>
      */
-    public function getPaginated(string $whereClause, int $limit, int $offset): array
+    public function getPaginated(SqlCondition $condition, int $limit, int $offset): array
     {
-        return $this->repo->findPaginated($whereClause, $limit, $offset);
+        return $this->repo->findPaginated($condition, $limit, $offset);
     }
 
     /**

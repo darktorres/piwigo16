@@ -321,6 +321,20 @@ abstract class CalendarBase
      */
     protected function build_nav_bar($level, ?array $labels, \Piwigo\Core\TemplateInterface $template): void
     {
+        // SQL-modernization audit: verified, no local defect -- every
+        // interpolated piece here (levelSql/innerSql/dateWhere) is a
+        // fragment-expression STRING built by another method/caller, not
+        // a raw scalar value spliced directly in this file. Traced
+        // $innerSql to its real producer, CalendarService::buildInnerSql():
+        // it does splice CSV id lists and a getSqlConditionFandF()
+        // fragment (a real, if already-documented-as-deliberate, instance
+        // of this initiative's target pattern -- see CalendarRepository::
+        // findRows()'s own docblock, which explicitly allows it). Fixing
+        // that means redesigning how inner_sql flows through
+        // CalendarService/CalendarRenderer/CalendarBase/CalendarMonthly/
+        // CalendarWeekly together -- deferred to CalendarMonthly.php's own
+        // stage (mid-size repos), where get_date_where()'s concrete
+        // implementation actually lives, not fixable piecemeal here.
         $levelSql = $this->calendar_levels[$level]['sql'];
         $innerSql = $this->inner_sql;
         $dateWhere = $this->get_date_where($level);

@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
+use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\ParameterType;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\CookieService;
 use Piwigo\Caddie\CaddieRepository;
@@ -30,6 +32,7 @@ use Piwigo\Image\DerivativeUrlCodec;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
+use Piwigo\Permission\SqlCondition;
 use Piwigo\Search\SearchRepository;
 
 /**
@@ -543,8 +546,6 @@ final class PwgCore
      */
     public static function getActivityList(array $param, PwgServer &$service): PwgError|array
     {
-        $conn = DbConnection::build();
-
         foreach (['date_min', 'date_max'] as $datefield) {
             $datefield_value = $param[$datefield] ?? null;
             if (! in_array($datefield_value, [null, ''], true) and ! \Piwigo\Core\DateHelper::isValidMysqlDatetime($datefield_value)) {
@@ -590,46 +591,79 @@ final class PwgCore
             $max = date_format($max_date, 'Y-m-d 23:59:59');
         }
 
-        $where = 'WHERE object != \'system\'';
+        // SQL-modernization audit: $where used to be a raw SQL string,
+        // built by string concatenation (uid/id/admin-ids were spliced
+        // directly, though always WsParamType::ID-guaranteed ints;
+        // action/object were already Connection::quote()-escaped;
+        // date_min/date_max already passed through date_format(), which
+        // can't emit SQL metacharacters) -- now a list<SqlCondition>,
+        // combined below.
+        $conditions = [new SqlCondition("object != 'system'")];
 
         if (isset($param['uid'])) {
-            $where .= '
-    AND performed_by = ' . $param['uid'];
+            $conditions[] = new SqlCondition('performed_by = :uid', [
+                'uid' => $param['uid'],
+            ], [
+                'uid' => ParameterType::INTEGER,
+            ]);
         }
 
         if (isset($param['action'])) {
-            $where .= '
-    AND action = ' . $conn->quote($param['action']);
+            $conditions[] = new SqlCondition('action = :action', [
+                'action' => $param['action'],
+            ], [
+                'action' => ParameterType::STRING,
+            ]);
         }
 
         if (isset($param['object'])) {
-            $where .= '
-    AND object = ' . $conn->quote($param['object']);
+            $conditions[] = new SqlCondition('object = :object', [
+                'object' => $param['object'],
+            ], [
+                'object' => ParameterType::STRING,
+            ]);
         }
 
         if (! in_array($date_min_raw, [null, ''], true)) {
-            $where .= '
-    AND occured_on >= "' . $min . '"';
+            $conditions[] = new SqlCondition('occured_on >= :minDate', [
+                'minDate' => $min,
+            ], [
+                'minDate' => ParameterType::STRING,
+            ]);
         }
 
         if (! in_array($date_max_raw, [null, ''], true)) {
-            $where .= '
-    AND occured_on <= "' . $max . '"';
+            $conditions[] = new SqlCondition('occured_on <= :maxDate', [
+                'maxDate' => $max,
+            ], [
+                'maxDate' => ParameterType::STRING,
+            ]);
         }
 
         if ($param['id'] !== null and $param['id'] !== 0) {
-            $where .= '
-    AND object_id = ' . $param['id'];
+            $conditions[] = new SqlCondition('object_id = :objectId', [
+                'objectId' => $param['id'],
+            ], [
+                'objectId' => ParameterType::INTEGER,
+            ]);
         }
 
         if (\Piwigo\Config\CurrentConfig::activityDisplayConnections() === 'none') {
-            $where .= '
-    AND action NOT IN (\'login\', \'logout\')';
+            $conditions[] = new SqlCondition("action NOT IN ('login', 'logout')");
         } elseif (\Piwigo\Config\CurrentConfig::activityDisplayConnections() === 'admins_only') {
             $admin_ids = \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class)->findAdminIds();
-            $where .= '
-    AND NOT (action IN (\'login\', \'logout\') AND object_id NOT IN (' . implode(',', array_map(static fn (\Piwigo\Common\ValueObject\UserId $id): int => $id->value, $admin_ids)) . '))';
+            $conditions[] = new SqlCondition(
+                "NOT (action IN ('login', 'logout') AND object_id NOT IN (:adminIds))",
+                [
+                    'adminIds' => array_map(static fn (\Piwigo\Common\ValueObject\UserId $id): int => $id->value, $admin_ids),
+                ],
+                [
+                    'adminIds' => ArrayParameterType::INTEGER,
+                ],
+            );
         }
+
+        $where = SqlCondition::combine('AND', ...$conditions);
 
         $more_rows_available = true;
 

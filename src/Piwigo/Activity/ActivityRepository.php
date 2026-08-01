@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Activity;
 
+use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\EntityRepository;
 use Piwigo\Activity\Projection\SystemActivityLogEntry;
 use Piwigo\Activity\Projection\UserActivityLogEntry;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Db\Tables;
+use Piwigo\Permission\SqlCondition;
 
 /**
  * Persistence layer for the activity domain: `activity` (an append-only
@@ -226,37 +228,48 @@ final class ActivityRepository extends EntityRepository
     }
 
     /**
-     * Paginated activity rows matching an already-built $whereClause --
+     * Paginated activity rows matching an already-built $condition --
      * Ws\PwgCore::getActivityList()'s own WS listing, one real caller.
-     * $whereClause is an already-built, trusted SQL WHERE fragment
-     * (starting with `WHERE`), same "caller composes trusted fragments"
-     * contract used throughout this codebase.
+     *
+     * SQL-modernization audit: $whereClause used to be an already-built
+     * raw SQL string (several of its own fragments -- uid/id/date range/
+     * admin-id exclusion list -- spliced directly by the caller), and
+     * $limit/$offset were spliced too; now a SqlCondition plus
+     * setMaxResults()/setFirstResult().
      *
      * @return list<array<string, mixed>>
      */
-    public function findPaginated(string $whereClause, int $limit, int $offset): array
+    public function findPaginated(SqlCondition $condition, int $limit, int $offset): array
     {
-        $activityTable = Tables::activity();
-
-        return $this->getEntityManager()
+        $qb = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT
-                    activity_id,
-                    performed_by,
-                    object,
-                    object_id,
-                    action,
-                    session_idx,
-                    ip_address,
-                    occured_on,
-                    details,
-                    user_agent
-                FROM {$activityTable}
-                {$whereClause}
-                ORDER BY activity_id DESC
-                LIMIT {$limit} OFFSET {$offset}
-                SQL);
+            ->createQueryBuilder()
+            ->select(
+                'activity_id',
+                'performed_by',
+                'object',
+                'object_id',
+                'action',
+                'session_idx',
+                'ip_address',
+                'occured_on',
+                'details',
+                'user_agent',
+            )
+            ->from(Tables::activity())
+            ->orderBy('activity_id', 'DESC')
+            ->setMaxResults($limit)
+            ->setFirstResult($offset);
+
+        if (! $condition->isEmpty()) {
+            $qb->where($condition->sql);
+            foreach ($condition->parameters as $name => $value) {
+                $qb->setParameter($name, $value, $condition->types[$name] ?? ParameterType::STRING);
+            }
+        }
+
+        return $qb->executeQuery()
+            ->fetchAllAssociative();
     }
 
     /**
@@ -268,23 +281,16 @@ final class ActivityRepository extends EntityRepository
      */
     public function findDailyActionCountsSince(string $sinceDate): array
     {
-        $activityTable = Tables::activity();
-
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT
-                    DATE_FORMAT(occured_on, '%Y-%m-%d') AS activity_day,
-                    object,
-                    action,
-                    COUNT(*) AS activity_counter
-                FROM {$activityTable}
-                WHERE occured_on >= :since_date
-                GROUP BY activity_day, object, action
-                SQL
-                , [
-                    'since_date' => $sinceDate,
-                ]);
+            ->createQueryBuilder()
+            ->select("DATE_FORMAT(occured_on, '%Y-%m-%d') AS activity_day", 'object', 'action', 'COUNT(*) AS activity_counter')
+            ->from(Tables::activity())
+            ->where('occured_on >= :sinceDate')
+            ->groupBy('activity_day', 'object', 'action')
+            ->setParameter('sinceDate', $sinceDate)
+            ->executeQuery()
+            ->fetchAllAssociative();
 
         return array_map(
             static fn (array $row): array => [
@@ -307,22 +313,18 @@ final class ActivityRepository extends EntityRepository
      */
     public function findCoreUpdateHistory(): array
     {
-        $activityTable = Tables::activity();
-        $activitySystemCore = \Piwigo\Core\ActivitySystem::Core;
-
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT
-                    action,
-                    occured_on,
-                    details
-                FROM {$activityTable}
-                WHERE object = 'system'
-                    AND object_id = {$activitySystemCore}
-                    AND action IN ('update', 'autoupdate')
-                ORDER BY activity_id ASC
-                SQL);
+            ->createQueryBuilder()
+            ->select('action', 'occured_on', 'details')
+            ->from(Tables::activity())
+            ->where("object = 'system'")
+            ->andWhere('object_id = :activitySystemCore')
+            ->andWhere("action IN ('update', 'autoupdate')")
+            ->orderBy('activity_id', 'ASC')
+            ->setParameter('activitySystemCore', \Piwigo\Core\ActivitySystem::Core, ParameterType::INTEGER)
+            ->executeQuery()
+            ->fetchAllAssociative();
 
         return array_map(
             static fn (array $row): array => [
@@ -344,20 +346,15 @@ final class ActivityRepository extends EntityRepository
      */
     public function findSystemActionCountsByObjectId(): array
     {
-        $activityTable = Tables::activity();
-
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT
-                    object,
-                    object_id,
-                    action,
-                    COUNT(*) AS counter
-                FROM {$activityTable}
-                WHERE object = 'system'
-                GROUP BY object, object_id, action
-                SQL);
+            ->createQueryBuilder()
+            ->select('object', 'object_id', 'action', 'COUNT(*) AS counter')
+            ->from(Tables::activity())
+            ->where("object = 'system'")
+            ->groupBy('object', 'object_id', 'action')
+            ->executeQuery()
+            ->fetchAllAssociative();
 
         return array_map(
             static fn (array $row): array => [
@@ -379,20 +376,15 @@ final class ActivityRepository extends EntityRepository
      */
     public function findUserAgentBreakdown(): array
     {
-        $activityTable = Tables::activity();
-
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT
-                    user_agent,
-                    COUNT(*) AS counter,
-                    MIN(occured_on) AS first_encounter,
-                    MAX(occured_on) AS last_encounter
-                FROM {$activityTable}
-                WHERE user_agent NOT LIKE 'Mozilla/5%'
-                GROUP BY user_agent
-                SQL);
+            ->createQueryBuilder()
+            ->select('user_agent', 'COUNT(*) AS counter', 'MIN(occured_on) AS first_encounter', 'MAX(occured_on) AS last_encounter')
+            ->from(Tables::activity())
+            ->where("user_agent NOT LIKE 'Mozilla/5%'")
+            ->groupBy('user_agent')
+            ->executeQuery()
+            ->fetchAllAssociative();
 
         return array_map(
             static fn (array $row): array => [

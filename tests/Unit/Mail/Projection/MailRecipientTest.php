@@ -37,6 +37,33 @@ test('fromRow defaults status to null when absent, matching findAdminsAndWebmast
     // zero value instead -- never actually null for a real fetched row.
 });
 
+test('fromRow defaults userId to 0 when user_id is missing or non-numeric', function (): void {
+    $row = fullMailRecipientRow();
+    unset($row['user_id']);
+
+    $recipient = MailRecipient::fromRow($row);
+
+    expect($recipient->userId)->toBe(0);
+});
+
+test('fromRow defaults name to an empty string when name is missing or non-string', function (): void {
+    $row = fullMailRecipientRow();
+    unset($row['name']);
+
+    $recipient = MailRecipient::fromRow($row);
+
+    expect($recipient->name)->toBe('');
+});
+
+test('fromRow defaults email to an empty string when email is missing or non-string', function (): void {
+    $row = fullMailRecipientRow();
+    unset($row['email']);
+
+    $recipient = MailRecipient::fromRow($row);
+
+    expect($recipient->email)->toBe('');
+});
+
 test('toArray round-trips the exact same DB column shape fromRow narrowed', function (): void {
     $roundTripped = MailRecipient::fromRow(fullMailRecipientRow())->toArray();
 

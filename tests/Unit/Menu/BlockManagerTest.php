@@ -6,6 +6,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Menu\BlockManager;
 use Piwigo\Menu\DisplayBlock;
 use Piwigo\Menu\RegisteredBlock;
+use Piwigo\PluginConfig\EventDispatcher;
 
 /**
  * Piwigo\Menu\BlockManager/DisplayBlock/RegisteredBlock -- had zero
@@ -114,6 +115,145 @@ test('prepare_display sorts display blocks by resolved position, independent of 
     $manager->register_block(new RegisteredBlock('first', 'First', 'core'));
     $manager->register_block(new RegisteredBlock('second', 'Second', 'core'));
     $manager->prepare_display();
+
+    $ids = [];
+    $reflection = new ReflectionProperty(BlockManager::class, 'display_blocks');
+    $displayBlocks = $reflection->getValue($manager);
+    if (! is_iterable($displayBlocks)) {
+        throw new RuntimeException('Expected display_blocks to be iterable');
+    }
+    foreach ($displayBlocks as $id => $block) {
+        $ids[] = $id;
+    }
+
+    expect($ids)->toBe(['second', 'first']);
+});
+
+test('prepare_display falls back to idx*50 positioning when a block\'s config value is non-numeric', function (): void {
+    // 'first' has an explicit but non-numeric config entry, forcing
+    // is_numeric($raw_pos) to false and exercising the ternary's *own*
+    // "$idx * 50" fallback (distinct from the one on the line above that
+    // only fires when the key is entirely absent from $mb_conf).
+    CurrentConfig::setBlkMenubar(['first' => 'not-a-number']);
+
+    $manager = new BlockManager('menubar');
+    $manager->register_block(new RegisteredBlock('first', 'First', 'core'));
+    $manager->register_block(new RegisteredBlock('second', 'Second', 'core'));
+
+    $manager->prepare_display();
+
+    $first = $manager->get_block('first');
+    $second = $manager->get_block('second');
+    if ($first === null || $second === null) {
+        throw new RuntimeException('Expected both blocks to be visible after prepare_display()');
+    }
+    expect($first->get_position())->toBe(50);
+    expect($second->get_position())->toBe(100);
+});
+
+test('prepare_display casts a numeric-string config position to a real int', function (): void {
+    // A numeric string survives is_numeric() but must go through the
+    // (int) cast before being stored -- otherwise DisplayBlock::set_position()
+    // (untyped param) would happily store the string "5" instead of the
+    // int 5, which the strict toBe(5) below would catch.
+    CurrentConfig::setBlkMenubar(['cat' => '5']);
+
+    $manager = new BlockManager('menubar');
+    $manager->register_block(new RegisteredBlock('cat', 'Categories', 'core'));
+    $manager->prepare_display();
+
+    $cat = $manager->get_block('cat');
+    if ($cat === null) {
+        throw new RuntimeException('Expected the cat block to remain visible after prepare_display()');
+    }
+    expect($cat->get_position())->toBe(5);
+});
+
+test('prepare_display treats a resolved position of exactly 1 as visible', function (): void {
+    // Pins down the ">" boundary itself (as opposed to the existing
+    // 0/negative test, which can't distinguish "> 0" from "> 1" since both
+    // reject 0 identically) -- 1 is the smallest position that must remain
+    // visible under "> 0" while a "> 1" mutant would wrongly hide it.
+    CurrentConfig::setBlkMenubar(['cat' => 1]);
+
+    $manager = new BlockManager('menubar');
+    $manager->register_block(new RegisteredBlock('cat', 'Categories', 'core'));
+    $manager->prepare_display();
+
+    expect($manager->is_hidden('cat'))->toBeFalse();
+    $cat = $manager->get_block('cat');
+    if ($cat === null) {
+        throw new RuntimeException('Expected the cat block to be visible after prepare_display()');
+    }
+    expect($cat->get_position())->toBe(1);
+});
+
+test('prepare_display sorts display blocks before firing blockmanager_prepare_display, so handlers observe already-sorted order', function (): void {
+    CurrentConfig::setBlkMenubar(['second' => 10, 'first' => 20]);
+
+    $manager = new BlockManager('menubar');
+    $manager->register_block(new RegisteredBlock('first', 'First', 'core'));
+    $manager->register_block(new RegisteredBlock('second', 'Second', 'core'));
+
+    $observedIds = null;
+    $handler = function (array $args) use (&$observedIds): void {
+        $target = $args[0];
+        if (! $target instanceof BlockManager) {
+            throw new RuntimeException('blockmanager_prepare_display: expected a BlockManager instance');
+        }
+
+        $reflection = new ReflectionProperty(BlockManager::class, 'display_blocks');
+        $displayBlocks = $reflection->getValue($target);
+        if (! is_iterable($displayBlocks)) {
+            throw new RuntimeException('Expected display_blocks to be iterable');
+        }
+
+        $ids = [];
+        foreach ($displayBlocks as $id => $block) {
+            $ids[] = $id;
+        }
+        $observedIds = $ids;
+    };
+    EventDispatcher::get()->addEventHandler('blockmanager_prepare_display', $handler);
+
+    try {
+        $manager->prepare_display();
+    } finally {
+        EventDispatcher::get()->removeEventHandler('blockmanager_prepare_display', $handler);
+    }
+
+    // Also proves the event actually fires with $this as the payload
+    // (an empty-array payload, or a call that never fires at all, would
+    // leave $observedIds null instead).
+    expect($observedIds)->toBe(['second', 'first']);
+});
+
+test('prepare_display re-sorts after blockmanager_prepare_display handlers change block positions', function (): void {
+    $manager = new BlockManager('menubar');
+    $manager->register_block(new RegisteredBlock('first', 'First', 'core'));
+    $manager->register_block(new RegisteredBlock('second', 'Second', 'core'));
+
+    // Default idx*50 positions put 'first' (50) before 'second' (100), so
+    // the pre-event sort_blocks() call leaves the array in that same
+    // order -- the handler then flips the relative order via the public
+    // set_block_position() API, and only a second, post-event sort_blocks()
+    // call can put 'second' back in front.
+    $handler = function (array $args): void {
+        $target = $args[0];
+        if (! $target instanceof BlockManager) {
+            throw new RuntimeException('blockmanager_prepare_display: expected a BlockManager instance');
+        }
+
+        $target->set_block_position('first', 999);
+        $target->set_block_position('second', 1);
+    };
+    EventDispatcher::get()->addEventHandler('blockmanager_prepare_display', $handler);
+
+    try {
+        $manager->prepare_display();
+    } finally {
+        EventDispatcher::get()->removeEventHandler('blockmanager_prepare_display', $handler);
+    }
 
     $ids = [];
     $reflection = new ReflectionProperty(BlockManager::class, 'display_blocks');

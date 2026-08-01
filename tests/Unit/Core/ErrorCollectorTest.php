@@ -29,6 +29,18 @@ afterEach(function (): void {
     ErrorCollector::reset();
 });
 
+test('reset actually clears isActive back to false, not leaving it true', function (): void {
+    // install() is deliberately never called in this file (see the top
+    // docblock), so isActive is set directly via reflection instead.
+    $prop = new ReflectionProperty(ErrorCollector::class, 'active');
+    $prop->setValue(null, true);
+    expect(ErrorCollector::isActive())->toBeTrue();
+
+    ErrorCollector::reset();
+
+    expect(ErrorCollector::isActive())->toBeFalse();
+});
+
 test('drain returns an empty array when nothing was collected', function (): void {
     expect(ErrorCollector::drain())->toBe([]);
 });
@@ -127,10 +139,187 @@ test('writeTestErrorsLog creates _data/logs/ when it does not exist yet, instead
         $logPath = $root . '_data/logs/test_errors.log';
         expect(is_dir($root . '_data/logs'))->toBeTrue()
             ->and(file_exists($logPath))->toBeTrue()
-            ->and(file_get_contents($logPath))->toContain('[WARNING] irrelevant in file.php:1');
+            // Exact match (not toContain()) -- kills line 163's
+            // ConcatRemoveRight (would drop the trailing "\n") and
+            // ConcatSwitchSides (would reorder to "\n" . $entry).
+            ->and(file_get_contents($logPath))->toBe("[WARNING] irrelevant in file.php:1\n");
     } finally {
         \Piwigo\Core\CurrentPaths::reset();
         exec('rm -rf ' . escapeshellarg($root));
+    }
+});
+
+test('writeTestErrorsLog appends the entry directly when _data/logs/ already exists', function (): void {
+    // Kills line 155's ConcatRemoveLeft/ConcatRemoveRight/ConcatSwitchSides
+    // on the FIRST file_put_contents() call -- the test above only
+    // exercises the fallback (line 163, after mkgetdir()), since its
+    // directory never exists yet, so the first call there always fails
+    // before ever writing anything.
+    $root = sys_get_temp_dir() . '/piwigo-error-collector-logs-' . bin2hex(random_bytes(8)) . '/';
+    mkdir($root . '_data/logs', 0o777, true);
+
+    try {
+        \Piwigo\Core\CurrentPaths::set(\Piwigo\Core\Paths::fromRoot($root));
+
+        $method = new ReflectionMethod(ErrorCollector::class, 'writeTestErrorsLog');
+        $method->invoke(null, '[WARNING] first in file.php:1');
+        $method->invoke(null, '[NOTICE] second in file.php:2');
+
+        $logPath = $root . '_data/logs/test_errors.log';
+        expect(file_get_contents($logPath))->toBe("[WARNING] first in file.php:1\n[NOTICE] second in file.php:2\n");
+    } finally {
+        \Piwigo\Core\CurrentPaths::reset();
+        exec('rm -rf ' . escapeshellarg($root));
+    }
+});
+
+/**
+ * New finding this sweep, applying to every subprocess-based test in
+ * this file (including the pre-existing E_ERROR/OOM test above): a real
+ * `pest --mutate` run cannot credit ANY of them with killing a mutant on
+ * line 174, even though each is independently, empirically verified
+ * (via a temporary sed-applied mutation + a standalone `php -r`/subprocess
+ * run, matching this whole sweep's own established technique) to
+ * genuinely distinguish real from mutated behavior. Root cause: pest's
+ * mutation harness swaps in the mutated source only within its own
+ * controlling PHP process's special test-run mechanism -- a `proc_open()`-
+ * spawned child process re-reads `src/Piwigo/Core/ErrorCollector.php`
+ * directly off disk, seeing the real, unmutated file every time,
+ * regardless of which mutant pest is currently "applying". This is a
+ * structural limitation of the subprocess-crash technique itself (real,
+ * uncatchable PHP errors are only reproducible via a genuinely separate
+ * process), not a code-quality gap -- the 2 tests below (and the
+ * pre-existing OOM one) are kept as real, valuable coverage despite
+ * `pest --mutate` being permanently unable to see it.
+ */
+test('flush does not record a non-fatal error_get_last() type as if it were fatal', function (): void {
+    // Kills line 174's BitwiseAndToBitwiseOr: E_USER_WARNING (512) shares
+    // no bits at all with the fatal mask (E_ERROR|E_PARSE|E_CORE_ERROR|
+    // E_COMPILE_ERROR = 85), so `&` correctly excludes it -- `|` would
+    // always be truthy regardless of $last['type'], wrongly recording
+    // every real error_get_last() state as a synthetic fatal entry.
+    // (RemoveBooleanCast on this same line is confirmed-equivalent,
+    // verified live: the surrounding `&&` already coerces its right
+    // operand to bool the same way an explicit cast would, for any int.)
+    //
+    // Run in an isolated subprocess, not a bare @trigger_error() here:
+    // error_get_last() is only ever populated by PHP's own DEFAULT error
+    // handling, which a real (even suppressing) set_error_handler()
+    // bypasses entirely (confirmed live: installing one, even one that
+    // returns true, leaves error_get_last() null afterward) -- and this
+    // shared PHPUnit process's own installed error handler intercepts a
+    // bare @trigger_error() regardless of the `@`, surfacing it as a
+    // risky-test warning instead of leaving error_get_last() alone.
+    $autoloadPath = dirname(__DIR__, 3) . '/vendor/autoload.php';
+    expect(is_file($autoloadPath))->toBeTrue();
+    $marker = sys_get_temp_dir() . '/piwigo-error-collector-nonfatal-' . bin2hex(random_bytes(8)) . '.json';
+
+    $script = '<?php' . "\n"
+        . 'require ' . var_export($autoloadPath, true) . ";\n"
+        . "@trigger_error('non-fatal warning for mutation coverage', E_USER_WARNING);\n"
+        . "\$method = new ReflectionMethod(\\Piwigo\\Core\\ErrorCollector::class, 'flush');\n"
+        . "\$method->invoke(null);\n"
+        . 'file_put_contents(' . var_export($marker, true) . ", json_encode(\\Piwigo\\Core\\ErrorCollector::collected()));\n";
+
+    $scriptFile = sys_get_temp_dir() . '/piwigo-error-collector-nonfatal-script-' . bin2hex(random_bytes(8)) . '.php';
+    file_put_contents($scriptFile, $script);
+
+    $descriptors = [
+        0 => ['file', '/dev/null', 'r'],
+        1 => ['pipe', 'w'],
+        2 => ['pipe', 'w'],
+    ];
+    $proc = proc_open([PHP_BINARY, $scriptFile], $descriptors, $pipes);
+    expect($proc)->toBeResource();
+    if ($proc === false) {
+        throw new RuntimeException('proc_open failed');
+    }
+
+    $stdout = stream_get_contents($pipes[1]);
+    fclose($pipes[1]);
+    $stderr = stream_get_contents($pipes[2]);
+    fclose($pipes[2]);
+    $exit = proc_close($proc);
+    @unlink($scriptFile);
+
+    try {
+        expect($exit)->toBe(0, 'ErrorCollector non-fatal subprocess exited non-zero: stdout=' . $stdout . ' stderr=' . $stderr)
+            ->and(file_exists($marker))->toBeTrue();
+
+        /** @var list<string> $collected */
+        $collected = json_decode((string) file_get_contents($marker), true);
+        expect($collected)->toBe([]);
+    } finally {
+        @unlink($marker);
+    }
+});
+
+test('flush records a synthetic entry for a genuine E_PARSE fatal (malformed required file) in a real subprocess', function (): void {
+    // Kills 2 of line 174's 3 BitwiseOrToBitwiseAnd mutants (the ones
+    // pairing E_ERROR|E_PARSE and E_PARSE|E_CORE_ERROR -- either zeroes
+    // out E_PARSE's own bit, both distinguishable from a real E_PARSE).
+    // The 3rd (pairing E_CORE_ERROR|E_COMPILE_ERROR) is not chased: both
+    // of those types originate from PHP's own core/compile machinery,
+    // not reachable via any userland mechanism -- confirmed here that
+    // even eval() (this file's own docblock) and a malformed `require`
+    // (this test) only ever produce a catchable ParseError/real E_PARSE,
+    // never E_CORE_ERROR or E_COMPILE_ERROR specifically.
+    //
+    // A syntactically invalid required file is a real, uncatchable
+    // (from the requiring script's own perspective) E_PARSE that DOES
+    // still populate error_get_last() and DOES still run
+    // register_shutdown_function() callbacks afterward -- both confirmed
+    // live, distinct from eval()'s own catchable-ParseError behavior
+    // this file's docblock already ruled out.
+    $autoloadPath = dirname(__DIR__, 3) . '/vendor/autoload.php';
+    expect(is_file($autoloadPath))->toBeTrue();
+    $marker = sys_get_temp_dir() . '/piwigo-error-collector-parse-' . bin2hex(random_bytes(8)) . '.json';
+    $brokenFile = sys_get_temp_dir() . '/piwigo-error-collector-broken-' . bin2hex(random_bytes(8)) . '.php';
+    file_put_contents($brokenFile, "<?php\nthis is not valid php syntax {{{\n");
+
+    $script = '<?php' . "\n"
+        . 'require ' . var_export($autoloadPath, true) . ";\n"
+        . "\\Piwigo\\Core\\ErrorCollector::install();\n"
+        . "register_shutdown_function(function () {\n"
+        . '    file_put_contents(' . var_export($marker, true) . ", json_encode(\\Piwigo\\Core\\ErrorCollector::collected()));\n"
+        . "});\n"
+        . 'require ' . var_export($brokenFile, true) . ";\n";
+
+    $scriptFile = sys_get_temp_dir() . '/piwigo-error-collector-parse-script-' . bin2hex(random_bytes(8)) . '.php';
+    file_put_contents($scriptFile, $script);
+
+    $descriptors = [
+        0 => ['file', '/dev/null', 'r'],
+        1 => ['pipe', 'w'],
+        2 => ['pipe', 'w'],
+    ];
+    $proc = proc_open([PHP_BINARY, $scriptFile], $descriptors, $pipes);
+    expect($proc)->toBeResource();
+    if ($proc === false) {
+        throw new RuntimeException('proc_open failed');
+    }
+
+    $stdout = stream_get_contents($pipes[1]);
+    fclose($pipes[1]);
+    $stderr = stream_get_contents($pipes[2]);
+    fclose($pipes[2]);
+    $exit = proc_close($proc);
+    @unlink($scriptFile);
+    @unlink($brokenFile);
+
+    try {
+        expect($exit)->not->toBe(0)
+            ->and(file_exists($marker))->toBeTrue('ErrorCollector E_PARSE subprocess never wrote its marker: stdout=' . $stdout . ' stderr=' . $stderr);
+
+        /** @var list<string> $collected */
+        $collected = json_decode((string) file_get_contents($marker), true);
+        expect($collected)->toHaveCount(1)
+            // label() itself deliberately has no E_PARSE arm (see the
+            // "label falls back to the PHP code" test above) -- '[PHP]',
+            // not '[ERROR]', is the real, correct label here.
+            ->and($collected[0])->toStartWith('[PHP] syntax error');
+    } finally {
+        @unlink($marker);
     }
 });
 
@@ -284,6 +473,24 @@ test('label falls back to the PHP code for a type matching none of the known cat
  *    of flush()'s `self::$collected === [] || headers_sent()` check
  *    (previously only its `self::$collected === []` half was exercised),
  *    proving flush() never mutates the buffer either way.
+ *
+ * This same test below (both its empty- and non-empty-buffer variants,
+ * plus "flush returns immediately when nothing was collected" further
+ * down) also empirically confirms all 3 of this sweep's own remaining
+ * mutants on that same condition (BooleanOrToBooleanAnd, IdenticalTo­
+ * NotIdentical, IfNegated) are confirmed-equivalent, not just untested:
+ * verified live via temporary sed-applied mutations to the operator, the
+ * left operand's own comparison, and the whole condition's negation --
+ * the full suite passed unchanged against each. header() is a
+ * documented-here-live no-op under the CLI SAPI (no warning, no
+ * exception), and this loop only ever *reads* self::$collected (never
+ * mutates it) -- so with headers_sent() permanently true in this
+ * environment, every mutated variant of this condition still leaves
+ * self::$collected in the exact same final state as the real early
+ * return, regardless of what's actually buffered. The header-emission
+ * loop's own remaining mutants (lines 187/189/190/192, all inside that
+ * same unreachable-per-this-file's-own-earlier-investigation loop) are
+ * dead for the identical reason -- not chased further.
  */
 test('flush leaves a non-empty buffer untouched when headers are already sent', function (): void {
     $seeded = ['[WARNING] foo in bar.php:1', '[NOTICE] baz in qux.php:2'];

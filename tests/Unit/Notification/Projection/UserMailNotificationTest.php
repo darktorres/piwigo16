@@ -45,7 +45,37 @@ test('fromRow defaults every nullable column to null when absent', function (): 
         ->and($notification->status)->toBeNull();
     // The NOT NULL columns (user_id/check_key/username/mail_address) fall
     // back to their type's zero value instead -- never actually null for a
-    // real fetched row.
+    // real fetched row. See the dedicated test below for that fallback's
+    // exact value.
+});
+
+test('fromRow defaults the NOT NULL columns to their type\'s zero value when absent', function (): void {
+    $row = fullUserMailNotificationRow();
+    foreach (['user_id', 'check_key', 'username', 'mail_address'] as $key) {
+        $row[$key] = null;
+    }
+
+    $notification = UserMailNotification::fromRow($row);
+
+    expect($notification->userId)->toBe(0)
+        ->and($notification->checkKey)->toBe('')
+        ->and($notification->username)->toBe('')
+        ->and($notification->mailAddress)->toBe('');
+});
+
+test('fromRow string-casts a native scalar enabled column, matching mysqli-native-types results', function (): void {
+    // The class docblock's "real bug found live" section: a real tinyint(1)
+    // `enabled` column comes back as a native int under this project's
+    // MYSQLI_OPT_INT_AND_FLOAT_NATIVE setting, not a string -- fromRow()
+    // must (string)-cast it, not pass the native scalar straight through
+    // (the constructor's `?string $enabled` would TypeError on a bare int
+    // under this file's own strict_types=1 otherwise).
+    $row = fullUserMailNotificationRow();
+    $row['enabled'] = 1;
+
+    $notification = UserMailNotification::fromRow($row);
+
+    expect($notification->enabled)->toBe('1');
 });
 
 test('toArray round-trips the exact same DB column shape fromRow narrowed', function (): void {

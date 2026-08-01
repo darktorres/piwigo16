@@ -31,6 +31,49 @@ test('generate then verify round-trips immediately', function (): void {
     expect($service->verify($key))->toBeTrue();
 });
 
+test('generate then verify round-trips immediately using generate()\'s own real output', function (): void {
+    // Every other "round trips" test hand-crafts its own key (to sidestep
+    // the 0.1s rounding race the class's own docblock documents) --
+    // meaning generate()'s own hash_hmac() input order/concatenation was
+    // never actually exercised end-to-end by a genuine positive
+    // verification. A negative validAfterSeconds sidesteps the race
+    // instead of avoiding generate() entirely: `$time - (float)(-1)` widens
+    // the "not before" check by a full second, so a same-instant
+    // generate()-then-verify() can never land on the wrong side of it.
+    $service = new EphemeralKeyService();
+
+    $key = $service->generate(-1);
+
+    expect($service->verify($key))->toBeTrue();
+});
+
+test('generate then verify round-trips with non-empty additionalDataToHash, hashed on both sides', function (): void {
+    // Every other round trip uses the default '' additionalDataToHash --
+    // a dropped/reordered `. $additionalDataToHash` concat piece in
+    // generate()'s own hash_hmac() input is unobservable against an empty
+    // string (nothing to drop). A real, non-empty value on both the
+    // generate() and verify() sides is the only way to prove it's
+    // actually threaded through generate()'s own concat correctly.
+    $service = new EphemeralKeyService();
+
+    $key = $service->generate(-1, 'real-form-token');
+
+    expect($service->verify($key, 'real-form-token'))->toBeTrue();
+});
+
+test('generate then verify round-trips when REMOTE_ADDR is absent, both sides defaulting the same way', function (): void {
+    // fromRemoteAddr() returns null when REMOTE_ADDR is unset -- the `??
+    // ''` fallback on both generate()'s and verify()'s own separate call
+    // to it must default identically for a real key produced with no
+    // REMOTE_ADDR to still verify.
+    unset($_SERVER['REMOTE_ADDR']);
+    $service = new EphemeralKeyService();
+
+    $key = $service->generate(-1);
+
+    expect($service->verify($key))->toBeTrue();
+});
+
 test('verify rejects a key before its valid_after_seconds window has elapsed', function (): void {
     $service = new EphemeralKeyService();
     $key = $service->generate(1000);
@@ -59,6 +102,30 @@ test('verify rejects a key with the right shape but non-numeric issuedAt/validAf
 
     expect($service->verify('not-a-number:0:somesignature'))->toBeFalse()
         ->and($service->verify('123.0:not-a-number:somesignature'))->toBeFalse();
+});
+
+test('verify rejects a non-numeric issuedAt even when its leading digits and a matching signature would otherwise pass', function (): void {
+    // The existing "non-numeric parts" test above can't distinguish the
+    // is_numeric() guard's own `||` (a real gap: an AND would only reject
+    // when *both* parts are non-numeric) from an always-eventually-false
+    // outcome: (float) on a non-numeric string like "not-a-number" casts
+    // to 0.0, which the later time-window checks reject anyway regardless
+    // of the guard. A string that's non-numeric only because of trailing
+    // garbage -- but float-casts to a real, valid, *recent* timestamp --
+    // sidesteps that: paired with a signature computed over this exact
+    // raw (unstringified) key material, only the is_numeric() guard
+    // itself stands between this key and a false "verified".
+    $service = new EphemeralKeyService();
+    $issuedAtRaw = (string) round(microtime(true), 1) . 'xyz';
+    $validAfterSecondsRaw = '-1';
+    $signature = hash_hmac(
+        'sha256',
+        $issuedAtRaw . substr('127.0.0.1', 0, 5) . $validAfterSecondsRaw,
+        'test-secret-key'
+    );
+    $key = $issuedAtRaw . ':' . $validAfterSecondsRaw . ':' . $signature;
+
+    expect($service->verify($key))->toBeFalse();
 });
 
 test('verify rejects a tampered signature', function (): void {
@@ -90,6 +157,18 @@ test('verify rejects a key generated from a different remote address', function 
 
     $_SERVER['REMOTE_ADDR'] = '192.168.1.1';
     expect($service->verify($key))->toBeFalse();
+});
+
+test('verify accepts a key when only the first 5 chars of the remote address match', function (): void {
+    // Distinguishes substr($remote_addr, 0, 5) from the full address: two
+    // genuinely different IPs sharing the same 5-char prefix ('192.1')
+    // must still verify, proving only the prefix is hashed on either side.
+    $service = new EphemeralKeyService();
+    $_SERVER['REMOTE_ADDR'] = '192.168.1.1';
+    $key = $service->generate(-1);
+
+    $_SERVER['REMOTE_ADDR'] = '192.100.2.2';
+    expect($service->verify($key))->toBeTrue();
 });
 
 test('generate produces a different signature when the secret key changes', function (): void {

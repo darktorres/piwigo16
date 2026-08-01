@@ -33,10 +33,23 @@ final class EphemeralKeyService
      */
     public function generate(int $validAfterSeconds, string $additionalDataToHash = ''): string
     {
+        // The `1` decimal-places argument isn't independently verifiable
+        // via the generated key's own string shape: round(x, 1) and
+        // round(x, 0) produce an identical (string) cast (no decimal
+        // point at all) whenever the instant happens to round to a whole
+        // second, which a live microtime(true) call does often enough
+        // (confirmed live) to make a "the issuedAt part has a decimal
+        // point" assertion flaky. Not chased given this file's own
+        // stated aversion to flaky, live-clock-dependent tests (see the
+        // rounding-race comments elsewhere in this file).
         $time = round(microtime(true), 1);
         $remote_addr = IpAddress::fromRemoteAddr()->value ?? '';
         $secret_key = \Piwigo\Config\CurrentConfig::secretKey();
 
+        // Both (string) casts below are redundant: `.` concatenation
+        // already stringifies a float identically to an explicit cast
+        // (confirmed live). Confirmed while investigating a
+        // mutation-testing gap.
         return (string) $time . ':' . $validAfterSeconds . ':'
             . hash_hmac(
                 'sha256',
@@ -57,7 +70,11 @@ final class EphemeralKeyService
         // making a key generated and verified mere microseconds apart, with
         // $validAfterSeconds = 0, look like it came "from the future" and
         // get rejected -- confirmed live, intermittently (whichever way
-        // that instant's rounding falls), not a cross-test leak.
+        // that instant's rounding falls), not a cross-test leak. Same
+        // "1 decimal place" argument as generate()'s own identical call --
+        // not independently verifiable without a flaky assertion on the
+        // live clock landing on a non-whole second, see that method's own
+        // comment.
         $time = round(microtime(true), 1);
         $keyParts = explode(':', $key);
 
@@ -71,6 +88,16 @@ final class EphemeralKeyService
             return false;
         }
 
+        // Both (float) casts on $issuedAt/$validAfterSeconds are redundant:
+        // PHP's arithmetic/comparison operators already coerce a numeric
+        // string operand the same way an explicit cast would (confirmed
+        // live). The exact `>`/`>=` and `<`/`<=` boundaries just below
+        // aren't chased either: proving them needs $issuedAt to exactly
+        // equal $time (or $time - 3600) as computed by verify()'s own
+        // internal, uncontrollable round(microtime(true), 1) call --
+        // exactly the same live-clock race this file's own docblock above
+        // already documents for the 0-offset case, just at a different
+        // boundary.
         if ((float) $issuedAt > $time - (float) $validAfterSeconds) { // page must have been retrieved more than X sec ago
             return false;
         }

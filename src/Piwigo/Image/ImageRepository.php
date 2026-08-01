@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Image;
 
 use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\ParameterType;
+use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\ORM\EntityRepository;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Core\Env;
@@ -13,6 +15,7 @@ use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Image\Projection\Image;
 use Piwigo\Image\Projection\ImageFormat;
+use Piwigo\Permission\SqlCondition;
 
 /**
  * Persistence layer for the image domain's own data-touching function from
@@ -48,6 +51,24 @@ use Piwigo\Image\Projection\ImageFormat;
  */
 final class ImageRepository extends EntityRepository
 {
+    /**
+     * Applies a permission/filter `SqlCondition` via `andWhere()`, binding
+     * every one of its parameters -- same shared-helper shape as
+     * `Notification\NotificationRepository::applyCondition()`/
+     * `Tag\TagRepository::applyCondition()`.
+     */
+    private static function applyCondition(QueryBuilder $qb, SqlCondition $condition): void
+    {
+        if ($condition->isEmpty()) {
+            return;
+        }
+
+        $qb->andWhere($condition->sql);
+        foreach ($condition->parameters as $name => $value) {
+            $qb->setParameter($name, $value, $condition->types[$name] ?? ParameterType::STRING);
+        }
+    }
+
     /**
      * Deliberately avoids bumping `lastmodified` (the original's own SQL
      * comment, preserved) -- an image's "last modified" timestamp should
@@ -307,19 +328,15 @@ final class ImageRepository extends EntityRepository
      */
     public function findPathsForFileDeletion(array $imageIds): array
     {
-        $imagesTable = Tables::images();
-        $idsCsv = implode(',', $imageIds);
-
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->executeQuery(<<<SQL
-                SELECT
-                    id,
-                    path,
-                    representative_ext
-                FROM {$imagesTable}
-                WHERE id IN ({$idsCsv})
-                SQL)->fetchAllAssociative();
+            ->createQueryBuilder()
+            ->select('id', 'path', 'representative_ext')
+            ->from(Tables::images())
+            ->where('id IN (:ids)')
+            ->setParameter('ids', array_map(strval(...), $imageIds), ArrayParameterType::STRING)
+            ->executeQuery()
+            ->fetchAllAssociative();
 
         return array_map(
             static fn (array $row): array => [
@@ -345,16 +362,15 @@ final class ImageRepository extends EntityRepository
             return [];
         }
 
-        $imagesTable = Tables::images();
-        $idsCsv = implode(',', $imageIds);
-
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->executeQuery(<<<SQL
-                SELECT id, path, representative_ext, level
-                FROM {$imagesTable}
-                WHERE id IN ({$idsCsv})
-                SQL)->fetchAllAssociative();
+            ->createQueryBuilder()
+            ->select('id', 'path', 'representative_ext', 'level')
+            ->from(Tables::images())
+            ->where('id IN (:ids)')
+            ->setParameter('ids', $imageIds, ArrayParameterType::INTEGER)
+            ->executeQuery()
+            ->fetchAllAssociative();
 
         return array_map(
             static fn (array $row): array => [
@@ -379,16 +395,15 @@ final class ImageRepository extends EntityRepository
      */
     public function updateLevelForImages(array $imageIds, int $level): int
     {
-        $imagesTable = Tables::images();
-        $idsCsv = implode(',', $imageIds);
-
         return (int) $this->getEntityManager()
             ->getConnection()
-            ->executeStatement(<<<SQL
-                UPDATE {$imagesTable}
-                SET level={$level}
-                WHERE id IN ({$idsCsv})
-                SQL);
+            ->createQueryBuilder()
+            ->update(Tables::images())
+            ->set('level', ':level')
+            ->where('id IN (:ids)')
+            ->setParameter('level', $level, ParameterType::INTEGER)
+            ->setParameter('ids', $imageIds, ArrayParameterType::INTEGER)
+            ->executeStatement();
     }
 
     /**
@@ -408,21 +423,17 @@ final class ImageRepository extends EntityRepository
             return;
         }
 
-        $imagesTable = Tables::images();
-        $idsCsv = implode(',', $imageIds);
         $protectedField = SqlDialect::protectColumnName($field);
 
         $this->getEntityManager()
             ->getConnection()
-            ->executeStatement(
-                <<<SQL
-                UPDATE {$imagesTable}
-                SET {$protectedField} = ?
-                WHERE id IN ({$idsCsv})
-                SQL
-                ,
-                [$value]
-            );
+            ->createQueryBuilder()
+            ->update(Tables::images())
+            ->set($protectedField, ':value')
+            ->where('id IN (:ids)')
+            ->setParameter('value', $value)
+            ->setParameter('ids', $imageIds, ArrayParameterType::INTEGER)
+            ->executeStatement();
     }
 
     /**
@@ -533,22 +544,24 @@ final class ImageRepository extends EntityRepository
      */
     public function deleteElementReferences(array $ids): void
     {
-        $idsStr = wordwrap(implode(', ', $ids), 80, "\n");
         $conn = $this->getEntityManager()
             ->getConnection();
+        $idsForSql = array_map(strval(...), $ids);
 
         foreach ([Tables::comments(), Tables::imageCategory(), Tables::imageFormat(), Tables::imageTag(), Tables::favorites()] as $table) {
-            $conn->executeStatement(<<<SQL
-                DELETE FROM {$table}
-                WHERE image_id IN ({$idsStr})
-                SQL);
+            $conn->createQueryBuilder()
+                ->delete($table)
+                ->where('image_id IN (:ids)')
+                ->setParameter('ids', $idsForSql, ArrayParameterType::STRING)
+                ->executeStatement();
         }
 
         foreach ([Tables::rate(), Tables::caddie()] as $table) {
-            $conn->executeStatement(<<<SQL
-                DELETE FROM {$table}
-                WHERE element_id IN ({$idsStr})
-                SQL);
+            $conn->createQueryBuilder()
+                ->delete($table)
+                ->where('element_id IN (:ids)')
+                ->setParameter('ids', $idsForSql, ArrayParameterType::STRING)
+                ->executeStatement();
         }
 
         $this->getEntityManager()
@@ -582,15 +595,18 @@ final class ImageRepository extends EntityRepository
      */
     public function findRepresentedCategoryIds(array $ids): array
     {
-        $idsStr = wordwrap(implode(', ', $ids), 80, "\n");
-        $categoriesTable = Tables::categories();
-
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery(<<<SQL
-            SELECT
-                id
-            FROM {$categoriesTable}
-            WHERE representative_picture_id IN ({$idsStr})
-            SQL)->fetchFirstColumn());
+        return array_map(
+            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+            $this->getEntityManager()
+                ->getConnection()
+                ->createQueryBuilder()
+                ->select('id')
+                ->from(Tables::categories())
+                ->where('representative_picture_id IN (:ids)')
+                ->setParameter('ids', array_map(strval(...), $ids), ArrayParameterType::STRING)
+                ->executeQuery()
+                ->fetchFirstColumn()
+        );
     }
 
     /**
@@ -667,17 +683,18 @@ final class ImageRepository extends EntityRepository
      */
     public function countLoungeImagesPendingForCategory(int $categoryId): int
     {
-        $loungeTable = Tables::lounge();
         $imageCategoryTable = Tables::imageCategory();
 
         $value = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne(<<<SQL
-                SELECT COUNT(*)
-                FROM {$loungeTable}
-                WHERE category_id = {$categoryId}
-                AND image_id NOT IN (SELECT image_id FROM {$imageCategoryTable})
-                SQL);
+            ->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from(Tables::lounge())
+            ->where('category_id = :categoryId')
+            ->andWhere("image_id NOT IN (SELECT image_id FROM {$imageCategoryTable})")
+            ->setParameter('categoryId', $categoryId, ParameterType::INTEGER)
+            ->executeQuery()
+            ->fetchOne();
 
         return is_numeric($value) ? (int) $value : 0;
     }
@@ -754,18 +771,20 @@ final class ImageRepository extends EntityRepository
     public function findExistingAssociations(array $images, array $categories): array
     {
         $existing = [];
-        $imageCategoryTable = Tables::imageCategory();
-        $imagesCsv = implode(',', $images);
-        $categoriesCsv = implode(',', $categories);
 
-        foreach ($this->getEntityManager()->getConnection()->executeQuery(<<<SQL
-            SELECT
-                image_id,
-                category_id
-            FROM {$imageCategoryTable}
-            WHERE image_id IN ({$imagesCsv})
-                AND category_id IN ({$categoriesCsv})
-            SQL)->fetchAllAssociative() as $row) {
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
+            ->select('image_id', 'category_id')
+            ->from(Tables::imageCategory())
+            ->where('image_id IN (:images)')
+            ->andWhere('category_id IN (:categories)')
+            ->setParameter('images', array_map(strval(...), $images), ArrayParameterType::STRING)
+            ->setParameter('categories', array_map(strval(...), $categories), ArrayParameterType::STRING)
+            ->executeQuery()
+            ->fetchAllAssociative();
+
+        foreach ($rows as $row) {
             $categoryId = $row['category_id'];
             $imageId = $row['image_id'];
             assert(is_numeric($categoryId) && is_numeric($imageId));
@@ -781,20 +800,17 @@ final class ImageRepository extends EntityRepository
      */
     public function findMaxRanksByCategory(array $categories): array
     {
-        $imageCategoryTable = Tables::imageCategory();
-        $categoriesCsv = implode(',', $categories);
-
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->executeQuery(<<<SQL
-                SELECT
-                    category_id,
-                    MAX(`rank`) AS max_rank
-                FROM {$imageCategoryTable}
-                WHERE `rank` IS NOT NULL
-                    AND category_id IN ({$categoriesCsv})
-                GROUP BY category_id
-                SQL)->fetchAllKeyValue();
+            ->createQueryBuilder()
+            ->select('category_id', 'MAX(`rank`) AS max_rank')
+            ->from(Tables::imageCategory())
+            ->where('`rank` IS NOT NULL')
+            ->andWhere('category_id IN (:categories)')
+            ->groupBy('category_id')
+            ->setParameter('categories', array_map(strval(...), $categories), ArrayParameterType::STRING)
+            ->executeQuery()
+            ->fetchAllKeyValue();
 
         return array_map(static fn (mixed $rank): int => is_numeric($rank) ? (int) $rank : 0, $rows);
     }
@@ -812,21 +828,22 @@ final class ImageRepository extends EntityRepository
      */
     public function findDissociableImageIds(array $images, int|string $category): array
     {
-        $imageCategoryTable = Tables::imageCategory();
-        $imagesTable = Tables::images();
-        $imagesCsv = implode(',', $images);
-
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery(<<<SQL
-            SELECT id
-            FROM {$imageCategoryTable}
-                INNER JOIN {$imagesTable} ON image_id = id
-            WHERE category_id = {$category}
-                AND id IN ({$imagesCsv})
-                AND (
-                    category_id != storage_category_id
-                    OR storage_category_id IS NULL
-                )
-            SQL)->fetchFirstColumn());
+        return array_map(
+            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+            $this->getEntityManager()
+                ->getConnection()
+                ->createQueryBuilder()
+                ->select('i.id')
+                ->from(Tables::imageCategory(), 'ic')
+                ->innerJoin('ic', Tables::images(), 'i', 'ic.image_id = i.id')
+                ->where('ic.category_id = :category')
+                ->andWhere('i.id IN (:images)')
+                ->andWhere('(ic.category_id != i.storage_category_id OR i.storage_category_id IS NULL)')
+                ->setParameter('category', (string) $category)
+                ->setParameter('images', array_map(strval(...), $images), ArrayParameterType::STRING)
+                ->executeQuery()
+                ->fetchFirstColumn()
+        );
     }
 
     /**
@@ -834,17 +851,15 @@ final class ImageRepository extends EntityRepository
      */
     public function deleteImageCategoryLinks(array $imageIds, int|string $category): void
     {
-        $imageCategoryTable = Tables::imageCategory();
-        $imagesCsv = implode(',', $imageIds);
-
         $em = $this->getEntityManager();
         $em->getConnection()
-            ->executeStatement(<<<SQL
-                DELETE
-                FROM {$imageCategoryTable}
-                WHERE category_id = {$category}
-                    AND image_id IN ({$imagesCsv})
-                SQL);
+            ->createQueryBuilder()
+            ->delete(Tables::imageCategory())
+            ->where('category_id = :category')
+            ->andWhere('image_id IN (:images)')
+            ->setParameter('category', (string) $category)
+            ->setParameter('images', array_map(strval(...), $imageIds), ArrayParameterType::STRING)
+            ->executeStatement();
         $em->clear();
     }
 
@@ -864,17 +879,15 @@ final class ImageRepository extends EntityRepository
             return;
         }
 
-        $imageCategoryTable = Tables::imageCategory();
-        $categoryIdsCsv = implode(',', $categoryIds);
-
         $this->getEntityManager()
             ->getConnection()
-            ->executeStatement(<<<SQL
-                DELETE
-                FROM {$imageCategoryTable}
-                WHERE image_id = {$imageId}
-                    AND category_id IN ({$categoryIdsCsv})
-                SQL);
+            ->createQueryBuilder()
+            ->delete(Tables::imageCategory())
+            ->where('image_id = :imageId')
+            ->andWhere('category_id IN (:categoryIds)')
+            ->setParameter('imageId', $imageId, ParameterType::INTEGER)
+            ->setParameter('categoryIds', array_map(strval(...), $categoryIds), ArrayParameterType::STRING)
+            ->executeStatement();
     }
 
     /**
@@ -890,21 +903,27 @@ final class ImageRepository extends EntityRepository
     {
         $imageCategoryTable = Tables::imageCategory();
         $imagesTable = Tables::images();
-        $imagesCsv = implode(',', $images);
 
         $query = <<<SQL
             DELETE {$imageCategoryTable}.*
             FROM {$imageCategoryTable}
                 JOIN {$imagesTable} ON image_id=id
-            WHERE id IN ({$imagesCsv})
+            WHERE id IN (:images)
             SQL;
+        $params = [
+            'images' => array_map(strval(...), $images),
+        ];
+        $types = [
+            'images' => ArrayParameterType::STRING,
+        ];
 
         if ($categories !== []) {
-            $categoriesCsv = implode(',', $categories);
             $query .= <<<SQL
 
-                AND category_id NOT IN ({$categoriesCsv})
+                AND category_id NOT IN (:categories)
                 SQL;
+            $params['categories'] = array_map(strval(...), $categories);
+            $types['categories'] = ArrayParameterType::STRING;
         }
 
         $query .= <<<SQL
@@ -914,7 +933,7 @@ final class ImageRepository extends EntityRepository
 
         $em = $this->getEntityManager();
         $em->getConnection()
-            ->executeStatement($query);
+            ->executeStatement($query, $params, $types);
         $em->clear();
     }
 
@@ -938,18 +957,15 @@ final class ImageRepository extends EntityRepository
      */
     public function findPathsForMd5sum(array $ids): array
     {
-        $imagesTable = Tables::images();
-        $idsCsv = implode(', ', $ids);
-
         $paths = $this->getEntityManager()
             ->getConnection()
-            ->executeQuery(<<<SQL
-                SELECT
-                    id,
-                    path
-                FROM {$imagesTable}
-                WHERE id IN ({$idsCsv})
-                SQL)->fetchAllKeyValue();
+            ->createQueryBuilder()
+            ->select('id', 'path')
+            ->from(Tables::images())
+            ->where('id IN (:ids)')
+            ->setParameter('ids', array_map(strval(...), $ids), ArrayParameterType::STRING)
+            ->executeQuery()
+            ->fetchAllKeyValue();
 
         return array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $paths);
     }
@@ -963,17 +979,15 @@ final class ImageRepository extends EntityRepository
      */
     public function findUploadInfoById(int $imageId): ?array
     {
-        $imagesTable = Tables::images();
-
         $row = $this->getEntityManager()
             ->getConnection()
-            ->fetchAssociative(<<<SQL
-                SELECT
-                    path, file, md5sum,
-                    width, height, filesize
-                FROM {$imagesTable}
-                WHERE id = {$imageId}
-                SQL);
+            ->createQueryBuilder()
+            ->select('path', 'file', 'md5sum', 'width', 'height', 'filesize')
+            ->from(Tables::images())
+            ->where('id = :imageId')
+            ->setParameter('imageId', $imageId, ParameterType::INTEGER)
+            ->executeQuery()
+            ->fetchAssociative();
 
         if ($row === false) {
             return null;
@@ -990,26 +1004,38 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * Whether at least one image matches an already-built $condition (a
-     * bare SQL boolean expression, not prefixed with WHERE) --
-     * Ws\PwgImages::add()'s own upload-time uniqueness check ($condition is
-     * caller-built from CurrentConfig::uniquenessMode(), not user input).
-     * Same "caller composes trusted fragments" contract as
-     * findWithConditionsPaginated() above.
+     * Whether at least one image has $value in $column -- Ws\PwgImages::
+     * add()'s own upload-time uniqueness check ($column is one of
+     * `md5sum`/`file`, selected from CurrentConfig::uniquenessMode(),
+     * never caller-controlled).
+     *
+     * SQL-modernization audit / [SEC-20]: replaces the former
+     * existsWithCondition(string $condition), which took an
+     * already-quote-wrapped `"{$column} = '{$value}'"` fragment built by
+     * the caller -- a real SQL injection, since $value there was
+     * `Ws\PwgImages::add()`'s own `$params['original_sum']`/
+     * `original_filename`, both registered with zero WS-level type
+     * constraints (same root cause as findIdsByMd5sum()'s own [SEC-20]
+     * fix above). The docblock's own former "not user input" claim was
+     * wrong: only the *column choice* came from CurrentConfig, the value
+     * itself was always raw client input. Fixed by taking the column and
+     * value as separate parameters and binding the value.
      */
-    public function existsWithCondition(string $condition): bool
+    public function existsWithColumnValue(string $column, string $value): bool
     {
-        $imagesTable = Tables::images();
+        $protectedColumn = SqlDialect::protectColumnName($column);
 
-        $value = $this->getEntityManager()
+        $result = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne(<<<SQL
-                SELECT COUNT(*)
-                FROM {$imagesTable}
-                WHERE {$condition}
-                SQL);
+            ->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from(Tables::images())
+            ->where("{$protectedColumn} = :value")
+            ->setParameter('value', $value)
+            ->executeQuery()
+            ->fetchOne();
 
-        return is_numeric($value) && (int) $value > 0;
+        return is_numeric($result) && (int) $result > 0;
     }
 
     public function countAllImages(): int
@@ -1238,26 +1264,42 @@ final class ImageRepository extends EntityRepository
      * composes trusted fragments" contract used throughout this
      * repository.
      *
+     * SQL-modernization audit: $params/$types widened additively (both
+     * default `[]`) so a caller building a `SqlCondition`-shaped fragment
+     * into $whereClauses can bind its own values instead of splicing
+     * them; $startId/$limit (previously spliced) always bound directly.
+     *
      * @param  list<string>  $whereClauses
+     * @param array<string, mixed> $params
+     * @param array<string, ArrayParameterType|ParameterType> $types
      * @return list<array<string, mixed>>
      */
-    public function findForMissingDerivatives(array $whereClauses, int $startId, int $limit): array
+    public function findForMissingDerivatives(array $whereClauses, int $startId, int $limit, array $params = [], array $types = []): array
     {
         $allClauses = $whereClauses;
-        $allClauses[] = 'id < ' . $startId;
+        $allClauses[] = 'id < :startId';
+        $params['startId'] = $startId;
+        $params['limit'] = $limit;
+        $types['startId'] = ParameterType::INTEGER;
+        $types['limit'] = ParameterType::INTEGER;
 
         $imagesTable = Tables::images();
         $whereSql = implode(' AND ', $allClauses);
 
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative(<<<SQL
+            ->fetchAllAssociative(
+                <<<SQL
                 SELECT id, path, representative_ext, width, height, rotation
                 FROM {$imagesTable}
                 WHERE {$whereSql}
                 ORDER BY id DESC
-                LIMIT {$limit}
-                SQL);
+                LIMIT :limit
+                SQL
+                ,
+                $params,
+                $types
+            );
     }
 
     /**
@@ -1274,22 +1316,15 @@ final class ImageRepository extends EntityRepository
             return [];
         }
 
-        $imagesTable = Tables::images();
-        $idsCsv = implode(',', $imageIds);
-
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT
-                    id,
-                    IF(name IS NULL, file, name) AS label,
-                    filesize,
-                    file,
-                    path,
-                    representative_ext
-                FROM {$imagesTable}
-                WHERE id IN ({$idsCsv})
-                SQL);
+            ->createQueryBuilder()
+            ->select('id', 'IF(name IS NULL, file, name) AS label', 'filesize', 'file', 'path', 'representative_ext')
+            ->from(Tables::images())
+            ->where('id IN (:ids)')
+            ->setParameter('ids', array_map(strval(...), $imageIds), ArrayParameterType::STRING)
+            ->executeQuery()
+            ->fetchAllAssociative();
 
         return array_column($rows, null, 'id');
     }
@@ -1317,31 +1352,21 @@ final class ImageRepository extends EntityRepository
      */
     public function findOrphanImageIds(array $loungedIds): array
     {
-        $imagesTable = Tables::images();
-        $imageCategoryTable = Tables::imageCategory();
-
-        $query = <<<SQL
-            SELECT
-                id
-            FROM {$imagesTable}
-                LEFT JOIN {$imageCategoryTable} ON id = image_id
-            WHERE category_id IS NULL
-            SQL;
+        $qb = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
+            ->select('i.id')
+            ->from(Tables::images(), 'i')
+            ->leftJoin('i', Tables::imageCategory(), 'ic', 'i.id = ic.image_id')
+            ->where('ic.category_id IS NULL')
+            ->orderBy('i.id', 'ASC');
 
         if (count($loungedIds) > 0) {
-            $loungedIdsCsv = implode(',', $loungedIds);
-            $query .= <<<SQL
-
-                AND id NOT IN ({$loungedIdsCsv})
-                SQL;
+            $qb->andWhere('i.id NOT IN (:loungedIds)')
+                ->setParameter('loungedIds', $loungedIds, ArrayParameterType::INTEGER);
         }
 
-        $query .= <<<SQL
-
-            ORDER BY id ASC
-            SQL;
-
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery($query)->fetchFirstColumn());
+        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->executeQuery()->fetchFirstColumn());
     }
 
     /**
@@ -1533,24 +1558,17 @@ final class ImageRepository extends EntityRepository
      */
     public function findVirtuallyAssociatedCategoryRows(array $imageIds): array
     {
-        $idsForSql = array_map(strval(...), $imageIds);
-        $imageCategoryTable = Tables::imageCategory();
-        $imagesTable = Tables::images();
-        $idsCsv = implode(',', $idsForSql);
-
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT
-                    DISTINCT(category_id) AS id
-                FROM {$imageCategoryTable} AS ic
-                    JOIN {$imagesTable} AS i ON i.id = ic.image_id
-                WHERE ic.image_id IN ({$idsCsv})
-                    AND (
-                        ic.category_id != i.storage_category_id
-                        OR i.storage_category_id IS NULL
-                    )
-                SQL);
+            ->createQueryBuilder()
+            ->select('DISTINCT(category_id) AS id')
+            ->from(Tables::imageCategory(), 'ic')
+            ->innerJoin('ic', Tables::images(), 'i', 'i.id = ic.image_id')
+            ->where('ic.image_id IN (:ids)')
+            ->andWhere('(ic.category_id != i.storage_category_id OR i.storage_category_id IS NULL)')
+            ->setParameter('ids', array_map(strval(...), $imageIds), ArrayParameterType::STRING)
+            ->executeQuery()
+            ->fetchAllAssociative();
     }
 
     /**
@@ -1564,25 +1582,17 @@ final class ImageRepository extends EntityRepository
      */
     public function findThumbnailRowsForCategoryOrderedByRank(int $categoryId): array
     {
-        $imagesTable = Tables::images();
-        $imageCategoryTable = Tables::imageCategory();
-
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT
-                    id,
-                    file,
-                    path,
-                    representative_ext,
-                    width, height, rotation,
-                    name,
-                    `rank`
-                FROM {$imagesTable}
-                    JOIN {$imageCategoryTable} ON image_id = id
-                WHERE category_id = {$categoryId}
-                ORDER BY `rank`
-                SQL);
+            ->createQueryBuilder()
+            ->select('i.id', 'i.file', 'i.path', 'i.representative_ext', 'i.width', 'i.height', 'i.rotation', 'i.name', 'ic.`rank`')
+            ->from(Tables::images(), 'i')
+            ->innerJoin('i', Tables::imageCategory(), 'ic', 'ic.image_id = i.id')
+            ->where('ic.category_id = :categoryId')
+            ->orderBy('ic.`rank`')
+            ->setParameter('categoryId', $categoryId, ParameterType::INTEGER)
+            ->executeQuery()
+            ->fetchAllAssociative();
     }
 
     /**
@@ -1594,18 +1604,17 @@ final class ImageRepository extends EntityRepository
      */
     public function findImageIdsOrderedByRankForCategory(int $categoryId): array
     {
-        $imageCategoryTable = Tables::imageCategory();
-
         return array_values(array_filter(
             array_column($this->getEntityManager()
                 ->getConnection()
-                ->fetchAllAssociative(<<<SQL
-                    SELECT
-                        image_id
-                    FROM {$imageCategoryTable}
-                    WHERE category_id = {$categoryId}
-                    ORDER BY `rank` ASC
-                    SQL), 'image_id'),
+                ->createQueryBuilder()
+                ->select('image_id')
+                ->from(Tables::imageCategory())
+                ->where('category_id = :categoryId')
+                ->orderBy('`rank`', 'ASC')
+                ->setParameter('categoryId', $categoryId, ParameterType::INTEGER)
+                ->executeQuery()
+                ->fetchAllAssociative(), 'image_id'),
             static fn (mixed $v): bool => is_int($v) || is_string($v)
         ));
     }
@@ -1616,16 +1625,17 @@ final class ImageRepository extends EntityRepository
      */
     public function isImageInCategory(int $imageId, int $categoryId): bool
     {
-        $imageCategoryTable = Tables::imageCategory();
-
         $value = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne(<<<SQL
-                SELECT COUNT(*)
-                FROM {$imageCategoryTable}
-                WHERE image_id = {$imageId}
-                    AND category_id = {$categoryId}
-                SQL);
+            ->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from(Tables::imageCategory())
+            ->where('image_id = :imageId')
+            ->andWhere('category_id = :categoryId')
+            ->setParameter('imageId', $imageId, ParameterType::INTEGER)
+            ->setParameter('categoryId', $categoryId, ParameterType::INTEGER)
+            ->executeQuery()
+            ->fetchOne();
 
         return is_numeric($value) && (int) $value > 0;
     }
@@ -1638,15 +1648,15 @@ final class ImageRepository extends EntityRepository
      */
     public function findMaxRankForCategory(int $categoryId): ?int
     {
-        $imageCategoryTable = Tables::imageCategory();
-
         $row = $this->getEntityManager()
             ->getConnection()
-            ->fetchAssociative(<<<SQL
-                SELECT MAX(`rank`) AS max_rank
-                FROM {$imageCategoryTable}
-                WHERE category_id = {$categoryId}
-                SQL);
+            ->createQueryBuilder()
+            ->select('MAX(`rank`) AS max_rank')
+            ->from(Tables::imageCategory())
+            ->where('category_id = :categoryId')
+            ->setParameter('categoryId', $categoryId, ParameterType::INTEGER)
+            ->executeQuery()
+            ->fetchAssociative();
 
         if ($row === false || ! is_numeric($row['max_rank'])) {
             return null;
@@ -1663,17 +1673,17 @@ final class ImageRepository extends EntityRepository
      */
     public function incrementRanksFromForCategory(int $categoryId, int $rank): void
     {
-        $imageCategoryTable = Tables::imageCategory();
-
         $this->getEntityManager()
             ->getConnection()
-            ->executeStatement(<<<SQL
-                UPDATE {$imageCategoryTable}
-                SET `rank` = `rank` + 1
-                WHERE category_id = {$categoryId}
-                    AND `rank` IS NOT NULL
-                    AND `rank` >= {$rank}
-                SQL);
+            ->createQueryBuilder()
+            ->update(Tables::imageCategory())
+            ->set('`rank`', '`rank` + 1')
+            ->where('category_id = :categoryId')
+            ->andWhere('`rank` IS NOT NULL')
+            ->andWhere('`rank` >= :rank')
+            ->setParameter('categoryId', $categoryId, ParameterType::INTEGER)
+            ->setParameter('rank', $rank, ParameterType::INTEGER)
+            ->executeStatement();
     }
 
     /**
@@ -1682,16 +1692,17 @@ final class ImageRepository extends EntityRepository
      */
     public function updateRankForImageInCategory(int $imageId, int $categoryId, int $rank): void
     {
-        $imageCategoryTable = Tables::imageCategory();
-
         $this->getEntityManager()
             ->getConnection()
-            ->executeStatement(<<<SQL
-                UPDATE {$imageCategoryTable}
-                SET `rank` = {$rank}
-                WHERE image_id = {$imageId}
-                    AND category_id = {$categoryId}
-                SQL);
+            ->createQueryBuilder()
+            ->update(Tables::imageCategory())
+            ->set('`rank`', ':rank')
+            ->where('image_id = :imageId')
+            ->andWhere('category_id = :categoryId')
+            ->setParameter('rank', $rank, ParameterType::INTEGER)
+            ->setParameter('imageId', $imageId, ParameterType::INTEGER)
+            ->setParameter('categoryId', $categoryId, ParameterType::INTEGER)
+            ->executeStatement();
     }
 
     /**
@@ -1793,12 +1804,21 @@ final class ImageRepository extends EntityRepository
     public function findBatchManagerThumbnails(array $imageIds, ?int $categoryId, string $orderBySql, int $limit, int $offset): array
     {
         $imagesTable = Tables::images();
-        $imagesCsv = implode(',', $imageIds);
 
         $query = <<<SQL
             SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
             FROM {$imagesTable}
             SQL;
+        $params = [
+            'ids' => array_map(strval(...), $imageIds),
+            'limit' => $limit,
+            'offset' => $offset,
+        ];
+        $types = [
+            'ids' => ArrayParameterType::STRING,
+            'limit' => ParameterType::INTEGER,
+            'offset' => ParameterType::INTEGER,
+        ];
 
         if ($categoryId !== null) {
             $imageCategoryTable = Tables::imageCategory();
@@ -1810,25 +1830,27 @@ final class ImageRepository extends EntityRepository
 
         $query .= <<<SQL
 
-            WHERE id IN ({$imagesCsv})
+            WHERE id IN (:ids)
             SQL;
 
         if ($categoryId !== null) {
             $query .= <<<SQL
 
-                AND category_id = {$categoryId}
+                AND category_id = :categoryId
                 SQL;
+            $params['categoryId'] = $categoryId;
+            $types['categoryId'] = ParameterType::INTEGER;
         }
 
         $query .= <<<SQL
 
             {$orderBySql}
-            LIMIT {$limit} OFFSET {$offset}
+            LIMIT :limit OFFSET :offset
             SQL;
 
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative($query);
+            ->fetchAllAssociative($query, $params, $types);
     }
 
     /**
@@ -1840,16 +1862,15 @@ final class ImageRepository extends EntityRepository
      */
     public function findIdsAndDatesForBatchUnitSave(array $imageIds): array
     {
-        $imagesTable = Tables::images();
-        $idsCsv = implode(',', $imageIds);
-
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT id, date_creation
-                FROM {$imagesTable}
-                WHERE id IN ({$idsCsv})
-                SQL);
+            ->createQueryBuilder()
+            ->select('id', 'date_creation')
+            ->from(Tables::images())
+            ->where('id IN (:ids)')
+            ->setParameter('ids', array_map(strval(...), $imageIds), ArrayParameterType::STRING)
+            ->executeQuery()
+            ->fetchAllAssociative();
     }
 
     /**
@@ -1864,12 +1885,21 @@ final class ImageRepository extends EntityRepository
     public function findBatchManagerUnitRows(array $imageIds, ?int $categoryId, string $orderBySql, int $limit, int $offset): array
     {
         $imagesTable = Tables::images();
-        $imagesCsv = implode(',', $imageIds);
 
         $query = <<<SQL
             SELECT *
             FROM {$imagesTable}
             SQL;
+        $params = [
+            'ids' => array_map(strval(...), $imageIds),
+            'limit' => $limit,
+            'offset' => $offset,
+        ];
+        $types = [
+            'ids' => ArrayParameterType::STRING,
+            'limit' => ParameterType::INTEGER,
+            'offset' => ParameterType::INTEGER,
+        ];
 
         if ($categoryId !== null) {
             $imageCategoryTable = Tables::imageCategory();
@@ -1881,25 +1911,27 @@ final class ImageRepository extends EntityRepository
 
         $query .= <<<SQL
 
-            WHERE id IN ({$imagesCsv})
+            WHERE id IN (:ids)
             SQL;
 
         if ($categoryId !== null) {
             $query .= <<<SQL
 
-                AND category_id = {$categoryId}
+                AND category_id = :categoryId
                 SQL;
+            $params['categoryId'] = $categoryId;
+            $types['categoryId'] = ParameterType::INTEGER;
         }
 
         $query .= <<<SQL
 
             {$orderBySql}
-            LIMIT {$limit} OFFSET {$offset}
+            LIMIT :limit OFFSET :offset
             SQL;
 
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative($query);
+            ->fetchAllAssociative($query, $params, $types);
     }
 
     /**
@@ -1911,18 +1943,16 @@ final class ImageRepository extends EntityRepository
      */
     public function findCategoryLinksForImage(int $imageId): array
     {
-        $imageCategoryTable = Tables::imageCategory();
-        $categoriesTable = Tables::categories();
-
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT category_id, uppercats, dir
-                FROM {$imageCategoryTable} AS ic
-                    INNER JOIN {$categoriesTable} AS c
-                        ON c.id = ic.category_id
-                WHERE image_id = {$imageId}
-                SQL);
+            ->createQueryBuilder()
+            ->select('category_id', 'uppercats', 'dir')
+            ->from(Tables::imageCategory(), 'ic')
+            ->innerJoin('ic', Tables::categories(), 'c', 'c.id = ic.category_id')
+            ->where('image_id = :imageId')
+            ->setParameter('imageId', $imageId, ParameterType::INTEGER)
+            ->executeQuery()
+            ->fetchAllAssociative();
     }
 
     /**
@@ -1935,17 +1965,17 @@ final class ImageRepository extends EntityRepository
      */
     public function findCategoryIdsForImage(int $imageId): array
     {
-        $imageCategoryTable = Tables::imageCategory();
-
         return array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             array_column($this->getEntityManager()
                 ->getConnection()
-                ->fetchAllAssociative(<<<SQL
-                    SELECT category_id
-                    FROM {$imageCategoryTable}
-                    WHERE image_id = {$imageId}
-                    SQL), 'category_id')
+                ->createQueryBuilder()
+                ->select('category_id')
+                ->from(Tables::imageCategory())
+                ->where('image_id = :imageId')
+                ->setParameter('imageId', $imageId, ParameterType::INTEGER)
+                ->executeQuery()
+                ->fetchAllAssociative(), 'category_id')
         );
     }
 
@@ -1960,20 +1990,18 @@ final class ImageRepository extends EntityRepository
      */
     public function findIssue1827CandidateImageIds(int $limit): array
     {
-        $imagesTable = Tables::images();
-
         return array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             array_column($this->getEntityManager()
                 ->getConnection()
-                ->fetchAllAssociative(<<<SQL
-                    SELECT
-                        id
-                    FROM {$imagesTable}
-                    WHERE date_available < '2022-12-08 00:00:00'
-                        AND path LIKE './upload/%'
-                    LIMIT {$limit}
-                    SQL), 'id')
+                ->createQueryBuilder()
+                ->select('id')
+                ->from(Tables::images())
+                ->where("date_available < '2022-12-08 00:00:00'")
+                ->andWhere("path LIKE './upload/%'")
+                ->setMaxResults($limit)
+                ->executeQuery()
+                ->fetchAllAssociative(), 'id')
         );
     }
 
@@ -1986,18 +2014,16 @@ final class ImageRepository extends EntityRepository
      */
     public function findImageIdsSample(int $limit): array
     {
-        $imagesTable = Tables::images();
-
         return array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             array_column($this->getEntityManager()
                 ->getConnection()
-                ->fetchAllAssociative(<<<SQL
-                    SELECT
-                        id
-                    FROM {$imagesTable}
-                    LIMIT {$limit}
-                    SQL), 'id')
+                ->createQueryBuilder()
+                ->select('id')
+                ->from(Tables::images())
+                ->setMaxResults($limit)
+                ->executeQuery()
+                ->fetchAllAssociative(), 'id')
         );
     }
 
@@ -2068,16 +2094,13 @@ final class ImageRepository extends EntityRepository
             return;
         }
 
-        $imageCategoryTable = Tables::imageCategory();
-        $idsCsv = implode(',', $imageIds);
-
         $this->getEntityManager()
             ->getConnection()
-            ->executeStatement(<<<SQL
-                DELETE
-                FROM {$imageCategoryTable}
-                WHERE image_id IN ({$idsCsv})
-                SQL);
+            ->createQueryBuilder()
+            ->delete(Tables::imageCategory())
+            ->where('image_id IN (:ids)')
+            ->setParameter('ids', $imageIds, ArrayParameterType::INTEGER)
+            ->executeStatement();
     }
 
     /**
@@ -2086,27 +2109,39 @@ final class ImageRepository extends EntityRepository
      * the caller) -- Controller\PictureController's own "resolve the
      * requested picture, by id or by filename" lookup.
      *
+     * SQL-modernization audit / [SEC-20]: $imageFile used to splice raw
+     * into the query -- a real, guest-reachable SQL injection. Traced to
+     * its real source: Section\SectionInitializer::parseUrl() captures it
+     * via `preg_match('/^(\d+-)?(.*)?$/', $token, ...)`, an unrestricted
+     * capture of a raw picture.php URL path segment, and
+     * Controller\PictureController's own "already escaped by the caller"
+     * claim only neutralizes LIKE's `_`/`%` wildcards (`str_replace(['_',
+     * '%'], ['/_', '/%'], ...)`), not SQL quote characters -- a filename
+     * containing a literal `'` reached this method's raw SQL untouched.
+     * Fixed as a bound parameter.
+     *
      * @return array<string, mixed>|false
      */
     public function findByIdOrFilePattern(int $imageId, ?string $imageFile): array|false
     {
-        $imagesTable = Tables::images();
+        $qb = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
+            ->select('id', 'file', 'level')
+            ->from(Tables::images());
 
-        $query = <<<SQL
-            SELECT id, file, level
-            FROM {$imagesTable}
-            WHERE
-            SQL;
         if ($imageId > 0) {
-            $query .= " id = {$imageId}";
+            $qb->where('id = :imageId')
+                ->setParameter('imageId', $imageId, ParameterType::INTEGER);
         } else {
             assert($imageFile !== null && $imageFile !== '');
-            $query .= " file LIKE '{$imageFile}.%' ESCAPE '/' LIMIT 1";
+            $qb->where("file LIKE :imageFile ESCAPE '/'")
+                ->setMaxResults(1)
+                ->setParameter('imageFile', $imageFile . '.%');
         }
 
-        return $this->getEntityManager()
-            ->getConnection()
-            ->fetchAssociative($query);
+        return $qb->executeQuery()
+            ->fetchAssociative();
     }
 
     /**
@@ -2140,15 +2175,15 @@ final class ImageRepository extends EntityRepository
      */
     public function findPathById(int $imageId): ?string
     {
-        $imagesTable = Tables::images();
-
         $value = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne(<<<SQL
-                SELECT path
-                FROM {$imagesTable}
-                WHERE id = {$imageId}
-                SQL);
+            ->createQueryBuilder()
+            ->select('path')
+            ->from(Tables::images())
+            ->where('id = :imageId')
+            ->setParameter('imageId', $imageId, ParameterType::INTEGER)
+            ->executeQuery()
+            ->fetchOne();
 
         return is_string($value) ? $value : null;
     }
@@ -2162,19 +2197,15 @@ final class ImageRepository extends EntityRepository
      */
     public function findUploadResultInfoById(int $imageId): ?array
     {
-        $imagesTable = Tables::images();
-
         $row = $this->getEntityManager()
             ->getConnection()
-            ->fetchAssociative(<<<SQL
-                SELECT
-                    id,
-                    name,
-                    representative_ext,
-                    path
-                FROM {$imagesTable}
-                WHERE id = {$imageId}
-                SQL);
+            ->createQueryBuilder()
+            ->select('id', 'name', 'representative_ext', 'path')
+            ->from(Tables::images())
+            ->where('id = :imageId')
+            ->setParameter('imageId', $imageId, ParameterType::INTEGER)
+            ->executeQuery()
+            ->fetchAssociative();
 
         if ($row === false) {
             return null;
@@ -2194,131 +2225,153 @@ final class ImageRepository extends EntityRepository
      */
     public function countImagesInCategory(int $categoryId): int
     {
-        $imageCategoryTable = Tables::imageCategory();
-
         $value = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne(<<<SQL
-                SELECT COUNT(*)
-                FROM {$imageCategoryTable}
-                WHERE category_id = {$categoryId}
-                SQL);
+            ->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from(Tables::imageCategory())
+            ->where('category_id = :categoryId')
+            ->setParameter('categoryId', $categoryId, ParameterType::INTEGER)
+            ->executeQuery()
+            ->fetchOne();
 
         return is_numeric($value) ? (int) $value : 0;
     }
 
     /**
      * Whether $imageId is reachable via at least one category satisfying
-     * $forbiddenCondition -- Controller\PictureController's own "can this
-     * image still be accessed differently" fallback check.
+     * $condition -- Controller\PictureController's own "can this image
+     * still be accessed differently" fallback check.
+     *
+     * SQL-modernization audit: $forbiddenCondition (raw
+     * getSqlConditionFandF() output) replaced with a bound SqlCondition.
      */
-    public function isImageAccessibleWithCondition(int $imageId, string $forbiddenCondition): bool
+    public function isImageAccessibleWithCondition(int $imageId, SqlCondition $condition): bool
     {
-        $imagesTable = Tables::images();
-        $imageCategoryTable = Tables::imageCategory();
-
-        return $this->getEntityManager()
+        $qb = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne(<<<SQL
-                SELECT id
-                FROM {$imagesTable} INNER JOIN {$imageCategoryTable} ON id=image_id
-                WHERE id={$imageId}
-                {$forbiddenCondition}
-                LIMIT 1
-                SQL) !== false;
+            ->createQueryBuilder()
+            ->select('i.id')
+            ->from(Tables::images(), 'i')
+            ->innerJoin('i', Tables::imageCategory(), 'ic', 'i.id = ic.image_id')
+            ->where('i.id = :imageId')
+            ->setMaxResults(1)
+            ->setParameter('imageId', $imageId, ParameterType::INTEGER);
+
+        self::applyCondition($qb, $condition);
+
+        return $qb->executeQuery()
+            ->fetchOne() !== false;
     }
 
     /**
-     * Every column of $imageId's own row, if it satisfies
-     * $permissionCondition -- Ws\PwgImages::getInfo()'s own image lookup.
+     * Every column of $imageId's own row, if it satisfies $condition --
+     * Ws\PwgImages::getInfo()'s own image lookup.
+     *
+     * SQL-modernization audit: $permissionCondition replaced with a bound
+     * SqlCondition, same move as isImageAccessibleWithCondition() above.
      *
      * @return ?array<string, mixed>
      */
-    public function findRowWithCondition(int $imageId, string $permissionCondition): ?array
+    public function findRowWithCondition(int $imageId, SqlCondition $condition): ?array
     {
-        $imagesTable = Tables::images();
-
-        $row = $this->getEntityManager()
+        $qb = $this->getEntityManager()
             ->getConnection()
-            ->fetchAssociative(<<<SQL
-                SELECT *
-                FROM {$imagesTable}
-                WHERE id={$imageId}
-                {$permissionCondition}
-                LIMIT 1
-                SQL);
+            ->createQueryBuilder()
+            ->select('*')
+            ->from(Tables::images())
+            ->where('id = :imageId')
+            ->setMaxResults(1)
+            ->setParameter('imageId', $imageId, ParameterType::INTEGER);
+
+        self::applyCondition($qb, $condition);
+
+        $row = $qb->executeQuery()
+            ->fetchAssociative();
 
         return $row === false ? null : $row;
     }
 
     /**
-     * Categories $imageId belongs to that satisfy $forbiddenCondition, with
-     * each category's own display-relevant columns (including `commentable`,
+     * Categories $imageId belongs to that satisfy $condition, with each
+     * category's own display-relevant columns (including `commentable`,
      * unlike findVisibleCategoriesForImage() below) -- Ws\PwgImages::
      * getInfo()'s own "related categories" block.
      *
+     * SQL-modernization audit: $forbiddenCondition replaced with a bound
+     * SqlCondition, same move as isImageAccessibleWithCondition() above.
+     *
      * @return list<array<string, mixed>>
      */
-    public function findRelatedCategoriesForImage(int $imageId, string $forbiddenCondition): array
+    public function findRelatedCategoriesForImage(int $imageId, SqlCondition $condition): array
     {
-        $imageCategoryTable = Tables::imageCategory();
-        $categoriesTable = Tables::categories();
-
-        return $this->getEntityManager()
+        $qb = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT id, name, permalink, uppercats, global_rank, commentable
-                FROM {$imageCategoryTable}
-                    INNER JOIN {$categoriesTable} ON category_id = id
-                WHERE image_id = {$imageId}
-                {$forbiddenCondition}
-                SQL);
+            ->createQueryBuilder()
+            ->select('id', 'name', 'permalink', 'uppercats', 'global_rank', 'commentable')
+            ->from(Tables::imageCategory(), 'ic')
+            ->innerJoin('ic', Tables::categories(), 'c', 'category_id = id')
+            ->where('image_id = :imageId')
+            ->setParameter('imageId', $imageId, ParameterType::INTEGER);
+
+        self::applyCondition($qb, $condition);
+
+        return $qb->executeQuery()
+            ->fetchAllAssociative();
     }
 
     /**
      * Whether $imageId belongs to at least one commentable category
-     * satisfying $permissionCondition -- Ws\PwgImages::addComment()'s own
-     * "can this image receive a comment" check.
+     * satisfying $condition -- Ws\PwgImages::addComment()'s own "can this
+     * image receive a comment" check.
+     *
+     * SQL-modernization audit: $permissionCondition replaced with a bound
+     * SqlCondition, same move as isImageAccessibleWithCondition() above.
      */
-    public function isImageCommentableWithCondition(int $imageId, string $permissionCondition): bool
+    public function isImageCommentableWithCondition(int $imageId, SqlCondition $condition): bool
     {
-        $imageCategoryTable = Tables::imageCategory();
-        $categoriesTable = Tables::categories();
-
-        return $this->getEntityManager()
+        $qb = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne(<<<SQL
-                SELECT DISTINCT image_id
-                FROM {$imageCategoryTable}
-                    INNER JOIN {$categoriesTable} ON category_id=id
-                WHERE commentable=1
-                    AND image_id={$imageId}
-                {$permissionCondition}
-                SQL) !== false;
+            ->createQueryBuilder()
+            ->select('DISTINCT image_id')
+            ->from(Tables::imageCategory(), 'ic')
+            ->innerJoin('ic', Tables::categories(), 'c', 'category_id = id')
+            ->where('commentable = 1')
+            ->andWhere('image_id = :imageId')
+            ->setParameter('imageId', $imageId, ParameterType::INTEGER);
+
+        self::applyCondition($qb, $condition);
+
+        return $qb->executeQuery()
+            ->fetchOne() !== false;
     }
 
     /**
-     * Categories $imageId belongs to that satisfy $permissionCondition,
-     * with each category's own display-relevant columns -- Controller\
+     * Categories $imageId belongs to that satisfy $condition, with each
+     * category's own display-relevant columns -- Controller\
      * PictureController's own "related categories" block, ordered by
      * CategoryService::compareByGlobalRank() afterwards (not here).
      *
+     * SQL-modernization audit: $permissionCondition replaced with a bound
+     * SqlCondition, same move as isImageAccessibleWithCondition() above.
+     *
      * @return list<array<string, mixed>>
      */
-    public function findVisibleCategoriesForImage(int $imageId, string $permissionCondition): array
+    public function findVisibleCategoriesForImage(int $imageId, SqlCondition $condition): array
     {
-        $imageCategoryTable = Tables::imageCategory();
-        $categoriesTable = Tables::categories();
-
-        return $this->getEntityManager()
+        $qb = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT id,uppercats,commentable,visible,status,global_rank
-                FROM {$imageCategoryTable}
-                    INNER JOIN {$categoriesTable} ON category_id = id
-                WHERE image_id = {$imageId}
-                {$permissionCondition}
-                SQL);
+            ->createQueryBuilder()
+            ->select('id', 'uppercats', 'commentable', 'visible', 'status', 'global_rank')
+            ->from(Tables::imageCategory(), 'ic')
+            ->innerJoin('ic', Tables::categories(), 'c', 'category_id = id')
+            ->where('image_id = :imageId')
+            ->setParameter('imageId', $imageId, ParameterType::INTEGER);
+
+        self::applyCondition($qb, $condition);
+
+        return $qb->executeQuery()
+            ->fetchAllAssociative();
     }
 
     /**
@@ -2332,19 +2385,18 @@ final class ImageRepository extends EntityRepository
      */
     public function findAssociatedCategoryIds(int $imageId): array
     {
-        $categoriesTable = Tables::categories();
-        $imageCategoryTable = Tables::imageCategory();
-
         return array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             array_column($this->getEntityManager()
                 ->getConnection()
-                ->fetchAllAssociative(<<<SQL
-                    SELECT id
-                    FROM {$categoriesTable}
-                        INNER JOIN {$imageCategoryTable} ON id = category_id
-                    WHERE image_id = {$imageId}
-                    SQL), 'id')
+                ->createQueryBuilder()
+                ->select('c.id')
+                ->from(Tables::categories(), 'c')
+                ->innerJoin('c', Tables::imageCategory(), 'ic', 'c.id = ic.category_id')
+                ->where('ic.image_id = :imageId')
+                ->setParameter('imageId', $imageId, ParameterType::INTEGER)
+                ->executeQuery()
+                ->fetchAllAssociative(), 'id')
         );
     }
 
@@ -2352,22 +2404,30 @@ final class ImageRepository extends EntityRepository
      * Ids of every image with $md5sum -- Admin\Upload\UploadService's own
      * upload-time duplicate detection.
      *
+     * SQL-modernization audit / [SEC-20]: $md5sum used to splice raw into
+     * the query -- a real SQL injection. Traced to its real source:
+     * Ws\PwgImages::add()'s own `$params['original_sum']`, registered
+     * with zero WS-level type constraints (`'original_sum' => []` in
+     * WsDefaultMethods.php, unlike e.g. `level`'s
+     * `WsParamType::INT|POSITIVE`) -- a fully free-form,
+     * caller-controlled string, despite its "md5sum" name. Fixed as a
+     * bound parameter.
+     *
      * @return list<int>
      */
     public function findIdsByMd5sum(string $md5sum): array
     {
-        $imagesTable = Tables::images();
-
         return array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             array_column($this->getEntityManager()
                 ->getConnection()
-                ->fetchAllAssociative(<<<SQL
-                    SELECT
-                        id
-                    FROM {$imagesTable}
-                    WHERE md5sum = '{$md5sum}'
-                    SQL), 'id')
+                ->createQueryBuilder()
+                ->select('id')
+                ->from(Tables::images())
+                ->where('md5sum = :md5sum')
+                ->setParameter('md5sum', $md5sum)
+                ->executeQuery()
+                ->fetchAllAssociative(), 'id')
         );
     }
 
@@ -2465,53 +2525,57 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * Whether at least one accessible image (satisfying $permissionCondition)
-     * has a non-null author -- Controller\SearchController's own "does this
+     * Whether at least one accessible image (satisfying $condition) has a
+     * non-null author -- Controller\SearchController's own "does this
      * gallery even have authors, for this user" check.
+     *
+     * SQL-modernization audit: $permissionCondition replaced with a bound
+     * SqlCondition, same move as isImageAccessibleWithCondition() above.
      */
-    public function hasAccessibleImageWithAuthor(string $permissionCondition): bool
+    public function hasAccessibleImageWithAuthor(SqlCondition $condition): bool
     {
-        $imagesTable = Tables::images();
-        $imageCategoryTable = Tables::imageCategory();
-
-        $rows = $this->getEntityManager()
+        $qb = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT
-                    id
-                FROM {$imagesTable} AS i
-                    JOIN {$imageCategoryTable} AS ic ON ic.image_id = i.id
-                {$permissionCondition}
-                    AND author IS NOT NULL
-                    LIMIT 1
-                SQL);
+            ->createQueryBuilder()
+            ->select('i.id')
+            ->from(Tables::images(), 'i')
+            ->innerJoin('i', Tables::imageCategory(), 'ic', 'ic.image_id = i.id')
+            ->andWhere('author IS NOT NULL')
+            ->setMaxResults(1);
 
-        return $rows !== [];
+        self::applyCondition($qb, $condition);
+
+        return $qb->executeQuery()
+            ->fetchAllAssociative() !== [];
     }
 
     /**
      * Whether $imageId is reachable via at least one of its own categories
-     * satisfying $permissionCondition -- Controller\ActionController's own
+     * satisfying $condition -- Controller\ActionController's own
      * download-permission check. A different query shape from
      * isImageAccessibleWithCondition() above (this one starts from
      * `categories`, joined onto `image_category` by category_id, filtered
      * by image_id -- that one starts from `images`).
+     *
+     * SQL-modernization audit: $permissionCondition replaced with a bound
+     * SqlCondition, same move as isImageAccessibleWithCondition() above.
      */
-    public function isImageAccessibleViaCategoryWithCondition(int $imageId, string $permissionCondition): bool
+    public function isImageAccessibleViaCategoryWithCondition(int $imageId, SqlCondition $condition): bool
     {
-        $categoriesTable = Tables::categories();
-        $imageCategoryTable = Tables::imageCategory();
-
-        return $this->getEntityManager()
+        $qb = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne(<<<SQL
-                SELECT id
-                FROM {$categoriesTable}
-                    INNER JOIN {$imageCategoryTable} ON category_id = id
-                WHERE image_id = {$imageId}
-                {$permissionCondition}
-                LIMIT 1
-                SQL) !== false;
+            ->createQueryBuilder()
+            ->select('c.id')
+            ->from(Tables::categories(), 'c')
+            ->innerJoin('c', Tables::imageCategory(), 'ic', 'ic.category_id = c.id')
+            ->where('ic.image_id = :imageId')
+            ->setMaxResults(1)
+            ->setParameter('imageId', $imageId, ParameterType::INTEGER);
+
+        self::applyCondition($qb, $condition);
+
+        return $qb->executeQuery()
+            ->fetchOne() !== false;
     }
 
     /**
@@ -2522,10 +2586,20 @@ final class ImageRepository extends EntityRepository
      * fragments, same "caller composes trusted fragments" contract as
      * {@see \Piwigo\Comment\CommentRepository::findAllWithConditions()}.
      *
+     * SQL-modernization audit: $params/$types widened additively (both
+     * default `[]`) so a caller building a `SqlCondition`-shaped fragment
+     * into $whereClauses can bind its own values instead of splicing
+     * them; $limit/$offset (previously spliced) always bound directly.
+     * `SQL_CALC_FOUND_ROWS` has no `QueryBuilder` fluent equivalent, so
+     * this stays hand-built SQL, same as
+     * {@see \Piwigo\Comment\CommentRepository::findAllWithConditions()}.
+     *
      * @param  list<string>  $whereClauses
+     * @param array<string, mixed> $params
+     * @param array<string, ArrayParameterType|ParameterType> $types
      * @return PaginatedResult<array<string, mixed>>
      */
-    public function findWithConditionsPaginated(array $whereClauses, string $orderByClause, int $limit, int $offset): PaginatedResult
+    public function findWithConditionsPaginated(array $whereClauses, string $orderByClause, int $limit, int $offset, array $params = [], array $types = []): PaginatedResult
     {
         $conn = $this->getEntityManager()
             ->getConnection();
@@ -2541,11 +2615,15 @@ final class ImageRepository extends EntityRepository
             WHERE {$whereSql}
             GROUP BY i.id
             {$orderByClause}
-            LIMIT {$limit}
-            OFFSET {$offset}
+            LIMIT :limit
+            OFFSET :offset
             SQL;
+        $params['limit'] = $limit;
+        $params['offset'] = $offset;
+        $types['limit'] = ParameterType::INTEGER;
+        $types['offset'] = ParameterType::INTEGER;
 
-        $rows = $conn->fetchAllAssociative($sql);
+        $rows = $conn->fetchAllAssociative($sql, $params, $types);
 
         $totalRaw = $conn->fetchOne(<<<SQL
             SELECT FOUND_ROWS()
@@ -2560,15 +2638,15 @@ final class ImageRepository extends EntityRepository
      */
     public function existsById(int $id): bool
     {
-        $imagesTable = Tables::images();
-
         $value = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne(<<<SQL
-                SELECT COUNT(*)
-                FROM {$imagesTable}
-                WHERE id = {$id}
-                SQL);
+            ->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from(Tables::images())
+            ->where('id = :id')
+            ->setParameter('id', $id, ParameterType::INTEGER)
+            ->executeQuery()
+            ->fetchOne();
 
         return is_numeric($value) && (int) $value > 0;
     }
@@ -2587,49 +2665,50 @@ final class ImageRepository extends EntityRepository
             return [];
         }
 
-        $imagesTable = Tables::images();
-        $idsCsv = implode(',', $ids);
-
         return array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             $this->getEntityManager()
                 ->getConnection()
-                ->fetchFirstColumn(<<<SQL
-                    SELECT id
-                    FROM {$imagesTable}
-                    WHERE id IN ({$idsCsv})
-                    SQL)
+                ->createQueryBuilder()
+                ->select('id')
+                ->from(Tables::images())
+                ->where('id IN (:ids)')
+                ->setParameter('ids', array_map(strval(...), $ids), ArrayParameterType::STRING)
+                ->executeQuery()
+                ->fetchFirstColumn()
         );
     }
 
     /**
-     * image_id/category_id link rows for $imageIds matching
-     * $permissionCondition -- Ws\PwgCategories::getImages()'s own "which
-     * albums (that the caller may see) is each returned photo linked to"
-     * step.
+     * image_id/category_id link rows for $imageIds matching $condition --
+     * Ws\PwgCategories::getImages()'s own "which albums (that the caller
+     * may see) is each returned photo linked to" step.
+     *
+     * SQL-modernization audit: $permissionCondition replaced with a bound
+     * SqlCondition, same move as isImageAccessibleWithCondition() above.
+     * $imageIds' own CSV splice also bound.
      *
      * @param  list<int>  $imageIds
      * @return list<array{image_id: int, category_id: int}>
      */
-    public function findCategoryLinksForImageIdsWithCondition(array $imageIds, string $permissionCondition): array
+    public function findCategoryLinksForImageIdsWithCondition(array $imageIds, SqlCondition $condition): array
     {
         if ($imageIds === []) {
             return [];
         }
 
-        $imageCategoryTable = Tables::imageCategory();
-        $idsCsv = implode(',', $imageIds);
-
-        $rows = $this->getEntityManager()
+        $qb = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT
-                    image_id,
-                    category_id
-                FROM {$imageCategoryTable}
-                WHERE image_id IN ({$idsCsv})
-                    AND {$permissionCondition}
-                SQL);
+            ->createQueryBuilder()
+            ->select('image_id', 'category_id')
+            ->from(Tables::imageCategory())
+            ->where('image_id IN (:imageIds)')
+            ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER);
+
+        self::applyCondition($qb, $condition);
+
+        $rows = $qb->executeQuery()
+            ->fetchAllAssociative();
 
         return array_map(
             static fn (array $row): array => [
@@ -2674,16 +2753,15 @@ final class ImageRepository extends EntityRepository
             return [];
         }
 
-        $imagesTable = Tables::images();
-        $categoryIdsCsv = implode(',', $categoryIds);
-
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT id, path
-                FROM {$imagesTable}
-                WHERE storage_category_id IN ({$categoryIdsCsv})
-                SQL);
+            ->createQueryBuilder()
+            ->select('id', 'path')
+            ->from(Tables::images())
+            ->where('storage_category_id IN (:categoryIds)')
+            ->setParameter('categoryIds', array_map(strval(...), $categoryIds), ArrayParameterType::STRING)
+            ->executeQuery()
+            ->fetchAllAssociative();
 
         $byId = [];
         foreach ($rows as $row) {
@@ -2929,17 +3007,27 @@ final class ImageRepository extends EntityRepository
     {
         $imageCategoryTable = Tables::imageCategory();
         $imagesTable = Tables::images();
+        $categoryIds = array_map(intval(...), explode(',', $categoryIdsCsv));
 
         return array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             $this->getEntityManager()
                 ->getConnection()
-                ->fetchFirstColumn(<<<SQL
+                ->fetchFirstColumn(
+                    <<<SQL
                     SELECT DISTINCT image_id
                     FROM {$imageCategoryTable} INNER JOIN {$imagesTable} ON image_id = id
-                    WHERE category_id IN ({$categoryIdsCsv})
+                    WHERE category_id IN (:categoryIds)
                         AND date_available >= {$recentPeriodExpr}
-                    SQL)
+                    SQL
+                    ,
+                    [
+                        'categoryIds' => $categoryIds,
+                    ],
+                    [
+                        'categoryIds' => ArrayParameterType::INTEGER,
+                    ],
+                )
         );
     }
 

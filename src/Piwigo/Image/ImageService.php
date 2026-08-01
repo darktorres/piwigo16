@@ -14,6 +14,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
+use Piwigo\Permission\SqlCondition;
 use Piwigo\Session\SessionService;
 
 /**
@@ -886,43 +887,43 @@ final readonly class ImageService
         return $this->repo->findByIdOrFilePattern($imageId, $imageFile);
     }
 
-    public function isImageAccessibleWithCondition(int $imageId, string $forbiddenCondition): bool
+    public function isImageAccessibleWithCondition(int $imageId, SqlCondition $condition): bool
     {
-        return $this->repo->isImageAccessibleWithCondition($imageId, $forbiddenCondition);
+        return $this->repo->isImageAccessibleWithCondition($imageId, $condition);
     }
 
-    public function isImageAccessibleViaCategoryWithCondition(int $imageId, string $permissionCondition): bool
+    public function isImageAccessibleViaCategoryWithCondition(int $imageId, SqlCondition $condition): bool
     {
-        return $this->repo->isImageAccessibleViaCategoryWithCondition($imageId, $permissionCondition);
+        return $this->repo->isImageAccessibleViaCategoryWithCondition($imageId, $condition);
     }
 
     /**
      * @return ?array<string, mixed>
      */
-    public function getRowWithCondition(int $imageId, string $permissionCondition): ?array
+    public function getRowWithCondition(int $imageId, SqlCondition $condition): ?array
     {
-        return $this->repo->findRowWithCondition($imageId, $permissionCondition);
+        return $this->repo->findRowWithCondition($imageId, $condition);
     }
 
     /**
      * @return list<array<string, mixed>>
      */
-    public function getRelatedCategoriesForImage(int $imageId, string $forbiddenCondition): array
+    public function getRelatedCategoriesForImage(int $imageId, SqlCondition $condition): array
     {
-        return $this->repo->findRelatedCategoriesForImage($imageId, $forbiddenCondition);
+        return $this->repo->findRelatedCategoriesForImage($imageId, $condition);
     }
 
-    public function isImageCommentableWithCondition(int $imageId, string $permissionCondition): bool
+    public function isImageCommentableWithCondition(int $imageId, SqlCondition $condition): bool
     {
-        return $this->repo->isImageCommentableWithCondition($imageId, $permissionCondition);
+        return $this->repo->isImageCommentableWithCondition($imageId, $condition);
     }
 
     /**
      * @return list<array<string, mixed>>
      */
-    public function getVisibleCategoriesForImage(int $imageId, string $permissionCondition): array
+    public function getVisibleCategoriesForImage(int $imageId, SqlCondition $condition): array
     {
-        return $this->repo->findVisibleCategoriesForImage($imageId, $permissionCondition);
+        return $this->repo->findVisibleCategoriesForImage($imageId, $condition);
     }
 
     /**
@@ -1046,11 +1047,13 @@ final readonly class ImageService
 
     /**
      * @param  list<string>  $whereClauses
+     * @param array<string, mixed> $params
+     * @param array<string, \Doctrine\DBAL\ArrayParameterType|\Doctrine\DBAL\ParameterType> $types
      * @return list<array<string, mixed>>
      */
-    public function getForMissingDerivatives(array $whereClauses, int $startId, int $limit): array
+    public function getForMissingDerivatives(array $whereClauses, int $startId, int $limit, array $params = [], array $types = []): array
     {
-        return $this->repo->findForMissingDerivatives($whereClauses, $startId, $limit);
+        return $this->repo->findForMissingDerivatives($whereClauses, $startId, $limit, $params, $types);
     }
 
     /**
@@ -1062,9 +1065,9 @@ final readonly class ImageService
         return $this->repo->findHistoryDisplayInfoByIds($imageIds);
     }
 
-    public function hasAccessibleImageWithAuthor(string $permissionCondition): bool
+    public function hasAccessibleImageWithAuthor(SqlCondition $condition): bool
     {
-        return $this->repo->hasAccessibleImageWithAuthor($permissionCondition);
+        return $this->repo->hasAccessibleImageWithAuthor($condition);
     }
 
     public function existsById(int $id): bool
@@ -1094,9 +1097,9 @@ final readonly class ImageService
         return $this->repo->findPathById($imageId);
     }
 
-    public function existsWithCondition(string $condition): bool
+    public function existsWithColumnValue(string $column, string $value): bool
     {
-        return $this->repo->existsWithCondition($condition);
+        return $this->repo->existsWithColumnValue($column, $value);
     }
 
     /**
@@ -1155,20 +1158,22 @@ final readonly class ImageService
 
     /**
      * @param  list<string>  $whereClauses
+     * @param array<string, mixed> $params
+     * @param array<string, \Doctrine\DBAL\ArrayParameterType|\Doctrine\DBAL\ParameterType> $types
      * @return PaginatedResult<array<string, mixed>>
      */
-    public function getWithConditionsPaginated(array $whereClauses, string $orderByClause, int $limit, int $offset): PaginatedResult
+    public function getWithConditionsPaginated(array $whereClauses, string $orderByClause, int $limit, int $offset, array $params = [], array $types = []): PaginatedResult
     {
-        return $this->repo->findWithConditionsPaginated($whereClauses, $orderByClause, $limit, $offset);
+        return $this->repo->findWithConditionsPaginated($whereClauses, $orderByClause, $limit, $offset, $params, $types);
     }
 
     /**
      * @param  list<int>  $imageIds
      * @return list<array{image_id: int, category_id: int}>
      */
-    public function getCategoryLinksForImageIdsWithCondition(array $imageIds, string $permissionCondition): array
+    public function getCategoryLinksForImageIdsWithCondition(array $imageIds, SqlCondition $condition): array
     {
-        return $this->repo->findCategoryLinksForImageIdsWithCondition($imageIds, $permissionCondition);
+        return $this->repo->findCategoryLinksForImageIdsWithCondition($imageIds, $condition);
     }
 
     public function getNextId(): int

@@ -116,10 +116,10 @@ final class ActionController implements ControllerInterface
 
         // $filter['visible_categories'] and $filter['visible_images']
         // are not used because it's not necessary (filter <> restriction)
-        $permissionCondition = \Piwigo\Bootstrap\CoreDomainAccessor::permissionService()->getSqlConditionFandF([
+        $permissionCondition = \Piwigo\Bootstrap\CoreDomainAccessor::permissionService()->getSqlConditionFandFAsCondition([
             'forbidden_categories' => 'category_id',
             'forbidden_images' => 'image_id',
-        ], '    AND');
+        ]);
         if (
             ! $is_admin_download
             and ! \Piwigo\Bootstrap\CoreDomainAccessor::imageService()

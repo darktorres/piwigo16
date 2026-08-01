@@ -157,15 +157,20 @@ final class PwgCore
         \Piwigo\Config\CurrentConfig::setDerivativeUrlStyle(2); // script
 
         $qlimit = (int) min(5000, ceil(max($image_count / 500, $max_urls / count($types))));
-        $where_clauses = WsHelper::stdImageSqlFilter($params, $service, '');
+        $filterCondition = WsHelper::stdImageSqlFilter($params, $service, '');
+        $where_clauses = $filterCondition->isEmpty() ? [] : [$filterCondition->sql];
+        $boundParams = $filterCondition->parameters;
+        $boundTypes = $filterCondition->types;
 
         if ($params['ids'] !== []) {
-            $where_clauses[] = 'id IN (' . implode(',', $params['ids']) . ')';
+            $where_clauses[] = 'id IN (:ids)';
+            $boundParams['ids'] = $params['ids'];
+            $boundTypes['ids'] = \Doctrine\DBAL\ArrayParameterType::INTEGER;
         }
 
         $urls = [];
         do {
-            $rows = self::imageService()->getForMissingDerivatives($where_clauses, $start_id, $qlimit);
+            $rows = self::imageService()->getForMissingDerivatives($where_clauses, $start_id, $qlimit, $boundParams, $boundTypes);
             $is_last = count($rows) < $qlimit;
 
             foreach ($rows as $image_row) {

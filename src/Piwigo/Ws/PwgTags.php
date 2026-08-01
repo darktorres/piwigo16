@@ -131,8 +131,7 @@ final class PwgTags
         unset($tags);
         $tag_ids = array_keys($tags_by_id);
 
-        $where_clauses = WsHelper::stdImageSqlFilter($params, $service);
-        $where_clauses = $where_clauses !== [] ? implode(' AND ', $where_clauses) : '';
+        $filterCondition = WsHelper::stdImageSqlFilter($params, $service);
 
         $order_by = WsHelper::stdImageSqlOrder($params, 'i.');
         if ($order_by !== '') {
@@ -141,8 +140,11 @@ final class PwgTags
         $image_ids = $tagService->getImageIdsForTags(
             array_map(TagId::from(...), $tag_ids),
             $params['tag_mode_and'] ? 'AND' : 'OR',
-            $where_clauses,
-            $order_by
+            $filterCondition->isEmpty() ? '' : $filterCondition->sql,
+            $order_by,
+            true,
+            $filterCondition->parameters,
+            $filterCondition->types
         );
         // Cast to int at the source (not just at each read site) so
         // array_flip($image_ids) below produces int keys matching $row_id's

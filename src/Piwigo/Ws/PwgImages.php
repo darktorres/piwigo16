@@ -329,11 +329,11 @@ final class PwgImages
             return new PwgError(403, 'Comments are disabled');
         }
 
-        $permissionCondition = self::permissionService()->getSqlConditionFandF([
+        $permissionCondition = self::permissionService()->getSqlConditionFandFAsCondition([
             'forbidden_categories' => 'id',
             'visible_categories' => 'id',
             'visible_images' => 'image_id',
-        ], ' AND');
+        ]);
 
         if (! self::imageService()->isImageCommentableWithCondition($params['image_id'], $permissionCondition)) {
             return new PwgError(WsError::INVALID_PARAM, 'Invalid image_id');
@@ -383,9 +383,9 @@ final class PwgImages
 
         $image_row = self::imageService()->getRowWithCondition(
             $params['image_id'],
-            self::permissionService()->getSqlConditionFandF([
+            self::permissionService()->getSqlConditionFandFAsCondition([
                 'visible_images' => 'id',
-            ], ' AND')
+            ])
         );
         if ($image_row === null) {
             return new PwgError(404, 'image_id not found');
@@ -424,9 +424,9 @@ final class PwgImages
         // -------------------------------------------------------- related categories
         $related_category_rows = self::imageService()->getRelatedCategoriesForImage(
             $image_id,
-            self::permissionService()->getSqlConditionFandF([
+            self::permissionService()->getSqlConditionFandFAsCondition([
                 'forbidden_categories' => 'category_id',
-            ], ' AND')
+            ])
         );
 
         $is_commentable = false;
@@ -604,10 +604,10 @@ final class PwgImages
     {
         $accessible = self::imageService()->isImageAccessibleWithCondition(
             $params['image_id'],
-            self::permissionService()->getSqlConditionFandF([
+            self::permissionService()->getSqlConditionFandFAsCondition([
                 'forbidden_categories' => 'category_id',
                 'forbidden_images' => 'id',
-            ], '    AND')
+            ])
         );
         if (! $accessible) {
             return new PwgError(404, 'Invalid image_id or access denied');
@@ -635,7 +635,7 @@ final class PwgImages
     public static function search(array $params, PwgServer $service): array
     {
         $images = [];
-        $where_clauses = WsHelper::stdImageSqlFilter($params, $service, 'i.');
+        $filterCondition = WsHelper::stdImageSqlFilter($params, $service, 'i.');
         $order_by = WsHelper::stdImageSqlOrder($params, 'i.');
 
         $super_order_by = false;
@@ -649,12 +649,29 @@ final class PwgImages
             $super_order_by = true; // quick_search_result might be faster
         }
 
+        // SearchService::getQuickSearchResults()'s own 'images_where' option
+        // takes a single already-built SQL string with no bound-parameter
+        // side-channel -- SearchService.php isn't part of this initiative's
+        // own file scope, so flattened back into literal SQL here rather
+        // than threading a $params/$types channel through an unscoped file.
+        // Safe to do so: every one of stdImageSqlFilter()'s own parameter
+        // values is already is_numeric()/DateHelper::isValidMysqlDatetime()-
+        // validated before ever reaching $filterCondition, so no
+        // injection-capable character can survive this substitution.
+        $images_where = $filterCondition->sql;
+        foreach ($filterCondition->parameters as $placeholder => $value) {
+            if (! is_scalar($value)) {
+                continue;
+            }
+            $images_where = str_replace(':' . $placeholder, is_string($value) ? "'" . $value . "'" : (string) $value, $images_where);
+        }
+
         $searchConn = DbConnection::build();
         $search_result = self::searchService()->getQuickSearchResults(
             $params['query'],
             [
                 'super_order_by' => $super_order_by,
-                'images_where' => implode(' AND ', $where_clauses),
+                'images_where' => $images_where,
             ]
         );
 
@@ -1290,17 +1307,24 @@ final class PwgImages
         }
 
         // does the image already exists ?
+        // SQL-modernization audit / [SEC-20]: $params['original_sum']/
+        // original_filename used to splice raw into a hand-built SQL
+        // fragment (ImageRepository::existsWithCondition()'s own former
+        // contract) -- both are registered with zero WS-level type
+        // constraints, so this was a real SQL injection. Fixed by binding
+        // the value through existsWithColumnValue() instead.
         if ($params['check_uniqueness']) {
-            $where_clause = '0'; // no known uniqueness_mode: skip the uniqueness check
-            if (\Piwigo\Config\CurrentConfig::uniquenessMode() === 'md5sum') {
-                $where_clause = "md5sum = '" . $params['original_sum'] . "'";
-            }
-            if (\Piwigo\Config\CurrentConfig::uniquenessMode() === 'filename') {
-                $where_clause = "file = '" . $params['original_filename'] . "'";
-            }
+            $uniqueness_column = match (\Piwigo\Config\CurrentConfig::uniquenessMode()) {
+                'md5sum' => 'md5sum',
+                'filename' => 'file',
+                default => null, // no known uniqueness_mode: skip the uniqueness check
+            };
 
-            if (self::imageService()->existsWithCondition($where_clause)) {
-                return new PwgError(500, 'file already exists');
+            if ($uniqueness_column !== null) {
+                $uniqueness_value = $uniqueness_column === 'md5sum' ? $params['original_sum'] : ($params['original_filename'] ?? '');
+                if (self::imageService()->existsWithColumnValue($uniqueness_column, $uniqueness_value)) {
+                    return new PwgError(500, 'file already exists');
+                }
             }
         }
 

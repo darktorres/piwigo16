@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Exception;
 use Piwigo\Activity\ActivityService;
@@ -187,11 +188,22 @@ final class PwgCategories
 
         // -------------------------------------------------------- get the images
         if ($cats !== []) {
-            $where_clauses = WsHelper::stdImageSqlFilter($params, $service, 'i.');
-            $where_clauses[] = 'category_id IN (' . implode(',', array_keys($cats)) . ')';
-            $where_clauses[] = self::permissionService()->getSqlConditionFandF([
+            $filterCondition = WsHelper::stdImageSqlFilter($params, $service, 'i.');
+            $where_clauses = $filterCondition->isEmpty() ? [] : [$filterCondition->sql];
+            $where_clauses[] = 'category_id IN (:categoryIds)';
+            $boundParams = array_merge($filterCondition->parameters, [
+                'categoryIds' => array_keys($cats),
+            ]);
+            $boundTypes = array_merge($filterCondition->types, [
+                'categoryIds' => ArrayParameterType::INTEGER,
+            ]);
+
+            $visibleImagesCondition = self::permissionService()->getSqlConditionFandFAsCondition([
                 'visible_images' => 'i.id',
-            ], null, true);
+            ], true);
+            $where_clauses[] = $visibleImagesCondition->sql;
+            $boundParams = array_merge($boundParams, $visibleImagesCondition->parameters);
+            $boundTypes = array_merge($boundTypes, $visibleImagesCondition->types);
 
             $order_by = WsHelper::stdImageSqlOrder($params, 'i.');
             if ($order_by === ''
@@ -207,7 +219,9 @@ final class PwgCategories
                 $where_clauses,
                 $order_by,
                 $params['per_page'],
-                $params['per_page'] * $params['page']
+                $params['per_page'] * $params['page'],
+                $boundParams,
+                $boundTypes
             );
             $rows = $paginated_images->rows;
 
@@ -249,9 +263,9 @@ final class PwgCategories
                 // find the complete list (given permissions) of albums linked to photos
                 $image_category_rows = self::imageService()->getCategoryLinksForImageIdsWithCondition(
                     $image_ids,
-                    self::permissionService()->getSqlConditionFandF([
+                    self::permissionService()->getSqlConditionFandFAsCondition([
                         'forbidden_categories' => 'category_id',
-                    ], null, true)
+                    ], true)
                 );
                 $categories_of_image = [];
                 foreach ($image_category_rows as $image_category_row) {

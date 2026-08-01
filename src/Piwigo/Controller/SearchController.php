@@ -174,11 +174,11 @@ final class SearchController implements ControllerInterface
         if (in_array('author', $fields, true)) {
             // does this Piwigo has authors for current user?
             $has_author = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->hasAccessibleImageWithAuthor(
-                self::permissionService()->getSqlConditionFandF([
+                self::permissionService()->getSqlConditionFandFAsCondition([
                     'forbidden_categories' => 'category_id',
                     'visible_categories' => 'category_id',
                     'visible_images' => 'id',
-                ], ' WHERE ')
+                ])
             );
 
             if ($has_author) {

@@ -11,6 +11,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\Projection\Image;
+use Piwigo\Permission\SqlCondition;
 
 final class ImageRepositoryTest extends IntegrationTestCase
 {
@@ -739,7 +740,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_find_category_links_for_image_ids_with_condition_returns_empty_array_for_empty_image_ids(): void
     {
-        self::assertSame([], $this->repo->findCategoryLinksForImageIdsWithCondition([], '1=1'));
+        self::assertSame([], $this->repo->findCategoryLinksForImageIdsWithCondition([], new SqlCondition('1=1')));
     }
 
     public function test_find_ids_and_paths_by_storage_category_ids_returns_empty_array_for_empty_input(): void
@@ -774,5 +775,334 @@ final class ImageRepositoryTest extends IntegrationTestCase
         } finally {
             $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET storage_category_id = NULL WHERE id = 1');
         }
+    }
+
+    // --- SQL-modernization audit: previously zero direct coverage on the
+    // methods below, plus first coverage of the new SqlCondition-taking
+    // fragment-consumer contract and the [SEC-20] injection fixes. Fixture
+    // shape: image_category links images 1/2/3 to category 1, images 4/5
+    // to category 2 (both categories commentable=1/visible=1/status=public,
+    // per tests/Fixtures/piwigo-17.0.sql); image 1's md5sum is
+    // 'fc6fccf1f8d70f6d7c6d627871f2ea6f'; every fixture image's `author` is
+    // NULL.
+
+    public function test_find_by_id_or_file_pattern_matches_by_id(): void
+    {
+        $row = $this->repo->findByIdOrFilePattern(1, null);
+
+        self::assertIsArray($row);
+        self::assertSame('fixture-photo-1.jpg', $row['file']);
+    }
+
+    public function test_find_by_id_or_file_pattern_matches_by_file_pattern(): void
+    {
+        $row = $this->repo->findByIdOrFilePattern(0, 'fixture-photo-2');
+
+        self::assertIsArray($row);
+        self::assertSame(2, $row['id']);
+    }
+
+    public function test_find_by_id_or_file_pattern_returns_false_for_no_match(): void
+    {
+        self::assertFalse($this->repo->findByIdOrFilePattern(999_999, null));
+    }
+
+    /**
+     * [SEC-20] regression: a file-pattern value containing SQL syntax
+     * (exactly the shape a crafted picture.php URL path segment could
+     * produce, per Controller\PictureController's own "already escaped"
+     * claim that only neutralized LIKE wildcards, not quotes) is now
+     * always bound as a literal LIKE value -- it matches nothing rather
+     * than tautologically matching every row.
+     */
+    public function test_find_by_id_or_file_pattern_treats_sql_syntax_as_a_literal_value(): void
+    {
+        self::assertFalse($this->repo->findByIdOrFilePattern(0, "fixture-photo-1' OR '1'='1"));
+    }
+
+    public function test_find_ids_by_md5sum_returns_the_matching_image(): void
+    {
+        self::assertSame([1], $this->repo->findIdsByMd5sum('fc6fccf1f8d70f6d7c6d627871f2ea6f'));
+    }
+
+    public function test_find_ids_by_md5sum_returns_empty_for_no_match(): void
+    {
+        self::assertSame([], $this->repo->findIdsByMd5sum('no-such-md5sum'));
+    }
+
+    /**
+     * [SEC-20] regression: findIdsByMd5sum()'s own real caller
+     * (Ws\PwgImages::add()'s `original_sum` param) has zero WS-level type
+     * constraints -- a value containing SQL syntax must be treated as a
+     * literal, matching nothing, not injected as SQL structure.
+     */
+    public function test_find_ids_by_md5sum_treats_sql_syntax_as_a_literal_value(): void
+    {
+        self::assertSame([], $this->repo->findIdsByMd5sum("x' OR '1'='1"));
+    }
+
+    public function test_exists_with_column_value_is_true_for_a_matching_md5sum(): void
+    {
+        self::assertTrue($this->repo->existsWithColumnValue('md5sum', 'fc6fccf1f8d70f6d7c6d627871f2ea6f'));
+    }
+
+    public function test_exists_with_column_value_is_true_for_a_matching_file(): void
+    {
+        self::assertTrue($this->repo->existsWithColumnValue('file', 'fixture-photo-1.jpg'));
+    }
+
+    public function test_exists_with_column_value_is_false_for_no_match(): void
+    {
+        self::assertFalse($this->repo->existsWithColumnValue('md5sum', 'no-such-md5sum'));
+    }
+
+    /**
+     * [SEC-20] regression: existsWithColumnValue() replaces the former
+     * existsWithCondition(), which took an already-quote-wrapped
+     * "{$column} = '{$value}'" fragment built from Ws\PwgImages::add()'s
+     * own unvalidated original_sum/original_filename params -- a real SQL
+     * injection. A value containing SQL syntax must be treated as a
+     * literal, matching nothing, not injected as a tautology.
+     */
+    public function test_exists_with_column_value_treats_sql_syntax_as_a_literal_value(): void
+    {
+        self::assertFalse($this->repo->existsWithColumnValue('file', "fixture-photo-1.jpg' OR '1'='1"));
+    }
+
+    public function test_is_image_accessible_with_condition_is_true_with_no_restriction(): void
+    {
+        self::assertTrue($this->repo->isImageAccessibleWithCondition(1, new SqlCondition('')));
+    }
+
+    public function test_is_image_accessible_with_condition_applies_the_given_condition(): void
+    {
+        self::assertFalse($this->repo->isImageAccessibleWithCondition(1, new SqlCondition('category_id = -1')));
+    }
+
+    public function test_find_row_with_condition_returns_the_matching_row(): void
+    {
+        $row = $this->repo->findRowWithCondition(1, new SqlCondition(''));
+
+        self::assertNotNull($row);
+        self::assertSame('fixture-photo-1.jpg', $row['file']);
+    }
+
+    public function test_find_row_with_condition_returns_null_when_the_condition_excludes_it(): void
+    {
+        self::assertNull($this->repo->findRowWithCondition(1, new SqlCondition('id = -1')));
+    }
+
+    public function test_find_related_categories_for_image_returns_matching_rows(): void
+    {
+        $rows = $this->repo->findRelatedCategoriesForImage(1, new SqlCondition(''));
+
+        self::assertCount(1, $rows);
+        self::assertSame(1, $rows[0]['id']);
+        self::assertSame(1, $rows[0]['commentable']);
+    }
+
+    public function test_find_related_categories_for_image_applies_the_given_condition(): void
+    {
+        self::assertSame([], $this->repo->findRelatedCategoriesForImage(1, new SqlCondition('category_id = -1')));
+    }
+
+    public function test_is_image_commentable_with_condition_is_true_for_a_commentable_category(): void
+    {
+        self::assertTrue($this->repo->isImageCommentableWithCondition(1, new SqlCondition('')));
+    }
+
+    public function test_is_image_commentable_with_condition_applies_the_given_condition(): void
+    {
+        self::assertFalse($this->repo->isImageCommentableWithCondition(1, new SqlCondition('category_id = -1')));
+    }
+
+    public function test_find_visible_categories_for_image_returns_matching_rows(): void
+    {
+        $rows = $this->repo->findVisibleCategoriesForImage(1, new SqlCondition(''));
+
+        self::assertCount(1, $rows);
+        self::assertSame(1, $rows[0]['id']);
+    }
+
+    public function test_find_visible_categories_for_image_applies_the_given_condition(): void
+    {
+        self::assertSame([], $this->repo->findVisibleCategoriesForImage(1, new SqlCondition('category_id = -1')));
+    }
+
+    public function test_has_accessible_image_with_author_is_false_when_no_image_has_an_author(): void
+    {
+        self::assertFalse($this->repo->hasAccessibleImageWithAuthor(new SqlCondition('')));
+    }
+
+    public function test_has_accessible_image_with_author_is_true_once_one_image_has_an_author(): void
+    {
+        $this->conn->executeStatement('UPDATE ' . Tables::images() . " SET author = 'fixture-author' WHERE id = 1");
+
+        try {
+            self::assertTrue($this->repo->hasAccessibleImageWithAuthor(new SqlCondition('')));
+        } finally {
+            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET author = NULL WHERE id = 1');
+        }
+    }
+
+    public function test_is_image_accessible_via_category_with_condition_is_true_with_no_restriction(): void
+    {
+        self::assertTrue($this->repo->isImageAccessibleViaCategoryWithCondition(1, new SqlCondition('')));
+    }
+
+    public function test_is_image_accessible_via_category_with_condition_applies_the_given_condition(): void
+    {
+        self::assertFalse($this->repo->isImageAccessibleViaCategoryWithCondition(1, new SqlCondition('category_id = -1')));
+    }
+
+    public function test_find_with_conditions_paginated_returns_matching_rows_and_total(): void
+    {
+        $result = $this->repo->findWithConditionsPaginated(['category_id = :categoryId'], '', 10, 0, ['categoryId' => 1], ['categoryId' => \Doctrine\DBAL\ParameterType::INTEGER]);
+
+        self::assertCount(3, $result->rows);
+        self::assertSame(3, $result->total);
+    }
+
+    public function test_find_with_conditions_paginated_respects_the_limit(): void
+    {
+        $result = $this->repo->findWithConditionsPaginated(['category_id = :categoryId'], '', 1, 0, ['categoryId' => 1], ['categoryId' => \Doctrine\DBAL\ParameterType::INTEGER]);
+
+        self::assertCount(1, $result->rows);
+        self::assertSame(3, $result->total);
+    }
+
+    public function test_find_category_links_for_image_ids_with_condition_returns_matching_rows(): void
+    {
+        $rows = $this->repo->findCategoryLinksForImageIdsWithCondition([1, 2], new SqlCondition(''));
+
+        $pairs = array_map(static fn (array $row): string => $row['image_id'] . ':' . $row['category_id'], $rows);
+        sort($pairs);
+
+        self::assertSame(['1:1', '2:1'], $pairs);
+    }
+
+    public function test_find_category_links_for_image_ids_with_condition_applies_the_given_condition(): void
+    {
+        self::assertSame([], $this->repo->findCategoryLinksForImageIdsWithCondition([1, 2], new SqlCondition('category_id = -1')));
+    }
+
+    public function test_find_for_missing_derivatives_matches_the_given_where_clause(): void
+    {
+        $rows = $this->repo->findForMissingDerivatives(['id = :imageId'], 999_999, 10, ['imageId' => 1], ['imageId' => \Doctrine\DBAL\ParameterType::INTEGER]);
+
+        self::assertCount(1, $rows);
+        self::assertSame(1, $rows[0]['id']);
+    }
+
+    public function test_count_lounge_images_pending_for_category_counts_unlinked_lounge_rows(): void
+    {
+        // `lounge.image_id` FK-references `images.id`, and every fixture
+        // image (1-5) already has an image_category link -- a disposable
+        // image row (with none) is the only way to reach the "pending"
+        // (not yet linked into image_category) branch this method counts.
+        $this->conn->insert(Tables::images(), ['file' => 'p18-test-lounge-pending.jpg']);
+        $imageId = (int) $this->conn->lastInsertId();
+        $this->conn->insert(Tables::lounge(), ['image_id' => $imageId, 'category_id' => 1]);
+
+        try {
+            self::assertSame(1, $this->repo->countLoungeImagesPendingForCategory(1));
+        } finally {
+            $this->conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+        }
+    }
+
+    public function test_is_image_in_category_is_true_for_a_real_link(): void
+    {
+        self::assertTrue($this->repo->isImageInCategory(1, 1));
+    }
+
+    public function test_is_image_in_category_is_false_for_no_link(): void
+    {
+        self::assertFalse($this->repo->isImageInCategory(1, 2));
+    }
+
+    public function test_find_max_rank_for_category_returns_the_highest_rank(): void
+    {
+        self::assertSame(3, $this->repo->findMaxRankForCategory(1));
+    }
+
+    public function test_find_max_rank_for_category_returns_null_for_no_ranked_images(): void
+    {
+        self::assertNull($this->repo->findMaxRankForCategory(999_999));
+    }
+
+    public function test_increment_ranks_from_for_category_bumps_ranks_at_or_above_the_given_rank(): void
+    {
+        try {
+            $this->repo->incrementRanksFromForCategory(1, 2);
+
+            $ranks = $this->conn->createQueryBuilder()
+                ->select('image_id', '`rank`')
+                ->from(Tables::imageCategory())
+                ->where('category_id = 1')
+                ->executeQuery()
+                ->fetchAllKeyValue();
+            self::assertSame(1, $ranks[1]);
+            self::assertSame(3, $ranks[2]);
+            self::assertSame(4, $ranks[3]);
+        } finally {
+            // Fixture's own image_category rows for category 1: image_id
+            // and rank are numerically identical by construction (1/1,
+            // 2/2, 3/3) -- restoring rank = image_id is exact, not an
+            // approximation.
+            $this->conn->executeStatement('UPDATE ' . Tables::imageCategory() . ' SET `rank` = image_id WHERE category_id = 1');
+        }
+    }
+
+    public function test_update_rank_for_image_in_category_sets_the_rank(): void
+    {
+        try {
+            $this->repo->updateRankForImageInCategory(1, 1, 99);
+
+            $rank = $this->conn->createQueryBuilder()
+                ->select('`rank`')
+                ->from(Tables::imageCategory())
+                ->where('image_id = 1')
+                ->andWhere('category_id = 1')
+                ->executeQuery()
+                ->fetchOne();
+            self::assertSame(99, $rank);
+        } finally {
+            $this->conn->executeStatement('UPDATE ' . Tables::imageCategory() . ' SET `rank` = 1 WHERE image_id = 1 AND category_id = 1');
+        }
+    }
+
+    public function test_count_images_in_category_counts_linked_images(): void
+    {
+        self::assertSame(3, $this->repo->countImagesInCategory(1));
+    }
+
+    public function test_find_associated_category_ids_returns_the_real_categories(): void
+    {
+        self::assertSame([1], $this->repo->findAssociatedCategoryIds(1));
+    }
+
+    public function test_update_level_for_images_sets_the_level_and_returns_the_affected_count(): void
+    {
+        try {
+            $affected = $this->repo->updateLevelForImages([1, 2], 5);
+
+            self::assertSame(2, $affected);
+            self::assertSame(
+                5,
+                $this->conn->createQueryBuilder()->select('level')->from(Tables::images())->where('id = 1')->executeQuery()->fetchOne()
+            );
+        } finally {
+            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET level = 0 WHERE id IN (1, 2)');
+        }
+    }
+
+    public function test_find_paths_for_file_deletion_returns_the_matching_rows(): void
+    {
+        $rows = $this->repo->findPathsForFileDeletion([1, 2]);
+
+        $ids = array_column($rows, 'id');
+        sort($ids);
+        self::assertSame([1, 2], $ids);
     }
 }

@@ -293,6 +293,12 @@ final readonly class TagService
      * Return the list of image ids corresponding to given tags. AND & OR
      * mode supported.
      *
+     * SQL-modernization audit: $extraParams/$extraTypes widened
+     * additively (both default `[]`) so a caller building its own bound
+     * fragment into $extraImagesWhereSql (e.g. Ws\PwgTags::getImages()'s
+     * own WsHelper::stdImageSqlFilter() output) can bind its values
+     * instead of splicing them.
+     *
      * @param list<TagId> $tagIds
      * @param string|null $extraImagesWhereSql optionally apply a sql where
      *   filter to retrieved images; null is treated the same as '' (both
@@ -300,9 +306,11 @@ final readonly class TagService
      *   BatchManagerSubController passes null explicitly
      * @param string|null $orderBy optionally overwrite default photo order;
      *   null is treated the same as '' for the same reason
+     * @param array<string, mixed> $extraParams
+     * @param array<string, ArrayParameterType|\Doctrine\DBAL\ParameterType> $extraTypes
      * @return list<int>
      */
-    public function getImageIdsForTags(array $tagIds, string $mode = 'AND', ?string $extraImagesWhereSql = '', ?string $orderBy = '', bool $usePermissions = true): array
+    public function getImageIdsForTags(array $tagIds, string $mode = 'AND', ?string $extraImagesWhereSql = '', ?string $orderBy = '', bool $usePermissions = true, array $extraParams = [], array $extraTypes = []): array
     {
 
         if ($tagIds === []) {
@@ -342,7 +350,11 @@ final readonly class TagService
             }
         }
 
-        $whereSql .= in_array($extraImagesWhereSql, [null, ''], true) ? '' : " \nAND (" . $extraImagesWhereSql . ')';
+        if (! in_array($extraImagesWhereSql, [null, ''], true)) {
+            $whereSql .= " \nAND (" . $extraImagesWhereSql . ')';
+            $params = array_merge($params, $extraParams);
+            $types = array_merge($types, $extraTypes);
+        }
 
         $groupHavingSql = 'GROUP BY id';
         if ($mode === 'AND' && count($tagIds) > 1) {

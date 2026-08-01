@@ -11,12 +11,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
+use Doctrine\DBAL\ParameterType;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsError;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\SrcImage;
+use Piwigo\Permission\SqlCondition;
 
 /**
  * P23 batch 8e: relocated verbatim from include/ws_functions.inc.php's 8
@@ -52,7 +54,7 @@ final class WsHelper
     }
 
     /**
-     * returns a "standard" (for our web service) array of sql where clauses that
+     * returns a "standard" (for our web service) sql condition that
      * filters the images (images table only)
      *
      * Called from every WS method that merges ws.php's shared $f_params into
@@ -60,10 +62,23 @@ final class WsHelper
      * pwg.getMissingDerivatives, pwg.tags.getImages) -- all 11 f_* keys are
      * always present, per that shared registration block.
      *
+     * SQL-modernization audit: every f_* value used to splice raw into the
+     * returned clause strings -- not currently exploitable (f_min_rate/
+     * f_max_rate/f_min_hit/f_max_hit/f_min_ratio/f_max_ratio/f_max_level
+     * are all gated by is_numeric(), and the 4 date fields are validated
+     * above via DateHelper::isValidMysqlDatetime(), which round-trips
+     * through DateTime::createFromFormat() and can never let a
+     * non-digit/hyphen/space/colon character through) -- but converted
+     * regardless, per this initiative's "regardless of exploitability"
+     * stance. Returns a single SqlCondition (its own internal clauses
+     * ANDed together, same "one more bound fragment for the caller's own
+     * $where_clauses list" shape as PermissionService::
+     * getSqlConditionFandFAsCondition()) instead of a raw clause list, so
+     * every real caller composes it the same way.
+     *
      * @param array{f_min_rate: float|null, f_max_rate: float|null, f_min_hit: int|null, f_max_hit: int|null, f_min_ratio: float|null, f_max_ratio: float|null, f_max_level: int|null, f_min_date_available: string|null, f_max_date_available: string|null, f_min_date_created: string|null, f_max_date_created: string|null, ...} $params
-     * @return list{0: non-falsy-string, 1?: non-falsy-string, 2?: non-falsy-string, 3?: non-falsy-string, 4?: non-falsy-string, 5?: non-falsy-string, 6?: non-falsy-string, 7?: non-falsy-string, 8?: non-falsy-string, 9?: non-falsy-string, 10?: non-falsy-string}|array{}
      */
-    public static function stdImageSqlFilter(array $params, PwgServer $service, string $tbl_name = ''): array
+    public static function stdImageSqlFilter(array $params, PwgServer $service, string $tbl_name = ''): SqlCondition
     {
         foreach (['f_min_date_available', 'f_max_date_available', 'f_min_date_created', 'f_max_date_created'] as $datefield) {
             if (isset($params[$datefield]) and ! DateHelper::isValidMysqlDatetime($params[$datefield])) {
@@ -72,41 +87,77 @@ final class WsHelper
             }
         }
 
+        $suffix = self::nextPlaceholderSuffix();
         $clauses = [];
+        $parameters = [];
+        $types = [];
+
         if (is_numeric($params['f_min_rate'])) {
-            $clauses[] = $tbl_name . 'rating_score>=' . (string) $params['f_min_rate'];
+            $clauses[] = $tbl_name . 'rating_score >= :f_min_rate' . $suffix;
+            $parameters['f_min_rate' . $suffix] = $params['f_min_rate'];
         }
         if (is_numeric($params['f_max_rate'])) {
-            $clauses[] = $tbl_name . 'rating_score<=' . (string) $params['f_max_rate'];
+            $clauses[] = $tbl_name . 'rating_score <= :f_max_rate' . $suffix;
+            $parameters['f_max_rate' . $suffix] = $params['f_max_rate'];
         }
         if (is_numeric($params['f_min_hit'])) {
-            $clauses[] = $tbl_name . 'hit>=' . $params['f_min_hit'];
+            $clauses[] = $tbl_name . 'hit >= :f_min_hit' . $suffix;
+            $parameters['f_min_hit' . $suffix] = $params['f_min_hit'];
+            $types['f_min_hit' . $suffix] = ParameterType::INTEGER;
         }
         if (is_numeric($params['f_max_hit'])) {
-            $clauses[] = $tbl_name . 'hit<=' . $params['f_max_hit'];
+            $clauses[] = $tbl_name . 'hit <= :f_max_hit' . $suffix;
+            $parameters['f_max_hit' . $suffix] = $params['f_max_hit'];
+            $types['f_max_hit' . $suffix] = ParameterType::INTEGER;
         }
         if (isset($params['f_min_date_available'])) {
-            $clauses[] = $tbl_name . "date_available>='" . $params['f_min_date_available'] . "'";
+            $clauses[] = $tbl_name . 'date_available >= :f_min_date_available' . $suffix;
+            $parameters['f_min_date_available' . $suffix] = $params['f_min_date_available'];
         }
         if (isset($params['f_max_date_available'])) {
-            $clauses[] = $tbl_name . "date_available<'" . $params['f_max_date_available'] . "'";
+            $clauses[] = $tbl_name . 'date_available < :f_max_date_available' . $suffix;
+            $parameters['f_max_date_available' . $suffix] = $params['f_max_date_available'];
         }
         if (isset($params['f_min_date_created'])) {
-            $clauses[] = $tbl_name . "date_creation>='" . $params['f_min_date_created'] . "'";
+            $clauses[] = $tbl_name . 'date_creation >= :f_min_date_created' . $suffix;
+            $parameters['f_min_date_created' . $suffix] = $params['f_min_date_created'];
         }
         if (isset($params['f_max_date_created'])) {
-            $clauses[] = $tbl_name . "date_creation<'" . $params['f_max_date_created'] . "'";
+            $clauses[] = $tbl_name . 'date_creation < :f_max_date_created' . $suffix;
+            $parameters['f_max_date_created' . $suffix] = $params['f_max_date_created'];
         }
         if (is_numeric($params['f_min_ratio'])) {
-            $clauses[] = $tbl_name . 'width/' . $tbl_name . 'height>=' . (string) $params['f_min_ratio'];
+            $clauses[] = $tbl_name . 'width/' . $tbl_name . 'height >= :f_min_ratio' . $suffix;
+            $parameters['f_min_ratio' . $suffix] = $params['f_min_ratio'];
         }
         if (is_numeric($params['f_max_ratio'])) {
-            $clauses[] = $tbl_name . 'width/' . $tbl_name . 'height<=' . (string) $params['f_max_ratio'];
+            $clauses[] = $tbl_name . 'width/' . $tbl_name . 'height <= :f_max_ratio' . $suffix;
+            $parameters['f_max_ratio' . $suffix] = $params['f_max_ratio'];
         }
         if (is_numeric($params['f_max_level'])) {
-            $clauses[] = $tbl_name . 'level <= ' . $params['f_max_level'];
+            $clauses[] = $tbl_name . 'level <= :f_max_level' . $suffix;
+            $parameters['f_max_level' . $suffix] = $params['f_max_level'];
+            $types['f_max_level' . $suffix] = ParameterType::INTEGER;
         }
-        return $clauses;
+
+        return new SqlCondition($clauses === [] ? '' : '(' . implode(' AND ', $clauses) . ')', $parameters, $types);
+    }
+
+    /**
+     * Monotonic per-process suffix for stdImageSqlFilter()'s placeholder
+     * names -- same "static local, not a class property" shape as
+     * PermissionService::nextPlaceholderSuffix(), and for the same
+     * reason: real callers can combine this with other bound fragments
+     * (getSqlConditionFandFAsCondition(), a caller's own `id IN (...)`)
+     * in one query, and Doctrine only supports one binding per named
+     * placeholder per query.
+     */
+    private static function nextPlaceholderSuffix(): string
+    {
+        /** @var int */
+        static $counter = 0;
+
+        return '_' . $counter++;
     }
 
     /**

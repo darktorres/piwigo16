@@ -224,9 +224,9 @@ final class PictureController implements ControllerInterface
                 } else {// try to see if we can access it differently
                     $accessible = self::imageService()->isImageAccessibleWithCondition(
                         $image_id,
-                        self::permissionService()->getSqlConditionFandF([
+                        self::permissionService()->getSqlConditionFandFAsCondition([
                             'forbidden_categories' => 'category_id',
-                        ], ' AND')
+                        ])
                     );
                     if (! $accessible) {
                         \Piwigo\Bootstrap\PresentationAccessor::htmlService()
@@ -564,10 +564,10 @@ final class PictureController implements ControllerInterface
         // real per-column breakdown.
         $related_categories = self::imageService()->getVisibleCategoriesForImage(
             $image_id,
-            self::permissionService()->getSqlConditionFandF([
+            self::permissionService()->getSqlConditionFandFAsCondition([
                 'forbidden_categories' => 'id',
                 'visible_categories' => 'id',
-            ], 'AND')
+            ])
         );
         usort($related_categories, CategoryService::compareByGlobalRank(...));
         // ---------------------- first, prev, current, next & last picture management

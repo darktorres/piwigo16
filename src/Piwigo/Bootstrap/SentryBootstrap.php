@@ -20,18 +20,44 @@ final class SentryBootstrap
 {
     public static function init(): void
     {
+        $options = self::resolveOptions();
+        if ($options === null) {
+            return;
+        }
+
+        \Sentry\init($options);
+    }
+
+    /**
+     * Pure env-var resolution, split out from init() so it's testable
+     * without a real \Sentry\init() call -- that call registers real
+     * global PHP error/exception handlers via the SDK's own integrations,
+     * and calling it more than once per test (even with a real
+     * restore_error_handler()/restore_exception_handler() after each)
+     * leaves the SDK's own internal handler-chain state imbalanced in a
+     * way PHPUnit's risky-test detector correctly notices -- confirmed
+     * live: a single real init()+restore is never flagged, a second one
+     * in the same test always is, regardless of how many env-var/option
+     * combinations are exercised. Only the "valid, real DSN" scenario
+     * needs the real SDK call to prove the wiring actually binds a
+     * client; the others are exercised through this method directly.
+     *
+     * @return array{dsn: string, traces_sample_rate: ?float, environment: ?string}|null null means "no-op, SENTRY_DSN unset/empty"
+     */
+    public static function resolveOptions(): ?array
+    {
         $dsn = getenv('SENTRY_DSN');
         if ($dsn === false || $dsn === '') {
-            return;
+            return null;
         }
 
         $sampleRate = getenv('SENTRY_TRACES_SAMPLE_RATE');
         $environment = getenv('SENTRY_ENVIRONMENT');
 
-        \Sentry\init([
+        return [
             'dsn' => $dsn,
             'traces_sample_rate' => $sampleRate !== false && $sampleRate !== '' ? (float) $sampleRate : null,
             'environment' => $environment !== false && $environment !== '' ? $environment : null,
-        ]);
+        ];
     }
 }

@@ -79,6 +79,44 @@ test('fromRow throws when id is missing', function (): void {
     Comment::fromRow($row);
 })->throws(InvalidArgumentException::class);
 
+test('fromRow throws with the real debug type of a non-null but invalid id', function (): void {
+    // The test above sets id to null itself, so `$row['id'] ?? null`
+    // resolves to null whether or not that coalesce actually reads
+    // $row['id'] -- can't tell it apart from a mutated bare `null`. A
+    // non-null-but-still-invalid id (CommentId::tryFrom() rejects any
+    // non-positive-integer-string) forces the exception message's own
+    // get_debug_type($row['id'] ?? null) call to reflect the real value.
+    $row = fullCommentRow();
+    $row['id'] = 'not-a-number';
+
+    expect(fn () => Comment::fromRow($row))
+        ->toThrow(InvalidArgumentException::class, 'Expected a positive comment id, got string');
+});
+
+test('fromRow defaults imageId to 0 when image_id is missing', function (): void {
+    // The "defaults every nullable column..." test above deliberately
+    // excludes image_id from the columns it nulls (its own docblock
+    // explains why: a NOT NULL DB column, never actually null for a real
+    // fetched row) -- meaning no existing test ever actually exercises
+    // this fallback, only describes it.
+    $row = fullCommentRow();
+    $row['image_id'] = null;
+
+    expect(Comment::fromRow($row)->imageId)->toBe(0);
+});
+
+test('fromRow casts a numeric-but-falsy-as-int validated string correctly via the int cast', function (): void {
+    // '0.0' is_numeric() but (bool) '0.0' directly is true (only '' and
+    // '0' are falsy strings in PHP) -- the (int) cast is what actually
+    // makes this evaluate to false, matching the DB's own int(0)/int(1)
+    // validated column shape. fullCommentRow()'s own '1'/existing null
+    // case can't tell the (int) cast apart from a bare (bool) cast.
+    $row = fullCommentRow();
+    $row['validated'] = '0.0';
+
+    expect(Comment::fromRow($row)->validated)->toBeFalse();
+});
+
 test('toArray round-trips the exact same DB column shape fromRow narrowed', function (): void {
     $roundTripped = Comment::fromRow(fullCommentRow())->toArray();
 

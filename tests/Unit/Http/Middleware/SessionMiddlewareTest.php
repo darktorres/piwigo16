@@ -10,15 +10,17 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 
-// No assertion on session_status() becoming PHP_SESSION_ACTIVE: confirmed
-// empirically that session_start() silently fails to activate once any
-// output has already occurred under CLI SAPI, and Pest's own console
-// output happens before any test body runs -- the same CLI-testing
-// limitation P7's ResponseEmitterTest already documented for header().
-// SessionMiddleware defends against this for real (`$_SESSION ??= []`),
-// so the reliably-testable part -- the VO gets attached and the response
-// passes through -- still holds regardless of whether activation
-// actually succeeded in this process.
+// Correction to an earlier assumption: session_start() does NOT silently
+// fail under Pest's own CLI runner the way a raw `php -r` script does --
+// confirmed empirically (headers_sent() is false, session_status()
+// genuinely transitions from NONE to ACTIVE, no warning) that Pest either
+// doesn't flush output the same way or otherwise leaves headers_sent()
+// false by the time a test body runs. session_start() DOES real work
+// here, including resetting $_SESSION to whatever the session store has
+// for the generated id -- tests that care about $_SESSION's prior
+// content must ensure a session is already active first (session_start()
+// overwrites it) or already closed (session_write_close()) before
+// asserting on activation, matching the two dedicated tests below.
 
 function sessionMiddlewareCapturingHandler(): RequestHandlerInterface
 {
@@ -52,3 +54,45 @@ test('does not error when a session is already reported active', function (): vo
     expect($response->getStatusCode())->toBe(200);
     expect($response2->getStatusCode())->toBe(200);
 });
+
+test('activates a session when none is active yet', function (): void {
+    // Kills line 38's IfNegated/NotIdenticalToIdentical and line 39's
+    // RemoveFunctionCall. Forces the "not active" precondition via
+    // session_write_close() (genuinely resets session_status() to NONE,
+    // confirmed live) regardless of what earlier tests in this shared
+    // process left it as.
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
+    }
+
+    new SessionMiddleware()->process(new ServerRequest('GET', '/'), sessionMiddlewareCapturingHandler());
+
+    expect(session_status())->toBe(PHP_SESSION_ACTIVE);
+});
+
+test('does not wipe pre-existing $_SESSION data when a session is already active', function (): void {
+    // Kills line 41's CoalesceEqualToEqual (`$_SESSION = []` instead of
+    // `??=`). session_start() itself resets $_SESSION when it actually
+    // runs, so this must force the "already active" precondition first
+    // (session_start() skips re-starting, matching the "already
+    // reported active" test above) before setting the marker, isolating
+    // the ??= vs = distinction to $_SESSION's OWN line. Confirmed live
+    // real code preserves the marker; the mutant wipes it.
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_start();
+    }
+    $_SESSION = ['marker' => 'preexisting-value'];
+
+    new SessionMiddleware()->process(new ServerRequest('GET', '/'), sessionMiddlewareCapturingHandler());
+
+    expect($_SESSION['marker'])->toBe('preexisting-value');
+});
+
+/**
+ * Confirmed-equivalent: line 47's RemoveMethodCall (dropping
+ * `$session->persistInto($_SESSION);`). Session::persistInto()'s own
+ * body is currently empty -- "zero typed slots... nothing to write
+ * back" per its own docblock -- so calling it has no observable effect
+ * at all today. This will become a real, closable gap once a future
+ * phase adds the first typed slot; not now.
+ */

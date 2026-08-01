@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tag;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -216,14 +217,11 @@ final readonly class TagService
     {
         $usePersistentCache = $tagIds === [];
 
-        $fandFSql = $this->permissionService->getSqlConditionFandF(
-            [
-                'forbidden_categories' => 'category_id',
-                'visible_categories' => 'category_id',
-                'visible_images' => 'ic.image_id',
-            ],
-            ' AND '
-        );
+        $condition = $this->permissionService->getSqlConditionFandFAsCondition([
+            'forbidden_categories' => 'category_id',
+            'visible_categories' => 'category_id',
+            'visible_images' => 'ic.image_id',
+        ]);
 
         if ($usePersistentCache) {
             // CachePools::tagCloud() (P23 Stage 1d) replaces the older
@@ -245,12 +243,12 @@ final readonly class TagService
             ) : null;
 
             if ($tagCounters === null) {
-                $tagCounters = $this->repo->countImagesPerTag($tagIds, $fandFSql);
+                $tagCounters = $this->repo->countImagesPerTag($tagIds, $condition);
                 $item->set($tagCounters);
                 $pool->save($item);
             }
         } else {
-            $tagCounters = $this->repo->countImagesPerTag($tagIds, $fandFSql);
+            $tagCounters = $this->repo->countImagesPerTag($tagIds, $condition);
         }
 
         if ($tagCounters === []) {
@@ -317,17 +315,31 @@ final readonly class TagService
         $joinSql .= '
     INNER JOIN ' . Tables::imageTag() . ' it ON id=it.image_id';
 
-        $whereSql = 'WHERE tag_id IN (' . implode(',', array_map(static fn (TagId $id): int => $id->value, $tagIds)) . ')';
+        // SQL-modernization audit: the tag_id list and permission
+        // condition are now bound via $params/$types instead of spliced
+        // into $whereSql -- see TagRepository::findImageIdsForTags()'s
+        // own docblock for why $extraImagesWhereSql/$orderBySql stay raw
+        // fragments.
+        $whereSql = 'WHERE tag_id IN (:tagIds)';
+        $params = [
+            'tagIds' => array_map(static fn (TagId $id): int => $id->value, $tagIds),
+        ];
+        $types = [
+            'tagIds' => ArrayParameterType::INTEGER,
+        ];
 
         if ($usePermissions) {
-            $whereSql .= $this->permissionService->getSqlConditionFandF(
-                [
-                    'forbidden_categories' => 'category_id',
-                    'visible_categories' => 'category_id',
-                    'visible_images' => 'id',
-                ],
-                "\n  AND"
-            );
+            $condition = $this->permissionService->getSqlConditionFandFAsCondition([
+                'forbidden_categories' => 'category_id',
+                'visible_categories' => 'category_id',
+                'visible_images' => 'id',
+            ]);
+
+            if (! $condition->isEmpty()) {
+                $whereSql .= "\n  AND " . $condition->sql;
+                $params = array_merge($params, $condition->parameters);
+                $types = array_merge($types, $condition->types);
+            }
         }
 
         $whereSql .= in_array($extraImagesWhereSql, [null, ''], true) ? '' : " \nAND (" . $extraImagesWhereSql . ')';
@@ -340,7 +352,7 @@ final readonly class TagService
 
         $orderBySql = in_array($orderBy, [null, ''], true) ? \Piwigo\Config\CurrentConfig::orderBy() : $orderBy;
 
-        return $this->repo->findImageIdsForTags($joinSql, $whereSql, $groupHavingSql, $orderBySql);
+        return $this->repo->findImageIdsForTags($joinSql, $whereSql, $groupHavingSql, $orderBySql, $params, $types);
     }
 
     /**

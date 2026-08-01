@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace Piwigo\Tag;
 
 use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\ParameterType;
+use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\ORM\EntityRepository;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Core\Env;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
+use Piwigo\Permission\SqlCondition;
 use Piwigo\Tag\Projection\Tag;
 use Piwigo\Tag\Projection\TagBrief;
 
@@ -84,47 +87,59 @@ final class TagRepository extends EntityRepository
     }
 
     /**
+     * Applies a permission/filter `SqlCondition` to $qb via `andWhere()`,
+     * binding every one of its parameters -- same shared-helper shape as
+     * `Notification\NotificationRepository::applyCondition()`
+     * (`Comment\CommentRepository::applyConditions()`'s plural sibling,
+     * for the single-condition case).
+     */
+    private static function applyCondition(QueryBuilder $qb, SqlCondition $condition): void
+    {
+        if ($condition->isEmpty()) {
+            return;
+        }
+
+        $qb->andWhere($condition->sql);
+        foreach ($condition->parameters as $name => $value) {
+            $qb->setParameter($name, $value, $condition->types[$name] ?? ParameterType::STRING);
+        }
+    }
+
+    /**
      * Count of distinct images per tag, restricted to visible/permitted
-     * images. $fandFSql is a raw, already-built SQL WHERE-continuation
-     * fragment (PermissionService::getSqlConditionFandF()) -- same
-     * "hand-written SQL on complex dynamic queries" allowance as
-     * CalendarRepository::findImageIds()'s own fragment params. Also
-     * cross-domain (image_category isn't Tag's own table) -- plain DBAL
-     * via the entity manager's own connection, not DQL.
+     * images. Cross-domain (image_category isn't Tag's own table) --
+     * plain DBAL `QueryBuilder` via the entity manager's own connection,
+     * not DQL.
+     *
+     * SQL-modernization audit: $fandFSql (a raw, already-built
+     * `PermissionService::getSqlConditionFandF()` fragment) replaced with
+     * a bound `SqlCondition` (its `getSqlConditionFandFAsCondition()`
+     * sibling) -- {@see TagService::getAvailableTags()}, this method's
+     * one real caller, migrated in the same pass. $tagIds' own CSV splice
+     * also bound.
      *
      * @param array<int, int|string> $tagIds empty means "no tag_id filter" (every tag counted)
      * @return array<int, int> [tag_id => counter]
      */
-    public function countImagesPerTag(array $tagIds, string $fandFSql): array
+    public function countImagesPerTag(array $tagIds, SqlCondition $condition): array
     {
-        $imageCategoryTable = Tables::imageCategory();
-        $imageTagTable = Tables::imageTag();
+        $qb = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
+            ->select('tag_id', 'COUNT(DISTINCT(it.image_id)) AS counter')
+            ->from(Tables::imageCategory(), 'ic')
+            ->innerJoin('ic', Tables::imageTag(), 'it', 'ic.image_id = it.image_id')
+            ->groupBy('tag_id');
 
-        $query = <<<SQL
-            SELECT tag_id, COUNT(DISTINCT(it.image_id)) AS counter
-            FROM {$imageCategoryTable} ic
-                INNER JOIN {$imageTagTable} it
-                ON ic.image_id=it.image_id
-            WHERE 1=1
-            {$fandFSql}
-            SQL;
+        self::applyCondition($qb, $condition);
 
         if ($tagIds !== []) {
-            $tagIdsCsv = implode(',', $tagIds);
-            $query .= <<<SQL
-
-                AND tag_id IN ({$tagIdsCsv})
-
-                SQL;
+            $qb->andWhere($qb->expr()->in('tag_id', ':tagIds'))
+                ->setParameter('tagIds', array_map(intval(...), $tagIds), ArrayParameterType::INTEGER);
         }
 
-        $query .= <<<SQL
-
-            GROUP BY tag_id
-            SQL;
-
         $counters = [];
-        foreach ($this->getEntityManager()->getConnection()->executeQuery($query)->fetchAllAssociative() as $row) {
+        foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
             $counters[is_numeric($row['tag_id']) ? (int) $row['tag_id'] : 0] = is_numeric($row['counter']) ? (int) $row['counter'] : 0;
         }
 
@@ -155,44 +170,40 @@ final class TagRepository extends EntityRepository
     }
 
     /**
+     * SQL-modernization audit: $itemsCsv/$excludedTagIdsCsv splices
+     * bound. The original's trailing `ORDER BY NULL` (a MySQL
+     * query-optimizer hint meaning "don't sort") when $maxTags <= 0 has
+     * no `QueryBuilder` equivalent and none is needed -- omitting
+     * `ORDER BY` entirely is the same "unspecified order" behavior.
+     *
      * @param list<int> $items
      * @param list<int> $excludedTagIds
      * @return list<array{id: int, name: string, url_name: string, lastmodified: string, counter: int}>
      */
     public function findCommonTags(array $items, int $maxTags, array $excludedTagIds): array
     {
-        $imageTagTable = Tables::imageTag();
-        $tagsTable = Tables::tags();
-        $itemsCsv = implode(',', $items);
+        $qb = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
+            ->select('t.*', 'count(*) AS counter')
+            ->from(Tables::imageTag(), 'it')
+            ->innerJoin('it', Tables::tags(), 't', 'it.tag_id = t.id')
+            ->groupBy('t.id');
 
-        $query = <<<SQL
-            SELECT t.*, count(*) AS counter
-            FROM {$imageTagTable}
-                INNER JOIN {$tagsTable} t ON tag_id = id
-            WHERE image_id IN ({$itemsCsv})
-            SQL;
+        $qb->where($qb->expr()->in('it.image_id', ':items'))
+            ->setParameter('items', $items, ArrayParameterType::INTEGER);
 
         if ($excludedTagIds !== []) {
-            $excludedTagIdsCsv = implode(',', $excludedTagIds);
-            $query .= <<<SQL
-
-                AND tag_id NOT IN ({$excludedTagIdsCsv})
-                SQL;
+            $qb->andWhere($qb->expr()->notIn('it.tag_id', ':excludedTagIds'))
+                ->setParameter('excludedTagIds', $excludedTagIds, ArrayParameterType::INTEGER);
         }
 
-        $query .= <<<SQL
+        if ($maxTags > 0) {
+            $qb->orderBy('counter', 'DESC')
+                ->setMaxResults($maxTags);
+        }
 
-            GROUP BY t.id
-            ORDER BY
-            SQL;
-
-        $query .= $maxTags > 0
-            ? ' counter DESC LIMIT ' . $maxTags
-            : ' NULL';
-
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->executeQuery($query)
+        $rows = $qb->executeQuery()
             ->fetchAllAssociative();
 
         return array_map(
@@ -212,9 +223,23 @@ final class TagRepository extends EntityRepository
      * SQL fragments assembled by TagService::getImageIdsForTags() -- same
      * fragment-passing shape as CalendarRepository::findImageIds().
      *
+     * SQL-modernization audit: $params/$types widened additively (both
+     * default `[]`) -- same "transitional caller-built query" move as
+     * CategoryRepository::fetchCallerBuiltQuery()/SearchRepository::
+     * queryRows() -- so TagService::getImageIdsForTags() can bind its own
+     * tag_id list and permission condition instead of splicing them into
+     * $whereSql. $extraImagesWhereSql/$orderBySql (reachable via
+     * Ws\PwgTags -> Ws\WsHelper::stdImageSqlFilter()/stdImageSqlOrder())
+     * stay a raw fragment inside $whereSql/$orderBySql: WsHelper.php
+     * isn't one of this initiative's 29 target files, and both already
+     * validate their own inputs (DateHelper::isValidMysqlDatetime()/
+     * is_numeric() guards) before a value ever reaches this method.
+     *
+     * @param array<string, mixed> $params
+     * @param array<string, ArrayParameterType|ParameterType> $types
      * @return list<int>
      */
-    public function findImageIdsForTags(string $joinSql, string $whereSql, string $groupHavingSql, string $orderBySql): array
+    public function findImageIdsForTags(string $joinSql, string $whereSql, string $groupHavingSql, string $orderBySql, array $params = [], array $types = []): array
     {
         $imagesTable = Tables::images();
 
@@ -224,6 +249,9 @@ final class TagRepository extends EntityRepository
                 <<<SQL
                 SELECT id FROM {$imagesTable} i {$joinSql} {$whereSql} {$groupHavingSql} {$orderBySql}
                 SQL
+                ,
+                $params,
+                $types
             )->fetchFirstColumn();
 
         return array_values(array_map(intval(...), array_filter($ids, is_numeric(...))));
@@ -410,8 +438,16 @@ final class TagRepository extends EntityRepository
 
     /**
      * $whereSql is a raw, already-built SQL WHERE-continuation fragment
-     * (plugin-supplied extended-description sub-name matching) -- same
-     * fragment-passing shape as countImagesPerTag()'s $fandFSql.
+     * (plugin-supplied extended-description sub-name matching), unlike
+     * countImagesPerTag()'s former $fandFSql (now a bound SqlCondition)
+     * -- this one's producer is a plugin's `get_tag_name_like_where`
+     * EventDispatcher hook (Piwigo\Tag\TagService::tagIdFromTagName()),
+     * not internal domain code. Left untouched: a plugin handing back raw
+     * SQL is a pre-existing, accepted trust boundary (a plugin already
+     * runs arbitrary PHP with full DB access -- returning a SQL fragment
+     * isn't a new one), and every plugin's own contract is due for a
+     * full rewrite anyway (see the project's plugin-rewrite decision),
+     * not a target of this SQL-modernization initiative.
      */
     public function findIdByWhereFragment(string $whereSql): ?TagId
     {
@@ -588,19 +624,18 @@ final class TagRepository extends EntityRepository
             return [];
         }
 
-        $imageTagTable = Tables::imageTag();
-        $tagIdsCsv = implode(',', $tagIds);
-        $imageIdsCsv = implode(',', $imageIds);
-
         $rows = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT image_id, GROUP_CONCAT(tag_id) AS tag_ids
-                FROM {$imageTagTable}
-                WHERE tag_id IN ({$tagIdsCsv})
-                    AND image_id IN ({$imageIdsCsv})
-                GROUP BY image_id
-                SQL);
+            ->createQueryBuilder()
+            ->select('image_id', 'GROUP_CONCAT(tag_id) AS tag_ids')
+            ->from(Tables::imageTag())
+            ->where('tag_id IN (:tagIds)')
+            ->andWhere('image_id IN (:imageIds)')
+            ->setParameter('tagIds', $tagIds, ArrayParameterType::INTEGER)
+            ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER)
+            ->groupBy('image_id')
+            ->executeQuery()
+            ->fetchAllAssociative();
 
         $byImageId = [];
         foreach ($rows as $row) {
@@ -624,15 +659,15 @@ final class TagRepository extends EntityRepository
 
     public function existsById(int $id): bool
     {
-        $tagsTable = Tables::tags();
-
         $value = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne(<<<SQL
-                SELECT COUNT(*)
-                FROM {$tagsTable}
-                WHERE id = {$id}
-                SQL);
+            ->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from(Tables::tags())
+            ->where('id = :id')
+            ->setParameter('id', $id, ParameterType::INTEGER)
+            ->executeQuery()
+            ->fetchOne();
 
         return is_numeric($value) && (int) $value > 0;
     }
@@ -646,16 +681,15 @@ final class TagRepository extends EntityRepository
             return 0;
         }
 
-        $tagsTable = Tables::tags();
-        $idsCsv = implode(',', $ids);
-
         $value = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne(<<<SQL
-                SELECT COUNT(*)
-                FROM {$tagsTable}
-                WHERE id IN ({$idsCsv})
-                SQL);
+            ->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from(Tables::tags())
+            ->where('id IN (:ids)')
+            ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
+            ->executeQuery()
+            ->fetchOne();
 
         return is_numeric($value) ? (int) $value : 0;
     }

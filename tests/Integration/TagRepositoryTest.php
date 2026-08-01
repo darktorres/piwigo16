@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Config\CurrentConfig;
@@ -11,6 +12,7 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\Tables;
+use Piwigo\Permission\SqlCondition;
 use Piwigo\Tag\TagEntity;
 use Piwigo\Tag\TagRepository;
 
@@ -360,5 +362,101 @@ final class TagRepositoryTest extends IntegrationTestCase
     public function test_count_existing_ids_returns_zero_for_an_empty_input(): void
     {
         self::assertSame(0, $this->repo->countExistingIds([]));
+    }
+
+    /**
+     * SQL-modernization audit: countImagesPerTag()'s own former
+     * $fandFSql raw-string parameter is now a bound SqlCondition -- these
+     * 3 tests (previously zero direct coverage on this method at all)
+     * are the first to exercise it. Fixture shape (see this class's own
+     * findTagIdsByImageIds test): image 1 has tags 1/2/3, images 2/3 have
+     * only tag 1, all three sit in category 1 (image_category).
+     */
+    public function test_count_images_per_tag_counts_distinct_images_per_tag(): void
+    {
+        $counters = $this->repo->countImagesPerTag([], new SqlCondition(''));
+
+        self::assertSame(3, $counters[1] ?? null);
+        self::assertSame(1, $counters[2] ?? null);
+        self::assertSame(1, $counters[3] ?? null);
+    }
+
+    public function test_count_images_per_tag_filters_by_the_given_tag_ids(): void
+    {
+        self::assertSame([1 => 3], $this->repo->countImagesPerTag([1], new SqlCondition('')));
+    }
+
+    public function test_count_images_per_tag_applies_the_given_condition(): void
+    {
+        self::assertSame([], $this->repo->countImagesPerTag([], new SqlCondition('category_id = -1')));
+    }
+
+    /**
+     * SQL-modernization audit: $itemsCsv/$excludedTagIdsCsv splices
+     * bound -- previously zero direct coverage of a real (non-empty)
+     * match on this method at all. Same fixture shape as
+     * countImagesPerTag()'s own tests just above.
+     */
+    public function test_find_common_tags_returns_tags_used_by_the_given_images_with_counts(): void
+    {
+        $rows = $this->repo->findCommonTags([1, 2, 3], 10, []);
+
+        $byId = array_column($rows, 'counter', 'id');
+        self::assertSame(3, $byId[1] ?? null);
+        self::assertSame(1, $byId[2] ?? null);
+        self::assertSame(1, $byId[3] ?? null);
+    }
+
+    public function test_find_common_tags_orders_by_counter_descending_and_respects_max_tags(): void
+    {
+        $rows = $this->repo->findCommonTags([1, 2, 3], 1, []);
+
+        self::assertCount(1, $rows);
+        self::assertSame(1, $rows[0]['id']);
+        self::assertSame(3, $rows[0]['counter']);
+    }
+
+    public function test_find_common_tags_excludes_the_given_tag_ids(): void
+    {
+        $ids = array_column($this->repo->findCommonTags([1, 2, 3], 10, [1]), 'id');
+        sort($ids);
+
+        self::assertSame([2, 3], $ids);
+    }
+
+    public function test_find_common_tags_returns_empty_for_no_matching_images(): void
+    {
+        self::assertSame([], $this->repo->findCommonTags([999_999], 10, []));
+    }
+
+    /**
+     * findImageIdsForTags() is otherwise only exercised indirectly via
+     * TagServiceTest's own getImageIdsForTags() tests -- this is the
+     * first direct test of its own $params/$types widening (SQL-
+     * modernization audit).
+     */
+    public function test_find_image_ids_for_tags_binds_named_parameters(): void
+    {
+        $ids = $this->repo->findImageIdsForTags(
+            'INNER JOIN ' . Tables::imageTag() . ' it ON id=it.image_id',
+            'WHERE tag_id IN (:tagIds)',
+            'GROUP BY id',
+            '',
+            ['tagIds' => [1]],
+            ['tagIds' => ArrayParameterType::INTEGER],
+        );
+        sort($ids);
+
+        self::assertSame([1, 2, 3], $ids);
+    }
+
+    public function test_exists_by_id_is_true_for_a_real_tag(): void
+    {
+        self::assertTrue($this->repo->existsById(1));
+    }
+
+    public function test_exists_by_id_is_false_for_an_unknown_id(): void
+    {
+        self::assertFalse($this->repo->existsById(999_999));
     }
 }

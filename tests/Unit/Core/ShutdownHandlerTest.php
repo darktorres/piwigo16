@@ -42,6 +42,41 @@ test('install() is idempotent', function (): void {
     expect(pcntl_signal_get_handler(SIGTERM))->toBeInstanceOf(Closure::class);
 });
 
+test('install() genuinely records that it ran, not leaving $installed false', function (): void {
+    // Kills line 42's TrueToFalse (`self::$installed = false;` instead
+    // of `= true;`): the public API surface (pcntl_signal_get_handler
+    // still returning a Closure) can't distinguish this on its own,
+    // since re-registering the identical closure a second time --
+    // which is what a permanently-false $installed would cause on any
+    // later install() call -- produces the exact same final handler.
+    // Reflection on the private property is the only way to observe
+    // that the flag itself is actually set, matching this codebase's
+    // established convention for exactly this kind of internal-state
+    // assertion (e.g. FilterStateTest.php's own reset() test).
+    ShutdownHandler::install();
+
+    $installed = new ReflectionProperty(ShutdownHandler::class, 'installed');
+
+    expect($installed->getValue())->toBeTrue();
+});
+
+/**
+ * Confirmed-equivalent: line 39's BooleanOrToBooleanAnd (`self::
+ * $installed && ! function_exists('pcntl_signal')` instead of `||`).
+ * ext-pcntl is a hard composer.json requirement for this project's own
+ * deployment targets and is always loaded in this test environment, so
+ * `! function_exists('pcntl_signal')` is always false here -- reducing
+ * the real guard to just `self::$installed` and the mutant's guard to
+ * always false (never short-circuits, regardless of $installed).
+ * The only input where they'd disagree ($installed === true) still
+ * produces an identical final observable state either way: re-running
+ * install()'s own idempotent body (pcntl_async_signals(true) +
+ * pcntl_signal() with the same closure) has no separate side effect
+ * from running it once. Confirmed live: every test in this file
+ * (including the new $installed-reflection one above) passes
+ * identically with this mutation applied.
+ */
+
 test('registered callbacks run when the signal handler fires', function (): void {
     $ran = [];
     ShutdownHandler::register(function () use (&$ran): void {
@@ -71,6 +106,18 @@ test('reset() clears registered callbacks', function (): void {
     expect($ran)->toBeFalse();
 });
 
+/**
+ * This test also kills line 44's TrueToFalse (`pcntl_async_signals
+ * (false)`) and RemoveFunctionCall (dropping the call entirely):
+ * confirmed live via a sed-applied mutation rerun, both genuinely make
+ * this test fail (the subprocess never processes the SIGTERM
+ * asynchronously during its own usleep(), so the marker file never
+ * gets written and the exit code is never 143). `pest --mutate`'s own
+ * scan still reports both as UNTESTED regardless -- the same
+ * proc_open() subprocess-invisibility documented in
+ * feedback_pest_mutate_invisible_to_subprocess_tests, not an
+ * unaddressed gap.
+ */
 test('a real SIGTERM signal delivered to a subprocess runs its registered callback, then exits 143', function (): void {
     // The real signal handler's own closure body (runAll(); exit(143);)
     // is unreachable from this shared PHPUnit/Pest worker for exactly the

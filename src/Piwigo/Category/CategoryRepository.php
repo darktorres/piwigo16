@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Category;
 
 use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\EntityRepository;
 use Piwigo\Category\Projection\Category;
 use Piwigo\Common\Dto\PaginatedResult;
@@ -1523,13 +1524,24 @@ final class CategoryRepository extends EntityRepository
      * their own pass (Phase 1g/1h) and can build a real `QueryBuilder`
      * instead of a raw string.
      *
+     * SQL-modernization audit: `$params`/`$types` added (both default `[]`,
+     * so the 5 not-yet-converted callers above are unaffected) -- lets a
+     * caller that already builds its own bound-parameter fragment (e.g.
+     * via `Permission\SqlCondition`) pass real values through instead of
+     * having nowhere to put them but back into raw interpolated `$query`
+     * text. `Controller\CommentsController.php` is the first real user of
+     * this; the other 5 still call with `$params`/`$types` omitted until
+     * their own pass converts them too.
+     *
+     * @param array<string, mixed> $params
+     * @param array<string, ArrayParameterType|ParameterType> $types
      * @return list<array<string, mixed>>
      */
-    public function fetchCallerBuiltQuery(string $query): array
+    public function fetchCallerBuiltQuery(string $query, array $params = [], array $types = []): array
     {
         return $this->getEntityManager()
             ->getConnection()
-            ->executeQuery($query)
+            ->executeQuery($query, $params, $types)
             ->fetchAllAssociative();
     }
 

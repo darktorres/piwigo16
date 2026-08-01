@@ -843,6 +843,9 @@ final readonly class CategoryService
      * @param array<int, mixed> $selecteds
      * @param string $blockname variable name in template
      * @param bool $fullname full breadcrumb or not
+     * @param array<string, mixed> $params bound parameters for $query, see
+     *   CategoryRepository::fetchCallerBuiltQuery()'s own docblock
+     * @param array<string, \Doctrine\DBAL\ArrayParameterType|\Doctrine\DBAL\ParameterType> $types
      */
     public function displaySelectCatWrapper(
         string $query,
@@ -850,9 +853,11 @@ final readonly class CategoryService
         string $blockname,
         HtmlRenderingInterface $htmlRenderer,
         TemplateInterface $template,
-        bool $fullname = true
+        bool $fullname = true,
+        array $params = [],
+        array $types = []
     ): void {
-        $categories = $this->repo->fetchCallerBuiltQuery($query);
+        $categories = $this->repo->fetchCallerBuiltQuery($query, $params, $types);
         usort($categories, self::compareByGlobalRank(...));
         $this->displaySelectCategories($categories, $selecteds, $blockname, $htmlRenderer, $template, $fullname);
     }

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\ParameterType;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentService;
@@ -22,6 +24,7 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Permission\PermissionService;
+use Piwigo\Permission\SqlCondition;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -153,6 +156,15 @@ final class CommentsController implements ControllerInterface
         // number of items to display
         $selected_items_number = $commentsRequest->itemsNumber;
 
+        // SQL-modernization audit: $whereClauses is now list<SqlCondition>,
+        // not list<string> -- the author/keyword filters below used to
+        // splice raw, unvalidated $_GET content directly into the query
+        // (manual '...\'' . $x . '\'...' quote-wrapping, no escaping or
+        // binding at all) -- a real, live, guest-reachable SQL injection
+        // via comments.php's own `author`/`keyword` query params
+        // (`CommentsRequest::fromArrays()` applies no ValidationPattern to
+        // either field, unlike comment_id/cat/the action fields). Fixed
+        // here as bound parameters, not just converted for style.
         $whereClauses = [];
 
         // which category to filter on ?
@@ -163,8 +175,15 @@ final class CommentsController implements ControllerInterface
                 $category_ids = [-1];
             }
 
-            $whereClauses[] =
-              'category_id IN (' . implode(',', $category_ids) . ')';
+            $whereClauses[] = new SqlCondition(
+                'category_id IN (:categoryIds)',
+                [
+                    'categoryIds' => $category_ids,
+                ],
+                [
+                    'categoryIds' => ArrayParameterType::INTEGER,
+                ],
+            );
         }
 
         $user_fields = \Piwigo\Config\CurrentConfig::userFields();
@@ -176,8 +195,17 @@ final class CommentsController implements ControllerInterface
         $author_filter = $commentsRequest->authorFilter;
         if ($author_filter !== null) {
             $author_search = $author_filter;
-            $whereClauses[] =
-              '(u.' . $username_field . ' = \'' . $author_search . '\' OR author = \'' . $author_search . '\')';
+            $whereClauses[] = new SqlCondition(
+                '(u.' . $username_field . ' = :authorSearchUsername OR author = :authorSearchAuthor)',
+                [
+                    'authorSearchUsername' => $author_search,
+                    'authorSearchAuthor' => $author_search,
+                ],
+                [
+                    'authorSearchUsername' => ParameterType::STRING,
+                    'authorSearchAuthor' => ParameterType::STRING,
+                ],
+            );
         }
 
         // search a specific comment (if you're coming directly from an
@@ -196,7 +224,15 @@ final class CommentsController implements ControllerInterface
                 $this->redirectService->redirect($login_url);
             }
 
-            $whereClauses[] = 'com.id = ' . $get_comment_id;
+            $whereClauses[] = new SqlCondition(
+                'com.id = :commentId',
+                [
+                    'commentId' => $get_comment_id,
+                ],
+                [
+                    'commentId' => ParameterType::INTEGER,
+                ],
+            );
         }
 
         // search a substring among comments content
@@ -206,30 +242,38 @@ final class CommentsController implements ControllerInterface
             $keywords = preg_split('/[\s,;]+/', $keyword_search);
             // the pattern above is a hardcoded, always-valid regex
             assert($keywords !== false);
-            $whereClauses[] =
-              '(' .
-              implode(
-                  ' AND ',
-                  array_map(
-                      fn ($s): string => "content LIKE '%{$s}%'",
-                      $keywords
-                  )
-              ) .
-              ')';
+
+            $keywordParts = [];
+            $keywordParams = [];
+            $keywordTypes = [];
+            foreach ($keywords as $i => $keyword) {
+                $placeholder = 'keyword' . $i;
+                $keywordParts[] = 'content LIKE :' . $placeholder;
+                // The %...% wildcard wrap is part of the bound VALUE, not
+                // the SQL text -- matches the original's own unescaped
+                // wildcard behavior for a literal %/_ inside the search
+                // term itself (still interpreted as a LIKE wildcard, same
+                // as before), while no longer allowing the term to break
+                // out of the string literal entirely.
+                $keywordParams[$placeholder] = '%' . $keyword . '%';
+                $keywordTypes[$placeholder] = ParameterType::STRING;
+            }
+
+            $whereClauses[] = new SqlCondition('(' . implode(' AND ', $keywordParts) . ')', $keywordParams, $keywordTypes);
         }
 
-        $whereClauses[] = $since_options[$since]['clause'];
+        $whereClauses[] = new SqlCondition($since_options[$since]['clause']);
 
         // which status to filter on ?
         if (! \Piwigo\Auth\AccessControl::isAdmin()) {
-            $whereClauses[] = 'validated=1';
+            $whereClauses[] = new SqlCondition('validated=1');
         }
 
-        $whereClauses[] = self::permissionService()->getSqlConditionFandF([
+        $whereClauses[] = self::permissionService()->getSqlConditionFandFAsCondition([
             'forbidden_categories' => 'category_id',
             'visible_categories' => 'category_id',
             'visible_images' => 'ic.image_id',
-        ], '', true);
+        ], true);
 
         // +-----------------------------------------------------------+
         // |                   comments management                     |
@@ -349,17 +393,18 @@ final class CommentsController implements ControllerInterface
         $blockname = 'categories';
 
         $categoriesTable = Tables::categories();
-        $categoryConditionSql = self::permissionService()->getSqlConditionFandF([
+        $categoryCondition = self::permissionService()->getSqlConditionFandFAsCondition([
             'forbidden_categories' => 'id',
             'visible_categories' => 'id',
-        ], 'WHERE');
+        ]);
+        $categoryConditionSql = $categoryCondition->isEmpty() ? '' : 'WHERE ' . $categoryCondition->sql;
         $query = <<<SQL
             SELECT id, name, uppercats, global_rank
             FROM {$categoriesTable}
             {$categoryConditionSql}
             SQL;
         self::categoryService()
-            ->displaySelectCatWrapper($query, [$commentsRequest->catDisplay], $blockname, \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $template, true);
+            ->displaySelectCatWrapper($query, [$commentsRequest->catDisplay], $blockname, \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $template, true, $categoryCondition->parameters, $categoryCondition->types);
 
         // Filter on recent comments...
         $tpl_var = [];

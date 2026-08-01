@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Comment;
 
 use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\ParameterType;
+use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\ORM\EntityRepository;
 use Piwigo\Comment\Projection\Comment;
 use Piwigo\Comment\Projection\CommentSummary;
@@ -13,6 +15,7 @@ use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Core\CommentCounterInterface;
 use Piwigo\Core\Env;
 use Piwigo\Db\Tables;
+use Piwigo\Permission\SqlCondition;
 
 /**
  * Persistence layer for the comment domain: `comments` itself, plus a
@@ -244,14 +247,38 @@ final class CommentRepository extends EntityRepository implements CommentCounter
     }
 
     /**
+     * Applies a set of already-built SqlCondition fragments to $qb as
+     * ANDed WHERE clauses, binding each fragment's own parameters/types --
+     * shared by every $whereClauses-accepting method below. Empty
+     * fragments (SqlCondition::isEmpty()) are skipped rather than adding a
+     * vacuous `AND ()`.
+     *
+     * @param array<array-key, SqlCondition> $conditions
+     */
+    private static function applyConditions(QueryBuilder $qb, array $conditions): void
+    {
+        foreach ($conditions as $condition) {
+            if ($condition->isEmpty()) {
+                continue;
+            }
+
+            $qb->andWhere($condition->sql);
+            foreach ($condition->parameters as $name => $value) {
+                $qb->setParameter($name, $value, $condition->types[$name] ?? ParameterType::STRING);
+            }
+        }
+    }
+
+    /**
      * Distinct comment count for the given permission/validation condition
      * fragments -- CommentService::getNbAvailableComments()'s own
-     * PermissionService::getSqlConditionFandF() output, already trusted SQL
-     * (built server-side from permission ids, not user input), spliced
-     * verbatim as raw WHERE fragments -- matches the original's own string
-     * concatenation.
+     * PermissionService::getSqlConditionFandFAsCondition() output plus a
+     * plain literal condition, combined here via applyConditions() and
+     * bound. SQL-modernization audit: $whereClauses elements used to be
+     * raw trusted-SQL strings spliced verbatim; now real SqlCondition
+     * fragments, each with its own bound parameters.
      *
-     * @param  list<string>  $whereClauses
+     * @param  list<SqlCondition>  $whereClauses
      */
     public function countAvailableWithConditions(array $whereClauses): int
     {
@@ -262,9 +289,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
             ->from(Tables::imageCategory(), 'ic')
             ->join('ic', Tables::comments(), 'com', 'ic.image_id = com.image_id');
 
-        foreach ($whereClauses as $clause) {
-            $qb->andWhere($clause);
-        }
+        self::applyConditions($qb, $whereClauses);
 
         $value = $qb->executeQuery()
             ->fetchOne();
@@ -430,14 +455,16 @@ final class CommentRepository extends EntityRepository implements CommentCounter
 
     /**
      * Cross-category "all comments" listing (comments.php's own front-end
-     * page) -- $whereClauses are already-built, trusted SQL fragments
-     * (permission/status/search filters, same "caller composes trusted
-     * fragments" contract as {@see countAvailableWithConditions()}),
-     * ANDed together. $userIdColumn/$userEmailColumn resolve
-     * \Piwigo\Config\CurrentConfig::userFields() same as
+     * page) -- $whereClauses are already-built SqlCondition fragments
+     * (permission/status/search/author/keyword filters, same "caller
+     * composes fragments" contract as {@see countAvailableWithConditions()}),
+     * combined via {@see applyConditions()}. $userIdColumn/$userEmailColumn
+     * resolve \Piwigo\Config\CurrentConfig::userFields() same as
      * {@see findForImage()}'s identical parameters. $sortByColumn/
      * $sortOrder concatenate directly into ORDER BY with no further
-     * validation -- caller must restrict these to a known-safe set first,
+     * validation -- caller must restrict these to a known-safe set first
+     * (confirmed: Controller\CommentsController's own real caller
+     * validates both against small fixed allowlists before this point),
      * same contract as {@see findForImage()}'s own $order.
      *
      * Deliberately returns raw rows, not a {@see Comment} Projection: the
@@ -453,7 +480,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * category per comment, matching the original's own grouping/row
      * count exactly.
      *
-     * @param list<string> $whereClauses
+     * @param list<SqlCondition> $whereClauses
      * @return PaginatedResult<array<string, mixed>>
      */
     public function findAllWithConditions(
@@ -465,53 +492,48 @@ final class CommentRepository extends EntityRepository implements CommentCounter
         int|string $limit,
         int $offset
     ): PaginatedResult {
-        $conn = $this->getEntityManager()
-            ->getConnection();
+        $qb = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
+            ->select(
+                'SQL_CALC_FOUND_ROWS com.id AS comment_id',
+                'com.image_id',
+                'ANY_VALUE(ic.category_id) AS category_id',
+                'com.author',
+                'com.author_id',
+                'u.' . $userEmailColumn . ' AS user_email',
+                'com.email',
+                'com.date',
+                'com.website_url',
+                'com.content',
+                'com.validated',
+            )
+            ->from(Tables::imageCategory(), 'ic')
+            ->innerJoin('ic', Tables::comments(), 'com', 'ic.image_id = com.image_id')
+            ->leftJoin('com', Tables::users(), 'u', 'u.' . $userIdColumn . ' = com.author_id')
+            ->groupBy('comment_id')
+            ->orderBy($sortByColumn, $sortOrder)
+            ->addOrderBy('comment_id', $sortOrder);
 
-        $imageCategoryTable = Tables::imageCategory();
-        $commentsTable = Tables::comments();
-        $usersTable = Tables::users();
-        $whereSql = implode('
-AND ', $whereClauses);
-
-        $sql = <<<SQL
-            SELECT SQL_CALC_FOUND_ROWS com.id AS comment_id,
-               com.image_id,
-               ANY_VALUE(ic.category_id) AS category_id,
-               com.author,
-               com.author_id,
-               u.{$userEmailColumn} AS user_email,
-               com.email,
-               com.date,
-               com.website_url,
-               com.content,
-               com.validated
-            FROM {$imageCategoryTable} AS ic
-            INNER JOIN {$commentsTable} AS com
-            ON ic.image_id = com.image_id
-            LEFT JOIN {$usersTable} AS u
-            ON u.{$userIdColumn} = com.author_id
-            WHERE {$whereSql}
-            GROUP BY comment_id
-            ORDER BY {$sortByColumn} {$sortOrder}, comment_id {$sortOrder}
-            SQL;
+        self::applyConditions($qb, $whereClauses);
 
         if ($limit !== 'all') {
-            $sql .= <<<SQL
-
-                LIMIT {$limit} OFFSET {$offset}
-                SQL;
+            $qb->setMaxResults((int) $limit)
+                ->setFirstResult($offset);
         }
 
-        $sql .= ';';
-
-        $rows = $conn->fetchAllAssociative($sql);
+        $rows = $qb->executeQuery()
+            ->fetchAllAssociative();
 
         // FOUND_ROWS() reflects the immediately-preceding query on the
-        // same connection/session.
-        $total_raw = $conn->fetchOne(<<<SQL
-            SELECT FOUND_ROWS()
-            SQL);
+        // same connection/session -- must run right after, no query
+        // in between.
+        $total_raw = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
+            ->select('FOUND_ROWS()')
+            ->executeQuery()
+            ->fetchOne();
 
         return new PaginatedResult($rows, is_numeric($total_raw) ? (int) $total_raw : null);
     }
@@ -522,24 +544,21 @@ AND ', $whereClauses);
      * composes trusted fragments" contract as
      * {@see countAvailableWithConditions()} above.
      *
-     * @param  list<string>  $whereClauses
+     * @param  list<SqlCondition>  $whereClauses
      * @return array{all_comments: mixed, validated: mixed, pending: mixed}|null
      */
     public function findSummaryCounts(array $whereClauses): ?array
     {
-        $commentsTable = Tables::comments();
-        $whereSql = implode(' AND ', $whereClauses);
-
-        $row = $this->getEntityManager()
+        $qb = $this->getEntityManager()
             ->getConnection()
-            ->fetchAssociative(<<<SQL
-                SELECT
-                    count(*) as all_comments,
-                    sum(validated = 1) as validated,
-                    sum(validated = 0) as pending
-                FROM {$commentsTable}
-                WHERE {$whereSql}
-                SQL);
+            ->createQueryBuilder()
+            ->select('count(*) as all_comments', 'sum(validated = 1) as validated', 'sum(validated = 0) as pending')
+            ->from(Tables::comments());
+
+        self::applyConditions($qb, $whereClauses);
+
+        $row = $qb->executeQuery()
+            ->fetchAssociative();
 
         if ($row === false) {
             return null;
@@ -559,7 +578,7 @@ AND ', $whereClauses);
      * resolve \Piwigo\Config\CurrentConfig::userFields(), same reasoning
      * as {@see findForImage()}'s own equivalents.
      *
-     * @param  list<string>  $whereClauses
+     * @param  list<SqlCondition>  $whereClauses
      * @return list<array<string, mixed>>
      */
     public function findListForAdminWs(
@@ -569,64 +588,59 @@ AND ', $whereClauses);
         int $offset,
         int $limit
     ): array {
-        $commentsTable = Tables::comments();
-        $imagesTable = Tables::images();
-        $usersTable = Tables::users();
-        $userInfosTable = Tables::userInfos();
-        $whereSql = implode(' AND ', $whereClauses);
-
-        return $this->getEntityManager()
+        $qb = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT
-                    c.id,
-                    c.image_id,
-                    c.date,
-                    c.author,
-                    c.author_id,
-                    {$userUsernameColumn} AS username,
-                    ui.status,
-                    c.content,
-                    i.path,
-                    i.representative_ext,
-                    i.file,
-                    i.date_available,
-                    validated,
-                    c.anonymous_id
-                FROM {$commentsTable} AS c
-                    INNER JOIN {$imagesTable} AS i
-                        ON i.id = c.image_id
-                    LEFT JOIN {$usersTable} AS u
-                        ON u.{$userIdColumn} = c.author_id
-                    LEFT JOIN {$userInfosTable} AS ui
-                        ON ui.user_id = c.author_id
-                WHERE {$whereSql}
-                ORDER BY c.date DESC, c.id DESC
-                LIMIT {$offset}, {$limit}
-                SQL);
+            ->createQueryBuilder()
+            ->select(
+                'c.id',
+                'c.image_id',
+                'c.date',
+                'c.author',
+                'c.author_id',
+                $userUsernameColumn . ' AS username',
+                'ui.status',
+                'c.content',
+                'i.path',
+                'i.representative_ext',
+                'i.file',
+                'i.date_available',
+                'validated',
+                'c.anonymous_id',
+            )
+            ->from(Tables::comments(), 'c')
+            ->innerJoin('c', Tables::images(), 'i', 'i.id = c.image_id')
+            ->leftJoin('c', Tables::users(), 'u', 'u.' . $userIdColumn . ' = c.author_id')
+            ->leftJoin('c', Tables::userInfos(), 'ui', 'ui.user_id = c.author_id')
+            ->orderBy('c.date', 'DESC')
+            ->addOrderBy('c.id', 'DESC')
+            ->setFirstResult($offset)
+            ->setMaxResults($limit);
+
+        self::applyConditions($qb, $whereClauses);
+
+        return $qb->executeQuery()
+            ->fetchAllAssociative();
     }
 
     /**
      * Earliest/latest `date` matching already-built $whereClauses --
      * Ws\PwgComments::getList()'s own "filters" date range.
      *
-     * @param  list<string>  $whereClauses
+     * @param  list<SqlCondition>  $whereClauses
      * @return array{started_at: mixed, ended_at: mixed}|null
      */
     public function findDateRange(array $whereClauses): ?array
     {
-        $commentsTable = Tables::comments();
-        $whereSql = implode(' AND ', $whereClauses);
-
-        $row = $this->getEntityManager()
+        $qb = $this->getEntityManager()
             ->getConnection()
-            ->fetchAssociative(<<<SQL
-                SELECT
-                    MIN(date) AS started_at,
-                    MAX(date) AS ended_at
-                FROM {$commentsTable}
-                WHERE {$whereSql}
-                SQL);
+            ->createQueryBuilder()
+            ->select('MIN(date) AS started_at', 'MAX(date) AS ended_at')
+            ->from(Tables::comments());
+
+        self::applyConditions($qb, $whereClauses);
+
+        $row = $qb->executeQuery()
+            ->fetchAssociative();
 
         if ($row === false) {
             return null;
@@ -648,25 +662,22 @@ AND ', $whereClauses);
      * author name per author_id, matching the original grouping/row count
      * exactly.
      *
-     * @param  list<string>  $whereClauses
+     * @param  list<SqlCondition>  $whereClauses
      * @return list<array<string, mixed>>
      */
     public function findAuthorCounts(array $whereClauses): array
     {
-        $commentsTable = Tables::comments();
-        $whereSql = implode(' AND ', $whereClauses);
-
-        return $this->getEntityManager()
+        $qb = $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT
-                    ANY_VALUE(author) AS author,
-                    author_id,
-                    count(*) as nb_authors
-                FROM {$commentsTable}
-                WHERE {$whereSql}
-                GROUP BY author_id
-                SQL);
+            ->createQueryBuilder()
+            ->select('ANY_VALUE(author) AS author', 'author_id', 'count(*) as nb_authors')
+            ->from(Tables::comments())
+            ->groupBy('author_id');
+
+        self::applyConditions($qb, $whereClauses);
+
+        return $qb->executeQuery()
+            ->fetchAllAssociative();
     }
 
     /**
@@ -675,13 +686,13 @@ AND ', $whereClauses);
      */
     public function countAll(): int
     {
-        $commentsTable = Tables::comments();
-
         $value = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne(<<<SQL
-                SELECT COUNT(*) FROM {$commentsTable}
-                SQL);
+            ->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from(Tables::comments())
+            ->executeQuery()
+            ->fetchOne();
 
         return is_numeric($value) ? (int) $value : 0;
     }
@@ -692,13 +703,14 @@ AND ', $whereClauses);
      */
     public function countUnvalidated(): int
     {
-        $commentsTable = Tables::comments();
-
         $value = $this->getEntityManager()
             ->getConnection()
-            ->fetchOne(<<<SQL
-                SELECT COUNT(*) FROM {$commentsTable} WHERE validated=0
-                SQL);
+            ->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from(Tables::comments())
+            ->where('validated=0')
+            ->executeQuery()
+            ->fetchOne();
 
         return is_numeric($value) ? (int) $value : 0;
     }

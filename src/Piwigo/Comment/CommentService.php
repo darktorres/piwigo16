@@ -17,6 +17,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
+use Piwigo\Permission\SqlCondition;
 
 /**
  * Comment domain business logic: spam/flood checks, insert/update/delete/
@@ -68,13 +69,13 @@ final readonly class CommentService
         if (! isset($currentUser->rawAttributes['nb_available_comments'])) {
             $where = [];
             if (! AccessControl::isAdmin()) {
-                $where[] = 'validated=1';
+                $where[] = new SqlCondition('validated=1');
             }
             $where[] = new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Category\CategoryEntity::class))
-                ->getSqlConditionFandF([
+                ->getSqlConditionFandFAsCondition([
                     'forbidden_categories' => 'category_id',
                     'forbidden_images' => 'ic.image_id',
-                ], '', true);
+                ], true);
 
             $nbAvailableComments = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Comment\CommentEntity::class)->countAvailableWithConditions($where);
             $currentUser = $currentUser->withRawAttribute('nb_available_comments', $nbAvailableComments);
@@ -85,7 +86,7 @@ final readonly class CommentService
     }
 
     /**
-     * @param list<string> $whereClauses
+     * @param list<SqlCondition> $whereClauses
      * @return PaginatedResult<array<string, mixed>>
      */
     public function getAllCommentsWithConditions(
@@ -101,7 +102,7 @@ final readonly class CommentService
     }
 
     /**
-     * @param  list<string>  $whereClauses
+     * @param  list<SqlCondition>  $whereClauses
      * @return array{all_comments: mixed, validated: mixed, pending: mixed}|null
      */
     public function getSummaryCounts(array $whereClauses): ?array
@@ -110,7 +111,7 @@ final readonly class CommentService
     }
 
     /**
-     * @param  list<string>  $whereClauses
+     * @param  list<SqlCondition>  $whereClauses
      * @return list<array<string, mixed>>
      */
     public function getListForAdminWs(
@@ -124,7 +125,7 @@ final readonly class CommentService
     }
 
     /**
-     * @param  list<string>  $whereClauses
+     * @param  list<SqlCondition>  $whereClauses
      * @return array{started_at: mixed, ended_at: mixed}|null
      */
     public function getDateRange(array $whereClauses): ?array
@@ -133,7 +134,7 @@ final readonly class CommentService
     }
 
     /**
-     * @param  list<string>  $whereClauses
+     * @param  list<SqlCondition>  $whereClauses
      * @return list<array<string, mixed>>
      */
     public function getAuthorCounts(array $whereClauses): array

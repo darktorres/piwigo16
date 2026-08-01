@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
+use Doctrine\DBAL\ParameterType;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Comment\CommentService;
 use Piwigo\Common\ValueObject\CommentId;
@@ -20,6 +21,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Permission\SqlCondition;
 
 /**
  * P23 batch 8e-2: relocated from include/ws_functions/pwg.comments.php.
@@ -51,8 +53,6 @@ final class PwgComments
      */
     public static function getList(array $params, PwgServer &$service): PwgError|array
     {
-        $conn = DbConnection::build();
-
         if (! \Piwigo\Config\CurrentConfig::activateComments()) {
             return new PwgError(403, 'Comments are disabled');
         }
@@ -69,14 +69,41 @@ final class PwgComments
             return new PwgError(401, 'Per page must be: 5, 10, 25 or 50');
         }
 
-        $where_clauses = ['1=1'];
+        // SQL-modernization audit: $where_clauses is now list<SqlCondition>
+        // (with string-keyed 'author_id' still used purely as a removable
+        // marker, same as before -- see the unset() below), not
+        // list<string>. author_id/image_id were already WsParamType::ID-
+        // guaranteed ints and f_min_date/f_max_date already passed through
+        // date_format() (which can't emit SQL metacharacters), so none of
+        // these were live injection risks -- converted for construction-
+        // style consistency, same as the rest of this initiative. The
+        // search term used to rely on Connection::quote() ([SEC-18]) for
+        // escaping; now a real bound parameter instead, one step further
+        // than escaping.
+        $where_clauses = [new SqlCondition('1=1')];
 
         if (isset($params['author_id']) and $params['author_id'] !== 0) {
-            $where_clauses['author_id'] = 'author_id = ' . $params['author_id'];
+            $where_clauses['author_id'] = new SqlCondition(
+                'author_id = :authorId',
+                [
+                    'authorId' => $params['author_id'],
+                ],
+                [
+                    'authorId' => ParameterType::INTEGER,
+                ],
+            );
         }
 
         if (isset($params['image_id']) and $params['image_id'] !== 0) {
-            $where_clauses[] = 'image_id = ' . $params['image_id'];
+            $where_clauses[] = new SqlCondition(
+                'image_id = :imageId',
+                [
+                    'imageId' => $params['image_id'],
+                ],
+                [
+                    'imageId' => ParameterType::INTEGER,
+                ],
+            );
         }
 
         if (! in_array($params['f_min_date'], [null, ''], true)) {
@@ -85,7 +112,11 @@ final class PwgComments
                 return new PwgError(401, 'Invalid f_min_date');
             }
             $min = date_format($min_date, 'Y-m-d 00:00:00');
-            $where_clauses[] = 'date >= \'' . $min . '\'';
+            $where_clauses[] = new SqlCondition('date >= :minDate', [
+                'minDate' => $min,
+            ], [
+                'minDate' => ParameterType::STRING,
+            ]);
         }
 
         if (! in_array($params['f_max_date'], [null, ''], true)) {
@@ -94,18 +125,23 @@ final class PwgComments
                 return new PwgError(401, 'Invalid f_max_date');
             }
             $max = date_format($max_date, 'Y-m-d 23:59:59');
-            $where_clauses[] = 'date <= \'' . $max . '\'';
+            $where_clauses[] = new SqlCondition('date <= :maxDate', [
+                'maxDate' => $max,
+            ], [
+                'maxDate' => ParameterType::STRING,
+            ]);
         }
 
         // reset all filters during search
         if (! in_array($params['search'], [null, ''], true)) {
-            $where_clauses = ['1=1'];
-            // [SEC-18] real DBAL driver escaping via Connection::quote()
-            // (includes its own surrounding quotes), replacing the
-            // original's MysqliDb::realEscapeString() -- same "free-text
-            // term spliced into a larger hand-built WHERE fragment"
-            // rationale as Search\SearchRepository::quote().
-            $where_clauses[] = 'content LIKE ' . $conn->quote('%' . $params['search'] . '%');
+            $where_clauses = [
+                new SqlCondition('1=1'),
+                new SqlCondition('content LIKE :search', [
+                    'search' => '%' . $params['search'] . '%',
+                ], [
+                    'search' => ParameterType::STRING,
+                ]),
+            ];
         }
 
         // summary. validated is a real tinyint(1) column now (Comment
@@ -125,12 +161,12 @@ final class PwgComments
 
         switch ($params['status']) {
             case 'pending':
-                $where_clauses[] = 'validated = 0';
+                $where_clauses[] = new SqlCondition('validated = 0');
                 $total_comments = is_numeric($summary['pending']) ? (int) $summary['pending'] : 0;
                 break;
 
             case 'validated':
-                $where_clauses[] = 'validated = 1';
+                $where_clauses[] = new SqlCondition('validated = 1');
                 $total_comments = is_numeric($summary['validated']) ? (int) $summary['validated'] : 0;
                 break;
         }

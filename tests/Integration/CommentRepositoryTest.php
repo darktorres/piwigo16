@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\ParameterType;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Permission\SqlCondition;
 
 final class CommentRepositoryTest extends IntegrationTestCase
 {
@@ -316,6 +319,155 @@ final class CommentRepositoryTest extends IntegrationTestCase
         // result is exactly image 1's own count.
         self::assertCount(1, $counts);
         self::assertSame($before + 1, array_values($counts)[0]);
+    }
+
+    /**
+     * SQL-modernization audit: countAvailableWithConditions()'s own
+     * $whereClauses moved from raw trusted-SQL strings to SqlCondition
+     * fragments (see CommentRepository.php's own docblock) -- this and
+     * the tests below are its first direct coverage; none of the tests
+     * above exercise these 6 methods at all.
+     */
+    public function test_count_available_with_conditions_counts_matching_rows_across_the_join(): void
+    {
+        $id = $this->insertFixtureComment(['validated' => true]);
+
+        $matchingCount = $this->repo->countAvailableWithConditions([
+            new SqlCondition('com.id = :id', ['id' => $id->value], ['id' => ParameterType::INTEGER]),
+        ]);
+        $nonMatchingCount = $this->repo->countAvailableWithConditions([
+            new SqlCondition('com.id = :id', ['id' => 999999], ['id' => ParameterType::INTEGER]),
+        ]);
+
+        self::assertSame(1, $matchingCount);
+        self::assertSame(0, $nonMatchingCount);
+    }
+
+    public function test_count_available_with_conditions_combines_multiple_fragments_with_and(): void
+    {
+        $id = $this->insertFixtureComment(['validated' => true]);
+
+        $count = $this->repo->countAvailableWithConditions([
+            new SqlCondition('com.id = :id', ['id' => $id->value], ['id' => ParameterType::INTEGER]),
+            new SqlCondition('validated = 0'),
+        ]);
+
+        self::assertSame(0, $count);
+    }
+
+    public function test_find_all_with_conditions_paginates_and_reports_the_real_total_via_found_rows(): void
+    {
+        $first = $this->repo->insert(['author' => 'fawc_a', 'authorId' => 1, 'anonymousId' => '10.30.0.1', 'content' => 'fawc content A', 'validated' => true, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
+        $second = $this->repo->insert(['author' => 'fawc_b', 'authorId' => 1, 'anonymousId' => '10.30.0.2', 'content' => 'fawc content B', 'validated' => true, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
+
+        $condition = new SqlCondition('com.id IN (:ids)', ['ids' => [$first->value, $second->value]], ['ids' => ArrayParameterType::INTEGER]);
+
+        $firstPage = $this->repo->findAllWithConditions([$condition], 'id', 'mail_address', 'com.id', 'ASC', 1, 0);
+        $secondPage = $this->repo->findAllWithConditions([$condition], 'id', 'mail_address', 'com.id', 'ASC', 1, 1);
+        $allAtOnce = $this->repo->findAllWithConditions([$condition], 'id', 'mail_address', 'com.id', 'ASC', 'all', 0);
+
+        self::assertCount(1, $firstPage->rows);
+        self::assertSame(2, $firstPage->total);
+        self::assertCount(1, $secondPage->rows);
+        self::assertSame(2, $secondPage->total);
+        self::assertNotSame($firstPage->rows[0]['comment_id'], $secondPage->rows[0]['comment_id']);
+        self::assertCount(2, $allAtOnce->rows);
+    }
+
+    /**
+     * Regression: Controller\CommentsController's own author-search
+     * fragment used to splice the raw request value straight into the
+     * query (`'... = \'' . $author_search . '\' ...'`), a live SQL
+     * injection. Builds the exact SqlCondition shape that controller now
+     * builds, with a classic `' OR '1'='1` payload as the bound value --
+     * confirms it's treated as an inert literal (matches nothing, no SQL
+     * error) rather than widening the WHERE clause to match everything.
+     */
+    public function test_find_all_with_conditions_treats_an_injection_payload_as_an_inert_literal_value(): void
+    {
+        $this->repo->insert(['author' => 'real_author', 'authorId' => 1, 'anonymousId' => '10.30.0.3', 'content' => 'injection guard content', 'validated' => true, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
+
+        $payload = "nonexistent' OR '1'='1";
+        $maliciousCondition = new SqlCondition(
+            '(u.username = :authorA OR author = :authorB)',
+            ['authorA' => $payload, 'authorB' => $payload],
+            ['authorA' => ParameterType::STRING, 'authorB' => ParameterType::STRING],
+        );
+
+        $result = $this->repo->findAllWithConditions([$maliciousCondition], 'id', 'mail_address', 'com.id', 'ASC', 'all', 0);
+
+        // If the payload had broken out of its string literal (the old
+        // raw-splice behavior), `OR '1'='1'` would make the WHERE clause
+        // match every comment in the fixture, not zero.
+        self::assertSame([], $result->rows);
+        self::assertSame(0, $result->total);
+    }
+
+    public function test_find_summary_counts_reports_validated_and_pending_split(): void
+    {
+        $validatedId = $this->insertFixtureComment(['validated' => true]);
+        $pendingId = $this->insertFixtureComment(['validated' => false]);
+
+        $summary = $this->repo->findSummaryCounts([
+            new SqlCondition('id IN (:ids)', ['ids' => [$validatedId->value, $pendingId->value]], ['ids' => ArrayParameterType::INTEGER]),
+        ]);
+
+        self::assertNotNull($summary);
+        self::assertSame(2, is_numeric($summary['all_comments']) ? (int) $summary['all_comments'] : null);
+        self::assertSame(1, is_numeric($summary['validated']) ? (int) $summary['validated'] : null);
+        self::assertSame(1, is_numeric($summary['pending']) ? (int) $summary['pending'] : null);
+    }
+
+    public function test_find_list_for_admin_ws_returns_joined_rows_with_username_and_status(): void
+    {
+        $id = $this->insertFixtureComment(['authorId' => 1, 'validated' => true]);
+
+        $rows = $this->repo->findListForAdminWs([
+            new SqlCondition('c.id = :id', ['id' => $id->value], ['id' => ParameterType::INTEGER]),
+        ], 'id', 'username', 0, 10);
+
+        self::assertCount(1, $rows);
+        self::assertSame($id->value, is_numeric($rows[0]['id']) ? (int) $rows[0]['id'] : null);
+        self::assertArrayHasKey('username', $rows[0]);
+        self::assertArrayHasKey('status', $rows[0]);
+    }
+
+    public function test_find_date_range_returns_min_and_max_matching_dates(): void
+    {
+        $id = $this->insertFixtureComment(['validated' => true]);
+
+        $range = $this->repo->findDateRange([
+            new SqlCondition('id = :id', ['id' => $id->value], ['id' => ParameterType::INTEGER]),
+        ]);
+
+        self::assertNotNull($range);
+        self::assertNotNull($range['started_at']);
+        self::assertSame($range['started_at'], $range['ended_at']);
+    }
+
+    public function test_find_author_counts_groups_by_author_id(): void
+    {
+        $firstId = $this->repo->insert(['author' => 'fac_author', 'authorId' => 1, 'anonymousId' => '10.30.0.4', 'content' => 'fac content A', 'validated' => true, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
+        $secondId = $this->repo->insert(['author' => 'fac_author', 'authorId' => 1, 'anonymousId' => '10.30.0.5', 'content' => 'fac content B', 'validated' => true, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
+
+        $rows = $this->repo->findAuthorCounts([
+            new SqlCondition('id IN (:ids)', ['ids' => [$firstId->value, $secondId->value]], ['ids' => ArrayParameterType::INTEGER]),
+        ]);
+
+        self::assertCount(1, $rows);
+        self::assertSame(1, is_numeric($rows[0]['author_id']) ? (int) $rows[0]['author_id'] : null);
+        self::assertSame(2, is_numeric($rows[0]['nb_authors']) ? (int) $rows[0]['nb_authors'] : null);
+    }
+
+    public function test_count_all_and_count_unvalidated_reflect_a_freshly_inserted_pending_comment(): void
+    {
+        $before_all = $this->repo->countAll();
+        $before_unvalidated = $this->repo->countUnvalidated();
+
+        $this->insertFixtureComment(['validated' => false]);
+
+        self::assertSame($before_all + 1, $this->repo->countAll());
+        self::assertSame($before_unvalidated + 1, $this->repo->countUnvalidated());
     }
 
     /**

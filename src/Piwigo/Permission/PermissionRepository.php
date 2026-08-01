@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Permission;
 
 use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Category\UserAccessEntity;
 use Piwigo\Db\BatchWriter;
@@ -236,24 +237,31 @@ final readonly class PermissionRepository
      * Image ids outside $structuralForbidden with an access level above
      * $level -- EffectiveForbiddenCategoriesCache's own "which specific
      * images does the level restriction additionally forbid" step.
-     * $structuralForbidden stays a raw comma-separated `NOT IN (...)`
-     * fragment (PermissionService::getForbiddenCategories()'s own return
-     * shape, embedded as SQL text throughout this codebase, not something
-     * this one extraction should re-litigate into bound parameters).
+     *
+     * SQL-modernization audit: $structuralForbidden (a comma-separated id
+     * list, PermissionService::getForbiddenCategories()'s own return
+     * shape) and $level were previously spliced raw; both now bound.
+     * PermissionService::getForbiddenCategories() itself is unchanged --
+     * its CSV-string return shape is a separate, wider cross-cutting
+     * concern (tracked in the plan) than this one extraction converting
+     * its own consumption of that string to bound parameters.
      *
      * @return list<int>
      */
     public function findImageIdsOutsideForbiddenCategories(string $structuralForbidden, int|string $level): array
     {
-        $imagesTable = Tables::images();
-        $imageCategoryTable = Tables::imageCategory();
         $ids = $this->em->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT DISTINCT(id)
-                FROM {$imagesTable} INNER JOIN {$imageCategoryTable} ON id=image_id
-                WHERE category_id NOT IN ({$structuralForbidden})
-                    AND level>{$level}
-                SQL);
+            ->createQueryBuilder()
+            ->select('i.id')
+            ->distinct()
+            ->from(Tables::images(), 'i')
+            ->innerJoin('i', Tables::imageCategory(), 'ic', 'i.id = ic.image_id')
+            ->where('ic.category_id NOT IN (:forbidden)')
+            ->andWhere('i.level > :level')
+            ->setParameter('forbidden', self::csvToIntList($structuralForbidden), ArrayParameterType::INTEGER)
+            ->setParameter('level', is_numeric($level) ? (int) $level : 0, ParameterType::INTEGER)
+            ->executeQuery()
+            ->fetchAllAssociative();
 
         return self::toIntList(array_column($ids, 'id'));
     }
@@ -262,20 +270,45 @@ final readonly class PermissionRepository
      * Count of distinct accessible images given $structuralForbidden plus
      * the already-computed $imageAccessType/$imageAccessList restriction --
      * EffectiveForbiddenCategoriesCache's own `nbTotalImages`.
+     *
+     * SQL-modernization audit: $structuralForbidden/$imageAccessList were
+     * previously spliced raw; both now bound. $imageAccessType (the SQL
+     * inclusion operator itself, 'IN'/'NOT IN') can't be a bound
+     * parameter -- SQL has no placeholder syntax for an operator position
+     * -- so it's validated against the fixed 2-value domain instead
+     * (matches getSqlConditionFandFAsCondition()'s own treatment of the
+     * same field).
      */
     public function countAccessibleImages(string $structuralForbidden, string $imageAccessType, string $imageAccessList): string
     {
-        $imageCategoryTable = Tables::imageCategory();
-        $row = $this->em->getConnection()
-            ->fetchNumeric(<<<SQL
-                SELECT COUNT(DISTINCT(image_id)) as total
-                FROM {$imageCategoryTable}
-                WHERE category_id NOT IN ({$structuralForbidden})
-                    AND image_id {$imageAccessType} ({$imageAccessList})
-                SQL);
-        $totalRaw = $row !== false ? ($row[0] ?? null) : null;
+        if (! in_array($imageAccessType, ['IN', 'NOT IN'], true)) {
+            throw new \UnexpectedValueException('Unexpected image_access_type: ' . $imageAccessType);
+        }
 
-        return is_scalar($totalRaw) ? (string) $totalRaw : '0';
+        $total = $this->em->getConnection()
+            ->createQueryBuilder()
+            ->select('COUNT(DISTINCT(image_id)) as total')
+            ->from(Tables::imageCategory())
+            ->where('category_id NOT IN (:forbidden)')
+            ->andWhere('image_id ' . $imageAccessType . ' (:accessList)')
+            ->setParameter('forbidden', self::csvToIntList($structuralForbidden), ArrayParameterType::INTEGER)
+            ->setParameter('accessList', self::csvToIntList($imageAccessList), ArrayParameterType::INTEGER)
+            ->executeQuery()
+            ->fetchOne();
+
+        return is_scalar($total) ? (string) $total : '0';
+    }
+
+    /**
+     * @return list<int>
+     */
+    private static function csvToIntList(string $csv): array
+    {
+        if ($csv === '') {
+            return [];
+        }
+
+        return array_map(intval(...), explode(',', $csv));
     }
 
     /**

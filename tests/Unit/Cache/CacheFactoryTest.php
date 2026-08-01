@@ -51,10 +51,53 @@ test('an explicit filesystem request always succeeds', function (): void {
     expect(CacheFactory::create('filesystem'))->toBeInstanceOf(FilesystemAdapter::class);
 });
 
+test('buildFilesystem points the adapter at the real repo root\'s _data/cache/ directory', function (): void {
+    // No existing test ever inspects *where* the filesystem adapter
+    // actually writes -- only that one gets built. FilesystemAdapter has
+    // no public getter for its configured directory, so this reads the
+    // same protected $directory property FilesystemTrait itself uses
+    // internally (confirmed present via direct source read).
+    $pool = CacheFactory::create('filesystem');
+
+    $directory = new ReflectionProperty($pool, 'directory')->getValue($pool);
+
+    expect($directory)->toBe(dirname(__DIR__, 3) . '/_data/cache/piwigo/');
+});
+
 test('the PIWIGO_CACHE_ADAPTER env var is honored when no explicit param is given', function (): void {
     putenv('PIWIGO_CACHE_ADAPTER=filesystem');
 
     expect(CacheFactory::create())->toBeInstanceOf(FilesystemAdapter::class);
+});
+
+test('the PIWIGO_CACHE_ADAPTER env var is honored for redis, not silently defaulted to auto-detect', function (): void {
+    // The "env var honored" test above only ever checks 'filesystem',
+    // which happens to be what auto-detect ALSO falls back to in this
+    // environment (no ext-apcu) -- it can't tell envAdapter() genuinely
+    // reading the env var apart from a mutated version that always
+    // returns null (silently ignoring it). redis is never auto-detect's
+    // own fallback, so routing into buildRedis() proves the env var was
+    // actually read.
+    putenv('PIWIGO_CACHE_ADAPTER=redis');
+
+    expect(static fn (): \Psr\Cache\CacheItemPoolInterface => CacheFactory::create())
+        ->toThrow(CacheException::class, 'Cannot find the "redis" extension');
+});
+
+test('an empty-string PIWIGO_CACHE_ADAPTER is treated the same as unset, not as a literal empty adapter name', function (): void {
+    // Distinct from both "unset" (beforeEach's bare putenv()) and a real
+    // value -- envAdapter()'s own `!== ''` sentinel is what's supposed
+    // to catch this, falling back to null (auto-detect) rather than
+    // letting `''` reach the match() as a literal unknown adapter name.
+    putenv('PIWIGO_CACHE_ADAPTER=');
+
+    $pool = CacheFactory::create();
+
+    if (ApcuAdapter::isSupported()) {
+        expect($pool)->toBeInstanceOf(ApcuAdapter::class);
+    } else {
+        expect($pool)->toBeInstanceOf(FilesystemAdapter::class);
+    }
 });
 
 test('an explicit param overrides the env var', function (): void {
@@ -83,6 +126,19 @@ test('an explicit redis request honors PIWIGO_REDIS_DSN but fails loudly without
 });
 
 test('an explicit redis request defaults to redis://localhost:6379 when PIWIGO_REDIS_DSN is unset', function (): void {
+    expect(static fn (): \Psr\Cache\CacheItemPoolInterface => CacheFactory::create('redis'))
+        ->toThrow(CacheException::class, 'Cannot find the "redis" extension');
+});
+
+test('an explicit redis request also defaults to redis://localhost:6379 when PIWIGO_REDIS_DSN is an empty string', function (): void {
+    // Distinct from "unset" above -- an empty string is passed straight
+    // through to RedisAdapter::createConnection() unless buildRedis()'s
+    // own `!== ''` sentinel catches it, which fails *before* reaching
+    // the extension-availability check with a different exception type
+    // entirely ("Invalid Redis DSN", confirmed live), so this can't be
+    // mistaken for the same failure as the "unset" case above.
+    putenv('PIWIGO_REDIS_DSN=');
+
     expect(static fn (): \Psr\Cache\CacheItemPoolInterface => CacheFactory::create('redis'))
         ->toThrow(CacheException::class, 'Cannot find the "redis" extension');
 });

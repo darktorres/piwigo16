@@ -25,19 +25,6 @@ function listDirectoryEntries(string $absoluteDir): array
 }
 
 /**
- * glob() with a false-safe, reindexed return -- keeps the callers' types
- * honest without short-ternary fallbacks.
- *
- * @return list<string>
- */
-function globPaths(string $pattern): array
-{
-    $matches = glob($pattern);
-
-    return $matches === false ? [] : $matches;
-}
-
-/**
  * Every include/require target literal under the given roots that points
  * into the historical include/, admin/, or install/ trees.
  *

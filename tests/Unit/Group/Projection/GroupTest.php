@@ -33,7 +33,7 @@ test('fromRow treats a falsy is_default as false', function (): void {
     expect($group->isDefault)->toBeFalse();
 });
 
-test('fromRow throws when id is null', function (): void {
+test('fromRow throws when id is null, defaulting the invalid id to 0, not -1', function (): void {
     // Behavior change, deliberate: id is a GroupId now, and GroupId::from(0)
     // always throws (0 was never a valid id) -- the previous "silently
     // default id to 0" contract (still every other Projection DTO's
@@ -42,11 +42,18 @@ test('fromRow throws when id is null', function (): void {
     // src/Piwigo (findAllBasic() constructs Group directly), so there's no
     // production behavior being preserved -- a loud failure on malformed
     // id data is exactly the point of this VO.
+    //
+    // Also kills line 51's DecrementInteger (defaulting to -1 instead of
+    // 0): GroupId::from() throws for ANY non-positive value, so a bare
+    // exception-type check can't distinguish which fallback ran --
+    // GroupId::from()'s own exception message embeds the exact value,
+    // confirmed live to read "got 0" for real code and "got -1" for the
+    // mutant.
     $row = fullGroupRow();
     $row['id'] = null;
 
     Group::fromRow($row);
-})->throws(InvalidArgumentException::class);
+})->throws(InvalidArgumentException::class, 'got 0');
 
 test('fromRow defaults name to empty string and is_default to false when absent, given a valid id', function (): void {
     $row = fullGroupRow();

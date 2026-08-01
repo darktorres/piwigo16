@@ -89,6 +89,34 @@ test('updateCatsWithFilteredData matches a string category id', function (): voi
     expect($cats[0]['nb_images'])->toBe(30);
 });
 
+test('updateCatsWithFilteredData continues past a non-int/string id to still process a later valid one', function (): void {
+    // Kills line 263's ContinueToBreak (`break;` instead of `continue;`)
+    // -- confirmed live that a `break` there wrongly aborts the whole
+    // foreach after the first non-int/string id, leaving every later
+    // (even valid) category row untouched.
+    FilterState::set(true, '', '', [2 => ['nb_images' => 99]]);
+    $cats = [0 => ['id' => null, 'nb_images' => 5], 1 => ['id' => 2, 'nb_images' => 7]];
+    $service = new FilterService();
+
+    $service->updateCatsWithFilteredData($cats);
+
+    expect($cats[1]['nb_images'])->toBe(99);
+});
+
+test('updateCatsWithFilteredData continues past a non-matching filter entry to still process a later matching one', function (): void {
+    // Kills line 268's ContinueToBreak (`break;` instead of `continue;`)
+    // -- confirmed live that a `break` there wrongly aborts the whole
+    // foreach after the first category id with no filter entry, leaving
+    // a later, genuinely matching category row untouched.
+    FilterState::set(true, '', '', [2 => ['nb_images' => 99]]);
+    $cats = [0 => ['id' => 1, 'nb_images' => 5], 1 => ['id' => 2, 'nb_images' => 7]];
+    $service = new FilterService();
+
+    $service->updateCatsWithFilteredData($cats);
+
+    expect($cats[1]['nb_images'])->toBe(99);
+});
+
 test('updateCatsWithFilteredData fills a missing aggregate field with null', function (): void {
     FilterState::set(true, '', '', [1 => ['nb_images' => 20]]);
     $cats = [0 => ['id' => 1, 'nb_images' => 5]];

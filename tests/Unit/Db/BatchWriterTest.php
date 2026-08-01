@@ -144,6 +144,14 @@ test('singleUpdate binds each WHERE condition to its own distinct value, not col
  * junction changes nothing about the final result for a null $value;
  * confirmed live with an explicit null field.
  *
+ * Also confirmed-equivalent: line 184's IncrementInteger (`$i = 1;`
+ * instead of `= 0;`, the SET-loop's own counter) -- same reasoning as
+ * line 206's WHERE-loop sibling below: SET placeholders only need to
+ * stay unique among themselves (they do, since $i still strictly
+ * increases) and distinct from WHERE's separately-prefixed
+ * placeholders (they still are). Confirmed live: the full suite in this
+ * file passes identically with the starting value changed.
+ *
  * Also confirmed-equivalent: line 206's IncrementInteger (`$j = 1;`
  * instead of `= 0;`) and line 210's ConcatRemoveLeft/ConcatSwitchSides
  * (dropping the 'where' prefix, or swapping it to the end). WHERE

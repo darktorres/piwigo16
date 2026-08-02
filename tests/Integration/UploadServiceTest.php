@@ -135,6 +135,8 @@ final class UploadServiceTest extends IntegrationTestCase
 
     private CurrentLogger $currentLogger;
 
+    private StorageRegistry $storageRegistry;
+
     private string $marker;
 
     /** @var list<int> */
@@ -211,16 +213,19 @@ final class UploadServiceTest extends IntegrationTestCase
         $this->marker = sys_get_temp_dir() . '/piwigo-upload-service-integration-test-' . bin2hex(random_bytes(8));
         mkdir($this->marker, 0o777, true);
         CurrentPaths::set(Paths::fromRoot($this->marker));
-        // A bare StorageRegistry::reset() is not enough: current()'s own
-        // lazy rebuild resolves config/storage.php *relative to the new
-        // CurrentPaths root* (CurrentPaths::get()->root . 'config/storage.php'),
-        // which is now the marker directory -- no config/ subdirectory
-        // exists there. Explicitly re-require the real project's
-        // config/storage.php instead: its factories close over $paths =
-        // CurrentPaths::get(), captured at this require, which is already
-        // the marker root set just above, so every disk (uploads,
-        // derivatives, ...) correctly resolves under the marker.
-        StorageRegistry::set(StorageRegistry::fromConfig(dirname(__DIR__, 2) . '/config/storage.php'));
+        // StorageRegistry is a container factory binding (singleton/
+        // service-locator elimination campaign, Phase 2) that reads
+        // CurrentPaths::get() at first resolution -- resolved here, after
+        // CurrentPaths::set() above (not before, and not once at
+        // Kernel::boot() time), so every disk (uploads, derivatives, ...)
+        // correctly resolves under the marker root rather than the real
+        // project root. Nothing else resolves StorageRegistry::class from
+        // this container before this point.
+        $storageRegistry = Kernel::container()->get(StorageRegistry::class);
+        if (! $storageRegistry instanceof StorageRegistry) {
+            throw new \LogicException('Container returned an unexpected type for ' . StorageRegistry::class);
+        }
+        $this->storageRegistry = $storageRegistry;
 
         $this->imageIdsToDelete = [];
     }
@@ -247,7 +252,6 @@ final class UploadServiceTest extends IntegrationTestCase
         $this->conn->executeStatement('DELETE FROM ' . Tables::imageFormat() . ' WHERE image_id = 1');
         $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param IN ('lounge_active', 'count_orphans')");
 
-        StorageRegistry::reset();
         self::rrmdir($this->marker);
 
         Kernel::reset();
@@ -344,7 +348,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $expectedMd5 = md5_file($source);
         self::assertIsString($expectedMd5);
 
-        $imageId = new UploadService($this->currentLogger)->addUploadedFile($source, $this->urlService, 'holiday.png');
+        $imageId = new UploadService($this->currentLogger, $this->storageRegistry)->addUploadedFile($source, $this->urlService, 'holiday.png');
         $id = $imageId;
         self::assertGreaterThan(0, $id);
         $this->imageIdsToDelete[] = $id;
@@ -378,7 +382,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
         $countBefore = $this->countRows('SELECT COUNT(*) FROM ' . Tables::images());
 
-        $result = new UploadService($this->currentLogger)->addUploadedFile(
+        $result = new UploadService($this->currentLogger, $this->storageRegistry)->addUploadedFile(
             $source,
             $this->urlService,
             'dup.jpg',
@@ -414,7 +418,7 @@ final class UploadServiceTest extends IntegrationTestCase
      */
     public function test_addUploadedFile_updates_an_existing_photo_in_place(): void
     {
-        $service = new UploadService($this->currentLogger);
+        $service = new UploadService($this->currentLogger, $this->storageRegistry);
 
         $firstSource = $this->marker . '/first.png';
         $this->makeImage($firstSource, 'png', 40, 30);
@@ -463,7 +467,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
         $threw = null;
         try {
-            new UploadService($this->currentLogger)->addUploadedFile($source, $this->urlService, 'orphan.png', image_id: 999_999);
+            new UploadService($this->currentLogger, $this->storageRegistry)->addUploadedFile($source, $this->urlService, 'orphan.png', image_id: 999_999);
         } catch (ImageProcessingException $e) {
             $threw = $e;
         }
@@ -481,7 +485,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
     public function test_addUploadedFile_updates_the_level_when_given_on_the_update_branch(): void
     {
-        $service = new UploadService($this->currentLogger);
+        $service = new UploadService($this->currentLogger, $this->storageRegistry);
 
         $first = $this->marker . '/lvl-first.png';
         $this->makeImage($first, 'png', 20, 20);
@@ -507,7 +511,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
     public function test_addUploadedFile_dispatches_the_correct_extension_for_each_raster_image_type(): void
     {
-        $service = new UploadService($this->currentLogger);
+        $service = new UploadService($this->currentLogger, $this->storageRegistry);
         $cases = [
             'png' => 'png',
             'jpeg' => 'jpg',
@@ -554,7 +558,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $source = $this->marker . '/archive.zip';
         file_put_contents($source, "PK\x03\x04" . str_repeat('x', 32));
 
-        $imageId = new UploadService($this->currentLogger)->addUploadedFile($source, $this->urlService, 'archive.zip');
+        $imageId = new UploadService($this->currentLogger, $this->storageRegistry)->addUploadedFile($source, $this->urlService, 'archive.zip');
         $id = $imageId;
         $this->imageIdsToDelete[] = $id;
 
@@ -591,7 +595,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $source = $this->marker . '/big.jpg';
         $this->makeImage($source, 'jpeg', 200, 150);
 
-        $imageId = new UploadService($this->currentLogger)->addUploadedFile($source, $this->urlService, 'big.jpg');
+        $imageId = new UploadService($this->currentLogger, $this->storageRegistry)->addUploadedFile($source, $this->urlService, 'big.jpg');
         $id = $imageId;
         $this->imageIdsToDelete[] = $id;
 
@@ -639,7 +643,7 @@ final class UploadServiceTest extends IntegrationTestCase
                 self::markTestSkipped('ImageMagick convert failed to build a PDF fixture: ' . implode("\n", $out));
             }
 
-            $imageId = new UploadService($this->currentLogger)->addUploadedFile($pdf, $this->urlService, 'document.pdf');
+            $imageId = new UploadService($this->currentLogger, $this->storageRegistry)->addUploadedFile($pdf, $this->urlService, 'document.pdf');
             $id = $imageId;
             $this->imageIdsToDelete[] = $id;
 
@@ -666,7 +670,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
         $threw = null;
         try {
-            new UploadService($this->currentLogger)->addUploadedFile($source, $this->urlService, 'fake.png');
+            new UploadService($this->currentLogger, $this->storageRegistry)->addUploadedFile($source, $this->urlService, 'fake.png');
         } catch (ImageProcessingException $e) {
             $threw = $e;
         }
@@ -698,7 +702,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
         $threw = null;
         try {
-            new UploadService($this->currentLogger)->addUploadedFile($source, $this->urlService, 'payload.exe');
+            new UploadService($this->currentLogger, $this->storageRegistry)->addUploadedFile($source, $this->urlService, 'payload.exe');
         } catch (ImageProcessingException $e) {
             $threw = $e;
         }
@@ -722,7 +726,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
         $threw = null;
         try {
-            new UploadService($this->currentLogger)->addUploadedFile($source, $this->urlService, 'notes.txt');
+            new UploadService($this->currentLogger, $this->storageRegistry)->addUploadedFile($source, $this->urlService, 'notes.txt');
         } catch (ImageProcessingException $e) {
             $threw = $e;
         }
@@ -750,7 +754,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $source = $this->marker . '/threshold.png';
         $this->makeImage($source, 'png', 10, 8);
 
-        $imageId = new UploadService($this->currentLogger)->addUploadedFile($source, $this->urlService, 'threshold.png');
+        $imageId = new UploadService($this->currentLogger, $this->storageRegistry)->addUploadedFile($source, $this->urlService, 'threshold.png');
         $this->imageIdsToDelete[] = $imageId;
 
         // addUploadedFileAddToCategories()'s own COUNT(*) check (running
@@ -767,7 +771,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $source = $this->marker . '/associate.png';
         $this->makeImage($source, 'png', 10, 8);
 
-        $imageId = new UploadService($this->currentLogger)->addUploadedFile($source, $this->urlService, 'associate.png', categories: [1]);
+        $imageId = new UploadService($this->currentLogger, $this->storageRegistry)->addUploadedFile($source, $this->urlService, 'associate.png', categories: [1]);
         $id = $imageId;
         $this->imageIdsToDelete[] = $id;
 
@@ -823,7 +827,7 @@ final class UploadServiceTest extends IntegrationTestCase
         CurrentConfig::setFormatExtensions(['tif']);
 
         try {
-            $service = new UploadService($this->currentLogger);
+            $service = new UploadService($this->currentLogger, $this->storageRegistry);
             $source = $this->marker . '/orphan-format.tif';
             file_put_contents($source, 'not a real tiff, just needs bytes on disk');
 
@@ -858,7 +862,7 @@ final class UploadServiceTest extends IntegrationTestCase
         CurrentConfig::setFormatExtensions(['tif']);
 
         try {
-            $service = new UploadService($this->currentLogger);
+            $service = new UploadService($this->currentLogger, $this->storageRegistry);
 
             $sourceV1 = $this->marker . '/format-v1.tif';
             file_put_contents($sourceV1, str_repeat('a', 128));

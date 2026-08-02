@@ -47,6 +47,7 @@ final class ThemesStandardPagesPageRenderer
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
+        private readonly StorageRegistry $storageRegistry,
     ) {}
 
     public function render(): void
@@ -154,7 +155,8 @@ final class ThemesStandardPagesPageRenderer
                     // gates on this exact config value).
                     $logo_stream = fopen($std_pgs_logo_tmp_name, 'rb');
                     if ($logo_stream !== false) {
-                        StorageRegistry::disk('local')->writeStream($relative_path, $logo_stream);
+                        $this->storageRegistry->get('local')
+                            ->writeStream($relative_path, $logo_stream);
                         fclose($logo_stream);
                         $this->configService->confUpdateParam('standard_pages_selected_logo_path', $relative_path, true);
                     } else {

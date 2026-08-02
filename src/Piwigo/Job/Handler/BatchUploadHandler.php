@@ -7,6 +7,7 @@ namespace Piwigo\Job\Handler;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Job\BatchUploadJob;
+use Piwigo\Storage\StorageRegistry;
 
 /**
  * Not attribute-discovered -- see SendNotificationEmailHandler's docblock.
@@ -31,11 +32,12 @@ final class BatchUploadHandler
     public function __construct(
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+        private readonly StorageRegistry $storageRegistry,
     ) {}
 
     public function __invoke(BatchUploadJob $job): int
     {
-        return new UploadService($this->currentLogger)
+        return new UploadService($this->currentLogger, $this->storageRegistry)
             ->addUploadedFile(
                 $job->sourceFilepath,
                 $this->urlService,

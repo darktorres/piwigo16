@@ -15,6 +15,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Picture\UploadFile;
 use Piwigo\Html\HtmlService;
+use Piwigo\Storage\StorageRegistry;
 use Piwigo\Url\UrlService;
 
 // Marker-based filesystem safety: this suite writes real files to verify
@@ -51,9 +52,22 @@ function upload_service_test_current_logger(): CurrentLogger
     return $currentLogger;
 }
 
+/**
+ * StorageRegistry is resolved fresh from the container on every call (not
+ * memoized) since a handful of tests call CurrentPaths::set() before
+ * calling this helper -- StorageRegistry's own factory captures
+ * CurrentPaths::get() once, at first resolution, so resolving here (after
+ * any such CurrentPaths::set()) rather than once in beforeEach keeps every
+ * disk correctly scoped to that test's own marker root.
+ */
 function upload_service_test_make(): UploadService
 {
-    return new UploadService(upload_service_test_current_logger());
+    $storageRegistry = Kernel::container()->get(StorageRegistry::class);
+    if (! $storageRegistry instanceof StorageRegistry) {
+        throw new \LogicException('Container returned an unexpected type for ' . StorageRegistry::class);
+    }
+
+    return new UploadService(upload_service_test_current_logger(), $storageRegistry);
 }
 
 beforeEach(function (): void {

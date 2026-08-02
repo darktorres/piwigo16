@@ -41,6 +41,10 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class CustomLogoController implements ControllerInterface
 {
+    public function __construct(
+        private readonly StorageRegistry $storageRegistry,
+    ) {}
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
@@ -51,7 +55,7 @@ final class CustomLogoController implements ControllerInterface
             return ResponseFactory::text('Not found', 404);
         }
 
-        $disk = StorageRegistry::disk('local');
+        $disk = $this->storageRegistry->get('local');
         if (! $disk->fileExists($path)) {
             return ResponseFactory::text('Not found', 404);
         }

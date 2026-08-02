@@ -106,6 +106,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+        private readonly StorageRegistry $storageRegistry,
     ) {}
 
     /**
@@ -351,7 +352,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
                 case 'watermark':
 
-                    self::processWatermark($post, $configurationRequest->files);
+                    $this->processWatermark($post, $configurationRequest->files);
                     break;
 
                 case 'sizes':
@@ -967,7 +968,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         // PluginLoader::autoupdatePlugin()).
         $page_errors = \Piwigo\Core\PageState::current()->errors;
 
-        new UploadService($this->currentLogger)
+        new UploadService($this->currentLogger, $this->storageRegistry)
             ->saveUploadFormConfig($updates, $page_errors, $errors);
 
         \Piwigo\Core\PageState::current()->errors = array_values($page_errors);
@@ -1203,7 +1204,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
      * @param array<int|string, mixed> $files raw $_FILES bag (see
      *   Request\ConfigurationRequest), for the watermarkImage upload below.
      */
-    private static function processWatermark(array $post, array $files): void
+    private function processWatermark(array $post, array $files): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -1270,7 +1271,8 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     // the disk-relative path is just the filename.
                     $watermark_stream = fopen($watermark_tmp_name, 'rb');
                     if ($watermark_stream !== false) {
-                        StorageRegistry::disk('watermarks')->writeStream(basename($file_path), $watermark_stream);
+                        $this->storageRegistry->get('watermarks')
+                            ->writeStream(basename($file_path), $watermark_stream);
                         fclose($watermark_stream);
                         $pwatermark['file'] = substr($file_path, strlen($paths->root));
                     } else {

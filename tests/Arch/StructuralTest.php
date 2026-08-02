@@ -228,6 +228,7 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
         '/src/Piwigo/Core/FilterState.php',
         '/src/Piwigo/Core/CurrentLogger.php',
         '/src/Piwigo/Section/SectionContextRegistry.php',
+        '/src/Piwigo/Storage/StorageRegistry.php',
     ];
 
     $hits = [
@@ -324,17 +325,28 @@ test('SessionService::reset() is only called from tests/', function (): void {
     expect(describeCallSites($hits))->toBe([]);
 });
 
-test('StorageRegistry::reset() is only called from tests/', function (): void {
-    // Same test-isolation rationale as CurrentConfig::reset() above.
+test('StorageRegistry::disk() transitional shim has a shrinking, known allow-list', function (): void {
+    // Singleton/service-locator elimination campaign, Phase 2: Piwigo\Ws\
+    // PwgImages's chunked-upload assembly is the one remaining real caller
+    // (the still-static Ws\Pwg* dispatch layer, Phase 10) not converted to
+    // constructor injection, so it uses this static shim instead of the
+    // real get() instance method (see that method's own docblock). Every
+    // phase that converts one more of these files should remove it from
+    // the allow-list below; once empty, delete the shim and this test.
     $repoRoot = __DIR__ . '/../..';
 
-    $hits = [
-        ...findCallSites($repoRoot . '/src/Piwigo', 'StorageRegistry::reset('),
-        ...findCallSitesInRootPhpFiles($repoRoot, 'StorageRegistry::reset('),
-        ...findCallSitesInBinFiles($repoRoot, 'StorageRegistry::reset('),
+    $allowedFiles = [
+        '/src/Piwigo/Ws/PwgImages.php',
     ];
 
-    expect(describeCallSites($hits))->toBe([]);
+    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'StorageRegistry::disk(');
+
+    $disallowed = array_values(array_filter(
+        $hits,
+        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
+    ));
+
+    expect(describeCallSites($disallowed))->toBe([]);
 });
 
 test('CurrentConfigService::reset() is only called from tests/', function (): void {

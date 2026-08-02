@@ -74,6 +74,7 @@ final class UploadService
 {
     public function __construct(
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+        private readonly StorageRegistry $storageRegistry,
     ) {}
 
     /**
@@ -434,7 +435,8 @@ final class UploadService
         $upload_rel_path = StorageRegistry::stripRoot($upload_root, $file_path);
         $upload_stream = fopen($source_filepath, 'rb');
         if ($upload_stream !== false) {
-            StorageRegistry::disk('uploads')->writeStream($upload_rel_path, $upload_stream);
+            $this->storageRegistry->get('uploads')
+                ->writeStream($upload_rel_path, $upload_stream);
             fclose($upload_stream);
             if (! is_uploaded_file($source_filepath)) {
                 @unlink($source_filepath);
@@ -739,7 +741,8 @@ final class UploadService
 
         $format_stream = fopen($source_filepath, 'rb');
         if ($format_stream !== false) {
-            StorageRegistry::disk('uploads')->writeStream($format_rel_path, $format_stream);
+            $this->storageRegistry->get('uploads')
+                ->writeStream($format_rel_path, $format_stream);
             fclose($format_stream);
             if (! is_uploaded_file($source_filepath)) {
                 @unlink($source_filepath);

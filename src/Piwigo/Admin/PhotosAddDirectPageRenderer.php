@@ -17,6 +17,7 @@ use Piwigo\Event\Location\LocEndPhotoAddDirect;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Storage\StorageRegistry;
 
 /**
  * Ported from admin/photos_add_direct.php (the "direct" tab of the
@@ -39,6 +40,7 @@ final class PhotosAddDirectPageRenderer
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+        private readonly StorageRegistry $storageRegistry,
     ) {}
 
     /**
@@ -200,7 +202,7 @@ final class PhotosAddDirectPageRenderer
 
         $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
 
-        $uploadService = new UploadService($this->currentLogger);
+        $uploadService = new UploadService($this->currentLogger, $this->storageRegistry);
 
         // +-------------------------------------------------------------------+
         // | Photo selection                                                    |

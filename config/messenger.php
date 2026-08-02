@@ -46,7 +46,7 @@ return [
 
     // message class => handler factory
     'handlers' => [
-        BatchUploadJob::class => static fn (): callable => new BatchUploadHandler(new UrlService(new HtmlService()), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger()),
+        BatchUploadJob::class => static fn (): callable => new BatchUploadHandler(new UrlService(new HtmlService()), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry()),
         GenerateDerivativeJob::class => static fn (): callable => new GenerateDerivativeHandler(new DerivativeCacheService()),
         RegenerateAllDerivativesJob::class => static fn (): callable => new RegenerateAllDerivativesHandler(new DerivativeCacheService()),
         ReindexImagesJob::class => static fn (): callable => new ReindexImagesHandler(new MetadataService(new MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger())),

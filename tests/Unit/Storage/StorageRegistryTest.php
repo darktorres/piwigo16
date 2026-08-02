@@ -5,17 +5,27 @@ declare(strict_types=1);
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Storage\StorageRegistry;
 
+/**
+ * Container-shared instance (singleton/service-locator elimination
+ * campaign, Phase 2) -- most tests construct their own fresh instance
+ * directly via `new StorageRegistry([...])`/`fromConfig()`; no reset()
+ * needed for the instance API. disk()'s own Kernel::isBooted()-adjacent
+ * behavior (it has no safe default, so it throws via Kernel::container()
+ * itself when not booted) is covered separately below.
+ */
 beforeEach(function (): void {
-    StorageRegistry::reset();
     CurrentPaths::set(Paths::fromRoot(dirname(__DIR__, 3)));
 });
 
 afterEach(function (): void {
-    StorageRegistry::reset();
     CurrentPaths::reset();
+    if (Kernel::isBooted()) {
+        Kernel::reset();
+    }
 });
 
 test('get round-trips a write and read on a real local disk', function (): void {
@@ -71,35 +81,33 @@ test('get lists the disk names (array_keys), not the factory closures, in the un
     $registry->get('does-not-exist');
 })->throws(InvalidArgumentException::class, "Unknown storage disk 'does-not-exist'. Available: alpha, beta.");
 
-test('disk() delegates to the current() singleton', function (): void {
-    $dir = sys_get_temp_dir() . '/piwigo-storage-registry-test-' . bin2hex(random_bytes(4));
-    mkdir($dir);
+test('disk throws when Kernel has not booted', function (): void {
+    expect(Kernel::isBooted())->toBeFalse();
 
-    $registry = new StorageRegistry([
-        'scratch' => static fn (): \League\Flysystem\Filesystem => new Filesystem(new LocalFilesystemAdapter($dir)),
-    ]);
-    StorageRegistry::set($registry);
-
-    expect(StorageRegistry::disk('scratch'))->toBe($registry->get('scratch'));
-
-    rmdir($dir);
+    expect(fn () => StorageRegistry::disk('temp'))->toThrow(
+        \LogicException::class,
+        'Kernel not booted — call Kernel::boot() first.',
+    );
 });
 
-test('current() lazily builds from config/storage.php only once', function (): void {
-    $first = StorageRegistry::current();
-    $second = StorageRegistry::current();
+test('disk delegates to the container-shared instance once Kernel has booted', function (): void {
+    Kernel::boot();
+    $storageRegistry = Kernel::container()->get(StorageRegistry::class);
+    if (! $storageRegistry instanceof StorageRegistry) {
+        throw new \LogicException('Container returned an unexpected type for ' . StorageRegistry::class);
+    }
 
-    expect($first)->toBe($second);
+    expect(StorageRegistry::disk('temp'))->toBe($storageRegistry->get('temp'));
 });
 
-test('current() requires config/storage.php from beneath CurrentPaths::get()->root, not a bare relative path', function (): void {
+test('container-resolved StorageRegistry requires config/storage.php from beneath CurrentPaths::get()->root, not a bare relative path', function (): void {
     // Distinctive, non-project root: config/storage.php below it declares a
     // disk name ('mutation-canary') that the real project config/storage.php
-    // does not have. If the `CurrentPaths::get()->root .` concatenation were
-    // dropped, fromConfig() would receive the bare literal
-    // 'config/storage.php' -- resolved relative to cwd/include_path, not
-    // this root -- and would never see this disk, so get() would throw
-    // instead of resolving it.
+    // does not have. If config/container.php's own `CurrentPaths::get()->root .`
+    // concatenation were dropped, StorageRegistry::fromConfig() would
+    // receive the bare literal 'config/storage.php' -- resolved relative to
+    // cwd/include_path, not this root -- and would never see this disk, so
+    // get() would throw instead of resolving it.
     $dir = sys_get_temp_dir() . '/piwigo-storage-registry-fromconfig-' . bin2hex(random_bytes(4));
     mkdir($dir . '/config', 0o777, true);
     file_put_contents($dir . '/config/storage.php', <<<'PHP'
@@ -115,8 +123,9 @@ test('current() requires config/storage.php from beneath CurrentPaths::get()->ro
         PHP);
 
     CurrentPaths::set(Paths::fromRoot($dir));
+    Kernel::boot();
 
-    expect(StorageRegistry::current()->get('mutation-canary'))->toBeInstanceOf(Filesystem::class);
+    expect(StorageRegistry::disk('mutation-canary'))->toBeInstanceOf(Filesystem::class);
 
     unlink($dir . '/config/storage.php');
     rmdir($dir . '/config');

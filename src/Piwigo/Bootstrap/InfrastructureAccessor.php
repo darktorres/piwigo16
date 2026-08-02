@@ -7,6 +7,7 @@ namespace Piwigo\Bootstrap;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Kernel;
+use Piwigo\Storage\StorageRegistry;
 
 /**
  * Typed accessor to the container-resolved `EntityManagerInterface` --
@@ -52,5 +53,22 @@ final class InfrastructureAccessor
             throw new \LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
         }
         return $currentLogger;
+    }
+
+    /**
+     * Same rationale as currentLogger() above -- StorageRegistry::disk()
+     * itself already exists as a transitional shim, but callers that need
+     * to *construct* a wrapper-typed object (e.g. Ws\PwgImages's own
+     * `new UploadService(...)` sites) can't use that shim the same way
+     * currentLogger()'s callers couldn't use CurrentLogger::getStatic()
+     * (singleton/service-locator elimination campaign, Phase 2).
+     */
+    public static function storageRegistry(): StorageRegistry
+    {
+        $storageRegistry = Kernel::container()->get(StorageRegistry::class);
+        if (! $storageRegistry instanceof StorageRegistry) {
+            throw new \LogicException('Container returned an unexpected type for ' . StorageRegistry::class);
+        }
+        return $storageRegistry;
     }
 }

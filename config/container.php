@@ -64,6 +64,7 @@ use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionRepository;
 use Piwigo\Site\SiteEntity;
 use Piwigo\Site\SiteRepository;
+use Piwigo\Storage\StorageRegistry;
 use Piwigo\Tag\TagEntity;
 use Piwigo\Tag\TagRepository;
 use Piwigo\Template\Template;
@@ -205,6 +206,15 @@ return [
     // Unresolvable string param (the routes file path) -- Router::fromFile()
     // needs a path autowire can't provide.
     Router::class => factory(static fn (): Router => Router::fromFile(dirname(__DIR__) . '/config/routes.php')),
+
+    // Factory binding (singleton/service-locator elimination campaign,
+    // Phase 2) -- replaces Piwigo\Storage\StorageRegistry's former
+    // self-managed static singleton (current()/set()/reset()): the value
+    // never actually varies per request (always built from the same
+    // config/storage.php), so there's nothing genuinely request-scoped to
+    // hold in a shared mutable instance, same "delete the facade, use a
+    // plain factory" outcome as the Phase 0 pilot (CurrentPersistentCache).
+    StorageRegistry::class => factory(static fn (): StorageRegistry => StorageRegistry::fromConfig(dirname(__DIR__) . '/config/storage.php')),
 
     // Non-obvious construction (handler + formatter wiring). Monolog "app"
     // channel only -- the "security" channel (a named $securityLogger

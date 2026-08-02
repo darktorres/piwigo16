@@ -16,6 +16,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
+use Piwigo\Storage\StorageRegistry;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\ScriptLoader;
 use Piwigo\Template\Template;
@@ -216,7 +217,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         ScriptLoader::setUrlService(new UrlService(new HtmlService()));
         CurrentTemplate::set(new Template(CurrentPaths::get()->root . 'themes/admin', 'default'));
 
-        $this->renderer = new ThemesStandardPagesPageRenderer(new RedirectService(), new UrlService(new HtmlService()), $this->configService);
+        $this->renderer = $this->makeRenderer();
 
         $_POST = [];
         $_FILES = [];
@@ -242,6 +243,25 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         parent::tearDown();
     }
 
+    private function makeRenderer(): ThemesStandardPagesPageRenderer
+    {
+        // StorageRegistry is built fresh here (not container-resolved
+        // once for the whole test) specifically so overrideSiteLocal()'s
+        // own CurrentPaths::set() below is reflected in the 'local' disk
+        // it builds -- config/storage.php's own 'local' factory reads
+        // CurrentPaths::get() at fromConfig()-call time, same "must be
+        // rebuilt after CurrentPaths changes" requirement a real request
+        // never hits (CurrentPaths is fixed before the container ever
+        // resolves anything, singleton/service-locator elimination
+        // campaign, Phase 2).
+        return new ThemesStandardPagesPageRenderer(
+            new RedirectService(),
+            new UrlService(new HtmlService()),
+            $this->configService,
+            StorageRegistry::fromConfig(dirname(__DIR__, 2) . '/config/storage.php'),
+        );
+    }
+
     private function overrideSiteLocal(string $siteLocal): void
     {
         $root = dirname(__DIR__, 2) . '/';
@@ -258,6 +278,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
             config: $root . 'config/',
             vendor: $root . 'vendor/',
         ));
+        $this->renderer = $this->makeRenderer();
     }
 
     private function realPngBytes(): string

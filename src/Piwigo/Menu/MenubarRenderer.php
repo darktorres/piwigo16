@@ -57,10 +57,10 @@ final class MenubarRenderer
      * write to, this method returns that value instead; every caller but
      * GalleryController ignores it.
      */
-    public function render(UrlServiceInterface $urlService, \Piwigo\Core\FilterState $filterState): ?int
+    public function render(UrlServiceInterface $urlService, \Piwigo\Core\FilterState $filterState, \Piwigo\Section\SectionContextRegistry $sectionContextRegistry): ?int
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
-        $section_context = \Piwigo\Section\SectionContextRegistry::current();
+        $section_context = $sectionContextRegistry->current();
 
         $conn = DbConnection::build();
         // Built once, reused below -- was the same PermissionService recipe

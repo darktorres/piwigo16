@@ -45,6 +45,7 @@ final class ProfileController implements ControllerInterface
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\FilterState $filterState,
+        private readonly \Piwigo\Section\SectionContextRegistry $sectionContextRegistry,
     ) {}
 
     private static function userService(): UserService
@@ -172,7 +173,7 @@ final class ProfileController implements ControllerInterface
         if (! is_array($hide_menu_on) or ! in_array('theProfilePage', $hide_menu_on, true)) {
             if (($themeconf['id'] ?? null) !== 'standard_pages') {
                 new MenubarRenderer()
-                    ->render($urlService, $this->filterState);
+                    ->render($urlService, $this->filterState, $this->sectionContextRegistry);
             }
         }
 

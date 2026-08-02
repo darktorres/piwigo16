@@ -8,6 +8,7 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\FilterState;
+use Piwigo\Core\Kernel;
 use Piwigo\Html\HtmlService;
 use Piwigo\Menu\Event\BlockManagerRegisterBlocks;
 use Piwigo\Menu\MenubarRenderer;
@@ -49,6 +50,8 @@ final class MenubarRendererTest extends IntegrationTestCase
 
     private FilterState $filterState;
 
+    private SectionContextRegistry $sectionContextRegistry;
+
     #[\Override]
     protected function setUp(): void
     {
@@ -83,7 +86,19 @@ final class MenubarRendererTest extends IntegrationTestCase
         $this->template = new Template(CurrentPaths::get()->root . 'themes', 'default');
         CurrentTemplate::set($this->template);
 
-        SectionContextRegistry::reset();
+        // getRootUrl()/paramsForDuplication() read SectionContextRegistry
+        // through the transitional currentStatic() shim (singleton/
+        // service-locator elimination campaign, Phase 2 -- UrlService is
+        // one of Phase 6's ~440 manually-`new`'d classes), which resolves
+        // the real container-shared instance once Kernel::boot() has run
+        // -- booted here so that instance is the same one $this->renderer
+        // is given directly below, not a disconnected one.
+        Kernel::boot();
+        $sectionContextRegistry = Kernel::container()->get(SectionContextRegistry::class);
+        if (! $sectionContextRegistry instanceof SectionContextRegistry) {
+            throw new \LogicException('Container returned an unexpected type for ' . SectionContextRegistry::class);
+        }
+        $this->sectionContextRegistry = $sectionContextRegistry;
         // The mbCategories block (built unconditionally by every test in
         // this file) reaches CategoryService::getCategoriesMenu() ->
         // getComputedCategories()/filterMenuRows(), which read
@@ -109,27 +124,27 @@ final class MenubarRendererTest extends IntegrationTestCase
     #[\Override]
     protected function tearDown(): void
     {
-        SectionContextRegistry::reset();
+        Kernel::reset();
         parent::tearDown();
     }
 
     public function test_render_escapes_the_query_search_value_for_a_search_section(): void
     {
-        SectionContextRegistry::set(new SectionContext(
+        $this->sectionContextRegistry->set(new SectionContext(
             section: 'search',
             qsearchDetails: ['q' => '<script>alert(1)</script>'],
         ));
 
-        $this->renderer->render($this->urlService, $this->filterState);
+        $this->renderer->render($this->urlService, $this->filterState, $this->sectionContextRegistry);
 
         self::assertSame('&lt;script&gt;alert(1)&lt;/script&gt;', $this->template->get_template_vars('QUERY_SEARCH'));
     }
 
     public function test_render_does_not_assign_query_search_outside_a_search_section(): void
     {
-        SectionContextRegistry::set(new SectionContext(section: 'categories'));
+        $this->sectionContextRegistry->set(new SectionContext(section: 'categories'));
 
-        $this->renderer->render($this->urlService, $this->filterState);
+        $this->renderer->render($this->urlService, $this->filterState, $this->sectionContextRegistry);
 
         self::assertNull($this->template->get_template_vars('QUERY_SEARCH'));
     }
@@ -140,7 +155,7 @@ final class MenubarRendererTest extends IntegrationTestCase
         CurrentConfig::setFilterPages(['default' => ['used' => true]]);
         $this->filterState->set(true, '', '', []);
 
-        $this->renderer->render($this->urlService, $this->filterState);
+        $this->renderer->render($this->urlService, $this->filterState, $this->sectionContextRegistry);
 
         $expected = $this->urlService->addUrlParams($this->urlService->makeIndexUrl([]), ['filter' => 'stop']);
         self::assertSame($expected, $this->template->get_template_vars('U_STOP_FILTER'));
@@ -154,7 +169,7 @@ final class MenubarRendererTest extends IntegrationTestCase
         $this->filterState->set(false, '', '', []);
         CurrentUser::set(CurrentUser::get()->withRawAttribute('recent_period', 7));
 
-        $this->renderer->render($this->urlService, $this->filterState);
+        $this->renderer->render($this->urlService, $this->filterState, $this->sectionContextRegistry);
 
         $expected = $this->urlService->addUrlParams($this->urlService->makeIndexUrl([]), ['filter' => 'start-recent-7']);
         self::assertSame($expected, $this->template->get_template_vars('U_START_FILTER'));
@@ -173,14 +188,14 @@ final class MenubarRendererTest extends IntegrationTestCase
      */
     public function test_render_related_categories_shows_a_common_category_not_excluded(): void
     {
-        SectionContextRegistry::set(new SectionContext(
+        $this->sectionContextRegistry->set(new SectionContext(
             section: 'categories',
             items: [1, 4],
             category: ['id' => 1, 'name' => 'Sample Album', 'permalink' => null],
             combinedCategories: null,
         ));
 
-        $this->renderer->render($this->urlService, $this->filterState);
+        $this->renderer->render($this->urlService, $this->filterState, $this->sectionContextRegistry);
 
         $menubar = $this->template->get_template_vars('MENUBAR');
         self::assertIsString($menubar);
@@ -199,14 +214,14 @@ final class MenubarRendererTest extends IntegrationTestCase
      */
     public function test_render_related_categories_excludes_ids_from_combined_categories(): void
     {
-        SectionContextRegistry::set(new SectionContext(
+        $this->sectionContextRegistry->set(new SectionContext(
             section: 'categories',
             items: [1, 4],
             category: ['id' => 1, 'name' => 'Sample Album', 'permalink' => null],
             combinedCategories: [['id' => 2, 'name' => 'Nested Sub Album', 'permalink' => null]],
         ));
 
-        $this->renderer->render($this->urlService, $this->filterState);
+        $this->renderer->render($this->urlService, $this->filterState, $this->sectionContextRegistry);
 
         $menubar = $this->template->get_template_vars('MENUBAR');
         self::assertIsString($menubar);

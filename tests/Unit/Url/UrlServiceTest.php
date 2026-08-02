@@ -6,6 +6,7 @@ namespace Piwigo\Tests\Unit\Url;
 
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\RequestMountDepth;
 use Piwigo\Core\WsContext;
 use Piwigo\Html\HtmlService;
@@ -35,17 +36,33 @@ beforeEach(function (): void {
     $_SERVER['SCRIPT_NAME'] = '/piwigo/index.php';
     CurrentConfig::setUrlPort('none');
     RootPathOverride::reset();
-    SectionContextRegistry::reset();
     RequestMountDepth::reset();
+    // getRootUrl()/paramsForDuplication() read SectionContextRegistry
+    // through the transitional currentStatic() shim (singleton/
+    // service-locator elimination campaign, Phase 2 -- see that method's
+    // own docblock: UrlService is one of Phase 6's ~440 manually-`new`'d
+    // classes), which resolves the real container-shared instance once
+    // Kernel::boot() has run.
+    Kernel::boot();
 });
 
 afterEach(function (): void {
     CurrentConfig::reset();
     DeploymentPolicy::reset();
     RootPathOverride::reset();
-    SectionContextRegistry::reset();
     RequestMountDepth::reset();
+    Kernel::reset();
 });
+
+function urlServiceTestSectionContextRegistry(): SectionContextRegistry
+{
+    $registry = Kernel::container()->get(SectionContextRegistry::class);
+    if (! $registry instanceof SectionContextRegistry) {
+        throw new RuntimeException('Container returned an unexpected type for ' . SectionContextRegistry::class);
+    }
+
+    return $registry;
+}
 
 test('getActionUrl builds action.php with id/part, adding a bare download flag when requested', function (): void {
     // addUrlParams()'s own default separator is the HTML-safe '&amp;'
@@ -420,7 +437,7 @@ test('makePictureUrl falls through the file style to the bare id when the filena
 
 test('getRootUrl treats an empty-string section rootPath the same as no rootPath at all', function (): void {
     RequestMountDepth::set(1);
-    SectionContextRegistry::set(new SectionContext(rootPath: ''));
+    urlServiceTestSectionContextRegistry()->set(new SectionContext(rootPath: ''));
     $service = new UrlService(new HtmlService());
 
     expect($service->getRootUrl())->toBe('../');
@@ -586,7 +603,7 @@ test('makeIndexUrl falls back to the absolute root URL when no params add anythi
 });
 
 test('paramsForDuplication seeds params from the current section context', function (): void {
-    SectionContextRegistry::set(new SectionContext(section: 'tags'));
+    urlServiceTestSectionContextRegistry()->set(new SectionContext(section: 'tags'));
     $service = new UrlService(new HtmlService());
 
     $params = $service->paramsForDuplication([], []);
@@ -595,7 +612,7 @@ test('paramsForDuplication seeds params from the current section context', funct
 });
 
 test('paramsForDuplication removes listed keys and applies redefinitions', function (): void {
-    SectionContextRegistry::set(new SectionContext(section: 'tags', start: 20));
+    urlServiceTestSectionContextRegistry()->set(new SectionContext(section: 'tags', start: 20));
     $service = new UrlService(new HtmlService());
 
     $params = $service->paramsForDuplication(['section' => 'categories'], ['start']);

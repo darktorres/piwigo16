@@ -99,6 +99,8 @@ final class SectionPopulatorTest extends IntegrationTestCase
 
     private CurrentLogger $currentLogger;
 
+    private SectionContextRegistry $sectionContextRegistry;
+
     #[\Override]
     protected function setUp(): void
     {
@@ -133,6 +135,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
         $this->filterState = new FilterState();
         $this->currentLogger = new CurrentLogger();
         $this->currentLogger->set(new Logger(['severity' => Logger::OFF]));
+        $this->sectionContextRegistry = new SectionContextRegistry();
 
         $this->setRegularUser();
         CurrentTemplate::set($this->makeTemplate());
@@ -148,13 +151,6 @@ final class SectionPopulatorTest extends IntegrationTestCase
         AdminContext::reset();
         PageState::reset();
         CurrentConfig::reset();
-        // populate() always leaves this populated (the normal end-of-method
-        // registration, or -- since a recent fix -- an early-exit redirect
-        // branch) -- never reset here before, confirmed live to leak a
-        // stale root_path/category context into whatever Unit test happens
-        // to run next in this shared process and call a UrlService method
-        // without its own full RequestBootstrap.
-        SectionContextRegistry::reset();
         Kernel::reset();
         parent::tearDown();
     }
@@ -179,6 +175,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
             new UrlService(new HtmlService()),
             $this->filterState,
             $this->currentLogger,
+            $this->sectionContextRegistry,
         );
     }
 
@@ -215,7 +212,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
 
         $this->makePopulator()->populate();
 
-        $ctx = SectionContextRegistry::current();
+        $ctx = $this->sectionContextRegistry->current();
         self::assertNotNull($ctx);
         self::assertSame('categories', $ctx->section);
         self::assertTrue($ctx->flat);
@@ -255,7 +252,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
         }
 
         self::assertSame('script_basename "somethingelse" unknown', $caughtMessage);
-        $ctx = SectionContextRegistry::current();
+        $ctx = $this->sectionContextRegistry->current();
         self::assertNotNull($ctx);
         self::assertSame('categories', $ctx->section);
     }
@@ -274,7 +271,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
         $this->makePopulator()->populate();
 
         self::assertArrayNotHasKey('pwg_image_order', $_SESSION);
-        $ctx = SectionContextRegistry::current();
+        $ctx = $this->sectionContextRegistry->current();
         self::assertNotNull($ctx);
         // superOrderBy reflects isset($page['super_order_by']), not its
         // boolean value -- confirmed live, the incompatible branch still
@@ -290,7 +287,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
 
         $this->makePopulator()->populate();
 
-        $ctx = SectionContextRegistry::current();
+        $ctx = $this->sectionContextRegistry->current();
         self::assertNotNull($ctx);
         self::assertNotNull($ctx->category);
         self::assertSame(1, $ctx->category['id']);
@@ -317,7 +314,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
             $this->conn->executeStatement('UPDATE piwigo_categories SET image_order = NULL WHERE id = 1');
         }
 
-        $ctx = SectionContextRegistry::current();
+        $ctx = $this->sectionContextRegistry->current();
         self::assertNotNull($ctx);
         self::assertCount(3, $ctx->items);
     }
@@ -351,7 +348,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
 
         $this->makePopulator()->populate();
 
-        $ctx = SectionContextRegistry::current();
+        $ctx = $this->sectionContextRegistry->current();
         self::assertNotNull($ctx);
         self::assertSame('search', $ctx->section);
         // getQuickSearchResultsNoCache()'s own 'qs' shape always adds
@@ -378,7 +375,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
 
         $this->makePopulator()->populate();
 
-        $ctx = SectionContextRegistry::current();
+        $ctx = $this->sectionContextRegistry->current();
         self::assertNotNull($ctx);
         self::assertSame('favorites', $ctx->section);
         // user 1's own 3 favorited images (1, 3, 5).
@@ -420,7 +417,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
 
         $this->makePopulator()->populate();
 
-        $ctx = SectionContextRegistry::current();
+        $ctx = $this->sectionContextRegistry->current();
         self::assertNotNull($ctx);
         self::assertSame('recent_pics', $ctx->section);
         self::assertStringContainsString('Recent photos', strip_tags($ctx->title));
@@ -433,7 +430,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
 
         $this->makePopulator()->populate();
 
-        $ctx = SectionContextRegistry::current();
+        $ctx = $this->sectionContextRegistry->current();
         self::assertNotNull($ctx);
         self::assertSame('most_visited', $ctx->section);
         self::assertTrue($ctx->superOrderBy);
@@ -447,7 +444,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
 
         $this->makePopulator()->populate();
 
-        $ctx = SectionContextRegistry::current();
+        $ctx = $this->sectionContextRegistry->current();
         self::assertNotNull($ctx);
         self::assertSame('best_rated', $ctx->section);
         self::assertTrue($ctx->superOrderBy);
@@ -461,7 +458,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
 
         $this->makePopulator()->populate();
 
-        $ctx = SectionContextRegistry::current();
+        $ctx = $this->sectionContextRegistry->current();
         self::assertNotNull($ctx);
         self::assertSame('list', $ctx->section);
         // parseWellKnownParamsUrl()'s own list-token parsing explode()s

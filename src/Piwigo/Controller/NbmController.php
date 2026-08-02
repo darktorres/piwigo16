@@ -30,6 +30,7 @@ final class NbmController implements ControllerInterface
     public function __construct(
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\FilterState $filterState,
+        private readonly \Piwigo\Section\SectionContextRegistry $sectionContextRegistry,
     ) {}
 
     #[\Override]
@@ -81,7 +82,7 @@ final class NbmController implements ControllerInterface
         $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
         if (! is_array($hide_menu_on) or ! in_array('theNBMPage', $hide_menu_on, true)) {
             new MenubarRenderer()
-                ->render($urlService, $this->filterState);
+                ->render($urlService, $this->filterState, $this->sectionContextRegistry);
         }
 
         new \Piwigo\Page\PageHeaderRenderer()

@@ -91,6 +91,7 @@ final class PictureController implements ControllerInterface
         private readonly ConfigService $configService,
         private readonly \Piwigo\Core\FilterState $filterState,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+        private readonly SectionContextRegistry $sectionContextRegistry,
     ) {}
 
     private static function permissionService(): PermissionService
@@ -141,7 +142,7 @@ final class PictureController implements ControllerInterface
         // does, so this is guaranteed non-null by the time this controller
         // (its one real caller besides GalleryController) runs -- a real
         // guard, not dead code, since the type itself is nullable.
-        $section_context = SectionContextRegistry::current();
+        $section_context = $this->sectionContextRegistry->current();
         if (! $section_context instanceof SectionContext) {
             throw new \RuntimeException('SectionContextRegistry::current() is null after SectionPopulator::populate()');
         }
@@ -245,7 +246,7 @@ final class PictureController implements ControllerInterface
                             $rank_of[$image_id] = count($items);
                             $items[] = $image_id;
                             $section_context = $section_context->withItems($items);
-                            SectionContextRegistry::set($section_context);
+                            $this->sectionContextRegistry->set($section_context);
                         } else {
                             $url = $this->urlService->makePictureUrl(
                                 [
@@ -1227,7 +1228,7 @@ final class PictureController implements ControllerInterface
         $themeconf = is_array($themeconf) ? $themeconf : [];
         if (\Piwigo\Config\CurrentConfig::pictureMenu() and (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('thePicturePage', $themeconf['hide_menu_on'], true))) {
             new MenubarRenderer()
-                ->render($urlService, $this->filterState);
+                ->render($urlService, $this->filterState, $this->sectionContextRegistry);
         }
 
         // The slideshow branch above may have set $refresh/$url_link

@@ -42,6 +42,7 @@ final class IdentificationController implements ControllerInterface
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\FilterState $filterState,
+        private readonly \Piwigo\Section\SectionContextRegistry $sectionContextRegistry,
     ) {}
 
     #[\Override]
@@ -163,7 +164,7 @@ final class IdentificationController implements ControllerInterface
         $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
         if (! \Piwigo\Config\CurrentConfig::galleryLocked() && (! is_array($hide_menu_on) or ! in_array('theIdentificationPage', $hide_menu_on, true))) {
             new MenubarRenderer()
-                ->render($urlService, $this->filterState);
+                ->render($urlService, $this->filterState, $this->sectionContextRegistry);
         }
 
         // Load language if cookie is set from login/register/password

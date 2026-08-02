@@ -62,7 +62,7 @@ final class UrlService implements UrlServiceInterface
         // -- nullable here (unlike GalleryController/PictureController's
         // own guaranteed-non-null read) since this runs for non-gallery
         // pages too, matching the original's own `?? null` fallback.
-        $root_path = RootPathOverride::current() ?? SectionContextRegistry::current()?->rootPath;
+        $root_path = RootPathOverride::current() ?? SectionContextRegistry::currentStatic()?->rootPath;
         if ($root_path === null || $root_path === '') {
             // Legacy Coupling Retirement gap-closure (entry-shell
             // define()/include round): used to read the raw PHPWG_ROOT_PATH
@@ -294,7 +294,7 @@ final class UrlService implements UrlServiceInterface
      */
     public function paramsForDuplication(array $redefined, array $removed): array
     {
-        $params = SectionContextRegistry::current()?->toUrlParams() ?? [];
+        $params = SectionContextRegistry::currentStatic()?->toUrlParams() ?? [];
 
         $rootPathOverride = RootPathOverride::current();
         if ($rootPathOverride !== null) {

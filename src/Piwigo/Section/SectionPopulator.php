@@ -69,6 +69,7 @@ final readonly class SectionPopulator
         private UrlServiceInterface $urlService,
         private \Piwigo\Core\FilterState $filterState,
         private \Piwigo\Core\CurrentLogger $currentLogger,
+        private SectionContextRegistry $sectionContextRegistry,
     ) {}
 
     public function populate(): void
@@ -711,7 +712,7 @@ final readonly class SectionPopulator
                 // every field it doesn't have yet, so registering here is
                 // safe; the later, fully-populated call for the normal
                 // (non-redirect) path simply overwrites it afterward.
-                SectionContextRegistry::set(self::buildSectionContext($page));
+                $this->sectionContextRegistry->set(self::buildSectionContext($page));
                 $redirect_url = \Piwigo\Core\PageFilterHelper::scriptBasename() === 'picture' ? $this->urlService->duplicatePictureUrl() : $this->urlService->duplicateIndexUrl();
 
                 if (! headers_sent()) { // this is a permanent redirection
@@ -770,7 +771,7 @@ final readonly class SectionPopulator
         \Piwigo\Core\PageState::current()->bodyClasses = $body_classes;
         \Piwigo\Core\PageState::current()->bodyData = $body_data;
 
-        SectionContextRegistry::set(self::buildSectionContext($page));
+        $this->sectionContextRegistry->set(self::buildSectionContext($page));
 
         \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndSectionInit());
     }

@@ -62,6 +62,7 @@ final class GalleryController implements ControllerInterface
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
         private readonly \Piwigo\Core\FilterState $filterState,
+        private readonly SectionContextRegistry $sectionContextRegistry,
     ) {}
 
     private static function categoryService(): CategoryService
@@ -89,7 +90,7 @@ final class GalleryController implements ControllerInterface
         // does, so this is guaranteed non-null by the time this controller
         // (its one real caller besides PictureController) runs -- a real
         // guard, not dead code, since the type itself is nullable.
-        $section_context = SectionContextRegistry::current();
+        $section_context = $this->sectionContextRegistry->current();
         if (! $section_context instanceof SectionContext) {
             throw new \RuntimeException('SectionContextRegistry::current() is null after SectionPopulator::populate()');
         }
@@ -192,7 +193,7 @@ final class GalleryController implements ControllerInterface
 
         // -------------------------------------------------- menubar
         $categoryCountCategories = new MenubarRenderer()
-            ->render($urlService, $this->filterState);
+            ->render($urlService, $this->filterState, $this->sectionContextRegistry);
 
         $template->set_filename('index', 'index.tpl');
 

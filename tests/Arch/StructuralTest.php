@@ -227,6 +227,7 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
         '/src/Piwigo/Core/ProcessCache.php',
         '/src/Piwigo/Core/FilterState.php',
         '/src/Piwigo/Core/CurrentLogger.php',
+        '/src/Piwigo/Section/SectionContextRegistry.php',
     ];
 
     $hits = [
@@ -692,16 +693,30 @@ test('EventDispatcher::reset() is only called from tests/', function (): void {
     expect(describeCallSites($hits))->toBe([]);
 });
 
-test('SectionContextRegistry::reset() is only called from tests/', function (): void {
+test('SectionContextRegistry::currentStatic() transitional shim has a shrinking, known allow-list', function (): void {
+    // Singleton/service-locator elimination campaign, Phase 2: real
+    // readers/the writer (SectionPopulator, GalleryController,
+    // PictureController, Menu\MenubarRenderer::render() + its 11
+    // controller callers) take it via constructor/explicit-parameter
+    // injection. Piwigo\Url\UrlService is the one exception: it's one of
+    // the ~440 manually-`new`'d call sites Phase 6 exists to fix, so it
+    // uses this static shim instead of the real current() instance method
+    // (see that method's own docblock). Delete once UrlService itself
+    // takes SectionContextRegistry via constructor injection (Phase 6).
     $repoRoot = __DIR__ . '/../..';
 
-    $hits = [
-        ...findCallSites($repoRoot . '/src/Piwigo', 'SectionContextRegistry::reset('),
-        ...findCallSitesInRootPhpFiles($repoRoot, 'SectionContextRegistry::reset('),
-        ...findCallSitesInBinFiles($repoRoot, 'SectionContextRegistry::reset('),
+    $allowedFiles = [
+        '/src/Piwigo/Url/UrlService.php',
     ];
 
-    expect(describeCallSites($hits))->toBe([]);
+    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'SectionContextRegistry::currentStatic(');
+
+    $disallowed = array_values(array_filter(
+        $hits,
+        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
+    ));
+
+    expect(describeCallSites($disallowed))->toBe([]);
 });
 
 test('CurrentTemplate::reset() is only called from tests/', function (): void {

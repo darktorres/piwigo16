@@ -5,40 +5,41 @@ declare(strict_types=1);
 use Piwigo\Section\SectionContext;
 use Piwigo\Section\SectionContextRegistry;
 
-beforeEach(function (): void {
-    SectionContextRegistry::reset();
-});
-
-afterEach(function (): void {
-    SectionContextRegistry::reset();
-});
+// Container-shared instance (singleton/service-locator elimination
+// campaign, Phase 2) -- each test constructs its own fresh instance
+// directly; no reset() needed.
 
 test('current returns null before anything is set', function (): void {
-    expect(SectionContextRegistry::current())->toBeNull();
+    $registry = new SectionContextRegistry();
+
+    expect($registry->current())->toBeNull();
 });
 
 test('set stores the context and current returns the same instance', function (): void {
+    $registry = new SectionContextRegistry();
     $context = new SectionContext(section: 'categories', rootPath: '../');
 
-    SectionContextRegistry::set($context);
+    $registry->set($context);
 
-    expect(SectionContextRegistry::current())->toBe($context);
+    expect($registry->current())->toBe($context);
 });
 
 test('set overwrites a previously stored context', function (): void {
+    $registry = new SectionContextRegistry();
     $first = new SectionContext(section: 'categories', rootPath: '../');
     $second = new SectionContext(section: 'tags', rootPath: '../../');
 
-    SectionContextRegistry::set($first);
-    SectionContextRegistry::set($second);
+    $registry->set($first);
+    $registry->set($second);
 
-    expect(SectionContextRegistry::current())->toBe($second);
+    expect($registry->current())->toBe($second);
 });
 
 test('reset clears the stored context', function (): void {
-    SectionContextRegistry::set(new SectionContext(section: 'categories', rootPath: '../'));
+    $registry = new SectionContextRegistry();
+    $registry->set(new SectionContext(section: 'categories', rootPath: '../'));
 
-    SectionContextRegistry::reset();
+    $registry->reset();
 
-    expect(SectionContextRegistry::current())->toBeNull();
+    expect($registry->current())->toBeNull();
 });

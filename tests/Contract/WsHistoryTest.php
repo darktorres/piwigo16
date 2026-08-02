@@ -975,26 +975,38 @@ final class WsHistoryTest extends ContractTestCase
     }
 
     /**
-     * historySearch()'s `$data = \Piwigo\PluginConfig\EventDispatcher::get()
-     * ->triggerChange('get_history', ...); if (! is_array($data)) { $data
-     * = []; }` -- historyGet() (this class's own 'get_history' handler,
-     * registered at the default priority 50) always returns a real array,
-     * so reaching the non-array fallback for real needs a second,
-     * higher-priority handler chained after it -- exactly the "a plugin
-     * can still override history search behavior by registering its own
-     * 'get_history' handler at a higher priority" scenario historyGet()'s
-     * own docblock describes. A real plugin file + `piwigo_plugins`
-     * activation row (PluginLoader::loadPlugins() include_once()s it on
-     * every real request, including ws.php) is the same established
-     * technique as tests/Browser/PictureControllerTest.php's own
-     * 'user_comment_check' misbehaving-plugin test -- EventDispatcher's
-     * own singleton lives in the real Apache-served process, not this
-     * Pest process, so it can't be reached by registering a handler here
-     * directly. Scoped to a throwaway image_id (never 1-5) so it's a
-     * complete no-op for every other concurrent request against this
-     * shared dev server while active.
+     * historySearch()'s `EventDispatcher::get()->dispatchChange(new
+     * GetHistory([], ...))` fails loud now (Track B typed-event-object gap
+     * closure, WS batch): a GetHistory handler that returns something other
+     * than a GetHistory instance makes dispatchChange() throw \Error,
+     * rather than the old triggerChange()'s silent "narrow to [] on a
+     * non-array return" fallback this test used to assert. historyGet()
+     * (this class's own GetHistory handler, registered at the default
+     * priority 50) always returns a real GetHistory instance, so reaching
+     * the misbehaving-handler path for real needs a second, higher-
+     * priority handler chained after it -- exactly the "a plugin can still
+     * override history search behavior by registering its own GetHistory
+     * handler at a higher priority" scenario historyGet()'s own docblock
+     * describes. A real plugin file + `piwigo_plugins` activation row
+     * (PluginLoader::loadPlugins() include_once()s it on every real
+     * request, including ws.php) is the same established technique as
+     * tests/Browser/PictureControllerTest.php's own 'user_comment_check'
+     * misbehaving-plugin test -- EventDispatcher's own singleton lives in
+     * the real Apache-served process, not this Pest process, so it can't
+     * be reached by registering a handler here directly. Scoped to a
+     * throwaway image_id (never 1-5) so it's a complete no-op for every
+     * other concurrent request against this shared dev server while
+     * active.
+     *
+     * Asserts the raw HTTP status only, not a decoded response body:
+     * ExceptionHandlerMiddleware catches the uncaught \Error and returns a
+     * real 500 (display_errors is off site-wide, so there's no fatal-error
+     * text to see even if it weren't caught) -- callWs()/wsAdmin() both
+     * assert 2xx/3xx and json_decode()-then-assertIsArray() the body, so
+     * neither fits this scenario; same "HTTP-status-only" assertion style
+     * as the Browser suite's own misbehaving-handler tests.
      */
-    public function test_historySearch_falls_back_to_an_empty_result_when_a_plugin_returns_a_non_array_history(): void
+    public function test_historySearch_fatals_when_a_plugin_get_history_handler_returns_something_other_than_a_get_history_instance(): void
     {
         $this->conn->executeStatement(
             'INSERT INTO ' . Tables::images() . ' (file, path) VALUES (?, ?)',
@@ -1033,14 +1045,14 @@ final class WsHistoryTest extends ContractTestCase
                 */
 
                 \\Piwigo\\PluginConfig\\EventDispatcher::get()->addEventHandler(
-                    'get_history',
-                    static function (mixed \$data, array \$search, array \$types): mixed {
-                        \$fields = \$search['fields'] ?? null;
+                    \\Piwigo\\Event\\Ws\\GetHistory::class,
+                    static function (\\Piwigo\\Event\\Ws\\GetHistory \$event): mixed {
+                        \$fields = \$event->search['fields'] ?? null;
                         \$imageId = is_array(\$fields) ? (\$fields['image_id'] ?? null) : null;
                         if (\$imageId === {$imageId}) {
                             return false;
                         }
-                        return \$data;
+                        return \$event;
                     },
                     51
                 );
@@ -1052,12 +1064,25 @@ final class WsHistoryTest extends ContractTestCase
                 [$pluginId]
             );
 
-            $after = $this->wsAdmin('pwg.history.search', ['image_id' => $imageId]);
+            $url = $this->baseUrl . '/ws.php?format=json';
+            $ch = curl_init($url);
+            self::assertNotFalse($ch, 'curl_init failed');
+            $cookieJar = $this->cookieJar();
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_USERAGENT, self::USER_AGENT);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
+                'method' => 'pwg.history.search',
+                'image_id' => $imageId,
+            ]));
+            curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
+            curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $this->testHeader());
+            curl_exec($ch);
+            $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            unset($ch);
 
-            self::assertSame('ok', $after['stat']);
-            $afterResult = $after['result'];
-            self::assertIsArray($afterResult);
-            self::assertSame([], $afterResult['lines'], 'a plugin returning a non-array must degrade to an empty result, not fatal');
+            self::assertSame(500, $status, 'a plugin GetHistory handler returning a non-GetHistory instance must fatal (fail loud), not silently degrade');
         } finally {
             $this->conn->executeStatement('DELETE FROM ' . Tables::plugins() . " WHERE id = ?", [$pluginId]);
             @unlink($mainFile);

@@ -28,6 +28,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
+use Piwigo\Event\User\WsUsersGetList;
 use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -393,12 +394,11 @@ final class PwgUsers
                 }
             }
         }
-        // trigger_change()'s return type is genuinely mixed (it dispatches to
-        // whatever handler is registered for 'ws_users_getList'); narrow back
-        // to the same array<int, array<string, mixed>> shape that was passed
-        // in.
-        $users_after_trigger = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('ws_users_getList', $users);
-        $users = is_array($users_after_trigger) ? $users_after_trigger : $users;
+        // WsUsersGetList::$users is a non-nullable PHP `array` property --
+        // dispatchChange()'s own instanceof check guarantees a real array
+        // here, unlike the old mixed-returning trigger_change(), so no
+        // fallback-to-original-$users guard is needed anymore.
+        $users = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new WsUsersGetList($users))->users;
         if ($params['per_page'] === 0 && $display_flags === []) {
             $method_result = $users_id_arr;
         } else {

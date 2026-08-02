@@ -16,7 +16,10 @@ use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\WsError;
 use Piwigo\Core\WsParamFlag;
 use Piwigo\Core\WsParamType;
+use Piwigo\Event\Ws\SendResponse;
 use Piwigo\Ws\Encoder\PwgResponseEncoder;
+use Piwigo\Ws\Event\WsAddMethods;
+use Piwigo\Ws\Event\WsInvokeAllowed;
 
 /**
  * The WS framework's own generic method registry/dispatcher -- every
@@ -117,7 +120,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
             ['methodName']
         );
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('ws_add_methods', [&$this]);
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new WsAddMethods($this));
         uksort($this->_methods, strnatcmp(...));
         $this->requestHandler()
             ->handleRequest($this);
@@ -135,7 +138,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
 
         @header('Content-Type: ' . $contentType . '; charset=' . \Piwigo\Core\CharsetHelper::getPwgCharset());
         print_r($encodedResponse);
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('sendResponse', $encodedResponse);
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new SendResponse($encodedResponse));
     }
 
     /**
@@ -431,7 +434,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
             return new PwgError(WsError::MISSING_PARAM, 'Missing parameters: ' . implode(',', $missing_params));
         }
 
-        $result = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('ws_invoke_allowed', true, $methodName, $params);
+        $result = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new WsInvokeAllowed(true, $methodName, $params))->value;
 
         $is_error = false;
         if ($result instanceof PwgError) {

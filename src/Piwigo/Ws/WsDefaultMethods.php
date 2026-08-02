@@ -14,6 +14,7 @@ namespace Piwigo\Ws;
 use Piwigo\Core\WsParamFlag;
 use Piwigo\Core\WsParamType;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Ws\Event\WsAddMethods;
 
 // P23 batch 8e-8: relocated from include/ws_default_methods.inc.php's own
 // top-level ws_addDefaultMethods() function (registered as a bare string
@@ -31,12 +32,10 @@ final class WsDefaultMethods
 {
     /**
      * event handler that registers standard methods with the web service
-     *
-     * @param array<int, PwgServer> $arr
      */
-    public static function register(array $arr): void
+    public static function register(WsAddMethods $event): void
     {
-        $service = &$arr[0];
+        $service = $event->server;
 
         // guard against a misconfigured/empty value since max() requires a
         // non-empty array.

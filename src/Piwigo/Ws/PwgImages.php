@@ -30,6 +30,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Event\Picture\RenderElementName;
+use Piwigo\Event\Picture\WsImagesUploadCompleted;
 use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageService;
@@ -2582,14 +2583,11 @@ final class PwgImages
         $category_name = \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->getCatDisplayNameFromId($params['category_id'], null);
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify(
-            'ws_images_uploadCompleted',
-            [
-                'image_ids' => $image_ids,
-                'category_id' => $params['category_id'],
-                'moved_from_lounge' => $moved_from_lounge,
-            ]
-        );
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new WsImagesUploadCompleted([
+            'image_ids' => $image_ids,
+            'category_id' => $params['category_id'],
+            'moved_from_lounge' => $moved_from_lounge,
+        ]));
 
         return [
             'moved_from_lounge' => $moved_from_lounge,

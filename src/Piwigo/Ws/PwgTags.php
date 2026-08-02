@@ -18,6 +18,7 @@ use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Core\WsError;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
+use Piwigo\Event\Album\MergeTags;
 use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Event\Picture\RenderElementName;
 use Piwigo\Event\Tag\GetTagAltNames;
@@ -492,7 +493,7 @@ final class PwgTags
             ]);
         }
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('merge_tags', $params['destination_tag_id'], $merge_tag);
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new MergeTags($params['destination_tag_id'], $merge_tag));
 
         self::tagService()->deleteTags(array_values(array_map(TagId::from(...), $merge_tag)));
 

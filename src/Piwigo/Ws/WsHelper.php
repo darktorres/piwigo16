@@ -19,6 +19,7 @@ use Piwigo\Core\WsError;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\SrcImage;
 use Piwigo\Permission\SqlCondition;
+use Piwigo\Ws\Event\WsInvokeAllowed;
 
 /**
  * P23 batch 8e: relocated verbatim from include/ws_functions.inc.php's 8
@@ -28,29 +29,23 @@ use Piwigo\Permission\SqlCondition;
 final class WsHelper
 {
     /**
-     * Event handler for method invocation security check. Should return a PwgError
-     * if the preconditions are not satifsied for method invocation.
-     *
-     * $res/return genuinely mixed by design: this is a plugin-style
-     * EventDispatcher filter handler, so $res is whatever the previous
-     * filter-chain step produced -- same contract as
-     * PluginConfig\EventDispatcher's own triggerChange() handlers.
-     *
-     * @param array<string, mixed> $params
+     * Event handler for method invocation security check. Sets $event->value
+     * to a PwgError if the preconditions are not satisfied for method
+     * invocation.
      */
-    public static function isInvokeAllowed(mixed $res, string $methodName, array $params): mixed
+    public static function isInvokeAllowed(WsInvokeAllowed $event): WsInvokeAllowed
     {
-
-        if (str_starts_with($methodName, 'reflection.')) { // OK for reflection
-            return $res;
+        if (str_starts_with($event->methodName, 'reflection.')) { // OK for reflection
+            return $event;
         }
 
         if (! \Piwigo\Auth\AccessControl::isAuthorizeStatus(AccessLevel::Guest) and
-            ! str_starts_with($methodName, 'pwg.session.')) {
-            return new PwgError(401, 'Access denied');
+            ! str_starts_with($event->methodName, 'pwg.session.')) {
+            $event->value = new PwgError(401, 'Access denied');
+            return $event;
         }
 
-        return $res;
+        return $event;
     }
 
     /**

@@ -1032,33 +1032,26 @@ function findStringKeyedDispatchCallSites(string $dir, array $allowlist): array
     return $hits;
 }
 
-test('src/Piwigo/ contains no string-keyed EventDispatcher dispatch calls outside the WS/meta allowlist', function (): void {
-    // Track B typed-event-object gap closure (11 batches, landed
-    // 2026-08-02): 148 of the 155 real legacy events now dispatch through
-    // typed SomeEvent::class objects via addTypedHandler()/
-    // dispatchChange()/dispatchNotify(). Two deliberate carve-outs stay
-    // on the legacy string-keyed addEventHandler()/triggerChange()/
-    // triggerNotify() path:
-    // - 7 WS-protocol-lifecycle events (get_history, ws_users_getList,
-    //   ws_invoke_allowed, ws_add_methods, ws_images_uploadCompleted,
-    //   sendResponse, merge_tags) -- P26 (WS API removal) isn't started;
-    //   converting these now risks rework the moment it lands. Revisit
-    //   once P26 ships; this half of the allowlist should collapse to
-    //   empty then.
-    // - 'trigger' -- EventDispatcher's own internal meta-notification
-    //   channel (its dispatchChange()/dispatchNotify()/triggerChange()/
-    //   triggerNotify() all self-notify via
-    //   $this->triggerNotify('trigger', ...)), never a batch event, stays
-    //   string-keyed permanently. This is the only reason
-    //   EventDispatcher.php itself has any hits to allowlist -- every
-    //   other real call site in src/Piwigo/ converted.
+test('src/Piwigo/ contains no string-keyed EventDispatcher dispatch calls outside the meta allowlist', function (): void {
+    // Track B typed-event-object gap closure (12 batches, landed
+    // 2026-08-02): all 155 real legacy events now dispatch through typed
+    // SomeEvent::class objects via addTypedHandler()/dispatchChange()/
+    // dispatchNotify() -- including the 7 WS-protocol-lifecycle events
+    // (get_history, ws_users_getList, ws_invoke_allowed, ws_add_methods,
+    // ws_images_uploadCompleted, sendResponse, merge_tags) originally
+    // deferred behind P26 (WS API removal), converted ahead of that on
+    // explicit direction rather than waiting.
+    //
+    // 'trigger' is the one permanent exception: EventDispatcher's own
+    // internal meta-notification channel (its dispatchChange()/
+    // dispatchNotify()/triggerChange()/triggerNotify() all self-notify via
+    // $this->triggerNotify('trigger', ...)), never a batch event, stays
+    // string-keyed permanently. This is the only reason EventDispatcher.php
+    // itself has any hits to allowlist -- every other real call site in
+    // src/Piwigo/ converted.
     $repoRoot = __DIR__ . '/../..';
 
-    $allowlist = [
-        'get_history', 'ws_users_getList', 'ws_invoke_allowed', 'ws_add_methods',
-        'ws_images_uploadCompleted', 'sendResponse', 'merge_tags',
-        'trigger',
-    ];
+    $allowlist = ['trigger'];
 
     $hits = findStringKeyedDispatchCallSites($repoRoot . '/src/Piwigo', $allowlist);
 

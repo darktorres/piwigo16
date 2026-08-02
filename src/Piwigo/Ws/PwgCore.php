@@ -27,6 +27,7 @@ use Piwigo\Db\DbInfo;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Event\Tag\RenderTagName;
+use Piwigo\Event\Ws\GetHistory;
 use Piwigo\History\HistoryRepository;
 use Piwigo\History\HistoryService;
 use Piwigo\Image\DerivativeImage;
@@ -865,22 +866,19 @@ final class PwgCore
     }
 
     /**
-     * Perform history search. Registered as the default 'get_history' event
+     * Perform history search. Registered as the default GetHistory event
      * handler (see src/Piwigo/Ws/WsInitializer.php) -- historySearch() (this
      * class's only real caller of that event) dispatches via
-     * trigger_change() rather than calling this directly, so a plugin can
+     * dispatchChange() rather than calling this directly, so a plugin can
      * still override history search behavior by registering its own
-     * 'get_history' handler at a higher priority.
-     *
-     * @param array<int, array<string, mixed>> $data  - used in trigger_change
-     * @param array<string, mixed> $search
-     * @param list<string> $types
-     * @return array<int, array<string, mixed>>
+     * GetHistory handler at a higher priority.
      */
-    public static function historyGet(array $data, array $search, array $types): array
+    public static function historyGet(GetHistory $event): GetHistory
     {
-        return self::historyService()
-            ->getHistory($data, $search, $types);
+        $event->data = self::historyService()
+            ->getHistory($event->data, $event->search, $event->types);
+
+        return $event;
     }
 
     /**
@@ -1016,19 +1014,16 @@ final class PwgCore
         // the page actually displays instead of a SQL_CALC_FOUND_ROWS-based
         // LIMIT/OFFSET pagination -- a real, non-trivial optimization
         // opportunity on large history tables, not a defect.
-        // trigger_change()'s return type is genuinely mixed (it dispatches
-        // to whatever handler is registered for 'get_history'); narrow to the
-        // list of row-arrays that historyGet() actually returns.
-        $data = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_history', [], $page['search'], $types);
-        if (! is_array($data)) {
-            $data = [];
-        }
-        // historyGet() (the only real handler for the 'get_history' event,
-        // registered in include/ws_init.inc.php) returns array<int,
-        // array<string, mixed>>; the trigger_change() dispatch above only
-        // proved each element is an array, not that its keys are strings.
+        $historyEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetHistory([], $page['search'], $types));
+        // GetHistory::$data is a non-nullable PHP `array` property --
+        // dispatchChange()'s own instanceof check already guarantees a real
+        // array here, unlike the old mixed-returning trigger_change() --
+        // but PHP has no generic array-shape enforcement, so a misbehaving
+        // handler at a higher priority than historyGet() (the default
+        // handler) could still populate it with non-row-shaped elements;
+        // keep the per-element defensive filter for that.
         /** @var array<int, array<string, mixed>> $data */
-        $data = array_values(array_filter($data, is_array(...)));
+        $data = array_values(array_filter($historyEvent->data, is_array(...)));
         $historyService = self::historyService();
         usort($data, $historyService->historyCompare(...));
 

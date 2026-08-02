@@ -17,7 +17,6 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
-use Piwigo\Db\Tables;
 use Piwigo\Event\Location\LocBeginComments;
 use Piwigo\Event\Location\LocEndComments;
 use Piwigo\Event\Template\RenderCommentAuthor;
@@ -405,19 +404,12 @@ final class CommentsController implements ControllerInterface
         // Search in a particular category
         $blockname = 'categories';
 
-        $categoriesTable = Tables::categories();
         $categoryCondition = $this->permissionService->getSqlConditionFandFAsCondition([
             'forbidden_categories' => 'id',
             'visible_categories' => 'id',
         ]);
-        $categoryConditionSql = $categoryCondition->isEmpty() ? '' : 'WHERE ' . $categoryCondition->sql;
-        $query = <<<SQL
-            SELECT id, name, uppercats, global_rank
-            FROM {$categoriesTable}
-            {$categoryConditionSql}
-            SQL;
         $this->categoryService
-            ->displaySelectCatWrapper($query, [$commentsRequest->catDisplay], $blockname, $this->htmlService, $template, true, $categoryCondition->parameters, $categoryCondition->types);
+            ->displaySelectByCondition($categoryCondition, [$commentsRequest->catDisplay], $blockname, $this->htmlService, $template);
 
         // Filter on recent comments...
         $tpl_var = [];

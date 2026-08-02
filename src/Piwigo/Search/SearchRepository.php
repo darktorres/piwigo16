@@ -28,9 +28,8 @@ use Piwigo\Search\Projection\Search;
  * Connection::executeQuery()'s own untyped bound-parameter contract
  * (values vary by which dynamically-built WHERE clause a caller
  * assembled); findRowsByClause()'s row shape genuinely varies with
- * $fromSql, same category as CategoryRepository::fetchCallerBuiltQuery();
- * $rules matches Search Projection's own already-documented JSON
- * rules-bag rationale.
+ * $fromSql; $rules matches Search Projection's own already-documented
+ * JSON rules-bag rationale.
  */
 final class SearchRepository extends AbstractRepository
 {

@@ -13,7 +13,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 
 /**
  * Ported from admin/cat_options.php (page slug "cat_options") -- a flat
@@ -97,48 +96,18 @@ final class CatOptionsPageRenderer
         // for true and false status, we associates an array of category ids,
         // function display_select_categories will use the given CSS class for each
         // option
-        [$query_true, $query_false, $l_section, $l_true, $l_false] = match ($section) {
+        [$l_section, $l_true, $l_false] = match ($section) {
             'comments' => [
-                '
-SELECT id,name,uppercats,global_rank
-  FROM ' . Tables::categories() . '
-  WHERE commentable = 1
-;',
-                '
-SELECT id,name,uppercats,global_rank
-  FROM ' . Tables::categories() . '
-  WHERE commentable = 0
-;',
                 $this->lang->t('Authorize users to add comments on selected albums'),
                 $this->lang->t('Authorized'),
                 $this->lang->t('Forbidden'),
             ],
             'visible' => [
-                '
-SELECT id,name,uppercats,global_rank
-  FROM ' . Tables::categories() . '
-  WHERE visible = 1
-;',
-                '
-SELECT id,name,uppercats,global_rank
-  FROM ' . Tables::categories() . '
-  WHERE visible = 0
-;',
                 $this->lang->t('Lock albums'),
                 $this->lang->t('Unlocked'),
                 $this->lang->t('Locked'),
             ],
             'status' => [
-                '
-SELECT id,name,uppercats,global_rank
-  FROM ' . Tables::categories() . '
-  WHERE status = \'public\'
-;',
-                '
-SELECT id,name,uppercats,global_rank
-  FROM ' . Tables::categories() . '
-  WHERE status = \'private\'
-;',
                 $this->lang->t('Manage authorizations for selected albums'),
                 $this->lang->t('Public'),
                 $this->lang->t('Private'),
@@ -147,16 +116,6 @@ SELECT id,name,uppercats,global_rank
             // is already restricted to comments/visible/status/representative by
             // the in_array() guard above.
             default => [
-                '
-SELECT id,name,uppercats,global_rank
-  FROM ' . Tables::categories() . '
-  WHERE representative_picture_id IS NOT NULL
-;',
-                '
-SELECT DISTINCT id,name,uppercats,global_rank
-  FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id=category_id
-  WHERE representative_picture_id IS NULL
-;',
                 $this->lang->t('Representative'),
                 $this->lang->t('singly represented'),
                 $this->lang->t('randomly represented'),
@@ -170,8 +129,22 @@ SELECT DISTINCT id,name,uppercats,global_rank
             ]
         );
         $categoryService = $this->categoryService;
-        $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true', $this->htmlRenderer, $template);
-        $categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false', $this->htmlRenderer, $template);
+        $htmlService = $this->htmlRenderer;
+        if ($section === 'comments') {
+            $categoryService->displaySelectByCommentable(true, 'category_option_true', $htmlService, $template);
+            $categoryService->displaySelectByCommentable(false, 'category_option_false', $htmlService, $template);
+        } elseif ($section === 'visible') {
+            $categoryService->displaySelectByVisible(true, 'category_option_true', $htmlService, $template);
+            $categoryService->displaySelectByVisible(false, 'category_option_false', $htmlService, $template);
+        } elseif ($section === 'status') {
+            $categoryService->displaySelectByStatus('public', 'category_option_true', $htmlService, $template);
+            $categoryService->displaySelectByStatus('private', 'category_option_false', $htmlService, $template);
+        } else {
+            // 'representative' is the only value that can still reach here --
+            // same guard as the label match() above.
+            $categoryService->displaySelectByRepresentativePresence(true, 'category_option_true', $htmlService, $template);
+            $categoryService->displaySelectByRepresentativePresence(false, 'category_option_false', $htmlService, $template);
+        }
         $template->assign('PWG_TOKEN', new \Piwigo\Csrf\CsrfService()->getToken());
         $template->assign('ADMIN_PAGE_TITLE', $this->lang->t('Properties of abums'));
 

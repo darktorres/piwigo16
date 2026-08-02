@@ -831,29 +831,119 @@ final readonly class CategoryService
     }
 
     /**
-     * Same as displaySelectCategories() but categories are ordered by rank.
+     * Further SQL-modernization audit, Item 9: displaySelectCatWrapper()
+     * (a caller-built-query wrapper around the now-deleted
+     * CategoryRepository::fetchCallerBuiltQuery()) replaced with one
+     * typed display method per real query shape below, each just
+     * fetching its own typed rows then sharing this same sort+display
+     * tail -- same as displaySelectCategories() but categories are
+     * ordered by rank first.
      *
-     * @see displaySelectCategories()
-     * @param array<int, mixed> $selecteds
-     * @param string $blockname variable name in template
-     * @param bool $fullname full breadcrumb or not
-     * @param array<string, mixed> $params bound parameters for $query, see
-     *   CategoryRepository::fetchCallerBuiltQuery()'s own docblock
-     * @param array<string, \Doctrine\DBAL\ArrayParameterType|\Doctrine\DBAL\ParameterType> $types
+     * @param  list<array<string, mixed>>  $categories
+     * @param  array<int, mixed>  $selecteds
      */
-    public function displaySelectCatWrapper(
-        string $query,
+    private function sortAndDisplaySelectCategories(
+        array $categories,
         array $selecteds,
         string $blockname,
         HtmlRenderingInterface $htmlRenderer,
         TemplateInterface $template,
-        bool $fullname = true,
-        array $params = [],
-        array $types = []
+        bool $fullname = true
     ): void {
-        $categories = $this->repo->fetchCallerBuiltQuery($query, $params, $types);
         usort($categories, self::compareByGlobalRank(...));
         $this->displaySelectCategories($categories, $selecteds, $blockname, $htmlRenderer, $template, $fullname);
+    }
+
+    /**
+     * Admin\CatOptionsPageRenderer's own "commentable" toggle section.
+     */
+    public function displaySelectByCommentable(bool $commentable, string $blockname, HtmlRenderingInterface $htmlRenderer, TemplateInterface $template): void
+    {
+        $this->sortAndDisplaySelectCategories($this->repo->findByCommentable($commentable), [], $blockname, $htmlRenderer, $template);
+    }
+
+    /**
+     * Admin\CatOptionsPageRenderer's own "visible" toggle section.
+     */
+    public function displaySelectByVisible(bool $visible, string $blockname, HtmlRenderingInterface $htmlRenderer, TemplateInterface $template): void
+    {
+        $this->sortAndDisplaySelectCategories($this->repo->findByVisible($visible), [], $blockname, $htmlRenderer, $template);
+    }
+
+    /**
+     * Admin\CatOptionsPageRenderer's own "status" (public/private) toggle
+     * section.
+     */
+    public function displaySelectByStatus(string $status, string $blockname, HtmlRenderingInterface $htmlRenderer, TemplateInterface $template): void
+    {
+        $this->sortAndDisplaySelectCategories($this->repo->findByStatus($status), [], $blockname, $htmlRenderer, $template);
+    }
+
+    /**
+     * Admin\CatOptionsPageRenderer's own "representative" toggle section.
+     */
+    public function displaySelectByRepresentativePresence(bool $hasRepresentative, string $blockname, HtmlRenderingInterface $htmlRenderer, TemplateInterface $template): void
+    {
+        $this->sortAndDisplaySelectCategories($this->repo->findByRepresentativePresence($hasRepresentative), [], $blockname, $htmlRenderer, $template);
+    }
+
+    /**
+     * Admin\UserPermPageRenderer's own "category options: authorized" list.
+     *
+     * @param  list<string>  $groupAuthorizedCatIds
+     */
+    public function displaySelectPrivateGrantedToUser(int $userId, array $groupAuthorizedCatIds, string $blockname, HtmlRenderingInterface $htmlRenderer, TemplateInterface $template): void
+    {
+        $this->sortAndDisplaySelectCategories($this->repo->findPrivateCategoriesGrantedToUser($userId, $groupAuthorizedCatIds), [], $blockname, $htmlRenderer, $template);
+    }
+
+    /**
+     * Admin\GroupPermPageRenderer's own "category options: authorized" list.
+     */
+    public function displaySelectPrivateGrantedToGroup(int $groupId, string $blockname, HtmlRenderingInterface $htmlRenderer, TemplateInterface $template): void
+    {
+        $this->sortAndDisplaySelectCategories($this->repo->findPrivateCategoriesGrantedToGroup($groupId), [], $blockname, $htmlRenderer, $template);
+    }
+
+    /**
+     * Admin\UserPermPageRenderer/GroupPermPageRenderer's own "category
+     * options: not yet authorized" list.
+     *
+     * @param  list<string>  $excludeCatIds
+     */
+    public function displaySelectPrivateExcluding(array $excludeCatIds, string $blockname, HtmlRenderingInterface $htmlRenderer, TemplateInterface $template): void
+    {
+        $this->sortAndDisplaySelectCategories($this->repo->findPrivateCategoriesExcluding($excludeCatIds), [], $blockname, $htmlRenderer, $template);
+    }
+
+    /**
+     * Controller\CommentsController's own "search by album" category list.
+     *
+     * @param  array<int, mixed>  $selecteds
+     */
+    public function displaySelectByCondition(SqlCondition $condition, array $selecteds, string $blockname, HtmlRenderingInterface $htmlRenderer, TemplateInterface $template): void
+    {
+        $this->sortAndDisplaySelectCategories($this->repo->findIdNameUppercatsRank($condition), $selecteds, $blockname, $htmlRenderer, $template);
+    }
+
+    /**
+     * Controller\Admin\PermalinksSubController's own category list.
+     *
+     * @param  array<int, mixed>  $selecteds
+     */
+    public function displaySelectForPermalinks(array $selecteds, string $blockname, HtmlRenderingInterface $htmlRenderer, TemplateInterface $template): void
+    {
+        $this->sortAndDisplaySelectCategories($this->repo->findAllForPermalinksDisplay(), $selecteds, $blockname, $htmlRenderer, $template, false);
+    }
+
+    /**
+     * Controller\Admin\SiteUpdateSubController's own per-site category list.
+     *
+     * @param  array<int, mixed>  $selecteds
+     */
+    public function displaySelectBySite(int $siteId, array $selecteds, string $blockname, HtmlRenderingInterface $htmlRenderer, TemplateInterface $template): void
+    {
+        $this->sortAndDisplaySelectCategories($this->repo->findIdNameUppercatsRankBySite($siteId), $selecteds, $blockname, $htmlRenderer, $template, false);
     }
 
     /**

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Audit\AuditService;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Common\ValueObject\CategoryId;
@@ -14,7 +13,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Group\GroupService;
 
 /**
@@ -131,33 +129,11 @@ final class GroupPermPageRenderer
         );
 
         // only private categories are listed
-        $query_true = '
-SELECT id,name,uppercats,global_rank
-  FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::groupAccess() . ' ON cat_id = id
-  WHERE status = \'private\'
-    AND group_id = :groupId
-;';
-        $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true', $this->htmlRenderer, $template, params: [
-            'groupId' => $groupId->value,
-        ]);
+        $categoryService->displaySelectPrivateGrantedToGroup($groupId->value, 'category_option_true', $this->htmlRenderer, $template);
 
         $authorized_ids = array_map(strval(...), $categoryService->getPrivateCategoryIdsGrantedToGroup($groupId->value));
 
-        $query_false = '
-SELECT id,name,uppercats,global_rank
-  FROM ' . Tables::categories() . '
-  WHERE status = \'private\'';
-        $params_false = [];
-        $types_false = [];
-        if (count($authorized_ids) > 0) {
-            $query_false .= '
-    AND id NOT IN (:authorizedIds)';
-            $params_false['authorizedIds'] = $authorized_ids;
-            $types_false['authorizedIds'] = ArrayParameterType::STRING;
-        }
-        $query_false .= '
-;';
-        $categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false', $this->htmlRenderer, $template, params: $params_false, types: $types_false);
+        $categoryService->displaySelectPrivateExcluding($authorized_ids, 'category_option_false', $this->htmlRenderer, $template);
 
         $template->assign('PWG_TOKEN', new \Piwigo\Csrf\CsrfService()->getToken());
 

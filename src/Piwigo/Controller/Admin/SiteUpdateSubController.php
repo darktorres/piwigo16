@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
@@ -18,7 +17,6 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
-use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\ImageService;
 use Piwigo\Permission\PermissionRepository;
@@ -1052,25 +1050,12 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
 
         $template->assign('introduction', $tpl_introduction);
 
-        $categoriesTable = Tables::categories();
-        $query = <<<SQL
-            SELECT id,name,uppercats,global_rank
-            FROM {$categoriesTable}
-            WHERE site_id = :siteId
-            SQL;
-        $this->categoryService->displaySelectCatWrapper(
-            $query,
+        $this->categoryService->displaySelectBySite(
+            $site_id,
             $cat_selected,
             'category_options',
             $this->htmlRenderer,
             $template,
-            false,
-            [
-                'siteId' => $site_id,
-            ],
-            [
-                'siteId' => ParameterType::INTEGER,
-            ]
         );
 
         if (count($errors) > 0) {

@@ -1639,37 +1639,233 @@ final class CategoryRepository extends EntityRepository
     }
 
     /**
-     * Executes an already-built SELECT query verbatim and returns every row.
-     * Transitional -- `CategoryService::displaySelectCatWrapper()`'s own
-     * callers (`Admin/UserPermPageRenderer.php`, `Admin/GroupPermPageRenderer.php`,
-     * `Admin/CatOptionsPageRenderer.php`, `Controller/CommentsController.php`,
-     * `Controller/Admin/PermalinksSubController.php`,
-     * `Controller/Admin/SiteUpdateSubController.php`) build the raw SQL
-     * string themselves instead of this repository, so there's no single
-     * query shape to give a real `find*()` method -- retiring `MysqliDb::`
-     * here only swaps the execution mechanism (Legacy Coupling Retirement:
-     * DI+DBAL migration Phase 1a). Revisit once those 6 caller files get
-     * their own pass (Phase 1g/1h) and can build a real `QueryBuilder`
-     * instead of a raw string.
+     * Further SQL-modernization audit, Item 9: fetchCallerBuiltQuery() (a
+     * fully generic "execute an already-built SELECT" escape hatch) deleted
+     * outright -- every one of its 9 real call sites, read individually
+     * across 6 files, is one of the typed methods below.
      *
-     * SQL-modernization audit: `$params`/`$types` added (both default `[]`,
-     * so the 5 not-yet-converted callers above are unaffected) -- lets a
-     * caller that already builds its own bound-parameter fragment (e.g.
-     * via `Permission\SqlCondition`) pass real values through instead of
-     * having nowhere to put them but back into raw interpolated `$query`
-     * text. `Controller\CommentsController.php` is the first real user of
-     * this; the other 5 still call with `$params`/`$types` omitted until
-     * their own pass converts them too.
+     * Admin\CatOptionsPageRenderer's own "id,name,uppercats,global_rank
+     * filtered by one boolean-ish column" shape, shared by 3 of its 4
+     * sections (commentable/visible/status) -- the 4th (representative
+     * presence) needs its own method below since its two branches aren't
+     * symmetric (only the "no representative" branch joins image_category).
      *
-     * @param array<string, mixed> $params
-     * @param array<string, ArrayParameterType|ParameterType> $types
      * @return list<array<string, mixed>>
      */
-    public function fetchCallerBuiltQuery(string $query, array $params = [], array $types = []): array
+    private function findIdNameUppercatsRankByCondition(string $whereSql, mixed $value): array
+    {
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
+            ->select('id', 'name', 'uppercats', 'global_rank')
+            ->from(Tables::categories())
+            ->where($whereSql)
+            ->setParameter('value', $value)
+            ->executeQuery()
+            ->fetchAllAssociative();
+
+        return $rows;
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function findByCommentable(bool $commentable): array
+    {
+        return $this->findIdNameUppercatsRankByCondition('commentable = :value', $commentable ? 1 : 0);
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function findByVisible(bool $visible): array
+    {
+        return $this->findIdNameUppercatsRankByCondition('visible = :value', $visible ? 1 : 0);
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function findByStatus(string $status): array
+    {
+        return $this->findIdNameUppercatsRankByCondition('status = :value', $status);
+    }
+
+    /**
+     * Admin\CatOptionsPageRenderer's own "representative" section --
+     * genuinely asymmetric branches (only the "no representative" side
+     * needs the image_category join + DISTINCT, to list every category
+     * that owns at least one image but has none picked as representative
+     * yet), not just true/false of the same predicate.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findByRepresentativePresence(bool $hasRepresentative): array
+    {
+        $qb = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
+            ->select('id', 'name', 'uppercats', 'global_rank')
+            ->from(Tables::categories());
+
+        if ($hasRepresentative) {
+            $qb->where('representative_picture_id IS NOT NULL');
+        } else {
+            $qb->distinct()
+                ->innerJoin(Tables::categories(), Tables::imageCategory(), 'ic', 'id = ic.category_id')
+                ->where('representative_picture_id IS NULL');
+        }
+
+        return $qb->executeQuery()
+            ->fetchAllAssociative();
+    }
+
+    /**
+     * Admin\UserPermPageRenderer's own "category options: authorized"
+     * query_true -- private categories directly granted to $userId via
+     * user_access, minus any category already covered by one of the
+     * user's own group memberships ($groupAuthorizedCatIds).
+     *
+     * @param list<string> $groupAuthorizedCatIds
+     * @return list<array<string, mixed>>
+     */
+    public function findPrivateCategoriesGrantedToUser(int $userId, array $groupAuthorizedCatIds = []): array
+    {
+        $qb = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
+            ->select('id', 'name', 'uppercats', 'global_rank')
+            ->from(Tables::categories())
+            ->innerJoin(Tables::categories(), Tables::userAccess(), 'ua', 'cat_id = id')
+            ->where('status = :status')
+            ->andWhere('user_id = :userId')
+            ->setParameter('status', 'private')
+            ->setParameter('userId', $userId);
+
+        if ($groupAuthorizedCatIds !== []) {
+            $qb->andWhere($qb->expr()->notIn('cat_id', ':groupAuthorized'))
+                ->setParameter('groupAuthorized', $groupAuthorizedCatIds, ArrayParameterType::STRING);
+        }
+
+        return $qb->executeQuery()
+            ->fetchAllAssociative();
+    }
+
+    /**
+     * Admin\GroupPermPageRenderer's own "category options: authorized"
+     * query_true -- private categories directly granted to $groupId via
+     * group_access. Same shape as findPrivateCategoriesGrantedToUser(),
+     * joined via group_access instead -- groups have no "authorized via
+     * another group" concept, so there's no exclusion-list parameter here.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findPrivateCategoriesGrantedToGroup(int $groupId): array
     {
         return $this->getEntityManager()
             ->getConnection()
-            ->executeQuery($query, $params, $types)
+            ->createQueryBuilder()
+            ->select('id', 'name', 'uppercats', 'global_rank')
+            ->from(Tables::categories())
+            ->innerJoin(Tables::categories(), Tables::groupAccess(), 'ga', 'cat_id = id')
+            ->where('status = :status')
+            ->andWhere('group_id = :groupId')
+            ->setParameter('status', 'private')
+            ->setParameter('groupId', $groupId)
+            ->executeQuery()
+            ->fetchAllAssociative();
+    }
+
+    /**
+     * Admin\UserPermPageRenderer/GroupPermPageRenderer's own "category
+     * options: not yet authorized" query_false -- every private category
+     * except the given ids. Shared by both real callers: user_perm passes
+     * its own directly-authorized ids merged with group-authorized ids,
+     * group_perm passes just its own directly-authorized ids -- two
+     * separate `NOT IN` clauses on the original pre-migration queries,
+     * logically identical to one `NOT IN` over their union.
+     *
+     * @param list<string> $excludeCatIds
+     * @return list<array<string, mixed>>
+     */
+    public function findPrivateCategoriesExcluding(array $excludeCatIds): array
+    {
+        $qb = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
+            ->select('id', 'name', 'uppercats', 'global_rank')
+            ->from(Tables::categories())
+            ->where('status = :status')
+            ->setParameter('status', 'private');
+
+        if ($excludeCatIds !== []) {
+            $qb->andWhere($qb->expr()->notIn('id', ':excludeCatIds'))
+                ->setParameter('excludeCatIds', $excludeCatIds, ArrayParameterType::STRING);
+        }
+
+        return $qb->executeQuery()
+            ->fetchAllAssociative();
+    }
+
+    /**
+     * Controller\CommentsController's own "search by album" category
+     * listing -- permission-filtered, no other condition.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findIdNameUppercatsRank(SqlCondition $condition): array
+    {
+        $qb = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
+            ->select('id', 'name', 'uppercats', 'global_rank')
+            ->from(Tables::categories());
+
+        self::applyCondition($qb, $condition);
+
+        return $qb->executeQuery()
+            ->fetchAllAssociative();
+    }
+
+    /**
+     * Controller\Admin\PermalinksSubController's own category listing --
+     * every category, `name` replaced with a display label indicating
+     * whether it already has a permalink set.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findAllForPermalinksDisplay(): array
+    {
+        $categoriesTable = Tables::categories();
+
+        return $this->getEntityManager()
+            ->getConnection()
+            ->executeQuery(<<<SQL
+                SELECT
+                  id, permalink,
+                  CONCAT(id, " - ", name, IF(permalink IS NULL, "", " &radic;") ) AS name,
+                  uppercats, global_rank
+                FROM {$categoriesTable}
+                SQL)
+            ->fetchAllAssociative();
+    }
+
+    /**
+     * Controller\Admin\SiteUpdateSubController's own per-site category
+     * listing.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function findIdNameUppercatsRankBySite(int $siteId): array
+    {
+        return $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
+            ->select('id', 'name', 'uppercats', 'global_rank')
+            ->from(Tables::categories())
+            ->where('site_id = :siteId')
+            ->setParameter('siteId', $siteId)
+            ->executeQuery()
             ->fetchAllAssociative();
     }
 

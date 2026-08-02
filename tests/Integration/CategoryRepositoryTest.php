@@ -636,5 +636,146 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         self::assertSame(0, $this->repo->countByVisible(false));
     }
 
+    public function test_find_by_commentable_filters_on_the_commentable_flag(): void
+    {
+        // Both fixture categories have commentable=1.
+        $rows = $this->repo->findByCommentable(true);
+        self::assertSame([1, 2], array_column($rows, 'id'));
+
+        self::assertSame([], $this->repo->findByCommentable(false));
+    }
+
+    public function test_find_by_visible_filters_on_the_visible_flag(): void
+    {
+        // Both fixture categories have visible=1.
+        $rows = $this->repo->findByVisible(true);
+        self::assertSame([1, 2], array_column($rows, 'id'));
+
+        self::assertSame([], $this->repo->findByVisible(false));
+    }
+
+    public function test_find_by_status_filters_on_the_status_column(): void
+    {
+        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'private' WHERE id = 2");
+
+        $publicRows = $this->repo->findByStatus('public');
+        $privateRows = $this->repo->findByStatus('private');
+
+        self::assertSame([1], array_column($publicRows, 'id'));
+        self::assertSame([2], array_column($privateRows, 'id'));
+    }
+
+    public function test_find_by_representative_presence_true_returns_categories_with_a_representative(): void
+    {
+        // Both fixture categories already have representative_picture_id set.
+        $rows = $this->repo->findByRepresentativePresence(true);
+        self::assertSame([1, 2], array_column($rows, 'id'));
+
+        try {
+            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = NULL WHERE id IN (1, 2)');
+            self::assertSame([], $this->repo->findByRepresentativePresence(true));
+        } finally {
+            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = 1 WHERE id = 1');
+            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = 4 WHERE id = 2');
+        }
+    }
+
+    public function test_find_by_representative_presence_false_joins_image_category_and_deduplicates(): void
+    {
+        try {
+            // Category 1 has no representative but 3 direct images (image_category
+            // rows 1,2,3) -- the DISTINCT is what's actually under test here: a
+            // missing distinct() would return category 1 three times (once per
+            // matching image_category row).
+            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = NULL WHERE id = 1');
+
+            $rows = $this->repo->findByRepresentativePresence(false);
+
+            self::assertSame([1], array_column($rows, 'id'));
+        } finally {
+            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = 1 WHERE id = 1');
+        }
+    }
+
+    public function test_find_private_categories_granted_to_user_excludes_group_authorized_ids(): void
+    {
+        try {
+            $this->conn->executeStatement(
+                'INSERT INTO ' . Tables::userAccess() . ' (user_id, cat_id) VALUES (?, ?)',
+                [3, 1]
+            );
+            $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'private' WHERE id = 1");
+
+            $rows = $this->repo->findPrivateCategoriesGrantedToUser(3);
+            self::assertSame([1], array_column($rows, 'id'));
+
+            // Same user_access grant, but category 1 is already covered via a
+            // group membership -- must be excluded from this result.
+            self::assertSame([], $this->repo->findPrivateCategoriesGrantedToUser(3, ['1']));
+        } finally {
+            $this->conn->executeStatement('DELETE FROM ' . Tables::userAccess() . ' WHERE user_id = 3 AND cat_id = 1');
+        }
+    }
+
+    public function test_find_private_categories_granted_to_group_matches_fixture_grants(): void
+    {
+        // Fixture group_access: (group_id=1, cat_id=1), (group_id=2, cat_id=1),
+        // (group_id=3, cat_id=1), (group_id=1, cat_id=2).
+        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'private'");
+
+        self::assertSame([1, 2], array_column($this->repo->findPrivateCategoriesGrantedToGroup(1), 'id'));
+        self::assertSame([1], array_column($this->repo->findPrivateCategoriesGrantedToGroup(2), 'id'));
+        self::assertSame([], array_column($this->repo->findPrivateCategoriesGrantedToGroup(999999), 'id'));
+    }
+
+    public function test_find_private_categories_excluding_filters_out_the_given_ids(): void
+    {
+        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'private'");
+
+        self::assertSame([1, 2], array_column($this->repo->findPrivateCategoriesExcluding([]), 'id'));
+        self::assertSame([2], array_column($this->repo->findPrivateCategoriesExcluding(['1']), 'id'));
+        self::assertSame([], array_column($this->repo->findPrivateCategoriesExcluding(['1', '2']), 'id'));
+    }
+
+    public function test_find_id_name_uppercats_rank_applies_the_given_condition(): void
+    {
+        $matchAll = $this->repo->findIdNameUppercatsRank(new SqlCondition('1 = 1'));
+        self::assertSame([1, 2], array_column($matchAll, 'id'));
+
+        self::assertSame([], $this->repo->findIdNameUppercatsRank(new SqlCondition('1 = 0')));
+    }
+
+    public function test_find_all_for_permalinks_display_computes_a_permalink_aware_name(): void
+    {
+        $rows = $this->repo->findAllForPermalinksDisplay();
+
+        $byId = [];
+        foreach ($rows as $row) {
+            $id = $row['id'];
+            self::assertTrue(is_int($id) || is_string($id));
+            $byId[$id] = $row;
+        }
+
+        // Both fixture categories have permalink NULL, so the CONCAT's IF()
+        // branch appends nothing (no trailing checkmark).
+        self::assertSame('1 - Sample Album', $byId[1]['name']);
+        self::assertSame('2 - Nested Sub Album', $byId[2]['name']);
+        self::assertNull($byId[1]['permalink']);
+    }
+
+    public function test_find_id_name_uppercats_rank_by_site_filters_on_site_id(): void
+    {
+        // Both fixture categories have site_id NULL -- never matches a real id.
+        self::assertSame([], $this->repo->findIdNameUppercatsRankBySite(1));
+
+        try {
+            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET site_id = 1 WHERE id = 1');
+
+            self::assertSame([1], array_column($this->repo->findIdNameUppercatsRankBySite(1), 'id'));
+        } finally {
+            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET site_id = NULL WHERE id = 1');
+        }
+    }
+
 }
 }

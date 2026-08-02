@@ -12,7 +12,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Permalink\PermalinkRepository;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -112,16 +111,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
             ]
         );
 
-        $categoriesTable = Tables::categories();
-        $query = <<<SQL
-            SELECT
-              id, permalink,
-              CONCAT(id, " - ", name, IF(permalink IS NULL, "", " &radic;") ) AS name,
-              uppercats, global_rank
-            FROM {$categoriesTable}
-            SQL;
-
-        $this->categoryService->displaySelectCatWrapper($query, $selected_cat, 'categories', $htmlRenderer, $template, false);
+        $this->categoryService->displaySelectForPermalinks($selected_cat, 'categories', $htmlRenderer, $template);
 
         $pwg_token = new \Piwigo\Csrf\CsrfService()
             ->getToken();

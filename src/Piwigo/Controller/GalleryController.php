@@ -10,6 +10,7 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Event\Tag\RenderTagName;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeParams;
@@ -337,9 +338,10 @@ final class GalleryController implements ControllerInterface
                 $otherSelectedTags = $selectedTags;
                 unset($otherSelectedTags[$selectedTagKey]);
 
+                $selectedTagNameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderTagName(is_string($selectedTag['name']) ? $selectedTag['name'] : '', $selectedTag));
                 $selected_related_tags_info[$selectedTagKey] =
                 [
-                    'tag_name' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_name', $selectedTag['name'], $selectedTag),
+                    'tag_name' => $selectedTagNameEvent->tagName,
                     'item_count' => '',
                     'index_url' => $urlService->makeIndexUrl(
                         [

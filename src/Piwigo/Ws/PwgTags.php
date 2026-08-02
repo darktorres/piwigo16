@@ -18,6 +18,11 @@ use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Core\WsError;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
+use Piwigo\Event\Picture\RenderElementDescription;
+use Piwigo\Event\Picture\RenderElementName;
+use Piwigo\Event\Tag\GetTagAltNames;
+use Piwigo\Event\Tag\RenderTagName;
+use Piwigo\Event\Tag\RenderTagUrl;
 use Piwigo\Tag\TagService;
 
 /**
@@ -191,9 +196,10 @@ final class PwgTags
                     $image[$k] = $row[$k] ?? null;
                 }
 
-                $rendered_name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_element_name', $image['name'], __FUNCTION__);
-                $image['name'] = strip_tags(is_string($rendered_name) ? $rendered_name : '');
-                $image['comment'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_element_description', $image['comment'], __FUNCTION__);
+                $nameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderElementName(is_string($image['name']) ? $image['name'] : '', __FUNCTION__));
+                $image['name'] = strip_tags($nameEvent->elementName);
+                $descriptionEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderElementDescription(is_string($image['comment']) ? $image['comment'] : '', __FUNCTION__));
+                $image['comment'] = $descriptionEvent->elementDescription;
 
                 $image = array_merge($image, WsHelper::stdGetUrls($row, $urlService));
 
@@ -346,14 +352,8 @@ final class PwgTags
         self::activityService($conn)->record('tag', $tag_id, 'edit');
 
         if ($tag_name !== '') {
-            $url_name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_url', $tag_name);
-            if (! is_string($url_name)) {
-                // a misbehaving plugin handler could return a non-string;
-                // fall back to the untransformed tag name rather than
-                // propagate it -- same rule as TagService::tagIdFromTagName().
-                $url_name = $tag_name;
-            }
-            self::tagService()->renameTag(TagId::from($tag_id), $tag_name, $url_name);
+            $urlNameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderTagUrl($tag_name));
+            self::tagService()->renameTag(TagId::from($tag_id), $tag_name, $urlNameEvent->tagName);
         }
         \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
@@ -366,8 +366,10 @@ final class PwgTags
             'url_name' => $renamed_tag->urlName,
         ];
         $tag['raw_name'] = $tag['name'];
-        $tag['name'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_name', $tag['raw_name'], $tag);
-        $tag['alt_names'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_tag_alt_names', [], $tag['raw_name']);
+        $renameNameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderTagName($tag['raw_name'], $tag));
+        $tag['name'] = $renameNameEvent->tagName;
+        $altNamesEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetTagAltNames([], $tag['raw_name']));
+        $tag['alt_names'] = $altNamesEvent->value;
         return $tag;
     }
 
@@ -378,11 +380,10 @@ final class PwgTags
      * @param array{tag_id: int, copy_name: string, pwg_token: string, ...} $params
      *   none has a 'default' key -- all mandatory, always present, WsParamType::ID
      *   guarantees a plain int for tag_id.
-     * url_name is EventDispatcher::triggerChange('render_tag_url', ...)'s
-     * own genuinely-mixed plugin-filter return; id/name/count are real
-     * (id is explicitly (int)-cast from lastInsertId(), name is the
-     * mandatory string $params['copy_name'], count is count($inserts)).
-     * @return PwgError|array{id: int, name: string, url_name: mixed, count: int}
+     * id/name/count are real (id is explicitly (int)-cast from
+     * lastInsertId(), name is the mandatory string $params['copy_name'],
+     * count is count($inserts)).
+     * @return PwgError|array{id: int, name: string, url_name: string, count: int}
      */
     public static function duplicate(array $params, PwgServer &$service): PwgError|array
     {
@@ -403,10 +404,8 @@ final class PwgTags
             return new PwgError(WsError::INVALID_PARAM, 'This name is already taken.');
         }
 
-        $copy_url_name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_url', $copy_name);
-        if (! is_string($copy_url_name)) {
-            $copy_url_name = $copy_name;
-        }
+        $copyUrlNameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderTagUrl($copy_name));
+        $copy_url_name = $copyUrlNameEvent->tagName;
         $destination_tag_id = self::tagService()->duplicateTag($copy_name, $copy_url_name)->value;
         \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
@@ -436,7 +435,7 @@ final class PwgTags
         return [
             'id' => $destination_tag_id,
             'name' => $copy_name,
-            'url_name' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_url', $copy_name),
+            'url_name' => $copy_url_name,
             'count' => count($inserts),
         ];
     }

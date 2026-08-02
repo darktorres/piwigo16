@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Translator;
@@ -99,8 +100,11 @@ final class AlbumNotificationPageRenderer
                 }
             }
 
+            $nameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryName($category['name'], 'admin_cat_list'));
+            $renderedCategoryName = $nameEvent->categoryName;
+
             $args = [
-                'subject' => Lang::t('[%s] Visit album %s', \Piwigo\Config\CurrentConfig::galleryTitle(), \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_category_name', $category['name'], 'admin_cat_list')),
+                'subject' => Lang::t('[%s] Visit album %s', \Piwigo\Config\CurrentConfig::galleryTitle(), $renderedCategoryName),
             ];
 
             $mail_content = $albumNotificationSubmit->mailContent;
@@ -109,12 +113,12 @@ final class AlbumNotificationPageRenderer
                 'filename' => 'cat_group_info',
                 'assign' => [
                     'IMG' => $img,
-                    'CAT_NAME' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_category_name', $category['name'], 'admin_cat_list'),
+                    'CAT_NAME' => $renderedCategoryName,
                     'LINK' => $this->urlService->makeIndexUrl(
                         [
                             'category' => [
                                 'id' => $category['id'],
-                                'name' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_category_name', $category['name'], 'admin_cat_list'),
+                                'name' => $renderedCategoryName,
                                 'permalink' => $category['permalink'],
                             ],
                         ]

@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\SqlDialect;
+use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Template\Template;
 
 /**
@@ -115,8 +116,8 @@ final class AlbumsPageRenderer
             }
 
             foreach ($categoryService->getIdsNamesUppercatsForIds($category_ids) as $cat_row) {
-                $rendered_name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_category_name', $cat_row['name'], 'admin_cat_list');
-                $cat_row['name'] = is_string($rendered_name) ? $rendered_name : $cat_row['name'];
+                $nameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryName(is_string($cat_row['name']) ? $cat_row['name'] : '', 'admin_cat_list'));
+                $cat_row['name'] = $nameEvent->categoryName;
 
                 if ($order_by_date) {
                     // id is Tables::categories()'s NOT NULL primary key.
@@ -124,8 +125,7 @@ final class AlbumsPageRenderer
                     assert(is_int($cat_row_id) || is_string($cat_row_id));
                     $sort[] = $ref_dates[$cat_row_id];
                 } else {
-                    $cat_row_name = $cat_row['name'];
-                    $sort[] = \Piwigo\Core\StringHelper::removeAccents(is_scalar($cat_row_name) ? (string) $cat_row_name : '');
+                    $sort[] = \Piwigo\Core\StringHelper::removeAccents($cat_row['name']);
                 }
 
                 $categories[] = [
@@ -217,8 +217,8 @@ final class AlbumsPageRenderer
                 /** @var array<string, mixed> $the_place */
             }
 
-            $rendered_name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_category_name', $album['name'], 'admin_cat_list');
-            $album['name'] = is_string($rendered_name) ? $rendered_name : $album['name'];
+            $nameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryName(is_string($album['name']) ? $album['name'] : '', 'admin_cat_list'));
+            $album['name'] = $nameEvent->categoryName;
             $album_lastmodified = $album['lastmodified'];
             $album['lastmodified'] = \Piwigo\Core\DateHelper::timeSince(is_scalar($album_lastmodified) ? (string) $album_lastmodified : '', 'year');
 

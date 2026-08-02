@@ -25,6 +25,8 @@ use Piwigo\Core\WsError;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Picture\RenderElementDescription;
+use Piwigo\Event\Tag\RenderTagName;
 use Piwigo\History\HistoryRepository;
 use Piwigo\History\HistoryService;
 use Piwigo\Image\DerivativeImage;
@@ -1169,7 +1171,8 @@ final class PwgCore
                     'name' => $tag->name,
                     'url_name' => $tag->urlName,
                 ];
-                $name_of_tag[(string) $tag->id->value] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_name', $tag->name, $tag_row);
+                $tagRowNameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderTagName($tag->name, $tag_row));
+                $name_of_tag[(string) $tag->id->value] = $tagRowNameEvent->tagName;
             }
         }
 
@@ -1276,8 +1279,7 @@ final class PwgCore
                      */
                     function (array $m) use ($name_of_tag): string {
                         $tag_id = $m[1];
-                        $found = $name_of_tag[$tag_id] ?? $tag_id;
-                        return is_string($found) ? $found : $tag_id;
+                        return $name_of_tag[$tag_id] ?? $tag_id;
                     },
                     $line_tag_ids
                 );
@@ -1317,8 +1319,9 @@ final class PwgCore
                 $image_title = '';
 
                 if (isset($image_infos[$line_image_id]['label'])) {
-                    $rendered_label = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_element_description', $image_infos[$line_image_id]['label']);
-                    $image_title .= ' ' . (is_string($rendered_label) ? $rendered_label : '');
+                    $label = $image_infos[$line_image_id]['label'];
+                    $labelEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderElementDescription(is_string($label) ? $label : ''));
+                    $image_title .= ' ' . $labelEvent->elementDescription;
                 } else {
                     $image_edit_string = '';
                     $image_title .= ' unknown filename';

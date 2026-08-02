@@ -1891,7 +1891,7 @@ it('renders the legend/author/creation-date info block for a photo with a real c
     $body = H::rawWebpage($page)->content();
 
     // legend (the image's own caption, rendered through the
-    // 'render_element_description' event -> HtmlService::pwgNl2br())
+    // RenderElementDescription event -> HtmlService::pwgNl2br())
     expect($body)->toContain('class="imageComment"');
     expect($body)->toContain($commentMarker);
 
@@ -2026,11 +2026,11 @@ it('falls back to the medium derivative size, without warnings, when the picture
 
 it('short-circuits the default element-content renderer when an earlier render_element_content plugin handler already produced content', function (): void {
     // PictureController::__invoke() registers defaultPictureContent() as
-    // its OWN 'render_element_content' handler at EventDispatcher::
-    // addEventHandler()'s default priority (50). A plugin registering at a
-    // LOWER priority runs BEFORE it and, if it returns non-empty content,
-    // defaultPictureContent()'s own `if ($content !== '') { return
-    // $content; }` guard (its very first statement) short-circuits instead
+    // its OWN RenderElementContent handler at EventDispatcher::
+    // addTypedHandler()'s default priority (50). A plugin registering at a
+    // LOWER priority runs BEFORE it and, if it sets non-empty content,
+    // defaultPictureContent()'s own `if ($event->content !== '') { return
+    // $event; }` guard (its very first statement) short-circuits instead
     // of ever building derivatives/assigning template vars -- the same
     // real-plugin technique this file's own "logs a PHP warning..." test
     // above uses for a different event, content-marker-gated by this
@@ -2066,15 +2066,15 @@ it('short-circuits the default element-content renderer when an earlier render_e
         Description: Test-only fixture plugin (tests/Browser/PictureControllerTest.php).
         */
 
-        \\Piwigo\\PluginConfig\\EventDispatcher::get()->addEventHandler(
-            'render_element_content',
-            static function (mixed \$content, array \$elementInfo): mixed {
-                \$id = \$elementInfo['id'] ?? null;
+        \\Piwigo\\PluginConfig\\EventDispatcher::get()->addTypedHandler(
+            \\Piwigo\\Event\\Picture\\RenderElementContent::class,
+            static function (\\Piwigo\\Event\\Picture\\RenderElementContent \$event): \\Piwigo\\Event\\Picture\\RenderElementContent {
+                \$id = \$event->currentPicture['id'] ?? null;
                 if (is_numeric(\$id) && (int) \$id === {$imageId}) {
-                    return '{$marker}';
+                    \$event->content = '{$marker}';
                 }
 
-                return \$content;
+                return \$event;
             },
             10
         );

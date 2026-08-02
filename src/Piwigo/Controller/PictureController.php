@@ -17,6 +17,8 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Event\Picture\RenderElementContent;
+use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\DerivativeImage;
@@ -289,9 +291,20 @@ final class PictureController implements ControllerInterface
         }
 
         // add default event handler for rendering element content
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('render_element_content', $this->defaultPictureContent(...));
-        // add default event handler for rendering element description
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('render_element_description', \Piwigo\Bootstrap\PresentationAccessor::htmlService()->pwgNl2br(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(RenderElementContent::class, $this->defaultPictureContent(...));
+        // add default event handler for rendering element description --
+        // pwgNl2br() is reused across two different events (this one and
+        // RenderCategoryDescription in RequestBootstrap.php), so this is a
+        // thin adapter closure, leaving pwgNl2br() itself untouched.
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(
+            RenderElementDescription::class,
+            static function (RenderElementDescription $e): RenderElementDescription {
+                $result = \Piwigo\Bootstrap\PresentationAccessor::htmlService()->pwgNl2br($e->elementDescription);
+                $e->elementDescription = is_string($result) ? $result : '';
+
+                return $e;
+            },
+        );
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_picture');
 
@@ -990,14 +1003,8 @@ final class PictureController implements ControllerInterface
         // legend
         $current_comment = $picture['current']['comment'] ?? null;
         if (is_string($current_comment) && $current_comment !== '' && $current_comment !== '0') {
-            $template->assign(
-                'COMMENT_IMG',
-                \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
-                    'render_element_description',
-                    $picture['current']['comment'],
-                    'picture_page_element_description'
-                )
-            );
+            $descriptionEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderElementDescription($current_comment, 'picture_page_element_description'));
+            $template->assign('COMMENT_IMG', $descriptionEvent->elementDescription);
         }
 
         // author
@@ -1165,12 +1172,8 @@ final class PictureController implements ControllerInterface
 
         // maybe someone wants a special display (call it before
         // page_header so that they can add stylesheets)
-        $element_content = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
-            'render_element_content',
-            '',
-            $picture['current']
-        );
-        $template->assign('ELEMENT_CONTENT', $element_content);
+        $contentEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderElementContent('', $picture['current']));
+        $template->assign('ELEMENT_CONTENT', $contentEvent->content);
 
         $http_user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
         $http_user_agent = is_string($http_user_agent) ? $http_user_agent : '';
@@ -1254,24 +1257,29 @@ final class PictureController implements ControllerInterface
     }
 
     /**
-     * $element_info is always $picture['current'] (see the trigger_change()
-     * call near the end of __invoke()) -- 'derivatives' is populated by
-     * DerivativeImage::get_all() (src/Piwigo/Image/DerivativeImage.php),
-     * keyed by the IMG_* type strings.
-     *
-     * @param array{
-     *     file: string,
-     *     derivatives: array<string, DerivativeImage>,
-     *     element_url?: string,
-     *     ...
-     * } $element_info
+     * $event->currentPicture is always $picture['current'] (see the
+     * dispatchChange() call near the end of __invoke()) -- 'derivatives' is
+     * populated by DerivativeImage::get_all()
+     * (src/Piwigo/Image/DerivativeImage.php), keyed by the IMG_* type
+     * strings. `RenderElementContent::$currentPicture` itself stays
+     * generically typed (it's a general-purpose event class); this method,
+     * as the one real consumer of that shape, narrows it locally instead.
      */
-    private function defaultPictureContent(string $content, array $element_info): string
+    private function defaultPictureContent(RenderElementContent $event): RenderElementContent
     {
-
-        if ($content !== '') {// someone hooked us - so we skip;
-            return $content;
+        if ($event->content !== '') {// someone hooked us - so we skip;
+            return $event;
         }
+
+        /**
+         * @var array{
+         *     file: string,
+         *     derivatives: array<string, DerivativeImage>,
+         *     element_url?: string,
+         *     ...
+         * } $element_info
+         */
+        $element_info = $event->currentPicture;
 
         if (isset($_COOKIE['picture_deriv'])) {
             if (is_string($_COOKIE['picture_deriv'])
@@ -1338,6 +1346,8 @@ final class PictureController implements ControllerInterface
                     ->cookiePath(),
             ]
         );
-        return $template->parse('default_content', true);
+        $event->content = $template->parse('default_content', true);
+
+        return $event;
     }
 }

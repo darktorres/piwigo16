@@ -14,6 +14,7 @@ use Piwigo\Admin\Tabsheet;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Event\Template\RenderCategoryName;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -69,10 +70,8 @@ final class AlbumSubController implements AdminSubControllerInterface
         $tabsheet->select($tab);
         $tabsheet->assign();
 
-        $category_name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_category_name', $category['name'], 'get_cat_display_name_cache');
-        if (! is_string($category_name)) {
-            $category_name = $category['name'];
-        }
+        $nameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryName($category['name'], 'get_cat_display_name_cache'));
+        $category_name = $nameEvent->categoryName;
         $category_id_display = (string) $category['id'];
         $template->assign([
             'ADMIN_PAGE_TITLE' => Lang::t('Edit album') . ' <strong>' . $category_name . '</strong>',

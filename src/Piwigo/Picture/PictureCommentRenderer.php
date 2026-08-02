@@ -11,6 +11,8 @@ use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Event\Template\RenderCommentAuthor;
+use Piwigo\Event\Template\RenderCommentContent;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Http\ResponseReadyException;
@@ -228,12 +230,16 @@ final class PictureCommentRenderer
                 // for this same column.
                 $rowDate = $row->date ?? false;
 
+                $authorEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCommentAuthor($author ?? ''));
+
+                $contentEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCommentContent($row->content ?? ''));
+
                 $tplComment =
                   [
                       'ID' => $row->id->value,
-                      'AUTHOR' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_comment_author', $author),
+                      'AUTHOR' => $authorEvent->commentAuthor,
                       'DATE' => \Piwigo\Core\DateHelper::formatDate($rowDate, ['day_name', 'day', 'month', 'year', 'time']),
-                      'CONTENT' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_comment_content', $row->content),
+                      'CONTENT' => $contentEvent->commentContent,
                       'WEBSITE_URL' => $row->websiteUrl,
                   ];
 

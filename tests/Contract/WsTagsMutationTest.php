@@ -411,26 +411,27 @@ final class WsTagsMutationTest extends ContractTestCase
     }
 
     /**
-     * rename()'s and duplicate()'s shared `if (! is_string($url_name))
-     * { $url_name = $tag_name; }` fallback (called `render_tag_url`'s
-     * "misbehaving plugin handler" guard in both methods' own source
-     * comments). The default handler (StringHelper::str2url(), registered
-     * at RequestBootstrap's own priority 50) always returns a real string,
-     * so reaching the fallback for real needs a second, higher-priority
-     * handler chained after it -- a real plugin file + `piwigo_plugins`
-     * activation row (PluginLoader::loadPlugins() include_once()s it on
-     * every real request), the same established technique as
-     * tests/Contract/WsHistoryTest.php's own 'get_history' override test:
-     * EventDispatcher's singleton lives in the real Apache-served process,
-     * not this Pest process, so it can't be reached by registering a
-     * handler here directly. Scoped to unique marker tag names so it's a
-     * complete no-op for every other concurrent request against this
-     * shared dev server while active.
+     * rename()'s and duplicate()'s shared RenderTagUrl dispatch has no
+     * fallback anymore: dispatchChange() itself enforces that every
+     * handler returns a RenderTagUrl instance, so a real plugin handler
+     * returning anything else now fails the whole request loud (an
+     * uncaught Error), rather than silently falling back to the raw tag
+     * name. The default handler (StringHelper::str2url(), registered at
+     * RequestBootstrap's own priority 50) always returns a real
+     * RenderTagUrl, so reaching this for real needs a second,
+     * higher-priority handler chained after it -- a real plugin file +
+     * `piwigo_plugins` activation row (PluginLoader::loadPlugins()
+     * include_once()s it on every real request), the same established
+     * technique as tests/Contract/WsHistoryTest.php's own 'get_history'
+     * override test: EventDispatcher's singleton lives in the real
+     * Apache-served process, not this Pest process, so it can't be reached
+     * by registering a handler here directly. Scoped to a unique marker
+     * tag name so it's a complete no-op for every other concurrent request
+     * against this shared dev server while active.
      */
-    public function test_rename_and_duplicate_fall_back_to_the_raw_name_when_render_tag_url_returns_a_non_string(): void
+    public function test_rename_throws_when_a_render_tag_url_handler_returns_something_other_than_a_render_tag_url_instance(): void
     {
         $renameMarker = 'ct_tag_url_fallback_rename_' . uniqid();
-        $duplicateMarker = 'ct_tag_url_fallback_duplicate_' . uniqid();
         $pluginId = 'pwgtest-tags-render-url-fallback';
         $pluginDir = dirname(__DIR__, 2) . '/plugins/' . $pluginId;
         $mainFile = $pluginDir . '/main.inc.php';
@@ -444,19 +445,19 @@ final class WsTagsMutationTest extends ContractTestCase
             declare(strict_types=1);
 
             /*
-            Plugin Name: WsTagsMutationTest -- render_tag_url Non-String Override
+            Plugin Name: WsTagsMutationTest -- render_tag_url Non-Instance Override
             Version: 1.0.0
             Description: Test-only fixture plugin (tests/Contract/WsTagsMutationTest.php).
             */
 
-            \\Piwigo\\PluginConfig\\EventDispatcher::get()->addEventHandler(
-                'render_tag_url',
-                static function (mixed \$data): mixed {
-                    if (\$data === '{$renameMarker}' || \$data === '{$duplicateMarker}') {
+            \\Piwigo\\PluginConfig\\EventDispatcher::get()->addTypedHandler(
+                \\Piwigo\\Event\\Tag\\RenderTagUrl::class,
+                static function (\\Piwigo\\Event\\Tag\\RenderTagUrl \$event): mixed {
+                    if (\$event->tagName === '{$renameMarker}') {
                         return 12345;
                     }
 
-                    return \$data;
+                    return \$event;
                 },
                 51
             );
@@ -474,44 +475,117 @@ final class WsTagsMutationTest extends ContractTestCase
             $add = $this->callWs('pwg.tags.add', ['name' => 'ct_tag_url_fallback_src_' . uniqid()]);
             $this->tagId = self::tagResultId($add);
 
-            $renameResponse = $this->callWs('pwg.tags.rename', [
+            // display_errors is off (Core\ErrorCollector::install() forces
+            // it, and php.ini already has it off too) -- the response body
+            // is just the web server's own generic error page, never the
+            // exception's own message/class. The HTTP status is the only
+            // reliable, environment-independent signal that the request
+            // failed instead of silently falling back.
+            $status = $this->postWsStatus('pwg.tags.rename', [
                 'tag_id' => $this->tagId,
                 'new_name' => $renameMarker,
                 'pwg_token' => $token,
             ]);
-            self::assertSame('ok', $renameResponse['stat']);
-            $renameResult = self::tagResult($renameResponse);
-            self::assertSame(
-                $renameMarker,
-                $renameResult['url_name'],
-                'a non-string render_tag_url result must fall back to the raw tag name'
-            );
 
-            $duplicateResponse = $this->callWs('pwg.tags.duplicate', [
-                'tag_id' => $this->tagId,
-                'copy_name' => $duplicateMarker,
-                'pwg_token' => $token,
-            ]);
-            self::assertSame('ok', $duplicateResponse['stat']);
-            $copyId = self::tagResultId($duplicateResponse);
-
-            // duplicate()'s own *persisted* url_name (via duplicateTag(),
-            // guarded by the fallback at line 406) differs from its
-            // *returned* 'url_name' field, a second, unguarded
-            // triggerChange() call -- see PwgTags::duplicate()'s own
-            // docblock -- so the DB row is what actually proves the
-            // fallback ran, not the response shape.
-            $persistedUrlName = $this->conn->fetchOne(
-                'SELECT url_name FROM ' . Tables::tags() . ' WHERE id = ?',
-                [$copyId]
-            );
-            self::assertSame($duplicateMarker, $persistedUrlName);
-
-            $this->callWs('pwg.tags.delete', ['tag_id' => [$copyId], 'pwg_token' => $token]);
+            self::assertSame(500, $status);
         } finally {
             $this->conn->executeStatement('DELETE FROM ' . Tables::plugins() . ' WHERE id = ?', [$pluginId]);
             @unlink($mainFile);
             @rmdir($pluginDir);
         }
+    }
+
+    /**
+     * duplicate()'s own RenderTagUrl dispatch site (PwgTags::duplicate())
+     * -- distinct from rename()'s own, see this file's own docblock above
+     * for why it now fails loud too.
+     */
+    public function test_duplicate_throws_when_a_render_tag_url_handler_returns_something_other_than_a_render_tag_url_instance(): void
+    {
+        $duplicateMarker = 'ct_tag_url_fallback_duplicate_' . uniqid();
+        $pluginId = 'pwgtest-tags-render-url-fallback-dup';
+        $pluginDir = dirname(__DIR__, 2) . '/plugins/' . $pluginId;
+        $mainFile = $pluginDir . '/main.inc.php';
+
+        if (! is_dir($pluginDir) && ! mkdir($pluginDir, 0o777, true) && ! is_dir($pluginDir)) {
+            throw new \RuntimeException('failed to create plugin dir: ' . $pluginDir);
+        }
+        file_put_contents($mainFile, <<<PHP
+            <?php
+
+            declare(strict_types=1);
+
+            /*
+            Plugin Name: WsTagsMutationTest -- render_tag_url Non-Instance Override (duplicate)
+            Version: 1.0.0
+            Description: Test-only fixture plugin (tests/Contract/WsTagsMutationTest.php).
+            */
+
+            \\Piwigo\\PluginConfig\\EventDispatcher::get()->addTypedHandler(
+                \\Piwigo\\Event\\Tag\\RenderTagUrl::class,
+                static function (\\Piwigo\\Event\\Tag\\RenderTagUrl \$event): mixed {
+                    if (\$event->tagName === '{$duplicateMarker}') {
+                        return 12345;
+                    }
+
+                    return \$event;
+                },
+                51
+            );
+
+            PHP);
+
+        $this->conn->executeStatement(
+            "INSERT INTO " . Tables::plugins() . " (id, state, version) VALUES (?, 'active', '1.0.0')",
+            [$pluginId]
+        );
+
+        try {
+            $token = $this->getPwgToken();
+
+            $add = $this->callWs('pwg.tags.add', ['name' => 'ct_tag_url_fallback_dup_src_' . uniqid()]);
+            $this->tagId = self::tagResultId($add);
+
+            // See test_rename_throws_...()'s own comment above for why this
+            // only asserts the HTTP status, not the response body.
+            $status = $this->postWsStatus('pwg.tags.duplicate', [
+                'tag_id' => $this->tagId,
+                'copy_name' => $duplicateMarker,
+                'pwg_token' => $token,
+            ]);
+
+            self::assertSame(500, $status);
+        } finally {
+            $this->conn->executeStatement('DELETE FROM ' . Tables::plugins() . ' WHERE id = ?', [$pluginId]);
+            @unlink($mainFile);
+            @rmdir($pluginDir);
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $params
+     *
+     * callWs()/callWsAllowingServerError() both json_decode() the response
+     * body, which fails on a raw fatal-error response -- this test only
+     * needs the HTTP status, so this skips the JSON round trip entirely.
+     */
+    private function postWsStatus(string $method, array $params): int
+    {
+        $ch = curl_init($this->baseUrl . '/ws.php?format=json');
+        self::assertNotFalse($ch, 'curl_init failed');
+
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_USERAGENT, self::USER_AGENT);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array_merge(['method' => $method], $params)));
+        curl_setopt($ch, CURLOPT_COOKIEJAR, $this->cookieJar());
+        curl_setopt($ch, CURLOPT_COOKIEFILE, $this->cookieJar());
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $this->testHeader());
+
+        curl_exec($ch);
+        $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        unset($ch);
+
+        return $status;
     }
 }

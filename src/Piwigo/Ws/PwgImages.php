@@ -28,6 +28,9 @@ use Piwigo\Core\ValidationPattern;
 use Piwigo\Core\WsError;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Picture\RenderElementDescription;
+use Piwigo\Event\Picture\RenderElementName;
+use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
@@ -407,19 +410,12 @@ final class PwgImages
         $image_row = array_merge($image_row, WsHelper::stdGetUrls($image_row, \Piwigo\Bootstrap\PresentationAccessor::urlService()));
 
         $image_row['name_raw'] = $image_row['name'];
-        $rendered_name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
-            'render_element_name',
-            $image_row['name'],
-            __FUNCTION__
-        );
-        $image_row['name'] = strip_tags(is_string($rendered_name) ? $rendered_name : '');
+        $nameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderElementName(is_string($image_row['name']) ? $image_row['name'] : '', __FUNCTION__));
+        $image_row['name'] = strip_tags($nameEvent->elementName);
 
         $image_row['comment_raw'] = $image_row['comment'];
-        $image_row['comment'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
-            'render_element_description',
-            $image_row['comment'],
-            __FUNCTION__
-        );
+        $descriptionEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderElementDescription(is_string($image_row['comment']) ? $image_row['comment'] : '', __FUNCTION__));
+        $image_row['comment'] = $descriptionEvent->elementDescription;
 
         // -------------------------------------------------------- related categories
         $related_category_rows = self::imageService()->getRelatedCategoriesForImage(
@@ -453,12 +449,8 @@ final class PwgImages
 
             $row['id'] = is_numeric($row['id']) ? (int) $row['id'] : 0;
 
-            $rendered_category_name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
-                'render_category_name',
-                $row['name'],
-                __FUNCTION__
-            );
-            $row['name'] = strip_tags(is_string($rendered_category_name) ? $rendered_category_name : '');
+            $nameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryName(is_string($row['name']) ? $row['name'] : '', __FUNCTION__));
+            $row['name'] = strip_tags($nameEvent->categoryName);
 
             $related_categories[] = $row;
         }
@@ -716,9 +708,10 @@ final class PwgImages
                     $image[$k] = $row[$k] ?? null;
                 }
 
-                $rendered_image_name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_element_name', $image['name'], __FUNCTION__);
-                $image['name'] = strip_tags(is_string($rendered_image_name) ? $rendered_image_name : '');
-                $image['comment'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_element_description', $image['comment'], __FUNCTION__);
+                $nameEvent2 = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderElementName(is_string($image['name']) ? $image['name'] : '', __FUNCTION__));
+                $image['name'] = strip_tags($nameEvent2->elementName);
+                $descriptionEvent2 = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderElementDescription(is_string($image['comment']) ? $image['comment'] : '', __FUNCTION__));
+                $image['comment'] = $descriptionEvent2->elementDescription;
 
                 $image = array_merge($image, WsHelper::stdGetUrls($row, \Piwigo\Bootstrap\PresentationAccessor::urlService()));
                 $images[$image_ids[$image['id']]] = $image;

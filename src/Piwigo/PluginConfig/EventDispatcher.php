@@ -229,6 +229,19 @@ final class EventDispatcher
      * triggerChange() passes, since the event also carries its own
      * readonly context, which triggerChange()'s ...$extra never reached
      * 'trigger' listeners with).
+     *
+     * Callers must capture and use the return value, not the pre-dispatch
+     * object -- a handler for a `readonly` event class cannot mutate its
+     * argument in place (the language forbids it), so it can only convey a
+     * change by returning a new instance. Relying on the original variable
+     * instead would silently discard that. The @template makes this the
+     * same instance for the common "handler mutates a non-readonly
+     * property and returns $event" case too, so capturing the return value
+     * is always correct and never a behavior change either way.
+     *
+     * @template T of object
+     * @param T $event
+     * @return T
      */
     public function dispatchChange(object $event): object
     {

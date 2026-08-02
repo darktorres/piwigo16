@@ -14,6 +14,9 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\Tables;
+    use Piwigo\Event\Tag\GetTagAltNames;
+    use Piwigo\Event\Tag\GetTagNameLikeWhere;
+    use Piwigo\Event\Tag\RenderTagUrl;
     use Piwigo\Group\GroupRepository;
     use Piwigo\Html\HtmlService;
     use Piwigo\Permission\PermissionRepository;
@@ -472,18 +475,20 @@ namespace Piwigo\Tests\Integration {
             }
         }
 
-        public function test_tag_id_from_tag_name_falls_back_to_the_raw_name_when_render_tag_url_misbehaves(): void
+        public function test_tag_id_from_tag_name_throws_when_the_render_tag_url_handler_returns_something_other_than_a_render_tag_url_instance(): void
         {
+            // addEventHandler(), not addTypedHandler() -- a real plugin
+            // handler is untyped from PHPStan's perspective, and this test
+            // exercises dispatchChange()'s own runtime enforcement, not a
+            // static one.
             $name = 'weird url name ' . uniqid();
-            EventDispatcher::get()->addEventHandler('render_tag_url', static fn (): int => 42);
+            EventDispatcher::get()->addEventHandler(RenderTagUrl::class, static fn (): int => 42);
+
+            $this->expectException(\Error::class);
+            $this->expectExceptionMessage('must return an instance of');
 
             try {
-                $id = $this->service->tagIdFromTagName($name);
-
-                self::assertSame(
-                    $name,
-                    $this->conn->createQueryBuilder()->select('url_name')->from(Tables::tags())->where('id = :id')->setParameter('id', $id->value)->executeQuery()->fetchOne()
-                );
+                $this->service->tagIdFromTagName($name);
             } finally {
                 EventDispatcher::reset();
                 $this->conn->executeStatement('DELETE FROM ' . Tables::tags() . ' WHERE name = ?', [$name]);
@@ -504,9 +509,9 @@ namespace Piwigo\Tests\Integration {
          */
         public function test_tag_id_from_tag_name_matches_via_a_plugin_supplied_like_pattern(): void
         {
-            EventDispatcher::get()->addEventHandler(
-                'get_tag_name_like_where',
-                static fn (mixed $data, string $tagName): array => ['nature']
+            EventDispatcher::get()->addTypedHandler(
+                GetTagNameLikeWhere::class,
+                static fn (GetTagNameLikeWhere $event): GetTagNameLikeWhere => new GetTagNameLikeWhere(['nature'], $event->tagName)
             );
 
             try {
@@ -526,9 +531,9 @@ namespace Piwigo\Tests\Integration {
          */
         public function test_tag_id_from_tag_name_treats_a_plugin_supplied_sql_injection_attempt_as_a_literal_value(): void
         {
-            EventDispatcher::get()->addEventHandler(
-                'get_tag_name_like_where',
-                static fn (mixed $data, string $tagName): array => ["' OR '1'='1"]
+            EventDispatcher::get()->addTypedHandler(
+                GetTagNameLikeWhere::class,
+                static fn (GetTagNameLikeWhere $event): GetTagNameLikeWhere => new GetTagNameLikeWhere(["' OR '1'='1"], $event->tagName)
             );
 
             $tagName = 'p18-test-sec19-' . bin2hex(random_bytes(4));
@@ -578,9 +583,9 @@ namespace Piwigo\Tests\Integration {
          */
         public function test_get_tag_list_includes_surviving_alt_names_when_not_restricted_to_user_language(): void
         {
-            EventDispatcher::get()->addEventHandler(
-                'get_tag_alt_names',
-                static fn (mixed $data, string $rawName): array => $rawName === 'nature' ? ['nature', 'Nature (alt)'] : []
+            EventDispatcher::get()->addTypedHandler(
+                GetTagAltNames::class,
+                static fn (GetTagAltNames $event): GetTagAltNames => new GetTagAltNames($event->rawName === 'nature' ? ['nature', 'Nature (alt)'] : [], $event->rawName)
             );
 
             try {

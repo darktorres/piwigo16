@@ -19,6 +19,8 @@ use Piwigo\Core\Lang;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
+use Piwigo\Event\Template\RenderCommentAuthor;
+use Piwigo\Event\Template\RenderCommentContent;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Permission\SqlCondition;
@@ -215,6 +217,10 @@ final class PwgComments
             $comment_date = is_string($row['date']) ? $row['date'] : false;
             $comment_date_available = is_string($row['date_available']) ? $row['date_available'] : false;
 
+            $authorEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCommentAuthor($author_name ?? ''));
+
+            $contentEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCommentContent(is_string($row['content']) ? $row['content'] : ''));
+
             $list[] = [
                 'id' => $row['id'],
                 'admin_link' => \Piwigo\Bootstrap\PresentationAccessor::urlService()
@@ -222,10 +228,10 @@ final class PwgComments
                 'medium_url' => $medium,
                 'file' => $row['file'],
                 'image_date_available' => \Piwigo\Core\DateHelper::formatDate($comment_date_available, ['day_name', 'day', 'month', 'year', 'time']),
-                'author' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_comment_author', $author_name),
+                'author' => $authorEvent->commentAuthor,
                 'author_status' => is_numeric($row['author_id']) && \Piwigo\Config\CurrentConfig::webmasterId() === (int) $row['author_id'] ? 'main_user' : $row['status'],
                 'date' => \Piwigo\Core\DateHelper::formatDate($comment_date, ['day_name', 'day', 'month', 'year', 'time']),
-                'content' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_comment_content', $row['content']),
+                'content' => $contentEvent->commentContent,
                 'raw_content' => $row['content'],
                 'is_pending' => ! SqlDialect::getBoolean($row['validated']),
             ];

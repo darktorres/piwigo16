@@ -12,6 +12,8 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Tag\RenderTagName;
+use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Search\Inflector\InflectorInterface;
 use Piwigo\Search\Projection\Search;
@@ -948,7 +950,8 @@ final readonly class SearchService
         $allTags = array_intersect_key($allTags, array_flip(array_diff($positiveIds, $notIds)));
         usort($allTags, $this->htmlRenderer->tagAlphaCompare(...));
         foreach ($allTags as &$tag) {
-            $tag['name'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_name', $tag['name'], $tag);
+            $nameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderTagName(is_string($tag['name']) ? $tag['name'] : '', $tag));
+            $tag['name'] = $nameEvent->tagName;
         }
 
         unset($tag);
@@ -1062,7 +1065,8 @@ final readonly class SearchService
         $allCats = array_intersect_key($allCats, array_flip(array_diff($positiveIds, $notIds)));
         usort($allCats, $this->htmlRenderer->tagAlphaCompare(...));
         foreach ($allCats as &$cat) {
-            $cat['name'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_category_name', $cat['name'], $cat);
+            $nameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryName(is_string($cat['name']) ? $cat['name'] : '', $cat));
+            $cat['name'] = $nameEvent->categoryName;
         }
 
         unset($cat);

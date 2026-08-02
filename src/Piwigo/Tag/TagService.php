@@ -12,6 +12,10 @@ use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Tag\GetTagAltNames;
+use Piwigo\Event\Tag\GetTagNameLikeWhere;
+use Piwigo\Event\Tag\RenderTagName;
+use Piwigo\Event\Tag\RenderTagUrl;
 use Piwigo\Image\ImageService;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Tag\Projection\Tag;
@@ -78,10 +82,9 @@ final readonly class TagService
     /**
      * Returns all tags even associated to no image. Row = Tag::toArray()'s
      * shape plus name_raw (the pre-render_tag_name-hook value); 'name'
-     * itself is overwritten to EventDispatcher::triggerChange()'s own
-     * by-design mixed return.
+     * itself is passed through dispatchChange(new RenderTagName(...)).
      *
-     * @return list<array{id: int, name: mixed, url_name: string, lastmodified: string, name_raw: string}>
+     * @return list<array{id: int, name: string, url_name: string, lastmodified: string, name_raw: string}>
      */
     public function getAllTags(HtmlRenderingInterface $htmlRenderer): array
     {
@@ -89,7 +92,8 @@ final readonly class TagService
         foreach ($this->repo->findAllTags() as $tag) {
             $row = $tag->toArray();
             $row['name_raw'] = $tag->name;
-            $row['name'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_name', $tag->name, $row);
+            $nameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderTagName($tag->name, $row));
+            $row['name'] = $nameEvent->tagName;
             $tags[] = $row;
         }
 
@@ -208,11 +212,11 @@ final readonly class TagService
      * permissions, also tags with no images are not returned.
      *
      * Row = Tag::toArray()'s shape plus counter (from countImagesPerTag()'s
-     * own array<int, int>) and name_raw; 'name' is overwritten to
-     * EventDispatcher::triggerChange()'s own by-design mixed return.
+     * own array<int, int>) and name_raw; 'name' is passed through
+     * dispatchChange(new RenderTagName(...)).
      *
      * @param array<int, int|string> $tagIds empty means "no tag_id filter"
-     * @return list<array{id: int, name: mixed, url_name: string, lastmodified: string, counter: int, name_raw: string}>
+     * @return list<array{id: int, name: string, url_name: string, lastmodified: string, counter: int, name_raw: string}>
      */
     public function getAvailableTags(array $tagIds = []): array
     {
@@ -265,7 +269,8 @@ final readonly class TagService
             $row = $tag->toArray();
             $row['counter'] = $tagCounters[$tag->id->value];
             $row['name_raw'] = $tag->name;
-            $row['name'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_name', $tag->name, $row);
+            $nameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderTagName($tag->name, $row));
+            $row['name'] = $nameEvent->tagName;
             $tags[] = $row;
         }
 
@@ -372,12 +377,11 @@ final readonly class TagService
      * Return a list of tags corresponding to given items.
      *
      * Row = TagRepository::findCommonTags()'s own shape with 'name'
-     * overwritten to EventDispatcher::triggerChange()'s by-design mixed
-     * return.
+     * passed through dispatchChange(new RenderTagName(...)).
      *
      * @param int[] $items
      * @param int[] $excludedTagIds
-     * @return list<array{id: int, name: mixed, url_name: string, lastmodified: string, counter: int}>
+     * @return list<array{id: int, name: string, url_name: string, lastmodified: string, counter: int}>
      */
     public function getCommonTags(array $items, int $maxTags, HtmlRenderingInterface $htmlRenderer, array $excludedTagIds = []): array
     {
@@ -387,7 +391,8 @@ final readonly class TagService
 
         $tags = [];
         foreach ($this->repo->findCommonTags(array_values($items), $maxTags, array_values($excludedTagIds)) as $row) {
-            $row['name'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_name', $row['name'], $row);
+            $nameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderTagName($row['name'], $row));
+            $row['name'] = $nameEvent->tagName;
             $tags[] = $row;
         }
 
@@ -552,12 +557,8 @@ final readonly class TagService
         $existingId = $this->repo->findIdByName($tagName);
 
         if ($existingId === null) {
-            $urlName = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_url', $tagName);
-            if (! is_string($urlName)) {
-                // a misbehaving plugin handler could return a non-string; fall
-                // back to the untransformed tag name rather than propagate it.
-                $urlName = $tagName;
-            }
+            $urlNameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderTagUrl($tagName));
+            $urlName = $urlNameEvent->tagName;
 
             // search existing by url name
             $existingId = $this->repo->findIdByUrlName($urlName);
@@ -568,8 +569,8 @@ final readonly class TagService
                 // pattern VALUES (bound as parameters), not raw SQL
                 // fragments -- see TagRepository::
                 // findIdByNameLikeAnyPattern()'s own docblock for why.
-                $namePatterns = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_tag_name_like_where', [], $tagName);
-                $namePatterns = is_array($namePatterns) ? array_values(array_filter($namePatterns, is_string(...))) : [];
+                $likeWhereEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetTagNameLikeWhere([], $tagName));
+                $namePatterns = array_values(array_filter($likeWhereEvent->value, is_string(...)));
                 if ($namePatterns !== []) {
                     $existingId = $this->repo->findIdByNameLikeAnyPattern($namePatterns);
                 }
@@ -707,11 +708,8 @@ final readonly class TagService
 
         // does the tag already exist?
         if ($this->repo->findIdByName($tagName) === null) {
-            $urlName = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_url', $tagName);
-            // a misbehaving plugin handler could return a non-string; fall
-            // back to the untransformed tag name rather than propagate it
-            // (same guard as tagIdFromTagName()'s own url_name resolution).
-            $urlName = is_string($urlName) ? $urlName : $tagName;
+            $insertUrlNameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderTagUrl($tagName));
+            $urlName = $insertUrlNameEvent->tagName;
 
             $insertedId = $this->repo->insert($tagName, $urlName);
 
@@ -737,7 +735,7 @@ final readonly class TagService
      *    multilingual tags (if ExtendedDescription plugin is active)
      * @param array<string, mixed> $params
      * @param array<string, ArrayParameterType|ParameterType> $types
-     * @return array<int, array{name: mixed, id: string}>
+     * @return array<int, array{name: string, id: string}>
      */
     public function getTagList(string $query, HtmlRenderingInterface $htmlRenderer, bool $onlyUserLanguage = true, array $params = [], array $types = []): array
     {
@@ -746,7 +744,8 @@ final readonly class TagService
 
         foreach ($this->repo->fetchTagListRows($query, $params, $types) as $row) {
             $rawName = $row['name'];
-            $name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_name', $rawName, $row);
+            $listNameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderTagName(is_string($rawName) ? $rawName : '', $row));
+            $name = $listNameEvent->tagName;
             $rowId = is_scalar($row['id']) ? (string) $row['id'] : '';
 
             $taglist[] = [
@@ -755,9 +754,9 @@ final readonly class TagService
             ];
 
             if (! $onlyUserLanguage) {
-                $altNames = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_tag_alt_names', [], $rawName);
-                $altNames = is_array($altNames) ? array_filter($altNames, is_string(...)) : [];
-                $nameForDiff = is_scalar($name) ? (string) $name : '';
+                $altNamesEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetTagAltNames([], is_string($rawName) ? $rawName : ''));
+                $altNames = array_filter($altNamesEvent->value, is_string(...));
+                $nameForDiff = $name;
 
                 foreach (array_diff(array_unique($altNames), [$nameForDiff]) as $alt) {
                     $altlist[] = [

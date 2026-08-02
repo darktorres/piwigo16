@@ -1075,10 +1075,6 @@ final readonly class SearchFilterRenderer
         usort($tags, $this->htmlRenderer->tagAlphaCompare(...));
         $tagsFound = [];
         foreach ($tags as $tag) {
-            if (! isset($tag['name']) || ! is_string($tag['name'])) {
-                continue;
-            }
-
             $url = $this->urlService->makeIndexUrl(
                 [
                     'tags' => [$tag],

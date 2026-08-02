@@ -8,6 +8,7 @@ use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Template\Template;
 
 /**
@@ -232,13 +233,10 @@ final class CatListPageRenderer
                 $self_url .= '&amp;parent_id=' . $parent_id;
             }
 
+            $nameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryName($category['name'], 'admin_cat_list'));
             $tpl_cat =
               [
-                  'NAME' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
-                      'render_category_name',
-                      $category['name'],
-                      'admin_cat_list'
-                  ),
+                  'NAME' => $nameEvent->categoryName,
                   'NB_PHOTOS' => $nb_photos_in[$cat_id] ?? 0,
                   'NB_SUB_PHOTOS' => $nb_sub_photos[$cat_id] ?? 0,
                   'NB_SUB_ALBUMS' => isset($subcats_of[$cat_id]) ? count($subcats_of[$cat_id]) : 0,

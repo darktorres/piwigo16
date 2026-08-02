@@ -14,8 +14,8 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * `tag_ids` param only accepts existing numeric tag ids (not names) --
  * pwg.tags.add is the real way to create a brand-new tag over the WS API.
  *
- * The 'alt_names' assign (only set when a 'get_tag_alt_names' event
- * handler returns a non-empty list) has no plugin registered to answer it
+ * The 'alt_names' assign (only set when a GetTagAltNames event handler
+ * returns a non-empty list) has no plugin registered to answer it
  * by default in this env, but IS reachable via a real plugin -- exercised
  * below the same way tests/Browser/PluginsInstalledPageRendererTest.php's
  * own get_admin_plugin_menu_links tests do: a throwaway, self-cleaning
@@ -193,14 +193,14 @@ it('joins real get_tag_alt_names hook results into a comma-separated alt_names v
     Description: Test-only fixture plugin (tests/Browser/TagsPageRendererTest.php).
     */
 
-    \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler(
-        'get_tag_alt_names',
-        static function (mixed $data, mixed $rawName): mixed {
-            if ($rawName === '__TAGS_PAGE_ALT_NAMES_TARGET__') {
-                return ['Alt Name One', 'Alt Name Two'];
+    \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(
+        \Piwigo\Event\Tag\GetTagAltNames::class,
+        static function (\Piwigo\Event\Tag\GetTagAltNames $event): \Piwigo\Event\Tag\GetTagAltNames {
+            if ($event->rawName === '__TAGS_PAGE_ALT_NAMES_TARGET__') {
+                return new \Piwigo\Event\Tag\GetTagAltNames(['Alt Name One', 'Alt Name Two'], $event->rawName);
             }
 
-            return is_array($data) ? $data : [];
+            return $event;
         }
     );
     PHP);

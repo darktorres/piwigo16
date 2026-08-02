@@ -24,6 +24,10 @@ use Piwigo\Core\WsError;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
+use Piwigo\Event\Picture\RenderElementDescription;
+use Piwigo\Event\Picture\RenderElementName;
+use Piwigo\Event\Template\RenderCategoryDescription;
+use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Permission\PermissionService;
@@ -265,9 +269,10 @@ final class PwgCategories
                     $image[$k] = $image_row[$k] ?? null;
                 }
 
-                $rendered_name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_element_name', $image['name'], __FUNCTION__);
-                $image['name'] = strip_tags(is_string($rendered_name) ? $rendered_name : '');
-                $image['comment'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_element_description', $image['comment'], __FUNCTION__);
+                $nameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderElementName(is_string($image['name']) ? $image['name'] : '', __FUNCTION__));
+                $image['name'] = strip_tags($nameEvent->elementName);
+                $descriptionEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderElementDescription(is_string($image['comment']) ? $image['comment'] : '', __FUNCTION__));
+                $image['comment'] = $descriptionEvent->elementDescription;
 
                 $image = array_merge($image, WsHelper::stdGetUrls($image_row, $urlService));
 
@@ -576,22 +581,14 @@ final class PwgCategories
             } else {
                 $row['name_raw'] = $row['name'];
 
-                $rendered_name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
-                    'render_category_name',
-                    $row['name'],
-                    'ws_categories_getList'
-                );
-                $row['name'] = strip_tags(is_string($rendered_name) ? $rendered_name : '');
+                $nameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryName(is_string($row['name']) ? $row['name'] : '', 'ws_categories_getList'));
+                $row['name'] = strip_tags($nameEvent->categoryName);
             }
 
             $row['comment_raw'] = $row['comment'];
 
-            $rendered_comment = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
-                'render_category_description',
-                $row['comment'],
-                'ws_categories_getList'
-            );
-            $row['comment'] = is_string($rendered_comment) ? $rendered_comment : '';
+            $descriptionEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryDescription(is_string($row['comment']) ? $row['comment'] : null, 'ws_categories_getList'));
+            $row['comment'] = $descriptionEvent->categoryDescription ?? '';
 
             // management of the album thumbnail -- starts here
             //
@@ -833,20 +830,13 @@ final class PwgCategories
 
             $row['name_raw'] = $row['name'];
 
-            $rendered_name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
-                'render_category_name',
-                $row['name'],
-                'ws_categories_getAdminList'
-            );
-            $row['name'] = strip_tags(is_string($rendered_name) ? $rendered_name : '');
+            $nameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryName(is_string($row['name']) ? $row['name'] : '', 'ws_categories_getAdminList'));
+            $row['name'] = strip_tags($nameEvent->categoryName);
             $row['fullname'] = strip_tags($cat_display_name);
 
             $row['comment_raw'] = $row['comment'];
-            $row['comment'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
-                'render_category_description',
-                $row['comment'] ?? '',
-                'ws_categories_getAdminList'
-            );
+            $adminDescriptionEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryDescription(is_string($row['comment']) ? $row['comment'] : '', 'ws_categories_getAdminList'));
+            $row['comment'] = $adminDescriptionEvent->categoryDescription;
 
             if (! is_string($row['image_order']) || $row['image_order'] === '') {
                 $row['image_order'] = str_replace('ORDER BY ', '', \Piwigo\Config\CurrentConfig::orderBy());
@@ -1345,12 +1335,8 @@ final class PwgCategories
 
             // we break on error at first physical category detected
             if (! in_array($row['dir'], [null, '', '0'], true)) {
-                $rendered_name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
-                    'render_category_name',
-                    $row['name'],
-                    'ws_categories_move'
-                );
-                $row_name = strip_tags(is_string($rendered_name) ? $rendered_name : '');
+                $moveNameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryName($row['name'], 'ws_categories_move'));
+                $row_name = strip_tags($moveNameEvent->categoryName);
 
                 return new PwgError(
                     403,

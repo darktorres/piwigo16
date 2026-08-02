@@ -1,0 +1,20 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Piwigo\Event\Picture;
+
+/**
+ * Typed event for the legacy `get_thumbnail_title` filter. No handler is
+ * registered for it anywhere today -- a pure information carrier.
+ */
+final readonly class GetThumbnailTitle
+{
+    /**
+     * @param array<mixed> $info
+     */
+    public function __construct(
+        public string $title,
+        public array $info,
+    ) {}
+}

@@ -10,6 +10,9 @@ use Piwigo\Core\FilterUpdaterInterface;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Event\Template\RenderCategoryDescription;
+use Piwigo\Event\Template\RenderCategoryLiteralDescription;
+use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -327,14 +330,8 @@ final readonly class CategoryCatsRenderer
                     continue;
                 }
 
-                $renderedCategoryName = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
-                    'render_category_name',
-                    $category['name'],
-                    'subcatify_category_name'
-                );
-                $category['name'] = is_string($renderedCategoryName)
-                    ? $renderedCategoryName
-                    : (is_string($category['name']) ? $category['name'] : '');
+                $nameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryName(is_string($category['name']) ? $category['name'] : '', 'subcatify_category_name'));
+                $category['name'] = $nameEvent->categoryName;
 
                 if ($isRecentCats) {
                     $categoryUppercats = $category['uppercats'];
@@ -360,6 +357,10 @@ final readonly class CategoryCatsRenderer
                 $catCountCategories = $category['count_categories'];
                 $catCountCategories = is_numeric($catCountCategories) ? (int) $catCountCategories : 0;
 
+                $categoryComment = $category['comment'] ?? null;
+                $descriptionEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryDescription(is_string($categoryComment) ? $categoryComment : null, 'subcatify_category_description'));
+                $literalDescriptionEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryLiteralDescription($descriptionEvent->categoryDescription));
+
                 $tplVar = array_merge($category, [
                     'ID' => $category['id'] /* obsolete */,
                     'representative' => $representativeInfos,
@@ -377,14 +378,7 @@ final readonly class CategoryCatsRenderer
                         true,
                         '<br>'
                     ),
-                    'DESCRIPTION' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
-                        'render_category_literal_description',
-                        \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
-                            'render_category_description',
-                            $category['comment'] ?? null,
-                            'subcatify_category_description'
-                        )
-                    ),
+                    'DESCRIPTION' => $literalDescriptionEvent->description,
                     'NAME' => $name,
                 ]);
                 if (\Piwigo\Config\CurrentConfig::indexNewIcon()) {

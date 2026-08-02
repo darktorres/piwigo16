@@ -17,6 +17,7 @@ use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageService;
 use Piwigo\Lang\Translator;
@@ -589,7 +590,8 @@ final readonly class CategoryService
 
             $globalRank = $cat['global_rank'];
             $cats[$idx]['LEVEL'] = substr_count(is_string($globalRank) ? $globalRank : '', '.') + 1;
-            $cats[$idx]['name'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_category_name', $cat['name'], $cat);
+            $nameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryName($cat['name'], $cat));
+            $cats[$idx]['name'] = $nameEvent->categoryName;
 
             if (isset($commonCats[$catId])) {
                 $cats[$idx]['count_images'] = $commonCats[$catId]['counter'];
@@ -676,9 +678,8 @@ final readonly class CategoryService
      *
      * 'menu' rows extend CategoryTreeCache::getForUser()'s own row shape
      * with template-display fields (NAME/TITLE/URL/LEVEL/SELECTED/
-     * IS_UPPERCAT/icon_ts) built inside this method's own loop; NAME stays
-     * mixed since it's EventDispatcher::triggerChange()'s own by-design
-     * arbitrary return value.
+     * IS_UPPERCAT/icon_ts) built inside this method's own loop; NAME is
+     * passed through dispatchChange(new RenderCategoryName(...)).
      *
      * @param array<string, mixed>|null $category
      * @return array{menu: array<int, array<string, mixed>>, categoryCountCategories: ?int}
@@ -728,14 +729,11 @@ final readonly class CategoryService
             $selectedIdStr = is_scalar($selectedId) ? (string) $selectedId : null;
             $selectedIdUppercat = $selectedCategory['id_uppercat'] ?? null;
             $selectedIdUppercatStr = is_scalar($selectedIdUppercat) ? (string) $selectedIdUppercat : null;
+            $menuNameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryName($row['name'], 'get_categories_menu'));
             $row = array_merge(
                 $row,
                 [
-                    'NAME' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
-                        'render_category_name',
-                        $row['name'],
-                        'get_categories_menu'
-                    ),
+                    'NAME' => $menuNameEvent->categoryName,
                     'TITLE' => self::getDisplayImagesCount(
                         $row['nb_images'],
                         $row['count_images'],
@@ -813,12 +811,8 @@ final readonly class CategoryService
                     (3 * substr_count(is_string($globalRank) ? $globalRank : '', '.'))
                 );
                 $option .= '- ';
-                $renderedName = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
-                    'render_category_name',
-                    $category['name'],
-                    'display_select_categories'
-                );
-                $option .= strip_tags(is_string($renderedName) ? $renderedName : '');
+                $selectNameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryName(is_string($category['name']) ? $category['name'] : '', 'display_select_categories'));
+                $option .= strip_tags($selectNameEvent->categoryName);
             }
             $id = $category['id'];
             if (is_int($id) || is_string($id)) {
@@ -863,14 +857,15 @@ final readonly class CategoryService
      * `$page`/`make_index_url()`.
      *
      * NOTE: 'combined_categories' below carries $cat AFTER
-     * getRelatedCategoriesMenu()'s own 'render_category_name'
-     * trigger_change() already ran on 'name' (the original built this
+     * getRelatedCategoriesMenu()'s own RenderCategoryName
+     * dispatchChange() already ran on 'name' (the original built this
      * array BEFORE that render), so UrlService::makeIndexUrl()'s id-name
      * style would embed the *rendered* name instead of the raw one if a
-     * 'render_category_name' plugin handler is ever registered (none are
-     * today -- PEM extensions are unwired, trigger_change() is a
-     * same-value pass-through -- so this is currently a no-op
-     * difference). Re-verify once P31 wires real event handlers.
+     * RenderCategoryName handler is ever registered (none are today --
+     * PEM extensions are unwired, and RenderCategoryName is currently
+     * `readonly` (no core handler mutates it either) -- so this is
+     * currently a no-op difference). Re-verify once P31 wires real event
+     * handlers.
      *
      * Legacy Coupling Retirement Track A batch A5.2e: $category/
      * $combinedCategories are explicit params instead of

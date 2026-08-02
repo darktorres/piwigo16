@@ -8,6 +8,8 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Event\Tag\GetTagAltNames;
+use Piwigo\Event\Tag\RenderTagName;
 
 /**
  * Ported from admin/tags.php (page slug "tags").
@@ -66,9 +68,9 @@ final class TagsPageRenderer
         $orphan_tag_names_array = '[]';
         $orphan_tag_names = [];
         foreach ($orphan_tags as $tag) {
-            $orphan_tag_names[] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_name', $tag->name, $tag->toArray());
+            $orphanNameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderTagName($tag->name, $tag->toArray()));
+            $orphan_tag_names[] = $orphanNameEvent->tagName;
         }
-        $orphan_tag_names = array_filter($orphan_tag_names, is_string(...));
 
         if (count($orphan_tag_names) > 0) {
             $warning_tags = sprintf(
@@ -121,8 +123,8 @@ final class TagsPageRenderer
             ];
             $raw_name = $tag_obj->name;
             $tag['raw_name'] = $raw_name;
-            $rendered_name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_name', $raw_name, $tag);
-            $rendered_name = is_string($rendered_name) ? $rendered_name : $raw_name;
+            $tagNameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderTagName($raw_name, $tag));
+            $rendered_name = $tagNameEvent->tagName;
             $tag['name'] = $rendered_name;
 
             $tag_id = $tag_obj->id->value;
@@ -131,8 +133,8 @@ final class TagsPageRenderer
                 $tag['counter'] = $counter;
             }
 
-            $alt_names = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_tag_alt_names', [], $raw_name);
-            $alt_names = is_array($alt_names) ? array_filter($alt_names, is_string(...)) : [];
+            $altNamesEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetTagAltNames([], $raw_name));
+            $alt_names = array_filter($altNamesEvent->value, is_string(...));
             $alt_names = array_diff(array_unique($alt_names), [$rendered_name]);
             if (count($alt_names) > 0) {
                 $tag['alt_names'] = implode(', ', $alt_names);

@@ -6,6 +6,12 @@ namespace Piwigo\Tests\Unit\Html;
 
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ProcessCache;
+use Piwigo\Event\Picture\GetThumbnailTitle;
+use Piwigo\Event\Picture\RenderElementDescription;
+use Piwigo\Event\Picture\RenderElementName;
+use Piwigo\Event\Template\RenderCategoryLiteralDescription;
+use Piwigo\Event\Template\RenderCategoryName;
+use Piwigo\Event\Template\RenderCommentContent;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\SrcImage;
 use Piwigo\Menu\BlockManager;
@@ -28,17 +34,22 @@ afterEach(function (): void {
     CurrentConfig::reset();
 });
 
+function htmlServiceTestRenderCommentContent(HtmlService $service, string $content): string
+{
+    return $service->renderCommentContent(new RenderCommentContent($content))->commentContent;
+}
+
 test('renderCommentContent escapes html and linkifies bare URLs', function (): void {
     $service = new HtmlService();
 
-    expect($service->renderCommentContent('<script>alert(1)</script> see http://example.test/x'))
+    expect(htmlServiceTestRenderCommentContent($service, '<script>alert(1)</script> see http://example.test/x'))
         ->toBe('&lt;script&gt;alert(1)&lt;/script&gt; see <a href="http://example.test/x" rel="nofollow">http://example.test/x</a>');
 });
 
 test('renderCommentContent underlines _word_', function (): void {
     $service = new HtmlService();
 
-    expect($service->renderCommentContent('_hello_'))
+    expect(htmlServiceTestRenderCommentContent($service, '_hello_'))
         ->toBe('<span style="text-decoration:underline;">hello</span>');
 });
 
@@ -53,15 +64,15 @@ test('renderCommentContent bolds *word* only when a word character directly touc
     // no-op, only "word*bold*word" (no space) actually triggers it.
     $service = new HtmlService();
 
-    expect($service->renderCommentContent('a *hello* b'))->toBe('a *hello* b')
-        ->and($service->renderCommentContent('x*hello*y'))
+    expect(htmlServiceTestRenderCommentContent($service, 'a *hello* b'))->toBe('a *hello* b')
+        ->and(htmlServiceTestRenderCommentContent($service, 'x*hello*y'))
         ->toBe('x<span style="font-weight:bold;">hello</span>y');
 });
 
 test('renderCommentContent converts newlines to br tags', function (): void {
     $service = new HtmlService();
 
-    expect($service->renderCommentContent("a\nb"))->toBe('a<br />' . "\n" . 'b');
+    expect(htmlServiceTestRenderCommentContent($service, "a\nb"))->toBe('a<br />' . "\n" . 'b');
 });
 
 /**
@@ -339,14 +350,14 @@ test('renderCategoryLiteralDescription strips disallowed tag markup but keeps th
     // meaning) -- "x" survives, just unwrapped.
     $service = new HtmlService();
 
-    expect($service->renderCategoryLiteralDescription('<script>x</script><p>hello</p><b>world</b>'))
+    expect($service->renderCategoryLiteralDescription(new RenderCategoryLiteralDescription('<script>x</script><p>hello</p><b>world</b>'))->description)
         ->toBe('x<p>hello</p><b>world</b>');
 });
 
 test('renderCategoryLiteralDescription treats a null description as empty', function (): void {
     $service = new HtmlService();
 
-    expect($service->renderCategoryLiteralDescription(null))->toBe('');
+    expect($service->renderCategoryLiteralDescription(new RenderCategoryLiteralDescription(null))->description)->toBe('');
 });
 
 test('pwgNl2br passes through falsy scalars unchanged', function (): void {
@@ -431,19 +442,24 @@ test('renderElementName falls back to an empty string when neither name nor file
     expect($service->renderElementName([]))->toBe('');
 });
 
-test('renderElementName falls back to the pre-trigger name when a render_element_name handler returns a non-string', function (): void {
-    // Kills line 677's TernaryNegated -- no existing test registers a
-    // handler for this event at all, so is_string($rendered_name) was
-    // always trivially true regardless of which branch the ternary
-    // took.
+test('renderElementName throws when a render_element_name handler returns something other than a RenderElementName instance', function (): void {
+    // dispatchChange() enforces this itself now -- the old is_string()
+    // fallback ternary this test used to kill was retired along with the
+    // typed conversion, since the class-string key + instanceof check
+    // make that failure mode structurally impossible to reach silently.
     $service = new HtmlService();
+    // A real, untyped plugin handler is exactly what addEventHandler()
+    // (not addTypedHandler()) accepts -- PHPStan can't see third-party
+    // code, so this test registers the same way to genuinely exercise
+    // dispatchChange()'s own runtime enforcement, not a static one.
     $handler = static fn (): int => 42;
-    EventDispatcher::get()->addEventHandler('render_element_name', $handler);
+    EventDispatcher::get()->addEventHandler(RenderElementName::class, $handler);
 
     try {
-        expect($service->renderElementName(['name' => 'My Photo Title']))->toBe('My Photo Title');
+        expect(static fn () => $service->renderElementName(['name' => 'My Photo Title']))
+            ->toThrow(\Error::class, 'must return an instance of');
     } finally {
-        EventDispatcher::get()->removeEventHandler('render_element_name', $handler);
+        EventDispatcher::get()->removeEventHandler(RenderElementName::class, $handler);
     }
 });
 
@@ -478,29 +494,32 @@ test('renderElementDescription never triggers render_element_description for a g
     // that actually transforms its input is required to expose the
     // difference.
     $service = new HtmlService();
-    $handler = static fn (): string => 'MODIFIED';
-    EventDispatcher::get()->addEventHandler('render_element_description', $handler);
+    $handler = static fn (RenderElementDescription $e): RenderElementDescription => new RenderElementDescription('MODIFIED', $e->action);
+    EventDispatcher::get()->addTypedHandler(RenderElementDescription::class, $handler);
 
     try {
         expect($service->renderElementDescription(['comment' => '']))->toBe('');
     } finally {
-        EventDispatcher::get()->removeEventHandler('render_element_description', $handler);
+        EventDispatcher::get()->removeEventHandler(RenderElementDescription::class, $handler);
     }
 });
 
-test('renderElementDescription falls back to the pre-trigger comment when a render_element_description handler returns a non-string', function (): void {
-    // Kills line 701's TernaryNegated -- no existing test registers a
-    // handler for this event at all, so is_string($rendered_comment)
-    // was always trivially true regardless of which branch the ternary
-    // took.
+test('renderElementDescription throws when a render_element_description handler returns something other than a RenderElementDescription instance', function (): void {
+    // dispatchChange() enforces this itself now -- the old is_string()
+    // fallback ternary this test used to kill was retired along with the
+    // typed conversion, since the class-string key + instanceof check
+    // make that failure mode structurally impossible to reach silently.
     $service = new HtmlService();
+    // See RenderElementName's own sibling test above for why this uses
+    // addEventHandler(), not addTypedHandler().
     $handler = static fn (): int => 42;
-    EventDispatcher::get()->addEventHandler('render_element_description', $handler);
+    EventDispatcher::get()->addEventHandler(RenderElementDescription::class, $handler);
 
     try {
-        expect($service->renderElementDescription(['comment' => 'A lovely shot.']))->toBe('A lovely shot.');
+        expect(static fn () => $service->renderElementDescription(['comment' => 'A lovely shot.']))
+            ->toThrow(\Error::class, 'must return an instance of');
     } finally {
-        EventDispatcher::get()->removeEventHandler('render_element_description', $handler);
+        EventDispatcher::get()->removeEventHandler(RenderElementDescription::class, $handler);
     }
 });
 
@@ -766,34 +785,37 @@ test('getThumbnailTitle strips real tag markup out of the final title, not just 
     expect($title)->toBe('Bold');
 });
 
-test('getThumbnailTitle falls back to the pre-trigger title when a get_thumbnail_title handler returns a non-string', function (): void {
-    // Kills line 747's TernaryNegated -- no existing test registers a
-    // handler for this event at all, so is_string($rendered_title) was
-    // always trivially true regardless of which branch the ternary
-    // took.
+test('getThumbnailTitle throws when a get_thumbnail_title handler returns something other than a GetThumbnailTitle instance', function (): void {
+    // dispatchChange() enforces this itself now -- the old is_string()
+    // fallback ternary this test used to kill was retired along with the
+    // typed conversion, since the class-string key + instanceof check
+    // make that failure mode structurally impossible to reach silently.
     $service = new HtmlService();
+    // See RenderElementName's own sibling test above for why this uses
+    // addEventHandler(), not addTypedHandler().
     $handler = static fn (): int => 42;
-    EventDispatcher::get()->addEventHandler('get_thumbnail_title', $handler);
+    EventDispatcher::get()->addEventHandler(GetThumbnailTitle::class, $handler);
 
     try {
-        expect($service->getThumbnailTitle([], 'My Photo'))->toBe('My Photo');
+        expect(static fn () => $service->getThumbnailTitle([], 'My Photo'))
+            ->toThrow(\Error::class, 'must return an instance of');
     } finally {
-        EventDispatcher::get()->removeEventHandler('get_thumbnail_title', $handler);
+        EventDispatcher::get()->removeEventHandler(GetThumbnailTitle::class, $handler);
     }
 });
 
-test('getCatDisplayName falls back to an empty category name when a render_category_name handler returns a non-string', function (): void {
+test('getCatDisplayName throws when a render_category_name handler returns something other than a RenderCategoryName instance', function (): void {
+    // See RenderElementName's own sibling test above for why this uses
+    // addEventHandler(), not addTypedHandler().
     $service = new HtmlService();
     $handler = static fn (): int => 42;
-    EventDispatcher::get()->addEventHandler('render_category_name', $handler);
+    EventDispatcher::get()->addEventHandler(RenderCategoryName::class, $handler);
 
     try {
-        // $url = null -> the "no link, name only" branch; the fallback
-        // empty name proves the non-string handler return was actually
-        // discarded rather than coerced/propagated.
-        expect($service->getCatDisplayName([['id' => 1, 'name' => 'Nature']], null))->toBe('');
+        expect(static fn () => $service->getCatDisplayName([['id' => 1, 'name' => 'Nature']], null))
+            ->toThrow(\Error::class, 'must return an instance of');
     } finally {
-        EventDispatcher::get()->removeEventHandler('render_category_name', $handler);
+        EventDispatcher::get()->removeEventHandler(RenderCategoryName::class, $handler);
     }
 });
 
@@ -884,18 +906,21 @@ test('getCatDisplayNameCache\'s singleLink href uses the LAST uppercats id, pref
     }
 });
 
-test('getCatDisplayNameCache falls back to an empty category name when a render_category_name handler returns a non-string', function (): void {
+test('getCatDisplayNameCache throws when a render_category_name handler returns something other than a RenderCategoryName instance', function (): void {
     ProcessCache::set('cat_names', [
         '5' => ['id' => 5, 'name' => 'Landscape', 'permalink' => null],
     ]);
+    // See RenderElementName's own sibling test above for why this uses
+    // addEventHandler(), not addTypedHandler().
     $service = new HtmlService();
     $handler = static fn (): int => 7;
-    EventDispatcher::get()->addEventHandler('render_category_name', $handler);
+    EventDispatcher::get()->addEventHandler(RenderCategoryName::class, $handler);
 
     try {
-        expect($service->getCatDisplayNameCache('5', null))->toBe('');
+        expect(static fn () => $service->getCatDisplayNameCache('5', null))
+            ->toThrow(\Error::class, 'must return an instance of');
     } finally {
-        EventDispatcher::get()->removeEventHandler('render_category_name', $handler);
+        EventDispatcher::get()->removeEventHandler(RenderCategoryName::class, $handler);
     }
 });
 

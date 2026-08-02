@@ -17,6 +17,8 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Template\RenderCommentAuthor;
+use Piwigo\Event\Template\RenderCommentContent;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Image\ImageRepository;
@@ -555,15 +557,19 @@ final class CommentsController implements ControllerInterface
                 // unowned rather than casting blindly.
                 $author_id = is_numeric($author_id) ? (int) $author_id : -1;
 
+                $authorEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCommentAuthor(is_string($comment['author']) ? $comment['author'] : ''));
+
+                $contentEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCommentContent(is_string($comment['content']) ? $comment['content'] : ''));
+
                 $tpl_comment = [
                     'ID' => $comment['comment_id'],
                     'U_PICTURE' => $url,
                     'src_image' => $src_image,
                     'ALT' => $name,
-                    'AUTHOR' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_comment_author', $comment['author']),
+                    'AUTHOR' => $authorEvent->commentAuthor,
                     'WEBSITE_URL' => $comment['website_url'],
                     'DATE' => \Piwigo\Core\DateHelper::formatDate($date, ['day_name', 'day', 'month', 'year', 'time']),
-                    'CONTENT' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_comment_content', $comment['content']),
+                    'CONTENT' => $contentEvent->commentContent,
                 ];
 
                 if (\Piwigo\Auth\AccessControl::isAdmin()) {

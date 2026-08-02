@@ -14,6 +14,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Event\Template\RenderCategoryDescription;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Search\SearchService;
 use Piwigo\Session\SessionService;
@@ -247,14 +248,12 @@ final readonly class SectionPopulator
             } elseif ($page_category !== null) {
                 $upper_names = $page_category['upper_names'];
 
+                $descriptionEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryDescription($page_category['comment'], 'main_page_category_description'));
+
                 $page = array_merge(
                     $page,
                     [
-                        'comment' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
-                            'render_category_description',
-                            $page_category['comment'],
-                            'main_page_category_description'
-                        ),
+                        'comment' => $descriptionEvent->categoryDescription,
                         'title' => $this->htmlRenderer->getCatDisplayName($upper_names, ''),
                     ]
                 );

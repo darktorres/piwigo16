@@ -19,6 +19,7 @@ use Piwigo\Core\FilterUpdaterInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
@@ -440,21 +441,22 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         self::assertStringNotContainsString('Sample Album', $html);
     }
 
-    public function test_render_falls_back_to_the_raw_name_when_the_event_handler_returns_a_non_string(): void
+    public function test_render_throws_when_the_render_category_name_handler_returns_something_other_than_a_render_category_name_instance(): void
     {
+        // addEventHandler(), not addTypedHandler() -- a real plugin
+        // handler is untyped from PHPStan's perspective, and this test
+        // exercises dispatchChange()'s own runtime enforcement, not a
+        // static one.
         $this->seedUser();
-        EventDispatcher::get()->addEventHandler('render_category_name', static fn (): int => 42);
+        EventDispatcher::get()->addEventHandler(RenderCategoryName::class, static fn (): int => 42);
+
+        $this->expectException(\Error::class);
+        $this->expectExceptionMessage('must return an instance of');
 
         try {
             $this->renderer->render('', null, 0);
         } finally {
             EventDispatcher::reset();
         }
-
-        // A misbehaving 'render_category_name' handler returning a
-        // non-string falls back to the category's own real name instead of
-        // crashing or rendering something blank.
-        $html = $this->renderedCategoriesHtml();
-        self::assertStringContainsString('Sample Album', $html);
     }
 }

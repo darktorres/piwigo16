@@ -66,20 +66,25 @@ it('renders the letters display mode, grouping tags by first letter', function (
 });
 
 /**
- * Closes the letters-mode `! is_string($tag_name)` fallback to
- * `name_raw` (~line 94): TagService::getAvailableTags() overwrites
- * 'name' with `EventDispatcher::triggerChange('render_tag_name', ...)`'s
- * own return value, with no whitelist -- a real plugin returning a
- * non-string reaches this branch, same throwaway-fixture-plugin
- * technique AlbumSubControllerTest.php's own render_category_name test
- * establishes (an exactly analogous hook).
+ * Closes dispatchChange()'s own instanceof-enforcement branch for the
+ * `RenderTagName` event: TagService::getAvailableTags() dispatches it with
+ * no whitelist -- a real plugin handler returning something other than a
+ * RenderTagName instance reaches this branch, same throwaway-fixture-
+ * plugin technique AlbumSubControllerTest.php's own RenderCategoryName
+ * test establishes (an exactly analogous hook).
  */
 function tagsControllerPluginsPath(): string
 {
     return dirname(__DIR__, 2) . '/plugins/';
 }
 
-it('falls back to the raw tag name in letters mode when a real render_tag_name hook returns a non-string', function (): void {
+it('fatal-errors instead of silently swallowing a real render_tag_name hook that returns something other than a RenderTagName instance', function (): void {
+    // RenderTagName is dispatched from many TagService call sites, not
+    // just this one page -- the plugin's DB activation row is inserted
+    // only around the one navigation under test, strictly AFTER login and
+    // every setup WS call (album/photo/tag creation, setInfo) and removed
+    // again strictly BEFORE any other request, so it can't break an
+    // unrelated call that happens to dispatch the same event.
     $pluginId = 'ct-tagscontroller-hook-' . uniqid();
     $dir = tagsControllerPluginsPath() . $pluginId;
     if (! is_dir($dir)) {
@@ -96,9 +101,9 @@ it('falls back to the raw tag name in letters mode when a real render_tag_name h
     Description: Test-only fixture plugin (tests/Browser/TagsControllerTest.php).
     */
 
-    \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler(
-        'render_tag_name',
-        static fn (mixed $name): mixed => null
+    \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(
+        \Piwigo\Event\Tag\RenderTagName::class,
+        static fn (mixed $event): mixed => null
     );
     PHP);
 
@@ -111,11 +116,6 @@ it('falls back to the raw tag name in letters mode when a real render_tag_name h
     );
     $prefix = getenv('PIWIGO_DB_PREFIX');
     $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    $db->query(sprintf(
-        "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0.0')",
-        $prefix,
-        $db->real_escape_string($pluginId)
-    ));
 
     try {
         $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Tags Controller Hook Album ' . uniqid()]);
@@ -138,20 +138,26 @@ it('falls back to the raw tag name in letters mode when a real render_tag_name h
 
         \Piwigo\Cache\CachePools::tagCloud()->clear();
 
-        $page = H::navigateOk($page, '/tags.php?display_mode=letters');
+        $db->query(sprintf(
+            "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0.0')",
+            $prefix,
+            $db->real_escape_string($pluginId)
+        ));
 
-        // Without the `! is_string($tag_name)` fallback, a null 'name'
-        // would make mb_substr()/StringHelper::pwgTransliterate() choke
-        // on a non-string and/or render an empty/broken letter grouping
-        // instead of this real, raw tag name. assertSeeSettled(), not
-        // $page->assertSee() -- confirmed live: assertSee()'s own polling
-        // reported failure "on the page initially with the url
-        // [.../identification.php]" (the pre-navigation page), a known
-        // Playwright race (see BrowserTestHelpers::settledContent()).
-        H::assertSeeSettled($page, $tagName);
-        $page->assertNoJavaScriptErrors();
+        try {
+            // dispatchChange() now enforces its own instanceof contract --
+            // a misbehaving handler makes the request fail loud (an HTTP
+            // 500) rather than silently degrading. display_errors is off
+            // site-wide (Core\ErrorCollector::install() forces it, and
+            // php.ini already has it off too), so the response body itself
+            // carries no exception detail to assert on -- the status code
+            // is the only reliable, environment-independent signal.
+            $response = H::rawGet($page, '/tags.php?display_mode=letters');
+            expect($response['status'])->toBe(500);
+        } finally {
+            $db->query(sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, $db->real_escape_string($pluginId)));
+        }
     } finally {
-        $db->query(sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, $db->real_escape_string($pluginId)));
         $db->close();
         @unlink($dir . '/main.inc.php');
         if (is_dir($dir)) {

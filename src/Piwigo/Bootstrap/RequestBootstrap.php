@@ -30,6 +30,11 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\ServerTiming;
 use Piwigo\Core\StringHelper;
 use Piwigo\Db\DbConnection;
+use Piwigo\Event\Tag\RenderTagUrl;
+use Piwigo\Event\Template\RenderCategoryDescription;
+use Piwigo\Event\Template\RenderCategoryLiteralDescription;
+use Piwigo\Event\Template\RenderCommentAuthor;
+use Piwigo\Event\Template\RenderCommentContent;
 use Piwigo\Filter\FilterService;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageService;
@@ -662,12 +667,35 @@ final class RequestBootstrap
         $pageState->headerNotes = array_merge($pageState->headerNotes, \Piwigo\Config\CurrentConfig::headerNotes());
 
         // default event handlers
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('render_category_literal_description', new HtmlService()->renderCategoryLiteralDescription(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(RenderCategoryLiteralDescription::class, new HtmlService()->renderCategoryLiteralDescription(...));
         if (! \Piwigo\Config\CurrentConfig::allowHtmlDescriptions()) {
-            \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('render_category_description', new HtmlService()->pwgNl2br(...));
+            // pwgNl2br() is a generic string transform reused by
+            // RenderElementDescription's own default handler too -- a thin
+            // adapter closure per event, leaving pwgNl2br() itself untouched,
+            // since one method can't be typed for two different event classes.
+            \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(
+                RenderCategoryDescription::class,
+                static function (RenderCategoryDescription $e): RenderCategoryDescription {
+                    $result = new HtmlService()
+                        ->pwgNl2br($e->categoryDescription);
+                    $e->categoryDescription = is_string($result) ? $result : null;
+
+                    return $e;
+                },
+            );
         }
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('render_comment_content', new HtmlService()->renderCommentContent(...));
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('render_comment_author', 'strip_tags');
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(RenderCommentContent::class, new HtmlService()->renderCommentContent(...));
+        // 'strip_tags' is PHP's own native function -- can't be retyped, so
+        // this is a thin adapter closure instead, same reasoning as
+        // pwgNl2br() above.
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(
+            RenderCommentAuthor::class,
+            static function (RenderCommentAuthor $e): RenderCommentAuthor {
+                $e->commentAuthor = strip_tags($e->commentAuthor);
+
+                return $e;
+            },
+        );
         // Was registered as the bare string 'str2url' -- dead since some earlier
         // phase migrated the global function to StringHelper::str2url() without
         // updating this one string-literal reference (add_event_handler() doesn't
@@ -677,7 +705,17 @@ final class RequestBootstrap
         // is not callable" -- every prior tag-creation activity-log row in the
         // fixture is static SQL data, never actually round-tripped through this
         // handler.
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('render_tag_url', StringHelper::str2url(...));
+        // StringHelper::str2url() is called directly from 6+ unrelated
+        // production sites -- a thin adapter closure keeps its own signature
+        // untouched, same reasoning as pwgNl2br()/strip_tags() above.
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(
+            RenderTagUrl::class,
+            static function (RenderTagUrl $e): RenderTagUrl {
+                $e->tagName = StringHelper::str2url($e->tagName);
+
+                return $e;
+            },
+        );
         \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('blockmanager_register_blocks', new HtmlService()->registerDefaultMenubarBlocks(...));
         // Relocated from include/functions_comment.inc.php (deleted, P23 batch 8c)
         // -- that file's own top-level add_event_handler() call only ever ran via

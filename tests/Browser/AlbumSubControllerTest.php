@@ -11,15 +11,13 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * that route never reaches:
  * - the `$categoryRow === null` "unknown album" fatalError (a cat_id with
  *   no matching row at all);
- * - the `render_category_name` EventDispatcher hook's non-string-return
- *   fallback (`! is_string($category_name)`), which needs a REAL plugin
- *   registering that hook -- EventDispatcher::triggerChange()'s own
- *   pass-through default (no handler registered) always returns
- *   $category['name'] unchanged, already a string (categories.name is a
- *   NOT NULL varchar), so this branch is unreachable without one. Same
- *   throwaway-fixture-plugin-under-the-live-plugins-root technique
- *   PluginsInstalledPageRendererTest.php's own
- *   "get_admin_plugin_menu_links" hook test already establishes.
+ * - a real `RenderCategoryName` plugin handler that returns something
+ *   other than a RenderCategoryName instance -- needs a REAL plugin
+ *   registering that hook, since EventDispatcher's own pass-through
+ *   default (no handler registered) never reaches dispatchChange()'s
+ *   instanceof enforcement at all. Same throwaway-fixture-plugin-under-
+ *   the-live-plugins-root technique PluginsInstalledPageRendererTest.php's
+ *   own "get_admin_plugin_menu_links" hook test already establishes.
  */
 function albumSubDbPrefix(): string
 {
@@ -68,9 +66,15 @@ it('fatal-errors with "unknown album" for a cat_id with no matching category row
     expect($page->content())->toContain('unknown album');
 });
 
-it('falls back to the raw category name when a real render_category_name hook returns a non-string', function (): void {
+it('fatal-errors instead of silently swallowing a real render_category_name hook that returns something other than a RenderCategoryName instance', function (): void {
+    // RenderCategoryName is dispatched from shared, site-wide render paths
+    // (confirmed live: identification.php itself 500s once this plugin is
+    // active), not just AlbumSubController's own page -- the plugin is
+    // activated only around the one navigation under test, strictly AFTER
+    // login and album creation and deactivated again strictly BEFORE
+    // cleanup, so it can't break the login flow or the delete WS call.
     $pluginId = 'ct-albumsub-hook-' . uniqid();
-    albumSubWriteFixturePlugin($pluginId, <<<'PHP'
+    $pluginSource = <<<'PHP'
     <?php
 
     declare(strict_types=1);
@@ -81,49 +85,52 @@ it('falls back to the raw category name when a real render_category_name hook re
     Description: Test-only fixture plugin (tests/Browser/AlbumSubControllerTest.php).
     */
 
-    \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler(
-        'render_category_name',
-        static fn (mixed $name): mixed => null
+    \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(
+        \Piwigo\Event\Template\RenderCategoryName::class,
+        static fn (mixed $event): mixed => null
     );
-    PHP);
+    PHP;
 
     $db = albumSubDb();
     $prefix = albumSubDbPrefix();
-    $db->query(sprintf(
-        "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0.0')",
-        $prefix,
-        $db->real_escape_string($pluginId)
-    ));
+
+    $page = H::loginAsAdmin($this);
+    $categoryName = 'CT Album Sub Hook Fallback ' . uniqid();
+    $album = H::wsCall($page, 'pwg.categories.add', ['name' => $categoryName]);
+    $albumResult = $album['result'] ?? null;
+    if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
+        throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
+    }
+    $albumId = (int) $albumResult['id'];
 
     try {
-        $page = H::loginAsAdmin($this);
-        $categoryName = 'CT Album Sub Hook Fallback ' . uniqid();
-        $album = H::wsCall($page, 'pwg.categories.add', ['name' => $categoryName]);
-        $albumResult = $album['result'] ?? null;
-        if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
-            throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
-        }
-        $albumId = (int) $albumResult['id'];
+        albumSubWriteFixturePlugin($pluginId, $pluginSource);
+        $db->query(sprintf(
+            "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0.0')",
+            $prefix,
+            $db->real_escape_string($pluginId)
+        ));
 
         try {
-            $page = H::navigateOk($page, '/admin.php?page=album&cat_id=' . $albumId);
-
-            // A registered handler returning null would otherwise make
-            // ADMIN_PAGE_TITLE's <strong>...</strong> wrap a literal empty
-            // string -- the `! is_string($category_name)` fallback instead
-            // keeps the real, raw category name.
-            $page->assertSee($categoryName);
-            $page->assertNoJavaScriptErrors();
+            // dispatchChange() now enforces its own instanceof contract --
+            // a misbehaving handler makes the request fail loud (an HTTP
+            // 500) rather than silently degrading. display_errors is off
+            // site-wide (Core\ErrorCollector::install() forces it, and
+            // php.ini already has it off too), so the response body itself
+            // carries no exception detail to assert on -- the status code
+            // is the only reliable, environment-independent signal.
+            $response = H::rawGet($page, '/admin.php?page=album&cat_id=' . $albumId);
+            expect($response['status'])->toBe(500);
         } finally {
-            H::wsCall($page, 'pwg.categories.delete', [
-                'category_id' => $albumId,
-                'photo_deletion_mode' => 'force_delete',
-                'pwg_token' => H::pwgToken($page),
-            ]);
+            $db->query(sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, $db->real_escape_string($pluginId)));
+            albumSubRemoveFixturePlugin($pluginId);
         }
     } finally {
-        $db->query(sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, $db->real_escape_string($pluginId)));
         $db->close();
-        albumSubRemoveFixturePlugin($pluginId);
+        H::wsCall($page, 'pwg.categories.delete', [
+            'category_id' => $albumId,
+            'photo_deletion_mode' => 'force_delete',
+            'pwg_token' => H::pwgToken($page),
+        ]);
     }
 });

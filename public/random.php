@@ -48,18 +48,29 @@ $nb_image_page = is_numeric($rawNbImagePage) ? (int) $rawNbImagePage : 15;
 
 $conn = \Piwigo\Db\DbConnection::build();
 
+$condition = new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class))->getSqlConditionFandFAsCondition([
+    'forbidden_categories' => 'category_id',
+    'visible_categories' => 'category_id',
+    'visible_images' => 'id',
+]);
+
 $query = '
 SELECT id
   FROM ' . Tables::images() . '
     INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
-' . new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class))->getSqlConditionFandF([
-    'forbidden_categories' => 'category_id',
-    'visible_categories' => 'category_id',
-    'visible_images' => 'id',
-], 'WHERE') . '
+' . ($condition->isEmpty() ? '' : 'WHERE ' . $condition->sql) . '
   ORDER BY ' . \Piwigo\Db\SqlDialect::DB_RANDOM_FUNCTION . '()
-  LIMIT ' . min(50, $top_number, $nb_image_page) . '
+  LIMIT :limit
 ;';
+
+$params = [
+    ...$condition->parameters,
+    'limit' => min(50, $top_number, $nb_image_page),
+];
+$types = [
+    ...$condition->types,
+    'limit' => \Doctrine\DBAL\ParameterType::INTEGER,
+];
 
 // +-----------------------------------------------------------------------+
 // |                                redirect                               |
@@ -79,7 +90,7 @@ try {
         ->redirect(new \Piwigo\Url\UrlService(new \Piwigo\Html\HtmlService())->makeIndexUrl([
             'list' => array_map(
                 static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
-                $conn->fetchFirstColumn($query)
+                $conn->fetchFirstColumn($query, $params, $types)
             ),
         ]));
 } catch (\Piwigo\Http\ResponseReadyException $e) {

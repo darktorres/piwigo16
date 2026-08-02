@@ -19,11 +19,11 @@ use Piwigo\Users\UserStatus;
 
 /**
  * PermissionRepository/GroupRepository/CategoryRepository are only ever
- * constructed here, never queried -- getSqlConditionFandF()/
- * getPrivacyLevelOptions() are pure string builders reading CurrentUser/
- * FilterState/CurrentConfig directly (see the class's own docblock), same
- * "real repository, DB never touched by the tested method" shape as
- * tests/Unit/Image/ImageServiceTest.php.
+ * constructed here, never queried -- getSqlConditionFandFAsCondition()/
+ * getPrivacyLevelOptions() are pure string/params builders reading
+ * CurrentUser/FilterState/CurrentConfig directly (see the class's own
+ * docblock), same "real repository, DB never touched by the tested
+ * method" shape as tests/Unit/Image/ImageServiceTest.php.
  */
 function makePermissionService(): PermissionService
 {
@@ -57,8 +57,8 @@ function seedPermissionUser(string $forbiddenCategories = '', int $level = 0, st
 
 /**
  * Bypasses seedPermissionUser()'s string-only params to reach
- * getSqlConditionFandF()'s own is_scalar()-then-(string)-cast defensive
- * guard (lines 157/159) with a rawAttributes shape that guard actually
+ * getSqlConditionFandFAsCondition()'s own is_scalar()-then-(string)-cast
+ * defensive guard with a rawAttributes shape that guard actually
  * exists for: `rawAttributes` is `array<string, mixed>` (see
  * `User::fromUserArray()`, which assigns the raw DB row wholesale) --
  * a driver returning a non-string scalar for a narrow column (e.g. a
@@ -93,200 +93,6 @@ afterEach(function (): void {
     Lang::reset();
     Translator::reset();
 });
-
-test('getSqlConditionFandF returns an empty string when nothing applies', function (): void {
-    $service = makePermissionService();
-
-    $sql = $service->getSqlConditionFandF(['forbidden_categories' => 'category_id']);
-
-    expect($sql)->toBe('');
-});
-
-test('getSqlConditionFandF forces a tautology when forceOneCondition is set and nothing applies', function (): void {
-    $service = makePermissionService();
-
-    $sql = $service->getSqlConditionFandF(['forbidden_categories' => 'category_id'], null, true);
-
-    expect($sql)->toBe('1 = 1');
-});
-
-test('getSqlConditionFandF builds a NOT IN clause from the user forbidden categories', function (): void {
-    seedPermissionUser(forbiddenCategories: '2,3');
-    $service = makePermissionService();
-
-    $sql = $service->getSqlConditionFandF(['forbidden_categories' => 'category_id']);
-
-    expect($sql)->toBe('(category_id NOT IN (2,3))');
-});
-
-test('getSqlConditionFandF builds an IN clause from FilterState visible categories/images', function (): void {
-    // image_access_type: 'NOT IN' with an empty list is the "no restriction"
-    // default (see getuserdata()) -- seeded here purely to suppress
-    // visible_images' own fallthrough into the forbidden_images level
-    // check below, which is exercised on its own further down.
-    seedPermissionUser(imageAccessType: 'NOT IN');
-    FilterState::set(true, visibleCategories: '1,2', visibleImages: '10,11');
-    $service = makePermissionService();
-
-    $sql = $service->getSqlConditionFandF([
-        'visible_categories' => 'category_id',
-        'visible_images' => 'id',
-    ]);
-
-    expect($sql)->toBe('(category_id IN (1,2) AND id IN (10,11))');
-});
-
-test('getSqlConditionFandF prepends the prefix only when the built condition is non-empty', function (): void {
-    seedPermissionUser(forbiddenCategories: '5');
-    $service = makePermissionService();
-
-    $withCondition = $service->getSqlConditionFandF(['forbidden_categories' => 'category_id'], "\n  AND");
-    $withoutCondition = $service->getSqlConditionFandF(['visible_categories' => 'category_id'], "\n  AND");
-
-    expect($withCondition)->toBe("\n  AND (category_id NOT IN (5))")
-        ->and($withoutCondition)->toBe('');
-});
-
-test('getSqlConditionFandF falls through from visible_images into the level check', function (): void {
-    // No break after 'visible_images' -- "visible include forbidden", per
-    // the method's own comment. Default image_access_type ('') !== 'NOT IN'
-    // so the fallthrough's own condition is true here.
-    seedPermissionUser(level: 3);
-    FilterState::set(true, visibleImages: '10,11');
-    $service = makePermissionService();
-
-    $sql = $service->getSqlConditionFandF(['visible_images' => 'id']);
-
-    expect($sql)->toBe('(id IN (10,11) AND level<=3)');
-});
-
-test('getSqlConditionFandF forbidden_images prefixes the level check for the i.id field', function (): void {
-    seedPermissionUser(level: 5);
-
-    $service = makePermissionService();
-
-    $sql = $service->getSqlConditionFandF(['forbidden_images' => 'i.id']);
-
-    expect($sql)->toBe('(i.level<=5)');
-});
-
-test('getSqlConditionFandF forbidden_images uses the raw access-list clause for a non-id field', function (): void {
-    seedPermissionUser(imageAccessType: 'NOT IN', imageAccessList: '7,8');
-    $service = makePermissionService();
-
-    $sql = $service->getSqlConditionFandF(['forbidden_images' => 'category_id']);
-
-    expect($sql)->toBe('(category_id NOT IN (7,8))');
-});
-
-// A mutation-testing sweep found `$userLevel = (string) $currentUser->level;`
-// itself is a confirmed-equivalent mutant when the cast is stripped: $userLevel
-// has exactly one downstream read, `$tablePrefix . 'level<=' . $userLevel`
-// (plain string concatenation), and $currentUser->level is a native, typed
-// `int` property (User::$level, `public int $level = 0`) reachable only through
-// constructor/withLevel() parameters that are themselves typed `int` under this
-// file's own `declare(strict_types=1)` -- no caller can ever put a non-int
-// there. Live-verified with a PHP probe across representative int values
-// (0, ±1, ±100, PHP_INT_MAX, PHP_INT_MIN, 42, 999999999):
-//   $withCast = 'level<=' . (string) $v;
-//   $withoutCast = 'level<=' . $v;
-//   // $withCast === $withoutCast for every value tried -- PHP's own
-//   // int-to-string concatenation coercion is byte-identical to an explicit
-//   // (string) cast, so removing the cast is unobservable from any assertion
-//   // on the returned SQL fragment.
-
-test('getSqlConditionFandF treats a non-string scalar image_access_type as empty, not as a truthy bypass', function (): void {
-    // rawAttributes['image_access_type'] as a real PHP bool (not a string) is
-    // exactly what the is_scalar()-then-(string)-cast guard on line 157 exists
-    // for. The cast collapses `false` to '' before the elseif's own
-    // `$userImageAccessType !== ''` check -- without the cast, `false !== ''`
-    // is true (mismatched types are never `===`), which would wrongly let a
-    // malformed "field  (list)" clause (no operator between field and list)
-    // through even though there is no real access-type operator to use.
-    seedPermissionUserRaw(['image_access_type' => false, 'image_access_list' => '7,8']);
-    $service = makePermissionService();
-
-    $sql = $service->getSqlConditionFandF(['forbidden_images' => 'category_id']);
-
-    expect($sql)->toBe('');
-});
-
-test('getSqlConditionFandF treats a genuinely absent image_access_type as empty', function (): void {
-    // No 'image_access_type' key at all -- the `?? null` fallback then
-    // is_scalar(null) === false, landing in the ternary's '' branch (not the
-    // (string)-cast branch above, so this exercises the *fallback literal*
-    // rather than the cast). Same expected result as the bool-false case: an
-    // absent/non-scalar access type must not enable the raw access-list
-    // clause below.
-    seedPermissionUserRaw(['image_access_list' => '7,8']);
-    $service = makePermissionService();
-
-    $sql = $service->getSqlConditionFandF(['forbidden_images' => 'category_id']);
-
-    expect($sql)->toBe('');
-});
-
-test('getSqlConditionFandF treats a non-string scalar image_access_list as empty, not as a truthy bypass', function (): void {
-    // Mirror of the image_access_type case above, for line 159's own
-    // is_scalar()-then-(string)-cast guard on image_access_list. image_access_type
-    // is set to a real, distinct-from-'NOT IN' value ('IN') purely so the
-    // line-187 gate is satisfied via the type side, isolating the list side's
-    // own cast for this assertion.
-    seedPermissionUserRaw(['image_access_type' => 'IN', 'image_access_list' => false]);
-    $service = makePermissionService();
-
-    $sql = $service->getSqlConditionFandF(['forbidden_images' => 'category_id']);
-
-    expect($sql)->toBe('');
-});
-
-test('getSqlConditionFandF treats a genuinely absent image_access_list as empty', function (): void {
-    // No 'image_access_list' key at all -- exercises line 159's fallback ''
-    // literal (not its cast) the same way the image_access_type test above
-    // exercises line 157's.
-    seedPermissionUserRaw(['image_access_type' => 'IN']);
-    $service = makePermissionService();
-
-    $sql = $service->getSqlConditionFandF(['forbidden_images' => 'category_id']);
-
-    expect($sql)->toBe('');
-});
-
-test('getSqlConditionFandF requires both a non-empty access list AND a non-empty access type for the raw clause', function (): void {
-    // image_access_type is non-empty ('IN', deliberately not 'NOT IN' so the
-    // line-187 gate is satisfied) but image_access_list stays '' (default) --
-    // the elseif's `&&` must reject this: an access *type* with no list to
-    // pair it with is exactly as unusable as a list with no type (the test
-    // below). Also pins the elseif's own '' literal on the list side: nothing
-    // about "list is empty" changes if that literal were some other string,
-    // since '' really is what $userImageAccessList holds here.
-    seedPermissionUser(imageAccessType: 'IN');
-    $service = makePermissionService();
-
-    $sql = $service->getSqlConditionFandF(['forbidden_images' => 'category_id']);
-
-    expect($sql)->toBe('');
-});
-
-test('getSqlConditionFandF requires both a non-empty access list AND a non-empty access type, not just a list', function (): void {
-    // Flip side of the test above: a non-empty access list ('7,8') with
-    // image_access_type left at its '' default. Pins the elseif's `&&` (an
-    // `||` mutant would wrongly build "category_id  (7,8)", a malformed
-    // clause with no operator) and the elseif's own '' literal on the type
-    // side.
-    seedPermissionUser(imageAccessList: '7,8');
-    $service = makePermissionService();
-
-    $sql = $service->getSqlConditionFandF(['forbidden_images' => 'category_id']);
-
-    expect($sql)->toBe('');
-});
-
-test('getSqlConditionFandF throws for an unknown condition key', function (): void {
-    $service = makePermissionService();
-
-    $service->getSqlConditionFandF(['not_a_real_condition' => 'x']);
-})->throws(InvalidArgumentException::class, 'Unknown condition: not_a_real_condition');
 
 /**
  * The one real placeholder name out of a single-condition SqlCondition --
@@ -410,6 +216,106 @@ test('getSqlConditionFandFAsCondition throws for an unknown condition key', func
 
     $service->getSqlConditionFandFAsCondition(['not_a_real_condition' => 'x']);
 })->throws(InvalidArgumentException::class, 'Unknown condition: not_a_real_condition');
+
+test('getSqlConditionFandFAsCondition treats a non-string scalar image_access_type as empty, not as a truthy bypass', function (): void {
+    // rawAttributes['image_access_type'] as a real PHP bool (not a string) is
+    // exactly what the is_scalar()-then-(string)-cast guard on the method's
+    // own image_access_type read exists for. The cast collapses `false` to
+    // '' before the elseif's own `$userImageAccessType !== ''` check --
+    // without the cast, `false !== ''` is true (mismatched types are never
+    // `===`), which would wrongly let a malformed "field  (list)" clause (no
+    // operator between field and list) through even though there is no real
+    // access-type operator to use.
+    seedPermissionUserRaw(['image_access_type' => false, 'image_access_list' => '7,8']);
+    $service = makePermissionService();
+
+    $condition = $service->getSqlConditionFandFAsCondition(['forbidden_images' => 'category_id']);
+
+    expect($condition->sql)->toBe('')
+        ->and($condition->parameters)->toBe([])
+        ->and($condition->types)->toBe([]);
+});
+
+test('getSqlConditionFandFAsCondition treats a genuinely absent image_access_type as empty', function (): void {
+    // No 'image_access_type' key at all -- the `?? null` fallback then
+    // is_scalar(null) === false, landing in the ternary's '' branch (not the
+    // (string)-cast branch above, so this exercises the *fallback literal*
+    // rather than the cast). Same expected result as the bool-false case: an
+    // absent/non-scalar access type must not enable the raw access-list
+    // clause below.
+    seedPermissionUserRaw(['image_access_list' => '7,8']);
+    $service = makePermissionService();
+
+    $condition = $service->getSqlConditionFandFAsCondition(['forbidden_images' => 'category_id']);
+
+    expect($condition->sql)->toBe('')
+        ->and($condition->parameters)->toBe([])
+        ->and($condition->types)->toBe([]);
+});
+
+test('getSqlConditionFandFAsCondition treats a non-string scalar image_access_list as empty, not as a truthy bypass', function (): void {
+    // Mirror of the image_access_type case above, for the method's own
+    // is_scalar()-then-(string)-cast guard on image_access_list.
+    // image_access_type is set to a real, distinct-from-'NOT IN' value
+    // ('IN') purely so the type-side gate is satisfied, isolating the list
+    // side's own cast for this assertion.
+    seedPermissionUserRaw(['image_access_type' => 'IN', 'image_access_list' => false]);
+    $service = makePermissionService();
+
+    $condition = $service->getSqlConditionFandFAsCondition(['forbidden_images' => 'category_id']);
+
+    expect($condition->sql)->toBe('')
+        ->and($condition->parameters)->toBe([])
+        ->and($condition->types)->toBe([]);
+});
+
+test('getSqlConditionFandFAsCondition treats a genuinely absent image_access_list as empty', function (): void {
+    // No 'image_access_list' key at all -- exercises the fallback ''
+    // literal (not its cast) the same way the image_access_type test above
+    // exercises its own.
+    seedPermissionUserRaw(['image_access_type' => 'IN']);
+    $service = makePermissionService();
+
+    $condition = $service->getSqlConditionFandFAsCondition(['forbidden_images' => 'category_id']);
+
+    expect($condition->sql)->toBe('')
+        ->and($condition->parameters)->toBe([])
+        ->and($condition->types)->toBe([]);
+});
+
+test('getSqlConditionFandFAsCondition requires both a non-empty access list AND a non-empty access type for the raw clause', function (): void {
+    // image_access_type is non-empty ('IN', deliberately not 'NOT IN' so the
+    // type-side gate is satisfied) but image_access_list stays '' (default)
+    // -- the elseif's `&&` must reject this: an access *type* with no list
+    // to pair it with is exactly as unusable as a list with no type (the
+    // test below). Also pins the elseif's own '' literal on the list side:
+    // nothing about "list is empty" changes if that literal were some other
+    // string, since '' really is what $userImageAccessList holds here.
+    seedPermissionUser(imageAccessType: 'IN');
+    $service = makePermissionService();
+
+    $condition = $service->getSqlConditionFandFAsCondition(['forbidden_images' => 'category_id']);
+
+    expect($condition->sql)->toBe('')
+        ->and($condition->parameters)->toBe([])
+        ->and($condition->types)->toBe([]);
+});
+
+test('getSqlConditionFandFAsCondition requires both a non-empty access list AND a non-empty access type, not just a list', function (): void {
+    // Flip side of the test above: a non-empty access list ('7,8') with
+    // image_access_type left at its '' default. Pins the elseif's `&&` (an
+    // `||` mutant would wrongly build "category_id  (7,8)", a malformed
+    // clause with no operator) and the elseif's own '' literal on the type
+    // side.
+    seedPermissionUser(imageAccessList: '7,8');
+    $service = makePermissionService();
+
+    $condition = $service->getSqlConditionFandFAsCondition(['forbidden_images' => 'category_id']);
+
+    expect($condition->sql)->toBe('')
+        ->and($condition->parameters)->toBe([])
+        ->and($condition->types)->toBe([]);
+});
 
 test('getSqlConditionFandFAsCondition throws for a corrupted image_access_type', function (): void {
     seedPermissionUser(imageAccessType: 'bogus', imageAccessList: '1');

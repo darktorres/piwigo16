@@ -122,120 +122,23 @@ final readonly class PermissionService
     }
 
     /**
-     * Returns a SQL condition string filtering by forbidden/visible
-     * categories and images, from CurrentUser and the request-scoped $filter global
-     * -- same "reads session/request globals directly" shape as
-     * AuditService's $_SERVER['REMOTE_ADDR'] read; a pure string builder
-     * with no DB access of its own.
+     * Returns a `SqlCondition` (bound-parameter carrier) filtering by
+     * forbidden/visible categories and images, from CurrentUser and the
+     * request-scoped $filter global -- same "reads session/request
+     * globals directly" shape as AuditService's
+     * $_SERVER['REMOTE_ADDR'] read; a pure string/params builder with no
+     * DB access of its own. Was originally paired with a
+     * `getSqlConditionFandF(): string` sibling during the SQL-
+     * modernization initiative's file-by-file migration (see the
+     * initiative's own plan for the full history) -- deleted once every
+     * real call site had migrated to this method, since every one of
+     * this initiative's 335 heredoc call sites ultimately needed real
+     * bound parameters, not a raw interpolated string.
      *
-     * @param array<string, string> $conditionFields condition name
-     *   (forbidden_categories|visible_categories|visible_images|
-     *   forbidden_images) => SQL field/table.column to filter on
-     * @param string|null $prefixCondition e.g. "\n  AND" -- only prepended
-     *   when the built condition is non-empty
-     */
-    public function getSqlConditionFandF(
-        array $conditionFields,
-        ?string $prefixCondition = null,
-        bool $forceOneCondition = false,
-    ): string {
-        $currentUser = \Piwigo\Users\CurrentUser::get();
-
-        // image_access_list is a comma-separated id list built with
-        // implode(',', ...) in getuserdata(); image_access_type is the
-        // literal string 'NOT IN' (see getuserdata()) -- both always
-        // scalar/string-castable. Phase 2 global-residual sweep:
-        // visible_categories/visible_images retargeted from `global
-        // $filter;` onto Piwigo\Core\FilterState, preserving the same
-        // lenient "not initialized yet -> ''" fallback the old `?? null`
-        // had -- this method is reachable from callers (Search/Calendar/
-        // Notification/CategoryService and their own tests) that don't
-        // always run through RequestBootstrap::finalize() first.
-        $userForbiddenCategories = $currentUser->forbiddenCategories;
-        $filterVisibleCategories = \Piwigo\Core\FilterState::isInitialized() ? \Piwigo\Core\FilterState::visibleCategories() : '';
-        $filterVisibleImages = \Piwigo\Core\FilterState::isInitialized() ? \Piwigo\Core\FilterState::visibleImages() : '';
-        $userLevel = (string) $currentUser->level;
-        $userImageAccessType = $currentUser->rawAttributes['image_access_type'] ?? null;
-        $userImageAccessType = is_scalar($userImageAccessType) ? (string) $userImageAccessType : '';
-        $userImageAccessList = $currentUser->rawAttributes['image_access_list'] ?? null;
-        $userImageAccessList = is_scalar($userImageAccessList) ? (string) $userImageAccessList : '';
-
-        $sqlList = [];
-
-        foreach ($conditionFields as $condition => $fieldName) {
-            switch ($condition) {
-                case 'forbidden_categories':
-                    if ($userForbiddenCategories !== '') {
-                        $sqlList[] = $fieldName . ' NOT IN (' . $userForbiddenCategories . ')';
-                    }
-
-                    break;
-
-                case 'visible_categories':
-                    if ($filterVisibleCategories !== '') {
-                        $sqlList[] = $fieldName . ' IN (' . $filterVisibleCategories . ')';
-                    }
-
-                    break;
-
-                case 'visible_images':
-                    if ($filterVisibleImages !== '') {
-                        $sqlList[] = $fieldName . ' IN (' . $filterVisibleImages . ')';
-                    }
-
-                    // note there is no break - visible include forbidden
-                    // no break
-                case 'forbidden_images':
-                    if ($userImageAccessList !== '' || $userImageAccessType !== 'NOT IN') {
-                        $tablePrefix = null;
-                        if ($fieldName === 'id') {
-                            $tablePrefix = '';
-                        } elseif ($fieldName === 'i.id') {
-                            $tablePrefix = 'i.';
-                        }
-
-                        if ($tablePrefix !== null) {
-                            $sqlList[] = $tablePrefix . 'level<=' . $userLevel;
-                        } elseif ($userImageAccessList !== '' && $userImageAccessType !== '') {
-                            $sqlList[] = $fieldName . ' ' . $userImageAccessType
-                                . ' (' . $userImageAccessList . ')';
-                        }
-                    }
-
-                    break;
-
-                default:
-                    throw new \InvalidArgumentException('Unknown condition: ' . $condition);
-            }
-        }
-
-        if ($sqlList !== []) {
-            $sql = '(' . implode(' AND ', $sqlList) . ')';
-        } else {
-            $sql = $forceOneCondition ? '1 = 1' : '';
-        }
-
-        if ($prefixCondition !== null && $sql !== '') {
-            $sql = $prefixCondition . ' ' . $sql;
-        }
-
-        return $sql;
-    }
-
-    /**
-     * `SqlCondition`-returning sibling of `getSqlConditionFandF()` --
-     * transitional (see the SQL-modernization plan's "Bigger finding"
-     * section): each heredoc-SQL file's own staged conversion migrates
-     * its `getSqlConditionFandF()` call sites to this method as that
-     * file's own heredoc SQL gets converted to `QueryBuilder`/bound
-     * parameters. `getSqlConditionFandF()` (string) is deleted once
-     * every call site has migrated -- not a permanent parallel method.
-     *
-     * No `$prefixCondition` parameter: the string-returning method uses
-     * it to splice a raw `"\n  AND"`-shaped continuation directly into
-     * the returned string, but a `SqlCondition`-based caller composes
-     * conjunction via `QueryBuilder::andWhere()`/`SqlCondition::combine()`
-     * instead, so there's nothing for it to do here.
+     * No `$prefixCondition` parameter: a `SqlCondition`-based caller
+     * composes conjunction via `QueryBuilder::andWhere()`/
+     * `SqlCondition::combine()` instead of splicing a raw
+     * `"\n  AND"`-shaped continuation directly into a returned string.
      *
      * Every placeholder name gets a per-call unique suffix (a monotonic
      * counter, not fixed names): real call sites combine multiple
@@ -353,7 +256,7 @@ final readonly class PermissionService
      */
     private static function nextPlaceholderSuffix(): string
     {
-        /** @var int $counter */
+        /** @var int */
         static $counter = 0;
 
         return '_' . $counter++;

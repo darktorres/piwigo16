@@ -10,9 +10,10 @@ use Doctrine\DBAL\ParameterType;
 /**
  * Bound-parameter carrier for a SQL WHERE-clause fragment --
  * `PermissionService::getSqlConditionFandFAsCondition()`'s own output
- * contract, replacing raw string-splicing (see
- * `getSqlConditionFandF()`, the string-returning method this is
- * transitionally replacing one call site at a time).
+ * contract, replacing the raw-string-splicing `getSqlConditionFandF()`
+ * that initially shipped alongside it during the SQL-modernization
+ * initiative's file-by-file migration (deleted once every real call
+ * site had migrated here).
  *
  * Apply via `QueryBuilder::andWhere($condition->sql)->setParameters([
  * ...$condition->parameters])` (with `$condition->types` passed as the

@@ -4,6 +4,43 @@ declare(strict_types=1);
 
 use Piwigo\PluginConfig\EventDispatcher;
 
+/**
+ * Narrows EventDispatcher's private $handlers property (read via
+ * Reflection) from ReflectionProperty::getValue()'s mixed return down to
+ * its real, internally-guaranteed shape.
+ *
+ * @return array<mixed, mixed>
+ */
+function eventDispatcherHandlers(EventDispatcher $dispatcher): array
+{
+    $reflection = new ReflectionProperty(EventDispatcher::class, 'handlers');
+    $handlers = $reflection->getValue($dispatcher);
+    if (! is_array($handlers)) {
+        throw new RuntimeException('Expected handlers to be an array');
+    }
+
+    return $handlers;
+}
+
+/**
+ * @return array<mixed, mixed>
+ */
+function eventDispatcherHandlersAt(EventDispatcher $dispatcher, string $event, int $priority): array
+{
+    $handlers = eventDispatcherHandlers($dispatcher);
+    $atEvent = $handlers[$event] ?? null;
+    if (! is_array($atEvent)) {
+        throw new RuntimeException("Expected handlers[{$event}] to be an array");
+    }
+
+    $atPriority = $atEvent[$priority] ?? null;
+    if (! is_array($atPriority)) {
+        throw new RuntimeException("Expected handlers[{$event}][{$priority}] to be an array");
+    }
+
+    return $atPriority;
+}
+
 beforeEach(function (): void {
     EventDispatcher::reset();
 });
@@ -266,3 +303,156 @@ test('triggerNotify throws only when a dead handler registration is actually inv
 
     $dispatcher->triggerNotify('dead_event_notify');
 })->throws(Error::class);
+
+test('addEventHandler appends a new handler alongside others already registered at that priority', function (): void {
+    // Kills a CoalesceRemoveLeft mutation on the `?? []` fallback: if the
+    // existing $priority bucket were unconditionally discarded instead of
+    // reused, only the second-registered handler would survive.
+    $dispatcher = new EventDispatcher();
+    $calls = [];
+    $dispatcher->addEventHandler('e', static function () use (&$calls): void {
+        $calls[] = 'first';
+    });
+    $dispatcher->addEventHandler('e', static function () use (&$calls): void {
+        $calls[] = 'second';
+    });
+
+    $dispatcher->triggerNotify('e');
+
+    expect($calls)->toBe(['first', 'second']);
+});
+
+test('removeEventHandler scans past a non-matching handler to reach a later match at the same priority', function (): void {
+    // Kills a ContinueToBreak mutation on the loop's `continue`: breaking
+    // instead would abandon the scan at the first non-matching handler and
+    // never reach -- or remove -- the real target.
+    $dispatcher = new EventDispatcher();
+    $dispatcher->addEventHandler('e', 'strtolower');
+    $dispatcher->addEventHandler('e', 'strtoupper');
+
+    $removed = $dispatcher->removeEventHandler('e', 'strtoupper');
+
+    expect($removed)->toBeTrue()
+        ->and($dispatcher->triggerChange('e', 'HeLLo'))->toBe('hello');
+});
+
+test('removeEventHandler re-indexes the surviving handlers after removing one from the middle', function (): void {
+    // Kills an UnwrapArrayValues mutation on array_values(): without it,
+    // removing the middle handler leaves a gapped key structure ([0, 2])
+    // rather than a re-indexed list ([0, 1]) -- unobservable through
+    // trigger*() alone (foreach preserves insertion order regardless of
+    // keys), so this reaches into the private $handlers state directly,
+    // same technique as BlockManagerTest's display_blocks assertions.
+    $dispatcher = new EventDispatcher();
+    $dispatcher->addEventHandler('e', 'strtoupper');
+    $dispatcher->addEventHandler('e', 'trim');
+    $dispatcher->addEventHandler('e', 'strrev');
+
+    $dispatcher->removeEventHandler('e', 'trim');
+
+    $handlersAt50 = eventDispatcherHandlersAt($dispatcher, 'e', 50);
+
+    expect(array_is_list($handlersAt50))->toBeTrue()
+        ->and(array_keys($handlersAt50))->toBe([0, 1]);
+});
+
+test('removeEventHandler fully unregisters an event once its only priority bucket becomes empty', function (): void {
+    // Kills IfNegated/IdenticalToNotIdentical mutations on
+    // `$handlersAtPriority === []`: an inverted/negated condition takes
+    // the else branch instead, leaving a stale empty bucket (and the event
+    // key) in place rather than unsetting both -- which is invisible to
+    // trigger*() (an empty bucket calls no handlers, same as no bucket at
+    // all), so this asserts on the private $handlers state directly.
+    $dispatcher = new EventDispatcher();
+    $dispatcher->addEventHandler('e', 'strtoupper');
+
+    $removed = $dispatcher->removeEventHandler('e', 'strtoupper');
+
+    $handlers = eventDispatcherHandlers($dispatcher);
+
+    expect($removed)->toBeTrue()
+        ->and($handlers)->not->toHaveKey('e');
+});
+
+test('removeEventHandler reassigns the surviving handlers rather than unsetting the priority bucket', function (): void {
+    // Kills the same mutations from the opposite side: with more than one
+    // handler still remaining, the (correct) else branch must run instead
+    // of the empty-bucket cleanup branch.
+    $dispatcher = new EventDispatcher();
+    $dispatcher->addEventHandler('e', 'strtoupper');
+    $dispatcher->addEventHandler('e', 'trim');
+
+    $removed = $dispatcher->removeEventHandler('e', 'strtoupper');
+
+    $handlers = eventDispatcherHandlers($dispatcher);
+    $handlersAt50 = eventDispatcherHandlersAt($dispatcher, 'e', 50);
+
+    expect($removed)->toBeTrue()
+        ->and($handlers)->toHaveKey('e')
+        ->and($handlersAt50)->toHaveCount(1);
+});
+
+test('callablesEqual does not reflect a non-Closure removal target when the registered handler is a Closure', function (): void {
+    // Kills BooleanAndToBooleanOr (`&&` -> `||`) and an InstanceOfToTrue
+    // mutation on the second `instanceof` check: either mutation makes the
+    // branch fire here, calling `new ReflectionFunction($b)` on an
+    // array-callable -- confirmed live to throw TypeError, since
+    // ReflectionFunction only accepts string|Closure, not the
+    // array-callable shape a removal target may hold.
+    $obj = new class {
+        public function handle(mixed $data): mixed
+        {
+            return $data;
+        }
+    };
+    $dispatcher = new EventDispatcher();
+    $dispatcher->addEventHandler('e', static fn (mixed $data): mixed => $data);
+
+    $removed = $dispatcher->removeEventHandler('e', [$obj, 'handle']);
+
+    expect($removed)->toBeFalse();
+});
+
+test('callablesEqual does not reflect a non-Closure registered handler when the removal target is a Closure', function (): void {
+    // Mirror image of the case above: kills BooleanAndToBooleanOr and an
+    // InstanceOfToTrue mutation on the first `instanceof` check by forcing
+    // `new ReflectionFunction($a)` on an array-callable registered handler.
+    $obj = new class {
+        public function handle(mixed $data): mixed
+        {
+            return $data;
+        }
+    };
+    $dispatcher = new EventDispatcher();
+    $dispatcher->addEventHandler('e', [$obj, 'handle']);
+
+    $removed = $dispatcher->removeEventHandler('e', static fn (mixed $data): mixed => $data);
+
+    expect($removed)->toBeFalse();
+});
+
+test('triggerChange skips include_once for a handler registered with an empty-string includePath', function (): void {
+    // Kills an EmptyStringToNotEmpty mutation on the `!== ''` guard: if the
+    // guard stopped treating '' as "no path", include_once('') would run
+    // and (per phpunit.xml.dist's failOnWarning="true") fail this test on
+    // the resulting "Filename cannot be empty"-style warning -- confirmed
+    // live that include_once('') does emit that warning rather than
+    // throwing, so failOnWarning is what makes it observable here.
+    $dispatcher = new EventDispatcher();
+    $dispatcher->addEventHandler('e', static fn (string $s): string => strtoupper($s), 50, '');
+
+    expect($dispatcher->triggerChange('e', 'hi'))->toBe('HI');
+});
+
+test('triggerNotify skips include_once for a handler registered with an empty-string includePath', function (): void {
+    // Kills the same mutation on triggerNotify's own copy of the guard.
+    $dispatcher = new EventDispatcher();
+    $calls = [];
+    $dispatcher->addEventHandler('e', static function () use (&$calls): void {
+        $calls[] = true;
+    }, 50, '');
+
+    $dispatcher->triggerNotify('e');
+
+    expect($calls)->toBe([true]);
+});

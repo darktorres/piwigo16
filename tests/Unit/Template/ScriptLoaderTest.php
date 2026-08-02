@@ -58,6 +58,14 @@ function scriptLoaderTopologicalOrder(ScriptLoader $loader, string $scriptId): i
     return $method->invoke($loader, $scriptId);
 }
 
+function scriptLoaderCmp(Script $s1, Script $s2): int
+{
+    $method = new ReflectionMethod(ScriptLoader::class, 'cmp_by_mode_and_order');
+
+    /** @var int */
+    return $method->invoke(null, $s1, $s2);
+}
+
 function file_combiner_test_rrmdir_scriptloader(string $dir): void
 {
     if (! is_dir($dir)) {
@@ -1052,4 +1060,166 @@ test('compute_script_topological_order does not recompute an already-memoized or
     $registered['standalone']->extra['order'] = 999;
 
     expect(scriptLoaderTopologicalOrder($loader, 'standalone'))->toBe(999);
+});
+
+test('add_inline auto-loads a required script\'s own transitive sub-dependencies at load_mode=1 (footer-sync)', function (): void {
+    // load_known_required_script() is called with a hardcoded `1` here --
+    // distinct from add_inline()'s OWN separate downgrade-if-already-async
+    // step right below it (`if ($s->load_mode === 2) { $s->load_mode = 1;
+    // }`), which only re-corrects the id literally named in $require
+    // ('jquery.ui.dialog' itself) back down to 1 if it lands on 2 -- NOT
+    // its own transitively-pulled-in precedents (fill_well_known() adds
+    // jquery/jquery.ui/jquery.ui.widget/jquery.ui.position/jquery.ui.mouse
+    // for an unlisted jquery.ui.* id, each auto-loaded via add()'s own
+    // "Try to load undefined required script" loop using this SAME `1`).
+    // Asserting on 'jquery' (a sub-dependency, not the directly-required
+    // id) is what actually distinguishes the hardcoded `1` from a
+    // mutated 0 or 2 -- asserting on 'jquery.ui.dialog' itself wouldn't,
+    // since a load_mode=2 there gets silently self-corrected regardless.
+    $loader = new ScriptLoader();
+
+    $loader->add_inline('console.log(1);', ['jquery.ui.dialog']);
+
+    expect(scriptLoaderRegistered($loader)['jquery']->load_mode)->toBe(1);
+});
+
+test('check_load_dep needs a second pass to cascade an unconditional downgrade through an intermediate node', function (): void {
+    // top(load=0) requires mid(load=2) requires bottom(load=2), registered
+    // in the order mid, bottom, top -- so mid's own scan of its precedent
+    // ('bottom') happens BEFORE top gets a chance to downgrade mid, using
+    // mid's STALE load_mode=2 (2 > 2 is false, no downgrade yet). Only
+    // once top downgrades mid (later in pass 1) does pass 2 get to use
+    // mid's new load=0 to finally cascade the downgrade down to bottom.
+    // templateCombineFiles=true (the default) plus purely local (non-
+    // remote) paths keep the async-specific downgrade branch inert, so
+    // this isolates the do-while's own repeat -- a single pass leaves
+    // bottom at its stale load_mode=2 instead of the converged 0.
+    ScriptLoader::setUrlService(new UrlService(new HtmlService()));
+    CurrentConfig::setTemplateCombineFiles(true);
+
+    $loader = new ScriptLoader();
+    $loader->add('mid', 2, ['bottom'], 'themes/default/js/mid.js');
+    $loader->add('bottom', 2, [], 'themes/default/js/bottom.js');
+    $loader->add('top', 0, ['mid'], 'themes/default/js/top.js');
+
+    try {
+        $method = new ReflectionMethod(ScriptLoader::class, 'check_load_dep');
+        $method->invoke(null, scriptLoaderRegistered($loader));
+
+        expect(scriptLoaderRegistered($loader)['bottom']->load_mode)->toBe(0);
+    } finally {
+        CurrentConfig::reset();
+    }
+});
+
+test('check_load_dep needs a further pass unlocked by the async branch\'s own changed=true, not just the unconditional branch\'s', function (): void {
+    // A 5-node graph (n4, n1, n2, n3, n0 -- registered in exactly that
+    // order) where, within pass 1's LAST steps, n0 downgrades its
+    // precedent n3 via the ASYNC-specific branch (both sit at load=2) --
+    // if that specific `$changed = true;` were suppressed, the do-while
+    // would stop right there, even though an EARLIER unconditional-branch
+    // change in that SAME pass (n2 downgrading n4) legitimately unlocked a
+    // further, necessary pass 2+3 cascade that eventually drops n1's own
+    // load_mode from 1 to 0. Exhaustively verified via a standalone
+    // brute-force reimplementation that no 3- or 4-node graph (in any
+    // registration order) can distinguish this mutation -- only 5+ node
+    // graphs can, because it needs both an unconditional AND an async
+    // downgrade coexisting in the same pass, with the async one ending up
+    // last.
+    ScriptLoader::setUrlService(new UrlService(new HtmlService()));
+    CurrentConfig::setTemplateCombineFiles(false);
+
+    $loader = new ScriptLoader();
+    $loader->add('n4', 2, ['n1'], 'themes/default/js/n4.js');
+    $loader->add('n1', 1, [], 'themes/default/js/n1.js');
+    $loader->add('n2', 0, ['n4'], 'themes/default/js/n2.js');
+    $loader->add('n3', 2, ['n2'], 'themes/default/js/n3.js');
+    $loader->add('n0', 2, ['n3', 'n1'], 'themes/default/js/n0.js');
+
+    try {
+        $method = new ReflectionMethod(ScriptLoader::class, 'check_load_dep');
+        $method->invoke(null, scriptLoaderRegistered($loader));
+
+        expect(scriptLoaderRegistered($loader)['n1']->load_mode)->toBe(0);
+    } finally {
+        CurrentConfig::reset();
+    }
+});
+
+test('check_load_dep continues past an unregistered precedent instead of abandoning the remaining ones', function (): void {
+    // 'dependent' lists an unregistered ghost id BEFORE its real,
+    // registered precedent -- `continue` (real code) skips only the ghost
+    // and still checks 'real-precedent' afterwards; `continue`-mutated-to-
+    // `break` would abandon the whole inner loop right there, leaving
+    // 'real-precedent' at its original load_mode.
+    $loader = new ScriptLoader();
+    $loader->add('dependent', 0, ['totally-unregistered-ghost', 'real-precedent'], 'themes/default/js/dep.js');
+    $loader->add('real-precedent', 2, [], 'themes/default/js/real.js');
+
+    $method = new ReflectionMethod(ScriptLoader::class, 'check_load_dep');
+    $method->invoke(null, scriptLoaderRegistered($loader));
+
+    expect(scriptLoaderRegistered($loader)['real-precedent']->load_mode)->toBe(0);
+});
+
+test('cmp_by_mode_and_order returns the raw topological-order difference, without falling through to id comparison', function (): void {
+    // s1's id sorts alphabetically AFTER s2's, but s1's own order (1) is
+    // strictly less than s2's (3) -- the correct result is the NEGATIVE
+    // order difference (1 - 3 = -2), not a MinusToPlus-flipped +4, and not
+    // whatever strcmp('zzz-late-id', 'aaa-early-id') would give if the
+    // early return were skipped (that's positive, the wrong sign, since
+    // 'z' > 'a').
+    $s1 = new Script(0, 'zzz-late-id', 'themes/default/js/a.js');
+    $s1->extra['order'] = 1;
+    $s2 = new Script(0, 'aaa-early-id', 'themes/default/js/b.js');
+    $s2->extra['order'] = 3;
+
+    expect(scriptLoaderCmp($s1, $s2))->toBe(-2);
+});
+
+test('cmp_by_mode_and_order falls through to strcmp when orders match but are non-zero, even if one script is remote', function (): void {
+    // Both scripts share load_mode=0 and topological order=5 (non-zero) --
+    // the remote/local tiebreak is only supposed to apply when order===0
+    // (LogicalAndToLogicalOr on the `and` would wrongly let a non-zero
+    // order fall into the remote/local ±1 branch just because the xor
+    // half is true).
+    ScriptLoader::setUrlService(new UrlService(new HtmlService()));
+
+    $s1 = new Script(0, 'local-id', 'themes/default/js/local.js');
+    $s1->extra['order'] = 5;
+    $s2 = new Script(0, 'remote-id', 'https://cdn.example.com/x.js');
+    $s2->extra['order'] = 5;
+
+    expect(scriptLoaderCmp($s1, $s2))->toBe(strcmp('local-id', 'remote-id'));
+});
+
+test('cmp_by_mode_and_order sorts a remote script strictly before a local one at the same mode/order (direct comparator invocation)', function (): void {
+    // Complements the existing uasort()-based remote-tiebreak test --
+    // asserts the EXACT -1 return value directly, closing both an
+    // IncrementInteger mutant on that literal (-1 -> 0, a tie instead of
+    // "before") and a DecrementInteger one (-1 -> -2, still negative for
+    // sorting purposes but a different pinned value here).
+    ScriptLoader::setUrlService(new UrlService(new HtmlService()));
+
+    $remote = new Script(0, 'remote-id', 'https://cdn.example.com/x.js');
+    $remote->extra['order'] = 0;
+    $local = new Script(0, 'local-id', 'themes/default/js/local.js');
+    $local->extra['order'] = 0;
+
+    expect(scriptLoaderCmp($remote, $local))->toBe(-1);
+});
+
+test('cmp_by_mode_and_order sorts a local script strictly after a remote one at the same mode/order (direct comparator invocation)', function (): void {
+    // The mirror image of the test above, exercising the ternary's OTHER
+    // branch (`$s1` is the local one this time) -- pins the exact +1
+    // return value, closing an IncrementInteger mutant on that literal
+    // (1 -> 2).
+    ScriptLoader::setUrlService(new UrlService(new HtmlService()));
+
+    $remote = new Script(0, 'remote-id', 'https://cdn.example.com/x.js');
+    $remote->extra['order'] = 0;
+    $local = new Script(0, 'local-id', 'themes/default/js/local.js');
+    $local->extra['order'] = 0;
+
+    expect(scriptLoaderCmp($local, $remote))->toBe(1);
 });

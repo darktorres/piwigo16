@@ -7,10 +7,13 @@ namespace Piwigo\Tests\Unit\Url;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\RequestMountDepth;
+use Piwigo\Core\WsContext;
 use Piwigo\Html\HtmlService;
+use Piwigo\Section\SectionContext;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Url\RootPathOverride;
 use Piwigo\Url\UrlService;
+use ReflectionProperty;
 use RuntimeException;
 
 /**
@@ -415,6 +418,343 @@ test('makePictureUrl falls through the file style to the bare id when the filena
     expect($url)->toBe('picture/42');
 });
 
+test('getRootUrl treats an empty-string section rootPath the same as no rootPath at all', function (): void {
+    RequestMountDepth::set(1);
+    SectionContextRegistry::set(new SectionContext(rootPath: ''));
+    $service = new UrlService(new HtmlService());
+
+    expect($service->getRootUrl())->toBe('../');
+});
+
+/**
+ * A mutation-testing sweep found two confirmed-equivalent mutants inside
+ * getAbsoluteRootUrl() -- verified live by sed-mutating the exact source
+ * line, rerunning this file's full suite, and confirming it still passes,
+ * then restoring the original:
+ *
+ * - `$url .= 'https://';` (the "then" arm) and `$url .= 'http://';` (the
+ *   "else" arm) each mutate to `$url = '...'` (ConcatEqualToEqual). `$url`
+ *   is unconditionally assigned `''` immediately before the enclosing
+ *   `if ($withScheme)` block, and nothing between that assignment and
+ *   either arm can change it -- so `.=` and `=` write the exact same value
+ *   in both arms, for every possible input.
+ */
+test('getAbsoluteRootUrl detects HTTPS from a case-insensitive $_SERVER[\'HTTPS\'] value', function (): void {
+    $_SERVER['HTTPS'] = 'ON';
+    $_SERVER['HTTP_HOST'] = 'gallery.example.test';
+    $service = new UrlService(new HtmlService());
+
+    expect($service->getAbsoluteRootUrl())->toBe('https://gallery.example.test/piwigo/');
+});
+
+test('getAbsoluteRootUrl omits the standard auto-detected port 443 for https', function (): void {
+    CurrentConfig::setUrlPort('auto');
+    $_SERVER['HTTPS'] = 'on';
+    $_SERVER['HTTP_HOST'] = 'gallery.example.test';
+    $_SERVER['SERVER_PORT'] = '443';
+    $service = new UrlService(new HtmlService());
+
+    expect($service->getAbsoluteRootUrl())->toBe('https://gallery.example.test/piwigo/');
+});
+
+test('getAbsoluteRootUrl trusts a forwarded host header when allowed_hosts is unconfigured', function (): void {
+    $_SERVER['HTTP_X_FORWARDED_HOST'] = 'forwarded.example.test';
+    $service = new UrlService(new HtmlService());
+
+    expect($service->getAbsoluteRootUrl())->toBe('http://forwarded.example.test/piwigo/');
+});
+
+test('getAbsoluteRootUrl falls back to an empty host segment when no host header, forwarded host, or gallery_url is present', function (): void {
+    CurrentConfig::setUrlPort('none');
+    $service = new UrlService(new HtmlService());
+
+    expect($service->getAbsoluteRootUrl())->toBe('http:///piwigo/');
+});
+
+test('getAbsoluteRootUrl omits the port segment entirely when the auto-detected server port is unavailable', function (): void {
+    // Regression test for a real, confirmed bug (found 2026-08-01 during
+    // the mutation sweep): SERVER_PORT missing used to leave $server_port
+    // null, which made `$server_port !== 80/443` vacuously true and
+    // appended a bare trailing ':' with no digits after it. Fixed by
+    // defaulting to 80, matching 16.x-rewrite's own UrlService -- a
+    // missing SERVER_PORT should behave like the default HTTP port, i.e.
+    // no port segment at all for a non-HTTPS request.
+    CurrentConfig::setUrlPort('auto');
+    $_SERVER['HTTP_HOST'] = 'gallery.example.test';
+    unset($_SERVER['SERVER_PORT']);
+    $service = new UrlService(new HtmlService());
+
+    expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test/piwigo/');
+});
+
+test('getAbsoluteRootUrl does not duplicate a port already present via the Host header', function (): void {
+    CurrentConfig::setUrlPort('auto');
+    $_SERVER['HTTP_HOST'] = 'gallery.example.test:8080';
+    $_SERVER['SERVER_PORT'] = '8080';
+    $service = new UrlService(new HtmlService());
+
+    expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test:8080/piwigo/');
+});
+
+test('getAbsoluteRootUrl falls back to the Host header when gallery_url is an empty string', function (): void {
+    CurrentConfig::setUrlPort('none');
+    CurrentConfig::setGalleryUrl('');
+    $_SERVER['HTTP_HOST'] = 'gallery.example.test';
+    $service = new UrlService(new HtmlService());
+
+    expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test/piwigo/');
+});
+
+/**
+ * configuredHost()'s `$gallery_url === ''` (line 159) EmptyStringToNotEmpty
+ * mutant is a confirmed equivalent -- verified live the same way as above.
+ * For the one input that distinguishes it (`$gallery_url === ''`), real
+ * code returns null immediately via this guard; the mutant instead falls
+ * through to `parse_url('', PHP_URL_HOST)`, which itself returns null (not
+ * a string) -- so the very next guard (`! is_string($host) || ...`, line
+ * 164) catches it and returns null anyway. Both paths produce the exact
+ * same final `null`, so no test (including the one right above, which
+ * exercises this literal input) can tell them apart.
+ */
+test('getAbsoluteRootUrl falls back to the Host header when gallery_url has an empty authority (no host at all)', function (): void {
+    // parse_url('http:///x', PHP_URL_HOST) returns bool(false) (not a
+    // string, not null) -- a distinct shape from the 'not-a-real-url-at-all'
+    // case above (which parses to null): both must hit the same "! is_string
+    // || ===''" early-return in configuredHost(), covering the '! is_string'
+    // operand specifically (host is bool false here, never the empty
+    // string) rather than the "===''" operand.
+    CurrentConfig::setUrlPort('none');
+    CurrentConfig::setGalleryUrl('http:///x');
+    $_SERVER['HTTP_HOST'] = 'gallery.example.test';
+    $service = new UrlService(new HtmlService());
+
+    expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test/piwigo/');
+});
+
+/**
+ * addUrlParams()'s `$is_first = false;` (line 210) FalseToTrue mutant and
+ * its `(string) $val` (line 217) RemoveStringCast mutant are both confirmed
+ * equivalents -- verified live the same sed-mutate-and-rerun way.
+ *
+ * - FalseToTrue: once mutated, $is_first never becomes false, so every
+ *   iteration re-enters the `if ($is_first)` branch and re-evaluates
+ *   `! str_contains($url, '?') ? '?' : $argSeparator`. But by the time any
+ *   iteration after the first runs, $url is *guaranteed* to already contain
+ *   a '?' -- either it appended the literal '?' itself on iteration 0, or
+ *   the caller's $url already had one going in (in which case iteration 0
+ *   appended $argSeparator instead of '?', but the '?' from before was
+ *   already there). So from iteration 1 onward this ternary always
+ *   resolves to $argSeparator, byte-for-byte identical to what the real
+ *   "else" branch (`$url .= $argSeparator;`) does -- no input can produce
+ *   a different result.
+ * - RemoveStringCast: `$url .= '=' . (is_scalar($val) ? $val : '')` --
+ *   PHP's `.=`/`.` operators coerce any scalar operand (int, float, bool,
+ *   string) to a string using the exact same rules as an explicit
+ *   `(string)` cast, so dropping the cast immediately before a
+ *   concatenation is a no-op for every scalar value.
+ */
+test('addUrlParams switches the default separator to a plain ampersand inside a WS request context', function (): void {
+    WsContext::mark();
+
+    try {
+        $service = new UrlService(new HtmlService());
+
+        expect($service->addUrlParams('/x', ['a' => 'b', 'c' => 'd']))->toBe('/x?a=b&c=d');
+    } finally {
+        WsContext::reset();
+    }
+});
+
+test('addUrlParams appends an empty value for a non-scalar param', function (): void {
+    $service = new UrlService(new HtmlService());
+
+    expect($service->addUrlParams('/x', ['a' => ['nested']]))->toBe('/x?a=');
+});
+
+test('makeIndexUrl builds a real path when params add a section, keeping the php extension and question mark', function (): void {
+    $service = new UrlService(new HtmlService());
+
+    $url = $service->makeIndexUrl(['section' => 'categories']);
+
+    expect($url)->toBe('index.php?/categories');
+});
+
+test('makeIndexUrl falls back to the absolute root URL when no params add anything to the path', function (): void {
+    $service = new UrlService(new HtmlService());
+
+    expect($service->makeIndexUrl())->toBe($service->getAbsoluteRootUrl(false));
+});
+
+test('paramsForDuplication seeds params from the current section context', function (): void {
+    SectionContextRegistry::set(new SectionContext(section: 'tags'));
+    $service = new UrlService(new HtmlService());
+
+    $params = $service->paramsForDuplication([], []);
+
+    expect($params['section'])->toBe('tags');
+});
+
+test('paramsForDuplication removes listed keys and applies redefinitions', function (): void {
+    SectionContextRegistry::set(new SectionContext(section: 'tags', start: 20));
+    $service = new UrlService(new HtmlService());
+
+    $params = $service->paramsForDuplication(['section' => 'categories'], ['start']);
+
+    expect($params['section'])->toBe('categories')
+        ->and(array_key_exists('start', $params))->toBeFalse();
+});
+
+/**
+ * A mutation-testing sweep found four more confirmed-equivalent mutants
+ * inside makePictureUrl(), all verified live the same sed-mutate-and-rerun
+ * way:
+ *
+ * - The three `is_scalar($image_id) ? (string) $image_id : ''` /
+ *   `is_scalar($start) ? (string) $start : ''`-shaped RemoveStringCast
+ *   mutants (the id-file-style, default-arm, and addWellKnownParamsInUrl's
+ *   own start segment) are equivalent for the same reason as addUrlParams's
+ *   own `(string) $val` above: concatenation already coerces any scalar to
+ *   string identically to an explicit cast.
+ * - `! (bool) preg_match(...)` (in the 'file' style's digit-boundary
+ *   guard) RemoveBooleanCast: `!` itself always coerces its operand to
+ *   bool first (preg_match() only ever returns int|false, both of which
+ *   `!` and `(bool)` interpret identically), so the explicit cast changes
+ *   nothing.
+ * - `$fname_wo_ext[0]` (same guard) IncrementInteger, mutating the index
+ *   to `[1]`: the guard is
+ *   `ord($fname_wo_ext[0]) > ord('9') or ! (bool) preg_match('/^\d+(-|$)/', $fname_wo_ext)`.
+ *   Whenever the regex fails to match (preg_match's second operand is
+ *   true), $fname_wo_ext doesn't start with `\d+(-|$)` at all, which
+ *   happens precisely when index 0 is *not* itself part of a clean
+ *   digit-then-dash-or-end run -- and by construction of `\d+(-|$)`, on
+ *   every string where the regex *does* match, index 1 (if it exists) is
+ *   either another digit or the terminating '-', so `ord(...) > ord('9')`
+ *   is false at index 1 exactly when it's false at index 0 too. Every
+ *   input therefore produces the same overall boolean via index 1 as via
+ *   index 0 -- confirmed against both the 'sunset.jpg' (non-digit-led),
+ *   '9-something.jpg' (single-digit-then-dash), and '42-something.jpg'
+ *   (multi-digit-then-dash) shapes exercised by the tests in this file.
+ */
+test('makePictureUrl prefixes the root URL before the picture path segment', function (): void {
+    RequestMountDepth::set(1);
+    CurrentConfig::setPhpExtensionInUrls(false);
+    CurrentConfig::setQuestionMarkInUrls(false);
+    CurrentConfig::setPictureUrlStyle('id-file');
+    $service = new UrlService(new HtmlService());
+
+    $url = $service->makePictureUrl(['image_id' => 5]);
+
+    expect($url)->toBe('../picture/5');
+});
+
+test('makePictureUrl appends the php extension and question mark by default, preserving the picture prefix', function (): void {
+    CurrentConfig::setPictureUrlStyle('id-file');
+    $service = new UrlService(new HtmlService());
+
+    $url = $service->makePictureUrl(['image_id' => 5]);
+
+    expect($url)->toBe('picture.php?/5');
+});
+
+test('makePictureUrl in id-file style uses an empty id segment when image_id is absent', function (): void {
+    CurrentConfig::setPhpExtensionInUrls(false);
+    CurrentConfig::setQuestionMarkInUrls(false);
+    CurrentConfig::setPictureUrlStyle('id-file');
+    $service = new UrlService(new HtmlService());
+
+    $url = $service->makePictureUrl([]);
+
+    expect($url)->toBe('picture/');
+});
+
+test('makePictureUrl in id-file style omits the filename suffix when image_file is not a string', function (): void {
+    CurrentConfig::setPhpExtensionInUrls(false);
+    CurrentConfig::setQuestionMarkInUrls(false);
+    CurrentConfig::setPictureUrlStyle('id-file');
+    $service = new UrlService(new HtmlService());
+
+    $url = $service->makePictureUrl(['image_id' => 5, 'image_file' => 123]);
+
+    expect($url)->toBe('picture/5');
+});
+
+test('makePictureUrl in file style falls through to the bare id when image_file is not a string', function (): void {
+    CurrentConfig::setPhpExtensionInUrls(false);
+    CurrentConfig::setQuestionMarkInUrls(false);
+    CurrentConfig::setPictureUrlStyle('file');
+    $service = new UrlService(new HtmlService());
+
+    $url = $service->makePictureUrl(['image_id' => 5, 'image_file' => 123]);
+
+    expect($url)->toBe('picture/5');
+});
+
+test('makePictureUrl in file style respects the ord(\'9\') boundary exactly (a lone leading 9 still falls through)', function (): void {
+    CurrentConfig::setPhpExtensionInUrls(false);
+    CurrentConfig::setQuestionMarkInUrls(false);
+    CurrentConfig::setPictureUrlStyle('file');
+    $service = new UrlService(new HtmlService());
+
+    // '9-something' starts with '9' (ord 57, not > ord('9')) and matches
+    // /^\d+(-|$)/ -- both operands of the guard are false, so this falls
+    // through to the bare image_id, same as the existing '42-something.jpg'
+    // test above but isolating the exact '9' boundary instead of '4'.
+    $url = $service->makePictureUrl(['image_id' => 99, 'image_file' => '9-something.jpg']);
+
+    expect($url)->toBe('picture/99');
+});
+
+test('makePictureUrl in file style uses the filename when it starts with digits but does not match the id-like pattern', function (): void {
+    CurrentConfig::setPhpExtensionInUrls(false);
+    CurrentConfig::setQuestionMarkInUrls(false);
+    CurrentConfig::setPictureUrlStyle('file');
+    $service = new UrlService(new HtmlService());
+
+    // '42abc' starts with a digit (first operand false) but does not match
+    // /^\d+(-|$)/ since the digit run is followed by a letter, not '-' or
+    // end-of-string (second operand true) -- isolates the "or" from an "and".
+    $url = $service->makePictureUrl(['image_id' => 77, 'image_file' => '42abc.jpg']);
+
+    expect($url)->toBe('picture/42abc');
+});
+
+test('makePictureUrl uses an empty id segment in the default style branch when image_id is absent', function (): void {
+    CurrentConfig::setPhpExtensionInUrls(false);
+    CurrentConfig::setQuestionMarkInUrls(false);
+    CurrentConfig::setPictureUrlStyle('unrecognized-style');
+    $service = new UrlService(new HtmlService());
+
+    $url = $service->makePictureUrl([]);
+
+    expect($url)->toBe('picture/');
+});
+
+test('makePictureUrl drops the flat param when no category is given (shorter urls)', function (): void {
+    CurrentConfig::setPhpExtensionInUrls(false);
+    CurrentConfig::setQuestionMarkInUrls(false);
+    CurrentConfig::setPictureUrlStyle('id-file');
+    $service = new UrlService(new HtmlService());
+
+    $url = $service->makePictureUrl(['image_id' => 5, 'flat' => true]);
+
+    expect($url)->toBe('picture/5');
+});
+
+test('addWellKnownParamsInUrl appends /start-N for the boundary value start=1', function (): void {
+    $service = new UrlService(new HtmlService());
+
+    expect($service->addWellKnownParamsInUrl('/x', ['start' => 1]))->toBe('/x/start-1');
+});
+
+test('addWellKnownParamsInUrl appends an empty start segment when start is a non-scalar truthy value', function (): void {
+    // ['nested'] > 0 is true (PHP: an array always compares greater than an
+    // int), so the isset()+>0 guard passes even though $start itself is not
+    // scalar -- isolates the (string) cast's own is_scalar() fallback.
+    $service = new UrlService(new HtmlService());
+
+    expect($service->addWellKnownParamsInUrl('/x', ['start' => ['nested']]))->toBe('/x/start-');
+});
+
 test('makeSectionInUrl defaults a non-array category param to an empty array', function (): void {
     $service = new UrlService(new HtmlService());
 
@@ -525,6 +865,140 @@ test('makeSectionInUrl builds a list section from scalar ids only', function ():
 
     expect($service->makeSectionInUrl(['section' => 'list', 'list' => [12, 34, 'not-scalar' => ['x']]]))
         ->toBe('/list/12,34');
+});
+
+test('makeSectionInUrl infers the categories section from a bare category param when section is unset', function (): void {
+    $service = new UrlService(new HtmlService());
+
+    $result = $service->makeSectionInUrl(['category' => ['id' => 1, 'name' => 'Test', 'permalink' => 'test-perma']]);
+
+    expect($result)->toBe('/category/test-perma');
+});
+
+test('makeSectionInUrl infers the tags section from a bare tags param when section is unset', function (): void {
+    CurrentConfig::setTagUrlStyle('id');
+    $service = new UrlService(new HtmlService());
+
+    $result = $service->makeSectionInUrl(['tags' => [['id' => 3, 'url_name' => 'nature']]]);
+
+    expect($result)->toBe('/tags/3');
+});
+
+test('makeSectionInUrl infers the list section from a bare list param when section is unset', function (): void {
+    $service = new UrlService(new HtmlService());
+
+    $result = $service->makeSectionInUrl(['list' => [1, 2, 3]]);
+
+    expect($result)->toBe('/list/1,2,3');
+});
+
+test('makeSectionInUrl infers the search section from a bare search param when section is unset', function (): void {
+    $service = new UrlService(new HtmlService());
+
+    $result = $service->makeSectionInUrl(['search' => 'hello']);
+
+    expect($result)->toBe('/search/hello');
+});
+
+test('makeSectionInUrl treats an explicit empty-string permalink the same as unset, falling back to the id', function (): void {
+    $service = new UrlService(new HtmlService());
+
+    $result = $service->makeSectionInUrl(['section' => 'categories', 'category' => ['id' => 10, 'name' => 'Test', 'permalink' => '']]);
+
+    expect($result)->toBe('/category/10');
+});
+
+test('makeSectionInUrl falls back to an empty slugified name when the name key is absent in id-name style', function (): void {
+    CurrentConfig::setCategoryUrlStyle('id-name');
+    $service = new UrlService(new HtmlService());
+
+    // 'name' is absent (only 'permalink' is present, as null) -- triggers
+    // the same "category name not set" E_USER_WARNING as the "non-array
+    // category param" test above.
+    set_error_handler(static fn (): bool => true);
+    try {
+        $result = $service->makeSectionInUrl(['section' => 'categories', 'category' => ['id' => 7, 'permalink' => null]]);
+    } finally {
+        restore_error_handler();
+    }
+
+    expect($result)->toBe('/category/7-');
+});
+
+test('makeSectionInUrl falls back to an empty permalink string when the category permalink is non-scalar', function (): void {
+    $service = new UrlService(new HtmlService());
+
+    $result = $service->makeSectionInUrl(['section' => 'categories', 'category' => ['id' => 1, 'name' => 'X', 'permalink' => ['a', 'b']]]);
+
+    expect($result)->toBe('/category/');
+});
+
+test('makeSectionInUrl treats an explicit empty-string combined-category permalink like unset, using the id', function (): void {
+    $service = new UrlService(new HtmlService());
+
+    $result = $service->makeSectionInUrl([
+        'section' => 'categories',
+        'category' => ['id' => 1, 'name' => 'Main', 'permalink' => 'main-perma'],
+        'combined_categories' => [
+            ['id' => 21, 'name' => 'Fourth', 'permalink' => ''],
+        ],
+    ]);
+
+    expect($result)->toBe('/category/main-perma/21');
+});
+
+test('makeSectionInUrl falls back to an empty combined-category permalink string when non-scalar', function (): void {
+    $service = new UrlService(new HtmlService());
+
+    $result = $service->makeSectionInUrl([
+        'section' => 'categories',
+        'category' => ['id' => 1, 'name' => 'Main', 'permalink' => 'main-perma'],
+        'combined_categories' => [
+            ['id' => 31, 'name' => 'Fifth', 'permalink' => ['x']],
+        ],
+    ]);
+
+    expect($result)->toBe('/category/main-perma/');
+});
+
+test('makeSectionInUrl appends an empty id segment for a tag missing its id, in "id" style', function (): void {
+    CurrentConfig::setTagUrlStyle('id');
+    $service = new UrlService(new HtmlService());
+
+    $result = $service->makeSectionInUrl(['section' => 'tags', 'tags' => [[]]]);
+
+    expect($result)->toBe('/tags/');
+});
+
+test('makeSectionInUrl falls through the "tag" style to default when url_name is present but non-scalar', function (): void {
+    CurrentConfig::setTagUrlStyle('tag');
+    $service = new UrlService(new HtmlService());
+
+    // url_name is set (non-null) but not scalar -- the "isset && is_scalar"
+    // guard must require BOTH, not either: an OR would wrongly try to use
+    // the array as the url_name segment instead of falling through.
+    $result = $service->makeSectionInUrl(['section' => 'tags', 'tags' => [['id' => 99, 'url_name' => ['nested']]]]);
+
+    expect($result)->toBe('/tags/99');
+});
+
+test('makeSectionInUrl omits the tag name suffix in the default style when url_name is non-scalar', function (): void {
+    CurrentConfig::setTagUrlStyle('id-tag');
+    $service = new UrlService(new HtmlService());
+
+    // Reaches the default arm directly (not via the "tag" style fallthrough)
+    // -- isolates its own "isset && is_scalar" guard on the suffix.
+    $result = $service->makeSectionInUrl(['section' => 'tags', 'tags' => [['id' => 55, 'url_name' => ['nested']]]]);
+
+    expect($result)->toBe('/tags/55');
+});
+
+test('makeSectionInUrl appends an empty search segment when no search param is present', function (): void {
+    $service = new UrlService(new HtmlService());
+
+    $result = $service->makeSectionInUrl(['section' => 'search']);
+
+    expect($result)->toBe('/search/');
 });
 
 test('parseSectionUrl recognizes the favorites/most_visited/best_rated/recent_pics/recent_cats tokens', function (): void {
@@ -671,6 +1145,203 @@ test('getUserFavorites returns an empty array for a guest', function (): void {
         $service = new UrlService(new HtmlService());
 
         expect($service->getUserFavorites())->toBe([]);
+    } finally {
+        \Piwigo\Users\CurrentUser::reset();
+    }
+});
+
+test('parseSectionUrl enters the categories section for a token starting with "categor"', function (): void {
+    $service = new UrlService(new HtmlService());
+    $i = 0;
+
+    // A single token with nothing following it -- the while loop inside
+    // the categories branch never executes (isset($tokens[1]) is false),
+    // so this exercises the str_starts_with() guard itself without
+    // needing any category row to actually exist in the DB.
+    $page = $service->parseSectionUrl(['category'], $i, new UrlServiceTestRedirectService());
+
+    expect($page)->toBe(['section' => 'categories'])
+        ->and($i)->toBe(1);
+});
+
+test('parseSectionUrl rejects a bare tags token with no tag identifiers', function (): void {
+    $service = new UrlService(new UrlServiceTestHtmlRenderer());
+    $i = 0;
+
+    // badRequest() throws before TagService is ever constructed, so this
+    // never touches the DB either.
+    expect(fn () => $service->parseSectionUrl(['tags'], $i, new UrlServiceTestRedirectService()))
+        ->toThrow(RuntimeException::class, 'badRequest: at least one tag required');
+});
+
+test('parseSectionUrl advances nextToken past both the list token and its trailing increment', function (): void {
+    $service = new UrlService(new HtmlService());
+    $i = 0;
+
+    $service->parseSectionUrl(['list', '12'], $i, new UrlServiceTestRedirectService());
+
+    expect($i)->toBe(2);
+});
+
+test('parseWellKnownParamsUrl parses a "posted-" chronology token', function (): void {
+    $service = new UrlService(new HtmlService());
+    $i = 0;
+
+    $result = $service->parseWellKnownParamsUrl(['posted-monthly-2026-07'], $i);
+
+    expect($result)->toBe([
+        'chronology_field' => 'posted',
+        'chronology_style' => 'monthly',
+        'chronology_date' => ['2026', '07'],
+    ]);
+});
+
+test('parseWellKnownParamsUrl accepts a "weekly" chronology style', function (): void {
+    $service = new UrlService(new HtmlService());
+    $i = 0;
+
+    $result = $service->parseWellKnownParamsUrl(['created-weekly-2026'], $i);
+
+    expect($result)->toBe([
+        'chronology_field' => 'created',
+        'chronology_style' => 'weekly',
+        'chronology_date' => ['2026'],
+    ]);
+});
+
+test('parseWellKnownParamsUrl leaves chronology_date unset when nothing remains after the style token', function (): void {
+    $service = new UrlService(new HtmlService());
+    $i = 0;
+
+    $result = $service->parseWellKnownParamsUrl(['created-monthly'], $i);
+
+    expect($result)->toBe([
+        'chronology_field' => 'created',
+        'chronology_style' => 'monthly',
+    ]);
+});
+
+test('parseWellKnownParamsUrl sets chronology_date from a single remaining token', function (): void {
+    $service = new UrlService(new HtmlService());
+    $i = 0;
+
+    $result = $service->parseWellKnownParamsUrl(['created-monthly-2026'], $i);
+
+    expect($result)->toBe([
+        'chronology_field' => 'created',
+        'chronology_style' => 'monthly',
+        'chronology_date' => ['2026'],
+    ]);
+});
+
+test('parseWellKnownParamsUrl parses an explicit "list" chronology view', function (): void {
+    $service = new UrlService(new HtmlService());
+    $i = 0;
+
+    $result = $service->parseWellKnownParamsUrl(['created-monthly-list-2026-07'], $i);
+
+    expect($result)->toBe([
+        'chronology_field' => 'created',
+        'chronology_style' => 'monthly',
+        'chronology_view' => 'list',
+        'chronology_date' => ['2026', '07'],
+    ]);
+});
+
+test('getActionUrl prefixes action.php with a non-empty root URL', function (): void {
+    RequestMountDepth::set(1);
+    $service = new UrlService(new HtmlService());
+
+    expect($service->getActionUrl(42, 'e', false))->toBe('../action.php?id=42&amp;part=e');
+});
+
+test('getElementUrl returns an empty string for a non-scalar path', function (): void {
+    $service = new UrlService(new HtmlService());
+
+    expect($service->getElementUrl(['path' => ['not', 'scalar']]))->toBe('');
+});
+
+test('unsetMakeFullUrl pops the override pushed by setMakeFullUrl', function (): void {
+    RequestMountDepth::set(1);
+    $_SERVER['HTTP_HOST'] = 'gallery.example.test';
+    $service = new UrlService(new HtmlService());
+
+    // getAbsoluteRootUrl()'s own cookiePath() also reads RequestMountDepth
+    // (it collapses a trailing '../' against the SCRIPT_NAME dirname), so
+    // with mountDepth=1 this resolves to the bare host root, not
+    // '.../piwigo/' -- what matters here is only that it's the absolute
+    // (scheme+host) form, distinct from the '../' the mount-depth-relative
+    // path produces once the override is popped below.
+    $service->setMakeFullUrl();
+    expect($service->getRootUrl())->toBe('http://gallery.example.test/');
+
+    $service->unsetMakeFullUrl();
+    expect($service->getRootUrl())->toBe('../');
+});
+
+test('embellishUrl leaves a leading /../ unresolved (the offset skips a match at position 0)', function (): void {
+    $service = new UrlService(new HtmlService());
+
+    expect($service->embellishUrl('/../b'))->toBe('/../b');
+});
+
+test('embellishUrl resolves a /../ immediately following a leading slash', function (): void {
+    $service = new UrlService(new HtmlService());
+
+    expect($service->embellishUrl('//../y'))->toBe('/y');
+});
+
+test('getGalleryHomeUrl falls back to makeIndexUrl for an empty-string gallery_url', function (): void {
+    CurrentConfig::setGalleryUrl('');
+    $service = new UrlService(new HtmlService());
+
+    expect($service->getGalleryHomeUrl())->toBe($service->makeIndexUrl());
+});
+
+test('getGalleryHomeUrl returns a root-relative gallery_url unchanged, ignoring a non-empty root URL', function (): void {
+    RequestMountDepth::set(1);
+    CurrentConfig::setGalleryUrl('/my-gallery');
+    $service = new UrlService(new HtmlService());
+
+    expect($service->getGalleryHomeUrl())->toBe('/my-gallery');
+});
+
+test('getGalleryHomeUrl prefixes a relative gallery_url with a non-empty root URL', function (): void {
+    RequestMountDepth::set(1);
+    CurrentConfig::setGalleryUrl('my-gallery/');
+    $service = new UrlService(new HtmlService());
+
+    expect($service->getGalleryHomeUrl())->toBe('../my-gallery/');
+});
+
+test('getQueryStringDiff returns empty string for an explicitly empty QUERY_STRING', function (): void {
+    $_SERVER['QUERY_STRING'] = '';
+    $service = new UrlService(new HtmlService());
+
+    expect($service->getQueryStringDiff())->toBe('');
+});
+
+test('getQueryStringDiff does not prefix a purely-numeric query key', function (): void {
+    $_SERVER['QUERY_STRING'] = '0=foo&a=1';
+    $service = new UrlService(new HtmlService());
+
+    expect($service->getQueryStringDiff())->toBe('?0=foo&amp;a=1');
+});
+
+test('getUserFavorites returns early for a guest without ever touching the database connection', function (): void {
+    \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray(['id' => 2, 'status' => 'guest']));
+
+    try {
+        $service = new UrlService(new HtmlService());
+
+        expect($service->getUserFavorites())->toBe([]);
+
+        // The lazily-built Connection property must still be null -- proof
+        // the DB-touching code past the guest guard never ran. A value
+        // assertion alone can't distinguish this from a real query that
+        // just happens to also find zero rows for this user id.
+        $conn = new ReflectionProperty($service, 'conn')->getValue($service);
+        expect($conn)->toBeNull();
     } finally {
         \Piwigo\Users\CurrentUser::reset();
     }

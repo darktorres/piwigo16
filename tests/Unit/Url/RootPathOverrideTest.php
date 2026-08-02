@@ -62,3 +62,33 @@ test('reset clears an active override', function (): void {
 
     expect(RootPathOverride::current())->toBeNull();
 });
+
+test('pop() back to an empty stack clears the stored path, not just the ref count', function (): void {
+    // current() already hides $path once $count is back to 0, so this
+    // reads the private static directly via reflection -- otherwise the
+    // `self::$count--; if (self::$count === 0)` cleanup on the class's
+    // own pop() could regress to a no-op (e.g. an off-by-one on that
+    // inner guard) without any test noticing, since current()'s own
+    // `$count > 0` gate would still mask the stale value.
+    RootPathOverride::push('/gallery/');
+    RootPathOverride::pop();
+
+    $path = new ReflectionClass(RootPathOverride::class)->getProperty('path');
+
+    expect($path->getValue())->toBeNull();
+});
+
+test('current() ignores a stale path once the ref count is back to zero', function (): void {
+    // Forces $path to remain non-null at $count === 0 (a state the
+    // class's own push()/pop() pair never actually produces) to pin
+    // down current()'s own guard as strictly "$count > 0", not merely
+    // "$count >= 0" -- both would agree on every reachable state, since
+    // push()/pop() always clear $path exactly when $count returns to 0.
+    RootPathOverride::push('/gallery/');
+    RootPathOverride::pop();
+
+    $path = new ReflectionClass(RootPathOverride::class)->getProperty('path');
+    $path->setValue(null, '/leaked/');
+
+    expect(RootPathOverride::current())->toBeNull();
+});

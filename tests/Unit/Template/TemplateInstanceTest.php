@@ -8,6 +8,7 @@ use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
+use Piwigo\Core\ProcessCache;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -89,6 +90,104 @@ function template_instance_test_rrmdir(string $dir): void
     rmdir($dir);
 }
 
+/**
+ * Writes a minimal, real themeconf.inc.php fixture -- exercised through a
+ * genuine `include` (load_themeconf()'s own contract), matching the bare
+ * `$themeconf = [...]` assignment shape every real themes/*\/themeconf.inc.php
+ * in this repo uses. Always carries a 'local_head' key (defaulting to '')
+ * unless the caller overrides it -- set_theme()'s own local_head branch
+ * reads $themeconf['local_head'] directly (not via `??`) in its
+ * is_string() clause, so an actually-missing key would trigger a real
+ * "Undefined array key" warning (failOnWarning=true) for every set_theme()
+ * test that isn't specifically exercising that gap.
+ *
+ * @param array<string, mixed> $vars
+ */
+function template_instance_test_write_themeconf(string $dir, array $vars): void
+{
+    if (! is_dir($dir)) {
+        mkdir($dir, 0o777, true);
+    }
+    $vars += ['local_head' => ''];
+    file_put_contents(
+        $dir . '/themeconf.inc.php',
+        "<?php\n\$themeconf = " . var_export($vars, true) . ";\n",
+    );
+}
+
+/**
+ * Narrows Template::get_template_vars()'s mixed return (it delegates
+ * straight to Smarty\Smarty::getTemplateVars()) down to the "list of
+ * per-theme arrays" shape set_theme() itself always appends.
+ *
+ * @return list<array<string, mixed>>
+ */
+function template_instance_test_themes(Template $t): array
+{
+    $themes = $t->get_template_vars('themes');
+    if (! is_array($themes) || ! array_is_list($themes)) {
+        throw new RuntimeException('Expected themes to be a list, got ' . get_debug_type($themes));
+    }
+
+    $narrowed = [];
+    foreach ($themes as $theme) {
+        $narrowed[] = template_instance_test_assoc($theme);
+    }
+
+    return $narrowed;
+}
+
+/**
+ * @return array<string, mixed>
+ */
+function template_instance_test_assoc(mixed $value): array
+{
+    if (! is_array($value)) {
+        throw new RuntimeException('Expected an array, got ' . get_debug_type($value));
+    }
+
+    $narrowed = [];
+    foreach ($value as $key => $v) {
+        if (! is_string($key)) {
+            throw new RuntimeException('Expected a string-keyed array, found key ' . get_debug_type($key));
+        }
+
+        $narrowed[$key] = $v;
+    }
+
+    return $narrowed;
+}
+
+/**
+ * @return array<string, string|null>
+ */
+function template_instance_test_save_server_keys(): array
+{
+    $scriptName = $_SERVER['SCRIPT_NAME'] ?? null;
+    $scriptFilename = $_SERVER['SCRIPT_FILENAME'] ?? null;
+    $phpSelf = $_SERVER['PHP_SELF'] ?? null;
+
+    return [
+        'SCRIPT_NAME' => is_string($scriptName) ? $scriptName : null,
+        'SCRIPT_FILENAME' => is_string($scriptFilename) ? $scriptFilename : null,
+        'PHP_SELF' => is_string($phpSelf) ? $phpSelf : null,
+    ];
+}
+
+/**
+ * @param array<string, string|null> $saved
+ */
+function template_instance_test_restore_server_keys(array $saved): void
+{
+    foreach ($saved as $key => $value) {
+        if ($value === null) {
+            unset($_SERVER[$key]);
+        } else {
+            $_SERVER[$key] = $value;
+        }
+    }
+}
+
 beforeEach(function (): void {
     $root = sys_get_temp_dir() . '/piwigo-template-instance-test-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
@@ -105,6 +204,7 @@ afterEach(function (): void {
     CurrentConfig::reset();
     CurrentPaths::reset();
     EventDispatcher::reset();
+    ProcessCache::reset();
 });
 
 // --- constructor: Smarty engine base config -----------------------------
@@ -175,6 +275,47 @@ test('constructor requests no backtrace when reporting the data-dir-not-writable
         ->and($body)->not->toContain("#1\t");
 });
 
+test('constructor loads admin.lang before rendering the data-dir-not-writable error, so its own real translation is used', function (): void {
+    // Real gettext fixture (same PoLoader/Translator stack LangTest.php's
+    // own langTestWritePo() uses) placed under the *test* root's own
+    // language/ dir -- Lang::load('admin.lang') resolves dirname from
+    // CurrentPaths::get()->root, not the repo's real top-level language/.
+    // Without the real load('admin.lang') call, Lang::t('an error
+    // happened') falls back to returning the raw key untranslated
+    // (Translator::translate()'s own documented fallback) instead of this
+    // fixture's translation, so this only passes when the load() call
+    // genuinely ran first.
+    // Lang::load()'s own po-sibling resolution strips a literal ".lang.php"
+    // suffix down to ".po" -- for filename "admin.lang", the appended-.php
+    // form is "admin.lang.php", whose po sibling is "admin.po" (matching
+    // this repo's own real ./language/*/admin.po naming), not
+    // "admin.lang.po".
+    mkdir(CurrentPaths::get()->root . 'language/en_UK', 0o777, true);
+    file_put_contents(
+        CurrentPaths::get()->root . 'language/en_UK/admin.po',
+        "msgid \"\"\nmsgstr \"\"\n\"Content-Type: text/plain; charset=UTF-8\\n\"\n\"Language: en_UK\\n\"\n\nmsgid \"an error happened\"\nmsgstr \"CUSTOM-ADMIN-LANG-TITLE\"\n",
+    );
+    chmod(CurrentPaths::get()->root, 0o555);
+    CurrentConfig::reset();
+    CurrentConfig::setDataLocation('data/');
+
+    $body = null;
+    set_error_handler(static fn (): bool => true);
+    try {
+        new Template();
+    } catch (ResponseReadyException $e) {
+        $body = (string) $e->response()->getBody();
+    } finally {
+        restore_error_handler();
+        chmod(CurrentPaths::get()->root, 0o755);
+        \Piwigo\Lang\Translator::reset();
+        Lang::reset();
+    }
+
+    expect($body)->not->toBeNull()
+        ->and($body)->toContain('<h1>CUSTOM-ADMIN-LANG-TITLE</h1>');
+});
+
 test('constructor creates the configured data-location directory when data_dir_checked is unset', function (): void {
     CurrentConfig::setDataLocation('mydata/');
     CurrentConfig::setDataDirChecked(null);
@@ -189,6 +330,21 @@ test('constructor creates the configured data-location directory when data_dir_c
     }
 
     expect(is_dir(CurrentPaths::get()->root . 'mydata'))->toBeTrue();
+});
+
+test('constructor actually reaches CurrentConfigService::confUpdateParam() when data_dir_checked is unset, not just the local isset() check', function (): void {
+    // The try/catch around this call only catches Doctrine\DBAL\Exception
+    // -- CurrentConfigService::get() itself throws a plain \LogicException
+    // when unset (never initialised in this Unit test), which propagates
+    // straight out of the constructor. That only happens if the
+    // confUpdateParam() call site is genuinely still reached; removing it
+    // entirely would let construction finish without throwing anything.
+    \Piwigo\Config\CurrentConfigService::reset();
+    CurrentConfig::setDataLocation('mydata3/');
+    CurrentConfig::setDataDirChecked(null);
+
+    expect(static fn (): Template => new Template())
+        ->toThrow(\LogicException::class, 'CurrentConfigService not initialised');
 });
 
 // --- constructor: compile dir / pwg assign / plugin registration -------
@@ -283,6 +439,246 @@ test('constructor registers template-extension extents when not in admin context
     $t = new Template();
 
     expect($t->get_extent('orig.tpl', 'dup-handle'))->toBe(realpath(CurrentPaths::get()->root . '/template-extension/second.tpl'));
+});
+
+// --- constructor: local-css header prefilter (themed, non-admin) -------
+
+test('constructor registers the local-css header prefilter for a themed template when not in admin context', function (): void {
+    \Piwigo\Core\AdminContext::reset();
+
+    $t = new Template('.', 'template-instance-test-theme-a');
+
+    expect($t->external_filters)->toHaveKey('header');
+});
+
+test('constructor does not register the local-css header prefilter for a themed template while in admin context', function (): void {
+    \Piwigo\Core\AdminContext::mark();
+    try {
+        $t = new Template('.', 'template-instance-test-theme-b');
+    } finally {
+        \Piwigo\Core\AdminContext::reset();
+    }
+
+    expect($t->external_filters)->not->toHaveKey('header');
+});
+
+// --- set_theme -----------------------------------------------------------
+
+test('set_theme loads themeconf from exactly root/theme, joined with a literal slash', function (): void {
+    $root = rtrim(CurrentPaths::get()->root, '/');
+    template_instance_test_write_themeconf($root . '/concat-theme', ['marker' => 'root-slash-theme']);
+    $t = new Template();
+
+    $t->set_theme($root, 'concat-theme', 'template');
+
+    expect($t->get_themeconf('marker'))->toBe('root-slash-theme');
+});
+
+test('set_theme recognizes every whitelisted auth-page basename for the standard-pages swap', function (): void {
+    $root = rtrim(CurrentPaths::get()->root, '/');
+    template_instance_test_write_themeconf($root . '/wl-theme', ['marker' => 'not-swapped']);
+    template_instance_test_write_themeconf($root . '/standard_pages', ['marker' => 'swapped']);
+    CurrentConfig::setUseStandardPages(true);
+    $saved = template_instance_test_save_server_keys();
+
+    try {
+        foreach (['identification', 'register', 'password', 'profile'] as $basename) {
+            $_SERVER['SCRIPT_NAME'] = '/' . $basename . '.php';
+            unset($_SERVER['SCRIPT_FILENAME'], $_SERVER['PHP_SELF']);
+
+            $t = new Template();
+            $t->set_theme($root, 'wl-theme', 'template');
+
+            expect($t->get_themeconf('marker'))->toBe('swapped');
+        }
+    } finally {
+        template_instance_test_restore_server_keys($saved);
+    }
+});
+
+test('set_theme does not swap themes when the current page is not a whitelisted auth page', function (): void {
+    $root = rtrim(CurrentPaths::get()->root, '/');
+    template_instance_test_write_themeconf($root . '/not-auth-theme', ['marker' => 'not-swapped']);
+    template_instance_test_write_themeconf($root . '/standard_pages', ['marker' => 'swapped']);
+    CurrentConfig::setUseStandardPages(true);
+    $saved = template_instance_test_save_server_keys();
+    $_SERVER['SCRIPT_NAME'] = '/index.php';
+    unset($_SERVER['SCRIPT_FILENAME'], $_SERVER['PHP_SELF']);
+    $t = new Template();
+
+    try {
+        $t->set_theme($root, 'not-auth-theme', 'template');
+    } finally {
+        template_instance_test_restore_server_keys($saved);
+    }
+
+    expect($t->get_themeconf('marker'))->toBe('not-swapped');
+});
+
+test('set_theme never swaps away from the "default" theme itself even on a whitelisted auth page', function (): void {
+    // Also proves the first `and` genuinely short-circuits the whole
+    // condition (not an `or`): with theme==='default', an `or`-mutated
+    // first join would let the (matching) auth-page clause alone drag the
+    // whole condition true, still swapping away from 'default'.
+    $root = rtrim(CurrentPaths::get()->root, '/');
+    template_instance_test_write_themeconf($root . '/default', ['marker' => 'default-marker']);
+    template_instance_test_write_themeconf($root . '/standard_pages', ['marker' => 'swapped']);
+    CurrentConfig::setUseStandardPages(true);
+    $saved = template_instance_test_save_server_keys();
+    $_SERVER['SCRIPT_NAME'] = '/identification.php';
+    unset($_SERVER['SCRIPT_FILENAME'], $_SERVER['PHP_SELF']);
+    $t = new Template();
+
+    try {
+        $t->set_theme($root, 'default', 'template');
+    } finally {
+        template_instance_test_restore_server_keys($saved);
+    }
+
+    expect($t->get_themeconf('marker'))->toBe('default-marker');
+});
+
+test('set_theme swaps themes when the theme itself opts into standard pages, even if the global config does not', function (): void {
+    $root = rtrim(CurrentPaths::get()->root, '/');
+    template_instance_test_write_themeconf($root . '/opt-in-theme', ['marker' => 'not-swapped', 'use_standard_pages' => true]);
+    template_instance_test_write_themeconf($root . '/standard_pages', ['marker' => 'swapped']);
+    CurrentConfig::setUseStandardPages(false);
+    $saved = template_instance_test_save_server_keys();
+    $_SERVER['SCRIPT_NAME'] = '/identification.php';
+    unset($_SERVER['SCRIPT_FILENAME'], $_SERVER['PHP_SELF']);
+    $t = new Template();
+
+    try {
+        $t->set_theme($root, 'opt-in-theme', 'template');
+    } finally {
+        template_instance_test_restore_server_keys($saved);
+    }
+
+    expect($t->get_themeconf('marker'))->toBe('swapped');
+});
+
+test('set_theme does not swap themes when neither the theme nor the global config opts into standard pages', function (): void {
+    $root = rtrim(CurrentPaths::get()->root, '/');
+    template_instance_test_write_themeconf($root . '/opt-out-theme', ['marker' => 'not-swapped']);
+    template_instance_test_write_themeconf($root . '/standard_pages', ['marker' => 'swapped']);
+    CurrentConfig::setUseStandardPages(false);
+    $saved = template_instance_test_save_server_keys();
+    $_SERVER['SCRIPT_NAME'] = '/identification.php';
+    unset($_SERVER['SCRIPT_FILENAME'], $_SERVER['PHP_SELF']);
+    $t = new Template();
+
+    try {
+        $t->set_theme($root, 'opt-out-theme', 'template');
+    } finally {
+        template_instance_test_restore_server_keys($saved);
+    }
+
+    expect($t->get_themeconf('marker'))->toBe('not-swapped');
+});
+
+test('set_theme recurses into a distinct parent theme', function (): void {
+    $root = rtrim(CurrentPaths::get()->root, '/');
+    template_instance_test_write_themeconf($root . '/child-theme', ['marker' => 'child', 'parent' => 'parent-theme']);
+    template_instance_test_write_themeconf($root . '/parent-theme', ['marker' => 'parent']);
+    $t = new Template();
+
+    $t->set_theme($root, 'child-theme', 'template');
+
+    $themes = template_instance_test_themes($t);
+    expect($themes)->toHaveCount(2)
+        // The parent's own recursive set_theme() call appends its themes
+        // entry before this (outer, child) call resumes and appends its
+        // own -- so the parent lands at index 0, the child at index 1.
+        ->and($themes[0]['id'])->toBe('parent-theme')
+        ->and($themes[1]['id'])->toBe('child-theme');
+});
+
+test('set_theme does not recurse when a theme names itself as its own parent', function (): void {
+    $root = rtrim(CurrentPaths::get()->root, '/');
+    template_instance_test_write_themeconf($root . '/self-parent-theme', ['marker' => 'self', 'parent' => 'self-parent-theme']);
+    $t = new Template();
+
+    $t->set_theme($root, 'self-parent-theme', 'template');
+
+    expect($t->get_template_vars('themes'))->toHaveCount(1);
+});
+
+test('set_theme records both the theme id and the load_css flag on the appended themes entry', function (): void {
+    $root = rtrim(CurrentPaths::get()->root, '/');
+    template_instance_test_write_themeconf($root . '/plain-theme', ['marker' => 'x']);
+    $t = new Template();
+
+    $t->set_theme($root, 'plain-theme', 'template', false);
+
+    $themes = template_instance_test_themes($t);
+    expect($themes[0]['id'])->toBe('plain-theme')
+        ->and($themes[0]['load_css'])->toBeFalse();
+});
+
+test('set_theme resolves local_head to a real file path when present and load_local_head is true', function (): void {
+    $root = rtrim(CurrentPaths::get()->root, '/');
+    mkdir($root . '/lh-theme', 0o777, true);
+    file_put_contents($root . '/lh-theme/local_head.tpl', 'x');
+    template_instance_test_write_themeconf($root . '/lh-theme', ['marker' => 'x', 'local_head' => 'local_head.tpl']);
+    $t = new Template();
+
+    $t->set_theme($root, 'lh-theme', 'template', true, true);
+
+    $themes = template_instance_test_themes($t);
+    expect($themes[0]['local_head'])->toBe(realpath($root . '/lh-theme/local_head.tpl'));
+});
+
+test('set_theme treats a local_head value of "0" as absent, same as every other in_array sentinel', function (): void {
+    $root = rtrim(CurrentPaths::get()->root, '/');
+    template_instance_test_write_themeconf($root . '/lh-zero-theme', ['marker' => 'x', 'local_head' => '0']);
+    $t = new Template();
+
+    $t->set_theme($root, 'lh-zero-theme', 'template', true, true);
+
+    expect(template_instance_test_themes($t)[0])->not->toHaveKey('local_head');
+});
+
+test('set_theme treats an empty-string local_head as absent', function (): void {
+    $root = rtrim(CurrentPaths::get()->root, '/');
+    template_instance_test_write_themeconf($root . '/lh-empty-theme', ['marker' => 'x', 'local_head' => '']);
+    $t = new Template();
+
+    $t->set_theme($root, 'lh-empty-theme', 'template', true, true);
+
+    expect(template_instance_test_themes($t)[0])->not->toHaveKey('local_head');
+});
+
+test('set_theme defaults colorscheme to the given value when the theme does not already set one', function (): void {
+    $root = rtrim(CurrentPaths::get()->root, '/');
+    template_instance_test_write_themeconf($root . '/cs-theme', ['marker' => 'x']);
+    $t = new Template();
+
+    $t->set_theme($root, 'cs-theme', 'template', true, true, 'custom-scheme');
+
+    expect($t->get_themeconf('colorscheme'))->toBe('custom-scheme');
+});
+
+test('set_theme preserves an already-set colorscheme instead of overwriting it', function (): void {
+    $root = rtrim(CurrentPaths::get()->root, '/');
+    template_instance_test_write_themeconf($root . '/cs-theme2', ['marker' => 'x', 'colorscheme' => 'theme-defined']);
+    $t = new Template();
+
+    $t->set_theme($root, 'cs-theme2', 'template', true, true, 'custom-scheme');
+
+    expect($t->get_themeconf('colorscheme'))->toBe('theme-defined');
+});
+
+test('set_theme merges themeconf directly into the flat "themeconf" template var, not nested under an index', function (): void {
+    $root = rtrim(CurrentPaths::get()->root, '/');
+    template_instance_test_write_themeconf($root . '/merge-theme', ['marker' => 'flat-merge-check']);
+    $t = new Template();
+
+    $t->set_theme($root, 'merge-theme', 'template');
+
+    $tc = template_instance_test_assoc($t->get_template_vars('themeconf'));
+    expect($tc)->toBeArray()
+        ->and($tc['marker'] ?? null)->toBe('flat-merge-check')
+        ->and($tc)->not->toHaveKey(0);
 });
 
 // --- set_template_dir ----------------------------------------------------
@@ -510,6 +906,43 @@ test('get_extent returns the given filename unchanged when no extent is register
     expect($t->get_extent('plain.tpl', 'unregistered'))->toBe('plain.tpl');
 });
 
+test('set_extents checks file_exists on the full dir+filename concatenation, not on a bare dir prefix alone', function (): void {
+    // $dir here is not itself an existing path (only $dir . $filename is) --
+    // a real directory (as every other set_extents fixture in this file
+    // uses) would already satisfy file_exists($dir) on its own, since
+    // file_exists() is true for directories too, making it impossible to
+    // tell a ConcatRemoveRight mutation (file_exists($dir) alone) apart
+    // from the real file_exists($dir . $filename).
+    $t = new Template();
+    $dir = CurrentPaths::get()->root . '/pfx-';
+    file_put_contents(CurrentPaths::get()->root . '/pfx-real.tpl', 'x');
+
+    $result = $t->set_extents(['real.tpl' => ['myhandle', 'N/A', 'N/A']], $dir, true, 'N/A');
+
+    expect($result)->toBeTrue()
+        ->and($t->get_extent('orig.tpl', 'myhandle'))->toBe(realpath(CurrentPaths::get()->root . '/pfx-real.tpl'));
+});
+
+test('set_extents does not register a handle when realpath fails despite file_exists succeeding', function (): void {
+    // realpath() never resolves stream-wrapped (non-local) paths, unlike
+    // file_exists() -- a fake url_stat() reporting a real file makes
+    // file_exists() true while realpath() on that same path stays
+    // unconditionally false, isolating the `$real_path !== false` guard
+    // from the file_exists() check just above it.
+    $t = new Template();
+    $scheme = 'pwgtestextents' . bin2hex(random_bytes(4));
+    stream_wrapper_register($scheme, \Piwigo\Tests\Unit\Template\TemplateInstanceTestFakeStatStreamWrapper::class);
+
+    try {
+        $result = $t->set_extents(['fake.tpl' => ['myhandle', 'N/A', 'N/A']], $scheme . '://', true, 'N/A');
+    } finally {
+        stream_wrapper_unregister($scheme);
+    }
+
+    expect($result)->toBeTrue()
+        ->and($t->get_extent('orig.tpl', 'myhandle'))->toBe('orig.tpl');
+});
+
 // --- assign_var_from_handle / clear_assign --------------------------------
 
 test('assign_var_from_handle assigns the parsed handle output (returned, not echoed) and returns true', function (): void {
@@ -570,6 +1003,25 @@ test('p does not attempt to build a debug console when template debugging is off
 
     expect($output)->toBe('body-output')
         ->and($t->get_template_vars('AAAA_DEBUG_TOTAL_TIME__'))->toBeNull();
+});
+
+test('p passes full=true to display_debug so the console targets the shared __Smarty__ window, not a per-call hash', function (): void {
+    // Smarty\Debug::display_debug()'s own $full param feeds
+    // `$displayMode = $debugging === 2 || !$full;`, which selects the
+    // rendered targetWindow: '__Smarty__' when $full is true (our real
+    // $this->smarty->debugging is a plain bool, never the int 2, so
+    // `$debugging === 2` is always false here), or a per-call md5 hash
+    // when $full is false -- debug.tpl renders it straight into
+    // `window.open("", "console{$targetWindow}", ...)`.
+    CurrentConfig::setDebugTemplate(true);
+    $t = new Template();
+    $t->output = 'body-output';
+
+    ob_start();
+    $t->p();
+    $output = ob_get_clean();
+
+    expect($output)->toContain('console__Smarty__');
 });
 
 // --- parse -----------------------------------------------------------------
@@ -1008,6 +1460,19 @@ test('func_combine_script sets is_template to true when the template param is tr
     expect($t->scriptLoader->get_all()['x']->is_template)->toBeTrue();
 });
 
+test('func_combine_script casts a non-bool truthy template value to a real bool before storing', function (): void {
+    // ScriptLoader::add()'s $is_template param is natively typed `bool`,
+    // and this file (like Template.php itself) runs under strict_types=1
+    // -- without func_combine_script()'s own (bool) cast, forwarding the
+    // raw int 1 straight through would throw a TypeError instead of
+    // quietly coercing, since strict_types disallows int->bool coercion.
+    $t = new Template();
+
+    $t->func_combine_script(['id' => 'x', 'path' => 'x.js', 'template' => 1]);
+
+    expect($t->scriptLoader->get_all()['x']->is_template)->toBeTrue();
+});
+
 test('func_get_combined_scripts trigger_errors when load is missing', function (): void {
     $t = new Template();
     ErrorCollector::drain();
@@ -1337,6 +1802,19 @@ test('func_combine_css sets is_template to true when the template param is truth
     expect(template_instance_test_cssloader_registered($t->cssLoader)['my-css']->is_template)->toBeTrue();
 });
 
+test('func_combine_css casts a non-bool truthy template value to a real bool before storing', function (): void {
+    // Unlike ScriptLoader::add(), CssLoader::add()'s $is_template param is
+    // untyped, so without func_combine_css()'s own (bool) cast the raw int
+    // 1 would be stored as-is (int(1), not bool(true)) -- toBeTrue() is a
+    // strict === true check, so it only passes when the cast really ran.
+    $t = new Template();
+    file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
+
+    $t->func_combine_css(['path' => 'style.css', 'id' => 'my-css', 'template' => 1]);
+
+    expect(template_instance_test_cssloader_registered($t->cssLoader)['my-css']->is_template)->toBeTrue();
+});
+
 test('func_combine_css defaults is_template to false when the template param is missing', function (): void {
     $t = new Template();
     file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
@@ -1567,4 +2045,65 @@ test('load_themeconf returns an empty array for a theme directory that does not 
     $t = new Template();
 
     expect($t->load_themeconf(CurrentPaths::get()->root . '/no-such-theme-dir'))->toBe([]);
+});
+
+test('load_themeconf includes themeconf.inc.php, returns its $themeconf, and assigns its $theme_template_vars', function (): void {
+    $t = new Template();
+    $dir = CurrentPaths::get()->root . '/theme-real';
+    mkdir($dir, 0o777, true);
+    file_put_contents(
+        $dir . '/themeconf.inc.php',
+        '<?php $themeconf = ["name" => "Real Theme"]; $theme_template_vars = ["theme_var" => "assigned-value"];'
+    );
+
+    $result = $t->load_themeconf($dir);
+
+    // A bare AlwaysReturnNull mutation on the final `return $cached;`, or a
+    // RemoveMethodCall dropping the ProcessCache::set() a few lines above
+    // it (which would leave the trailing ProcessCache::get() reading back
+    // nothing), both collapse $result to null instead of the real array.
+    expect($result)->toBe(['name' => 'Real Theme'])
+        ->and($t->get_template_vars('theme_var'))->toBe('assigned-value');
+});
+
+test('load_themeconf caches per-directory: a second, different theme dir is not served the first dir\'s cached result', function (): void {
+    // Kills a ConcatRemoveRight mutation on $cache_key ('themeconf:' . $dir
+    // collapsing to the bare literal 'themeconf:'), which would make every
+    // directory share one cache slot -- the second call below would then
+    // wrongly return the first dir's already-cached themeconf.
+    $t = new Template();
+    $dirA = CurrentPaths::get()->root . '/theme-a';
+    $dirB = CurrentPaths::get()->root . '/theme-b';
+    mkdir($dirA, 0o777, true);
+    mkdir($dirB, 0o777, true);
+    file_put_contents($dirA . '/themeconf.inc.php', '<?php $themeconf = ["which" => "A"];');
+    file_put_contents($dirB . '/themeconf.inc.php', '<?php $themeconf = ["which" => "B"];');
+
+    $resultA = $t->load_themeconf($dirA);
+    $resultB = $t->load_themeconf($dirB);
+
+    expect($resultA)->toBe(['which' => 'A'])
+        ->and($resultB)->toBe(['which' => 'B']);
+});
+
+test('load_themeconf caches under the exact "themeconf:" . $dir key shape, not a bare or reversed variant', function (): void {
+    // Poisons the two other plausible cache-key shapes a mutated concat
+    // could produce -- ConcatRemoveLeft (bare $dir, dropping the
+    // 'themeconf:' prefix) and ConcatSwitchSides ($dir . 'themeconf:',
+    // operands reversed) -- with a recognizable sentinel value each. If
+    // load_themeconf() ever computed its cache key as either of those
+    // variants, ProcessCache::has() would find one of these pre-seeded
+    // entries and return its poisoned value instead of the real,
+    // freshly-computed themeconf.
+    $t = new Template();
+    $dir = CurrentPaths::get()->root . '/theme-format';
+    mkdir($dir, 0o777, true);
+    file_put_contents($dir . '/themeconf.inc.php', '<?php $themeconf = ["real" => true];');
+    $realDir = (string) realpath($dir);
+    ProcessCache::set($realDir, ['poisoned' => 'bare-dir-key']);
+    ProcessCache::set($realDir . 'themeconf:', ['poisoned' => 'switched-key']);
+
+    $result = $t->load_themeconf($dir);
+
+    expect($result)->toBe(['real' => true]);
 });

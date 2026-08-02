@@ -155,7 +155,7 @@ final readonly class MetadataService
             if ((bool) $exif2) {
                 $exif = $exif2;
             } else {
-                $exif = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new FormatExifData($exif !== false ? $exif : null, $filename, $map))->exif;
+                $exif = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new FormatExifData($exif, $filename, $map))->exif;
             }
 
             if (! is_array($exif)) {

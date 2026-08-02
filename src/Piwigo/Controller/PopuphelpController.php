@@ -76,7 +76,7 @@ final class PopuphelpController implements ControllerInterface
         $help_content = Lang::load('help/' . $rawPage . '.html', '', [
             'return' => true,
         ]);
-        if ($help_content === false) {
+        if (! is_string($help_content)) {
             $help_content = '';
         }
 

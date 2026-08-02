@@ -936,6 +936,136 @@ test('src/Piwigo/ contains no bare add_event_handler()/trigger_change()/trigger_
 });
 
 /**
+ * Track B typed-event-object gap closure's own door-lock. Neither
+ * existing helper fits: findCallSitesOutsideComments() blanks every
+ * T_CONSTANT_ENCAPSED_STRING token -- including its surrounding quote
+ * characters -- before searching, so a needle containing a literal `'`
+ * would never match anything; countExitCallsPerFile() allowlists by
+ * per-file *count*, not by which event name a call site names, so it
+ * can't distinguish an allowlisted WS call from a missed conversion
+ * sharing the same file. Token-aware instead: walk tokens for a
+ * T_STRING matching one of the three legacy dispatch method names,
+ * preceded by T_OBJECT_OPERATOR (`->`), then inspect its first argument
+ * token. A converted call site's first argument is `SomeEvent::class`
+ * -- a T_STRING/T_CLASS pair after T_DOUBLE_COLON, an entirely different
+ * token shape -- and never matches the T_CONSTANT_ENCAPSED_STRING check
+ * below, so it's never flagged regardless of the class name chosen.
+ *
+ * @param list<string> $allowlist
+ * @return list<array{path: string, line: int}>
+ */
+function findStringKeyedDispatchCallSites(string $dir, array $allowlist): array
+{
+    $hits = [];
+    if (! is_dir($dir)) {
+        return $hits;
+    }
+    $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS));
+
+    $methodNames = ['addEventHandler', 'triggerChange', 'triggerNotify'];
+
+    foreach ($iterator as $file) {
+        /** @var SplFileInfo $file RecursiveIteratorIterator loses this over RecursiveDirectoryIterator */
+        if (! $file->isFile() || $file->getExtension() !== 'php') {
+            continue;
+        }
+
+        $source = file_get_contents($file->getPathname());
+        if ($source === false) {
+            continue;
+        }
+
+        $hit = false;
+        foreach ($methodNames as $name) {
+            if (str_contains($source, $name)) {
+                $hit = true;
+                break;
+            }
+        }
+        if (! $hit) {
+            continue;
+        }
+
+        $tokens = token_get_all($source);
+        $n = count($tokens);
+        for ($i = 0; $i < $n; $i++) {
+            $tok = $tokens[$i];
+            if (! is_array($tok) || $tok[0] !== T_STRING || ! in_array($tok[1], $methodNames, true)) {
+                continue;
+            }
+
+            $j = $i - 1;
+            while ($j >= 0 && is_array($tokens[$j]) && $tokens[$j][0] === T_WHITESPACE) {
+                $j--;
+            }
+            $prev = $j >= 0 ? $tokens[$j] : null;
+            if (! (is_array($prev) && $prev[0] === T_OBJECT_OPERATOR)) {
+                continue;
+            }
+
+            $k = $i + 1;
+            while ($k < $n && is_array($tokens[$k]) && $tokens[$k][0] === T_WHITESPACE) {
+                $k++;
+            }
+            if (! ($k < $n && is_string($tokens[$k]) && $tokens[$k] === '(')) {
+                continue;
+            }
+
+            $m = $k + 1;
+            while ($m < $n && is_array($tokens[$m]) && in_array($tokens[$m][0], [T_WHITESPACE, T_COMMENT, T_DOC_COMMENT], true)) {
+                $m++;
+            }
+            $arg = $m < $n ? $tokens[$m] : null;
+            if (! (is_array($arg) && $arg[0] === T_CONSTANT_ENCAPSED_STRING)) {
+                continue; // SomeEvent::class or any other non-string-literal shape -- already converted
+            }
+
+            $literal = stripcslashes(substr($arg[1], 1, -1));
+            if (in_array($literal, $allowlist, true)) {
+                continue;
+            }
+
+            $hits[] = ['path' => $file->getPathname(), 'line' => $tok[2]];
+        }
+    }
+
+    return $hits;
+}
+
+test('src/Piwigo/ contains no string-keyed EventDispatcher dispatch calls outside the WS/meta allowlist', function (): void {
+    // Track B typed-event-object gap closure (11 batches, landed
+    // 2026-08-02): 148 of the 155 real legacy events now dispatch through
+    // typed SomeEvent::class objects via addTypedHandler()/
+    // dispatchChange()/dispatchNotify(). Two deliberate carve-outs stay
+    // on the legacy string-keyed addEventHandler()/triggerChange()/
+    // triggerNotify() path:
+    // - 7 WS-protocol-lifecycle events (get_history, ws_users_getList,
+    //   ws_invoke_allowed, ws_add_methods, ws_images_uploadCompleted,
+    //   sendResponse, merge_tags) -- P26 (WS API removal) isn't started;
+    //   converting these now risks rework the moment it lands. Revisit
+    //   once P26 ships; this half of the allowlist should collapse to
+    //   empty then.
+    // - 'trigger' -- EventDispatcher's own internal meta-notification
+    //   channel (its dispatchChange()/dispatchNotify()/triggerChange()/
+    //   triggerNotify() all self-notify via
+    //   $this->triggerNotify('trigger', ...)), never a batch event, stays
+    //   string-keyed permanently. This is the only reason
+    //   EventDispatcher.php itself has any hits to allowlist -- every
+    //   other real call site in src/Piwigo/ converted.
+    $repoRoot = __DIR__ . '/../..';
+
+    $allowlist = [
+        'get_history', 'ws_users_getList', 'ws_invoke_allowed', 'ws_add_methods',
+        'ws_images_uploadCompleted', 'sendResponse', 'merge_tags',
+        'trigger',
+    ];
+
+    $hits = findStringKeyedDispatchCallSites($repoRoot . '/src/Piwigo', $allowlist);
+
+    expect(describeCallSites($hits))->toBe([]);
+});
+
+/**
  * Token-aware, unlike findCallSitesOutsideComments()'s plain (post-
  * blanking) substring match: several of Track C's retired free-function
  * names collide as a bare substring with a real, still-legitimate OOP

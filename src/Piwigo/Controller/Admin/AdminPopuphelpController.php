@@ -92,7 +92,7 @@ final class AdminPopuphelpController implements ControllerInterface
                 'return' => true,
             ]
         );
-        if ($help_content === false) {
+        if (! is_string($help_content)) {
             $help_content = '';
         }
 

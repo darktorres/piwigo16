@@ -114,15 +114,18 @@ final class RequestBootstrapConnectTest extends IntegrationTestCase
         // -- every test below reaches it regardless of what happens
         // afterwards, so every test leaves a real set_error_handler()
         // active unless undone here (same "restore immediately" discipline
-        // InstallBootstrapTest's own docblock documents).
-        if (ErrorCollector::isActive()) {
-            restore_error_handler();
+        // InstallBootstrapTest's own docblock documents). setUp() always
+        // calls Kernel::boot(), so the container (and these instances) is
+        // always available here.
+        $errorCollector = Kernel::container()->get(ErrorCollector::class);
+        if ($errorCollector instanceof ErrorCollector) {
+            if ($errorCollector->isActive()) {
+                restore_error_handler();
+            }
+            $errorCollector->reset();
         }
-        ErrorCollector::reset();
 
         EventDispatcher::reset();
-        // setUp() always calls Kernel::boot(), so the container (and these
-        // instances) is always available here.
         $installationFlag = Kernel::container()->get(InstallationFlag::class);
         if ($installationFlag instanceof InstallationFlag) {
             $installationFlag->reset();

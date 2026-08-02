@@ -1289,38 +1289,56 @@ test('parse fatal-errors for a handle with no registered filename', function ():
 
 // --- func_combine_script / func_get_combined_scripts -----------------------
 
+/**
+ * func_combine_script()/func_get_combined_scripts() log via ErrorCollector::
+ * recordFatalStatic() (Template is still manually `new`'d at several call
+ * sites, singleton/service-locator elimination campaign, Phase 6 -- see
+ * that shim's own docblock), which resolves the container-shared instance
+ * -- resolved here the same way, so drain() reads what the shim just wrote
+ * instead of a disconnected fresh instance.
+ */
+function templateInstanceTestErrorCollector(): ErrorCollector
+{
+    $errorCollector = Kernel::container()->get(ErrorCollector::class);
+    if (! $errorCollector instanceof ErrorCollector) {
+        throw new \LogicException('Container returned an unexpected type for ' . ErrorCollector::class);
+    }
+
+    return $errorCollector;
+}
+
 test('func_combine_script trigger_errors when id is missing', function (): void {
-    // func_combine_script() logs via ErrorCollector::recordFatal() (not
-    // trigger_error(E_USER_ERROR), deprecated as of PHP 8.4 -- see
+    // func_combine_script() logs via ErrorCollector::recordFatalStatic()
+    // (not trigger_error(E_USER_ERROR), deprecated as of PHP 8.4 -- see
     // HtmlService::fatalError()'s own docblock) and simply returns, no
     // exception thrown -- checked directly via drain() instead of a
     // throwaway set_error_handler().
     $t = new Template();
-    ErrorCollector::drain();
+    templateInstanceTestErrorCollector()->drain();
 
     $t->func_combine_script([]);
 
-    $collected = ErrorCollector::drain();
+    $collected = templateInstanceTestErrorCollector()->drain();
     expect($collected)->toBe(["[ERROR] combine_script: missing 'id' parameter"]);
 });
 
 test('func_combine_script requires id to be a string even when the key is set', function (): void {
     $t = new Template();
-    ErrorCollector::drain();
+    templateInstanceTestErrorCollector()->drain();
 
     $t->func_combine_script(['id' => 42, 'path' => 'x.js']);
 
-    $collected = ErrorCollector::drain();
+    $collected = templateInstanceTestErrorCollector()->drain();
     expect($collected)->toBe(["[ERROR] combine_script: missing 'id' parameter"]);
 });
 
 test('func_combine_script trigger_errors for an invalid load value', function (): void {
     $t = new Template();
-    ErrorCollector::drain();
+    templateInstanceTestErrorCollector()->drain();
 
     $t->func_combine_script(['id' => 'x', 'load' => 'bogus']);
 
-    $collected = ErrorCollector::drain();
+    $collected = templateInstanceTestErrorCollector()->drain();
     expect($collected)->toBe(["[ERROR] combine_script: invalid 'load' parameter"]);
 });
 
@@ -1483,9 +1501,9 @@ test('func_combine_script casts a non-bool truthy template value to a real bool 
 
 test('func_get_combined_scripts trigger_errors when load is missing', function (): void {
     $t = new Template();
-    ErrorCollector::drain();
+    templateInstanceTestErrorCollector()->drain();
 
-    // The fatal signal (ErrorCollector::recordFatal(), no exception) falls
+    // The fatal signal (ErrorCollector::recordFatalStatic(), no exception) falls
     // through to the very next line, which reads the still-missing
     // $params['load'] key directly (no isset()) -- a real "Undefined
     // array key" E_WARNING this handler must still absorb, confirmed live.
@@ -1500,7 +1518,7 @@ test('func_get_combined_scripts trigger_errors when load is missing', function (
         restore_error_handler();
     }
 
-    $collected = ErrorCollector::drain();
+    $collected = templateInstanceTestErrorCollector()->drain();
     expect($collected)->toBe(["[ERROR] get_combined_scripts: missing 'load' parameter"]);
     expect($caught)->toContain('Undefined array key "load"');
     // $params['load'] === 'header' is false for the missing/null case, so

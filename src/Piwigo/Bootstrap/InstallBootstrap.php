@@ -64,7 +64,11 @@ final class InstallBootstrap
         // path was a real, pre-existing 500 (uncaught PHP fatal error, not
         // the intended clean error page) because this was never called
         // here. See ErrorCollector::installIfConfigured()'s own docblock.
-        ErrorCollector::installIfConfigured();
+        $errorCollector = Kernel::container()->get(ErrorCollector::class);
+        if (! $errorCollector instanceof ErrorCollector) {
+            throw new \LogicException('Container returned an unexpected type for ' . ErrorCollector::class);
+        }
+        $errorCollector->installIfConfigured();
     }
 
     public static function activateConfigService(): void

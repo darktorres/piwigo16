@@ -5,66 +5,71 @@ declare(strict_types=1);
 use Piwigo\Core\ErrorCollector;
 
 /**
- * Deliberately never calls ErrorCollector::install() -- it registers a real
- * set_error_handler()/register_shutdown_function() pair, and PHP has no way
- * to unregister a shutdown function once added, which would leak into every
- * later test in this shared PHPUnit/Pest process. drain()'s own return-then-
- * clear contract is exercised directly via reflection instead, matching how
- * this class's other static state has no install()-dependent test either.
- */
-/**
+ * Container-shared instance (singleton/service-locator elimination
+ * campaign, Phase 2) -- each test constructs its own fresh instance
+ * directly; no reset()/global beforeEach-afterEach needed for the
+ * instance API, same shape as CurrentLoggerTest.php.
+ *
+ * Deliberately never calls a real instance's install() -- it registers a
+ * real set_error_handler()/register_shutdown_function() pair, and PHP has
+ * no way to unregister a shutdown function once added, which would leak
+ * into every later test in this shared PHPUnit/Pest process. drain()'s own
+ * return-then-clear contract is exercised directly via reflection instead,
+ * matching how this class's other state has no install()-dependent test
+ * either. handleError()/flush() are the only two methods with instance
+ * state to reflect into -- label()/writeTestErrorsLog() are pure functions
+ * of their own parameters and stayed `private static` through the
+ * conversion, so their own Reflection calls below are unchanged
+ * (`invoke(null, ...)`).
+ *
  * @param list<string> $entries
  */
-function seedCollected(array $entries): void
+function seedCollected(ErrorCollector $errorCollector, array $entries): void
 {
     $prop = new ReflectionProperty(ErrorCollector::class, 'collected');
-    $prop->setValue(null, $entries);
+    $prop->setValue($errorCollector, $entries);
 }
-
-beforeEach(function (): void {
-    ErrorCollector::reset();
-});
-
-afterEach(function (): void {
-    ErrorCollector::reset();
-});
 
 test('reset actually clears isActive back to false, not leaving it true', function (): void {
     // install() is deliberately never called in this file (see the top
     // docblock), so isActive is set directly via reflection instead.
+    $errorCollector = new ErrorCollector();
     $prop = new ReflectionProperty(ErrorCollector::class, 'active');
-    $prop->setValue(null, true);
-    expect(ErrorCollector::isActive())->toBeTrue();
+    $prop->setValue($errorCollector, true);
+    expect($errorCollector->isActive())->toBeTrue();
 
-    ErrorCollector::reset();
+    $errorCollector->reset();
 
-    expect(ErrorCollector::isActive())->toBeFalse();
+    expect($errorCollector->isActive())->toBeFalse();
 });
 
 test('drain returns an empty array when nothing was collected', function (): void {
-    expect(ErrorCollector::drain())->toBe([]);
+    expect(new ErrorCollector()->drain())->toBe([]);
 });
 
 test('drain returns exactly what was collected', function (): void {
-    seedCollected(['[WARNING] foo in bar.php:1', '[NOTICE] baz in qux.php:2']);
+    $errorCollector = new ErrorCollector();
+    seedCollected($errorCollector, ['[WARNING] foo in bar.php:1', '[NOTICE] baz in qux.php:2']);
 
-    expect(ErrorCollector::drain())->toBe(['[WARNING] foo in bar.php:1', '[NOTICE] baz in qux.php:2']);
+    expect($errorCollector->drain())->toBe(['[WARNING] foo in bar.php:1', '[NOTICE] baz in qux.php:2']);
 });
 
 test('drain clears the buffer, unlike collected()', function (): void {
-    seedCollected(['[WARNING] foo in bar.php:1']);
+    $errorCollector = new ErrorCollector();
+    seedCollected($errorCollector, ['[WARNING] foo in bar.php:1']);
 
-    ErrorCollector::drain();
+    $errorCollector->drain();
 
-    expect(ErrorCollector::collected())->toBe([]);
+    expect($errorCollector->collected())->toBe([]);
 });
 
 test('a second drain after a first returns empty', function (): void {
-    seedCollected(['[WARNING] foo in bar.php:1']);
+    $errorCollector = new ErrorCollector();
+    seedCollected($errorCollector, ['[WARNING] foo in bar.php:1']);
 
-    ErrorCollector::drain();
+    $errorCollector->drain();
 
-    expect(ErrorCollector::drain())->toBe([]);
+    expect($errorCollector->drain())->toBe([]);
 });
 
 /**
@@ -74,7 +79,7 @@ test('a second drain after a first returns empty', function (): void {
  * file's own top docblock) -- invoked directly via Reflection instead,
  * same rationale as seedCollected() above.
  *
- * flush()'s own header-emission loop (only reached when `self::$collected
+ * flush()'s own header-emission loop (only reached when `$this->collected
  * !== [] && ! headers_sent()`) stays genuinely unreachable from any test in
  * this repo: PHP's CLI SAPI hardwires headers_sent() to true
  * unconditionally (confirmed live, fresh process, zero prior output) --
@@ -217,9 +222,10 @@ test('flush does not record a non-fatal error_get_last() type as if it were fata
     $script = '<?php' . "\n"
         . 'require ' . var_export($autoloadPath, true) . ";\n"
         . "@trigger_error('non-fatal warning for mutation coverage', E_USER_WARNING);\n"
+        . "\$errorCollector = new \\Piwigo\\Core\\ErrorCollector();\n"
         . "\$method = new ReflectionMethod(\\Piwigo\\Core\\ErrorCollector::class, 'flush');\n"
-        . "\$method->invoke(null);\n"
-        . 'file_put_contents(' . var_export($marker, true) . ", json_encode(\\Piwigo\\Core\\ErrorCollector::collected()));\n";
+        . "\$method->invoke(\$errorCollector);\n"
+        . 'file_put_contents(' . var_export($marker, true) . ", json_encode(\$errorCollector->collected()));\n";
 
     $scriptFile = sys_get_temp_dir() . '/piwigo-error-collector-nonfatal-script-' . bin2hex(random_bytes(8)) . '.php';
     file_put_contents($scriptFile, $script);
@@ -279,9 +285,10 @@ test('flush records a synthetic entry for a genuine E_PARSE fatal (malformed req
 
     $script = '<?php' . "\n"
         . 'require ' . var_export($autoloadPath, true) . ";\n"
-        . "\\Piwigo\\Core\\ErrorCollector::install();\n"
-        . "register_shutdown_function(function () {\n"
-        . '    file_put_contents(' . var_export($marker, true) . ", json_encode(\\Piwigo\\Core\\ErrorCollector::collected()));\n"
+        . "\$errorCollector = new \\Piwigo\\Core\\ErrorCollector();\n"
+        . "\$errorCollector->install();\n"
+        . "register_shutdown_function(function () use (\$errorCollector) {\n"
+        . '    file_put_contents(' . var_export($marker, true) . ", json_encode(\$errorCollector->collected()));\n"
         . "});\n"
         . 'require ' . var_export($brokenFile, true) . ";\n";
 
@@ -324,12 +331,13 @@ test('flush records a synthetic entry for a genuine E_PARSE fatal (malformed req
 });
 
 test('flush returns immediately when nothing was collected', function (): void {
-    seedCollected([]);
+    $errorCollector = new ErrorCollector();
+    seedCollected($errorCollector, []);
 
     $method = new ReflectionMethod(ErrorCollector::class, 'flush');
-    $method->invoke(null);
+    $method->invoke($errorCollector);
 
-    expect(ErrorCollector::collected())->toBe([]);
+    expect($errorCollector->collected())->toBe([]);
 });
 
 test('flush records a synthetic entry for a genuine E_ERROR fatal (memory-limit exhaustion) in a real subprocess', function (): void {
@@ -350,9 +358,10 @@ test('flush records a synthetic entry for a genuine E_ERROR fatal (memory-limit 
     $script = '<?php' . "\n"
         . "ini_set('memory_limit', '32M');\n"
         . 'require ' . var_export($autoloadPath, true) . ";\n"
-        . "\\Piwigo\\Core\\ErrorCollector::install();\n"
-        . "register_shutdown_function(function () {\n"
-        . '    file_put_contents(' . var_export($marker, true) . ", json_encode(\\Piwigo\\Core\\ErrorCollector::collected()));\n"
+        . "\$errorCollector = new \\Piwigo\\Core\\ErrorCollector();\n"
+        . "\$errorCollector->install();\n"
+        . "register_shutdown_function(function () use (\$errorCollector) {\n"
+        . '    file_put_contents(' . var_export($marker, true) . ", json_encode(\$errorCollector->collected()));\n"
         . "});\n"
         . "\$sink = [];\n"
         . "while (true) {\n"
@@ -470,8 +479,8 @@ test('label falls back to the PHP code for a type matching none of the known cat
  *    userland reset, and no runkit/uopz extension is installed here to
  *    stub the builtin itself. The two lines below add real, still-closable
  *    coverage adjacent to that guard instead: the `headers_sent()` half
- *    of flush()'s `self::$collected === [] || headers_sent()` check
- *    (previously only its `self::$collected === []` half was exercised),
+ *    of flush()'s `$this->collected === [] || headers_sent()` check
+ *    (previously only its `$this->collected === []` half was exercised),
  *    proving flush() never mutates the buffer either way.
  *
  * This same test below (both its empty- and non-empty-buffer variants,
@@ -483,26 +492,27 @@ test('label falls back to the PHP code for a type matching none of the known cat
  * left operand's own comparison, and the whole condition's negation --
  * the full suite passed unchanged against each. header() is a
  * documented-here-live no-op under the CLI SAPI (no warning, no
- * exception), and this loop only ever *reads* self::$collected (never
+ * exception), and this loop only ever *reads* $this->collected (never
  * mutates it) -- so with headers_sent() permanently true in this
  * environment, every mutated variant of this condition still leaves
- * self::$collected in the exact same final state as the real early
+ * $this->collected in the exact same final state as the real early
  * return, regardless of what's actually buffered. The header-emission
  * loop's own remaining mutants (lines 187/189/190/192, all inside that
  * same unreachable-per-this-file's-own-earlier-investigation loop) are
  * dead for the identical reason -- not chased further.
  */
 test('flush leaves a non-empty buffer untouched when headers are already sent', function (): void {
+    $errorCollector = new ErrorCollector();
     $seeded = ['[WARNING] foo in bar.php:1', '[NOTICE] baz in qux.php:2'];
-    seedCollected($seeded);
+    seedCollected($errorCollector, $seeded);
 
     $method = new ReflectionMethod(ErrorCollector::class, 'flush');
-    $method->invoke(null);
+    $method->invoke($errorCollector);
 
     // Whether this run's headers_sent() is true (the early return fires)
     // or -- in some future environment where it genuinely isn't -- the
     // header-emission loop runs for real, flush() never drains or
-    // otherwise mutates self::$collected: it is byte-for-byte identical
+    // otherwise mutates $this->collected: it is byte-for-byte identical
     // to what was seeded either way.
-    expect(ErrorCollector::collected())->toBe($seeded);
+    expect($errorCollector->collected())->toBe($seeded);
 });

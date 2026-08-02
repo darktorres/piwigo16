@@ -50,11 +50,30 @@ final class InstallBootstrapTest extends IntegrationTestCase
     #[\Override]
     protected function tearDown(): void
     {
+        // Resolved (and reset) before Kernel::reset() destroys the
+        // container -- unlike the old static API, an instance can no
+        // longer be reached afterwards (singleton/service-locator
+        // elimination campaign, Phase 2).
+        if (Kernel::isBooted()) {
+            $errorCollector = Kernel::container()->get(ErrorCollector::class);
+            if ($errorCollector instanceof ErrorCollector) {
+                $errorCollector->reset();
+            }
+        }
         Kernel::reset();
         DeploymentPolicy::reset();
-        ErrorCollector::reset();
         $this->removeDirectory($this->tempRoot);
         parent::tearDown();
+    }
+
+    private function errorCollector(): ErrorCollector
+    {
+        $errorCollector = Kernel::container()->get(ErrorCollector::class);
+        if (! $errorCollector instanceof ErrorCollector) {
+            throw new \LogicException('Container returned an unexpected type for ' . ErrorCollector::class);
+        }
+
+        return $errorCollector;
     }
 
     private function removeDirectory(string $dir): void
@@ -127,7 +146,7 @@ final class InstallBootstrapTest extends IntegrationTestCase
 
         InstallBootstrap::boot($paths);
 
-        self::assertTrue(ErrorCollector::isActive());
+        self::assertTrue($this->errorCollector()->isActive());
 
         // Real cleanup: undo the real set_error_handler() this just
         // performed so it can't intercept errors raised by any later test
@@ -142,7 +161,7 @@ final class InstallBootstrapTest extends IntegrationTestCase
 
         InstallBootstrap::boot($paths);
 
-        self::assertFalse(ErrorCollector::isActive());
+        self::assertFalse($this->errorCollector()->isActive());
     }
 
     public function test_boot_skips_the_error_reporting_ini_change_when_deployment_policy_has_show_php_errors_disabled(): void
@@ -160,7 +179,7 @@ final class InstallBootstrapTest extends IntegrationTestCase
         // calling self::install() -- the sentinel value set above must
         // survive untouched, and the collector must stay inactive.
         self::assertSame((string) $sentinelLevel, ini_get('error_reporting'));
-        self::assertFalse(ErrorCollector::isActive());
+        self::assertFalse($this->errorCollector()->isActive());
 
         ini_set('error_reporting', $previous);
     }

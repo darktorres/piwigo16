@@ -44,6 +44,7 @@ final class ElementSetRanksPageRenderer
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
+        private readonly ErrorCollector $errorCollector,
     ) {}
 
     public function render(): void
@@ -81,7 +82,7 @@ final class ElementSetRanksPageRenderer
             // through to the cast below regardless (see
             // ElementSetRanksRequest's own docblock), so nothing else
             // changes here.
-            ErrorCollector::recordFatal('missing cat_id param');
+            $this->errorCollector->recordFatal('missing cat_id param');
         }
 
         $category_id = $elementSetRanksRequest->catId;

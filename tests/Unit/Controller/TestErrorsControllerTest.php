@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Nyholm\Psr7\ServerRequest;
 use Piwigo\Controller\TestErrorsController;
+use Piwigo\Core\ErrorCollector;
 
 /**
  * Piwigo\Controller\TestErrorsController's own "outside test mode" 404
@@ -31,7 +32,7 @@ test('returns an empty 404 response when test mode is not active', function (): 
     unset($_SERVER['HTTP_X_PIWIGO_ENV']);
 
     try {
-        $controller = new TestErrorsController();
+        $controller = new TestErrorsController(new ErrorCollector());
         $response = $controller(new ServerRequest('GET', '/__test/errors'));
     } finally {
         if ($original !== null) {

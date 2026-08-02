@@ -516,7 +516,7 @@ final class HtmlService implements HtmlRenderingInterface
         // the whole test process instead. Always recording (regardless of
         // isActive()) and always falling through to the real error page
         // below is both simpler and correct for every one of these cases.
-        ErrorCollector::recordFatal(strip_tags($msg) . $btrace_msg);
+        ErrorCollector::recordFatalStatic(strip_tags($msg) . $btrace_msg);
 
         throw new ResponseReadyException(ResponseFactory::html($display, 500));
     }

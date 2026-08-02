@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Unit\Html;
 
 use Piwigo\Core\ErrorCollector;
+use Piwigo\Core\Kernel;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseReadyException;
 
@@ -21,14 +22,28 @@ use Piwigo\Http\ResponseReadyException;
 final class HtmlServiceTestFatalErrorCaller
 {
     /**
-     * fatalError()'s ErrorCollector::recordFatal() message, captured via
-     * ErrorCollector::collected() -- the real recording path it now uses
-     * instead of trigger_error(E_USER_ERROR) (deprecated as of PHP 8.4).
-     * Called unconditionally by fatalError() regardless of
-     * ErrorCollector::isActive(), so no install()/Reflection state setup
-     * is needed here.
+     * fatalError()'s ErrorCollector::recordFatalStatic() message, captured
+     * via the container-shared instance's collected() -- the real
+     * recording path it now uses instead of trigger_error(E_USER_ERROR)
+     * (deprecated as of PHP 8.4). Called unconditionally by fatalError()
+     * regardless of isActive(), so no install()/Reflection state setup is
+     * needed here. Resolved from the container (not a fresh `new
+     * ErrorCollector()`) so this sees the exact same instance
+     * recordFatalStatic()'s shim writes to (singleton/service-locator
+     * elimination campaign, Phase 2) -- HtmlServiceTest.php's own
+     * beforeEach() already boots Kernel.
      */
     public ?string $capturedErrorMessage = null;
+
+    private function errorCollector(): ErrorCollector
+    {
+        $errorCollector = Kernel::container()->get(ErrorCollector::class);
+        if (! $errorCollector instanceof ErrorCollector) {
+            throw new \LogicException('Container returned an unexpected type for ' . ErrorCollector::class);
+        }
+
+        return $errorCollector;
+    }
 
     /**
      * count(debug_backtrace()) taken one line above the fatalError()
@@ -50,7 +65,7 @@ final class HtmlServiceTestFatalErrorCaller
     public function call(HtmlService $service, string $msg, ?string $title, bool $showTrace): string
     {
         $this->capturedErrorMessage = null;
-        ErrorCollector::drain();
+        $this->errorCollector()->drain();
         // fatalError() is `never`-typed and always throws
         // ResponseReadyException -- no fallback return needed after the
         // try/catch (matches HtmlServiceTest.php's own established
@@ -59,7 +74,7 @@ final class HtmlServiceTestFatalErrorCaller
             $this->preCallDepth = count(debug_backtrace());
             $service->fatalError($msg, $title, $showTrace);
         } catch (ResponseReadyException $e) {
-            $collected = ErrorCollector::drain();
+            $collected = $this->errorCollector()->drain();
             $this->capturedErrorMessage = $collected === [] ? null : preg_replace('/^\[ERROR\] /', '', $collected[0]);
             $this->capturedStatusCode = $e->response()->getStatusCode();
 

@@ -1005,19 +1005,30 @@ test('compute_script_topological_order fatal-errors exactly one level past the r
         $loader->add("a{$i}", 0, ["a" . ($i - 1)], "themes/default/js/a{$i}.js");
     }
 
-    // HtmlService::fatalError() always calls ErrorCollector::recordFatal()
-    // then throws ResponseReadyException -- caught directly here rather
-    // than via a throwaway set_error_handler() (this class no longer
-    // triggers a PHP-level error at all: trigger_error(E_USER_ERROR) was
-    // deprecated as of PHP 8.4, see HtmlService::fatalError()'s own
-    // docblock for the real replacement).
-    \Piwigo\Core\ErrorCollector::drain();
+    // HtmlService::fatalError() always calls ErrorCollector::
+    // recordFatalStatic() then throws ResponseReadyException -- caught
+    // directly here rather than via a throwaway set_error_handler() (this
+    // class no longer triggers a PHP-level error at all: trigger_error
+    // (E_USER_ERROR) was deprecated as of PHP 8.4, see HtmlService::
+    // fatalError()'s own docblock for the real replacement).
+    // recordFatalStatic() resolves the container-shared instance
+    // (singleton/service-locator elimination campaign, Phase 2) -- booted
+    // and reset locally, scoped to this one test, since no other test in
+    // this file needs a container.
+    \Piwigo\Core\Kernel::boot();
+    $errorCollector = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\ErrorCollector::class);
+    if (! $errorCollector instanceof \Piwigo\Core\ErrorCollector) {
+        throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\ErrorCollector::class);
+    }
+    $errorCollector->drain();
     $caught = null;
     try {
         scriptLoaderTopologicalOrder($loader, 'a5');
     } catch (\Piwigo\Http\ResponseReadyException) {
-        $collected = \Piwigo\Core\ErrorCollector::drain();
+        $collected = $errorCollector->drain();
         $caught = $collected === [] ? null : preg_replace('/^\[ERROR\] /', '', $collected[0]);
+    } finally {
+        \Piwigo\Core\Kernel::reset();
     }
 
     // fatalError()'s own $showTrace=true default appends a backtrace

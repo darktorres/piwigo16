@@ -229,6 +229,7 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
         '/src/Piwigo/Core/CurrentLogger.php',
         '/src/Piwigo/Section/SectionContextRegistry.php',
         '/src/Piwigo/Storage/StorageRegistry.php',
+        '/src/Piwigo/Core/ErrorCollector.php',
     ];
 
     $hits = [
@@ -499,16 +500,30 @@ test('CurrentPaths::reset() is only called from tests/ or the Kernel::reset() ca
     expect(describeCallSites($hits))->toBe([]);
 });
 
-test('ErrorCollector::reset() is only called from tests/', function (): void {
+test('ErrorCollector::recordFatalStatic() transitional shim has a shrinking, known allow-list', function (): void {
+    // Singleton/service-locator elimination campaign, Phase 2: Piwigo\
+    // Template\Template and Piwigo\Html\HtmlService are both still
+    // manually `new`'d at dozens of call sites each (Phase 6, not yet
+    // converted), so neither can take ErrorCollector via constructor
+    // injection yet -- they use this static shim instead of the real
+    // recordFatal() instance method (see that method's own docblock).
+    // Every phase that converts one more of these files should remove it
+    // from the allow-list below; once empty, delete the shim and this test.
     $repoRoot = __DIR__ . '/../..';
 
-    $hits = [
-        ...findCallSites($repoRoot . '/src/Piwigo', 'ErrorCollector::reset('),
-        ...findCallSitesInRootPhpFiles($repoRoot, 'ErrorCollector::reset('),
-        ...findCallSitesInBinFiles($repoRoot, 'ErrorCollector::reset('),
+    $allowedFiles = [
+        '/src/Piwigo/Template/Template.php',
+        '/src/Piwigo/Html/HtmlService.php',
     ];
 
-    expect(describeCallSites($hits))->toBe([]);
+    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'ErrorCollector::recordFatalStatic(');
+
+    $disallowed = array_values(array_filter(
+        $hits,
+        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
+    ));
+
+    expect(describeCallSites($disallowed))->toBe([]);
 });
 
 test('FilterState::*Static() transitional shims have a shrinking, known allow-list', function (): void {

@@ -200,8 +200,11 @@ final class InstallWizardTest extends IntegrationTestCase
         DbCredentials::reset();
         if ($this->installBootstrapBooted) {
             restore_error_handler();
+            $errorCollector = Kernel::container()->get(ErrorCollector::class);
+            if ($errorCollector instanceof ErrorCollector) {
+                $errorCollector->reset();
+            }
         }
-        ErrorCollector::reset();
         Kernel::reset();
         CurrentConfig::reset();
         // render()'s step-2 body (via AuthService::logUser()'s

@@ -24,30 +24,40 @@ namespace Piwigo\Core;
  *
  * Install once, early in the bootstrap — see Piwigo\Bootstrap\
  * RequestBootstrap's show_php_errors_on_frontend handling.
+ *
+ * Container-shared instance (singleton/service-locator elimination
+ * campaign, Phase 2): $active/$collected are real per-request state, a
+ * genuine SEC-60 worker-mode risk if left static (a leftover $collected
+ * entry from one request would otherwise resurface as an X-PHP-Error-N
+ * header on the next request sharing the same worker process).
+ * handleError()/flush() are the only two methods that read/write that
+ * state, so only those became instance methods -- label()/
+ * writeTestErrorsLog() are pure functions of their own parameters (no
+ * $this access) and stay `private static`, unchanged.
  */
 final class ErrorCollector
 {
-    private static bool $active = false;
+    private bool $active = false;
 
     /**
      * @var list<string>
      */
-    private static array $collected = [];
+    private array $collected = [];
 
-    public static function install(): void
+    public function install(): void
     {
-        if (self::$active) {
+        if ($this->active) {
             return;
         }
-        self::$active = true;
-        self::$collected = [];
+        $this->active = true;
+        $this->collected = [];
 
         // Never write errors inline — they corrupt non-HTML responses.
         @ini_set('display_errors', '0');
         @ini_set('display_startup_errors', '0');
 
-        set_error_handler(self::handleError(...));
-        register_shutdown_function(self::flush(...));
+        set_error_handler($this->handleError(...));
+        register_shutdown_function($this->flush(...));
     }
 
     /**
@@ -63,28 +73,32 @@ final class ErrorCollector
      * it) -- confirmed live, a real install.php 500 rather than the
      * intended clean error page.
      */
-    public static function installIfConfigured(): void
+    public function installIfConfigured(): void
     {
+        // DeploymentPolicy hasn't converted yet (Phase 4) -- ordinary
+        // still-static call, not scaffolding; revisited once that phase
+        // lands and this can take DeploymentPolicy via constructor
+        // injection instead.
         $policy = \Piwigo\Config\DeploymentPolicy::current();
         if ($policy->showPhpErrors !== 0) {
             @ini_set('error_reporting', $policy->showPhpErrors);
             if ($policy->showPhpErrorsOnFrontend) {
-                self::install();
+                $this->install();
             }
         }
     }
 
-    public static function isActive(): bool
+    public function isActive(): bool
     {
-        return self::$active;
+        return $this->active;
     }
 
     /**
      * @return list<string>
      */
-    public static function collected(): array
+    public function collected(): array
     {
-        return self::$collected;
+        return $this->collected;
     }
 
     /**
@@ -98,18 +112,18 @@ final class ErrorCollector
      *
      * @return list<string>
      */
-    public static function drain(): array
+    public function drain(): array
     {
-        $collected = self::$collected;
-        self::$collected = [];
+        $collected = $this->collected;
+        $this->collected = [];
 
         return $collected;
     }
 
-    public static function reset(): void
+    public function reset(): void
     {
-        self::$active = false;
-        self::$collected = [];
+        $this->active = false;
+        $this->collected = [];
     }
 
     /**
@@ -133,10 +147,28 @@ final class ErrorCollector
      * instead, so the normal collected()/flush()-header path this method
      * already feeds is never bypassed here.
      */
-    public static function recordFatal(string $message): void
+    public function recordFatal(string $message): void
     {
-        self::$collected[] = '[ERROR] ' . $message;
+        $this->collected[] = '[ERROR] ' . $message;
         error_log('PHP Fatal error: ' . $message);
+    }
+
+    /**
+     * @deprecated transitional bridge for callers not yet converted to
+     * constructor injection -- Piwigo\Template\Template and
+     * Piwigo\Html\HtmlService are both still manually `new`'d at dozens of
+     * call sites each (singleton/service-locator elimination campaign,
+     * Phase 6), so neither can take ErrorCollector via constructor
+     * injection yet. Delete once `grep -rn "ErrorCollector::recordFatalStatic("`
+     * outside tests/ returns nothing.
+     */
+    public static function recordFatalStatic(string $message): void
+    {
+        $instance = Kernel::container()->get(self::class);
+        if (! $instance instanceof self) {
+            throw new \LogicException('Container returned an unexpected type for ' . self::class);
+        }
+        $instance->recordFatal($message);
     }
 
     /**
@@ -145,7 +177,7 @@ final class ErrorCollector
      * signature set_error_handler() expects.
      * @param array<array-key, mixed> $errcontext unused, kept for signature parity
      */
-    private static function handleError(int $errno, string $errstr, string $errfile = '', int $errline = 0, array $errcontext = []): bool
+    private function handleError(int $errno, string $errstr, string $errfile = '', int $errline = 0, array $errcontext = []): bool
     {
         // Respect the @ error-suppression operator.
         if (! (bool) (error_reporting() & $errno)) {
@@ -155,7 +187,7 @@ final class ErrorCollector
         $label = self::label($errno);
         $short = basename($errfile) . ':' . $errline;
         $entry = "[{$label}] {$errstr} in {$short}";
-        self::$collected[] = $entry;
+        $this->collected[] = $entry;
 
         // Keep the Apache error log as the authoritative server-side record.
         error_log("PHP {$label}: {$errstr} in {$errfile} on line {$errline}");
@@ -194,7 +226,7 @@ final class ErrorCollector
     /**
      * @internal registered via register_shutdown_function()
      */
-    private static function flush(): void
+    private function flush(): void
     {
         // Catch fatal errors that set_error_handler() cannot intercept.
         $last = error_get_last();
@@ -202,21 +234,21 @@ final class ErrorCollector
             $label = self::label($last['type']);
             $short = basename($last['file']) . ':' . $last['line'];
             $entry = "[{$label}] {$last['message']} in {$short}";
-            self::$collected[] = $entry;
+            $this->collected[] = $entry;
             self::writeTestErrorsLog($entry);
         }
 
-        if (self::$collected === [] || headers_sent()) {
+        if ($this->collected === [] || headers_sent()) {
             return;
         }
 
         // Emit one header per error — DevTools shows each on its own line.
-        foreach (self::$collected as $i => $msg) {
+        foreach ($this->collected as $i => $msg) {
             // Strip newlines (invalid in header values) and cap length.
             $safe = substr(str_replace(["\r", "\n"], ' ', $msg), 0, 500);
             header('X-PHP-Error-' . ($i + 1) . ': ' . $safe);
         }
-        header('X-PHP-Error-Count: ' . count(self::$collected));
+        header('X-PHP-Error-Count: ' . count($this->collected));
     }
 
     private static function label(int $type): string

@@ -345,7 +345,7 @@ final class RequestBootstrap
         // is also load-bearing for HtmlService::fatalError()'s own
         // recordFatal()+throw sequence (see
         // ErrorCollector::installIfConfigured()'s own docblock).
-        ErrorCollector::installIfConfigured();
+        self::errorCollector()->installIfConfigured();
 
         if (\Piwigo\Config\CurrentConfig::sessionGcProbability() > 0) {
             @ini_set('session.gc_divisor', 100);
@@ -883,6 +883,23 @@ final class RequestBootstrap
         }
 
         return $currentLogger;
+    }
+
+    /**
+     * Resolves the container-shared instance so that this method's own
+     * `install()` write (registering the real error handler/shutdown
+     * function) is visible to every other consumer holding the same
+     * shared instance (singleton/service-locator elimination campaign,
+     * Phase 2).
+     */
+    private static function errorCollector(): ErrorCollector
+    {
+        $errorCollector = Kernel::container()->get(ErrorCollector::class);
+        if (! $errorCollector instanceof ErrorCollector) {
+            throw new \LogicException('Container returned an unexpected type for ' . ErrorCollector::class);
+        }
+
+        return $errorCollector;
     }
 
     /**

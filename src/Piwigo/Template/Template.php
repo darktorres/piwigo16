@@ -1057,7 +1057,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
             // the real replacement/reasoning. This return is what actually
             // prevents $params['id'] from being read below when it's
             // genuinely missing/non-string.
-            ErrorCollector::recordFatal("combine_script: missing 'id' parameter");
+            ErrorCollector::recordFatalStatic("combine_script: missing 'id' parameter");
 
             return;
         }
@@ -1070,7 +1070,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
                     break;
                 case 'async': $load = 2;
                     break;
-                default: ErrorCollector::recordFatal("combine_script: invalid 'load' parameter");
+                default: ErrorCollector::recordFatalStatic("combine_script: invalid 'load' parameter");
             }
         }
 
@@ -1104,7 +1104,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
     public function func_get_combined_scripts(array $params): string
     {
         if (! isset($params['load'])) {
-            ErrorCollector::recordFatal("get_combined_scripts: missing 'load' parameter");
+            ErrorCollector::recordFatalStatic("get_combined_scripts: missing 'load' parameter");
         }
         $load = $params['load'] === 'header' ? 0 : 1;
         $content = [];

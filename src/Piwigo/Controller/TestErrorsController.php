@@ -26,6 +26,10 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class TestErrorsController implements ControllerInterface
 {
+    public function __construct(
+        private readonly ErrorCollector $errorCollector,
+    ) {}
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
@@ -34,7 +38,7 @@ final class TestErrorsController implements ControllerInterface
         }
 
         return ResponseFactory::json([
-            'errors' => ErrorCollector::drain(),
+            'errors' => $this->errorCollector->drain(),
         ]);
     }
 }

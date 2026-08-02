@@ -52,6 +52,18 @@ final class RequestBootstrapBootEntryPointTest extends IntegrationTestCase
      */
     private array $originalDbEnv = [];
 
+    /**
+     * Resolved from the container inside the test's own override callback,
+     * before KernelContainerOverride::with()'s finally calls Kernel::reset()
+     * -- install()'s real set_error_handler() registration is a process-
+     * global side effect that outlives the container/instance that made
+     * it, so tearDown() needs a direct reference to check/undo it, not a
+     * re-resolve from what may by then be a destroyed container (unlike
+     * InstallationFlag below, whose own state has no such global side
+     * effect and is safe to simply let become unreachable garbage).
+     */
+    private ?ErrorCollector $errorCollectorUnderTest = null;
+
     #[\Override]
     protected function setUp(): void
     {
@@ -85,11 +97,16 @@ final class RequestBootstrapBootEntryPointTest extends IntegrationTestCase
         // configure() -> connect()'s own ErrorCollector::installIfConfigured()
         // runs unconditionally before the \LogicException fires -- restore
         // immediately, same discipline as InstallBootstrapTest's own
-        // docblock/RequestBootstrapConnectTest's tearDown() above.
-        if (ErrorCollector::isActive()) {
+        // docblock/RequestBootstrapConnectTest's tearDown() above. Checked
+        // via the instance captured inside the test's own callback (see
+        // that property's own docblock), not a container re-resolve --
+        // KernelContainerOverride::with()'s finally has typically already
+        // reset the container by the time tearDown() runs.
+        if ($this->errorCollectorUnderTest?->isActive() === true) {
             restore_error_handler();
         }
-        ErrorCollector::reset();
+        $this->errorCollectorUnderTest?->reset();
+        $this->errorCollectorUnderTest = null;
 
         // Some tests above reach this point via KernelContainerOverride::
         // with(), which already calls Kernel::reset() internally before
@@ -118,13 +135,23 @@ final class RequestBootstrapBootEntryPointTest extends IntegrationTestCase
         // additional cleanup is needed here.
         KernelContainerOverride::withWrongTypeFor(
             ConfigService::class,
-            static function () use ($paths): void {
+            function () use ($paths): void {
                 // with() calls Kernel::reset() internally, which also
                 // clears CurrentPaths -- restore it before bootEntryPoint()
                 // runs anything that needs it (Kernel::boot($paths) itself
                 // is a no-op here since booted is already forced true by
                 // the override).
                 CurrentPaths::set($paths);
+
+                // Captured now, while the override's own container is still
+                // alive, so tearDown() can still check/undo install()'s real
+                // set_error_handler() registration after this callback's
+                // container is gone (see that property's own docblock).
+                $errorCollector = Kernel::container()->get(ErrorCollector::class);
+                if ($errorCollector instanceof ErrorCollector) {
+                    $this->errorCollectorUnderTest = $errorCollector;
+                }
+
                 RequestBootstrap::bootEntryPoint($paths);
             }
         );

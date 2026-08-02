@@ -69,6 +69,7 @@ final class IntroSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Core\UrlServiceInterface $urlService,
         private readonly LoadedPlugins $loadedPlugins,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+        private readonly FilesystemIntegrityChecker $filesystemIntegrityChecker,
     ) {}
 
     #[\Override]
@@ -152,7 +153,7 @@ final class IntroSubController implements AdminSubControllerInterface
             \Piwigo\Core\PageState::current()->addWarning($message);
         }
 
-        FilesystemIntegrityChecker::fsQuickCheck();
+        $this->filesystemIntegrityChecker->fsQuickCheck();
 
         // +-----------------------------------------------------------------------+
         // |                             template init                             |

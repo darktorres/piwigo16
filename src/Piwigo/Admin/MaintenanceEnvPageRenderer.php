@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Admin\Image\PwgImage;
+use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Admin\Maintenance\MaintenanceActionDispatcher;
 use Piwigo\Admin\Maintenance\Request\MaintenanceActionRequest;
 use Piwigo\Config\ConfigService;
@@ -45,6 +46,7 @@ final class MaintenanceEnvPageRenderer
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
+        private readonly FilesystemIntegrityChecker $filesystemIntegrityChecker,
         private readonly ?\Piwigo\Cache\PersistentCache $persistentCache = null,
     ) {}
 
@@ -53,7 +55,7 @@ final class MaintenanceEnvPageRenderer
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $action = MaintenanceActionRequest::fromGlobals()->action;
-        new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->persistentCache)
+        new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->filesystemIntegrityChecker, $this->persistentCache)
             ->dispatch($action);
 
         // +-------------------------------------------------------------------+

@@ -58,6 +58,7 @@ final class MaintenanceActionDispatcher
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
+        private readonly FilesystemIntegrityChecker $filesystemIntegrityChecker,
         private readonly ?\Piwigo\Cache\PersistentCache $persistentCache = null,
     ) {}
 
@@ -108,7 +109,7 @@ final class MaintenanceActionDispatcher
                 // no break
             case 'categories':
 
-                FilesystemIntegrityChecker::imagesIntegrity();
+                $this->filesystemIntegrityChecker->imagesIntegrity();
                 $categoriesService = self::categoryService();
                 $categoriesService->checkCategoriesIntegrity();
                 $categoriesService->updateUppercats();
@@ -120,7 +121,7 @@ final class MaintenanceActionDispatcher
 
             case 'images':
 
-                FilesystemIntegrityChecker::imagesIntegrity();
+                $this->filesystemIntegrityChecker->imagesIntegrity();
                 self::categoryService()
                     ->updatePath();
                 \Piwigo\Bootstrap\ExtendedDomainAccessor::rateService()

@@ -32,5 +32,5 @@ AdminContext::mark();
 
 \Piwigo\Bootstrap\RequestBootstrap::bootEntryPoint($paths);
 
-new AdminShell(new RedirectService(), new UrlService(new HtmlService()), CurrentConfigService::get(), $paths)
+new AdminShell(new RedirectService(), new UrlService(new HtmlService()), CurrentConfigService::get(), $paths, \Piwigo\Bootstrap\RequestBootstrap::filesystemIntegrityChecker())
     ->run();

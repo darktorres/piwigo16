@@ -903,6 +903,31 @@ final class RequestBootstrap
     }
 
     /**
+     * Public (unlike the resolver helpers above): public/admin.php's own
+     * legacy-style `new AdminShell(...)` manual construction -- unlike
+     * every P22 controller root file, admin.php doesn't route through
+     * RequestPipeline's container-backed controller resolution, so it
+     * needs a way to obtain the same container-shared instance
+     * Controller\Admin\IntroSubController will later receive, without
+     * calling Kernel::container() directly itself (arch-tested to
+     * Bootstrap/ only). Same "public accessor on this class" shape as
+     * pemUrl() above, generalised to a container resolution (singleton/
+     * service-locator elimination campaign, Phase 2) -- load-bearing for
+     * FilesystemIntegrityChecker::fsQuickCheck()'s own per-request
+     * run-once guard, which only actually guards anything if admin.php and
+     * IntroSubController share the same instance.
+     */
+    public static function filesystemIntegrityChecker(): \Piwigo\Admin\Maintenance\FilesystemIntegrityChecker
+    {
+        $filesystemIntegrityChecker = Kernel::container()->get(\Piwigo\Admin\Maintenance\FilesystemIntegrityChecker::class);
+        if (! $filesystemIntegrityChecker instanceof \Piwigo\Admin\Maintenance\FilesystemIntegrityChecker) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Admin\Maintenance\FilesystemIntegrityChecker::class);
+        }
+
+        return $filesystemIntegrityChecker;
+    }
+
+    /**
      * Leaf values recursed into by array_walk_recursive() from $_GET/
      * $_POST/$_COOKIE are always strings in practice (HTTP request data
      * never contains scalars other than strings; arrays are recursed

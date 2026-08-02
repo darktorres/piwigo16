@@ -45,6 +45,7 @@ final class MaintenanceActionsPageRenderer
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
+        private readonly FilesystemIntegrityChecker $filesystemIntegrityChecker,
         private readonly ?\Piwigo\Cache\PersistentCache $persistentCache = null,
     ) {}
 
@@ -55,10 +56,10 @@ final class MaintenanceActionsPageRenderer
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        FilesystemIntegrityChecker::fsQuickCheck();
+        $this->filesystemIntegrityChecker->fsQuickCheck();
 
         $action = MaintenanceActionRequest::fromGlobals()->action;
-        new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->persistentCache)
+        new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->filesystemIntegrityChecker, $this->persistentCache)
             ->dispatch($action);
 
         // +-------------------------------------------------------------------+

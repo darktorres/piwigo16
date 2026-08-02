@@ -50,6 +50,14 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
 
     private Connection $conn;
 
+    /**
+     * Container-shared instance (singleton/service-locator elimination
+     * campaign, Phase 2) -- resolved once per test in setUp(), after
+     * Kernel::boot(), same convention as this file's sibling Integration
+     * tests.
+     */
+    private FilesystemIntegrityChecker $checker;
+
     #[\Override]
     protected function setUp(): void
     {
@@ -68,6 +76,12 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
         Kernel::boot();
         CurrentConfigService::set(new ConfigService($this->buildConfigRepository()));
 
+        $checker = Kernel::container()->get(FilesystemIntegrityChecker::class);
+        if (! $checker instanceof FilesystemIntegrityChecker) {
+            throw new \LogicException('Container returned an unexpected type for ' . FilesystemIntegrityChecker::class);
+        }
+        $this->checker = $checker;
+
         $this->conn = DbConnection::build();
         // The fixture never seeds this param (confirmed via grep) -- a
         // previous test method's write is the only source of a stale row,
@@ -76,19 +90,12 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
         $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'fs_quick_check_last_check'");
 
         CurrentTemplate::set(new Template(CurrentPaths::get()->root . 'themes/admin', 'default'));
-
-        // Per-request run-once guard -- see the class's own docblock.
-        // Reset here so every test starts from "not yet run this request",
-        // regardless of what an earlier test method in this file left it
-        // as.
-        FilesystemIntegrityChecker::reset();
     }
 
     #[\Override]
     protected function tearDown(): void
     {
         $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'fs_quick_check_last_check'");
-        FilesystemIntegrityChecker::reset();
         CurrentTemplate::reset();
         Kernel::reset();
         parent::tearDown();
@@ -131,7 +138,7 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
     {
         CurrentConfig::setFsQuickCheckPeriod(0);
 
-        FilesystemIntegrityChecker::fsQuickCheck();
+        $this->checker->fsQuickCheck();
 
         self::assertNull($this->fsQuickCheckLastCheckRaw());
     }
@@ -141,7 +148,7 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
         // CurrentConfig::reset() in setUp() leaves fsQuickCheckPeriod at
         // its own property-initializer default (86400, nonzero) -- this
         // proves the guard's fall-through path, not just its early return.
-        FilesystemIntegrityChecker::fsQuickCheck();
+        $this->checker->fsQuickCheck();
 
         self::assertNotNull($this->fsQuickCheckLastCheckRaw());
         // Every fixture image resolves to a real file and none of them
@@ -154,7 +161,7 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
 
     public function test_fs_quick_check_is_a_no_op_on_a_second_call_within_the_same_request(): void
     {
-        FilesystemIntegrityChecker::fsQuickCheck();
+        $this->checker->fsQuickCheck();
         self::assertNotNull($this->fsQuickCheckLastCheckRaw());
 
         // Overwrite the just-written row directly, bypassing
@@ -165,14 +172,14 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
             "UPDATE " . Tables::config() . " SET value = '\"sentinel-unchanged\"' WHERE param = 'fs_quick_check_last_check'"
         );
 
-        FilesystemIntegrityChecker::fsQuickCheck();
+        $this->checker->fsQuickCheck();
 
         self::assertSame('sentinel-unchanged', $this->fsQuickCheckLastCheckRaw());
     }
 
     public function test_reset_allows_fs_quick_check_to_run_again(): void
     {
-        FilesystemIntegrityChecker::fsQuickCheck();
+        $this->checker->fsQuickCheck();
         $this->conn->executeStatement(
             "UPDATE " . Tables::config() . " SET value = '\"sentinel-before-reset\"' WHERE param = 'fs_quick_check_last_check'"
         );
@@ -188,8 +195,8 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
         // session).
         $this->configEntityManager?->clear();
 
-        FilesystemIntegrityChecker::reset();
-        FilesystemIntegrityChecker::fsQuickCheck();
+        $this->checker->reset();
+        $this->checker->fsQuickCheck();
 
         $after = $this->fsQuickCheckLastCheckRaw();
         self::assertNotNull($after);
@@ -208,7 +215,7 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
         $this->conn->executeStatement('DELETE FROM ' . Tables::images());
 
         try {
-            FilesystemIntegrityChecker::fsQuickCheck();
+            $this->checker->fsQuickCheck();
 
             // Reaching this line at all (no DBAL exception) is the guard
             // firing. The last-check write on line 52 running first
@@ -248,7 +255,7 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
         self::assertCount(2, $newIds);
 
         try {
-            FilesystemIntegrityChecker::fsQuickCheck();
+            $this->checker->fsQuickCheck();
 
             self::assertSame(
                 ['We have found 2 duplicate paths. Details provided by plugin Check Uploads'],
@@ -285,7 +292,7 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
                 $this->fetchOneInt('SELECT COUNT(*) FROM ' . Tables::imageCategory() . ' WHERE image_id = 777777')
             );
 
-            FilesystemIntegrityChecker::imagesIntegrity();
+            $this->checker->imagesIntegrity();
 
             self::assertSame(
                 0,
@@ -301,7 +308,7 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
         $before = $this->fetchOneInt('SELECT COUNT(*) FROM ' . Tables::imageCategory());
         self::assertGreaterThan(0, $before, 'the fixture must have at least one real image_category row for this to be a meaningful assertion');
 
-        FilesystemIntegrityChecker::imagesIntegrity();
+        $this->checker->imagesIntegrity();
 
         self::assertSame($before, $this->fetchOneInt('SELECT COUNT(*) FROM ' . Tables::imageCategory()));
     }

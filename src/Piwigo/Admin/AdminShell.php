@@ -53,6 +53,7 @@ final class AdminShell
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
         private readonly \Piwigo\Core\Paths $paths,
+        private readonly FilesystemIntegrityChecker $filesystemIntegrityChecker,
     ) {}
 
     /**
@@ -127,7 +128,7 @@ final class AdminShell
             }
 
             if ($perform_fsqc) {
-                FilesystemIntegrityChecker::fsQuickCheck();
+                $this->filesystemIntegrityChecker->fsQuickCheck();
             }
         }
 

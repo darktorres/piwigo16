@@ -396,18 +396,6 @@ test('DeploymentPolicy::set()/reset() are only called from tests/', function ():
  * verified above -- filtered out below by name rather than left
  * unguarded, so any *other* new direct caller still fails this test.
  */
-test('FilesystemIntegrityChecker::reset() is only called from tests/', function (): void {
-    $repoRoot = __DIR__ . '/../..';
-
-    $hits = [
-        ...findCallSites($repoRoot . '/src/Piwigo', 'FilesystemIntegrityChecker::reset('),
-        ...findCallSitesInRootPhpFiles($repoRoot, 'FilesystemIntegrityChecker::reset('),
-        ...findCallSitesInBinFiles($repoRoot, 'FilesystemIntegrityChecker::reset('),
-    ];
-
-    expect(describeCallSites($hits))->toBe([]);
-});
-
 test('AdminContext::reset() is only called from tests/', function (): void {
     $repoRoot = __DIR__ . '/../..';
 

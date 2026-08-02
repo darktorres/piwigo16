@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration {
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Admin\Maintenance\MaintenanceActionDispatcher;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Config\CurrentConfig;
@@ -79,7 +80,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         CurrentConfigService::set(new ConfigService($this->buildConfigRepository()));
-        $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService(), new UrlService(new HtmlService()), new ConfigService($this->buildConfigRepository()));
+        $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService(), new UrlService(new HtmlService()), new ConfigService($this->buildConfigRepository()), new FilesystemIntegrityChecker());
     }
 
     #[\Override]
@@ -459,6 +460,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             new RedirectService(),
             new UrlService(new HtmlService()),
             new ConfigService($this->buildConfigRepository()),
+            new FilesystemIntegrityChecker(),
             new \Piwigo\Cache\PersistentFileCache(),
         );
 

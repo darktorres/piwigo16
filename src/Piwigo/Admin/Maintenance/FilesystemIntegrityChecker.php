@@ -14,6 +14,16 @@ use Piwigo\Core\Lang;
  * Piwigo\Admin\Integrity\CheckIntegrity (add_anomaly()/display()/
  * maintenance()) -- not the same concern, deliberately not merged in and
  * deliberately named more specifically to avoid confusion with it.
+ *
+ * Container-shared instance (singleton/service-locator elimination
+ * campaign, Phase 2): every real caller (Controller\Admin\
+ * IntroSubController, Admin\MaintenanceActionsPageRenderer, Admin\
+ * AdminShell, Admin\Maintenance\MaintenanceActionDispatcher) is already
+ * container-autowired or takes this via constructor injection -- no shim
+ * needed. `CoreDomainAccessor::imageService()`/`CurrentConfig`/
+ * `CurrentConfigService`/`CurrentTemplate`/`Lang` inside fsQuickCheck()/
+ * imagesIntegrity() stay plain (unconverted) static calls, revisited once
+ * each of those targets' own phase lands.
  */
 final class FilesystemIntegrityChecker
 {
@@ -26,7 +36,7 @@ final class FilesystemIntegrityChecker
      * a sub-controller (e.g. Controller\Admin\IntroSubController) that
      * calls it again within that same dispatched request.
      */
-    private static bool $fsQuickCheckDone = false;
+    private bool $fsQuickCheckDone = false;
 
     /**
      * Displays a header warning if we find missing photos on a random
@@ -35,18 +45,18 @@ final class FilesystemIntegrityChecker
      *
      * @since 13.4.0
      */
-    public static function fsQuickCheck(): void
+    public function fsQuickCheck(): void
     {
         $fs_quick_check_period = \Piwigo\Config\CurrentConfig::fsQuickCheckPeriod();
         if ($fs_quick_check_period === 0) {
             return;
         }
 
-        if (self::$fsQuickCheckDone) {
+        if ($this->fsQuickCheckDone) {
             return;
         }
 
-        self::$fsQuickCheckDone = true;
+        $this->fsQuickCheckDone = true;
         \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('fs_quick_check_last_check', date('c'));
 
         $imageService = \Piwigo\Bootstrap\CoreDomainAccessor::imageService();
@@ -116,7 +126,7 @@ final class FilesystemIntegrityChecker
         }
     }
 
-    public static function imagesIntegrity(): void
+    public function imagesIntegrity(): void
     {
         $imageService = \Piwigo\Bootstrap\CoreDomainAccessor::imageService();
 
@@ -127,12 +137,8 @@ final class FilesystemIntegrityChecker
         }
     }
 
-    /**
-     * Test-only -- restricted to tests/ by an arch test, mirroring the
-     * equivalent guard on SessionService's/Config's own reset() methods.
-     */
-    public static function reset(): void
+    public function reset(): void
     {
-        self::$fsQuickCheckDone = false;
+        $this->fsQuickCheckDone = false;
     }
 }

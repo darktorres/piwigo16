@@ -367,6 +367,69 @@ final class CommentRepository extends EntityRepository implements CommentCounter
     }
 
     /**
+     * DQL counterpart of {@see buildApiConditions()} -- SQL-modernization
+     * audit, Item 14 Sub-phase B3: shared by the 3 DQL-based
+     * CommentApiCriteria-consuming methods below
+     * ({@see findAuthorCounts()}/{@see findSummaryCounts()}/
+     * {@see findDateRange()}). {@see findListForAdminWs()} deliberately
+     * keeps using the original SqlCondition/DBAL version above -- it has
+     * its own separate, permanent blocker (a dynamic multi-auth
+     * column-name join, same as {@see findForImage()}'s own), so tying it
+     * to a DQL-only builder would just force it back onto a second,
+     * redundant raw-SQL condition layer for no benefit. Splitting this
+     * class's condition-building machinery in two (once judged not worth
+     * doing, per the older docblock this replaces) is the honest design
+     * here: 3 methods genuinely have no other blocker left, one never
+     * will regardless of what this helper does.
+     */
+    private static function applyApiConditions(\Doctrine\ORM\QueryBuilder $qb, CommentApiCriteria $criteria, bool $includeAuthorId): void
+    {
+        if ($criteria->search !== null && $criteria->search !== '') {
+            $qb->andWhere('c.content LIKE :search')
+                ->setParameter('search', '%' . $criteria->search . '%');
+
+            return;
+        }
+
+        if ($includeAuthorId && $criteria->authorId !== null && $criteria->authorId !== 0) {
+            $qb->andWhere('c.authorId = :authorId')
+                ->setParameter('authorId', $criteria->authorId);
+        }
+
+        if ($criteria->imageId !== null && $criteria->imageId !== 0) {
+            $qb->andWhere('c.imageId = :imageId')
+                ->setParameter('imageId', $criteria->imageId);
+        }
+
+        if ($criteria->minDate !== null) {
+            $qb->andWhere('c.date >= :minDate')
+                ->setParameter('minDate', $criteria->minDate);
+        }
+
+        if ($criteria->maxDate !== null) {
+            $qb->andWhere('c.date <= :maxDate')
+                ->setParameter('maxDate', $criteria->maxDate);
+        }
+    }
+
+    /**
+     * DQL counterpart of {@see buildApiConditionsWithStatus()} -- same
+     * scope note as {@see applyApiConditions()} above.
+     */
+    private static function applyApiConditionsWithStatus(\Doctrine\ORM\QueryBuilder $qb, CommentApiCriteria $criteria, bool $includeAuthorId): void
+    {
+        self::applyApiConditions($qb, $criteria, $includeAuthorId);
+
+        match ($criteria->status) {
+            'pending' => $qb->andWhere('c.validated = :validated')
+                ->setParameter('validated', false),
+            'validated' => $qb->andWhere('c.validated = :validated')
+                ->setParameter('validated', true),
+            default => null,
+        };
+    }
+
+    /**
      * Distinct comment count for the given permission/validation condition
      * fragments -- CommentService::getNbAvailableComments()'s own
      * PermissionService::getSqlConditionFandFAsCondition() output plus a
@@ -375,10 +438,15 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * raw trusted-SQL strings spliced verbatim; now real SqlCondition
      * fragments, each with its own bound parameters.
      *
-     * Item 14 DQL audit: stays on DBAL -- joins `image_category`, which is
-     * never entity-mapped anywhere in this migration (see
-     * Category\CategoryRepository's own class docblock), plus dynamic
-     * caller-supplied SqlCondition fragments DQL has no equivalent for.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see \Piwigo\Image\ImageCategoryEntity}), but stays on DBAL for its
+     * other, still-real blocker: this method's own real caller
+     * ({@see \Piwigo\Comment\CommentService::getNbAvailableComments()})
+     * feeds it a `PermissionService::getSqlConditionFandFAsCondition()`
+     * result (see this docblock's own opening line) -- same genuinely
+     * dynamic, cross-cutting permission-condition blocker documented in
+     * {@see \Piwigo\Image\ImageRepository::applyCondition()}'s own
+     * docblock, outside Sub-phase B3/B4's scope.
      *
      * @param  list<SqlCondition>  $whereClauses
      */
@@ -689,31 +757,30 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * needs the status-unfiltered condition set, unlike the 3 sibling
      * methods below.
      *
-     * Item 14 DQL audit: stays on DBAL -- `sum(validated = 1)`/`sum(validated
-     * = 0)` are MySQL's boolean-expression-as-integer idiom (would need a
-     * `SUM(CASE WHEN ... THEN 1 ELSE 0 END)` rewrite to express in DQL);
-     * buildApiConditions()/buildApiConditionsWithStatus() (shared by this
-     * method and the 3 below) also build raw-column-named SqlCondition
-     * fragments applied via applyConditions(), not DQL property-path
-     * expressions -- converting one without the other would split this
-     * class's condition-building machinery in two.
+     * SQL-modernization audit, Item 14 Sub-phase B3: converted to real
+     * DQL -- MySQL's `sum(validated = 1)`/`sum(validated = 0)` boolean-
+     * expression-as-integer idiom is rewritten as the standard DQL
+     * `SUM(CASE WHEN ... THEN 1 ELSE 0 END)`, and
+     * {@see applyApiConditions()} resolves the condition-building blocker
+     * this method's own docblock used to cite.
      *
      * @return array{all_comments: mixed, validated: mixed, pending: mixed}|null
      */
     public function findSummaryCounts(CommentApiCriteria $criteria): ?array
     {
-        $qb = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('count(*) as all_comments', 'sum(validated = 1) as validated', 'sum(validated = 0) as pending')
-            ->from(Tables::comments());
+        $qb = $this->createQueryBuilder('c')
+            ->select(
+                'COUNT(c.id) AS all_comments',
+                'SUM(CASE WHEN c.validated = true THEN 1 ELSE 0 END) AS validated',
+                'SUM(CASE WHEN c.validated = false THEN 1 ELSE 0 END) AS pending',
+            );
 
-        self::applyConditions($qb, self::buildApiConditions($criteria, includeAuthorId: true));
+        self::applyApiConditions($qb, $criteria, includeAuthorId: true);
 
-        $row = $qb->executeQuery()
-            ->fetchAssociative();
+        $row = $qb->getQuery()
+            ->getOneOrNullResult(\Doctrine\ORM\Query::HYDRATE_ARRAY);
 
-        if ($row === false) {
+        if (! is_array($row)) {
             return null;
         }
 
@@ -732,9 +799,11 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * {@see findForImage()}'s own equivalents.
      *
      * Item 14 DQL audit: stays on DBAL -- dynamic-column-name `users` join
-     * (same blocker as findForImage()) plus buildApiConditionsWithStatus()'s
-     * raw-column-named SqlCondition fragments (see findSummaryCounts()'s
-     * own docblock).
+     * (same blocker as findForImage()), a permanent blocker DQL can never
+     * express (see this plan's own "Out of scope" section). Keeps using
+     * the SqlCondition/DBAL-based buildApiConditionsWithStatus() rather
+     * than {@see applyApiConditionsWithStatus()}'s DQL version -- see that
+     * method's own docblock for why.
      *
      * @return list<array<string, mixed>>
      */
@@ -783,27 +852,24 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * Earliest/latest `date` matching $criteria -- Ws\PwgComments::
      * getList()'s own "filters" date range.
      *
-     * Item 14 DQL audit: stays on DBAL -- MIN()/MAX() are themselves
-     * standard DQL functions, but buildApiConditionsWithStatus()'s
-     * raw-column-named SqlCondition fragments aren't (see
-     * findSummaryCounts()'s own docblock).
+     * SQL-modernization audit, Item 14 Sub-phase B3: converted to real
+     * DQL -- MIN()/MAX() were themselves already standard DQL functions;
+     * {@see applyApiConditionsWithStatus()} resolves the condition-building
+     * blocker this method's own docblock used to cite.
      *
      * @return array{started_at: mixed, ended_at: mixed}|null
      */
     public function findDateRange(CommentApiCriteria $criteria): ?array
     {
-        $qb = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('MIN(date) AS started_at', 'MAX(date) AS ended_at')
-            ->from(Tables::comments());
+        $qb = $this->createQueryBuilder('c')
+            ->select('MIN(c.date) AS started_at', 'MAX(c.date) AS ended_at');
 
-        self::applyConditions($qb, self::buildApiConditionsWithStatus($criteria, includeAuthorId: true));
+        self::applyApiConditionsWithStatus($qb, $criteria, includeAuthorId: true);
 
-        $row = $qb->executeQuery()
-            ->fetchAssociative();
+        $row = $qb->getQuery()
+            ->getOneOrNullResult(\Doctrine\ORM\Query::HYDRATE_ARRAY);
 
-        if ($row === false) {
+        if (! is_array($row)) {
             return null;
         }
 
@@ -822,33 +888,48 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * unset($where_clauses['author_id']) intent as real code instead of
      * an array-key convention.
      *
-     * ANY_VALUE(author): author isn't functionally dependent on the GROUP
-     * BY column (author_id) -- this connection doesn't strip
-     * ONLY_FULL_GROUP_BY the way the legacy mysqli connection did, so this
-     * needs the explicit opt-out to keep selecting exactly one arbitrary
-     * author name per author_id, matching the original grouping/row count
-     * exactly.
+     * author isn't functionally dependent on the GROUP BY column
+     * (author_id) -- this connection doesn't strip ONLY_FULL_GROUP_BY the
+     * way the legacy mysqli connection did, so picking exactly one row's
+     * worth of `author` per author_id needs an explicit aggregate.
+     * `MIN(author)` (standard SQL-92, portable across every DBAL platform)
+     * replaces the originally-ported `ANY_VALUE()` (MySQL-only) --
+     * SQL-modernization audit, Item 14 Sub-phase B5 Tier 2. Changes
+     * "arbitrary pick" to "deterministic pick" (a behavior improvement, not
+     * just a portability shim); confirmed no test asserts on which
+     * specific `author` value comes back, only `author_id`/`nb_authors`.
      *
-     * Item 14 DQL audit: stays on DBAL -- MySQL-specific `ANY_VALUE()` has
-     * no DQL equivalent, plus buildApiConditionsWithStatus()'s raw-column-
-     * named SqlCondition fragments (see findSummaryCounts()'s own
-     * docblock).
+     * SQL-modernization audit, Item 14 Sub-phase B3: converted to real
+     * DQL -- {@see applyApiConditionsWithStatus()} resolves the condition-
+     * building blocker this method's own docblock used to cite.
      *
      * @return list<array<string, mixed>>
      */
     public function findAuthorCounts(CommentApiCriteria $criteria): array
     {
-        $qb = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('ANY_VALUE(author) AS author', 'author_id', 'count(*) as nb_authors')
-            ->from(Tables::comments())
-            ->groupBy('author_id');
+        $qb = $this->createQueryBuilder('c')
+            ->select('MIN(c.author) AS author', 'c.authorId AS author_id', 'COUNT(c.id) AS nb_authors')
+            ->groupBy('c.authorId');
 
-        self::applyConditions($qb, self::buildApiConditionsWithStatus($criteria, includeAuthorId: false));
+        self::applyApiConditionsWithStatus($qb, $criteria, includeAuthorId: false);
 
-        return $qb->executeQuery()
-            ->fetchAllAssociative();
+        $rows = $qb->getQuery()
+            ->getArrayResult();
+
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $result[] = [
+                'author' => $row['author'] ?? null,
+                'author_id' => $row['author_id'] ?? null,
+                'nb_authors' => $row['nb_authors'] ?? null,
+            ];
+        }
+
+        return $result;
     }
 
     /**

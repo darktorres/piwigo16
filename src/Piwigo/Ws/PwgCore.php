@@ -11,9 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
-use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessControl;
@@ -47,7 +45,6 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\MissingDerivativesCriteria;
 use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
-use Piwigo\Permission\SqlCondition;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Rate\RateService;
 use Piwigo\Search\SearchRepository;
@@ -581,84 +578,36 @@ final class PwgCore
             $max = date_format($max_date, 'Y-m-d 23:59:59');
         }
 
-        // SQL-modernization audit: $where used to be a raw SQL string,
-        // built by string concatenation (uid/id/admin-ids were spliced
-        // directly, though always WsParamType::ID-guaranteed ints;
+        // SQL-modernization audit, Item 14 Sub-phase B3: $where used to be
+        // a caller-built raw SqlCondition fragment (uid/id/admin-ids were
+        // spliced directly, though always WsParamType::ID-guaranteed ints;
         // action/object were already Connection::quote()-escaped;
         // date_min/date_max already passed through date_format(), which
-        // can't emit SQL metacharacters) -- now a list<SqlCondition>,
-        // combined below.
-        $conditions = [new SqlCondition("object != 'system'")];
-
-        if (isset($param['uid'])) {
-            $conditions[] = new SqlCondition('performed_by = :uid', [
-                'uid' => $param['uid'],
-            ], [
-                'uid' => ParameterType::INTEGER,
-            ]);
+        // can't emit SQL metacharacters) -- now an ActivityListCriteria,
+        // translated into bound conditions inside ActivityRepository
+        // itself (see that class's own findPaginated() docblock).
+        $connections_mode = \Piwigo\Config\CurrentConfig::current()->activityDisplayConnections();
+        $admin_ids = [];
+        if ($connections_mode === 'admins_only') {
+            $admin_id_objects = \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class)->findAdminIds();
+            $admin_ids = array_map(static fn (\Piwigo\Common\ValueObject\UserId $id): int => $id->value, $admin_id_objects);
         }
 
-        if (isset($param['action'])) {
-            $conditions[] = new SqlCondition('action = :action', [
-                'action' => $param['action'],
-            ], [
-                'action' => ParameterType::STRING,
-            ]);
-        }
-
-        if (isset($param['object'])) {
-            $conditions[] = new SqlCondition('object = :object', [
-                'object' => $param['object'],
-            ], [
-                'object' => ParameterType::STRING,
-            ]);
-        }
-
-        if (! in_array($date_min_raw, [null, ''], true)) {
-            $conditions[] = new SqlCondition('occured_on >= :minDate', [
-                'minDate' => $min,
-            ], [
-                'minDate' => ParameterType::STRING,
-            ]);
-        }
-
-        if (! in_array($date_max_raw, [null, ''], true)) {
-            $conditions[] = new SqlCondition('occured_on <= :maxDate', [
-                'maxDate' => $max,
-            ], [
-                'maxDate' => ParameterType::STRING,
-            ]);
-        }
-
-        if ($param['id'] !== null and $param['id'] !== 0) {
-            $conditions[] = new SqlCondition('object_id = :objectId', [
-                'objectId' => $param['id'],
-            ], [
-                'objectId' => ParameterType::INTEGER,
-            ]);
-        }
-
-        if ($this->currentConfig->activityDisplayConnections() === 'none') {
-            $conditions[] = new SqlCondition("action NOT IN ('login', 'logout')");
-        } elseif ($this->currentConfig->activityDisplayConnections() === 'admins_only') {
-            $admin_ids = $this->userRepository->findAdminIds();
-            $conditions[] = new SqlCondition(
-                "NOT (action IN ('login', 'logout') AND object_id NOT IN (:adminIds))",
-                [
-                    'adminIds' => array_map(static fn (\Piwigo\Common\ValueObject\UserId $id): int => $id->value, $admin_ids),
-                ],
-                [
-                    'adminIds' => ArrayParameterType::INTEGER,
-                ],
-            );
-        }
-
-        $where = SqlCondition::combine('AND', ...$conditions);
+        $criteria = new \Piwigo\Activity\ActivityListCriteria(
+            performedBy: $param['uid'] ?? null,
+            action: is_string($param['action'] ?? null) ? $param['action'] : null,
+            object: is_string($param['object'] ?? null) ? $param['object'] : null,
+            minDate: ! in_array($date_min_raw, [null, ''], true) ? $min : null,
+            maxDate: ! in_array($date_max_raw, [null, ''], true) ? $max : null,
+            objectId: ($param['id'] !== null and $param['id'] !== 0) ? $param['id'] : null,
+            connectionsMode: $connections_mode,
+            adminIds: $admin_ids,
+        );
 
         $more_rows_available = true;
 
         while (count($output_lines) < $page_size and $more_rows_available) {
-            $rows = $this->activityService->getPaginated($where, $nb_rows_to_fetch, $page_offset);
+            $rows = $this->activityService->getPaginated($criteria, $nb_rows_to_fetch, $page_offset);
 
             if (count($rows) < $nb_rows_to_fetch) {
                 $more_rows_available = false;
@@ -668,18 +617,24 @@ final class PwgCore
                 if (count($output_lines) < $page_size) {
                     $page_offset++;
 
-                    // DBAL's fetchAllAssociative() rows are array<string,
-                    // mixed> (vs. mysqli's guaranteed string|null under the
-                    // legacy driver) -- narrow every field used below once,
+                    // ActivityRepository::findPaginated()'s rows are
+                    // array<string, mixed> straight from DQL array
+                    // hydration -- narrow every field used below once,
                     // here, instead of scattering is_scalar()/is_string()
-                    // guards through the rest of this loop.
+                    // guards through the rest of this loop. ip_address and
+                    // details are real typed values now (an IpAddress VO
+                    // and an already-decoded array respectively, per
+                    // Doctrine's own custom-Type/json-Type conversion --
+                    // see that method's own docblock), not raw strings, so
+                    // they're narrowed differently from the plain-scalar
+                    // columns below.
                     $row_session_idx = is_scalar($row['session_idx']) ? (string) $row['session_idx'] : '';
                     $row_object = is_scalar($row['object']) ? (string) $row['object'] : '';
                     $row_action = is_scalar($row['action']) ? (string) $row['action'] : '';
                     $row_object_id = is_scalar($row['object_id']) ? (string) $row['object_id'] : null;
-                    $row_ip_address = is_scalar($row['ip_address']) ? (string) $row['ip_address'] : null;
+                    $row_ip_address = $row['ip_address'] instanceof \Piwigo\Common\ValueObject\IpAddress ? $row['ip_address']->value : null;
                     $row_performed_by = is_scalar($row['performed_by']) ? (string) $row['performed_by'] : null;
-                    $row_details = is_scalar($row['details']) ? (string) $row['details'] : '';
+                    $row_details = is_array($row['details'] ?? null) ? $row['details'] : [];
                     $row_occured_on = is_scalar($row['occured_on']) ? (string) $row['occured_on'] : '';
 
                     $line_key = $row_session_idx . '~' . $row_object . '~' . $row_action . '~'; // idx~photo~add
@@ -702,7 +657,7 @@ final class PwgCore
                         $prev_object_ids[] = $row_object_id;
                         $output_lines[$last_idx]['object_id'] = $prev_object_ids;
                     } else {
-                        $details = \Piwigo\Core\ArrayHelper::safeJsonDecode($row_details);
+                        $details = $row_details;
                         $detailsType = null;
 
                         if (isset($row['user_agent'])) {

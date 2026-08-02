@@ -312,7 +312,7 @@ final class RateRepositoryTest extends IntegrationTestCase
 
     public function test_find_rating_report_matches_the_fixture(): void
     {
-        $rows = $this->repo->findRatingReport(null, false, [], 'i.id ASC', 10, 0);
+        $rows = $this->repo->findRatingReport(null, false, [], 'score', 10, 0);
 
         self::assertCount(4, $rows);
         $byId = [];
@@ -339,7 +339,7 @@ final class RateRepositoryTest extends IntegrationTestCase
 
     public function test_find_rating_report_orders_and_paginates(): void
     {
-        $rows = $this->repo->findRatingReport(null, false, [], 'sum_rates DESC', 2, 0);
+        $rows = $this->repo->findRatingReport(null, false, [], 'sum_rates', 2, 0);
 
         self::assertCount(2, $rows);
         self::assertSame([1, 3], array_column($rows, 'id'));

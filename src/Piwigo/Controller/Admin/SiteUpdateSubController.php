@@ -275,31 +275,22 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             and ! $general_failure) {
             $start = \Piwigo\Core\TimingHelper::getMoment();
             // which categories to update ?
-            $extra_condition = '';
-            $extra_params = [];
-            $extra_types = [];
+            $extra_cat_id = null;
+            $extra_recursive = false;
             if (isset($post['cat']) and is_numeric($post['cat'])) {
-                if (isset($post['subcats-included']) and $post['subcats-included'] === '1') {
-                    // Item 16 (AbstractPlatform adoption): the real
-                    // per-platform operator (MySQL/MariaDB: RLIKE) rather
-                    // than a hardcoded 'REGEXP' dialect constant.
-                    $extra_condition = ' AND uppercats ' . $conn->getDatabasePlatform()->getRegexpExpression() . ' :extraCatUppercatsLike';
-                    $extra_params['extraCatUppercatsLike'] = '(^|,)' . $post['cat'] . '(,|$)';
-                } else {
-                    $extra_condition = ' AND id = :extraCatId';
-                    $extra_params['extraCatId'] = (int) $post['cat'];
-                }
+                $extra_cat_id = (int) $post['cat'];
+                $extra_recursive = isset($post['subcats-included']) && $post['subcats-included'] === '1';
             }
-            // hash_from_query()'s declared return type is under-typed (array<int|string,
-            // mixed>) — each row is really the fetch_assoc() result for id, uppercats,
-            // global_rank, status, visible (all string|null), but this same array is
-            // later reused (below) to hold freshly-inserted categories keyed by their
-            // new int id, whose entries additionally carry an int 'parent' and int
-            // 'id'/'rank'/'global_rank' fields. array<string, mixed> is the honest
-            // common shape for both origins; individual fields are narrowed with
-            // is_string()/is_int() at each point of use below.
+            // getSyncCandidatesForSite()'s declared return type is under-typed
+            // (array<int|string, mixed>) — each row is really id/uppercats/
+            // global_rank/status/visible, but this same array is later reused
+            // (below) to hold freshly-inserted categories keyed by their new
+            // int id, whose entries additionally carry an int 'parent' and int
+            // 'id'/'rank'/'global_rank' fields. array<string, mixed> is the
+            // honest common shape for both origins; individual fields are
+            // narrowed with is_string()/is_int() at each point of use below.
             /** @var array<int|string, array<string, mixed>> $db_categories */
-            $db_categories = array_column($this->categoryService->getSyncCandidatesForSite($site_id, $extra_condition, $extra_params, $extra_types), null, 'id');
+            $db_categories = array_column($this->categoryService->getSyncCandidatesForSite($site_id, $extra_cat_id, $extra_recursive), null, 'id');
 
             // get categort full directories in an array for comparison with file
             // system directory tree

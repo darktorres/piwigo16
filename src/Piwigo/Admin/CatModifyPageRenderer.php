@@ -187,9 +187,6 @@ final class CatModifyPageRenderer
             );
 
             $row = $categoryService->getPhotoCountAndDateRange($category_id);
-            if ($row === false) {
-                throw new \Exception("cat_modify: aggregate photo count/date query returned no row for category #{$category_id}");
-            }
             $image_count = $row[0] ?? null;
             $min_date = $row[1] ?? null;
             $max_date = $row[2] ?? null;

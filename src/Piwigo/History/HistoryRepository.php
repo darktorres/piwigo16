@@ -90,12 +90,23 @@ final class HistoryRepository extends EntityRepository
     }
 
     /**
-     * Item 14 DQL audit: stays on DBAL -- `HOUR(time)` has no DQL
-     * equivalent (only ABS/CONCAT/CURRENT_DATE/CURRENT_TIME/
-     * CURRENT_TIMESTAMP/DATE_ADD/DATE_DIFF/DATE_SUB/LENGTH/LOCATE/LOWER/
-     * MOD/SIZE/SQRT/SUBSTRING/TRIM/UPPER/BIT_AND/BIT_OR are standard DQL
-     * functions, and this project's EntityManagerFactory registers no
-     * custom DQL functions on top of those).
+     * SQL-modernization audit, Item 14 Sub-phase B5 Tier 2: converted to
+     * real DQL -- MySQL's `HOUR(time)` has no portable DQL equivalent
+     * (only ABS/CONCAT/CURRENT_DATE/CURRENT_TIME/CURRENT_TIMESTAMP/
+     * DATE_ADD/DATE_DIFF/DATE_SUB/LENGTH/LOCATE/LOWER/MOD/SIZE/SQRT/
+     * SUBSTRING/TRIM/UPPER/BIT_AND/BIT_OR are standard DQL functions, and
+     * this project's EntityManagerFactory registers no custom DQL
+     * functions on top of those), and it was also part of the `GROUP BY`
+     * key (DQL can't group by a SELECT alias). Fetches `date`/`time`/`id`
+     * per row instead and groups in PHP -- the real caller
+     * ({@see \Piwigo\History\HistoryService::summarize()}) is a
+     * chunked/cron-style batch job, not a hot request path, and already
+     * supports a `$maxLines` cap for controlling batch size; scanning
+     * every history row in ]$minId, $maxId] is the same trade
+     * `updateSummaryRows()`/`insertSummaryRows()` already made for their
+     * own per-row loops. `time` is an `HH:MM:SS` string (`HistoryEntity`'s
+     * own `length: 8`), so `(int) substr($time, 0, 2)` reproduces
+     * `HOUR(time)`'s output exactly.
      *
      * One row per (date, hour) bucket with at least one history line in
      * ]$minId, $maxId].
@@ -104,35 +115,54 @@ final class HistoryRepository extends EntityRepository
      */
     public function findGroupedCountsSince(int $minId, ?int $maxId): array
     {
-        $qb = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('date', 'HOUR(time) AS hour', 'MIN(id) AS min_id', 'MAX(id) AS max_id', 'COUNT(*) AS nb_pages')
-            ->from(Tables::history())
-            ->where('id > :minId')
-            ->groupBy('date', 'hour')
-            ->orderBy('date', 'ASC')
-            ->addOrderBy('hour', 'ASC')
+        $qb = $this->createQueryBuilder('h')
+            ->select('h.id AS id', 'h.date AS date', 'h.time AS time')
+            ->where('h.id > :minId')
             ->setParameter('minId', $minId);
 
         if ($maxId !== null) {
-            $qb->andWhere('id <= :maxId')
+            $qb->andWhere('h.id <= :maxId')
                 ->setParameter('maxId', $maxId);
         }
 
-        $rows = $qb->executeQuery()
-            ->fetchAllAssociative();
+        $rows = $qb->getQuery()
+            ->getArrayResult();
 
-        return array_map(
-            static fn (array $row): array => [
-                'date' => is_string($row['date']) ? $row['date'] : '',
-                'hour' => is_numeric($row['hour']) ? (int) $row['hour'] : 0,
-                'minId' => is_numeric($row['min_id']) ? (int) $row['min_id'] : 0,
-                'maxId' => is_numeric($row['max_id']) ? (int) $row['max_id'] : 0,
-                'nbPages' => is_numeric($row['nb_pages']) ? (int) $row['nb_pages'] : 0,
-            ],
-            $rows
+        $byKey = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $id = is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0;
+            $date = is_string($row['date'] ?? null) ? $row['date'] : '';
+            $time = is_string($row['time'] ?? null) ? $row['time'] : '';
+            $hour = (int) substr($time, 0, 2);
+
+            $key = $date . "\0" . $hour;
+
+            if (! isset($byKey[$key])) {
+                $byKey[$key] = [
+                    'date' => $date,
+                    'hour' => $hour,
+                    'minId' => $id,
+                    'maxId' => $id,
+                    'nbPages' => 0,
+                ];
+            }
+
+            $byKey[$key]['minId'] = min($byKey[$key]['minId'], $id);
+            $byKey[$key]['maxId'] = max($byKey[$key]['maxId'], $id);
+            $byKey[$key]['nbPages']++;
+        }
+
+        $result = array_values($byKey);
+        usort(
+            $result,
+            static fn (array $a, array $b): int => [$a['date'], $a['hour']] <=> [$b['date'], $b['hour']]
         );
+
+        return $result;
     }
 
     /**

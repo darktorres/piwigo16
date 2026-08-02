@@ -111,9 +111,14 @@ final class TagRepository extends EntityRepository
      * plain DBAL `QueryBuilder` via the entity manager's own connection,
      * not DQL.
      *
-     * Item 14 DQL audit: confirmed still applies -- image_category is
-     * never entity-mapped anywhere in this migration, plus a dynamic
-     * caller-supplied SqlCondition.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see \Piwigo\Image\ImageCategoryEntity}), but stays on DBAL for its
+     * other, still-real blocker: a dynamic caller-supplied SqlCondition
+     * (`PermissionService::getSqlConditionFandFAsCondition()`, see this
+     * docblock's own next paragraph) -- same genuinely dynamic,
+     * cross-cutting permission-condition blocker documented in
+     * {@see \Piwigo\Image\ImageRepository::applyCondition()}'s own
+     * docblock, outside Sub-phase B3/B4's scope.
      *
      * SQL-modernization audit: $fandFSql (a raw, already-built
      * `PermissionService::getSqlConditionFandF()` fragment) replaced with
@@ -827,8 +832,11 @@ final class TagRepository extends EntityRepository
      * Comma-joined tag ids per image, for images linked to any of $tagIds
      * -- Ws\PwgTags::getImages()'s own "OR mode" per-image tag list.
      *
-     * Item 14 DQL audit: stays on DBAL -- MySQL-specific `GROUP_CONCAT()`
-     * has no DQL equivalent.
+     * SQL-modernization audit, Item 14 Sub-phase B5 Tier 3: converted to
+     * real DQL -- MySQL's `GROUP_CONCAT()` now has a portable custom DQL
+     * function ({@see \Piwigo\Db\DqlFunction\GroupConcatFunction}, per-
+     * platform dispatch, MySQL/MariaDB verified, PostgreSQL/SQLite
+     * unverified against a real install -- see that class's own docblock).
      *
      * @param  list<int>  $tagIds
      * @param  list<int>  $imageIds
@@ -841,21 +849,24 @@ final class TagRepository extends EntityRepository
         }
 
         $rows = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select('image_id', 'GROUP_CONCAT(tag_id) AS tag_ids')
-            ->from(Tables::imageTag())
-            ->where('tag_id IN (:tagIds)')
-            ->andWhere('image_id IN (:imageIds)')
+            ->select('it.imageId AS image_id', 'GROUP_CONCAT(it.tagId) AS tag_ids')
+            ->from(ImageTagEntity::class, 'it')
+            ->where('it.tagId IN (:tagIds)')
+            ->andWhere('it.imageId IN (:imageIds)')
             ->setParameter('tagIds', $tagIds, ArrayParameterType::INTEGER)
             ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER)
-            ->groupBy('image_id')
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->groupBy('it.imageId')
+            ->getQuery()
+            ->getArrayResult();
 
         $byImageId = [];
         foreach ($rows as $row) {
-            $imageId = $row['image_id'];
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $imageId = $row['image_id'] ?? null;
             if (! is_numeric($imageId)) {
                 continue;
             }

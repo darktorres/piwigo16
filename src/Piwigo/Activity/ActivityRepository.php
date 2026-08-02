@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Piwigo\Activity;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\EntityRepository;
 use Piwigo\Activity\Projection\SystemActivityLogEntry;
 use Piwigo\Activity\Projection\UserActivityLogEntry;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Db\Tables;
-use Piwigo\Permission\SqlCondition;
 
 /**
  * Persistence layer for the activity domain: `activity` (an append-only
@@ -244,49 +244,103 @@ final class ActivityRepository extends EntityRepository
      * Paginated activity rows matching an already-built $condition --
      * Ws\PwgCore::getActivityList()'s own WS listing, one real caller.
      *
-     * SQL-modernization audit: $whereClause used to be an already-built
-     * raw SQL string (several of its own fragments -- uid/id/date range/
-     * admin-id exclusion list -- spliced directly by the caller), and
-     * $limit/$offset were spliced too; now a SqlCondition plus
-     * setMaxResults()/setFirstResult().
-     *
-     * Item 14 DQL audit: stays on DBAL -- $condition carries a caller-built
-     * raw SQL fragment (SqlCondition, applied via ->where($condition->sql)),
-     * not a DQL property-path expression.
+     * SQL-modernization audit, Item 14 Sub-phase B3: converted to real
+     * DQL -- the caller-built raw `SqlCondition` fragment (itself already
+     * a `SqlCondition::combine('AND', ...)` of a small, finite set of
+     * optional pieces, all built from the caller's own already-validated
+     * `$param`) is replaced by {@see ActivityListCriteria}, an immutable
+     * object the caller builds once from the same `$param` values, now
+     * translated into bound `andWhere()` calls here instead of a raw SQL
+     * string the caller composed itself (same shape Item 13's own
+     * Criteria classes established, e.g. {@see
+     * \Piwigo\Comment\CommentApiCriteria}). Returned rows carry whatever
+     * type each `ActivityEntity` column really is under DQL array
+     * hydration -- `ip_address` an `IpAddress` VO (not a raw string),
+     * `details` an already-decoded `array` (Doctrine's own `json` Type
+     * conversion, not a raw JSON string) -- the caller was updated to
+     * match instead of re-flattening these back to strings.
      *
      * @return list<array<string, mixed>>
      */
-    public function findPaginated(SqlCondition $condition, int $limit, int $offset): array
+    public function findPaginated(ActivityListCriteria $criteria, int $limit, int $offset): array
     {
-        $qb = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
+        $qb = $this->createQueryBuilder('a')
             ->select(
-                'activity_id',
-                'performed_by',
-                'object',
-                'object_id',
-                'action',
-                'session_idx',
-                'ip_address',
-                'occured_on',
-                'details',
-                'user_agent',
+                'a.performedBy AS performed_by',
+                'a.object AS object',
+                'a.objectId AS object_id',
+                'a.action AS action',
+                'a.sessionIdx AS session_idx',
+                'a.ipAddress AS ip_address',
+                'a.occuredOn AS occured_on',
+                'a.details AS details',
+                'a.userAgent AS user_agent',
             )
-            ->from(Tables::activity())
-            ->orderBy('activity_id', 'DESC')
+            ->where("a.object != 'system'")
+            ->orderBy('a.activityId', 'DESC')
             ->setMaxResults($limit)
             ->setFirstResult($offset);
 
-        if (! $condition->isEmpty()) {
-            $qb->where($condition->sql);
-            foreach ($condition->parameters as $name => $value) {
-                $qb->setParameter($name, $value, $condition->types[$name] ?? ParameterType::STRING);
-            }
+        if ($criteria->performedBy !== null) {
+            $qb->andWhere('a.performedBy = :performedBy')
+                ->setParameter('performedBy', $criteria->performedBy);
         }
 
-        return $qb->executeQuery()
-            ->fetchAllAssociative();
+        if ($criteria->action !== null) {
+            $qb->andWhere('a.action = :action')
+                ->setParameter('action', $criteria->action);
+        }
+
+        if ($criteria->object !== null) {
+            $qb->andWhere('a.object = :object')
+                ->setParameter('object', $criteria->object);
+        }
+
+        if ($criteria->minDate !== null) {
+            $qb->andWhere('a.occuredOn >= :minDate')
+                ->setParameter('minDate', $criteria->minDate);
+        }
+
+        if ($criteria->maxDate !== null) {
+            $qb->andWhere('a.occuredOn <= :maxDate')
+                ->setParameter('maxDate', $criteria->maxDate);
+        }
+
+        if ($criteria->objectId !== null) {
+            $qb->andWhere('a.objectId = :objectId')
+                ->setParameter('objectId', $criteria->objectId);
+        }
+
+        if ($criteria->connectionsMode === 'none') {
+            $qb->andWhere("a.action NOT IN ('login', 'logout')");
+        } elseif ($criteria->connectionsMode === 'admins_only') {
+            $qb->andWhere("NOT (a.action IN ('login', 'logout') AND a.objectId NOT IN (:adminIds))")
+                ->setParameter('adminIds', $criteria->adminIds, ArrayParameterType::INTEGER);
+        }
+
+        $rows = $qb->getQuery()
+            ->getArrayResult();
+
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $result[] = [
+                'performed_by' => $row['performed_by'] ?? null,
+                'object' => $row['object'] ?? null,
+                'object_id' => $row['object_id'] ?? null,
+                'action' => $row['action'] ?? null,
+                'session_idx' => $row['session_idx'] ?? null,
+                'ip_address' => $row['ip_address'] ?? null,
+                'occured_on' => $row['occured_on'] ?? null,
+                'details' => $row['details'] ?? null,
+                'user_agent' => $row['user_agent'] ?? null,
+            ];
+        }
+
+        return $result;
     }
 
     /**
@@ -294,33 +348,52 @@ final class ActivityRepository extends EntityRepository
      * Controller\Admin\IntroSubController's own dashboard "recent
      * activity" chart data.
      *
-     * Item 14 DQL audit: stays on DBAL -- `DATE_FORMAT()` is MySQL-specific
-     * with no DQL equivalent.
+     * SQL-modernization audit, Item 14 Sub-phase B5 Tier 2: converted to
+     * real DQL -- MySQL's `DATE_FORMAT(occured_on, '%Y-%m-%d')` has no
+     * portable DQL equivalent, and it was also part of the `GROUP BY` key
+     * (DQL can't group by a SELECT alias). Fetches `occuredOn`/`object`/
+     * `action` per row instead and groups in PHP -- this admin dashboard
+     * chart is already bounded to a small multi-week window by its own
+     * caller ({@see \Piwigo\Controller\Admin\IntroSubController}) and
+     * session-cached for 5 minutes, so scanning every matching row is an
+     * acceptable trade. `occuredOn` is a `Y-m-d H:i:s` string (`ActivityEntity`'s
+     * own `length: 19`), so `substr($occuredOn, 0, 10)` reproduces
+     * `DATE_FORMAT(..., '%Y-%m-%d')`'s output exactly.
      *
      * @return list<array{activity_day: string, object: string, action: string, counter: int}>
      */
     public function findDailyActionCountsSince(string $sinceDate): array
     {
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select("DATE_FORMAT(occured_on, '%Y-%m-%d') AS activity_day", 'object', 'action', 'COUNT(*) AS activity_counter')
-            ->from(Tables::activity())
-            ->where('occured_on >= :sinceDate')
-            ->groupBy('activity_day', 'object', 'action')
+        $rows = $this->createQueryBuilder('a')
+            ->select('a.occuredOn AS occured_on', 'a.object AS object', 'a.action AS action')
+            ->where('a.occuredOn >= :sinceDate')
             ->setParameter('sinceDate', $sinceDate)
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->getQuery()
+            ->getArrayResult();
 
-        return array_map(
-            static fn (array $row): array => [
-                'activity_day' => is_string($row['activity_day']) ? $row['activity_day'] : '',
-                'object' => is_string($row['object']) ? $row['object'] : '',
-                'action' => is_string($row['action']) ? $row['action'] : '',
-                'counter' => is_numeric($row['activity_counter']) ? (int) $row['activity_counter'] : 0,
-            ],
-            $rows
-        );
+        $byKey = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $occuredOn = is_string($row['occured_on'] ?? null) ? $row['occured_on'] : '';
+            $object = is_string($row['object'] ?? null) ? $row['object'] : '';
+            $action = is_string($row['action'] ?? null) ? $row['action'] : '';
+            $activityDay = substr($occuredOn, 0, 10);
+
+            $key = $activityDay . "\0" . $object . "\0" . $action;
+
+            $byKey[$key] ??= [
+                'activity_day' => $activityDay,
+                'object' => $object,
+                'action' => $action,
+                'counter' => 0,
+            ];
+            $byKey[$key]['counter']++;
+        }
+
+        return array_values($byKey);
     }
 
     /**

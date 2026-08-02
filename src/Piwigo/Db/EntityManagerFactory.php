@@ -10,6 +10,8 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Events;
 use Doctrine\ORM\ORMSetup;
+use Piwigo\Db\DqlFunction\GroupConcatFunction;
+use Piwigo\Db\DqlFunction\RandFunction;
 use Piwigo\Db\DqlFunction\RegexpFunction;
 use Piwigo\Db\Type\CategoryIdType;
 use Piwigo\Db\Type\CommentIdType;
@@ -56,6 +58,8 @@ final class EntityManagerFactory
         );
         $config->enableNativeLazyObjects(true);
         $config->addCustomStringFunction('REGEXP', RegexpFunction::class);
+        $config->addCustomStringFunction('GROUP_CONCAT', GroupConcatFunction::class);
+        $config->addCustomNumericFunction('RAND', RandFunction::class);
 
         $em = new EntityManager($conn ?? DbConnection::build(), $config);
         $em->getEventManager()

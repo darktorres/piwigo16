@@ -83,14 +83,14 @@ final class RatingPageRenderer
         );
 
         $available_order_by = [
-            [$lang->t('Rate date'), 'recently_rated DESC'],
-            [$lang->t('Rating score'), 'score DESC'],
-            [$lang->t('Average rate'), 'avg_rates DESC'],
-            [$lang->t('Number of rates'), 'nb_rates DESC'],
-            [$lang->t('Sum of rates'), 'sum_rates DESC'],
-            [$lang->t('File name'), 'file DESC'],
-            [$lang->t('Creation date'), 'date_creation DESC'],
-            [$lang->t('Post date'), 'date_available DESC'],
+            [$lang->t('Rate date'), 'recently_rated'],
+            [$lang->t('Rating score'), 'score'],
+            [$lang->t('Average rate'), 'avg_rates'],
+            [$lang->t('Number of rates'), 'nb_rates'],
+            [$lang->t('Sum of rates'), 'sum_rates'],
+            [$lang->t('File name'), 'file'],
+            [$lang->t('Creation date'), 'date_creation'],
+            [$lang->t('Post date'), 'date_available'],
         ];
 
         if ($order_by_index < 0 or $order_by_index >= count($available_order_by)) {

@@ -19,6 +19,7 @@ use Piwigo\Db\Tables;
 use Piwigo\Group\GroupAccessEntity;
 use Piwigo\Group\UserGroupEntity;
 use Piwigo\Image\ImageCategoryEntity;
+use Piwigo\Image\ImageEntity;
 use Piwigo\Permission\SqlCondition;
 
 /**
@@ -324,9 +325,11 @@ final class CategoryRepository extends EntityRepository
 
     /**
      * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see \Piwigo\Image\ImageCategoryEntity}), but stays on DBAL for its
-     * two other, still-real blockers: a caller-built SqlCondition fragment
-     * and MySQL-specific `RAND()` (no portable DQL equivalent yet).
+     * ({@see \Piwigo\Image\ImageCategoryEntity}), and Sub-phase B5 Tier 3
+     * gives `RAND()` a portable custom DQL function
+     * ({@see \Piwigo\Db\DqlFunction\RandFunction}), but this method stays
+     * on DBAL for its other, still-real blocker: a caller-built
+     * SqlCondition fragment (Sub-phase B3 scope, not yet done).
      */
     public function findRandomImageId(int $catId, string $uppercats, bool $recursive, SqlCondition $condition): ?int
     {
@@ -490,6 +493,13 @@ final class CategoryRepository extends EntityRepository
      * Item 14 DQL audit, re-corrected: `image_category` is now mapped
      * ({@see \Piwigo\Image\ImageCategoryEntity}), but stays on DBAL for its
      * other, still-real blocker: a caller-built SqlCondition fragment.
+     * Sub-phase B3/B4 re-investigation: this method's real caller
+     * ({@see \Piwigo\Category\CategoryService::getCommonCategories()})
+     * feeds it a `PermissionService::getSqlConditionFandFAsCondition()`
+     * result by default (the only way its one real caller invokes it) --
+     * same genuinely dynamic, cross-cutting permission-condition blocker
+     * documented in {@see \Piwigo\Image\ImageRepository::applyCondition()}'s
+     * own docblock, outside this sub-phase's scope.
      */
     public function findCommonCategories(array $itemIds, ?int $max, array $excludedCatIds, SqlCondition $condition): array
     {
@@ -648,9 +658,15 @@ final class CategoryRepository extends EntityRepository
      * @param  list<int>  $ids
      * @return list<int>
      *
-     * Item 14 DQL audit: stays on DBAL -- queries `images`, a table owned
-     * by the Image domain with no association declared on CategoryEntity
-     * to it.
+     * SQL-modernization audit, Item 14 Sub-phase B4: converted to real
+     * DQL -- `images` is owned by the Image domain (`Piwigo\Image`,
+     * L2aCoreDomain, same layer as `Piwigo\Category`, so querying
+     * `ImageEntity` directly here is a legal same-layer dependency per
+     * `deptrac.yaml`'s own ruleset), with no association declared on
+     * `CategoryEntity` to it -- queried directly via
+     * `$this->getEntityManager()->createQueryBuilder()->from(ImageEntity::class,
+     * ...)`, same "no new association required" shape Item 14's own
+     * `GroupAccessEntity`/`UserAccessEntity` joins already established.
      */
     public function findStorageLinkedImageIds(array $ids): array
     {
@@ -658,18 +674,17 @@ final class CategoryRepository extends EntityRepository
             return [];
         }
 
-        $imagesTable = Tables::images();
-
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery(<<<SQL
-            SELECT id
-            FROM {$imagesTable}
-            WHERE storage_category_id IN (:ids)
-            SQL
-            , [
-                'ids' => $ids,
-            ], [
-                'ids' => ArrayParameterType::INTEGER,
-            ])->fetchFirstColumn());
+        return array_values(array_map(
+            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+            $this->getEntityManager()
+                ->createQueryBuilder()
+                ->select('i.id')
+                ->from(ImageEntity::class, 'i')
+                ->where('i.storageCategoryId IN (:ids)')
+                ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
+                ->getQuery()
+                ->getSingleColumnResult()
+        ));
     }
 
     /**
@@ -1495,39 +1510,33 @@ final class CategoryRepository extends EntityRepository
     }
 
     /**
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see \Piwigo\Image\ImageCategoryEntity}), but stays on DBAL for its
-     * other, still-real blocker: MySQL-specific `RAND()` (no portable DQL
-     * equivalent yet).
+     * SQL-modernization audit, Item 14 Sub-phase B5 Tier 3: converted to
+     * real DQL -- `image_category` is mapped
+     * ({@see \Piwigo\Image\ImageCategoryEntity}), and its remaining
+     * blocker, MySQL's `RAND()`, now has a portable custom DQL function
+     * ({@see \Piwigo\Db\DqlFunction\RandFunction}, per-platform dispatch,
+     * MySQL/MariaDB verified, PostgreSQL/SQLite unverified against a real
+     * install -- see that class's own docblock). `imageId` is a plain
+     * `int` column (no custom Type), so `getSingleColumnResult()` +
+     * `setMaxResults(1)` is safe here (unlike a custom-Typed field --
+     * this audit's own gotcha #4).
      */
     public function findRandomImageIdInCategory(int $categoryId): ?int
     {
-        $imageCategoryTable = Tables::imageCategory();
-        $randomFunction = $this->randomFunction();
+        $values = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('ic.imageId')
+            ->from(ImageCategoryEntity::class, 'ic')
+            ->where('ic.categoryId = :categoryId')
+            ->setParameter('categoryId', CategoryId::from($categoryId))
+            ->orderBy('RAND()')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getSingleColumnResult();
 
-        $value = $this->getEntityManager()
-            ->getConnection()
-            ->executeQuery(<<<SQL
-                SELECT image_id
-                FROM {$imageCategoryTable}
-                WHERE category_id = :categoryId
-                ORDER BY {$randomFunction}()
-                LIMIT 1
-                SQL
-                , [
-                    'categoryId' => $categoryId,
-                ])->fetchOne();
+        $value = $values[0] ?? null;
 
         return is_numeric($value) ? (int) $value : null;
-    }
-
-    /**
-     * `DB_RANDOM_FUNCTION`'s replacement -- MySQL/MariaDB's random-row
-     * ordering function, matching {@see findRandomImageId()}'s own `RAND()`.
-     */
-    private function randomFunction(): string
-    {
-        return 'RAND';
     }
 
     /**
@@ -1626,41 +1635,52 @@ final class CategoryRepository extends EntityRepository
     /**
      * @return list<int>
      *
-     * Item 14 DQL audit: stays on DBAL -- queries `images`, a table owned by
-     * the Image domain with no association declared on CategoryEntity to it.
+     * SQL-modernization audit, Item 14 Sub-phase B4: converted to real
+     * DQL -- same "no association declared, queried directly" shape as
+     * {@see findStorageLinkedImageIds()} above.
      */
     public function findDistinctStorageCategoryIds(): array
     {
-        $imagesTable = Tables::images();
-
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery(<<<SQL
-            SELECT DISTINCT(storage_category_id)
-            FROM {$imagesTable}
-            WHERE storage_category_id IS NOT NULL
-            SQL)->fetchFirstColumn());
+        return array_values(array_map(
+            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+            $this->getEntityManager()
+                ->createQueryBuilder()
+                ->select('DISTINCT i.storageCategoryId')
+                ->from(ImageEntity::class, 'i')
+                ->where('i.storageCategoryId IS NOT NULL')
+                ->getQuery()
+                ->getSingleColumnResult()
+        ));
     }
 
     /**
-     * Item 14 DQL audit: stays on DBAL -- writes `images` (Image domain
-     * table, no association from CategoryEntity), and the SET expression is
-     * a dynamic `SqlDialect::concat()` fragment, not a fixed property path.
+     * SQL-modernization audit, Item 14 Sub-phase B4: converted to real
+     * DQL -- writes `images` (Image domain table, no association from
+     * CategoryEntity, queried directly same as
+     * {@see findStorageLinkedImageIds()} above). MySQL's own
+     * `SqlDialect::concat()` was already a real, portable
+     * `AbstractPlatform::getConcatExpression()` primitive (Item 16's own
+     * finding), and DQL's built-in `CONCAT()` accepting 3+ arguments
+     * (confirmed against `vendor/doctrine/orm/.../ConcatFunction.php`,
+     * same as {@see \Piwigo\Category\CategoryRepository::
+     * findAllForPermalinksDisplay()}'s own use) lets this collapse the
+     * original's nested `CONCAT(CONCAT(:fulldir, '/'), file)` into one
+     * flat call. DQL's bulk `UPDATE ... SET` accepts a function call as
+     * the new value, same as {@see touchOldPermalinkHit()}'s own
+     * self-referential-arithmetic SET precedent established this
+     * primitive works for non-trivial SET expressions.
      */
     public function updateImagePathsForCategory(int $categoryId, string $fulldir): void
     {
-        $imagesTable = Tables::images();
-        $pathExpr = SqlDialect::concat(['CONCAT(:fulldir, \'/\')', 'file']);
-
         $this->getEntityManager()
-            ->getConnection()
-            ->executeStatement(<<<SQL
-                UPDATE {$imagesTable}
-                SET path = {$pathExpr}
-                WHERE storage_category_id = :categoryId
-                SQL
-                , [
-                    'fulldir' => $fulldir,
-                    'categoryId' => $categoryId,
-                ]);
+            ->createQueryBuilder()
+            ->update(ImageEntity::class, 'i')
+            ->set('i.path', "CONCAT(:fulldir, '/', i.file)")
+            ->where('i.storageCategoryId = :categoryId')
+            ->setParameter('fulldir', $fulldir)
+            ->setParameter('categoryId', $categoryId)
+            ->getQuery()
+            ->execute();
     }
 
     /**
@@ -2047,8 +2067,21 @@ final class CategoryRepository extends EntityRepository
      *
      * @return list<array<string, mixed>>
      *
-     * Item 14 DQL audit: stays on DBAL -- takes a caller-built SqlCondition
-     * fragment (same family as {@see applyCondition()}'s other callers).
+     * SQL-modernization audit, Item 14 Sub-phase B3 re-investigation: this
+     * method's own sole real caller ({@see \Piwigo\Controller\
+     * CommentsController}'s "search by album" listing) traced back to
+     * {@see \Piwigo\Permission\PermissionService::getSqlConditionFandFAsCondition()}
+     * -- a genuinely dynamic, multi-clause, cross-cutting permission
+     * condition builder (forbidden/visible categories, image access
+     * type/list, ...), not a small finite set of shapes a typed DTO could
+     * replace the way {@see \Piwigo\Comment\CommentApiCriteria}/
+     * {@see \Piwigo\Activity\ActivityListCriteria} did for their own
+     * bounded, WS-param-driven callers. Converting this would mean giving
+     * `PermissionService` itself a DQL-producing path, a cross-cutting
+     * change affecting every other repository it feeds (Category/Image/
+     * Comment/Rate/...), clearly outside this sub-phase's own scope.
+     * Stays on DBAL -- takes a caller-built SqlCondition fragment (same
+     * family as {@see applyCondition()}'s other callers).
      */
     public function findIdNameUppercatsRank(SqlCondition $condition): array
     {
@@ -2069,26 +2102,46 @@ final class CategoryRepository extends EntityRepository
      * every category, `name` replaced with a display label indicating
      * whether it already has a permalink set.
      *
-     * @return list<array<string, mixed>>
+     * SQL-modernization audit, Item 14 Sub-phase B5 Tier 2: converted to
+     * real DQL -- MySQL's `IF(permalink IS NULL, "", " &radic;")` builds a
+     * different value per branch (not just a NULL fallback COALESCE()
+     * could express -- see {@see findNextId()}'s own docblock for that
+     * distinction), but DQL's standard `CASE WHEN ... THEN ... ELSE ...
+     * END` is a clean, portable drop-in for it, and `CONCAT()` accepting
+     * more than 2 arguments (confirmed against
+     * `vendor/doctrine/orm/.../ConcatFunction.php`) covers the rest.
      *
-     * Item 14 DQL audit: stays on DBAL -- `IF()` is MySQL-specific with no
-     * DQL equivalent (DQL's `CASE WHEN ... END` isn't a drop-in text/
-     * escaping match for it here).
+     * @return list<array<string, mixed>>
      */
     public function findAllForPermalinksDisplay(): array
     {
-        $categoriesTable = Tables::categories();
+        $rows = $this->createQueryBuilder('c')
+            ->select(
+                'c.id AS id',
+                'c.permalink AS permalink',
+                "CONCAT(c.id, ' - ', c.name, CASE WHEN c.permalink IS NULL THEN '' ELSE ' &radic;' END) AS name",
+                'c.uppercats AS uppercats',
+                'c.globalRank AS global_rank'
+            )
+            ->getQuery()
+            ->getArrayResult();
 
-        return $this->getEntityManager()
-            ->getConnection()
-            ->executeQuery(<<<SQL
-                SELECT
-                  id, permalink,
-                  CONCAT(id, " - ", name, IF(permalink IS NULL, "", " &radic;") ) AS name,
-                  uppercats, global_rank
-                FROM {$categoriesTable}
-                SQL)
-            ->fetchAllAssociative();
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $result[] = [
+                'id' => $row['id'] ?? null,
+                'permalink' => $row['permalink'] ?? null,
+                'name' => $row['name'] ?? null,
+                'uppercats' => $row['uppercats'] ?? null,
+                'global_rank' => $row['global_rank'] ?? null,
+            ];
+        }
+
+        return $result;
     }
 
     /**
@@ -2336,8 +2389,12 @@ final class CategoryRepository extends EntityRepository
      * `user_id = :userId` condition.
      *
      * Item 14 DQL audit: stays on DBAL -- caller-built SqlCondition
-     * fragment plus MySQL-specific `RAND()` (no ORDER BY random() DQL
-     * equivalent).
+     * fragment (Sub-phase B3 scope). MySQL's `RAND()` now has a portable
+     * custom DQL function ({@see \Piwigo\Db\DqlFunction\RandFunction},
+     * Sub-phase B5 Tier 3), but that alone doesn't unblock this method;
+     * this call site's own `SqlDialect::DB_RANDOM_FUNCTION` stays as-is
+     * for now -- a broader `SqlDialect` portability rewrite is Item 16's
+     * own scope, not this one (see this plan's Context section).
      */
     public function findRandomRepresentativeIdAmongSubcategories(string $uppercats, SqlCondition $condition): ?string
     {
@@ -2940,33 +2997,64 @@ final class CategoryRepository extends EntityRepository
      * images -- Admin\CatModifyPageRenderer's own "this album contains N
      * photos, added between X and Y" summary.
      *
-     * @return list<mixed>|false
+     * @return list<mixed>
      *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see \Piwigo\Image\ImageCategoryEntity}), but stays on DBAL for its
-     * two other, still-real blockers: MySQL's `DATE()` function, and a
-     * positional (`fetchNumeric()`) row shape DQL's named field selects
-     * don't produce.
+     * SQL-modernization audit, Item 14 Sub-phase B5 Tier 2: converted to
+     * real DQL -- `image_category` is mapped
+     * ({@see \Piwigo\Image\ImageCategoryEntity}), and its remaining two
+     * blockers are resolved by fetching raw rows and computing in PHP
+     * instead: MySQL's `DATE()` has no portable DQL equivalent, and the
+     * caller's positional `[count, min, max]` shape doesn't need DQL's
+     * named field selects at all once the aggregation itself moves to PHP.
+     * `dateAvailable` is a `Y-m-d H:i:s` string, so
+     * `substr($dateAvailable, 0, 10)` reproduces `DATE(date_available)`'s
+     * output exactly. Return type narrowed from `list|false` to `list` --
+     * `false` was only ever reachable under the original driver-level
+     * `fetchNumeric()` returning zero rows, which an aggregate query
+     * without GROUP BY never does; this PHP-side rewrite has no equivalent
+     * "zero rows" case at all, so the caller's own defensive
+     * `$row === false` check ({@see \Piwigo\Admin\CatModifyPageRenderer})
+     * is updated to match.
      */
-    public function findPhotoCountAndDateRange(int $categoryId): array|false
+    public function findPhotoCountAndDateRange(int $categoryId): array
     {
-        $imagesTable = Tables::images();
-        $imageCategoryTable = Tables::imageCategory();
+        $rows = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('i.dateAvailable AS date_available')
+            ->from(ImageCategoryEntity::class, 'ic')
+            ->innerJoin(ImageEntity::class, 'i', \Doctrine\ORM\Query\Expr\Join::WITH, 'i.id = ic.imageId')
+            ->where('ic.categoryId = :categoryId')
+            ->setParameter('categoryId', CategoryId::from($categoryId))
+            ->getQuery()
+            ->getArrayResult();
 
-        return $this->getEntityManager()
-            ->getConnection()
-            ->fetchNumeric(<<<SQL
-                SELECT
-                    COUNT(image_id),
-                    MIN(DATE(date_available)),
-                    MAX(DATE(date_available))
-                FROM {$imagesTable}
-                    JOIN {$imageCategoryTable} ON image_id = id
-                WHERE category_id = :categoryId
-                SQL
-                , [
-                    'categoryId' => $categoryId,
-                ]);
+        $count = 0;
+        $minDate = null;
+        $maxDate = null;
+
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $count++;
+
+            $dateAvailable = is_string($row['date_available'] ?? null) ? $row['date_available'] : null;
+            if ($dateAvailable === null) {
+                continue;
+            }
+
+            $date = substr($dateAvailable, 0, 10);
+            if ($minDate === null || $date < $minDate) {
+                $minDate = $date;
+            }
+
+            if ($maxDate === null || $date > $maxDate) {
+                $maxDate = $date;
+            }
+        }
+
+        return [$count, $minDate, $maxDate];
     }
 
     /**
@@ -3074,26 +3162,49 @@ final class CategoryRepository extends EntityRepository
     /**
      * id/permalink/uppercats/global_rank for every category with an active
      * permalink -- Controller\Admin\PermalinksSubController's own listing.
-     * $orderBySql is a raw "ORDER BY ..." fragment or '' (the caller sorts
-     * by global_rank itself afterward when not sorting by id/permalink).
+     * $orderByColumn is 'id'/'permalink'/null (its only real caller's own
+     * `$sort_by[0] === 'id' or $sort_by[0] === 'permalink'` check --
+     * the caller sorts by global_rank itself afterward when not sorting
+     * by id/permalink).
+     *
+     * SQL-modernization audit, Item 14 Sub-phase B3: converted to real
+     * DQL -- the caller-supplied raw "ORDER BY ..." fragment turned out to
+     * be one of exactly 3 finite shapes at its one real caller, so
+     * $orderByColumn now carries just the column name (or null), and this
+     * method decides the DQL `orderBy()` call itself.
      *
      * @return list<array<string, mixed>>
-     *
-     * Item 14 DQL audit: stays on DBAL -- $orderBySql is a caller-supplied
-     * raw "ORDER BY ..." fragment, not a fixed DQL property path.
      */
-    public function findActivePermalinksList(string $orderBySql): array
+    public function findActivePermalinksList(?string $orderByColumn): array
     {
-        $categoriesTable = Tables::categories();
+        $qb = $this->createQueryBuilder('c')
+            ->select('c.id AS id', 'c.permalink AS permalink', 'c.uppercats AS uppercats', 'c.globalRank AS global_rank')
+            ->where('c.permalink IS NOT NULL');
 
-        return $this->getEntityManager()
-            ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT id, permalink, uppercats, global_rank
-                FROM {$categoriesTable}
-                WHERE permalink IS NOT NULL
-                {$orderBySql}
-                SQL);
+        match ($orderByColumn) {
+            'id' => $qb->orderBy('c.id'),
+            'permalink' => $qb->orderBy('c.permalink'),
+            default => null,
+        };
+
+        $rows = $qb->getQuery()
+            ->getArrayResult();
+
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $result[] = [
+                'id' => $row['id'] ?? null,
+                'permalink' => $row['permalink'] ?? null,
+                'uppercats' => $row['uppercats'] ?? null,
+                'global_rank' => $row['global_rank'] ?? null,
+            ];
+        }
+
+        return $result;
     }
 
     /**
@@ -3178,10 +3289,16 @@ final class CategoryRepository extends EntityRepository
      * @param  list<SqlCondition>  $conditions
      * @return list<array{id: int, image_order: ?string}>
      *
-     * Item 14 DQL audit: stays on DBAL -- $conditions is a list of
-     * caller-built SqlCondition fragments (combined via
-     * `SqlCondition::combine()`), same family as `applyCondition()`'s other
-     * callers.
+     * SQL-modernization audit, Item 14 Sub-phase B3 re-investigation: this
+     * method's own sole real caller ({@see \Piwigo\Ws\PwgCategories::
+     * getImages()}) combines a dynamically-sized per-`cat_id` OR-chain
+     * (itself convertible -- a bound loop, not free-form text) with a
+     * {@see \Piwigo\Permission\PermissionService::getSqlConditionFandFAsCondition()}
+     * fragment -- the same genuinely dynamic, cross-cutting permission
+     * condition covered in {@see findIdNameUppercatsRank()}'s own docblock.
+     * Stays on DBAL -- $conditions is a list of caller-built SqlCondition
+     * fragments (combined via `SqlCondition::combine()`), same family as
+     * `applyCondition()`'s other callers.
      */
     public function findIdsAndImageOrderWithConditions(array $conditions): array
     {
@@ -3603,34 +3720,59 @@ final class CategoryRepository extends EntityRepository
      * Categories with a physical `dir`, scoped to $siteId (directory-based
      * synchronization's own candidate set) -- Controller\Admin\
      * SiteUpdateSubController's own "which categories to update" step.
-     * $extraCondition is an already-built, trusted SQL AND-continuation
-     * fragment (empty string means no further restriction) -- same
-     * "caller composes trusted fragments" contract used throughout this
-     * repository.
+     * $catId/$recursive narrow further, matching that one real caller's
+     * own exactly-3-shapes logic: no `$catId` means no extra filter,
+     * `$recursive` true means every descendant of $catId (uppercats
+     * REGEXP match), false means $catId itself only.
      *
-     * @param array<string, mixed> $params
-     * @param array<string, ArrayParameterType|ParameterType> $types
+     * SQL-modernization audit, Item 14 Sub-phase B3: converted to real
+     * DQL -- the caller-supplied raw SQL AND-continuation fragment turned
+     * out to be one of exactly 3 finite shapes at its one real caller, so
+     * $catId/$recursive now carry the intent directly and this method
+     * builds the DQL condition itself, reusing the same portable REGEXP
+     * DQL function ({@see \Piwigo\Db\DqlFunction\RegexpFunction}, Sub-phase
+     * B5 Tier 1) {@see findSubcategoryIds()} already established for the
+     * exact same `uppercats REGEXP '(^|,)ID(,|$)'` pattern.
+     *
      * @return list<array<string, mixed>>
-     *
-     * Item 14 DQL audit: stays on DBAL -- $extraCondition is a caller-
-     * supplied raw SQL AND-continuation fragment, not a fixed DQL property
-     * path.
      */
-    public function findSyncCandidatesForSite(int $siteId, string $extraCondition, array $params = [], array $types = []): array
+    public function findSyncCandidatesForSite(int $siteId, ?int $catId, bool $recursive): array
     {
-        $categoriesTable = Tables::categories();
-        $params['siteId'] = $siteId;
+        $qb = $this->createQueryBuilder('c')
+            ->select('c.id AS id', 'c.uppercats AS uppercats', 'c.globalRank AS global_rank', 'c.status AS status', 'c.visible AS visible')
+            ->where('c.dir IS NOT NULL')
+            ->andWhere('c.siteId = :siteId')
+            ->setParameter('siteId', $siteId);
 
-        return $this->getEntityManager()
-            ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT id, uppercats, global_rank, status, visible
-                FROM {$categoriesTable}
-                WHERE dir IS NOT NULL
-                    AND site_id = :siteId
-                {$extraCondition}
-                SQL
-                , $params, $types);
+        if ($catId !== null) {
+            if ($recursive) {
+                $qb->andWhere('REGEXP(c.uppercats, :uppercatsLike) = true')
+                    ->setParameter('uppercatsLike', '(^|,)' . $catId . '(,|$)');
+            } else {
+                $qb->andWhere('c.id = :catId')
+                    ->setParameter('catId', $catId);
+            }
+        }
+
+        $rows = $qb->getQuery()
+            ->getArrayResult();
+
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $result[] = [
+                'id' => $row['id'] ?? null,
+                'uppercats' => $row['uppercats'] ?? null,
+                'global_rank' => $row['global_rank'] ?? null,
+                'status' => $row['status'] ?? null,
+                'visible' => $row['visible'] ?? null,
+            ];
+        }
+
+        return $result;
     }
 
     /**

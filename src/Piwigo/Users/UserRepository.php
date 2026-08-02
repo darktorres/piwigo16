@@ -56,6 +56,23 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * `Image\ImageRepository::applyCondition()`/`Notification\
      * NotificationRepository::applyCondition()`/`Tag\TagRepository::
      * applyCondition()`.
+     *
+     * SQL-modernization audit, Item 14 Sub-phase B3 re-investigation: this
+     * helper's own 3 callers (findAuthorizedFavoriteImageIds() /
+     * findVisibleFavoriteImageIds() / findVisibleFavoriteImages()) are all
+     * fed a `PermissionService::getSqlConditionFandFAsCondition()` result
+     * by their real caller ({@see \Piwigo\Ws\PwgUsers}/
+     * {@see \Piwigo\Section\SectionPopulator}) -- confirmed by reading
+     * those real call sites, same genuinely dynamic, cross-cutting
+     * permission-condition blocker documented in
+     * {@see \Piwigo\Image\ImageRepository::applyCondition()}'s own
+     * docblock, not a small finite set of shapes a typed DTO could
+     * replace. 2 of the 3 also take a caller-composed `$orderBySql`
+     * tracing back to `WsHelper::stdImageSqlOrder()`/`CurrentConfig::
+     * orderBy()`, a second, independent cross-cutting blocker (see
+     * {@see \Piwigo\Image\ImageRepository::findIdsWithConditions()}'s own
+     * docblock). Both are well outside this sub-phase's scope, so this
+     * whole cluster stays on DBAL.
      */
     private static function applyCondition(QueryBuilder $qb, SqlCondition $condition): void
     {
@@ -1130,35 +1147,49 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * Distinct "YYYY-MM" registration months among every user --
      * Admin\UserListPageRenderer's own registration-date filter dropdown.
      *
-     * Item 14 DQL audit: stays on DBAL -- `month()`/`year()` are
-     * MySQL-specific SQL functions with no built-in DQL equivalent (and no
-     * custom DQL function is registered for either in this project).
+     * SQL-modernization audit, Item 14 Sub-phase B5 Tier 2: converted to
+     * real DQL -- MySQL's `month()`/`year()` have no portable DQL
+     * equivalent, and DISTINCT over both computed columns has the same
+     * "can't express the grouping in DQL" shape as a GROUP BY alias.
+     * Fetches `registrationDate` per row instead and computes the distinct
+     * set in PHP -- an admin-only dropdown filter, not a hot path.
+     * `registrationDate` is a `Y-m-d H:i:s` string
+     * (`UserInfoEntity`'s own `length: 19`), so slicing it directly
+     * reproduces `MONTH()`/`YEAR()`'s output exactly, already zero-padded.
+     * A null `registrationDate` (real for some users --
+     * {@see findEarliestRegistrationDate()}'s own docblock) reproduces the
+     * original's own `MONTH(NULL)`/`YEAR(NULL)` -> `'-00'` formatting
+     * exactly (confirmed against `16.x-rewrite`'s reference
+     * `findRegistrationMonthsYears()` -- same unfiltered-null behavior
+     * there, not something to correct here).
      *
      * @return list<string>
      */
     public function findDistinctRegistrationYearMonths(): array
     {
-        $userInfosTable = Tables::userInfos();
+        $rows = $this->createQueryBuilder('ui')
+            ->select('ui.registrationDate AS registration_date')
+            ->getQuery()
+            ->getArrayResult();
 
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT DISTINCT
-                    month(registration_date) as registration_month,
-                    year(registration_date) as registration_year
-                FROM {$userInfosTable}
-                ORDER BY registration_year, registration_month
-                SQL);
+        $yearMonths = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
 
-        return array_map(
-            static function (array $row): string {
-                $registrationMonth = is_numeric($row['registration_month']) ? (int) $row['registration_month'] : 0;
-                $registrationYear = is_scalar($row['registration_year']) ? (string) $row['registration_year'] : '';
+            $registrationDate = $row['registration_date'] ?? null;
+            $yearMonth = is_string($registrationDate)
+                ? substr($registrationDate, 0, 4) . '-' . substr($registrationDate, 5, 2)
+                : '-00';
 
-                return $registrationYear . '-' . sprintf('%02u', $registrationMonth);
-            },
-            $rows
-        );
+            $yearMonths[$yearMonth] = true;
+        }
+
+        $result = array_keys($yearMonths);
+        sort($result);
+
+        return $result;
     }
 
     /**

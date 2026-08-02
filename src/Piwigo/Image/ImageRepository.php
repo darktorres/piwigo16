@@ -59,6 +59,24 @@ final class ImageRepository extends EntityRepository
      * every one of its parameters -- same shared-helper shape as
      * `Notification\NotificationRepository::applyCondition()`/
      * `Tag\TagRepository::applyCondition()`.
+     *
+     * SQL-modernization audit, Item 14 Sub-phase B3 re-investigation: every
+     * real caller of every one of this helper's own callers
+     * (isImageAccessibleWithCondition/findRowWithCondition/
+     * findRelatedCategoriesForImage/isImageCommentableWithCondition/
+     * findVisibleCategoriesForImage/hasAccessibleImageWithAuthor/
+     * isImageAccessibleViaCategoryWithCondition/
+     * findCategoryLinksForImageIdsWithCondition) traces back to
+     * {@see \Piwigo\Permission\PermissionService::getSqlConditionFandFAsCondition()}
+     * -- confirmed by reading every real WS/Controller call site (PwgImages,
+     * PwgCategories, SearchController, PictureController, ActionController).
+     * This is a genuinely dynamic, multi-clause, cross-cutting permission
+     * condition builder, not a small finite set of shapes a typed DTO could
+     * replace the way {@see \Piwigo\Comment\CommentApiCriteria}/
+     * {@see \Piwigo\Activity\ActivityListCriteria} did for their own
+     * bounded, single-purpose callers -- giving `PermissionService` itself
+     * a DQL-producing path is a cross-cutting change well outside this
+     * sub-phase's scope, so this entire cluster stays on DBAL.
      */
     private static function applyCondition(QueryBuilder $qb, SqlCondition $condition): void
     {
@@ -1436,9 +1454,19 @@ final class ImageRepository extends EntityRepository
      * internally via SqlCondition::combine(), replacing the caller-built
      * `list<string> $whereClauses` this used to take.
      *
-     * Item 14 DQL audit: stays on DBAL -- $criteria->filterCondition is
-     * a caller-supplied raw SqlCondition fragment, not a DQL
-     * property-path expression.
+     * SQL-modernization audit, Item 14 Sub-phase B3 re-investigation:
+     * $criteria->filterCondition traces back to {@see \Piwigo\Ws\WsHelper::
+     * stdImageSqlFilter()} -- a shared, cross-cutting generic image-filter
+     * builder used across many different WS methods (rate/hit/date/
+     * ratio/level ranges, each independently optional, plus a runtime
+     * `$tbl_name` alias prefix), not a small finite set of shapes specific
+     * to this one method the way {@see \Piwigo\Comment\CommentApiCriteria}/
+     * {@see \Piwigo\Activity\ActivityListCriteria} were for their own
+     * bounded, single-purpose callers. Converting this would mean giving
+     * `WsHelper::stdImageSqlFilter()` itself a DQL-producing path, a
+     * cross-cutting change well outside this sub-phase's scope. Stays on
+     * DBAL -- $criteria->filterCondition is a caller-supplied raw
+     * SqlCondition fragment, not a DQL property-path expression.
      *
      * @return list<array<string, mixed>>
      */
@@ -2616,8 +2644,13 @@ final class ImageRepository extends EntityRepository
      * ({@see ImageCategoryEntity}), but stays on DBAL regardless --
      * $condition is a caller-supplied raw SqlCondition fragment applied
      * via the shared applyCondition() helper several sibling methods in
-     * this file also use; converting this one alone would split that
-     * shared condition-building machinery in two.
+     * this file also use. Sub-phase B3 re-investigation confirmed this
+     * isn't just "converting one would split shared machinery in two" --
+     * every real caller across this whole family traces back to
+     * `PermissionService::getSqlConditionFandFAsCondition()`, a genuinely
+     * cross-cutting blocker outside this sub-phase's scope regardless of
+     * whether the machinery stays shared or gets split; see
+     * {@see applyCondition()}'s own docblock for the full finding.
      */
     public function isImageAccessibleWithCondition(int $imageId, SqlCondition $condition): bool
     {
@@ -3380,10 +3413,15 @@ final class ImageRepository extends EntityRepository
      * group larger than ~250 ids silently loses members -- a pre-existing
      * limitation, not introduced here.
      *
-     * Item 14 DQL audit: stays on DBAL -- MySQL-specific
-     * `GROUP_CONCAT()` has no DQL equivalent, and $fields is itself a
-     * caller-supplied dynamic column-name list (`groupBy()`'s own
-     * argument), not fixed DQL property paths.
+     * Item 14 DQL audit: stays on DBAL -- MySQL's `GROUP_CONCAT()` now has
+     * a portable custom DQL function
+     * ({@see \Piwigo\Db\DqlFunction\GroupConcatFunction}, Sub-phase B5
+     * Tier 3), but that alone doesn't unblock this method: $fields is
+     * itself a caller-supplied dynamic column-name list (`groupBy()`'s own
+     * argument), not fixed DQL property paths -- DQL requires a
+     * compile-time-known property path, so this stays permanently out of
+     * scope for DQL conversion regardless (see this plan's own "Out of
+     * scope" section).
      *
      * @param list<string> $fields
      * @return list<int>
@@ -3434,9 +3472,21 @@ final class ImageRepository extends EntityRepository
      * trusted SQL boolean expressions, $params are the bound values
      * referenced by any named placeholders inside them.
      *
-     * Item 14 DQL audit: stays on DBAL -- $whereClauses and $orderBySql
-     * are caller-composed raw SQL fragments, not DQL property-path
-     * expressions.
+     * SQL-modernization audit, Item 14 Sub-phase B3 re-investigation:
+     * $whereClauses turned out to be a genuinely finite set of shapes at
+     * every real caller ({@see \Piwigo\Admin\BatchManager\FilterResolver}'s
+     * own all_photos/level/dimension/filesize prefilters), but
+     * $orderBySql traces back to {@see \Piwigo\Config\CurrentConfig::
+     * orderBy()}/{@see \Piwigo\Config\CurrentConfig::orderByInsideCategory()}
+     * -- an admin-configurable raw "ORDER BY ..." string with no bounded
+     * shape (not one of a small fixed set the way
+     * {@see \Piwigo\Category\CategoryRepository::findActivePermalinksList()}'s
+     * own caller-composed ORDER BY was), matching this plan's own
+     * Context-section note that a real multi-dialect `CurrentConfig::
+     * orderBy()` rewrite is Item 16's territory. DQL requires the whole
+     * query expressible in DQL, not just the WHERE half, so this stays on
+     * DBAL -- $whereClauses and $orderBySql are caller-composed raw SQL
+     * fragments, not DQL property-path expressions.
      *
      * @param list<string> $whereClauses
      * @param array<string, int|float|string> $params
@@ -3558,41 +3608,52 @@ final class ImageRepository extends EntityRepository
      * counts and most recent `date_available` -- Admin\PiwigoInfosSender's
      * own "how were most photos added" telemetry breakdown.
      *
-     * Item 14 DQL audit: stays on DBAL -- MySQL-specific
-     * `IF(storage_category_id IS NULL, 'api', 'sync')` is used both as
-     * the projected `add_method` label and as the `GROUP BY` key; DQL
-     * has no IF() (a CASE-expression rewrite would also need to repeat
-     * the full expression in GROUP BY, since DQL can't group by a
-     * SELECT alias the way MySQL can) -- the same "would need a CASE
-     * rewrite DQL doesn't offer the same way" reasoning
-     * {@see \Piwigo\Comment\CommentRepository}'s own `sum(validated = 1)`
-     * audit note documents.
+     * SQL-modernization audit, Item 14 Sub-phase B5 Tier 2: converted to
+     * real DQL -- MySQL's `IF(storage_category_id IS NULL, 'api', 'sync')`
+     * has no portable DQL equivalent, and reusing it as the `GROUP BY` key
+     * doesn't translate either (DQL can't group by a SELECT alias the way
+     * MySQL can, and repeating the full CASE expression in GROUP BY was
+     * judged too fragile to trust without a Postgres install to verify
+     * against). Fetches `storageCategoryId`/`dateAvailable` per row instead
+     * and groups in PHP -- only 2 buckets, and this is an admin-telemetry
+     * call, not a hot path, so scanning every image row is an acceptable
+     * trade. `date_available` values are ISO `Y-m-d H:i:s` strings, so a
+     * plain PHP string comparison reproduces MAX()'s ordering exactly.
      *
      * @return list<array{add_method: string, last_added_on: ?string, nb_files: int}>
      */
     public function findAddMethodBreakdown(): array
     {
-        $imagesTable = Tables::images();
+        $rows = $this->createQueryBuilder('i')
+            ->select('i.storageCategoryId AS storage_category_id', 'i.dateAvailable AS date_available')
+            ->getQuery()
+            ->getArrayResult();
 
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT
-                    IF(storage_category_id IS NULL, 'api', 'sync') AS add_method,
-                    MAX(date_available) AS last_added_on,
-                    COUNT(*) AS nb_files
-                FROM {$imagesTable}
-                GROUP BY add_method
-                SQL);
+        $byMethod = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
 
-        return array_map(
-            static fn (array $row): array => [
-                'add_method' => is_string($row['add_method']) ? $row['add_method'] : '',
-                'last_added_on' => is_string($row['last_added_on'] ?? null) ? $row['last_added_on'] : null,
-                'nb_files' => is_numeric($row['nb_files']) ? (int) $row['nb_files'] : 0,
-            ],
-            $rows
-        );
+            $addMethod = ($row['storage_category_id'] ?? null) === null ? 'api' : 'sync';
+            $dateAvailable = is_string($row['date_available'] ?? null) ? $row['date_available'] : null;
+
+            if (! isset($byMethod[$addMethod])) {
+                $byMethod[$addMethod] = [
+                    'add_method' => $addMethod,
+                    'last_added_on' => null,
+                    'nb_files' => 0,
+                ];
+            }
+
+            $byMethod[$addMethod]['nb_files']++;
+
+            if ($dateAvailable !== null && ($byMethod[$addMethod]['last_added_on'] === null || $dateAvailable > $byMethod[$addMethod]['last_added_on'])) {
+                $byMethod[$addMethod]['last_added_on'] = $dateAvailable;
+            }
+        }
+
+        return array_values($byMethod);
     }
 
     /**
@@ -3600,37 +3661,53 @@ final class ImageRepository extends EntityRepository
      * Controller\Admin\IntroSubController's own storage chart and Admin\
      * PiwigoInfosSender's own telemetry breakdown, both keyed by ext.
      *
-     * Item 14 DQL audit: stays on DBAL -- MySQL-specific
-     * `SUBSTRING_INDEX()` has no DQL equivalent, and it's also the
-     * `GROUP BY` key here (`ext` is a computed alias, not a real
-     * column) -- unlike findFormatExtensionBreakdown() below, which
-     * groups by a real `ext` column and does convert.
+     * SQL-modernization audit, Item 14 Sub-phase B5 Tier 2: converted to
+     * real DQL -- MySQL's `SUBSTRING_INDEX(path, ".", -1)` has no portable
+     * DQL equivalent, and it was also the `GROUP BY` key (`ext` is a
+     * computed alias, not a real column, and DQL can't group by a SELECT
+     * alias). Fetches `path`/`filesize` per row instead and groups in PHP
+     * -- an admin-telemetry call, not a hot path, so scanning every image
+     * row is an acceptable trade. The extension extraction below
+     * reproduces `SUBSTRING_INDEX(path, ".", -1)`'s exact semantics
+     * (substring after the last `.`, or the whole string when there's no
+     * `.` at all) rather than reusing {@see \Piwigo\Core\StringHelper::
+     * getExtension()}, which returns `''` for the no-dot case instead --
+     * a real behavioral difference from the original SQL, even though no
+     * real image path is expected to lack an extension.
      *
      * @return list<array{ext: string, counter: int, filesize: int}>
      */
     public function findExtensionBreakdown(): array
     {
-        $imagesTable = Tables::images();
+        $rows = $this->createQueryBuilder('i')
+            ->select('i.path AS path', 'i.filesize AS filesize')
+            ->getQuery()
+            ->getArrayResult();
 
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT
-                    SUBSTRING_INDEX(path, ".", -1) AS ext,
-                    COUNT(*) AS counter,
-                    SUM(filesize) AS filesize
-                FROM {$imagesTable}
-                GROUP BY ext
-                SQL);
+        $byExtension = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
 
-        return array_map(
-            static fn (array $row): array => [
-                'ext' => is_string($row['ext']) ? $row['ext'] : '',
-                'counter' => is_numeric($row['counter']) ? (int) $row['counter'] : 0,
-                'filesize' => is_numeric($row['filesize']) ? (int) $row['filesize'] : 0,
-            ],
-            $rows
-        );
+            $path = is_string($row['path'] ?? null) ? $row['path'] : '';
+            $dotPosition = strrpos($path, '.');
+            $ext = $dotPosition === false ? $path : substr($path, $dotPosition + 1);
+            $filesize = is_numeric($row['filesize'] ?? null) ? (int) $row['filesize'] : 0;
+
+            if (! isset($byExtension[$ext])) {
+                $byExtension[$ext] = [
+                    'ext' => $ext,
+                    'counter' => 0,
+                    'filesize' => 0,
+                ];
+            }
+
+            $byExtension[$ext]['counter']++;
+            $byExtension[$ext]['filesize'] += $filesize;
+        }
+
+        return array_values($byExtension);
     }
 
     /**

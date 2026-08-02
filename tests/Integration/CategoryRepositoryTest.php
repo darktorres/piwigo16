@@ -174,6 +174,22 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         self::assertNull($this->repo->findRandomImageId(1, '1', false, new SqlCondition('1 = 0')));
     }
 
+    public function test_find_random_image_id_in_category_returns_an_image_from_the_category(): void
+    {
+        // Real regression coverage for the custom RandFunction DQL
+        // function's own `ORDER BY RAND()` -- runs enough draws to make it
+        // very unlikely a single lucky pick masks a query that's actually
+        // broken (e.g. always returning the same row, or the wrong pool).
+        for ($i = 0; $i < 10; $i++) {
+            self::assertContains($this->repo->findRandomImageIdInCategory(1), [1, 2, 3]);
+        }
+    }
+
+    public function test_find_random_image_id_in_category_returns_null_for_a_category_without_images(): void
+    {
+        self::assertNull($this->repo->findRandomImageIdInCategory(999));
+    }
+
     public function test_find_computed_categories_rollup_returns_one_row_per_category(): void
     {
         $rows = $this->repo->findComputedCategoriesRollup(0, null, '');
@@ -310,6 +326,46 @@ final class CategoryRepositoryTest extends IntegrationTestCase
     public function test_find_storage_linked_image_ids_returns_empty_for_no_ids(): void
     {
         self::assertSame([], $this->repo->findStorageLinkedImageIds([]));
+    }
+
+    public function test_find_storage_linked_image_ids_returns_matching_images(): void
+    {
+        // No fixture image has a real storage_category_id (filesystem-sync
+        // linkage, distinct from image_category membership) -- give image 1
+        // one temporarily.
+        try {
+            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET storage_category_id = 1 WHERE id = 1');
+
+            self::assertSame([1], $this->repo->findStorageLinkedImageIds([1]));
+            self::assertSame([], $this->repo->findStorageLinkedImageIds([2]));
+        } finally {
+            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET storage_category_id = NULL WHERE id = 1');
+        }
+    }
+
+    public function test_find_distinct_storage_category_ids_returns_the_real_distinct_set(): void
+    {
+        try {
+            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET storage_category_id = 1 WHERE id IN (1, 2)');
+
+            self::assertSame([1], $this->repo->findDistinctStorageCategoryIds());
+        } finally {
+            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET storage_category_id = NULL WHERE id IN (1, 2)');
+        }
+    }
+
+    public function test_update_image_paths_for_category_rewrites_the_path_from_the_new_fulldir(): void
+    {
+        try {
+            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET storage_category_id = 1 WHERE id = 1');
+
+            $this->repo->updateImagePathsForCategory(1, 'galleries/renamed-album');
+
+            $path = $this->conn->fetchOne('SELECT path FROM ' . Tables::images() . ' WHERE id = 1');
+            self::assertSame('galleries/renamed-album/fixture-photo-1.jpg', $path);
+        } finally {
+            $this->conn->executeStatement("UPDATE " . Tables::images() . " SET storage_category_id = NULL, path = 'upload/2026/08/01/20260801000000-2e7e9c93.jpg' WHERE id = 1");
+        }
     }
 
     public function test_find_distinct_linked_image_ids_returns_empty_for_no_ids(): void
@@ -841,6 +897,22 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         self::assertNull($byId[1]['permalink']);
     }
 
+    public function test_find_all_for_permalinks_display_appends_a_checkmark_when_permalink_is_set(): void
+    {
+        try {
+            $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET permalink = 'sample-album' WHERE id = 1");
+
+            $rows = $this->repo->findAllForPermalinksDisplay();
+
+            $byId = array_column($rows, null, 'id');
+            self::assertSame('1 - Sample Album &radic;', $byId[1]['name']);
+            self::assertSame('sample-album', $byId[1]['permalink']);
+            self::assertSame('2 - Nested Sub Album', $byId[2]['name']);
+        } finally {
+            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET permalink = NULL WHERE id = 1');
+        }
+    }
+
     public function test_find_id_name_uppercats_rank_by_site_filters_on_site_id(): void
     {
         // Both fixture categories have site_id NULL -- never matches a real id.
@@ -987,6 +1059,31 @@ final class CategoryRepositoryTest extends IntegrationTestCase
     public function test_has_images_is_false_for_a_category_without_images(): void
     {
         self::assertFalse($this->repo->hasImages(999));
+    }
+
+    public function test_find_photo_count_and_date_range_matches_the_fixture(): void
+    {
+        // Category 1 has 3 direct images, all sharing the same
+        // date_available (2026-08-01 00:00:00 -- see the fixture-shape
+        // docblock at the top of this file / test_find_add_method_
+        // breakdown_groups_by_storage_category_presence's own comment
+        // elsewhere), so min and max both resolve to that same date.
+        $row = $this->repo->findPhotoCountAndDateRange(1);
+
+        self::assertNotFalse($row);
+        self::assertSame(3, $row[0]);
+        self::assertSame('2026-08-01', $row[1]);
+        self::assertSame('2026-08-01', $row[2]);
+    }
+
+    public function test_find_photo_count_and_date_range_is_zero_for_a_category_without_images(): void
+    {
+        $row = $this->repo->findPhotoCountAndDateRange(999);
+
+        self::assertNotFalse($row);
+        self::assertSame(0, $row[0]);
+        self::assertNull($row[1]);
+        self::assertNull($row[2]);
     }
 
     public function test_find_distinct_image_ids_in_categories_returns_the_linked_images(): void

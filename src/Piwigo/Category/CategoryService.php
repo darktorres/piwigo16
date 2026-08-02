@@ -2118,9 +2118,9 @@ final readonly class CategoryService
     }
 
     /**
-     * @return list<mixed>|false
+     * @return list<mixed>
      */
-    public function getPhotoCountAndDateRange(int $categoryId): array|false
+    public function getPhotoCountAndDateRange(int $categoryId): array
     {
         return $this->repo->findPhotoCountAndDateRange($categoryId);
     }
@@ -2156,9 +2156,9 @@ final readonly class CategoryService
     /**
      * @return list<array<string, mixed>>
      */
-    public function getActivePermalinksList(string $orderBySql): array
+    public function getActivePermalinksList(?string $orderByColumn): array
     {
-        return $this->repo->findActivePermalinksList($orderBySql);
+        return $this->repo->findActivePermalinksList($orderByColumn);
     }
 
     public function existsAndNotForbidden(int $catId, string $forbiddenCategoriesCsv): bool
@@ -2329,13 +2329,11 @@ final readonly class CategoryService
     }
 
     /**
-     * @param array<string, mixed> $params
-     * @param array<string, ArrayParameterType|\Doctrine\DBAL\ParameterType> $types
      * @return list<array<string, mixed>>
      */
-    public function getSyncCandidatesForSite(int $siteId, string $extraCondition, array $params = [], array $types = []): array
+    public function getSyncCandidatesForSite(int $siteId, ?int $catId, bool $recursive): array
     {
-        return $this->repo->findSyncCandidatesForSite($siteId, $extraCondition, $params, $types);
+        return $this->repo->findSyncCandidatesForSite($siteId, $catId, $recursive);
     }
 
     /**

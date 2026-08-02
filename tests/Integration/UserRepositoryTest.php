@@ -439,6 +439,27 @@ final class UserRepositoryTest extends IntegrationTestCase
         self::assertSame(['2026-08'], $this->repo->findDistinctRegistrationYearMonths());
     }
 
+    public function test_find_distinct_registration_year_months_groups_and_orders_across_periods(): void
+    {
+        // Real regression coverage for the DISTINCT + ORDER BY shape
+        // itself, not just the per-row formatting -- give user 1 an
+        // earlier period and user 2 a later one, both distinct from the
+        // shared fixture period (2026-08), and confirm all three come
+        // back deduplicated and chronologically ordered regardless of the
+        // rows' own id order.
+        try {
+            $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . " SET registration_date = '2024-01-15 10:00:00' WHERE user_id = 1");
+            $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . " SET registration_date = '2027-03-20 10:00:00' WHERE user_id = 2");
+
+            self::assertSame(
+                ['2024-01', '2026-08', '2027-03'],
+                $this->repo->findDistinctRegistrationYearMonths()
+            );
+        } finally {
+            $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . " SET registration_date = '2026-08-01 00:00:00' WHERE user_id IN (1, 2)");
+        }
+    }
+
     public function test_find_user_counts_by_status_excludes_the_given_user_and_groups_by_status(): void
     {
         // Excluding user 2 (guest) leaves user 1 (webmaster) and users 3/4

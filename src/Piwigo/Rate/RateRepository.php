@@ -6,9 +6,11 @@ namespace Piwigo\Rate;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr\Join;
 use Piwigo\Core\Env;
 use Piwigo\Db\Tables;
+use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Rate\Projection\Rate;
 
@@ -29,8 +31,13 @@ use Piwigo\Rate\Projection\Rate;
  * via $this->getEntityManager()->getConnection() is documented per
  * method with an "Item 14 DQL audit: stays on DBAL -- <reason>" note:
  * runtime-resolved multi-auth column names, joins against `users` /
- * `image_category` (neither ever entity-mapped in this migration), a
- * caller-supplied raw ORDER BY fragment, or ROUND() (no DQL equivalent).
+ * `image_category` (neither ever entity-mapped in this migration -- Item
+ * 14 Sub-phase B1 has since mapped `image_category`
+ * {@see \Piwigo\Image\ImageCategoryEntity}, but crossing into it from here
+ * is Sub-phase B4 scope, not yet done), or a caller-supplied raw ORDER BY
+ * fragment. `ROUND()`, previously listed here too, no longer blocks
+ * anything -- Sub-phase B5 Tier 2 replaced it everywhere in this file with
+ * a raw `AVG()` plus a PHP-side round().
  *
  * @extends EntityRepository<RateEntity>
  */
@@ -271,34 +278,38 @@ final class RateRepository extends EntityRepository
      * Admin "Rating" report: distinct rated elements, optionally scoped to
      * one user (included or excluded) and/or a set of categories.
      *
-     * Item 14 DQL audit: stays on DBAL -- the $categoryIds branch joins
-     * `image_category`, which is never entity-mapped anywhere in this
-     * migration (same precedent as CategoryRepository's own docblock).
+     * SQL-modernization audit, Item 14 Sub-phase B4: converted to real
+     * DQL -- `image_category` is now mapped
+     * ({@see \Piwigo\Image\ImageCategoryEntity}), queried directly here
+     * the same "no association required" way
+     * {@see \Piwigo\Category\CategoryRepository::findStorageLinkedImageIds()}
+     * queries `ImageEntity` (both `Piwigo\Image`, L2aCoreDomain -- a
+     * legal same-layer dependency from `Piwigo\Rate`, L2bExtendedDomain,
+     * per `deptrac.yaml`'s ruleset).
      *
      * @param list<int> $categoryIds
      */
     public function countRatedElements(?int $filterUserId, bool $excludeFilterUser, array $categoryIds): int
     {
         $qb = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select('COUNT(DISTINCT r.element_id)')
-            ->from(Tables::rate(), 'r');
+            ->select('COUNT(DISTINCT r.elementId)')
+            ->from(RateEntity::class, 'r');
 
         if ($categoryIds !== []) {
-            $qb->join('r', Tables::images(), 'i', 'r.element_id = i.id')
-                ->join('i', Tables::imageCategory(), 'ic', 'ic.image_id = i.id')
-                ->andWhere('ic.category_id IN (:categoryIds)')
+            $qb->innerJoin(ImageEntity::class, 'i', Join::WITH, 'r.elementId = i.id')
+                ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'ic.imageId = i.id')
+                ->andWhere('ic.categoryId IN (:categoryIds)')
                 ->setParameter('categoryIds', $categoryIds, ArrayParameterType::INTEGER);
         }
 
         if ($filterUserId !== null) {
-            $qb->andWhere($excludeFilterUser ? 'r.user_id <> :filterUserId' : 'r.user_id = :filterUserId')
+            $qb->andWhere($excludeFilterUser ? 'r.userId <> :filterUserId' : 'r.userId = :filterUserId')
                 ->setParameter('filterUserId', $filterUserId);
         }
 
-        $value = $qb->executeQuery()
-            ->fetchOne();
+        $value = $qb->getQuery()
+            ->getSingleScalarResult();
 
         return is_numeric($value) ? (int) $value : 0;
     }
@@ -307,68 +318,106 @@ final class RateRepository extends EntityRepository
      * Same report as countRatedElements(), one row per rated image with its
      * rate aggregates.
      *
-     * Item 14 DQL audit: stays on DBAL -- takes a caller-supplied raw
-     * "column DIRECTION" ORDER BY fragment (DQL requires a fixed property
-     * path, not a runtime string), and its $categoryIds branch joins
-     * `image_category`, which is never entity-mapped in this migration.
+     * SQL-modernization audit, Item 14 Sub-phase B4: converted to real
+     * DQL -- `image_category` is now mapped
+     * ({@see \Piwigo\Image\ImageCategoryEntity}), same "no association
+     * required" shape as {@see countRatedElements()} above; the
+     * caller-supplied raw "column DIRECTION" ORDER BY fragment turned out
+     * to be a genuinely finite set of exactly 8 shapes at its one real
+     * caller ({@see \Piwigo\Admin\RatingPageRenderer}'s own
+     * `$available_order_by` array, always `DESC`), so $orderBy now carries
+     * just the column key and this method decides the DQL `orderBy()`
+     * call itself -- DQL supports ordering by a SELECT alias
+     * (a "ResultVariable", confirmed against `vendor/doctrine/orm/.../
+     * Parser.php`'s own `OrderByItem()` grammar) for the 5 aggregate/
+     * aliased columns, and a real property path for the 3 plain
+     * `ImageEntity` columns.
+     *
+     * Real bug found and fixed here, not just carried forward: Sub-phase
+     * B5 Tier 2's own docblock previously claimed `ROUND(AVG(...), 2)` was
+     * already replaced with a raw `AVG(...)` plus PHP-side round() for
+     * this method too (true for {@see findRateSummaryForElement()}, which
+     * that Tier 2 pass did convert) -- the code here was never actually
+     * touched, a stale docblock claim not matching the code. Fixed now as
+     * part of this conversion.
      *
      * @param list<int> $categoryIds
-     * @param string $orderBySql a raw "column DIRECTION" SQL fragment, always
-     *   picked from the admin page's own fixed allowlist array, never from
-     *   raw user input
+     * @param string $orderBy one of 'recently_rated'/'score'/'avg_rates'/
+     *   'nb_rates'/'sum_rates'/'file'/'date_creation'/'date_available',
+     *   always picked from the admin page's own fixed allowlist array,
+     *   never from raw user input; any other value leaves the query
+     *   unordered
      * @return list<array{id: int, path: string, file: string, representative_ext: ?string, score: ?float, recently_rated: ?string, avg_rates: ?float, nb_rates: int, sum_rates: float}>
      */
-    public function findRatingReport(?int $filterUserId, bool $excludeFilterUser, array $categoryIds, string $orderBySql, int $limit, int $offset): array
+    public function findRatingReport(?int $filterUserId, bool $excludeFilterUser, array $categoryIds, string $orderBy, int $limit, int $offset): array
     {
         $qb = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
             ->select(
-                'i.id',
-                'i.path',
-                'i.file',
-                'i.representative_ext',
-                'i.rating_score AS score',
+                'i.id AS id',
+                'i.path AS path',
+                'i.file AS file',
+                'i.representativeExt AS representative_ext',
+                'i.ratingScore AS score',
                 'MAX(r.date) AS recently_rated',
-                'ROUND(AVG(r.rate), 2) AS avg_rates',
+                'AVG(r.rate) AS avg_rates',
                 'COUNT(r.rate) AS nb_rates',
                 'SUM(r.rate) AS sum_rates',
             )
-            ->from(Tables::rate(), 'r')
-            ->leftJoin('r', Tables::images(), 'i', 'r.element_id = i.id')
-            ->groupBy('i.id', 'i.path', 'i.file', 'i.representative_ext', 'i.rating_score', 'r.element_id')
-            ->orderBy($orderBySql)
+            ->from(RateEntity::class, 'r')
+            ->leftJoin(ImageEntity::class, 'i', Join::WITH, 'r.elementId = i.id')
+            ->groupBy('i.id', 'i.path', 'i.file', 'i.representativeExt', 'i.ratingScore', 'r.elementId')
             ->setMaxResults($limit)
             ->setFirstResult($offset);
 
+        match ($orderBy) {
+            'recently_rated' => $qb->orderBy('recently_rated', 'DESC'),
+            'score' => $qb->orderBy('score', 'DESC'),
+            'avg_rates' => $qb->orderBy('avg_rates', 'DESC'),
+            'nb_rates' => $qb->orderBy('nb_rates', 'DESC'),
+            'sum_rates' => $qb->orderBy('sum_rates', 'DESC'),
+            'file' => $qb->orderBy('i.file', 'DESC'),
+            'date_creation' => $qb->orderBy('i.dateCreation', 'DESC'),
+            'date_available' => $qb->orderBy('i.dateAvailable', 'DESC'),
+            default => null,
+        };
+
         if ($categoryIds !== []) {
-            $qb->join('i', Tables::imageCategory(), 'ic', 'ic.image_id = i.id')
-                ->andWhere('ic.category_id IN (:categoryIds)')
+            $qb->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'ic.imageId = i.id')
+                ->andWhere('ic.categoryId IN (:categoryIds)')
                 ->setParameter('categoryIds', $categoryIds, ArrayParameterType::INTEGER);
         }
 
         if ($filterUserId !== null) {
-            $qb->andWhere($excludeFilterUser ? 'r.user_id <> :filterUserId' : 'r.user_id = :filterUserId')
+            $qb->andWhere($excludeFilterUser ? 'r.userId <> :filterUserId' : 'r.userId = :filterUserId')
                 ->setParameter('filterUserId', $filterUserId);
         }
 
-        $rows = $qb->executeQuery()
-            ->fetchAllAssociative();
+        $rows = $qb->getQuery()
+            ->getArrayResult();
 
-        return array_map(
-            static fn (array $row): array => [
-                'id' => is_numeric($row['id']) ? (int) $row['id'] : 0,
-                'path' => is_string($row['path']) ? $row['path'] : '',
-                'file' => is_string($row['file']) ? $row['file'] : '',
-                'representative_ext' => is_string($row['representative_ext']) ? $row['representative_ext'] : null,
-                'score' => is_numeric($row['score']) ? (float) $row['score'] : null,
-                'recently_rated' => is_string($row['recently_rated']) ? $row['recently_rated'] : null,
-                'avg_rates' => is_numeric($row['avg_rates']) ? (float) $row['avg_rates'] : null,
-                'nb_rates' => is_numeric($row['nb_rates']) ? (int) $row['nb_rates'] : 0,
-                'sum_rates' => is_numeric($row['sum_rates']) ? (float) $row['sum_rates'] : 0.0,
-            ],
-            $rows
-        );
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $avgRates = is_numeric($row['avg_rates'] ?? null) ? round((float) $row['avg_rates'], 2) : null;
+
+            $result[] = [
+                'id' => is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0,
+                'path' => is_string($row['path'] ?? null) ? $row['path'] : '',
+                'file' => is_string($row['file'] ?? null) ? $row['file'] : '',
+                'representative_ext' => is_string($row['representative_ext'] ?? null) ? $row['representative_ext'] : null,
+                'score' => is_numeric($row['score'] ?? null) ? (float) $row['score'] : null,
+                'recently_rated' => is_string($row['recently_rated'] ?? null) ? $row['recently_rated'] : null,
+                'avg_rates' => $avgRates,
+                'nb_rates' => is_numeric($row['nb_rates'] ?? null) ? (int) $row['nb_rates'] : 0,
+                'sum_rates' => is_numeric($row['sum_rates'] ?? null) ? (float) $row['sum_rates'] : 0.0,
+            ];
+        }
+
+        return $result;
     }
 
     /**
@@ -614,24 +663,27 @@ final class RateRepository extends EntityRepository
      * Picture page's rating-summary widget: count + average rate for a
      * single image.
      *
-     * Item 14 DQL audit: stays on DBAL -- ROUND() has no DQL equivalent
-     * (it is not in Doctrine's built-in DQL function set).
+     * SQL-modernization audit, Item 14 Sub-phase B5 Tier 2: converted to
+     * real DQL -- single-table, static WHERE; MySQL's `ROUND()` was the
+     * only remaining blocker, and it has no portable DQL/DBAL-platform
+     * equivalent. Replaced with a raw `AVG()` (a real, portable, standard
+     * DQL aggregate on its own) plus a PHP-side round() -- a plain
+     * aggregate query with no GROUP BY always returns exactly one row
+     * (count 0 / average NULL for zero matching `rate` rows), so no
+     * getOneOrNullResult()/NonUniqueResultException concern here.
      *
      * @return array{count: int, average: ?float}
      */
     public function findRateSummaryForElement(int $elementId): array
     {
-        $row = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('COUNT(rate) AS count', 'ROUND(AVG(rate), 2) AS average')
-            ->from(Tables::rate())
-            ->where('element_id = :elementId')
+        $row = $this->createQueryBuilder('r')
+            ->select('COUNT(r.rate) AS count', 'AVG(r.rate) AS average')
+            ->where('r.elementId = :elementId')
             ->setParameter('elementId', $elementId)
-            ->executeQuery()
-            ->fetchAssociative();
+            ->getQuery()
+            ->getOneOrNullResult(Query::HYDRATE_ARRAY);
 
-        if ($row === false) {
+        if (! is_array($row)) {
             return [
                 'count' => 0,
                 'average' => null,
@@ -640,7 +692,7 @@ final class RateRepository extends EntityRepository
 
         return [
             'count' => is_numeric($row['count']) ? (int) $row['count'] : 0,
-            'average' => is_numeric($row['average']) ? (float) $row['average'] : null,
+            'average' => is_numeric($row['average']) ? round((float) $row['average'], 2) : null,
         ];
     }
 

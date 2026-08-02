@@ -719,7 +719,7 @@ final readonly class TagService
 
         foreach ($rows as $row) {
             $rawName = $row['name'];
-            $listNameEvent = $this->eventDispatcher->dispatchChange(new RenderTagName(is_string($rawName) ? $rawName : '', $row));
+            $listNameEvent = $this->eventDispatcher->dispatchChange(new RenderTagName($rawName, $row));
             $name = $listNameEvent->tagName;
             $rowId = (string) $row['id'];
 
@@ -729,7 +729,7 @@ final readonly class TagService
             ];
 
             if (! $onlyUserLanguage) {
-                $altNamesEvent = $this->eventDispatcher->dispatchChange(new GetTagAltNames([], is_string($rawName) ? $rawName : ''));
+                $altNamesEvent = $this->eventDispatcher->dispatchChange(new GetTagAltNames([], $rawName));
                 $altNames = array_filter($altNamesEvent->value, is_string(...));
                 $nameForDiff = $name;
 

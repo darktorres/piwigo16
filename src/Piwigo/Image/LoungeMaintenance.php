@@ -42,19 +42,19 @@ final class LoungeMaintenance
         }
 
         // is the oldest photo in the lounge older than lounge maximum waiting time?
-        $ageInfo = EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class)
+        $dateAvailable = EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class)
             ->findOldestLoungeAgeInfo();
-        if ($ageInfo === null) {
+        if ($dateAvailable === null) {
             return false;
         }
 
-        $dbnow = strtotime($ageInfo['dbNow']);
-        $date_available = strtotime($ageInfo['dateAvailable']);
-        // dbnow/date_available come straight from NOW() and a required,
-        // populated lounge-table column -- both are always well-formed
-        // MySQL datetimes in practice; the false fallback (age 0) is a
-        // defensive no-op, not an expected real path.
-        $age = ($dbnow !== false ? $dbnow : 0) - ($date_available !== false ? $date_available : 0);
+        $dbnow = \Piwigo\Core\Env::now()->getTimestamp();
+        $date_available = strtotime($dateAvailable);
+        // date_available comes straight from a required, populated
+        // lounge-table column -- always a well-formed MySQL datetime in
+        // practice; the false fallback (age 0) is a defensive no-op, not
+        // an expected real path.
+        $age = $dbnow - ($date_available !== false ? $date_available : 0);
 
         $lounge_max_duration = \Piwigo\Config\CurrentConfig::loungeMaxDuration();
 

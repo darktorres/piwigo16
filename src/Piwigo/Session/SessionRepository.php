@@ -66,10 +66,19 @@ final class SessionRepository extends EntityRepository
      * parameter -- cross-provider safe (no MySQL-only UNIX_TIMESTAMP()/
      * PostgreSQL-only interval syntax), unlike a raw
      * "NOW() - expiration > N seconds" comparison would require.
+     *
+     * Real bug, found via the mutation sweep (2026-08-01): the cutoff used
+     * to be computed from the real wall clock, invisible to Env::now()'s
+     * own PIWIGO_TEST_NOW freeze -- write() above already learned this
+     * lesson (see its own comment) but gc() didn't apply it, so once real
+     * time drifted away from a frozen PIWIGO_TEST_NOW, every session
+     * written during that freeze looked far older than it really was and
+     * got swept immediately, regardless of $sessionLength.
      */
     public function gc(int $sessionLength): int
     {
-        $cutoff = new \DateTimeImmutable('-' . $sessionLength . ' seconds');
+        $cutoff = \DateTimeImmutable::createFromInterface(Env::now())
+            ->modify('-' . $sessionLength . ' seconds');
 
         $em = $this->getEntityManager();
         $affected = $em->createQueryBuilder()

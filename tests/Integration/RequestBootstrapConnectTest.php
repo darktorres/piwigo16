@@ -12,6 +12,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\Env;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\InstallationFlag;
@@ -171,11 +172,19 @@ final class RequestBootstrapConnectTest extends IntegrationTestCase
         $this->configService->confUpdateParam('lounge_active', true);
         $this->configService->confUpdateParam('lounge_max_duration', 60);
 
+        // Anchored on Env::now() rather than the DB server's own real
+        // NOW(), matching the real bug fixed in
+        // LoungeMaintenance::needsEmptying()/ImageRepository::
+        // findOldestLoungeAgeInfo() itself (2026-08-01): the two clock
+        // sources agreed only as long as real wall-clock time stayed close
+        // to a frozen PIWIGO_TEST_NOW, and drifted apart the moment it
+        // didn't.
         $dateAvailable = $this->conn->fetchOne('SELECT date_available FROM ' . Tables::images() . ' WHERE id = 1');
         self::assertIsString($dateAvailable);
         $this->conn->executeStatement('DELETE FROM ' . Tables::lounge());
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::images() . ' SET date_available = DATE_SUB(NOW(), INTERVAL 1 HOUR) WHERE id = 1'
+            'UPDATE ' . Tables::images() . ' SET date_available = ? WHERE id = 1',
+            [Env::now()->modify('-1 hour')->format('Y-m-d H:i:s')]
         );
         $this->conn->executeStatement('INSERT INTO ' . Tables::lounge() . ' (image_id, category_id) VALUES (1, 1)');
 

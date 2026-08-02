@@ -620,15 +620,23 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * `date_available` for the oldest photo still in the lounge, alongside
-     * the DB server's own NOW() (so age can be computed without relying
-     * on PHP's own clock) -- LoungeMaintenance::needsEmptying()'s own "is
-     * the oldest lounge photo older than the max wait time" check.
-     * Returns null when the lounge is empty.
+     * `date_available` for the oldest photo still in the lounge --
+     * LoungeMaintenance::needsEmptying()'s own "is the oldest lounge photo
+     * older than the max wait time" check. Returns null when the lounge is
+     * empty.
      *
-     * @return ?array{dateAvailable: string, dbNow: string}
+     * Real bug, found via the mutation sweep (2026-08-01): this used to
+     * also select the DB server's own NOW() ("so age can be computed
+     * without relying on PHP's own clock"), but date_available itself is
+     * always written via Env::now() (see UploadService's own comment on
+     * that exact same lesson) -- invisible to Env::now()'s PIWIGO_TEST_NOW
+     * freeze, so once real time drifted away from a frozen PIWIGO_TEST_NOW,
+     * every lounge photo looked far older than it really was and
+     * needsEmptying() fired on literally every request. The caller now
+     * computes age against Env::now() instead, matching date_available's
+     * own clock source.
      */
-    public function findOldestLoungeAgeInfo(): ?array
+    public function findOldestLoungeAgeInfo(): ?string
     {
         $loungeTable = Tables::lounge();
         $imagesTable = Tables::images();
@@ -636,9 +644,7 @@ final class ImageRepository extends EntityRepository
         $row = $this->getEntityManager()
             ->getConnection()
             ->fetchAssociative(<<<SQL
-                SELECT
-                    date_available,
-                    NOW() AS dbnow
+                SELECT date_available
                 FROM {$loungeTable}
                     JOIN {$imagesTable} ON image_id = id
                 ORDER BY image_id ASC
@@ -650,15 +656,8 @@ final class ImageRepository extends EntityRepository
         }
 
         $dateAvailable = $row['date_available'];
-        $dbNow = $row['dbnow'];
-        if (! is_scalar($dateAvailable) || ! is_scalar($dbNow)) {
-            return null;
-        }
 
-        return [
-            'dateAvailable' => (string) $dateAvailable,
-            'dbNow' => (string) $dbNow,
-        ];
+        return is_scalar($dateAvailable) ? (string) $dateAvailable : null;
     }
 
     /**

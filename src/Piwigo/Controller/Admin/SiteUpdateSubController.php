@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ParameterType;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Tabsheet;
@@ -1042,7 +1043,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         $query = <<<SQL
             SELECT id,name,uppercats,global_rank
             FROM {$categoriesTable}
-            WHERE site_id = {$site_id}
+            WHERE site_id = :siteId
             SQL;
         self::categoryService()->displaySelectCatWrapper(
             $query,
@@ -1050,7 +1051,13 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             'category_options',
             \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
             $template,
-            false
+            false,
+            [
+                'siteId' => $site_id,
+            ],
+            [
+                'siteId' => ParameterType::INTEGER,
+            ]
         );
 
         if (count($errors) > 0) {

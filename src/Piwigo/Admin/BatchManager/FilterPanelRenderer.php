@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\BatchManager;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
@@ -170,17 +171,25 @@ final class FilterPanelRenderer
             $filter_tags_ids = array_filter($bulk_manager_filter['tags'], is_scalar(...));
 
             $tagsTable = Tables::tags();
-            $filterTagsIdsCsv = implode(',', $filter_tags_ids);
             $query = <<<SQL
                 SELECT
                     id,
                     name
                 FROM {$tagsTable}
-                WHERE id IN ({$filterTagsIdsCsv})
+                WHERE id IN (:tagIds)
                 SQL;
 
             $filter_tags = \Piwigo\Bootstrap\CoreDomainAccessor::tagService()
-                ->getTagList($query, \Piwigo\Bootstrap\PresentationAccessor::htmlService());
+                ->getTagList(
+                    $query,
+                    \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
+                    params: [
+                        'tagIds' => array_map(intval(...), array_values($filter_tags_ids)),
+                    ],
+                    types: [
+                        'tagIds' => ArrayParameterType::INTEGER,
+                    ]
+                );
         }
 
         $template->assign('filter_tags', $filter_tags);

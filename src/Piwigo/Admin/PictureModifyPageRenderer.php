@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\DBAL\ParameterType;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
@@ -253,10 +254,14 @@ final class PictureModifyPageRenderer
                 name
             FROM {$imageTagTable} AS it
                 JOIN {$tagsTable} AS t ON t.id = it.tag_id
-            WHERE image_id = {$image_id}
+            WHERE image_id = :imageId
             SQL;
         $tag_selection = self::tagService()
-            ->getTagList($query, $htmlRenderer);
+            ->getTagList($query, $htmlRenderer, params: [
+                'imageId' => $image_id,
+            ], types: [
+                'imageId' => ParameterType::INTEGER,
+            ]);
 
         // getImageInfos($image_id, $htmlRenderer, true) fatal_errors (never returns) when the
         // photo doesn't exist, so $page['image'] is guaranteed to be a real

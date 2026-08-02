@@ -563,13 +563,15 @@ final class TagRepository extends EntityRepository
      * precise column-name shape wouldn't buy much beyond what's already
      * documented.
      *
+     * @param array<string, mixed> $params
+     * @param array<string, ArrayParameterType|ParameterType> $types
      * @return list<array<string, mixed>>
      */
-    public function fetchTagListRows(string $query): array
+    public function fetchTagListRows(string $query, array $params = [], array $types = []): array
     {
         return $this->getEntityManager()
             ->getConnection()
-            ->executeQuery($query)
+            ->executeQuery($query, $params, $types)
             ->fetchAllAssociative();
     }
 

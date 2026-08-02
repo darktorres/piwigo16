@@ -532,10 +532,12 @@ define(\'DB_COLLATE\', \'\');
         $configTable = $this->prefixeTable . 'config';
         $query = <<<SQL
             INSERT INTO {$configTable} (param,value,comment)
-               VALUES ('secret_key','{$secretKeyJson}',
+               VALUES ('secret_key', :secretKey,
                'a secret key specific to the gallery for internal use');
             SQL;
-        $conn->executeStatement($query);
+        $conn->executeStatement($query, [
+            'secretKey' => $secretKeyJson,
+        ]);
 
         $configService = \Piwigo\Config\CurrentConfigService::get();
         $configService->confUpdateParam('gallery_title', Lang::t('Just another Piwigo gallery'));

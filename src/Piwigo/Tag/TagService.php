@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tag;
 
 use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\ParameterType;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -730,17 +731,20 @@ final readonly class TagService
      *
      * @param string $query a complete, already-built SELECT id, name query --
      *   real callers each build their own WHERE clause against
-     *   Tables::tags()/Tables::imageTag() and hand the whole thing in
+     *   Tables::tags()/Tables::imageTag() and hand the whole thing in,
+     *   with any real value bound via $params/$types rather than spliced
      * @param bool $onlyUserLanguage - if true, only local name is returned for
      *    multilingual tags (if ExtendedDescription plugin is active)
+     * @param array<string, mixed> $params
+     * @param array<string, ArrayParameterType|ParameterType> $types
      * @return array<int, array{name: mixed, id: string}>
      */
-    public function getTagList(string $query, HtmlRenderingInterface $htmlRenderer, bool $onlyUserLanguage = true): array
+    public function getTagList(string $query, HtmlRenderingInterface $htmlRenderer, bool $onlyUserLanguage = true, array $params = [], array $types = []): array
     {
         $taglist = [];
         $altlist = [];
 
-        foreach ($this->repo->fetchTagListRows($query) as $row) {
+        foreach ($this->repo->fetchTagListRows($query, $params, $types) as $row) {
             $rawName = $row['name'];
             $name = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_tag_name', $rawName, $row);
             $rowId = is_scalar($row['id']) ? (string) $row['id'] : '';

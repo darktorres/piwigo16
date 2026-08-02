@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\DBAL\ParameterType;
 use Piwigo\Admin\BatchManager\FilterPanelRenderer;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
@@ -349,10 +350,14 @@ final class BatchManagerUnitPageRenderer
                         name
                     FROM {$imageTagTable} AS it
                         JOIN {$tagsTable} AS t ON t.id = it.tag_id
-                    WHERE image_id = {$row_id_str}
+                    WHERE image_id = :imageId
                     SQL;
 
-                $tag_selection = $tagService->getTagList($query, $htmlRenderer);
+                $tag_selection = $tagService->getTagList($query, $htmlRenderer, params: [
+                    'imageId' => (int) $row_id_str,
+                ], types: [
+                    'imageId' => ParameterType::INTEGER,
+                ]);
 
                 $row_file = is_string($row['file']) ? $row['file'] : '';
                 $legend = $htmlRenderer->renderElementName($row);

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Event\Mail\BeforeSendMail;
 use Piwigo\Job\Handler\SendNotificationEmailHandler;
 use Piwigo\Job\SendNotificationEmailJob;
 use Piwigo\Mail\MailService;
@@ -67,13 +68,13 @@ test('__invoke actually reaches MailService::mail() with the job\'s exact to/arg
 
     $capturedTo = null;
     $capturedArgs = null;
-    $eventHandler = function (mixed $preResult, mixed $to, array $args, mixed $email) use (&$capturedTo, &$capturedArgs): bool {
-        $capturedTo = $to;
-        $capturedArgs = $args;
+    $eventHandler = function (BeforeSendMail $event) use (&$capturedTo, &$capturedArgs): BeforeSendMail {
+        $capturedTo = $event->to;
+        $capturedArgs = $event->args;
 
-        return false;
+        return new BeforeSendMail(false, $event->to, $event->args, $event->email);
     };
-    EventDispatcher::get()->addEventHandler('before_send_mail', $eventHandler);
+    EventDispatcher::get()->addTypedHandler(BeforeSendMail::class, $eventHandler);
 
     try {
         $handler = new SendNotificationEmailHandler(new MailService());
@@ -84,9 +85,9 @@ test('__invoke actually reaches MailService::mail() with the job\'s exact to/arg
         if ($capturedArgs === null) {
             throw new RuntimeException('expected the before_send_mail handler to have captured real args');
         }
-        expect($capturedArgs['subject'])->toBe('Test Subject');
+        expect($capturedArgs['subject'] ?? null)->toBe('Test Subject');
     } finally {
-        EventDispatcher::get()->removeEventHandler('before_send_mail', $eventHandler);
+        EventDispatcher::get()->removeEventHandler(BeforeSendMail::class, $eventHandler);
         CurrentConfig::reset();
         \Piwigo\Core\CurrentPaths::reset();
     }

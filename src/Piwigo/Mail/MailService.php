@@ -12,6 +12,9 @@ use Piwigo\Core\MailerInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WebmasterMailProviderInterface;
 use Piwigo\Event\Lifecycle\LoadingLang;
+use Piwigo\Event\Mail\BeforeParseMailTemplate;
+use Piwigo\Event\Mail\BeforeSendMail;
+use Piwigo\Event\Mail\RenderLostPasswordMailContent;
 use Piwigo\Html\HtmlService;
 use Piwigo\Template\Template;
 use Piwigo\Url\UrlService;
@@ -840,7 +843,7 @@ final class MailService implements MailerInterface
                 self::$templateCache[$cacheKey] = [
                     'theme' => $template,
                 ];
-                \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('before_parse_mail_template', $cacheKey, $contentType);
+                \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new BeforeParseMailTemplate($cacheKey, $contentType));
 
                 $template->set_filename('mail_header', 'header.tpl');
                 $template->set_filename('mail_footer', 'footer.tpl');
@@ -980,9 +983,9 @@ final class MailService implements MailerInterface
 
         $ret = true;
         $errorMessage = null;
-        $preResult = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('before_send_mail', true, $to, $args, $email);
+        $beforeSendMailEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new BeforeSendMail(true, $to, $args, $email));
 
-        if ($preResult === true) {
+        if ($beforeSendMailEvent->shouldSend) {
             try {
                 $mailer->send($email);
             } catch (TransportExceptionInterface $e) {
@@ -1102,8 +1105,7 @@ final class MailService implements MailerInterface
         $this->urlService()
             ->unsetMakeFullUrl();
 
-        $messageAfterTrigger = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_lost_password_mail_content', $message);
-        $message = is_string($messageAfterTrigger) ? $messageAfterTrigger : $message;
+        $message = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderLostPasswordMailContent($message))->message;
 
         return [
             'subject' => '[' . $galleryTitle . '] ' . Lang::t('Password Reset'),
@@ -1135,8 +1137,7 @@ final class MailService implements MailerInterface
         $this->urlService()
             ->unsetMakeFullUrl();
 
-        $messageAfterTrigger = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('render_lost_password_mail_content', $message);
-        $message = is_string($messageAfterTrigger) ? $messageAfterTrigger : $message;
+        $message = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderLostPasswordMailContent($message))->message;
 
         return [
             'subject' => Lang::t('Welcome to %s', $galleryTitle),

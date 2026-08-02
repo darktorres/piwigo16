@@ -14,6 +14,8 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
+use Piwigo\Event\Lifecycle\NbmEventHandlerAdded;
+use Piwigo\Event\Mail\NbmRenderGlobalCustomizeMailContent;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\NotificationByMailSender;
 use Piwigo\Template\Template;
@@ -70,14 +72,14 @@ use Psr\Http\Message\ServerRequestInterface;
  * see above.
  *
  * renderGlobalCustomizeMailContent() needed different handling than the
- * other 4: it's registered as an event handler
- * (`add_event_handler('nbm_render_global_customize_mail_content', ...)`),
+ * other 4: it's registered as a typed event handler
+ * (`addTypedHandler(NbmRenderGlobalCustomizeMailContent::class, ...)`),
  * and a bare string can't resolve to a private method from outside the
- * class. EventDispatcher::addEventHandler()'s real signature is
- * `string|array|object $func`, which accepts a Closure -- registered via
- * first-class callable syntax (`self::renderGlobalCustomizeMailContent(...)`)
- * instead, a real Closure created from inside the class that fully
- * preserves private-method encapsulation.
+ * class. EventDispatcher::addTypedHandler()'s real signature accepts a
+ * Closure -- registered via first-class callable syntax
+ * (`self::renderGlobalCustomizeMailContent(...)`) instead, a real
+ * Closure created from inside the class that fully preserves
+ * private-method encapsulation.
  */
 final class NotificationByMailSubController implements AdminSubControllerInterface
 {
@@ -119,8 +121,8 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         // +-----------------------------------------------------------------------+
         // | Add event handler                                                     |
         // +-----------------------------------------------------------------------+
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('nbm_render_global_customize_mail_content', self::renderGlobalCustomizeMailContent(...));
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('nbm_event_handler_added');
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(NbmRenderGlobalCustomizeMailContent::class, self::renderGlobalCustomizeMailContent(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new NbmEventHandlerAdded());
 
         // +-----------------------------------------------------------------------+
         // | Insert new users with mails                                           |
@@ -494,21 +496,14 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
      * Apply global functions to mail content
      * return customize mail content rendered
      */
-    private static function renderGlobalCustomizeMailContent(mixed $customize_mail_content): mixed
+    private static function renderGlobalCustomizeMailContent(NbmRenderGlobalCustomizeMailContent $event): NbmRenderGlobalCustomizeMailContent
     {
-
-        // Real callers always pass a string (config value or POSTed content);
-        // this handler is registered as a generic event filter (mixed in/out),
-        // so narrow defensively rather than blindly casting a possibly
-        // non-scalar value.
-        $customize_mail_content_str = is_string($customize_mail_content) ? $customize_mail_content : '';
-
-        if (\Piwigo\Config\CurrentConfig::nbmSendHtmlMail() and ! str_starts_with($customize_mail_content_str, '<')) {
+        if (\Piwigo\Config\CurrentConfig::nbmSendHtmlMail() and ! str_starts_with($event->customizeMailContent, '<')) {
             // On HTML mail, detects if the content are HTML format.
             // If it's plain text format, convert content to readable HTML
-            return nl2br(htmlspecialchars($customize_mail_content_str));
-        } else {
-            return $customize_mail_content;
+            $event->customizeMailContent = nl2br(htmlspecialchars($event->customizeMailContent));
         }
+
+        return $event;
     }
 }

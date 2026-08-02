@@ -7,7 +7,9 @@ namespace Piwigo\Mail;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Mail\NbmRenderGlobalCustomizeMailContent;
 use Piwigo\Lang\Translator;
+use Piwigo\Notification\Event\NbmRenderUserCustomizeMailContent;
 use Piwigo\Notification\NotificationByMailService;
 use Piwigo\Notification\NotificationService;
 use Piwigo\Notification\Projection\UserMailNotification;
@@ -452,13 +454,6 @@ final class NotificationByMailSender
      * Returns the list of "selected" users for 'list_to_send'.
      * Returns the list of "treated" check_key for 'send'.
      *
-     * $customizeMailContent: every real caller passes a string (or the
-     * default); it becomes mixed internally once the
-     * nbm_render_global_customize_mail_content hook runs (by-design, see
-     * EventDispatcher), flowing into another trigger_change() call and
-     * then Template::assign() -- both already-confirmed arbitrary-value
-     * boundaries.
-     *
      * @param array<int, mixed> $checkKeyList
      * @return ($action is 'send' ? list<string> : list<UserMailNotification>)
      */
@@ -492,7 +487,7 @@ final class NotificationByMailSender
                     }
 
                     $customizeMailContent =
-                      \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('nbm_render_global_customize_mail_content', $customizeMailContent);
+                      \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new NbmRenderGlobalCustomizeMailContent($customizeMailContent))->customizeMailContent;
 
                     // Prepare message after change language
                     if ($isActionSend) {
@@ -585,12 +580,10 @@ final class NotificationByMailSender
                                 }
 
                                 $nbmUserCustomizeMailContent =
-                                  \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
-                                      'nbm_render_user_customize_mail_content',
-                                      $customizeMailContent,
-                                      $nbmUser
-                                  );
-                                if (! in_array($nbmUserCustomizeMailContent, [null, false, 0, '0', '', []], true)) {
+                                  \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(
+                                      new NbmRenderUserCustomizeMailContent($customizeMailContent, $nbmUser)
+                                  )->customizeMailContent;
+                                if (! in_array($nbmUserCustomizeMailContent, ['0', ''], true)) {
                                     $mailTemplate->assign(
                                         'custom_mail_content',
                                         $nbmUserCustomizeMailContent

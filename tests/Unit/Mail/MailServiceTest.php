@@ -8,6 +8,9 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\WebmasterMailProviderInterface;
 use Piwigo\Event\Lifecycle\LoadingLang;
+use Piwigo\Event\Mail\BeforeParseMailTemplate;
+use Piwigo\Event\Mail\BeforeSendMail;
+use Piwigo\Event\Mail\RenderLostPasswordMailContent;
 use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Users\CurrentUser;
@@ -55,19 +58,19 @@ function mail_service_capture_send(MailService $service, string|array $to, array
     $capturedTo = null;
     $capturedArgs = null;
     $capturedEmail = null;
-    $eventHandler = function (mixed $preResult, mixed $hookTo, array $hookArgs, mixed $hookEmail) use (&$capturedTo, &$capturedArgs, &$capturedEmail): bool {
-        $capturedTo = $hookTo;
-        $capturedArgs = $hookArgs;
-        $capturedEmail = $hookEmail;
+    $eventHandler = function (BeforeSendMail $event) use (&$capturedTo, &$capturedArgs, &$capturedEmail): BeforeSendMail {
+        $capturedTo = $event->to;
+        $capturedArgs = $event->args;
+        $capturedEmail = $event->email;
 
-        return false;
+        return new BeforeSendMail(false, $event->to, $event->args, $event->email);
     };
-    EventDispatcher::get()->addEventHandler('before_send_mail', $eventHandler);
+    EventDispatcher::get()->addTypedHandler(BeforeSendMail::class, $eventHandler);
 
     try {
         $return = $service->mail($to, $args, $tpl);
     } finally {
-        EventDispatcher::get()->removeEventHandler('before_send_mail', $eventHandler);
+        EventDispatcher::get()->removeEventHandler(BeforeSendMail::class, $eventHandler);
     }
 
     if (! is_array($capturedArgs) || ! $capturedEmail instanceof \Symfony\Component\Mime\Email) {
@@ -630,29 +633,28 @@ test('generateResetPasswordMail assembles the exact HTML content, in order, from
     );
 });
 
-test('generateResetPasswordMail keeps its own built content when the render_lost_password_mail_content handler returns a non-string', function (): void {
+test('generateResetPasswordMail throws when a render_lost_password_mail_content handler returns something other than a RenderLostPasswordMailContent instance', function (): void {
     $service = new MailService();
-    $handler = static fn (mixed $message): bool => false;
-    EventDispatcher::get()->addEventHandler('render_lost_password_mail_content', $handler);
+    $handler = static fn (): bool => false;
+    EventDispatcher::get()->addEventHandler(RenderLostPasswordMailContent::class, $handler);
 
     try {
-        $mail = $service->generateResetPasswordMail('jane', 'https://example.test/x', 'My Gallery', '2 hours');
+        expect(fn () => $service->generateResetPasswordMail('jane', 'https://example.test/x', 'My Gallery', '2 hours'))
+            ->toThrow(\Error::class, 'must return an instance of');
     } finally {
-        EventDispatcher::get()->removeEventHandler('render_lost_password_mail_content', $handler);
+        EventDispatcher::get()->removeEventHandler(RenderLostPasswordMailContent::class, $handler);
     }
-
-    expect($mail['content'])->toContain('jane');
 });
 
 test('generateResetPasswordMail uses the render_lost_password_mail_content handler\'s own replacement when it returns a real string', function (): void {
     $service = new MailService();
-    $handler = static fn (mixed $message): string => 'REPLACED CONTENT';
-    EventDispatcher::get()->addEventHandler('render_lost_password_mail_content', $handler);
+    $handler = static fn (RenderLostPasswordMailContent $event): RenderLostPasswordMailContent => new RenderLostPasswordMailContent('REPLACED CONTENT');
+    EventDispatcher::get()->addTypedHandler(RenderLostPasswordMailContent::class, $handler);
 
     try {
         $mail = $service->generateResetPasswordMail('jane', 'https://example.test/x', 'My Gallery', '2 hours');
     } finally {
-        EventDispatcher::get()->removeEventHandler('render_lost_password_mail_content', $handler);
+        EventDispatcher::get()->removeEventHandler(RenderLostPasswordMailContent::class, $handler);
     }
 
     expect($mail['content'])->toBe('REPLACED CONTENT');
@@ -675,13 +677,13 @@ test('generateSetPasswordMail assembles the exact HTML content, in order, from e
 
 test('generateSetPasswordMail uses the render_lost_password_mail_content handler\'s own replacement when it returns a real string', function (): void {
     $service = new MailService();
-    $handler = static fn (mixed $message): string => 'REPLACED CONTENT';
-    EventDispatcher::get()->addEventHandler('render_lost_password_mail_content', $handler);
+    $handler = static fn (RenderLostPasswordMailContent $event): RenderLostPasswordMailContent => new RenderLostPasswordMailContent('REPLACED CONTENT');
+    EventDispatcher::get()->addTypedHandler(RenderLostPasswordMailContent::class, $handler);
 
     try {
         $mail = $service->generateSetPasswordMail('jane', 'https://example.test/x', 'My Gallery', '48 hours');
     } finally {
-        EventDispatcher::get()->removeEventHandler('render_lost_password_mail_content', $handler);
+        EventDispatcher::get()->removeEventHandler(RenderLostPasswordMailContent::class, $handler);
     }
 
     expect($mail['content'])->toBe('REPLACED CONTENT');
@@ -1115,15 +1117,15 @@ test('mail fires the before_parse_mail_template event with the real cache key an
 
     $capturedCacheKey = null;
     $capturedContentType = null;
-    $handler = function (string $cacheKey, string $contentType) use (&$capturedCacheKey, &$capturedContentType): void {
-        $capturedCacheKey = $cacheKey;
-        $capturedContentType = $contentType;
+    $handler = function (BeforeParseMailTemplate $event) use (&$capturedCacheKey, &$capturedContentType): void {
+        $capturedCacheKey = $event->cacheKey;
+        $capturedContentType = $event->contentType;
     };
-    EventDispatcher::get()->addEventHandler('before_parse_mail_template', $handler);
+    EventDispatcher::get()->addTypedHandler(BeforeParseMailTemplate::class, $handler);
     try {
         mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
     } finally {
-        EventDispatcher::get()->removeEventHandler('before_parse_mail_template', $handler);
+        EventDispatcher::get()->removeEventHandler(BeforeParseMailTemplate::class, $handler);
     }
 
     expect($capturedContentType)->toBe('text/plain');

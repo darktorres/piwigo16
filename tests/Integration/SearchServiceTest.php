@@ -14,12 +14,14 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\RedirectServiceInterface;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\Tables;
+    use Piwigo\Event\Search\QsearchGetScopes;
     use Piwigo\Group\GroupRepository;
     use Piwigo\Html\HtmlService;
     use Piwigo\Mail\MailService;
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
     use Piwigo\PluginConfig\EventDispatcher;
+    use Piwigo\Search\Event\QsearchResults;
     use Piwigo\Search\QExpression;
     use Piwigo\Search\QResults;
     use Piwigo\Search\QSearchScope;
@@ -1192,36 +1194,40 @@ final class SearchServiceTest extends IntegrationTestCase
         self::assertSame([1], $results['items']);
     }
 
-    public function test_get_quick_search_results_no_cache_ignores_a_non_array_scopes_hook_result(): void
+    public function test_get_quick_search_results_no_cache_throws_when_a_qsearch_get_scopes_handler_returns_something_other_than_a_qsearch_get_scopes_instance(): void
     {
-        $handler = static function (mixed $scopes): mixed {
-            return null;
-        };
-        EventDispatcher::get()->addEventHandler('qsearch_get_scopes', $handler);
+        // addEventHandler(), not addTypedHandler() -- a real plugin
+        // handler is untyped from PHPStan's perspective, and this test
+        // exercises dispatchChange()'s own runtime enforcement, not a
+        // static one.
+        $handler = static fn (): mixed => null;
+        EventDispatcher::get()->addEventHandler(QsearchGetScopes::class, $handler);
+
+        $this->expectException(\Error::class);
+        $this->expectExceptionMessage('must return an instance of');
 
         try {
-            $results = $this->service->getQuickSearchResultsNoCache('family', []);
+            $this->service->getQuickSearchResultsNoCache('family', []);
         } finally {
-            EventDispatcher::get()->removeEventHandler('qsearch_get_scopes', $handler);
+            EventDispatcher::get()->removeEventHandler(QsearchGetScopes::class, $handler);
         }
-
-        self::assertSame([1], $results['items']);
     }
 
     public function test_get_quick_search_results_no_cache_falls_back_when_a_hook_returns_non_array_items_and_qs(): void
     {
-        $handler = static function (array $searchResults, mixed ...$rest): array {
+        $handler = static function (QsearchResults $event): QsearchResults {
+            $searchResults = $event->searchResults;
             $searchResults['items'] = 'not-an-array';
             $searchResults['qs'] = 'not-an-array-either';
 
-            return $searchResults;
+            return new QsearchResults($searchResults, $event->expression, $event->qsr);
         };
-        EventDispatcher::get()->addEventHandler('qsearch_results', $handler);
+        EventDispatcher::get()->addTypedHandler(QsearchResults::class, $handler);
 
         try {
             $results = $this->service->getQuickSearchResultsNoCache('family', []);
         } finally {
-            EventDispatcher::get()->removeEventHandler('qsearch_results', $handler);
+            EventDispatcher::get()->removeEventHandler(QsearchResults::class, $handler);
         }
 
         // The hook only corrupts $searchResults['items']/['qs'] -- both
@@ -1237,17 +1243,18 @@ final class SearchServiceTest extends IntegrationTestCase
 
     public function test_get_quick_search_results_no_cache_merges_extra_numeric_ids_from_a_plugin_hook(): void
     {
-        $handler = static function (array $searchResults, mixed ...$rest): array {
+        $handler = static function (QsearchResults $event): QsearchResults {
+            $searchResults = $event->searchResults;
             $searchResults['items'] = ['4', 'not-numeric'];
 
-            return $searchResults;
+            return new QsearchResults($searchResults, $event->expression, $event->qsr);
         };
-        EventDispatcher::get()->addEventHandler('qsearch_results', $handler);
+        EventDispatcher::get()->addTypedHandler(QsearchResults::class, $handler);
 
         try {
             $results = $this->service->getQuickSearchResultsNoCache('family', []);
         } finally {
-            EventDispatcher::get()->removeEventHandler('qsearch_results', $handler);
+            EventDispatcher::get()->removeEventHandler(QsearchResults::class, $handler);
         }
 
         $items = $results['items'];

@@ -12,9 +12,15 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Search\QsearchGetScopes;
+use Piwigo\Event\Search\QsearchPre;
 use Piwigo\Event\Tag\RenderTagName;
 use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Permission\PermissionService;
+use Piwigo\Search\Event\QsearchBeforeEval;
+use Piwigo\Search\Event\QsearchExpressionParsed;
+use Piwigo\Search\Event\QsearchGetImagesSqlScopes;
+use Piwigo\Search\Event\QsearchResults;
 use Piwigo\Search\Inflector\InflectorInterface;
 use Piwigo\Search\Projection\Search;
 use Piwigo\Session\SessionService;
@@ -866,8 +872,8 @@ final readonly class SearchService
 
                     break;
                 default:
-                    $clausesAfterHook = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('qsearch_get_images_sql_scopes', $clauses, $token, $expr);
-                    $clauses = is_array($clausesAfterHook) ? array_values(array_filter($clausesAfterHook, is_string(...))) : $clauses;
+                    $clausesAfterHook = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new QsearchGetImagesSqlScopes($clauses, $token, $expr))->clauses;
+                    $clauses = array_values(array_filter($clausesAfterHook, is_string(...)));
 
                     break;
             }
@@ -1189,8 +1195,7 @@ final readonly class SearchService
         /** @var list<string> $debug */
         $debug = [];
 
-        $qAfterHook = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('qsearch_pre', $q);
-        $q = is_string($qAfterHook) ? $qAfterHook : $q;
+        $q = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new QsearchPre($q))->q;
 
         $scopes = [];
         $scopes[] = new QSearchScope('tag', ['tags']);
@@ -1217,10 +1222,8 @@ final readonly class SearchService
         $scopes[] = new QDateRangeScope('created', $createdDateAliases, true);
         $scopes[] = new QDateRangeScope('posted', $postedDateAliases);
 
-        $scopesAfterHook = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('qsearch_get_scopes', $scopes);
-        $scopes = is_array($scopesAfterHook)
-            ? array_values(array_filter($scopesAfterHook, static fn (mixed $s): bool => $s instanceof QSearchScope))
-            : $scopes;
+        $scopesAfterHook = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new QsearchGetScopes($scopes))->scopes;
+        $scopes = array_values(array_filter($scopesAfterHook, static fn (mixed $s): bool => $s instanceof QSearchScope));
         $expression = new QExpression($q, $scopes);
 
         $inflector = null;
@@ -1246,7 +1249,7 @@ final readonly class SearchService
             }
         }
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('qsearch_expression_parsed', $expression);
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new QsearchExpressionParsed($expression));
 
         if (count($expression->stokens) === 0) {
             $searchResults['debug'] = $debug;
@@ -1259,7 +1262,7 @@ final readonly class SearchService
         $this->qsearchGetCategories($expression, $qsr);
         $this->qsearchGetImages($expression, $qsr);
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('qsearch_before_eval', $expression, $qsr);
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new QsearchBeforeEval($expression, $qsr));
 
         $tmp = false;
         $unmatchedTerms = [];
@@ -1278,12 +1281,10 @@ final readonly class SearchService
 
         $searchResults['qs']['matching_tags'] = $qsr->all_tags;
         $searchResults['qs']['matching_cats'] = $qsr->all_cats;
-        $searchResultsAfterHook = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('qsearch_results', $searchResults, $expression, $qsr);
-        if (is_array($searchResultsAfterHook)) {
-            foreach ($searchResultsAfterHook as $hookKey => $hookValue) {
-                if (is_string($hookKey)) {
-                    $searchResults[$hookKey] = $hookValue;
-                }
+        $searchResultsAfterHook = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new QsearchResults($searchResults, $expression, $qsr))->searchResults;
+        foreach ($searchResultsAfterHook as $hookKey => $hookValue) {
+            if (is_string($hookKey)) {
+                $searchResults[$hookKey] = $hookValue;
             }
         }
 

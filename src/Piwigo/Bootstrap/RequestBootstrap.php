@@ -412,7 +412,7 @@ final class RequestBootstrap
         ImageStdParams::load_from_db();
 
         session_start();
-        PluginLoader::loadPlugins();
+        PluginLoader::loadPlugins(self::loadedPlugins());
 
         if (\Piwigo\Config\CurrentConfig::piwigoInstalledVersion() === null) {
             $configService->confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
@@ -832,6 +832,24 @@ final class RequestBootstrap
         }
 
         return $flag;
+    }
+
+    /**
+     * Resolves the container-shared instance so that `PluginLoader::
+     * loadPlugins()`'s writes are visible to every other consumer holding
+     * the same shared instance -- `PluginLoader` itself stays static and
+     * lives outside `Bootstrap/`, so the instance is threaded through as an
+     * explicit parameter rather than resolved from inside `PluginLoader`
+     * (singleton/service-locator elimination campaign, Phase 1).
+     */
+    private static function loadedPlugins(): \Piwigo\Admin\LoadedPlugins
+    {
+        $loadedPlugins = Kernel::container()->get(\Piwigo\Admin\LoadedPlugins::class);
+        if (! $loadedPlugins instanceof \Piwigo\Admin\LoadedPlugins) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Admin\LoadedPlugins::class);
+        }
+
+        return $loadedPlugins;
     }
 
     /**

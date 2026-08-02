@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Piwigo\Admin\LoadedPlugins;
 use Piwigo\Controller\Admin\Request\PluginSectionRequest;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -29,12 +30,16 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class PluginSubController implements AdminSubControllerInterface
 {
+    public function __construct(
+        private readonly LoadedPlugins $loadedPlugins,
+    ) {}
+
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
         $pluginSection = PluginSectionRequest::fromGlobals();
 
-        if (! isset(\Piwigo\Admin\LoadedPlugins::get()[$pluginSection->pluginId])) {
+        if (! isset($this->loadedPlugins->get()[$pluginSection->pluginId])) {
             \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->fatalError('Invalid URL - plugin ' . $pluginSection->pluginId . ' not active');
         }

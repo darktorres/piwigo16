@@ -12,16 +12,18 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 /**
- * Static accessor for the current request's loaded-plugins map -- Phase 2
- * global-residual sweep, replacing the legacy `global $pwg_loaded_plugins;`
- * bridge. Same shape as this codebase's other per-request singleton
- * facades (`Template\CurrentTemplate`, `Users\CurrentUser`): a
- * self-managed static instance with `get()`/`set()`/`isInitialized()`/
- * `reset()`, not constructor-injected DI. The writer
- * (`PluginLoader::loadPlugins()`/`loadPlugin()`) and all 3 real readers
- * are `Piwigo\Admin`/`Piwigo\Controller\Admin` -- both `L4Integration` in
- * `deptrac.yaml` -- so unlike `Core\FilterState`, there's no cross-layer
- * placement decision to make here; this lives alongside its writer.
+ * Holds the current request's loaded-plugins map -- Phase 2 global-residual
+ * sweep, replacing the legacy `global $pwg_loaded_plugins;` bridge.
+ * Container-shared instance (singleton-DI campaign, Phase 1): the writer
+ * (`PluginLoader::loadPlugins()`/`loadPlugin()`, itself an entirely-static
+ * helper outside `Bootstrap/`) receives this instance as an explicit
+ * parameter from `RequestBootstrap` rather than resolving it via a static
+ * accessor -- `PluginLoader` isn't itself part of this campaign's scope, so
+ * threading the shared instance through as a plain parameter (the same
+ * mechanism `Paths` already uses) avoids needing any static delegating
+ * shim. All 3 real readers (`BatchManagerUnitPageRenderer`,
+ * `IntroSubController`, `PluginSubController`) receive it via constructor
+ * injection.
  */
 final class LoadedPlugins
 {
@@ -31,48 +33,44 @@ final class LoadedPlugins
      *
      * @var array<string, array{id: string, state: string, version: string}>|null
      */
-    private static ?array $plugins = null;
+    private ?array $plugins = null;
 
     /**
      * @return array<string, array{id: string, state: string, version: string}>
      */
-    public static function get(): array
+    public function get(): array
     {
-        if (self::$plugins === null) {
+        if ($this->plugins === null) {
             throw new \LogicException('LoadedPlugins not initialised -- call Piwigo\Admin\PluginLoader::loadPlugins() first.');
         }
 
-        return self::$plugins;
+        return $this->plugins;
     }
 
     /**
      * @param array<string, array{id: string, state: string, version: string}> $plugins
      */
-    public static function set(array $plugins): void
+    public function set(array $plugins): void
     {
-        self::$plugins = $plugins;
+        $this->plugins = $plugins;
     }
 
     /**
      * @param array{id: string, state: string, version: string} $plugin
      */
-    public static function add(string $pluginId, array $plugin): void
+    public function add(string $pluginId, array $plugin): void
     {
-        self::$plugins ??= [];
-        self::$plugins[$pluginId] = $plugin;
+        $this->plugins ??= [];
+        $this->plugins[$pluginId] = $plugin;
     }
 
-    public static function isInitialized(): bool
+    public function isInitialized(): bool
     {
-        return self::$plugins !== null;
+        return $this->plugins !== null;
     }
 
-    /**
-     * Test-only -- restricted to tests/ by an arch test, mirroring the
-     * equivalent guard on SessionService's/Config's own reset() methods.
-     */
-    public static function reset(): void
+    public function reset(): void
     {
-        self::$plugins = null;
+        $this->plugins = null;
     }
 }

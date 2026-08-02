@@ -380,18 +380,6 @@ test('DeploymentPolicy::set()/reset() are only called from tests/', function ():
  * verified above -- filtered out below by name rather than left
  * unguarded, so any *other* new direct caller still fails this test.
  */
-test('LoadedPlugins::reset() is only called from tests/', function (): void {
-    $repoRoot = __DIR__ . '/../..';
-
-    $hits = [
-        ...findCallSites($repoRoot . '/src/Piwigo', 'LoadedPlugins::reset('),
-        ...findCallSitesInRootPhpFiles($repoRoot, 'LoadedPlugins::reset('),
-        ...findCallSitesInBinFiles($repoRoot, 'LoadedPlugins::reset('),
-    ];
-
-    expect(describeCallSites($hits))->toBe([]);
-});
-
 test('FilesystemIntegrityChecker::reset() is only called from tests/', function (): void {
     $repoRoot = __DIR__ . '/../..';
 

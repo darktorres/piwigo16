@@ -67,6 +67,7 @@ final class BatchManagerUnitPageRenderer
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\ProcessCache $processCache,
+        private readonly LoadedPlugins $loadedPlugins,
     ) {}
 
     private static function tagService(): TagService
@@ -245,7 +246,7 @@ final class BatchManagerUnitPageRenderer
         // |                        global mode thumbnails                         |
         // +-------------------------------------------------------------------+
 
-        $template->assign('ACTIVE_PLUGINS', array_keys(LoadedPlugins::get()));
+        $template->assign('ACTIVE_PLUGINS', array_keys($this->loadedPlugins->get()));
 
         // how many items to display on this page
         if ($batchManagerUnitRequest->displayRequested) {

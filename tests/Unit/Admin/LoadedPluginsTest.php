@@ -5,72 +5,74 @@ declare(strict_types=1);
 use Piwigo\Admin\LoadedPlugins;
 
 /**
- * Piwigo\Admin\LoadedPlugins -- a per-request static singleton (no test
- * file existed before this one). reset() is test-only (arch-test
- * restricted to tests/), used here to isolate each test from whatever
- * state a previous test (or PluginLoader::loadPlugins()) left behind.
+ * Piwigo\Admin\LoadedPlugins -- a container-shared instance (singleton-DI
+ * campaign, Phase 1). Each test constructs its own fresh instance directly;
+ * no reset()/Kernel::boot() needed since there's no more shared static
+ * state to isolate between tests.
  */
-beforeEach(function (): void {
-    LoadedPlugins::reset();
-});
-
-afterEach(function (): void {
-    LoadedPlugins::reset();
-});
-
 test('get() throws before anything has ever been initialised', function (): void {
-    expect(LoadedPlugins::isInitialized())->toBeFalse();
-    expect(fn () => LoadedPlugins::get())
+    $loadedPlugins = new LoadedPlugins();
+
+    expect($loadedPlugins->isInitialized())->toBeFalse();
+    expect(fn () => $loadedPlugins->get())
         ->toThrow(LogicException::class, 'LoadedPlugins not initialised -- call Piwigo\Admin\PluginLoader::loadPlugins() first.');
 });
 
 test('set() initialises the map and get()/isInitialized() reflect it', function (): void {
+    $loadedPlugins = new LoadedPlugins();
     $plugins = [
         'plugin-a' => ['id' => 'plugin-a', 'state' => 'active', 'version' => '1.0'],
         'plugin-b' => ['id' => 'plugin-b', 'state' => 'inactive', 'version' => '2.0'],
     ];
 
-    LoadedPlugins::set($plugins);
+    $loadedPlugins->set($plugins);
 
-    expect(LoadedPlugins::isInitialized())->toBeTrue();
-    expect(LoadedPlugins::get())->toBe($plugins);
+    expect($loadedPlugins->isInitialized())->toBeTrue();
+    expect($loadedPlugins->get())->toBe($plugins);
 });
 
 test('set() to an empty array still counts as initialised, distinct from never-initialised', function (): void {
-    LoadedPlugins::set([]);
+    $loadedPlugins = new LoadedPlugins();
 
-    expect(LoadedPlugins::isInitialized())->toBeTrue();
-    expect(LoadedPlugins::get())->toBe([]);
+    $loadedPlugins->set([]);
+
+    expect($loadedPlugins->isInitialized())->toBeTrue();
+    expect($loadedPlugins->get())->toBe([]);
 });
 
 test('add() lazily initialises an empty map when none exists yet', function (): void {
-    expect(LoadedPlugins::isInitialized())->toBeFalse();
+    $loadedPlugins = new LoadedPlugins();
 
-    LoadedPlugins::add('solo-plugin', ['id' => 'solo-plugin', 'state' => 'active', 'version' => '3.1']);
+    expect($loadedPlugins->isInitialized())->toBeFalse();
 
-    expect(LoadedPlugins::isInitialized())->toBeTrue();
-    expect(LoadedPlugins::get())->toBe([
+    $loadedPlugins->add('solo-plugin', ['id' => 'solo-plugin', 'state' => 'active', 'version' => '3.1']);
+
+    expect($loadedPlugins->isInitialized())->toBeTrue();
+    expect($loadedPlugins->get())->toBe([
         'solo-plugin' => ['id' => 'solo-plugin', 'state' => 'active', 'version' => '3.1'],
     ]);
 });
 
 test('add() appends to an already-initialised map without clobbering existing entries', function (): void {
-    LoadedPlugins::set(['first-plugin' => ['id' => 'first-plugin', 'state' => 'active', 'version' => '1.0']]);
+    $loadedPlugins = new LoadedPlugins();
 
-    LoadedPlugins::add('second-plugin', ['id' => 'second-plugin', 'state' => 'inactive', 'version' => '0.5']);
+    $loadedPlugins->set(['first-plugin' => ['id' => 'first-plugin', 'state' => 'active', 'version' => '1.0']]);
 
-    expect(LoadedPlugins::get())->toBe([
+    $loadedPlugins->add('second-plugin', ['id' => 'second-plugin', 'state' => 'inactive', 'version' => '0.5']);
+
+    expect($loadedPlugins->get())->toBe([
         'first-plugin' => ['id' => 'first-plugin', 'state' => 'active', 'version' => '1.0'],
         'second-plugin' => ['id' => 'second-plugin', 'state' => 'inactive', 'version' => '0.5'],
     ]);
 });
 
 test('reset() returns to the never-initialised state', function (): void {
-    LoadedPlugins::set(['x' => ['id' => 'x', 'state' => 'active', 'version' => '1.0']]);
-    expect(LoadedPlugins::isInitialized())->toBeTrue();
+    $loadedPlugins = new LoadedPlugins();
+    $loadedPlugins->set(['x' => ['id' => 'x', 'state' => 'active', 'version' => '1.0']]);
+    expect($loadedPlugins->isInitialized())->toBeTrue();
 
-    LoadedPlugins::reset();
+    $loadedPlugins->reset();
 
-    expect(LoadedPlugins::isInitialized())->toBeFalse();
-    expect(fn () => LoadedPlugins::get())->toThrow(LogicException::class);
+    expect($loadedPlugins->isInitialized())->toBeFalse();
+    expect(fn () => $loadedPlugins->get())->toThrow(LogicException::class);
 });

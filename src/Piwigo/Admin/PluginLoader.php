@@ -49,9 +49,9 @@ final class PluginLoader
     /**
      * Loads all the registered plugins.
      */
-    public static function loadPlugins(): void
+    public static function loadPlugins(LoadedPlugins $loadedPlugins): void
     {
-        LoadedPlugins::set([]);
+        $loadedPlugins->set([]);
         if (\Piwigo\Config\CurrentConfig::enablePlugins()) {
             $plugins = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\PluginConfig\PluginEntity::class)->getDbPlugins('active');
             foreach ($plugins as $plugin) {// include main from a function to avoid using same function context
@@ -60,7 +60,7 @@ final class PluginLoader
                 // param, which a readonly Plugin object can't support (same
                 // "unbox where genuinely needed" shape as
                 // CategoryCatsRenderer's own unboxing).
-                self::loadPlugin($plugin->toArray());
+                self::loadPlugin($plugin->toArray(), $loadedPlugins);
             }
             \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new PluginsLoaded());
         }
@@ -75,14 +75,14 @@ final class PluginLoader
      *   loadPlugins(), unboxes the repository's typed row there since this
      *   method needs mutable array semantics, not a readonly object)
      */
-    private static function loadPlugin(array $plugin): void
+    private static function loadPlugin(array $plugin, LoadedPlugins $loadedPlugins): void
     {
         $plugin_id = $plugin['id'];
 
         $file_name = self::pluginsPath() . $plugin_id . '/main.inc.php';
         if (file_exists($file_name)) {
             self::autoupdatePlugin($plugin);
-            LoadedPlugins::add($plugin_id, $plugin);
+            $loadedPlugins->add($plugin_id, $plugin);
             include_once $file_name;
         }
     }

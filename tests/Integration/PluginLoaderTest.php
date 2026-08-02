@@ -46,6 +46,8 @@ final class PluginLoaderTest extends IntegrationTestCase
 {
     private static bool $fixtureReady = false;
 
+    private LoadedPlugins $loadedPlugins;
+
     #[\Override]
     protected function setUp(): void
     {
@@ -69,6 +71,13 @@ final class PluginLoaderTest extends IntegrationTestCase
         // throwaway plugins root doesn't invalidate the already-built
         // container.
         Kernel::boot();
+
+        $loadedPlugins = Kernel::container()->get(LoadedPlugins::class);
+        if (! $loadedPlugins instanceof LoadedPlugins) {
+            throw new \LogicException('Container returned an unexpected type for ' . LoadedPlugins::class);
+        }
+
+        $this->loadedPlugins = $loadedPlugins;
     }
 
     #[\Override]
@@ -130,9 +139,9 @@ final class PluginLoaderTest extends IntegrationTestCase
     {
         CurrentConfig::setEnablePlugins(false);
 
-        PluginLoader::loadPlugins();
+        PluginLoader::loadPlugins($this->loadedPlugins);
 
-        expect(LoadedPlugins::get())->toBe([]);
+        expect($this->loadedPlugins->get())->toBe([]);
     }
 
     public function test_load_plugins_skips_an_active_plugin_whose_main_inc_php_file_is_missing(): void
@@ -146,9 +155,9 @@ final class PluginLoaderTest extends IntegrationTestCase
             "INSERT INTO " . Tables::plugins() . " (id, state, version) VALUES ('ghost-plugin', 'active', '1.0')"
         );
 
-        PluginLoader::loadPlugins();
+        PluginLoader::loadPlugins($this->loadedPlugins);
 
-        expect(LoadedPlugins::get())->toBe([]);
+        expect($this->loadedPlugins->get())->toBe([]);
     }
 
     public function test_load_plugins_loads_an_active_plugin_with_a_real_main_inc_php(): void
@@ -168,10 +177,10 @@ final class PluginLoaderTest extends IntegrationTestCase
             "INSERT INTO " . Tables::plugins() . " (id, state, version) VALUES ('loadable-plugin', 'active', '1.0')"
         );
 
-        PluginLoader::loadPlugins();
+        PluginLoader::loadPlugins($this->loadedPlugins);
 
-        expect(LoadedPlugins::get())->toHaveKey('loadable-plugin');
-        expect(LoadedPlugins::get()['loadable-plugin']['version'])->toBe('1.0');
+        expect($this->loadedPlugins->get())->toHaveKey('loadable-plugin');
+        expect($this->loadedPlugins->get()['loadable-plugin']['version'])->toBe('1.0');
         expect(file_exists($marker))->toBeTrue();
     }
 
@@ -188,9 +197,9 @@ final class PluginLoaderTest extends IntegrationTestCase
             "INSERT INTO " . Tables::plugins() . " (id, state, version) VALUES ('inactive-plugin', 'inactive', '1.0')"
         );
 
-        PluginLoader::loadPlugins();
+        PluginLoader::loadPlugins($this->loadedPlugins);
 
-        expect(LoadedPlugins::get())->toBe([]);
+        expect($this->loadedPlugins->get())->toBe([]);
     }
 
     // ---------------------------------------- autoupdatePlugin(), real update
@@ -218,10 +227,10 @@ PHP);
             [$id]
         );
 
-        PluginLoader::loadPlugins();
+        PluginLoader::loadPlugins($this->loadedPlugins);
 
         expect(PageState::current()->errors)->toBe(['updated from 1.0 to 2.0']);
-        expect(LoadedPlugins::get()[$id]['version'])->toBe('2.0');
+        expect($this->loadedPlugins->get()[$id]['version'])->toBe('2.0');
 
         $storedVersion = DbConnection::build()->fetchOne(
             'SELECT version FROM ' . Tables::plugins() . ' WHERE id = ?',
@@ -277,7 +286,7 @@ PHP);
         $this->expectException(\LogicException::class);
         $this->expectExceptionMessage("PluginLoader::autoupdatePlugin(): {$classname} does not extend PluginMaintain");
 
-        PluginLoader::loadPlugins();
+        PluginLoader::loadPlugins($this->loadedPlugins);
     }
 
     public function test_autoupdate_plugin_skips_the_db_and_activity_write_for_an_auto_to_auto_update(): void
@@ -301,7 +310,7 @@ PHP);
             [$id]
         );
 
-        PluginLoader::loadPlugins();
+        PluginLoader::loadPlugins($this->loadedPlugins);
 
         $storedVersion = DbConnection::build()->fetchOne(
             'SELECT version FROM ' . Tables::plugins() . ' WHERE id = ?',

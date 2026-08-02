@@ -10,6 +10,7 @@ use Piwigo\Admin\AdminUiHelper;
 use Piwigo\Admin\InstallationStats;
 use Piwigo\Admin\Integrity\C13yInternal;
 use Piwigo\Admin\Integrity\CheckIntegrity;
+use Piwigo\Admin\LoadedPlugins;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Core\AppInfo;
@@ -66,6 +67,7 @@ final class IntroSubController implements AdminSubControllerInterface
 {
     public function __construct(
         private readonly \Piwigo\Core\UrlServiceInterface $urlService,
+        private readonly LoadedPlugins $loadedPlugins,
     ) {}
 
     #[\Override]
@@ -204,7 +206,7 @@ final class IntroSubController implements AdminSubControllerInterface
                 'NB_GROUPS' => $stats['nb_groups'],
                 'NB_RATES' => $stats['nb_rates'],
                 'NB_VIEWS' => AdminUiHelper::numberFormatHumanReadable($nb_views),
-                'NB_PLUGINS' => count(\Piwigo\Admin\LoadedPlugins::get()),
+                'NB_PLUGINS' => count($this->loadedPlugins->get()),
                 'STORAGE_USED' => str_replace(' ', '&nbsp;', Lang::t('%sGB', number_format($du_gb, $du_decimals))),
                 'U_QUICK_SYNC' => $this->urlService->getRootUrl() . 'admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken(),
                 'CHECK_FOR_UPDATES' => \Piwigo\Config\CurrentConfig::dashboardCheckForUpdates(),

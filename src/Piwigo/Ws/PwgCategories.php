@@ -29,7 +29,7 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsError;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\SqlDialect;
+use Piwigo\Db\DbConnection;
 use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Event\Picture\RenderElementName;
 use Piwigo\Event\Template\RenderCategoryDescription;
@@ -172,9 +172,13 @@ final class PwgCategories
         // ------------------------------------------------- get the related categories
         $catClauses = [];
         $catParams = [];
+        // Item 16 (AbstractPlatform adoption): the real per-platform
+        // operator (MySQL/MariaDB: RLIKE) rather than a hardcoded
+        // 'REGEXP' dialect constant.
+        $regexOperator = DbConnection::build()->getDatabasePlatform()->getRegexpExpression();
         foreach ($params['cat_id'] as $i => $cat_id) {
             if ($params['recursive']) {
-                $catClauses[] = 'uppercats ' . SqlDialect::DB_REGEX_OPERATOR . ' :catUppercatsLike' . $i;
+                $catClauses[] = 'uppercats ' . $regexOperator . ' :catUppercatsLike' . $i;
                 $catParams['catUppercatsLike' . $i] = '(^|,)' . $cat_id . '(,|$)';
             } else {
                 $catClauses[] = 'id = :catId' . $i;

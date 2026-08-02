@@ -16,7 +16,6 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\SqlDialect;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\ImageService;
 use Piwigo\Permission\PermissionRepository;
@@ -281,7 +280,10 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             $extra_types = [];
             if (isset($post['cat']) and is_numeric($post['cat'])) {
                 if (isset($post['subcats-included']) and $post['subcats-included'] === '1') {
-                    $extra_condition = ' AND uppercats ' . SqlDialect::DB_REGEX_OPERATOR . ' :extraCatUppercatsLike';
+                    // Item 16 (AbstractPlatform adoption): the real
+                    // per-platform operator (MySQL/MariaDB: RLIKE) rather
+                    // than a hardcoded 'REGEXP' dialect constant.
+                    $extra_condition = ' AND uppercats ' . $conn->getDatabasePlatform()->getRegexpExpression() . ' :extraCatUppercatsLike';
                     $extra_params['extraCatUppercatsLike'] = '(^|,)' . $post['cat'] . '(,|$)';
                 } else {
                     $extra_condition = ' AND id = :extraCatId';

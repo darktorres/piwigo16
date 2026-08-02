@@ -10,6 +10,7 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Events;
 use Doctrine\ORM\ORMSetup;
+use Piwigo\Db\DqlFunction\RegexpFunction;
 use Piwigo\Db\Type\CategoryIdType;
 use Piwigo\Db\Type\CommentIdType;
 use Piwigo\Db\Type\GroupIdType;
@@ -54,6 +55,7 @@ final class EntityManagerFactory
             isDevMode: true,
         );
         $config->enableNativeLazyObjects(true);
+        $config->addCustomStringFunction('REGEXP', RegexpFunction::class);
 
         $em = new EntityManager($conn ?? DbConnection::build(), $config);
         $em->getEventManager()

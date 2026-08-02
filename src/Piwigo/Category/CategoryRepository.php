@@ -180,8 +180,14 @@ final class CategoryRepository extends EntityRepository
      * @param  list<int>  $ids
      * @return list<int>
      *
-     * Item 14 DQL audit: stays on DBAL -- `REGEXP` is MySQL/MariaDB-specific
-     * with no DQL equivalent.
+     * Item 14 DQL audit, re-corrected: `REGEXP`'s MySQL/MariaDB-specific
+     * *operator name* is now genuinely portable via a custom DQL function
+     * ({@see \Piwigo\Db\DqlFunction\RegexpFunction}, Item 14 Sub-phase B5
+     * Tier 1) that reads the real operator from `AbstractPlatform::
+     * getRegexpExpression()`. Converted to real DQL -- see that class's
+     * own docblock for the real remaining Postgres-portability caveat
+     * (the pattern *syntax* below, not just the operator, would need a
+     * platform-specific rewrite for genuine Postgres support).
      */
     public function findSubcategoryIds(array $ids): array
     {
@@ -189,37 +195,24 @@ final class CategoryRepository extends EntityRepository
             return [];
         }
 
-        $qb = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('DISTINCT id')
-            ->from(Tables::categories());
+        $qb = $this->createQueryBuilder('c')
+            ->select('DISTINCT c.id');
 
         $clauses = [];
         foreach ($ids as $num => $categoryId) {
             $param = 'id' . $num;
             $qb->setParameter($param, '(^|,)' . $categoryId . '(,|$)');
-            $clauses[] = 'uppercats ' . $this->regexOperator() . ' :' . $param;
+            $clauses[] = 'REGEXP(c.uppercats, :' . $param . ') = true';
         }
 
-        $rows = $qb->where(implode(' OR ', $clauses))
-            ->executeQuery()
-            ->fetchFirstColumn();
+        $matchedIds = $qb->where(implode(' OR ', $clauses))
+            ->getQuery()
+            ->getSingleColumnResult();
 
         return array_values(array_map(
             static fn (mixed $id): int => (int) $id,
-            array_filter($rows, is_numeric(...))
+            array_filter($matchedIds, is_numeric(...))
         ));
-    }
-
-    /**
-     * REGEXP is MySQL/MariaDB's operator name; matches
-     * `include/dblayer/functions_mysqli.inc.php`'s own `DB_REGEX_OPERATOR`
-     * constant, which this repository replaces the free-function caller of.
-     */
-    private function regexOperator(): string
-    {
-        return 'REGEXP';
     }
 
     /**
@@ -3180,7 +3173,7 @@ final class CategoryRepository extends EntityRepository
      * $catId), or none at all (recursive with no $catId -- matches the
      * original, which added nothing to $where in that case).
      */
-    private static function categoryScopeCondition(?int $catId, bool $recursive): SqlCondition
+    private function categoryScopeCondition(?int $catId, bool $recursive): SqlCondition
     {
         if (! $recursive) {
             if ($catId !== null && $catId > 0) {
@@ -3193,7 +3186,16 @@ final class CategoryRepository extends EntityRepository
         }
 
         if ($catId !== null && $catId > 0) {
-            return new SqlCondition('uppercats ' . SqlDialect::DB_REGEX_OPERATOR . ' :catUppercatsLike', [
+            // Item 16 (AbstractPlatform adoption): the real per-platform
+            // operator (MySQL/MariaDB: RLIKE) rather than a hardcoded
+            // 'REGEXP' dialect constant. No longer static since this
+            // needs a real Connection to ask for it.
+            $regexOperator = $this->getEntityManager()
+                ->getConnection()
+                ->getDatabasePlatform()
+                ->getRegexpExpression();
+
+            return new SqlCondition('uppercats ' . $regexOperator . ' :catUppercatsLike', [
                 'catUppercatsLike' => '(^|,)' . $catId . '(,|$)',
             ]);
         }
@@ -3231,7 +3233,7 @@ final class CategoryRepository extends EntityRepository
         $conn = $this->getEntityManager()
             ->getConnection();
 
-        $conditions = [self::categoryScopeCondition($criteria->catId, $criteria->recursive)];
+        $conditions = [$this->categoryScopeCondition($criteria->catId, $criteria->recursive)];
 
         if ($criteria->forbiddenCategoryIds !== []) {
             $conditions[] = new SqlCondition('id NOT IN (:forbiddenCategoryIds)', [
@@ -3315,7 +3317,7 @@ final class CategoryRepository extends EntityRepository
         $conn = $this->getEntityManager()
             ->getConnection();
 
-        $combined = SqlCondition::combine('AND', new SqlCondition('1=1'), self::categoryScopeCondition($criteria->catId, $criteria->recursive));
+        $combined = SqlCondition::combine('AND', new SqlCondition('1=1'), $this->categoryScopeCondition($criteria->catId, $criteria->recursive));
         $params = $combined->parameters;
         $types = $combined->types;
 

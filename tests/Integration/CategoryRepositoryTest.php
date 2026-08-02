@@ -634,5 +634,15 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         self::assertSame([], $this->repo->findMoveDetailsByIds([]));
     }
 
+    public function test_count_by_visible_counts_only_matching_rows(): void
+    {
+        // Both fixture categories have visible=1 -- proves the bound
+        // :visible parameter actually discriminates (a broken bind that
+        // always matched, or never matched, would pass a same-count-for-
+        // both regression test but not this one).
+        self::assertSame(2, $this->repo->countByVisible(true));
+        self::assertSame(0, $this->repo->countByVisible(false));
+    }
+
 }
 }

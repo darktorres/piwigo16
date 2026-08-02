@@ -569,10 +569,10 @@ final class CategoryRepository extends EntityRepository
             WHERE storage_category_id IN (:ids)
             SQL
             , [
-                        'ids' => $ids,
-                    ], [
-                        'ids' => ArrayParameterType::INTEGER,
-                    ])->fetchFirstColumn());
+                'ids' => $ids,
+            ], [
+                'ids' => ArrayParameterType::INTEGER,
+            ])->fetchFirstColumn());
     }
 
     /**
@@ -594,10 +594,10 @@ final class CategoryRepository extends EntityRepository
             WHERE category_id IN (:ids)
             SQL
             , [
-                        'ids' => $ids,
-                    ], [
-                        'ids' => ArrayParameterType::INTEGER,
-                    ])->fetchFirstColumn());
+                'ids' => $ids,
+            ], [
+                'ids' => ArrayParameterType::INTEGER,
+            ])->fetchFirstColumn());
     }
 
     /**
@@ -625,12 +625,12 @@ final class CategoryRepository extends EntityRepository
                 AND category_id NOT IN (:excludeIds)
             SQL
             , [
-                        'imageIds' => $imageIds,
-                        'excludeIds' => $excludeIds,
-                    ], [
-                        'imageIds' => ArrayParameterType::INTEGER,
-                        'excludeIds' => ArrayParameterType::INTEGER,
-                    ])->fetchFirstColumn());
+                'imageIds' => $imageIds,
+                'excludeIds' => $excludeIds,
+            ], [
+                'imageIds' => ArrayParameterType::INTEGER,
+                'excludeIds' => ArrayParameterType::INTEGER,
+            ])->fetchFirstColumn());
     }
 
     /**
@@ -661,10 +661,10 @@ final class CategoryRepository extends EntityRepository
                 (:excludeIds)
             SQL
             , [
-                        'excludeIds' => $excludeIds,
-                    ], [
-                        'excludeIds' => ArrayParameterType::INTEGER,
-                    ])->fetchFirstColumn());
+                'excludeIds' => $excludeIds,
+            ], [
+                'excludeIds' => ArrayParameterType::INTEGER,
+            ])->fetchFirstColumn());
     }
 
     /**
@@ -681,10 +681,10 @@ final class CategoryRepository extends EntityRepository
                 WHERE category_id IN (:ids)
                 SQL
                 , [
-                                'ids' => $ids,
-                            ], [
-                                'ids' => ArrayParameterType::INTEGER,
-                            ]);
+                    'ids' => $ids,
+                ], [
+                    'ids' => ArrayParameterType::INTEGER,
+                ]);
     }
 
     /**
@@ -825,10 +825,10 @@ final class CategoryRepository extends EntityRepository
                 WHERE cat_id IN (:ids)
                 SQL
                 , [
-                                'ids' => $ids,
-                            ], [
-                                'ids' => ArrayParameterType::INTEGER,
-                            ]);
+                    'ids' => $ids,
+                ], [
+                    'ids' => ArrayParameterType::INTEGER,
+                ]);
     }
 
     /**
@@ -931,10 +931,10 @@ final class CategoryRepository extends EntityRepository
                 WHERE {$column} IN (:values)
                 SQL
                 , [
-                                'values' => array_map(static fn (int|string $v): string => (string) $v, $values),
-                            ], [
-                                'values' => ArrayParameterType::STRING,
-                            ]);
+                    'values' => array_map(static fn (int|string $v): string => (string) $v, $values),
+                ], [
+                    'values' => ArrayParameterType::STRING,
+                ]);
     }
 
     /**
@@ -1091,10 +1091,10 @@ final class CategoryRepository extends EntityRepository
                 WHERE id IN (:ids)
                 SQL
                 , [
-                                'ids' => $ids,
-                            ], [
-                                'ids' => ArrayParameterType::INTEGER,
-                            ])->fetchAllAssociative();
+                    'ids' => $ids,
+                ], [
+                    'ids' => ArrayParameterType::INTEGER,
+                ])->fetchAllAssociative();
 
         $byId = [];
         foreach ($rows as $row) {
@@ -1160,12 +1160,12 @@ final class CategoryRepository extends EntityRepository
                     AND cat_id IN (:catIds)
                 SQL
                 , [
-                                'keepIds' => $keepIds,
-                                'catIds' => $catIds,
-                            ], [
-                                'keepIds' => ArrayParameterType::INTEGER,
-                                'catIds' => ArrayParameterType::INTEGER,
-                            ]);
+                    'keepIds' => $keepIds,
+                    'catIds' => $catIds,
+                ], [
+                    'keepIds' => ArrayParameterType::INTEGER,
+                    'catIds' => ArrayParameterType::INTEGER,
+                ]);
         $em->clear();
     }
 
@@ -1187,10 +1187,10 @@ final class CategoryRepository extends EntityRepository
             WHERE id IN (:ids)
             SQL
             , [
-                        'ids' => array_values($ids),
-                    ], [
-                        'ids' => ArrayParameterType::INTEGER,
-                    ])->fetchFirstColumn());
+                'ids' => array_values($ids),
+            ], [
+                'ids' => ArrayParameterType::INTEGER,
+            ])->fetchFirstColumn());
     }
 
     /**
@@ -1217,10 +1217,10 @@ final class CategoryRepository extends EntityRepository
                 WHERE id IN (:ids)
                 SQL
                 , [
-                                'ids' => $ids,
-                            ], [
-                                'ids' => ArrayParameterType::INTEGER,
-                            ])->fetchAllKeyValue();
+                    'ids' => $ids,
+                ], [
+                    'ids' => ArrayParameterType::INTEGER,
+                ])->fetchAllKeyValue();
 
         $byId = [];
         foreach ($rows as $id => $uppercats) {
@@ -1270,10 +1270,10 @@ final class CategoryRepository extends EntityRepository
                 GROUP BY category_id
                 SQL
                 , [
-                                'categoryIds' => $categoryIds,
-                            ], [
-                                'categoryIds' => ArrayParameterType::INTEGER,
-                            ])->fetchAllKeyValue();
+                    'categoryIds' => $categoryIds,
+                ], [
+                    'categoryIds' => ArrayParameterType::INTEGER,
+                ])->fetchAllKeyValue();
 
         $byCategoryId = [];
         foreach ($rows as $categoryId => $refDate) {
@@ -1328,8 +1328,8 @@ final class CategoryRepository extends EntityRepository
                 LIMIT 1
                 SQL
                 , [
-                                'categoryId' => $categoryId,
-                            ])->fetchOne();
+                    'categoryId' => $categoryId,
+                ])->fetchOne();
 
         return is_numeric($value) ? (int) $value : null;
     }
@@ -1396,10 +1396,10 @@ final class CategoryRepository extends EntityRepository
                     AND id IN (:ids)
                 SQL
                 , [
-                                'ids' => array_values($ids),
-                            ], [
-                                'ids' => ArrayParameterType::INTEGER,
-                            ])->fetchAllAssociative();
+                    'ids' => array_values($ids),
+                ], [
+                    'ids' => ArrayParameterType::INTEGER,
+                ])->fetchAllAssociative();
 
         return array_map(
             static fn (array $row): array => [
@@ -1438,9 +1438,9 @@ final class CategoryRepository extends EntityRepository
                 WHERE storage_category_id = :categoryId
                 SQL
                 , [
-                                'fulldir' => $fulldir,
-                                'categoryId' => $categoryId,
-                            ]);
+                    'fulldir' => $fulldir,
+                    'categoryId' => $categoryId,
+                ]);
     }
 
     /**
@@ -1461,9 +1461,9 @@ final class CategoryRepository extends EntityRepository
                 WHERE id = :categoryId
                 SQL
                 , [
-                                'imageId' => $imageId,
-                                'categoryId' => $categoryId,
-                            ]);
+                    'imageId' => $imageId,
+                    'categoryId' => $categoryId,
+                ]);
     }
 
     /**
@@ -1482,10 +1482,10 @@ final class CategoryRepository extends EntityRepository
                 WHERE id IN (:ids)
                 SQL
                 , [
-                                'ids' => array_values($ids),
-                            ], [
-                                'ids' => ArrayParameterType::INTEGER,
-                            ])->fetchAllAssociative();
+                    'ids' => array_values($ids),
+                ], [
+                    'ids' => ArrayParameterType::INTEGER,
+                ])->fetchAllAssociative();
 
         return array_map(
             static fn (array $row): array => [
@@ -1510,8 +1510,8 @@ final class CategoryRepository extends EntityRepository
                 WHERE id = :id
                 SQL
                 , [
-                                'id' => $id,
-                            ])->fetchOne();
+                    'id' => $id,
+                ])->fetchOne();
 
         return is_string($value) ? $value : null;
     }
@@ -1555,8 +1555,8 @@ final class CategoryRepository extends EntityRepository
                 WHERE id = :id
                 SQL
                 , [
-                                'id' => $id,
-                            ])->fetchOne();
+                    'id' => $id,
+                ])->fetchOne();
 
         return is_string($value) ? $value : null;
     }
@@ -1578,8 +1578,8 @@ final class CategoryRepository extends EntityRepository
                 WHERE id_uppercat {$parentCondition}
                 SQL
                 , $parentIsEmpty ? [] : [
-                                'parentId' => $parentId,
-                            ])->fetchOne();
+                    'parentId' => $parentId,
+                ])->fetchOne();
 
         return is_numeric($value) ? (int) $value : null;
     }
@@ -1599,8 +1599,8 @@ final class CategoryRepository extends EntityRepository
                 WHERE id = :parentId
                 SQL
                 , [
-                                'parentId' => $parentId,
-                            ])->fetchAssociative();
+                    'parentId' => $parentId,
+                ])->fetchAssociative();
 
         /** @var array{id: int, uppercats: string, global_rank: string, visible: int, status: string}|false $row */
         return $row === false ? null : $row;
@@ -1995,15 +1995,19 @@ final class CategoryRepository extends EntityRepository
     public function countByVisible(bool $visible): int
     {
         $categoriesTable = Tables::categories();
-        $visibleValue = $visible ? 1 : 0;
 
         $value = $this->getEntityManager()
             ->getConnection()
             ->fetchOne(<<<SQL
                 SELECT COUNT(*)
                 FROM {$categoriesTable}
-                WHERE visible = {$visibleValue}
-                SQL);
+                WHERE visible = :visible
+                SQL
+                , [
+                    'visible' => $visible ? 1 : 0,
+                ], [
+                    'visible' => ParameterType::INTEGER,
+                ]);
 
         return is_numeric($value) ? (int) $value : 0;
     }
@@ -2029,8 +2033,8 @@ final class CategoryRepository extends EntityRepository
                     WHERE representative_picture_id = :imageId
                     SQL
                     , [
-                                        'imageId' => $imageId,
-                                    ]), 'id')
+                        'imageId' => $imageId,
+                    ]), 'id')
         );
     }
 
@@ -2057,11 +2061,11 @@ final class CategoryRepository extends EntityRepository
                 WHERE id IN (:categoryIds)
                 SQL
                 , [
-                                'imageId' => $imageId,
-                                'categoryIds' => $categoryIds,
-                            ], [
-                                'categoryIds' => ArrayParameterType::INTEGER,
-                            ]);
+                    'imageId' => $imageId,
+                    'categoryIds' => $categoryIds,
+                ], [
+                    'categoryIds' => ArrayParameterType::INTEGER,
+                ]);
     }
 
     /**
@@ -2087,8 +2091,8 @@ final class CategoryRepository extends EntityRepository
                         AND group_id = :groupId
                     SQL
                     , [
-                                        'groupId' => $groupId,
-                                    ]), 'id')
+                        'groupId' => $groupId,
+                    ]), 'id')
         );
     }
 
@@ -2118,8 +2122,8 @@ final class CategoryRepository extends EntityRepository
                 WHERE ug.user_id = :userId
                 SQL
                 , [
-                                'userId' => $userId,
-                            ]);
+                    'userId' => $userId,
+                ]);
     }
 
     /**
@@ -2322,10 +2326,10 @@ final class CategoryRepository extends EntityRepository
                 WHERE id IN (:categoryIds)
                 SQL
                 , [
-                                'categoryIds' => $categoryIds,
-                            ], [
-                                'categoryIds' => ArrayParameterType::STRING,
-                            ]);
+                    'categoryIds' => $categoryIds,
+                ], [
+                    'categoryIds' => ArrayParameterType::STRING,
+                ]);
     }
 
     /**
@@ -2393,8 +2397,8 @@ final class CategoryRepository extends EntityRepository
                 WHERE category_id = :categoryId
                 SQL
                 , [
-                                'categoryId' => $categoryId,
-                            ]);
+                    'categoryId' => $categoryId,
+                ]);
     }
 
     /**
@@ -2422,10 +2426,10 @@ final class CategoryRepository extends EntityRepository
                         category_id IN (:categoryIds)
                     SQL
                     , [
-                                        'categoryIds' => $categoryIds,
-                                    ], [
-                                        'categoryIds' => ArrayParameterType::INTEGER,
-                                    ]), 'image_id')
+                        'categoryIds' => $categoryIds,
+                    ], [
+                        'categoryIds' => ArrayParameterType::INTEGER,
+                    ]), 'image_id')
         );
     }
 
@@ -2451,10 +2455,10 @@ final class CategoryRepository extends EntityRepository
                 FROM {$categoriesTable} WHERE id IN (:ids)
                 SQL
                 , [
-                                'ids' => array_map(static fn (int|string $v): string => (string) $v, $ids),
-                            ], [
-                                'ids' => ArrayParameterType::STRING,
-                            ]), 'dir', 'id');
+                    'ids' => array_map(static fn (int|string $v): string => (string) $v, $ids),
+                ], [
+                    'ids' => ArrayParameterType::STRING,
+                ]), 'dir', 'id');
     }
 
     /**
@@ -2475,8 +2479,8 @@ final class CategoryRepository extends EntityRepository
                     AND c.id = :categoryId
                 SQL
                 , [
-                                'categoryId' => $categoryId,
-                            ]);
+                    'categoryId' => $categoryId,
+                ]);
 
         if ($row === false) {
             return null;
@@ -2533,11 +2537,11 @@ final class CategoryRepository extends EntityRepository
                     AND id NOT IN (:forbiddenIds)
                 SQL
                 , [
-                                'catId' => $catId,
-                                'forbiddenIds' => $forbiddenIds,
-                            ], [
-                                'forbiddenIds' => ArrayParameterType::INTEGER,
-                            ]);
+                    'catId' => $catId,
+                    'forbiddenIds' => $forbiddenIds,
+                ], [
+                    'forbiddenIds' => ArrayParameterType::INTEGER,
+                ]);
 
         return $rows !== [];
     }
@@ -2558,8 +2562,8 @@ final class CategoryRepository extends EntityRepository
                 WHERE id = :id
                 SQL
                 , [
-                                'id' => $id,
-                            ]);
+                    'id' => $id,
+                ]);
 
         return is_numeric($value) && (int) $value > 0;
     }
@@ -2589,10 +2593,10 @@ final class CategoryRepository extends EntityRepository
                     WHERE id IN (:ids)
                     SQL
                     , [
-                                        'ids' => $ids,
-                                    ], [
-                                        'ids' => ArrayParameterType::INTEGER,
-                                    ])->fetchFirstColumn()
+                        'ids' => $ids,
+                    ], [
+                        'ids' => ArrayParameterType::INTEGER,
+                    ])->fetchFirstColumn()
         );
     }
 
@@ -2778,10 +2782,10 @@ final class CategoryRepository extends EntityRepository
                 GROUP BY id_uppercat
                 SQL
                 , [
-                                'parentIds' => $parentIds,
-                            ], [
-                                'parentIds' => ArrayParameterType::INTEGER,
-                            ]);
+                    'parentIds' => $parentIds,
+                ], [
+                    'parentIds' => ArrayParameterType::INTEGER,
+                ]);
 
         $bySubcat = [];
         foreach ($rows as $row) {
@@ -2819,10 +2823,10 @@ final class CategoryRepository extends EntityRepository
                 WHERE id IN (:ids)
                 SQL
                 , [
-                                'ids' => $ids,
-                            ], [
-                                'ids' => ArrayParameterType::INTEGER,
-                            ]);
+                    'ids' => $ids,
+                ], [
+                    'ids' => ArrayParameterType::INTEGER,
+                ]);
 
         return array_map(
             static fn (array $row): array => [
@@ -2859,8 +2863,8 @@ final class CategoryRepository extends EntityRepository
                     ORDER BY `id` ASC
                     SQL
                     , $parentId === null ? [] : [
-                                        'parentId' => $parentId,
-                                    ])->fetchFirstColumn()
+                        'parentId' => $parentId,
+                    ])->fetchFirstColumn()
         );
     }
 
@@ -2925,10 +2929,10 @@ final class CategoryRepository extends EntityRepository
                 WHERE id IN (:ids)
                 SQL
                 , [
-                                'ids' => $ids,
-                            ], [
-                                'ids' => ArrayParameterType::INTEGER,
-                            ]);
+                    'ids' => $ids,
+                ], [
+                    'ids' => ArrayParameterType::INTEGER,
+                ]);
 
         return array_map(
             static fn (array $row): array => [

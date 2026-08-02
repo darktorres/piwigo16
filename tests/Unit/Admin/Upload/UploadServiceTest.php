@@ -1061,6 +1061,11 @@ function upload_service_video_readonly_dir(): string
 
 test('uploadFileVideo recognizes every one of its 17 ffmpeg-tested extensions', function (): void {
     $dir = upload_service_video_readonly_dir();
+    // mkdir() on a permission-denied directory emits a real PHP warning
+    // that phpunit.xml's failOnWarning="true" would otherwise turn into a
+    // failure right at the call site -- same suppression pattern as
+    // sanitize's own permission-denied-read test further up.
+    set_error_handler(static fn (): bool => true);
     try {
         foreach ([
             'wmv', 'mov', 'mkv', 'mp4', 'mpg', 'flv', 'asf', 'xvid', 'divx', 'mpeg',
@@ -1070,16 +1075,19 @@ test('uploadFileVideo recognizes every one of its 17 ffmpeg-tested extensions', 
                 ->toThrow(ImageProcessingException::class);
         }
     } finally {
+        restore_error_handler();
         chmod($dir, 0o777);
     }
 });
 
 test('uploadFileVideo matches a video extension case-insensitively', function (): void {
     $dir = upload_service_video_readonly_dir();
+    set_error_handler(static fn (): bool => true);
     try {
         expect(fn () => UploadService::uploadFileVideo(null, $dir . '/video.WMV'))
             ->toThrow(ImageProcessingException::class);
     } finally {
+        restore_error_handler();
         chmod($dir, 0o777);
     }
 });

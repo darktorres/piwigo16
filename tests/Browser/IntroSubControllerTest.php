@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\Env;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
@@ -148,17 +149,31 @@ it('computes zero comments when comments are disabled', function (): void {
     }
 });
 
-/** @param array<int, array{object: string, action: string, daysAgo: int}> $rows */
+/**
+ * @param array<int, array{object: string, action: string, daysAgo: int}> $rows
+ *
+ * Real bug, found via the mutation sweep (2026-08-01): this used to anchor
+ * "daysAgo" on the DB's own real-clock NOW(), while IntroSubController's
+ * own activity-chart "today" is Env::now() (frozen to PIWIGO_TEST_NOW in
+ * test mode) -- the two silently agreed as long as real wall-clock time
+ * stayed on the same calendar day as the frozen instant, but broke the
+ * moment real time drifted onto the next day, landing every inserted row
+ * one full day off from where the chart expects it. Anchoring on
+ * Env::now() here instead keeps this in lockstep with the page under
+ * test, the same fix already applied to SessionRepository::gc().
+ */
 function introInsertActivityRows(array $rows): void
 {
     $db = introDbConnect();
+    $now = Env::now();
     foreach ($rows as $row) {
+        $occuredOn = (clone $now)->modify('-' . $row['daysAgo'] . ' day')->format('Y-m-d H:i:s');
         $db->query(sprintf(
-            "INSERT INTO %sactivity (object, object_id, action, session_idx, occured_on) VALUES ('%s', 1, '%s', 'ct_intro_session', DATE_SUB(NOW(), INTERVAL %d DAY))",
+            "INSERT INTO %sactivity (object, object_id, action, session_idx, occured_on) VALUES ('%s', 1, '%s', 'ct_intro_session', '%s')",
             introDbPrefix(),
             $db->real_escape_string($row['object']),
             $db->real_escape_string($row['action']),
-            $row['daysAgo']
+            $db->real_escape_string($occuredOn)
         ));
     }
     $db->close();
@@ -180,8 +195,21 @@ it('smooths the activity chart into size groups when daily counts vary by more t
     // login starts a session with no `cache_activity_last_weeks` yet, so
     // this recomputes straight from these rows rather than reusing a
     // stale/empty cached value from an earlier test in this run.
+    //
+    // Real bug, found via the mutation sweep (2026-08-01): the 1-count
+    // day used to be daysAgo=0 (i.e. "today", Env::now() itself) -- but
+    // "today" is also where every OTHER test's login (and the fixture's
+    // own install/seed events) log their own real activity rows, all
+    // sharing the same frozen Env::now() timestamp. Across a full Browser
+    // suite run that ambient noise accumulates into dozens of extra
+    // same-day rows, inflating "1 Activity" into "N Activities" and
+    // breaking this test's own escalating 1/3/20 scenario. daysAgo=1
+    // lands one day earlier than the fixture/login noise ever touches
+    // (confirmed empirically: no piwigo_activity rows exist before
+    // "today" at all), while staying on its own distinct day-of-week from
+    // the other two seeded days.
     introInsertActivityRows([
-        ['object' => 'photo', 'action' => 'ct_intro_a', 'daysAgo' => 0],
+        ['object' => 'photo', 'action' => 'ct_intro_a', 'daysAgo' => 1],
         ['object' => 'photo', 'action' => 'ct_intro_b1', 'daysAgo' => 2],
         ['object' => 'photo', 'action' => 'ct_intro_b2', 'daysAgo' => 2],
         ['object' => 'photo', 'action' => 'ct_intro_b3', 'daysAgo' => 2],

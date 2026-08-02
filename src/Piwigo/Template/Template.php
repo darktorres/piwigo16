@@ -268,7 +268,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
         $this->smarty->setTemplateDir([]);
         if ($theme !== '') {
             $this->set_theme($root, $theme, $path);
-            if (! AdminContext::isActive()) {
+            if (! AdminContext::isActiveStatic()) {
                 $this->set_prefilter('header', self::prefilter_local_css(...));
             }
         } else {
@@ -287,7 +287,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
         Lang::setLangInfo($lang_info);
         $this->smarty->assign('lang_info', $lang_info);
 
-        if (! AdminContext::isActive()) {
+        if (! AdminContext::isActiveStatic()) {
             $this->set_extents(\Piwigo\Config\CurrentConfig::extentsForTemplates(), CurrentPaths::get()->root . 'template-extension/', true, $theme);
         }
     }

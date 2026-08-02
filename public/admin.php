@@ -22,15 +22,13 @@ require __DIR__ . '/../vendor/autoload.php';
 use Piwigo\Admin\AdminShell;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Config\CurrentConfigService;
-use Piwigo\Core\AdminContext;
 use Piwigo\Core\Paths;
 use Piwigo\Html\HtmlService;
 use Piwigo\Url\UrlService;
 
 $paths = Paths::fromRoot(dirname(__DIR__));
-AdminContext::mark();
 
-\Piwigo\Bootstrap\RequestBootstrap::bootEntryPoint($paths);
+\Piwigo\Bootstrap\RequestBootstrap::bootEntryPoint($paths, isAdmin: true);
 
 new AdminShell(new RedirectService(), new UrlService(new HtmlService()), CurrentConfigService::get(), $paths, \Piwigo\Bootstrap\RequestBootstrap::filesystemIntegrityChecker())
     ->run();

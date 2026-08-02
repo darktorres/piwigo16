@@ -33,6 +33,7 @@ final readonly class SectionInitializer
         private SectionRepository $repo,
         private RedirectServiceInterface $redirectService,
         private UrlServiceInterface $urlService,
+        private RequestMountDepth $requestMountDepth,
     ) {}
 
     public function parse(): SectionUrlParse
@@ -54,7 +55,7 @@ final readonly class SectionInitializer
             // below in every real gallery-facing context. RequestMountDepth
             // generalizes this correctly instead of hardcoding "this
             // entry file is never nested" -- see that class's own docblock.
-            $root_path = str_repeat('../', RequestMountDepth::current() + $path_count - 1);
+            $root_path = str_repeat('../', $this->requestMountDepth->current() + $path_count - 1);
         } else {
             // PHP auto-casts a purely-numeric query-string key (e.g. "?1")
             // to a real int array key -- a bare numeric token (no id-name
@@ -67,7 +68,7 @@ final readonly class SectionInitializer
 
             // the $_GET keys are not protected in include/common.inc.php, only the values
             $rewritten = $this->repo->escapeToken($rewritten);
-            $root_path = str_repeat('../', RequestMountDepth::current());
+            $root_path = str_repeat('../', $this->requestMountDepth->current());
         }
 
         $section_url = $rewritten;

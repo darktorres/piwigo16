@@ -18,14 +18,12 @@ require __DIR__ . '/../vendor/autoload.php';
 
 use Piwigo\Bootstrap\RequestPipeline;
 use Piwigo\Core\Paths;
-use Piwigo\Core\WsContext;
 use Piwigo\Http\RequestFactory;
 use Piwigo\Http\ResponseEmitter;
 
 // ----------------------------------------------------------- include
 $paths = Paths::fromRoot(dirname(__DIR__));
-WsContext::mark();
-\Piwigo\Bootstrap\RequestBootstrap::bootEntryPoint($paths);
+\Piwigo\Bootstrap\RequestBootstrap::bootEntryPoint($paths, isWs: true);
 
 $response = RequestPipeline::handle(RequestFactory::fromGlobals());
 new ResponseEmitter()

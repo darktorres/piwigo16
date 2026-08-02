@@ -75,7 +75,7 @@ final class CookieService
             $scr .= '/';
         }
 
-        $mountDepth = \Piwigo\Core\RequestMountDepth::current();
+        $mountDepth = \Piwigo\Core\RequestMountDepth::currentStatic();
         // `> 0` vs `>= 0`/`> -1` at the mountDepth===0 boundary is
         // unobservable: entering the block below with mountDepth=0 makes
         // str_repeat('../', 0) a no-op ('') and the while loop's own

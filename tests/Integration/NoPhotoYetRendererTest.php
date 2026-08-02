@@ -17,6 +17,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfigService;
+use Piwigo\Core\AdminContext;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -101,7 +102,7 @@ final class NoPhotoYetRendererTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         CurrentConfigService::set(new ConfigService($this->buildConfigRepository()));
-        $this->renderer = new NoPhotoYetRenderer(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Image\ImageEntity::class), new ConfigService($this->buildConfigRepository()), new RedirectService(), new UrlService(new HtmlService()), Paths::fromRoot(dirname(__DIR__, 2)));
+        $this->renderer = new NoPhotoYetRenderer(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Image\ImageEntity::class), new ConfigService($this->buildConfigRepository()), new RedirectService(), new UrlService(new HtmlService()), Paths::fromRoot(dirname(__DIR__, 2)), new AdminContext());
 
         // NoPhotoYetRenderer calls Piwigo\Auth\AccessControl::isAGuest()/
         // isAdmin() directly (real class methods), which read

@@ -107,6 +107,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         private readonly ConfigService $configService,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
         private readonly StorageRegistry $storageRegistry,
+        private readonly \Piwigo\Core\AdminContext $adminContext,
     ) {}
 
     /**
@@ -618,7 +619,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 // P22: profile.php's own save_profile_from_post()/
                 // load_profile_in_template() ported to Piwigo\Controller\
                 // ProfileFormHandler in P23 batch 8c.
-                $profileFormHandler = new ProfileFormHandler($this->redirectService);
+                $profileFormHandler = new ProfileFormHandler($this->redirectService, $this->adminContext);
 
                 $errors = [];
                 if ($profileFormHandler->saveFromPost($edit_user, $errors)) {

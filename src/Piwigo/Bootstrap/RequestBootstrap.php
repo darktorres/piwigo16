@@ -146,8 +146,17 @@ final class RequestBootstrap
      * directly in this class -- see bootConfigOnly() below for the
      * lighter, standalone-callable equivalent that used to be that
      * class's own run().
+     *
+     * $mountDepth/$isWs/$isAdmin -- singleton/service-locator elimination
+     * campaign, Phase 3: the pre-`Kernel::boot()` marker trio
+     * (RequestMountDepth/WsContext/AdminContext), threaded through from
+     * whichever entry-shell file called this (`public/admin/popuphelp.php`,
+     * `public/ws.php`, `public/admin.php` -- the only 3 that pass anything
+     * other than the defaults) all the way down to `Container::build()`,
+     * replacing those 3 classes' former pre-boot `X::mark()`/`X::set()`
+     * calls (there is no container yet at the point those used to run).
      */
-    public static function bootEntryPoint(Paths $paths): void
+    public static function bootEntryPoint(Paths $paths, int $mountDepth = 0, bool $isWs = false, bool $isAdmin = false): void
     {
         CoverageCollector::registerIfActive($paths);
         SentryBootstrap::init();
@@ -156,7 +165,7 @@ final class RequestBootstrap
         $t2 = microtime(true);
 
         try {
-            self::configure($paths, $t2);
+            self::configure($paths, $t2, $mountDepth, $isWs, $isAdmin);
             self::installationFlag()->mark();
             self::connect();
             self::finalize();
@@ -237,9 +246,9 @@ final class RequestBootstrap
      * booting this early changes nothing observable until something
      * actually resolves a service.
      */
-    public static function configure(Paths $paths, float $requestStart): void
+    public static function configure(Paths $paths, float $requestStart, int $mountDepth = 0, bool $isWs = false, bool $isAdmin = false): void
     {
-        Kernel::boot($paths);
+        Kernel::boot($paths, $mountDepth, $isWs, $isAdmin);
 
         // Legacy Coupling Retirement Phase 8, 8h: the true start of each
         // request -- resets ActivityService::record()'s "was a real user
@@ -494,6 +503,7 @@ final class RequestBootstrap
             new UrlService(new HtmlService()),
             self::apiKeyRequestFlag(),
             self::currentLogger(),
+            self::wsContext(),
         )->initialize();
     }
 
@@ -539,7 +549,7 @@ final class RequestBootstrap
             $conn,
         ));
         Lang::load('common.lang');
-        if (\Piwigo\Auth\AccessControl::isAdmin() || \Piwigo\Core\AdminContext::isActive()) {
+        if (\Piwigo\Auth\AccessControl::isAdmin() || self::adminContext()->isActive()) {
             Lang::load('admin.lang');
             // Add language for temporary strings for new popup, from piwigo 15
             Lang::load('whats_new_' . \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION) . '.lang');
@@ -594,7 +604,7 @@ final class RequestBootstrap
         }
 
         // template instance
-        if (\Piwigo\Core\AdminContext::isActive()) {// Admin template
+        if (self::adminContext()->isActive()) {// Admin template
             // getParam() has no return type declaration (its own value
             // comes from CurrentUser::get()->preferences[$param], an
             // untyped array<string, mixed>), so its return is inferred as
@@ -634,7 +644,7 @@ final class RequestBootstrap
             // when it decides to take over the page. CurrentConfigService::get()
             // reuses the instance connect() already resolved earlier in the
             // same request (Legacy Coupling Retirement Phase 8, 8d).
-            new NoPhotoYetRenderer(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), \Piwigo\Config\CurrentConfigService::get(), new RedirectService(), new UrlService(new HtmlService()), CurrentPaths::get())
+            new NoPhotoYetRenderer(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), \Piwigo\Config\CurrentConfigService::get(), new RedirectService(), new UrlService(new HtmlService()), CurrentPaths::get(), self::adminContext())
                 ->render();
         }
 
@@ -900,6 +910,34 @@ final class RequestBootstrap
         }
 
         return $errorCollector;
+    }
+
+    /**
+     * Resolves the container-shared, immutable instance -- singleton/
+     * service-locator elimination campaign, Phase 3.
+     */
+    private static function wsContext(): \Piwigo\Core\WsContext
+    {
+        $wsContext = Kernel::container()->get(\Piwigo\Core\WsContext::class);
+        if (! $wsContext instanceof \Piwigo\Core\WsContext) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\WsContext::class);
+        }
+
+        return $wsContext;
+    }
+
+    /**
+     * Resolves the container-shared, immutable instance -- singleton/
+     * service-locator elimination campaign, Phase 3.
+     */
+    private static function adminContext(): \Piwigo\Core\AdminContext
+    {
+        $adminContext = Kernel::container()->get(\Piwigo\Core\AdminContext::class);
+        if (! $adminContext instanceof \Piwigo\Core\AdminContext) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\AdminContext::class);
+        }
+
+        return $adminContext;
     }
 
     /**

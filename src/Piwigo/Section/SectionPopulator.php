@@ -70,6 +70,7 @@ final readonly class SectionPopulator
         private \Piwigo\Core\FilterState $filterState,
         private \Piwigo\Core\CurrentLogger $currentLogger,
         private SectionContextRegistry $sectionContextRegistry,
+        private \Piwigo\Core\RequestMountDepth $requestMountDepth,
     ) {}
 
     public function populate(): void
@@ -107,7 +108,7 @@ final readonly class SectionPopulator
         // execution. No downstream code reads SectionContextRegistry::
         // current() mid-request today (confirmed via a full-repo grep),
         // so deferring the one real set() call to the end is safe.
-        $url_parse = new SectionInitializer($this->htmlRenderer, $this->repo, $this->redirectService, $this->urlService)
+        $url_parse = new SectionInitializer($this->htmlRenderer, $this->repo, $this->redirectService, $this->urlService, $this->requestMountDepth)
             ->parse();
 
         $page['root_path'] = $url_parse->rootPath;

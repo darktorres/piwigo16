@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Piwigo\Admin\PluginMaintain;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\WsContext;
+use Piwigo\Tests\Support\KernelContainerOverride;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
@@ -36,12 +37,10 @@ use Piwigo\Users\UserStatus;
  */
 beforeEach(function (): void {
     CurrentUser::reset();
-    WsContext::reset();
 });
 
 afterEach(function (): void {
     CurrentUser::reset();
-    WsContext::reset();
 });
 
 function pluginMaintainSetUserStatus(UserStatus $status): void
@@ -124,7 +123,6 @@ test('autoUpdate() stays silent for a normal (non-admin) user', function (): voi
 
 test('autoUpdate() stays silent for an admin user inside an active WS request', function (): void {
     pluginMaintainSetUserStatus(UserStatus::Admin);
-    WsContext::mark();
 
     $triggered = false;
     set_error_handler(static function () use (&$triggered): bool {
@@ -134,7 +132,16 @@ test('autoUpdate() stays silent for an admin user inside an active WS request', 
     });
 
     try {
-        new PluginMaintain('some-plugin')->autoUpdate();
+        // WsContext::isActiveStatic() resolves the container-shared
+        // instance (singleton/service-locator elimination campaign, Phase
+        // 3) -- KernelContainerOverride::with() gives this one test a real
+        // container with WsContext bound active, then tears it back down.
+        KernelContainerOverride::with(
+            [WsContext::class => new WsContext(true)],
+            static function (): void {
+                new PluginMaintain('some-plugin')->autoUpdate();
+            }
+        );
     } finally {
         restore_error_handler();
     }

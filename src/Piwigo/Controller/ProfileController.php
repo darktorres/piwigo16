@@ -46,6 +46,7 @@ final class ProfileController implements ControllerInterface
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\FilterState $filterState,
         private readonly \Piwigo\Section\SectionContextRegistry $sectionContextRegistry,
+        private readonly \Piwigo\Core\AdminContext $adminContext,
     ) {}
 
     private static function userService(): UserService
@@ -142,7 +143,7 @@ final class ProfileController implements ControllerInterface
             $userdata = array_merge($userdata, $default_user);
         }
 
-        $profileFormHandler = new ProfileFormHandler($this->redirectService);
+        $profileFormHandler = new ProfileFormHandler($this->redirectService, $this->adminContext);
 
         $page_errors = \Piwigo\Core\PageState::current()->errors;
         $profileFormHandler->saveFromPost($userdata, $page_errors);

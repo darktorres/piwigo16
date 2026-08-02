@@ -452,22 +452,23 @@ test('constructor registers template-extension extents when not in admin context
 // --- constructor: local-css header prefilter (themed, non-admin) -------
 
 test('constructor registers the local-css header prefilter for a themed template when not in admin context', function (): void {
-    \Piwigo\Core\AdminContext::reset();
-
+    // AdminContext defaults to inactive -- beforeEach()'s own Kernel::boot()
+    // already bound the default (false), no explicit setup needed
+    // (singleton/service-locator elimination campaign, Phase 3).
     $t = new Template('.', 'template-instance-test-theme-a');
 
     expect($t->external_filters)->toHaveKey('header');
 });
 
 test('constructor does not register the local-css header prefilter for a themed template while in admin context', function (): void {
-    \Piwigo\Core\AdminContext::mark();
-    try {
-        $t = new Template('.', 'template-instance-test-theme-b');
-    } finally {
-        \Piwigo\Core\AdminContext::reset();
-    }
+    \Piwigo\Tests\Support\KernelContainerOverride::with(
+        [\Piwigo\Core\AdminContext::class => new \Piwigo\Core\AdminContext(true)],
+        function (): void {
+            $t = new Template('.', 'template-instance-test-theme-b');
 
-    expect($t->external_filters)->not->toHaveKey('header');
+            expect($t->external_filters)->not->toHaveKey('header');
+        }
+    );
 });
 
 // --- set_theme -----------------------------------------------------------

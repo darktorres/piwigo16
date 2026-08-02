@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Page;
 
 use Piwigo\Config\ConfigService;
+use Piwigo\Core\AdminContext;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
@@ -40,12 +41,13 @@ final readonly class NoPhotoYetRenderer
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly Paths $paths,
+        private readonly AdminContext $adminContext,
     ) {}
 
     public function render(): void
     {
         if (
-            ! \Piwigo\Core\AdminContext::isActive()   // no message inside administration
+            ! $this->adminContext->isActive()   // no message inside administration
             and \Piwigo\Core\PageFilterHelper::scriptBasename() !== 'identification' // keep the ability to login
             and \Piwigo\Core\PageFilterHelper::scriptBasename() !== 'password'       // keep the ability to reset password
             and \Piwigo\Core\PageFilterHelper::scriptBasename() !== 'ws'             // keep the ability to discuss with web API

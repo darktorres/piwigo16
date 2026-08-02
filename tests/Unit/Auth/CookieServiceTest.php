@@ -4,15 +4,24 @@ declare(strict_types=1);
 
 use Piwigo\Auth\CookieService;
 use Piwigo\Core\RequestMountDepth;
+use Piwigo\Tests\Support\KernelContainerOverride;
 
 beforeEach(function (): void {
     unset($_SERVER['REDIRECT_SCRIPT_NAME'], $_SERVER['REDIRECT_URL'], $_SERVER['PATH_INFO']);
-    RequestMountDepth::reset();
 });
 
-afterEach(function (): void {
-    RequestMountDepth::reset();
-});
+/**
+ * RequestMountDepth::currentStatic() (singleton/service-locator
+ * elimination campaign, Phase 3) gracefully falls back to 0 when Kernel
+ * hasn't booted -- most tests in this file need no container at all.
+ * Tests needing a non-zero depth boot a real one via
+ * KernelContainerOverride::with() instead of the former mid-test
+ * RequestMountDepth::set() call.
+ */
+function cookieServiceTestWithMountDepth(int $depth, callable $fn): mixed
+{
+    return KernelContainerOverride::with([RequestMountDepth::class => new RequestMountDepth($depth)], $fn);
+}
 
 test('cookiePath falls back to SCRIPT_NAME when no rewrite headers are present', function (): void {
     $_SERVER['SCRIPT_NAME'] = '/piwigo/index.php';
@@ -151,8 +160,10 @@ test('cookiePath leaves an already-slash-terminated path alone, not appending a 
 });
 
 test('cookiePath does not append any ../ when mount depth is exactly 0', function (): void {
+    // 0 is RequestMountDepth's own default (no container needed at all --
+    // currentStatic() gracefully falls back to it when Kernel isn't
+    // booted), so this needs no explicit setup.
     $_SERVER['SCRIPT_NAME'] = '/piwigo/index.php';
-    RequestMountDepth::set(0);
 
     expect(new CookieService()->cookiePath())->toBe('/piwigo/');
 });
@@ -161,10 +172,11 @@ test('cookiePath repeats ../ exactly once per mount depth level, not just once',
     // Distinguishes str_repeat('../', $mountDepth) from a version that
     // appends '../' only once regardless of depth -- depth 2 must
     // normalize 2 levels up, not 1.
-    $_SERVER['SCRIPT_NAME'] = '/piwigo/admin/deep/popuphelp.php';
-    RequestMountDepth::set(2);
+    cookieServiceTestWithMountDepth(2, function (): void {
+        $_SERVER['SCRIPT_NAME'] = '/piwigo/admin/deep/popuphelp.php';
 
-    expect(new CookieService()->cookiePath())->toBe('/piwigo/');
+        expect(new CookieService()->cookiePath())->toBe('/piwigo/');
+    });
 });
 
 test('cookiePath normalizes back to the real app root when the entry file is one directory deeper', function (): void {
@@ -183,8 +195,9 @@ test('cookiePath normalizes back to the real app root when the entry file is one
     // itself, so that branch is provably unreachable (the source's own
     // inline comment right above `if ($new === null)` already documents
     // the same conclusion).
-    $_SERVER['SCRIPT_NAME'] = '/piwigo/admin/popuphelp.php';
-    RequestMountDepth::set(1);
+    cookieServiceTestWithMountDepth(1, function (): void {
+        $_SERVER['SCRIPT_NAME'] = '/piwigo/admin/popuphelp.php';
 
-    expect(new CookieService()->cookiePath())->toBe('/piwigo/');
+        expect(new CookieService()->cookiePath())->toBe('/piwigo/');
+    });
 });

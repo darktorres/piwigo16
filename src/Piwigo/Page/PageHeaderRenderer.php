@@ -52,7 +52,7 @@ final class PageHeaderRenderer
         \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginPageHeader());
 
         $show_mobile_app_banner = \Piwigo\Config\CurrentConfig::showMobileAppBannerInGallery();
-        if (\Piwigo\Core\AdminContext::isActive()) {
+        if (\Piwigo\Core\AdminContext::isActiveStatic()) {
             $show_mobile_app_banner = \Piwigo\Config\CurrentConfig::showMobileAppBannerInAdmin();
         }
 

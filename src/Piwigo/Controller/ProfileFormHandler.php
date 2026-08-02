@@ -11,6 +11,7 @@ namespace Piwigo\Controller;
 use Doctrine\DBAL\Connection;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\PasswordService;
+use Piwigo\Core\AdminContext;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
@@ -37,6 +38,7 @@ final class ProfileFormHandler
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly AdminContext $adminContext,
     ) {}
 
     private static function activityService(Connection $conn): \Piwigo\Activity\ActivityService
@@ -111,11 +113,11 @@ final class ProfileFormHandler
             $post['language'] = self::userService()->getDefaultLanguage();
         }
 
-        if (! \Piwigo\Core\AdminContext::isActive()) {
+        if (! $this->adminContext->isActive()) {
             unset($post['username']);
         }
 
-        if (\Piwigo\Config\CurrentConfig::allowUserCustomization() or \Piwigo\Core\AdminContext::isActive()) {
+        if (\Piwigo\Config\CurrentConfig::allowUserCustomization() or $this->adminContext->isActive()) {
             $int_pattern = '/^\d+$/';
             // $_POST values are always strings or arrays -- never a real
             // PHP int/float/bool -- so only the null/string/array-emptiness
@@ -174,7 +176,7 @@ final class ProfileFormHandler
                 $errors[] = Lang::t('The passwords do not match');
             }
 
-            if (! \Piwigo\Core\AdminContext::isActive()) {// changing password requires old password
+            if (! $this->adminContext->isActive()) {// changing password requires old password
                 $current_password = self::authService()->getPasswordHash($user_id, $user_fields['id'], $user_fields['username'], $user_fields['password']);
 
                 // the password column allows NULL (external-authentication
@@ -263,7 +265,7 @@ final class ProfileFormHandler
                 $activity_details_tables[] = 'users';
             }
 
-            if (\Piwigo\Config\CurrentConfig::allowUserCustomization() or \Piwigo\Core\AdminContext::isActive()) {
+            if (\Piwigo\Config\CurrentConfig::allowUserCustomization() or $this->adminContext->isActive()) {
                 // update user "additional" informations (specific to Piwigo)
                 $fields = [
                     'nb_image_page', 'language',
@@ -371,7 +373,7 @@ final class ProfileFormHandler
 
         $special_user = in_array($userdata['id'], [\Piwigo\Config\CurrentConfig::guestId(), \Piwigo\Config\CurrentConfig::defaultUserId()], true);
         $template->assign('SPECIAL_USER', $special_user);
-        $template->assign('IN_ADMIN', \Piwigo\Core\AdminContext::isActive());
+        $template->assign('IN_ADMIN', $this->adminContext->isActive());
 
         // api key expiration choice
         $conn = DbConnection::build();

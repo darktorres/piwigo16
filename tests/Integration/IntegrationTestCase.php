@@ -193,13 +193,6 @@ abstract class IntegrationTestCase extends TestCase
             }
         }
         CurrentPaths::reset();
-        // Legacy Coupling Retirement gap-closure (entry-shell define()/
-        // include round, Part 0b) -- same per-request-singleton shape as
-        // the resets above; harmless even for test classes that never
-        // call mark() at all, same reasoning as CurrentConfigService::
-        // reset() above.
-        \Piwigo\Core\AdminContext::reset();
-        \Piwigo\Core\WsContext::reset();
         // InstallationFlag is a container-shared instance now (singleton/
         // service-locator elimination campaign, Phase 1), not a static
         // facade -- most subclasses never call Kernel::boot() at all, so

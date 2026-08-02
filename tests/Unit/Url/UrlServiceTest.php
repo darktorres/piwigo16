@@ -12,6 +12,7 @@ use Piwigo\Core\WsContext;
 use Piwigo\Html\HtmlService;
 use Piwigo\Section\SectionContext;
 use Piwigo\Section\SectionContextRegistry;
+use Piwigo\Tests\Support\KernelContainerOverride;
 use Piwigo\Url\RootPathOverride;
 use Piwigo\Url\UrlService;
 use ReflectionProperty;
@@ -36,7 +37,6 @@ beforeEach(function (): void {
     $_SERVER['SCRIPT_NAME'] = '/piwigo/index.php';
     CurrentConfig::setUrlPort('none');
     RootPathOverride::reset();
-    RequestMountDepth::reset();
     // getRootUrl()/paramsForDuplication() read SectionContextRegistry
     // through the transitional currentStatic() shim (singleton/
     // service-locator elimination campaign, Phase 2 -- see that method's
@@ -50,7 +50,6 @@ afterEach(function (): void {
     CurrentConfig::reset();
     DeploymentPolicy::reset();
     RootPathOverride::reset();
-    RequestMountDepth::reset();
     Kernel::reset();
 });
 
@@ -62,6 +61,22 @@ function urlServiceTestSectionContextRegistry(): SectionContextRegistry
     }
 
     return $registry;
+}
+
+/**
+ * RequestMountDepth is a container-shared, immutable value now (singleton/
+ * service-locator elimination campaign, Phase 3) -- beforeEach()'s own
+ * Kernel::boot() already bound the default (0), so a test needing a
+ * non-zero depth rebuilds the container via KernelContainerOverride::with()
+ * instead of the former mid-test RequestMountDepth::set() call. Runs $fn
+ * inside that fresh container, same as SectionContextRegistry-dependent
+ * tests already do via urlServiceTestSectionContextRegistry() -- callers
+ * needing both do their own SectionContextRegistry ->set() call from
+ * inside $fn, after the container has already been rebuilt.
+ */
+function urlServiceTestWithMountDepth(int $depth, callable $fn): mixed
+{
+    return KernelContainerOverride::with([RequestMountDepth::class => new RequestMountDepth($depth)], $fn);
 }
 
 test('getActionUrl builds action.php with id/part, adding a bare download flag when requested', function (): void {
@@ -102,22 +117,24 @@ test('getRootUrl returns an empty string at the app\'s real root (no mount depth
 });
 
 test('getRootUrl returns a ../ prefix per RequestMountDepth level when no override is active', function (): void {
-    RequestMountDepth::set(1);
-    $service = new UrlService(new HtmlService());
+    urlServiceTestWithMountDepth(1, function (): void {
+        $service = new UrlService(new HtmlService());
 
-    expect($service->getRootUrl())->toBe('../');
+        expect($service->getRootUrl())->toBe('../');
+    });
 });
 
 test('getRootUrl prefers RootPathOverride over RequestMountDepth', function (): void {
-    RequestMountDepth::set(1);
-    RootPathOverride::push('/gallery/');
-    $service = new UrlService(new HtmlService());
+    urlServiceTestWithMountDepth(1, function (): void {
+        RootPathOverride::push('/gallery/');
+        $service = new UrlService(new HtmlService());
 
-    try {
-        expect($service->getRootUrl())->toBe('/gallery/');
-    } finally {
-        RootPathOverride::pop();
-    }
+        try {
+            expect($service->getRootUrl())->toBe('/gallery/');
+        } finally {
+            RootPathOverride::pop();
+        }
+    });
 });
 
 test('urlIsRemote is true for http and https URLs', function (): void {
@@ -436,11 +453,12 @@ test('makePictureUrl falls through the file style to the bare id when the filena
 });
 
 test('getRootUrl treats an empty-string section rootPath the same as no rootPath at all', function (): void {
-    RequestMountDepth::set(1);
-    urlServiceTestSectionContextRegistry()->set(new SectionContext(rootPath: ''));
-    $service = new UrlService(new HtmlService());
+    urlServiceTestWithMountDepth(1, function (): void {
+        urlServiceTestSectionContextRegistry()->set(new SectionContext(rootPath: ''));
+        $service = new UrlService(new HtmlService());
 
-    expect($service->getRootUrl())->toBe('../');
+        expect($service->getRootUrl())->toBe('../');
+    });
 });
 
 /**
@@ -571,15 +589,11 @@ test('getAbsoluteRootUrl falls back to the Host header when gallery_url has an e
  *   concatenation is a no-op for every scalar value.
  */
 test('addUrlParams switches the default separator to a plain ampersand inside a WS request context', function (): void {
-    WsContext::mark();
-
-    try {
+    KernelContainerOverride::with([WsContext::class => new WsContext(true)], function (): void {
         $service = new UrlService(new HtmlService());
 
         expect($service->addUrlParams('/x', ['a' => 'b', 'c' => 'd']))->toBe('/x?a=b&c=d');
-    } finally {
-        WsContext::reset();
-    }
+    });
 });
 
 test('addUrlParams appends an empty value for a non-scalar param', function (): void {
@@ -653,15 +667,16 @@ test('paramsForDuplication removes listed keys and applies redefinitions', funct
  *   (multi-digit-then-dash) shapes exercised by the tests in this file.
  */
 test('makePictureUrl prefixes the root URL before the picture path segment', function (): void {
-    RequestMountDepth::set(1);
-    CurrentConfig::setPhpExtensionInUrls(false);
-    CurrentConfig::setQuestionMarkInUrls(false);
-    CurrentConfig::setPictureUrlStyle('id-file');
-    $service = new UrlService(new HtmlService());
+    urlServiceTestWithMountDepth(1, function (): void {
+        CurrentConfig::setPhpExtensionInUrls(false);
+        CurrentConfig::setQuestionMarkInUrls(false);
+        CurrentConfig::setPictureUrlStyle('id-file');
+        $service = new UrlService(new HtmlService());
 
-    $url = $service->makePictureUrl(['image_id' => 5]);
+        $url = $service->makePictureUrl(['image_id' => 5]);
 
-    expect($url)->toBe('../picture/5');
+        expect($url)->toBe('../picture/5');
+    });
 });
 
 test('makePictureUrl appends the php extension and question mark by default, preserving the picture prefix', function (): void {
@@ -1129,11 +1144,12 @@ test('parseWellKnownParamsUrl rejects a non-numeric chronology date token', func
 });
 
 test('getElementUrl embellishes a non-remote path with the root URL', function (): void {
-    RequestMountDepth::set(1);
-    $service = new UrlService(new HtmlService());
+    urlServiceTestWithMountDepth(1, function (): void {
+        $service = new UrlService(new HtmlService());
 
-    expect($service->getElementUrl(['path' => 'galleries/2026/photo.jpg']))
-        ->toBe('../galleries/2026/photo.jpg');
+        expect($service->getElementUrl(['path' => 'galleries/2026/photo.jpg']))
+            ->toBe('../galleries/2026/photo.jpg');
+    });
 });
 
 test('getElementUrl leaves a remote path unchanged', function (): void {
@@ -1266,10 +1282,11 @@ test('parseWellKnownParamsUrl parses an explicit "list" chronology view', functi
 });
 
 test('getActionUrl prefixes action.php with a non-empty root URL', function (): void {
-    RequestMountDepth::set(1);
-    $service = new UrlService(new HtmlService());
+    urlServiceTestWithMountDepth(1, function (): void {
+        $service = new UrlService(new HtmlService());
 
-    expect($service->getActionUrl(42, 'e', false))->toBe('../action.php?id=42&amp;part=e');
+        expect($service->getActionUrl(42, 'e', false))->toBe('../action.php?id=42&amp;part=e');
+    });
 });
 
 test('getElementUrl returns an empty string for a non-scalar path', function (): void {
@@ -1279,21 +1296,22 @@ test('getElementUrl returns an empty string for a non-scalar path', function ():
 });
 
 test('unsetMakeFullUrl pops the override pushed by setMakeFullUrl', function (): void {
-    RequestMountDepth::set(1);
-    $_SERVER['HTTP_HOST'] = 'gallery.example.test';
-    $service = new UrlService(new HtmlService());
+    urlServiceTestWithMountDepth(1, function (): void {
+        $_SERVER['HTTP_HOST'] = 'gallery.example.test';
+        $service = new UrlService(new HtmlService());
 
-    // getAbsoluteRootUrl()'s own cookiePath() also reads RequestMountDepth
-    // (it collapses a trailing '../' against the SCRIPT_NAME dirname), so
-    // with mountDepth=1 this resolves to the bare host root, not
-    // '.../piwigo/' -- what matters here is only that it's the absolute
-    // (scheme+host) form, distinct from the '../' the mount-depth-relative
-    // path produces once the override is popped below.
-    $service->setMakeFullUrl();
-    expect($service->getRootUrl())->toBe('http://gallery.example.test/');
+        // getAbsoluteRootUrl()'s own cookiePath() also reads RequestMountDepth
+        // (it collapses a trailing '../' against the SCRIPT_NAME dirname), so
+        // with mountDepth=1 this resolves to the bare host root, not
+        // '.../piwigo/' -- what matters here is only that it's the absolute
+        // (scheme+host) form, distinct from the '../' the mount-depth-relative
+        // path produces once the override is popped below.
+        $service->setMakeFullUrl();
+        expect($service->getRootUrl())->toBe('http://gallery.example.test/');
 
-    $service->unsetMakeFullUrl();
-    expect($service->getRootUrl())->toBe('../');
+        $service->unsetMakeFullUrl();
+        expect($service->getRootUrl())->toBe('../');
+    });
 });
 
 test('embellishUrl leaves a leading /../ unresolved (the offset skips a match at position 0)', function (): void {
@@ -1316,19 +1334,21 @@ test('getGalleryHomeUrl falls back to makeIndexUrl for an empty-string gallery_u
 });
 
 test('getGalleryHomeUrl returns a root-relative gallery_url unchanged, ignoring a non-empty root URL', function (): void {
-    RequestMountDepth::set(1);
-    CurrentConfig::setGalleryUrl('/my-gallery');
-    $service = new UrlService(new HtmlService());
+    urlServiceTestWithMountDepth(1, function (): void {
+        CurrentConfig::setGalleryUrl('/my-gallery');
+        $service = new UrlService(new HtmlService());
 
-    expect($service->getGalleryHomeUrl())->toBe('/my-gallery');
+        expect($service->getGalleryHomeUrl())->toBe('/my-gallery');
+    });
 });
 
 test('getGalleryHomeUrl prefixes a relative gallery_url with a non-empty root URL', function (): void {
-    RequestMountDepth::set(1);
-    CurrentConfig::setGalleryUrl('my-gallery/');
-    $service = new UrlService(new HtmlService());
+    urlServiceTestWithMountDepth(1, function (): void {
+        CurrentConfig::setGalleryUrl('my-gallery/');
+        $service = new UrlService(new HtmlService());
 
-    expect($service->getGalleryHomeUrl())->toBe('../my-gallery/');
+        expect($service->getGalleryHomeUrl())->toBe('../my-gallery/');
+    });
 });
 
 test('getQueryStringDiff returns empty string for an explicitly empty QUERY_STRING', function (): void {

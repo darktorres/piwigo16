@@ -10,7 +10,6 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
-use Piwigo\Core\AdminContext;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
@@ -92,7 +91,6 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
     {
         CurrentUser::reset();
         CurrentTemplate::reset();
-        AdminContext::reset();
         EventDispatcher::reset();
         PageState::reset();
         CurrentConfig::reset();

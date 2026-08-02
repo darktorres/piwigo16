@@ -13,6 +13,7 @@ use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\Logger;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Core\WsContext;
 use Piwigo\Db\DbConnection;
 use Piwigo\Event\User\UserInit;
 use Piwigo\Html\HtmlService;
@@ -49,6 +50,7 @@ final class UserBootstrap
         private readonly UrlServiceInterface $urlService,
         private readonly ApiKeyRequestFlag $apiKeyRequestFlag,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+        private readonly WsContext $wsContext,
     ) {}
 
     public function initialize(): void
@@ -120,7 +122,7 @@ final class UserBootstrap
 
         // HTTP_AUTHORIZATION api_key
         if (
-            \Piwigo\Core\WsContext::isActive()
+            $this->wsContext->isActive()
             and isset($_SERVER['HTTP_X_PIWIGO_API'])
             and is_string($_SERVER['HTTP_X_PIWIGO_API'])
             and ! self::emptyValue($_SERVER['HTTP_X_PIWIGO_API'])
@@ -163,7 +165,7 @@ final class UserBootstrap
         }
 
         if (
-            \Piwigo\Core\WsContext::isActive()
+            $this->wsContext->isActive()
             and $userBootstrapRequest->wsMethod === 'pwg.images.uploadAsync'
             and $userBootstrapRequest->username !== null
             and $userBootstrapRequest->password !== null

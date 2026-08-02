@@ -230,6 +230,9 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
         '/src/Piwigo/Section/SectionContextRegistry.php',
         '/src/Piwigo/Storage/StorageRegistry.php',
         '/src/Piwigo/Core/ErrorCollector.php',
+        '/src/Piwigo/Core/RequestMountDepth.php',
+        '/src/Piwigo/Core/WsContext.php',
+        '/src/Piwigo/Core/AdminContext.php',
     ];
 
     $hits = [
@@ -396,16 +399,32 @@ test('DeploymentPolicy::set()/reset() are only called from tests/', function ():
  * verified above -- filtered out below by name rather than left
  * unguarded, so any *other* new direct caller still fails this test.
  */
-test('AdminContext::reset() is only called from tests/', function (): void {
+test('AdminContext::isActiveStatic() transitional shim has a shrinking, known allow-list', function (): void {
+    // Singleton/service-locator elimination campaign, Phase 3:
+    // Piwigo\Page\PageHeaderRenderer and Piwigo\Bootstrap\RedirectService
+    // both deliberately have no constructor at all (early-crash-fallback
+    // shape, Phase 6), and Piwigo\Template\Template is still manually
+    // `new`'d at dozens of call sites (Phase 6/8) -- all 3 use this static
+    // shim instead of the real isActive() instance method (see that
+    // method's own docblock). Every phase that converts one more of these
+    // files should remove it from the allow-list below; once empty,
+    // delete the shim and this test.
     $repoRoot = __DIR__ . '/../..';
 
-    $hits = [
-        ...findCallSites($repoRoot . '/src/Piwigo', 'AdminContext::reset('),
-        ...findCallSitesInRootPhpFiles($repoRoot, 'AdminContext::reset('),
-        ...findCallSitesInBinFiles($repoRoot, 'AdminContext::reset('),
+    $allowedFiles = [
+        '/src/Piwigo/Page/PageHeaderRenderer.php',
+        '/src/Piwigo/Bootstrap/RedirectService.php',
+        '/src/Piwigo/Template/Template.php',
     ];
 
-    expect(describeCallSites($hits))->toBe([]);
+    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'AdminContext::isActiveStatic(');
+
+    $disallowed = array_values(array_filter(
+        $hits,
+        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
+    ));
+
+    expect(describeCallSites($disallowed))->toBe([]);
 });
 
 test('ApiKeyRequestFlag::isActiveStatic() transitional shim has a shrinking, known allow-list', function (): void {
@@ -636,16 +655,30 @@ test('ProcessCache::*Static() transitional shims have a shrinking, known allow-l
     expect(describeCallSites($disallowed))->toBe([]);
 });
 
-test('RequestMountDepth::reset() is only called from tests/', function (): void {
+test('RequestMountDepth::currentStatic() transitional shim has a shrinking, known allow-list', function (): void {
+    // Singleton/service-locator elimination campaign, Phase 3:
+    // Piwigo\Url\UrlService and Piwigo\Auth\CookieService are both still
+    // manually `new`'d at dozens of call sites each (Phase 6), so neither
+    // can take RequestMountDepth via constructor injection yet -- they
+    // use this static shim instead of the real current() instance method
+    // (see that method's own docblock). Every phase that converts one
+    // more of these files should remove it from the allow-list below;
+    // once empty, delete the shim and this test.
     $repoRoot = __DIR__ . '/../..';
 
-    $hits = [
-        ...findCallSites($repoRoot . '/src/Piwigo', 'RequestMountDepth::reset('),
-        ...findCallSitesInRootPhpFiles($repoRoot, 'RequestMountDepth::reset('),
-        ...findCallSitesInBinFiles($repoRoot, 'RequestMountDepth::reset('),
+    $allowedFiles = [
+        '/src/Piwigo/Url/UrlService.php',
+        '/src/Piwigo/Auth/CookieService.php',
     ];
 
-    expect(describeCallSites($hits))->toBe([]);
+    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'RequestMountDepth::currentStatic(');
+
+    $disallowed = array_values(array_filter(
+        $hits,
+        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
+    ));
+
+    expect(describeCallSites($disallowed))->toBe([]);
 });
 
 test('ServerTiming::reset() is only called from tests/', function (): void {
@@ -660,16 +693,33 @@ test('ServerTiming::reset() is only called from tests/', function (): void {
     expect(describeCallSites($hits))->toBe([]);
 });
 
-test('WsContext::reset() is only called from tests/', function (): void {
+test('WsContext::isActiveStatic() transitional shim has a shrinking, known allow-list', function (): void {
+    // Singleton/service-locator elimination campaign, Phase 3:
+    // Piwigo\Admin\PluginMaintain (a base class extended by every
+    // third-party plugin's own maintain class -- its constructor
+    // signature isn't this campaign's to change), Piwigo\Url\UrlService
+    // (Phase 6), and Piwigo\Admin\Upload\UploadService::addUploadedFile()
+    // (reachable from the still-static Ws\PwgImages dispatch layer, Phase
+    // 10) all use this static shim instead of the real isActive() instance
+    // method (see that method's own docblock). Every phase that converts
+    // one more of these files should remove it from the allow-list below;
+    // once empty, delete the shim and this test.
     $repoRoot = __DIR__ . '/../..';
 
-    $hits = [
-        ...findCallSites($repoRoot . '/src/Piwigo', 'WsContext::reset('),
-        ...findCallSitesInRootPhpFiles($repoRoot, 'WsContext::reset('),
-        ...findCallSitesInBinFiles($repoRoot, 'WsContext::reset('),
+    $allowedFiles = [
+        '/src/Piwigo/Admin/PluginMaintain.php',
+        '/src/Piwigo/Url/UrlService.php',
+        '/src/Piwigo/Admin/Upload/UploadService.php',
     ];
 
-    expect(describeCallSites($hits))->toBe([]);
+    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'WsContext::isActiveStatic(');
+
+    $disallowed = array_values(array_filter(
+        $hits,
+        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
+    ));
+
+    expect(describeCallSites($disallowed))->toBe([]);
 });
 
 test('Translator::reset() is only called from tests/', function (): void {

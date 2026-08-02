@@ -29,30 +29,50 @@ namespace Piwigo\Core;
  * need this same fact, and deptrac.yaml only allows each layer to depend
  * downward -- L1 is the lowest layer that covers both real callers.
  *
- * A self-managed registry, not constructor-injected DI, because this is
- * genuinely per-request *state* known only by the one entry file that sets
- * it (same shape as `CurrentTemplate`/`CurrentUser`/`RootPathOverride`),
- * not a stateless service with real dependencies of its own.
+ * Container-shared, immutable value (singleton/service-locator elimination
+ * campaign, Phase 3): the value is fixed once, at container-build time
+ * (`Piwigo\Core\Container::build()`, threaded from the one entry-shell file
+ * that knows its own real mount depth -- `public/admin/popuphelp.php`),
+ * never mutated afterward during a request -- no "current instance"
+ * concept needed at all (same lesson as the Phase 0 `CurrentPersistentCache`
+ * pilot). currentStatic() is a `@deprecated` transitional bridge for
+ * callers not yet converted to constructor injection.
  */
 final class RequestMountDepth
 {
-    private static int $depth = 0;
+    public function __construct(
+        private readonly int $depth = 0,
+    ) {}
 
-    public static function set(int $depth): void
+    public function current(): int
     {
-        self::$depth = $depth;
-    }
-
-    public static function current(): int
-    {
-        return self::$depth;
+        return $this->depth;
     }
 
     /**
-     * Test-only -- production code never needs to clear this mid-request.
+     * @deprecated transitional bridge for callers not yet converted to
+     * constructor injection -- Piwigo\Url\UrlService and Piwigo\Auth\
+     * CookieService are both still manually `new`'d at dozens of call
+     * sites each (singleton/service-locator elimination campaign, Phase 6),
+     * so neither can take RequestMountDepth via constructor injection yet.
+     * Gracefully falls back to 0 (the same value an unset instance already
+     * defaults to) when Kernel hasn't booted -- both callers are reached by
+     * many Unit tests that never boot a container at all, matching the
+     * `InstallationFlag::isActiveStatic()` shim's own established
+     * reasoning. Delete once `grep -rn "RequestMountDepth::currentStatic("`
+     * outside tests/ returns nothing.
      */
-    public static function reset(): void
+    public static function currentStatic(): int
     {
-        self::$depth = 0;
+        if (! Kernel::isBooted()) {
+            return 0;
+        }
+
+        $instance = Kernel::container()->get(self::class);
+        if (! $instance instanceof self) {
+            throw new \LogicException('Container returned an unexpected type for ' . self::class);
+        }
+
+        return $instance->current();
     }
 }

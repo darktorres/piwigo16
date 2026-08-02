@@ -70,7 +70,7 @@ final class UrlService implements UrlServiceInterface
             // that was fragile (coincidentally correct only for
             // admin/popuphelp.php, not a guaranteed general mechanism) and
             // why this real, request-scoped mount-depth value replaces it.
-            return str_repeat('../', \Piwigo\Core\RequestMountDepth::current());
+            return str_repeat('../', \Piwigo\Core\RequestMountDepth::currentStatic());
         }
 
         return $root_path;
@@ -206,7 +206,7 @@ final class UrlService implements UrlServiceInterface
     public function addUrlParams(string $url, array $params, string $argSeparator = '&amp;'): string
     {
         if ($params !== []) {
-            if (\Piwigo\Core\WsContext::isActive() and $argSeparator === '&amp;') {
+            if (\Piwigo\Core\WsContext::isActiveStatic() and $argSeparator === '&amp;') {
                 $argSeparator = '&';
             }
 

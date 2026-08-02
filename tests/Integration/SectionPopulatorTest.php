@@ -15,7 +15,6 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
-use Piwigo\Core\AdminContext;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\FilterState;
@@ -24,6 +23,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
+use Piwigo\Core\RequestMountDepth;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Html\HtmlService;
@@ -148,7 +148,6 @@ final class SectionPopulatorTest extends IntegrationTestCase
         unset($_SESSION['pwg_image_order'], $_GET['action']);
         CurrentUser::reset();
         CurrentTemplate::reset();
-        AdminContext::reset();
         PageState::reset();
         CurrentConfig::reset();
         Kernel::reset();
@@ -176,6 +175,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
             $this->filterState,
             $this->currentLogger,
             $this->sectionContextRegistry,
+            new RequestMountDepth(),
         );
     }
 

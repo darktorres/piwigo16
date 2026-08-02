@@ -119,20 +119,19 @@ final class UserBootstrapTest extends IntegrationTestCase
         unset($_SESSION['connected_with'], $_SESSION['pwg_uid']);
 
         DeploymentPolicy::reset();
-        WsContext::reset();
         EventDispatcher::reset();
         CurrentUser::reset();
         Kernel::reset();
         parent::tearDown();
     }
 
-    private function bootstrap(): UserBootstrap
+    private function bootstrap(?WsContext $wsContext = null): UserBootstrap
     {
         // The api_key branch that reads CurrentLogger ends in a bare
         // exit() and is deliberately left uncovered here (see this class's
         // own docblock) -- never actually read, so a fresh, never-set()
         // instance is fine.
-        return new UserBootstrap(new RedirectService(), new UrlService(new HtmlService()), new ApiKeyRequestFlag(), new CurrentLogger());
+        return new UserBootstrap(new RedirectService(), new UrlService(new HtmlService()), new ApiKeyRequestFlag(), new CurrentLogger(), $wsContext ?? new WsContext());
     }
 
     public function test_initialize_auto_registers_a_new_local_account_for_an_unknown_apache_remote_user(): void
@@ -219,14 +218,13 @@ final class UserBootstrapTest extends IntegrationTestCase
             EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class),
         )->pwgLogin(...));
 
-        WsContext::mark();
         $_SERVER = [];
         $_GET = [];
         $_POST = ['username' => $username, 'password' => $plainPassword];
         $_REQUEST = ['method' => 'pwg.images.uploadAsync', 'username' => $username, 'password' => $plainPassword];
 
         try {
-            $this->bootstrap()->initialize();
+            $this->bootstrap(new WsContext(true))->initialize();
 
             self::assertSame('pwg.images.uploadAsync', $_SESSION['connected_with'] ?? null);
         } finally {

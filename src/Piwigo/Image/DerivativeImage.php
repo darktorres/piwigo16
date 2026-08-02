@@ -14,6 +14,7 @@ namespace Piwigo\Image;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Image\Event\GetDerivativeUrl;
 
 /**
  * Holds information (path, url, dimensions) about a derivative image.
@@ -105,17 +106,14 @@ final class DerivativeImage
             return $src_image->get_url();
         }
         $default_url = self::urlService()->getRootUrl() . $rel_url;
-        $filtered_url = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
-            'get_derivative_url',
+        $filtered_url = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetDerivativeUrl(
             $default_url,
             $params,
             $src_image,
             $rel_url
-        );
-        // trigger_change() hands the value through arbitrary registered
-        // event handlers (mixed return); fall back to the pre-filter url
-        // if a misbehaving handler returns a non-string.
-        return self::urlService()->embellishUrl(is_string($filtered_url) ? $filtered_url : $default_url);
+        ))->url;
+
+        return self::urlService()->embellishUrl($filtered_url);
     }
 
     /**
@@ -278,17 +276,14 @@ final class DerivativeImage
             return $this->src_image->get_url();
         }
         $default_url = self::urlService()->getRootUrl() . $this->rel_url;
-        $filtered_url = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
-            'get_derivative_url',
+        $filtered_url = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetDerivativeUrl(
             $default_url,
             $this->params,
             $this->src_image,
             $this->rel_url
-        );
-        // trigger_change() hands the value through arbitrary registered
-        // event handlers (mixed return); fall back to the pre-filter url
-        // if a misbehaving handler returns a non-string.
-        return self::urlService()->embellishUrl(is_string($filtered_url) ? $filtered_url : $default_url);
+        ))->url;
+
+        return self::urlService()->embellishUrl($filtered_url);
     }
 
     public function same_as_source(): bool

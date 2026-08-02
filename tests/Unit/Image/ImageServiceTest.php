@@ -6,6 +6,9 @@ namespace Piwigo\Tests\Unit\Image;
 
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Db\DbConnection;
+use Piwigo\Event\Album\EmptyLounge;
+use Piwigo\Event\Picture\BeginDeleteElements;
+use Piwigo\Event\Picture\DeleteElements;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use RuntimeException;
@@ -715,15 +718,15 @@ test('deleteElements() fires begin_delete_elements and delete_elements with the 
     $activityService = new \Piwigo\Activity\ActivityService($activityRepo);
 
     $capturedBeginIds = null;
-    $beginHandler = function (array $ids) use (&$capturedBeginIds): void {
-        $capturedBeginIds = $ids;
+    $beginHandler = function (BeginDeleteElements $event) use (&$capturedBeginIds): void {
+        $capturedBeginIds = $event->ids;
     };
     $capturedDeleteIds = null;
-    $deleteHandler = function (array $ids) use (&$capturedDeleteIds): void {
-        $capturedDeleteIds = $ids;
+    $deleteHandler = function (DeleteElements $event) use (&$capturedDeleteIds): void {
+        $capturedDeleteIds = $event->ids;
     };
-    \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('begin_delete_elements', $beginHandler);
-    \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('delete_elements', $deleteHandler);
+    \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(BeginDeleteElements::class, $beginHandler);
+    \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(DeleteElements::class, $deleteHandler);
 
     try {
         $service = new ImageService($repo, $activityService);
@@ -737,8 +740,8 @@ test('deleteElements() fires begin_delete_elements and delete_elements with the 
         expect(is_numeric($imagesRemaining) ? (int) $imagesRemaining : -1)->toBe(0);
         expect($activityService->getOccuredOnForObject($imageId, 'photo', 'delete'))->not->toBeNull();
     } finally {
-        \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler('begin_delete_elements', $beginHandler);
-        \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler('delete_elements', $deleteHandler);
+        \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(BeginDeleteElements::class, $beginHandler);
+        \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(DeleteElements::class, $deleteHandler);
     }
 });
 
@@ -750,7 +753,7 @@ test('deleteElements() with an empty id list never fires begin_delete_elements a
     $handler = function () use (&$fired): void {
         $fired = true;
     };
-    \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('begin_delete_elements', $handler);
+    \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(BeginDeleteElements::class, $handler);
 
     try {
         $service = imageServiceTestNewService($repo, $conn);
@@ -758,7 +761,7 @@ test('deleteElements() with an empty id list never fires begin_delete_elements a
         expect($service->deleteElements([], $urlService))->toBe(0);
         expect($fired)->toBeFalse();
     } finally {
-        \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler('begin_delete_elements', $handler);
+        \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(BeginDeleteElements::class, $handler);
     }
 });
 
@@ -1184,10 +1187,10 @@ test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end mes
     $_REQUEST['method'] = 'pwg.images.upload';
 
     $capturedEventRows = null;
-    $handler = function (array $rows) use (&$capturedEventRows): void {
-        $capturedEventRows = $rows;
+    $handler = function (EmptyLounge $event) use (&$capturedEventRows): void {
+        $capturedEventRows = $event->rows;
     };
-    \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('empty_lounge', $handler);
+    \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(EmptyLounge::class, $handler);
 
     try {
         $service = imageServiceTestNewService($repo, $conn);
@@ -1246,7 +1249,7 @@ test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end mes
         expect(\Piwigo\Config\CurrentConfigService::get()->findRawValue('count_orphans'))->toBe(json_encode(3));
     } finally {
         imageServiceTestReleaseEmptyLoungeDbLock($conn);
-        \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler('empty_lounge', $handler);
+        \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(EmptyLounge::class, $handler);
         $_REQUEST = $originalRequest;
         $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::imageCategory() . ' WHERE image_id IN (?, ?)', [$imageA, $imageB]);
         $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::lounge() . ' WHERE image_id IN (?, ?)', [$imageA, $imageB]);

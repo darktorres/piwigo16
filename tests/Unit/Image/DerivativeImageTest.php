@@ -10,6 +10,7 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeParams;
+use Piwigo\Image\Event\GetDerivativeUrl;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SizingParams;
 use Piwigo\Image\SrcImage;
@@ -150,11 +151,9 @@ test('url() computes the derivative url via a real build() call, prefixed by the
     expect($url)->toBe('/gallery/i.php?/gallery/photo-cu_80x60_a.jpg');
 });
 
-test('url() falls back to the pre-filter url when a get_derivative_url handler returns a non-string', function (): void {
-    // Kills line 118's TernaryNegated -- the static url() method's own
-    // mirror of get_url()'s identical fallback ternary.
+test('url() throws when a get_derivative_url handler returns something other than a GetDerivativeUrl instance', function (): void {
     $handler = static fn (): int => 42;
-    \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('get_derivative_url', $handler);
+    \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler(GetDerivativeUrl::class, $handler);
 
     try {
         $src = new SrcImage([
@@ -164,11 +163,10 @@ test('url() falls back to the pre-filter url when a get_derivative_url handler r
         ]);
         CurrentPaths::set(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-url-filter-only'));
 
-        $url = DerivativeImage::url(new DerivativeParams(SizingParams::classic(80, 60)), $src);
-
-        expect($url)->toBe('i.php?/gallery/photo-cu_80x60_a.jpg');
+        expect(fn () => DerivativeImage::url(new DerivativeParams(SizingParams::classic(80, 60)), $src))
+            ->toThrow(\Error::class, 'must return an instance of');
     } finally {
-        \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler('get_derivative_url', $handler);
+        \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(GetDerivativeUrl::class, $handler);
     }
 });
 
@@ -678,10 +676,9 @@ test('get_url() prefixes the computed rel_url with the real root url', function 
     expect($derivative->get_url())->toBe('/gallery/i.php?/gallery/photo-cu_80x60_a.jpg');
 });
 
-test('get_url() falls back to the pre-filter url when a get_derivative_url handler returns a non-string', function (): void {
-    // Kills line 291's TernaryNegated.
+test('get_url() throws when a get_derivative_url handler returns something other than a GetDerivativeUrl instance', function (): void {
     $handler = static fn (): int => 42;
-    \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('get_derivative_url', $handler);
+    \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler(GetDerivativeUrl::class, $handler);
 
     try {
         $src = new SrcImage([
@@ -693,9 +690,9 @@ test('get_url() falls back to the pre-filter url when a get_derivative_url handl
 
         $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(80, 60)), $src);
 
-        expect($derivative->get_url())->toBe('i.php?/gallery/photo-cu_80x60_a.jpg');
+        expect(fn () => $derivative->get_url())->toThrow(\Error::class, 'must return an instance of');
     } finally {
-        \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler('get_derivative_url', $handler);
+        \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(GetDerivativeUrl::class, $handler);
     }
 });
 

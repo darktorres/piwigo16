@@ -18,6 +18,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\RedirectServiceInterface;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\Tables;
+    use Piwigo\Event\Album\GetCategoryPreferredImageOrders;
     use Piwigo\Group\GroupRepository;
     use Piwigo\Html\HtmlService;
     use Piwigo\Image\DerivativeImage;
@@ -515,29 +516,34 @@ final class CategoryServiceTest extends IntegrationTestCase
         self::assertNotSame([], $cats);
     }
 
-    public function test_get_preferred_image_orders_returns_empty_when_the_event_handler_returns_a_non_array(): void
+    public function test_get_preferred_image_orders_throws_when_the_event_handler_returns_something_other_than_a_get_category_preferred_image_orders_instance(): void
     {
-        EventDispatcher::get()->addEventHandler('get_category_preferred_image_orders', static fn (): string => 'not-an-array');
+        // addEventHandler(), not addTypedHandler() -- a real plugin
+        // handler is untyped from PHPStan's perspective, and this test
+        // exercises dispatchChange()'s own runtime enforcement, not a
+        // static one.
+        EventDispatcher::get()->addEventHandler(GetCategoryPreferredImageOrders::class, static fn (): string => 'not-an-array');
+
+        $this->expectException(\Error::class);
+        $this->expectExceptionMessage('must return an instance of');
 
         try {
-            $orders = $this->service->getPreferredImageOrders();
+            $this->service->getPreferredImageOrders();
         } finally {
             EventDispatcher::reset();
         }
-
-        self::assertSame([], $orders);
     }
 
     public function test_get_preferred_image_orders_skips_a_malformed_entry_from_the_event_handler(): void
     {
-        EventDispatcher::get()->addEventHandler(
-            'get_category_preferred_image_orders',
+        EventDispatcher::get()->addTypedHandler(
+            GetCategoryPreferredImageOrders::class,
             // Missing the 3rd (visibility) element -- malformed, must be
             // skipped rather than crash on an undefined offset.
-            static fn (): array => [
+            static fn (): GetCategoryPreferredImageOrders => new GetCategoryPreferredImageOrders([
                 ['Only Two Elements', 'name ASC'],
                 ['Real Order', 'hit DESC', true],
-            ]
+            ])
         );
 
         try {

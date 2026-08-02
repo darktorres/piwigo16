@@ -13,6 +13,7 @@ use Piwigo\Event\Picture\RenderElementName;
 use Piwigo\Event\Template\RenderCategoryLiteralDescription;
 use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Event\Template\RenderCommentContent;
+use Piwigo\Event\Template\SetStatusHeader;
 use Piwigo\Image\Event\GetSrcImageUrl;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\SrcImage;
@@ -1094,10 +1095,10 @@ test('setStatusHeader resolves the exact well-known reason phrase for every know
     // passed, unmodified, to the real 'set_status_header' trigger_notify
     // event, giving a real side channel to observe it through.
     $captured = [];
-    $handler = static function (int $code, string $text) use (&$captured): void {
-        $captured[$code] = $text;
+    $handler = static function (SetStatusHeader $event) use (&$captured): void {
+        $captured[$event->code] = $event->text;
     };
-    EventDispatcher::get()->addEventHandler('set_status_header', $handler);
+    EventDispatcher::get()->addTypedHandler(SetStatusHeader::class, $handler);
     $service = new HtmlService();
 
     try {
@@ -1120,7 +1121,7 @@ test('setStatusHeader resolves the exact well-known reason phrase for every know
 
         expect($captured)->toBe($expected);
     } finally {
-        EventDispatcher::get()->removeEventHandler('set_status_header', $handler);
+        EventDispatcher::get()->removeEventHandler(SetStatusHeader::class, $handler);
     }
 });
 
@@ -1130,10 +1131,10 @@ test('setStatusHeader keeps the given text unchanged when it is genuinely non-em
     // reason phrase for a well-known code would be silently overwritten
     // by the default table lookup instead of being kept as given.
     $captured = null;
-    $handler = static function (int $code, string $text) use (&$captured): void {
-        $captured = $text;
+    $handler = static function (SetStatusHeader $event) use (&$captured): void {
+        $captured = $event->text;
     };
-    EventDispatcher::get()->addEventHandler('set_status_header', $handler);
+    EventDispatcher::get()->addTypedHandler(SetStatusHeader::class, $handler);
     $service = new HtmlService();
 
     try {
@@ -1141,7 +1142,7 @@ test('setStatusHeader keeps the given text unchanged when it is genuinely non-em
 
         expect($captured)->toBe('My Custom Reason');
     } finally {
-        EventDispatcher::get()->removeEventHandler('set_status_header', $handler);
+        EventDispatcher::get()->removeEventHandler(SetStatusHeader::class, $handler);
     }
 });
 

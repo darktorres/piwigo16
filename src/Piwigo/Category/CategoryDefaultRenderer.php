@@ -8,6 +8,10 @@ use Piwigo\Core\CommentCounterInterface;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Event\Location\LocBeginIndexThumbnails;
+use Piwigo\Event\Location\LocEndIndexThumbnails;
+use Piwigo\Event\Location\LocIndexThumbnailsSelection;
+use Piwigo\Image\Event\GetIndexDerivativeParams;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -59,14 +63,7 @@ final readonly class CategoryDefaultRenderer
 
         $selection = array_slice($items, $start, $nbImagePage);
 
-        $selection = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('loc_index_thumbnails_selection', $selection);
-        if (! is_array($selection)) {
-            // A misbehaving plugin handler could return something else;
-            // count() on a non-array/non-Countable is a fatal TypeError in
-            // PHP 8, so this also guards against a real runtime crash, not
-            // just the static type.
-            $selection = [];
-        }
+        $selection = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new LocIndexThumbnailsSelection($selection))->selection;
         /** @var list<int|string> $selection */
         $selection = array_values(array_filter(
             $selection,
@@ -121,7 +118,7 @@ final readonly class CategoryDefaultRenderer
             'index_thumbnails' => 'thumbnails.tpl',
         ]);
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_index_thumbnails', $pictures);
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginIndexThumbnails($pictures));
         $tplThumbnailsVar = [];
 
         foreach ($pictures as $row) {
@@ -202,11 +199,11 @@ final readonly class CategoryDefaultRenderer
         $indexDeriv = is_string($indexDeriv) ? $indexDeriv : ImageStdParams::THUMB;
 
         $template->assign([
-            'derivative_params' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_index_derivative_params', ImageStdParams::get_by_type($indexDeriv)),
+            'derivative_params' => \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetIndexDerivativeParams(ImageStdParams::get_by_type($indexDeriv)))->params,
             'maxRequests' => \Piwigo\Config\CurrentConfig::maxRequests(),
             'SHOW_THUMBNAIL_CAPTION' => \Piwigo\Config\CurrentConfig::showThumbnailCaption(),
         ]);
-        $tplThumbnailsVar = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('loc_end_index_thumbnails', $tplThumbnailsVar, $pictures);
+        $tplThumbnailsVar = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new LocEndIndexThumbnails($tplThumbnailsVar, $pictures))->tplThumbnailsVar;
         $template->assign('thumbnails', $tplThumbnailsVar);
 
         $template->assign_var_from_handle('THUMBNAILS', 'index_thumbnails');

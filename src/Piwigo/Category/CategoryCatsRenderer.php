@@ -10,9 +10,12 @@ use Piwigo\Core\FilterUpdaterInterface;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Event\Location\LocBeginIndexCategoryThumbnails;
+use Piwigo\Event\Location\LocEndIndexCategoryThumbnails;
 use Piwigo\Event\Template\RenderCategoryDescription;
 use Piwigo\Event\Template\RenderCategoryLiteralDescription;
 use Piwigo\Event\Template\RenderCategoryName;
+use Piwigo\Image\Event\GetIndexAlbumDerivativeParams;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -320,7 +323,7 @@ final readonly class CategoryCatsRenderer
 
             $template->set_filename('index_category_thumbnails', 'mainpage_categories.tpl');
 
-            \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_index_category_thumbnails', $categories);
+            \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginIndexCategoryThumbnails($categories));
 
             $tplThumbnailsVar = [];
 
@@ -410,8 +413,8 @@ final readonly class CategoryCatsRenderer
             // pagination
             $tplThumbnailsVarSelection = $tplThumbnailsVar;
 
-            $derivativeParams = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_index_album_derivative_params', ImageStdParams::get_by_type(ImageStdParams::THUMB));
-            $tplThumbnailsVarSelection = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('loc_end_index_category_thumbnails', $tplThumbnailsVarSelection);
+            $derivativeParams = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetIndexAlbumDerivativeParams(ImageStdParams::get_by_type(ImageStdParams::THUMB)))->params;
+            $tplThumbnailsVarSelection = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new LocEndIndexCategoryThumbnails($tplThumbnailsVarSelection))->tplThumbnailsVar;
             $template->assign([
                 'maxRequests' => \Piwigo\Config\CurrentConfig::maxRequests(),
                 'category_thumbnails' => $tplThumbnailsVarSelection,

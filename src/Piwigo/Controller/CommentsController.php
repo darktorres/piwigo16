@@ -21,6 +21,7 @@ use Piwigo\Event\Template\RenderCommentAuthor;
 use Piwigo\Event\Template\RenderCommentContent;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
+use Piwigo\Image\Event\GetCommentsDerivativeParams;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -624,7 +625,7 @@ final class CommentsController implements ControllerInterface
             }
         }
 
-        $derivative_params = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_comments_derivative_params', ImageStdParams::get_by_type(ImageStdParams::THUMB));
+        $derivative_params = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetCommentsDerivativeParams(ImageStdParams::get_by_type(ImageStdParams::THUMB)))->params;
         $template->assign('comment_derivative_params', $derivative_params);
 
         // include menubar

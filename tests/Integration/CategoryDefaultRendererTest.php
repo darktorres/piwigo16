@@ -14,6 +14,7 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Event\Location\LocIndexThumbnailsSelection;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageEntity;
@@ -251,24 +252,22 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         self::assertStringContainsString('17 hits', $html);
     }
 
-    public function test_render_treats_a_misbehaving_plugin_handlers_non_array_selection_as_empty(): void
+    public function test_render_throws_when_a_loc_index_thumbnails_selection_handler_returns_something_other_than_a_loc_index_thumbnails_selection_instance(): void
     {
-        // count() on a non-array/non-Countable is a fatal TypeError in
-        // PHP 8 -- a plugin handler returning something else must be
-        // coerced to an empty selection rather than crashing.
-        EventDispatcher::get()->addEventHandler('loc_index_thumbnails_selection', static fn (): int => 42);
+        // addEventHandler(), not addTypedHandler() -- a real plugin
+        // handler is untyped from PHPStan's perspective, and this test
+        // exercises dispatchChange()'s own runtime enforcement, not a
+        // static one.
+        EventDispatcher::get()->addEventHandler(LocIndexThumbnailsSelection::class, static fn (): int => 42);
+
+        $this->expectException(\Error::class);
+        $this->expectExceptionMessage('must return an instance of');
 
         try {
             $this->seedUser(showNbHits: false, showNbComments: false);
-            $slideshowUrl = $this->renderer->render([3, 1, 2], 0, 3, '');
+            $this->renderer->render([3, 1, 2], 0, 3, '');
         } finally {
             EventDispatcher::reset();
-        }
-
-        self::assertNull($slideshowUrl);
-        $html = $this->renderedThumbnailsHtml();
-        foreach ([1, 2, 3] as $id) {
-            self::assertStringNotContainsString('Photo ' . $id, $html);
         }
     }
 

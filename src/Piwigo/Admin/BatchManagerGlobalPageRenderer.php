@@ -12,6 +12,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Event\Admin\ElementSetGlobalAction;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageService;
@@ -433,7 +434,7 @@ final class BatchManagerGlobalPageRenderer
                 PermissionCacheInvalidator::invalidate();
             }
 
-            \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('element_set_global_action', $action, $collection);
+            \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new ElementSetGlobalAction($action, $collection));
 
             if ($redirect) {
                 $this->redirectService->redirect($redirect_url);

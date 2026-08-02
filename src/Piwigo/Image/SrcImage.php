@@ -15,6 +15,7 @@ use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\ThemeConfProviderInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Event\Picture\GetMimetypeLocation;
 use Piwigo\Image\Event\GetSrcImageUrl;
 
 /**
@@ -188,11 +189,7 @@ final class SrcImage
             $this->rel_path = \Piwigo\Image\ImagePathHelper::originalToRepresentative($path, $representative_ext);
         } else {
             $default_mimetype_location = self::themeConf('mime_icon_dir') . $ext . '.png';
-            $mimetype_location = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_mimetype_location', $default_mimetype_location, $ext);
-            // trigger_change() hands the value through arbitrary registered
-            // event handlers (mixed return); fall back to the pre-filter
-            // location if a misbehaving handler returns a non-string.
-            $this->rel_path = is_string($mimetype_location) ? $mimetype_location : $default_mimetype_location;
+            $this->rel_path = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetMimetypeLocation($default_mimetype_location, $ext))->location;
             $this->flags |= self::IS_MIMETYPE;
             $mimetype_abs_path = CurrentPaths::get()->root . $this->rel_path;
             $size = file_exists($mimetype_abs_path) ? getimagesize($mimetype_abs_path) : false;

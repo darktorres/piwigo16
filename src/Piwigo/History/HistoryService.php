@@ -7,6 +7,8 @@ namespace Piwigo\History;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Config\ConfigService;
+use Piwigo\Event\Picture\PwgLogAllowed;
+use Piwigo\Event\Picture\PwgLogUpdateLastVisit;
 
 /**
  * History domain business logic: page-view search/filtering, the
@@ -66,13 +68,7 @@ final readonly class HistoryService
             $doLog = \Piwigo\Config\CurrentConfig::historyGuest();
         }
 
-        $doLog = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('pwg_log_allowed', $doLog, $imageId, $imageType);
-
-        // trigger_change() hands the value through arbitrary registered event
-        // handlers (mixed return); the contract of this filter is a bool, so a
-        // misbehaving handler falls back to the pre-filter truthiness instead of
-        // being trusted blindly.
-        return is_bool($doLog) ? $doLog : (bool) $doLog;
+        return \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new PwgLogAllowed($doLog, $imageId, $imageType))->doLog;
     }
 
     /**
@@ -117,11 +113,11 @@ final readonly class HistoryService
         if (in_array($lastVisit, [null, false, 0, '0', '', []], true) or strtotime($lastVisitStr) < time() - $sessionLength) {
             $updateLastVisit = true;
         }
-        $updateLastVisit = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('pwg_log_update_last_visit', $updateLastVisit);
+        $updateLastVisit = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new PwgLogUpdateLastVisit($updateLastVisit))->update;
 
         $userId = $currentUser->id->value;
 
-        if ((bool) $updateLastVisit) {
+        if ($updateLastVisit) {
             $this->repo->updateLastVisitNow($userId);
         }
 

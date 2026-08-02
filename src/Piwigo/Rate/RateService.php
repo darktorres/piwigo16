@@ -7,6 +7,7 @@ namespace Piwigo\Rate;
 use Piwigo\Auth\CookieService;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Core\AccessLevel;
+use Piwigo\Event\Picture\UpdateRatingScore;
 
 /**
  * Rate domain business logic: submitting a rate, recomputing the bayesian
@@ -114,9 +115,8 @@ final readonly class RateService
      */
     public function updateRatingScore(int|false $elementId = false): array
     {
-        $altResult = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('update_rating_score', false, $elementId);
-        if ($altResult !== false && is_array($altResult)) {
-            /** @var array<string, mixed> $altResult */
+        $altResult = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new UpdateRatingScore(false, $elementId))->result;
+        if (is_array($altResult)) {
             return $altResult;
         }
 

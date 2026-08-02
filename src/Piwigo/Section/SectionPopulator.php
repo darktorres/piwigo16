@@ -14,6 +14,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Event\Location\LocEndSectionInit;
 use Piwigo\Event\Template\RenderCategoryDescription;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Search\SearchService;
@@ -769,7 +770,7 @@ final readonly class SectionPopulator
 
         SectionContextRegistry::set(self::buildSectionContext($page));
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_section_init');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndSectionInit());
     }
 
     /**

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
+use Piwigo\Event\Template\SetStatusHeader;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Ws\PwgError;
 
@@ -38,10 +39,10 @@ afterEach(function (): void {
 
 test('code just below the HTTP range (399) does not call setStatusHeader', function (): void {
     $calls = [];
-    $handler = static function (int $code, string $text) use (&$calls): void {
-        $calls[] = [$code, $text];
+    $handler = static function (SetStatusHeader $event) use (&$calls): void {
+        $calls[] = [$event->code, $event->text];
     };
-    EventDispatcher::get()->addEventHandler('set_status_header', $handler);
+    EventDispatcher::get()->addTypedHandler(SetStatusHeader::class, $handler);
 
     try {
         $error = new PwgError(399, 'Not an HTTP code');
@@ -50,16 +51,16 @@ test('code just below the HTTP range (399) does not call setStatusHeader', funct
             ->and($error->code())->toBe(399)
             ->and($error->message())->toBe('Not an HTTP code');
     } finally {
-        EventDispatcher::get()->removeEventHandler('set_status_header', $handler);
+        EventDispatcher::get()->removeEventHandler(SetStatusHeader::class, $handler);
     }
 });
 
 test('code at the lower HTTP boundary (400) calls setStatusHeader', function (): void {
     $calls = [];
-    $handler = static function (int $code, string $text) use (&$calls): void {
-        $calls[] = [$code, $text];
+    $handler = static function (SetStatusHeader $event) use (&$calls): void {
+        $calls[] = [$event->code, $event->text];
     };
-    EventDispatcher::get()->addEventHandler('set_status_header', $handler);
+    EventDispatcher::get()->addTypedHandler(SetStatusHeader::class, $handler);
 
     try {
         $error = new PwgError(400, 'Bad request');
@@ -68,7 +69,7 @@ test('code at the lower HTTP boundary (400) calls setStatusHeader', function ():
             ->and($error->code())->toBe(400)
             ->and($error->message())->toBe('Bad request');
     } finally {
-        EventDispatcher::get()->removeEventHandler('set_status_header', $handler);
+        EventDispatcher::get()->removeEventHandler(SetStatusHeader::class, $handler);
     }
 });
 
@@ -77,10 +78,10 @@ test('code comfortably inside the HTTP range (404) calls setStatusHeader', funct
     // for 404, `>= 400` is true but `<= 400` is false, so a mutant using
     // `<=` would skip the call while the real code makes it.
     $calls = [];
-    $handler = static function (int $code, string $text) use (&$calls): void {
-        $calls[] = [$code, $text];
+    $handler = static function (SetStatusHeader $event) use (&$calls): void {
+        $calls[] = [$event->code, $event->text];
     };
-    EventDispatcher::get()->addEventHandler('set_status_header', $handler);
+    EventDispatcher::get()->addTypedHandler(SetStatusHeader::class, $handler);
 
     try {
         $error = new PwgError(404, 'Not found');
@@ -89,16 +90,16 @@ test('code comfortably inside the HTTP range (404) calls setStatusHeader', funct
             ->and($error->code())->toBe(404)
             ->and($error->message())->toBe('Not found');
     } finally {
-        EventDispatcher::get()->removeEventHandler('set_status_header', $handler);
+        EventDispatcher::get()->removeEventHandler(SetStatusHeader::class, $handler);
     }
 });
 
 test('code at the upper HTTP boundary (599) calls setStatusHeader', function (): void {
     $calls = [];
-    $handler = static function (int $code, string $text) use (&$calls): void {
-        $calls[] = [$code, $text];
+    $handler = static function (SetStatusHeader $event) use (&$calls): void {
+        $calls[] = [$event->code, $event->text];
     };
-    EventDispatcher::get()->addEventHandler('set_status_header', $handler);
+    EventDispatcher::get()->addTypedHandler(SetStatusHeader::class, $handler);
 
     try {
         $error = new PwgError(599, 'Custom 599');
@@ -107,16 +108,16 @@ test('code at the upper HTTP boundary (599) calls setStatusHeader', function ():
             ->and($error->code())->toBe(599)
             ->and($error->message())->toBe('Custom 599');
     } finally {
-        EventDispatcher::get()->removeEventHandler('set_status_header', $handler);
+        EventDispatcher::get()->removeEventHandler(SetStatusHeader::class, $handler);
     }
 });
 
 test('code just past the HTTP range (600) does not call setStatusHeader', function (): void {
     $calls = [];
-    $handler = static function (int $code, string $text) use (&$calls): void {
-        $calls[] = [$code, $text];
+    $handler = static function (SetStatusHeader $event) use (&$calls): void {
+        $calls[] = [$event->code, $event->text];
     };
-    EventDispatcher::get()->addEventHandler('set_status_header', $handler);
+    EventDispatcher::get()->addTypedHandler(SetStatusHeader::class, $handler);
 
     try {
         $error = new PwgError(600, 'Not an HTTP code either');
@@ -125,7 +126,7 @@ test('code just past the HTTP range (600) does not call setStatusHeader', functi
             ->and($error->code())->toBe(600)
             ->and($error->message())->toBe('Not an HTTP code either');
     } finally {
-        EventDispatcher::get()->removeEventHandler('set_status_header', $handler);
+        EventDispatcher::get()->removeEventHandler(SetStatusHeader::class, $handler);
     }
 });
 
@@ -135,10 +136,10 @@ test('code comfortably outside the HTTP range (1003) does not call setStatusHead
     // own docblock) -- confirms the guard also holds well clear of the
     // upper boundary, not just immediately past it.
     $calls = [];
-    $handler = static function (int $code, string $text) use (&$calls): void {
-        $calls[] = [$code, $text];
+    $handler = static function (SetStatusHeader $event) use (&$calls): void {
+        $calls[] = [$event->code, $event->text];
     };
-    EventDispatcher::get()->addEventHandler('set_status_header', $handler);
+    EventDispatcher::get()->addTypedHandler(SetStatusHeader::class, $handler);
 
     try {
         $error = new PwgError(1003, 'Invalid param foo');
@@ -147,6 +148,6 @@ test('code comfortably outside the HTTP range (1003) does not call setStatusHead
             ->and($error->code())->toBe(1003)
             ->and($error->message())->toBe('Invalid param foo');
     } finally {
-        EventDispatcher::get()->removeEventHandler('set_status_header', $handler);
+        EventDispatcher::get()->removeEventHandler(SetStatusHeader::class, $handler);
     }
 });

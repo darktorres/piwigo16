@@ -17,6 +17,9 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Event\Picture\AllowIncrementElementHitCount;
+use Piwigo\Event\Picture\GetElementMetadataAvailable;
+use Piwigo\Event\Picture\PicturePicturesData;
 use Piwigo\Event\Picture\RenderElementContent;
 use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Http\ControllerInterface;
@@ -566,7 +569,7 @@ final class PictureController implements ControllerInterface
         }
 
         // don't increment if adding a comment
-        if ((bool) \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('allow_increment_element_hit_count', $inc_hit_count, $image_id)) {
+        if (\Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new AllowIncrementElementHitCount($inc_hit_count, $image_id))->incHitCount) {
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
                 ->incrementVisitCounter($image_id);
         }
@@ -721,14 +724,13 @@ final class PictureController implements ControllerInterface
 
         // do we have a plugin that can show metadata for something
         // else than images?
-        $metadata_showable = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
-            'get_element_metadata_available',
+        $metadata_showable = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetElementMetadataAvailable(
             (
                 (\Piwigo\Config\CurrentConfig::showExif() or \Piwigo\Config\CurrentConfig::showIptc())
                 and ! $picture['current']['src_image']->is_mimetype()
             ),
             $picture['current']
-        );
+        ))->available;
 
         if ($pictureRequest->metadataPresent) {
             \Piwigo\Core\PageState::current()->setMetaRobots([
@@ -742,11 +744,11 @@ final class PictureController implements ControllerInterface
         // allow plugins to change what we computed before passing data
         // to template
         /**
-         * EventDispatcher::triggerChange() is only typed to return
-         * mixed -- restate the shape plugins are expected to
-         * preserve: one images-table row (string|null columns) per
-         * navigation slot, plus the computed fields set on $row
-         * above.
+         * PicturePicturesData::$picture is deliberately loose
+         * (array<mixed>, matching the reference) -- restate the shape a
+         * well-behaved plugin is expected to preserve: one images-table
+         * row (string|null columns) per navigation slot, plus the
+         * computed fields set on $row above.
          *
          * @var array<string, array{
          *     id: string,
@@ -769,7 +771,7 @@ final class PictureController implements ControllerInterface
          *     ...
          * }> $picture
          */
-        $picture = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('picture_pictures_data', $picture);
+        $picture = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new PicturePicturesData($picture))->picture;
 
         // ---------------------------------------------------- navigation management
         foreach (['first', 'previous', 'next', 'last', 'current'] as $which_image) {
@@ -1211,7 +1213,7 @@ final class PictureController implements ControllerInterface
             new PictureCommentRenderer()
                 ->render($edit_comment, $image_id, $section_context->start, $urlService, $related_categories, $url_self);
         }
-        if ((bool) $metadata_showable and SessionService::get()->getSessionVar('show_metadata') !== null) {
+        if ($metadata_showable and SessionService::get()->getSessionVar('show_metadata') !== null) {
             new PictureMetadataRenderer()
                 ->render($picture);
         }

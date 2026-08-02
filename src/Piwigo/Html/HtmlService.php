@@ -19,6 +19,7 @@ use Piwigo\Event\Picture\RenderElementName;
 use Piwigo\Event\Template\RenderCategoryLiteralDescription;
 use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Event\Template\RenderCommentContent;
+use Piwigo\Event\Template\SetStatusHeader;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Image\Event\GetSrcImageUrl;
@@ -627,7 +628,7 @@ final class HtmlService implements HtmlRenderingInterface
         }
 
         header("{$protocol} {$code} {$text}", true, $code);
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('set_status_header', $code, $text);
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new SetStatusHeader($code, $text));
     }
 
     /**

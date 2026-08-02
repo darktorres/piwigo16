@@ -10,6 +10,7 @@ use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ThemeConfProviderInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Event\Picture\GetMimetypeLocation;
 use Piwigo\Image\Event\GetSrcImageUrl;
 use Piwigo\Image\SrcImage;
 use ReflectionProperty;
@@ -355,38 +356,23 @@ test('constructor treats a missing path as an empty string, not null, when build
     expect($src->rel_path)->toBe('pjpg');
 });
 
-test('constructor falls back to the pre-filter mimetype location when a get_mimetype_location handler returns a non-string', function (): void {
-    // Kills line 194's TernaryNegated -- every sibling mimetype-icon
-    // test above has NO handler registered for 'get_mimetype_location',
-    // so triggerChange() returns $data (the pre-filter value itself)
-    // unchanged, which is always already a string -- never reaching
-    // this ternary's false branch. Deliberately does NOT create an
-    // unknown.png fallback: if the mutation corrupts rel_path with the
-    // handler's raw non-string return value instead of falling back,
-    // the resulting bogus file_exists() check fails and cascades into
-    // the "no fallback icon either" Exception, distinguishing it from
-    // real code's clean success -- an unknown.png fallback present
-    // would silently re-repair rel_path a few lines later regardless of
-    // this specific mutation, masking it (confirmed live).
+test('constructor throws when a get_mimetype_location handler returns something other than a GetMimetypeLocation instance', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-srcimage-test-' . bin2hex(random_bytes(8));
     CurrentPaths::set(Paths::fromRoot($root));
     srcImageTestSetThemeConfProvider(new SrcImageTestFakeThemeConfProvider('themes/default/icon/mimetypes/'));
     srcImageTestMakePng($root . '/themes/default/icon/mimetypes/zzz.png', 16, 12);
 
     $handler = static fn (): int => 42;
-    \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('get_mimetype_location', $handler);
+    \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler(GetMimetypeLocation::class, $handler);
 
     try {
-        $src = new SrcImage([
+        expect(fn () => new SrcImage([
             'id' => 1,
             'path' => 'upload/2026/07/file.zzz',
             'file' => 'file.zzz',
-        ]);
-
-        expect($src->rel_path)->toBe('themes/default/icon/mimetypes/zzz.png');
-        expect($src->get_size())->toBe([16, 12]);
+        ]))->toThrow(\Error::class, 'must return an instance of');
     } finally {
-        \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler('get_mimetype_location', $handler);
+        \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(GetMimetypeLocation::class, $handler);
         srcImageTestRrmdir($root);
     }
 });

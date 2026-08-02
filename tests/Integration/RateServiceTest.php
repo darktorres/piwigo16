@@ -18,6 +18,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\Tables;
+    use Piwigo\Event\Picture\UpdateRatingScore;
     use Piwigo\PluginConfig\EventDispatcher;
     use Piwigo\Rate\RateRepository;
     use Piwigo\Rate\RateService;
@@ -185,9 +186,9 @@ namespace Piwigo\Tests\Integration {
         public function test_update_rating_score_returns_a_plugin_handlers_replacement_verbatim(): void
         {
             $override = ['score' => 999, 'average' => 9.9, 'count' => 42];
-            EventDispatcher::get()->addEventHandler(
-                'update_rating_score',
-                static fn (mixed $data, int|false $elementId): array => $override
+            EventDispatcher::get()->addTypedHandler(
+                UpdateRatingScore::class,
+                static fn (UpdateRatingScore $event): UpdateRatingScore => new UpdateRatingScore($override, $event->elementId)
             );
 
             try {

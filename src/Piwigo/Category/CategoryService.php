@@ -17,6 +17,9 @@ use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Album\CreateVirtualCategory;
+use Piwigo\Event\Album\DeleteCategories;
+use Piwigo\Event\Album\GetCategoryPreferredImageOrders;
 use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageService;
@@ -252,7 +255,7 @@ final readonly class CategoryService
     public function getPreferredImageOrders(): array
     {
 
-        $orders = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_category_preferred_image_orders', [
+        $orders = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetCategoryPreferredImageOrders([
             [Lang::t('Default'), '', true],
             [Lang::t('Photo title, A &rarr; Z'), 'name ASC', true],
             [Lang::t('Photo title, Z &rarr; A'), 'name DESC', true],
@@ -265,11 +268,7 @@ final readonly class CategoryService
             [Lang::t('Visits, high &rarr; low'), 'hit DESC', true],
             [Lang::t('Visits, low &rarr; high'), 'hit ASC', true],
             [Lang::t('Permissions'), 'level DESC', \Piwigo\Auth\AccessControl::isAdmin()],
-        ]);
-
-        if (! is_array($orders)) {
-            return [];
-        }
+        ]))->orders;
 
         $result = [];
         foreach ($orders as $order) {
@@ -980,7 +979,7 @@ final readonly class CategoryService
 
         $this->repo->deleteOldPermalinksForCategories($ids);
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('delete_categories', $ids);
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new DeleteCategories($ids));
         $activityLogger->record('album', $ids, 'delete', [
             'photo_deletion_mode' => $photoDeletionMode,
         ]);
@@ -1838,9 +1837,9 @@ final readonly class CategoryService
             $this->permissionService->addPermissionOnCategory((int) $insertedId, array_unique(array_merge($adminIds, [$currentUserId])));
         }
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('create_virtual_category', array_merge([
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new CreateVirtualCategory(array_merge([
             'id' => $insertedId,
-        ], $insert));
+        ], $insert)));
         $activityLogger->record('album', $insertedId, 'add');
 
         return [

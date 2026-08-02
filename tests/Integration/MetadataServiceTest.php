@@ -16,6 +16,8 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Config\CurrentConfig;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
+    use Piwigo\Event\Picture\CleanIptcValue;
+    use Piwigo\Event\Picture\FormatExifData;
     use Piwigo\Metadata\MetadataRepository;
     use Piwigo\Metadata\MetadataService;
 
@@ -400,15 +402,15 @@ final class MetadataServiceTest extends IntegrationTestCase
 
     public function test_clean_iptc_value_lets_a_plugin_handler_override_the_value(): void
     {
-        $handler = static fn (string $value): string => 'plugin-override';
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('clean_iptc_value', $handler);
+        $handler = static fn (CleanIptcValue $event): CleanIptcValue => new CleanIptcValue('plugin-override');
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(CleanIptcValue::class, $handler);
 
         try {
             $result = $this->service->cleanIptcValue("raw \x92 value");
 
             self::assertSame('plugin-override', $result);
         } finally {
-            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler('clean_iptc_value', $handler);
+            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(CleanIptcValue::class, $handler);
         }
     }
 
@@ -460,16 +462,16 @@ final class MetadataServiceTest extends IntegrationTestCase
         $path = $this->scratchDir . '/gps-valid.jpg';
         file_put_contents($path, $this->makePlainJpeg());
 
-        $handler = static function (mixed $exif, string $filename, array $map): mixed {
-            $exif = is_array($exif) ? $exif : [];
+        $handler = static function (FormatExifData $event): FormatExifData {
+            $exif = $event->exif ?? [];
             $exif['GPSLatitudeRef'] = 'N';
             $exif['GPSLatitude'] = ['41/1', '54/1', '9686/1000'];
             $exif['GPSLongitudeRef'] = 'E';
             $exif['GPSLongitude'] = ['12/1', '30/1', '0/1'];
 
-            return $exif;
+            return new FormatExifData($exif, $event->filename, $event->map);
         };
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('format_exif_data', $handler);
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
 
         try {
             $result = $this->service->getExifData($path, []);
@@ -477,7 +479,7 @@ final class MetadataServiceTest extends IntegrationTestCase
             self::assertEqualsWithDelta(41.9027, $result['latitude'], 0.001);
             self::assertEqualsWithDelta(12.5, $result['longitude'], 0.001);
         } finally {
-            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler('format_exif_data', $handler);
+            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
         }
     }
 
@@ -487,8 +489,8 @@ final class MetadataServiceTest extends IntegrationTestCase
         $path = $this->scratchDir . '/gps-invalid.jpg';
         file_put_contents($path, $this->makePlainJpeg());
 
-        $handler = static function (mixed $exif, string $filename, array $map): mixed {
-            $exif = is_array($exif) ? $exif : [];
+        $handler = static function (FormatExifData $event): FormatExifData {
+            $exif = $event->exif ?? [];
             // 200 degrees is out of the valid [-90, 90] latitude range --
             // reaches the `else` logging branch instead of assigning
             // latitude/longitude.
@@ -497,9 +499,9 @@ final class MetadataServiceTest extends IntegrationTestCase
             $exif['GPSLongitudeRef'] = 'E';
             $exif['GPSLongitude'] = ['12/1', '0/1', '0/1'];
 
-            return $exif;
+            return new FormatExifData($exif, $event->filename, $event->map);
         };
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('format_exif_data', $handler);
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
 
         try {
             $result = $this->service->getExifData($path, []);
@@ -507,7 +509,7 @@ final class MetadataServiceTest extends IntegrationTestCase
             self::assertArrayNotHasKey('latitude', $result);
             self::assertArrayNotHasKey('longitude', $result);
         } finally {
-            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler('format_exif_data', $handler);
+            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
         }
     }
 
@@ -516,20 +518,20 @@ final class MetadataServiceTest extends IntegrationTestCase
         $path = $this->scratchDir . '/array-field.jpg';
         file_put_contents($path, $this->makePlainJpeg());
 
-        $handler = static function (mixed $exif, string $filename, array $map): mixed {
-            $exif = is_array($exif) ? $exif : [];
+        $handler = static function (FormatExifData $event): FormatExifData {
+            $exif = $event->exif ?? [];
             $exif['MultiField'] = ['<b>one</b>', '<i>two</i>'];
 
-            return $exif;
+            return new FormatExifData($exif, $event->filename, $event->map);
         };
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('format_exif_data', $handler);
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
 
         try {
             $result = $this->service->getExifData($path, ['multi' => 'MultiField']);
 
             self::assertSame(['multi' => ['one', 'two']], $result);
         } finally {
-            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler('format_exif_data', $handler);
+            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
         }
     }
 
@@ -538,50 +540,56 @@ final class MetadataServiceTest extends IntegrationTestCase
         $path = $this->scratchDir . '/scalar-field.jpg';
         file_put_contents($path, $this->makePlainJpeg());
 
-        $handler = static function (mixed $exif, string $filename, array $map): mixed {
-            $exif = is_array($exif) ? $exif : [];
+        $handler = static function (FormatExifData $event): FormatExifData {
+            $exif = $event->exif ?? [];
             $exif['Artist'] = '<script>alert(1)</script>Jane';
 
-            return $exif;
+            return new FormatExifData($exif, $event->filename, $event->map);
         };
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('format_exif_data', $handler);
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
 
         try {
             $result = $this->service->getExifData($path, ['author' => 'Artist']);
 
             self::assertSame(['author' => 'alert(1)Jane'], $result);
         } finally {
-            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler('format_exif_data', $handler);
+            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
         }
     }
 
-    public function test_get_exif_data_uses_the_format_exif_data_override_when_exif_read_data_itself_fails(): void
+    public function test_get_exif_data_throws_when_a_format_exif_data_handler_returns_something_other_than_a_format_exif_data_instance_and_exif_read_data_itself_fails(): void
     {
         // A non-JPEG byte stream with a real .jpg extension -- exif_read_data()
         // genuinely fails here (a real "File not supported" E_WARNING, not
         // merely an empty array), which is the only way to reach the
-        // `$exif2 = triggerChange(...)` branch (only computed when
+        // `$exif2 = dispatchChange(...)` branch (only computed when
         // exif_read_data() itself was falsy), as opposed to the
-        // always-invoked triggerChange() call on the truthy-$exif path
+        // always-invoked dispatchChange() call on the truthy-$exif path
         // every other test above exercises.
         $path = $this->scratchDir . '/malformed.jpg';
         file_put_contents($path, str_repeat('not a real jpeg', 10));
 
-        // Returning a non-empty, non-array truthy value additionally
-        // covers the `! is_array($exif)` reset-to-[] guard right after
-        // this branch.
-        $handler = static fn (mixed $exif, string $filename, array $map): string => 'plugin-supplied-non-array-exif';
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('format_exif_data', $handler);
+        // addEventHandler(), not addTypedHandler() -- a real plugin
+        // handler is untyped from PHPStan's perspective, and this test
+        // exercises dispatchChange()'s own runtime enforcement, not a
+        // static one. FormatExifData::$exif is natively ?array, so a
+        // well-typed handler could never hand back a non-array truthy
+        // scalar the way this one deliberately does -- misbehaving in
+        // this shape now means not returning a FormatExifData instance
+        // at all, which fails loud instead of falling back to [].
+        $handler = static fn (): string => 'plugin-supplied-non-array-exif';
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler(FormatExifData::class, $handler);
+
+        $this->expectException(\Error::class);
+        $this->expectExceptionMessage('must return an instance of');
 
         set_error_handler(static fn (): bool => true);
         try {
-            $result = $this->service->getExifData($path, ['author' => 'Artist']);
+            $this->service->getExifData($path, ['author' => 'Artist']);
         } finally {
             restore_error_handler();
-            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler('format_exif_data', $handler);
+            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
         }
-
-        self::assertSame([], $result);
     }
 
     // getExifData()'s `if (! function_exists('exif_read_data'))` RuntimeException
@@ -651,20 +659,20 @@ final class MetadataServiceTest extends IntegrationTestCase
         $path = $this->scratchDir . '/exif-datetime-full.jpg';
         file_put_contents($path, $this->makePlainJpeg());
 
-        $handler = static function (mixed $exif, string $filename, array $map): mixed {
-            $exif = is_array($exif) ? $exif : [];
+        $handler = static function (FormatExifData $event): FormatExifData {
+            $exif = $event->exif ?? [];
             $exif['DateTimeOriginal'] = '2024:03:15 10:20:30';
 
-            return $exif;
+            return new FormatExifData($exif, $event->filename, $event->map);
         };
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('format_exif_data', $handler);
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
 
         try {
             $result = $this->service->getSyncExifData($path);
 
             self::assertSame('2024-03-15 10:20:30', $result['date_creation']);
         } finally {
-            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler('format_exif_data', $handler);
+            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
         }
     }
 
@@ -674,22 +682,22 @@ final class MetadataServiceTest extends IntegrationTestCase
         $path = $this->scratchDir . '/exif-date-only.jpg';
         file_put_contents($path, $this->makePlainJpeg());
 
-        $handler = static function (mixed $exif, string $filename, array $map): mixed {
-            $exif = is_array($exif) ? $exif : [];
+        $handler = static function (FormatExifData $event): FormatExifData {
+            $exif = $event->exif ?? [];
             // No time portion -- the full-datetime regex fails to match,
             // falling through to the date-only regex branch.
             $exif['DateTimeOriginal'] = '2024:03:15';
 
-            return $exif;
+            return new FormatExifData($exif, $event->filename, $event->map);
         };
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('format_exif_data', $handler);
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
 
         try {
             $result = $this->service->getSyncExifData($path);
 
             self::assertSame('2024-03-15', $result['date_creation']);
         } finally {
-            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler('format_exif_data', $handler);
+            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
         }
     }
 
@@ -699,8 +707,8 @@ final class MetadataServiceTest extends IntegrationTestCase
         $path = $this->scratchDir . '/exif-date-malformed.jpg';
         file_put_contents($path, $this->makePlainJpeg());
 
-        $handler = static function (mixed $exif, string $filename, array $map): mixed {
-            $exif = is_array($exif) ? $exif : [];
+        $handler = static function (FormatExifData $event): FormatExifData {
+            $exif = $event->exif ?? [];
             // Matches neither the full-datetime nor the date-only regex --
             // the else `continue` branch, distinct from the "0000-00-00"
             // sibling test below (that one DOES match the full-datetime
@@ -708,16 +716,16 @@ final class MetadataServiceTest extends IntegrationTestCase
             // `$isEmpty` check instead).
             $exif['DateTimeOriginal'] = 'not-a-real-date';
 
-            return $exif;
+            return new FormatExifData($exif, $event->filename, $event->map);
         };
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('format_exif_data', $handler);
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
 
         try {
             $result = $this->service->getSyncExifData($path);
 
             self::assertArrayNotHasKey('date_creation', $result);
         } finally {
-            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler('format_exif_data', $handler);
+            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
         }
     }
 
@@ -727,20 +735,20 @@ final class MetadataServiceTest extends IntegrationTestCase
         $path = $this->scratchDir . '/exif-date-zero.jpg';
         file_put_contents($path, $this->makePlainJpeg());
 
-        $handler = static function (mixed $exif, string $filename, array $map): mixed {
-            $exif = is_array($exif) ? $exif : [];
+        $handler = static function (FormatExifData $event): FormatExifData {
+            $exif = $event->exif ?? [];
             $exif['DateTimeOriginal'] = '0000:00:00 00:00:00';
 
-            return $exif;
+            return new FormatExifData($exif, $event->filename, $event->map);
         };
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('format_exif_data', $handler);
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
 
         try {
             $result = $this->service->getSyncExifData($path);
 
             self::assertArrayNotHasKey('date_creation', $result);
         } finally {
-            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler('format_exif_data', $handler);
+            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
         }
     }
 
@@ -750,20 +758,20 @@ final class MetadataServiceTest extends IntegrationTestCase
         $path = $this->scratchDir . '/exif-keywords.jpg';
         file_put_contents($path, $this->makePlainJpeg());
 
-        $handler = static function (mixed $exif, string $filename, array $map): mixed {
-            $exif = is_array($exif) ? $exif : [];
+        $handler = static function (FormatExifData $event): FormatExifData {
+            $exif = $event->exif ?? [];
             $exif['UserComment'] = 'nature.travel;family';
 
-            return $exif;
+            return new FormatExifData($exif, $event->filename, $event->map);
         };
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('format_exif_data', $handler);
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
 
         try {
             $result = $this->service->getSyncExifData($path);
 
             self::assertSame('nature,travel,family', $result['keywords']);
         } finally {
-            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler('format_exif_data', $handler);
+            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
         }
     }
 
@@ -803,12 +811,12 @@ final class MetadataServiceTest extends IntegrationTestCase
         imagejpeg($representativeImg, $representativeDir . '/tiff-original.jpg');
 
         $exifReadFilename = null;
-        $handler = static function (mixed $exif, string $filename, array $map) use (&$exifReadFilename): mixed {
-            $exifReadFilename = $filename;
+        $handler = static function (FormatExifData $event) use (&$exifReadFilename): FormatExifData {
+            $exifReadFilename = $event->filename;
 
-            return $exif;
+            return $event;
         };
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('format_exif_data', $handler);
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(FormatExifData::class, $handler);
 
         try {
             $result = $this->service->getSyncMetadata([
@@ -816,7 +824,7 @@ final class MetadataServiceTest extends IntegrationTestCase
                 'representative_ext' => 'jpg',
             ]);
         } finally {
-            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler('format_exif_data', $handler);
+            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(FormatExifData::class, $handler);
             @unlink($representativeDir . '/tiff-original.jpg');
             @rmdir($representativeDir);
         }

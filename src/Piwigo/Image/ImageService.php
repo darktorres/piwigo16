@@ -12,6 +12,9 @@ use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Event\Album\EmptyLounge;
+use Piwigo\Event\Picture\BeginDeleteElements;
+use Piwigo\Event\Picture\DeleteElements;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
@@ -272,7 +275,7 @@ final readonly class ImageService
         if ($ids === []) {
             return 0;
         }
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('begin_delete_elements', $ids);
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new BeginDeleteElements($ids));
 
         if ($physicalDeletion) {
             $ids = $this->deleteElementFiles($ids, $urlService);
@@ -291,7 +294,7 @@ final readonly class ImageService
                 ->updateCategory($categoryIds);
         }
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('delete_elements', $ids);
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new DeleteElements($ids));
         $this->activityLogger->record('photo', $ids, 'delete');
         return count($ids);
     }
@@ -389,7 +392,7 @@ final readonly class ImageService
 
         $logger->debug(__FUNCTION__ . ', exec=' . $execId . ', ends');
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('empty_lounge', $rows);
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new EmptyLounge($rows));
 
         return $rows;
     }

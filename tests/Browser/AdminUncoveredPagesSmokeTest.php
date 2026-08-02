@@ -348,7 +348,7 @@ it('admin popuphelp falls back to empty content for a well-formed but nonexisten
  * same throwaway-fixture-plugin technique as the PluginSubController
  * tests above.
  */
-it('admin popuphelp falls back to empty content when a real get_popup_help_content hook returns a non-string', function (): void {
+it('admin popuphelp fatal-errors when a real get_popup_help_content hook returns something other than a GetPopupHelpContent instance', function (): void {
     $pluginId = 'ct-popuphelp-hook-' . uniqid();
     $dir = pluginSubPluginsPath() . $pluginId;
     if (! is_dir($dir)) {
@@ -366,8 +366,8 @@ it('admin popuphelp falls back to empty content when a real get_popup_help_conte
     */
 
     \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler(
-        'get_popup_help_content',
-        static fn (mixed $content): mixed => null
+        \Piwigo\Event\Admin\GetPopupHelpContent::class,
+        static fn (): mixed => null
     );
     PHP);
     $db = pluginSubDb();
@@ -381,17 +381,13 @@ it('admin popuphelp falls back to empty content when a real get_popup_help_conte
 
     try {
         $page = H::loginAsAdmin($this);
-        // A real, existing help topic -- proves the fallback specifically
-        // discards the hook's null return (which would otherwise leave
-        // HELP_CONTENT as a literal empty string too, indistinguishable
-        // from the "nonexistent topic" test above without this real
-        // topic's own non-empty starting content to overwrite). Raw
-        // rawGet(), not navigateOk()+content(), for the same exact-empty
-        // reason as that test.
+        // dispatchChange()'s own fail-loud contract now throws \Error
+        // instead of gracefully falling back to '' -- display_errors is
+        // off site-wide, so the HTTP status is the only reliable signal
+        // (see this suite's own established convention for this).
         $result = H::rawGet($page, '/admin/popuphelp.php?page=cat_options&output=content_only');
 
-        expect($result['status'])->toBe(200);
-        expect($result['body'])->toBe('');
+        expect($result['status'])->toBe(500);
     } finally {
         $db = pluginSubDb();
         $db->query(sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, $db->real_escape_string($pluginId)));

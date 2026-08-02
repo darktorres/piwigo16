@@ -6,6 +6,7 @@ namespace Piwigo\Controller\Admin;
 
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
+use Piwigo\Event\Admin\GetPopupHelpContent;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Http\ResponseReadyException;
@@ -95,10 +96,7 @@ final class AdminPopuphelpController implements ControllerInterface
             $help_content = '';
         }
 
-        $help_content = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_popup_help_content', $help_content, $rawPage);
-        if (! is_string($help_content)) {
-            $help_content = '';
-        }
+        $help_content = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetPopupHelpContent($help_content, $rawPage))->content;
 
         $template->set_filename('popuphelp', 'popuphelp.tpl');
         $template->assign(

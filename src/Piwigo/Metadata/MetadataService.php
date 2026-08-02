@@ -6,6 +6,8 @@ namespace Piwigo\Metadata;
 
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Db\DbConnection;
+use Piwigo\Event\Picture\CleanIptcValue;
+use Piwigo\Event\Picture\FormatExifData;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Tag\TagService;
@@ -90,10 +92,7 @@ final readonly class MetadataService
         if ((bool) preg_match('/[\x80-\xff]/', $value)) {
             // apparently mac uses some MacRoman crap encoding -- no
             // reliable way to detect it, a plugin should do the trick.
-            $changedValue = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('clean_iptc_value', $value);
-            if (is_string($changedValue)) {
-                $value = $changedValue;
-            }
+            $value = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new CleanIptcValue($value))->value;
 
             $qual = \Piwigo\Core\StringHelper::qualifyUtf8($value);
             if ($qual !== 0) { // has non-ascii chars
@@ -150,13 +149,13 @@ final readonly class MetadataService
         $exif = in_array($extension, ['jpg', 'jpeg', 'tif', 'tiff'], true)
             ? exif_read_data($filename)
             : false;
-        $exif2 = (bool) $exif ? null : \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('format_exif_data', null, $filename, $map);
+        $exif2 = (bool) $exif ? null : \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new FormatExifData(null, $filename, $map))->exif;
 
         if ((bool) $exif || (bool) $exif2) {
             if ((bool) $exif2) {
                 $exif = $exif2;
             } else {
-                $exif = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('format_exif_data', $exif, $filename, $map);
+                $exif = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new FormatExifData($exif !== false ? $exif : null, $filename, $map))->exif;
             }
 
             if (! is_array($exif)) {

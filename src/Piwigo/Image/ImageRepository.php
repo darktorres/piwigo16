@@ -9,7 +9,9 @@ use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Query;
+use Piwigo\Category\CategoryEntity;
 use Piwigo\Common\Dto\PaginatedResult;
+use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Core\Env;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\SqlDialect;
@@ -663,31 +665,29 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * Item 14 DQL audit: stays on DBAL -- `lounge` has no mapped Entity
-     * anywhere in this codebase.
+     * Item 14 DQL audit, re-corrected: `lounge` is now mapped
+     * ({@see LoungeEntity}). Converted to real DQL -- single-table,
+     * static ORDER BY.
      *
      * @return list<array{image_id: int, category_id: int}>
      */
     public function findLoungeRows(): array
     {
-        $loungeTable = Tables::lounge();
-
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->executeQuery(<<<SQL
-                SELECT
-                    image_id,
-                    category_id
-                FROM {$loungeTable}
-                ORDER BY category_id ASC, image_id ASC
-                SQL)->fetchAllAssociative();
+        $entities = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('l')
+            ->from(LoungeEntity::class, 'l')
+            ->orderBy('l.categoryId', 'ASC')
+            ->addOrderBy('l.imageId', 'ASC')
+            ->getQuery()
+            ->getResult();
 
         return array_map(
-            static fn (array $row): array => [
-                'image_id' => is_numeric($row['image_id']) ? (int) $row['image_id'] : 0,
-                'category_id' => is_numeric($row['category_id']) ? (int) $row['category_id'] : 0,
+            static fn (LoungeEntity $l): array => [
+                'image_id' => $l->imageId,
+                'category_id' => $l->categoryId->value,
             ],
-            $rows
+            $entities
         );
     }
 
@@ -708,25 +708,24 @@ final class ImageRepository extends EntityRepository
      * computes age against Env::now() instead, matching date_available's
      * own clock source.
      *
-     * Item 14 DQL audit: stays on DBAL -- joins `lounge`, which has no
-     * mapped Entity anywhere in this codebase.
+     * Item 14 DQL audit, re-corrected: `lounge` is now mapped
+     * ({@see LoungeEntity}). Converted to real DQL -- inner join into
+     * this repository's own {@see ImageEntity}; setMaxResults(1) is
+     * paired with getOneOrNullResult() per the audit's own gotcha #3.
      */
     public function findOldestLoungeAgeInfo(): ?string
     {
-        $loungeTable = Tables::lounge();
-        $imagesTable = Tables::images();
-
         $row = $this->getEntityManager()
-            ->getConnection()
-            ->fetchAssociative(<<<SQL
-                SELECT date_available
-                FROM {$loungeTable}
-                    JOIN {$imagesTable} ON image_id = id
-                ORDER BY image_id ASC
-                LIMIT 1
-                SQL);
+            ->createQueryBuilder()
+            ->select('i.dateAvailable AS date_available')
+            ->from(LoungeEntity::class, 'l')
+            ->innerJoin(ImageEntity::class, 'i', \Doctrine\ORM\Query\Expr\Join::WITH, 'l.imageId = i.id')
+            ->orderBy('l.imageId', 'ASC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult(Query::HYDRATE_ARRAY);
 
-        if ($row === false) {
+        if (! is_array($row)) {
             return null;
         }
 
@@ -740,44 +739,45 @@ final class ImageRepository extends EntityRepository
      * `image_category` -- Ws\PwgImages::upload()'s own "how many photos
      * are still awaiting validation in this category" response field.
      *
-     * Item 14 DQL audit: stays on DBAL -- both `lounge` and the
-     * `image_category` subquery table have no mapped Entity anywhere in
-     * this codebase.
+     * Item 14 DQL audit, re-corrected: both `lounge` and `image_category`
+     * are now mapped ({@see LoungeEntity}, {@see ImageCategoryEntity}).
+     * Converted to real DQL -- the subquery targets the latter directly.
      */
     public function countLoungeImagesPendingForCategory(int $categoryId): int
     {
-        $imageCategoryTable = Tables::imageCategory();
+        $subQuery = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('ic.imageId')
+            ->from(ImageCategoryEntity::class, 'ic')
+            ->getDQL();
 
         $value = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from(Tables::lounge())
-            ->where('category_id = :categoryId')
-            ->andWhere("image_id NOT IN (SELECT image_id FROM {$imageCategoryTable})")
-            ->setParameter('categoryId', $categoryId, ParameterType::INTEGER)
-            ->executeQuery()
-            ->fetchOne();
+            ->select('COUNT(l.imageId)')
+            ->from(LoungeEntity::class, 'l')
+            ->where('l.categoryId = :categoryId')
+            ->andWhere("l.imageId NOT IN ({$subQuery})")
+            ->setParameter('categoryId', CategoryId::from($categoryId))
+            ->getQuery()
+            ->getSingleScalarResult();
 
         return is_numeric($value) ? (int) $value : 0;
     }
 
     /**
-     * Item 14 DQL audit: stays on DBAL -- `lounge` has no mapped Entity
-     * anywhere in this codebase.
+     * Item 14 DQL audit, re-corrected: `lounge` is now mapped
+     * ({@see LoungeEntity}). Converted to real DQL -- single-table bulk
+     * DELETE.
      */
     public function deleteLoungeUpTo(int $maxImageId): void
     {
-        $loungeTable = Tables::lounge();
         $this->getEntityManager()
-            ->getConnection()
-            ->executeStatement(
-                <<<SQL
-                DELETE FROM {$loungeTable} WHERE image_id <= ?
-                SQL
-                ,
-                [$maxImageId]
-            );
+            ->createQueryBuilder()
+            ->delete(LoungeEntity::class, 'l')
+            ->where('l.imageId <= :maxImageId')
+            ->setParameter('maxImageId', $maxImageId, ParameterType::INTEGER)
+            ->getQuery()
+            ->execute();
     }
 
     /**
@@ -840,8 +840,11 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * Item 14 DQL audit: stays on DBAL -- `image_category` has no
-     * mapped Entity anywhere in this codebase.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}). Converted to real DQL -- per the
+     * audit's own gotcha #1, the selected `ic.categoryId` hydrates as a
+     * real {@see CategoryId} under array hydration, so it's unwrapped
+     * rather than treated as a raw int.
      *
      * @param array<int|string> $images real callers don't guarantee a list
      * @param array<int|string> $categories
@@ -852,30 +855,39 @@ final class ImageRepository extends EntityRepository
         $existing = [];
 
         $rows = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select('image_id', 'category_id')
-            ->from(Tables::imageCategory())
-            ->where('image_id IN (:images)')
-            ->andWhere('category_id IN (:categories)')
+            ->select('ic.imageId', 'ic.categoryId')
+            ->from(ImageCategoryEntity::class, 'ic')
+            ->where('ic.imageId IN (:images)')
+            ->andWhere('ic.categoryId IN (:categories)')
             ->setParameter('images', array_map(strval(...), $images), ArrayParameterType::STRING)
             ->setParameter('categories', array_map(strval(...), $categories), ArrayParameterType::STRING)
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->getQuery()
+            ->getArrayResult();
 
         foreach ($rows as $row) {
-            $categoryId = $row['category_id'];
-            $imageId = $row['image_id'];
-            assert(is_numeric($categoryId) && is_numeric($imageId));
-            $existing[(int) $categoryId][] = (int) $imageId;
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $categoryId = $row['categoryId'];
+            $imageId = $row['imageId'];
+            if (! $categoryId instanceof CategoryId || ! is_numeric($imageId)) {
+                continue;
+            }
+
+            $existing[$categoryId->value][] = (int) $imageId;
         }
 
         return $existing;
     }
 
     /**
-     * Item 14 DQL audit: stays on DBAL -- `image_category` has no
-     * mapped Entity anywhere in this codebase.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}). Converted to real DQL -- per the
+     * audit's own gotcha #1, the selected `ic.categoryId` hydrates as a
+     * real {@see CategoryId} under array hydration, so it's unwrapped
+     * rather than treated as a raw int.
      *
      * @param array<int|string> $categories real callers don't guarantee a list
      * @return array<int|string, int> category_id => max rank
@@ -883,18 +895,32 @@ final class ImageRepository extends EntityRepository
     public function findMaxRanksByCategory(array $categories): array
     {
         $rows = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select('category_id', 'MAX(`rank`) AS max_rank')
-            ->from(Tables::imageCategory())
-            ->where('`rank` IS NOT NULL')
-            ->andWhere('category_id IN (:categories)')
-            ->groupBy('category_id')
+            ->select('ic.categoryId', 'MAX(ic.rank) AS maxRank')
+            ->from(ImageCategoryEntity::class, 'ic')
+            ->where('ic.rank IS NOT NULL')
+            ->andWhere('ic.categoryId IN (:categories)')
+            ->groupBy('ic.categoryId')
             ->setParameter('categories', array_map(strval(...), $categories), ArrayParameterType::STRING)
-            ->executeQuery()
-            ->fetchAllKeyValue();
+            ->getQuery()
+            ->getArrayResult();
 
-        return array_map(static fn (mixed $rank): int => is_numeric($rank) ? (int) $rank : 0, $rows);
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $categoryId = $row['categoryId'];
+            $maxRank = $row['maxRank'];
+            if (! $categoryId instanceof CategoryId || ! is_numeric($maxRank)) {
+                continue;
+            }
+
+            $result[$categoryId->value] = (int) $maxRank;
+        }
+
+        return $result;
     }
 
     /**
@@ -905,49 +931,50 @@ final class ImageRepository extends EntityRepository
      * no-op -- dropped here since the query itself already guarantees
      * numeric ids.
      *
-     * Item 14 DQL audit: stays on DBAL -- joins the never-entity-mapped
-     * `image_category`.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}). Converted to real DQL -- inner join
+     * into this repository's own {@see ImageEntity}.
      *
      * @param array<int, int|string> $images
      * @return list<int>
      */
     public function findDissociableImageIds(array $images, int|string $category): array
     {
-        return array_map(
+        return array_values(array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             $this->getEntityManager()
-                ->getConnection()
                 ->createQueryBuilder()
                 ->select('i.id')
-                ->from(Tables::imageCategory(), 'ic')
-                ->innerJoin('ic', Tables::images(), 'i', 'ic.image_id = i.id')
-                ->where('ic.category_id = :category')
+                ->from(ImageCategoryEntity::class, 'ic')
+                ->innerJoin(ImageEntity::class, 'i', \Doctrine\ORM\Query\Expr\Join::WITH, 'ic.imageId = i.id')
+                ->where('ic.categoryId = :category')
                 ->andWhere('i.id IN (:images)')
-                ->andWhere('(ic.category_id != i.storage_category_id OR i.storage_category_id IS NULL)')
-                ->setParameter('category', (string) $category)
+                ->andWhere('(ic.categoryId != i.storageCategoryId OR i.storageCategoryId IS NULL)')
+                ->setParameter('category', CategoryId::from((int) $category))
                 ->setParameter('images', array_map(strval(...), $images), ArrayParameterType::STRING)
-                ->executeQuery()
-                ->fetchFirstColumn()
-        );
+                ->getQuery()
+                ->getSingleColumnResult()
+        ));
     }
 
     /**
-     * Item 14 DQL audit: stays on DBAL -- `image_category` has no
-     * mapped Entity anywhere in this codebase.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-table
+     * bulk DELETE.
      *
      * @param array<int, int> $imageIds
      */
     public function deleteImageCategoryLinks(array $imageIds, int|string $category): void
     {
         $em = $this->getEntityManager();
-        $em->getConnection()
-            ->createQueryBuilder()
-            ->delete(Tables::imageCategory())
-            ->where('category_id = :category')
-            ->andWhere('image_id IN (:images)')
-            ->setParameter('category', (string) $category)
+        $em->createQueryBuilder()
+            ->delete(ImageCategoryEntity::class, 'ic')
+            ->where('ic.categoryId = :category')
+            ->andWhere('ic.imageId IN (:images)')
+            ->setParameter('category', CategoryId::from((int) $category))
             ->setParameter('images', array_map(strval(...), $imageIds), ArrayParameterType::STRING)
-            ->executeStatement();
+            ->getQuery()
+            ->execute();
         $em->clear();
     }
 
@@ -959,8 +986,9 @@ final class ImageRepository extends EntityRepository
      * above (many images, one category), this is one image, many
      * categories.
      *
-     * Item 14 DQL audit: stays on DBAL -- `image_category` has no
-     * mapped Entity anywhere in this codebase.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-table
+     * bulk DELETE.
      *
      * @param list<int|string> $categoryIds
      */
@@ -971,14 +999,14 @@ final class ImageRepository extends EntityRepository
         }
 
         $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->delete(Tables::imageCategory())
-            ->where('image_id = :imageId')
-            ->andWhere('category_id IN (:categoryIds)')
+            ->delete(ImageCategoryEntity::class, 'ic')
+            ->where('ic.imageId = :imageId')
+            ->andWhere('ic.categoryId IN (:categoryIds)')
             ->setParameter('imageId', $imageId, ParameterType::INTEGER)
             ->setParameter('categoryIds', array_map(strval(...), $categoryIds), ArrayParameterType::STRING)
-            ->executeStatement();
+            ->getQuery()
+            ->execute();
     }
 
     /**
@@ -987,9 +1015,10 @@ final class ImageRepository extends EntityRepository
      * excludes nothing, matching the original's own conditional `AND
      * category_id NOT IN (...)` clause).
      *
-     * Item 14 DQL audit: stays on DBAL -- `DELETE ... JOIN` targets the
-     * never-entity-mapped `image_category`, and DQL DELETE doesn't
-     * support joins in any case.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}), but stays on DBAL regardless -- this
+     * is a `DELETE ... JOIN`, and DQL's DELETE statement doesn't support
+     * joins at all, mapped target or not.
      *
      * @param array<int, int|string> $images
      * @param array<int, int|string> $categories
@@ -1306,18 +1335,18 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * Item 14 DQL audit: stays on DBAL -- `image_category` has no
-     * mapped Entity anywhere in this codebase.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-table,
+     * no WHERE.
      */
     public function countImagesInCategories(): int
     {
-        $imageCategoryTable = Tables::imageCategory();
-
         $count = $this->getEntityManager()
-            ->getConnection()
-            ->executeQuery(<<<SQL
-                SELECT COUNT(DISTINCT(image_id)) FROM {$imageCategoryTable}
-                SQL)->fetchOne();
+            ->createQueryBuilder()
+            ->select('COUNT(DISTINCT ic.imageId)')
+            ->from(ImageCategoryEntity::class, 'ic')
+            ->getQuery()
+            ->getSingleScalarResult();
 
         return is_numeric($count) ? (int) $count : 0;
     }
@@ -1328,18 +1357,18 @@ final class ImageRepository extends EntityRepository
      * above) -- Ws\PwgCore::getInfos()'s own "nb_image_category" summary
      * figure.
      *
-     * Item 14 DQL audit: stays on DBAL -- `image_category` has no
-     * mapped Entity anywhere in this codebase.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-table,
+     * no WHERE.
      */
     public function countImageCategoryLinks(): int
     {
-        $imageCategoryTable = Tables::imageCategory();
-
         $count = $this->getEntityManager()
-            ->getConnection()
-            ->executeQuery(<<<SQL
-                SELECT COUNT(*) FROM {$imageCategoryTable}
-                SQL)->fetchOne();
+            ->createQueryBuilder()
+            ->select('COUNT(ic.imageId)')
+            ->from(ImageCategoryEntity::class, 'ic')
+            ->getQuery()
+            ->getSingleScalarResult();
 
         return is_numeric($count) ? (int) $count : 0;
     }
@@ -1503,41 +1532,39 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * Item 14 DQL audit: stays on DBAL -- `lounge` has no mapped Entity
-     * anywhere in this codebase.
+     * Item 14 DQL audit, re-corrected: `lounge` is now mapped
+     * ({@see LoungeEntity}). Converted to real DQL -- single-table, no
+     * WHERE.
      *
      * @return list<int>
      */
     public function findLoungedImageIds(): array
     {
-        $loungeTable = Tables::lounge();
-
-        return array_map(
+        return array_values(array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             $this->getEntityManager()
-                ->getConnection()
-                ->executeQuery(<<<SQL
-                    SELECT image_id FROM {$loungeTable}
-                    SQL)->fetchFirstColumn()
-        );
+                ->createQueryBuilder()
+                ->select('l.imageId')
+                ->from(LoungeEntity::class, 'l')
+                ->getQuery()
+                ->getSingleColumnResult()
+        ));
     }
 
     /**
-     * Item 14 DQL audit: stays on DBAL -- LEFT JOINs the
-     * never-entity-mapped `image_category`.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}). Converted to real DQL -- LEFT JOIN
+     * into this repository's own entity.
      *
      * @param list<int> $loungedIds
      * @return list<int>
      */
     public function findOrphanImageIds(array $loungedIds): array
     {
-        $qb = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
+        $qb = $this->createQueryBuilder('i')
             ->select('i.id')
-            ->from(Tables::images(), 'i')
-            ->leftJoin('i', Tables::imageCategory(), 'ic', 'i.id = ic.image_id')
-            ->where('ic.category_id IS NULL')
+            ->leftJoin(ImageCategoryEntity::class, 'ic', \Doctrine\ORM\Query\Expr\Join::WITH, 'i.id = ic.imageId')
+            ->where('ic.categoryId IS NULL')
             ->orderBy('i.id', 'ASC');
 
         if (count($loungedIds) > 0) {
@@ -1545,7 +1572,7 @@ final class ImageRepository extends EntityRepository
                 ->setParameter('loungedIds', $loungedIds, ArrayParameterType::INTEGER);
         }
 
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->executeQuery()->fetchFirstColumn());
+        return array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $qb->getQuery()->getSingleColumnResult()));
     }
 
     /**
@@ -1745,25 +1772,42 @@ final class ImageRepository extends EntityRepository
      * list) since the caller's own `array_column(..., 'id', 'id')`
      * membership-set idiom is preserved unchanged at the call site.
      *
-     * Item 14 DQL audit: stays on DBAL -- joins the never-entity-mapped
-     * `image_category`.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}). Converted to real DQL -- inner join
+     * into this repository's own {@see ImageEntity}; per the audit's own
+     * gotcha #1, the selected `ic.categoryId` hydrates as a real
+     * {@see CategoryId} under array hydration, so it's unwrapped rather
+     * than treated as a raw int.
      *
      * @param array<array-key, int|string|float|bool> $imageIds
      * @return list<array<string, mixed>>
      */
     public function findVirtuallyAssociatedCategoryRows(array $imageIds): array
     {
-        return $this->getEntityManager()
-            ->getConnection()
+        $rows = $this->getEntityManager()
             ->createQueryBuilder()
-            ->select('DISTINCT(category_id) AS id')
-            ->from(Tables::imageCategory(), 'ic')
-            ->innerJoin('ic', Tables::images(), 'i', 'i.id = ic.image_id')
-            ->where('ic.image_id IN (:ids)')
-            ->andWhere('(ic.category_id != i.storage_category_id OR i.storage_category_id IS NULL)')
+            ->select('DISTINCT ic.categoryId AS id')
+            ->from(ImageCategoryEntity::class, 'ic')
+            ->innerJoin(ImageEntity::class, 'i', \Doctrine\ORM\Query\Expr\Join::WITH, 'i.id = ic.imageId')
+            ->where('ic.imageId IN (:ids)')
+            ->andWhere('(ic.categoryId != i.storageCategoryId OR i.storageCategoryId IS NULL)')
             ->setParameter('ids', array_map(strval(...), $imageIds), ArrayParameterType::STRING)
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->getQuery()
+            ->getArrayResult();
+
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $id = $row['id'];
+            $result[] = [
+                'id' => $id instanceof CategoryId ? $id->value : $id,
+            ];
+        }
+
+        return $result;
     }
 
     /**
@@ -1773,24 +1817,41 @@ final class ImageRepository extends EntityRepository
      * into {@see \Piwigo\Image\SrcImage}'s own constructor, which already
      * narrows each key itself.
      *
-     * Item 14 DQL audit: stays on DBAL -- joins the never-entity-mapped
-     * `image_category`.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}). Converted to real DQL -- inner join
+     * against this repository's own entity.
      *
      * @return list<array<string, mixed>>
      */
     public function findThumbnailRowsForCategoryOrderedByRank(int $categoryId): array
     {
-        return $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('i.id', 'i.file', 'i.path', 'i.representative_ext', 'i.width', 'i.height', 'i.rotation', 'i.name', 'ic.`rank`')
-            ->from(Tables::images(), 'i')
-            ->innerJoin('i', Tables::imageCategory(), 'ic', 'ic.image_id = i.id')
-            ->where('ic.category_id = :categoryId')
-            ->orderBy('ic.`rank`')
-            ->setParameter('categoryId', $categoryId, ParameterType::INTEGER)
-            ->executeQuery()
-            ->fetchAllAssociative();
+        $rows = $this->createQueryBuilder('i')
+            ->select('i.id', 'i.file', 'i.path', 'i.representativeExt AS representative_ext', 'i.width', 'i.height', 'i.rotation', 'i.name', 'ic.rank')
+            ->innerJoin(ImageCategoryEntity::class, 'ic', \Doctrine\ORM\Query\Expr\Join::WITH, 'ic.imageId = i.id')
+            ->where('ic.categoryId = :categoryId')
+            ->orderBy('ic.rank')
+            ->setParameter('categoryId', CategoryId::from($categoryId))
+            ->getQuery()
+            ->getArrayResult();
+
+        $result = [];
+        foreach ($rows as $row) {
+            if (is_array($row)) {
+                $result[] = [
+                    'id' => $row['id'] ?? null,
+                    'file' => $row['file'] ?? null,
+                    'path' => $row['path'] ?? null,
+                    'representative_ext' => $row['representative_ext'] ?? null,
+                    'width' => $row['width'] ?? null,
+                    'height' => $row['height'] ?? null,
+                    'rotation' => $row['rotation'] ?? null,
+                    'name' => $row['name'] ?? null,
+                    'rank' => $row['rank'] ?? null,
+                ];
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -1798,24 +1859,24 @@ final class ImageRepository extends EntityRepository
      * Ws\PwgImages::setRank()'s own multi-image "return the new order"
      * response.
      *
-     * Item 14 DQL audit: stays on DBAL -- `image_category` has no
-     * mapped Entity anywhere in this codebase.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-table,
+     * static WHERE + ORDER BY.
      *
      * @return list<int|string>
      */
     public function findImageIdsOrderedByRankForCategory(int $categoryId): array
     {
         return array_values(array_filter(
-            array_column($this->getEntityManager()
-                ->getConnection()
+            $this->getEntityManager()
                 ->createQueryBuilder()
-                ->select('image_id')
-                ->from(Tables::imageCategory())
-                ->where('category_id = :categoryId')
-                ->orderBy('`rank`', 'ASC')
-                ->setParameter('categoryId', $categoryId, ParameterType::INTEGER)
-                ->executeQuery()
-                ->fetchAllAssociative(), 'image_id'),
+                ->select('ic.imageId')
+                ->from(ImageCategoryEntity::class, 'ic')
+                ->where('ic.categoryId = :categoryId')
+                ->orderBy('ic.rank', 'ASC')
+                ->setParameter('categoryId', CategoryId::from($categoryId))
+                ->getQuery()
+                ->getSingleColumnResult(),
             static fn (mixed $v): bool => is_int($v) || is_string($v)
         ));
     }
@@ -1824,22 +1885,22 @@ final class ImageRepository extends EntityRepository
      * Whether $imageId is associated to $categoryId -- Ws\PwgImages::
      * setRank()'s own "is this image even in that category" guard.
      *
-     * Item 14 DQL audit: stays on DBAL -- `image_category` has no
-     * mapped Entity anywhere in this codebase.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-table,
+     * static WHERE.
      */
     public function isImageInCategory(int $imageId, int $categoryId): bool
     {
         $value = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from(Tables::imageCategory())
-            ->where('image_id = :imageId')
-            ->andWhere('category_id = :categoryId')
+            ->select('COUNT(ic.imageId)')
+            ->from(ImageCategoryEntity::class, 'ic')
+            ->where('ic.imageId = :imageId')
+            ->andWhere('ic.categoryId = :categoryId')
             ->setParameter('imageId', $imageId, ParameterType::INTEGER)
-            ->setParameter('categoryId', $categoryId, ParameterType::INTEGER)
-            ->executeQuery()
-            ->fetchOne();
+            ->setParameter('categoryId', CategoryId::from($categoryId))
+            ->getQuery()
+            ->getSingleScalarResult();
 
         return is_numeric($value) && (int) $value > 0;
     }
@@ -1850,26 +1911,24 @@ final class ImageRepository extends EntityRepository
      * Ws\PwgImages::setRank()'s own "what's the current max rank" lookup.
      * Returns null when no image in this category has a rank set yet.
      *
-     * Item 14 DQL audit: stays on DBAL -- `image_category` has no
-     * mapped Entity anywhere in this codebase.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-table,
+     * static WHERE; a bare aggregate with no GROUP BY always returns
+     * exactly one row (NULL when nothing matches), so getSingleScalarResult()
+     * never throws here.
      */
     public function findMaxRankForCategory(int $categoryId): ?int
     {
-        $row = $this->getEntityManager()
-            ->getConnection()
+        $maxRank = $this->getEntityManager()
             ->createQueryBuilder()
-            ->select('MAX(`rank`) AS max_rank')
-            ->from(Tables::imageCategory())
-            ->where('category_id = :categoryId')
-            ->setParameter('categoryId', $categoryId, ParameterType::INTEGER)
-            ->executeQuery()
-            ->fetchAssociative();
+            ->select('MAX(ic.rank)')
+            ->from(ImageCategoryEntity::class, 'ic')
+            ->where('ic.categoryId = :categoryId')
+            ->setParameter('categoryId', CategoryId::from($categoryId))
+            ->getQuery()
+            ->getSingleScalarResult();
 
-        if ($row === false || ! is_numeric($row['max_rank'])) {
-            return null;
-        }
-
-        return (int) $row['max_rank'];
+        return is_numeric($maxRank) ? (int) $maxRank : null;
     }
 
     /**
@@ -1878,44 +1937,47 @@ final class ImageRepository extends EntityRepository
      * inserting a new rank value. `image_category` isn't ORM-mapped, so
      * no caller-side EntityManager::clear() is needed after this write.
      *
-     * Item 14 DQL audit: stays on DBAL -- `image_category` has no
-     * mapped Entity anywhere in this codebase.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-table
+     * bulk UPDATE; DQL's UPDATE SET clause supports the `ic.rank + 1`
+     * self-referential arithmetic directly.
      */
     public function incrementRanksFromForCategory(int $categoryId, int $rank): void
     {
         $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->update(Tables::imageCategory())
-            ->set('`rank`', '`rank` + 1')
-            ->where('category_id = :categoryId')
-            ->andWhere('`rank` IS NOT NULL')
-            ->andWhere('`rank` >= :rank')
-            ->setParameter('categoryId', $categoryId, ParameterType::INTEGER)
+            ->update(ImageCategoryEntity::class, 'ic')
+            ->set('ic.rank', 'ic.rank + 1')
+            ->where('ic.categoryId = :categoryId')
+            ->andWhere('ic.rank IS NOT NULL')
+            ->andWhere('ic.rank >= :rank')
+            ->setParameter('categoryId', CategoryId::from($categoryId))
             ->setParameter('rank', $rank, ParameterType::INTEGER)
-            ->executeStatement();
+            ->getQuery()
+            ->execute();
     }
 
     /**
      * Sets `rank` for one (imageId, categoryId) image_category row --
      * Ws\PwgImages::setRank()'s own final write.
      *
-     * Item 14 DQL audit: stays on DBAL -- `image_category` has no
-     * mapped Entity anywhere in this codebase.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-row
+     * UPDATE on the composite primary key.
      */
     public function updateRankForImageInCategory(int $imageId, int $categoryId, int $rank): void
     {
         $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->update(Tables::imageCategory())
-            ->set('`rank`', ':rank')
-            ->where('image_id = :imageId')
-            ->andWhere('category_id = :categoryId')
+            ->update(ImageCategoryEntity::class, 'ic')
+            ->set('ic.rank', ':rank')
+            ->where('ic.imageId = :imageId')
+            ->andWhere('ic.categoryId = :categoryId')
             ->setParameter('rank', $rank, ParameterType::INTEGER)
             ->setParameter('imageId', $imageId, ParameterType::INTEGER)
-            ->setParameter('categoryId', $categoryId, ParameterType::INTEGER)
-            ->executeStatement();
+            ->setParameter('categoryId', CategoryId::from($categoryId))
+            ->getQuery()
+            ->execute();
     }
 
     /**
@@ -1923,39 +1985,41 @@ final class ImageRepository extends EntityRepository
      * placed into -- Admin\PhotosAddDirectPageRenderer's own "default the
      * upload form to whichever album the last photo went into" lookup.
      *
-     * Item 14 DQL audit: stays on DBAL -- joins the never-entity-mapped
-     * `image_category`.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}). Converted to real DQL -- joins this
+     * repository's own {@see ImageEntity} plus the cross-domain
+     * {@see \Piwigo\Category\CategoryEntity} (same L2aCoreDomain layer,
+     * see this repository's own header docblock and
+     * {@see ImageCategoryEntity}'s own docblock on that boundary).
+     * setMaxResults(1) is paired with getOneOrNullResult() per the
+     * audit's own gotcha #3. Per gotcha #1, the selected `ic.categoryId`
+     * hydrates as a real {@see CategoryId} under array hydration.
      *
      * @return array{category_id: int|string, uppercats: string}|null
      */
     public function findMostRecentImageCategoryInfo(): ?array
     {
-        $imagesTable = Tables::images();
-        $imageCategoryTable = Tables::imageCategory();
-        $categoriesTable = Tables::categories();
+        $row = $this->createQueryBuilder('i')
+            ->select('ic.categoryId', 'c.uppercats')
+            ->innerJoin(ImageCategoryEntity::class, 'ic', \Doctrine\ORM\Query\Expr\Join::WITH, 'ic.imageId = i.id')
+            ->innerJoin(CategoryEntity::class, 'c', \Doctrine\ORM\Query\Expr\Join::WITH, 'ic.categoryId = c.id')
+            ->orderBy('i.id', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult(Query::HYDRATE_ARRAY);
 
-        $row = $this->getEntityManager()
-            ->getConnection()
-            ->fetchAssociative(<<<SQL
-                SELECT category_id, c.uppercats
-                FROM {$imagesTable} AS i
-                    JOIN {$imageCategoryTable} AS ic ON image_id = i.id
-                    JOIN {$categoriesTable} AS c ON category_id = c.id
-                ORDER BY i.id DESC
-                LIMIT 1
-                SQL);
-
-        if ($row === false) {
+        if (! is_array($row)) {
             return null;
         }
 
-        $categoryId = $row['category_id'];
-        assert(is_int($categoryId) || is_string($categoryId));
+        $categoryId = $row['categoryId'];
         $uppercats = $row['uppercats'];
-        assert(is_string($uppercats));
+        if (! $categoryId instanceof CategoryId || ! is_string($uppercats)) {
+            return null;
+        }
 
         return [
-            'category_id' => $categoryId,
+            'category_id' => $categoryId->value,
             'uppercats' => $uppercats,
         ];
     }
@@ -2029,9 +2093,10 @@ final class ImageRepository extends EntityRepository
      * this extraction should re-litigate. $categoryId non-null additionally
      * joins imageCategory and restricts to that category.
      *
-     * Item 14 DQL audit: stays on DBAL -- $orderBySql is a
-     * caller-composed raw SQL fragment, and the optional join targets
-     * the never-entity-mapped `image_category`.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}), but stays on DBAL regardless --
+     * $orderBySql is a caller-composed raw SQL fragment spliced directly
+     * into the query, which DQL has no way to embed.
      *
      * @param array<array-key, int|string|float|bool> $imageIds
      * @return list<array<string, mixed>>
@@ -2124,10 +2189,10 @@ final class ImageRepository extends EntityRepository
      * own per-image inline-edit grid needs far more columns than the
      * global-mode thumbnail grid does.
      *
-     * Item 14 DQL audit: stays on DBAL -- same reasons as
-     * findBatchManagerThumbnails() above ($orderBySql is a
-     * caller-composed raw fragment, the optional join targets the
-     * never-entity-mapped `image_category`).
+     * Item 14 DQL audit, re-corrected: same reasons as
+     * findBatchManagerThumbnails() above -- `image_category` is now
+     * mapped ({@see ImageCategoryEntity}), but $orderBySql is a
+     * caller-composed raw fragment DQL has no way to embed.
      *
      * @param array<array-key, int|string|float|bool> $imageIds
      * @return list<array<string, mixed>>
@@ -2189,23 +2254,44 @@ final class ImageRepository extends EntityRepository
      * and dir -- Admin\BatchManagerUnitPageRenderer's own per-image
      * "related albums" display.
      *
-     * Item 14 DQL audit: stays on DBAL -- joins the never-entity-mapped
-     * `image_category`.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}). Converted to real DQL -- joins the
+     * cross-domain {@see \Piwigo\Category\CategoryEntity} (same
+     * L2aCoreDomain layer). Per the audit's own gotcha #1, the aliased
+     * `ic.categoryId AS category_id` still hydrates as a real
+     * {@see CategoryId} under array hydration despite the alias, so it's
+     * unwrapped explicitly to preserve this method's own `int|string`
+     * array-shape contract.
      *
      * @return list<array<string, mixed>>
      */
     public function findCategoryLinksForImage(int $imageId): array
     {
-        return $this->getEntityManager()
-            ->getConnection()
+        $rows = $this->getEntityManager()
             ->createQueryBuilder()
-            ->select('category_id', 'uppercats', 'dir')
-            ->from(Tables::imageCategory(), 'ic')
-            ->innerJoin('ic', Tables::categories(), 'c', 'c.id = ic.category_id')
-            ->where('image_id = :imageId')
+            ->select('ic.categoryId AS category_id', 'c.uppercats', 'c.dir')
+            ->from(ImageCategoryEntity::class, 'ic')
+            ->innerJoin(CategoryEntity::class, 'c', \Doctrine\ORM\Query\Expr\Join::WITH, 'c.id = ic.categoryId')
+            ->where('ic.imageId = :imageId')
             ->setParameter('imageId', $imageId, ParameterType::INTEGER)
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->getQuery()
+            ->getArrayResult();
+
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $categoryId = $row['category_id'];
+            $result[] = [
+                'category_id' => $categoryId instanceof CategoryId ? $categoryId->value : $categoryId,
+                'uppercats' => $row['uppercats'] ?? null,
+                'dir' => $row['dir'] ?? null,
+            ];
+        }
+
+        return $result;
     }
 
     /**
@@ -2214,25 +2300,30 @@ final class ImageRepository extends EntityRepository
      * check, a separate query from findCategoryLinksForImage() above (same
      * image_id, no uppercats/dir needed here).
      *
-     * Item 14 DQL audit: stays on DBAL -- `image_category` has no
-     * mapped Entity anywhere in this codebase.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-table,
+     * static WHERE. Per the audit's own gotcha #4, `getSingleColumnResult()`
+     * uses `HYDRATE_SCALAR_COLUMN`, which does NOT apply the `category_id`
+     * custom Type -- the selected `ic.categoryId` comes back as a raw
+     * scalar here, exactly what this method's own `list<int>` contract
+     * wants, so no VO-unwrap is needed (unlike the array/object-hydrated
+     * conversions elsewhere in this file).
      *
      * @return list<int>
      */
     public function findCategoryIdsForImage(int $imageId): array
     {
-        return array_map(
+        return array_values(array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-            array_column($this->getEntityManager()
-                ->getConnection()
+            $this->getEntityManager()
                 ->createQueryBuilder()
-                ->select('category_id')
-                ->from(Tables::imageCategory())
-                ->where('image_id = :imageId')
+                ->select('ic.categoryId')
+                ->from(ImageCategoryEntity::class, 'ic')
+                ->where('ic.imageId = :imageId')
                 ->setParameter('imageId', $imageId, ParameterType::INTEGER)
-                ->executeQuery()
-                ->fetchAllAssociative(), 'category_id')
-        );
+                ->getQuery()
+                ->getSingleColumnResult()
+        ));
     }
 
     /**
@@ -2311,28 +2402,25 @@ final class ImageRepository extends EntityRepository
      * `images` at all -- FilesystemIntegrityChecker::imagesIntegrity()'s
      * own orphaned-link detection.
      *
-     * Item 14 DQL audit: stays on DBAL -- LEFT JOINs FROM the
-     * never-entity-mapped `image_category`.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}). Converted to real DQL -- LEFT JOIN
+     * FROM it into this repository's own {@see ImageEntity}.
      *
      * @return list<int>
      */
     public function findOrphanImageCategoryLinkIds(): array
     {
-        $imageCategoryTable = Tables::imageCategory();
-        $imagesTable = Tables::images();
-
-        return array_map(
+        return array_values(array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-            array_column($this->getEntityManager()
-                ->getConnection()
-                ->fetchAllAssociative(<<<SQL
-                    SELECT
-                        image_id
-                    FROM {$imageCategoryTable}
-                        LEFT JOIN {$imagesTable} ON id = image_id
-                    WHERE id IS NULL
-                    SQL), 'image_id')
-        );
+            $this->getEntityManager()
+                ->createQueryBuilder()
+                ->select('ic.imageId')
+                ->from(ImageCategoryEntity::class, 'ic')
+                ->leftJoin(ImageEntity::class, 'i', \Doctrine\ORM\Query\Expr\Join::WITH, 'i.id = ic.imageId')
+                ->where('i.id IS NULL')
+                ->getQuery()
+                ->getSingleColumnResult()
+        ));
     }
 
     /**
@@ -2341,8 +2429,9 @@ final class ImageRepository extends EntityRepository
      * orphaned-link cleanup, unlike deleteImageCategoryLinks() above which
      * is scoped to one category.
      *
-     * Item 14 DQL audit: stays on DBAL -- `image_category` has no
-     * mapped Entity anywhere in this codebase.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-table
+     * bulk DELETE.
      *
      * @param list<int> $imageIds
      */
@@ -2353,12 +2442,12 @@ final class ImageRepository extends EntityRepository
         }
 
         $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->delete(Tables::imageCategory())
-            ->where('image_id IN (:ids)')
+            ->delete(ImageCategoryEntity::class, 'ic')
+            ->where('ic.imageId IN (:ids)')
             ->setParameter('ids', $imageIds, ArrayParameterType::INTEGER)
-            ->executeStatement();
+            ->getQuery()
+            ->execute();
     }
 
     /**
@@ -2420,28 +2509,26 @@ final class ImageRepository extends EntityRepository
      * Ids of images already at $filename within $categoryId -- Ws\
      * PwgImages::upload()'s own "update_mode" replace-existing lookup.
      *
-     * Item 14 DQL audit: stays on DBAL -- joins the never-entity-mapped
-     * `image_category`.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}). Converted to real DQL -- inner join
+     * against this repository's own entity.
      *
      * @return list<int>
      */
     public function findIdsByFilenameInCategory(string $filename, int $categoryId): array
     {
-        return array_map(
+        return array_values(array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-            $this->getEntityManager()
-                ->getConnection()
-                ->createQueryBuilder()
+            $this->createQueryBuilder('i')
                 ->select('i.id')
-                ->from(Tables::images(), 'i')
-                ->innerJoin('i', Tables::imageCategory(), 'ic', 'ic.image_id = i.id')
+                ->innerJoin(ImageCategoryEntity::class, 'ic', \Doctrine\ORM\Query\Expr\Join::WITH, 'ic.imageId = i.id')
                 ->where('i.file = :filename')
-                ->andWhere('ic.category_id = :categoryId')
+                ->andWhere('ic.categoryId = :categoryId')
                 ->setParameter('filename', $filename)
-                ->setParameter('categoryId', $categoryId)
-                ->executeQuery()
-                ->fetchFirstColumn()
-        );
+                ->setParameter('categoryId', CategoryId::from($categoryId))
+                ->getQuery()
+                ->getSingleColumnResult()
+        ));
     }
 
     /**
@@ -2499,20 +2586,20 @@ final class ImageRepository extends EntityRepository
      * Number of images linked to $categoryId -- Ws\PwgImages::upload()'s
      * own "how many photos are now in this category" response field.
      *
-     * Item 14 DQL audit: stays on DBAL -- `image_category` has no
-     * mapped Entity anywhere in this codebase.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-table,
+     * static WHERE.
      */
     public function countImagesInCategory(int $categoryId): int
     {
         $value = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from(Tables::imageCategory())
-            ->where('category_id = :categoryId')
-            ->setParameter('categoryId', $categoryId, ParameterType::INTEGER)
-            ->executeQuery()
-            ->fetchOne();
+            ->select('COUNT(ic.imageId)')
+            ->from(ImageCategoryEntity::class, 'ic')
+            ->where('ic.categoryId = :categoryId')
+            ->setParameter('categoryId', CategoryId::from($categoryId))
+            ->getQuery()
+            ->getSingleScalarResult();
 
         return is_numeric($value) ? (int) $value : 0;
     }
@@ -2525,12 +2612,12 @@ final class ImageRepository extends EntityRepository
      * SQL-modernization audit: $forbiddenCondition (raw
      * getSqlConditionFandF() output) replaced with a bound SqlCondition.
      *
-     * Item 14 DQL audit: stays on DBAL -- joins the never-entity-mapped
-     * `image_category`, and $condition is a caller-supplied raw
-     * SqlCondition fragment applied via the shared applyCondition()
-     * helper several sibling methods in this file also use; converting
-     * this one alone would split that shared condition-building
-     * machinery in two.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}), but stays on DBAL regardless --
+     * $condition is a caller-supplied raw SqlCondition fragment applied
+     * via the shared applyCondition() helper several sibling methods in
+     * this file also use; converting this one alone would split that
+     * shared condition-building machinery in two.
      */
     public function isImageAccessibleWithCondition(int $imageId, SqlCondition $condition): bool
     {
@@ -2557,13 +2644,14 @@ final class ImageRepository extends EntityRepository
      * SQL-modernization audit: $permissionCondition replaced with a bound
      * SqlCondition, same move as isImageAccessibleWithCondition() above.
      *
-     * Item 14 DQL audit: stays on DBAL -- this one is single-table
-     * (`images`, no join), but $condition is a caller-supplied raw
-     * SqlCondition fragment applied via the shared applyCondition()
-     * helper the rest of this SqlCondition family also uses (most of
-     * which join the never-entity-mapped `image_category`); converting
-     * this one alone would split that shared condition-building
-     * machinery in two, so the whole family stays together.
+     * Item 14 DQL audit, re-corrected: this one is single-table
+     * (`images`, no join into `image_category` -- which is now mapped as
+     * {@see ImageCategoryEntity} regardless), but $condition is a
+     * caller-supplied raw SqlCondition fragment applied via the shared
+     * applyCondition() helper the rest of this SqlCondition family also
+     * uses; converting this one alone would split that shared
+     * condition-building machinery in two, so the whole family stays
+     * together.
      *
      * @return ?array<string, mixed>
      */
@@ -2595,9 +2683,10 @@ final class ImageRepository extends EntityRepository
      * SQL-modernization audit: $forbiddenCondition replaced with a bound
      * SqlCondition, same move as isImageAccessibleWithCondition() above.
      *
-     * Item 14 DQL audit: stays on DBAL -- joins the never-entity-mapped
-     * `image_category`, plus the shared applyCondition() family reason
-     * (see isImageAccessibleWithCondition() above).
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}), but stays on DBAL regardless -- the
+     * shared applyCondition() family reason (see
+     * isImageAccessibleWithCondition() above).
      *
      * @return list<array<string, mixed>>
      */
@@ -2626,9 +2715,10 @@ final class ImageRepository extends EntityRepository
      * SQL-modernization audit: $permissionCondition replaced with a bound
      * SqlCondition, same move as isImageAccessibleWithCondition() above.
      *
-     * Item 14 DQL audit: stays on DBAL -- joins the never-entity-mapped
-     * `image_category`, plus the shared applyCondition() family reason
-     * (see isImageAccessibleWithCondition() above).
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}), but stays on DBAL regardless -- the
+     * shared applyCondition() family reason (see
+     * isImageAccessibleWithCondition() above).
      */
     public function isImageCommentableWithCondition(int $imageId, SqlCondition $condition): bool
     {
@@ -2657,9 +2747,10 @@ final class ImageRepository extends EntityRepository
      * SQL-modernization audit: $permissionCondition replaced with a bound
      * SqlCondition, same move as isImageAccessibleWithCondition() above.
      *
-     * Item 14 DQL audit: stays on DBAL -- joins the never-entity-mapped
-     * `image_category`, plus the shared applyCondition() family reason
-     * (see isImageAccessibleWithCondition() above).
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}), but stays on DBAL regardless -- the
+     * shared applyCondition() family reason (see
+     * isImageAccessibleWithCondition() above).
      *
      * @return list<array<string, mixed>>
      */
@@ -2687,26 +2778,27 @@ final class ImageRepository extends EntityRepository
      * findCategoryIdsForImage() above (that one has no join, so it can
      * include ids for categories that no longer exist).
      *
-     * Item 14 DQL audit: stays on DBAL -- joins the never-entity-mapped
-     * `image_category`.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}). Converted to real DQL -- joins the
+     * cross-domain {@see \Piwigo\Category\CategoryEntity} (same
+     * L2aCoreDomain layer).
      *
      * @return list<int>
      */
     public function findAssociatedCategoryIds(int $imageId): array
     {
-        return array_map(
+        return array_values(array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-            array_column($this->getEntityManager()
-                ->getConnection()
+            $this->getEntityManager()
                 ->createQueryBuilder()
                 ->select('c.id')
-                ->from(Tables::categories(), 'c')
-                ->innerJoin('c', Tables::imageCategory(), 'ic', 'c.id = ic.category_id')
-                ->where('ic.image_id = :imageId')
+                ->from(CategoryEntity::class, 'c')
+                ->innerJoin(ImageCategoryEntity::class, 'ic', \Doctrine\ORM\Query\Expr\Join::WITH, 'c.id = ic.categoryId')
+                ->where('ic.imageId = :imageId')
                 ->setParameter('imageId', $imageId, ParameterType::INTEGER)
-                ->executeQuery()
-                ->fetchAllAssociative(), 'id')
-        );
+                ->getQuery()
+                ->getSingleColumnResult()
+        ));
     }
 
     /**
@@ -2847,9 +2939,10 @@ final class ImageRepository extends EntityRepository
      * SQL-modernization audit: $permissionCondition replaced with a bound
      * SqlCondition, same move as isImageAccessibleWithCondition() above.
      *
-     * Item 14 DQL audit: stays on DBAL -- joins the never-entity-mapped
-     * `image_category`, plus the shared applyCondition() family reason
-     * (see isImageAccessibleWithCondition() above).
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}), but stays on DBAL regardless -- the
+     * shared applyCondition() family reason (see
+     * isImageAccessibleWithCondition() above).
      */
     public function hasAccessibleImageWithAuthor(SqlCondition $condition): bool
     {
@@ -2879,9 +2972,10 @@ final class ImageRepository extends EntityRepository
      * SQL-modernization audit: $permissionCondition replaced with a bound
      * SqlCondition, same move as isImageAccessibleWithCondition() above.
      *
-     * Item 14 DQL audit: stays on DBAL -- joins the never-entity-mapped
-     * `image_category`, plus the shared applyCondition() family reason
-     * (see isImageAccessibleWithCondition() above).
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}), but stays on DBAL regardless -- the
+     * shared applyCondition() family reason (see
+     * isImageAccessibleWithCondition() above).
      */
     public function isImageAccessibleViaCategoryWithCondition(int $imageId, SqlCondition $condition): bool
     {
@@ -2918,10 +3012,11 @@ final class ImageRepository extends EntityRepository
      * this stays hand-built SQL, same as
      * {@see \Piwigo\Comment\CommentRepository::findAllWithConditions()}.
      *
-     * Item 14 DQL audit: stays on DBAL -- MySQL-specific
-     * `SQL_CALC_FOUND_ROWS`/`FOUND_ROWS()` have no DQL equivalent, joins
-     * the never-entity-mapped `image_category`, and $criteria's own 3
-     * conditions are caller-supplied raw SqlCondition fragments.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}), but stays on DBAL regardless --
+     * MySQL-specific `SQL_CALC_FOUND_ROWS`/`FOUND_ROWS()` have no DQL
+     * equivalent, and $criteria's own 3 conditions are caller-supplied
+     * raw SqlCondition fragments.
      *
      * @return PaginatedResult<array<string, mixed>>
      */
@@ -3027,10 +3122,10 @@ final class ImageRepository extends EntityRepository
      * SqlCondition, same move as isImageAccessibleWithCondition() above.
      * $imageIds' own CSV splice also bound.
      *
-     * Item 14 DQL audit: stays on DBAL -- `image_category` has no
-     * mapped Entity anywhere in this codebase, plus the shared
-     * applyCondition() family reason (see isImageAccessibleWithCondition()
-     * above).
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}), but stays on DBAL regardless -- the
+     * shared applyCondition() family reason (see
+     * isImageAccessibleWithCondition() above).
      *
      * @param  list<int>  $imageIds
      * @return list<array{image_id: int, category_id: int}>
@@ -3133,8 +3228,9 @@ final class ImageRepository extends EntityRepository
      * $categoryIds -- Admin\BatchManager\FilterResolver's own
      * "categories" prefilter.
      *
-     * Item 14 DQL audit: stays on DBAL -- `image_category` has no
-     * mapped Entity anywhere in this codebase.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-table,
+     * static WHERE.
      *
      * @param list<int> $categoryIds
      * @return list<int>
@@ -3145,18 +3241,17 @@ final class ImageRepository extends EntityRepository
             return [];
         }
 
-        return array_map(
+        return array_values(array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             $this->getEntityManager()
-                ->getConnection()
                 ->createQueryBuilder()
-                ->select('DISTINCT(image_id)')
-                ->from(Tables::imageCategory())
-                ->where('category_id IN (:ids)')
+                ->select('DISTINCT ic.imageId')
+                ->from(ImageCategoryEntity::class, 'ic')
+                ->where('ic.categoryId IN (:ids)')
                 ->setParameter('ids', $categoryIds, ArrayParameterType::INTEGER)
-                ->executeQuery()
-                ->fetchFirstColumn()
-        );
+                ->getQuery()
+                ->getSingleColumnResult()
+        ));
     }
 
     /**
@@ -3166,45 +3261,43 @@ final class ImageRepository extends EntityRepository
      * "no_virtual_album" prefilter (paired with
      * CategoryRepository::findIdsByDirNull() above).
      *
-     * Item 14 DQL audit: stays on DBAL -- the non-empty branch's `NOT
-     * IN (SELECT ... FROM image_category ...)` subquery targets a table
-     * with no mapped Entity anywhere in this codebase.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}). Converted to real DQL -- the
+     * non-empty branch's `NOT IN (...)` subquery is expressed as a real
+     * DQL subquery (DQL supports a parenthesized `SELECT ...` inside a
+     * `NOT IN`, same as SQL).
      *
      * @param list<int> $categoryIds
      * @return list<int>
      */
     public function findIdsNotInCategories(array $categoryIds): array
     {
-        $imagesTable = Tables::images();
-
         if ($categoryIds === []) {
-            return array_map(
+            return array_values(array_map(
                 static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-                $this->getEntityManager()
-                    ->getConnection()
-                    ->fetchFirstColumn(<<<SQL
-                        SELECT id
-                        FROM {$imagesTable}
-                        SQL)
-            );
+                $this->createQueryBuilder('i')
+                    ->select('i.id')
+                    ->getQuery()
+                    ->getSingleColumnResult()
+            ));
         }
 
-        $imageCategoryTable = Tables::imageCategory();
+        $subQuery = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('DISTINCT ic.imageId')
+            ->from(ImageCategoryEntity::class, 'ic')
+            ->where('ic.categoryId IN (:ids)')
+            ->getDQL();
 
-        return array_map(
+        return array_values(array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-            $this->getEntityManager()
-                ->getConnection()
-                ->createQueryBuilder()
-                ->select('id')
-                ->from($imagesTable)
-                ->where('id NOT IN (
-                    SELECT DISTINCT(image_id) FROM ' . $imageCategoryTable . ' WHERE category_id IN (:ids)
-                )')
+            $this->createQueryBuilder('i')
+                ->select('i.id')
+                ->where("i.id NOT IN ({$subQuery})")
                 ->setParameter('ids', $categoryIds, ArrayParameterType::INTEGER)
-                ->executeQuery()
-                ->fetchFirstColumn()
-        );
+                ->getQuery()
+                ->getSingleColumnResult()
+        ));
     }
 
     /**
@@ -3376,9 +3469,11 @@ final class ImageRepository extends EntityRepository
      * own recent-content filter computation. Same "caller composes
      * trusted fragments" contract as findWithConditionsPaginated() above.
      *
-     * Item 14 DQL audit: stays on DBAL -- joins the never-entity-mapped
-     * `image_category`, and $recentPeriodExpr is a caller-composed raw
-     * SQL date-arithmetic fragment.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}), but stays on DBAL regardless --
+     * $recentPeriodExpr is a caller-composed raw SQL date-arithmetic
+     * fragment, spliced directly into the WHERE clause; DQL has no way
+     * to embed an already-built trusted SQL fragment like this one.
      *
      * @return list<int>
      */

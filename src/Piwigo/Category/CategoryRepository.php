@@ -18,6 +18,7 @@ use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupAccessEntity;
 use Piwigo\Group\UserGroupEntity;
+use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Permission\SqlCondition;
 
 /**
@@ -29,18 +30,20 @@ use Piwigo\Permission\SqlCondition;
  * rather than constructed here -- same "repository takes a pre-built
  * permission condition string" shape as RateRepository/CommentRepository.
  *
- * Owns `categories` ({@see CategoryEntity}) and shares `user_access`
- * ({@see UserAccessEntity})/`group_access` ({@see \Piwigo\Group\GroupAccessEntity},
- * created during the Group batch) with Group/Permission -- only the
- * single-row/simple-id-list methods against those three tables go
- * through DQL; the large majority of this repository's 65 methods are
- * dynamic-fragment (caller-built permission/ORDER BY SQL), dynamically
- * table/column-named (findOrphanedColumnValues/deleteRowsWhereColumnIn/
- * deleteInconsistentAccess), or cross-domain joins/reads, and stay plain
- * DBAL via $this->getEntityManager()->getConnection() -- same "mixed
+ * Owns `categories` ({@see CategoryEntity}) and `old_permalinks` ({@see
+ * OldPermalinkEntity}), and shares `user_access` ({@see UserAccessEntity})/
+ * `group_access` ({@see \Piwigo\Group\GroupAccessEntity}, created during
+ * the Group batch)/`image_category` ({@see \Piwigo\Image\ImageCategoryEntity},
+ * placed in the Image domain, its heaviest real consumer -- Item 14
+ * Sub-phase B1) with Group/Image/Permission -- only the single-row/
+ * simple-id-list methods against those tables go through DQL; the large
+ * majority of this repository's 65 methods are dynamic-fragment
+ * (caller-built permission/ORDER BY SQL), dynamically table/column-named
+ * (findOrphanedColumnValues/deleteRowsWhereColumnIn/deleteInconsistentAccess),
+ * or cross-domain joins/reads (typically against `images`, owned by the
+ * Image domain with no association declared here), and stay plain DBAL
+ * via $this->getEntityManager()->getConnection() -- same "mixed
  * repository" shape Image/Tag's own conversions established.
- * `image_category` is never entity-mapped anywhere in this migration
- * (see CategoryEntity's own docblock).
  *
  * @extends EntityRepository<CategoryEntity>
  */
@@ -225,9 +228,14 @@ final class CategoryRepository extends EntityRepository
      * @param  list<string>  $permalinks
      * @return array<string, array{id: int, permalink: string, is_old: int}>
      *
-     * Item 14 DQL audit: stays on DBAL -- `old_permalinks` has no mapped
-     * Entity anywhere in this migration, and the two queries are unioned in
-     * PHP.
+     * Item 14 DQL audit, re-corrected: `old_permalinks` is now mapped ({@see
+     * OldPermalinkEntity}). Converted to real DQL -- still two single-table
+     * selects unioned in PHP (DQL itself has no UNION), one against
+     * OldPermalinkEntity and one against this repository's own
+     * CategoryEntity. `op.catId` maps through the `category_id` custom
+     * Doctrine Type, so getArrayResult() hydrates it as a CategoryId value
+     * object (Gotcha #1 shape) -- read via instanceof, unlike the plain-int
+     * `c.id` from the categories side.
      */
     public function findPermalinkMatches(array $permalinks): array
     {
@@ -235,65 +243,90 @@ final class CategoryRepository extends EntityRepository
             return [];
         }
 
-        $conn = $this->getEntityManager()
-            ->getConnection();
+        $em = $this->getEntityManager();
 
-        $rows = $conn->createQueryBuilder()
-            ->select('cat_id AS id', 'permalink', '1 AS is_old')
-            ->from(Tables::oldPermalinks())
-            ->where('permalink IN (:permalinks)')
+        $oldRows = $em->createQueryBuilder()
+            ->select('op.catId AS id', 'op.permalink AS permalink', '1 AS is_old')
+            ->from(OldPermalinkEntity::class, 'op')
+            ->where('op.permalink IN (:permalinks)')
             ->setParameter('permalinks', $permalinks, ArrayParameterType::STRING)
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->getQuery()
+            ->getArrayResult();
 
-        $rows2 = $conn->createQueryBuilder()
-            ->select('id', 'permalink', '0 AS is_old')
-            ->from(Tables::categories())
-            ->where('permalink IN (:permalinks)')
+        $categoryRows = $this->createQueryBuilder('c')
+            ->select('c.id AS id', 'c.permalink AS permalink', '0 AS is_old')
+            ->where('c.permalink IN (:permalinks)')
             ->setParameter('permalinks', $permalinks, ArrayParameterType::STRING)
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->getQuery()
+            ->getArrayResult();
 
         $byPermalink = [];
-        foreach ([...$rows, ...$rows2] as $row) {
-            /** @var array{id: int, permalink: string, is_old: int} $row */
-            $byPermalink[$row['permalink']] = $row;
+        foreach ([...$oldRows, ...$categoryRows] as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $id = $row['id'] ?? null;
+            $idValue = $id instanceof CategoryId ? $id->value : (is_numeric($id) ? (int) $id : null);
+            $permalink = $row['permalink'] ?? null;
+            $isOld = $row['is_old'] ?? null;
+
+            if ($idValue === null || ! is_string($permalink) || ! is_numeric($isOld)) {
+                continue;
+            }
+
+            $byPermalink[$permalink] = [
+                'id' => $idValue,
+                'permalink' => $permalink,
+                'is_old' => (int) $isOld,
+            ];
         }
 
         return $byPermalink;
     }
 
     /**
-     * `hit = hit + 1` is a self-referential SQL fragment a mapped entity
-     * property write can't express -- stays raw DBAL, same reasoning as
-     * Image\ImageRepository::incrementVisitCounter(). `old_permalinks`
-     * is never entity-mapped in this migration (this is its only write
-     * method; every other touch is a read), so there's no identity map
-     * to clear here.
-     *
-     * Item 14 DQL audit: stays on DBAL -- see above (`old_permalinks`
-     * unmapped, plus a self-referential `hit = hit + 1` SET expression).
+     * Item 14 DQL audit, re-corrected: `old_permalinks` is now mapped
+     * ({@see OldPermalinkEntity}). Converted to real DQL -- the original
+     * "a mapped entity property write can't express `hit = hit + 1`"
+     * reasoning only ruled out a fetch-mutate-flush() round trip; a DQL
+     * bulk UPDATE's own SET clause allows a self-referential arithmetic
+     * expression directly (`op.hit = op.hit + 1`, confirmed against the
+     * installed doctrine/orm QueryBuilder -- same shape as `rank = rank +
+     * 1` elsewhere in this codebase), and `NOW()` becomes DQL's own
+     * `CURRENT_TIMESTAMP()` (same {@see \Piwigo\Users\UserRepository::
+     * findPendingActivationKeyRows()} precedent, compiles to MySQL's
+     * `NOW()` via `MySQLPlatform::getCurrentTimestampSQL()`). No `LIMIT`
+     * clause -- ORM's QueryBuilder rejects `setMaxResults()` on an
+     * UPDATE/DELETE DQL statement outright, but `permalink` is
+     * OldPermalinkEntity's own single-column PK, so `WHERE op.permalink =
+     * :permalink` alone is already at most one row; `cat_id` stays as a
+     * defensive extra condition, matching the original. No full
+     * OldPermalinkEntity object is ever hydrated anywhere in this
+     * repository (only array/scalar reads), so there's no identity map
+     * entry for this bulk UPDATE to leave stale -- $em->clear() would be a
+     * no-op here.
      */
     public function touchOldPermalinkHit(string $permalink, int $catId): void
     {
         $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->update(Tables::oldPermalinks())
-            ->set('last_hit', 'NOW()')
-            ->set('hit', 'hit + 1')
-            ->where('permalink = :permalink')
-            ->andWhere('cat_id = :catId')
+            ->update(OldPermalinkEntity::class, 'op')
+            ->set('op.lastHit', 'CURRENT_TIMESTAMP()')
+            ->set('op.hit', 'op.hit + 1')
+            ->where('op.permalink = :permalink')
+            ->andWhere('op.catId = :catId')
             ->setParameter('permalink', $permalink)
-            ->setParameter('catId', $catId)
-            ->setMaxResults(1)
-            ->executeStatement();
+            ->setParameter('catId', CategoryId::from($catId))
+            ->getQuery()
+            ->execute();
     }
 
     /**
-     * Item 14 DQL audit: stays on DBAL -- joins `image_category`, never
-     * entity-mapped anywhere in this migration, plus a caller-built
-     * SqlCondition fragment and MySQL-specific `RAND()`.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see \Piwigo\Image\ImageCategoryEntity}), but stays on DBAL for its
+     * two other, still-real blockers: a caller-built SqlCondition fragment
+     * and MySQL-specific `RAND()` (no portable DQL equivalent yet).
      */
     public function findRandomImageId(int $catId, string $uppercats, bool $recursive, SqlCondition $condition): ?int
     {
@@ -339,10 +372,11 @@ final class CategoryRepository extends EntityRepository
      *
      * @return list<array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int}>
      *
-     * Item 14 DQL audit: stays on DBAL -- joins `image_category`/`images`
-     * (never entity-mapped on the Category side, and `images` is owned by
-     * the Image domain), a dynamic `SqlDialect::getRecentPeriodExpression()`
-     * fragment inside the second JOIN's own ON condition, and a raw
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see \Piwigo\Image\ImageCategoryEntity}), but stays on DBAL for its
+     * two other, still-real blockers: a dynamic
+     * `SqlDialect::getRecentPeriodExpression()` raw-SQL fragment spliced
+     * into the second JOIN's own ON condition, and a raw
      * `$forbiddenCategoriesCsv` NOT IN splice.
      */
     public function findComputedCategoriesRollup(int $level, ?int $filterDays, string $forbiddenCategoriesCsv): array
@@ -399,9 +433,10 @@ final class CategoryRepository extends EntityRepository
      * @param  list<int>  $catIds
      * @return list<int>
      *
-     * Item 14 DQL audit: stays on DBAL -- joins `images`/`image_category`
-     * (Image domain/unmapped), a caller-built SqlCondition fragment, and a
-     * raw `CurrentConfig::orderBy()` ORDER BY fragment.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see \Piwigo\Image\ImageCategoryEntity}), but stays on DBAL for its
+     * two other, still-real blockers: a caller-built SqlCondition fragment,
+     * and a raw `CurrentConfig::orderBy()` ORDER BY fragment.
      */
     public function findImageIdsForCategories(
         array $catIds,
@@ -452,9 +487,9 @@ final class CategoryRepository extends EntityRepository
      * @param  list<int>  $excludedCatIds
      * @return array<int, array{id: int, uppercats: string, counter: int}> keyed by id
      *
-     * Item 14 DQL audit: stays on DBAL -- joins `image_category`, never
-     * entity-mapped anywhere in this migration, plus a caller-built
-     * SqlCondition fragment.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see \Piwigo\Image\ImageCategoryEntity}), but stays on DBAL for its
+     * other, still-real blocker: a caller-built SqlCondition fragment.
      */
     public function findCommonCategories(array $itemIds, ?int $max, array $excludedCatIds, SqlCondition $condition): array
     {
@@ -682,8 +717,13 @@ final class CategoryRepository extends EntityRepository
      * @param  list<int>  $ids
      * @return list<int>
      *
-     * Item 14 DQL audit: stays on DBAL -- `image_category` has no mapped
-     * Entity anywhere in this migration.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-table,
+     * `ic.imageId` is plain int (no custom Doctrine Type), so
+     * getSingleColumnResult() returns ordinary ints/numeric strings, same
+     * as any other plain-typed column (Gotcha #4 doesn't apply here, only
+     * `ic.categoryId` is custom-typed and it's never selected, only
+     * filtered on).
      */
     public function findDistinctLinkedImageIds(array $ids): array
     {
@@ -691,19 +731,16 @@ final class CategoryRepository extends EntityRepository
             return [];
         }
 
-        $imageCategoryTable = Tables::imageCategory();
+        $rows = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('DISTINCT ic.imageId')
+            ->from(ImageCategoryEntity::class, 'ic')
+            ->where('ic.categoryId IN (:ids)')
+            ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
+            ->getQuery()
+            ->getSingleColumnResult();
 
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery(<<<SQL
-            SELECT
-                DISTINCT(image_id)
-            FROM {$imageCategoryTable}
-            WHERE category_id IN (:ids)
-            SQL
-            , [
-                'ids' => $ids,
-            ], [
-                'ids' => ArrayParameterType::INTEGER,
-            ])->fetchFirstColumn());
+        return array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows));
     }
 
     /**
@@ -715,8 +752,15 @@ final class CategoryRepository extends EntityRepository
      * @param  list<int>  $excludeIds
      * @return list<int>
      *
-     * Item 14 DQL audit: stays on DBAL -- `image_category` has no mapped
-     * Entity anywhere in this migration.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-table,
+     * both filtered columns bound as `ArrayParameterType::INTEGER` IN-lists
+     * (raw ints, not wrapped through CategoryId -- the IN-clause array
+     * bind doesn't route through a field's custom Doctrine Type reliably,
+     * same established convention as {@see deleteGroupAccessForCategories()}
+     * elsewhere in this class). `$excludeIds` is still spliced in
+     * unconditionally, even when empty, matching the original's own
+     * behavior exactly (no new empty-array guard added).
      */
     public function findNonOrphanImageIds(array $imageIds, array $excludeIds): array
     {
@@ -724,22 +768,18 @@ final class CategoryRepository extends EntityRepository
             return [];
         }
 
-        $imageCategoryTable = Tables::imageCategory();
+        $rows = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('DISTINCT ic.imageId')
+            ->from(ImageCategoryEntity::class, 'ic')
+            ->where('ic.imageId IN (:imageIds)')
+            ->andWhere('ic.categoryId NOT IN (:excludeIds)')
+            ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER)
+            ->setParameter('excludeIds', $excludeIds, ArrayParameterType::INTEGER)
+            ->getQuery()
+            ->getSingleColumnResult();
 
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery(<<<SQL
-            SELECT
-                DISTINCT(image_id)
-            FROM {$imageCategoryTable}
-            WHERE image_id IN (:imageIds)
-                AND category_id NOT IN (:excludeIds)
-            SQL
-            , [
-                'imageIds' => $imageIds,
-                'excludeIds' => $excludeIds,
-            ], [
-                'imageIds' => ArrayParameterType::INTEGER,
-                'excludeIds' => ArrayParameterType::INTEGER,
-            ])->fetchFirstColumn());
+        return array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows));
     }
 
     /**
@@ -755,51 +795,46 @@ final class CategoryRepository extends EntityRepository
      * @param  list<int>  $excludeIds
      * @return list<int>
      *
-     * Item 14 DQL audit: stays on DBAL -- `image_category` has no mapped
-     * Entity anywhere in this migration.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-table,
+     * no DISTINCT (matches the original -- this method deliberately
+     * returns every matching row, see the class comment above).
      */
     public function findImageIdsOutsideCategories(array $excludeIds): array
     {
-        $imageCategoryTable = Tables::imageCategory();
+        $rows = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('ic.imageId')
+            ->from(ImageCategoryEntity::class, 'ic')
+            ->where('ic.categoryId NOT IN (:excludeIds)')
+            ->setParameter('excludeIds', $excludeIds, ArrayParameterType::INTEGER)
+            ->getQuery()
+            ->getSingleColumnResult();
 
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery(<<<SQL
-            SELECT
-                image_id
-            FROM
-                {$imageCategoryTable}
-            WHERE
-                category_id
-            NOT IN
-                (:excludeIds)
-            SQL
-            , [
-                'excludeIds' => $excludeIds,
-            ], [
-                'excludeIds' => ArrayParameterType::INTEGER,
-            ])->fetchFirstColumn());
+        return array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows));
     }
 
     /**
      * @param  list<int>  $ids
      *
-     * Item 14 DQL audit: stays on DBAL -- `image_category` has no mapped
-     * Entity anywhere in this migration.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-table
+     * bulk DELETE, same "delete-by-ids clears the identity map afterward"
+     * contract as {@see deleteUserAccessForCategories()}/
+     * {@see deleteGroupAccessForCategories()} above. `$ids` is still
+     * spliced in unconditionally, even when empty, matching the original's
+     * own behavior exactly (no new empty-array guard added).
      */
     public function deleteImageCategoryLinksForCategories(array $ids): void
     {
-        $imageCategoryTable = Tables::imageCategory();
-
-        $this->getEntityManager()
-            ->getConnection()
-            ->executeStatement(<<<SQL
-                DELETE FROM {$imageCategoryTable}
-                WHERE category_id IN (:ids)
-                SQL
-                , [
-                    'ids' => $ids,
-                ], [
-                    'ids' => ArrayParameterType::INTEGER,
-                ]);
+        $em = $this->getEntityManager();
+        $em->createQueryBuilder()
+            ->delete(ImageCategoryEntity::class, 'ic')
+            ->where('ic.categoryId IN (:ids)')
+            ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
+            ->getQuery()
+            ->execute();
+        $em->clear();
     }
 
     /**
@@ -925,8 +960,15 @@ final class CategoryRepository extends EntityRepository
     /**
      * @param  list<int>  $ids
      *
-     * Item 14 DQL audit: stays on DBAL -- `old_permalinks` has no mapped
-     * Entity anywhere in this migration.
+     * Item 14 DQL audit, re-corrected: `old_permalinks` is now mapped
+     * ({@see OldPermalinkEntity}). Converted to real DQL -- single-table
+     * bulk DELETE, same "delete-by-ids clears the identity map afterward"
+     * contract as {@see deleteUserAccessForCategories()}/
+     * {@see deleteGroupAccessForCategories()} above (even though no full
+     * OldPermalinkEntity object is ever hydrated anywhere in this
+     * repository today, so this particular clear() is currently a no-op --
+     * kept for consistency with every other entity-targeted bulk delete in
+     * this class).
      */
     public function deleteOldPermalinksForCategories(array $ids): void
     {
@@ -934,19 +976,14 @@ final class CategoryRepository extends EntityRepository
             return;
         }
 
-        $oldPermalinksTable = Tables::oldPermalinks();
-
-        $this->getEntityManager()
-            ->getConnection()
-            ->executeStatement(<<<SQL
-                DELETE FROM {$oldPermalinksTable}
-                WHERE cat_id IN (:ids)
-                SQL
-                , [
-                    'ids' => $ids,
-                ], [
-                    'ids' => ArrayParameterType::INTEGER,
-                ]);
+        $em = $this->getEntityManager();
+        $em->createQueryBuilder()
+            ->delete(OldPermalinkEntity::class, 'op')
+            ->where('op.catId IN (:ids)')
+            ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
+            ->getQuery()
+            ->execute();
+        $em->clear();
     }
 
     /**
@@ -1009,9 +1046,10 @@ final class CategoryRepository extends EntityRepository
      * @param array<string, ArrayParameterType|ParameterType> $types
      * @return list<int>
      *
-     * Item 14 DQL audit: stays on DBAL -- $whereCatsSql is a caller-supplied
-     * raw SQL fragment, and this joins `image_category` (never
-     * entity-mapped anywhere in this migration).
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see \Piwigo\Image\ImageCategoryEntity}), but stays on DBAL for its
+     * other, still-real blocker: `$whereCatsSql` is a caller-supplied raw
+     * SQL fragment.
      */
     public function findCategoriesNeedingRandomRepresentative(string $whereCatsSql, array $params = [], array $types = []): array
     {
@@ -1387,9 +1425,10 @@ final class CategoryRepository extends EntityRepository
      * @param  list<int>  $categoryIds
      * @return array<int, mixed> keyed by category_id
      *
-     * Item 14 DQL audit: stays on DBAL -- $field/$minmax are dynamic
-     * runtime column/function names, and this joins `image_category`/
-     * `images` (unmapped/Image domain).
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see \Piwigo\Image\ImageCategoryEntity}), but stays on DBAL for its
+     * other, still-real blocker: `$field`/`$minmax` are dynamic runtime
+     * column/function names, not a fixed DQL property path/aggregate.
      */
     public function findRefDatesByCategoryIds(array $categoryIds, string $field, string $minmax): array
     {
@@ -1456,8 +1495,10 @@ final class CategoryRepository extends EntityRepository
     }
 
     /**
-     * Item 14 DQL audit: stays on DBAL -- `image_category` has no mapped
-     * Entity anywhere in this migration, plus MySQL-specific `RAND()`.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see \Piwigo\Image\ImageCategoryEntity}), but stays on DBAL for its
+     * other, still-real blocker: MySQL-specific `RAND()` (no portable DQL
+     * equivalent yet).
      */
     public function findRandomImageIdInCategory(int $categoryId): ?int
     {
@@ -1878,30 +1919,30 @@ final class CategoryRepository extends EntityRepository
      *
      * @return list<array<string, mixed>>
      *
-     * Item 14 DQL audit: stays on DBAL -- the $hasRepresentative=false
-     * branch joins `image_category`, never entity-mapped anywhere in this
-     * migration; the true branch alone would convert cleanly, but splitting
-     * one query-building method's two branches across DQL and DBAL just to
-     * convert half of it isn't worth the inconsistency.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see \Piwigo\Image\ImageCategoryEntity}) -- the "splitting one
+     * query-building method's two branches across DQL and DBAL isn't worth
+     * the inconsistency" reasoning that previously kept the whole method on
+     * DBAL no longer applies now that both branches convert cleanly.
+     * Converted to real DQL -- the false branch's join has no declared
+     * association from CategoryEntity, so it goes through an explicit
+     * `Join::WITH` condition, same precedent as
+     * {@see findPrivateCategoriesGrantedToUser()} elsewhere in this class.
      */
     public function findByRepresentativePresence(bool $hasRepresentative): array
     {
-        $qb = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('id', 'name', 'uppercats', 'global_rank')
-            ->from(Tables::categories());
+        $qb = $this->createQueryBuilder('c')
+            ->select('c.id', 'c.name', 'c.uppercats', 'c.globalRank AS global_rank');
 
         if ($hasRepresentative) {
-            $qb->where('representative_picture_id IS NOT NULL');
+            $qb->where('c.representativePictureId IS NOT NULL');
         } else {
             $qb->distinct()
-                ->innerJoin(Tables::categories(), Tables::imageCategory(), 'ic', 'id = ic.category_id')
-                ->where('representative_picture_id IS NULL');
+                ->innerJoin(ImageCategoryEntity::class, 'ic', \Doctrine\ORM\Query\Expr\Join::WITH, 'ic.categoryId = c.id')
+                ->where('c.representativePictureId IS NULL');
         }
 
-        return $qb->executeQuery()
-            ->fetchAllAssociative();
+        return self::narrowIdNameUppercatsRankRows($qb->getQuery()->getArrayResult());
     }
 
     /**
@@ -2339,9 +2380,9 @@ final class CategoryRepository extends EntityRepository
      * @param  list<int>  $categoryIds
      * @return array<string, array{from: ?string, to: ?string}> keyed by category id
      *
-     * Item 14 DQL audit: stays on DBAL -- joins `image_category`, never
-     * entity-mapped anywhere in this migration, plus a caller-built
-     * SqlCondition fragment.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see \Piwigo\Image\ImageCategoryEntity}), but stays on DBAL for its
+     * other, still-real blocker: a caller-built SqlCondition fragment.
      */
     public function findDateRangeByCategory(array $categoryIds, SqlCondition $condition): array
     {
@@ -2702,28 +2743,35 @@ final class CategoryRepository extends EntityRepository
      *
      * @return array<int, int> keyed by category_id
      *
-     * Item 14 DQL audit: stays on DBAL -- `image_category` has no mapped
-     * Entity anywhere in this migration.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-table
+     * GROUP BY COUNT. `ic.categoryId` hydrates as a CategoryId VO under
+     * getArrayResult() (Gotcha #1 shape), read via instanceof, same
+     * precedent as {@see \Piwigo\Tag\TagRepository::
+     * countImagesPerTagUnrestricted()}'s own `it.tagId`/TagId shape.
      */
     public function findPhotoCountsByCategory(): array
     {
-        $imageCategoryTable = Tables::imageCategory();
-
         $rows = $this->getEntityManager()
-            ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT
-                    category_id,
-                    COUNT(*) AS nb_photos
-                FROM {$imageCategoryTable}
-                GROUP BY category_id
-                SQL);
+            ->createQueryBuilder()
+            ->select('ic.categoryId', 'COUNT(ic.imageId) AS counter')
+            ->from(ImageCategoryEntity::class, 'ic')
+            ->groupBy('ic.categoryId')
+            ->getQuery()
+            ->getArrayResult();
 
         $countByCategory = [];
         foreach ($rows as $row) {
-            if (is_numeric($row['category_id']) && is_numeric($row['nb_photos'])) {
-                $countByCategory[(int) $row['category_id']] = (int) $row['nb_photos'];
+            if (! is_array($row)) {
+                continue;
             }
+
+            $categoryId = $row['categoryId'] ?? null;
+            if (! $categoryId instanceof CategoryId) {
+                continue;
+            }
+
+            $countByCategory[$categoryId->value] = is_numeric($row['counter'] ?? null) ? (int) $row['counter'] : 0;
         }
 
         return $countByCategory;
@@ -2865,26 +2913,26 @@ final class CategoryRepository extends EntityRepository
      * Whether $categoryId has at least one direct image link --
      * Admin\CatModifyPageRenderer's own "has_images" flag.
      *
-     * Item 14 DQL audit: stays on DBAL -- `image_category` has no mapped
-     * Entity anywhere in this migration.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}). Converted to real DQL -- a COUNT
+     * aggregate always returns exactly one row, so there's no LIMIT to
+     * preserve. `categoryId` is a custom-typed field, so the single-value
+     * bind wraps it in the {@see CategoryId} VO -- `convertToDatabaseValue()`
+     * is strict VO-only (see {@see \Piwigo\Db\Type\AbstractNumericIdType}'s
+     * own docblock), unlike an IN-clause array bind.
      */
     public function hasImages(int $categoryId): bool
     {
-        $imageCategoryTable = Tables::imageCategory();
+        $count = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('COUNT(ic.imageId)')
+            ->from(ImageCategoryEntity::class, 'ic')
+            ->where('ic.categoryId = :categoryId')
+            ->setParameter('categoryId', CategoryId::from($categoryId))
+            ->getQuery()
+            ->getSingleScalarResult();
 
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT DISTINCT category_id
-                FROM {$imageCategoryTable}
-                WHERE category_id = :category_id
-                LIMIT 1
-                SQL
-                , [
-                    'category_id' => $categoryId,
-                ]);
-
-        return count($rows) > 0;
+        return is_numeric($count) && (int) $count > 0;
     }
 
     /**
@@ -2894,9 +2942,10 @@ final class CategoryRepository extends EntityRepository
      *
      * @return list<mixed>|false
      *
-     * Item 14 DQL audit: stays on DBAL -- joins `images`/`image_category`
-     * (Image domain/unmapped), uses MySQL's `DATE()` function, and returns
-     * a positional (`fetchNumeric()`) row shape DQL's named field selects
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see \Piwigo\Image\ImageCategoryEntity}), but stays on DBAL for its
+     * two other, still-real blockers: MySQL's `DATE()` function, and a
+     * positional (`fetchNumeric()`) row shape DQL's named field selects
      * don't produce.
      */
     public function findPhotoCountAndDateRange(int $categoryId): array|false
@@ -2928,31 +2977,24 @@ final class CategoryRepository extends EntityRepository
      * @param list<int> $categoryIds
      * @return list<int>
      *
-     * Item 14 DQL audit: stays on DBAL -- `image_category` has no mapped
-     * Entity anywhere in this migration.
+     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
+     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-table,
+     * same shape as {@see findDistinctLinkedImageIds()} above (`$categoryIds`
+     * is still spliced in unconditionally, even when empty, matching the
+     * original's own behavior exactly -- no new empty-array guard added).
      */
     public function findDistinctImageIdsInCategories(array $categoryIds): array
     {
-        $imageCategoryTable = Tables::imageCategory();
+        $rows = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('DISTINCT ic.imageId')
+            ->from(ImageCategoryEntity::class, 'ic')
+            ->where('ic.categoryId IN (:categoryIds)')
+            ->setParameter('categoryIds', $categoryIds, ArrayParameterType::INTEGER)
+            ->getQuery()
+            ->getSingleColumnResult();
 
-        return array_map(
-            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-            array_column($this->getEntityManager()
-                ->getConnection()
-                ->fetchAllAssociative(<<<SQL
-                    SELECT DISTINCT
-                        (image_id)
-                    FROM
-                        {$imageCategoryTable}
-                    WHERE
-                        category_id IN (:categoryIds)
-                    SQL
-                    , [
-                        'categoryIds' => $categoryIds,
-                    ], [
-                        'categoryIds' => ArrayParameterType::INTEGER,
-                    ]), 'image_id')
-        );
+        return array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $rows));
     }
 
     /**

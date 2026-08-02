@@ -726,6 +726,22 @@ final class ImageRepositoryTest extends IntegrationTestCase
         }
     }
 
+    public function test_find_most_recent_image_category_info_returns_the_real_joined_row(): void
+    {
+        // Item 14 Sub-phase B2 re-audit: the joined real-value branch had
+        // zero coverage (only the empty-table null case above was
+        // tested) -- this method's own conversion uses a blind
+        // `instanceof CategoryId` check with a silent `return null`
+        // fallback, so a wrong gotcha #1 assumption would be
+        // indistinguishable from "no image is linked" without this.
+        // Fixture: image 5 (the highest id with an image_category link)
+        // is in category 2, whose uppercats is '1,2'.
+        self::assertSame(
+            ['category_id' => 2, 'uppercats' => '1,2'],
+            $this->repo->findMostRecentImageCategoryInfo()
+        );
+    }
+
     public function test_delete_image_category_rows_for_image_ids_is_a_noop_for_empty_ids(): void
     {
         $before = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::imageCategory());
@@ -1178,5 +1194,232 @@ final class ImageRepositoryTest extends IntegrationTestCase
         $maxId = $this->conn->fetchOne('SELECT MAX(id) FROM ' . Tables::images());
 
         self::assertSame((is_numeric($maxId) ? (int) $maxId : 0) + 1, $this->repo->findNextId());
+    }
+
+    public function test_find_ids_not_in_categories_excludes_linked_images(): void
+    {
+        // Item 14 Sub-phase B2 re-audit: had zero existing coverage --
+        // the non-empty branch's DQL NOT IN (subquery), built via a
+        // separate QueryBuilder's own getDQL() string interpolated into
+        // the outer query, had never been exercised against the real DB.
+        // Fixture: images 1-3 are in category 1, images 4-5 are in
+        // category 2.
+        $ids = $this->repo->findIdsNotInCategories([1]);
+        sort($ids);
+        self::assertSame([4, 5], $ids);
+    }
+
+    public function test_find_ids_not_in_categories_returns_every_image_for_no_categories(): void
+    {
+        $ids = $this->repo->findIdsNotInCategories([]);
+        sort($ids);
+        self::assertSame([1, 2, 3, 4, 5], $ids);
+    }
+
+    public function test_find_ids_not_in_categories_returns_empty_when_every_image_is_linked(): void
+    {
+        self::assertSame([], $this->repo->findIdsNotInCategories([1, 2]));
+    }
+
+    public function test_find_ids_in_categories_returns_linked_images(): void
+    {
+        // Item 14 Sub-phase B2 re-audit: had zero existing coverage.
+        $ids = $this->repo->findIdsInCategories([2]);
+        sort($ids);
+        self::assertSame([4, 5], $ids);
+    }
+
+    public function test_find_ids_in_categories_returns_empty_for_no_categories(): void
+    {
+        self::assertSame([], $this->repo->findIdsInCategories([]));
+    }
+
+    public function test_find_existing_associations_returns_real_values_not_an_empty_array(): void
+    {
+        // Item 14 Sub-phase B2 re-audit: had zero existing coverage. This
+        // method's own conversion uses a *blind* `instanceof CategoryId`
+        // check (no raw-int fallback, unlike sibling conversions in this
+        // same file) -- if the gotcha #1 VO-hydration assumption behind it
+        // were wrong, every row would silently be skipped and this would
+        // return [] instead of throwing, so asserting the real non-empty
+        // shape is the only way to catch that.
+        $existing = $this->repo->findExistingAssociations([1, 2, 4], [1, 2]);
+
+        self::assertArrayHasKey(1, $existing);
+        self::assertArrayHasKey(2, $existing);
+        $sortedCat1 = $existing[1];
+        sort($sortedCat1);
+        self::assertSame([1, 2], $sortedCat1);
+        self::assertSame([4], $existing[2]);
+    }
+
+    public function test_find_max_ranks_by_category_returns_real_values_not_an_empty_array(): void
+    {
+        // Item 14 Sub-phase B2 re-audit: had zero existing coverage, same
+        // blind-instanceof risk as findExistingAssociations() above --
+        // this one additionally combines the custom-Typed field with
+        // GROUP BY/MAX(), a shape gotcha #1 was never previously verified
+        // against.
+        self::assertSame(
+            ['1' => 3, '2' => 2],
+            $this->repo->findMaxRanksByCategory([1, 2])
+        );
+    }
+
+    public function test_find_virtually_associated_category_rows_returns_real_categories(): void
+    {
+        // Item 14 Sub-phase B2 re-audit: had zero existing coverage. Every
+        // fixture image has storage_category_id NULL, so the "OR
+        // i.storageCategoryId IS NULL" branch always applies -- image 1's
+        // real category_id membership (category 1) must come back, not [].
+        $rows = $this->repo->findVirtuallyAssociatedCategoryRows([1]);
+
+        self::assertSame([['id' => 1]], $rows);
+    }
+
+    public function test_find_category_links_for_image_returns_the_real_category(): void
+    {
+        // Item 14 Sub-phase B2 re-audit: had zero existing coverage.
+        $rows = $this->repo->findCategoryLinksForImage(1);
+
+        self::assertSame([[
+            'category_id' => 1,
+            'uppercats' => '1',
+            'dir' => null,
+        ]], $rows);
+    }
+
+    public function test_find_lounge_rows_returns_the_real_rows(): void
+    {
+        // Item 14 Sub-phase B2 re-audit: had zero existing coverage. No
+        // fixture lounge data exists, so this inserts its own within a
+        // rolled-back transaction.
+        $this->conn->beginTransaction();
+
+        try {
+            $this->conn->insert(Tables::lounge(), ['image_id' => 1, 'category_id' => 2]);
+
+            self::assertSame(
+                [['image_id' => 1, 'category_id' => 2]],
+                $this->repo->findLoungeRows()
+            );
+        } finally {
+            $this->conn->rollBack();
+        }
+    }
+
+    public function test_delete_lounge_up_to_removes_matching_rows_only(): void
+    {
+        $this->conn->beginTransaction();
+
+        try {
+            $this->conn->insert(Tables::lounge(), ['image_id' => 1, 'category_id' => 2]);
+            $this->conn->insert(Tables::lounge(), ['image_id' => 3, 'category_id' => 2]);
+
+            $this->repo->deleteLoungeUpTo(1);
+
+            self::assertSame([3], $this->repo->findLoungedImageIds());
+        } finally {
+            $this->conn->rollBack();
+        }
+    }
+
+    public function test_find_lounged_image_ids_returns_the_real_ids(): void
+    {
+        // Item 14 Sub-phase B2 re-audit: had zero existing coverage.
+        $this->conn->beginTransaction();
+
+        try {
+            $this->conn->insert(Tables::lounge(), ['image_id' => 4, 'category_id' => 1]);
+
+            self::assertSame([4], $this->repo->findLoungedImageIds());
+        } finally {
+            $this->conn->rollBack();
+        }
+    }
+
+    public function test_find_dissociable_image_ids_returns_images_not_stored_under_the_category(): void
+    {
+        // Item 14 Sub-phase B2 re-audit: had zero existing coverage.
+        // Fixture: images 1-3 are in category 1, none has a
+        // storage_category_id set, so all 3 are dissociable from it.
+        $ids = $this->repo->findDissociableImageIds([1, 2, 3], 1);
+        sort($ids);
+        self::assertSame([1, 2, 3], $ids);
+    }
+
+    public function test_delete_image_category_links_removes_only_the_given_images_and_category(): void
+    {
+        $this->conn->beginTransaction();
+
+        try {
+            $this->repo->deleteImageCategoryLinks([1], 1);
+
+            self::assertFalse($this->repo->isImageInCategory(1, 1));
+            self::assertTrue($this->repo->isImageInCategory(2, 1));
+        } finally {
+            $this->conn->rollBack();
+        }
+    }
+
+    public function test_count_images_in_categories_counts_distinct_images(): void
+    {
+        // Item 14 Sub-phase B2 re-audit: had zero existing coverage.
+        // Fixture: 5 distinct images across image_category.
+        self::assertSame(5, $this->repo->countImagesInCategories());
+    }
+
+    public function test_count_image_category_links_counts_every_row(): void
+    {
+        // Fixture has 5 image_category rows, all distinct images -- same
+        // figure as countImagesInCategories() here, but a genuinely
+        // different query (no DISTINCT).
+        self::assertSame(5, $this->repo->countImageCategoryLinks());
+    }
+
+    public function test_find_thumbnail_rows_for_category_ordered_by_rank_returns_real_rows_in_rank_order(): void
+    {
+        // Item 14 Sub-phase B2 re-audit: had zero existing coverage.
+        // Fixture: category 1 has images 1,2,3 at ranks 1,2,3.
+        $rows = $this->repo->findThumbnailRowsForCategoryOrderedByRank(1);
+
+        self::assertSame([1, 2, 3], array_column($rows, 'id'));
+    }
+
+    public function test_find_image_ids_ordered_by_rank_for_category_returns_real_ids_in_rank_order(): void
+    {
+        // Item 14 Sub-phase B2 re-audit: had zero existing coverage.
+        self::assertSame([1, 2, 3], $this->repo->findImageIdsOrderedByRankForCategory(1));
+    }
+
+    public function test_find_category_ids_for_image_returns_the_real_categories(): void
+    {
+        // Item 14 Sub-phase B2 re-audit: had zero existing coverage.
+        self::assertSame([1], $this->repo->findCategoryIdsForImage(1));
+    }
+
+    public function test_find_orphan_image_category_link_ids_returns_empty_when_every_link_has_a_real_image(): void
+    {
+        self::assertSame([], $this->repo->findOrphanImageCategoryLinkIds());
+    }
+
+    public function test_find_orphan_image_category_link_ids_returns_links_with_no_real_image(): void
+    {
+        // Item 14 Sub-phase B2 re-audit: had zero existing coverage.
+        // image_category.image_id FK-references images.id ON DELETE
+        // CASCADE, so a genuine orphan can only exist the way it would in
+        // real life -- imported/fixed-up data that bypassed the FK, here
+        // simulated by disabling FK checks for one insert.
+        $this->conn->beginTransaction();
+
+        try {
+            $this->conn->executeStatement('SET FOREIGN_KEY_CHECKS = 0');
+            $this->conn->insert(Tables::imageCategory(), ['image_id' => 999999, 'category_id' => 1]);
+            $this->conn->executeStatement('SET FOREIGN_KEY_CHECKS = 1');
+
+            self::assertSame([999999], $this->repo->findOrphanImageCategoryLinkIds());
+        } finally {
+            $this->conn->rollBack();
+        }
     }
 }

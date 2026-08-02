@@ -8,12 +8,14 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\Query\Expr\Join;
 use Piwigo\Auth\UserAuthKeyEntity;
 use Piwigo\Category\UserAccessEntity;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
+use Piwigo\Core\ThemeEntity;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Mail\GetWebmasterMailAddress;
@@ -617,33 +619,45 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * comment) exists for $userId -- the externalAuthentification
      * integrity check gating whether a missing row needs creating.
      *
-     * Item 14 DQL audit: stays on DBAL -- LEFT JOINs `themes`, which has no
-     * entity anywhere in this migration.
+     * Item 14 DQL audit, re-corrected: `themes` is now mapped ({@see
+     * ThemeEntity}). Converted to real DQL -- LEFT JOIN via an explicit
+     * `Join::WITH` condition (no formal association between UserInfoEntity
+     * and ThemeEntity), same shape as
+     * {@see \Piwigo\Category\CategoryRepository::findPrivateCategoriesGrantedToUser()}'s
+     * own precedent. `ui.user_id = :userId` scopes to at most one
+     * `user_infos` row (its own primary key), so `getResult()` never
+     * returns more than one row here regardless of the GROUP BY.
      */
     public function countUserInfosRows(UserId $userId): int
     {
-        $row = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('COUNT(1) AS counter')
-            ->from(Tables::userInfos(), 'ui')
-            ->leftJoin('ui', Tables::themes(), 't', 't.id = ui.theme')
-            ->where('ui.user_id = :userId')
-            ->groupBy('ui.user_id')
-            ->setParameter('userId', $userId->value)
-            ->executeQuery()
-            ->fetchNumeric();
+        $rows = $this->createQueryBuilder('ui')
+            ->select('COUNT(ui.userId) AS counter')
+            ->leftJoin(ThemeEntity::class, 't', Join::WITH, 't.id = ui.theme')
+            ->where('ui.userId = :userId')
+            ->groupBy('ui.userId')
+            ->setParameter('userId', $userId)
+            ->getQuery()
+            ->getResult();
 
-        return $row !== false && is_numeric($row[0]) ? (int) $row[0] : 0;
+        $counter = $rows[0]['counter'] ?? null;
+
+        return is_int($counter) ? $counter : 0;
     }
 
     /**
      * Full `user_infos` row plus the joined theme's display name --
      * UserService::getUserData()'s own merge-with-basic-row step.
      *
-     * Item 14 DQL audit: stays on DBAL -- LEFT JOINs `themes`, which has no
-     * entity anywhere in this migration, and selects `ui.*` (a whole-row
-     * shape, not a fixed DQL property list).
+     * Item 14 DQL audit, re-corrected: `themes` is now mapped ({@see
+     * ThemeEntity}), but the real remaining blocker survives that fix --
+     * this selects `ui.*` (every `user_infos` column keyed by its raw
+     * snake_case column name, e.g. `nb_image_page`/`show_nb_comments`),
+     * which UserService::getUserData() then array_merge()s straight into
+     * its own `$userdata`. DQL has no whole-row-as-raw-column-names select;
+     * selecting the full UserInfoEntity instead would key the array by its
+     * camelCase property names (`nbImagePage`/`showNbComments`), silently
+     * breaking that merge and every downstream `$userdata['...']` read.
+     * Stays on DBAL.
      *
      * @return array<string, mixed>|false
      */
@@ -701,29 +715,35 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * Every favorite image id for $userId, unfiltered -- the other half of
      * UserService::checkUserFavorites()'s comparison.
      *
-     * Item 14 DQL audit: stays on DBAL -- `favorites` has no entity
-     * anywhere in this migration.
+     * Item 14 DQL audit, re-corrected: `favorites` is now mapped ({@see
+     * FavoriteEntity}). Converted to real DQL -- single-table select of
+     * `f.imageId`, a plain int property (no custom Doctrine Type on
+     * FavoriteEntity's imageId, so `getSingleColumnResult()`'s lack of Type
+     * conversion -- see this class's own Item 14 gotcha note elsewhere in
+     * this file -- doesn't apply here).
      *
      * @return list<int>
      */
     public function findFavoriteImageIds(UserId $userId): array
     {
         $rows = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select('image_id')
-            ->from(Tables::favorites())
-            ->where('user_id = :userId')
-            ->setParameter('userId', $userId->value)
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->select('f.imageId')
+            ->from(FavoriteEntity::class, 'f')
+            ->where('f.userId = :userId')
+            ->setParameter('userId', $userId)
+            ->getQuery()
+            ->getSingleColumnResult();
 
-        return self::toIntList(array_column($rows, 'image_id'));
+        return self::toIntList(array_values($rows));
     }
 
     /**
-     * Item 14 DQL audit: stays on DBAL -- `favorites` has no entity
-     * anywhere in this migration.
+     * Item 14 DQL audit, re-corrected: `favorites` is now mapped ({@see
+     * FavoriteEntity}). Converted to real DQL bulk DELETE -- still bypasses
+     * the identity map the same way the previous raw-DBAL DELETE did (a
+     * DQL bulk DELETE also skips the ORM's own cascade/lifecycle handling),
+     * so this is not a behavior change either way.
      *
      * @param list<int> $imageIds
      */
@@ -734,14 +754,14 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
         }
 
         $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->delete(Tables::favorites())
-            ->where('image_id IN (:imageIds)')
-            ->andWhere('user_id = :userId')
+            ->delete(FavoriteEntity::class, 'f')
+            ->where('f.imageId IN (:imageIds)')
+            ->andWhere('f.userId = :userId')
             ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER)
-            ->setParameter('userId', $userId->value)
-            ->executeStatement();
+            ->setParameter('userId', $userId)
+            ->getQuery()
+            ->execute();
     }
 
     /**
@@ -779,22 +799,25 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * Whether $imageId is already among $userId's favorites --
      * Controller\PictureController's own favorite-icon toggle state.
      *
-     * Item 14 DQL audit: stays on DBAL -- `favorites` has no entity
-     * anywhere in this migration.
+     * Item 14 DQL audit, re-corrected: `favorites` is now mapped ({@see
+     * FavoriteEntity}). Converted to real DQL -- `COUNT()` with no GROUP BY
+     * always returns exactly one row, same
+     * {@see findMinRegistrationDateAfter()}-established reasoning for why
+     * `getSingleScalarResult()` is safe here (never
+     * NonUniqueResultException territory).
      */
     public function isFavorite(UserId $userId, int $imageId): bool
     {
         $value = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from(Tables::favorites())
-            ->where('image_id = :imageId')
-            ->andWhere('user_id = :userId')
+            ->select('COUNT(f.imageId)')
+            ->from(FavoriteEntity::class, 'f')
+            ->where('f.imageId = :imageId')
+            ->andWhere('f.userId = :userId')
             ->setParameter('imageId', $imageId, ParameterType::INTEGER)
-            ->setParameter('userId', $userId->value)
-            ->executeQuery()
-            ->fetchOne();
+            ->setParameter('userId', $userId)
+            ->getQuery()
+            ->getSingleScalarResult();
 
         return is_numeric($value) && (int) $value !== 0;
     }
@@ -804,18 +827,20 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * SectionPopulator's own "remove_all_from_favorites" action, unlike
      * deleteFavoritesForImages() above which is scoped to a given image set.
      *
-     * Item 14 DQL audit: stays on DBAL -- `favorites` has no entity
-     * anywhere in this migration.
+     * Item 14 DQL audit, re-corrected: `favorites` is now mapped ({@see
+     * FavoriteEntity}). Converted to real DQL bulk DELETE -- same
+     * not-a-behavior-change reasoning as
+     * {@see deleteFavoritesForImages()} above.
      */
     public function deleteAllFavorites(UserId $userId): void
     {
         $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->delete(Tables::favorites())
-            ->where('user_id = :userId')
-            ->setParameter('userId', $userId->value)
-            ->executeStatement();
+            ->delete(FavoriteEntity::class, 'f')
+            ->where('f.userId = :userId')
+            ->setParameter('userId', $userId)
+            ->getQuery()
+            ->execute();
     }
 
     /**

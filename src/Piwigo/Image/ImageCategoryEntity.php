@@ -27,6 +27,18 @@ use Piwigo\Common\ValueObject\CategoryId;
  * exists yet. `categoryId` uses the existing `category_id` custom
  * Doctrine Type, matching {@see \Piwigo\Group\GroupAccessEntity}'s own
  * convention for a mapped foreign id.
+ *
+ * `rank`'s column name is explicitly backtick-quoted (Doctrine's own
+ * documented mechanism for a reserved SQL keyword column) -- `RANK` is a
+ * reserved word as of MySQL 8.0.2 (window functions), and the schema's
+ * own `CREATE TABLE` already quotes it for the same reason. Without the
+ * explicit quoting, `SELECT`/`WHERE` on `ic.rank` compiled fine (DQL's
+ * own identifier-quoting there already handles it), but a DQL `UPDATE
+ * ... SET ic.rank = ...` did not -- caught empirically via a real
+ * `SyntaxErrorException` against the test DB when
+ * {@see \Piwigo\Image\ImageRepository::updateRankForImageInCategory()}/
+ * {@see \Piwigo\Image\ImageRepository::incrementRanksFromForCategory()}
+ * ran, not by static analysis.
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'image_category')]
@@ -39,7 +51,7 @@ final class ImageCategoryEntity
         #[ORM\Id]
         #[ORM\Column(name: 'category_id', type: 'category_id')]
         public CategoryId $categoryId,
-        #[ORM\Column(type: 'integer', nullable: true)]
+        #[ORM\Column(name: '`rank`', type: 'integer', nullable: true)]
         public ?int $rank,
     ) {}
 }

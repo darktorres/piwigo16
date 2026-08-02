@@ -30,6 +30,15 @@ use Doctrine\ORM\Mapping as ORM;
  * a couple of clean single-table candidates. Now mapped as {@see
  * \Piwigo\Image\ImageCategoryEntity}, placed in `Piwigo\Image` (the
  * heaviest real consumer) rather than here.
+ *
+ * `rank`'s column name is explicitly backtick-quoted -- `RANK` is a
+ * reserved SQL keyword as of MySQL 8.0.2 (window functions), and a real
+ * DQL `UPDATE ... SET` against an unquoted `rank` property elsewhere in
+ * this migration ({@see \Piwigo\Image\ImageCategoryEntity}'s own `$rank`,
+ * same column name/reserved-word shape) hit a genuine `SyntaxErrorException`
+ * against the real test DB; this property isn't DQL-`UPDATE`d anywhere
+ * today, but fixed proactively rather than leaving the same latent
+ * landmine here.
  */
 #[ORM\Entity(repositoryClass: CategoryRepository::class)]
 #[ORM\Table(name: 'categories')]
@@ -49,7 +58,7 @@ final class CategoryEntity
         public ?string $comment,
         #[ORM\Column(type: 'string', length: 255, nullable: true)]
         public ?string $dir,
-        #[ORM\Column(type: 'integer', nullable: true)]
+        #[ORM\Column(name: '`rank`', type: 'integer', nullable: true)]
         public ?int $rank,
         #[ORM\Column(type: 'string', length: 10)]
         public string $status,

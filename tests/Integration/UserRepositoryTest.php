@@ -638,4 +638,43 @@ final class UserRepositoryTest extends IntegrationTestCase
         self::assertCount(2, $result->rows);
         self::assertSame(4, $result->total);
     }
+
+    public function test_count_user_infos_rows_is_one_for_a_real_user(): void
+    {
+        // Item 14 Sub-phase B2 re-audit: had zero existing coverage.
+        self::assertSame(1, $this->repo->countUserInfosRows(\Piwigo\Common\ValueObject\UserId::from(1)));
+    }
+
+    public function test_count_user_infos_rows_is_zero_for_a_nonexistent_user(): void
+    {
+        self::assertSame(0, $this->repo->countUserInfosRows(\Piwigo\Common\ValueObject\UserId::from(999999)));
+    }
+
+    public function test_find_favorite_image_ids_returns_the_real_ids(): void
+    {
+        // Item 14 Sub-phase B2 re-audit: had zero existing coverage.
+        // Fixture: user 1 has favorites [1, 3, 5].
+        $ids = $this->repo->findFavoriteImageIds(\Piwigo\Common\ValueObject\UserId::from(1));
+        sort($ids);
+        self::assertSame([1, 3, 5], $ids);
+    }
+
+    public function test_find_favorite_image_ids_returns_empty_for_a_user_with_no_favorites(): void
+    {
+        self::assertSame([], $this->repo->findFavoriteImageIds(\Piwigo\Common\ValueObject\UserId::from(2)));
+    }
+
+    public function test_delete_all_favorites_removes_every_row_for_the_user(): void
+    {
+        // Item 14 Sub-phase B2 re-audit: had zero existing coverage.
+        $this->conn->beginTransaction();
+
+        try {
+            $this->repo->deleteAllFavorites(\Piwigo\Common\ValueObject\UserId::from(1));
+
+            self::assertSame([], $this->repo->findFavoriteImageIds(\Piwigo\Common\ValueObject\UserId::from(1)));
+        } finally {
+            $this->conn->rollBack();
+        }
+    }
 }

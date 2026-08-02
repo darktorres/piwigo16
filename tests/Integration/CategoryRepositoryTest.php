@@ -967,5 +967,52 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         self::assertSame((is_numeric($maxId) ? (int) $maxId : 0) + 1, $this->repo->findNextId());
     }
 
+    public function test_find_photo_counts_by_category_counts_direct_images(): void
+    {
+        // Item 14 Sub-phase B2 re-audit: had zero existing coverage --
+        // combines a custom-Typed categoryId GROUP BY with a blind
+        // instanceof-then-continue fallback (silently drops the row
+        // instead of throwing if the VO-hydration assumption is wrong).
+        self::assertSame(
+            [1 => 3, 2 => 2],
+            $this->repo->findPhotoCountsByCategory()
+        );
+    }
+
+    public function test_has_images_is_true_for_a_category_with_images(): void
+    {
+        self::assertTrue($this->repo->hasImages(1));
+    }
+
+    public function test_has_images_is_false_for_a_category_without_images(): void
+    {
+        self::assertFalse($this->repo->hasImages(999));
+    }
+
+    public function test_find_distinct_image_ids_in_categories_returns_the_linked_images(): void
+    {
+        $ids = $this->repo->findDistinctImageIdsInCategories([1]);
+        sort($ids);
+        self::assertSame([1, 2, 3], $ids);
+    }
+
+    public function test_delete_image_category_links_for_categories_removes_only_the_given_categories(): void
+    {
+        $this->conn->beginTransaction();
+
+        try {
+            $this->repo->deleteImageCategoryLinksForCategories([1]);
+
+            $remaining = $this->conn->createQueryBuilder()
+                ->select('DISTINCT category_id')
+                ->from(Tables::imageCategory())
+                ->executeQuery()
+                ->fetchFirstColumn();
+
+            self::assertSame([2], array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $remaining));
+        } finally {
+            $this->conn->rollBack();
+        }
+    }
 }
 }

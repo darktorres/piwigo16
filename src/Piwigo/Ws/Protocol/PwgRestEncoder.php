@@ -81,7 +81,7 @@ final class PwgRestEncoder extends PwgResponseEncoder
 
     /**
      * @param array<int|string, mixed> $data
-     * @param array<string, int> $xml_attributes
+     * @param array<array-key, int> $xml_attributes
      */
     public function encode_struct(array $data, bool $skip_underscore, array $xml_attributes = []): void
     {

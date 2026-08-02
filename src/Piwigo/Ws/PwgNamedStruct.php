@@ -24,14 +24,17 @@ final class PwgNamedStruct
 {
     /* private */
     /**
-     * @var array<string, int>
+     * @var array<array-key, int>
      */
     public $_xmlAttributes;
 
     /**
      * Constructs a named struct (usually returned by web service function
      * implementation)
-     * @param array<string, mixed> $_content the actual content (php array)
+     * @param array<array-key, mixed> $_content the actual content (php array) --
+     *    a "struct" is defined by non-consecutive keys, which includes
+     *    genuine int keys (e.g. a numeric key mixed with string keys, or a
+     *    non-zero-starting int-keyed array), not just string keys
      * @param string[]|null $xmlAttributes name of the keys in $content that will be
      *    encoded as xml attributes (if null - automatically prefer xml attributes
      *    whenever possible)

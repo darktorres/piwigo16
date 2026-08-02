@@ -14,6 +14,9 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Event\User\UserCommentCheck;
+use Piwigo\Event\User\UserCommentDeletion;
+use Piwigo\Event\User\UserCommentValidation;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -170,34 +173,34 @@ final readonly class CommentService
      * event). Registered in Piwigo\Bootstrap\RequestBootstrap's own
      * default-event-handlers block (P23 batch 8c, relocated from the now-deleted
      * functions_comment.inc.php) as that event's own handler -- called by
-     * trigger_change() from insertComment()/updateComment() themselves, not
-     * directly by callers.
-     *
-     * @param array{author: string, content: string, image_id: int, website_url?: string, email?: string} $comment
-     * @return string validate, moderate, reject
+     * dispatchChange() from insertComment()/updateComment() themselves, not
+     * directly by callers. $event->comm is untyped per-key (matching
+     * updateComment()'s own already-established looseness), so 'content'/
+     * 'author' are narrowed defensively here rather than trusted as string.
      */
-    public function checkForSpam(string $action, array $comment): string
+    public function checkForSpam(UserCommentCheck $event): UserCommentCheck
     {
+        $action = $event->commentAction;
 
         if ($action === 'reject') {
-            return $action;
+            return $event;
         }
 
         $myAction = \Piwigo\Config\CurrentConfig::commentSpamReject() ? 'reject' : 'moderate';
         if ($action === $myAction) {
-            return $action;
+            return $event;
         }
 
         if (! \Piwigo\Auth\AccessControl::isAGuest()) {
-            return $action;
+            return $event;
         }
 
-        $content = $comment['content'];
+        $content = is_string($event->comm['content'] ?? null) ? $event->comm['content'] : '';
         $linkCount = preg_match_all('/https?:\/\//', $content, $matches);
         // the pattern above is a hardcoded, always-valid regex
         assert($linkCount !== false);
 
-        $author = $comment['author'];
+        $author = is_string($event->comm['author'] ?? null) ? $event->comm['author'] : '';
         if (str_contains($author, 'http://')) {
             $linkCount++;
         }
@@ -206,11 +209,12 @@ final readonly class CommentService
 
         if ($linkCount > $maxLinks) {
             self::pushCrReason('links');
+            $event->commentAction = $myAction;
 
-            return $myAction;
+            return $event;
         }
 
-        return $action;
+        return $event;
     }
 
     /**
@@ -341,11 +345,7 @@ final readonly class CommentService
         }
 
         // perform more spam check
-        $result = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('user_comment_check', $commentAction, $comm);
-        // handlers of the user_comment_check event contract MUST return a
-        // string (validate/moderate/reject); fail closed if a handler
-        // misbehaves
-        $commentAction = is_string($result) ? $result : 'reject';
+        $commentAction = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new UserCommentCheck($commentAction, $comm))->commentAction;
 
         if ($commentAction !== 'reject') {
             $author = $comm['author'];
@@ -431,7 +431,7 @@ final readonly class CommentService
             'comment_id' => $rawCommentId,
         ]);
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('user_comment_deletion', $rawCommentId);
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new UserCommentDeletion($rawCommentId));
 
         return true;
     }
@@ -473,17 +473,12 @@ final readonly class CommentService
         }
 
         // perform more spam check
-        $result = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
-            'user_comment_check',
+        $commentAction = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new UserCommentCheck(
             $commentAction,
             array_merge($comment, [
                 'author' => $username,
             ])
-        );
-        // handlers of the user_comment_check event contract MUST return a
-        // string (validate/moderate/reject); fail closed if a handler
-        // misbehaves
-        $commentAction = is_string($result) ? $result : 'reject';
+        ))->commentAction;
 
         // website
         if (! self::emptyValue($comment['website_url'] ?? null)) {
@@ -636,7 +631,7 @@ final readonly class CommentService
         $rawCommentId = is_array($commentId)
             ? array_map(static fn (CommentId $id): int => $id->value, $commentId)
             : $commentId->value;
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('user_comment_validation', $rawCommentId);
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new UserCommentValidation($rawCommentId));
     }
 
     /**

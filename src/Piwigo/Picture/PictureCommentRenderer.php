@@ -13,6 +13,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Event\Template\RenderCommentAuthor;
 use Piwigo\Event\Template\RenderCommentContent;
+use Piwigo\Event\User\UserCommentInsertion;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Http\ResponseReadyException;
@@ -148,12 +149,11 @@ final class PictureCommentRenderer
             \Piwigo\Core\PageState::current()->errors = $commentErrors;
 
             // allow plugins to notify what's going on
-            \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify(
-                'user_comment_insertion',
+            \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new UserCommentInsertion(
                 array_merge($comm, [
                     'action' => $commentAction,
                 ])
-            );
+            ));
         } elseif ($pictureCommentSubmitRequest->contentPresent) {
             throw new ResponseReadyException(ResponseFactory::text('ugly spammer', 403));
         }

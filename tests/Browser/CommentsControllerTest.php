@@ -551,11 +551,11 @@ it("shows an anonymous comment's own email when no linked user account has one",
 /**
  * Closes the comment-edit dispatch switch's own `default:` arm (~line
  * 303) -- CommentService::updateComment()'s `user_comment_check` event
- * hook has no whitelist on its return value
- * (`$commentAction = is_string($result) ? $result : 'reject';`), so a
- * REAL plugin returning an arbitrary string reaches this controller's
- * switch with a value matching none of 'moderate'/'validate'/'reject',
- * landing on `trigger_error('Invalid comment action ...', E_USER_WARNING)`.
+ * hook has no whitelist on its own $commentAction property value, so a
+ * REAL plugin returning a well-typed UserCommentCheck with an arbitrary
+ * string reaches this controller's switch with a value matching none of
+ * 'moderate'/'validate'/'reject', landing on `trigger_error('Invalid
+ * comment action ...', E_USER_WARNING)`.
  * ErrorCollector (installed on every real request) surfaces that as an
  * `X-PHP-Error-1` response header rather than corrupting the page body --
  * asserted on directly here via a raw in-browser fetch() (matching
@@ -584,9 +584,9 @@ it('trigger_errors on an unrecognized comment_action from a real user_comment_ch
     Description: Test-only fixture plugin (tests/Browser/CommentsControllerTest.php).
     */
 
-    \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler(
-        'user_comment_check',
-        static fn (mixed $action): mixed => 'ct_unknown_action'
+    \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(
+        \Piwigo\Event\User\UserCommentCheck::class,
+        static fn (\Piwigo\Event\User\UserCommentCheck $event): \Piwigo\Event\User\UserCommentCheck => new \Piwigo\Event\User\UserCommentCheck('ct_unknown_action', $event->comm)
     );
     PHP);
 

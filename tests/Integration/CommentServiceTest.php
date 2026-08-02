@@ -16,6 +16,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\RedirectServiceInterface;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\Tables;
+    use Piwigo\Event\User\UserCommentCheck;
     use Piwigo\Html\HtmlService;
     use Piwigo\Mail\MailService;
     use Piwigo\Url\UrlService;
@@ -210,16 +211,24 @@ namespace Piwigo\Tests\Integration {
 
         // --- checkForSpam() -------------------------------------------------
 
+        /**
+         * @param array<string, mixed> $comment
+         */
+        private function checkForSpam(string $action, array $comment): string
+        {
+            return $this->service->checkForSpam(new UserCommentCheck($action, $comment))->commentAction;
+        }
+
         public function test_check_for_spam_returns_reject_unchanged(): void
         {
-            self::assertSame('reject', $this->service->checkForSpam('reject', ['content' => '', 'author' => '', 'image_id' => 1]));
+            self::assertSame('reject', $this->checkForSpam('reject', ['content' => '', 'author' => '', 'image_id' => 1]));
         }
 
         public function test_check_for_spam_leaves_action_alone_for_a_non_guest(): void
         {
             CurrentUser::set(CurrentUser::get()->withStatus(UserStatus::Normal));
 
-            self::assertSame('moderate', $this->service->checkForSpam('moderate', ['content' => 'hi', 'author' => 'a', 'image_id' => 1]));
+            self::assertSame('moderate', $this->checkForSpam('moderate', ['content' => 'hi', 'author' => 'a', 'image_id' => 1]));
         }
 
         public function test_check_for_spam_escalates_when_link_count_exceeds_the_max(): void
@@ -227,7 +236,7 @@ namespace Piwigo\Tests\Integration {
             CurrentUser::set(CurrentUser::get()->withStatus(UserStatus::Guest));
 
             $content = 'http://a.test http://b.test http://c.test http://d.test';
-            self::assertSame('reject', $this->service->checkForSpam('moderate', ['content' => $content, 'author' => 'a', 'image_id' => 1]));
+            self::assertSame('reject', $this->checkForSpam('moderate', ['content' => $content, 'author' => 'a', 'image_id' => 1]));
             self::assertContains('links', $this->postCr());
         }
 
@@ -235,7 +244,7 @@ namespace Piwigo\Tests\Integration {
         {
             CurrentUser::set(CurrentUser::get()->withStatus(UserStatus::Guest));
 
-            self::assertSame('moderate', $this->service->checkForSpam('moderate', ['content' => 'http://a.test', 'author' => 'a', 'image_id' => 1]));
+            self::assertSame('moderate', $this->checkForSpam('moderate', ['content' => 'http://a.test', 'author' => 'a', 'image_id' => 1]));
         }
 
         /**
@@ -250,7 +259,7 @@ namespace Piwigo\Tests\Integration {
         {
             CurrentConfig::setCommentSpamReject(false);
 
-            self::assertSame('moderate', $this->service->checkForSpam('moderate', ['content' => 'no links here', 'author' => 'plain_name', 'image_id' => 1]));
+            self::assertSame('moderate', $this->checkForSpam('moderate', ['content' => 'no links here', 'author' => 'plain_name', 'image_id' => 1]));
         }
 
         /**
@@ -265,7 +274,7 @@ namespace Piwigo\Tests\Integration {
             CurrentUser::set(CurrentUser::get()->withStatus(UserStatus::Guest));
             CurrentConfig::setCommentSpamMaxLinks(0);
 
-            $action = $this->service->checkForSpam('moderate', ['content' => 'no links in here at all', 'author' => 'http://spammer.example', 'image_id' => 1]);
+            $action = $this->checkForSpam('moderate', ['content' => 'no links in here at all', 'author' => 'http://spammer.example', 'image_id' => 1]);
 
             self::assertSame('reject', $action);
             self::assertContains('links', $this->postCr());

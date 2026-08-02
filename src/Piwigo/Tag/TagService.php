@@ -12,6 +12,7 @@ use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Tag\DeleteTags;
 use Piwigo\Event\Tag\GetTagAltNames;
 use Piwigo\Event\Tag\GetTagNameLikeWhere;
 use Piwigo\Event\Tag\RenderTagName;
@@ -509,7 +510,7 @@ final readonly class TagService
         // -- unwrap ->value explicitly, same rule as every other
         // unconverted-domain sink in this codebase.
         $rawTagIds = array_map(static fn (TagId $id): int => $id->value, $tagIds);
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('delete_tags', $rawTagIds);
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new DeleteTags($rawTagIds));
         $this->activityLogger->record('tag', $rawTagIds, 'delete');
 
         $this->newImageService()

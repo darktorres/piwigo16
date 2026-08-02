@@ -14,6 +14,7 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Mail\GetWebmasterMailAddress;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\Users\Projection\UserInfo;
 
@@ -101,9 +102,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
         // not a bug, so this degrades to '' rather than asserting non-null.
         $email = is_string($value) ? $value : '';
 
-        $email = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_webmaster_mail_address', $email);
-
-        return is_string($email) ? $email : '';
+        return \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetWebmasterMailAddress($email))->email;
     }
 
     public function findIdByUsername(Username $username, string $idColumn, string $usernameColumn): ?UserId

@@ -1587,15 +1587,15 @@ it('logs a PHP warning and still renders when a plugin-registered user_comment_c
         Description: Test-only fixture plugin (tests/Browser/PictureControllerTest.php).
         */
 
-        \\Piwigo\\PluginConfig\\EventDispatcher::get()->addEventHandler(
-            'user_comment_check',
-            static function (mixed \$action, array \$comment): mixed {
-                \$content = is_string(\$comment['content'] ?? null) ? \$comment['content'] : '';
+        \\Piwigo\\PluginConfig\\EventDispatcher::get()->addTypedHandler(
+            \\Piwigo\\Event\\User\\UserCommentCheck::class,
+            static function (\\Piwigo\\Event\\User\\UserCommentCheck \$event): \\Piwigo\\Event\\User\\UserCommentCheck {
+                \$content = is_string(\$event->comm['content'] ?? null) ? \$event->comm['content'] : '';
                 if (str_contains(\$content, '{$marker}')) {
-                    return 'this-is-not-a-real-comment-action';
+                    return new \\Piwigo\\Event\\User\\UserCommentCheck('this-is-not-a-real-comment-action', \$event->comm);
                 }
 
-                return \$action;
+                return \$event;
             }
         );
 

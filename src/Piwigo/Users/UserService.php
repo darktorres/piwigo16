@@ -30,6 +30,9 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsError;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
+use Piwigo\Event\User\DeleteUser;
+use Piwigo\Event\User\RegisterUser;
+use Piwigo\Event\User\RegisterUserCheck;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\EffectiveForbiddenCategoriesCache;
 use Piwigo\Permission\PermissionRepository;
@@ -246,7 +249,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     {
         $this->repo->deleteUser($userId);
         SessionService::get()->deleteUserSessions($userId->value);
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('delete_user', $userId->value);
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new DeleteUser($userId->value));
         $this->activityLogger->record('user', $userId->value, 'delete');
     }
 
@@ -308,16 +311,15 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             }
         }
 
-        $errorsAfterTrigger = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
-            'register_user_check',
+        $errorsAfterTrigger = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RegisterUserCheck(
             $errors,
             [
                 'username' => $login,
                 'password' => $password,
                 'email' => $mailAddress,
             ]
-        );
-        $errors = is_array($errorsAfterTrigger) ? array_values(array_filter($errorsAfterTrigger, is_string(...))) : [];
+        ))->errors;
+        $errors = array_values(array_filter($errorsAfterTrigger, is_string(...)));
 
         if ($errors !== [] || $duplicateUsername) {
             if ($duplicateUsername) {
@@ -375,14 +377,11 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             $this->sendWelcomeEmail($login, $mailAddress, $urlService);
         }
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify(
-            'register_user',
-            [
-                'id' => $userId->value,
-                'username' => $login,
-                'email' => $mailAddress,
-            ]
-        );
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new RegisterUser([
+            'id' => $userId->value,
+            'username' => $login,
+            'email' => $mailAddress,
+        ]));
 
         $this->activityLogger->record('user', $userId->value, 'add');
 

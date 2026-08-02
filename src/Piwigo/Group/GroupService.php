@@ -11,6 +11,7 @@ use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\ActivityLoggerInterface;
+use Piwigo\Event\User\DeleteGroup;
 
 /**
  * Group domain business logic: creation/rename/deletion, membership
@@ -322,7 +323,7 @@ final readonly class GroupService
         }
 
         $ids = array_keys($deleted);
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('delete_group', $ids);
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new DeleteGroup($ids));
         $this->activityLogger->record('group', $ids, 'delete');
 
         // [SEC-57] one row per group actually deleted

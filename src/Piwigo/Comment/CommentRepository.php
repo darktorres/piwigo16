@@ -270,6 +270,92 @@ final class CommentRepository extends EntityRepository implements CommentCounter
     }
 
     /**
+     * Shared base condition list for the 4 CommentApiCriteria-accepting
+     * methods below -- mirrors Ws\PwgComments::getList()'s own real
+     * behavior: a non-empty $criteria->search resets every other filter
+     * (its own "reset all filters during search" comment), otherwise each
+     * of authorId/imageId/minDate/maxDate applies independently when set.
+     * $includeAuthorId is false only for findAuthorCounts()'s own call --
+     * see that method's own docblock for why.
+     *
+     * @return list<SqlCondition>
+     */
+    private static function buildApiConditions(CommentApiCriteria $criteria, bool $includeAuthorId): array
+    {
+        if ($criteria->search !== null && $criteria->search !== '') {
+            return [
+                new SqlCondition('1=1'),
+                new SqlCondition('content LIKE :search', [
+                    'search' => '%' . $criteria->search . '%',
+                ], [
+                    'search' => ParameterType::STRING,
+                ]),
+            ];
+        }
+
+        $conditions = [new SqlCondition('1=1')];
+
+        if ($includeAuthorId && $criteria->authorId !== null && $criteria->authorId !== 0) {
+            $conditions[] = new SqlCondition('author_id = :authorId', [
+                'authorId' => $criteria->authorId,
+            ], [
+                'authorId' => ParameterType::INTEGER,
+            ]);
+        }
+
+        if ($criteria->imageId !== null && $criteria->imageId !== 0) {
+            $conditions[] = new SqlCondition('image_id = :imageId', [
+                'imageId' => $criteria->imageId,
+            ], [
+                'imageId' => ParameterType::INTEGER,
+            ]);
+        }
+
+        if ($criteria->minDate !== null) {
+            $conditions[] = new SqlCondition('date >= :minDate', [
+                'minDate' => $criteria->minDate,
+            ], [
+                'minDate' => ParameterType::STRING,
+            ]);
+        }
+
+        if ($criteria->maxDate !== null) {
+            $conditions[] = new SqlCondition('date <= :maxDate', [
+                'maxDate' => $criteria->maxDate,
+            ], [
+                'maxDate' => ParameterType::STRING,
+            ]);
+        }
+
+        return $conditions;
+    }
+
+    /**
+     * {@see buildApiConditions()} plus $criteria->status's own condition,
+     * appended on top -- the 3 sibling methods (unlike findSummaryCounts(),
+     * which computes all/validated/pending itself and needs the
+     * status-unfiltered set) all filter by status the same way.
+     *
+     * @return list<SqlCondition>
+     */
+    private static function buildApiConditionsWithStatus(CommentApiCriteria $criteria, bool $includeAuthorId): array
+    {
+        $conditions = self::buildApiConditions($criteria, $includeAuthorId);
+
+        $statusCondition = match ($criteria->status) {
+            'pending' => new SqlCondition('validated = 0'),
+            'validated' => new SqlCondition('validated = 1'),
+            default => null,
+        };
+
+        if ($statusCondition !== null) {
+            $conditions[] = $statusCondition;
+        }
+
+        return $conditions;
+    }
+
+    /**
      * Distinct comment count for the given permission/validation condition
      * fragments -- CommentService::getNbAvailableComments()'s own
      * PermissionService::getSqlConditionFandFAsCondition() output plus a
@@ -539,15 +625,15 @@ final class CommentRepository extends EntityRepository implements CommentCounter
     }
 
     /**
-     * Total/validated/pending counts matching already-built $whereClauses
-     * -- Ws\PwgComments::getList()'s own summary block, same "caller
-     * composes trusted fragments" contract as
-     * {@see countAvailableWithConditions()} above.
+     * Total/validated/pending counts matching $criteria -- Ws\PwgComments::
+     * getList()'s own summary block. Deliberately ignores $criteria->status:
+     * this computes all/validated/pending counts itself via SUM(), so it
+     * needs the status-unfiltered condition set, unlike the 3 sibling
+     * methods below.
      *
-     * @param  list<SqlCondition>  $whereClauses
      * @return array{all_comments: mixed, validated: mixed, pending: mixed}|null
      */
-    public function findSummaryCounts(array $whereClauses): ?array
+    public function findSummaryCounts(CommentApiCriteria $criteria): ?array
     {
         $qb = $this->getEntityManager()
             ->getConnection()
@@ -555,7 +641,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
             ->select('count(*) as all_comments', 'sum(validated = 1) as validated', 'sum(validated = 0) as pending')
             ->from(Tables::comments());
 
-        self::applyConditions($qb, $whereClauses);
+        self::applyConditions($qb, self::buildApiConditions($criteria, includeAuthorId: true));
 
         $row = $qb->executeQuery()
             ->fetchAssociative();
@@ -573,16 +659,15 @@ final class CommentRepository extends EntityRepository implements CommentCounter
 
     /**
      * Paginated admin comment listing (joined with the commenting image
-     * and user) matching already-built $whereClauses -- Ws\PwgComments::
-     * getList()'s own row listing. $userIdColumn/$userUsernameColumn
-     * resolve \Piwigo\Config\CurrentConfig::userFields(), same reasoning
-     * as {@see findForImage()}'s own equivalents.
+     * and user) matching $criteria -- Ws\PwgComments::getList()'s own row
+     * listing. $userIdColumn/$userUsernameColumn resolve
+     * \Piwigo\Config\CurrentConfig::userFields(), same reasoning as
+     * {@see findForImage()}'s own equivalents.
      *
-     * @param  list<SqlCondition>  $whereClauses
      * @return list<array<string, mixed>>
      */
     public function findListForAdminWs(
-        array $whereClauses,
+        CommentApiCriteria $criteria,
         string $userIdColumn,
         string $userUsernameColumn,
         int $offset,
@@ -616,20 +701,19 @@ final class CommentRepository extends EntityRepository implements CommentCounter
             ->setFirstResult($offset)
             ->setMaxResults($limit);
 
-        self::applyConditions($qb, $whereClauses);
+        self::applyConditions($qb, self::buildApiConditionsWithStatus($criteria, includeAuthorId: true));
 
         return $qb->executeQuery()
             ->fetchAllAssociative();
     }
 
     /**
-     * Earliest/latest `date` matching already-built $whereClauses --
-     * Ws\PwgComments::getList()'s own "filters" date range.
+     * Earliest/latest `date` matching $criteria -- Ws\PwgComments::
+     * getList()'s own "filters" date range.
      *
-     * @param  list<SqlCondition>  $whereClauses
      * @return array{started_at: mixed, ended_at: mixed}|null
      */
-    public function findDateRange(array $whereClauses): ?array
+    public function findDateRange(CommentApiCriteria $criteria): ?array
     {
         $qb = $this->getEntityManager()
             ->getConnection()
@@ -637,7 +721,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
             ->select('MIN(date) AS started_at', 'MAX(date) AS ended_at')
             ->from(Tables::comments());
 
-        self::applyConditions($qb, $whereClauses);
+        self::applyConditions($qb, self::buildApiConditionsWithStatus($criteria, includeAuthorId: true));
 
         $row = $qb->executeQuery()
             ->fetchAssociative();
@@ -653,8 +737,14 @@ final class CommentRepository extends EntityRepository implements CommentCounter
     }
 
     /**
-     * Per-author comment counts matching already-built $whereClauses --
-     * Ws\PwgComments::getList()'s own "filters.nb_authors" breakdown.
+     * Per-author comment counts matching $criteria -- Ws\PwgComments::
+     * getList()'s own "filters.nb_authors" breakdown. Deliberately ignores
+     * $criteria->authorId -- "how many comments per author" scoped to a
+     * single author would be trivially 1, defeating the point of the
+     * breakdown; mirrors the original's own
+     * unset($where_clauses['author_id']) intent as real code instead of
+     * an array-key convention.
+     *
      * ANY_VALUE(author): author isn't functionally dependent on the GROUP
      * BY column (author_id) -- this connection doesn't strip
      * ONLY_FULL_GROUP_BY the way the legacy mysqli connection did, so this
@@ -662,10 +752,9 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * author name per author_id, matching the original grouping/row count
      * exactly.
      *
-     * @param  list<SqlCondition>  $whereClauses
      * @return list<array<string, mixed>>
      */
-    public function findAuthorCounts(array $whereClauses): array
+    public function findAuthorCounts(CommentApiCriteria $criteria): array
     {
         $qb = $this->getEntityManager()
             ->getConnection()
@@ -674,7 +763,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
             ->from(Tables::comments())
             ->groupBy('author_id');
 
-        self::applyConditions($qb, $whereClauses);
+        self::applyConditions($qb, self::buildApiConditionsWithStatus($criteria, includeAuthorId: false));
 
         return $qb->executeQuery()
             ->fetchAllAssociative();

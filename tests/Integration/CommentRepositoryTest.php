@@ -6,6 +6,7 @@ namespace Piwigo\Tests\Integration;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
+use Piwigo\Comment\CommentApiCriteria;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Config\CurrentConfig;
@@ -409,12 +410,36 @@ final class CommentRepositoryTest extends IntegrationTestCase
 
     public function test_find_summary_counts_reports_validated_and_pending_split(): void
     {
-        $validatedId = $this->insertFixtureComment(['validated' => true]);
-        $pendingId = $this->insertFixtureComment(['validated' => false]);
+        // A unique `search` marker scopes findSummaryCounts() to exactly
+        // these 2 rows (search resets every other filter -- see
+        // CommentRepository::buildApiConditions()'s own docblock), same
+        // isolation intent the old `id IN (:ids)` condition served before
+        // this method took a CommentApiCriteria instead of an arbitrary
+        // SqlCondition list.
+        $marker = 'fsc-marker-' . uniqid();
+        $this->repo->insert(['author' => 'fsc_author', 'authorId' => 1, 'anonymousId' => '10.30.0.6', 'content' => $marker . ' validated', 'validated' => true, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
+        $this->repo->insert(['author' => 'fsc_author', 'authorId' => 1, 'anonymousId' => '10.30.0.7', 'content' => $marker . ' pending', 'validated' => false, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
 
-        $summary = $this->repo->findSummaryCounts([
-            new SqlCondition('id IN (:ids)', ['ids' => [$validatedId->value, $pendingId->value]], ['ids' => ArrayParameterType::INTEGER]),
-        ]);
+        $summary = $this->repo->findSummaryCounts(new CommentApiCriteria(search: $marker));
+
+        self::assertNotNull($summary);
+        self::assertSame(2, is_numeric($summary['all_comments']) ? (int) $summary['all_comments'] : null);
+        self::assertSame(1, is_numeric($summary['validated']) ? (int) $summary['validated'] : null);
+        self::assertSame(1, is_numeric($summary['pending']) ? (int) $summary['pending'] : null);
+    }
+
+    public function test_find_summary_counts_ignores_status_and_always_reports_the_full_split(): void
+    {
+        // Deliberate: findSummaryCounts() computes all/validated/pending
+        // itself via SUM(), so $criteria->status must NOT narrow the
+        // underlying row set the way it does for the 3 sibling methods
+        // below -- otherwise a 'validated'-status criteria would report
+        // pending=0 unconditionally, defeating the summary's own purpose.
+        $marker = 'fscs-marker-' . uniqid();
+        $this->repo->insert(['author' => 'fscs_author', 'authorId' => 1, 'anonymousId' => '10.30.0.20', 'content' => $marker . ' validated', 'validated' => true, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
+        $this->repo->insert(['author' => 'fscs_author', 'authorId' => 1, 'anonymousId' => '10.30.0.21', 'content' => $marker . ' pending', 'validated' => false, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
+
+        $summary = $this->repo->findSummaryCounts(new CommentApiCriteria(search: $marker, status: 'validated'));
 
         self::assertNotNull($summary);
         self::assertSame(2, is_numeric($summary['all_comments']) ? (int) $summary['all_comments'] : null);
@@ -424,11 +449,10 @@ final class CommentRepositoryTest extends IntegrationTestCase
 
     public function test_find_list_for_admin_ws_returns_joined_rows_with_username_and_status(): void
     {
-        $id = $this->insertFixtureComment(['authorId' => 1, 'validated' => true]);
+        $marker = 'flfaw-marker-' . uniqid();
+        $id = $this->repo->insert(['author' => 'flfaw_author', 'authorId' => 1, 'anonymousId' => '10.30.0.8', 'content' => $marker, 'validated' => true, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
 
-        $rows = $this->repo->findListForAdminWs([
-            new SqlCondition('c.id = :id', ['id' => $id->value], ['id' => ParameterType::INTEGER]),
-        ], 'id', 'username', 0, 10);
+        $rows = $this->repo->findListForAdminWs(new CommentApiCriteria(search: $marker), 'id', 'username', 0, 10);
 
         self::assertCount(1, $rows);
         self::assertSame($id->value, is_numeric($rows[0]['id']) ? (int) $rows[0]['id'] : null);
@@ -436,13 +460,24 @@ final class CommentRepositoryTest extends IntegrationTestCase
         self::assertArrayHasKey('status', $rows[0]);
     }
 
+    public function test_find_list_for_admin_ws_applies_the_status_filter(): void
+    {
+        $marker = 'flfaws-marker-' . uniqid();
+        $this->repo->insert(['author' => 'flfaws_author', 'authorId' => 1, 'anonymousId' => '10.30.0.22', 'content' => $marker . ' validated', 'validated' => true, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
+        $pendingId = $this->repo->insert(['author' => 'flfaws_author', 'authorId' => 1, 'anonymousId' => '10.30.0.23', 'content' => $marker . ' pending', 'validated' => false, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
+
+        $rows = $this->repo->findListForAdminWs(new CommentApiCriteria(search: $marker, status: 'pending'), 'id', 'username', 0, 10);
+
+        self::assertCount(1, $rows);
+        self::assertSame($pendingId->value, is_numeric($rows[0]['id']) ? (int) $rows[0]['id'] : null);
+    }
+
     public function test_find_date_range_returns_min_and_max_matching_dates(): void
     {
-        $id = $this->insertFixtureComment(['validated' => true]);
+        $marker = 'fdr-marker-' . uniqid();
+        $this->repo->insert(['author' => 'fdr_author', 'authorId' => 1, 'anonymousId' => '10.30.0.9', 'content' => $marker, 'validated' => true, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
 
-        $range = $this->repo->findDateRange([
-            new SqlCondition('id = :id', ['id' => $id->value], ['id' => ParameterType::INTEGER]),
-        ]);
+        $range = $this->repo->findDateRange(new CommentApiCriteria(search: $marker));
 
         self::assertNotNull($range);
         self::assertNotNull($range['started_at']);
@@ -451,16 +486,46 @@ final class CommentRepositoryTest extends IntegrationTestCase
 
     public function test_find_author_counts_groups_by_author_id(): void
     {
-        $firstId = $this->repo->insert(['author' => 'fac_author', 'authorId' => 1, 'anonymousId' => '10.30.0.4', 'content' => 'fac content A', 'validated' => true, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
-        $secondId = $this->repo->insert(['author' => 'fac_author', 'authorId' => 1, 'anonymousId' => '10.30.0.5', 'content' => 'fac content B', 'validated' => true, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
+        $marker = 'fac-marker-' . uniqid();
+        $this->repo->insert(['author' => 'fac_author', 'authorId' => 1, 'anonymousId' => '10.30.0.4', 'content' => $marker . ' A', 'validated' => true, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
+        $this->repo->insert(['author' => 'fac_author', 'authorId' => 1, 'anonymousId' => '10.30.0.5', 'content' => $marker . ' B', 'validated' => true, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
 
-        $rows = $this->repo->findAuthorCounts([
-            new SqlCondition('id IN (:ids)', ['ids' => [$firstId->value, $secondId->value]], ['ids' => ArrayParameterType::INTEGER]),
-        ]);
+        $rows = $this->repo->findAuthorCounts(new CommentApiCriteria(search: $marker));
 
         self::assertCount(1, $rows);
         self::assertSame(1, is_numeric($rows[0]['author_id']) ? (int) $rows[0]['author_id'] : null);
         self::assertSame(2, is_numeric($rows[0]['nb_authors']) ? (int) $rows[0]['nb_authors'] : null);
+    }
+
+    public function test_find_author_counts_ignores_the_author_id_filter(): void
+    {
+        // Real regression coverage for CommentRepository::findAuthorCounts()'s
+        // own documented behavior: $criteria->authorId must NOT narrow the
+        // author breakdown down to a single author (that would defeat the
+        // "how many comments per author" point of this method) -- mirrors
+        // the original Ws\PwgComments::getList()'s own
+        // unset($where_clauses['author_id']) intent, now as real code.
+        //
+        // Isolated via imageId (fixture image 5 has zero fixture/other-test
+        // comments), not `search` -- a non-empty search resets every
+        // filter including authorId for every method (see
+        // buildApiConditions()'s own docblock), which would make this
+        // pass even if findAuthorCounts() DID honor authorId. imageId
+        // doesn't trigger that reset, so authorId's own inclusion/exclusion
+        // is what's actually under test here.
+        $this->repo->insert(['author' => 'faci_author_one', 'authorId' => 1, 'anonymousId' => '10.30.0.24', 'content' => 'faci content one', 'validated' => true, 'imageId' => 5, 'websiteUrl' => null, 'email' => null]);
+        $this->repo->insert(['author' => 'faci_author_three', 'authorId' => 3, 'anonymousId' => '10.30.0.25', 'content' => 'faci content three', 'validated' => true, 'imageId' => 5, 'websiteUrl' => null, 'email' => null]);
+
+        // authorId: 1 would, if honored, exclude author_id=3's row --
+        // findAuthorCounts() must still report both.
+        $rows = $this->repo->findAuthorCounts(new CommentApiCriteria(authorId: 1, imageId: 5));
+
+        $authorIds = array_map(
+            static fn (array $row): ?int => is_numeric($row['author_id']) ? (int) $row['author_id'] : null,
+            $rows
+        );
+        sort($authorIds);
+        self::assertSame([1, 3], $authorIds);
     }
 
     public function test_count_all_and_count_unvalidated_reflect_a_freshly_inserted_pending_comment(): void

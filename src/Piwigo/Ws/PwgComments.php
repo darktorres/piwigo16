@@ -11,7 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
-use Doctrine\DBAL\ParameterType;
+use Piwigo\Auth\EphemeralKeyService;
+use Piwigo\Comment\CommentApiCriteria;
 use Piwigo\Comment\CommentService;
 use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Core\Lang;
@@ -21,7 +22,6 @@ use Piwigo\Event\Template\RenderCommentAuthor;
 use Piwigo\Event\Template\RenderCommentContent;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
-use Piwigo\Permission\SqlCondition;
 
 /**
  * P23 batch 8e-2: relocated from include/ws_functions/pwg.comments.php.
@@ -77,80 +77,49 @@ final class PwgComments
             return new PwgError(401, 'Per page must be: 5, 10, 25 or 50');
         }
 
-        // SQL-modernization audit: $where_clauses is now list<SqlCondition>
-        // (with string-keyed 'author_id' still used purely as a removable
-        // marker, same as before -- see the unset() below), not
-        // list<string>. author_id/image_id were already WsParamType::ID-
-        // guaranteed ints and f_min_date/f_max_date already passed through
-        // date_format() (which can't emit SQL metacharacters), so none of
-        // these were live injection risks -- converted for construction-
-        // style consistency, same as the rest of this initiative. The
-        // search term used to rely on Connection::quote() ([SEC-18]) for
-        // escaping; now a real bound parameter instead, one step further
-        // than escaping.
-        $where_clauses = [new SqlCondition('1=1')];
+        // Further SQL-modernization audit, Item 13: author_id/image_id/
+        // f_min_date/f_max_date/search/status collapse into one
+        // CommentApiCriteria, built once and passed unchanged to all 4
+        // CommentService calls below -- each decides for itself which
+        // fields it honors (see CommentApiCriteria's own docblock),
+        // replacing the former list<SqlCondition> $where_clauses (with a
+        // string-keyed 'author_id' entry used purely as a removable
+        // marker) this method used to build once and mutate/reuse.
+        // author_id/image_id were already WsParamType::ID-guaranteed ints
+        // and f_min_date/f_max_date already passed through date_format()
+        // (which can't emit SQL metacharacters), so none of these were
+        // live injection risks -- the search term used to rely on
+        // Connection::quote() ([SEC-18]) for escaping; now a real bound
+        // parameter instead, one step further than escaping.
+        $authorId = (isset($params['author_id']) and $params['author_id'] !== 0) ? $params['author_id'] : null;
+        $imageId = (isset($params['image_id']) and $params['image_id'] !== 0) ? $params['image_id'] : null;
 
-        if (isset($params['author_id']) and $params['author_id'] !== 0) {
-            $where_clauses['author_id'] = new SqlCondition(
-                'author_id = :authorId',
-                [
-                    'authorId' => $params['author_id'],
-                ],
-                [
-                    'authorId' => ParameterType::INTEGER,
-                ],
-            );
-        }
-
-        if (isset($params['image_id']) and $params['image_id'] !== 0) {
-            $where_clauses[] = new SqlCondition(
-                'image_id = :imageId',
-                [
-                    'imageId' => $params['image_id'],
-                ],
-                [
-                    'imageId' => ParameterType::INTEGER,
-                ],
-            );
-        }
-
+        $minDate = null;
         if (! in_array($params['f_min_date'], [null, ''], true)) {
             $min_date = date_create($params['f_min_date']);
             if ($min_date === false) {
                 return new PwgError(401, 'Invalid f_min_date');
             }
-            $min = date_format($min_date, 'Y-m-d 00:00:00');
-            $where_clauses[] = new SqlCondition('date >= :minDate', [
-                'minDate' => $min,
-            ], [
-                'minDate' => ParameterType::STRING,
-            ]);
+            $minDate = date_format($min_date, 'Y-m-d 00:00:00');
         }
 
+        $maxDate = null;
         if (! in_array($params['f_max_date'], [null, ''], true)) {
             $max_date = date_create($params['f_max_date']);
             if ($max_date === false) {
                 return new PwgError(401, 'Invalid f_max_date');
             }
-            $max = date_format($max_date, 'Y-m-d 23:59:59');
-            $where_clauses[] = new SqlCondition('date <= :maxDate', [
-                'maxDate' => $max,
-            ], [
-                'maxDate' => ParameterType::STRING,
-            ]);
+            $maxDate = date_format($max_date, 'Y-m-d 23:59:59');
         }
 
-        // reset all filters during search
-        if (! in_array($params['search'], [null, ''], true)) {
-            $where_clauses = [
-                new SqlCondition('1=1'),
-                new SqlCondition('content LIKE :search', [
-                    'search' => '%' . $params['search'] . '%',
-                ], [
-                    'search' => ParameterType::STRING,
-                ]),
-            ];
-        }
+        $criteria = new CommentApiCriteria(
+            authorId: $authorId,
+            imageId: $imageId,
+            minDate: $minDate,
+            maxDate: $maxDate,
+            search: $params['search'],
+            status: $params['status'],
+        );
 
         // summary. validated is a real tinyint(1) column now (Comment
         // domain Stage 1a) -- numeric literals, not the old
@@ -158,7 +127,7 @@ final class PwgComments
         // coercion would otherwise silently convert 'true' to 0 too,
         // inverting the validated/pending counts (same bug class
         // Category's own commentable/visible retype found).
-        $summary = $this->commentService->getSummaryCounts(array_values($where_clauses));
+        $summary = $this->commentService->getSummaryCounts($criteria);
         if ($summary === null) {
             return new PwgError(500, 'Unable to compute comments summary');
         }
@@ -169,12 +138,10 @@ final class PwgComments
 
         switch ($params['status']) {
             case 'pending':
-                $where_clauses[] = new SqlCondition('validated = 0');
                 $total_comments = is_numeric($summary['pending']) ? (int) $summary['pending'] : 0;
                 break;
 
             case 'validated':
-                $where_clauses[] = new SqlCondition('validated = 1');
                 $total_comments = is_numeric($summary['validated']) ? (int) $summary['validated'] : 0;
                 break;
         }
@@ -184,7 +151,7 @@ final class PwgComments
         $user_fields = $this->currentConfig->userFields();
         $list = [];
         foreach ($this->commentService->getListForAdminWs(
-            array_values($where_clauses),
+            $criteria,
             $user_fields['id'],
             $user_fields['username'],
             $params['per_page'] * $params['page'],
@@ -244,13 +211,14 @@ final class PwgComments
         }
 
         // filters
-        $dates = $this->commentService->getDateRange(array_values($where_clauses));
+        $dates = $this->commentService->getDateRange($criteria);
         if ($dates === null) {
             return new PwgError(500, 'Unable to compute comments date range');
         }
 
-        unset($where_clauses['author_id']);
-        $nb_authors_in = $this->commentService->getAuthorCounts(array_values($where_clauses));
+        // getAuthorCounts() ignores $criteria->authorId internally -- see
+        // CommentRepository::findAuthorCounts()'s own docblock.
+        $nb_authors_in = $this->commentService->getAuthorCounts($criteria);
 
         return [
             'summary' => $summary,

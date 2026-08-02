@@ -110,44 +110,40 @@ final readonly class CommentService
     }
 
     /**
-     * @param  list<SqlCondition>  $whereClauses
      * @return array{all_comments: mixed, validated: mixed, pending: mixed}|null
      */
-    public function getSummaryCounts(array $whereClauses): ?array
+    public function getSummaryCounts(CommentApiCriteria $criteria): ?array
     {
-        return $this->repo->findSummaryCounts($whereClauses);
+        return $this->repo->findSummaryCounts($criteria);
     }
 
     /**
-     * @param  list<SqlCondition>  $whereClauses
      * @return list<array<string, mixed>>
      */
     public function getListForAdminWs(
-        array $whereClauses,
+        CommentApiCriteria $criteria,
         string $userIdColumn,
         string $userUsernameColumn,
         int $offset,
         int $limit
     ): array {
-        return $this->repo->findListForAdminWs($whereClauses, $userIdColumn, $userUsernameColumn, $offset, $limit);
+        return $this->repo->findListForAdminWs($criteria, $userIdColumn, $userUsernameColumn, $offset, $limit);
     }
 
     /**
-     * @param  list<SqlCondition>  $whereClauses
      * @return array{started_at: mixed, ended_at: mixed}|null
      */
-    public function getDateRange(array $whereClauses): ?array
+    public function getDateRange(CommentApiCriteria $criteria): ?array
     {
-        return $this->repo->findDateRange($whereClauses);
+        return $this->repo->findDateRange($criteria);
     }
 
     /**
-     * @param  list<SqlCondition>  $whereClauses
      * @return list<array<string, mixed>>
      */
-    public function getAuthorCounts(array $whereClauses): array
+    public function getAuthorCounts(CommentApiCriteria $criteria): array
     {
-        return $this->repo->findAuthorCounts($whereClauses);
+        return $this->repo->findAuthorCounts($criteria);
     }
 
     public function countAll(): int

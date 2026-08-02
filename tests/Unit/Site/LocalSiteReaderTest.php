@@ -19,6 +19,46 @@ use Piwigo\Site\LocalSiteReader;
  * are already fully covered by that same browser flow and are not
  * exercised again here -- this file never touches the lazy-constructed
  * default MetadataService, so no DB access is needed.
+ *
+ * Mutation-sweep notes (pest --mutate --class='Piwigo\Site\LocalSiteReader'):
+ * three mutants on get_elements() are true equivalent mutants under any
+ * plain-file/plain-directory fixture and were verified as such by live
+ * sed-mutate-and-rerun (apply the exact mutant, confirm this whole file
+ * still passes, then restore the source) rather than by reasoning alone --
+ * none of them are worth chasing with a real test:
+ *  - the `(bool)` cast on `($contents = opendir($path))` inside the
+ *    `if (is_dir($path) && ...)` guard: PHP coerces the condition to bool
+ *    regardless of the explicit cast, so removing it cannot change control
+ *    flow.
+ *  - `closedir($contents)`: its only effect is releasing the directory
+ *    handle: a pure resource-leak with no return value and no effect on
+ *    subsequent opendir()/readdir() calls within a single test run. It is
+ *    deliberately not chased through directory-count/ulimit exhaustion,
+ *    since that would make the test's pass/fail depend on the running
+ *    system's open-file-descriptor limit rather than on this class's
+ *    behavior.
+ *  - `is_dir($path . '/' . $node)` mutated to `is_dir($path . '/')`
+ *    (dropping `$node` from the concatenation): this reduces to `is_dir
+ *    ($path)`, which is already known true here -- it's checked a few
+ *    lines up, at the top of get_elements(), and $path is unchanged for
+ *    the rest of the method. So this clause becomes a tautology. The only
+ *    entries that could ever expose the drop are directory entries that
+ *    are neither a regular file nor a real directory (e.g. a broken
+ *    symlink or a FIFO), and even then get_elements()'s own top-of-method
+ *    is_dir() guard makes the recursive call return [] either way, so the
+ *    returned array is identical regardless. Deliberately not chased with
+ *    a broken-symlink/FIFO fixture, since a FIFO with no reader/writer on
+ *    the other end risks hanging the test process.
+ *
+ * One further mutant is a known, *not* equivalent, gap: `filesize()`'s
+ * `!== false` check inside get_formats() (mutated to `!== true`, which is
+ * always true since filesize() never returns bool(true)). Reaching the
+ * difference requires filesize() to genuinely fail immediately after
+ * is_file() succeeded on the very same path -- normal stat() failure
+ * modes need either a TOCTOU race (delete/replace the file between the
+ * two calls) or a permissions trick, both of which trade a real bug in
+ * favor of a flaky test. Left untested on purpose; not claimed to be
+ * equivalent.
  */
 function lsrRrmdir(string $dir): void
 {
@@ -193,4 +233,108 @@ test('get_formats returns an empty array when the pwg_format directory does not 
     $reader = new LocalSiteReader($this->root);
 
     expect($reader->get_formats($this->root, 'negative'))->toBe([]);
+});
+
+test('get_elements does not look up a representative extension for a picture-extension element even when a matching representative file exists', function (): void {
+    // flip_picture_ext is what get_elements() consults to decide whether
+    // to skip the pwg_representative lookup for a given extension. A
+    // representative-extension file that genuinely matches is planted
+    // here on purpose: if flip_picture_ext were ever the *unflipped*
+    // array (extension values under integer keys, instead of extension
+    // keys), `isset($flip_picture_ext['jpg'])` would wrongly read false,
+    // the lookup would wrongly run, and it would wrongly find this file
+    // -- so a non-null representative_ext here would prove that bug.
+    mkdir($this->root . '/pwg_representative');
+    file_put_contents($this->root . '/family-photo.jpg', 'jpg-bytes');
+    file_put_contents($this->root . '/pwg_representative/family-photo.png', 'png-bytes');
+
+    $reader = new LocalSiteReader($this->root);
+    $elements = $reader->get_elements($this->root);
+
+    expect($elements)->toBe([
+        $this->root . '/family-photo.jpg' => ['representative_ext' => null],
+    ]);
+});
+
+test('get_elements lower-cases the file extension before matching it against the configured extension lists', function (): void {
+    file_put_contents($this->root . '/vacation.JPG', 'jpg-bytes');
+
+    $reader = new LocalSiteReader($this->root);
+    $elements = $reader->get_elements($this->root);
+
+    expect($elements)->toBe([
+        $this->root . '/vacation.JPG' => ['representative_ext' => null],
+    ]);
+});
+
+test('get_elements recurses into ordinary subdirectories -- including names that are a substring or superstring of an excluded name -- while skipping exactly pwg_high, pwg_representative, pwg_format and thumbnail', function (): void {
+    // 'keepme' is a plain subdirectory with no special meaning: it must
+    // be recursed into. 'thumbnails' (superstring of 'thumbnail') and
+    // 'humbnail' (substring of 'thumbnail') must *also* be recursed into
+    // -- only an exact name match excludes a directory. The 4 exactly
+    // named directories must each be skipped: their content must never
+    // appear in the result.
+    mkdir($this->root . '/keepme');
+    file_put_contents($this->root . '/keepme/inner-a.jpg', 'a-bytes');
+
+    mkdir($this->root . '/thumbnails');
+    file_put_contents($this->root . '/thumbnails/inner-b.jpg', 'b-bytes');
+
+    mkdir($this->root . '/humbnail');
+    file_put_contents($this->root . '/humbnail/inner-c.jpg', 'c-bytes');
+
+    mkdir($this->root . '/pwg_high');
+    file_put_contents($this->root . '/pwg_high/hidden-1.jpg', 'h1-bytes');
+
+    mkdir($this->root . '/pwg_representative');
+    file_put_contents($this->root . '/pwg_representative/hidden-2.jpg', 'h2-bytes');
+
+    mkdir($this->root . '/pwg_format');
+    file_put_contents($this->root . '/pwg_format/hidden-3.jpg', 'h3-bytes');
+
+    mkdir($this->root . '/thumbnail');
+    file_put_contents($this->root . '/thumbnail/hidden-4.jpg', 'h4-bytes');
+
+    $reader = new LocalSiteReader($this->root);
+    $elements = $reader->get_elements($this->root);
+
+    expect($elements)->toBe([
+        $this->root . '/humbnail/inner-c.jpg' => ['representative_ext' => null],
+        $this->root . '/keepme/inner-a.jpg' => ['representative_ext' => null],
+        $this->root . '/thumbnails/inner-b.jpg' => ['representative_ext' => null],
+    ]);
+});
+
+test('get_elements returns keys in sorted order regardless of the on-disk readdir order', function (): void {
+    // Filenames deliberately chosen so their natural readdir() order
+    // (filesystem/hash-dependent, effectively unordered for a small
+    // directory on ext4) is very unlikely to already be alphabetical --
+    // the assertion below only passes if ksort() actually ran.
+    file_put_contents($this->root . '/zebra.jpg', 'z-bytes');
+    file_put_contents($this->root . '/mango.jpg', 'm-bytes');
+    file_put_contents($this->root . '/apple.jpg', 'a-bytes');
+
+    $reader = new LocalSiteReader($this->root);
+    $elements = $reader->get_elements($this->root);
+
+    expect(array_keys($elements))->toBe([
+        $this->root . '/apple.jpg',
+        $this->root . '/mango.jpg',
+        $this->root . '/zebra.jpg',
+    ]);
+});
+
+test('get_formats floors a non-multiple-of-1024 file size to kilobytes', function (): void {
+    // 2047 bytes / 1024 = 1.9990234375: floor() -> 1.0, while round()
+    // and ceil() both -> 2.0, and dividing by 1023 instead of 1024
+    // (an off-by-one on the divisor) also -> floor(2047/1023) = 2.0.
+    // This one size therefore distinguishes floor() from all three.
+    mkdir($this->root . '/pwg_format');
+    file_put_contents($this->root . '/pwg_format/negative.tif', str_repeat('a', 2047));
+
+    $reader = new LocalSiteReader($this->root);
+
+    expect($reader->get_formats($this->root, 'negative'))->toBe([
+        'tif' => 1.0,
+    ]);
 });

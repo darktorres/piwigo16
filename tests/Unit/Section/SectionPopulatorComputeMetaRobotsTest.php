@@ -10,9 +10,36 @@ use Piwigo\Section\SectionPopulator;
  * SectionPopulator::computeMetaRobots() -- the noindex/nofollow decision
  * tree extracted from include/section_init.inc.php during its P23 batch 4d
  * port. Pure function, no DB/globals needed.
+ *
+ * A mutation-testing sweep found the method's own
+ * `is_string($page['section'] ?? null) ? $page['section'] : ''` fallback
+ * (used whenever 'section' is absent or non-string) is a confirmed-
+ * equivalent mutant for pest-mutate's EmptyStringToNotEmpty mutator:
+ * $section is only ever read via `===` against the six literals 'list',
+ * 'recent_pics', 'tags', 'recent_cats', 'search' and 'categories'. Real ''
+ * matches none of them, and the mutator's replacement text ('PEST Mutator
+ * was here!') doesn't either, so every branch below the ternary evaluates
+ * identically for '' and for the mutated placeholder -- there is no $page
+ * input that can distinguish them from inside this method. Verified live:
+ * with the mutation hand-applied to source, every test below (including
+ * the two added specifically to exercise the fallback) still passes.
  */
 final class SectionPopulatorComputeMetaRobotsTest extends \PHPUnit\Framework\TestCase
 {
+    public function test_missing_section_key_is_unrestricted(): void
+    {
+        $result = SectionPopulator::computeMetaRobots([], false);
+
+        self::assertSame([], $result);
+    }
+
+    public function test_non_string_section_value_is_unrestricted(): void
+    {
+        $result = SectionPopulator::computeMetaRobots(['section' => 42], false);
+
+        self::assertSame([], $result);
+    }
+
     public function test_chronology_field_forces_noindex_and_nofollow(): void
     {
         $result = SectionPopulator::computeMetaRobots(

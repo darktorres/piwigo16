@@ -44,10 +44,10 @@ final class Inflector_fr implements InflectorInterface
         $this->pluralizers = array_reverse([
             '/$/' => 's',
             '/(bijou|caillou|chou|genou|hibou|joujou|pou|au|eu|eau)$/' => '\1x',
-            '/(bleu|�meu|landau|lieu|pneu|sarrau)$/' => '\1s',
+            '/(bleu|émeu|landau|lieu|pneu|sarrau)$/' => '\1s',
             '/al$/' => 'aux',
             '/ail$/' => 'ails',
-            '/(b|cor|�m|gemm|soupir|trav|vant|vitr)ail$/' => '\1aux',
+            '/(b|cor|ém|gemm|soupir|trav|vant|vitr)ail$/' => '\1aux',
             '/(s|x|z)$/' => '\1',
         ]);
 
@@ -56,7 +56,7 @@ final class Inflector_fr implements InflectorInterface
             '/(bijou|caillou|chou|genou|hibou|joujou|pou|au|eu|eau)x$/' => '\1',
             '/(journ|chev)aux$/' => '\1al',
             '/ails$/' => 'ail',
-            '/(b|cor|�m|gemm|soupir|trav|vant|vitr)aux$/' => '\1ail',
+            '/(b|cor|ém|gemm|soupir|trav|vant|vitr)aux$/' => '\1ail',
         ]);
     }
 

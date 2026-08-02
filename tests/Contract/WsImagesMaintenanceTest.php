@@ -238,7 +238,7 @@ final class WsImagesMaintenanceTest extends ContractTestCase
 
     public function test_checkFiles_reports_equals_for_the_real_file_hash(): void
     {
-        $realPath = dirname(__DIR__, 2) . '/upload/2026/08/01/20260801000000-2e7e64c7.jpg';
+        $realPath = dirname(__DIR__, 2) . '/upload/2026/08/01/20260801000000-2e7e9c93.jpg';
         self::assertFileExists($realPath);
         $realMd5 = md5_file($realPath);
 
@@ -264,7 +264,7 @@ final class WsImagesMaintenanceTest extends ContractTestCase
         // isset($params['high_sum']) sets $ret['file'] = 'equals' up front
         // unconditionally (legacy compat), *then* runs the real comparison
         // keyed 'high' (not 'file') -- both keys end up in the result.
-        $realPath = dirname(__DIR__, 2) . '/upload/2026/08/01/20260801000000-2e7e64c7.jpg';
+        $realPath = dirname(__DIR__, 2) . '/upload/2026/08/01/20260801000000-2e7e9c93.jpg';
         $realMd5 = md5_file($realPath);
 
         $response = $this->callWs('pwg.images.checkFiles', ['image_id' => 1, 'high_sum' => $realMd5]);

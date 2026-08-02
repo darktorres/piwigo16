@@ -8,6 +8,8 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\ORM\EntityRepository;
+use Piwigo\Auth\UserAuthKeyEntity;
+use Piwigo\Category\UserAccessEntity;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\UserId;
@@ -15,6 +17,7 @@ use Piwigo\Common\ValueObject\Username;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Mail\GetWebmasterMailAddress;
+use Piwigo\Group\UserGroupEntity;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\Users\Projection\UserInfo;
 
@@ -78,6 +81,11 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * its own \Piwigo\Config\CurrentConfig::userFields() column-name resolution) -- stays
      * zero-arg, matching the original's own signature exactly, so every
      * real call site retargets as a pure rename.
+     *
+     * Item 14 DQL audit: stays on DBAL -- `$id_field`/`$email_field` are
+     * caller-resolved dynamic column names (\Piwigo\Config\CurrentConfig::
+     * userFields()) against the never-entity-mapped `users` table (see this
+     * class's own docblock); DQL needs a fixed property path.
      */
     #[\Override]
     public function getWebmasterMailAddress(): string
@@ -105,6 +113,11 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
         return \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetWebmasterMailAddress($email))->email;
     }
 
+    /**
+     * Item 14 DQL audit: stays on DBAL -- `$idColumn`/`$usernameColumn` are
+     * caller-supplied dynamic column names against the never-entity-mapped
+     * `users` table.
+     */
     public function findIdByUsername(Username $username, string $idColumn, string $usernameColumn): ?UserId
     {
         $value = $this->getEntityManager()
@@ -120,6 +133,11 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
         return UserId::tryFrom($value);
     }
 
+    /**
+     * Item 14 DQL audit: stays on DBAL -- `$idColumn`/`$emailColumn` are
+     * caller-supplied dynamic column names against the never-entity-mapped
+     * `users` table.
+     */
     public function findIdByEmail(Email $email, string $idColumn, string $emailColumn): ?UserId
     {
         $value = $this->getEntityManager()
@@ -141,6 +159,10 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      *   the account matching $email -- used both to look up an existing
      *   account for the SEC-31 duplicate-registration notice, and for the
      *   password.php-style "find by username or email" flow.
+     *
+     * Item 14 DQL audit: stays on DBAL -- `$idColumn`/`$usernameColumn`/
+     * `$emailColumn` are caller-supplied dynamic column names against the
+     * never-entity-mapped `users` table.
      */
     public function findByUsernameCaseInsensitive(string $username, string $idColumn, string $usernameColumn, string $emailColumn): ?array
     {
@@ -165,6 +187,11 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
         ];
     }
 
+    /**
+     * Item 14 DQL audit: stays on DBAL -- `$usernameColumn` is a
+     * caller-supplied dynamic column name against the never-entity-mapped
+     * `users` table.
+     */
     public function usernameExistsCaseInsensitive(Username $username, string $usernameColumn): bool
     {
         $value = $this->getEntityManager()
@@ -180,6 +207,11 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
         return is_numeric($value) && (int) $value > 0;
     }
 
+    /**
+     * Item 14 DQL audit: stays on DBAL -- `$emailColumn`/`$idColumn` are
+     * caller-supplied dynamic column names against the never-entity-mapped
+     * `users` table.
+     */
     public function emailExists(Email $email, string $emailColumn, string $idColumn, ?UserId $excludeUserId): bool
     {
         $qb = $this->getEntityManager()
@@ -201,6 +233,11 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
         return is_numeric($value) && (int) $value > 0;
     }
 
+    /**
+     * Item 14 DQL audit: stays on DBAL -- `$idColumn`/`$usernameColumn` are
+     * caller-supplied dynamic column names against the never-entity-mapped
+     * `users` table.
+     */
     public function findUsernameById(UserId $userId, string $idColumn, string $usernameColumn): ?Username
     {
         $value = $this->getEntityManager()
@@ -217,6 +254,10 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
     }
 
     /**
+     * Item 14 DQL audit: stays on DBAL -- `$usernameColumn` is a
+     * caller-supplied dynamic column name against the never-entity-mapped
+     * `users` table.
+     *
      * @return list<string>
      */
     public function findAllUsernames(string $usernameColumn): array
@@ -240,6 +281,9 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * names -- Admin\CatPermPageRenderer's own "list every user for the
      * groups/users permission form" lookup.
      *
+     * Item 14 DQL audit: stays on DBAL -- both column names are dynamic
+     * against the never-entity-mapped `users` table.
+     *
      * @return array<int|string, mixed> keyed by id
      */
     public function findAllUsernamesById(string $idColumn, string $usernameColumn): array
@@ -257,6 +301,9 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * @param array<string, mixed> $columns generic pwgfield => real DB
      *   column-name-and-value pairs (username/password/email), matching
      *   the original's \Piwigo\Config\CurrentConfig::userFields() mapping
+     *
+     * Item 14 DQL audit: stays on DBAL -- `$columns` carries dynamic
+     * column names against the never-entity-mapped `users` table.
      */
     public function insertUser(array $columns): UserId
     {
@@ -389,36 +436,50 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * unchanged logic -- pure cascade delete, no business logic (session
      * purge / activity log stay in Piwigo\Users\UserService::deleteUser(),
      * which calls this).
+     *
+     * Item 14 DQL audit: `user_access`/`user_group`/`user_auth_keys` are
+     * each entity-mapped (Category\UserAccessEntity, Group\UserGroupEntity,
+     * Auth\UserAuthKeyEntity) and each entity's own docblock documents it
+     * as having no single owning repository -- other repositories already
+     * query/delete them directly via DQL through their own EntityManager
+     * (e.g. Permission\PermissionRepository already deletes
+     * UserAccessEntity this same way), so those three convert alongside
+     * UserInfoEntity's pre-existing DQL delete below. `user_feed` IS
+     * entity-mapped too (Feed\FeedEntity), but unlike the three above it
+     * has a single documented owner (FeedRepository) with no existing
+     * cross-domain DQL precedent, so it stays on raw DBAL to avoid a new
+     * coupling. `user_mail_notification`/`favorites`/`caddie` have no
+     * entity anywhere in this migration, and the final `users` row delete
+     * needs a caller-supplied dynamic id column (multi-auth) -- both stay
+     * DBAL too.
      */
     public function deleteUser(UserId $userId): void
     {
-
-        $tables = [
-            Tables::userAccess(),
-            Tables::userMailNotification(),
-            Tables::userFeed(),
-            Tables::userGroup(),
-            Tables::favorites(),
-            Tables::caddie(),
-            Tables::userInfos(),
-            Tables::userAuthKeys(),
-        ];
-
         $em = $this->getEntityManager();
         $conn = $em->getConnection();
 
-        foreach ($tables as $table) {
-            if ($table === Tables::userInfos()) {
-                $em->createQueryBuilder()
-                    ->delete(UserInfoEntity::class, 'ui')
-                    ->where('ui.userId = :userId')
-                    ->setParameter('userId', $userId)
-                    ->getQuery()
-                    ->execute();
+        $em->createQueryBuilder()
+            ->delete(UserAccessEntity::class, 'ua')
+            ->where('ua.userId = :userId')
+            ->setParameter('userId', $userId->value)
+            ->getQuery()
+            ->execute();
 
-                continue;
-            }
+        $em->createQueryBuilder()
+            ->delete(UserAuthKeyEntity::class, 'uak')
+            ->where('uak.userId = :userId')
+            ->setParameter('userId', $userId->value)
+            ->getQuery()
+            ->execute();
 
+        $em->createQueryBuilder()
+            ->delete(UserGroupEntity::class, 'ug')
+            ->where('ug.userId = :userId')
+            ->setParameter('userId', $userId)
+            ->getQuery()
+            ->execute();
+
+        foreach ([Tables::userMailNotification(), Tables::userFeed(), Tables::favorites(), Tables::caddie()] as $table) {
             $conn->createQueryBuilder()
                 ->delete($table)
                 ->where('user_id = :userId')
@@ -426,10 +487,19 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
                 ->executeStatement();
         }
 
-        // Bypassed the ORM for every table above except UserInfoEntity's own
-        // DQL delete -- any UserInfoEntity this EntityManager already loaded
-        // for this user would otherwise stay stale (same identity-map
-        // reasoning as GroupRepository::delete()'s own comment).
+        $em->createQueryBuilder()
+            ->delete(UserInfoEntity::class, 'ui')
+            ->where('ui.userId = :userId')
+            ->setParameter('userId', $userId)
+            ->getQuery()
+            ->execute();
+
+        // Bypassed the ORM for user_mail_notification/user_feed/favorites/
+        // caddie/users above -- any entity this EntityManager already
+        // loaded for this user (UserInfoEntity, UserAccessEntity,
+        // UserAuthKeyEntity, UserGroupEntity) would otherwise stay stale
+        // (same identity-map reasoning as GroupRepository::delete()'s own
+        // comment).
         $em->clear();
 
         $userFields = \Piwigo\Config\CurrentConfig::current()->userFields();
@@ -447,6 +517,10 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * compat column-name lookup (the caller passes it, this method never
      * reads `$conf` itself).
      *
+     * Item 14 DQL audit: stays on DBAL -- `$userIdColumn` is a
+     * caller-supplied dynamic column name against the never-entity-mapped
+     * `users` table.
+     *
      * @return list<UserId>
      */
     public function findAllUserIds(string $userIdColumn): array
@@ -461,6 +535,10 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
     }
 
     /**
+     * Item 14 DQL audit: stays on DBAL -- `$table` is itself a
+     * caller-supplied dynamic table name, not resolvable to a single
+     * mapped entity at compile time.
+     *
      * @return list<UserId>
      */
     public function findDistinctUserIdsInTable(string $table): array
@@ -475,6 +553,10 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
     }
 
     /**
+     * Item 14 DQL audit: stays on DBAL -- `$table` is itself a
+     * caller-supplied dynamic table name, not resolvable to a single
+     * mapped entity at compile time.
+     *
      * @param list<UserId> $userIds
      */
     public function deleteUsersFromTable(string $table, array $userIds): void
@@ -504,6 +586,9 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * same dynamic-column-mapping reason `users` stays unmapped by any
      * entity (see this class's own docblock).
      *
+     * Item 14 DQL audit: stays on DBAL -- `$userFields` carries dynamic
+     * column names against the never-entity-mapped `users` table.
+     *
      * @param array<string, string> $userFields
      * @return array<string, mixed>|false
      */
@@ -531,6 +616,9 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * harmless no-op for this COUNT -- see UserService::getUserData()'s own
      * comment) exists for $userId -- the externalAuthentification
      * integrity check gating whether a missing row needs creating.
+     *
+     * Item 14 DQL audit: stays on DBAL -- LEFT JOINs `themes`, which has no
+     * entity anywhere in this migration.
      */
     public function countUserInfosRows(UserId $userId): int
     {
@@ -552,6 +640,10 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
     /**
      * Full `user_infos` row plus the joined theme's display name --
      * UserService::getUserData()'s own merge-with-basic-row step.
+     *
+     * Item 14 DQL audit: stays on DBAL -- LEFT JOINs `themes`, which has no
+     * entity anywhere in this migration, and selects `ui.*` (a whole-row
+     * shape, not a fixed DQL property list).
      *
      * @return array<string, mixed>|false
      */
@@ -579,6 +671,14 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * migrated together with this method's one real caller
      * (UserService::checkUserFavorites()).
      *
+     * Item 14 DQL audit: stays on DBAL -- joins `image_category`, which has
+     * no entity anywhere in this migration (see Category\
+     * CategoryRepository's own class docblock), and applies a caller-built
+     * SqlCondition raw fragment via the shared applyCondition() helper
+     * above (used by this method and findVisibleFavoriteImageIds()/
+     * findVisibleFavoriteImages() below; converting one without the
+     * others would split that shared machinery in two).
+     *
      * @return list<int>
      */
     public function findAuthorizedFavoriteImageIds(UserId $userId, SqlCondition $condition): array
@@ -601,6 +701,9 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * Every favorite image id for $userId, unfiltered -- the other half of
      * UserService::checkUserFavorites()'s comparison.
      *
+     * Item 14 DQL audit: stays on DBAL -- `favorites` has no entity
+     * anywhere in this migration.
+     *
      * @return list<int>
      */
     public function findFavoriteImageIds(UserId $userId): array
@@ -619,6 +722,9 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
     }
 
     /**
+     * Item 14 DQL audit: stays on DBAL -- `favorites` has no entity
+     * anywhere in this migration.
+     *
      * @param list<int> $imageIds
      */
     public function deleteFavoritesForImages(UserId $userId, array $imageIds): void
@@ -648,6 +754,11 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * `(user_id, image_id)` primary key) stays a no-op instead of a
      * duplicate-key error; PictureController's own call keeps the
      * pre-existing plain-INSERT default unchanged.
+     *
+     * Item 14 DQL audit: not a DQL-vs-DBAL question -- single-row write via
+     * BatchWriter (its own `ignore`-flag INSERT IGNORE support has no ORM
+     * persist() equivalent); `favorites` also has no entity anywhere in
+     * this migration regardless.
      */
     public function addFavorite(UserId $userId, int $imageId, bool $ignoreDuplicate = false): void
     {
@@ -667,6 +778,9 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
     /**
      * Whether $imageId is already among $userId's favorites --
      * Controller\PictureController's own favorite-icon toggle state.
+     *
+     * Item 14 DQL audit: stays on DBAL -- `favorites` has no entity
+     * anywhere in this migration.
      */
     public function isFavorite(UserId $userId, int $imageId): bool
     {
@@ -689,6 +803,9 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * Removes every favorite for $userId regardless of image -- Section\
      * SectionPopulator's own "remove_all_from_favorites" action, unlike
      * deleteFavoritesForImages() above which is scoped to a given image set.
+     *
+     * Item 14 DQL audit: stays on DBAL -- `favorites` has no entity
+     * anywhere in this migration.
      */
     public function deleteAllFavorites(UserId $userId): void
     {
@@ -715,6 +832,12 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * (Section\SectionPopulator.php). $orderBySql stays a raw fragment
      * (CurrentConfig::orderBy(), trusted internal config, same "caller
      * composes trusted fragments" contract used throughout this codebase).
+     *
+     * Item 14 DQL audit: stays on DBAL -- `favorites` has no entity
+     * anywhere in this migration, $condition is a caller-built raw SQL
+     * fragment (same shared-family reasoning as
+     * findAuthorizedFavoriteImageIds() above), and $orderBySql concatenates
+     * a caller-composed raw ORDER BY fragment directly.
      *
      * @return list<string|null>
      */
@@ -767,6 +890,13 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * (Ws\PwgUsers::favoritesGetList()). $orderBySql stays a raw fragment,
      * same reasoning as findVisibleFavoriteImageIds() above.
      *
+     * Item 14 DQL audit: stays on DBAL -- `favorites` has no entity
+     * anywhere in this migration, $condition is a caller-built raw SQL
+     * fragment (same shared family as findAuthorizedFavoriteImageIds()/
+     * findVisibleFavoriteImageIds() above), $orderBySql concatenates a
+     * caller-composed raw fragment, and it selects `i.*` (a whole-row
+     * shape, not a fixed DQL property list).
+     *
      * @return list<array<string, mixed>>
      */
     public function findVisibleFavoriteImages(UserId $userId, SqlCondition $condition, string $orderBySql): array
@@ -806,6 +936,12 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * Bulk `user_infos.status` update -- UserService::checkAndSaveUserInfos()'s
      * own status-change branch, applied to every id in $userIds at once.
      *
+     * Item 14 DQL audit: converted to real DQL -- single-table bulk UPDATE,
+     * static column/property. Still bypasses the identity map the same way
+     * the previous raw-DBAL UPDATE did (a DQL bulk UPDATE also skips
+     * persist()/flush()'s change tracking), so this is not a behavior
+     * change either way.
+     *
      * @param list<UserId> $userIds
      */
     public function updateStatusForUsers(array $userIds, string $status): void
@@ -815,14 +951,14 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
         }
 
         $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->update(Tables::userInfos())
-            ->set('status', ':status')
-            ->where('user_id IN (:userIds)')
+            ->update(UserInfoEntity::class, 'ui')
+            ->set('ui.status', ':status')
+            ->where('ui.userId IN (:userIds)')
             ->setParameter('status', $status)
             ->setParameter('userIds', array_map(static fn (UserId $id): int => $id->value, $userIds), ArrayParameterType::INTEGER)
-            ->executeStatement();
+            ->getQuery()
+            ->execute();
     }
 
     /**
@@ -831,6 +967,10 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * whichever the caller actually changed), applied to every id in
      * $userIds at once. $updates stays a raw column => scalar-value map,
      * same dynamic-column reasoning as fetchBasicUserRow() above.
+     *
+     * Item 14 DQL audit: stays on DBAL -- `$updates`'s keys are dynamic
+     * column names (the set() calls in the loop below), which DQL requires
+     * as fixed property paths.
      *
      * @param list<UserId> $userIds
      * @param array<string, mixed> $updates
@@ -864,6 +1004,10 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * $updates/$idColumn stay raw column => value / column-name, same
      * dynamic field-name-mapping reasoning as fetchBasicUserRow() above.
      *
+     * Item 14 DQL audit: not a DQL-vs-DBAL question -- write via
+     * BatchWriter; `$updates`/`$idColumn` are also dynamic column names
+     * against the never-entity-mapped `users` table regardless.
+     *
      * @param array<string, mixed> $updates
      */
     public function updateAccountFields(int $userId, string $idColumn, array $updates): void
@@ -882,20 +1026,23 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * The earliest non-null `registration_date` among every user --
      * Admin\PhotosAddDirectPageRenderer's own "how old is this install"
      * check for the mobile-app promotion banner.
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table, static
+     * column/property, plain string `registrationDate` (no custom-type
+     * hydration concern). setMaxResults(1) reproduces the original's LIMIT
+     * 1.
      */
     public function findEarliestRegistrationDate(): ?string
     {
-        $userInfosTable = Tables::userInfos();
+        $rows = $this->createQueryBuilder('ui')
+            ->select('ui.registrationDate')
+            ->where('ui.registrationDate IS NOT NULL')
+            ->orderBy('ui.userId', 'ASC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getSingleColumnResult();
 
-        $value = $this->getEntityManager()
-            ->getConnection()
-            ->fetchOne(<<<SQL
-                SELECT registration_date
-                FROM {$userInfosTable}
-                WHERE registration_date IS NOT NULL
-                ORDER BY user_id ASC
-                LIMIT 1
-                SQL);
+        $value = $rows[0] ?? null;
 
         return is_string($value) ? $value : null;
     }
@@ -904,28 +1051,24 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * Every distinct `theme` value's user count -- Admin\
      * PiwigoInfosSender's own telemetry theme-usage breakdown.
      *
+     * Item 14 DQL audit: converted to real DQL -- single-table, static
+     * column/property, plain string `theme` (no custom-type hydration
+     * concern).
+     *
      * @return array<string, int> keyed by theme
      */
     public function findThemeUsageCounts(): array
     {
-        $userInfosTable = Tables::userInfos();
-
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT
-                    theme,
-                    COUNT(*) AS theme_counter
-                FROM {$userInfosTable}
-                GROUP BY theme
-                ORDER BY theme
-                SQL);
+        $rows = $this->createQueryBuilder('ui')
+            ->select('ui.theme', 'COUNT(ui.userId) AS themeCounter')
+            ->groupBy('ui.theme')
+            ->orderBy('ui.theme')
+            ->getQuery()
+            ->getResult();
 
         $byTheme = [];
         foreach ($rows as $row) {
-            if (is_string($row['theme'] ?? null) && is_numeric($row['theme_counter'] ?? null)) {
-                $byTheme[$row['theme']] = (int) $row['theme_counter'];
-            }
+            $byTheme[$row['theme']] = $row['themeCounter'];
         }
 
         return $byTheme;
@@ -935,28 +1078,24 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * Every distinct `language` value's user count -- Admin\
      * PiwigoInfosSender's own telemetry language-usage breakdown.
      *
+     * Item 14 DQL audit: converted to real DQL -- single-table, static
+     * column/property, plain string `language` (no custom-type hydration
+     * concern).
+     *
      * @return array<string, int> keyed by language
      */
     public function findLanguageUsageCounts(): array
     {
-        $userInfosTable = Tables::userInfos();
-
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT
-                    language,
-                    COUNT(*) AS language_counter
-                FROM {$userInfosTable}
-                GROUP BY language
-                ORDER BY language
-                SQL);
+        $rows = $this->createQueryBuilder('ui')
+            ->select('ui.language', 'COUNT(ui.userId) AS languageCounter')
+            ->groupBy('ui.language')
+            ->orderBy('ui.language')
+            ->getQuery()
+            ->getResult();
 
         $byLanguage = [];
         foreach ($rows as $row) {
-            if (is_string($row['language'] ?? null) && is_numeric($row['language_counter'] ?? null)) {
-                $byLanguage[$row['language']] = (int) $row['language_counter'];
-            }
+            $byLanguage[$row['language']] = $row['languageCounter'];
         }
 
         return $byLanguage;
@@ -965,6 +1104,10 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
     /**
      * Distinct "YYYY-MM" registration months among every user --
      * Admin\UserListPageRenderer's own registration-date filter dropdown.
+     *
+     * Item 14 DQL audit: stays on DBAL -- `month()`/`year()` are
+     * MySQL-specific SQL functions with no built-in DQL equivalent (and no
+     * custom DQL function is registered for either in this project).
      *
      * @return list<string>
      */
@@ -997,29 +1140,25 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * Per-status user counts, excluding $excludeUserId (the guest user) --
      * Admin\UserListPageRenderer's own status-filter counters.
      *
+     * Item 14 DQL audit: converted to real DQL -- single-table, static
+     * column/property, plain string `status` (no custom-type hydration
+     * concern).
+     *
      * @return array<string, int> keyed by status
      */
     public function findUserCountsByStatus(int $excludeUserId): array
     {
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('status', 'COUNT(*) AS nb_users_of')
-            ->from(Tables::userInfos())
-            ->where('user_id != :excludeUserId')
-            ->groupBy('status')
+        $rows = $this->createQueryBuilder('ui')
+            ->select('ui.status', 'COUNT(ui.userId) AS nbUsersOf')
+            ->where('ui.userId != :excludeUserId')
+            ->groupBy('ui.status')
             ->setParameter('excludeUserId', $excludeUserId, ParameterType::INTEGER)
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->getQuery()
+            ->getResult();
 
         $byStatus = [];
         foreach ($rows as $row) {
-            $status = $row['status'];
-            if (! is_string($status)) {
-                continue;
-            }
-
-            $byStatus[$status] = is_numeric($row['nb_users_of']) ? (int) $row['nb_users_of'] : 0;
+            $byStatus[$row['status']] = $row['nbUsersOf'];
         }
 
         return $byStatus;
@@ -1029,29 +1168,25 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * Per-level user counts, excluding $excludeUserId (the guest user) --
      * Admin\UserListPageRenderer's own level-filter counters.
      *
+     * Item 14 DQL audit: converted to real DQL -- single-table, static
+     * column/property, plain smallint `level` (no custom-type hydration
+     * concern).
+     *
      * @return array<int, int> keyed by level
      */
     public function findUserCountsByLevel(int $excludeUserId): array
     {
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('level', 'COUNT(*) AS nb_users_of')
-            ->from(Tables::userInfos())
-            ->where('user_id != :excludeUserId')
-            ->groupBy('level')
+        $rows = $this->createQueryBuilder('ui')
+            ->select('ui.level', 'COUNT(ui.userId) AS nbUsersOf')
+            ->where('ui.userId != :excludeUserId')
+            ->groupBy('ui.level')
             ->setParameter('excludeUserId', $excludeUserId, ParameterType::INTEGER)
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->getQuery()
+            ->getResult();
 
         $byLevel = [];
         foreach ($rows as $row) {
-            $level = $row['level'];
-            if (! is_numeric($level)) {
-                continue;
-            }
-
-            $byLevel[(int) $level] = is_numeric($row['nb_users_of']) ? (int) $row['nb_users_of'] : 0;
+            $byLevel[$row['level']] = $row['nbUsersOf'];
         }
 
         return $byLevel;
@@ -1168,6 +1303,16 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * $order. FOUND_ROWS() is only fetched when $includeTotalCount.
      * LIMIT/OFFSET are only applied when $limit !== null.
      *
+     * Item 14 DQL audit: stays on DBAL -- joins the never-entity-mapped
+     * `users` table via a caller-supplied dynamic `$idColumn`/
+     * `$usernameColumn`/`$emailColumn`, `$displayColumns` is a dynamic
+     * field-expression => alias map, `$orderBy` concatenates a
+     * caller-validated raw fragment, `SQL_CALC_FOUND_ROWS`/`FOUND_ROWS()`
+     * are MySQL-specific with no DQL equivalent, and the WHERE clause comes
+     * from buildListForWsCondition() above's shared SqlCondition-building
+     * machinery (also used standalone by no other method today, but kept
+     * as raw SQL to stay consistent with that helper's own contract).
+     *
      * @param  array<string, string>  $displayColumns
      * @return PaginatedResult<array<string, mixed>>
      */
@@ -1249,26 +1394,35 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * Admin\AlbumNotificationPageRenderer's own "every non-guest user"
      * pool, further intersected with album-access ids for private albums.
      *
+     * Item 14 DQL audit: converted to real DQL -- single-table, static
+     * column/property. getSingleColumnResult() uses Doctrine's
+     * HYDRATE_SCALAR_COLUMN mode (ScalarColumnHydrator), which does a raw
+     * Statement::fetchFirstColumn() with NO per-field Type conversion at
+     * all -- unlike getArrayResult()/getResult(), it does NOT hydrate
+     * ui.userId into a UserId VO despite the custom `user_id` Doctrine
+     * Type, so this reads the raw numeric-string/int directly.
+     *
      * @return list<string>
      */
     public function findUserIdsExcludingStatus(string $excludedStatus): array
     {
-        $userInfosTable = Tables::userInfos();
+        $rows = $this->createQueryBuilder('ui')
+            ->select('ui.userId')
+            ->where('ui.status != :status')
+            ->setParameter('status', $excludedStatus)
+            ->getQuery()
+            ->getSingleColumnResult();
 
-        return array_map(
-            static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
-            $this->getEntityManager()
-                ->getConnection()
-                ->executeQuery(<<<SQL
-                    SELECT user_id
-                    FROM {$userInfosTable}
-                    WHERE status != :status
-                    SQL
-                    , [
-                        'status' => $excludedStatus,
-                    ])
-                ->fetchFirstColumn()
-        );
+        $ids = [];
+        foreach ($rows as $row) {
+            if (! is_numeric($row)) {
+                continue;
+            }
+
+            $ids[] = (string) (int) $row;
+        }
+
+        return $ids;
     }
 
     /**
@@ -1276,6 +1430,10 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * matching a dynamic $idColumn/$usernameColumn/$emailColumn mapping)
      * for $userIds -- Admin\AlbumNotificationPageRenderer's own
      * "notify these specific users" mail-merge data.
+     *
+     * Item 14 DQL audit: stays on DBAL -- INNER JOINs the never-entity-mapped
+     * `users` table via a caller-supplied dynamic `$idColumn`/
+     * `$usernameColumn`/`$emailColumn`.
      *
      * @param  list<int|string>  $userIds
      * @return list<array<string, mixed>>
@@ -1303,6 +1461,9 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * column mapping -- Admin\BatchManagerUnitPageRenderer's own
      * "who uploaded each of these photos" lookup, same dynamic-column
      * reasoning as fetchBasicUserRow() above.
+     *
+     * Item 14 DQL audit: stays on DBAL -- `$userFields` carries dynamic
+     * column names against the never-entity-mapped `users` table.
      *
      * @param array<string, string> $userFields
      * @param list<string> $userIds
@@ -1332,26 +1493,23 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * registration_date for a single user id -- Admin\InstallationStats::
      * getInstallationDate()'s own "when was the first real (non-guest,
      * non-default) user, id 2, registered" candidate.
+     *
+     * Item 14 DQL audit: converted to real DQL -- a `user_infos` lookup by
+     * its own primary key is exactly `$this->find()`'s contract; `$userId`
+     * stays a plain int in this method's own signature (its one real
+     * caller passes the literal id 2), so an invalid/non-positive value is
+     * turned into "no such row" via UserId::tryFrom() rather than letting
+     * UserId::from()'s own exception change this method's "not found ->
+     * null" behavior.
      */
     public function findRegistrationDateById(int $userId): ?string
     {
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('registration_date')
-            ->from(Tables::userInfos())
-            ->where('user_id = :userId')
-            ->setParameter('userId', $userId, ParameterType::INTEGER)
-            ->executeQuery()
-            ->fetchAllAssociative();
-
-        if ($rows === []) {
+        $id = UserId::tryFrom($userId);
+        if ($id === null) {
             return null;
         }
 
-        $registrationDate = $rows[0]['registration_date'];
-
-        return is_string($registrationDate) ? $registrationDate : null;
+        return $this->find($id)?->registrationDate;
     }
 
     /**
@@ -1359,31 +1517,30 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * InstallationStats::getInstallationDate()'s own fallback candidate
      * when user id 2's own registration_date predates Piwigo's own
      * "origin of times".
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table, static
+     * column/property. MIN() is a standard DQL function, and an unGROUPed
+     * aggregate always returns exactly one row (never NonUniqueResultException
+     * territory), so getSingleScalarResult() is safe here.
      */
     public function findMinRegistrationDateAfter(string $afterDate): ?string
     {
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('MIN(registration_date) AS min_registration_date')
-            ->from(Tables::userInfos())
-            ->where('registration_date > :afterDate')
+        $value = $this->createQueryBuilder('ui')
+            ->select('MIN(ui.registrationDate)')
+            ->where('ui.registrationDate > :afterDate')
             ->setParameter('afterDate', $afterDate)
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->getQuery()
+            ->getSingleScalarResult();
 
-        if ($rows === []) {
-            return null;
-        }
-
-        $minRegistrationDate = $rows[0]['min_registration_date'];
-
-        return is_string($minRegistrationDate) ? $minRegistrationDate : null;
+        return is_string($value) ? $value : null;
     }
 
     /**
      * Total row count of `users` -- Admin\UserActivityPageRenderer's own
      * "nb_users" summary figure.
+     *
+     * Item 14 DQL audit: stays on DBAL -- `users` has no entity anywhere
+     * in this migration (see this class's own docblock).
      */
     public function countAllUsers(): int
     {
@@ -1405,6 +1562,9 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * the right status" check. A user present in `users` but missing its
      * `user_infos` row (the LEFT JOIN's own "no such row" case) still
      * appears here, with a null status.
+     *
+     * Item 14 DQL audit: stays on DBAL -- LEFT JOINs the never-entity-mapped
+     * `users` table via a caller-supplied dynamic `$idColumn`.
      *
      * @param  list<int|string>  $ids
      * @return array<int|string, ?string>
@@ -1444,25 +1604,43 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * Controller\PasswordController::checkPasswordResetKey()'s own reset-
      * key scan.
      *
+     * Item 14 DQL audit: converted to real DQL -- single-table, static
+     * columns/properties. DQL's CURRENT_TIMESTAMP() compiles to MySQL's
+     * NOW() (Doctrine\DBAL\Platforms\MySQLPlatform::getCurrentTimestampSQL()),
+     * same comparison as the original raw `activation_key_expire > NOW()`
+     * against this still-plain-string column. `ui.userId` maps through the
+     * `user_id` custom Doctrine Type, so getArrayResult() hydrates it as a
+     * UserId value object, not a raw scalar -- per the Item 14 gotcha, this
+     * builds ActivationKeyRow directly with an instanceof check instead of
+     * reusing ActivationKeyRow::fromRow() (which does a raw-DBAL-shaped
+     * UserId::tryFrom($row['user_id']) check that would silently treat a
+     * UserId object as invalid and throw).
+     *
      * @return list<\Piwigo\Users\Projection\ActivationKeyRow>
      */
     public function findPendingActivationKeyRows(): array
     {
-        $userInfosTable = Tables::userInfos();
+        $rows = $this->createQueryBuilder('ui')
+            ->select('ui.userId', 'ui.status', 'ui.activationKey')
+            ->where('ui.activationKey IS NOT NULL')
+            ->andWhere('ui.activationKeyExpire > CURRENT_TIMESTAMP()')
+            ->getQuery()
+            ->getArrayResult();
 
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT
-                    user_id,
-                    status,
-                    activation_key
-                FROM {$userInfosTable}
-                WHERE activation_key IS NOT NULL
-                    AND activation_key_expire > NOW()
-                SQL);
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_array($row) || ! $row['userId'] instanceof UserId) {
+                continue;
+            }
 
-        return array_map(\Piwigo\Users\Projection\ActivationKeyRow::fromRow(...), $rows);
+            $result[] = new \Piwigo\Users\Projection\ActivationKeyRow(
+                userId: $row['userId'],
+                status: is_string($row['status']) ? $row['status'] : '',
+                activationKey: is_string($row['activationKey']) ? $row['activationKey'] : '',
+            );
+        }
+
+        return $result;
     }
 
     /**

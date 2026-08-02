@@ -61,28 +61,31 @@ final class ActivityRepository extends EntityRepository
     }
 
     /**
-     * Number of logged actions per user, excluding object='system'. Stays
-     * plain DBAL rather than DQL -- phpstan-doctrine mis-infers a nullable
-     * scalar-selected column used in GROUP BY as always non-null (verified
-     * live: `performed_by` genuinely comes back NULL here for a
-     * non-'system' row whose acting user was later deleted, an
-     * ON-DELETE-SET-NULL FK case distinct from the system-row NULL case
-     * {@see findSystemObjectLogWithUsernames()} documents), which would
-     * make the real `is_numeric()` filter below misreported as dead code.
+     * Number of logged actions per user, excluding object='system'.
+     *
+     * Item 14 DQL audit: converted to DQL -- single table, aggregate DQL
+     * can express. A prior audit pass kept this on plain DBAL, documenting
+     * a phpstan-doctrine false positive that mis-inferred the nullable
+     * `performed_by` (genuinely NULL here for a non-'system' row whose
+     * acting user was later deleted, an ON-DELETE-SET-NULL FK case distinct
+     * from the system-row NULL case {@see findSystemObjectLogWithUsernames()}
+     * documents) as always non-null, which would have made the real
+     * `is_numeric()` filter below misreport as dead code. Re-verified live
+     * against the current toolchain: that false positive no longer
+     * reproduces -- `performed_by` now correctly infers as `int|null`
+     * through the DQL alias, so the `is_numeric()` guard type-checks as a
+     * real (non-dead) narrowing and PHPStan is clean.
      *
      * @return array<int, int> performed_by => count
      */
     public function countByUser(): array
     {
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('performed_by', 'COUNT(*) AS counter')
-            ->from(Tables::activity())
-            ->where("object != 'system'")
-            ->groupBy('performed_by')
-            ->executeQuery()
-            ->fetchAllAssociative();
+        $rows = $this->createQueryBuilder('a')
+            ->select('a.performedBy AS performed_by', 'COUNT(a.activityId) AS counter')
+            ->where("a.object != 'system'")
+            ->groupBy('a.performedBy')
+            ->getQuery()
+            ->getResult();
 
         $counts = [];
         foreach ($rows as $row) {
@@ -90,7 +93,7 @@ final class ActivityRepository extends EntityRepository
                 continue;
             }
 
-            $counts[(int) $row['performed_by']] = is_numeric($row['counter']) ? (int) $row['counter'] : 0;
+            $counts[$row['performed_by']] = $row['counter'];
         }
 
         return $counts;
@@ -168,6 +171,11 @@ final class ActivityRepository extends EntityRepository
      * {@see findSystemObjectLogWithUsernames()}'s own consumer, which does
      * structured `$details['key']` access and needs the real array.
      *
+     * Item 14 DQL audit: stays on DBAL -- joins `users`, which is never
+     * entity-mapped anywhere in this migration (only `user_infos` is, via
+     * UserInfoEntity), and $usernameColumn/$idColumn are runtime column
+     * names DQL can't express as a property path.
+     *
      * @return list<UserActivityLogEntry>
      */
     public function findUserObjectLogWithUsernames(string $usernameColumn, string $idColumn): array
@@ -209,6 +217,11 @@ final class ActivityRepository extends EntityRepository
      * does structured `$details['key']` access and used to `unserialize()`
      * it itself.
      *
+     * Item 14 DQL audit: stays on DBAL -- same `users`-is-unmapped and
+     * runtime-column-name blockers as {@see findUserObjectLogWithUsernames()}
+     * above, plus a MySQL-specific `IF(...)` expression with no DQL
+     * equivalent.
+     *
      * @return list<SystemActivityLogEntry>
      */
     public function findSystemObjectLogWithUsernames(string $usernameColumn, string $idColumn): array
@@ -236,6 +249,10 @@ final class ActivityRepository extends EntityRepository
      * admin-id exclusion list -- spliced directly by the caller), and
      * $limit/$offset were spliced too; now a SqlCondition plus
      * setMaxResults()/setFirstResult().
+     *
+     * Item 14 DQL audit: stays on DBAL -- $condition carries a caller-built
+     * raw SQL fragment (SqlCondition, applied via ->where($condition->sql)),
+     * not a DQL property-path expression.
      *
      * @return list<array<string, mixed>>
      */
@@ -277,6 +294,9 @@ final class ActivityRepository extends EntityRepository
      * Controller\Admin\IntroSubController's own dashboard "recent
      * activity" chart data.
      *
+     * Item 14 DQL audit: stays on DBAL -- `DATE_FORMAT()` is MySQL-specific
+     * with no DQL equivalent.
+     *
      * @return list<array{activity_day: string, object: string, action: string, counter: int}>
      */
     public function findDailyActionCountsSince(string $sinceDate): array
@@ -309,31 +329,42 @@ final class ActivityRepository extends EntityRepository
      * oldest first -- Admin\PiwigoInfosSender's own "version upgrade
      * history" telemetry field.
      *
+     * Item 14 DQL audit: converted to DQL -- single table, fixed WHERE
+     * shape, no unmapped joins or MySQL-specific functions.
+     *
      * @return list<array{action: string, occured_on: ?string, details: ?string}>
      */
     public function findCoreUpdateHistory(): array
     {
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('action', 'occured_on', 'details')
-            ->from(Tables::activity())
-            ->where("object = 'system'")
-            ->andWhere('object_id = :activitySystemCore')
-            ->andWhere("action IN ('update', 'autoupdate')")
-            ->orderBy('activity_id', 'ASC')
+        $rows = $this->createQueryBuilder('a')
+            ->select('a.action', 'a.occuredOn AS occured_on', 'a.details')
+            ->where("a.object = 'system'")
+            ->andWhere('a.objectId = :activitySystemCore')
+            ->andWhere("a.action IN ('update', 'autoupdate')")
+            ->orderBy('a.activityId', 'ASC')
             ->setParameter('activitySystemCore', \Piwigo\Core\ActivitySystem::Core, ParameterType::INTEGER)
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->getQuery()
+            ->getArrayResult();
 
-        return array_map(
-            static fn (array $row): array => [
-                'action' => is_string($row['action']) ? $row['action'] : '',
-                'occured_on' => is_string($row['occured_on'] ?? null) ? $row['occured_on'] : null,
-                'details' => is_string($row['details'] ?? null) ? $row['details'] : null,
-            ],
-            $rows
-        );
+        $history = [];
+        foreach ($rows as $row) {
+            $details = is_array($row) ? ($row['details'] ?? null) : null;
+            // DQL array hydration decodes the `json`-typed `details` column
+            // into a PHP array (unlike the raw-DBAL row this method used to
+            // return, where it was the raw JSON text) -- re-encode
+            // explicitly to keep this method's own `?string` contract;
+            // PiwigoInfosSender's consumer only needs it to round-trip
+            // through json_decode(), not byte-identically.
+            $encodedDetails = is_array($details) ? json_encode($details) : false;
+
+            $history[] = [
+                'action' => is_array($row) && is_string($row['action']) ? $row['action'] : '',
+                'occured_on' => is_array($row) && is_string($row['occured_on'] ?? null) ? $row['occured_on'] : null,
+                'details' => $encodedDetails === false ? null : $encodedDetails,
+            ];
+        }
+
+        return $history;
     }
 
     /**
@@ -342,26 +373,28 @@ final class ActivityRepository extends EntityRepository
      * Unlike findSystemObjectLogWithUsernames() above, this doesn't join
      * `users` (only the counts matter here, not who performed each one).
      *
+     * Item 14 DQL audit: converted to DQL -- single table, no unmapped
+     * joins, `object`/`object_id`/`action` are all non-nullable columns so
+     * no GROUP BY-on-nullable-column false positive applies here (unlike
+     * {@see countByUser()}'s own documented one).
+     *
      * @return list<array{object: string, object_id: int, action: string, counter: int}>
      */
     public function findSystemActionCountsByObjectId(): array
     {
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('object', 'object_id', 'action', 'COUNT(*) AS counter')
-            ->from(Tables::activity())
-            ->where("object = 'system'")
-            ->groupBy('object', 'object_id', 'action')
-            ->executeQuery()
-            ->fetchAllAssociative();
+        $rows = $this->createQueryBuilder('a')
+            ->select('a.object', 'a.objectId AS object_id', 'a.action', 'COUNT(a.activityId) AS counter')
+            ->where("a.object = 'system'")
+            ->groupBy('a.object', 'a.objectId', 'a.action')
+            ->getQuery()
+            ->getResult();
 
         return array_map(
             static fn (array $row): array => [
-                'object' => is_string($row['object']) ? $row['object'] : '',
-                'object_id' => is_numeric($row['object_id']) ? (int) $row['object_id'] : 0,
-                'action' => is_string($row['action']) ? $row['action'] : '',
-                'counter' => is_numeric($row['counter']) ? (int) $row['counter'] : 0,
+                'object' => $row['object'],
+                'object_id' => $row['object_id'],
+                'action' => $row['action'],
+                'counter' => $row['counter'],
             ],
             $rows
         );
@@ -372,26 +405,30 @@ final class ActivityRepository extends EntityRepository
      * Admin\PiwigoInfosSender's own "which apps have been used" telemetry
      * breakdown. Excludes real browser traffic (Mozilla/5.x user agents).
      *
+     * Item 14 DQL audit: converted to DQL -- single table, MIN()/MAX() are
+     * standard DQL functions (unlike the MySQL-specific ones this pass
+     * excludes). `user_agent` is nullable in the entity mapping, but the
+     * `NOT LIKE` WHERE excludes NULL rows at the SQL level (NULL NOT LIKE
+     * '...' is NULL, not TRUE), so the row-mapping below stays defensive
+     * only for phpstan-doctrine's own static type, not a real runtime case.
+     *
      * @return list<array{user_agent: ?string, counter: int, first_encounter: ?string, last_encounter: ?string}>
      */
     public function findUserAgentBreakdown(): array
     {
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('user_agent', 'COUNT(*) AS counter', 'MIN(occured_on) AS first_encounter', 'MAX(occured_on) AS last_encounter')
-            ->from(Tables::activity())
-            ->where("user_agent NOT LIKE 'Mozilla/5%'")
-            ->groupBy('user_agent')
-            ->executeQuery()
-            ->fetchAllAssociative();
+        $rows = $this->createQueryBuilder('a')
+            ->select('a.userAgent AS user_agent', 'COUNT(a.activityId) AS counter', 'MIN(a.occuredOn) AS first_encounter', 'MAX(a.occuredOn) AS last_encounter')
+            ->where("a.userAgent NOT LIKE 'Mozilla/5%'")
+            ->groupBy('a.userAgent')
+            ->getQuery()
+            ->getResult();
 
         return array_map(
             static fn (array $row): array => [
-                'user_agent' => is_string($row['user_agent'] ?? null) ? $row['user_agent'] : null,
-                'counter' => is_numeric($row['counter']) ? (int) $row['counter'] : 0,
-                'first_encounter' => is_string($row['first_encounter'] ?? null) ? $row['first_encounter'] : null,
-                'last_encounter' => is_string($row['last_encounter'] ?? null) ? $row['last_encounter'] : null,
+                'user_agent' => is_string($row['user_agent']) ? $row['user_agent'] : null,
+                'counter' => $row['counter'],
+                'first_encounter' => $row['first_encounter'],
+                'last_encounter' => $row['last_encounter'],
             ],
             $rows
         );

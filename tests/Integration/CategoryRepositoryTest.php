@@ -730,6 +730,38 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         self::assertSame([], array_column($this->repo->findPrivateCategoriesGrantedToGroup(999999), 'id'));
     }
 
+    public function test_find_private_category_ids_granted_to_group_matches_fixture_grants(): void
+    {
+        // Item 14 DQL audit regression test: this method's JOIN...WITH
+        // condition (ga.catId = c.id) compares GroupAccessEntity's own
+        // custom-CategoryId-typed field against CategoryEntity's plain int
+        // id -- confirming here that it still resolves correctly against a
+        // real DB (DQL JOIN...WITH conditions compile to a plain SQL column
+        // comparison regardless of PHP-side Type differences).
+        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'private'");
+
+        self::assertSame([1, 2], $this->repo->findPrivateCategoryIdsGrantedToGroup(1));
+        self::assertSame([1], $this->repo->findPrivateCategoryIdsGrantedToGroup(2));
+        self::assertSame([], $this->repo->findPrivateCategoryIdsGrantedToGroup(999999));
+    }
+
+    public function test_find_categories_authorized_via_groups_for_user_deduplicates_across_memberships(): void
+    {
+        // Fixture user_group: user 3 belongs to groups 1 and 2. group_access:
+        // group 1 grants cat 1 and cat 2, group 2 grants cat 1 -- cat 1 is
+        // reachable via both memberships, so this also confirms the
+        // ->distinct() actually dedupes.
+        $ids = array_column($this->repo->findCategoriesAuthorizedViaGroupsForUser(3), 'cat_id');
+        sort($ids);
+
+        self::assertSame([1, 2], $ids);
+    }
+
+    public function test_find_categories_authorized_via_groups_for_user_returns_empty_for_a_groupless_user(): void
+    {
+        self::assertSame([], $this->repo->findCategoriesAuthorizedViaGroupsForUser(2));
+    }
+
     public function test_find_private_categories_excluding_filters_out_the_given_ids(): void
     {
         $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'private'");
@@ -877,6 +909,18 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         $result = $this->repo->findAdminListForWs($criteria, 'Nested', 10);
 
         self::assertSame([2], array_column($result->rows, 'id'));
+    }
+
+    public function test_find_next_id_returns_one_more_than_the_current_max(): void
+    {
+        // Item 14 DQL audit: findNextId() converted its original
+        // IF(MAX(id)+1 IS NULL, 1, MAX(id)+1) to COALESCE(MAX(id)+1, 1) --
+        // mathematically identical for this 2-argument case, verified here
+        // against the real, non-empty fixture table (the empty-table branch
+        // isn't practically testable against this shared fixture DB).
+        $maxId = $this->conn->fetchOne('SELECT MAX(id) FROM ' . Tables::categories());
+
+        self::assertSame((is_numeric($maxId) ? (int) $maxId : 0) + 1, $this->repo->findNextId());
     }
 
 }

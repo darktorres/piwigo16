@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Site;
 
 use Doctrine\ORM\EntityRepository;
-use Piwigo\Db\Tables;
+use Doctrine\ORM\Query\Expr\Join;
+use Piwigo\Category\CategoryEntity;
+use Piwigo\Image\ImageEntity;
 use Piwigo\Site\Projection\Site;
 
 /**
@@ -69,19 +71,30 @@ final class SiteRepository extends EntityRepository
      */
     public function findCategoryAndImageCountsBySite(): array
     {
+        // Item 14 DQL audit: converted. Neither `categories` nor `images` has
+        // an ORM association between them (storage_category_id is a plain
+        // int column, not a mapped ManyToOne), so the join is expressed as
+        // an arbitrary cross-entity DQL JOIN ... WITH, same pattern already
+        // used by GroupRepository::getAccessibleCategoryIdsForUser(). Neither
+        // CategoryEntity::$siteId nor ImageEntity's id/storageCategoryId use
+        // a custom Doctrine Type, so array-hydrated values are plain scalars,
+        // same as the previous raw-DBAL row shape.
         $rows = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select('c.site_id', 'COUNT(DISTINCT c.id) AS nb_categories', 'COUNT(i.id) AS nb_images')
-            ->from(Tables::categories(), 'c')
-            ->leftJoin('c', Tables::images(), 'i', 'c.id = i.storage_category_id')
-            ->where('c.site_id IS NOT NULL')
-            ->groupBy('c.site_id')
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->select('c.siteId AS site_id', 'COUNT(DISTINCT c.id) AS nb_categories', 'COUNT(i.id) AS nb_images')
+            ->from(CategoryEntity::class, 'c')
+            ->leftJoin(ImageEntity::class, 'i', Join::WITH, 'c.id = i.storageCategoryId')
+            ->where('c.siteId IS NOT NULL')
+            ->groupBy('c.siteId')
+            ->getQuery()
+            ->getArrayResult();
 
         $bySiteId = [];
         foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
             $siteId = $row['site_id'] ?? null;
             $nbCategories = $row['nb_categories'] ?? null;
             $nbImages = $row['nb_images'] ?? null;

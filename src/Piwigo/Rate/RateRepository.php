@@ -6,8 +6,10 @@ namespace Piwigo\Rate;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\Query\Expr\Join;
 use Piwigo\Core\Env;
 use Piwigo\Db\Tables;
+use Piwigo\Image\ImageEntity;
 use Piwigo\Rate\Projection\Rate;
 
 /**
@@ -17,11 +19,18 @@ use Piwigo\Rate\Projection\Rate;
  * dependency, same "thin cross-domain touch" precedent as History/
  * Activity's own single-column reads (see docs/PLAN.md's Epoch E section,
  * P17-P20 domain tiers).
- * Owns `rate` ({@see RateEntity}, composite PK) -- only the
- * single/simple-condition write methods against it go through DQL; every
- * read here (including bulk list/aggregate reads of `rate` itself) stays
- * plain DBAL via $this->getEntityManager()->getConnection(), same "mixed
- * repository" shape Image/Category's own conversions established.
+ * Owns `rate` ({@see RateEntity}, composite PK). Item 14 DQL audit
+ * (SQL-modernization plan): single/simple-condition reads and writes
+ * against `rate`, plus the same-shaped single-column touches of
+ * `images` (Image\ImageEntity, plain scalar columns, no custom Doctrine
+ * Type), now go through real DQL -- including the class-level `images`
+ * LEFT JOIN `rate` in findImageIdsWithStaleRatingScore(), which has no
+ * declared association between the two entities. What stays plain DBAL
+ * via $this->getEntityManager()->getConnection() is documented per
+ * method with an "Item 14 DQL audit: stays on DBAL -- <reason>" note:
+ * runtime-resolved multi-auth column names, joins against `users` /
+ * `image_category` (neither ever entity-mapped in this migration), a
+ * caller-supplied raw ORDER BY fragment, or ROUND() (no DQL equivalent).
  *
  * @extends EntityRepository<RateEntity>
  */
@@ -32,19 +41,16 @@ final class RateRepository extends EntityRepository
      */
     public function findElementIdsForUserAndAnonymousId(int $userId, string $anonymousId): array
     {
-        $ids = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('element_id')
-            ->from(Tables::rate())
-            ->where('user_id = :userId')
-            ->andWhere('anonymous_id = :anonymousId')
+        $ids = $this->createQueryBuilder('r')
+            ->select('r.elementId')
+            ->where('r.userId = :userId')
+            ->andWhere('r.anonymousId = :anonymousId')
             ->setParameter('userId', $userId)
             ->setParameter('anonymousId', $anonymousId)
-            ->executeQuery()
-            ->fetchFirstColumn();
+            ->getQuery()
+            ->getSingleColumnResult();
 
-        return self::toIntList($ids);
+        return array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $ids));
     }
 
     /**
@@ -138,24 +144,21 @@ final class RateRepository extends EntityRepository
      */
     public function findRateSummaries(): array
     {
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('element_id', 'COUNT(rate) AS rcount', 'SUM(rate) AS rsum')
-            ->from(Tables::rate())
-            ->groupBy('element_id')
-            ->executeQuery()
-            ->fetchAllAssociative();
+        $rows = $this->createQueryBuilder('r')
+            ->select('r.elementId AS elementId', 'COUNT(r.rate) AS rcount', 'SUM(r.rate) AS rsum')
+            ->groupBy('r.elementId')
+            ->getQuery()
+            ->getArrayResult();
 
         $byItem = [];
         foreach ($rows as $row) {
-            if (! is_numeric($row['element_id'])) {
+            if (! is_array($row) || ! is_numeric($row['elementId'] ?? null)) {
                 continue;
             }
 
-            $byItem[(int) $row['element_id']] = [
-                'rcount' => is_numeric($row['rcount']) ? (int) $row['rcount'] : 0,
-                'rsum' => is_numeric($row['rsum']) ? (float) $row['rsum'] : 0.0,
+            $byItem[(int) $row['elementId']] = [
+                'rcount' => is_numeric($row['rcount'] ?? null) ? (int) $row['rcount'] : 0,
+                'rsum' => is_numeric($row['rsum'] ?? null) ? (float) $row['rsum'] : 0.0,
             ];
         }
 
@@ -172,19 +175,21 @@ final class RateRepository extends EntityRepository
         }
 
         $em = $this->getEntityManager();
-        $conn = $em->getConnection();
         foreach ($updates as $update) {
-            $conn->createQueryBuilder()
-                ->update(Tables::images())
-                ->set('rating_score', ':score')
-                ->where('id = :id')
+            $em->createQueryBuilder()
+                ->update(ImageEntity::class, 'i')
+                ->set('i.ratingScore', ':score')
+                ->where('i.id = :id')
                 ->setParameter('score', $update['ratingScore'])
                 ->setParameter('id', $update['id'])
-                ->executeStatement();
+                ->getQuery()
+                ->execute();
         }
 
-        // Bypasses the ORM -- images is Image\ImageEntity's own table
-        // (this repository doesn't own it, just touches this one column).
+        // images is Image\ImageEntity's own table (this repository
+        // doesn't own it, just touches this one column) -- clear() keeps
+        // the ORM identity map from holding a stale ImageEntity if one
+        // happens to already be managed elsewhere in this request.
         $em->clear();
     }
 
@@ -196,18 +201,21 @@ final class RateRepository extends EntityRepository
      */
     public function findImageIdsWithStaleRatingScore(): array
     {
+        // Item 14 DQL audit note: `images` (ImageEntity) and `rate`
+        // (RateEntity) are both entity-mapped but have no declared
+        // association between them, so this is a class-level (WITH-clause)
+        // arbitrary DQL join rather than an association-path join.
         $ids = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
             ->select('i.id')
-            ->from(Tables::images(), 'i')
-            ->leftJoin('i', Tables::rate(), 'r', 'i.id = r.element_id')
-            ->where('r.element_id IS NULL')
-            ->andWhere('i.rating_score IS NOT NULL')
-            ->executeQuery()
-            ->fetchFirstColumn();
+            ->from(ImageEntity::class, 'i')
+            ->leftJoin(RateEntity::class, 'r', Join::WITH, 'i.id = r.elementId')
+            ->where('r.elementId IS NULL')
+            ->andWhere('i.ratingScore IS NOT NULL')
+            ->getQuery()
+            ->getSingleColumnResult();
 
-        return self::toIntList($ids);
+        return array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $ids));
     }
 
     /**
@@ -220,17 +228,23 @@ final class RateRepository extends EntityRepository
         }
 
         $em = $this->getEntityManager();
-        $em->getConnection()
-            ->createQueryBuilder()
-            ->update(Tables::images())
-            ->set('rating_score', 'NULL')
-            ->where('id IN (:ids)')
+        $em->createQueryBuilder()
+            ->update(ImageEntity::class, 'i')
+            ->set('i.ratingScore', 'NULL')
+            ->where('i.id IN (:ids)')
             ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
-            ->executeStatement();
+            ->getQuery()
+            ->execute();
         $em->clear();
     }
 
     /**
+     * Item 14 DQL audit: stays on DBAL -- $idColumn/$usernameColumn are
+     * runtime-resolved column names (Piwigo's multi-auth
+     * CurrentConfig::userFields() remapping), not fixed DQL property paths;
+     * `users` is also deliberately not entity-mapped (see UserInfoEntity's
+     * own docblock).
+     *
      * @return array<int, string>
      */
     public function findUsernamesById(string $idColumn, string $usernameColumn): array
@@ -256,6 +270,10 @@ final class RateRepository extends EntityRepository
     /**
      * Admin "Rating" report: distinct rated elements, optionally scoped to
      * one user (included or excluded) and/or a set of categories.
+     *
+     * Item 14 DQL audit: stays on DBAL -- the $categoryIds branch joins
+     * `image_category`, which is never entity-mapped anywhere in this
+     * migration (same precedent as CategoryRepository's own docblock).
      *
      * @param list<int> $categoryIds
      */
@@ -288,6 +306,11 @@ final class RateRepository extends EntityRepository
     /**
      * Same report as countRatedElements(), one row per rated image with its
      * rate aggregates.
+     *
+     * Item 14 DQL audit: stays on DBAL -- takes a caller-supplied raw
+     * "column DIRECTION" ORDER BY fragment (DQL requires a fixed property
+     * path, not a runtime string), and its $categoryIds branch joins
+     * `image_category`, which is never entity-mapped in this migration.
      *
      * @param list<int> $categoryIds
      * @param string $orderBySql a raw "column DIRECTION" SQL fragment, always
@@ -353,31 +376,38 @@ final class RateRepository extends EntityRepository
      */
     public function findRateRowsForElement(int $elementId): array
     {
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('*')
-            ->from(Tables::rate())
-            ->where('element_id = :elementId')
-            ->orderBy('date', 'DESC')
+        // Item 14 DQL audit note: converted to real DQL. Deliberately maps
+        // the hydrated RateEntity objects to Rate by hand instead of
+        // reusing Rate::fromRow() -- fromRow()'s own contract expects a
+        // raw-DBAL-shaped row keyed by column name (element_id, user_id,
+        // ...), whereas DQL entity/array hydration keys by PHP property
+        // name (elementId, userId, ...); feeding one into the other would
+        // silently default every field instead of surfacing a mismatch.
+        $entities = $this->createQueryBuilder('r')
+            ->where('r.elementId = :elementId')
+            ->orderBy('r.date', 'DESC')
             ->setParameter('elementId', $elementId)
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->getQuery()
+            ->getResult();
 
-        return array_map(Rate::fromRow(...), $rows);
+        return array_map(
+            static fn (RateEntity $r): Rate => new Rate(
+                userId: $r->userId,
+                elementId: $r->elementId,
+                anonymousId: $r->anonymousId,
+                rate: $r->rate,
+                date: $r->date,
+            ),
+            $entities
+        );
     }
 
     public function countAllRates(): int
     {
-        $value = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from(Tables::rate())
-            ->executeQuery()
-            ->fetchOne();
-
-        return is_numeric($value) ? (int) $value : 0;
+        return (int) $this->createQueryBuilder('r')
+            ->select('COUNT(r.elementId)')
+            ->getQuery()
+            ->getSingleScalarResult();
     }
 
     /**
@@ -391,24 +421,27 @@ final class RateRepository extends EntityRepository
      */
     public function deleteByOptionalConditions(int $userId, ?string $anonymousId, ?int $elementId): int
     {
-        $qb = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->delete(Tables::rate())
-            ->where('user_id = :userId')
+        $em = $this->getEntityManager();
+        $qb = $em->createQueryBuilder()
+            ->delete(RateEntity::class, 'r')
+            ->where('r.userId = :userId')
             ->setParameter('userId', $userId);
 
         if ($anonymousId !== null) {
-            $qb->andWhere('anonymous_id = :anonymousId')
+            $qb->andWhere('r.anonymousId = :anonymousId')
                 ->setParameter('anonymousId', $anonymousId);
         }
 
         if ($elementId !== null) {
-            $qb->andWhere('element_id = :elementId')
+            $qb->andWhere('r.elementId = :elementId')
                 ->setParameter('elementId', $elementId);
         }
 
-        return (int) $qb->executeStatement();
+        $deleted = $qb->getQuery()
+            ->execute();
+        $em->clear();
+
+        return $deleted;
     }
 
     /**
@@ -417,23 +450,23 @@ final class RateRepository extends EntityRepository
      */
     public function countRatesForElement(int $elementId): int
     {
-        $value = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from(Tables::rate())
-            ->where('element_id = :elementId')
+        return (int) $this->createQueryBuilder('r')
+            ->select('COUNT(r.elementId)')
+            ->where('r.elementId = :elementId')
             ->setParameter('elementId', $elementId)
-            ->executeQuery()
-            ->fetchOne();
-
-        return is_numeric($value) ? (int) $value : 0;
+            ->getQuery()
+            ->getSingleScalarResult();
     }
 
     /**
      * Admin "Rating by user" report: every rater, joined to their account
      * status (used by the page to decide whether to render them as an
      * anonymous rater).
+     *
+     * Item 14 DQL audit: stays on DBAL -- $idColumn/$usernameColumn are
+     * runtime-resolved multi-auth column names, not fixed DQL property
+     * paths, and it joins `users`, which is deliberately not entity-mapped
+     * (see UserInfoEntity's own docblock).
      *
      * @return list<array{id: int, name: string, status: string}>
      */
@@ -469,16 +502,24 @@ final class RateRepository extends EntityRepository
      */
     public function findAllRatesOrderedByDateDesc(): array
     {
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('*')
-            ->from(Tables::rate())
-            ->orderBy('date', 'DESC')
-            ->executeQuery()
-            ->fetchAllAssociative();
+        // Item 14 DQL audit note: same reasoning as findRateRowsForElement()
+        // above -- maps RateEntity to Rate by hand rather than reusing
+        // Rate::fromRow(), which expects DBAL's column-name-keyed row shape.
+        $entities = $this->createQueryBuilder('r')
+            ->orderBy('r.date', 'DESC')
+            ->getQuery()
+            ->getResult();
 
-        return array_map(Rate::fromRow(...), $rows);
+        return array_map(
+            static fn (RateEntity $r): Rate => new Rate(
+                userId: $r->userId,
+                elementId: $r->elementId,
+                anonymousId: $r->anonymousId,
+                rate: $r->rate,
+                date: $r->date,
+            ),
+            $entities
+        );
     }
 
     /**
@@ -497,26 +538,38 @@ final class RateRepository extends EntityRepository
         }
 
         $rows = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select('id', 'name', 'file', 'path', 'representative_ext', 'level')
-            ->from(Tables::images())
-            ->where('id IN (:ids)')
+            ->select('i.id AS id', 'i.name AS name', 'i.file AS file', 'i.path AS path', 'i.representativeExt AS representativeExt', 'i.level AS level')
+            ->from(ImageEntity::class, 'i')
+            ->where('i.id IN (:ids)')
             ->setParameter('ids', $imageIds, ArrayParameterType::INTEGER)
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->getQuery()
+            ->getArrayResult();
 
-        return array_map(
-            static fn (array $row): array => [
-                'id' => is_numeric($row['id']) ? (int) $row['id'] : 0,
-                'name' => is_string($row['name']) ? $row['name'] : null,
-                'file' => is_string($row['file']) ? $row['file'] : '',
-                'path' => is_string($row['path']) ? $row['path'] : '',
-                'representative_ext' => is_string($row['representative_ext']) ? $row['representative_ext'] : null,
-                'level' => is_numeric($row['level']) ? (int) $row['level'] : 0,
-            ],
+        return array_values(array_map(
+            static function (mixed $row): array {
+                if (! is_array($row)) {
+                    return [
+                        'id' => 0,
+                        'name' => null,
+                        'file' => '',
+                        'path' => '',
+                        'representative_ext' => null,
+                        'level' => 0,
+                    ];
+                }
+
+                return [
+                    'id' => is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0,
+                    'name' => is_string($row['name'] ?? null) ? $row['name'] : null,
+                    'file' => is_string($row['file'] ?? null) ? $row['file'] : '',
+                    'path' => is_string($row['path'] ?? null) ? $row['path'] : '',
+                    'representative_ext' => is_string($row['representativeExt'] ?? null) ? $row['representativeExt'] : null,
+                    'level' => is_numeric($row['level'] ?? null) ? (int) $row['level'] : 0,
+                ];
+            },
             $rows
-        );
+        ));
     }
 
     /**
@@ -524,19 +577,16 @@ final class RateRepository extends EntityRepository
      */
     public function findAverageRatePerElement(): array
     {
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('element_id', 'AVG(rate) AS avg_rate')
-            ->from(Tables::rate())
-            ->groupBy('element_id')
-            ->executeQuery()
-            ->fetchAllAssociative();
+        $rows = $this->createQueryBuilder('r')
+            ->select('r.elementId AS elementId', 'AVG(r.rate) AS avgRate')
+            ->groupBy('r.elementId')
+            ->getQuery()
+            ->getArrayResult();
 
         $result = [];
         foreach ($rows as $row) {
-            if (is_numeric($row['element_id'])) {
-                $result[(int) $row['element_id']] = is_numeric($row['avg_rate']) ? (float) $row['avg_rate'] : 0.0;
+            if (is_array($row) && is_numeric($row['elementId'] ?? null)) {
+                $result[(int) $row['elementId']] = is_numeric($row['avgRate'] ?? null) ? (float) $row['avgRate'] : 0.0;
             }
         }
 
@@ -549,33 +599,23 @@ final class RateRepository extends EntityRepository
     public function findTopRatedImageIds(int $limit): array
     {
         $ids = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select('id')
-            ->from(Tables::images())
-            ->orderBy('rating_score', 'DESC')
+            ->select('i.id')
+            ->from(ImageEntity::class, 'i')
+            ->orderBy('i.ratingScore', 'DESC')
             ->setMaxResults($limit)
-            ->executeQuery()
-            ->fetchFirstColumn();
+            ->getQuery()
+            ->getSingleColumnResult();
 
-        return self::toIntList($ids);
-    }
-
-    /**
-     * @param list<mixed> $values
-     * @return list<int>
-     */
-    private static function toIntList(array $values): array
-    {
-        return array_map(
-            static fn (mixed $value): int => is_numeric($value) ? (int) $value : 0,
-            $values
-        );
+        return array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $ids));
     }
 
     /**
      * Picture page's rating-summary widget: count + average rate for a
      * single image.
+     *
+     * Item 14 DQL audit: stays on DBAL -- ROUND() has no DQL equivalent
+     * (it is not in Doctrine's built-in DQL function set).
      *
      * @return array{count: int, average: ?float}
      */
@@ -609,26 +649,34 @@ final class RateRepository extends EntityRepository
      * applied for non-classic (guest) users -- matches the original's own
      * conditional `AND anonymous_id = ...` clause, always additionally
      * filtered by $userId regardless.
+     *
+     * Item 14 DQL audit note: converted to real DQL. `rate`'s PK is
+     * (element_id, user_id, anonymous_id), so without the optional
+     * anonymous_id filter more than one row can match (element_id, user_id)
+     * alone -- ->getOneOrNullResult() would throw NonUniqueResultException
+     * in that case, so this pairs the query with ->setMaxResults(1) instead,
+     * matching the original DBAL fetchOne()'s "just give me any one
+     * matching row" semantics.
      */
     public function findUserRate(int $elementId, int $userId, ?string $anonymousId): ?int
     {
-        $qb = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('rate')
-            ->from(Tables::rate())
-            ->where('element_id = :elementId')
-            ->andWhere('user_id = :userId')
+        $qb = $this->createQueryBuilder('r')
+            ->select('r.rate')
+            ->where('r.elementId = :elementId')
+            ->andWhere('r.userId = :userId')
             ->setParameter('elementId', $elementId)
             ->setParameter('userId', $userId);
 
         if ($anonymousId !== null) {
-            $qb->andWhere('anonymous_id = :anonymousId')
+            $qb->andWhere('r.anonymousId = :anonymousId')
                 ->setParameter('anonymousId', $anonymousId);
         }
 
-        $value = $qb->executeQuery()
-            ->fetchOne();
+        $values = $qb->setMaxResults(1)
+            ->getQuery()
+            ->getSingleColumnResult();
+
+        $value = $values[0] ?? null;
 
         return is_numeric($value) ? (int) $value : null;
     }

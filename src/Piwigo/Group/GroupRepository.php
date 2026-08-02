@@ -65,18 +65,33 @@ final class GroupRepository extends EntityRepository
      */
     public function findIdsByNameLike(string $namePattern): array
     {
-        return array_map(
-            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-            $this->getEntityManager()
-                ->getConnection()
-                ->createQueryBuilder()
-                ->select('id')
-                ->from(\Piwigo\Db\Tables::groups())
-                ->where('name LIKE :namePattern')
-                ->setParameter('namePattern', $namePattern)
-                ->executeQuery()
-                ->fetchFirstColumn()
-        );
+        $ids = $this->createQueryBuilder('g')
+            ->select('g.id')
+            ->where('g.name LIKE :namePattern')
+            ->setParameter('namePattern', $namePattern)
+            ->getQuery()
+            ->getSingleColumnResult();
+
+        // Item 14 DQL audit correction: getSingleColumnResult() uses
+        // Doctrine's HYDRATE_SCALAR_COLUMN mode (ScalarColumnHydrator),
+        // which does a raw Statement::fetchFirstColumn() with NO per-field
+        // Type conversion at all -- unlike getArrayResult() (HYDRATE_ARRAY),
+        // it does NOT hydrate g.id into a GroupId VO despite the custom
+        // `group_id` Doctrine Type, so this reads the raw int/numeric-string
+        // directly rather than an instanceof GroupId check (which always
+        // silently produced [] here, a real bug caught by the consolidated
+        // Item 14 verification pass, not by gotcha #1 -- that gotcha is
+        // specific to getArrayResult()/getResult()-shaped hydration).
+        $result = [];
+        foreach ($ids as $id) {
+            if (! is_numeric($id)) {
+                continue;
+            }
+
+            $result[] = (int) $id;
+        }
+
+        return $result;
     }
 
     /**
@@ -112,6 +127,10 @@ final class GroupRepository extends EntityRepository
      * unwraps to raw ints before binding regardless of the IN-clause rule
      * above being about DQL specifically -- this was already true before
      * this VO integration, unchanged behavior, just a typed input now.
+     *
+     * Item 14 DQL audit: stays on DBAL -- $order is a genuinely dynamic
+     * runtime ORDER BY fragment; DQL's orderBy() takes a fixed field path,
+     * not a caller-supplied string.
      *
      * @param list<GroupId> $groupIds when non-empty, restricts to these ids
      * @return list<array{id: int, name: string, is_default: bool, lastmodified: string, nb_users: int}>
@@ -292,6 +311,11 @@ final class GroupRepository extends EntityRepository
      * DBAL via the entity manager's own connection, so $groupId unwraps to
      * a raw int before binding regardless of the custom Type.
      *
+     * Item 14 DQL audit: stays on DBAL -- `users` has no mapped Entity in
+     * this codebase, and $usernameColumn/$idColumn are runtime-resolved
+     * column names (CurrentConfig::userFields()), not fixed DQL property
+     * paths.
+     *
      * @return list<string>
      */
     public function findMemberUsernames(GroupId $groupId, string $usernameColumn, string $idColumn): array
@@ -322,6 +346,9 @@ final class GroupRepository extends EntityRepository
      * equivalent for INSERT IGNORE; raw SQL + bindings on the entity
      * manager's own connection is safe here (no string concatenation of
      * values) -- plain DBAL, so both ids unwrap to raw ints.
+     *
+     * Item 14 DQL audit: not a DQL-vs-DBAL question -- ORM persist()/flush()
+     * writes one row per call, not a bulk INSERT IGNORE statement.
      *
      * @param list<UserId> $userIds
      */
@@ -556,15 +583,35 @@ final class GroupRepository extends EntityRepository
             return [];
         }
 
-        return $this->getEntityManager()
-            ->getConnection()
+        $rows = $this->getEntityManager()
             ->createQueryBuilder()
-            ->select('user_id', 'group_id')
-            ->from(\Piwigo\Db\Tables::userGroup())
-            ->where('group_id IN (:groupIds)')
+            ->select('ug.userId', 'ug.groupId')
+            ->from(UserGroupEntity::class, 'ug')
+            ->where('ug.groupId IN (:groupIds)')
             ->setParameter('groupIds', $groupIds, ArrayParameterType::INTEGER)
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->getQuery()
+            ->getResult();
+
+        // ug.userId/ug.groupId are custom-typed columns (user_id/group_id) --
+        // a partial-field DQL select hydrates them into real UserId/GroupId
+        // VOs, not raw ints, so this extracts ->value explicitly with an
+        // instanceof check rather than an is_numeric()-style raw-DBAL row
+        // check (Item 14 DQL audit gotcha #1). Callers (CatPermPageRenderer,
+        // AlbumNotificationPageRenderer) expect raw scalars under the
+        // 'user_id'/'group_id' keys, unchanged from the DBAL shape.
+        $result = [];
+        foreach ($rows as $row) {
+            if (! $row['userId'] instanceof UserId || ! $row['groupId'] instanceof GroupId) {
+                continue;
+            }
+
+            $result[] = [
+                'user_id' => $row['userId']->value,
+                'group_id' => $row['groupId']->value,
+            ];
+        }
+
+        return $result;
     }
 
     /**
@@ -583,15 +630,34 @@ final class GroupRepository extends EntityRepository
             return [];
         }
 
-        return $this->getEntityManager()
-            ->getConnection()
+        $rows = $this->getEntityManager()
             ->createQueryBuilder()
-            ->select('user_id', 'group_id')
-            ->from(\Piwigo\Db\Tables::userGroup())
-            ->where('user_id IN (:userIds)')
+            ->select('ug.userId', 'ug.groupId')
+            ->from(UserGroupEntity::class, 'ug')
+            ->where('ug.userId IN (:userIds)')
             ->setParameter('userIds', $userIds, ArrayParameterType::INTEGER)
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->getQuery()
+            ->getResult();
+
+        // Same VO-hydration caveat as findMembersByGroupIds() above (Item 14
+        // DQL audit gotcha #1) -- ug.userId/ug.groupId hydrate into real
+        // UserId/GroupId VOs under a partial-field DQL select, so this
+        // extracts ->value explicitly with an instanceof check. Callers
+        // (Ws\PwgUsers::getList()) expect raw scalars under the
+        // 'user_id'/'group_id' keys, unchanged from the DBAL shape.
+        $result = [];
+        foreach ($rows as $row) {
+            if (! $row['userId'] instanceof UserId || ! $row['groupId'] instanceof GroupId) {
+                continue;
+            }
+
+            $result[] = [
+                'user_id' => $row['userId']->value,
+                'group_id' => $row['groupId']->value,
+            ];
+        }
+
+        return $result;
     }
 
     /**
@@ -600,13 +666,10 @@ final class GroupRepository extends EntityRepository
      */
     public function countAll(): int
     {
-        $value = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from(\Piwigo\Db\Tables::groups())
-            ->executeQuery()
-            ->fetchOne();
+        $value = $this->createQueryBuilder('g')
+            ->select('COUNT(g.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
 
         return is_numeric($value) ? (int) $value : 0;
     }
@@ -625,24 +688,28 @@ final class GroupRepository extends EntityRepository
             return [];
         }
 
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('id', 'name')
-            ->from(\Piwigo\Db\Tables::groups())
-            ->where('id IN (:groupIds)')
-            ->orderBy('name', 'ASC')
+        $rows = $this->createQueryBuilder('g')
+            ->select('g.id', 'g.name')
+            ->where('g.id IN (:groupIds)')
+            ->orderBy('g.name', 'ASC')
             ->setParameter('groupIds', $groupIds, ArrayParameterType::INTEGER)
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->getQuery()
+            ->getResult();
 
+        // g.id is the custom `group_id` Doctrine Type -- a partial-field DQL
+        // select hydrates it into a real GroupId VO, not a raw int, so this
+        // uses an instanceof check rather than the previous is_numeric()
+        // raw-DBAL row check (Item 14 DQL audit gotcha #1). g.name is a
+        // plain `string` column -- phpstan-doctrine's own DQL metadata
+        // already narrows $row['name'] to string, so no is_string() guard
+        // is needed for it (unlike the id field above).
         $byId = [];
         foreach ($rows as $row) {
-            if (! is_numeric($row['id']) || ! is_string($row['name'])) {
+            if (! $row['id'] instanceof GroupId) {
                 continue;
             }
 
-            $byId[(int) $row['id']] = $row['name'];
+            $byId[$row['id']->value] = $row['name'];
         }
 
         return $byId;

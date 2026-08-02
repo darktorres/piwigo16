@@ -57,6 +57,10 @@ final class ConfigRepository extends EntityRepository
      * UploadService::saveUploadFormConfig()'s own "apply every validated
      * upload-setting field at once" step.
      *
+     * Item 14 DQL audit: stays on DBAL -- bulk multi-row UPDATE via
+     * BatchWriter, not a DQL-vs-DBAL question at all (ORM persist()/flush()
+     * writes one row per entity, not a bulk statement).
+     *
      * @param list<array{param: string, value: mixed}> $updates
      */
     public function massUpdateValues(array $updates): void
@@ -101,23 +105,26 @@ final class ConfigRepository extends EntityRepository
      */
     public function findParamsAndValuesLike(string $likePattern): array
     {
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('param', 'value')
-            ->from(\Piwigo\Db\Tables::config())
-            ->where('param LIKE :likePattern')
+        $rows = $this->createQueryBuilder('c')
+            ->select('c.param', 'c.value')
+            ->where('c.param LIKE :likePattern')
             ->setParameter('likePattern', $likePattern)
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->getQuery()
+            ->getArrayResult();
 
-        return array_map(
-            static fn (array $row): array => [
-                'param' => is_string($row['param']) ? $row['param'] : '',
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $result[] = [
+                'param' => is_string($row['param'] ?? null) ? $row['param'] : '',
                 'value' => is_string($row['value'] ?? null) ? $row['value'] : null,
-            ],
-            $rows
-        );
+            ];
+        }
+
+        return $result;
     }
 
     /**
@@ -143,6 +150,11 @@ final class ConfigRepository extends EntityRepository
      * Core\UniqueExecLock, wrote its plain `$exec_id . '-' . time()`
      * token straight through, which passed silently when `value` was
      * still a plain `text` column but is genuinely invalid JSON now.
+     *
+     * Item 14 DQL audit: stays on DBAL -- MySQL-specific `INSERT IGNORE`
+     * syntax has no DQL equivalent (DQL has no INSERT support at all),
+     * and this method's whole reason to exist is the atomic
+     * insert-if-absent guarantee that only bypassing the ORM provides.
      */
     public function insertIgnoreRawValue(string $param, string $value): void
     {
@@ -190,15 +202,17 @@ final class ConfigRepository extends EntityRepository
      */
     public function findRawValue(string $param): string|false
     {
-        $value = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('value')
-            ->from(\Piwigo\Db\Tables::config())
-            ->where('param = :param')
+        // `param` is the entity's own @ORM\Id, so at most one row can ever
+        // match -- getOneOrNullResult() can't hit its NonUniqueResultException
+        // here. Scalar hydration (not entity hydration) means this still
+        // issues a fresh query rather than consulting the identity map, so
+        // the "always re-reads the DB" contract above holds.
+        $value = $this->createQueryBuilder('c')
+            ->select('c.value')
+            ->where('c.param = :param')
             ->setParameter('param', $param)
-            ->executeQuery()
-            ->fetchOne();
+            ->getQuery()
+            ->getOneOrNullResult(\Doctrine\ORM\AbstractQuery::HYDRATE_SINGLE_SCALAR);
 
         if (! is_string($value)) {
             return false;
@@ -211,15 +225,12 @@ final class ConfigRepository extends EntityRepository
 
     public function countByParam(string $param): int
     {
-        $value = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from(\Piwigo\Db\Tables::config())
-            ->where('param = :param')
+        $value = $this->createQueryBuilder('c')
+            ->select('COUNT(c.param)')
+            ->where('c.param = :param')
             ->setParameter('param', $param)
-            ->executeQuery()
-            ->fetchOne();
+            ->getQuery()
+            ->getSingleScalarResult();
 
         return is_numeric($value) ? (int) $value : 0;
     }

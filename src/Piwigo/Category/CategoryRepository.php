@@ -12,10 +12,12 @@ use Piwigo\Category\Projection\Category;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\GroupId;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupAccessEntity;
+use Piwigo\Group\UserGroupEntity;
 use Piwigo\Permission\SqlCondition;
 
 /**
@@ -66,6 +68,11 @@ final class CategoryRepository extends EntityRepository
     /**
      * @param  list<int>  $ids
      * @return array<int, array{id: int, name: string, permalink: ?string}> keyed by id
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table, static WHERE,
+     * no join DQL can't express; id/name/permalink are plain types (no
+     * custom Doctrine Type on CategoryEntity), so array hydration returns
+     * ordinary scalars.
      */
     public function findNamesByIds(array $ids): array
     {
@@ -73,20 +80,24 @@ final class CategoryRepository extends EntityRepository
             return [];
         }
 
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('id', 'name', 'permalink')
-            ->from(Tables::categories())
-            ->where('id IN (:ids)')
+        $rows = $this->createQueryBuilder('c')
+            ->select('c.id', 'c.name', 'c.permalink')
+            ->where('c.id IN (:ids)')
             ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->getQuery()
+            ->getArrayResult();
 
         $byId = [];
         foreach ($rows as $row) {
-            /** @var array{id: int, name: string, permalink: ?string} $row */
-            $byId[$row['id']] = $row;
+            if (! is_array($row) || ! is_numeric($row['id'] ?? null)) {
+                continue;
+            }
+
+            $byId[(int) $row['id']] = [
+                'id' => (int) $row['id'],
+                'name' => is_string($row['name'] ?? null) ? $row['name'] : '',
+                'permalink' => is_string($row['permalink'] ?? null) ? $row['permalink'] : null,
+            ];
         }
 
         return $byId;
@@ -97,21 +108,28 @@ final class CategoryRepository extends EntityRepository
      * getCatDisplayNameCache()'s own breadcrumb-rendering cache warm-up.
      *
      * @return array<int, array{id: int, name: string, permalink: ?string}> keyed by id
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table, unconditional
+     * select of plain-typed columns.
      */
     public function findAllIdNamePermalink(): array
     {
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('id', 'name', 'permalink')
-            ->from(Tables::categories())
-            ->executeQuery()
-            ->fetchAllAssociative();
+        $rows = $this->createQueryBuilder('c')
+            ->select('c.id', 'c.name', 'c.permalink')
+            ->getQuery()
+            ->getArrayResult();
 
         $byId = [];
         foreach ($rows as $row) {
-            /** @var array{id: int, name: string, permalink: ?string} $row */
-            $byId[$row['id']] = $row;
+            if (! is_array($row) || ! is_numeric($row['id'] ?? null)) {
+                continue;
+            }
+
+            $byId[(int) $row['id']] = [
+                'id' => (int) $row['id'],
+                'name' => is_string($row['name'] ?? null) ? $row['name'] : '',
+                'permalink' => is_string($row['permalink'] ?? null) ? $row['permalink'] : null,
+            ];
         }
 
         return $byId;
@@ -124,22 +142,26 @@ final class CategoryRepository extends EntityRepository
      * (every row, cache warm-up), this is a single-id lookup.
      *
      * @return ?array{id: int, name: string, permalink: ?string}
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table, id is the PK
+     * so at most one row can match (no NonUniqueResultException risk, no
+     * setMaxResults() needed); id/name/permalink are plain types.
      */
     public function findIdNamePermalinkById(int $id): ?array
     {
-        $row = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('id', 'name', 'permalink')
-            ->from(Tables::categories())
-            ->where('id = :id')
+        $rows = $this->createQueryBuilder('c')
+            ->select('c.id', 'c.name', 'c.permalink')
+            ->where('c.id = :id')
             ->setParameter('id', $id)
-            ->executeQuery()
-            ->fetchAssociative();
+            ->getQuery()
+            ->getArrayResult();
 
-        if ($row === false) {
+        if ($rows === []) {
             return null;
         }
+
+        /** @var array{id: mixed, name: mixed, permalink: mixed} $row */
+        $row = $rows[0];
 
         return [
             'id' => is_numeric($row['id']) ? (int) $row['id'] : 0,
@@ -157,6 +179,9 @@ final class CategoryRepository extends EntityRepository
      *
      * @param  list<int>  $ids
      * @return list<int>
+     *
+     * Item 14 DQL audit: stays on DBAL -- `REGEXP` is MySQL/MariaDB-specific
+     * with no DQL equivalent.
      */
     public function findSubcategoryIds(array $ids): array
     {
@@ -206,6 +231,10 @@ final class CategoryRepository extends EntityRepository
      *
      * @param  list<string>  $permalinks
      * @return array<string, array{id: int, permalink: string, is_old: int}>
+     *
+     * Item 14 DQL audit: stays on DBAL -- `old_permalinks` has no mapped
+     * Entity anywhere in this migration, and the two queries are unioned in
+     * PHP.
      */
     public function findPermalinkMatches(array $permalinks): array
     {
@@ -248,6 +277,9 @@ final class CategoryRepository extends EntityRepository
      * is never entity-mapped in this migration (this is its only write
      * method; every other touch is a read), so there's no identity map
      * to clear here.
+     *
+     * Item 14 DQL audit: stays on DBAL -- see above (`old_permalinks`
+     * unmapped, plus a self-referential `hit = hit + 1` SET expression).
      */
     public function touchOldPermalinkHit(string $permalink, int $catId): void
     {
@@ -265,6 +297,11 @@ final class CategoryRepository extends EntityRepository
             ->executeStatement();
     }
 
+    /**
+     * Item 14 DQL audit: stays on DBAL -- joins `image_category`, never
+     * entity-mapped anywhere in this migration, plus a caller-built
+     * SqlCondition fragment and MySQL-specific `RAND()`.
+     */
     public function findRandomImageId(int $catId, string $uppercats, bool $recursive, SqlCondition $condition): ?int
     {
         $scope = $recursive
@@ -308,6 +345,12 @@ final class CategoryRepository extends EntityRepository
      * CategoryService/CategoryTreeCache themselves never read it.
      *
      * @return list<array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int}>
+     *
+     * Item 14 DQL audit: stays on DBAL -- joins `image_category`/`images`
+     * (never entity-mapped on the Category side, and `images` is owned by
+     * the Image domain), a dynamic `SqlDialect::getRecentPeriodExpression()`
+     * fragment inside the second JOIN's own ON condition, and a raw
+     * `$forbiddenCategoriesCsv` NOT IN splice.
      */
     public function findComputedCategoriesRollup(int $level, ?int $filterDays, string $forbiddenCategoriesCsv): array
     {
@@ -362,6 +405,10 @@ final class CategoryRepository extends EntityRepository
     /**
      * @param  list<int>  $catIds
      * @return list<int>
+     *
+     * Item 14 DQL audit: stays on DBAL -- joins `images`/`image_category`
+     * (Image domain/unmapped), a caller-built SqlCondition fragment, and a
+     * raw `CurrentConfig::orderBy()` ORDER BY fragment.
      */
     public function findImageIdsForCategories(
         array $catIds,
@@ -411,6 +458,10 @@ final class CategoryRepository extends EntityRepository
      * @param  list<int>  $itemIds
      * @param  list<int>  $excludedCatIds
      * @return array<int, array{id: int, uppercats: string, counter: int}> keyed by id
+     *
+     * Item 14 DQL audit: stays on DBAL -- joins `image_category`, never
+     * entity-mapped anywhere in this migration, plus a caller-built
+     * SqlCondition fragment.
      */
     public function findCommonCategories(array $itemIds, ?int $max, array $excludedCatIds, SqlCondition $condition): array
     {
@@ -458,6 +509,9 @@ final class CategoryRepository extends EntityRepository
      *
      * @param  list<int>  $ids
      * @return list<array{id: int, name: string, permalink: ?string, id_uppercat: ?int, uppercats: string, global_rank: ?string}>
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table, static WHERE,
+     * all 6 columns plain-typed.
      */
     public function findCategoriesByIds(array $ids): array
     {
@@ -465,27 +519,30 @@ final class CategoryRepository extends EntityRepository
             return [];
         }
 
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('id', 'name', 'permalink', 'id_uppercat', 'uppercats', 'global_rank')
-            ->from(Tables::categories())
-            ->where('id IN (:ids)')
+        $rows = $this->createQueryBuilder('c')
+            ->select('c.id', 'c.name', 'c.permalink', 'c.idUppercat AS id_uppercat', 'c.uppercats', 'c.globalRank AS global_rank')
+            ->where('c.id IN (:ids)')
             ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->getQuery()
+            ->getArrayResult();
 
-        return array_map(
-            static fn (array $row): array => [
-                'id' => is_numeric($row['id']) ? (int) $row['id'] : 0,
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $result[] = [
+                'id' => is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0,
                 'name' => is_string($row['name'] ?? null) ? $row['name'] : '',
                 'permalink' => is_string($row['permalink'] ?? null) ? $row['permalink'] : null,
                 'id_uppercat' => is_numeric($row['id_uppercat'] ?? null) ? (int) $row['id_uppercat'] : null,
                 'uppercats' => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
                 'global_rank' => is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
-            ],
-            $rows
-        );
+            ];
+        }
+
+        return $result;
     }
 
     /**
@@ -499,6 +556,11 @@ final class CategoryRepository extends EntityRepository
      *
      * @param  list<int>  $ids
      * @return list<Category>
+     *
+     * Item 14 DQL audit: converted to real DQL -- fetches the full entity
+     * (object hydration, same as {@see findById()}) instead of a `SELECT *`
+     * DBAL row, and maps through {@see Category::fromEntity()} instead of
+     * {@see Category::fromRow()}.
      */
     public function findFullCategoriesByIds(array $ids): array
     {
@@ -506,33 +568,36 @@ final class CategoryRepository extends EntityRepository
             return [];
         }
 
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('*')
-            ->from(Tables::categories())
-            ->where('id IN (:ids)')
+        $entities = $this->createQueryBuilder('c')
+            ->where('c.id IN (:ids)')
             ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->getQuery()
+            ->getResult();
 
-        return array_map(Category::fromRow(...), $rows);
+        return array_map(Category::fromEntity(...), $entities);
     }
 
     /**
      * @return list<int>
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table, static
+     * WHERE; id is plain-typed, so getSingleColumnResult() returns ordinary
+     * ints.
      */
     public function findCategoryIdsBySite(int $siteId): array
     {
-        return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->createQueryBuilder()
-            ->select('id')
-            ->from(Tables::categories())
-            ->where('site_id = :siteId')
+        return array_values(array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->createQueryBuilder('c')
+            ->select('c.id')
+            ->where('c.siteId = :siteId')
             ->setParameter('siteId', $siteId)
-            ->executeQuery()
-            ->fetchFirstColumn());
+            ->getQuery()
+            ->getSingleColumnResult()));
     }
 
+    /**
+     * Item 14 DQL audit: stays on DBAL -- `sites` has no mapped Entity
+     * anywhere in this migration.
+     */
     public function deleteSiteRow(int $id): void
     {
         $this->getEntityManager()
@@ -547,6 +612,10 @@ final class CategoryRepository extends EntityRepository
     /**
      * @param  list<int>  $ids
      * @return list<int>
+     *
+     * Item 14 DQL audit: stays on DBAL -- queries `images`, a table owned
+     * by the Image domain with no association declared on CategoryEntity
+     * to it.
      */
     public function findStorageLinkedImageIds(array $ids): array
     {
@@ -577,6 +646,12 @@ final class CategoryRepository extends EntityRepository
      * distinct from quick-search's separate token-based category lookup).
      *
      * @return list<int>
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table. The
+     * dynamic name/comment OR is built as a plain string (both branches
+     * share the same `:pattern` bind), not a loop-built `Expr\Orx`
+     * composite -- sidesteps gotcha #2's phpstan-doctrine false positive
+     * on dynamically-built composites.
      */
     public function findIdsByNameOrCommentLike(string $pattern, bool $matchName, bool $matchComment): array
     {
@@ -584,25 +659,21 @@ final class CategoryRepository extends EntityRepository
             return [];
         }
 
-        $qb = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('id')
-            ->from(Tables::categories());
-
         $clauses = [];
         if ($matchName) {
-            $clauses[] = $qb->expr()->like('name', ':pattern');
+            $clauses[] = 'c.name LIKE :pattern';
         }
 
         if ($matchComment) {
-            $clauses[] = $qb->expr()->like('comment', ':pattern');
+            $clauses[] = 'c.comment LIKE :pattern';
         }
 
-        $ids = $qb->where($qb->expr()->or(...$clauses))
+        $ids = $this->createQueryBuilder('c')
+            ->select('c.id')
+            ->where(implode(' OR ', $clauses))
             ->setParameter('pattern', $pattern)
-            ->executeQuery()
-            ->fetchFirstColumn();
+            ->getQuery()
+            ->getSingleColumnResult();
 
         return array_values(array_map(intval(...), array_filter($ids, is_numeric(...))));
     }
@@ -610,6 +681,9 @@ final class CategoryRepository extends EntityRepository
     /**
      * @param  list<int>  $ids
      * @return list<int>
+     *
+     * Item 14 DQL audit: stays on DBAL -- `image_category` has no mapped
+     * Entity anywhere in this migration.
      */
     public function findDistinctLinkedImageIds(array $ids): array
     {
@@ -640,6 +714,9 @@ final class CategoryRepository extends EntityRepository
      * @param  list<int>  $imageIds
      * @param  list<int>  $excludeIds
      * @return list<int>
+     *
+     * Item 14 DQL audit: stays on DBAL -- `image_category` has no mapped
+     * Entity anywhere in this migration.
      */
     public function findNonOrphanImageIds(array $imageIds, array $excludeIds): array
     {
@@ -677,6 +754,9 @@ final class CategoryRepository extends EntityRepository
      *
      * @param  list<int>  $excludeIds
      * @return list<int>
+     *
+     * Item 14 DQL audit: stays on DBAL -- `image_category` has no mapped
+     * Entity anywhere in this migration.
      */
     public function findImageIdsOutsideCategories(array $excludeIds): array
     {
@@ -701,6 +781,9 @@ final class CategoryRepository extends EntityRepository
 
     /**
      * @param  list<int>  $ids
+     *
+     * Item 14 DQL audit: stays on DBAL -- `image_category` has no mapped
+     * Entity anywhere in this migration.
      */
     public function deleteImageCategoryLinksForCategories(array $ids): void
     {
@@ -841,6 +924,9 @@ final class CategoryRepository extends EntityRepository
 
     /**
      * @param  list<int>  $ids
+     *
+     * Item 14 DQL audit: stays on DBAL -- `old_permalinks` has no mapped
+     * Entity anywhere in this migration.
      */
     public function deleteOldPermalinksForCategories(array $ids): void
     {
@@ -873,6 +959,10 @@ final class CategoryRepository extends EntityRepository
      * @param array<string, mixed> $params
      * @param array<string, ArrayParameterType|ParameterType> $types
      * @return list<int>
+     *
+     * Item 14 DQL audit: stays on DBAL -- $whereCatsSql is a caller-supplied
+     * raw SQL fragment, and this joins `images` (Image domain, no
+     * association from CategoryEntity).
      */
     public function findWrongRepresentativeCategoryIds(string $whereCatsSql, array $params = [], array $types = []): array
     {
@@ -918,6 +1008,10 @@ final class CategoryRepository extends EntityRepository
      * @param array<string, mixed> $params
      * @param array<string, ArrayParameterType|ParameterType> $types
      * @return list<int>
+     *
+     * Item 14 DQL audit: stays on DBAL -- $whereCatsSql is a caller-supplied
+     * raw SQL fragment, and this joins `image_category` (never
+     * entity-mapped anywhere in this migration).
      */
     public function findCategoriesNeedingRandomRepresentative(string $whereCatsSql, array $params = [], array $types = []): array
     {
@@ -936,6 +1030,9 @@ final class CategoryRepository extends EntityRepository
 
     /**
      * @return list<string>
+     *
+     * Item 14 DQL audit: stays on DBAL -- $table/$column are dynamic
+     * runtime table/column names, not a fixed DQL property path.
      */
     public function findOrphanedColumnValues(string $table, string $column): array
     {
@@ -952,6 +1049,10 @@ final class CategoryRepository extends EntityRepository
 
     /**
      * @param  list<int|string>  $values
+     *
+     * Item 14 DQL audit: stays on DBAL -- $table/$column are dynamic
+     * runtime table/column names, same reason as
+     * {@see findOrphanedColumnValues()} above.
      */
     public function deleteRowsWhereColumnIn(string $table, string $column, array $values): void
     {
@@ -977,29 +1078,36 @@ final class CategoryRepository extends EntityRepository
      * that method's own rank-change detection.
      *
      * @return list<array{id: int, id_uppercat: ?int, uppercats: string, rank: ?int, global_rank: ?string}>
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table, unconditional
+     * select/order, all columns plain-typed.
      */
     public function findCategoriesForRankUpdate(): array
     {
-        $categoriesTable = Tables::categories();
+        $rows = $this->createQueryBuilder('c')
+            ->select('c.id', 'c.idUppercat AS id_uppercat', 'c.uppercats', 'c.rank', 'c.globalRank AS global_rank')
+            ->orderBy('c.idUppercat')
+            ->addOrderBy('c.rank')
+            ->addOrderBy('c.name')
+            ->getQuery()
+            ->getArrayResult();
 
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->executeQuery(<<<SQL
-                SELECT id, id_uppercat, uppercats, `rank`, global_rank
-                FROM {$categoriesTable}
-                ORDER BY id_uppercat, `rank`, name
-                SQL)->fetchAllAssociative();
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
 
-        return array_map(
-            static fn (array $row): array => [
-                'id' => is_numeric($row['id']) ? (int) $row['id'] : 0,
+            $result[] = [
+                'id' => is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0,
                 'id_uppercat' => is_numeric($row['id_uppercat'] ?? null) ? (int) $row['id_uppercat'] : null,
-                'uppercats' => is_string($row['uppercats']) ? $row['uppercats'] : '',
+                'uppercats' => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
                 'rank' => is_numeric($row['rank'] ?? null) ? (int) $row['rank'] : null,
                 'global_rank' => is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
-            ],
-            $rows
-        );
+            ];
+        }
+
+        return $result;
     }
 
     /**
@@ -1104,6 +1212,9 @@ final class CategoryRepository extends EntityRepository
     /**
      * @param  list<int>  $ids
      * @return array<int, array{id: int, status: string}> keyed by id
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table, static
+     * WHERE, both columns plain-typed.
      */
     public function findStatusByIds(array $ids): array
     {
@@ -1111,22 +1222,12 @@ final class CategoryRepository extends EntityRepository
             return [];
         }
 
-        $categoriesTable = Tables::categories();
-
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->executeQuery(<<<SQL
-                SELECT
-                    id,
-                    status
-                FROM {$categoriesTable}
-                WHERE id IN (:ids)
-                SQL
-                , [
-                    'ids' => $ids,
-                ], [
-                    'ids' => ArrayParameterType::INTEGER,
-                ])->fetchAllAssociative();
+        $rows = $this->createQueryBuilder('c')
+            ->select('c.id', 'c.status')
+            ->where('c.id IN (:ids)')
+            ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
+            ->getQuery()
+            ->getArrayResult();
 
         $byId = [];
         foreach ($rows as $row) {
@@ -1180,6 +1281,10 @@ final class CategoryRepository extends EntityRepository
      *   caller (-1 is substituted when no reference access exists, matching
      *   the original's own `$ref_access[] = -1;` sentinel)
      * @param  list<int>  $catIds
+     *
+     * Item 14 DQL audit: stays on DBAL -- $table/$field are dynamic runtime
+     * table/column names, same reason as {@see findOrphanedColumnValues()}
+     * above.
      */
     public function deleteInconsistentAccess(string $table, string $field, array $keepIds, array $catIds): void
     {
@@ -1204,6 +1309,10 @@ final class CategoryRepository extends EntityRepository
     /**
      * @param  array<int>  $ids  real callers don't guarantee a list
      * @return list<string>
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table, static
+     * WHERE; uppercats is a plain string column, so getSingleColumnResult()
+     * returns ordinary strings.
      */
     public function findUppercatsColumns(array $ids): array
     {
@@ -1211,18 +1320,12 @@ final class CategoryRepository extends EntityRepository
             return [];
         }
 
-        $categoriesTable = Tables::categories();
-
-        return array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $this->getEntityManager()->getConnection()->executeQuery(<<<SQL
-            SELECT uppercats
-            FROM {$categoriesTable}
-            WHERE id IN (:ids)
-            SQL
-            , [
-                'ids' => array_values($ids),
-            ], [
-                'ids' => ArrayParameterType::INTEGER,
-            ])->fetchFirstColumn());
+        return array_values(array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $this->createQueryBuilder('c')
+            ->select('c.uppercats')
+            ->where('c.id IN (:ids)')
+            ->setParameter('ids', array_values($ids), ArrayParameterType::INTEGER)
+            ->getQuery()
+            ->getSingleColumnResult()));
     }
 
     /**
@@ -1232,6 +1335,11 @@ final class CategoryRepository extends EntityRepository
      *
      * @param  list<int>  $ids
      * @return array<int, string> keyed by id
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table, static
+     * WHERE; id/uppercats are both plain-typed. `fetchAllKeyValue()` has no
+     * direct DQL equivalent, so the id=>uppercats map is built from
+     * `getArrayResult()`'s own rows instead.
      */
     public function findUppercatsById(array $ids): array
     {
@@ -1239,23 +1347,21 @@ final class CategoryRepository extends EntityRepository
             return [];
         }
 
-        $categoriesTable = Tables::categories();
-
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->executeQuery(<<<SQL
-                SELECT id, uppercats
-                FROM {$categoriesTable}
-                WHERE id IN (:ids)
-                SQL
-                , [
-                    'ids' => $ids,
-                ], [
-                    'ids' => ArrayParameterType::INTEGER,
-                ])->fetchAllKeyValue();
+        $rows = $this->createQueryBuilder('c')
+            ->select('c.id', 'c.uppercats')
+            ->where('c.id IN (:ids)')
+            ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
+            ->getQuery()
+            ->getArrayResult();
 
         $byId = [];
-        foreach ($rows as $id => $uppercats) {
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $id = $row['id'] ?? null;
+            $uppercats = $row['uppercats'] ?? null;
             if (is_numeric($id)) {
                 $byId[(int) $id] = is_scalar($uppercats) ? (string) $uppercats : '';
             }
@@ -1280,6 +1386,10 @@ final class CategoryRepository extends EntityRepository
      *
      * @param  list<int>  $categoryIds
      * @return array<int, mixed> keyed by category_id
+     *
+     * Item 14 DQL audit: stays on DBAL -- $field/$minmax are dynamic
+     * runtime column/function names, and this joins `image_category`/
+     * `images` (unmapped/Image domain).
      */
     public function findRefDatesByCategoryIds(array $categoryIds, string $field, string $minmax): array
     {
@@ -1345,6 +1455,10 @@ final class CategoryRepository extends EntityRepository
         return array_unique($uppercats);
     }
 
+    /**
+     * Item 14 DQL audit: stays on DBAL -- `image_category` has no mapped
+     * Entity anywhere in this migration, plus MySQL-specific `RAND()`.
+     */
     public function findRandomImageIdInCategory(int $categoryId): ?int
     {
         $imageCategoryTable = Tables::imageCategory();
@@ -1381,21 +1495,42 @@ final class CategoryRepository extends EntityRepository
      *   contribute a fulldir segment) -- id keys are numeric strings (PHP
      *   coerces them to int automatically when used as real array keys, but
      *   fetchAllKeyValue()'s own generic type doesn't track that statically)
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table, static
+     * WHERE; id/dir are both plain-typed. Builds the id=>dir map from
+     * `getArrayResult()`'s own rows (no direct `fetchAllKeyValue()`
+     * equivalent).
      */
     public function findCategoryDirsById(): array
     {
-        $categoriesTable = Tables::categories();
+        $rows = $this->createQueryBuilder('c')
+            ->select('c.id', 'c.dir')
+            ->where('c.dir IS NOT NULL')
+            ->getQuery()
+            ->getArrayResult();
 
-        return array_filter($this->getEntityManager()->getConnection()->executeQuery(<<<SQL
-            SELECT id, dir
-            FROM {$categoriesTable}
-            WHERE dir IS NOT NULL
-            SQL)->fetchAllKeyValue(), is_string(...));
+        $byId = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $id = $row['id'] ?? null;
+            $dir = $row['dir'] ?? null;
+            if (is_numeric($id) && is_string($dir)) {
+                $byId[(int) $id] = $dir;
+            }
+        }
+
+        return $byId;
     }
 
     /**
      * @return array<int|string, string> id => galleries_url, same
      *   numeric-string key caveat as {@see findCategoryDirsById()}
+     *
+     * Item 14 DQL audit: stays on DBAL -- `sites` has no mapped Entity
+     * anywhere in this migration.
      */
     public function findSiteGalleriesUrls(): array
     {
@@ -1410,6 +1545,9 @@ final class CategoryRepository extends EntityRepository
     /**
      * @param  array<int>  $ids  real callers don't guarantee a list
      * @return list<array{id: int, uppercats: string, site_id: ?int}>
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table, static
+     * WHERE, all 3 columns plain-typed.
      */
     public function findCategoriesForFulldirs(array $ids): array
     {
@@ -1417,34 +1555,35 @@ final class CategoryRepository extends EntityRepository
             return [];
         }
 
-        $categoriesTable = Tables::categories();
+        $rows = $this->createQueryBuilder('c')
+            ->select('c.id', 'c.uppercats', 'c.siteId AS site_id')
+            ->where('c.dir IS NOT NULL')
+            ->andWhere('c.id IN (:ids)')
+            ->setParameter('ids', array_values($ids), ArrayParameterType::INTEGER)
+            ->getQuery()
+            ->getArrayResult();
 
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->executeQuery(<<<SQL
-                SELECT id, uppercats, site_id
-                FROM {$categoriesTable}
-                WHERE dir IS NOT NULL
-                    AND id IN (:ids)
-                SQL
-                , [
-                    'ids' => array_values($ids),
-                ], [
-                    'ids' => ArrayParameterType::INTEGER,
-                ])->fetchAllAssociative();
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
 
-        return array_map(
-            static fn (array $row): array => [
-                'id' => is_numeric($row['id']) ? (int) $row['id'] : 0,
+            $result[] = [
+                'id' => is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0,
                 'uppercats' => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
                 'site_id' => is_numeric($row['site_id'] ?? null) ? (int) $row['site_id'] : null,
-            ],
-            $rows
-        );
+            ];
+        }
+
+        return $result;
     }
 
     /**
      * @return list<int>
+     *
+     * Item 14 DQL audit: stays on DBAL -- queries `images`, a table owned by
+     * the Image domain with no association declared on CategoryEntity to it.
      */
     public function findDistinctStorageCategoryIds(): array
     {
@@ -1457,6 +1596,11 @@ final class CategoryRepository extends EntityRepository
             SQL)->fetchFirstColumn());
     }
 
+    /**
+     * Item 14 DQL audit: stays on DBAL -- writes `images` (Image domain
+     * table, no association from CategoryEntity), and the SET expression is
+     * a dynamic `SqlDialect::concat()` fragment, not a fixed property path.
+     */
     public function updateImagePathsForCategory(int $categoryId, string $fulldir): void
     {
         $imagesTable = Tables::images();
@@ -1478,74 +1622,69 @@ final class CategoryRepository extends EntityRepository
     /**
      * Sets $categoryId's representative image -- Controller\
      * PictureController's own "set_as_representative" action. Caller is
-     * responsible for clearing the EntityManager afterward (bypasses the
-     * ORM, same as every other raw-DBAL write in this class).
+     * responsible for clearing the EntityManager afterward (same contract as
+     * before: a DQL bulk UPDATE also bypasses the identity map, so this
+     * still doesn't call $em->clear() itself, matching every real caller's
+     * own explicit clear() afterward).
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table, static
+     * WHERE, fixed SET column.
      */
     public function setRepresentativeImage(int $categoryId, int $imageId): void
     {
-        $categoriesTable = Tables::categories();
-
         $this->getEntityManager()
-            ->getConnection()
-            ->executeStatement(<<<SQL
-                UPDATE {$categoriesTable}
-                SET representative_picture_id = :imageId
-                WHERE id = :categoryId
-                SQL
-                , [
-                    'imageId' => $imageId,
-                    'categoryId' => $categoryId,
-                ]);
+            ->createQueryBuilder()
+            ->update(CategoryEntity::class, 'c')
+            ->set('c.representativePictureId', ':imageId')
+            ->where('c.id = :categoryId')
+            ->setParameter('imageId', $imageId)
+            ->setParameter('categoryId', $categoryId)
+            ->getQuery()
+            ->execute();
     }
 
     /**
      * @param  array<int>  $ids  real callers don't guarantee a list
      * @return list<array{id: int, id_uppercat: ?int, status: string, uppercats: string}>
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table, static
+     * WHERE, all 4 columns plain-typed.
      */
     public function findCategoriesForMove(array $ids): array
     {
-        $categoriesTable = Tables::categories();
+        $rows = $this->createQueryBuilder('c')
+            ->select('c.id', 'c.idUppercat AS id_uppercat', 'c.status', 'c.uppercats')
+            ->where('c.id IN (:ids)')
+            ->setParameter('ids', array_values($ids), ArrayParameterType::INTEGER)
+            ->getQuery()
+            ->getArrayResult();
 
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->executeQuery(<<<SQL
-                SELECT id, id_uppercat, status, uppercats
-                FROM {$categoriesTable}
-                WHERE id IN (:ids)
-                SQL
-                , [
-                    'ids' => array_values($ids),
-                ], [
-                    'ids' => ArrayParameterType::INTEGER,
-                ])->fetchAllAssociative();
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
 
-        return array_map(
-            static fn (array $row): array => [
-                'id' => is_numeric($row['id']) ? (int) $row['id'] : 0,
+            $result[] = [
+                'id' => is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0,
                 'id_uppercat' => is_numeric($row['id_uppercat'] ?? null) ? (int) $row['id_uppercat'] : null,
                 'status' => is_string($row['status'] ?? null) ? $row['status'] : '',
                 'uppercats' => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
-            ],
-            $rows
-        );
+            ];
+        }
+
+        return $result;
     }
 
+    /**
+     * Item 14 DQL audit: converted to real DQL -- id is the PK, so this is
+     * just $this->find() plus a property read (same idiom as
+     * {@see findById()}/{@see updateImageOrder()} elsewhere in this class),
+     * rather than a partial-column select.
+     */
     public function findCategoryUppercatsById(int $id): ?string
     {
-        $categoriesTable = Tables::categories();
-
-        $value = $this->getEntityManager()
-            ->getConnection()
-            ->executeQuery(<<<SQL
-                SELECT uppercats
-                FROM {$categoriesTable}
-                WHERE id = :id
-                SQL
-                , [
-                    'id' => $id,
-                ])->fetchOne();
-
-        return is_string($value) ? $value : null;
+        return $this->find($id)?->uppercats;
     }
 
     /**
@@ -1575,67 +1714,77 @@ final class CategoryRepository extends EntityRepository
         $em->clear();
     }
 
+    /**
+     * Item 14 DQL audit: converted to real DQL -- id is the PK, same
+     * $this->find()-based idiom as {@see findCategoryUppercatsById()} above.
+     */
     public function findCategoryStatus(int $id): ?string
     {
-        $categoriesTable = Tables::categories();
-
-        $value = $this->getEntityManager()
-            ->getConnection()
-            ->executeQuery(<<<SQL
-                SELECT status
-                FROM {$categoriesTable}
-                WHERE id = :id
-                SQL
-                , [
-                    'id' => $id,
-                ])->fetchOne();
-
-        return is_string($value) ? $value : null;
+        return $this->find($id)?->status;
     }
 
+    /**
+     * Item 14 DQL audit: converted to real DQL -- single-table, MAX() is a
+     * standard DQL aggregate function. An aggregate with no GROUP BY always
+     * yields exactly one row (NULL when nothing matches), so
+     * getSingleScalarResult() can't throw NoResultException here.
+     */
     public function findMaxRankForParent(int|string|null $parentId): ?int
     {
         // Matches the original's own empty($parent_id) semantics (null, 0,
         // '0', and '' all mean "no parent" / root level).
         $parentIsEmpty = $parentId === null || $parentId === 0 || $parentId === '0' || $parentId === '';
 
-        $categoriesTable = Tables::categories();
-        $parentCondition = $parentIsEmpty ? 'IS NULL' : '= :parentId';
+        $qb = $this->createQueryBuilder('c')
+            ->select('MAX(c.rank)');
 
-        $value = $this->getEntityManager()
-            ->getConnection()
-            ->executeQuery(<<<SQL
-                SELECT MAX(`rank`) AS max_rank
-                FROM {$categoriesTable}
-                WHERE id_uppercat {$parentCondition}
-                SQL
-                , $parentIsEmpty ? [] : [
-                    'parentId' => $parentId,
-                ])->fetchOne();
+        if ($parentIsEmpty) {
+            $qb->where('c.idUppercat IS NULL');
+        } else {
+            $qb->where('c.idUppercat = :parentId')
+                ->setParameter('parentId', $parentId);
+        }
+
+        $value = $qb->getQuery()
+            ->getSingleScalarResult();
 
         return is_numeric($value) ? (int) $value : null;
     }
 
     /**
      * @return array{id: int, uppercats: string, global_rank: string, visible: int, status: string}|null
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table, id is the
+     * PK. `visible` is a real bool column on CategoryEntity now (DQL
+     * hydrates it as bool, not the raw driver value the original DBAL
+     * fetchAssociative() row shape assumed) -- cast back to int explicitly
+     * to preserve this method's own documented `visible: int` contract.
      */
     public function findParentCategoryForCreate(int|string $parentId): ?array
     {
-        $categoriesTable = Tables::categories();
+        $rows = $this->createQueryBuilder('c')
+            ->select('c.id', 'c.uppercats', 'c.globalRank AS global_rank', 'c.visible', 'c.status')
+            ->where('c.id = :parentId')
+            ->setParameter('parentId', $parentId)
+            ->getQuery()
+            ->getArrayResult();
 
-        $row = $this->getEntityManager()
-            ->getConnection()
-            ->executeQuery(<<<SQL
-                SELECT id, uppercats, global_rank, visible, status
-                FROM {$categoriesTable}
-                WHERE id = :parentId
-                SQL
-                , [
-                    'parentId' => $parentId,
-                ])->fetchAssociative();
+        if ($rows === []) {
+            return null;
+        }
 
-        /** @var array{id: int, uppercats: string, global_rank: string, visible: int, status: string}|false $row */
-        return $row === false ? null : $row;
+        $row = $rows[0];
+        if (! is_array($row)) {
+            return null;
+        }
+
+        return [
+            'id' => is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0,
+            'uppercats' => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
+            'global_rank' => is_string($row['global_rank'] ?? null) ? $row['global_rank'] : '',
+            'visible' => (bool) ($row['visible'] ?? false) ? 1 : 0,
+            'status' => is_string($row['status'] ?? null) ? $row['status'] : '',
+        ];
     }
 
     /**
@@ -1645,34 +1794,27 @@ final class CategoryRepository extends EntityRepository
      * across 6 files, is one of the typed methods below.
      *
      * Admin\CatOptionsPageRenderer's own "id,name,uppercats,global_rank
-     * filtered by one boolean-ish column" shape, shared by 3 of its 4
-     * sections (commentable/visible/status) -- the 4th (representative
-     * presence) needs its own method below since its two branches aren't
-     * symmetric (only the "no representative" branch joins image_category).
+     * filtered by one boolean-ish column" shape, 3 of its 4 sections
+     * (commentable/visible/status) -- the 4th (representative presence)
+     * needs its own method below since its two branches aren't symmetric
+     * (only the "no representative" branch joins image_category).
      *
-     * @return list<array<string, mixed>>
-     */
-    private function findIdNameUppercatsRankByCondition(string $whereSql, mixed $value): array
-    {
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('id', 'name', 'uppercats', 'global_rank')
-            ->from(Tables::categories())
-            ->where($whereSql)
-            ->setParameter('value', $value)
-            ->executeQuery()
-            ->fetchAllAssociative();
-
-        return $rows;
-    }
-
-    /**
+     * Item 14 DQL audit: converted to real DQL, and inlined into each of
+     * the 3 methods below individually (each column condition is a fixed,
+     * within-class literal, not a caller-supplied fragment) -- the shared
+     * `findIdNameUppercatsRankByCondition()` raw-SQL-fragment helper this
+     * replaces is gone; nothing else called it.
+     *
      * @return list<array<string, mixed>>
      */
     public function findByCommentable(bool $commentable): array
     {
-        return $this->findIdNameUppercatsRankByCondition('commentable = :value', $commentable ? 1 : 0);
+        return self::narrowIdNameUppercatsRankRows($this->createQueryBuilder('c')
+            ->select('c.id', 'c.name', 'c.uppercats', 'c.globalRank AS global_rank')
+            ->where('c.commentable = :value')
+            ->setParameter('value', $commentable)
+            ->getQuery()
+            ->getArrayResult());
     }
 
     /**
@@ -1680,7 +1822,12 @@ final class CategoryRepository extends EntityRepository
      */
     public function findByVisible(bool $visible): array
     {
-        return $this->findIdNameUppercatsRankByCondition('visible = :value', $visible ? 1 : 0);
+        return self::narrowIdNameUppercatsRankRows($this->createQueryBuilder('c')
+            ->select('c.id', 'c.name', 'c.uppercats', 'c.globalRank AS global_rank')
+            ->where('c.visible = :value')
+            ->setParameter('value', $visible)
+            ->getQuery()
+            ->getArrayResult());
     }
 
     /**
@@ -1688,7 +1835,35 @@ final class CategoryRepository extends EntityRepository
      */
     public function findByStatus(string $status): array
     {
-        return $this->findIdNameUppercatsRankByCondition('status = :value', $status);
+        return self::narrowIdNameUppercatsRankRows($this->createQueryBuilder('c')
+            ->select('c.id', 'c.name', 'c.uppercats', 'c.globalRank AS global_rank')
+            ->where('c.status = :value')
+            ->setParameter('value', $status)
+            ->getQuery()
+            ->getArrayResult());
+    }
+
+    /**
+     * @param  array<mixed>  $rows
+     * @return list<array<string, mixed>>
+     */
+    private static function narrowIdNameUppercatsRankRows(array $rows): array
+    {
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $result[] = [
+                'id' => $row['id'] ?? null,
+                'name' => $row['name'] ?? null,
+                'uppercats' => $row['uppercats'] ?? null,
+                'global_rank' => $row['global_rank'] ?? null,
+            ];
+        }
+
+        return $result;
     }
 
     /**
@@ -1699,6 +1874,12 @@ final class CategoryRepository extends EntityRepository
      * yet), not just true/false of the same predicate.
      *
      * @return list<array<string, mixed>>
+     *
+     * Item 14 DQL audit: stays on DBAL -- the $hasRepresentative=false
+     * branch joins `image_category`, never entity-mapped anywhere in this
+     * migration; the true branch alone would convert cleanly, but splitting
+     * one query-building method's two branches across DQL and DBAL just to
+     * convert half of it isn't worth the inconsistency.
      */
     public function findByRepresentativePresence(bool $hasRepresentative): array
     {
@@ -1728,27 +1909,30 @@ final class CategoryRepository extends EntityRepository
      *
      * @param list<string> $groupAuthorizedCatIds
      * @return list<array<string, mixed>>
+     *
+     * Item 14 DQL audit: converted to real DQL -- `user_access` is mapped
+     * ({@see UserAccessEntity}, no declared association to CategoryEntity,
+     * so joined via an explicit `Join::WITH` condition, same shape as
+     * {@see \Piwigo\Group\GroupRepository::getAccessibleCategoryIdsForUser()}'s
+     * own precedent). UserAccessEntity's own userId/catId are plain ints
+     * (no custom Doctrine Type), unlike GroupAccessEntity below.
      */
     public function findPrivateCategoriesGrantedToUser(int $userId, array $groupAuthorizedCatIds = []): array
     {
-        $qb = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('id', 'name', 'uppercats', 'global_rank')
-            ->from(Tables::categories())
-            ->innerJoin(Tables::categories(), Tables::userAccess(), 'ua', 'cat_id = id')
-            ->where('status = :status')
-            ->andWhere('user_id = :userId')
+        $qb = $this->createQueryBuilder('c')
+            ->select('c.id', 'c.name', 'c.uppercats', 'c.globalRank AS global_rank')
+            ->innerJoin(UserAccessEntity::class, 'ua', \Doctrine\ORM\Query\Expr\Join::WITH, 'ua.catId = c.id')
+            ->where('c.status = :status')
+            ->andWhere('ua.userId = :userId')
             ->setParameter('status', 'private')
             ->setParameter('userId', $userId);
 
         if ($groupAuthorizedCatIds !== []) {
-            $qb->andWhere($qb->expr()->notIn('cat_id', ':groupAuthorized'))
+            $qb->andWhere($qb->expr()->notIn('ua.catId', ':groupAuthorized'))
                 ->setParameter('groupAuthorized', $groupAuthorizedCatIds, ArrayParameterType::STRING);
         }
 
-        return $qb->executeQuery()
-            ->fetchAllAssociative();
+        return self::narrowIdNameUppercatsRankRows($qb->getQuery()->getArrayResult());
     }
 
     /**
@@ -1759,21 +1943,28 @@ final class CategoryRepository extends EntityRepository
      * another group" concept, so there's no exclusion-list parameter here.
      *
      * @return list<array<string, mixed>>
+     *
+     * Item 14 DQL audit: converted to real DQL -- `group_access` is mapped
+     * ({@see GroupAccessEntity}), joined via an explicit `Join::WITH`
+     * condition (same precedent as
+     * {@see findPrivateCategoriesGrantedToUser()} above). The join condition
+     * itself (`ga.catId = c.id`) compiles to a plain SQL `cat_id = id`
+     * regardless of GroupAccessEntity's own custom Doctrine Types; only the
+     * `ga.groupId = :groupId` parameter needs the {@see GroupId} VO wrapper
+     * (the well-supported single-value bind case, not the IN-clause array
+     * one).
      */
     public function findPrivateCategoriesGrantedToGroup(int $groupId): array
     {
-        return $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('id', 'name', 'uppercats', 'global_rank')
-            ->from(Tables::categories())
-            ->innerJoin(Tables::categories(), Tables::groupAccess(), 'ga', 'cat_id = id')
-            ->where('status = :status')
-            ->andWhere('group_id = :groupId')
+        return self::narrowIdNameUppercatsRankRows($this->createQueryBuilder('c')
+            ->select('c.id', 'c.name', 'c.uppercats', 'c.globalRank AS global_rank')
+            ->innerJoin(GroupAccessEntity::class, 'ga', \Doctrine\ORM\Query\Expr\Join::WITH, 'ga.catId = c.id')
+            ->where('c.status = :status')
+            ->andWhere('ga.groupId = :groupId')
             ->setParameter('status', 'private')
-            ->setParameter('groupId', $groupId)
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->setParameter('groupId', GroupId::from($groupId))
+            ->getQuery()
+            ->getArrayResult());
     }
 
     /**
@@ -1787,24 +1978,23 @@ final class CategoryRepository extends EntityRepository
      *
      * @param list<string> $excludeCatIds
      * @return list<array<string, mixed>>
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table, static
+     * WHERE plus an optional NOT IN.
      */
     public function findPrivateCategoriesExcluding(array $excludeCatIds): array
     {
-        $qb = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('id', 'name', 'uppercats', 'global_rank')
-            ->from(Tables::categories())
-            ->where('status = :status')
+        $qb = $this->createQueryBuilder('c')
+            ->select('c.id', 'c.name', 'c.uppercats', 'c.globalRank AS global_rank')
+            ->where('c.status = :status')
             ->setParameter('status', 'private');
 
         if ($excludeCatIds !== []) {
-            $qb->andWhere($qb->expr()->notIn('id', ':excludeCatIds'))
+            $qb->andWhere($qb->expr()->notIn('c.id', ':excludeCatIds'))
                 ->setParameter('excludeCatIds', $excludeCatIds, ArrayParameterType::STRING);
         }
 
-        return $qb->executeQuery()
-            ->fetchAllAssociative();
+        return self::narrowIdNameUppercatsRankRows($qb->getQuery()->getArrayResult());
     }
 
     /**
@@ -1812,6 +2002,9 @@ final class CategoryRepository extends EntityRepository
      * listing -- permission-filtered, no other condition.
      *
      * @return list<array<string, mixed>>
+     *
+     * Item 14 DQL audit: stays on DBAL -- takes a caller-built SqlCondition
+     * fragment (same family as {@see applyCondition()}'s other callers).
      */
     public function findIdNameUppercatsRank(SqlCondition $condition): array
     {
@@ -1833,6 +2026,10 @@ final class CategoryRepository extends EntityRepository
      * whether it already has a permalink set.
      *
      * @return list<array<string, mixed>>
+     *
+     * Item 14 DQL audit: stays on DBAL -- `IF()` is MySQL-specific with no
+     * DQL equivalent (DQL's `CASE WHEN ... END` isn't a drop-in text/
+     * escaping match for it here).
      */
     public function findAllForPermalinksDisplay(): array
     {
@@ -1855,18 +2052,18 @@ final class CategoryRepository extends EntityRepository
      * listing.
      *
      * @return list<array<string, mixed>>
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table, static
+     * WHERE.
      */
     public function findIdNameUppercatsRankBySite(int $siteId): array
     {
-        return $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('id', 'name', 'uppercats', 'global_rank')
-            ->from(Tables::categories())
-            ->where('site_id = :siteId')
+        return self::narrowIdNameUppercatsRankRows($this->createQueryBuilder('c')
+            ->select('c.id', 'c.name', 'c.uppercats', 'c.globalRank AS global_rank')
+            ->where('c.siteId = :siteId')
             ->setParameter('siteId', $siteId)
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->getQuery()
+            ->getArrayResult());
     }
 
     /**
@@ -1875,6 +2072,10 @@ final class CategoryRepository extends EntityRepository
      * so id traces back to an unvalidated request element.
      *
      * @param array<int, array{id: mixed, rank: int}> $datas
+     *
+     * Item 14 DQL audit: not a DQL-vs-DBAL question -- bulk multi-row write
+     * via BatchWriter, not something persist()/flush() (one row per flush)
+     * expresses.
      */
     public function massUpdateRanks(array $datas): void
     {
@@ -1893,6 +2094,9 @@ final class CategoryRepository extends EntityRepository
 
     /**
      * @param array<int, array{id: int, rank: int, global_rank: ?string}> $datas
+     *
+     * Item 14 DQL audit: not a DQL-vs-DBAL question -- bulk write, same as
+     * {@see massUpdateRanks()} above.
      */
     public function massUpdateRanksAndGlobalRank(array $datas): void
     {
@@ -1911,6 +2115,9 @@ final class CategoryRepository extends EntityRepository
 
     /**
      * @param array<int, array{id: int, representative_picture_id: ?int}> $datas
+     *
+     * Item 14 DQL audit: not a DQL-vs-DBAL question -- bulk write, same as
+     * {@see massUpdateRanks()} above.
      */
     public function massUpdateRepresentativePictures(array $datas): void
     {
@@ -1929,6 +2136,9 @@ final class CategoryRepository extends EntityRepository
 
     /**
      * @param array<int, array{id: int, uppercats: string}> $datas
+     *
+     * Item 14 DQL audit: not a DQL-vs-DBAL question -- bulk write, same as
+     * {@see massUpdateRanks()} above.
      */
     public function massUpdateUppercats(array $datas): void
     {
@@ -1953,6 +2163,9 @@ final class CategoryRepository extends EntityRepository
      * as Users\UserRepository::insertUser().
      *
      * @param array<string, mixed> $insert
+     *
+     * Item 14 DQL audit: stays on DBAL -- dynamic caller-supplied
+     * column=>value map, no fixed property path.
      */
     public function insertCategory(array $insert): int|string
     {
@@ -1973,6 +2186,9 @@ final class CategoryRepository extends EntityRepository
      *
      * @param string[] $dbfields
      * @param array<int, array<string, mixed>> $inserts
+     *
+     * Item 14 DQL audit: not a DQL-vs-DBAL question -- bulk write with a
+     * dynamic column set.
      */
     public function massInsertCategories(array $dbfields, array $inserts): void
     {
@@ -1988,6 +2204,9 @@ final class CategoryRepository extends EntityRepository
 
     /**
      * @param array<string, mixed> $data
+     *
+     * Item 14 DQL audit: stays on DBAL -- dynamic caller-supplied
+     * column=>value map, same reason as {@see insertCategory()} above.
      */
     public function updateCategoryAfterInsert(int|string $id, array $data): void
     {
@@ -2005,6 +2224,9 @@ final class CategoryRepository extends EntityRepository
      * name/comment edit, not a post-insert patch.
      *
      * @param array<string, mixed> $data
+     *
+     * Item 14 DQL audit: stays on DBAL -- dynamic caller-supplied
+     * column=>value map, same reason as {@see insertCategory()} above.
      */
     public function updateFields(int $id, array $data): void
     {
@@ -2033,6 +2255,9 @@ final class CategoryRepository extends EntityRepository
      * addMembers().
      *
      * @param array<int, array{group_id: int, cat_id: int}> $inserts
+     *
+     * Item 14 DQL audit: not a DQL-vs-DBAL question -- bulk write with an
+     * INSERT IGNORE option ORM persist()/flush() has no equivalent for.
      */
     public function massInsertGroupAccess(array $inserts, bool $ignore = false): void
     {
@@ -2065,6 +2290,10 @@ final class CategoryRepository extends EntityRepository
      * behavior change, the real filtering was already happening twice.
      * `$userId` is dropped too -- its only use was the JOIN's own
      * `user_id = :userId` condition.
+     *
+     * Item 14 DQL audit: stays on DBAL -- caller-built SqlCondition
+     * fragment plus MySQL-specific `RAND()` (no ORDER BY random() DQL
+     * equivalent).
      */
     public function findRandomRepresentativeIdAmongSubcategories(string $uppercats, SqlCondition $condition): ?string
     {
@@ -2106,6 +2335,10 @@ final class CategoryRepository extends EntityRepository
      *
      * @param  list<int>  $categoryIds
      * @return array<string, array{from: ?string, to: ?string}> keyed by category id
+     *
+     * Item 14 DQL audit: stays on DBAL -- joins `image_category`, never
+     * entity-mapped anywhere in this migration, plus a caller-built
+     * SqlCondition fragment.
      */
     public function findDateRangeByCategory(array $categoryIds, SqlCondition $condition): array
     {
@@ -2153,15 +2386,16 @@ final class CategoryRepository extends EntityRepository
         return $byId;
     }
 
+    /**
+     * Item 14 DQL audit: converted to real DQL -- single-table,
+     * unconditional COUNT.
+     */
     public function countAllCategories(): int
     {
-        $categoriesTable = Tables::categories();
-
-        $value = $this->getEntityManager()
-            ->getConnection()
-            ->fetchOne(<<<SQL
-                SELECT COUNT(*) FROM {$categoriesTable}
-                SQL);
+        $value = $this->createQueryBuilder('c')
+            ->select('COUNT(c.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
 
         return is_numeric($value) ? (int) $value : 0;
     }
@@ -2173,41 +2407,39 @@ final class CategoryRepository extends EntityRepository
      * below.
      *
      * @return list<int>
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table; $dirIsNull
+     * toggles between two fixed DQL conditions (not a dynamic column name).
      */
     public function findIdsByDirNull(bool $dirIsNull): array
     {
-        $categoriesTable = Tables::categories();
-        $dirCondition = $dirIsNull ? 'NULL' : 'NOT NULL';
+        $qb = $this->createQueryBuilder('c')
+            ->select('c.id');
+        $qb->where($dirIsNull ? 'c.dir IS NULL' : 'c.dir IS NOT NULL');
 
-        return array_map(
+        return array_values(array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-            $this->getEntityManager()
-                ->getConnection()
-                ->fetchFirstColumn(<<<SQL
-                    SELECT id
-                    FROM {$categoriesTable}
-                    WHERE dir IS {$dirCondition}
-                    SQL)
-        );
+            $qb->getQuery()
+                ->getSingleColumnResult()
+        ));
     }
 
     /**
      * Count of categories with no physical directory (virtual) or with
      * one (physical) -- Ws\PwgCore::getInfos()'s own "nb_virtual"/
      * "nb_physical" summary figures.
+     *
+     * Item 14 DQL audit: converted to real DQL -- same reasoning as
+     * {@see findIdsByDirNull()} above.
      */
     public function countByDirNull(bool $dirIsNull): int
     {
-        $categoriesTable = Tables::categories();
-        $dirCondition = $dirIsNull ? 'NULL' : 'NOT NULL';
+        $qb = $this->createQueryBuilder('c')
+            ->select('COUNT(c.id)');
+        $qb->where($dirIsNull ? 'c.dir IS NULL' : 'c.dir IS NOT NULL');
 
-        $value = $this->getEntityManager()
-            ->getConnection()
-            ->fetchOne(<<<SQL
-                SELECT COUNT(*)
-                FROM {$categoriesTable}
-                WHERE dir IS {$dirCondition}
-                SQL);
+        $value = $qb->getQuery()
+            ->getSingleScalarResult();
 
         return is_numeric($value) ? (int) $value : 0;
     }
@@ -2219,23 +2451,18 @@ final class CategoryRepository extends EntityRepository
      * `enum('true','false')` string the original inline query's own
      * `WHERE visible = 'false'` predated (see Comment's own commentable/
      * validated retype for the same bug class).
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table, static
+     * WHERE against the real bool column.
      */
     public function countByVisible(bool $visible): int
     {
-        $categoriesTable = Tables::categories();
-
-        $value = $this->getEntityManager()
-            ->getConnection()
-            ->fetchOne(<<<SQL
-                SELECT COUNT(*)
-                FROM {$categoriesTable}
-                WHERE visible = :visible
-                SQL
-                , [
-                    'visible' => $visible ? 1 : 0,
-                ], [
-                    'visible' => ParameterType::INTEGER,
-                ]);
+        $value = $this->createQueryBuilder('c')
+            ->select('COUNT(c.id)')
+            ->where('c.visible = :visible')
+            ->setParameter('visible', $visible)
+            ->getQuery()
+            ->getSingleScalarResult();
 
         return is_numeric($value) ? (int) $value : 0;
     }
@@ -2246,24 +2473,21 @@ final class CategoryRepository extends EntityRepository
      * this photo currently represent" lookup.
      *
      * @return list<int>
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table, static
+     * WHERE.
      */
     public function findCategoryIdsRepresentedByImage(int $imageId): array
     {
-        $categoriesTable = Tables::categories();
-
-        return array_map(
+        return array_values(array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-            array_column($this->getEntityManager()
-                ->getConnection()
-                ->fetchAllAssociative(<<<SQL
-                    SELECT id
-                    FROM {$categoriesTable}
-                    WHERE representative_picture_id = :imageId
-                    SQL
-                    , [
-                        'imageId' => $imageId,
-                    ]), 'id')
-        );
+            $this->createQueryBuilder('c')
+                ->select('c.id')
+                ->where('c.representativePictureId = :imageId')
+                ->setParameter('imageId', $imageId)
+                ->getQuery()
+                ->getSingleColumnResult()
+        ));
     }
 
     /**
@@ -2272,6 +2496,10 @@ final class CategoryRepository extends EntityRepository
      * every newly-checked album" step.
      *
      * @param list<int> $categoryIds
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table, static SET/
+     * WHERE. Same "caller clears the EntityManager afterward" contract as
+     * {@see setRepresentativeImage()} above (both real callers already do).
      */
     public function setRepresentativeImageForCategories(array $categoryIds, int $imageId): void
     {
@@ -2279,21 +2507,15 @@ final class CategoryRepository extends EntityRepository
             return;
         }
 
-        $categoriesTable = Tables::categories();
-
         $this->getEntityManager()
-            ->getConnection()
-            ->executeStatement(<<<SQL
-                UPDATE {$categoriesTable}
-                SET representative_picture_id = :imageId
-                WHERE id IN (:categoryIds)
-                SQL
-                , [
-                    'imageId' => $imageId,
-                    'categoryIds' => $categoryIds,
-                ], [
-                    'categoryIds' => ArrayParameterType::INTEGER,
-                ]);
+            ->createQueryBuilder()
+            ->update(CategoryEntity::class, 'c')
+            ->set('c.representativePictureId', ':imageId')
+            ->where('c.id IN (:categoryIds)')
+            ->setParameter('imageId', $imageId)
+            ->setParameter('categoryIds', $categoryIds, ArrayParameterType::INTEGER)
+            ->getQuery()
+            ->execute();
     }
 
     /**
@@ -2302,26 +2524,27 @@ final class CategoryRepository extends EntityRepository
      * compute which private categories still need granting.
      *
      * @return list<int>
+     *
+     * Item 14 DQL audit: converted to real DQL -- `group_access` is mapped
+     * ({@see GroupAccessEntity}), joined via explicit `Join::WITH` (same
+     * precedent as {@see findPrivateCategoriesGrantedToGroup()} above).
+     * Only `c.id` is selected (plain int, not `ga.catId`), so this avoids
+     * the custom-Doctrine-Type array-hydration question entirely.
      */
     public function findPrivateCategoryIdsGrantedToGroup(int $groupId): array
     {
-        $categoriesTable = Tables::categories();
-        $groupAccessTable = Tables::groupAccess();
-
-        return array_map(
+        return array_values(array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-            array_column($this->getEntityManager()
-                ->getConnection()
-                ->fetchAllAssociative(<<<SQL
-                    SELECT id
-                    FROM {$categoriesTable} INNER JOIN {$groupAccessTable} ON cat_id = id
-                    WHERE status = 'private'
-                        AND group_id = :groupId
-                    SQL
-                    , [
-                        'groupId' => $groupId,
-                    ]), 'id')
-        );
+            $this->createQueryBuilder('c')
+                ->select('c.id')
+                ->innerJoin(GroupAccessEntity::class, 'ga', \Doctrine\ORM\Query\Expr\Join::WITH, 'ga.catId = c.id')
+                ->where('c.status = :status')
+                ->andWhere('ga.groupId = :groupId')
+                ->setParameter('status', 'private')
+                ->setParameter('groupId', GroupId::from($groupId))
+                ->getQuery()
+                ->getSingleColumnResult()
+        ));
     }
 
     /**
@@ -2331,27 +2554,44 @@ final class CategoryRepository extends EntityRepository
      * user belongs to.
      *
      * @return list<array<string, mixed>>
+     *
+     * Item 14 DQL audit: converted to real DQL -- `user_group`/
+     * `group_access` are both mapped ({@see UserGroupEntity}/
+     * {@see GroupAccessEntity}), chained via two explicit `Join::WITH`
+     * conditions. Selects `c.id AS cat_id` (plain int off CategoryEntity)
+     * rather than `ga.catId` (a custom-typed CategoryId VO) -- the real
+     * caller (Admin\UserPermPageRenderer) narrows `cat_id` with
+     * `is_int()/is_string()`, which a VO instance would silently fail,
+     * gotcha #1 from the Item 14 audit's own pilot.
      */
     public function findCategoriesAuthorizedViaGroupsForUser(int $userId): array
     {
-        $userGroupTable = Tables::userGroup();
-        $groupAccessTable = Tables::groupAccess();
-        $categoriesTable = Tables::categories();
+        $rows = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('c.id AS cat_id', 'c.uppercats', 'c.globalRank AS global_rank')
+            ->distinct()
+            ->from(UserGroupEntity::class, 'ug')
+            ->innerJoin(GroupAccessEntity::class, 'ga', \Doctrine\ORM\Query\Expr\Join::WITH, 'ug.groupId = ga.groupId')
+            ->innerJoin(CategoryEntity::class, 'c', \Doctrine\ORM\Query\Expr\Join::WITH, 'c.id = ga.catId')
+            ->where('ug.userId = :userId')
+            ->setParameter('userId', UserId::from($userId))
+            ->getQuery()
+            ->getArrayResult();
 
-        return $this->getEntityManager()
-            ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT DISTINCT cat_id, c.uppercats, c.global_rank
-                FROM {$userGroupTable} AS ug
-                    INNER JOIN {$groupAccessTable} AS ga
-                        ON ug.group_id = ga.group_id
-                    INNER JOIN {$categoriesTable} AS c
-                        ON c.id = ga.cat_id
-                WHERE ug.user_id = :userId
-                SQL
-                , [
-                    'userId' => $userId,
-                ]);
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $result[] = [
+                'cat_id' => $row['cat_id'] ?? null,
+                'uppercats' => $row['uppercats'] ?? null,
+                'global_rank' => $row['global_rank'] ?? null,
+            ];
+        }
+
+        return $result;
     }
 
     /**
@@ -2362,38 +2602,32 @@ final class CategoryRepository extends EntityRepository
      *
      * @param list<int> $excludeCategoryIds
      * @return list<int>
+     *
+     * Item 14 DQL audit: converted to real DQL -- `user_access` is mapped
+     * ({@see UserAccessEntity}), joined via explicit `Join::WITH`. Only
+     * `c.id` is selected (plain int), same reasoning as
+     * {@see findPrivateCategoryIdsGrantedToGroup()} above.
      */
     public function findPrivateCategoryIdsGrantedToUser(int $userId, array $excludeCategoryIds): array
     {
-        $categoriesTable = Tables::categories();
-        $userAccessTable = Tables::userAccess();
-
-        $query = <<<SQL
-            SELECT id
-            FROM {$categoriesTable} INNER JOIN {$userAccessTable} ON cat_id = id
-            WHERE status = 'private'
-                AND user_id = :userId
-            SQL;
-        $params = [
-            'userId' => $userId,
-        ];
-        $types = [];
+        $qb = $this->createQueryBuilder('c')
+            ->select('c.id')
+            ->innerJoin(UserAccessEntity::class, 'ua', \Doctrine\ORM\Query\Expr\Join::WITH, 'ua.catId = c.id')
+            ->where('c.status = :status')
+            ->andWhere('ua.userId = :userId')
+            ->setParameter('status', 'private')
+            ->setParameter('userId', $userId);
 
         if ($excludeCategoryIds !== []) {
-            $query .= <<<SQL
-
-                AND cat_id NOT IN (:excludeCategoryIds)
-                SQL;
-            $params['excludeCategoryIds'] = $excludeCategoryIds;
-            $types['excludeCategoryIds'] = ArrayParameterType::INTEGER;
+            $qb->andWhere($qb->expr()->notIn('ua.catId', ':excludeCategoryIds'))
+                ->setParameter('excludeCategoryIds', $excludeCategoryIds, ArrayParameterType::INTEGER);
         }
 
-        return array_map(
+        return array_values(array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-            array_column($this->getEntityManager()
-                ->getConnection()
-                ->fetchAllAssociative($query, $params, $types), 'id')
-        );
+            $qb->getQuery()
+                ->getSingleColumnResult()
+        ));
     }
 
     /**
@@ -2401,23 +2635,20 @@ final class CategoryRepository extends EntityRepository
      * own "selective URLs keyword" list.
      *
      * @return list<string>
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table, static
+     * WHERE; permalink is plain-typed.
      */
     public function findActivePermalinks(): array
     {
-        $categoriesTable = Tables::categories();
-
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT permalink
-                FROM {$categoriesTable}
-                WHERE permalink IS NOT NULL
-                SQL);
-
-        return array_map(
+        return array_values(array_map(
             static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
-            array_column($rows, 'permalink')
-        );
+            $this->createQueryBuilder('c')
+                ->select('c.permalink')
+                ->where('c.permalink IS NOT NULL')
+                ->getQuery()
+                ->getSingleColumnResult()
+        ));
     }
 
     /**
@@ -2425,34 +2656,40 @@ final class CategoryRepository extends EntityRepository
      * ordered by rank -- Admin\CatListPageRenderer's own album listing.
      *
      * @return list<array<string, mixed>>
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table; $parentId
+     * toggles between two fixed DQL conditions (not a dynamic column name).
      */
     public function findChildrenOfParent(?int $parentId): array
     {
-        $categoriesTable = Tables::categories();
+        $qb = $this->createQueryBuilder('c')
+            ->select('c.id', 'c.name', 'c.permalink', 'c.dir', 'c.rank', 'c.status')
+            ->orderBy('c.rank', 'ASC');
 
-        $query = <<<SQL
-            SELECT id, name, permalink, dir, `rank`, status
-            FROM {$categoriesTable}
-            SQL;
-        $query .= $parentId === null
-            ? <<<SQL
+        if ($parentId === null) {
+            $qb->where('c.idUppercat IS NULL');
+        } else {
+            $qb->where('c.idUppercat = :parentId')
+                ->setParameter('parentId', $parentId);
+        }
 
-                WHERE id_uppercat IS NULL
-                SQL
-            : <<<SQL
+        $result = [];
+        foreach ($qb->getQuery()->getArrayResult() as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
 
-                WHERE id_uppercat = :parentId
-                SQL;
-        $query .= <<<SQL
+            $result[] = [
+                'id' => $row['id'] ?? null,
+                'name' => $row['name'] ?? null,
+                'permalink' => $row['permalink'] ?? null,
+                'dir' => $row['dir'] ?? null,
+                'rank' => $row['rank'] ?? null,
+                'status' => $row['status'] ?? null,
+            ];
+        }
 
-            ORDER BY `rank` ASC
-            SQL;
-
-        return $this->getEntityManager()
-            ->getConnection()
-            ->fetchAllAssociative($query, $parentId === null ? [] : [
-                'parentId' => $parentId,
-            ]);
+        return $result;
     }
 
     /**
@@ -2461,6 +2698,9 @@ final class CategoryRepository extends EntityRepository
      * per-album photo count display.
      *
      * @return array<int, int> keyed by category_id
+     *
+     * Item 14 DQL audit: stays on DBAL -- `image_category` has no mapped
+     * Entity anywhere in this migration.
      */
     public function findPhotoCountsByCategory(): array
     {
@@ -2491,19 +2731,30 @@ final class CategoryRepository extends EntityRepository
      * Admin\CatListPageRenderer's own subcategory/photo-rollup computation.
      *
      * @return array<int|string, mixed> keyed by id
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table,
+     * unconditional select, both columns plain-typed.
      */
     public function findAllCategoryUppercats(): array
     {
-        $categoriesTable = Tables::categories();
+        $rows = $this->createQueryBuilder('c')
+            ->select('c.id', 'c.uppercats')
+            ->getQuery()
+            ->getArrayResult();
 
-        return array_column($this->getEntityManager()
-            ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT
-                    id,
-                    uppercats
-                FROM {$categoriesTable}
-                SQL), 'uppercats', 'id');
+        $byId = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $id = $row['id'] ?? null;
+            if (is_int($id) || is_string($id)) {
+                $byId[$id] = $row['uppercats'] ?? null;
+            }
+        }
+
+        return $byId;
     }
 
     /**
@@ -2513,26 +2764,27 @@ final class CategoryRepository extends EntityRepository
      * also selects name/permalink/dir/rank/status and orders by rank).
      *
      * @return list<int>
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table; same
+     * $parentId toggle as {@see findChildrenOfParent()} above.
      */
     public function findIdsByParent(?int $parentId): array
     {
-        $categoriesTable = Tables::categories();
-        $parentCondition = $parentId === null ? 'IS NULL' : '= :parentId';
+        $qb = $this->createQueryBuilder('c')
+            ->select('c.id');
 
-        $query = <<<SQL
-            SELECT id
-            FROM {$categoriesTable}
-            WHERE id_uppercat {$parentCondition}
-            SQL;
+        if ($parentId === null) {
+            $qb->where('c.idUppercat IS NULL');
+        } else {
+            $qb->where('c.idUppercat = :parentId')
+                ->setParameter('parentId', $parentId);
+        }
 
-        return array_map(
+        return array_values(array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-            array_column($this->getEntityManager()
-                ->getConnection()
-                ->fetchAllAssociative($query, $parentId === null ? [] : [
-                    'parentId' => $parentId,
-                ]), 'id')
-        );
+            $qb->getQuery()
+                ->getSingleColumnResult()
+        ));
     }
 
     /**
@@ -2541,23 +2793,33 @@ final class CategoryRepository extends EntityRepository
      *
      * @param list<string> $categoryIds
      * @return list<array<string, mixed>>
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table, static
+     * WHERE, all 3 columns plain-typed.
      */
     public function findIdsNamesUppercatsForIds(array $categoryIds): array
     {
-        $categoriesTable = Tables::categories();
+        $rows = $this->createQueryBuilder('c')
+            ->select('c.id', 'c.name', 'c.idUppercat AS id_uppercat')
+            ->where('c.id IN (:categoryIds)')
+            ->setParameter('categoryIds', $categoryIds, ArrayParameterType::STRING)
+            ->getQuery()
+            ->getArrayResult();
 
-        return $this->getEntityManager()
-            ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT id, name, id_uppercat
-                FROM {$categoriesTable}
-                WHERE id IN (:categoryIds)
-                SQL
-                , [
-                    'categoryIds' => $categoryIds,
-                ], [
-                    'categoryIds' => ArrayParameterType::STRING,
-                ]);
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $result[] = [
+                'id' => $row['id'] ?? null,
+                'name' => $row['name'] ?? null,
+                'id_uppercat' => $row['id_uppercat'] ?? null,
+            ];
+        }
+
+        return $result;
     }
 
     /**
@@ -2565,22 +2827,43 @@ final class CategoryRepository extends EntityRepository
      * -- Admin\AlbumsPageRenderer's own full album-tree listing.
      *
      * @return list<array<string, mixed>>
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table,
+     * unconditional select, all columns plain-typed.
      */
     public function findAllForAlbumTree(): array
     {
-        $categoriesTable = Tables::categories();
+        $rows = $this->createQueryBuilder('c')
+            ->select('c.id', 'c.name', 'c.rank', 'c.status', 'c.visible', 'c.uppercats', 'c.lastmodified')
+            ->getQuery()
+            ->getArrayResult();
 
-        return $this->getEntityManager()
-            ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT id,name,`rank`,status, visible, uppercats, lastmodified
-                FROM {$categoriesTable}
-                SQL);
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $result[] = [
+                'id' => $row['id'] ?? null,
+                'name' => $row['name'] ?? null,
+                'rank' => $row['rank'] ?? null,
+                'status' => $row['status'] ?? null,
+                'visible' => $row['visible'] ?? null,
+                'uppercats' => $row['uppercats'] ?? null,
+                'lastmodified' => $row['lastmodified'] ?? null,
+            ];
+        }
+
+        return $result;
     }
 
     /**
      * Whether $categoryId has at least one direct image link --
      * Admin\CatModifyPageRenderer's own "has_images" flag.
+     *
+     * Item 14 DQL audit: stays on DBAL -- `image_category` has no mapped
+     * Entity anywhere in this migration.
      */
     public function hasImages(int $categoryId): bool
     {
@@ -2607,6 +2890,11 @@ final class CategoryRepository extends EntityRepository
      * photos, added between X and Y" summary.
      *
      * @return list<mixed>|false
+     *
+     * Item 14 DQL audit: stays on DBAL -- joins `images`/`image_category`
+     * (Image domain/unmapped), uses MySQL's `DATE()` function, and returns
+     * a positional (`fetchNumeric()`) row shape DQL's named field selects
+     * don't produce.
      */
     public function findPhotoCountAndDateRange(int $categoryId): array|false
     {
@@ -2636,6 +2924,9 @@ final class CategoryRepository extends EntityRepository
      *
      * @param list<int> $categoryIds
      * @return list<int>
+     *
+     * Item 14 DQL audit: stays on DBAL -- `image_category` has no mapped
+     * Entity anywhere in this migration.
      */
     public function findDistinctImageIdsInCategories(array $categoryIds): array
     {
@@ -2667,6 +2958,9 @@ final class CategoryRepository extends EntityRepository
      *
      * @param list<int|string> $ids
      * @return array<int|string, mixed> keyed by id
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table, static
+     * WHERE, both columns plain-typed.
      */
     public function findDirsByIds(array $ids): array
     {
@@ -2674,24 +2968,34 @@ final class CategoryRepository extends EntityRepository
             return [];
         }
 
-        $categoriesTable = Tables::categories();
+        $rows = $this->createQueryBuilder('c')
+            ->select('c.id', 'c.dir')
+            ->where('c.id IN (:ids)')
+            ->setParameter('ids', array_map(static fn (int|string $v): string => (string) $v, $ids), ArrayParameterType::STRING)
+            ->getQuery()
+            ->getArrayResult();
 
-        return array_column($this->getEntityManager()
-            ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT id,dir
-                FROM {$categoriesTable} WHERE id IN (:ids)
-                SQL
-                , [
-                    'ids' => array_map(static fn (int|string $v): string => (string) $v, $ids),
-                ], [
-                    'ids' => ArrayParameterType::STRING,
-                ]), 'dir', 'id');
+        $byId = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $id = $row['id'] ?? null;
+            if (is_int($id) || is_string($id)) {
+                $byId[$id] = $row['dir'] ?? null;
+            }
+        }
+
+        return $byId;
     }
 
     /**
      * $categoryId's own site's galleries_url, via the site_id FK join --
      * Admin\CatModifyPageRenderer's own getSiteUrl().
+     *
+     * Item 14 DQL audit: stays on DBAL -- `sites` has no mapped Entity
+     * anywhere in this migration.
      */
     public function findGalleriesUrlForCategory(int|string $categoryId): ?string
     {
@@ -2726,6 +3030,9 @@ final class CategoryRepository extends EntityRepository
      * by global_rank itself afterward when not sorting by id/permalink).
      *
      * @return list<array<string, mixed>>
+     *
+     * Item 14 DQL audit: stays on DBAL -- $orderBySql is a caller-supplied
+     * raw "ORDER BY ..." fragment, not a fixed DQL property path.
      */
     public function findActivePermalinksList(string $orderBySql): array
     {
@@ -2745,31 +3052,26 @@ final class CategoryRepository extends EntityRepository
      * Whether $catId exists and isn't among $forbiddenCategoriesCsv --
      * Controller\SearchController's own "does this album exist and is it
      * accessible" check.
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table, static
+     * WHERE; $forbiddenIds is a plain int list computed in PHP before the
+     * query runs, not a raw fragment.
      */
     public function existsAndNotForbidden(int $catId, string $forbiddenCategoriesCsv): bool
     {
-        $categoriesTable = Tables::categories();
-
         $forbiddenIds = array_map(intval(...), array_filter(explode(',', $forbiddenCategoriesCsv), is_numeric(...)));
         if ($forbiddenIds === []) {
             $forbiddenIds = [0];
         }
 
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT
-                    id
-                FROM {$categoriesTable}
-                WHERE id = :catId
-                    AND id NOT IN (:forbiddenIds)
-                SQL
-                , [
-                    'catId' => $catId,
-                    'forbiddenIds' => $forbiddenIds,
-                ], [
-                    'forbiddenIds' => ArrayParameterType::INTEGER,
-                ]);
+        $rows = $this->createQueryBuilder('c')
+            ->select('c.id')
+            ->where('c.id = :catId')
+            ->andWhere('c.id NOT IN (:forbiddenIds)')
+            ->setParameter('catId', $catId)
+            ->setParameter('forbiddenIds', $forbiddenIds, ArrayParameterType::INTEGER)
+            ->getQuery()
+            ->getArrayResult();
 
         return $rows !== [];
     }
@@ -2777,21 +3079,18 @@ final class CategoryRepository extends EntityRepository
     /**
      * Whether a category with this id exists -- Ws\PwgCategories'
      * setRepresentative()'s own existence check.
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table, static
+     * WHERE, COUNT aggregate.
      */
     public function existsById(int $id): bool
     {
-        $categoriesTable = Tables::categories();
-
-        $value = $this->getEntityManager()
-            ->getConnection()
-            ->fetchOne(<<<SQL
-                SELECT COUNT(*)
-                FROM {$categoriesTable}
-                WHERE id = :id
-                SQL
-                , [
-                    'id' => $id,
-                ]);
+        $value = $this->createQueryBuilder('c')
+            ->select('COUNT(c.id)')
+            ->where('c.id = :id')
+            ->setParameter('id', $id)
+            ->getQuery()
+            ->getSingleScalarResult();
 
         return is_numeric($value) && (int) $value > 0;
     }
@@ -2802,6 +3101,9 @@ final class CategoryRepository extends EntityRepository
      *
      * @param  list<int>  $ids
      * @return list<int>
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table, static
+     * WHERE.
      */
     public function findExistingIds(array $ids): array
     {
@@ -2809,23 +3111,15 @@ final class CategoryRepository extends EntityRepository
             return [];
         }
 
-        $categoriesTable = Tables::categories();
-
-        return array_map(
+        return array_values(array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-            $this->getEntityManager()
-                ->getConnection()
-                ->executeQuery(<<<SQL
-                    SELECT id
-                    FROM {$categoriesTable}
-                    WHERE id IN (:ids)
-                    SQL
-                    , [
-                        'ids' => $ids,
-                    ], [
-                        'ids' => ArrayParameterType::INTEGER,
-                    ])->fetchFirstColumn()
-        );
+            $this->createQueryBuilder('c')
+                ->select('c.id')
+                ->where('c.id IN (:ids)')
+                ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
+                ->getQuery()
+                ->getSingleColumnResult()
+        ));
     }
 
     /**
@@ -2835,6 +3129,11 @@ final class CategoryRepository extends EntityRepository
      *
      * @param  list<SqlCondition>  $conditions
      * @return list<array{id: int, image_order: ?string}>
+     *
+     * Item 14 DQL audit: stays on DBAL -- $conditions is a list of
+     * caller-built SqlCondition fragments (combined via
+     * `SqlCondition::combine()`), same family as `applyCondition()`'s other
+     * callers.
      */
     public function findIdsAndImageOrderWithConditions(array $conditions): array
     {
@@ -2904,6 +3203,10 @@ final class CategoryRepository extends EntityRepository
      * when $limit !== null, matching the original's own guard.
      *
      * @return PaginatedResult<array<string, mixed>>
+     *
+     * Item 14 DQL audit: stays on DBAL -- `SQL_CALC_FOUND_ROWS`/
+     * `FOUND_ROWS()` are MySQL-specific with no DQL equivalent, plus a
+     * caller-conditioned SqlCondition combination.
      */
     public function findListForWs(
         CategoryListCriteria $criteria,
@@ -2990,6 +3293,9 @@ final class CategoryRepository extends EntityRepository
      * original, unlike findListForWs()'s own $limit-gated fetch).
      *
      * @return PaginatedResult<array<string, mixed>>
+     *
+     * Item 14 DQL audit: stays on DBAL -- same `SQL_CALC_FOUND_ROWS`/
+     * `FOUND_ROWS()` reasoning as {@see findListForWs()} above.
      */
     public function findAdminListForWs(CategoryAdminListCriteria $criteria, ?string $searchTerm, int $searchLimit): PaginatedResult
     {
@@ -3033,6 +3339,9 @@ final class CategoryRepository extends EntityRepository
      *
      * @param  list<int>  $parentIds
      * @return array<string, int> keyed by id_uppercat
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table, standard
+     * COUNT + GROUP BY aggregate.
      */
     public function findSubcategoryCountsByParent(array $parentIds): array
     {
@@ -3040,26 +3349,20 @@ final class CategoryRepository extends EntityRepository
             return [];
         }
 
-        $categoriesTable = Tables::categories();
-
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT
-                    id_uppercat,
-                    COUNT(*) AS nb_subcats
-                FROM {$categoriesTable}
-                WHERE id_uppercat IN (:parentIds)
-                GROUP BY id_uppercat
-                SQL
-                , [
-                    'parentIds' => $parentIds,
-                ], [
-                    'parentIds' => ArrayParameterType::INTEGER,
-                ]);
+        $rows = $this->createQueryBuilder('c')
+            ->select('c.idUppercat AS id_uppercat', 'COUNT(c.id) AS nb_subcats')
+            ->where('c.idUppercat IN (:parentIds)')
+            ->groupBy('c.idUppercat')
+            ->setParameter('parentIds', $parentIds, ArrayParameterType::INTEGER)
+            ->getQuery()
+            ->getArrayResult();
 
         $bySubcat = [];
         foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
             $idUppercat = $row['id_uppercat'] ?? null;
             $nbSubcats = $row['nb_subcats'] ?? null;
             if (is_scalar($idUppercat) && is_numeric($nbSubcats)) {
@@ -3077,6 +3380,9 @@ final class CategoryRepository extends EntityRepository
      *
      * @param  list<int>  $ids
      * @return list<array{id: int, id_uppercat: ?int, rank: ?int}>
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table, static
+     * WHERE, all 3 columns plain-typed.
      */
     public function findRankInfoByIds(array $ids): array
     {
@@ -3084,29 +3390,27 @@ final class CategoryRepository extends EntityRepository
             return [];
         }
 
-        $categoriesTable = Tables::categories();
+        $rows = $this->createQueryBuilder('c')
+            ->select('c.id', 'c.idUppercat AS id_uppercat', 'c.rank')
+            ->where('c.id IN (:ids)')
+            ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
+            ->getQuery()
+            ->getArrayResult();
 
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT id, id_uppercat, `rank`
-                FROM {$categoriesTable}
-                WHERE id IN (:ids)
-                SQL
-                , [
-                    'ids' => $ids,
-                ], [
-                    'ids' => ArrayParameterType::INTEGER,
-                ]);
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
 
-        return array_map(
-            static fn (array $row): array => [
-                'id' => is_numeric($row['id']) ? (int) $row['id'] : 0,
+            $result[] = [
+                'id' => is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0,
                 'id_uppercat' => is_numeric($row['id_uppercat'] ?? null) ? (int) $row['id_uppercat'] : null,
                 'rank' => is_numeric($row['rank'] ?? null) ? (int) $row['rank'] : null,
-            ],
-            $rows
-        );
+            ];
+        }
+
+        return $result;
     }
 
     /**
@@ -3117,26 +3421,28 @@ final class CategoryRepository extends EntityRepository
      * caller's own numerically-sorted id list.
      *
      * @return list<int>
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table; $parentId
+     * toggles between two fixed DQL conditions.
      */
     public function findIdsByParentOrderedById(?int $parentId): array
     {
-        $categoriesTable = Tables::categories();
-        $parentCondition = $parentId === null ? 'IS NULL' : '= :parentId';
+        $qb = $this->createQueryBuilder('c')
+            ->select('c.id')
+            ->orderBy('c.id', 'ASC');
 
-        return array_map(
+        if ($parentId === null) {
+            $qb->where('c.idUppercat IS NULL');
+        } else {
+            $qb->where('c.idUppercat = :parentId')
+                ->setParameter('parentId', $parentId);
+        }
+
+        return array_values(array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-            $this->getEntityManager()
-                ->getConnection()
-                ->executeQuery(<<<SQL
-                    SELECT id
-                    FROM {$categoriesTable}
-                    WHERE id_uppercat {$parentCondition}
-                    ORDER BY `id` ASC
-                    SQL
-                    , $parentId === null ? [] : [
-                        'parentId' => $parentId,
-                    ])->fetchFirstColumn()
-        );
+            $qb->getQuery()
+                ->getSingleColumnResult()
+        ));
     }
 
     /**
@@ -3146,32 +3452,30 @@ final class CategoryRepository extends EntityRepository
      * step.
      *
      * @return list<int>
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table; same
+     * $parentId toggle as {@see findIdsByParentOrderedById()} above.
      */
     public function findSiblingIdsExcludingOrderedByRank(?int $parentId, int $excludeId): array
     {
-        $categoriesTable = Tables::categories();
-        $parentCondition = $parentId === null ? 'IS NULL' : '= :parentId';
+        $qb = $this->createQueryBuilder('c')
+            ->select('c.id')
+            ->andWhere('c.id != :excludeId')
+            ->orderBy('c.rank', 'ASC')
+            ->setParameter('excludeId', $excludeId);
 
-        $params = [
-            'excludeId' => $excludeId,
-        ];
-        if ($parentId !== null) {
-            $params['parentId'] = $parentId;
+        if ($parentId === null) {
+            $qb->andWhere('c.idUppercat IS NULL');
+        } else {
+            $qb->andWhere('c.idUppercat = :parentId')
+                ->setParameter('parentId', $parentId);
         }
 
-        return array_map(
+        return array_values(array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-            $this->getEntityManager()
-                ->getConnection()
-                ->executeQuery(<<<SQL
-                    SELECT id
-                    FROM {$categoriesTable}
-                    WHERE id_uppercat {$parentCondition}
-                        AND id != :excludeId
-                    ORDER BY `rank` ASC
-                    SQL
-                    , $params)->fetchFirstColumn()
-        );
+            $qb->getQuery()
+                ->getSingleColumnResult()
+        ));
     }
 
     /**
@@ -3183,6 +3487,9 @@ final class CategoryRepository extends EntityRepository
      *
      * @param  list<int>  $ids
      * @return list<array{id: int, name: string, dir: ?string, uppercats: string}>
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table, static
+     * WHERE, all 4 columns plain-typed.
      */
     public function findMoveDetailsByIds(array $ids): array
     {
@@ -3190,47 +3497,47 @@ final class CategoryRepository extends EntityRepository
             return [];
         }
 
-        $categoriesTable = Tables::categories();
+        $rows = $this->createQueryBuilder('c')
+            ->select('c.id', 'c.name', 'c.dir', 'c.uppercats')
+            ->where('c.id IN (:ids)')
+            ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
+            ->getQuery()
+            ->getArrayResult();
 
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT id, name, dir, uppercats
-                FROM {$categoriesTable}
-                WHERE id IN (:ids)
-                SQL
-                , [
-                    'ids' => $ids,
-                ], [
-                    'ids' => ArrayParameterType::INTEGER,
-                ]);
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
 
-        return array_map(
-            static fn (array $row): array => [
-                'id' => is_numeric($row['id']) ? (int) $row['id'] : 0,
+            $result[] = [
+                'id' => is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0,
                 'name' => is_string($row['name'] ?? null) ? $row['name'] : '',
                 'dir' => is_string($row['dir'] ?? null) ? $row['dir'] : null,
                 'uppercats' => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
-            ],
-            $rows
-        );
+            ];
+        }
+
+        return $result;
     }
 
     /**
      * Next free id -- Controller\Admin\SiteUpdateSubController's own
      * manual-id assignment for directory-synced categories (mirrors the
      * retired MysqliDb::nextval()).
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table; `IF()` is
+     * MySQL-specific, but this particular "NULL becomes a default" shape is
+     * exactly what DQL's standard `COALESCE()` expresses (unlike
+     * {@see findAllForPermalinksDisplay()}'s own `IF()` use, which builds a
+     * different value per branch, not just a NULL fallback).
      */
     public function findNextId(): int
     {
-        $categoriesTable = Tables::categories();
-
-        $next = $this->getEntityManager()
-            ->getConnection()
-            ->fetchOne(<<<SQL
-                SELECT IF(MAX(id)+1 IS NULL, 1, MAX(id)+1)
-                FROM {$categoriesTable}
-                SQL);
+        $next = $this->createQueryBuilder('c')
+            ->select('COALESCE(MAX(c.id) + 1, 1)')
+            ->getQuery()
+            ->getSingleScalarResult();
 
         return is_numeric($next) ? (int) $next : 1;
     }
@@ -3247,6 +3554,10 @@ final class CategoryRepository extends EntityRepository
      * @param array<string, mixed> $params
      * @param array<string, ArrayParameterType|ParameterType> $types
      * @return list<array<string, mixed>>
+     *
+     * Item 14 DQL audit: stays on DBAL -- $extraCondition is a caller-
+     * supplied raw SQL AND-continuation fragment, not a fixed DQL property
+     * path.
      */
     public function findSyncCandidatesForSite(int $siteId, string $extraCondition, array $params = [], array $types = []): array
     {
@@ -3272,20 +3583,19 @@ final class CategoryRepository extends EntityRepository
      * otherwise below").
      *
      * @return list<int>
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table,
+     * unconditional select.
      */
     public function findAllIds(): array
     {
-        $categoriesTable = Tables::categories();
-
-        return array_map(
+        return array_values(array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-            $this->getEntityManager()
-                ->getConnection()
-                ->executeQuery(<<<SQL
-                    SELECT id
-                    FROM {$categoriesTable}
-                    SQL)->fetchFirstColumn()
-        );
+            $this->createQueryBuilder('c')
+                ->select('c.id')
+                ->getQuery()
+                ->getSingleColumnResult()
+        ));
     }
 
     /**
@@ -3294,17 +3604,30 @@ final class CategoryRepository extends EntityRepository
      * sub-categories, and if so what's the next free rank" step.
      *
      * @return list<array<string, mixed>>
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table; MAX()+1 is
+     * a standard DQL aggregate/arithmetic expression.
      */
     public function findNextRanksByParent(): array
     {
-        $categoriesTable = Tables::categories();
+        $rows = $this->createQueryBuilder('c')
+            ->select('c.idUppercat AS id_uppercat', 'MAX(c.rank) + 1 AS next_rank')
+            ->groupBy('c.idUppercat')
+            ->getQuery()
+            ->getArrayResult();
 
-        return $this->getEntityManager()
-            ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT id_uppercat, MAX(`rank`)+1 AS next_rank
-                FROM {$categoriesTable}
-                GROUP BY id_uppercat
-                SQL);
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $result[] = [
+                'id_uppercat' => $row['id_uppercat'] ?? null,
+                'next_rank' => $row['next_rank'] ?? null,
+            ];
+        }
+
+        return $result;
     }
 }

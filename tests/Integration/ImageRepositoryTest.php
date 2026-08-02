@@ -1143,4 +1143,16 @@ final class ImageRepositoryTest extends IntegrationTestCase
         sort($ids);
         self::assertSame([1, 2], $ids);
     }
+
+    public function test_find_next_id_returns_one_more_than_the_current_max(): void
+    {
+        // Item 14 DQL audit: findNextId() converted its original
+        // IF(MAX(id)+1 IS NULL, 1, MAX(id)+1) to COALESCE(MAX(id)+1, 1) --
+        // mathematically identical for this 2-argument case, verified here
+        // against the real, non-empty fixture table (the empty-table branch
+        // isn't practically testable against this shared fixture DB).
+        $maxId = $this->conn->fetchOne('SELECT MAX(id) FROM ' . Tables::images());
+
+        self::assertSame((is_numeric($maxId) ? (int) $maxId : 0) + 1, $this->repo->findNextId());
+    }
 }

@@ -2873,7 +2873,7 @@ final class ImageRepository extends EntityRepository
             return [];
         }
 
-        $recentPeriodExpr = SqlDialect::getRecentPeriodExpression(1, $lastDate);
+        $recentPeriodExpr = SqlDialect::getRecentPeriodExpression(1, ':last_date');
 
         return array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,

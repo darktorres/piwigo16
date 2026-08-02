@@ -96,8 +96,14 @@ test('dateToTs wraps a date expression in UNIX_TIMESTAMP()', function (): void {
     expect(SqlDialect::dateToTs('d'))->toBe('UNIX_TIMESTAMP(d)');
 });
 
-test('getRecentPeriodExpression builds a SUBDATE(...) fragment for a caller-supplied literal date', function (): void {
-    expect(SqlDialect::getRecentPeriodExpression(7, '2024-01-01'))->toBe("SUBDATE('2024-01-01',INTERVAL 7 DAY)");
+/**
+ * Further SQL-modernization audit, Item 11: a non-default $date is now
+ * always a bound-parameter placeholder the caller already declared (see
+ * getRecentPeriodExpression()'s own docblock) -- spliced in unquoted,
+ * unlike the old quote-wrap-any-literal-value defect this replaced.
+ */
+test('getRecentPeriodExpression builds a SUBDATE(...) fragment for a caller-supplied bound-parameter placeholder', function (): void {
+    expect(SqlDialect::getRecentPeriodExpression(7, ':lastDate'))->toBe('SUBDATE(:lastDate,INTERVAL 7 DAY)');
 });
 
 /**

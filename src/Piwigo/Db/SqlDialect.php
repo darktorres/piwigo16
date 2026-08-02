@@ -133,15 +133,22 @@ final class SqlDialect
      * gap-closure-adjacent bug found via this audit, not merely a type
      * annotation tightening).
      *
-     * $date's own manual `'\'' . $date . '\''` quote-wrap below is a real,
-     * separate raw-string-splice defect -- not fixed here. Only 2 real
-     * callers ever pass a non-default $date (`Users\UserService::
-     * getUserData()`'s `$last_photo_date`, `Image\ImageRepository::
-     * findRecentImageIdsQuick()`'s own equivalent), both DB-sourced
-     * datetime strings, not raw user input -- tracked as a cross-cutting
-     * finding to fix (a bound-parameter carrier, same shape as
-     * `Permission\SqlCondition`) when those two files reach their own
-     * staged conversion, not this Db/-infrastructure stage.
+     * Further SQL-modernization audit, Item 11: $date's own manual
+     * `'\'' . $date . '\''` quote-wrap used to apply to *any* non-default
+     * $date, including a caller-supplied raw literal date value -- a real,
+     * separate raw-string-splice defect. Fixed by changing the contract: a
+     * non-default $date is now always a bound-parameter placeholder (e.g.
+     * `:lastDate`) the caller has already declared and will bind via their
+     * own query's existing params/types, never a literal value handed to
+     * this method directly -- so it's spliced into the returned expression
+     * unquoted, same as the `CURRENT_DATE` keyword always was. The 2 real
+     * non-default-$date callers (`Image\ImageRepository::
+     * findIdsAddedSameDayAsLatest()`, `Users\UserService::
+     * getRecentPhotosCondition()`) converted to this placeholder contract
+     * in this same pass. Quoting is still needed -- and still applied --
+     * for the one remaining literal-date case: the internal test-mode
+     * override below, a controlled `Y-m-d`-formatted string, not caller
+     * input.
      */
     public static function getRecentPeriodExpression(int $period, string $date = 'CURRENT_DATE'): string
     {
@@ -151,14 +158,10 @@ final class SqlDialect
         // on for deterministic rendering) -- CURRENT_DATE is the DB SERVER's
         // real wall-clock date, which drifts out of sync with fixture data
         // dated relative to PIWIGO_TEST_NOW once real time catches up to it.
-        // A caller-supplied $date is left untouched either way.
+        // A caller-supplied $date (a bound-parameter placeholder) is left
+        // untouched either way.
         if ($date === 'CURRENT_DATE' && Env::testModeIsActive()) {
-            $date = Env::now()
-                ->format('Y-m-d');
-        }
-
-        if ($date !== 'CURRENT_DATE') {
-            $date = '\'' . $date . '\'';
+            $date = '\'' . Env::now()->format('Y-m-d') . '\'';
         }
 
         return 'SUBDATE(' . $date . ',INTERVAL ' . $period . ' DAY)';

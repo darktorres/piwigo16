@@ -102,7 +102,9 @@ SELECT id
 
     /**
      * Image ids for the "recent_pics" section -- $recentSql is
-     * UserService::getRecentPhotosSql()'s own raw WHERE fragment.
+     * UserService::getRecentPhotosCondition()'s own SqlCondition->sql
+     * fragment (its ->parameters/->types are merged into $params/$types by
+     * the caller, alongside the forbidden-categories condition's own).
      *
      * @param array<string, mixed> $params
      * @param array<string, ArrayParameterType|ParameterType> $types

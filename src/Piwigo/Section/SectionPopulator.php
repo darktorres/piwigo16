@@ -538,6 +538,7 @@ final readonly class SectionPopulator
                 // query above; $order_by orders by date_available, images'
                 // own column, so `id` is a full functional-dependency key
                 // for it.
+                $recentCondition = $this->userService->getRecentPhotosCondition('date_available');
                 $page = array_merge(
                     $page,
                     [
@@ -546,11 +547,11 @@ final readonly class SectionPopulator
                         ]) . '">'
                                     . $this->lang->t('Recent photos') . '</a>',
                         'items' => $this->repo->findRecentImageIds(
-                            $this->userService->getRecentPhotosSql('date_available'),
+                            $recentCondition->sql,
                             $forbidden,
                             $order_by,
-                            $forbidden_params,
-                            $forbidden_types
+                            array_merge($recentCondition->parameters, $forbidden_params),
+                            array_merge($recentCondition->types, $forbidden_types)
                         ),
                     ]
                 );

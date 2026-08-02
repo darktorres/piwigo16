@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Users;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ParameterType;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AuthRepository;
 use Piwigo\Auth\AuthService;
@@ -1079,14 +1080,21 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     }
 
     /**
-     * Returns sql WHERE condition for recent photos/albums for current
-     * user.
+     * Returns the SQL WHERE condition for recent photos/albums for the
+     * current user.
+     *
+     * Further SQL-modernization audit, Item 11: now returns a SqlCondition
+     * instead of a bare string -- $last_photo_date is bound via its own
+     * parameter rather than spliced into SqlDialect::
+     * getRecentPeriodExpression()'s returned expression (see that method's
+     * own docblock for the placeholder-passthrough contract this relies
+     * on).
      */
-    public function getRecentPhotosSql(string $dbField): string
+    public function getRecentPhotosCondition(string $dbField): SqlCondition
     {
         $user = $this->currentUser->get();
         if (! isset($user->rawAttributes['last_photo_date'])) {
-            return '0=1';
+            return new SqlCondition('0=1');
         }
 
         // A raw user_infos DB value -- numeric string or int in practice,
@@ -1104,9 +1112,17 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         $last_photo_date = $user->rawAttributes['last_photo_date'];
         $last_photo_date = is_string($last_photo_date) ? $last_photo_date : '';
 
-        return $dbField . '>=LEAST('
-          . SqlDialect::getRecentPeriodExpression($recent_period)
-          . ',' . SqlDialect::getRecentPeriodExpression(1, $last_photo_date) . ')';
+        return new SqlCondition(
+            $dbField . '>=LEAST('
+              . SqlDialect::getRecentPeriodExpression($recent_period)
+              . ',' . SqlDialect::getRecentPeriodExpression(1, ':recentLastPhotoDate') . ')',
+            [
+                'recentLastPhotoDate' => $last_photo_date,
+            ],
+            [
+                'recentLastPhotoDate' => ParameterType::STRING,
+            ],
+        );
     }
 
     /**

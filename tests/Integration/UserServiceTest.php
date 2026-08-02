@@ -21,6 +21,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Group\GroupRepository;
     use Piwigo\Html\HtmlService;
     use Piwigo\Mail\MailService;
+    use Piwigo\Permission\SqlCondition;
     use Piwigo\Session\SessionEntity;
     use Piwigo\Session\SessionService;
     use Piwigo\Url\UrlService;
@@ -636,31 +637,33 @@ namespace Piwigo\Tests\Integration {
             }
         }
 
-        public function test_get_recent_photos_sql_returns_a_false_condition_when_last_photo_date_is_not_set(): void
+        public function test_get_recent_photos_condition_returns_a_false_condition_when_last_photo_date_is_not_set(): void
         {
             // Default guest CurrentUser (from IntegrationTestCase's own
             // setUp) has no 'last_photo_date' key in rawAttributes at all
             // -- only buildUser()'s own effective-permission enrichment
             // adds it (see the next test).
-            self::assertSame('0=1', $this->service->getRecentPhotosSql('i.date_available'));
+            self::assertEquals(new SqlCondition('0=1'), $this->service->getRecentPhotosCondition('i.date_available'));
         }
 
-        public function test_get_recent_photos_sql_builds_a_least_expression_when_last_photo_date_is_set(): void
+        public function test_get_recent_photos_condition_builds_a_least_expression_when_last_photo_date_is_set(): void
         {
             $user = $this->service->buildUser(UserId::from(1));
             \Piwigo\Users\CurrentUser::current()->set(\Piwigo\Users\User::fromUserArray($user));
 
             try {
-                $sql = $this->service->getRecentPhotosSql('i.date_available');
+                $condition = $this->service->getRecentPhotosCondition('i.date_available');
             } finally {
                 \Piwigo\Users\CurrentUser::current()->reset();
             }
 
             // The exact SUBDATE(...) fragment is SqlDialectTest's own
             // territory (already covered there) -- this only confirms
-            // UserService's own wiring reaches the real "set" branch.
-            self::assertStringStartsWith('i.date_available>=LEAST(', $sql);
-            self::assertStringEndsWith(')', $sql);
+            // UserService's own wiring reaches the real "set" branch, and
+            // that $last_photo_date is bound rather than spliced.
+            self::assertStringStartsWith('i.date_available>=LEAST(', $condition->sql);
+            self::assertStringEndsWith(')', $condition->sql);
+            self::assertArrayHasKey('recentLastPhotoDate', $condition->parameters);
         }
 
         /**
@@ -672,7 +675,7 @@ namespace Piwigo\Tests\Integration {
          * `int`, so a corrupted value must fall back to 0 like any other
          * malformed input, not reach the query verbatim.
          */
-        public function test_get_recent_photos_sql_falls_back_to_zero_days_for_a_non_numeric_recent_period(): void
+        public function test_get_recent_photos_condition_falls_back_to_zero_days_for_a_non_numeric_recent_period(): void
         {
             \Piwigo\Users\CurrentUser::current()->set(new \Piwigo\Users\User(
                 id: UserId::from(1),
@@ -689,13 +692,14 @@ namespace Piwigo\Tests\Integration {
             ));
 
             try {
-                $sql = $this->service->getRecentPhotosSql('i.date_available');
+                $condition = $this->service->getRecentPhotosCondition('i.date_available');
             } finally {
                 CurrentUser::current()->reset();
             }
 
-            self::assertStringNotContainsString('not-a-number', $sql);
-            self::assertStringContainsString('INTERVAL 0 DAY', $sql);
+            self::assertStringNotContainsString('not-a-number', $condition->sql);
+            self::assertStringContainsString('INTERVAL 0 DAY', $condition->sql);
+            self::assertSame('2024-01-01', $condition->parameters['recentLastPhotoDate']);
         }
 
         public function test_sync_users_creates_missing_user_infos_for_a_base_user(): void

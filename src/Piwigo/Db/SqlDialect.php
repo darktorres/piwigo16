@@ -167,11 +167,6 @@ final class SqlDialect
         return 'SUBDATE(' . $date . ',INTERVAL ' . $period . ' DAY)';
     }
 
-    public static function getFloodPeriodExpression(int|string $seconds): string
-    {
-        return 'SUBDATE(NOW(), INTERVAL ' . $seconds . ' SECOND)';
-    }
-
     public static function getHour(string $date): string
     {
         return 'HOUR(' . $date . ')';

@@ -6,8 +6,8 @@ use Piwigo\Db\SqlDialect;
 
 /**
  * Piwigo\Db\SqlDialect -- pure SQL-fragment string builders, no connection
- * dependency. concat()/getHour()/getFloodPeriodExpression()/dateToTs() had
- * zero coverage and booleanToInt() only its bool branch (see
+ * dependency. concat()/getHour()/dateToTs() had zero coverage and
+ * booleanToInt() only its bool branch (see
  * /home/torres/.claude/plans/piped-enchanting-spark.md, Wave 1); every
  * other method here is already indirectly exercised (Calendar/C13yInternal
  * tests), but a full, direct pass is cheap and removes any doubt.
@@ -62,10 +62,6 @@ test('booleanToInt converts a real bool to 1/0, and passes everything else throu
     expect(SqlDialect::booleanToInt(false))->toBe(0);
     expect(SqlDialect::booleanToInt('42'))->toBe('42');
     expect(SqlDialect::booleanToInt(null))->toBeNull();
-});
-
-test('getFloodPeriodExpression builds a SUBDATE(NOW(), ...) fragment', function (): void {
-    expect(SqlDialect::getFloodPeriodExpression(300))->toBe('SUBDATE(NOW(), INTERVAL 300 SECOND)');
 });
 
 test('getHour wraps a date expression in HOUR()', function (): void {

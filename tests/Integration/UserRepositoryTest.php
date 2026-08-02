@@ -9,6 +9,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Users\UserListCriteria;
 use Piwigo\Users\UserRepository;
 
 final class UserRepositoryTest extends IntegrationTestCase
@@ -546,4 +547,95 @@ final class UserRepositoryTest extends IntegrationTestCase
     //   JOIN against `users`' own primary key (never NULL), typed
     //   int/string by the same native mysqli casting as above -- there is
     //   no real row shape where it becomes anything else.
+
+    /**
+     * @return list<int>
+     */
+    private function findListForWsIds(UserListCriteria $criteria): array
+    {
+        $result = $this->repo->findListForWs('id', 'username', 'mail_address', ['u.id' => 'id'], false, $criteria, 'u.id ASC', false, null, 0);
+
+        return array_map(
+            static fn (array $row): int => is_numeric($row['id']) ? (int) $row['id'] : 0,
+            $result->rows
+        );
+    }
+
+    // Fixture: user 1 (fixture_admin, status webmaster, level 8, group 1),
+    // user 2 (guest, status guest, level 0), user 3 (regular_user, status
+    // normal, level 0, groups 1 and 2), user 4 (power_user, status normal,
+    // level 0, group 3). All 4 share registration_date 2026-08-01 00:00:00.
+
+    public function test_find_list_for_ws_returns_every_user_for_an_empty_criteria(): void
+    {
+        self::assertSame([1, 2, 3, 4], $this->findListForWsIds(new UserListCriteria()));
+    }
+
+    public function test_find_list_for_ws_filters_by_user_id(): void
+    {
+        self::assertSame([1, 3], $this->findListForWsIds(new UserListCriteria(userId: [1, 3])));
+    }
+
+    public function test_find_list_for_ws_filters_by_username(): void
+    {
+        self::assertSame([1], $this->findListForWsIds(new UserListCriteria(username: 'fixture_admin')));
+    }
+
+    public function test_find_list_for_ws_filter_matches_username_directly(): void
+    {
+        self::assertSame([3], $this->findListForWsIds(new UserListCriteria(filter: 'regular')));
+    }
+
+    public function test_find_list_for_ws_filter_falls_back_to_the_resolved_group_ids(): void
+    {
+        // filteredGroupIds is the caller-resolved GroupService::getIdsByNameLike()
+        // output -- the raw $filter text itself matches no username/email
+        // here, only via the OR ug.group_id IN (...) branch.
+        $ids = $this->findListForWsIds(new UserListCriteria(filter: 'no-such-username-match', filteredGroupIds: [3]));
+
+        self::assertSame([4], $ids);
+    }
+
+    public function test_find_list_for_ws_filters_by_min_register(): void
+    {
+        self::assertSame([], $this->findListForWsIds(new UserListCriteria(minRegister: '2026-08-02 00:00:00')));
+    }
+
+    public function test_find_list_for_ws_filters_by_max_register(): void
+    {
+        self::assertSame([], $this->findListForWsIds(new UserListCriteria(maxRegister: '2026-07-31 23:59:59')));
+    }
+
+    public function test_find_list_for_ws_filters_by_status(): void
+    {
+        self::assertSame([1], $this->findListForWsIds(new UserListCriteria(status: ['webmaster'])));
+    }
+
+    public function test_find_list_for_ws_filters_by_min_level(): void
+    {
+        self::assertSame([1], $this->findListForWsIds(new UserListCriteria(minLevel: 5)));
+    }
+
+    public function test_find_list_for_ws_filters_by_max_level(): void
+    {
+        self::assertSame([2, 3, 4], $this->findListForWsIds(new UserListCriteria(maxLevel: 0)));
+    }
+
+    public function test_find_list_for_ws_filters_by_group_id(): void
+    {
+        self::assertSame([4], $this->findListForWsIds(new UserListCriteria(groupId: [3])));
+    }
+
+    public function test_find_list_for_ws_filters_by_exclude(): void
+    {
+        self::assertSame([1, 3, 4], $this->findListForWsIds(new UserListCriteria(exclude: [2])));
+    }
+
+    public function test_find_list_for_ws_applies_the_limit_and_reports_the_total(): void
+    {
+        $result = $this->repo->findListForWs('id', 'username', 'mail_address', ['u.id' => 'id'], false, new UserListCriteria(), 'u.id ASC', true, 2, 0);
+
+        self::assertCount(2, $result->rows);
+        self::assertSame(4, $result->total);
+    }
 }

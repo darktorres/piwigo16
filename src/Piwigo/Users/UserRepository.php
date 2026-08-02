@@ -1058,45 +1058,130 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
     }
 
     /**
-     * Ws\PwgUsers::getList()'s own paginated, dynamically-columned user
-     * listing -- $displayColumns is the already-built `field expr => alias`
-     * map (always includes at least `u.<idColumn> => id`), matching the WS
-     * method's client-controlled `display` param; $whereClauses are
-     * already-built, trusted SQL fragments, same "caller composes trusted
-     * fragments" contract as {@see \Piwigo\Comment\CommentRepository::findAllWithConditions()}.
-     * $orderBy concatenates directly into ORDER BY -- caller must validate
-     * this first (the WS method's own ValidationPattern::ORDER check), same
-     * contract as {@see \Piwigo\Comment\CommentRepository::findForImage()}'s
-     * own $order. FOUND_ROWS() is only fetched when $includeTotalCount.
+     * The condition list shared by findListForWs() below -- a `1=1` base
+     * plus one condition per non-null UserListCriteria field, mirroring
+     * Ws\PwgUsers::getList()'s own original "appended only when its
+     * corresponding $params key is present" chain.
+     */
+    private static function buildListForWsCondition(UserListCriteria $criteria, string $idColumn, string $usernameColumn, string $emailColumn): SqlCondition
+    {
+        $conditions = [];
+
+        if ($criteria->userId !== null) {
+            $conditions[] = new SqlCondition('u.' . $idColumn . ' IN (:userId)', [
+                'userId' => $criteria->userId,
+            ], [
+                'userId' => ArrayParameterType::INTEGER,
+            ]);
+        }
+
+        if ($criteria->username !== null) {
+            $conditions[] = new SqlCondition('u.' . $usernameColumn . ' LIKE :username', [
+                'username' => $criteria->username,
+            ]);
+        }
+
+        if ($criteria->filter !== null) {
+            $filterClause = '(u.' . $usernameColumn . ' LIKE :filterLike OR u.' . $emailColumn . ' LIKE :filterLike';
+            $filterParams = [
+                'filterLike' => '%' . $criteria->filter . '%',
+            ];
+            $filterTypes = [];
+
+            if ($criteria->filteredGroupIds !== null && $criteria->filteredGroupIds !== []) {
+                $filterClause .= ' OR ug.group_id IN (:filteredGroups)';
+                $filterParams['filteredGroups'] = $criteria->filteredGroupIds;
+                $filterTypes['filteredGroups'] = ArrayParameterType::INTEGER;
+            }
+
+            $conditions[] = new SqlCondition($filterClause . ')', $filterParams, $filterTypes);
+        }
+
+        if ($criteria->minRegister !== null) {
+            $conditions[] = new SqlCondition('ui.registration_date >= :minRegister', [
+                'minRegister' => $criteria->minRegister,
+            ]);
+        }
+
+        if ($criteria->maxRegister !== null) {
+            $conditions[] = new SqlCondition('ui.registration_date <= :maxRegister', [
+                'maxRegister' => $criteria->maxRegister,
+            ]);
+        }
+
+        if ($criteria->status !== null) {
+            $conditions[] = new SqlCondition('ui.status IN (:status)', [
+                'status' => $criteria->status,
+            ], [
+                'status' => ArrayParameterType::STRING,
+            ]);
+        }
+
+        if ($criteria->minLevel !== null) {
+            $conditions[] = new SqlCondition('ui.level >= :minLevel', [
+                'minLevel' => $criteria->minLevel,
+            ], [
+                'minLevel' => ParameterType::INTEGER,
+            ]);
+        }
+
+        if ($criteria->maxLevel !== null) {
+            $conditions[] = new SqlCondition('ui.level <= :maxLevel', [
+                'maxLevel' => $criteria->maxLevel,
+            ], [
+                'maxLevel' => ParameterType::INTEGER,
+            ]);
+        }
+
+        if ($criteria->groupId !== null) {
+            $conditions[] = new SqlCondition('ug.group_id IN (:groupId)', [
+                'groupId' => $criteria->groupId,
+            ], [
+                'groupId' => ArrayParameterType::INTEGER,
+            ]);
+        }
+
+        if ($criteria->exclude !== null) {
+            $conditions[] = new SqlCondition('u.' . $idColumn . ' NOT IN (:exclude)', [
+                'exclude' => $criteria->exclude,
+            ], [
+                'exclude' => ArrayParameterType::INTEGER,
+            ]);
+        }
+
+        return SqlCondition::combine('AND', new SqlCondition('1=1'), ...$conditions);
+    }
+
+    /**
+     * Further SQL-modernization audit, Item 13: Ws\PwgUsers::getList()'s
+     * own paginated, dynamically-columned user listing -- $whereClauses (a
+     * caller-built `list<string>` of trusted SQL fragments) replaced with
+     * a typed UserListCriteria; see buildListForWsCondition() above for
+     * how each field maps to its own condition. $displayColumns is the
+     * already-built `field expr => alias` map (always includes at least
+     * `u.<idColumn> => id`), matching the WS method's client-controlled
+     * `display` param -- still caller-composed, since it shapes SELECT
+     * columns, not a WHERE condition. $orderBy concatenates directly into
+     * ORDER BY -- caller must validate this first (the WS method's own
+     * ValidationPattern::ORDER check), same contract as
+     * {@see \Piwigo\Comment\CommentRepository::findForImage()}'s own
+     * $order. FOUND_ROWS() is only fetched when $includeTotalCount.
      * LIMIT/OFFSET are only applied when $limit !== null.
      *
      * @param  array<string, string>  $displayColumns
-     * @param  list<string>  $whereClauses
-     * @return PaginatedResult<array<string, mixed>>
-     */
-    /**
-     * SQL-modernization audit: $params/$types widened additively (both
-     * default `[]`) so a caller building a bound fragment into
-     * $whereClauses can bind its own values instead of splicing them;
-     * $limit/$offset (previously spliced) always bound directly.
-     *
-     * @param  array<string, string>  $displayColumns
-     * @param  list<string>  $whereClauses
-     * @param array<string, mixed> $params
-     * @param array<string, ArrayParameterType|ParameterType> $types
      * @return PaginatedResult<array<string, mixed>>
      */
     public function findListForWs(
         string $idColumn,
+        string $usernameColumn,
+        string $emailColumn,
         array $displayColumns,
         bool $includeLastVisitFromHistory,
-        array $whereClauses,
+        UserListCriteria $criteria,
         string $orderBy,
         bool $includeTotalCount,
         ?int $limit,
-        int $offset,
-        array $params = [],
-        array $types = []
+        int $offset
     ): PaginatedResult {
         $conn = $this->getEntityManager()
             ->getConnection();
@@ -1113,8 +1198,11 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             $columnPairs[] = 'ui.last_visit_from_history AS last_visit_from_history';
         }
         $columnsSql = implode(', ', $columnPairs);
-        $whereSql = implode(' AND ', $whereClauses);
         $distinctPrefix = $includeTotalCount ? 'SQL_CALC_FOUND_ROWS ' : '';
+
+        $combined = self::buildListForWsCondition($criteria, $idColumn, $usernameColumn, $emailColumn);
+        $params = $combined->parameters;
+        $types = $combined->types;
 
         $sql = <<<SQL
             SELECT DISTINCT {$distinctPrefix}{$columnsSql}
@@ -1124,7 +1212,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
                 LEFT JOIN {$userGroupTable} AS ug
                     ON u.{$idColumn} = ug.user_id
             WHERE
-                {$whereSql}
+                {$combined->sql}
             ORDER BY {$orderBy}
             SQL;
 

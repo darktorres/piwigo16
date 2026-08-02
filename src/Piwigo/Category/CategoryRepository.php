@@ -2862,10 +2862,40 @@ final class CategoryRepository extends EntityRepository
     }
 
     /**
-     * Ws\PwgCategories::getList()'s own paginated category rollup --
-     * $whereClauses are already-built, trusted SQL fragments (permission/
-     * recursive-scope conditions), same "caller composes trusted
-     * fragments" contract as {@see \Piwigo\Comment\CommentRepository::findAllWithConditions()}.
+     * The scope condition shared by findListForWs()/findAdminListForWs()
+     * below -- exactly one of 3 mutually-exclusive branches (non-recursive
+     * with a real $catId / non-recursive without / recursive with a real
+     * $catId), or none at all (recursive with no $catId -- matches the
+     * original, which added nothing to $where in that case).
+     */
+    private static function categoryScopeCondition(?int $catId, bool $recursive): SqlCondition
+    {
+        if (! $recursive) {
+            if ($catId !== null && $catId > 0) {
+                return new SqlCondition('(id_uppercat = :catId OR id = :catId)', [
+                    'catId' => $catId,
+                ]);
+            }
+
+            return new SqlCondition('id_uppercat IS NULL');
+        }
+
+        if ($catId !== null && $catId > 0) {
+            return new SqlCondition('uppercats ' . SqlDialect::DB_REGEX_OPERATOR . ' :catUppercatsLike', [
+                'catUppercatsLike' => '(^|,)' . $catId . '(,|$)',
+            ]);
+        }
+
+        return new SqlCondition('');
+    }
+
+    /**
+     * Further SQL-modernization audit, Item 13: Ws\PwgCategories::
+     * getList()'s own paginated category rollup -- $whereClauses (a
+     * caller-built `list<string>` of trusted SQL fragments) replaced with
+     * a typed CategoryListCriteria; this method now builds its own scope/
+     * forbidden-categories/public-only conditions internally via
+     * {@see categoryScopeCondition()} and SqlCondition::combine().
      * $searchTerm/$searchLimit/$limit/$limitPlusOne replicate the
      * original's own conditional LIMIT logic verbatim: a search term gets
      * its own LIMIT only when no explicit $limit is requested; $limit
@@ -2873,25 +2903,37 @@ final class CategoryRepository extends EntityRepository
      * "more remain" without a second query. FOUND_ROWS() is only fetched
      * when $limit !== null, matching the original's own guard.
      *
-     * @param  list<string>  $whereClauses
-     * @param  array<string, mixed>  $params
-     * @param  array<string, ArrayParameterType|ParameterType>  $types
      * @return PaginatedResult<array<string, mixed>>
      */
     public function findListForWs(
-        array $whereClauses,
+        CategoryListCriteria $criteria,
         ?string $searchTerm,
         int $searchLimit,
         ?int $limit,
-        bool $limitPlusOne,
-        array $params = [],
-        array $types = []
+        bool $limitPlusOne
     ): PaginatedResult {
         $conn = $this->getEntityManager()
             ->getConnection();
 
+        $conditions = [self::categoryScopeCondition($criteria->catId, $criteria->recursive)];
+
+        if ($criteria->forbiddenCategoryIds !== []) {
+            $conditions[] = new SqlCondition('id NOT IN (:forbiddenCategoryIds)', [
+                'forbiddenCategoryIds' => $criteria->forbiddenCategoryIds,
+            ], [
+                'forbiddenCategoryIds' => ArrayParameterType::INTEGER,
+            ]);
+        }
+
+        if ($criteria->publicOnly) {
+            $conditions[] = new SqlCondition('status = "public" AND visible = 1');
+        }
+
+        $combined = SqlCondition::combine('AND', new SqlCondition('1=1'), ...$conditions);
+        $params = $combined->parameters;
+        $types = $combined->types;
+
         $categoriesTable = Tables::categories();
-        $whereSql = implode("\n    AND ", $whereClauses);
 
         $sql = <<<SQL
             SELECT SQL_CALC_FOUND_ROWS
@@ -2900,7 +2942,7 @@ final class CategoryRepository extends EntityRepository
                 representative_picture_id,
                 image_order
             FROM {$categoriesTable}
-            WHERE {$whereSql}
+            WHERE {$combined->sql}
             SQL;
 
         if ($searchTerm !== null) {
@@ -2940,29 +2982,30 @@ final class CategoryRepository extends EntityRepository
     }
 
     /**
-     * Ws\PwgCategories::getAdminList()'s own paginated category rollup --
-     * same "caller composes trusted fragments" contract as
-     * {@see findListForWs()} above, always fetches FOUND_ROWS()
-     * (unconditional in the original, unlike findListForWs()'s own
-     * $limit-gated fetch).
+     * Further SQL-modernization audit, Item 13: Ws\PwgCategories::
+     * getAdminList()'s own paginated category rollup -- same conversion as
+     * {@see findListForWs()} above, but via CategoryAdminListCriteria (no
+     * forbidden-categories/public-only fields at all -- this WS method is
+     * admin-only). Always fetches FOUND_ROWS() (unconditional in the
+     * original, unlike findListForWs()'s own $limit-gated fetch).
      *
-     * @param  list<string>  $whereClauses
-     * @param  array<string, mixed>  $params
-     * @param  array<string, ArrayParameterType|ParameterType>  $types
      * @return PaginatedResult<array<string, mixed>>
      */
-    public function findAdminListForWs(array $whereClauses, ?string $searchTerm, int $searchLimit, array $params = [], array $types = []): PaginatedResult
+    public function findAdminListForWs(CategoryAdminListCriteria $criteria, ?string $searchTerm, int $searchLimit): PaginatedResult
     {
         $conn = $this->getEntityManager()
             ->getConnection();
 
+        $combined = SqlCondition::combine('AND', new SqlCondition('1=1'), self::categoryScopeCondition($criteria->catId, $criteria->recursive));
+        $params = $combined->parameters;
+        $types = $combined->types;
+
         $categoriesTable = Tables::categories();
-        $whereSql = implode("\n    AND ", $whereClauses);
 
         $sql = <<<SQL
             SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, status, image_order
             FROM {$categoriesTable}
-            WHERE {$whereSql}
+            WHERE {$combined->sql}
             SQL;
 
         if ($searchTerm !== null) {

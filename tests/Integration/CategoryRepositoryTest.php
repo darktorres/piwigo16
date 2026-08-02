@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration {
 
     use Doctrine\DBAL\Connection;
+    use Piwigo\Category\CategoryAdminListCriteria;
+    use Piwigo\Category\CategoryListCriteria;
     use Piwigo\Category\CategoryRepository;
     use Piwigo\Category\Projection\Category;
     use Piwigo\Config\CurrentConfig;
@@ -775,6 +777,106 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         } finally {
             $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET site_id = NULL WHERE id = 1');
         }
+    }
+
+    public function test_find_list_for_ws_scopes_to_root_categories_when_recursive_is_false_and_cat_id_is_null(): void
+    {
+        $criteria = new CategoryListCriteria(catId: null, recursive: false, forbiddenCategoryIds: [], publicOnly: false);
+
+        $result = $this->repo->findListForWs($criteria, null, 10, null, false);
+
+        self::assertSame([1], array_column($result->rows, 'id'));
+    }
+
+    public function test_find_list_for_ws_matches_a_category_and_its_direct_children_when_recursive_is_false_and_cat_id_is_set(): void
+    {
+        $criteria = new CategoryListCriteria(catId: 1, recursive: false, forbiddenCategoryIds: [], publicOnly: false);
+
+        $result = $this->repo->findListForWs($criteria, null, 10, null, false);
+
+        $ids = array_column($result->rows, 'id');
+        sort($ids);
+        self::assertSame([1, 2], $ids);
+    }
+
+    public function test_find_list_for_ws_matches_the_full_subtree_when_recursive(): void
+    {
+        $criteria = new CategoryListCriteria(catId: 1, recursive: true, forbiddenCategoryIds: [], publicOnly: false);
+
+        $result = $this->repo->findListForWs($criteria, null, 10, null, false);
+
+        $ids = array_column($result->rows, 'id');
+        sort($ids);
+        self::assertSame([1, 2], $ids);
+    }
+
+    public function test_find_list_for_ws_excludes_forbidden_category_ids(): void
+    {
+        $criteria = new CategoryListCriteria(catId: null, recursive: true, forbiddenCategoryIds: [2], publicOnly: false);
+
+        $result = $this->repo->findListForWs($criteria, null, 10, null, false);
+
+        self::assertSame([1], array_column($result->rows, 'id'));
+    }
+
+    public function test_find_list_for_ws_public_only_excludes_non_public_categories(): void
+    {
+        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'private' WHERE id = 2");
+
+        $criteria = new CategoryListCriteria(catId: null, recursive: true, forbiddenCategoryIds: [], publicOnly: true);
+
+        $result = $this->repo->findListForWs($criteria, null, 10, null, false);
+
+        self::assertSame([1], array_column($result->rows, 'id'));
+    }
+
+    public function test_find_list_for_ws_applies_the_search_term(): void
+    {
+        $criteria = new CategoryListCriteria(catId: null, recursive: true, forbiddenCategoryIds: [], publicOnly: false);
+
+        $result = $this->repo->findListForWs($criteria, 'Nested', 10, null, false);
+
+        self::assertSame([2], array_column($result->rows, 'id'));
+    }
+
+    public function test_find_list_for_ws_applies_the_limit_and_reports_the_total(): void
+    {
+        $criteria = new CategoryListCriteria(catId: null, recursive: true, forbiddenCategoryIds: [], publicOnly: false);
+
+        $result = $this->repo->findListForWs($criteria, null, 10, 1, false);
+
+        self::assertCount(1, $result->rows);
+        self::assertSame(2, $result->total);
+    }
+
+    public function test_find_admin_list_for_ws_scopes_to_root_categories_when_recursive_is_false_and_cat_id_is_null(): void
+    {
+        $criteria = new CategoryAdminListCriteria(catId: null, recursive: false);
+
+        $result = $this->repo->findAdminListForWs($criteria, null, 10);
+
+        self::assertSame([1], array_column($result->rows, 'id'));
+        self::assertSame(1, $result->total);
+    }
+
+    public function test_find_admin_list_for_ws_matches_the_full_subtree_when_recursive(): void
+    {
+        $criteria = new CategoryAdminListCriteria(catId: 1, recursive: true);
+
+        $result = $this->repo->findAdminListForWs($criteria, null, 10);
+
+        $ids = array_column($result->rows, 'id');
+        sort($ids);
+        self::assertSame([1, 2], $ids);
+    }
+
+    public function test_find_admin_list_for_ws_applies_the_search_term(): void
+    {
+        $criteria = new CategoryAdminListCriteria(catId: null, recursive: true);
+
+        $result = $this->repo->findAdminListForWs($criteria, 'Nested', 10);
+
+        self::assertSame([2], array_column($result->rows, 'id'));
     }
 
 }

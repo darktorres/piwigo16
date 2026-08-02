@@ -11,9 +11,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
-use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\ApiKeyService;
 use Piwigo\Auth\AuthService;
@@ -41,6 +41,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PreferencesService;
+use Piwigo\Users\UserListCriteria;
 use Piwigo\Users\UserService;
 
 /**
@@ -124,45 +125,24 @@ final class PwgUsers
             $params['order'] = str_ireplace('username', 'LOWER(username)', $params['order']);
         }
 
-        // SQL-modernization audit: every clause below used to splice a
-        // value directly (some already safe -- $conn->quote(), int casts,
-        // enum-filtering -- some not, but all converted regardless per
-        // this initiative's "regardless of exploitability" stance).
-        // $bound_params/$bound_types feed UserRepository::findListForWs()'s
-        // own additive $params/$types widening.
-        $where_clauses = ['1=1'];
-        $bound_params = [];
-        $bound_types = [];
+        // SQL-modernization audit: every field below used to splice a
+        // value directly into a $where_clauses[]-appended raw SQL fragment
+        // (some already safe -- $conn->quote(), int casts, enum-filtering --
+        // some not, but all converted regardless per this initiative's
+        // "regardless of exploitability" stance). Each is null when its
+        // filter wasn't requested -- UserRepository::findListForWs() (via
+        // UserListCriteria) decides for itself which condition to add.
+        $userId = (isset($params['user_id']) && $params['user_id'] !== []) ? array_values($params['user_id']) : null;
+        $username = (isset($params['username']) && $params['username'] !== '') ? $params['username'] : null;
 
-        if (isset($params['user_id']) && $params['user_id'] !== []) {
-            $where_clauses[] = 'u.' . $user_field_id . ' IN (:userId)';
-            $bound_params['userId'] = $params['user_id'];
-            $bound_types['userId'] = ArrayParameterType::INTEGER;
-        }
-
-        if (isset($params['username']) && $params['username'] !== '') {
-            $where_clauses[] = 'u.' . $user_field_username . ' LIKE :username';
-            $bound_params['username'] = $params['username'];
-        }
-
-        $filtered_groups = [];
+        $filter = null;
+        $filtered_groups = null;
         if (isset($params['filter']) && $params['filter'] !== '') {
-            $filtered_groups = array_map(
-                strval(...),
-                $this->groupService->getIdsByNameLike('%' . $params['filter'] . '%')
-            );
-            $filter_where_clause = '(u.' . $user_field_username . ' LIKE :filterLike OR '
-            . 'u.' . $user_field_email . ' LIKE :filterLike';
-            $bound_params['filterLike'] = '%' . $params['filter'] . '%';
-
-            if ($filtered_groups !== []) {
-                $filter_where_clause .= ' OR ug.group_id IN (:filteredGroups)';
-                $bound_params['filteredGroups'] = $filtered_groups;
-                $bound_types['filteredGroups'] = ArrayParameterType::INTEGER;
-            }
-            $where_clauses[] = $filter_where_clause . ')';
+            $filter = $params['filter'];
+            $filtered_groups = $this->groupService->getIdsByNameLike('%' . $params['filter'] . '%');
         }
 
+        $minRegister = null;
         if (isset($params['min_register']) && $params['min_register'] !== '') {
             if (! (bool) preg_match('/^\d\d\d\d(-\d{1,2}){0,2}$/', $params['min_register'])) {
                 return new PwgError(WsError::INVALID_PARAM, 'Invalid input parameter min_register');
@@ -173,10 +153,10 @@ final class PwgUsers
             $min_register_month = $date_tokens[1] ?? 1;
             $min_register_day = $date_tokens[2] ?? 1;
             $min_date = sprintf('%u-%02u-%02u', (int) $min_register_year, (int) $min_register_month, (int) $min_register_day);
-            $where_clauses[] = 'ui.registration_date >= :minRegister';
-            $bound_params['minRegister'] = $min_date . ' 00:00:00';
+            $minRegister = $min_date . ' 00:00:00';
         }
 
+        $maxRegister = null;
         if (isset($params['max_register']) && $params['max_register'] !== '') {
             if (! (bool) preg_match('/^\d\d\d\d(-\d{1,2}){0,2}$/', $params['max_register'])) {
                 return new PwgError(WsError::INVALID_PARAM, 'Invalid input parameter max_register');
@@ -196,28 +176,26 @@ final class PwgUsers
                 $max_register_day = date('t', $max_register_month_ts);
             }
             $max_date = sprintf('%u-%02u-%02u', (int) $max_register_year, (int) $max_register_month, (int) $max_register_day);
-            $where_clauses[] = 'ui.registration_date <= :maxRegister';
-            $bound_params['maxRegister'] = $max_date . ' 23:59:59';
+            $maxRegister = $max_date . ' 23:59:59';
         }
 
+        $status = null;
         if (isset($params['status']) && $params['status'] !== []) {
-            $params['status'] = array_intersect($params['status'], new DbInfo($this->connection)->getEnums(Tables::userInfos(), 'status'));
-            if (count($params['status']) > 0) {
-                $where_clauses[] = 'ui.status IN (:status)';
-                $bound_params['status'] = array_values($params['status']);
-                $bound_types['status'] = ArrayParameterType::STRING;
+            $matchedStatus = array_intersect($params['status'], new DbInfo($this->connection)->getEnums(Tables::userInfos(), 'status'));
+            if (count($matchedStatus) > 0) {
+                $status = array_values($matchedStatus);
             }
         }
 
+        $minLevel = null;
         if ($params['min_level'] !== 0) {
             if (! in_array($params['min_level'], $available_permission_levels, true)) {
                 return new PwgError(WsError::INVALID_PARAM, 'Invalid level');
             }
-            $where_clauses[] = 'ui.level >= :minLevel';
-            $bound_params['minLevel'] = $params['min_level'];
-            $bound_types['minLevel'] = ParameterType::INTEGER;
+            $minLevel = $params['min_level'];
         }
 
+        $maxLevel = null;
         if (! in_array($params['max_level'] ?? null, [null, false, 0, '0', '', []], true)) {
             if (! in_array(is_numeric($params['max_level']) ? (int) $params['max_level'] : null, $available_permission_levels, true)) {
                 return new PwgError(WsError::INVALID_PARAM, 'Invalid level');
@@ -225,23 +203,25 @@ final class PwgUsers
             // 'max_level' is not a registered ws.php param (see this function's
             // @param docblock) -- reachable only via the shape's open tail, so
             // it's genuinely `mixed` here, unlike 'min_level'.
-            $max_level = is_numeric($params['max_level']) ? (int) $params['max_level'] : 0;
-            $where_clauses[] = 'ui.level <= :maxLevel';
-            $bound_params['maxLevel'] = $max_level;
-            $bound_types['maxLevel'] = ParameterType::INTEGER;
+            $maxLevel = is_numeric($params['max_level']) ? (int) $params['max_level'] : 0;
         }
 
-        if (isset($params['group_id']) && $params['group_id'] !== []) {
-            $where_clauses[] = 'ug.group_id IN (:groupId)';
-            $bound_params['groupId'] = $params['group_id'];
-            $bound_types['groupId'] = ArrayParameterType::INTEGER;
-        }
+        $groupId = (isset($params['group_id']) && $params['group_id'] !== []) ? array_values($params['group_id']) : null;
+        $exclude = (isset($params['exclude']) && $params['exclude'] !== []) ? array_values($params['exclude']) : null;
 
-        if (isset($params['exclude']) && $params['exclude'] !== []) {
-            $where_clauses[] = 'u.' . $user_field_id . ' NOT IN (:exclude)';
-            $bound_params['exclude'] = $params['exclude'];
-            $bound_types['exclude'] = ArrayParameterType::INTEGER;
-        }
+        $criteria = new UserListCriteria(
+            userId: $userId,
+            username: $username,
+            filter: $filter,
+            filteredGroupIds: $filtered_groups,
+            minRegister: $minRegister,
+            maxRegister: $maxRegister,
+            status: $status,
+            minLevel: $minLevel,
+            maxLevel: $maxLevel,
+            groupId: $groupId,
+            exclude: $exclude,
+        );
 
         $display = [
             'u.' . $user_field_id => 'id',
@@ -310,15 +290,15 @@ final class PwgUsers
         $apply_limit = $params['per_page'] !== 0 || $display_flags !== [];
         $paginated_users = $this->userService->getListForWs(
             $user_field_id,
+            $user_field_username,
+            $user_field_email,
             $display,
             isset($display['ui.last_visit']),
-            $where_clauses,
+            $criteria,
             $params['order'],
             isset($display_flags['total_count']),
             $apply_limit ? $params['per_page'] : null,
-            $params['per_page'] * $params['page'],
-            $bound_params,
-            $bound_types
+            $params['per_page'] * $params['page']
         );
         $users = [];
         $rows = $paginated_users->rows;

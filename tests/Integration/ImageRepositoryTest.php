@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ParameterType;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Image\CategoryImagesCriteria;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Image\MissingDerivativesCriteria;
 use Piwigo\Image\Projection\Image;
 use Piwigo\Permission\SqlCondition;
 
@@ -961,7 +964,8 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_find_with_conditions_paginated_returns_matching_rows_and_total(): void
     {
-        $result = $this->repo->findWithConditionsPaginated(['category_id = :categoryId'], '', 10, 0, ['categoryId' => 1], ['categoryId' => \Doctrine\DBAL\ParameterType::INTEGER]);
+        $criteria = new CategoryImagesCriteria(new SqlCondition(''), [1], new SqlCondition(''));
+        $result = $this->repo->findWithConditionsPaginated($criteria, '', 10, 0);
 
         self::assertCount(3, $result->rows);
         self::assertSame(3, $result->total);
@@ -969,10 +973,29 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_find_with_conditions_paginated_respects_the_limit(): void
     {
-        $result = $this->repo->findWithConditionsPaginated(['category_id = :categoryId'], '', 1, 0, ['categoryId' => 1], ['categoryId' => \Doctrine\DBAL\ParameterType::INTEGER]);
+        $criteria = new CategoryImagesCriteria(new SqlCondition(''), [1], new SqlCondition(''));
+        $result = $this->repo->findWithConditionsPaginated($criteria, '', 1, 0);
 
         self::assertCount(1, $result->rows);
         self::assertSame(3, $result->total);
+    }
+
+    public function test_find_with_conditions_paginated_applies_the_filter_condition(): void
+    {
+        $criteria = new CategoryImagesCriteria(new SqlCondition('i.id = :imageId', ['imageId' => 1], ['imageId' => ParameterType::INTEGER]), [1], new SqlCondition(''));
+        $result = $this->repo->findWithConditionsPaginated($criteria, '', 10, 0);
+
+        self::assertCount(1, $result->rows);
+        self::assertSame(1, $result->total);
+    }
+
+    public function test_find_with_conditions_paginated_applies_the_visible_images_condition(): void
+    {
+        $criteria = new CategoryImagesCriteria(new SqlCondition(''), [1], new SqlCondition('i.id = -1'));
+        $result = $this->repo->findWithConditionsPaginated($criteria, '', 10, 0);
+
+        self::assertSame([], $result->rows);
+        self::assertSame(0, $result->total);
     }
 
     public function test_find_category_links_for_image_ids_with_condition_returns_matching_rows(): void
@@ -990,12 +1013,23 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertSame([], $this->repo->findCategoryLinksForImageIdsWithCondition([1, 2], new SqlCondition('category_id = -1')));
     }
 
-    public function test_find_for_missing_derivatives_matches_the_given_where_clause(): void
+    public function test_find_for_missing_derivatives_matches_the_given_filter_condition(): void
     {
-        $rows = $this->repo->findForMissingDerivatives(['id = :imageId'], 999_999, 10, ['imageId' => 1], ['imageId' => \Doctrine\DBAL\ParameterType::INTEGER]);
+        $criteria = new MissingDerivativesCriteria(new SqlCondition('id = :imageId', ['imageId' => 1], ['imageId' => ParameterType::INTEGER]));
+        $rows = $this->repo->findForMissingDerivatives($criteria, 999_999, 10);
 
         self::assertCount(1, $rows);
         self::assertSame(1, $rows[0]['id']);
+    }
+
+    public function test_find_for_missing_derivatives_filters_by_ids(): void
+    {
+        $criteria = new MissingDerivativesCriteria(new SqlCondition(''), [2, 3]);
+        $rows = $this->repo->findForMissingDerivatives($criteria, 999_999, 10);
+
+        $ids = array_map(static fn (array $row): int => is_numeric($row['id']) ? (int) $row['id'] : 0, $rows);
+        sort($ids);
+        self::assertSame([2, 3], $ids);
     }
 
     public function test_count_lounge_images_pending_for_category_counts_unlinked_lounge_rows(): void

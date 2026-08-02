@@ -44,6 +44,7 @@ use Piwigo\Image\DerivativeUrlCodec;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\MissingDerivativesCriteria;
 use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
 use Piwigo\Permission\SqlCondition;
@@ -146,20 +147,14 @@ final class PwgCore
         $this->currentConfig->setDerivativeUrlStyle(2); // script
 
         $qlimit = (int) min(5000, ceil(max($image_count / 500, $max_urls / count($types))));
-        $filterCondition = WsHelper::stdImageSqlFilter($params, $service, '');
-        $where_clauses = $filterCondition->isEmpty() ? [] : [$filterCondition->sql];
-        $boundParams = $filterCondition->parameters;
-        $boundTypes = $filterCondition->types;
-
-        if ($params['ids'] !== []) {
-            $where_clauses[] = 'id IN (:ids)';
-            $boundParams['ids'] = $params['ids'];
-            $boundTypes['ids'] = ArrayParameterType::INTEGER;
-        }
+        $criteria = new MissingDerivativesCriteria(
+            filterCondition: WsHelper::stdImageSqlFilter($params, $service, ''),
+            ids: array_values($params['ids']),
+        );
 
         $urls = [];
         do {
-            $rows = $this->imageService->getForMissingDerivatives($where_clauses, $start_id, $qlimit, $boundParams, $boundTypes);
+            $rows = $this->imageService->getForMissingDerivatives($criteria, $start_id, $qlimit);
             $is_last = count($rows) < $qlimit;
 
             foreach ($rows as $image_row) {

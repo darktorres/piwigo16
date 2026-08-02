@@ -12,11 +12,14 @@ declare(strict_types=1);
 namespace Piwigo\Ws;
 
 use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\Connection;
 use Exception;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Cache\CachePools;
 use Piwigo\Cache\PermissionCacheInvalidator;
+use Piwigo\Category\CategoryAdminListCriteria;
+use Piwigo\Category\CategoryListCriteria;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Category\CategoryTreeCache;
@@ -31,6 +34,7 @@ use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Event\Picture\RenderElementName;
 use Piwigo\Event\Template\RenderCategoryDescription;
 use Piwigo\Event\Template\RenderCategoryName;
+use Piwigo\Image\CategoryImagesCriteria;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
@@ -192,22 +196,13 @@ final class PwgCategories
 
         // -------------------------------------------------------- get the images
         if ($cats !== []) {
-            $filterCondition = WsHelper::stdImageSqlFilter($params, $service, 'i.');
-            $where_clauses = $filterCondition->isEmpty() ? [] : [$filterCondition->sql];
-            $where_clauses[] = 'category_id IN (:categoryIds)';
-            $boundParams = array_merge($filterCondition->parameters, [
-                'categoryIds' => array_keys($cats),
-            ]);
-            $boundTypes = array_merge($filterCondition->types, [
-                'categoryIds' => ArrayParameterType::INTEGER,
-            ]);
-
-            $visibleImagesCondition = $this->permissionService->getSqlConditionFandFAsCondition([
-                'visible_images' => 'i.id',
-            ], true);
-            $where_clauses[] = $visibleImagesCondition->sql;
-            $boundParams = array_merge($boundParams, $visibleImagesCondition->parameters);
-            $boundTypes = array_merge($boundTypes, $visibleImagesCondition->types);
+            $imagesCriteria = new CategoryImagesCriteria(
+                filterCondition: WsHelper::stdImageSqlFilter($params, $service, 'i.'),
+                categoryIds: array_keys($cats),
+                visibleImagesCondition: $this->permissionService->getSqlConditionFandFAsCondition([
+                    'visible_images' => 'i.id',
+                ], true),
+            );
 
             $order_by = WsHelper::stdImageSqlOrder($params, 'i.');
             if ($order_by === ''
@@ -220,12 +215,10 @@ final class PwgCategories
             $favorite_ids = $urlService->getUserFavorites();
 
             $paginated_images = $this->imageService->getWithConditionsPaginated(
-                $where_clauses,
+                $imagesCriteria,
                 $order_by,
                 $params['per_page'],
-                $params['per_page'] * $params['page'],
-                $boundParams,
-                $boundTypes
+                $params['per_page'] * $params['page']
             );
             $rows = $paginated_images->rows;
 
@@ -377,9 +370,6 @@ final class PwgCategories
         }
 
         $output = [];
-        $where = ['1=1'];
-        $bound_params = [];
-        $bound_types = [];
         $user_id = $currentUser->id->value;
         // Which user's own "remembered random representative" cache entry
         // (CachePools::categoryTree(), see below) each row's
@@ -387,21 +377,6 @@ final class PwgCategories
         // overridden to the guest identity in the public branch, same
         // identity the old user_cache_categories JOIN used to key on.
         $repr_user_id = $user_id;
-
-        if (! $params['recursive']) {
-            if ($params['cat_id'] > 0) {
-                $where[] = '(
-        id_uppercat = :catId
-        OR id = :catId
-      )';
-                $bound_params['catId'] = $params['cat_id'];
-            } else {
-                $where[] = 'id_uppercat IS NULL';
-            }
-        } elseif ($params['cat_id'] > 0) {
-            $where[] = 'uppercats ' . SqlDialect::DB_REGEX_OPERATOR . ' :catUppercatsLike';
-            $bound_params['catUppercatsLike'] = '(^|,)' . $params['cat_id'] . '(,|$)';
-        }
 
         // Gap-closure Stage 4h (docs/plan/gap-closure-p0-p23.md): all 3
         // branches below now add their own explicit `id NOT IN (forbidden)`
@@ -421,10 +396,11 @@ final class PwgCategories
         // identity's forbidden-categories value differs (see each
         // branch's own comment).
         $rollupByCatId = [];
+        $forbiddenCategoryIds = [];
+        $publicOnly = false;
 
         if ($params['public']) {
-            $where[] = 'status = "public"';
-            $where[] = 'visible = 1';
+            $publicOnly = true;
 
             $repr_user_id = $this->currentConfig->guestId();
             // UserService::getUserData() computes the same effective
@@ -440,9 +416,7 @@ final class PwgCategories
             $guest_userdata = $this->userService->getUserData(\Piwigo\Common\ValueObject\UserId::from($repr_user_id));
             $guest_forbidden_categories = $guest_userdata['forbidden_categories'] ?? '0';
             $guest_forbidden_categories = is_string($guest_forbidden_categories) ? $guest_forbidden_categories : '0';
-            $where[] = 'id NOT IN (:guestForbiddenCategories)';
-            $bound_params['guestForbiddenCategories'] = self::csvToIntList($guest_forbidden_categories);
-            $bound_types['guestForbiddenCategories'] = ArrayParameterType::INTEGER;
+            $forbiddenCategoryIds = self::csvToIntList($guest_forbidden_categories);
             $rollupByCatId = $this->categoryTreeCache()
                 ->getForUser($guest_userdata);
         } elseif ($this->accessControl->isAdmin()) {
@@ -453,9 +427,7 @@ final class PwgCategories
             // calculate_permissions does not consider empty categories as forbidden
             $forbidden_categories = new \Piwigo\Permission\ForbiddenCategoriesCache($this->permissionService, \Piwigo\Cache\CachePools::permissions())
                 ->getForUser($user_id, $currentUser->status->value);
-            $where[] = 'id NOT IN (:adminForbiddenCategories)';
-            $bound_params['adminForbiddenCategories'] = self::csvToIntList($forbidden_categories);
-            $bound_types['adminForbiddenCategories'] = ArrayParameterType::INTEGER;
+            $forbiddenCategoryIds = self::csvToIntList($forbidden_categories);
             // Deliberately NOT CategoryTreeCache: that pool is keyed only
             // by user id, and this branch's forbidden_categories is the
             // narrower structural value above, not the wider "effective"
@@ -471,9 +443,7 @@ final class PwgCategories
             $admin_userdata['forbidden_categories'] = $forbidden_categories;
             $rollupByCatId = $categoryService->getComputedCategories($admin_userdata, null)['categories'];
         } else {
-            $where[] = 'id NOT IN (:userForbiddenCategories)';
-            $bound_params['userForbiddenCategories'] = self::csvToIntList($currentUser->forbiddenCategories);
-            $bound_types['userForbiddenCategories'] = ArrayParameterType::INTEGER;
+            $forbiddenCategoryIds = self::csvToIntList($currentUser->forbiddenCategories);
             // $currentUser->forbiddenCategories IS the same effective value
             // EffectiveForbiddenCategoriesCache computes for this user id
             // (Stage 4b/4g) -- the same value any other CategoryTreeCache
@@ -484,14 +454,19 @@ final class PwgCategories
 
         $search_term = (isset($params['search']) and $params['search'] !== '') ? $params['search'] : null;
 
-        $paginated_cats = $this->categoryService->getListForWs(
-            $where,
+        $criteria = new CategoryListCriteria(
+            catId: $params['cat_id'] > 0 ? $params['cat_id'] : null,
+            recursive: $params['recursive'],
+            forbiddenCategoryIds: $forbiddenCategoryIds,
+            publicOnly: $publicOnly,
+        );
+
+        $paginated_cats = $categoryService->getListForWs(
+            $criteria,
             $search_term,
             $this->currentConfig->linkedAlbumSearchLimit(),
             $params['limit'],
-            $params['cat_id'] > 0,
-            $bound_params,
-            $bound_types
+            $params['cat_id'] > 0
         );
         $rows = $paginated_cats->rows;
 
@@ -760,32 +735,16 @@ final class PwgCategories
 
         // pwg_db_real_escape_string
 
-        $where = ['1=1'];
-        $bound_params = [];
-        $bound_types = [];
-
-        if (! $params['recursive']) {
-            if ($params['cat_id'] > 0) {
-                $where[] = '(
-        id_uppercat = :catId
-        OR id = :catId
-      )';
-                $bound_params['catId'] = $params['cat_id'];
-            } else {
-                $where[] = 'id_uppercat IS NULL';
-            }
-        } elseif ($params['cat_id'] > 0) {
-            $where[] = 'uppercats ' . SqlDialect::DB_REGEX_OPERATOR . ' :catUppercatsLike';
-            $bound_params['catUppercatsLike'] = '(^|,)' . $params['cat_id'] . '(,|$)';
-        }
+        $criteria = new CategoryAdminListCriteria(
+            catId: $params['cat_id'] > 0 ? $params['cat_id'] : null,
+            recursive: $params['recursive'],
+        );
 
         $search_term = (isset($params['search']) and $params['search'] !== '') ? $params['search'] : null;
         $paginated_admin_cats = $this->categoryService->getAdminListForWs(
-            $where,
+            $criteria,
             $search_term,
-            $this->currentConfig->linkedAlbumSearchLimit(),
-            $bound_params,
-            $bound_types
+            $this->currentConfig->linkedAlbumSearchLimit()
         );
         $rows = $paginated_admin_cats->rows;
         $counter = $paginated_admin_cats->total ?? 0;

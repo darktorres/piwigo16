@@ -1256,35 +1256,41 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * One page of images with id below $startId, matching already-built
-     * $whereClauses -- Ws\PwgCore::getMissingDerivatives()'s own
-     * cursor-paginated scan, one real caller. $whereClauses are
-     * already-built, trusted SQL fragments (WsHelper::stdImageSqlFilter()'s
-     * own output plus an optional `id IN (...)` filter), same "caller
-     * composes trusted fragments" contract used throughout this
-     * repository.
+     * Further SQL-modernization audit, Item 13: one page of images with id
+     * below $startId, matching $criteria -- Ws\PwgCore::
+     * getMissingDerivatives()'s own cursor-paginated scan, one real
+     * caller. $criteria's filter condition and optional id restriction are
+     * combined with this method's own `id < :startId` cursor condition
+     * internally via SqlCondition::combine(), replacing the caller-built
+     * `list<string> $whereClauses` this used to take.
      *
-     * SQL-modernization audit: $params/$types widened additively (both
-     * default `[]`) so a caller building a `SqlCondition`-shaped fragment
-     * into $whereClauses can bind its own values instead of splicing
-     * them; $startId/$limit (previously spliced) always bound directly.
-     *
-     * @param  list<string>  $whereClauses
-     * @param array<string, mixed> $params
-     * @param array<string, ArrayParameterType|ParameterType> $types
      * @return list<array<string, mixed>>
      */
-    public function findForMissingDerivatives(array $whereClauses, int $startId, int $limit, array $params = [], array $types = []): array
+    public function findForMissingDerivatives(MissingDerivativesCriteria $criteria, int $startId, int $limit): array
     {
-        $allClauses = $whereClauses;
-        $allClauses[] = 'id < :startId';
-        $params['startId'] = $startId;
-        $params['limit'] = $limit;
-        $types['startId'] = ParameterType::INTEGER;
-        $types['limit'] = ParameterType::INTEGER;
+        $conditions = [$criteria->filterCondition];
+
+        if ($criteria->ids !== []) {
+            $conditions[] = new SqlCondition('id IN (:ids)', [
+                'ids' => $criteria->ids,
+            ], [
+                'ids' => ArrayParameterType::INTEGER,
+            ]);
+        }
+
+        $conditions[] = new SqlCondition('id < :startId', [
+            'startId' => $startId,
+        ], [
+            'startId' => ParameterType::INTEGER,
+        ]);
+
+        $combined = SqlCondition::combine('AND', ...$conditions);
 
         $imagesTable = Tables::images();
-        $whereSql = implode(' AND ', $allClauses);
+        $params = $combined->parameters;
+        $params['limit'] = $limit;
+        $types = $combined->types;
+        $types['limit'] = ParameterType::INTEGER;
 
         return $this->getEntityManager()
             ->getConnection()
@@ -1292,7 +1298,7 @@ final class ImageRepository extends EntityRepository
                 <<<SQL
                 SELECT id, path, representative_ext, width, height, rotation
                 FROM {$imagesTable}
-                WHERE {$whereSql}
+                WHERE {$combined->sql}
                 ORDER BY id DESC
                 LIMIT :limit
                 SQL
@@ -2579,47 +2585,57 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * Every column of every image matching already-built $whereClauses,
-     * joined against `image_category` and deduplicated by image id --
-     * Ws\PwgCategories::getImages()'s own paginated listing.
-     * $whereClauses/$orderByClause are already-built, trusted SQL
-     * fragments, same "caller composes trusted fragments" contract as
-     * {@see \Piwigo\Comment\CommentRepository::findAllWithConditions()}.
+     * Further SQL-modernization audit, Item 13: every column of every
+     * image matching $criteria, joined against `image_category` and
+     * deduplicated by image id -- Ws\PwgCategories::getImages()'s own
+     * paginated listing. $criteria's 3 conditions (filter/category scope/
+     * visible-images permission) are combined internally via
+     * SqlCondition::combine(), replacing the caller-built `list<string>
+     * $whereClauses` this used to take. $orderByClause is still an
+     * already-built, trusted SQL fragment -- same "caller composes
+     * trusted ORDER BY text" contract as
+     * {@see \Piwigo\Comment\CommentRepository::findForImage()}'s own
+     * $order.
      *
-     * SQL-modernization audit: $params/$types widened additively (both
-     * default `[]`) so a caller building a `SqlCondition`-shaped fragment
-     * into $whereClauses can bind its own values instead of splicing
-     * them; $limit/$offset (previously spliced) always bound directly.
      * `SQL_CALC_FOUND_ROWS` has no `QueryBuilder` fluent equivalent, so
      * this stays hand-built SQL, same as
      * {@see \Piwigo\Comment\CommentRepository::findAllWithConditions()}.
      *
-     * @param  list<string>  $whereClauses
-     * @param array<string, mixed> $params
-     * @param array<string, ArrayParameterType|ParameterType> $types
      * @return PaginatedResult<array<string, mixed>>
      */
-    public function findWithConditionsPaginated(array $whereClauses, string $orderByClause, int $limit, int $offset, array $params = [], array $types = []): PaginatedResult
+    public function findWithConditionsPaginated(CategoryImagesCriteria $criteria, string $orderByClause, int $limit, int $offset): PaginatedResult
     {
         $conn = $this->getEntityManager()
             ->getConnection();
 
+        $combined = SqlCondition::combine(
+            'AND',
+            $criteria->filterCondition,
+            new SqlCondition('category_id IN (:categoryIds)', [
+                'categoryIds' => $criteria->categoryIds,
+            ], [
+                'categoryIds' => ArrayParameterType::INTEGER,
+            ]),
+            $criteria->visibleImagesCondition,
+        );
+
         $imagesTable = Tables::images();
         $imageCategoryTable = Tables::imageCategory();
-        $whereSql = implode("\n    AND ", $whereClauses);
 
         $sql = <<<SQL
             SELECT SQL_CALC_FOUND_ROWS i.*
             FROM {$imagesTable} i
                 INNER JOIN {$imageCategoryTable} ON i.id=image_id
-            WHERE {$whereSql}
+            WHERE {$combined->sql}
             GROUP BY i.id
             {$orderByClause}
             LIMIT :limit
             OFFSET :offset
             SQL;
+        $params = $combined->parameters;
         $params['limit'] = $limit;
         $params['offset'] = $offset;
+        $types = $combined->types;
         $types['limit'] = ParameterType::INTEGER;
         $types['offset'] = ParameterType::INTEGER;
 

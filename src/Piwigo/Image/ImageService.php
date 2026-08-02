@@ -1056,14 +1056,11 @@ final readonly class ImageService
     }
 
     /**
-     * @param  list<string>  $whereClauses
-     * @param array<string, mixed> $params
-     * @param array<string, \Doctrine\DBAL\ArrayParameterType|\Doctrine\DBAL\ParameterType> $types
      * @return list<array<string, mixed>>
      */
-    public function getForMissingDerivatives(array $whereClauses, int $startId, int $limit, array $params = [], array $types = []): array
+    public function getForMissingDerivatives(MissingDerivativesCriteria $criteria, int $startId, int $limit): array
     {
-        return $this->repo->findForMissingDerivatives($whereClauses, $startId, $limit, $params, $types);
+        return $this->repo->findForMissingDerivatives($criteria, $startId, $limit);
     }
 
     /**
@@ -1167,14 +1164,11 @@ final readonly class ImageService
     }
 
     /**
-     * @param  list<string>  $whereClauses
-     * @param array<string, mixed> $params
-     * @param array<string, \Doctrine\DBAL\ArrayParameterType|\Doctrine\DBAL\ParameterType> $types
      * @return PaginatedResult<array<string, mixed>>
      */
-    public function getWithConditionsPaginated(array $whereClauses, string $orderByClause, int $limit, int $offset, array $params = [], array $types = []): PaginatedResult
+    public function getWithConditionsPaginated(CategoryImagesCriteria $criteria, string $orderByClause, int $limit, int $offset): PaginatedResult
     {
-        return $this->repo->findWithConditionsPaginated($whereClauses, $orderByClause, $limit, $offset, $params, $types);
+        return $this->repo->findWithConditionsPaginated($criteria, $orderByClause, $limit, $offset);
     }
 
     /**

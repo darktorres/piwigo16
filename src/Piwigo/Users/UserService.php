@@ -1678,23 +1678,20 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
     /**
      * @param  array<string, string>  $displayColumns
-     * @param  list<string>  $whereClauses
-     * @param array<string, mixed> $params
-     * @param array<string, \Doctrine\DBAL\ArrayParameterType|\Doctrine\DBAL\ParameterType> $types
      * @return PaginatedResult<array<string, mixed>>
      */
     public function getListForWs(
         string $idColumn,
+        string $usernameColumn,
+        string $emailColumn,
         array $displayColumns,
         bool $includeLastVisitFromHistory,
-        array $whereClauses,
+        UserListCriteria $criteria,
         string $orderBy,
         bool $includeTotalCount,
         ?int $limit,
-        int $offset,
-        array $params = [],
-        array $types = []
+        int $offset
     ): PaginatedResult {
-        return $this->repo->findListForWs($idColumn, $displayColumns, $includeLastVisitFromHistory, $whereClauses, $orderBy, $includeTotalCount, $limit, $offset, $params, $types);
+        return $this->repo->findListForWs($idColumn, $usernameColumn, $emailColumn, $displayColumns, $includeLastVisitFromHistory, $criteria, $orderBy, $includeTotalCount, $limit, $offset);
     }
 }

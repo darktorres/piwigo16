@@ -2215,32 +2215,24 @@ final readonly class CategoryService
     }
 
     /**
-     * @param  list<string>  $whereClauses
-     * @param  array<string, mixed>  $params
-     * @param  array<string, ArrayParameterType|\Doctrine\DBAL\ParameterType>  $types
      * @return PaginatedResult<array<string, mixed>>
      */
     public function getListForWs(
-        array $whereClauses,
+        CategoryListCriteria $criteria,
         ?string $searchTerm,
         int $searchLimit,
         ?int $limit,
-        bool $limitPlusOne,
-        array $params = [],
-        array $types = []
+        bool $limitPlusOne
     ): PaginatedResult {
-        return $this->repo->findListForWs($whereClauses, $searchTerm, $searchLimit, $limit, $limitPlusOne, $params, $types);
+        return $this->repo->findListForWs($criteria, $searchTerm, $searchLimit, $limit, $limitPlusOne);
     }
 
     /**
-     * @param  list<string>  $whereClauses
-     * @param  array<string, mixed>  $params
-     * @param  array<string, ArrayParameterType|\Doctrine\DBAL\ParameterType>  $types
      * @return PaginatedResult<array<string, mixed>>
      */
-    public function getAdminListForWs(array $whereClauses, ?string $searchTerm, int $searchLimit, array $params = [], array $types = []): PaginatedResult
+    public function getAdminListForWs(CategoryAdminListCriteria $criteria, ?string $searchTerm, int $searchLimit): PaginatedResult
     {
-        return $this->repo->findAdminListForWs($whereClauses, $searchTerm, $searchLimit, $params, $types);
+        return $this->repo->findAdminListForWs($criteria, $searchTerm, $searchLimit);
     }
 
     /**

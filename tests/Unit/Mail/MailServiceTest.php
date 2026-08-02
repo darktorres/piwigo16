@@ -7,6 +7,7 @@ use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\WebmasterMailProviderInterface;
+use Piwigo\Event\Lifecycle\LoadingLang;
 use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Users\CurrentUser;
@@ -1394,11 +1395,11 @@ test('switchLangTo fires the loading_lang event while reloading a language for t
     $handler = function () use (&$fired): void {
         $fired = true;
     };
-    EventDispatcher::get()->addEventHandler('loading_lang', $handler);
+    EventDispatcher::get()->addTypedHandler(LoadingLang::class, $handler);
     try {
         $service->switchLangTo('fr_FR');
     } finally {
-        EventDispatcher::get()->removeEventHandler('loading_lang', $handler);
+        EventDispatcher::get()->removeEventHandler(LoadingLang::class, $handler);
     }
 
     expect($fired)->toBeTrue();
@@ -1434,11 +1435,11 @@ test('switchLangTo reuses its own cache for a language already switched to once,
     $handler = function () use (&$loadingLangCalls): void {
         $loadingLangCalls++;
     };
-    EventDispatcher::get()->addEventHandler('loading_lang', $handler);
+    EventDispatcher::get()->addTypedHandler(LoadingLang::class, $handler);
     try {
         $service->switchLangTo('fr_FR');
     } finally {
-        EventDispatcher::get()->removeEventHandler('loading_lang', $handler);
+        EventDispatcher::get()->removeEventHandler(LoadingLang::class, $handler);
     }
 
     expect($loadingLangCalls)->toBe(0);

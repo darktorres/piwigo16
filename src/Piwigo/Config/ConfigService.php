@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Config;
 
+use Piwigo\Event\Lifecycle\LoadConf;
+
 /**
  * The DI/Doctrine-backed config persistence layer -- the real writer
  * behind Piwigo\Config\CurrentConfig:: (Legacy Coupling Retirement Phase
@@ -415,7 +417,7 @@ final readonly class ConfigService
             self::hydrate($entry->param, $entry->value);
         }
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('load_conf', $param);
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LoadConf($param));
     }
 
     /**

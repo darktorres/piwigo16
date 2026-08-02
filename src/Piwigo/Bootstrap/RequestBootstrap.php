@@ -30,6 +30,8 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\ServerTiming;
 use Piwigo\Core\StringHelper;
 use Piwigo\Db\DbConnection;
+use Piwigo\Event\Lifecycle\Init;
+use Piwigo\Event\Lifecycle\LoadingLang;
 use Piwigo\Event\Picture\GetElementUrl;
 use Piwigo\Event\Picture\UploadFile;
 use Piwigo\Event\Picture\UploadImageResize;
@@ -540,7 +542,7 @@ final class RequestBootstrap
             // Add language for temporary strings for new popup, from piwigo 15
             Lang::load('whats_new_' . \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION) . '.lang');
         }
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loading_lang');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LoadingLang());
         Lang::load('lang', CurrentPaths::get()->siteLocal, [
             'no_fallback' => true,
             'local' => true,
@@ -766,7 +768,7 @@ final class RequestBootstrap
             \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(GetElementUrl::class, new HtmlService()->getElementUrlProtectionHandler(...));
             \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(GetSrcImageUrl::class, new HtmlService()->getSrcImageUrlProtectionHandler(...));
         }
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('init');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new Init());
 
         // Formerly the tail of Piwigo\Bootstrap\CommonBootstrap::run(),
         // called after this whole bootstrap already completed -- moved

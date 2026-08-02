@@ -18,6 +18,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Lifecycle\LoadingLang;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Html\HtmlService;
 use Piwigo\Mail\MailRecipientRepository;
@@ -365,7 +366,7 @@ final class MailServiceTest extends IntegrationTestCase
         $handler = static function () use (&$notified): void {
             $notified = true;
         };
-        EventDispatcher::get()->addEventHandler('loading_lang', $handler);
+        EventDispatcher::get()->addTypedHandler(LoadingLang::class, $handler);
 
         try {
             // A fresh MailService::reset() (this file's own setUp())
@@ -384,7 +385,7 @@ final class MailServiceTest extends IntegrationTestCase
 
             self::assertTrue($notified);
         } finally {
-            EventDispatcher::get()->removeEventHandler('loading_lang', $handler);
+            EventDispatcher::get()->removeEventHandler(LoadingLang::class, $handler);
             $this->mailer->switchLangBack();
         }
     }

@@ -9,6 +9,7 @@ use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Event\Lifecycle\LoadingLang;
 use Piwigo\Html\HtmlService;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -101,7 +102,7 @@ final class RedirectService implements RedirectServiceInterface
             $user = self::userService()->buildUser(\Piwigo\Common\ValueObject\UserId::from($guest_id));
             CurrentUser::set(User::fromUserArray($user));
             Lang::load('common.lang');
-            EventDispatcher::get()->triggerNotify('loading_lang');
+            EventDispatcher::get()->dispatchNotify(new LoadingLang());
             Lang::load('lang', $paths->siteLocal, [
                 'no_fallback' => true,
                 'local' => true,

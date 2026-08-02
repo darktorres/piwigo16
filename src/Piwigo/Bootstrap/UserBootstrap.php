@@ -14,6 +14,7 @@ use Piwigo\Core\Logger;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Event\User\UserInit;
 use Piwigo\Html\HtmlService;
 use Piwigo\Url\UrlService;
 use Piwigo\Ws\PwgCore;
@@ -212,7 +213,7 @@ final class UserBootstrap
             $user['language'] = $language;
             \Piwigo\Users\CurrentUser::updateLanguage($language);
         }
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('user_init', $user);
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new UserInit($user));
     }
 
     /**

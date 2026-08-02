@@ -10,6 +10,7 @@ namespace Piwigo\Admin;
 
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Db\DbConnection;
+use Piwigo\Event\Lifecycle\PluginsLoaded;
 use Piwigo\PluginConfig\PluginRepository;
 
 /**
@@ -61,7 +62,7 @@ final class PluginLoader
                 // CategoryCatsRenderer's own unboxing).
                 self::loadPlugin($plugin->toArray());
             }
-            \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('plugins_loaded');
+            \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new PluginsLoaded());
         }
     }
 

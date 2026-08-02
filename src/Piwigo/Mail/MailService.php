@@ -11,6 +11,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WebmasterMailProviderInterface;
+use Piwigo\Event\Lifecycle\LoadingLang;
 use Piwigo\Html\HtmlService;
 use Piwigo\Template\Template;
 use Piwigo\Url\UrlService;
@@ -457,7 +458,7 @@ final class MailService implements MailerInterface
                 }
             }
 
-            \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loading_lang');
+            \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LoadingLang());
             Lang::load(
                 'lang',
                 CurrentPaths::get()->siteLocal,

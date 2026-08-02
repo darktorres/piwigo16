@@ -8,6 +8,7 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Event\Lifecycle\LoadingLang;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
@@ -38,7 +39,7 @@ final class NbmController implements ControllerInterface
         // Translations are in the admin file too.
         Lang::load('admin.lang');
         // Need to update a second time.
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loading_lang');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LoadingLang());
         Lang::load('lang', \Piwigo\Core\CurrentPaths::get()->siteLocal, [
             'no_fallback' => true,
             'local' => true,

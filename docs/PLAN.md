@@ -663,18 +663,21 @@ documented judgment call, not a miss). **Confirmed live**: zero `global $x`
 anywhere in `src/Piwigo/`, zero `$GLOBALS` reads, the door-lock Arch tests
 pass.
 
-**Track B — event dispatch retarget.** **Only half delivered relative to
-its own stated target.** The free-function elimination is done and
-verified — `add_event_handler()`/`trigger_change()`/`trigger_notify()`
+**Track B — event dispatch retarget.** **Done and verified live
+(2026-08-02).** The free-function elimination landed first —
+`add_event_handler()`/`trigger_change()`/`trigger_notify()`
 (`PluginConfig/functions.php`) deleted, all 241 real call sites (later
 re-counted at 240) retargeted onto `EventDispatcher::get()->addEventHandler()`/
-`triggerChange()`/`triggerNotify()` directly. **But the actual point of
-Track B — typed event objects (`SomeEvent` classes, `dispatchNotify()`/
-`dispatchChange()`) replacing the bare-string-keyed dispatch — was never
-built.** `EventDispatcher.php` still has only the original string-keyed
-methods today, confirmed by reading it directly. A real, still-open gap;
-full batch plan (155 real events mapped to 11 domain batches, ~20 needing
-a handler-signature rewrite too) written up separately:
+`triggerChange()`/`triggerNotify()` directly. Track B's actual point —
+typed event objects (`SomeEvent` classes, `dispatchNotify()`/
+`dispatchChange()`) replacing the bare-string-keyed dispatch — then
+shipped across 12 domain batches (all 155 real events, including the
+7-event WS-protocol-lifecycle group originally deferred behind P26).
+`EventDispatcher.php` now exposes `addTypedHandler()`/`dispatchChange()`/
+`dispatchNotify()` alongside the original string-keyed methods (kept only
+for `'trigger'`, its own permanent internal meta-notification channel). A
+token-aware door-lock Arch test enforces zero remaining string-keyed call
+sites outside that one name. Full history and design notes:
 `~/.claude/plans/track-b-typed-events-gap.md`.
 
 **Track C — `l10n()`/`get_root_url()` retarget.** Done and verified —
@@ -814,11 +817,14 @@ for Tailwind's `@source` scanning.
 ### Epoch I — Plugins/layering/repo-restructure (P31–P32) — not started
 
 **P31 — Plugin / Theme contracts + bundled extensions + decomposition**
-(`PluginInterface`/`ThemeInterface`, JSON-schema manifests, 157 typed PSR-14
-event classes + 16 Listener/Subscriber classes, migrating 7 bundled
-extensions, OpenAPI spec generation, outbound webhooks). **Not started** —
-this is also the real, canonical home for Track B's still-open typed-event-object
-gap (above): P31's own documented design ties the typed events to
+(`PluginInterface`/`ThemeInterface`, JSON-schema manifests, 16
+Listener/Subscriber classes, migrating 7 bundled extensions, OpenAPI spec
+generation, outbound webhooks). **Not started** — but its typed-event-object
+piece shipped early, independent of the rest: Track B (above) already
+built all 155 typed event classes and the `dispatchChange()`/
+`dispatchNotify()`/`addTypedHandler()` dispatch mechanism, ahead of and
+outside P31. What's left here is wiring those classes to a real plugin
+registration surface — P31's own documented design ties them to
 `PluginInterface::subscribedEvents()`, which doesn't exist yet.
 
 **P32 — Layer decoupling + repository restructure** (drive the Deptrac

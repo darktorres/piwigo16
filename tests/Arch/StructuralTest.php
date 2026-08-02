@@ -209,7 +209,21 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
     // Kernel::container() directly itself -- every real container access
     // already goes through a Bootstrap/ class (Legacy Coupling Retirement
     // Phase 8, 8e).
+    //
+    // Singleton/service-locator elimination campaign: a handful of classes
+    // outside Bootstrap/ also carry ONE narrow, explicitly-tracked
+    // exception each -- a transitional `@deprecated ...Static()` shim
+    // method (see e.g. Piwigo\Core\ApiKeyRequestFlag::isActiveStatic()'s
+    // own docblock) that lets a not-yet-converted caller elsewhere keep
+    // working unchanged until its own phase converts it. Every entry below
+    // is removed once that class's shim is deleted -- this allow-list
+    // should shrink back to empty by the end of the campaign, not grow
+    // unbounded.
     $repoRoot = __DIR__ . '/../..';
+
+    $shimAllowedFiles = [
+        '/src/Piwigo/Core/ApiKeyRequestFlag.php',
+    ];
 
     $hits = [
         ...findCallSites($repoRoot . '/src/Piwigo', 'Kernel::container('),
@@ -220,6 +234,7 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
     $disallowed = array_values(array_filter(
         $hits,
         static fn (array $hit): bool => ! str_contains($hit['path'], '/src/Piwigo/Bootstrap/')
+            && ! array_any($shimAllowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
     ));
 
     expect(describeCallSites($disallowed))->toBe([]);
@@ -399,16 +414,34 @@ test('AdminContext::reset() is only called from tests/', function (): void {
     expect(describeCallSites($hits))->toBe([]);
 });
 
-test('ApiKeyRequestFlag::reset() is only called from tests/', function (): void {
+test('ApiKeyRequestFlag::isActiveStatic() transitional shim has a shrinking, known allow-list', function (): void {
+    // Singleton/service-locator elimination campaign, Phase 1: real callers
+    // (Piwigo\Ws\PwgCore/PwgServer -- Phase 10; Piwigo\Session\SessionService
+    // -- Phase 4) aren't converted to constructor injection yet, so they use
+    // this static shim instead of the real isActive() instance method (see
+    // that method's own docblock). Every phase that converts one more of
+    // these files should remove it from the allow-list below; once the
+    // allow-list is empty, delete isActiveStatic() itself and this test.
     $repoRoot = __DIR__ . '/../..';
 
-    $hits = [
-        ...findCallSites($repoRoot . '/src/Piwigo', 'ApiKeyRequestFlag::reset('),
-        ...findCallSitesInRootPhpFiles($repoRoot, 'ApiKeyRequestFlag::reset('),
-        ...findCallSitesInBinFiles($repoRoot, 'ApiKeyRequestFlag::reset('),
+    $allowedFiles = [
+        '/src/Piwigo/Ws/PwgCore.php',
+        '/src/Piwigo/Ws/PwgServer.php',
+        '/src/Piwigo/Session/SessionService.php',
     ];
 
-    expect(describeCallSites($hits))->toBe([]);
+    // Comment-aware (findCallSitesOutsideComments, not findCallSites): this
+    // class's own docblock spells out the exact grep string callers should
+    // use to find their own remaining references, which would otherwise
+    // self-match as a false "call site" in its own file.
+    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'ApiKeyRequestFlag::isActiveStatic(');
+
+    $disallowed = array_values(array_filter(
+        $hits,
+        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
+    ));
+
+    expect(describeCallSites($disallowed))->toBe([]);
 });
 
 test('CurrentLogger::reset() is only called from tests/', function (): void {

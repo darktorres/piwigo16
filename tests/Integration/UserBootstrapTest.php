@@ -18,6 +18,7 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\WsContext;
 use Piwigo\Db\DbConnection;
@@ -126,7 +127,7 @@ final class UserBootstrapTest extends IntegrationTestCase
 
     private function bootstrap(): UserBootstrap
     {
-        return new UserBootstrap(new RedirectService(), new UrlService(new HtmlService()));
+        return new UserBootstrap(new RedirectService(), new UrlService(new HtmlService()), new ApiKeyRequestFlag());
     }
 
     public function test_initialize_auto_registers_a_new_local_account_for_an_unknown_apache_remote_user(): void

@@ -556,7 +556,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
         // list of prohibited methods (\Piwigo\Config\CurrentConfig::apiKeyForbiddenMethods()) for API keys
         // if it is, access is refused (false)
         if (
-            ApiKeyRequestFlag::isActive()
+            ApiKeyRequestFlag::isActiveStatic()
             or (isset($_SESSION['connected_with']) and $_SESSION['connected_with'] === 'ws_session_login_api_key')
         ) {
             $forbidden_methods = \Piwigo\Config\CurrentConfig::apiKeyForbiddenMethods();

@@ -17,26 +17,46 @@ namespace Piwigo\Core;
  * activate() once per request when a WS api_key authenticates; SessionService
  * (session persistence gate) and PwgServer (api_key-forbidden WS methods)
  * read isActive() instead of defined('PWG_API_KEY_REQUEST').
+ *
+ * Singleton/service-locator elimination campaign, Phase 1: converted from a
+ * self-managed static facade to a container-shared instance. `UserBootstrap`
+ * (the only writer) constructor-injects this directly. `Piwigo\Ws\PwgCore`/
+ * `Piwigo\Ws\PwgServer` (Phase 10) and `Piwigo\Session\SessionService`
+ * (Phase 4) aren't converted yet, so they keep calling the `isActiveStatic()`
+ * shim below instead of `isActive()` -- see that method's own docblock.
  */
 final class ApiKeyRequestFlag
 {
-    private static bool $active = false;
+    private bool $active = false;
 
-    public static function activate(): void
+    public function activate(): void
     {
-        self::$active = true;
+        $this->active = true;
     }
 
-    public static function isActive(): bool
+    public function isActive(): bool
     {
-        return self::$active;
+        return $this->active;
     }
 
     /**
-     * Test-only -- resets the flag between test cases in the same process.
+     * @deprecated transitional bridge for callers not yet converted to
+     * constructor injection (Piwigo\Ws\PwgCore::sessionLogin()/
+     * sessionLogout(), Piwigo\Ws\PwgServer::isInvokeAllowed(), and
+     * Piwigo\Session\SessionService::sessionWrite()) -- PHP forbids an
+     * instance method and a static method sharing one name, hence the
+     * `Static` suffix (not a rename of the real API -- `isActive()` above
+     * is the real one; this is scaffolding only). Delete once
+     * `grep -rn "ApiKeyRequestFlag::isActiveStatic("` outside tests/
+     * returns nothing.
      */
-    public static function reset(): void
+    public static function isActiveStatic(): bool
     {
-        self::$active = false;
+        $instance = Kernel::container()->get(self::class);
+        if (! $instance instanceof self) {
+            throw new \LogicException('Container returned an unexpected type for ' . self::class);
+        }
+
+        return $instance->isActive();
     }
 }

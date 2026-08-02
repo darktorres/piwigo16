@@ -436,7 +436,7 @@ final class PwgCore
      */
     public static function sessionLogin(array $params, PwgServer &$service): PwgError|true
     {
-        if (ApiKeyRequestFlag::isActive()) {
+        if (ApiKeyRequestFlag::isActiveStatic()) {
             return new PwgError(401, 'Cannot use this method with an api key');
         }
 
@@ -467,7 +467,7 @@ final class PwgCore
      */
     public static function sessionLogout(array $params, PwgServer &$service): PwgError|true
     {
-        if (ApiKeyRequestFlag::isActive()) {
+        if (ApiKeyRequestFlag::isActiveStatic()) {
             return new PwgError(401, 'Cannot use this method with an api key');
         }
 

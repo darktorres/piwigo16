@@ -47,6 +47,7 @@ final class UserBootstrap
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
+        private readonly ApiKeyRequestFlag $apiKeyRequestFlag,
     ) {}
 
     public function initialize(): void
@@ -145,7 +146,7 @@ final class UserBootstrap
                     $service->sendResponse(new PwgError(401, 'Invalid api_key'));
                     exit;
                 }
-                ApiKeyRequestFlag::activate();
+                $this->apiKeyRequestFlag->activate();
 
                 // set pwg_token for api_key request -- load-bearing write, not
                 // covered by Request\UserBootstrapRequest (see its own

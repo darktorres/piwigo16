@@ -155,7 +155,7 @@ final class SessionService
         // you do not want the session to be written to the database (no user
         // session persistence) -- this avoids polluting the session table
         // with stateless API accesses
-        if (ApiKeyRequestFlag::isActive()) {
+        if (ApiKeyRequestFlag::isActiveStatic()) {
             return true;
         }
         $this->repo->write($this->getRemoteAddrSessionHash() . $sessionId, $data);

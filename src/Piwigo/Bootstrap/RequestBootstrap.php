@@ -489,8 +489,11 @@ final class RequestBootstrap
             new CookieService(),
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class),
         )->pwgLogin(...));
-        new UserBootstrap(new RedirectService(), new UrlService(new HtmlService()))
-            ->initialize();
+        new UserBootstrap(
+            new RedirectService(),
+            new UrlService(new HtmlService()),
+            self::apiKeyRequestFlag(),
+        )->initialize();
     }
 
     /**
@@ -796,6 +799,23 @@ final class RequestBootstrap
     private static function activityService(Connection $conn): ActivityService
     {
         return new ActivityService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class));
+    }
+
+    /**
+     * Resolves the container-shared instance (not `new ApiKeyRequestFlag()`)
+     * so that `UserBootstrap::initialize()`'s `activate()` call is visible
+     * to every other consumer holding the same shared instance -- see that
+     * class's own docblock (singleton/service-locator elimination campaign,
+     * Phase 1).
+     */
+    private static function apiKeyRequestFlag(): \Piwigo\Core\ApiKeyRequestFlag
+    {
+        $flag = Kernel::container()->get(\Piwigo\Core\ApiKeyRequestFlag::class);
+        if (! $flag instanceof \Piwigo\Core\ApiKeyRequestFlag) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\ApiKeyRequestFlag::class);
+        }
+
+        return $flag;
     }
 
     /**

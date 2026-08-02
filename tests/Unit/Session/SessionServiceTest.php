@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\ApiKeyRequestFlag;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbCredentials;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Session\SessionEntity;
@@ -45,7 +46,9 @@ beforeEach(function () use (&$originalDbHost): void {
 afterEach(function () use (&$originalDbHost): void {
     putenv($originalDbHost === null ? 'PIWIGO_DB_HOST' : 'PIWIGO_DB_HOST=' . $originalDbHost);
     DbCredentials::reset();
-    ApiKeyRequestFlag::reset();
+    // Harmless for every other test in this file, which never calls
+    // Kernel::boot() at all -- Kernel::reset() is a safe no-op regardless.
+    Kernel::reset();
 });
 
 test('generateKey returns a string of the requested length', function (): void {
@@ -250,14 +253,19 @@ test('getSessionVar returns the default when unset', function (): void {
 test('sessionWrite short-circuits to true without touching the repository when the request is api_key-authenticated', function (): void {
     // Same "never touches the repository's DB-backed methods" shape as
     // this file's own header comment: if this short-circuit branch
-    // (ApiKeyRequestFlag::isActive()) were broken and control fell through
-    // to $this->repo->write(), that would attempt a real connection to
-    // the deliberately unreachable PIWIGO_DB_HOST set up by
-    // makeSessionService() and this test would error out instead of
-    // passing -- so a clean `true` result here is itself proof the
-    // repository was never reached.
+    // (ApiKeyRequestFlag::isActiveStatic(), reading the container-shared
+    // instance -- SessionService itself isn't converted to constructor
+    // injection until Phase 4, see that class's own shim docblock) were
+    // broken and control fell through to $this->repo->write(), that would
+    // attempt a real connection to the deliberately unreachable
+    // PIWIGO_DB_HOST set up by makeSessionService() and this test would
+    // error out instead of passing -- so a clean `true` result here is
+    // itself proof the repository was never reached.
     $service = makeSessionService();
-    ApiKeyRequestFlag::activate();
+    Kernel::boot();
+    $flag = Kernel::container()->get(ApiKeyRequestFlag::class);
+    expect($flag)->toBeInstanceOf(ApiKeyRequestFlag::class);
+    $flag->activate();
 
     expect($service->sessionWrite('some-session-id', 'some-data'))->toBeTrue();
 });

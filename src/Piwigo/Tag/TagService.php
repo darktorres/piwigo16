@@ -19,6 +19,7 @@ use Piwigo\Event\Tag\RenderTagName;
 use Piwigo\Event\Tag\RenderTagUrl;
 use Piwigo\Image\ImageService;
 use Piwigo\Permission\PermissionService;
+use Piwigo\Permission\SqlCondition;
 use Piwigo\Tag\Projection\Tag;
 use Piwigo\Tag\Projection\TagBrief;
 
@@ -327,54 +328,26 @@ final readonly class TagService
             return [];
         }
 
-        $joinSql = $usePermissions
-            ? 'INNER JOIN ' . Tables::imageCategory() . ' ic ON id=ic.image_id'
-            : '';
-        $joinSql .= '
-    INNER JOIN ' . Tables::imageTag() . ' it ON id=it.image_id';
-
-        // SQL-modernization audit: the tag_id list and permission
-        // condition are now bound via $params/$types instead of spliced
-        // into $whereSql -- see TagRepository::findImageIdsForTags()'s
-        // own docblock for why $extraImagesWhereSql/$orderBySql stay raw
-        // fragments.
-        $whereSql = 'WHERE tag_id IN (:tagIds)';
-        $params = [
-            'tagIds' => array_map(static fn (TagId $id): int => $id->value, $tagIds),
-        ];
-        $types = [
-            'tagIds' => ArrayParameterType::INTEGER,
-        ];
-
-        if ($usePermissions) {
-            $condition = $this->permissionService->getSqlConditionFandFAsCondition([
+        $condition = $usePermissions
+            ? $this->permissionService->getSqlConditionFandFAsCondition([
                 'forbidden_categories' => 'category_id',
                 'visible_categories' => 'category_id',
                 'visible_images' => 'id',
-            ]);
-
-            if (! $condition->isEmpty()) {
-                $whereSql .= "\n  AND " . $condition->sql;
-                $params = array_merge($params, $condition->parameters);
-                $types = array_merge($types, $condition->types);
-            }
-        }
-
-        if (! in_array($extraImagesWhereSql, [null, ''], true)) {
-            $whereSql .= " \nAND (" . $extraImagesWhereSql . ')';
-            $params = array_merge($params, $extraParams);
-            $types = array_merge($types, $extraTypes);
-        }
-
-        $groupHavingSql = 'GROUP BY id';
-        if ($mode === 'AND' && count($tagIds) > 1) {
-            $groupHavingSql .= '
-  HAVING COUNT(DISTINCT tag_id)=' . count($tagIds);
-        }
+            ])
+            : new SqlCondition('');
 
         $orderBySql = in_array($orderBy, [null, ''], true) ? $this->currentConfig->orderBy() : $orderBy;
 
-        return $this->repo->findImageIdsForTags($joinSql, $whereSql, $groupHavingSql, $orderBySql, $params, $types);
+        return $this->repo->findImageIdsForTags(
+            array_map(static fn (TagId $id): int => $id->value, $tagIds),
+            $mode,
+            $usePermissions,
+            $condition,
+            in_array($extraImagesWhereSql, [null, ''], true) ? '' : $extraImagesWhereSql,
+            $extraParams,
+            $extraTypes,
+            $orderBySql
+        );
     }
 
     /**

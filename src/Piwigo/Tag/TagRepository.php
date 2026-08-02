@@ -219,40 +219,73 @@ final class TagRepository extends EntityRepository
     }
 
     /**
-     * $joinSql/$whereSql/$groupHavingSql/$orderBySql are raw, already-built
-     * SQL fragments assembled by TagService::getImageIdsForTags() -- same
-     * fragment-passing shape as CalendarRepository::findImageIds().
+     * Further SQL-modernization audit, Item 4: $joinSql/$whereSql/
+     * $groupHavingSql used to be fully assembled by TagService::
+     * getImageIdsForTags() itself and handed here pre-built -- now typed,
+     * the repository builds its own join/base-where/group-having
+     * internally from $tagIds/$mode/$usePermissions/$permissionCondition.
+     * $extraImagesWhereSql/$extraParams/$extraTypes/$orderBySql stay raw,
+     * caller-supplied opaque fragments -- the one legitimate exception,
+     * not the norm: Ws\PwgTags::getImages() passes WsHelper::
+     * stdImageSqlFilter()'s own SqlCondition->sql straight through as the
+     * public WS API's genuine generic image-filter feature (f_min_rate
+     * etc.), which can't be modeled as a fixed set of typed params.
      *
-     * SQL-modernization audit: $params/$types widened additively (both
-     * default `[]`) -- same "transitional caller-built query" move as
-     * CategoryRepository::fetchCallerBuiltQuery()/SearchRepository::
-     * queryRows() -- so TagService::getImageIdsForTags() can bind its own
-     * tag_id list and permission condition instead of splicing them into
-     * $whereSql. $extraImagesWhereSql/$orderBySql (reachable via
-     * Ws\PwgTags -> Ws\WsHelper::stdImageSqlFilter()/stdImageSqlOrder())
-     * stay a raw fragment inside $whereSql/$orderBySql: WsHelper.php
-     * isn't one of this initiative's 29 target files, and both already
-     * validate their own inputs (DateHelper::isValidMysqlDatetime()/
-     * is_numeric() guards) before a value ever reaches this method.
-     *
-     * @param array<string, mixed> $params
-     * @param array<string, ArrayParameterType|ParameterType> $types
+     * @param list<int> $tagIds already-unwrapped TagId values
+     * @param array<string, mixed> $extraParams
+     * @param array<string, ArrayParameterType|ParameterType> $extraTypes
      * @return list<int>
      */
-    public function findImageIdsForTags(string $joinSql, string $whereSql, string $groupHavingSql, string $orderBySql, array $params = [], array $types = []): array
-    {
-        $imagesTable = Tables::images();
-
-        $ids = $this->getEntityManager()
+    public function findImageIdsForTags(
+        array $tagIds,
+        string $mode,
+        bool $usePermissions,
+        SqlCondition $permissionCondition,
+        string $extraImagesWhereSql = '',
+        array $extraParams = [],
+        array $extraTypes = [],
+        string $orderBySql = ''
+    ): array {
+        $qb = $this->getEntityManager()
             ->getConnection()
-            ->executeQuery(
-                <<<SQL
-                SELECT id FROM {$imagesTable} i {$joinSql} {$whereSql} {$groupHavingSql} {$orderBySql}
-                SQL
-                ,
-                $params,
-                $types
-            )->fetchFirstColumn();
+            ->createQueryBuilder()
+            ->select('id')
+            ->from(Tables::images(), 'i');
+
+        if ($usePermissions) {
+            $qb->innerJoin('i', Tables::imageCategory(), 'ic', 'id=ic.image_id');
+        }
+
+        $qb->innerJoin('i', Tables::imageTag(), 'it', 'id=it.image_id')
+            ->where($qb->expr()->in('tag_id', ':tagIds'))
+            ->setParameter('tagIds', $tagIds, ArrayParameterType::INTEGER)
+            ->groupBy('id');
+
+        self::applyCondition($qb, $permissionCondition);
+
+        if ($extraImagesWhereSql !== '') {
+            // Parenthesized: $extraImagesWhereSql (e.g. WsHelper::
+            // stdImageSqlFilter()'s own fragment) can itself contain a
+            // top-level OR, which andWhere()'s plain string concatenation
+            // wouldn't otherwise scope correctly against the conditions
+            // already applied above.
+            $qb->andWhere('(' . $extraImagesWhereSql . ')');
+            foreach ($extraParams as $name => $value) {
+                $qb->setParameter($name, $value, $extraTypes[$name] ?? ParameterType::STRING);
+            }
+        }
+
+        if ($mode === 'AND' && count($tagIds) > 1) {
+            $qb->having('COUNT(DISTINCT tag_id) = :tagCount')
+                ->setParameter('tagCount', count($tagIds));
+        }
+
+        if ($orderBySql !== '') {
+            $qb->orderBy(str_replace('ORDER BY ', '', $orderBySql));
+        }
+
+        $ids = $qb->executeQuery()
+            ->fetchFirstColumn();
 
         return array_values(array_map(intval(...), array_filter($ids, is_numeric(...))));
     }

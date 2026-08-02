@@ -6,6 +6,7 @@ namespace Piwigo\Tests\Integration;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\ParameterType;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
@@ -473,22 +474,36 @@ final class TagRepositoryTest extends IntegrationTestCase
     /**
      * findImageIdsForTags() is otherwise only exercised indirectly via
      * TagServiceTest's own getImageIdsForTags() tests -- this is the
-     * first direct test of its own $params/$types widening (SQL-
-     * modernization audit).
+     * first direct test of its own typed params (Further SQL-
+     * modernization audit, Item 4).
      */
     public function test_find_image_ids_for_tags_binds_named_parameters(): void
     {
-        $ids = $this->repo->findImageIdsForTags(
-            'INNER JOIN ' . Tables::imageTag() . ' it ON id=it.image_id',
-            'WHERE tag_id IN (:tagIds)',
-            'GROUP BY id',
-            '',
-            ['tagIds' => [1]],
-            ['tagIds' => ArrayParameterType::INTEGER],
-        );
+        $ids = $this->repo->findImageIdsForTags([1], 'AND', false, new SqlCondition(''));
         sort($ids);
 
         self::assertSame([1, 2, 3], $ids);
+    }
+
+    public function test_find_image_ids_for_tags_applies_an_extra_where_fragment_with_its_own_bound_params(): void
+    {
+        // Proves $extraImagesWhereSql/$extraParams/$extraTypes (the one
+        // legitimate caller-supplied fragment this method still accepts,
+        // see its own docblock) reach the query and stay correctly bound
+        // -- excludes image 1 by id, matching all 3 of category 1's images
+        // (1, 2, 3) down to just 2 and 3.
+        $ids = $this->repo->findImageIdsForTags(
+            [1],
+            'AND',
+            false,
+            new SqlCondition(''),
+            'i.id != :excludedId',
+            ['excludedId' => 1],
+            ['excludedId' => ParameterType::INTEGER],
+        );
+        sort($ids);
+
+        self::assertSame([2, 3], $ids);
     }
 
     public function test_exists_by_id_is_true_for_a_real_tag(): void

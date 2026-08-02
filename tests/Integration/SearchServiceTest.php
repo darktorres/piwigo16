@@ -456,20 +456,23 @@ final class SearchServiceTest extends IntegrationTestCase
 
     public function test_qsearch_get_text_token_search_sql_is_injection_safe(): void
     {
-        // [SEC-18] a term with a single quote must not break out of the
-        // generated REGEXP/MATCH clauses -- proven by actually executing
-        // them against the real fixture DB, not just eyeballing the SQL.
+        // [SEC-18]/Further SQL-modernization audit Item 8: a term with a
+        // single quote must not break out of the generated REGEXP/MATCH
+        // clauses -- proven by actually executing them (with their own
+        // bound values) against the real fixture DB, not just eyeballing
+        // the SQL.
         $token = new QSingleToken("nature's", 0, null);
 
         // ['name', 'comment'] matches the images_ft_name_comment FULLTEXT
         // index's exact column list (MySQL requires an exact match to use
         // MATCH() against it) -- the same pair every real call site passes.
-        $clauses = $this->service->qsearchGetTextTokenSearchSql($token, ['name', 'comment']);
+        [$clauses, $values] = $this->service->qsearchGetTextTokenSearchSql($token, ['name', 'comment']);
 
         self::assertNotSame([], $clauses);
 
         $count = $this->conn->executeQuery(
-            'SELECT COUNT(*) FROM ' . Tables::images() . ' WHERE (' . implode(' OR ', $clauses) . ')'
+            'SELECT COUNT(*) FROM ' . Tables::images() . ' WHERE (' . implode(' OR ', $clauses) . ')',
+            $values
         )->fetchOne();
 
         self::assertSame(0, is_numeric($count) ? (int) $count : null);
@@ -830,11 +833,12 @@ final class SearchServiceTest extends IntegrationTestCase
         // MySQL FULLTEXT can't do a leading-wildcard prefix match.
         $token = new QSingleToken('hoto', QSingleToken::QST_WILDCARD_BEGIN, null);
 
-        $clauses = $this->service->qsearchGetTextTokenSearchSql($token, ['name']);
+        [$clauses, $values] = $this->service->qsearchGetTextTokenSearchSql($token, ['name']);
 
         self::assertNotSame([], $clauses);
         $count = $this->conn->executeQuery(
-            'SELECT COUNT(*) FROM ' . Tables::images() . ' WHERE (' . implode(' OR ', $clauses) . ')'
+            'SELECT COUNT(*) FROM ' . Tables::images() . ' WHERE (' . implode(' OR ', $clauses) . ')',
+            $values
         )->fetchOne();
         // every fixture image is named "Photo N" -- "hoto" (no left
         // boundary required) matches all 5.
@@ -846,11 +850,12 @@ final class SearchServiceTest extends IntegrationTestCase
         $modifier = QSingleToken::QST_QUOTED | QSingleToken::QST_WILDCARD_END;
         $token = new QSingleToken('Phot', $modifier, null);
 
-        $clauses = $this->service->qsearchGetTextTokenSearchSql($token, ['name']);
+        [$clauses, $values] = $this->service->qsearchGetTextTokenSearchSql($token, ['name']);
 
         self::assertNotSame([], $clauses);
         $count = $this->conn->executeQuery(
-            'SELECT COUNT(*) FROM ' . Tables::images() . ' WHERE (' . implode(' OR ', $clauses) . ')'
+            'SELECT COUNT(*) FROM ' . Tables::images() . ' WHERE (' . implode(' OR ', $clauses) . ')',
+            $values
         )->fetchOne();
         self::assertSame(5, is_numeric($count) ? (int) $count : null);
     }
@@ -862,11 +867,12 @@ final class SearchServiceTest extends IntegrationTestCase
         // term itself is longer than 3 chars.
         $token = new QSingleToken('ab-cd', 0, null);
 
-        $clauses = $this->service->qsearchGetTextTokenSearchSql($token, ['name']);
+        [$clauses, $values] = $this->service->qsearchGetTextTokenSearchSql($token, ['name']);
 
         self::assertNotSame([], $clauses);
         $count = $this->conn->executeQuery(
-            'SELECT COUNT(*) FROM ' . Tables::images() . ' WHERE (' . implode(' OR ', $clauses) . ')'
+            'SELECT COUNT(*) FROM ' . Tables::images() . ' WHERE (' . implode(' OR ', $clauses) . ')',
+            $values
         )->fetchOne();
         self::assertSame(0, is_numeric($count) ? (int) $count : null);
     }
@@ -875,20 +881,20 @@ final class SearchServiceTest extends IntegrationTestCase
     {
         $token = new QSingleToken('nature', QSingleToken::QST_QUOTED, null);
 
-        $clauses = $this->service->qsearchGetTextTokenSearchSql($token, ['name', 'comment']);
+        [$clauses, $values] = $this->service->qsearchGetTextTokenSearchSql($token, ['name', 'comment']);
 
-        $expectedQuoted = $this->repo->quote('"nature"');
-        self::assertSame(['MATCH(name, comment) AGAINST(' . $expectedQuoted . ' IN BOOLEAN MODE)'], $clauses);
+        self::assertSame(['MATCH(name, comment) AGAINST(? IN BOOLEAN MODE)'], $clauses);
+        self::assertSame(['"nature"'], $values);
     }
 
     public function test_qsearch_get_text_token_search_sql_appends_a_star_for_a_trailing_wildcard_fulltext_term(): void
     {
         $token = new QSingleToken('travel', QSingleToken::QST_WILDCARD_END, null);
 
-        $clauses = $this->service->qsearchGetTextTokenSearchSql($token, ['name', 'comment']);
+        [$clauses, $values] = $this->service->qsearchGetTextTokenSearchSql($token, ['name', 'comment']);
 
-        $expectedQuoted = $this->repo->quote('travel*');
-        self::assertSame(['MATCH(name, comment) AGAINST(' . $expectedQuoted . ' IN BOOLEAN MODE)'], $clauses);
+        self::assertSame(['MATCH(name, comment) AGAINST(? IN BOOLEAN MODE)'], $clauses);
+        self::assertSame(['travel*'], $values);
     }
 
     public function test_qsearch_get_text_token_search_sql_throws_when_preg_split_hits_the_backtrack_limit(): void

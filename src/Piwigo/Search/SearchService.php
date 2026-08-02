@@ -734,16 +734,23 @@ final readonly class SearchService
     }
 
     /**
-     * [SEC-18] Free-text search terms are quoted via
-     * {@see SearchRepository::quote()} (real DBAL driver escaping),
-     * replacing the original's `addslashes()`.
+     * Further SQL-modernization audit, Item 8: free-text search terms are
+     * now bound as real `?` parameters instead of manually quote()'d and
+     * spliced inline -- [SEC-18]'s own quote()-based fix already replaced
+     * the original's addslashes(), but a bound parameter is stronger still
+     * (the uniform fix every other clause in this modernization lineage
+     * already got). $values is positional, in the exact order its
+     * corresponding `?` appears across $clauses -- callers thread it
+     * straight through to whichever of SearchRepository's positional-`?`
+     * executors they already use.
      *
      * @param  string[]  $fields
-     * @return non-falsy-string[]
+     * @return array{0: list<non-falsy-string>, 1: list<string>}
      */
     public function qsearchGetTextTokenSearchSql(QSingleToken $token, array $fields): array
     {
         $clauses = [];
+        $values = [];
         $variants = array_merge([$token->term], $token->variants);
         $fts = [];
         foreach ($variants as $variant) {
@@ -775,19 +782,21 @@ final readonly class SearchService
                 $useRegexpICU = preg_match('/mariadb/i', $dbVersion) !== 1 && version_compare($dbVersion, '8.0.4', '>');
 
                 // A single literal backslash here ('\\b' is a 2-char PHP
-                // string: backslash + b) -- quote() below does its own SQL
-                // string-literal escaping (doubling it to '\\\\b' in the
-                // SQL text), which MySQL's parser then reduces back to one
-                // literal backslash before REGEXP ever sees it. Confirmed
-                // live: starting from an already-doubled '\\\\b' here
-                // (4-char PHP string) round-trips through quote() into 4
-                // literal backslashes, which ICU regex parses as an
-                // escaped literal backslash + a literal 'b' -- never a
-                // \b word-boundary token -- so it silently matched 0 rows.
+                // string: backslash + b) is exactly what REGEXP needs to
+                // see -- a real bound parameter (Further SQL-modernization
+                // audit, Item 8) crosses the wire as-is, with no SQL
+                // string-literal escaping step to compensate for, unlike
+                // the former quote()-then-splice mechanism this replaced
+                // (which needed the source string pre-doubled specifically
+                // to survive quote()'s own literal-escaping round trip --
+                // confirmed empirically against a real connection that a
+                // bound '\bword\b' pattern matches correctly with no such
+                // doubling at all).
                 $pre = ((bool) ($token->modifier & QSingleToken::QST_WILDCARD_BEGIN)) ? '' : ($useRegexpICU ? '\\b' : '[[:<:]]');
                 $post = ((bool) ($token->modifier & QSingleToken::QST_WILDCARD_END)) ? '' : ($useRegexpICU ? '\\b' : '[[:>:]]');
                 foreach ($fields as $field) {
-                    $clauses[] = $field . ' REGEXP ' . $this->repo->quote($pre . preg_quote($variant) . $post);
+                    $clauses[] = $field . ' REGEXP ?';
+                    $values[] = $pre . preg_quote($variant) . $post;
                 }
             } else {
                 $ft = $variant;
@@ -804,10 +813,11 @@ final readonly class SearchService
         }
 
         if ($fts !== []) {
-            $clauses[] = 'MATCH(' . implode(', ', $fields) . ') AGAINST(' . $this->repo->quote(implode(' ', $fts)) . ' IN BOOLEAN MODE)';
+            $clauses[] = 'MATCH(' . implode(', ', $fields) . ') AGAINST(? IN BOOLEAN MODE)';
+            $values[] = implode(' ', $fts);
         }
 
-        return $clauses;
+        return [$clauses, $values];
     }
 
     /**
@@ -827,24 +837,32 @@ final readonly class SearchService
             $scope = $token->scope;
             $scopeId = $scope !== null ? $scope->id : 'photo';
             $clauses = [];
+            $params = [];
 
             $like = str_replace(['%', '_'], ['\\%', '\\_'], $token->term);
-            $fileLike = 'CONVERT(file, CHAR) LIKE ' . $this->repo->quote('%' . $like . '%');
+            $fileLike = 'CONVERT(file, CHAR) LIKE ?';
+            $fileLikeValue = '%' . $like . '%';
 
             switch ($scopeId) {
                 case 'photo':
                     $clauses[] = $fileLike;
-                    $clauses = array_merge($clauses, $this->qsearchGetTextTokenSearchSql($token, ['name', 'comment']));
+                    $params[] = $fileLikeValue;
+                    [$textClauses, $textValues] = $this->qsearchGetTextTokenSearchSql($token, ['name', 'comment']);
+                    $clauses = array_merge($clauses, $textClauses);
+                    $params = array_merge($params, $textValues);
 
                     break;
 
                 case 'file':
                     $clauses[] = $fileLike;
+                    $params[] = $fileLikeValue;
 
                     break;
                 case 'author':
                     if ((bool) strlen($token->term)) {
-                        $clauses = array_merge($clauses, $this->qsearchGetTextTokenSearchSql($token, ['author']));
+                        [$textClauses, $textValues] = $this->qsearchGetTextTokenSearchSql($token, ['author']);
+                        $clauses = array_merge($clauses, $textClauses);
+                        $params = array_merge($params, $textValues);
                     } elseif ((bool) ($token->modifier & QSingleToken::QST_WILDCARD)) {
                         $clauses[] = 'author IS NOT NULL';
                     } else {
@@ -907,7 +925,7 @@ final readonly class SearchService
             }
 
             if ($clauses !== []) {
-                $qsr->images_iids[$i] = $this->repo->findIdsByClause('id', Tables::images() . ' i', '(' . implode("\n OR ", $clauses) . ')');
+                $qsr->images_iids[$i] = $this->repo->findIdsByClause('id', Tables::images() . ' i', '(' . implode("\n OR ", $clauses) . ')', $params);
             }
         }
     }
@@ -927,8 +945,8 @@ final readonly class SearchService
                 continue;
             }
 
-            $clauses = $this->qsearchGetTextTokenSearchSql($token, ['name']);
-            $rows = $this->repo->findRowsByClause(Tables::tags(), '(' . implode("\n OR ", $clauses) . ')');
+            [$clauses, $params] = $this->qsearchGetTextTokenSearchSql($token, ['name']);
+            $rows = $this->repo->findRowsByClause(Tables::tags(), '(' . implode("\n OR ", $clauses) . ')', $params);
             foreach ($rows as $tag) {
                 if (! is_numeric($tag['id'])) {
                     continue;
@@ -1027,11 +1045,11 @@ final readonly class SearchService
                 continue;
             }
 
-            $clauses = $this->qsearchGetTextTokenSearchSql($token, ['name', 'comment']);
+            [$clauses, $params] = $this->qsearchGetTextTokenSearchSql($token, ['name', 'comment']);
             $rows = $this->repo->findRowsByClause(
                 Tables::categories(),
                 '(' . implode("\n OR ", $clauses) . ') AND id NOT IN (' . $forbiddenPlaceholders . ')',
-                $forbiddenIds
+                [...$params, ...$forbiddenIds]
             );
             foreach ($rows as $cat) {
                 if (! is_numeric($cat['id'])) {

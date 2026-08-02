@@ -543,4 +543,58 @@ final class TagRepositoryTest extends IntegrationTestCase
         sort($names);
         self::assertSame(['nature', 'travel'], $names);
     }
+
+    public function test_find_ids_by_name_like_matches_a_wildcard_pattern(): void
+    {
+        self::assertSame([1], $this->repo->findIdsByNameLike('%nat%'));
+    }
+
+    public function test_find_ids_by_name_like_returns_empty_for_no_match(): void
+    {
+        self::assertSame([], $this->repo->findIdsByNameLike('%no-such-tag%'));
+    }
+
+    public function test_exists_by_name_is_true_for_a_real_tag(): void
+    {
+        self::assertTrue($this->repo->existsByName('nature'));
+    }
+
+    public function test_exists_by_name_is_false_for_an_unknown_name(): void
+    {
+        self::assertFalse($this->repo->existsByName('no-such-tag'));
+    }
+
+    public function test_find_other_names_excludes_the_given_id(): void
+    {
+        $names = $this->repo->findOtherNames(1);
+        sort($names);
+
+        self::assertSame(['family', 'travel'], $names);
+    }
+
+    public function test_count_all_reflects_a_freshly_inserted_tag(): void
+    {
+        $before = $this->repo->countAll();
+
+        $id = $this->repo->insert('cat14-test-tag', 'cat14-test-tag');
+
+        try {
+            self::assertSame($before + 1, $this->repo->countAll());
+        } finally {
+            $this->repo->deleteByIds([$id]);
+        }
+    }
+
+    public function test_count_all_image_tag_links_reflects_a_freshly_inserted_link(): void
+    {
+        $before = $this->repo->countAllImageTagLinks();
+
+        $this->conn->insert(Tables::imageTag(), ['image_id' => 5, 'tag_id' => 2]);
+
+        try {
+            self::assertSame($before + 1, $this->repo->countAllImageTagLinks());
+        } finally {
+            $this->conn->delete(Tables::imageTag(), ['image_id' => 5, 'tag_id' => 2]);
+        }
+    }
 }

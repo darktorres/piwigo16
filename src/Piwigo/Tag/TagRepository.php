@@ -111,6 +111,10 @@ final class TagRepository extends EntityRepository
      * plain DBAL `QueryBuilder` via the entity manager's own connection,
      * not DQL.
      *
+     * Item 14 DQL audit: confirmed still applies -- image_category is
+     * never entity-mapped anywhere in this migration, plus a dynamic
+     * caller-supplied SqlCondition.
+     *
      * SQL-modernization audit: $fandFSql (a raw, already-built
      * `PermissionService::getSqlConditionFandF()` fragment) replaced with
      * a bound `SqlCondition` (its `getSqlConditionFandFAsCondition()`
@@ -176,6 +180,12 @@ final class TagRepository extends EntityRepository
      * no `QueryBuilder` equivalent and none is needed -- omitting
      * `ORDER BY` entirely is the same "unspecified order" behavior.
      *
+     * Item 14 DQL audit: stays on DBAL -- joins the never-entity-mapped
+     * `image_tag`-as-a-plain-table (no association from TagEntity), and
+     * `t.*` selects every tags column alongside a computed `counter`
+     * aggregate, a shape DQL's entity-vs-scalar select split doesn't
+     * cleanly express without listing every column by name.
+     *
      * @param list<int> $items
      * @param list<int> $excludedTagIds
      * @return list<array{id: int, name: string, url_name: string, lastmodified: string, counter: int}>
@@ -230,6 +240,10 @@ final class TagRepository extends EntityRepository
      * stdImageSqlFilter()'s own SqlCondition->sql straight through as the
      * public WS API's genuine generic image-filter feature (f_min_rate
      * etc.), which can't be modeled as a fixed set of typed params.
+     *
+     * Item 14 DQL audit: stays on DBAL -- conditionally joins the
+     * never-entity-mapped `image_category`, plus the caller-supplied raw
+     * $extraImagesWhereSql/$orderBySql fragments documented above.
      *
      * @param list<int> $tagIds already-unwrapped TagId values
      * @param array<string, mixed> $extraParams
@@ -294,6 +308,11 @@ final class TagRepository extends EntityRepository
      * Tags (id + name) linked to no photo, and not modified in the last day
      * (grace period so a tag freshly created/detached isn't immediately
      * swept up).
+     *
+     * Item 14 DQL audit: stays on DBAL -- SUBDATE(NOW(), INTERVAL 1 DAY)
+     * is MySQL-specific date arithmetic with no native DQL function (same
+     * blocker as Comment\CommentRepository::countRecentComments()'s own
+     * documented finding).
      *
      * @return list<TagBrief>
      */
@@ -467,21 +486,33 @@ final class TagRepository extends EntityRepository
      * SearchService::searchAllwords()'s own "all words" search feature
      * (distinct from quick-search's separate token-based tag lookup).
      *
+     * Item 14 DQL audit: converted to real DQL -- single-table, static
+     * WHERE, no join DQL can't express. t.id hydrates as a real TagId VO
+     * under DQL array hydration (its own 'tag_id' custom Doctrine Type
+     * applies there too, same as CommentRepository::findSummariesForImage()'s
+     * own documented finding for CommentId) -- extracted back to a plain
+     * int below since that's this method's own return contract.
+     *
      * @return list<int>
      */
     public function findIdsByNameLike(string $pattern): array
     {
-        $ids = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('id')
-            ->from(Tables::tags())
-            ->where('name LIKE :pattern')
+        $rows = $this->createQueryBuilder('t')
+            ->select('t.id')
+            ->where('t.name LIKE :pattern')
             ->setParameter('pattern', $pattern)
-            ->executeQuery()
-            ->fetchFirstColumn();
+            ->getQuery()
+            ->getArrayResult();
 
-        return array_values(array_map(intval(...), array_filter($ids, is_numeric(...))));
+        $ids = [];
+        foreach ($rows as $row) {
+            $id = is_array($row) ? ($row['id'] ?? null) : null;
+            if ($id instanceof TagId) {
+                $ids[] = $id->value;
+            }
+        }
+
+        return $ids;
     }
 
     public function findIdByUrlName(string $urlName): ?TagId
@@ -512,6 +543,16 @@ final class TagRepository extends EntityRepository
      * in practice: no 17.x plugin implements this hook yet (it's a
      * greenfield rewrite hook), so there's nothing real to migrate.
      *
+     * Item 14 DQL audit: converted to real DQL -- single-table, dynamic
+     * OR-joined LIKE conditions (ORM's own Expr::orX()/like(), same shape
+     * as findByIdsUrlNamesOrNames()'s existing DQL orX() usage above), no
+     * join DQL can't express. Fetches the full entity (not a t.id partial
+     * select) and reads ->id off it -- avoids the array-hydration/custom-
+     * Type question entirely by staying on ordinary object hydration.
+     * setMaxResults(1) matches the original's own "just the first matching
+     * row" fetchOne() semantics -- getOneOrNullResult() alone throws
+     * NonUniqueResultException for more than one match.
+     *
      * @param list<string> $patterns
      */
     public function findIdByNameLikeAnyPattern(array $patterns): ?TagId
@@ -520,24 +561,21 @@ final class TagRepository extends EntityRepository
             return null;
         }
 
-        $qb = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('id')
-            ->from(Tables::tags());
+        $qb = $this->createQueryBuilder('t');
 
-        $likeExprs = [];
+        $conditions = [];
         foreach ($patterns as $i => $pattern) {
             $placeholder = 'pattern' . $i;
-            $likeExprs[] = $qb->expr()->like('name', ':' . $placeholder);
+            $conditions[] = 't.name LIKE :' . $placeholder;
             $qb->setParameter($placeholder, $pattern);
         }
 
-        $id = $qb->where($qb->expr()->or(...$likeExprs))
-            ->executeQuery()
-            ->fetchOne();
+        $entity = $qb->where(implode(' OR ', $conditions))
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
 
-        return is_numeric($id) ? TagId::from((int) $id) : null;
+        return $entity instanceof TagEntity ? $entity->id : null;
     }
 
     public function insert(string $name, string $urlName): TagId
@@ -616,6 +654,16 @@ final class TagRepository extends EntityRepository
      * image_tag-JOIN-tags-by-image_id shape) replaced with this typed
      * method.
      *
+     * Item 14 DQL audit: stays on DBAL -- no ORM association exists
+     * between ImageTagEntity and TagEntity (ImageTagEntity's own docblock:
+     * "TagRepository ... queries it directly via DQL/QueryBuilder rather
+     * than through a dedicated repository class"), so this JOIN would need
+     * DQL's class-level `JOIN Entity WITH condition` form against two
+     * otherwise-unrelated entities -- real but meaningfully more complex
+     * than every other conversion this pass, for a method this
+     * repository's own Item 10 pass already gave a clean typed shape and
+     * test coverage; not worth the added complexity this pass.
+     *
      * @return list<array{id: int, name: string}>
      */
     public function findTagsForImage(int $imageId): array
@@ -642,6 +690,15 @@ final class TagRepository extends EntityRepository
      * real caller -- Admin\BatchManager\FilterPanelRenderer's own
      * `tags WHERE id IN (...)` shape.
      *
+     * Item 14 DQL audit: converted to real DQL -- single-table, static
+     * WHERE, no join DQL can't express. Deliberately NOT reusing
+     * toIdNameRow() here: t.id hydrates as a TagId VO under DQL (see
+     * findIdsByNameLike()'s own docblock), and toIdNameRow()'s
+     * is_numeric() check would silently default that to 0 (a TagId object
+     * is never is_numeric()) instead of throwing -- the exact silent-bug
+     * shape this class's own SQL-modernization audit has been eliminating
+     * throughout, so this reads t.id explicitly instead.
+     *
      * @param  list<int>  $ids
      * @return list<array{id: int, name: string}>
      */
@@ -651,16 +708,31 @@ final class TagRepository extends EntityRepository
             return [];
         }
 
-        $tagsTable = Tables::tags();
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->executeQuery(<<<SQL
-                SELECT id, name FROM {$tagsTable} WHERE id IN (?)
-                SQL
-                , [$ids], [ArrayParameterType::INTEGER])
-            ->fetchAllAssociative();
+        $rows = $this->createQueryBuilder('t')
+            ->select('t.id', 't.name')
+            ->where('t.id IN (:ids)')
+            ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
+            ->getQuery()
+            ->getArrayResult();
 
-        return array_map(self::toIdNameRow(...), $rows);
+        $tags = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $id = $row['id'] ?? null;
+            if (! $id instanceof TagId) {
+                continue;
+            }
+
+            $tags[] = [
+                'id' => $id->value,
+                'name' => is_string($row['name'] ?? null) ? $row['name'] : '',
+            ];
+        }
+
+        return $tags;
     }
 
     /**
@@ -680,6 +752,12 @@ final class TagRepository extends EntityRepository
      * own `ignore` convention -- Ws\PwgTags::merge() needs INSERT IGNORE so
      * an image already tagged with the destination tag doesn't collide with
      * one it's picking up from a merged-away tag.
+     *
+     * Item 14 DQL audit: stays on DBAL -- bulk multi-row INSERT via
+     * BatchWriter, deliberately not per-entity persist() (an ORM insert
+     * writes one row per flush(), not a single bulk statement); not a real
+     * DQL-vs-DBAL question, same as every other BatchWriter call site in
+     * this codebase.
      *
      * @param  list<array{image_id: int|string, tag_id: int|string}>  $inserts
      */
@@ -704,28 +782,37 @@ final class TagRepository extends EntityRepository
      * above (that one restricts to visible/permitted images via an
      * image_category JOIN, for the public-facing WS listing).
      *
+     * Item 14 DQL audit: converted to real DQL -- single-table
+     * (`image_tag`, mapped via ImageTagEntity), no WHERE/join DQL can't
+     * express. it.tagId hydrates as a TagId VO (ImageTagEntity's own
+     * TagIdType-mapped field, see that class's own docblock) -- read via
+     * instanceof, not is_numeric() (which a TagId object always fails,
+     * the same silent-bug shape findTagsByIds()'s own docblock documents).
+     *
      * @return array<int, int> [tag_id => counter]
      */
     public function countImagesPerTagUnrestricted(): array
     {
-        $imageTagTable = Tables::imageTag();
-
         $rows = $this->getEntityManager()
-            ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT tag_id, COUNT(image_id) AS counter
-                FROM {$imageTagTable}
-                GROUP BY tag_id
-                SQL);
+            ->createQueryBuilder()
+            ->select('it.tagId', 'COUNT(it.imageId) AS counter')
+            ->from(ImageTagEntity::class, 'it')
+            ->groupBy('it.tagId')
+            ->getQuery()
+            ->getArrayResult();
 
         $counters = [];
         foreach ($rows as $row) {
-            $tagId = $row['tag_id'];
-            if (! is_numeric($tagId)) {
+            if (! is_array($row)) {
                 continue;
             }
 
-            $counters[(int) $tagId] = is_numeric($row['counter']) ? (int) $row['counter'] : 0;
+            $tagId = $row['tagId'] ?? null;
+            if (! $tagId instanceof TagId) {
+                continue;
+            }
+
+            $counters[$tagId->value] = is_numeric($row['counter'] ?? null) ? (int) $row['counter'] : 0;
         }
 
         return $counters;
@@ -734,6 +821,9 @@ final class TagRepository extends EntityRepository
     /**
      * Comma-joined tag ids per image, for images linked to any of $tagIds
      * -- Ws\PwgTags::getImages()'s own "OR mode" per-image tag list.
+     *
+     * Item 14 DQL audit: stays on DBAL -- MySQL-specific `GROUP_CONCAT()`
+     * has no DQL equivalent.
      *
      * @param  list<int>  $tagIds
      * @param  list<int>  $imageIds
@@ -778,22 +868,26 @@ final class TagRepository extends EntityRepository
         return $entity === null ? null : self::toProjection($entity);
     }
 
+    /**
+     * Item 14 DQL audit: converted to real DQL -- single-table, static
+     * WHERE, no join DQL can't express.
+     */
     public function existsById(int $id): bool
     {
-        $value = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from(Tables::tags())
-            ->where('id = :id')
+        $value = $this->createQueryBuilder('t')
+            ->select('COUNT(t.id)')
+            ->where('t.id = :id')
             ->setParameter('id', $id, ParameterType::INTEGER)
-            ->executeQuery()
-            ->fetchOne();
+            ->getQuery()
+            ->getSingleScalarResult();
 
         return is_numeric($value) && (int) $value > 0;
     }
 
     /**
+     * Item 14 DQL audit: converted to real DQL -- single-table, static
+     * WHERE, no join DQL can't express.
+     *
      * @param  list<int>  $ids
      */
     public function countExistingIds(array $ids): int
@@ -802,30 +896,28 @@ final class TagRepository extends EntityRepository
             return 0;
         }
 
-        $value = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from(Tables::tags())
-            ->where('id IN (:ids)')
+        $value = $this->createQueryBuilder('t')
+            ->select('COUNT(t.id)')
+            ->where('t.id IN (:ids)')
             ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
-            ->executeQuery()
-            ->fetchOne();
+            ->getQuery()
+            ->getSingleScalarResult();
 
         return is_numeric($value) ? (int) $value : 0;
     }
 
+    /**
+     * Item 14 DQL audit: converted to real DQL -- single-table, static
+     * WHERE, no join DQL can't express.
+     */
     public function existsByName(string $name): bool
     {
-        $value = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from(Tables::tags())
-            ->where('name = :name')
+        $value = $this->createQueryBuilder('t')
+            ->select('COUNT(t.id)')
+            ->where('t.name = :name')
             ->setParameter('name', $name)
-            ->executeQuery()
-            ->fetchOne();
+            ->getQuery()
+            ->getSingleScalarResult();
 
         return is_numeric($value) && (int) $value > 0;
     }
@@ -834,22 +926,26 @@ final class TagRepository extends EntityRepository
      * Every tag name except $excludeId's own -- Ws\PwgTags::rename()'s
      * own "is the new name already taken by a different tag" check.
      *
+     * Item 14 DQL audit: converted to real DQL -- single-table, static
+     * WHERE, no join DQL can't express. t.name is a plain string column,
+     * no custom Doctrine Type involved (unlike t.id elsewhere in this
+     * class).
+     *
      * @return list<string>
      */
     public function findOtherNames(int $excludeId): array
     {
-        return array_map(
+        $names = $this->createQueryBuilder('t')
+            ->select('t.name')
+            ->where('t.id != :excludeId')
+            ->setParameter('excludeId', $excludeId)
+            ->getQuery()
+            ->getSingleColumnResult();
+
+        return array_values(array_map(
             static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
-            $this->getEntityManager()
-                ->getConnection()
-                ->createQueryBuilder()
-                ->select('name')
-                ->from(Tables::tags())
-                ->where('id != :excludeId')
-                ->setParameter('excludeId', $excludeId)
-                ->executeQuery()
-                ->fetchFirstColumn()
-        );
+            $names
+        ));
     }
 
     private static function toProjection(TagEntity $entity): Tag
@@ -862,16 +958,16 @@ final class TagRepository extends EntityRepository
     /**
      * Total row count of `tags` -- Admin\InstallationStats's own
      * "nb_tags" summary figure.
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table, no WHERE/
+     * join DQL can't express.
      */
     public function countAll(): int
     {
-        $tagsTable = Tables::tags();
-
-        $value = $this->getEntityManager()
-            ->getConnection()
-            ->fetchOne(<<<SQL
-                SELECT COUNT(*) FROM {$tagsTable}
-                SQL);
+        $value = $this->createQueryBuilder('t')
+            ->select('COUNT(t.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
 
         return is_numeric($value) ? (int) $value : 0;
     }
@@ -879,16 +975,18 @@ final class TagRepository extends EntityRepository
     /**
      * Total row count of `image_tag` -- Admin\InstallationStats's own
      * "nb_image_tag" summary figure.
+     *
+     * Item 14 DQL audit: converted to real DQL -- single-table (mapped via
+     * ImageTagEntity), no WHERE/join DQL can't express.
      */
     public function countAllImageTagLinks(): int
     {
-        $imageTagTable = Tables::imageTag();
-
         $value = $this->getEntityManager()
-            ->getConnection()
-            ->fetchOne(<<<SQL
-                SELECT COUNT(*) FROM {$imageTagTable}
-                SQL);
+            ->createQueryBuilder()
+            ->select('COUNT(it.imageId)')
+            ->from(ImageTagEntity::class, 'it')
+            ->getQuery()
+            ->getSingleScalarResult();
 
         return is_numeric($value) ? (int) $value : 0;
     }

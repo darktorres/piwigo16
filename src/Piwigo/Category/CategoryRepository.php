@@ -366,8 +366,6 @@ final class CategoryRepository extends EntityRepository
     public function findImageIdsForCategories(
         array $catIds,
         string $mode,
-        string $extraImagesWhereSql,
-        string $orderBySql,
         SqlCondition $condition
     ): array {
         if ($catIds === []) {
@@ -385,25 +383,20 @@ final class CategoryRepository extends EntityRepository
             ->groupBy('id');
         self::applyCondition($qb, $condition);
 
-        if ($extraImagesWhereSql !== '') {
-            $qb->andWhere($extraImagesWhereSql);
-        }
-
         if ($mode === 'AND' && count($catIds) > 1) {
             $qb->having('COUNT(DISTINCT category_id) = :catCount')
                 ->setParameter('catCount', count($catIds));
         }
 
-        if ($orderBySql !== '') {
-            // $orderBySql is CurrentConfig::orderBy()'s own raw "ORDER BY
-            // ..." SQL-fragment string (or a caller-supplied equivalent) --
-            // every other real consumer concatenates it directly into a raw
-            // SQL string, but QueryBuilder::orderBy() prepends its own
-            // "ORDER BY " keyword, so the prefix must be stripped here or
-            // the query becomes "ORDER BY ORDER BY ..." (a real syntax
-            // error, caught live via CategoryServiceTest).
-            $qb->orderBy(str_replace('ORDER BY ', '', $orderBySql));
-        }
+        // CurrentConfig::orderBy() is always applied -- Item 3's own dead-
+        // parameter cleanup found no real caller ever supplies a genuinely
+        // different order, so there's nothing left to distinguish "no
+        // override" from "current config order" for. Its own raw "ORDER BY
+        // ..." SQL-fragment shape means QueryBuilder::orderBy() prepends its
+        // own "ORDER BY " keyword, so the prefix must be stripped here or
+        // the query becomes "ORDER BY ORDER BY ..." (a real syntax error,
+        // caught live via CategoryServiceTest).
+        $qb->orderBy(str_replace('ORDER BY ', '', \Piwigo\Config\CurrentConfig::orderBy()));
 
         $ids = $qb->executeQuery()
             ->fetchFirstColumn();

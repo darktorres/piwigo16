@@ -436,7 +436,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_get_image_ids_for_categories_returns_images(): void
     {
-        $ids = $this->service->getImageIdsForCategories([1], 'AND', '', '', false);
+        $ids = $this->service->getImageIdsForCategories([1], 'AND', false);
         sort($ids);
 
         self::assertSame([1, 2, 3], $ids);
@@ -498,7 +498,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         // that an empty (guest-default) CurrentUser silently skips.
         CurrentUser::current()->set(User::fromUserArray(self::realisticUserGlobal()));
 
-        $ids = $this->service->getImageIdsForCategories([1], 'AND', '', '', true);
+        $ids = $this->service->getImageIdsForCategories([1], 'AND', true);
         sort($ids);
 
         self::assertSame([1, 2, 3], $ids);

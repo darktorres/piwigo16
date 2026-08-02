@@ -215,7 +215,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
 
     public function test_find_image_ids_for_categories_returns_images_in_category(): void
     {
-        $ids = $this->repo->findImageIdsForCategories([1], 'AND', '', '', new SqlCondition(''));
+        $ids = $this->repo->findImageIdsForCategories([1], 'AND', new SqlCondition(''));
         sort($ids);
 
         self::assertSame([1, 2, 3], $ids);
@@ -223,14 +223,14 @@ final class CategoryRepositoryTest extends IntegrationTestCase
 
     public function test_find_image_ids_for_categories_returns_empty_for_no_categories(): void
     {
-        self::assertSame([], $this->repo->findImageIdsForCategories([], 'AND', '', '', new SqlCondition('')));
+        self::assertSame([], $this->repo->findImageIdsForCategories([], 'AND', new SqlCondition('')));
     }
 
     public function test_find_image_ids_for_categories_and_mode_requires_all_categories(): void
     {
         // no image belongs to both category 1 and 2 in the fixture, so AND
         // mode across [1, 2] returns nothing.
-        $ids = $this->repo->findImageIdsForCategories([1, 2], 'AND', '', '', new SqlCondition(''));
+        $ids = $this->repo->findImageIdsForCategories([1, 2], 'AND', new SqlCondition(''));
 
         self::assertSame([], $ids);
     }
@@ -298,18 +298,6 @@ final class CategoryRepositoryTest extends IntegrationTestCase
     public function test_find_permalink_matches_returns_empty_for_no_permalinks(): void
     {
         self::assertSame([], $this->repo->findPermalinkMatches([]));
-    }
-
-    public function test_find_image_ids_for_categories_applies_a_non_empty_extra_where_fragment(): void
-    {
-        // Without the fragment, category 1's own 3 images (1, 2, 3) all
-        // qualify -- excluding image 1 by id proves $extraImagesWhereSql
-        // (aliased 'i', matching the query's own images-table alias)
-        // actually reaches the query rather than being silently dropped.
-        $ids = $this->repo->findImageIdsForCategories([1], 'AND', 'i.id != 1', '', new SqlCondition(''));
-        sort($ids);
-
-        self::assertSame([2, 3], $ids);
     }
 
     public function test_find_categories_by_ids_returns_empty_for_no_ids(): void

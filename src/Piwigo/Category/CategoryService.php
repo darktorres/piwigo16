@@ -515,8 +515,6 @@ final readonly class CategoryService
     public function getImageIdsForCategories(
         array $catIds,
         string $mode = 'AND',
-        string $extraImagesWhereSql = '',
-        string $orderBy = '',
         bool $usePermissions = true
     ): array {
 
@@ -532,9 +530,7 @@ final readonly class CategoryService
             ])
             : new SqlCondition('');
 
-        $effectiveOrderBy = $orderBy === '' ? $this->currentConfig->orderBy() : $orderBy;
-
-        return $this->repo->findImageIdsForCategories($catIds, $mode, $extraImagesWhereSql, $effectiveOrderBy, $condition);
+        return $this->repo->findImageIdsForCategories($catIds, $mode, $condition);
     }
 
     /**

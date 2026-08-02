@@ -111,6 +111,31 @@ final class EventDispatcher
     }
 
     /**
+     * Thin ergonomic wrapper over addEventHandler() for typed-event
+     * registration -- real per-event handler-signature checking at
+     * registration sites, with zero change to storage/dispatch internals
+     * ($event is a class-string, itself just a string; the untyped
+     * registry doesn't need to know the difference).
+     *
+     * @template T of object
+     * @param class-string<T> $event
+     * @param callable(T): (T|void) $handler
+     */
+    public function addTypedHandler(string $event, callable $handler, int $priority = 50): bool
+    {
+        // addEventHandler()'s own $func param is intentionally NOT `callable`
+        // (see its own docblock), so this boundary needs a real narrow, not
+        // a cast: PHP's `callable` type has no other shape than
+        // string|array|object, and PHPStan verifies that structurally via
+        // these three checks rather than trusting an @var override.
+        if (is_string($handler) || is_array($handler) || is_object($handler)) {
+            return $this->addEventHandler($event, $handler, $priority);
+        }
+
+        throw new \LogicException('Unreachable: a callable is always string, array, or object.');
+    }
+
+    /**
      * Faithfully replicates PHP's `==` semantics for two callables (this
      * project's PHPStan rules disallow the operator itself) -- string and
      * array callables always compare identically under `==`/`===`, but
@@ -196,6 +221,61 @@ final class EventDispatcher
     }
 
     /**
+     * Typed-event counterpart to triggerChange(): every registered handler
+     * for $event::class receives and must return an instance of
+     * $event::class, in priority order. Mirrors triggerChange()'s own
+     * 'trigger' meta-notification pre/post firing exactly, passing the
+     * event object itself as 'data' (richer than the raw value
+     * triggerChange() passes, since the event also carries its own
+     * readonly context, which triggerChange()'s ...$extra never reached
+     * 'trigger' listeners with).
+     */
+    public function dispatchChange(object $event): object
+    {
+        $eventClass = $event::class;
+
+        if (isset($this->handlers['trigger'])) {
+            $this->triggerNotify('trigger', [
+                'type' => 'event',
+                'event' => $eventClass,
+                'data' => $event,
+            ]);
+        }
+
+        if (isset($this->handlers[$eventClass])) {
+            foreach ($this->handlers[$eventClass] as $handlersAtPriority) {
+                foreach ($handlersAtPriority as $handler) {
+                    if ($handler->includePath !== null && $handler->includePath !== '') {
+                        include_once $handler->includePath;
+                    }
+
+                    if (! is_callable($handler->function)) {
+                        throw new \Error("Event handler for '{$eventClass}' is not callable.");
+                    }
+
+                    $result = call_user_func($handler->function, $event);
+
+                    if (! $result instanceof $eventClass) {
+                        throw new \Error("Change handler for '{$eventClass}' must return an instance of {$eventClass}.");
+                    }
+
+                    $event = $result;
+                }
+            }
+        }
+
+        if (isset($this->handlers['trigger'])) {
+            $this->triggerNotify('trigger', [
+                'type' => 'post_event',
+                'event' => $eventClass,
+                'data' => $event,
+            ]);
+        }
+
+        return $event;
+    }
+
+    /**
      * Notifier event: no return value, just calls every registered handler.
      */
     public function triggerNotify(string $event, mixed ...$args): void
@@ -223,6 +303,49 @@ final class EventDispatcher
                 }
 
                 call_user_func_array($handler->function, $args);
+            }
+        }
+    }
+
+    /**
+     * Typed-event counterpart to triggerNotify(): fire-and-forget, no
+     * return value captured. The 'trigger' meta-notification uses
+     * 'type' => 'action' (matching triggerNotify()'s own value, not
+     * dispatchChange()'s 'event'/'post_event') and passes the event
+     * object as 'data' -- a deliberate improvement over triggerNotify()'s
+     * always-null 'data' (that method takes variadic args with no single
+     * canonical value to report; dispatchNotify() takes exactly one, so
+     * that ambiguity doesn't apply). No recursion guard is needed here:
+     * $event is typed object, so it can never actually be the string
+     * 'trigger'.
+     */
+    public function dispatchNotify(object $event): void
+    {
+        $eventClass = $event::class;
+
+        if (isset($this->handlers['trigger'])) {
+            $this->triggerNotify('trigger', [
+                'type' => 'action',
+                'event' => $eventClass,
+                'data' => $event,
+            ]);
+        }
+
+        if (! isset($this->handlers[$eventClass])) {
+            return;
+        }
+
+        foreach ($this->handlers[$eventClass] as $handlersAtPriority) {
+            foreach ($handlersAtPriority as $handler) {
+                if ($handler->includePath !== null && $handler->includePath !== '') {
+                    include_once $handler->includePath;
+                }
+
+                if (! is_callable($handler->function)) {
+                    throw new \Error("Event handler for '{$eventClass}' is not callable.");
+                }
+
+                call_user_func($handler->function, $event);
             }
         }
     }

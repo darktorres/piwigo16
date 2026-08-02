@@ -16,6 +16,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
+use Piwigo\Event\Picture\GetElementUrl;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -204,15 +205,14 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
 
         RequestBootstrap::finalize();
 
-        $result = EventDispatcher::get()->triggerChange(
-            'get_element_url',
+        $result = EventDispatcher::get()->dispatchChange(new GetElementUrl(
             'http://original.example/x.jpg',
             ['id' => 42, 'path' => 'x.jpg']
-        );
+        ));
 
         self::assertSame(
             new UrlService(new HtmlService())->getActionUrl(42, 'e', false),
-            $result
+            $result->url
         );
     }
 }

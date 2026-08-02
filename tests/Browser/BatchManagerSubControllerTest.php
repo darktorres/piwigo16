@@ -1041,21 +1041,17 @@ it('resets a corrupted (non-array) session bulk_manager_filter back to the defau
     @unlink($session['cookieJar']);
 });
 
-it('falls back to an empty filter set when a plugin-registered prefilter/filter-sets hook returns a non-array value', function (): void {
-    // computeCurrentSet() has 2 independent "plugin handler must return
-    // an array" defensive fallbacks: perform_batch_manager_prefilters
-    // (only invoked when the prefilter itself is unrecognized, i.e.
-    // FilterResolver::resolvePrefilter() returns null) and
-    // batch_manager_perform_filters (always invoked, at the very end).
-    // Neither can return non-array through any real, unhooked request --
-    // reaching them needs a real plugin, same mechanism a genuine
-    // misbehaving 3rd-party plugin would use (PluginLoader::
-    // loadPlugins() include_once()s every DB-active plugin's
-    // main.inc.php on every request). Both handlers below are gated on
-    // this test's own unique marker prefilter value, so they're a
-    // complete no-op for every other concurrent request against this
-    // shared dev server while active (matches PictureControllerTest.php's
-    // own "bogus comment action" fixture-plugin test).
+it('fatal-errors instead of silently swallowing a perform_batch_manager_prefilters handler that returns something other than a PerformBatchManagerPrefilters instance', function (): void {
+    // Only invoked when the prefilter itself is unrecognized, i.e.
+    // FilterResolver::resolvePrefilter() returns null. Unreachable
+    // through any real, unhooked request -- reaching it needs a real
+    // plugin, same mechanism a genuine misbehaving 3rd-party plugin
+    // would use (PluginLoader::loadPlugins() include_once()s every
+    // DB-active plugin's main.inc.php on every request). Gated on this
+    // test's own unique marker prefilter value, so it's a complete no-op
+    // for every other concurrent request against this shared dev server
+    // while active (matches PictureControllerTest.php's own "bogus
+    // comment action" fixture-plugin test).
     $marker = 'pwgtest_bogus_prefilter_' . uniqid();
     $pluginId = 'pwgtest-batch-manager-bogus-prefilter';
     $pluginDir = dirname(__DIR__, 2) . '/plugins/' . $pluginId;
@@ -1075,25 +1071,14 @@ it('falls back to an empty filter set when a plugin-registered prefilter/filter-
         Description: Test-only fixture plugin (tests/Browser/BatchManagerSubControllerTest.php).
         */
 
-        \\Piwigo\\PluginConfig\\EventDispatcher::get()->addEventHandler(
-            'perform_batch_manager_prefilters',
-            static function (mixed \$filterSets, mixed \$prefilter): mixed {
-                if (\$prefilter === '{$marker}') {
-                    return 'not-an-array-prefilters';
+        \\Piwigo\\PluginConfig\\EventDispatcher::get()->addTypedHandler(
+            \\Piwigo\\Event\\Admin\\PerformBatchManagerPrefilters::class,
+            static function (\\Piwigo\\Event\\Admin\\PerformBatchManagerPrefilters \$event): mixed {
+                if (\$event->prefilter === '{$marker}') {
+                    return 'not-a-perform-batch-manager-prefilters-instance';
                 }
 
-                return \$filterSets;
-            }
-        );
-
-        \\Piwigo\\PluginConfig\\EventDispatcher::get()->addEventHandler(
-            'batch_manager_perform_filters',
-            static function (mixed \$filterSets, mixed \$bulkFilter): mixed {
-                if (is_array(\$bulkFilter) && (\$bulkFilter['prefilter'] ?? null) === '{$marker}') {
-                    return 'not-an-array-filters';
-                }
-
-                return \$filterSets;
+                return \$event;
             }
         );
 
@@ -1117,13 +1102,81 @@ it('falls back to an empty filter set when a plugin-registered prefilter/filter-
             'filter_prefilter' => $marker,
         ]);
 
-        // If either fallback (BatchManagerSubController.php:548/652) had
-        // NOT reset $filter_sets back to a real array, the very next line
-        // in each case -- array_shift()/the array_filter()+foreach loop
-        // below it -- would throw a TypeError against a string argument,
-        // a real fatal surfaced as a 500 here.
-        expect($result['status'])->toBe(200);
-        expect($result['body'])->not->toContain('Fatal error');
+        // display_errors is off site-wide (Core\ErrorCollector::install()
+        // forces it, and php.ini already has it off too), so the response
+        // body itself carries no exception detail to assert on -- the
+        // status code is the only reliable, environment-independent
+        // signal.
+        expect($result['status'])->toBe(500);
+    } finally {
+        $cleanupDb = bmDbConnect();
+        $cleanupDb->query(sprintf("DELETE FROM %splugins WHERE id = '%s'", bmDbPrefix(), $pluginId));
+        $cleanupDb->close();
+        @unlink($mainFile);
+        @rmdir($pluginDir);
+    }
+});
+
+it('fatal-errors instead of silently swallowing a batch_manager_perform_filters handler that returns something other than a BatchManagerPerformFilters instance', function (): void {
+    // Always invoked, at the very end of computeCurrentSet(). Same
+    // fixture-plugin technique as the sibling test above, gated on its
+    // own distinct marker.
+    $marker = 'pwgtest_bogus_filters_' . uniqid();
+    $pluginId = 'pwgtest-batch-manager-bogus-filters';
+    $pluginDir = dirname(__DIR__, 2) . '/plugins/' . $pluginId;
+
+    if (! is_dir($pluginDir) && ! mkdir($pluginDir, 0o777, true) && ! is_dir($pluginDir)) {
+        throw new RuntimeException('failed to create plugin dir: ' . $pluginDir);
+    }
+    $mainFile = $pluginDir . '/main.inc.php';
+    file_put_contents($mainFile, <<<PHP
+        <?php
+
+        declare(strict_types=1);
+
+        /*
+        Plugin Name: BatchManagerSubController Test -- Bogus Filters Non-Array Hook
+        Version: 1.0.0
+        Description: Test-only fixture plugin (tests/Browser/BatchManagerSubControllerTest.php).
+        */
+
+        \\Piwigo\\PluginConfig\\EventDispatcher::get()->addTypedHandler(
+            \\Piwigo\\Event\\Admin\\BatchManagerPerformFilters::class,
+            static function (\\Piwigo\\Event\\Admin\\BatchManagerPerformFilters \$event): mixed {
+                if ((\$event->bulkManagerFilter['prefilter'] ?? null) === '{$marker}') {
+                    return 'not-a-batch-manager-perform-filters-instance';
+                }
+
+                return \$event;
+            }
+        );
+
+        PHP);
+
+    $pluginDb = bmDbConnect();
+    $pluginDb->query(sprintf(
+        "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0.0')",
+        bmDbPrefix(),
+        $pluginId
+    ));
+    $pluginDb->close();
+
+    try {
+        $page = H::loginAsAdmin($this);
+        H::navigateOk($page, '/admin.php?page=batch_manager');
+
+        $result = bmPost($page, [
+            'submitFilter' => '1',
+            'filter_prefilter_use' => '1',
+            'filter_prefilter' => $marker,
+        ]);
+
+        // display_errors is off site-wide (Core\ErrorCollector::install()
+        // forces it, and php.ini already has it off too), so the response
+        // body itself carries no exception detail to assert on -- the
+        // status code is the only reliable, environment-independent
+        // signal.
+        expect($result['status'])->toBe(500);
     } finally {
         $cleanupDb = bmDbConnect();
         $cleanupDb->query(sprintf("DELETE FROM %splugins WHERE id = '%s'", bmDbPrefix(), $pluginId));

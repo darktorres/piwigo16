@@ -12,6 +12,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Event\Picture\GetElementUrl;
 use Piwigo\Event\Picture\GetThumbnailTitle;
 use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Event\Picture\RenderElementName;
@@ -20,7 +21,7 @@ use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Event\Template\RenderCommentContent;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Http\ResponseReadyException;
-use Piwigo\Image\SrcImage;
+use Piwigo\Image\Event\GetSrcImageUrl;
 use Piwigo\Lang\Translator;
 use Piwigo\Menu\Event\BlockManagerRegisterBlocks;
 use Piwigo\Menu\RegisteredBlock;
@@ -755,10 +756,12 @@ final class HtmlService implements HtmlRenderingInterface
     /**
      * Event handler to protect src image urls.
      */
-    public function getSrcImageUrlProtectionHandler(string $url, SrcImage $srcImage): string
+    public function getSrcImageUrlProtectionHandler(GetSrcImageUrl $event): GetSrcImageUrl
     {
-        return $this->urlService()
-            ->getActionUrl($srcImage->id, $srcImage->is_original() ? 'e' : 'r', false);
+        $event->url = $this->urlService()
+            ->getActionUrl($event->value->id, $event->value->is_original() ? 'e' : 'r', false);
+
+        return $event;
     }
 
     /**
@@ -767,24 +770,25 @@ final class HtmlService implements HtmlRenderingInterface
      * Same cross-domain generic-row-reader rationale as
      * renderElementName() above (matches SrcImage::__construct()'s own
      * shape for this 'id'/'path' pair).
-     *
-     * @param array<string, mixed> $infos id, path
      */
-    public function getElementUrlProtectionHandler(string $url, array $infos): string
+    public function getElementUrlProtectionHandler(GetElementUrl $event): GetElementUrl
     {
+        $infos = $event->elementInfo;
         if (\Piwigo\Config\CurrentConfig::originalUrlProtection() === 'images') { // protect only images and not other file types (for example large movies that we don't want to send through our file proxy)
             $path = $infos['path'] ?? null;
             $ext = \Piwigo\Core\StringHelper::getExtension(is_string($path) ? $path : null);
             $picture_ext = \Piwigo\Config\CurrentConfig::pictureExtensions();
             if (! in_array($ext, $picture_ext, true)) {
-                return $url;
+                return $event;
             }
         }
         $id = $infos['id'] ?? '';
         $id = is_int($id) || is_string($id) ? $id : '';
 
-        return $this->urlService()
+        $event->url = $this->urlService()
             ->getActionUrl($id, 'e', false);
+
+        return $event;
     }
 
     /**

@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\Template\Template;
 
 final class Tabsheet
@@ -90,26 +91,22 @@ final class Tabsheet
     */
     public function select(string $name): void
     {
-        $sheets_after_trigger = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('tabsheet_before_select', $this->sheets, $this->uniqid);
+        $event = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new TabsheetBeforeSelect($this->sheets, $this->uniqid));
         // 'tabsheet_before_select' handlers are documented to filter/append to
         // the array<string, array{caption: string, url: string}> $sheets they
-        // receive and return the same shape, but trigger_change()'s own return
-        // type is mixed (a handler could misbehave) -- rebuild the array
-        // defensively instead of trusting it, keeping only entries that still
-        // match the property's declared shape (string key, caption/url
-        // strings).
+        // receive and return the same shape, but TabsheetBeforeSelect::$sheets
+        // itself is only loosely typed array<mixed> (a misbehaving third-party
+        // handler could populate it with anything) -- rebuild it defensively
+        // instead of trusting it, keeping only entries that match this
+        // property's real declared shape (string key, caption/url strings).
         $filtered_sheets = [];
-        if (is_array($sheets_after_trigger)) {
-            foreach ($sheets_after_trigger as $sheet_name => $sheet) {
-                if (is_string($sheet_name) && is_array($sheet) && isset($sheet['caption'], $sheet['url']) && is_string($sheet['caption']) && is_string($sheet['url'])) {
-                    $filtered_sheets[$sheet_name] = [
-                        'caption' => $sheet['caption'],
-                        'url' => $sheet['url'],
-                    ];
-                }
+        foreach ($event->sheets as $sheet_name => $sheet) {
+            if (is_string($sheet_name) && is_array($sheet) && isset($sheet['caption'], $sheet['url']) && is_string($sheet['caption']) && is_string($sheet['url'])) {
+                $filtered_sheets[$sheet_name] = [
+                    'caption' => $sheet['caption'],
+                    'url' => $sheet['url'],
+                ];
             }
-        } else {
-            $filtered_sheets = $this->sheets;
         }
         $this->sheets = $filtered_sheets;
 

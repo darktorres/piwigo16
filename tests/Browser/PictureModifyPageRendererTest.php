@@ -26,8 +26,10 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * distinguished from the already-representative-at-upload-time case the
  * pre-existing "sets a plain (non-array) tag name..." test below only
  * looks like it covers), and a real fixture-plugin `main.inc.php` proving
- * `picture_modify_before_update`'s own pre-hook-data fallback when a
- * handler misbehaves and returns something other than an array.
+ * that a PictureModifyBeforeUpdate handler returning something other than
+ * a PictureModifyBeforeUpdate instance now fails the request loud
+ * (dispatchChange()'s own instanceof enforcement) instead of silently
+ * falling back to the pre-hook submission.
  *
  * Deliberately NOT covered, both non-behavioral:
  *  - `if (! isset($page['image']))`'s own FALSE branch: `$page` is a
@@ -533,18 +535,17 @@ it('renders U_JUMPTO from the session edit context, ahead of the authorized-cate
     expect($result['body'])->toContain('picture.php?/' . $imageId . '/category/' . $albumId);
 });
 
-it('falls back to the pre-hook submission when a picture_modify_before_update plugin handler misbehaves and returns a non-array', function (): void {
-    // picture_modify_before_update handlers are documented (this
-    // renderer's own docblock at its trigger_change() call site) to
-    // filter and return the same array<string, mixed> $data shape they
-    // receive, but EventDispatcher::triggerChange()'s own return type is
-    // mixed -- a real handler can misbehave. Admin\PluginLoader::
-    // loadPlugins() include_once()s every active plugins/{id}/main.inc.php
-    // on every request, the same live mechanism a genuine misbehaving
-    // 3rd-party plugin would use -- same fixture-plugin technique as
-    // PictureControllerTest's own "bogus comment action" test.
-    // Content-marker-gated so it's a no-op for every other concurrent
-    // request against this shared dev server while active.
+it('fatal-errors instead of silently falling back when a picture_modify_before_update plugin handler returns something other than a PictureModifyBeforeUpdate instance', function (): void {
+    // dispatchChange() now enforces its own instanceof contract -- a
+    // misbehaving handler makes the request fail loud (an HTTP 500)
+    // rather than silently falling back to the pre-hook submission.
+    // Admin\PluginLoader::loadPlugins() include_once()s every active
+    // plugins/{id}/main.inc.php on every request, the same live mechanism
+    // a genuine misbehaving 3rd-party plugin would use -- same
+    // fixture-plugin technique as PictureControllerTest's own "bogus
+    // comment action" test. Content-marker-gated so it's a no-op for
+    // every other concurrent request against this shared dev server
+    // while active.
     $pluginId = 'pwgtest-picture-modify-bogus-hook';
     $pluginDir = dirname(__DIR__, 2) . '/plugins/' . $pluginId;
     $marker = 'PWGTEST_BOGUS_HOOK_MARKER_' . uniqid();
@@ -564,14 +565,14 @@ it('falls back to the pre-hook submission when a picture_modify_before_update pl
         Description: Test-only fixture plugin (tests/Browser/PictureModifyPageRendererTest.php).
         */
 
-        \\Piwigo\\PluginConfig\\EventDispatcher::get()->addEventHandler(
-            'picture_modify_before_update',
-            static function (mixed \$data): mixed {
-                if (is_array(\$data) && is_string(\$data['comment'] ?? null) && str_contains(\$data['comment'], '{$marker}')) {
+        \\Piwigo\\PluginConfig\\EventDispatcher::get()->addTypedHandler(
+            \\Piwigo\\Event\\Picture\\PictureModifyBeforeUpdate::class,
+            static function (\\Piwigo\\Event\\Picture\\PictureModifyBeforeUpdate \$event): mixed {
+                if (is_string(\$event->data['comment'] ?? null) && str_contains(\$event->data['comment'], '{$marker}')) {
                     return null;
                 }
 
-                return \$data;
+                return \$event;
             }
         );
 
@@ -605,15 +606,19 @@ it('falls back to the pre-hook submission when a picture_modify_before_update pl
             'level' => '0',
         ]);
 
-        expect($result['status'])->toBe(200);
-        expect($result['body'])->toContain('Photo information updated');
+        // display_errors is off site-wide (Core\ErrorCollector::install()
+        // forces it, and php.ini already has it off too), so the response
+        // body itself carries no exception detail to assert on -- the
+        // status code is the only reliable, environment-independent
+        // signal.
+        expect($result['status'])->toBe(500);
 
-        // Proves $data fell back to $pre_hook_data (the admin's own real
-        // submission) rather than the handler's bogus null silently
-        // propagating into updateFields() and dropping the edit.
+        // Proves the whole request failed before ever reaching
+        // updateFields() -- the photo keeps its original pre-submission
+        // name/comment, not the bogus edit.
         $row = pictureModifyImageRow($imageId);
-        expect($row['name'] ?? null)->toBe('Bogus Hook Title');
-        expect($row['comment'] ?? null)->toBe('Bogus hook comment ' . $marker);
+        expect($row['name'] ?? null)->toBe('PM Bogus Hook Photo');
+        expect($row['comment'] ?? null)->not->toBe('Bogus hook comment ' . $marker);
     } finally {
         $cleanupDb = pictureModifyDbConnect();
         $cleanupDb->query(sprintf("DELETE FROM %splugins WHERE id = '%s'", pictureModifyDbPrefix(), $pluginId));

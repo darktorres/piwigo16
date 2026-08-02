@@ -30,6 +30,10 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\ServerTiming;
 use Piwigo\Core\StringHelper;
 use Piwigo\Db\DbConnection;
+use Piwigo\Event\Picture\GetElementUrl;
+use Piwigo\Event\Picture\UploadFile;
+use Piwigo\Event\Picture\UploadImageResize;
+use Piwigo\Event\Picture\UploadThumbnailResize;
 use Piwigo\Event\Tag\RenderTagUrl;
 use Piwigo\Event\Template\RenderCategoryDescription;
 use Piwigo\Event\Template\RenderCategoryLiteralDescription;
@@ -38,6 +42,7 @@ use Piwigo\Event\Template\RenderCommentContent;
 use Piwigo\Event\User\TryLogUser;
 use Piwigo\Filter\FilterService;
 use Piwigo\Html\HtmlService;
+use Piwigo\Image\Event\GetSrcImageUrl;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Mail\MailService;
@@ -743,17 +748,23 @@ final class RequestBootstrap
         // dead-but-harmless registration, already documented in
         // Piwigo\PluginConfig\EventDispatcher's own class docblock. Preserved
         // unchanged rather than "fixed", per that same documented decision.
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('upload_image_resize', 'pwg_image_resize');
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('upload_thumbnail_resize', 'pwg_image_resize');
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('upload_file', UploadService::uploadFilePdf(...));
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('upload_file', UploadService::uploadFileHeic(...));
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('upload_file', UploadService::uploadFileTiff(...));
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('upload_file', UploadService::uploadFileVideo(...));
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('upload_file', UploadService::uploadFilePsd(...));
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('upload_file', UploadService::uploadFileEps(...));
+        // addEventHandler(), not addTypedHandler() -- 'pwg_image_resize'
+        // doesn't exist as a function anywhere in this codebase, so it
+        // can't satisfy addTypedHandler()'s own callable(T): (T|void)
+        // signature check; addEventHandler()'s untyped string|array|object
+        // parameter keeps this exactly as harmless (lazy, never eagerly
+        // validated) as it was before this typed conversion.
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler(UploadImageResize::class, 'pwg_image_resize');
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler(UploadThumbnailResize::class, 'pwg_image_resize');
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(UploadFile::class, UploadService::uploadFilePdf(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(UploadFile::class, UploadService::uploadFileHeic(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(UploadFile::class, UploadService::uploadFileTiff(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(UploadFile::class, UploadService::uploadFileVideo(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(UploadFile::class, UploadService::uploadFilePsd(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(UploadFile::class, UploadService::uploadFileEps(...));
         if (\Piwigo\Config\CurrentConfig::originalUrlProtection() !== '') {
-            \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('get_element_url', new HtmlService()->getElementUrlProtectionHandler(...));
-            \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('get_src_image_url', new HtmlService()->getSrcImageUrlProtectionHandler(...));
+            \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(GetElementUrl::class, new HtmlService()->getElementUrlProtectionHandler(...));
+            \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(GetSrcImageUrl::class, new HtmlService()->getSrcImageUrlProtectionHandler(...));
         }
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('init');
 

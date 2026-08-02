@@ -12,6 +12,7 @@ use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Event\Admin\GetAdminPluginMenuLinks;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
 
@@ -111,26 +112,26 @@ final class PluginsInstalledPageRenderer
 
         // --------------------------------------------------------Get the menu with the depreciated version
 
-        $plugin_menu_links_deprec = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_admin_plugin_menu_links', []);
+        $plugin_menu_links_deprec_event = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetAdminPluginMenuLinks([]));
 
         $settings_url_for_plugin_deprec = [];
 
-        // trigger_change() is declared to return mixed (it echoes back whatever
-        // registered handlers return); narrow it to an iterable of arrays here
-        // before reading each item's 'URL' entry.
-        if (is_array($plugin_menu_links_deprec)) {
-            foreach ($plugin_menu_links_deprec as $value) {
-                if (! is_array($value) || ! isset($value['URL']) || ! is_string($value['URL'])) {
-                    continue;
-                }
+        // dispatchChange() enforces the top-level array type, but a
+        // misbehaving third-party handler could still populate it with
+        // malformed element values PHP's own type system can't catch at
+        // runtime -- narrow each item defensively before reading its own
+        // 'URL' entry.
+        foreach ($plugin_menu_links_deprec_event->value as $value) {
+            if (! is_array($value) || ! isset($value['URL']) || ! is_string($value['URL'])) {
+                continue;
+            }
 
-                $menu_link_url = $value['URL'];
+            $menu_link_url = $value['URL'];
 
-                if ((bool) preg_match('/^admin\.php\?page=plugin-(.*)$/', $menu_link_url, $matches)) {
-                    $settings_url_for_plugin_deprec[$matches[1]] = $menu_link_url;
-                } elseif ((bool) preg_match('/^.*section=(.*?)[\/&%].*$/', $menu_link_url, $matches)) {
-                    $settings_url_for_plugin_deprec[$matches[1]] = $menu_link_url;
-                }
+            if ((bool) preg_match('/^admin\.php\?page=plugin-(.*)$/', $menu_link_url, $matches)) {
+                $settings_url_for_plugin_deprec[$matches[1]] = $menu_link_url;
+            } elseif ((bool) preg_match('/^.*section=(.*?)[\/&%].*$/', $menu_link_url, $matches)) {
+                $settings_url_for_plugin_deprec[$matches[1]] = $menu_link_url;
             }
         }
 

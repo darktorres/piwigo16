@@ -13,6 +13,7 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Picture\PictureModifyBeforeUpdate;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
@@ -168,18 +169,8 @@ final class PictureModifyPageRenderer
 
             $data['date_creation'] = $pictureModifyRequest->dateCreation;
 
-            $pre_hook_data = $data;
-            $data = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('picture_modify_before_update', $data);
-            if (! is_array($data)) {
-                // 'picture_modify_before_update' handlers are documented to filter
-                // the array<string, mixed> $data they receive and return the same
-                // shape, but trigger_change()'s own return type is mixed (a handler
-                // could misbehave) -- fall back to the pre-hook data rather than
-                // silently dropping the admin's edit.
-                $data = $pre_hook_data;
-            }
+            $data = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new PictureModifyBeforeUpdate($data))->data;
 
-            /** @var array<string, mixed> $data */
             unset($data['id']);
             $imageService->updateFields($image_id, $data);
             \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();

@@ -13,6 +13,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
+use Piwigo\Event\Picture\UploadFile;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeParams;
@@ -437,18 +438,7 @@ final class UploadService
 
         // handle the uploaded file type by potentially making a
         // pwg_representative file.
-        $representative_ext = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('upload_file', null, $file_path);
-
-        // If it is set to either true (the file didn't need a
-        // representative generated), false (the generation of the
-        // representative failed), or any other non-string value an event
-        // handler might return, set it to null because we have no
-        // representative file. (All upload_file handlers registered in this
-        // file return ?string, but trigger_change() itself is inherently
-        // mixed since any plugin can register a handler for this event.)
-        if (! is_string($representative_ext)) {
-            $representative_ext = null;
-        }
+        $representative_ext = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new UploadFile(null, $file_path))->representativeExt;
 
         $logger->info(__METHOD__ . ' : force cache generation, representative_ext = ' . ($representative_ext ?? ''));
 
@@ -786,22 +776,30 @@ final class UploadService
         return $add_status;
     }
 
-    public static function uploadFilePdf(?string $representative_ext, string $file_path): ?string
+    public static function uploadFilePdf(UploadFile $event): UploadFile
     {
+        $representative_ext = $event->representativeExt;
+        $file_path = $event->filePath;
         $logger = \Piwigo\Core\CurrentLogger::get();
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
         if (isset($representative_ext)) {
-            return $representative_ext;
+            $event->representativeExt = $representative_ext;
+
+            return $event;
         }
 
         if (PwgImage::get_library() !== 'ext_imagick') {
-            return $representative_ext;
+            $event->representativeExt = $representative_ext;
+
+            return $event;
         }
 
         if (! in_array(strtolower(\Piwigo\Core\StringHelper::getExtension($file_path)), ['pdf'], true)) {
-            return $representative_ext;
+            $event->representativeExt = $representative_ext;
+
+            return $event;
         }
 
         $ext = \Piwigo\Config\CurrentConfig::pdfRepresentativeExt();
@@ -835,25 +833,35 @@ final class UploadService
             $representative_ext = $ext;
         }
 
-        return $representative_ext;
+        $event->representativeExt = $representative_ext;
+
+        return $event;
     }
 
-    public static function uploadFileHeic(?string $representative_ext, string $file_path): ?string
+    public static function uploadFileHeic(UploadFile $event): UploadFile
     {
+        $representative_ext = $event->representativeExt;
+        $file_path = $event->filePath;
         $logger = \Piwigo\Core\CurrentLogger::get();
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
         if (isset($representative_ext)) {
-            return $representative_ext;
+            $event->representativeExt = $representative_ext;
+
+            return $event;
         }
 
         if (PwgImage::get_library() !== 'ext_imagick') {
-            return $representative_ext;
+            $event->representativeExt = $representative_ext;
+
+            return $event;
         }
 
         if (! in_array(strtolower(\Piwigo\Core\StringHelper::getExtension($file_path)), ['heic'], true)) {
-            return $representative_ext;
+            $event->representativeExt = $representative_ext;
+
+            return $event;
         }
 
         $ext = 'jpg';
@@ -881,25 +889,35 @@ final class UploadService
             $representative_ext = $ext;
         }
 
-        return $representative_ext;
+        $event->representativeExt = $representative_ext;
+
+        return $event;
     }
 
-    public static function uploadFileTiff(?string $representative_ext, string $file_path): ?string
+    public static function uploadFileTiff(UploadFile $event): UploadFile
     {
+        $representative_ext = $event->representativeExt;
+        $file_path = $event->filePath;
         $logger = \Piwigo\Core\CurrentLogger::get();
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
         if (isset($representative_ext)) {
-            return $representative_ext;
+            $event->representativeExt = $representative_ext;
+
+            return $event;
         }
 
         if (PwgImage::get_library() !== 'ext_imagick') {
-            return $representative_ext;
+            $event->representativeExt = $representative_ext;
+
+            return $event;
         }
 
         if (! in_array(strtolower(\Piwigo\Core\StringHelper::getExtension($file_path)), ['tif', 'tiff'], true)) {
-            return $representative_ext;
+            $event->representativeExt = $representative_ext;
+
+            return $event;
         }
 
         // move the uploaded file to pwg_representative sub-directory
@@ -956,17 +974,23 @@ final class UploadService
             }
         }
 
-        return \Piwigo\Core\StringHelper::getExtension($representative_file_abspath);
+        $event->representativeExt = \Piwigo\Core\StringHelper::getExtension($representative_file_abspath);
+
+        return $event;
     }
 
-    public static function uploadFileVideo(?string $representative_ext, string $file_path): ?string
+    public static function uploadFileVideo(UploadFile $event): UploadFile
     {
+        $representative_ext = $event->representativeExt;
+        $file_path = $event->filePath;
         $logger = \Piwigo\Core\CurrentLogger::get();
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
         if (isset($representative_ext)) {
-            return $representative_ext;
+            $event->representativeExt = $representative_ext;
+
+            return $event;
         }
 
         $ffmpeg_video_exts = [ // extensions tested with FFmpeg
@@ -975,7 +999,9 @@ final class UploadService
         ];
 
         if (! in_array(strtolower(\Piwigo\Core\StringHelper::getExtension($file_path)), $ffmpeg_video_exts, true)) {
-            return $representative_ext;
+            $event->representativeExt = $representative_ext;
+
+            return $event;
         }
 
         $representative_file_path = dirname($file_path) . '/pwg_representative/';
@@ -1032,28 +1058,40 @@ final class UploadService
 
         // Did we finally generate the file ?
         if (! file_exists($representative_file_path)) {
-            return null;
+            $event->representativeExt = null;
+
+            return $event;
         }
 
-        return $representative_ext;
+        $event->representativeExt = $representative_ext;
+
+        return $event;
     }
 
-    public static function uploadFilePsd(?string $representative_ext, string $file_path): ?string
+    public static function uploadFilePsd(UploadFile $event): UploadFile
     {
+        $representative_ext = $event->representativeExt;
+        $file_path = $event->filePath;
         $logger = \Piwigo\Core\CurrentLogger::get();
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
         if (isset($representative_ext)) {
-            return $representative_ext;
+            $event->representativeExt = $representative_ext;
+
+            return $event;
         }
 
         if (PwgImage::get_library() !== 'ext_imagick') {
-            return $representative_ext;
+            $event->representativeExt = $representative_ext;
+
+            return $event;
         }
 
         if (! in_array(strtolower(\Piwigo\Core\StringHelper::getExtension($file_path)), ['psd'], true)) {
-            return $representative_ext;
+            $event->representativeExt = $representative_ext;
+
+            return $event;
         }
 
         // move the uploaded file to pwg_representative sub-directory
@@ -1104,25 +1142,35 @@ final class UploadService
             }
         }
 
-        return \Piwigo\Core\StringHelper::getExtension($representative_file_abspath);
+        $event->representativeExt = \Piwigo\Core\StringHelper::getExtension($representative_file_abspath);
+
+        return $event;
     }
 
-    public static function uploadFileEps(?string $representative_ext, string $file_path): ?string
+    public static function uploadFileEps(UploadFile $event): UploadFile
     {
+        $representative_ext = $event->representativeExt;
+        $file_path = $event->filePath;
         $logger = \Piwigo\Core\CurrentLogger::get();
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
         if (isset($representative_ext)) {
-            return $representative_ext;
+            $event->representativeExt = $representative_ext;
+
+            return $event;
         }
 
         if (PwgImage::get_library() !== 'ext_imagick') {
-            return $representative_ext;
+            $event->representativeExt = $representative_ext;
+
+            return $event;
         }
 
         if (! in_array(strtolower(\Piwigo\Core\StringHelper::getExtension($file_path)), ['eps'], true)) {
-            return $representative_ext;
+            $event->representativeExt = $representative_ext;
+
+            return $event;
         }
 
         // if the representative is "jpg", the derivatives are ugly. With "png" it's fine.
@@ -1152,7 +1200,9 @@ final class UploadService
             $representative_ext = $ext;
         }
 
-        return $representative_ext;
+        $event->representativeExt = $representative_ext;
+
+        return $event;
     }
 
     private function prepareDirectory(string $directory): void

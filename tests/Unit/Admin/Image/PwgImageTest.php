@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Admin\Image\ImageProcessingException;
 use Piwigo\Admin\Image\PwgImage;
+use Piwigo\Event\Lifecycle\LoadImageLibrary;
 
 /**
  * P23 Stage 1e: __construct()'s unsupported-extension guard used to
@@ -511,14 +512,14 @@ test('constructor uses a plugin-provided image instance and skips its own librar
         }
     };
 
-    $handler = function (array $args) use ($fake): void {
-        $target = $args[0];
+    $handler = function (LoadImageLibrary $event) use ($fake): void {
+        $target = $event->value;
         if (! $target instanceof PwgImage) {
             throw new RuntimeException('load_image_library: expected a PwgImage instance');
         }
         $target->image = $fake;
     };
-    \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('load_image_library', $handler);
+    \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(LoadImageLibrary::class, $handler);
 
     try {
         // A path this class's own real library resolution would reject
@@ -530,7 +531,7 @@ test('constructor uses a plugin-provided image instance and skips its own librar
         expect($img->get_width())->toBe(123);
         expect($img->library)->toBe('');
     } finally {
-        \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler('load_image_library', $handler);
+        \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(LoadImageLibrary::class, $handler);
     }
 });
 

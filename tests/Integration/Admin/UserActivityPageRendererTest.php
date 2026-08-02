@@ -15,6 +15,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\Html\HtmlService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
@@ -87,7 +88,7 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
         // `$keys[0]` of an empty array.
         EventDispatcher::reset();
         CoreTabs::setUrlService($this->urlService);
-        EventDispatcher::get()->addEventHandler('tabsheet_before_select', CoreTabs::addCoreTabs(...));
+        EventDispatcher::get()->addTypedHandler(TabsheetBeforeSelect::class, CoreTabs::addCoreTabs(...));
 
         Lang::load('admin.lang');
         // Template::__construct()'s own data_dir_checked first-time-setup

@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Image;
 
+use Piwigo\Event\Lifecycle\LoadImageLibrary;
+
 /**
  * Unknown methods are forwarded to $this->image (an ImageInterface
  * implementor) via __call(). These @method tags mirror that interface.
@@ -51,7 +53,7 @@ final class PwgImage
         ?string $library = null
     ) {
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('load_image_library', [&$this]);
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LoadImageLibrary($this));
 
         if (is_object($this->image)) {
             return; // A plugin may have load its own library

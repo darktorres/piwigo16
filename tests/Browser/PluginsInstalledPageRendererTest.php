@@ -245,17 +245,14 @@ it('resolves a settings URL from a real get_admin_plugin_menu_links hook via bot
     Description: Test-only fixture plugin (tests/Browser/PluginsInstalledPageRendererTest.php).
     */
 
-    \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler(
-        'get_admin_plugin_menu_links',
-        static function (mixed $links): mixed {
-            if (! is_array($links)) {
-                $links = [];
-            }
-
+    \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(
+        \Piwigo\Event\Admin\GetAdminPluginMenuLinks::class,
+        static function (\Piwigo\Event\Admin\GetAdminPluginMenuLinks $event): \Piwigo\Event\Admin\GetAdminPluginMenuLinks {
+            $links = $event->value;
             $links[] = ['URL' => 'admin.php?page=plugin-pwgtest-plugins-installed-hooks'];
             $links[] = ['URL' => 'index.php?section=pwgtest-plugins-installed-target&foo=bar'];
 
-            return $links;
+            return new \Piwigo\Event\Admin\GetAdminPluginMenuLinks($links);
         }
     );
     PHP);
@@ -330,19 +327,16 @@ it('skips malformed get_admin_plugin_menu_links entries instead of erroring, and
     Description: Test-only fixture plugin (tests/Browser/PluginsInstalledPageRendererTest.php).
     */
 
-    \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler(
-        'get_admin_plugin_menu_links',
-        static function (mixed $links): mixed {
-            if (! is_array($links)) {
-                $links = [];
-            }
-
+    \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(
+        \Piwigo\Event\Admin\GetAdminPluginMenuLinks::class,
+        static function (\Piwigo\Event\Admin\GetAdminPluginMenuLinks $event): \Piwigo\Event\Admin\GetAdminPluginMenuLinks {
+            $links = $event->value;
             $links[] = 'not-an-array';
             $links[] = ['no_url_key' => 'irrelevant'];
             $links[] = ['URL' => ['not', 'a', 'string']];
             $links[] = ['URL' => 'admin.php?page=plugin-pwgtest-plugins-installed-malformed-hooks'];
 
-            return $links;
+            return new \Piwigo\Event\Admin\GetAdminPluginMenuLinks($links);
         }
     );
     PHP);

@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Event\Admin\TabsheetBeforeSelect;
 
 /**
  * Ported from admin/include/add_core_tabs.inc.php (P23 batch 8b-6). Its
@@ -102,18 +103,10 @@ final class CoreTabs
         return $value;
     }
 
-    /**
-     * $tabId is genuinely ?string, not mixed -- this is only ever reached
-     * as the 'tabsheet_before_select' event handler, whose sole trigger
-     * site (Tabsheet::select()) passes its own $this->uniqid (?string,
-     * confirmed via every real read/write site on that property).
-     *
-     * @param array<string, array{caption: string, url: string}> $sheets
-     * @return array<string, array{caption: string, url: string}>
-     */
-    public static function addCoreTabs(array $sheets, ?string $tabId): array
+    public static function addCoreTabs(TabsheetBeforeSelect $event): TabsheetBeforeSelect
     {
-        switch ($tabId) {
+        $sheets = $event->sheets;
+        switch ($event->tabsheetId) {
             case 'admin_home':
                 $sheets[''] = [
                     'caption' => Lang::t('Administration Home'),
@@ -463,6 +456,8 @@ final class CoreTabs
                 break;
         }
 
-        return $sheets;
+        $event->sheets = $sheets;
+
+        return $event;
     }
 }

@@ -15,6 +15,7 @@ use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\ThemeConfProviderInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Image\Event\GetSrcImageUrl;
 
 /**
  * A source image is used to get a derivative image. It is either
@@ -270,11 +271,7 @@ final class SrcImage
             $part = $this->is_original() ? 'e' : 'r';
             $url = self::urlService()->getActionUrl($this->id, $part, false);
 
-            $filtered_url = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_src_image_url', $url, $this);
-            // trigger_change() hands the value through arbitrary registered
-            // event handlers (mixed return); fall back to the pre-filter
-            // url if a misbehaving handler returns a non-string.
-            $url = is_string($filtered_url) ? $filtered_url : $url;
+            $url = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetSrcImageUrl($url, $this))->url;
         }
 
         return self::urlService()->embellishUrl($url);

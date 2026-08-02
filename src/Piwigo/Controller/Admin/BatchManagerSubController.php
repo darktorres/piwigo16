@@ -17,6 +17,10 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Db\DbConnection;
+use Piwigo\Event\Admin\BatchManagerPerformFilters;
+use Piwigo\Event\Admin\BatchManagerRegisterFilters;
+use Piwigo\Event\Admin\BatchManagerUrlFilter;
+use Piwigo\Event\Admin\PerformBatchManagerPrefilters;
 use Piwigo\Image\ImageService;
 use Piwigo\Lang\Translator;
 use Piwigo\Tag\TagService;
@@ -349,7 +353,8 @@ final class BatchManagerSubController implements AdminSubControllerInterface
                 $_SESSION['bulk_manager_filter']['search']['q'] = $post['q'];
             }
 
-            $_SESSION['bulk_manager_filter'] = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('batch_manager_register_filters', $_SESSION['bulk_manager_filter']);
+            $registerFiltersEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new BatchManagerRegisterFilters($_SESSION['bulk_manager_filter']));
+            $_SESSION['bulk_manager_filter'] = $registerFiltersEvent->bulkManagerFilter;
         }
         // filters from url
         elseif ($batchManagerRequest->urlFilterPresent) {
@@ -466,8 +471,8 @@ final class BatchManagerSubController implements AdminSubControllerInterface
                         break;
 
                     default:
-                        $url_filter_result = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('batch_manager_url_filter', $url_filter, $filter);
-                        $url_filter = is_array($url_filter_result) ? $url_filter_result : $url_filter;
+                        $urlFilterEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new BatchManagerUrlFilter($url_filter, $filter));
+                        $url_filter = $urlFilterEvent->bulkManagerFilter;
                         break;
                 }
             }
@@ -540,13 +545,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
             if ($prefilter_result !== null) {
                 $filter_sets[] = $prefilter_result;
             } else {
-                $filter_sets = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('perform_batch_manager_prefilters', $filter_sets, $prefilter);
-                if (! is_array($filter_sets)) {
-                    // Plugin handlers must return the (possibly extended) list of id
-                    // sets; fall back to an empty set of filters rather than
-                    // propagating a non-array value into array-only code below.
-                    $filter_sets = [];
-                }
+                $filter_sets = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new PerformBatchManagerPrefilters($filter_sets, $prefilter))->filterSets;
             }
         }
 
@@ -644,13 +643,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
             $filter_sets[] = $res_items;
         }
 
-        $filter_sets = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('batch_manager_perform_filters', $filter_sets, $bulkFilter);
-        if (! is_array($filter_sets)) {
-            // Plugin handlers must return the (possibly extended) list of id sets;
-            // fall back to an empty set of filters rather than propagating a
-            // non-array value into the array-only code below.
-            $filter_sets = [];
-        }
+        $filter_sets = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new BatchManagerPerformFilters($filter_sets, $bulkFilter))->filterSets;
 
         $current_set = array_shift($filter_sets);
         // filter sets are always image id lists (either this method's own search

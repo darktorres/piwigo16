@@ -10,6 +10,7 @@ use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ThemeConfProviderInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Image\Event\GetSrcImageUrl;
 use Piwigo\Image\SrcImage;
 use ReflectionProperty;
 
@@ -524,17 +525,19 @@ test('get_url() for a real representative image requests part "r"', function ():
     expect($fakeUrlService->lastActionUrlArgs)->toBe([8, 'r', false]);
 });
 
-test('get_url() falls back to the pre-filter url when a get_src_image_url handler returns a non-string', function (): void {
-    // Kills line 277's TernaryNegated -- every sibling non-mimetype
-    // get_url() test above has NO handler registered for
-    // 'get_src_image_url', so triggerChange() returns the pre-filter
-    // url unchanged (already a string), never reaching this ternary's
-    // false branch.
+test('get_url() throws when a get_src_image_url handler returns something other than a GetSrcImageUrl instance', function (): void {
+    // Every sibling non-mimetype get_url() test above has NO handler
+    // registered for GetSrcImageUrl, so dispatchChange() returns the
+    // pre-filter url unchanged (already a string), never reaching
+    // dispatchChange()'s own instanceof enforcement.
     $fakeUrlService = new SrcImageTestFakeUrlService();
     srcImageTestSetUrlService($fakeUrlService);
 
+    // addEventHandler(), not addTypedHandler() -- a real plugin handler
+    // is untyped from PHPStan's perspective, and this test exercises
+    // dispatchChange()'s own runtime enforcement, not a static one.
     $handler = static fn (): int => 42;
-    \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('get_src_image_url', $handler);
+    \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler(GetSrcImageUrl::class, $handler);
 
     try {
         $src = new SrcImage([
@@ -543,9 +546,10 @@ test('get_url() falls back to the pre-filter url when a get_src_image_url handle
             'file' => 'photo.jpg',
         ]);
 
-        expect($src->get_url())->toBe('/action/7/e');
+        expect(static fn () => $src->get_url())
+            ->toThrow(\Error::class, 'must return an instance of');
     } finally {
-        \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler('get_src_image_url', $handler);
+        \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(GetSrcImageUrl::class, $handler);
     }
 });
 

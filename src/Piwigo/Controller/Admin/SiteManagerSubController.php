@@ -12,6 +12,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Event\Album\GetAdminsSiteLinks;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -187,16 +188,8 @@ final class SiteManagerSubController implements AdminSubControllerInterface
                 $tpl_var['U_DELETE'] = $base_url . 'delete';
             }
 
-            $plugin_links = [];
             // $plugin_links is array of array composed of U_HREF, U_HINT & U_CAPTION
-            $plugin_links =
-              \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
-                  'get_admins_site_links',
-                  $plugin_links,
-                  $id,
-                  $is_remote
-              );
-            $tpl_var['plugin_links'] = $plugin_links;
+            $tpl_var['plugin_links'] = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetAdminsSiteLinks([], $id, $is_remote))->pluginLinks;
 
             $template->append('sites', $tpl_var);
         }

@@ -9,6 +9,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Admin\GetBatchManagerPrefilters;
 use Piwigo\Template\Template;
 
 /**
@@ -100,13 +101,13 @@ final class FilterPanelRenderer
             ];
         }
 
-        $changed_prefilters = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_batch_manager_prefilters', $prefilters);
+        $prefiltersEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetBatchManagerPrefilters($prefilters));
 
-        // Plugins may return anything from this modifier event; only accept a real
-        // array of arrays back, otherwise keep the built-in prefilter list above.
-        if (is_array($changed_prefilters)) {
-            $prefilters = array_filter($changed_prefilters, is_array(...));
-        }
+        // A misbehaving third-party handler could still populate this with
+        // non-array elements PHP's own type system can't catch at runtime
+        // -- only accept a real array of arrays back, otherwise keep the
+        // built-in prefilter list above.
+        $prefilters = array_filter($prefiltersEvent->prefilters, is_array(...));
 
         // Sort prefilters by localized name.
         usort($prefilters, self::compareByName(...));

@@ -22,6 +22,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\Http\RequestFactory;
 use Piwigo\Image\ImageService;
 use Piwigo\Session\SessionService;
@@ -87,7 +88,7 @@ final class AdminShell
         $conn = DbConnection::build();
 
         CoreTabs::setUrlService($this->urlService);
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('tabsheet_before_select', CoreTabs::addCoreTabs(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(TabsheetBeforeSelect::class, CoreTabs::addCoreTabs(...));
 
         \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_admin');
 

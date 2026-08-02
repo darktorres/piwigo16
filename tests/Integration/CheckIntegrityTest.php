@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Piwigo\Admin\Integrity\CheckIntegrity;
+use Piwigo\Admin\Integrity\Event\ListCheckIntegrity;
 use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity;
 use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyRepository;
 use Piwigo\Config\ConfigService;
@@ -55,8 +56,9 @@ final class CheckIntegrityTest extends IntegrationTestCase
      */
     public static array $queuedAnomalies = [];
 
-    public static function pushQueuedAnomalies(CheckIntegrity $c13y): void
+    public static function pushQueuedAnomalies(ListCheckIntegrity $event): void
     {
+        $c13y = $event->value;
         foreach (self::$queuedAnomalies as $a) {
             $c13y->add_anomaly($a['anomaly'], $a['correction_fct'], $a['correction_fct_args'], $a['correction_msg']);
         }
@@ -93,7 +95,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
         DbConnection::build()->executeStatement('DELETE FROM ' . Tables::integrityIgnoredAnomalies());
 
         self::$queuedAnomalies = [];
-        EventDispatcher::get()->addEventHandler('list_check_integrity', [self::class, 'pushQueuedAnomalies']);
+        EventDispatcher::get()->addTypedHandler(ListCheckIntegrity::class, [self::class, 'pushQueuedAnomalies']);
 
         unset($_POST['c13y_submit_correction'], $_POST['c13y_submit_ignore'], $_POST['c13y_selection']);
 
@@ -103,7 +105,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
     #[\Override]
     protected function tearDown(): void
     {
-        EventDispatcher::get()->removeEventHandler('list_check_integrity', [self::class, 'pushQueuedAnomalies']);
+        EventDispatcher::get()->removeEventHandler(ListCheckIntegrity::class, [self::class, 'pushQueuedAnomalies']);
         unset($_POST['c13y_submit_correction'], $_POST['c13y_submit_ignore'], $_POST['c13y_selection']);
         DbConnection::build()->executeStatement('DELETE FROM ' . Tables::integrityIgnoredAnomalies());
         CurrentTemplate::reset();

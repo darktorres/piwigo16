@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Integrity;
 
 use Piwigo\Admin\AdminUiHelper;
+use Piwigo\Admin\Integrity\Event\ListCheckIntegrity;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
 use Piwigo\Lang\Translator;
@@ -78,7 +79,7 @@ final class CheckIntegrity
         $this->retrieve_list = [];
         $this->build_ignore_list = [];
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('list_check_integrity', $this);
+        $this->dispatchListCheckIntegrity();
 
         // Information
         if (count($this->retrieve_list) > 0) {
@@ -165,6 +166,18 @@ final class CheckIntegrity
         if ($ignore_list_changed) {
             $this->update_conf($this->build_ignore_list);
         }
+    }
+
+    /**
+     * Dispatched as its own method (rather than inline in check()) so
+     * PHPStan sees a call on $this and re-widens $retrieve_list /
+     * $build_ignore_list afterwards -- it can't otherwise tell that a
+     * registered handler may call $event->value->add_anomaly() back into
+     * this same instance through the dispatched event.
+     */
+    private function dispatchListCheckIntegrity(): void
+    {
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new ListCheckIntegrity($this));
     }
 
     /**

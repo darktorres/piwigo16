@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Integrity;
 
+use Piwigo\Admin\Integrity\Event\ListCheckIntegrity;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
@@ -34,9 +35,9 @@ final class C13yInternal
      */
     public function registerHandlers(): void
     {
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('list_check_integrity', $this->c13y_version(...));
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('list_check_integrity', $this->c13y_exif(...));
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('list_check_integrity', $this->c13y_user(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(ListCheckIntegrity::class, $this->c13y_version(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(ListCheckIntegrity::class, $this->c13y_exif(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(ListCheckIntegrity::class, $this->c13y_user(...));
     }
 
     private static function userService(): UserService
@@ -46,11 +47,10 @@ final class C13yInternal
 
     /**
      * Check version
-     *
-     * @param CheckIntegrity $c13y
      */
-    public function c13y_version($c13y): void
+    public function c13y_version(ListCheckIntegrity $event): void
     {
+        $c13y = $event->value;
 
         $check_list = [];
 
@@ -82,11 +82,10 @@ final class C13yInternal
 
     /**
      * Check exif
-     *
-     * @param CheckIntegrity $c13y
      */
-    public function c13y_exif($c13y): void
+    public function c13y_exif(ListCheckIntegrity $event): void
     {
+        $c13y = $event->value;
         $checks = [
             'show_exif' => \Piwigo\Config\CurrentConfig::showExif(),
             'use_exif' => \Piwigo\Config\CurrentConfig::useExif(),
@@ -107,11 +106,11 @@ final class C13yInternal
 
     /**
      * Check user
-     *
-     * @param CheckIntegrity $c13y
      */
-    public function c13y_user($c13y): void
+    public function c13y_user(ListCheckIntegrity $event): void
     {
+        $c13y = $event->value;
+
         // guest_id/default_user_id/webmaster_id are always scalar (raw DB
         // primary keys or config defaults, see include/config_default.inc.php).
         $guest_id = \Piwigo\Config\CurrentConfig::guestId();

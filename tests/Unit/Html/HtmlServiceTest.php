@@ -6,12 +6,14 @@ namespace Piwigo\Tests\Unit\Html;
 
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ProcessCache;
+use Piwigo\Event\Picture\GetElementUrl;
 use Piwigo\Event\Picture\GetThumbnailTitle;
 use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Event\Picture\RenderElementName;
 use Piwigo\Event\Template\RenderCategoryLiteralDescription;
 use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Event\Template\RenderCommentContent;
+use Piwigo\Image\Event\GetSrcImageUrl;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\SrcImage;
 use Piwigo\Menu\BlockManager;
@@ -1152,6 +1154,19 @@ test('registerDefaultMenubarBlocks does nothing for a BlockManager whose id is n
     expect($menu->get_registered_blocks())->toBe([]);
 });
 
+function htmlServiceTestSrcImageUrlProtection(HtmlService $service, string $url, SrcImage $srcImage): string
+{
+    return $service->getSrcImageUrlProtectionHandler(new GetSrcImageUrl($url, $srcImage))->url;
+}
+
+/**
+ * @param array<string, mixed> $elementInfo
+ */
+function htmlServiceTestElementUrlProtection(HtmlService $service, string $url, array $elementInfo): string
+{
+    return $service->getElementUrlProtectionHandler(new GetElementUrl($url, $elementInfo))->url;
+}
+
 test('getSrcImageUrlProtectionHandler uses "e" for an original image and "r" for a non-original representative', function (): void {
     $service = new HtmlService();
     $original = new SrcImage(['id' => 7, 'path' => 'upload/2026/07/photo.jpg', 'file' => 'photo.jpg']);
@@ -1160,9 +1175,9 @@ test('getSrcImageUrlProtectionHandler uses "e" for an original image and "r" for
     expect($original->is_original())->toBeTrue()
         ->and($representative->is_original())->toBeFalse();
 
-    expect($service->getSrcImageUrlProtectionHandler('ignored-input-url', $original))
+    expect(htmlServiceTestSrcImageUrlProtection($service, 'ignored-input-url', $original))
         ->toBe('action.php?id=7&amp;part=e')
-        ->and($service->getSrcImageUrlProtectionHandler('ignored-input-url', $representative))
+        ->and(htmlServiceTestSrcImageUrlProtection($service, 'ignored-input-url', $representative))
         ->toBe('action.php?id=9&amp;part=r');
 });
 
@@ -1170,7 +1185,7 @@ test('getElementUrlProtectionHandler passes a non-image extension through unchan
     CurrentConfig::setOriginalUrlProtection('images');
     $service = new HtmlService();
 
-    $result = $service->getElementUrlProtectionHandler('original-url-unchanged', ['id' => 3, 'path' => 'upload/video.mp4']);
+    $result = htmlServiceTestElementUrlProtection($service, 'original-url-unchanged', ['id' => 3, 'path' => 'upload/video.mp4']);
 
     expect($result)->toBe('original-url-unchanged');
 });
@@ -1179,7 +1194,7 @@ test('getElementUrlProtectionHandler builds an action url for an image extension
     CurrentConfig::setOriginalUrlProtection('images');
     $service = new HtmlService();
 
-    $result = $service->getElementUrlProtectionHandler('ignored', ['id' => 3, 'path' => 'upload/photo.jpg']);
+    $result = htmlServiceTestElementUrlProtection($service, 'ignored', ['id' => 3, 'path' => 'upload/photo.jpg']);
 
     expect($result)->toBe('action.php?id=3&amp;part=e');
 });
@@ -1189,7 +1204,7 @@ test('getElementUrlProtectionHandler builds an action url for any extension when
     // triggers, so even a non-image extension reaches the action url.
     $service = new HtmlService();
 
-    $result = $service->getElementUrlProtectionHandler('ignored', ['id' => 5, 'path' => 'upload/video.mp4']);
+    $result = htmlServiceTestElementUrlProtection($service, 'ignored', ['id' => 5, 'path' => 'upload/video.mp4']);
 
     expect($result)->toBe('action.php?id=5&amp;part=e');
 });
@@ -1202,7 +1217,7 @@ test('getElementUrlProtectionHandler defaults a missing id to an empty string, n
     // provides a real 'id'.
     $service = new HtmlService();
 
-    $result = $service->getElementUrlProtectionHandler('ignored', ['path' => 'upload/video.mp4']);
+    $result = htmlServiceTestElementUrlProtection($service, 'ignored', ['path' => 'upload/video.mp4']);
 
     expect($result)->toBe('action.php?id=&amp;part=e');
 });
@@ -1217,7 +1232,7 @@ test('getElementUrlProtectionHandler defaults a non-int-non-string id to an empt
     // an int nor a string is required to actually reach it.
     $service = new HtmlService();
 
-    $result = $service->getElementUrlProtectionHandler('ignored', ['id' => 3.5, 'path' => 'upload/video.mp4']);
+    $result = htmlServiceTestElementUrlProtection($service, 'ignored', ['id' => 3.5, 'path' => 'upload/video.mp4']);
 
     expect($result)->toBe('action.php?id=&amp;part=e');
 });

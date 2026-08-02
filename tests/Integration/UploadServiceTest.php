@@ -18,6 +18,7 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\ThemeConfProviderInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Picture\UploadFile;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
@@ -317,6 +318,14 @@ final class UploadServiceTest extends IntegrationTestCase
         return is_numeric($value) ? (int) $value : 0;
     }
 
+    /**
+     * @param callable(UploadFile): UploadFile $handler
+     */
+    private function uploadFileExt(callable $handler, ?string $representativeExt, string $filePath): ?string
+    {
+        return $handler(new UploadFile($representativeExt, $filePath))->representativeExt;
+    }
+
     public function test_addUploadedFile_inserts_a_new_photo_and_writes_it_to_real_storage(): void
     {
         $source = $this->marker . '/incoming.png';
@@ -607,7 +616,7 @@ final class UploadServiceTest extends IntegrationTestCase
     {
         CurrentConfig::setUploadFormAllTypes(true);
 
-        EventDispatcher::get()->addEventHandler('upload_file', UploadService::uploadFilePdf(...));
+        EventDispatcher::get()->addTypedHandler(UploadFile::class, UploadService::uploadFilePdf(...));
 
         try {
             $png = $this->marker . '/pdf-source.png';
@@ -786,7 +795,7 @@ final class UploadServiceTest extends IntegrationTestCase
             self::markTestSkipped('ImageMagick convert failed to build a multi-page TIFF fixture: ' . implode("\n", $out));
         }
 
-        $result = UploadService::uploadFileTiff(null, $tiff);
+        $result = $this->uploadFileExt(UploadService::uploadFileTiff(...), null, $tiff);
 
         self::assertIsString($result);
         $representativePath = $this->marker . '/pwg_representative/multi.' . $result;
@@ -879,7 +888,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $heic = $this->marker . '/photo.heic';
         file_put_contents($heic, 'not a genuine heic payload -- only the .heic extension needs to dispatch here');
 
-        $result = UploadService::uploadFileHeic(null, $heic);
+        $result = $this->uploadFileExt(UploadService::uploadFileHeic(...), null, $heic);
 
         self::assertTrue($result === null || $result === 'jpg');
 
@@ -899,7 +908,7 @@ final class UploadServiceTest extends IntegrationTestCase
      */
     public function test_upload_file_video_passes_through_an_already_set_representative_ext(): void
     {
-        $result = UploadService::uploadFileVideo('already-set', $this->marker . '/whatever.mp4');
+        $result = $this->uploadFileExt(UploadService::uploadFileVideo(...), 'already-set', $this->marker . '/whatever.mp4');
 
         self::assertSame('already-set', $result);
     }
@@ -935,7 +944,7 @@ final class UploadServiceTest extends IntegrationTestCase
             self::markTestSkipped('ffmpeg failed to synthesize the test video fixture: ' . implode("\n", $out));
         }
 
-        $result = UploadService::uploadFileVideo(null, $video);
+        $result = $this->uploadFileExt(UploadService::uploadFileVideo(...), null, $video);
 
         self::assertSame('jpg', $result);
         $posterPath = $this->marker . '/pwg_representative/clip.jpg';
@@ -977,7 +986,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $fake = $this->marker . '/broken.mp4';
         file_put_contents($fake, "this is not a video file, just plain text with a video-like extension\n");
 
-        $result = UploadService::uploadFileVideo(null, $fake);
+        $result = $this->uploadFileExt(UploadService::uploadFileVideo(...), null, $fake);
 
         self::assertNull($result);
         self::assertFileDoesNotExist($this->marker . '/pwg_representative/broken.jpg');

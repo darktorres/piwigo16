@@ -14,6 +14,7 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
+use Piwigo\Event\Admin\GetAdminAdvancedFeaturesLinks;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Template\Template;
 
@@ -158,15 +159,10 @@ final class MaintenanceEnvPageRenderer
         // | Define advanced features                                              |
         // +-------------------------------------------------------------------+
 
-        $advanced_features = [];
-
         // $advanced_features is array of array composed of CAPTION & URL
-        $advanced_features = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
-            'get_admin_advanced_features_links',
-            $advanced_features
-        );
+        $advanced_features_event = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetAdminAdvancedFeaturesLinks([]));
 
-        $template->assign('advanced_features', $advanced_features);
+        $template->assign('advanced_features', $advanced_features_event->advancedFeatures);
 
         // +-------------------------------------------------------------------+
         // |                           sending html code                           |

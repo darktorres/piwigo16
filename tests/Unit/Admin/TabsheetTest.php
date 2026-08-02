@@ -6,6 +6,7 @@ use Piwigo\Admin\Tabsheet;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Paths;
+use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Template;
@@ -147,13 +148,15 @@ test('select falls back to the first remaining tab when the requested name does 
 });
 
 test('select applies a tabsheet_before_select handler that filters and appends tabs', function (): void {
-    $handler = function (array $sheets): array {
+    $handler = function (TabsheetBeforeSelect $event): TabsheetBeforeSelect {
+        $sheets = $event->sheets;
         unset($sheets['removed-by-handler']);
         $sheets['added-by-handler'] = ['caption' => 'Added', 'url' => '/added'];
+        $event->sheets = $sheets;
 
-        return $sheets;
+        return $event;
     };
-    EventDispatcher::get()->addEventHandler('tabsheet_before_select', $handler);
+    EventDispatcher::get()->addTypedHandler(TabsheetBeforeSelect::class, $handler);
 
     try {
         $tabsheet = new Tabsheet();
@@ -168,18 +171,20 @@ test('select applies a tabsheet_before_select handler that filters and appends t
         ]);
         expect($tabsheet->selected)->toBe('added-by-handler');
     } finally {
-        EventDispatcher::get()->removeEventHandler('tabsheet_before_select', $handler);
+        EventDispatcher::get()->removeEventHandler(TabsheetBeforeSelect::class, $handler);
     }
 });
 
 test('select discards a handler-returned entry that does not match the expected shape', function (): void {
-    $handler = function (array $sheets): array {
+    $handler = function (TabsheetBeforeSelect $event): TabsheetBeforeSelect {
+        $sheets = $event->sheets;
         $sheets['malformed'] = ['caption' => 'Missing url'];
         $sheets[] = 'not-even-an-array-entry'; // int key, non-array value
+        $event->sheets = $sheets;
 
-        return $sheets;
+        return $event;
     };
-    EventDispatcher::get()->addEventHandler('tabsheet_before_select', $handler);
+    EventDispatcher::get()->addTypedHandler(TabsheetBeforeSelect::class, $handler);
 
     try {
         $tabsheet = new Tabsheet();
@@ -189,7 +194,7 @@ test('select discards a handler-returned entry that does not match the expected 
 
         expect($tabsheet->sheets)->toBe(['general' => ['caption' => 'General', 'url' => '/general']]);
     } finally {
-        EventDispatcher::get()->removeEventHandler('tabsheet_before_select', $handler);
+        EventDispatcher::get()->removeEventHandler(TabsheetBeforeSelect::class, $handler);
     }
 });
 
@@ -199,12 +204,14 @@ test('select discards a well-shaped sheet entry keyed by an int, not just a malf
     // *key* is wrong (an int, not a string). Both checks (is_string($key)
     // and is_array($value)) must independently hold; this proves the key
     // check alone can't be skipped just because the value looks fine.
-    $handler = function (array $sheets): array {
+    $handler = function (TabsheetBeforeSelect $event): TabsheetBeforeSelect {
+        $sheets = $event->sheets;
         $sheets[] = ['caption' => 'Int Keyed', 'url' => '/int-keyed'];
+        $event->sheets = $sheets;
 
-        return $sheets;
+        return $event;
     };
-    EventDispatcher::get()->addEventHandler('tabsheet_before_select', $handler);
+    EventDispatcher::get()->addTypedHandler(TabsheetBeforeSelect::class, $handler);
 
     try {
         $tabsheet = new Tabsheet();
@@ -214,23 +221,24 @@ test('select discards a well-shaped sheet entry keyed by an int, not just a malf
 
         expect($tabsheet->sheets)->toBe(['general' => ['caption' => 'General', 'url' => '/general']]);
     } finally {
-        EventDispatcher::get()->removeEventHandler('tabsheet_before_select', $handler);
+        EventDispatcher::get()->removeEventHandler(TabsheetBeforeSelect::class, $handler);
     }
 });
 
-test('select keeps the current sheets unchanged when a handler returns a non-array value', function (): void {
-    $handler = fn (array $sheets): string => 'not-an-array';
-    EventDispatcher::get()->addEventHandler('tabsheet_before_select', $handler);
+test('select throws when a tabsheet_before_select handler returns something other than a TabsheetBeforeSelect instance', function (): void {
+    // See RenderElementName's own sibling test in HtmlServiceTest.php for
+    // why this uses addEventHandler(), not addTypedHandler().
+    $handler = fn (): string => 'not-an-array';
+    EventDispatcher::get()->addEventHandler(TabsheetBeforeSelect::class, $handler);
 
     try {
         $tabsheet = new Tabsheet();
         $tabsheet->add('general', 'General', '/general');
 
-        $tabsheet->select('general');
-
-        expect($tabsheet->sheets)->toBe(['general' => ['caption' => 'General', 'url' => '/general']]);
+        expect(static fn () => $tabsheet->select('general'))
+            ->toThrow(\Error::class, 'must return an instance of');
     } finally {
-        EventDispatcher::get()->removeEventHandler('tabsheet_before_select', $handler);
+        EventDispatcher::get()->removeEventHandler(TabsheetBeforeSelect::class, $handler);
     }
 });
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Admin\Integrity\C13yInternal;
 use Piwigo\Admin\Integrity\CheckIntegrity;
+use Piwigo\Admin\Integrity\Event\ListCheckIntegrity;
 use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity;
 use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyRepository;
 use Piwigo\Config\ConfigLoader;
@@ -47,7 +48,7 @@ beforeEach(function (): void {
 test('c13y_version adds no anomaly when the running PHP/MySQL already satisfy the app\'s own minimum versions', function (): void {
     $c13y = c13yInternalTestCheckIntegrity();
 
-    new C13yInternal()->c13y_version($c13y);
+    new C13yInternal()->c13y_version(new ListCheckIntegrity($c13y));
 
     expect($c13y->retrieve_list)->toBe([]);
 });
@@ -56,7 +57,7 @@ test('c13y_exif adds no anomaly when exif_read_data() is available', function ()
     expect(function_exists('exif_read_data'))->toBeTrue();
 
     $c13y = c13yInternalTestCheckIntegrity();
-    new C13yInternal()->c13y_exif($c13y);
+    new C13yInternal()->c13y_exif(new ListCheckIntegrity($c13y));
 
     expect($c13y->retrieve_list)->toBe([]);
 });
@@ -94,7 +95,7 @@ test('c13y_user flags a configured webmaster_id that has no matching user row, a
     CurrentConfig::setWebmasterId(999999);
 
     $c13y = c13yInternalTestCheckIntegrity();
-    new C13yInternal()->c13y_user($c13y);
+    new C13yInternal()->c13y_user(new ListCheckIntegrity($c13y));
 
     expect($c13y->retrieve_list)->toHaveCount(1);
     $anomaly = $c13y->retrieve_list[0];
@@ -132,7 +133,7 @@ test('c13y_user flags a real user whose status does not match the expected one, 
         $conn->executeStatement("UPDATE " . \Piwigo\Db\Tables::userInfos() . " SET status = 'normal' WHERE user_id = 1");
 
         $c13y = c13yInternalTestCheckIntegrity();
-        new C13yInternal()->c13y_user($c13y);
+        new C13yInternal()->c13y_user(new ListCheckIntegrity($c13y));
 
         $webmasterAnomaly = null;
         foreach ($c13y->retrieve_list as $anomaly) {
@@ -179,7 +180,7 @@ test('c13y_user flags a configured default_user_id distinct from guest_id that h
     CurrentConfig::setWebmasterId(1);
 
     $c13y = c13yInternalTestCheckIntegrity();
-    new C13yInternal()->c13y_user($c13y);
+    new C13yInternal()->c13y_user(new ListCheckIntegrity($c13y));
 
     expect($c13y->retrieve_list)->toHaveCount(1);
     $anomaly = $c13y->retrieve_list[0];

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Ws\Protocol\PwgXmlRpcEncoder;
 use Piwigo\Ws\PwgError;
+use Piwigo\Ws\PwgNamedArray;
 
 /**
  * PwgXmlRpcEncoder::xmlrpcEncode() switches on gettype() per value
@@ -19,6 +20,19 @@ use Piwigo\Ws\PwgError;
  * As with the PwgSerialPhpEncoder tests, PwgError fixtures use a
  * WsError-style code (>= 1000), not an HTTP-range 400-599 code, to
  * avoid PwgError's constructor reaching for a booted container.
+ *
+ * Deliberately NOT tested: the `(string)` cast on the 'double' case's
+ * `return '<double>' . (string) $data . '</double>';`. $data is only
+ * ever a genuine `float` there (gettype($data) === 'double' guards the
+ * branch), and for a float, PHP's implicit string-context conversion
+ * (plain concatenation) is byte-for-byte identical to an explicit
+ * `(string)` cast in every case checked -- 1.0, 4.5, huge/tiny
+ * magnitudes, NAN, INF, -0.0, and across `precision` ini values of 4,
+ * -1, 14 (default), and 17 -- confirmed live via
+ * `sed -i "80s/(string) \$data/\$data/" src/.../PwgXmlRpcEncoder.php`
+ * followed by rerunning this suite (all green) and reverting. Removing
+ * that cast is a true equivalent mutant here: no input can distinguish
+ * the two, so no test is added to "kill" it.
  */
 test('encodeResponse renders a PwgError as a methodResponse/fault', function (): void {
     $encoder = new PwgXmlRpcEncoder();
@@ -163,6 +177,104 @@ test('encodeResponse renders a null field as an empty value tag via the switch f
 
     $struct = "<struct>\n"
         . "  <member><name>connected_with</name><value></value></member>\n"
+        . '</struct>';
+
+    $expected = <<<EOD
+    <methodResponse>
+      <params>
+        <param>
+          <value>
+            {$struct}
+          </value>
+        </param>
+      </params>
+    </methodResponse>
+    EOD;
+
+    expect($result)->toBe($expected);
+});
+
+test('encodeResponse actually flattens a PwgNamedArray wrapper before encoding', function (): void {
+    // If parent::flattenResponse($response) weren't called, $response
+    // would still be a PwgNamedArray *object* by the time it reaches
+    // xmlrpcEncode(). That method has no special case for PwgNamedArray --
+    // it would fall into the generic 'object' branch and get_object_vars()
+    // would leak _content/_itemName/_xmlAttributes as struct members
+    // instead of encoding the wrapped list directly. Calling flatten
+    // first unwraps $response to plain [1, 2, 3] before xmlrpcEncode()
+    // ever sees it, so the list branch runs and none of those wrapper
+    // property names appear anywhere in the output.
+    $encoder = new PwgXmlRpcEncoder();
+    $response = new PwgNamedArray([1, 2, 3], 'item');
+
+    $result = $encoder->encodeResponse($response);
+
+    $list = "<array><data>\n"
+        . "  <value><int>1</int></value>\n"
+        . "  <value><int>2</int></value>\n"
+        . "  <value><int>3</int></value>\n"
+        . '</data></array>';
+
+    $expected = <<<EOD
+    <methodResponse>
+      <params>
+        <param>
+          <value>
+            {$list}
+          </value>
+        </param>
+      </params>
+    </methodResponse>
+    EOD;
+
+    expect($result)->toBe($expected);
+});
+
+test('encodeResponse casts a non-string (integer) struct key to string before escaping', function (): void {
+    // Struct member names come straight from a plain array's own keys,
+    // which can be integers (PHP auto-casts a numeric-string key like
+    // '3' to int(3)) -- htmlspecialchars() requires a string argument
+    // under this file's strict_types, so without the (string) cast on
+    // $name this would fatal with a TypeError for any non-string key.
+    // A lone int key already forces the struct branch on its own:
+    // array_keys([3 => 'three']) is [3], which never equals
+    // range(0, 0) = [0].
+    $encoder = new PwgXmlRpcEncoder();
+    $response = [3 => 'three'];
+
+    $result = $encoder->encodeResponse($response);
+
+    $struct = "<struct>\n"
+        . "  <member><name>3</name><value><string>three</string></value></member>\n"
+        . '</struct>';
+
+    $expected = <<<EOD
+    <methodResponse>
+      <params>
+        <param>
+          <value>
+            {$struct}
+          </value>
+        </param>
+      </params>
+    </methodResponse>
+    EOD;
+
+    expect($result)->toBe($expected);
+});
+
+test('encodeResponse escapes HTML-special characters in a struct member name', function (): void {
+    $encoder = new PwgXmlRpcEncoder();
+    $response = [
+        '<tag>' => 'value',
+        'a&b' => 'other',
+    ];
+
+    $result = $encoder->encodeResponse($response);
+
+    $struct = "<struct>\n"
+        . "  <member><name>&lt;tag&gt;</name><value><string>value</string></value></member>\n"
+        . "  <member><name>a&amp;b</name><value><string>other</string></value></member>\n"
         . '</struct>';
 
     $expected = <<<EOD

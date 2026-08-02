@@ -3210,47 +3210,43 @@ final class ImageRepository extends EntityRepository
     /**
      * Ids of every image added on the same day as the most recently
      * added one -- Admin\BatchManager\FilterResolver's own "last_import"
-     * prefilter. "Day" per SqlDialect::getRecentPeriodExpression()'s own
-     * DB-specific date arithmetic. Returns [] when there are no images at
-     * all.
+     * prefilter. Returns [] when there are no images at all.
      *
-     * Item 14 DQL audit: stays on DBAL -- SqlDialect::
-     * getRecentPeriodExpression()'s own MySQL-specific
-     * `SUBDATE(..., INTERVAL ...)` date arithmetic has no DQL
-     * equivalent.
+     * Item 14 DQL audit, corrected: the original note claimed
+     * `SqlDialect::getRecentPeriodExpression()`'s own `SUBDATE(...,
+     * INTERVAL ...)` had no DQL equivalent -- wrong, same corrected
+     * `DATE_SUB()` finding as {@see
+     * \Piwigo\Comment\CommentRepository::countRecentComments()}.
+     * Converted to real DQL -- single-table, no join.
      *
      * @return list<int>
      */
     public function findIdsAddedSameDayAsLatest(): array
     {
-        $imagesTable = Tables::images();
-        $conn = $this->getEntityManager()
-            ->getConnection();
-
-        $lastDate = $conn->createQueryBuilder()
-            ->select('MAX(date_available) AS max_date')
-            ->from($imagesTable)
-            ->executeQuery()
-            ->fetchOne();
+        $lastDate = $this->createQueryBuilder('i')
+            ->select('MAX(i.dateAvailable)')
+            ->getQuery()
+            ->getSingleScalarResult();
 
         if (! is_string($lastDate) || $lastDate === '') {
             return [];
         }
 
-        $recentPeriodExpr = SqlDialect::getRecentPeriodExpression(1, ':last_date');
+        $ids = $this->createQueryBuilder('i')
+            ->select('i.id')
+            ->where("i.dateAvailable BETWEEN DATE_SUB(:lastDate, 1, 'day') AND :lastDate")
+            ->setParameter('lastDate', $lastDate)
+            ->getQuery()
+            ->getSingleColumnResult();
 
-        return array_map(
-            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-            $conn->executeQuery(
-                <<<SQL
-                    SELECT id FROM {$imagesTable} WHERE date_available BETWEEN {$recentPeriodExpr} AND :last_date
-                    SQL
-                ,
-                [
-                    'last_date' => $lastDate,
-                ],
-            )->fetchFirstColumn()
-        );
+        $result = [];
+        foreach ($ids as $id) {
+            if (is_numeric($id)) {
+                $result[] = (int) $id;
+            }
+        }
+
+        return $result;
     }
 
     /**

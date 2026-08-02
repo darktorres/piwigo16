@@ -684,6 +684,30 @@ final class ImageRepositoryTest extends IntegrationTestCase
         }
     }
 
+    public function test_find_ids_added_same_day_as_latest_excludes_older_images(): void
+    {
+        // Item 14 DQL audit re-audit (Item 14 Sub-phase B): had zero
+        // existing coverage. Every fixture image already shares the same
+        // date_available (the "latest" day) -- add one genuinely older
+        // image to prove the DATE_SUB()-based lower bound really excludes
+        // it, not just "returns everything by accident."
+        $this->conn->beginTransaction();
+
+        try {
+            $this->conn->executeStatement(
+                "INSERT INTO " . Tables::images() . " (file, path, date_available) VALUES ('older-photo.jpg', 'upload/older-photo.jpg', '2020-01-01 00:00:00')"
+            );
+            $olderId = (int) $this->conn->lastInsertId();
+
+            $ids = $this->repo->findIdsAddedSameDayAsLatest();
+
+            self::assertEqualsCanonicalizing([1, 2, 3, 4, 5], $ids);
+            self::assertNotContains($olderId, $ids);
+        } finally {
+            $this->conn->rollBack();
+        }
+    }
+
     public function test_find_history_display_info_by_ids_returns_empty_array_for_empty_input(): void
     {
         self::assertSame([], $this->repo->findHistoryDisplayInfoByIds([]));

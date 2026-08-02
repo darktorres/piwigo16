@@ -193,8 +193,14 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * also matching the $anonymousIdPrefix.* anonymous_id pattern) within
      * the last $antiFloodSeconds seconds. Used by the anti-flood check.
      *
-     * Item 14 DQL audit: stays on DBAL -- SUBDATE(..., INTERVAL ... SECOND)
-     * is MySQL-specific date arithmetic with no native DQL function.
+     * Item 14 DQL audit, corrected: the original note claimed
+     * `SUBDATE(..., INTERVAL ... SECOND)` had no native DQL function --
+     * wrong. `DATE_SUB(date, interval, unit)` is a real, built-in DQL
+     * function (compiling through `AbstractPlatform::
+     * getDateSubSecondsExpression()`, genuinely portable per-platform,
+     * not MySQL-specific), just spelled with a different argument order
+     * than MySQL's own `SUBDATE(date, INTERVAL n unit)` syntax. Converted
+     * to real DQL.
      */
     public function countRecentComments(int $authorId, ?string $anonymousIdPrefix, int $antiFloodSeconds): int
     {
@@ -203,24 +209,21 @@ final class CommentRepository extends EntityRepository implements CommentCounter
         // PIWIGO_TEST_NOW, so fixture comments dated relative to it would
         // read as "within the flood window" whenever real time drifted
         // away from the fixture's own dates.
-        $qb = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('COUNT(1)')
-            ->from(Tables::comments())
-            ->where('date > SUBDATE(:now, INTERVAL :seconds SECOND)')
-            ->andWhere('author_id = :authorId')
+        $qb = $this->createQueryBuilder('c')
+            ->select('COUNT(c.id)')
+            ->where("c.date > DATE_SUB(:now, :seconds, 'second')")
+            ->andWhere('c.authorId = :authorId')
             ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
             ->setParameter('seconds', $antiFloodSeconds)
             ->setParameter('authorId', $authorId);
 
         if ($anonymousIdPrefix !== null) {
-            $qb->andWhere('anonymous_id LIKE :anonymousIdPrefix')
+            $qb->andWhere('c.anonymousId LIKE :anonymousIdPrefix')
                 ->setParameter('anonymousIdPrefix', $anonymousIdPrefix . '.%');
         }
 
-        $value = $qb->executeQuery()
-            ->fetchOne();
+        $value = $qb->getQuery()
+            ->getSingleScalarResult();
 
         return is_numeric($value) ? (int) $value : 0;
     }

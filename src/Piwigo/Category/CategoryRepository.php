@@ -595,8 +595,15 @@ final class CategoryRepository extends EntityRepository
     }
 
     /**
-     * Item 14 DQL audit: stays on DBAL -- `sites` has no mapped Entity
-     * anywhere in this migration.
+     * Item 14 DQL audit, re-corrected: `sites` *is* mapped ({@see
+     * \Piwigo\Site\SiteEntity}), but converting this to DQL against it
+     * would make `Category` (L2aCoreDomain) depend on `Site`
+     * (L2bExtendedDomain) -- confirmed a real `deptrac` violation
+     * (`DependsOnDisallowedLayer`), not a false positive: `deptrac.yaml`'s
+     * ruleset only lets `L2aCoreDomain` depend downward on
+     * `L1Infrastructure`/`L0Data`, never upward into `L2bExtendedDomain`.
+     * Stays on DBAL for this real architectural-boundary reason, not a
+     * missing-entity one.
      */
     public function deleteSiteRow(int $id): void
     {
@@ -1529,8 +1536,11 @@ final class CategoryRepository extends EntityRepository
      * @return array<int|string, string> id => galleries_url, same
      *   numeric-string key caveat as {@see findCategoryDirsById()}
      *
-     * Item 14 DQL audit: stays on DBAL -- `sites` has no mapped Entity
-     * anywhere in this migration.
+     * Item 14 DQL audit, re-corrected: `sites` *is* mapped ({@see
+     * \Piwigo\Site\SiteEntity}), but querying it from here would make
+     * `Category` (L2aCoreDomain) depend on `Site` (L2bExtendedDomain) --
+     * a real `deptrac` `DependsOnDisallowedLayer` violation, same
+     * reasoning as {@see deleteSiteRow()} above. Stays on DBAL.
      */
     public function findSiteGalleriesUrls(): array
     {
@@ -2994,8 +3004,11 @@ final class CategoryRepository extends EntityRepository
      * $categoryId's own site's galleries_url, via the site_id FK join --
      * Admin\CatModifyPageRenderer's own getSiteUrl().
      *
-     * Item 14 DQL audit: stays on DBAL -- `sites` has no mapped Entity
-     * anywhere in this migration.
+     * Item 14 DQL audit, re-corrected: `sites` *is* mapped ({@see
+     * \Piwigo\Site\SiteEntity}), but joining it from here would make
+     * `Category` (L2aCoreDomain) depend on `Site` (L2bExtendedDomain) --
+     * a real `deptrac` `DependsOnDisallowedLayer` violation, same
+     * reasoning as {@see deleteSiteRow()} above. Stays on DBAL.
      */
     public function findGalleriesUrlForCategory(int|string $categoryId): ?string
     {

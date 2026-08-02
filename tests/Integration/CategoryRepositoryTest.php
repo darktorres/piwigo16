@@ -608,6 +608,50 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         self::assertNull($this->repo->findGalleriesUrlForCategory(1));
     }
 
+    public function test_find_galleries_url_for_category_returns_the_joined_sites_row(): void
+    {
+        // Item 14 DQL audit re-audit (Item 14 Sub-phase B): the JOIN
+        // branch itself had no test coverage. Fixture has exactly one
+        // sites row (id 1); temporarily point category 1 at it.
+        $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET site_id = 1 WHERE id = 1');
+
+        try {
+            self::assertSame(
+                '/home/torres/piwigo17-rewrite-sql/galleries/',
+                $this->repo->findGalleriesUrlForCategory(1)
+            );
+        } finally {
+            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET site_id = NULL WHERE id = 1');
+        }
+    }
+
+    public function test_find_site_galleries_urls_returns_the_id_to_url_map(): void
+    {
+        // Item 14 DQL audit re-audit (Item 14 Sub-phase B): had zero
+        // existing coverage.
+        self::assertSame(
+            [1 => '/home/torres/piwigo17-rewrite-sql/galleries/'],
+            $this->repo->findSiteGalleriesUrls()
+        );
+    }
+
+    public function test_delete_site_row_removes_the_row(): void
+    {
+        // Item 14 DQL audit re-audit (Item 14 Sub-phase B): had zero
+        // existing coverage. Inserts a throwaway site rather than
+        // deleting the fixture's own row 1 (other tests in this file rely
+        // on it existing).
+        $newId = $this->conn->insert(Tables::sites(), ['galleries_url' => '/tmp/throwaway/']);
+        self::assertSame(1, $newId);
+        $insertedId = (int) $this->conn->lastInsertId();
+
+        self::assertArrayHasKey($insertedId, $this->repo->findSiteGalleriesUrls());
+
+        $this->repo->deleteSiteRow($insertedId);
+
+        self::assertArrayNotHasKey($insertedId, $this->repo->findSiteGalleriesUrls());
+    }
+
     public function test_find_existing_ids_returns_empty_for_no_ids(): void
     {
         self::assertSame([], $this->repo->findExistingIds([]));

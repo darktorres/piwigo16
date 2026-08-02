@@ -309,10 +309,15 @@ final class TagRepository extends EntityRepository
      * (grace period so a tag freshly created/detached isn't immediately
      * swept up).
      *
-     * Item 14 DQL audit: stays on DBAL -- SUBDATE(NOW(), INTERVAL 1 DAY)
-     * is MySQL-specific date arithmetic with no native DQL function (same
-     * blocker as Comment\CommentRepository::countRecentComments()'s own
-     * documented finding).
+     * Item 14 DQL audit, corrected: the original note claimed
+     * `SUBDATE(NOW(), INTERVAL 1 DAY)` had no native DQL function -- wrong,
+     * see {@see \Piwigo\Comment\CommentRepository::countRecentComments()}'s
+     * own corrected note for the real `DATE_SUB()` equivalent. Stays on
+     * DBAL regardless for the real remaining reason: the `LEFT JOIN
+     * image_tag ... WHERE tag_id IS NULL` anti-join has no formal ORM
+     * association between `ImageTagEntity`/`TagEntity` (same "not worth
+     * the added complexity this pass" call already made for
+     * {@see findTagsForImage()} above).
      *
      * @return list<TagBrief>
      */

@@ -58,6 +58,7 @@ final class MaintenanceActionDispatcher
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
+        private readonly ?\Piwigo\Cache\PersistentCache $persistentCache = null,
     ) {}
 
     /**
@@ -71,8 +72,6 @@ final class MaintenanceActionDispatcher
 
     public function dispatch(string $action): void
     {
-        $persistent_cache = \Piwigo\Cache\CurrentPersistentCache::get();
-
         $register_activity = true;
         $conn = DbConnection::build();
         $db_maintenance = \Piwigo\Bootstrap\AdminAccessor::dbMaintenanceRepository();
@@ -203,11 +202,11 @@ final class MaintenanceActionDispatcher
 
                 \Piwigo\Template\CurrentTemplate::get()->delete_compiled_templates();
                 FileCombiner::clear_combined_files();
-                if (! $persistent_cache instanceof \Piwigo\Cache\PersistentCache) {
+                if (! $this->persistentCache instanceof \Piwigo\Cache\PersistentCache) {
                     \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                         ->fatalError('persistent cache not initialized');
                 }
-                $persistent_cache->purge(true);
+                $this->persistentCache->purge(true);
                 \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', Lang::t('Purge compiled templates'), Lang::t('action successfully performed.')));
                 break;
 

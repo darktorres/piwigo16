@@ -387,18 +387,6 @@ test('FilesystemIntegrityChecker::reset() is only called from tests/', function 
     expect(describeCallSites($hits))->toBe([]);
 });
 
-test('CurrentPersistentCache::reset() is only called from tests/', function (): void {
-    $repoRoot = __DIR__ . '/../..';
-
-    $hits = [
-        ...findCallSites($repoRoot . '/src/Piwigo', 'CurrentPersistentCache::reset('),
-        ...findCallSitesInRootPhpFiles($repoRoot, 'CurrentPersistentCache::reset('),
-        ...findCallSitesInBinFiles($repoRoot, 'CurrentPersistentCache::reset('),
-    ];
-
-    expect(describeCallSites($hits))->toBe([]);
-});
-
 test('AdminContext::reset() is only called from tests/', function (): void {
     $repoRoot = __DIR__ . '/../..';
 

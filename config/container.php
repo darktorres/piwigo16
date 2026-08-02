@@ -21,6 +21,8 @@ use Piwigo\Auth\UserFailedLoginEntity;
 use Piwigo\Auth\UserFailedLoginRepository;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Cache\CacheFactory;
+use Piwigo\Cache\PersistentCache;
+use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Category\CategoryEntity;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Comment\CommentEntity;
@@ -156,6 +158,16 @@ return [
     // deptrac.yaml's ruleset. See src/Piwigo/Core/UrlServiceInterface.php's
     // own docblock.
     UrlServiceInterface::class => \DI\get(UrlService::class),
+
+    // Abstract-class binding (singleton/service-locator elimination
+    // campaign, Phase 0 pilot) -- Piwigo\Cache\PersistentCache is abstract,
+    // so PHP-DI can't autowire it without being told which concrete
+    // implementation to construct. Replaces the former
+    // Piwigo\Cache\CurrentPersistentCache static facade (deleted): the
+    // value never actually varied per request (always PersistentFileCache),
+    // so there was nothing genuinely request-scoped to hold in a shared
+    // mutable instance -- an ordinary binding is enough.
+    PersistentCache::class => \DI\get(PersistentFileCache::class),
 
     // Interface binding (P23 batch 8f-4) -- Piwigo\Admin\PiwigoInfosSender
     // is L4Integration; Piwigo\Page\PageTailRenderer (L3Presentation)

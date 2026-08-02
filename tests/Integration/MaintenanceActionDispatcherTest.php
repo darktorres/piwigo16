@@ -379,7 +379,9 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
 
     public function test_compiled_templates_fatal_errors_when_the_persistent_cache_is_not_initialized(): void
     {
-        \Piwigo\Cache\CurrentPersistentCache::reset();
+        // $this->dispatcher (built in setUp()) already has no persistent
+        // cache -- its constructor's $persistentCache param defaults to
+        // null, and setUp() never passes one.
         // delete_compiled_templates() runs before the persistent-cache
         // guard -- needs a real Template instance, unset by default since
         // this test never boots a full RequestBootstrap.
@@ -448,7 +450,17 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
     public function test_compiled_templates_purges_a_real_initialized_persistent_cache(): void
     {
         CurrentTemplate::set(new Template(CurrentPaths::get()->root . 'themes/admin', 'default'));
-        \Piwigo\Cache\CurrentPersistentCache::set(new \Piwigo\Cache\PersistentFileCache());
+
+        // A dedicated local instance, not $this->dispatcher (built in
+        // setUp() with no persistent cache) -- constructor injection means
+        // this test just passes the fixture it wants directly, no static
+        // set()/reset() ceremony needed.
+        $dispatcher = new MaintenanceActionDispatcher(
+            new RedirectService(),
+            new UrlService(new HtmlService()),
+            new ConfigService($this->buildConfigRepository()),
+            new \Piwigo\Cache\PersistentFileCache(),
+        );
 
         // FileCombiner::clear_combined_files()'s own opendir() (the real
         // combined-CSS/JS cache dir, _data/combined/, may not exist yet in
@@ -459,7 +471,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         // test_derivatives_* tests' identical reasoning above.
         set_error_handler(static fn (): bool => true);
         try {
-            $this->dispatcher->dispatch('compiled-templates');
+            $dispatcher->dispatch('compiled-templates');
 
             self::assertContains(
                 'Purge compiled templates : action successfully performed.',
@@ -467,7 +479,6 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             );
         } finally {
             restore_error_handler();
-            \Piwigo\Cache\CurrentPersistentCache::reset();
         }
     }
 }

@@ -17,9 +17,11 @@ namespace Piwigo\Config;
  * and reached via Piwigo\Config\CurrentConfigService::get() everywhere
  * else. Renamed from Config to CurrentConfig to match this codebase's own
  * established Current* convention (CurrentUser, CurrentLogger,
- * CurrentPaths, CurrentTemplate, CurrentPersistentCache,
- * CurrentConfigService) -- this was the one class of that same shape
- * breaking the pattern.
+ * CurrentPaths, CurrentTemplate, CurrentConfigService) -- this was the one
+ * class of that same shape breaking the pattern. (CurrentPersistentCache,
+ * once a sibling of this same shape, was deleted by the singleton/DI
+ * elimination campaign -- see config/container.php's PersistentCache
+ * binding -- since its value never actually varied per request.)
  *
  * DB credentials (db_host/db_port/db_driver/db_base/db_user/db_password/
  * db_prefix) and the handful of sysadmin-lockable settings

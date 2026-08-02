@@ -14,7 +14,6 @@ use Piwigo\Auth\CookieService;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
-use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Comment\CommentService;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\ActivitySystem;
@@ -357,8 +356,6 @@ final class RequestBootstrap
         SessionBootstrap::register();
 
         \Piwigo\Core\PageState::current()->executionUuid = SessionService::get()->generateKey(10);
-
-        \Piwigo\Cache\CurrentPersistentCache::set(new PersistentFileCache());
 
         // Database connection. DbConnection::build() itself deliberately
         // never touches the session-level ONLY_FULL_GROUP_BY server mode

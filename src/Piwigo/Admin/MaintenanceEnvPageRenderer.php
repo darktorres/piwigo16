@@ -45,6 +45,7 @@ final class MaintenanceEnvPageRenderer
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
+        private readonly ?\Piwigo\Cache\PersistentCache $persistentCache = null,
     ) {}
 
     public function render(): void
@@ -52,7 +53,7 @@ final class MaintenanceEnvPageRenderer
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $action = MaintenanceActionRequest::fromGlobals()->action;
-        new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService)
+        new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->persistentCache)
             ->dispatch($action);
 
         // +-------------------------------------------------------------------+

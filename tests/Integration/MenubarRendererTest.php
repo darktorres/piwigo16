@@ -9,6 +9,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\FilterState;
 use Piwigo\Html\HtmlService;
+use Piwigo\Menu\Event\BlockManagerRegisterBlocks;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Section\SectionContext;
@@ -72,7 +73,7 @@ final class MenubarRendererTest extends IntegrationTestCase
         // every $menu->get_block(...) call in render() returns null and
         // the whole method is a no-op.
         EventDispatcher::reset();
-        EventDispatcher::get()->addEventHandler('blockmanager_register_blocks', (new HtmlService())->registerDefaultMenubarBlocks(...));
+        EventDispatcher::get()->addTypedHandler(BlockManagerRegisterBlocks::class, (new HtmlService())->registerDefaultMenubarBlocks(...));
 
         $htmlService = new HtmlService();
         $this->urlService = new UrlService($htmlService);

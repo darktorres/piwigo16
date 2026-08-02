@@ -12,6 +12,9 @@ declare(strict_types=1);
 namespace Piwigo\Menu;
 
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Event\BlockManager\BlockManagerApply;
+use Piwigo\Event\BlockManager\BlockManagerPrepareDisplay;
+use Piwigo\Menu\Event\BlockManagerRegisterBlocks;
 use Piwigo\Template\Template;
 
 /**
@@ -41,7 +44,7 @@ final class BlockManager
      */
     public function load_registered_blocks(): void
     {
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('blockmanager_register_blocks', [$this]);
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new BlockManagerRegisterBlocks($this));
     }
 
     /**
@@ -99,7 +102,7 @@ final class BlockManager
             $idx++;
         }
         $this->sort_blocks();
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('blockmanager_prepare_display', [$this]);
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new BlockManagerPrepareDisplay($this));
         $this->sort_blocks();
     }
 
@@ -174,7 +177,7 @@ final class BlockManager
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $template->set_filename('menubar', $file);
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('blockmanager_apply', [$this]);
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new BlockManagerApply($this));
 
         foreach ($this->display_blocks as $id => $block) {
             if (in_array($block->raw_content, [null, ''], true) and in_array($block->template, [null, ''], true)) {

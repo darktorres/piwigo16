@@ -22,7 +22,7 @@ use Piwigo\Http\ResponseFactory;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
-use Piwigo\Menu\BlockManager;
+use Piwigo\Menu\Event\BlockManagerRegisterBlocks;
 use Piwigo\Menu\RegisteredBlock;
 use Piwigo\Template\Template;
 use Piwigo\Url\UrlService;
@@ -645,13 +645,11 @@ final class HtmlService implements HtmlRenderingInterface
 
     /**
      * Add known menubar blocks.
-     * This method is called by a trigger_notify().
-     *
-     * @param BlockManager[] $menuRefArr
+     * This method is called by a dispatchNotify().
      */
-    public function registerDefaultMenubarBlocks(array $menuRefArr): void
+    public function registerDefaultMenubarBlocks(BlockManagerRegisterBlocks $event): void
     {
-        $menu = &$menuRefArr[0];
+        $menu = $event->menu;
         if ($menu->get_id() !== 'menubar') {
             return;
         }

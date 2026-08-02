@@ -40,6 +40,7 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Mail\MailService;
+use Piwigo\Menu\Event\BlockManagerRegisterBlocks;
 use Piwigo\Page\NoPhotoYetRenderer;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
@@ -716,7 +717,7 @@ final class RequestBootstrap
                 return $e;
             },
         );
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('blockmanager_register_blocks', new HtmlService()->registerDefaultMenubarBlocks(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(BlockManagerRegisterBlocks::class, new HtmlService()->registerDefaultMenubarBlocks(...));
         // Relocated from include/functions_comment.inc.php (deleted, P23 batch 8c)
         // -- that file's own top-level add_event_handler() call only ever ran via
         // its include_once at each real caller, all of which now construct

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Event\BlockManager\BlockManagerPrepareDisplay;
 use Piwigo\Menu\BlockManager;
 use Piwigo\Menu\DisplayBlock;
 use Piwigo\Menu\RegisteredBlock;
@@ -196,8 +197,8 @@ test('prepare_display sorts display blocks before firing blockmanager_prepare_di
     $manager->register_block(new RegisteredBlock('second', 'Second', 'core'));
 
     $observedIds = null;
-    $handler = function (array $args) use (&$observedIds): void {
-        $target = $args[0];
+    $handler = function (BlockManagerPrepareDisplay $event) use (&$observedIds): void {
+        $target = $event->value;
         if (! $target instanceof BlockManager) {
             throw new RuntimeException('blockmanager_prepare_display: expected a BlockManager instance');
         }
@@ -214,12 +215,12 @@ test('prepare_display sorts display blocks before firing blockmanager_prepare_di
         }
         $observedIds = $ids;
     };
-    EventDispatcher::get()->addEventHandler('blockmanager_prepare_display', $handler);
+    EventDispatcher::get()->addTypedHandler(BlockManagerPrepareDisplay::class, $handler);
 
     try {
         $manager->prepare_display();
     } finally {
-        EventDispatcher::get()->removeEventHandler('blockmanager_prepare_display', $handler);
+        EventDispatcher::get()->removeEventHandler(BlockManagerPrepareDisplay::class, $handler);
     }
 
     // Also proves the event actually fires with $this as the payload
@@ -238,8 +239,8 @@ test('prepare_display re-sorts after blockmanager_prepare_display handlers chang
     // order -- the handler then flips the relative order via the public
     // set_block_position() API, and only a second, post-event sort_blocks()
     // call can put 'second' back in front.
-    $handler = function (array $args): void {
-        $target = $args[0];
+    $handler = function (BlockManagerPrepareDisplay $event): void {
+        $target = $event->value;
         if (! $target instanceof BlockManager) {
             throw new RuntimeException('blockmanager_prepare_display: expected a BlockManager instance');
         }
@@ -247,12 +248,12 @@ test('prepare_display re-sorts after blockmanager_prepare_display handlers chang
         $target->set_block_position('first', 999);
         $target->set_block_position('second', 1);
     };
-    EventDispatcher::get()->addEventHandler('blockmanager_prepare_display', $handler);
+    EventDispatcher::get()->addTypedHandler(BlockManagerPrepareDisplay::class, $handler);
 
     try {
         $manager->prepare_display();
     } finally {
-        EventDispatcher::get()->removeEventHandler('blockmanager_prepare_display', $handler);
+        EventDispatcher::get()->removeEventHandler(BlockManagerPrepareDisplay::class, $handler);
     }
 
     $ids = [];

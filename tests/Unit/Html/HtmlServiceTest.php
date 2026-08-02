@@ -15,6 +15,7 @@ use Piwigo\Event\Template\RenderCommentContent;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\SrcImage;
 use Piwigo\Menu\BlockManager;
+use Piwigo\Menu\Event\BlockManagerRegisterBlocks;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Url\UrlService;
@@ -1146,7 +1147,7 @@ test('registerDefaultMenubarBlocks does nothing for a BlockManager whose id is n
     $service = new HtmlService();
     $menu = new BlockManager('sidebar');
 
-    $service->registerDefaultMenubarBlocks([$menu]);
+    $service->registerDefaultMenubarBlocks(new BlockManagerRegisterBlocks($menu));
 
     expect($menu->get_registered_blocks())->toBe([]);
 });

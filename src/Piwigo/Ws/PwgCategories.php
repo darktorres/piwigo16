@@ -27,6 +27,7 @@ use Piwigo\Db\SqlDialect;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Permission\PermissionService;
+use Piwigo\Permission\SqlCondition;
 use Piwigo\Users\UserService;
 
 /**
@@ -102,6 +103,21 @@ final class PwgCategories
     }
 
     /**
+     * Explodes a `forbidden_categories`-shaped CSV id string into a bound
+     * `NOT IN (:x)` list -- `[0]` (a category id that never exists, a
+     * no-op exclusion) when $csv is empty, since `NOT IN ()` is invalid
+     * SQL.
+     *
+     * @return list<int>
+     */
+    private static function csvToIntList(string $csv): array
+    {
+        $ids = array_map(intval(...), array_filter(explode(',', $csv), is_numeric(...)));
+
+        return $ids === [] ? [0] : array_values($ids);
+    }
+
+    /**
      * Gap-closure Stage 4h: replaces `user_cache_categories.
      * user_representative_picture_id` -- a per-user "remembered random
      * representative" override, not just a permission-visibility cache
@@ -166,23 +182,27 @@ final class PwgCategories
         $total_images = 0;
 
         // ------------------------------------------------- get the related categories
-        $where_clauses = [];
-        foreach ($params['cat_id'] as $cat_id) {
+        $catClauses = [];
+        $catParams = [];
+        foreach ($params['cat_id'] as $i => $cat_id) {
             if ($params['recursive']) {
-                $where_clauses[] = 'uppercats ' . SqlDialect::DB_REGEX_OPERATOR . ' \'(^|,)' . $cat_id . '(,|$)\'';
+                $catClauses[] = 'uppercats ' . SqlDialect::DB_REGEX_OPERATOR . ' :catUppercatsLike' . $i;
+                $catParams['catUppercatsLike' . $i] = '(^|,)' . $cat_id . '(,|$)';
             } else {
-                $where_clauses[] = 'id=' . $cat_id;
+                $catClauses[] = 'id = :catId' . $i;
+                $catParams['catId' . $i] = $cat_id;
             }
         }
-        if ($where_clauses !== []) {
-            $where_clauses = ['(' . implode("\n    OR ", $where_clauses) . ')'];
+        $catConditions = [];
+        if ($catClauses !== []) {
+            $catConditions[] = new SqlCondition('(' . implode("\n    OR ", $catClauses) . ')', $catParams);
         }
-        $where_clauses[] = self::permissionService()->getSqlConditionFandF([
+        $catConditions[] = self::permissionService()->getSqlConditionFandFAsCondition([
             'forbidden_categories' => 'id',
-        ], null, true);
+        ], true);
 
         $cats = [];
-        foreach (self::categoryService()->getIdsAndImageOrderWithConditions($where_clauses) as $row) {
+        foreach (self::categoryService()->getIdsAndImageOrderWithConditions($catConditions) as $row) {
             $cats[$row['id']] = $row;
         }
 
@@ -374,6 +394,8 @@ final class PwgCategories
 
         $output = [];
         $where = ['1=1'];
+        $bound_params = [];
+        $bound_types = [];
         $user_id = $currentUser->id->value;
         // Which user's own "remembered random representative" cache entry
         // (CachePools::categoryTree(), see below) each row's
@@ -385,15 +407,16 @@ final class PwgCategories
         if (! $params['recursive']) {
             if ($params['cat_id'] > 0) {
                 $where[] = '(
-        id_uppercat = ' . $params['cat_id'] . '
-        OR id=' . $params['cat_id'] . '
+        id_uppercat = :catId
+        OR id = :catId
       )';
+                $bound_params['catId'] = $params['cat_id'];
             } else {
                 $where[] = 'id_uppercat IS NULL';
             }
         } elseif ($params['cat_id'] > 0) {
-            $where[] = 'uppercats ' . SqlDialect::DB_REGEX_OPERATOR . ' \'(^|,)' .
-              $params['cat_id'] . '(,|$)\'';
+            $where[] = 'uppercats ' . SqlDialect::DB_REGEX_OPERATOR . ' :catUppercatsLike';
+            $bound_params['catUppercatsLike'] = '(^|,)' . $params['cat_id'] . '(,|$)';
         }
 
         // Gap-closure Stage 4h (docs/plan/gap-closure-p0-p23.md): all 3
@@ -433,7 +456,9 @@ final class PwgCategories
             $guest_userdata = self::userService()->getUserData(\Piwigo\Common\ValueObject\UserId::from($repr_user_id));
             $guest_forbidden_categories = $guest_userdata['forbidden_categories'] ?? '0';
             $guest_forbidden_categories = is_string($guest_forbidden_categories) ? $guest_forbidden_categories : '0';
-            $where[] = 'id NOT IN (' . $guest_forbidden_categories . ')';
+            $where[] = 'id NOT IN (:guestForbiddenCategories)';
+            $bound_params['guestForbiddenCategories'] = self::csvToIntList($guest_forbidden_categories);
+            $bound_types['guestForbiddenCategories'] = ArrayParameterType::INTEGER;
             $rollupByCatId = self::categoryTreeCache($categoryConn)->getForUser($guest_userdata);
         } elseif (\Piwigo\Auth\AccessControl::isAdmin()) {
             // in this very specific case, we don't want to hide empty
@@ -443,7 +468,9 @@ final class PwgCategories
             // calculate_permissions does not consider empty categories as forbidden
             $forbidden_categories = new \Piwigo\Permission\ForbiddenCategoriesCache(self::permissionService(), \Piwigo\Cache\CachePools::permissions())
                 ->getForUser($user_id, $currentUser->status->value);
-            $where[] = 'id NOT IN (' . $forbidden_categories . ')';
+            $where[] = 'id NOT IN (:adminForbiddenCategories)';
+            $bound_params['adminForbiddenCategories'] = self::csvToIntList($forbidden_categories);
+            $bound_types['adminForbiddenCategories'] = ArrayParameterType::INTEGER;
             // Deliberately NOT CategoryTreeCache: that pool is keyed only
             // by user id, and this branch's forbidden_categories is the
             // narrower structural value above, not the wider "effective"
@@ -459,7 +486,9 @@ final class PwgCategories
             $admin_userdata['forbidden_categories'] = $forbidden_categories;
             $rollupByCatId = $categoryService->getComputedCategories($admin_userdata, null)['categories'];
         } else {
-            $where[] = 'id NOT IN (' . $currentUser->forbiddenCategories . ')';
+            $where[] = 'id NOT IN (:userForbiddenCategories)';
+            $bound_params['userForbiddenCategories'] = self::csvToIntList($currentUser->forbiddenCategories);
+            $bound_types['userForbiddenCategories'] = ArrayParameterType::INTEGER;
             // $currentUser->forbiddenCategories IS the same effective value
             // EffectiveForbiddenCategoriesCache computes for this user id
             // (Stage 4b/4g) -- the same value any other CategoryTreeCache
@@ -474,7 +503,9 @@ final class PwgCategories
             $search_term,
             \Piwigo\Config\CurrentConfig::linkedAlbumSearchLimit(),
             $params['limit'],
-            $params['cat_id'] > 0
+            $params['cat_id'] > 0,
+            $bound_params,
+            $bound_types
         );
         $rows = $paginated_cats->rows;
 
@@ -591,9 +622,9 @@ final class PwgCategories
                     // findRandomRepresentativeIdAmongSubcategories().
                     $subrow_image_id = $categoryService->getRandomRepresentativeIdAmongSubcategories(
                         $row['uppercats'],
-                        self::permissionService()->getSqlConditionFandF([
+                        self::permissionService()->getSqlConditionFandFAsCondition([
                             'visible_categories' => 'id',
-                        ], "\n  AND")
+                        ])
                     );
 
                     if ($subrow_image_id !== null) {
@@ -752,26 +783,31 @@ final class PwgCategories
         // pwg_db_real_escape_string
 
         $where = ['1=1'];
+        $bound_params = [];
+        $bound_types = [];
 
         if (! $params['recursive']) {
             if ($params['cat_id'] > 0) {
                 $where[] = '(
-        id_uppercat = ' . $params['cat_id'] . '
-        OR id=' . $params['cat_id'] . '
+        id_uppercat = :catId
+        OR id = :catId
       )';
+                $bound_params['catId'] = $params['cat_id'];
             } else {
                 $where[] = 'id_uppercat IS NULL';
             }
         } elseif ($params['cat_id'] > 0) {
-            $where[] = 'uppercats ' . SqlDialect::DB_REGEX_OPERATOR . ' \'(^|,)' .
-              $params['cat_id'] . '(,|$)\'';
+            $where[] = 'uppercats ' . SqlDialect::DB_REGEX_OPERATOR . ' :catUppercatsLike';
+            $bound_params['catUppercatsLike'] = '(^|,)' . $params['cat_id'] . '(,|$)';
         }
 
         $search_term = (isset($params['search']) and $params['search'] !== '') ? $params['search'] : null;
         $paginated_admin_cats = self::categoryService()->getAdminListForWs(
             $where,
             $search_term,
-            \Piwigo\Config\CurrentConfig::linkedAlbumSearchLimit()
+            \Piwigo\Config\CurrentConfig::linkedAlbumSearchLimit(),
+            $bound_params,
+            $bound_types
         );
         $rows = $paginated_admin_cats->rows;
         $counter = $paginated_admin_cats->total ?? 0;

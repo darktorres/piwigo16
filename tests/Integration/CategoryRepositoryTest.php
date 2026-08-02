@@ -11,6 +11,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\Tables;
+    use Piwigo\Permission\SqlCondition;
 
 /**
  * Fixture shape: category 1 "Sample Album" (root, uppercats="1",
@@ -136,7 +137,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
 
     public function test_find_random_image_id_returns_an_image_from_the_category(): void
     {
-        $imageId = $this->repo->findRandomImageId(1, '1', false, '');
+        $imageId = $this->repo->findRandomImageId(1, '1', false, new SqlCondition(''));
 
         self::assertContains($imageId, [1, 2, 3]);
     }
@@ -149,7 +150,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         // the pool beyond category 1's own (1, 2, 3).
         $found = [];
         for ($i = 0; $i < 30; $i++) {
-            $imageId = $this->repo->findRandomImageId(1, '1', true, '');
+            $imageId = $this->repo->findRandomImageId(1, '1', true, new SqlCondition(''));
             if ($imageId !== null) {
                 $found[$imageId] = true;
             }
@@ -164,7 +165,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
 
     public function test_find_random_image_id_returns_null_when_permission_condition_excludes_everything(): void
     {
-        self::assertNull($this->repo->findRandomImageId(1, '1', false, 'AND 1 = 0'));
+        self::assertNull($this->repo->findRandomImageId(1, '1', false, new SqlCondition('1 = 0')));
     }
 
     public function test_find_computed_categories_rollup_returns_one_row_per_category(): void
@@ -210,7 +211,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
 
     public function test_find_image_ids_for_categories_returns_images_in_category(): void
     {
-        $ids = $this->repo->findImageIdsForCategories([1], 'AND', '', '', '');
+        $ids = $this->repo->findImageIdsForCategories([1], 'AND', '', '', new SqlCondition(''));
         sort($ids);
 
         self::assertSame([1, 2, 3], $ids);
@@ -218,28 +219,28 @@ final class CategoryRepositoryTest extends IntegrationTestCase
 
     public function test_find_image_ids_for_categories_returns_empty_for_no_categories(): void
     {
-        self::assertSame([], $this->repo->findImageIdsForCategories([], 'AND', '', '', ''));
+        self::assertSame([], $this->repo->findImageIdsForCategories([], 'AND', '', '', new SqlCondition('')));
     }
 
     public function test_find_image_ids_for_categories_and_mode_requires_all_categories(): void
     {
         // no image belongs to both category 1 and 2 in the fixture, so AND
         // mode across [1, 2] returns nothing.
-        $ids = $this->repo->findImageIdsForCategories([1, 2], 'AND', '', '', '');
+        $ids = $this->repo->findImageIdsForCategories([1, 2], 'AND', '', '', new SqlCondition(''));
 
         self::assertSame([], $ids);
     }
 
     public function test_find_common_categories_counts_matching_images(): void
     {
-        $common = $this->repo->findCommonCategories([1, 2, 3], null, [], '');
+        $common = $this->repo->findCommonCategories([1, 2, 3], null, [], new SqlCondition(''));
 
         self::assertSame(3, $common['1']['counter']);
     }
 
     public function test_find_common_categories_returns_empty_for_no_items(): void
     {
-        self::assertSame([], $this->repo->findCommonCategories([], null, [], ''));
+        self::assertSame([], $this->repo->findCommonCategories([], null, [], new SqlCondition('')));
     }
 
     public function test_find_categories_by_ids_returns_matching_rows(): void
@@ -301,7 +302,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         // qualify -- excluding image 1 by id proves $extraImagesWhereSql
         // (aliased 'i', matching the query's own images-table alias)
         // actually reaches the query rather than being silently dropped.
-        $ids = $this->repo->findImageIdsForCategories([1], 'AND', 'i.id != 1', '', '');
+        $ids = $this->repo->findImageIdsForCategories([1], 'AND', 'i.id != 1', '', new SqlCondition(''));
         sort($ids);
 
         self::assertSame([2, 3], $ids);
@@ -494,23 +495,23 @@ final class CategoryRepositoryTest extends IntegrationTestCase
     {
         // category 2 ("1,2") is the only row LIKE '1,%', and its fixture
         // representative_picture_id is 4.
-        self::assertSame('4', $this->repo->findRandomRepresentativeIdAmongSubcategories('1', ''));
+        self::assertSame('4', $this->repo->findRandomRepresentativeIdAmongSubcategories('1', new SqlCondition('')));
     }
 
     public function test_find_random_representative_id_among_subcategories_returns_null_when_no_subcategory_matches(): void
     {
         // category 2 has no sub-categories of its own.
-        self::assertNull($this->repo->findRandomRepresentativeIdAmongSubcategories('2', ''));
+        self::assertNull($this->repo->findRandomRepresentativeIdAmongSubcategories('2', new SqlCondition('')));
     }
 
     public function test_find_random_representative_id_among_subcategories_returns_null_when_the_permission_condition_excludes_everything(): void
     {
-        self::assertNull($this->repo->findRandomRepresentativeIdAmongSubcategories('1', ' AND 1 = 0'));
+        self::assertNull($this->repo->findRandomRepresentativeIdAmongSubcategories('1', new SqlCondition('1 = 0')));
     }
 
     public function test_find_date_range_by_category_returns_empty_for_no_category_ids(): void
     {
-        self::assertSame([], $this->repo->findDateRangeByCategory([], ''));
+        self::assertSame([], $this->repo->findDateRangeByCategory([], new SqlCondition('')));
     }
 
     public function test_find_date_range_by_category_returns_the_min_and_max_creation_date(): void
@@ -522,7 +523,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_creation = '2019-06-15 10:00:00' WHERE id = 2");
 
         try {
-            $range = $this->repo->findDateRangeByCategory([1], '');
+            $range = $this->repo->findDateRangeByCategory([1], new SqlCondition(''));
             self::assertCount(1, $range);
             $entry = array_values($range)[0];
 

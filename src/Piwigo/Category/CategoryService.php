@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Category;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Cache\CachePools;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Core\ActivityLoggerInterface;
@@ -20,6 +21,7 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageService;
 use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionService;
+use Piwigo\Permission\SqlCondition;
 use Piwigo\Users\UserRepository;
 
 /**
@@ -371,13 +373,13 @@ final readonly class CategoryService
         $uppercats = $category['uppercats'];
         $uppercats = is_string($uppercats) ? $uppercats : '';
 
-        $permissionCondition = $this->permissionService->getSqlConditionFandF([
+        $condition = $this->permissionService->getSqlConditionFandFAsCondition([
             'forbidden_categories' => 'c.id',
             'visible_categories' => 'c.id',
             'visible_images' => 'image_id',
-        ], "\n  AND");
+        ]);
 
-        return $this->repo->findRandomImageId($catId, $uppercats, $recursive, $permissionCondition);
+        return $this->repo->findRandomImageId($catId, $uppercats, $recursive, $condition);
     }
 
     /**
@@ -512,22 +514,17 @@ final readonly class CategoryService
             return [];
         }
 
-        // no prefix: findImageIdsForCategories() feeds this into andWhere(),
-        // which already inserts its own "AND" between conditions -- a
-        // "\n  AND"-prefixed condition here double-wraps into literal
-        // "AND AND (...)", a real SQL syntax error caught via live
-        // verification (menubar.inc.php -> get_related_categories_menu()).
-        $permissionCondition = $usePermissions
-            ? $this->permissionService->getSqlConditionFandF([
+        $condition = $usePermissions
+            ? $this->permissionService->getSqlConditionFandFAsCondition([
                 'forbidden_categories' => 'category_id',
                 'visible_categories' => 'category_id',
                 'visible_images' => 'id',
             ])
-            : '';
+            : new SqlCondition('');
 
         $effectiveOrderBy = $orderBy === '' ? \Piwigo\Config\CurrentConfig::orderBy() : $orderBy;
 
-        return $this->repo->findImageIdsForCategories($catIds, $mode, $extraImagesWhereSql, $effectiveOrderBy, $permissionCondition);
+        return $this->repo->findImageIdsForCategories($catIds, $mode, $extraImagesWhereSql, $effectiveOrderBy, $condition);
     }
 
     /**
@@ -541,17 +538,14 @@ final readonly class CategoryService
             return [];
         }
 
-        // no prefix -- see getImageIdsForCategories()'s own comment: this
-        // feeds into findCommonCategories()'s andWhere(), which already
-        // inserts "AND" itself.
-        $permissionCondition = $usePermissions
-            ? $this->permissionService->getSqlConditionFandF([
+        $condition = $usePermissions
+            ? $this->permissionService->getSqlConditionFandFAsCondition([
                 'forbidden_categories' => 'category_id',
                 'visible_categories' => 'category_id',
             ])
-            : '';
+            : new SqlCondition('');
 
-        return $this->repo->findCommonCategories($items, $max, $excludedCatIds, $permissionCondition);
+        return $this->repo->findCommonCategories($items, $max, $excludedCatIds, $condition);
     }
 
     /**
@@ -1011,18 +1005,30 @@ final readonly class CategoryService
 
         if ($ids === 'all') {
             $whereCats = '1=1';
+            $whereCatsParams = [];
+            $whereCatsTypes = [];
         } elseif (! is_array($ids)) {
-            $whereCats = '%s=' . $ids;
+            $whereCats = '%s = :catId';
+            $whereCatsParams = [
+                'catId' => $ids,
+            ];
+            $whereCatsTypes = [];
         } else {
             if (count($ids) === 0) {
                 return false;
             }
-            $whereCats = '%s IN(' . wordwrap(implode(', ', $ids), 120, "\n") . ')';
+            $whereCats = '%s IN (:catIds)';
+            $whereCatsParams = [
+                'catIds' => array_map(intval(...), array_values($ids)),
+            ];
+            $whereCatsTypes = [
+                'catIds' => ArrayParameterType::INTEGER,
+            ];
         }
 
         // find all categories where the setted representative is not possible :
         // the picture does not exist
-        $wrongRepresentant = $this->repo->findWrongRepresentativeCategoryIds(sprintf($whereCats, 'c.id'));
+        $wrongRepresentant = $this->repo->findWrongRepresentativeCategoryIds(sprintf($whereCats, 'c.id'), $whereCatsParams, $whereCatsTypes);
 
         if (count($wrongRepresentant) > 0) {
             $this->repo->clearRepresentativePictureIds($wrongRepresentant);
@@ -1033,7 +1039,7 @@ final readonly class CategoryService
             // categories with elements and with no representant. Those categories
             // must be added to the list of categories to set to a random
             // representant.
-            $toRand = $this->repo->findCategoriesNeedingRandomRepresentative(sprintf($whereCats, 'category_id'));
+            $toRand = $this->repo->findCategoriesNeedingRandomRepresentative(sprintf($whereCats, 'category_id'), $whereCatsParams, $whereCatsTypes);
             if (count($toRand) > 0) {
                 $this->setRandomRepresentant($toRand);
             }
@@ -2084,9 +2090,9 @@ final readonly class CategoryService
         return $this->repo->existsById($id);
     }
 
-    public function getRandomRepresentativeIdAmongSubcategories(string $uppercats, string $permissionCondition): ?string
+    public function getRandomRepresentativeIdAmongSubcategories(string $uppercats, SqlCondition $condition): ?string
     {
-        return $this->repo->findRandomRepresentativeIdAmongSubcategories($uppercats, $permissionCondition);
+        return $this->repo->findRandomRepresentativeIdAmongSubcategories($uppercats, $condition);
     }
 
     /**
@@ -2107,16 +2113,18 @@ final readonly class CategoryService
     }
 
     /**
-     * @param  list<string>  $whereClauses
+     * @param  list<SqlCondition>  $conditions
      * @return list<array{id: int, image_order: ?string}>
      */
-    public function getIdsAndImageOrderWithConditions(array $whereClauses): array
+    public function getIdsAndImageOrderWithConditions(array $conditions): array
     {
-        return $this->repo->findIdsAndImageOrderWithConditions($whereClauses);
+        return $this->repo->findIdsAndImageOrderWithConditions($conditions);
     }
 
     /**
      * @param  list<string>  $whereClauses
+     * @param  array<string, mixed>  $params
+     * @param  array<string, ArrayParameterType|\Doctrine\DBAL\ParameterType>  $types
      * @return PaginatedResult<array<string, mixed>>
      */
     public function getListForWs(
@@ -2124,18 +2132,22 @@ final readonly class CategoryService
         ?string $searchTerm,
         int $searchLimit,
         ?int $limit,
-        bool $limitPlusOne
+        bool $limitPlusOne,
+        array $params = [],
+        array $types = []
     ): PaginatedResult {
-        return $this->repo->findListForWs($whereClauses, $searchTerm, $searchLimit, $limit, $limitPlusOne);
+        return $this->repo->findListForWs($whereClauses, $searchTerm, $searchLimit, $limit, $limitPlusOne, $params, $types);
     }
 
     /**
      * @param  list<string>  $whereClauses
+     * @param  array<string, mixed>  $params
+     * @param  array<string, ArrayParameterType|\Doctrine\DBAL\ParameterType>  $types
      * @return PaginatedResult<array<string, mixed>>
      */
-    public function getAdminListForWs(array $whereClauses, ?string $searchTerm, int $searchLimit): PaginatedResult
+    public function getAdminListForWs(array $whereClauses, ?string $searchTerm, int $searchLimit, array $params = [], array $types = []): PaginatedResult
     {
-        return $this->repo->findAdminListForWs($whereClauses, $searchTerm, $searchLimit);
+        return $this->repo->findAdminListForWs($whereClauses, $searchTerm, $searchLimit, $params, $types);
     }
 
     /**
@@ -2224,11 +2236,13 @@ final readonly class CategoryService
     }
 
     /**
+     * @param array<string, mixed> $params
+     * @param array<string, ArrayParameterType|\Doctrine\DBAL\ParameterType> $types
      * @return list<array<string, mixed>>
      */
-    public function getSyncCandidatesForSite(int $siteId, string $extraCondition): array
+    public function getSyncCandidatesForSite(int $siteId, string $extraCondition, array $params = [], array $types = []): array
     {
-        return $this->repo->findSyncCandidatesForSite($siteId, $extraCondition);
+        return $this->repo->findSyncCandidatesForSite($siteId, $extraCondition, $params, $types);
     }
 
     /**

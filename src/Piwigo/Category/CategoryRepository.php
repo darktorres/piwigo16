@@ -6,6 +6,7 @@ namespace Piwigo\Category;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
+use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\ORM\EntityRepository;
 use Piwigo\Category\Projection\Category;
 use Piwigo\Common\Dto\PaginatedResult;
@@ -15,6 +16,7 @@ use Piwigo\Db\BatchWriter;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupAccessEntity;
+use Piwigo\Permission\SqlCondition;
 
 /**
  * Persistence layer for the category domain: tree/menu queries, permalink
@@ -42,6 +44,18 @@ use Piwigo\Group\GroupAccessEntity;
  */
 final class CategoryRepository extends EntityRepository
 {
+    private static function applyCondition(QueryBuilder $qb, SqlCondition $condition): void
+    {
+        if ($condition->isEmpty()) {
+            return;
+        }
+
+        $qb->andWhere($condition->sql);
+        foreach ($condition->parameters as $name => $value) {
+            $qb->setParameter($name, $value, $condition->types[$name] ?? ParameterType::STRING);
+        }
+    }
+
     public function findById(int $id): ?Category
     {
         $entity = $this->find($id);
@@ -251,7 +265,7 @@ final class CategoryRepository extends EntityRepository
             ->executeStatement();
     }
 
-    public function findRandomImageId(int $catId, string $uppercats, bool $recursive, string $permissionCondition): ?int
+    public function findRandomImageId(int $catId, string $uppercats, bool $recursive, SqlCondition $condition): ?int
     {
         $scope = $recursive
             ? '(c.id = :catId OR uppercats LIKE :uppercatsLike)'
@@ -263,10 +277,11 @@ final class CategoryRepository extends EntityRepository
             ->select('image_id')
             ->from(Tables::categories(), 'c')
             ->innerJoin('c', Tables::imageCategory(), 'ic', 'ic.category_id = c.id')
-            ->where($scope . ' ' . $permissionCondition)
+            ->where($scope)
             ->orderBy('RAND()')
             ->setMaxResults(1)
             ->setParameter('catId', $catId);
+        self::applyCondition($qb, $condition);
 
         if ($recursive) {
             $qb->setParameter('uppercatsLike', $uppercats . ',%');
@@ -353,7 +368,7 @@ final class CategoryRepository extends EntityRepository
         string $mode,
         string $extraImagesWhereSql,
         string $orderBySql,
-        string $permissionCondition
+        SqlCondition $condition
     ): array {
         if ($catIds === []) {
             return [];
@@ -368,10 +383,7 @@ final class CategoryRepository extends EntityRepository
             ->where('category_id IN (:catIds)')
             ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER)
             ->groupBy('id');
-
-        if ($permissionCondition !== '') {
-            $qb->andWhere(trim($permissionCondition));
-        }
+        self::applyCondition($qb, $condition);
 
         if ($extraImagesWhereSql !== '') {
             $qb->andWhere($extraImagesWhereSql);
@@ -407,7 +419,7 @@ final class CategoryRepository extends EntityRepository
      * @param  list<int>  $excludedCatIds
      * @return array<int, array{id: int, uppercats: string, counter: int}> keyed by id
      */
-    public function findCommonCategories(array $itemIds, ?int $max, array $excludedCatIds, string $permissionCondition): array
+    public function findCommonCategories(array $itemIds, ?int $max, array $excludedCatIds, SqlCondition $condition): array
     {
         if ($itemIds === []) {
             return [];
@@ -422,10 +434,7 @@ final class CategoryRepository extends EntityRepository
             ->where('image_id IN (:itemIds)')
             ->setParameter('itemIds', $itemIds, ArrayParameterType::INTEGER)
             ->groupBy('c.id');
-
-        if ($permissionCondition !== '') {
-            $qb->andWhere(trim($permissionCondition));
-        }
+        self::applyCondition($qb, $condition);
 
         if ($excludedCatIds !== []) {
             $qb->andWhere('category_id NOT IN (:excludedCatIds)')
@@ -553,14 +562,17 @@ final class CategoryRepository extends EntityRepository
         }
 
         $imagesTable = Tables::images();
-        $idsStr = wordwrap(implode(', ', $ids), 80, "\n");
 
         return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery(<<<SQL
             SELECT id
             FROM {$imagesTable}
-            WHERE storage_category_id IN (
-                {$idsStr})
-            SQL)->fetchFirstColumn());
+            WHERE storage_category_id IN (:ids)
+            SQL
+            , [
+                        'ids' => $ids,
+                    ], [
+                        'ids' => ArrayParameterType::INTEGER,
+                    ])->fetchFirstColumn());
     }
 
     /**
@@ -574,14 +586,18 @@ final class CategoryRepository extends EntityRepository
         }
 
         $imageCategoryTable = Tables::imageCategory();
-        $idsCsv = implode(',', $ids);
 
         return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery(<<<SQL
             SELECT
                 DISTINCT(image_id)
             FROM {$imageCategoryTable}
-            WHERE category_id IN ({$idsCsv})
-            SQL)->fetchFirstColumn());
+            WHERE category_id IN (:ids)
+            SQL
+            , [
+                        'ids' => $ids,
+                    ], [
+                        'ids' => ArrayParameterType::INTEGER,
+                    ])->fetchFirstColumn());
     }
 
     /**
@@ -600,16 +616,21 @@ final class CategoryRepository extends EntityRepository
         }
 
         $imageCategoryTable = Tables::imageCategory();
-        $imageIdsCsv = implode(',', $imageIds);
-        $excludeIdsCsv = implode(',', $excludeIds);
 
         return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery(<<<SQL
             SELECT
                 DISTINCT(image_id)
             FROM {$imageCategoryTable}
-            WHERE image_id IN ({$imageIdsCsv})
-                AND category_id NOT IN ({$excludeIdsCsv})
-            SQL)->fetchFirstColumn());
+            WHERE image_id IN (:imageIds)
+                AND category_id NOT IN (:excludeIds)
+            SQL
+            , [
+                        'imageIds' => $imageIds,
+                        'excludeIds' => $excludeIds,
+                    ], [
+                        'imageIds' => ArrayParameterType::INTEGER,
+                        'excludeIds' => ArrayParameterType::INTEGER,
+                    ])->fetchFirstColumn());
     }
 
     /**
@@ -628,7 +649,6 @@ final class CategoryRepository extends EntityRepository
     public function findImageIdsOutsideCategories(array $excludeIds): array
     {
         $imageCategoryTable = Tables::imageCategory();
-        $excludeIdsCsv = implode(',', $excludeIds);
 
         return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->getEntityManager()->getConnection()->executeQuery(<<<SQL
             SELECT
@@ -638,8 +658,13 @@ final class CategoryRepository extends EntityRepository
             WHERE
                 category_id
             NOT IN
-                ({$excludeIdsCsv})
-            SQL)->fetchFirstColumn());
+                (:excludeIds)
+            SQL
+            , [
+                        'excludeIds' => $excludeIds,
+                    ], [
+                        'excludeIds' => ArrayParameterType::INTEGER,
+                    ])->fetchFirstColumn());
     }
 
     /**
@@ -648,15 +673,18 @@ final class CategoryRepository extends EntityRepository
     public function deleteImageCategoryLinksForCategories(array $ids): void
     {
         $imageCategoryTable = Tables::imageCategory();
-        $idsStr = wordwrap(implode(', ', $ids), 80, "\n");
 
         $this->getEntityManager()
             ->getConnection()
             ->executeStatement(<<<SQL
                 DELETE FROM {$imageCategoryTable}
-                WHERE category_id IN (
-                    {$idsStr})
-                SQL);
+                WHERE category_id IN (:ids)
+                SQL
+                , [
+                                'ids' => $ids,
+                            ], [
+                                'ids' => ArrayParameterType::INTEGER,
+                            ]);
     }
 
     /**
@@ -789,24 +817,32 @@ final class CategoryRepository extends EntityRepository
         }
 
         $oldPermalinksTable = Tables::oldPermalinks();
-        $idsCsv = implode(',', $ids);
 
         $this->getEntityManager()
             ->getConnection()
             ->executeStatement(<<<SQL
                 DELETE FROM {$oldPermalinksTable}
-                WHERE cat_id IN ({$idsCsv})
-                SQL);
+                WHERE cat_id IN (:ids)
+                SQL
+                , [
+                                'ids' => $ids,
+                            ], [
+                                'ids' => ArrayParameterType::INTEGER,
+                            ]);
     }
 
     /**
      * $whereCatsSql is a pre-built SQL fragment from the caller (e.g. `1=1`,
-     * `c.id=5`, `c.id IN (1,2,3)`) -- same "repository takes a pre-built SQL
-     * fragment" shape this class already uses for permission conditions.
+     * `c.id = :catId`, `c.id IN (:catIds)`) -- same "repository takes a
+     * pre-built SQL fragment" shape this class already uses for permission
+     * conditions; any real value it references is bound via $params/$types
+     * rather than spliced.
      *
+     * @param array<string, mixed> $params
+     * @param array<string, ArrayParameterType|ParameterType> $types
      * @return list<int>
      */
-    public function findWrongRepresentativeCategoryIds(string $whereCatsSql): array
+    public function findWrongRepresentativeCategoryIds(string $whereCatsSql, array $params = [], array $types = []): array
     {
         $categoriesTable = Tables::categories();
         $imagesTable = Tables::images();
@@ -818,7 +854,8 @@ final class CategoryRepository extends EntityRepository
             WHERE representative_picture_id IS NOT NULL
                 AND {$whereCatsSql}
                 AND i.id IS NULL
-            SQL)->fetchFirstColumn());
+            SQL
+            , $params, $types)->fetchFirstColumn());
     }
 
     /**
@@ -845,7 +882,12 @@ final class CategoryRepository extends EntityRepository
     /**
      * @return list<int>
      */
-    public function findCategoriesNeedingRandomRepresentative(string $whereCatsSql): array
+    /**
+     * @param array<string, mixed> $params
+     * @param array<string, ArrayParameterType|ParameterType> $types
+     * @return list<int>
+     */
+    public function findCategoriesNeedingRandomRepresentative(string $whereCatsSql, array $params = [], array $types = []): array
     {
         $categoriesTable = Tables::categories();
         $imageCategoryTable = Tables::imageCategory();
@@ -856,7 +898,8 @@ final class CategoryRepository extends EntityRepository
                 ON id = category_id
             WHERE representative_picture_id IS NULL
                 AND {$whereCatsSql}
-            SQL)->fetchFirstColumn());
+            SQL
+            , $params, $types)->fetchFirstColumn());
     }
 
     /**
@@ -880,15 +923,18 @@ final class CategoryRepository extends EntityRepository
      */
     public function deleteRowsWhereColumnIn(string $table, string $column, array $values): void
     {
-        $valuesCsv = implode(',', $values);
-
         $this->getEntityManager()
             ->getConnection()
             ->executeStatement(<<<SQL
                 DELETE
                 FROM {$table}
-                WHERE {$column} IN ({$valuesCsv})
-                SQL);
+                WHERE {$column} IN (:values)
+                SQL
+                , [
+                                'values' => array_map(static fn (int|string $v): string => (string) $v, $values),
+                            ], [
+                                'values' => ArrayParameterType::STRING,
+                            ]);
     }
 
     /**
@@ -1034,7 +1080,6 @@ final class CategoryRepository extends EntityRepository
         }
 
         $categoriesTable = Tables::categories();
-        $idsCsv = implode(',', $ids);
 
         $rows = $this->getEntityManager()
             ->getConnection()
@@ -1043,8 +1088,13 @@ final class CategoryRepository extends EntityRepository
                     id,
                     status
                 FROM {$categoriesTable}
-                WHERE id IN ({$idsCsv})
-                SQL)->fetchAllAssociative();
+                WHERE id IN (:ids)
+                SQL
+                , [
+                                'ids' => $ids,
+                            ], [
+                                'ids' => ArrayParameterType::INTEGER,
+                            ])->fetchAllAssociative();
 
         $byId = [];
         foreach ($rows as $row) {
@@ -1101,17 +1151,21 @@ final class CategoryRepository extends EntityRepository
      */
     public function deleteInconsistentAccess(string $table, string $field, array $keepIds, array $catIds): void
     {
-        $keepIdsCsv = implode(',', $keepIds);
-        $catIdsCsv = implode(',', $catIds);
-
         $em = $this->getEntityManager();
         $em->getConnection()
             ->executeStatement(<<<SQL
                 DELETE
                 FROM {$table}
-                WHERE {$field} NOT IN ({$keepIdsCsv})
-                    AND cat_id IN ({$catIdsCsv})
-                SQL);
+                WHERE {$field} NOT IN (:keepIds)
+                    AND cat_id IN (:catIds)
+                SQL
+                , [
+                                'keepIds' => $keepIds,
+                                'catIds' => $catIds,
+                            ], [
+                                'keepIds' => ArrayParameterType::INTEGER,
+                                'catIds' => ArrayParameterType::INTEGER,
+                            ]);
         $em->clear();
     }
 
@@ -1126,13 +1180,17 @@ final class CategoryRepository extends EntityRepository
         }
 
         $categoriesTable = Tables::categories();
-        $idsCsv = implode(',', $ids);
 
         return array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $this->getEntityManager()->getConnection()->executeQuery(<<<SQL
             SELECT uppercats
             FROM {$categoriesTable}
-            WHERE id IN ({$idsCsv})
-            SQL)->fetchFirstColumn());
+            WHERE id IN (:ids)
+            SQL
+            , [
+                        'ids' => array_values($ids),
+                    ], [
+                        'ids' => ArrayParameterType::INTEGER,
+                    ])->fetchFirstColumn());
     }
 
     /**
@@ -1150,15 +1208,19 @@ final class CategoryRepository extends EntityRepository
         }
 
         $categoriesTable = Tables::categories();
-        $idsCsv = implode(',', $ids);
 
         $rows = $this->getEntityManager()
             ->getConnection()
             ->executeQuery(<<<SQL
                 SELECT id, uppercats
                 FROM {$categoriesTable}
-                WHERE id IN ({$idsCsv})
-                SQL)->fetchAllKeyValue();
+                WHERE id IN (:ids)
+                SQL
+                , [
+                                'ids' => $ids,
+                            ], [
+                                'ids' => ArrayParameterType::INTEGER,
+                            ])->fetchAllKeyValue();
 
         $byId = [];
         foreach ($rows as $id => $uppercats) {
@@ -1195,7 +1257,6 @@ final class CategoryRepository extends EntityRepository
 
         $imageCategoryTable = Tables::imageCategory();
         $imagesTable = Tables::images();
-        $categoryIdsCsv = implode(',', $categoryIds);
 
         $rows = $this->getEntityManager()
             ->getConnection()
@@ -1205,9 +1266,14 @@ final class CategoryRepository extends EntityRepository
                     {$minmax}({$field}) as ref_date
                 FROM {$imageCategoryTable}
                     JOIN {$imagesTable} ON image_id = id
-                WHERE category_id IN ({$categoryIdsCsv})
+                WHERE category_id IN (:categoryIds)
                 GROUP BY category_id
-                SQL)->fetchAllKeyValue();
+                SQL
+                , [
+                                'categoryIds' => $categoryIds,
+                            ], [
+                                'categoryIds' => ArrayParameterType::INTEGER,
+                            ])->fetchAllKeyValue();
 
         $byCategoryId = [];
         foreach ($rows as $categoryId => $refDate) {
@@ -1257,10 +1323,13 @@ final class CategoryRepository extends EntityRepository
             ->executeQuery(<<<SQL
                 SELECT image_id
                 FROM {$imageCategoryTable}
-                WHERE category_id = {$categoryId}
+                WHERE category_id = :categoryId
                 ORDER BY {$randomFunction}()
                 LIMIT 1
-                SQL)->fetchOne();
+                SQL
+                , [
+                                'categoryId' => $categoryId,
+                            ])->fetchOne();
 
         return is_numeric($value) ? (int) $value : null;
     }
@@ -1317,7 +1386,6 @@ final class CategoryRepository extends EntityRepository
         }
 
         $categoriesTable = Tables::categories();
-        $idsStr = wordwrap(implode(', ', $ids), 80, "\n");
 
         $rows = $this->getEntityManager()
             ->getConnection()
@@ -1325,9 +1393,13 @@ final class CategoryRepository extends EntityRepository
                 SELECT id, uppercats, site_id
                 FROM {$categoriesTable}
                 WHERE dir IS NOT NULL
-                    AND id IN (
-                        {$idsStr})
-                SQL)->fetchAllAssociative();
+                    AND id IN (:ids)
+                SQL
+                , [
+                                'ids' => array_values($ids),
+                            ], [
+                                'ids' => ArrayParameterType::INTEGER,
+                            ])->fetchAllAssociative();
 
         return array_map(
             static fn (array $row): array => [
@@ -1356,15 +1428,19 @@ final class CategoryRepository extends EntityRepository
     public function updateImagePathsForCategory(int $categoryId, string $fulldir): void
     {
         $imagesTable = Tables::images();
-        $pathExpr = SqlDialect::concat(["'" . $fulldir . "/'", 'file']);
+        $pathExpr = SqlDialect::concat(['CONCAT(:fulldir, \'/\')', 'file']);
 
         $this->getEntityManager()
             ->getConnection()
             ->executeStatement(<<<SQL
                 UPDATE {$imagesTable}
                 SET path = {$pathExpr}
-                WHERE storage_category_id = {$categoryId}
-                SQL);
+                WHERE storage_category_id = :categoryId
+                SQL
+                , [
+                                'fulldir' => $fulldir,
+                                'categoryId' => $categoryId,
+                            ]);
     }
 
     /**
@@ -1381,9 +1457,13 @@ final class CategoryRepository extends EntityRepository
             ->getConnection()
             ->executeStatement(<<<SQL
                 UPDATE {$categoriesTable}
-                SET representative_picture_id = {$imageId}
-                WHERE id = {$categoryId}
-                SQL);
+                SET representative_picture_id = :imageId
+                WHERE id = :categoryId
+                SQL
+                , [
+                                'imageId' => $imageId,
+                                'categoryId' => $categoryId,
+                            ]);
     }
 
     /**
@@ -1393,15 +1473,19 @@ final class CategoryRepository extends EntityRepository
     public function findCategoriesForMove(array $ids): array
     {
         $categoriesTable = Tables::categories();
-        $idsCsv = implode(',', $ids);
 
         $rows = $this->getEntityManager()
             ->getConnection()
             ->executeQuery(<<<SQL
                 SELECT id, id_uppercat, status, uppercats
                 FROM {$categoriesTable}
-                WHERE id IN ({$idsCsv})
-                SQL)->fetchAllAssociative();
+                WHERE id IN (:ids)
+                SQL
+                , [
+                                'ids' => array_values($ids),
+                            ], [
+                                'ids' => ArrayParameterType::INTEGER,
+                            ])->fetchAllAssociative();
 
         return array_map(
             static fn (array $row): array => [
@@ -1423,8 +1507,11 @@ final class CategoryRepository extends EntityRepository
             ->executeQuery(<<<SQL
                 SELECT uppercats
                 FROM {$categoriesTable}
-                WHERE id = {$id}
-                SQL)->fetchOne();
+                WHERE id = :id
+                SQL
+                , [
+                                'id' => $id,
+                            ])->fetchOne();
 
         return is_string($value) ? $value : null;
     }
@@ -1465,8 +1552,11 @@ final class CategoryRepository extends EntityRepository
             ->executeQuery(<<<SQL
                 SELECT status
                 FROM {$categoriesTable}
-                WHERE id = {$id}
-                SQL)->fetchOne();
+                WHERE id = :id
+                SQL
+                , [
+                                'id' => $id,
+                            ])->fetchOne();
 
         return is_string($value) ? $value : null;
     }
@@ -1478,7 +1568,7 @@ final class CategoryRepository extends EntityRepository
         $parentIsEmpty = $parentId === null || $parentId === 0 || $parentId === '0' || $parentId === '';
 
         $categoriesTable = Tables::categories();
-        $parentCondition = $parentIsEmpty ? 'IS NULL' : '= ' . (string) $parentId;
+        $parentCondition = $parentIsEmpty ? 'IS NULL' : '= :parentId';
 
         $value = $this->getEntityManager()
             ->getConnection()
@@ -1486,7 +1576,10 @@ final class CategoryRepository extends EntityRepository
                 SELECT MAX(`rank`) AS max_rank
                 FROM {$categoriesTable}
                 WHERE id_uppercat {$parentCondition}
-                SQL)->fetchOne();
+                SQL
+                , $parentIsEmpty ? [] : [
+                                'parentId' => $parentId,
+                            ])->fetchOne();
 
         return is_numeric($value) ? (int) $value : null;
     }
@@ -1503,8 +1596,11 @@ final class CategoryRepository extends EntityRepository
             ->executeQuery(<<<SQL
                 SELECT id, uppercats, global_rank, visible, status
                 FROM {$categoriesTable}
-                WHERE id = {$parentId}
-                SQL)->fetchAssociative();
+                WHERE id = :parentId
+                SQL
+                , [
+                                'parentId' => $parentId,
+                            ])->fetchAssociative();
 
         /** @var array{id: int, uppercats: string, global_rank: string, visible: int, status: string}|false $row */
         return $row === false ? null : $row;
@@ -1723,10 +1819,9 @@ final class CategoryRepository extends EntityRepository
     /**
      * Picks a random representative image among a category's sub-categories
      * (`CategoryCatsRenderer`'s own fallback when a category has no direct
-     * representative but does have sub-albums with images). $permissionCondition
-     * is an already-built SQL fragment (leading "\n  AND"), same
-     * pre-built-permission-string shape as every other repository method
-     * here.
+     * representative but does have sub-albums with images). $condition is
+     * an already-built permission `SqlCondition`, same shape as every other
+     * repository method here.
      *
      * Gap-closure Stage 4h (docs/plan/gap-closure-p0-p23.md): dropped the
      * `user_cache_categories` `INNER JOIN` -- a real, live regression this
@@ -1734,20 +1829,26 @@ final class CategoryRepository extends EntityRepository
      * the only remaining writer of that table, so the JOIN's own
      * visibility filter had silently gone permanently empty for every user
      * (confirmed live: only 2 stale rows survived in the whole table).
-     * The caller's own `$permissionCondition` (built via
-     * `PermissionService::getSqlConditionFandF(['visible_categories' =>
-     * 'id'], ...)`) was *already* a live, correctly-scoped duplicate of
+     * The caller's own condition (built via
+     * `PermissionService::getSqlConditionFandFAsCondition(['visible_categories' =>
+     * 'id'])`) was *already* a live, correctly-scoped duplicate of
      * the exact same "is this category visible" check the JOIN provided
      * via a now-dead precomputed table -- removing the JOIN is not a
      * behavior change, the real filtering was already happening twice.
      * `$userId` is dropped too -- its only use was the JOIN's own
      * `user_id = :userId` condition.
      */
-    public function findRandomRepresentativeIdAmongSubcategories(string $uppercats, string $permissionCondition): ?string
+    public function findRandomRepresentativeIdAmongSubcategories(string $uppercats, SqlCondition $condition): ?string
     {
         $categoriesTable = Tables::categories();
         $dbRandomFunction = SqlDialect::DB_RANDOM_FUNCTION;
         $uppercatsLike = $uppercats . ',%';
+
+        $conditionSql = $condition->isEmpty() ? '' : ' AND ' . $condition->sql;
+        $params = array_merge([
+            'uppercatsLike' => $uppercatsLike,
+        ], $condition->parameters);
+        $types = $condition->types;
 
         $value = $this->getEntityManager()
             ->getConnection()
@@ -1756,13 +1857,11 @@ final class CategoryRepository extends EntityRepository
                 FROM {$categoriesTable}
                 WHERE uppercats LIKE :uppercatsLike
                     AND representative_picture_id IS NOT NULL
-                {$permissionCondition}
+                {$conditionSql}
                 ORDER BY {$dbRandomFunction}()
                 LIMIT 1
                 SQL
-                , [
-                    'uppercatsLike' => $uppercatsLike,
-                ])->fetchOne();
+                , $params, $types)->fetchOne();
 
         // fetchOne() returns false (also a real is_scalar() value) to
         // signal "no rows matched" -- is_scalar() alone can't tell that
@@ -1774,13 +1873,13 @@ final class CategoryRepository extends EntityRepository
     /**
      * First/last photo creation date per category (`CategoryCatsRenderer`'s
      * "from/to" date-range display, gated by `CurrentConfig::displayFromto()`).
-     * $permissionCondition is an already-built SQL fragment, same shape as
+     * $condition is an already-built permission fragment, same shape as
      * {@see findRandomRepresentativeIdAmongSubcategories()}.
      *
      * @param  list<int>  $categoryIds
      * @return array<string, array{from: ?string, to: ?string}> keyed by category id
      */
-    public function findDateRangeByCategory(array $categoryIds, string $permissionCondition): array
+    public function findDateRangeByCategory(array $categoryIds, SqlCondition $condition): array
     {
         if ($categoryIds === []) {
             return [];
@@ -1788,6 +1887,14 @@ final class CategoryRepository extends EntityRepository
 
         $imageCategoryTable = Tables::imageCategory();
         $imagesTable = Tables::images();
+
+        $conditionSql = $condition->isEmpty() ? '' : ' AND ' . $condition->sql;
+        $params = array_merge([
+            'categoryIds' => $categoryIds,
+        ], $condition->parameters);
+        $types = array_merge([
+            'categoryIds' => ArrayParameterType::INTEGER,
+        ], $condition->types);
 
         $rows = $this->getEntityManager()
             ->getConnection()
@@ -1799,14 +1906,10 @@ final class CategoryRepository extends EntityRepository
                 FROM {$imageCategoryTable}
                     INNER JOIN {$imagesTable} ON image_id = id
                 WHERE category_id IN (:categoryIds)
-                {$permissionCondition}
+                {$conditionSql}
                 GROUP BY category_id
                 SQL
-                , [
-                    'categoryIds' => $categoryIds,
-                ], [
-                    'categoryIds' => ArrayParameterType::INTEGER,
-                ])->fetchAllAssociative();
+                , $params, $types)->fetchAllAssociative();
 
         $byId = [];
         foreach ($rows as $row) {
@@ -1923,8 +2026,11 @@ final class CategoryRepository extends EntityRepository
                 ->fetchAllAssociative(<<<SQL
                     SELECT id
                     FROM {$categoriesTable}
-                    WHERE representative_picture_id = {$imageId}
-                    SQL), 'id')
+                    WHERE representative_picture_id = :imageId
+                    SQL
+                    , [
+                                        'imageId' => $imageId,
+                                    ]), 'id')
         );
     }
 
@@ -1942,15 +2048,20 @@ final class CategoryRepository extends EntityRepository
         }
 
         $categoriesTable = Tables::categories();
-        $categoryIdsCsv = implode(',', $categoryIds);
 
         $this->getEntityManager()
             ->getConnection()
             ->executeStatement(<<<SQL
                 UPDATE {$categoriesTable}
-                SET representative_picture_id = {$imageId}
-                WHERE id IN ({$categoryIdsCsv})
-                SQL);
+                SET representative_picture_id = :imageId
+                WHERE id IN (:categoryIds)
+                SQL
+                , [
+                                'imageId' => $imageId,
+                                'categoryIds' => $categoryIds,
+                            ], [
+                                'categoryIds' => ArrayParameterType::INTEGER,
+                            ]);
     }
 
     /**
@@ -1973,8 +2084,11 @@ final class CategoryRepository extends EntityRepository
                     SELECT id
                     FROM {$categoriesTable} INNER JOIN {$groupAccessTable} ON cat_id = id
                     WHERE status = 'private'
-                        AND group_id = {$groupId}
-                    SQL), 'id')
+                        AND group_id = :groupId
+                    SQL
+                    , [
+                                        'groupId' => $groupId,
+                                    ]), 'id')
         );
     }
 
@@ -2001,8 +2115,11 @@ final class CategoryRepository extends EntityRepository
                         ON ug.group_id = ga.group_id
                     INNER JOIN {$categoriesTable} AS c
                         ON c.id = ga.cat_id
-                WHERE ug.user_id = {$userId}
-                SQL);
+                WHERE ug.user_id = :userId
+                SQL
+                , [
+                                'userId' => $userId,
+                            ]);
     }
 
     /**
@@ -2023,22 +2140,27 @@ final class CategoryRepository extends EntityRepository
             SELECT id
             FROM {$categoriesTable} INNER JOIN {$userAccessTable} ON cat_id = id
             WHERE status = 'private'
-                AND user_id = {$userId}
+                AND user_id = :userId
             SQL;
+        $params = [
+            'userId' => $userId,
+        ];
+        $types = [];
 
         if ($excludeCategoryIds !== []) {
-            $excludeCsv = implode(',', $excludeCategoryIds);
             $query .= <<<SQL
 
-                AND cat_id NOT IN ({$excludeCsv})
+                AND cat_id NOT IN (:excludeCategoryIds)
                 SQL;
+            $params['excludeCategoryIds'] = $excludeCategoryIds;
+            $types['excludeCategoryIds'] = ArrayParameterType::INTEGER;
         }
 
         return array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             array_column($this->getEntityManager()
                 ->getConnection()
-                ->fetchAllAssociative($query), 'id')
+                ->fetchAllAssociative($query, $params, $types), 'id')
         );
     }
 
@@ -2087,7 +2209,7 @@ final class CategoryRepository extends EntityRepository
                 SQL
             : <<<SQL
 
-                WHERE id_uppercat = {$parentId}
+                WHERE id_uppercat = :parentId
                 SQL;
         $query .= <<<SQL
 
@@ -2096,7 +2218,9 @@ final class CategoryRepository extends EntityRepository
 
         return $this->getEntityManager()
             ->getConnection()
-            ->fetchAllAssociative($query);
+            ->fetchAllAssociative($query, $parentId === null ? [] : [
+                'parentId' => $parentId,
+            ]);
     }
 
     /**
@@ -2161,7 +2285,7 @@ final class CategoryRepository extends EntityRepository
     public function findIdsByParent(?int $parentId): array
     {
         $categoriesTable = Tables::categories();
-        $parentCondition = $parentId === null ? 'IS NULL' : '= ' . $parentId;
+        $parentCondition = $parentId === null ? 'IS NULL' : '= :parentId';
 
         $query = <<<SQL
             SELECT id
@@ -2173,7 +2297,9 @@ final class CategoryRepository extends EntityRepository
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             array_column($this->getEntityManager()
                 ->getConnection()
-                ->fetchAllAssociative($query), 'id')
+                ->fetchAllAssociative($query, $parentId === null ? [] : [
+                    'parentId' => $parentId,
+                ]), 'id')
         );
     }
 
@@ -2187,15 +2313,19 @@ final class CategoryRepository extends EntityRepository
     public function findIdsNamesUppercatsForIds(array $categoryIds): array
     {
         $categoriesTable = Tables::categories();
-        $idsCsv = implode(',', $categoryIds);
 
         return $this->getEntityManager()
             ->getConnection()
             ->fetchAllAssociative(<<<SQL
                 SELECT id, name, id_uppercat
                 FROM {$categoriesTable}
-                WHERE id IN ({$idsCsv})
-                SQL);
+                WHERE id IN (:categoryIds)
+                SQL
+                , [
+                                'categoryIds' => $categoryIds,
+                            ], [
+                                'categoryIds' => ArrayParameterType::STRING,
+                            ]);
     }
 
     /**
@@ -2260,8 +2390,11 @@ final class CategoryRepository extends EntityRepository
                     MAX(DATE(date_available))
                 FROM {$imagesTable}
                     JOIN {$imageCategoryTable} ON image_id = id
-                WHERE category_id = {$categoryId}
-                SQL);
+                WHERE category_id = :categoryId
+                SQL
+                , [
+                                'categoryId' => $categoryId,
+                            ]);
     }
 
     /**
@@ -2275,7 +2408,6 @@ final class CategoryRepository extends EntityRepository
     public function findDistinctImageIdsInCategories(array $categoryIds): array
     {
         $imageCategoryTable = Tables::imageCategory();
-        $categoryIdsCsv = implode(',', $categoryIds);
 
         return array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
@@ -2287,8 +2419,13 @@ final class CategoryRepository extends EntityRepository
                     FROM
                         {$imageCategoryTable}
                     WHERE
-                        category_id IN ({$categoryIdsCsv})
-                    SQL), 'image_id')
+                        category_id IN (:categoryIds)
+                    SQL
+                    , [
+                                        'categoryIds' => $categoryIds,
+                                    ], [
+                                        'categoryIds' => ArrayParameterType::INTEGER,
+                                    ]), 'image_id')
         );
     }
 
@@ -2306,14 +2443,18 @@ final class CategoryRepository extends EntityRepository
         }
 
         $categoriesTable = Tables::categories();
-        $idsCsv = implode(',', $ids);
 
         return array_column($this->getEntityManager()
             ->getConnection()
             ->fetchAllAssociative(<<<SQL
                 SELECT id,dir
-                FROM {$categoriesTable} WHERE id IN ({$idsCsv})
-                SQL), 'dir', 'id');
+                FROM {$categoriesTable} WHERE id IN (:ids)
+                SQL
+                , [
+                                'ids' => array_map(static fn (int|string $v): string => (string) $v, $ids),
+                            ], [
+                                'ids' => ArrayParameterType::STRING,
+                            ]), 'dir', 'id');
     }
 
     /**
@@ -2331,8 +2472,11 @@ final class CategoryRepository extends EntityRepository
                 SELECT galleries_url
                 FROM {$sitesTable} AS s,{$categoriesTable} AS c
                 WHERE s.id = c.site_id
-                    AND c.id = {$categoryId}
-                SQL);
+                    AND c.id = :categoryId
+                SQL
+                , [
+                                'categoryId' => $categoryId,
+                            ]);
 
         if ($row === false) {
             return null;
@@ -2374,15 +2518,26 @@ final class CategoryRepository extends EntityRepository
     {
         $categoriesTable = Tables::categories();
 
+        $forbiddenIds = array_map(intval(...), array_filter(explode(',', $forbiddenCategoriesCsv), is_numeric(...)));
+        if ($forbiddenIds === []) {
+            $forbiddenIds = [0];
+        }
+
         $rows = $this->getEntityManager()
             ->getConnection()
             ->fetchAllAssociative(<<<SQL
                 SELECT
                     id
                 FROM {$categoriesTable}
-                WHERE id = {$catId}
-                    AND id NOT IN ({$forbiddenCategoriesCsv})
-                SQL);
+                WHERE id = :catId
+                    AND id NOT IN (:forbiddenIds)
+                SQL
+                , [
+                                'catId' => $catId,
+                                'forbiddenIds' => $forbiddenIds,
+                            ], [
+                                'forbiddenIds' => ArrayParameterType::INTEGER,
+                            ]);
 
         return $rows !== [];
     }
@@ -2400,8 +2555,11 @@ final class CategoryRepository extends EntityRepository
             ->fetchOne(<<<SQL
                 SELECT COUNT(*)
                 FROM {$categoriesTable}
-                WHERE id = {$id}
-                SQL);
+                WHERE id = :id
+                SQL
+                , [
+                                'id' => $id,
+                            ]);
 
         return is_numeric($value) && (int) $value > 0;
     }
@@ -2420,7 +2578,6 @@ final class CategoryRepository extends EntityRepository
         }
 
         $categoriesTable = Tables::categories();
-        $idsCsv = implode(',', $ids);
 
         return array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
@@ -2429,23 +2586,28 @@ final class CategoryRepository extends EntityRepository
                 ->executeQuery(<<<SQL
                     SELECT id
                     FROM {$categoriesTable}
-                    WHERE id IN ({$idsCsv})
-                    SQL)->fetchFirstColumn()
+                    WHERE id IN (:ids)
+                    SQL
+                    , [
+                                        'ids' => $ids,
+                                    ], [
+                                        'ids' => ArrayParameterType::INTEGER,
+                                    ])->fetchFirstColumn()
         );
     }
 
     /**
-     * id/image_order for categories matching already-built $whereClauses --
+     * id/image_order for categories matching already-built $conditions --
      * Ws\PwgCategories::getImages()'s own "which categories are we
      * fetching images for" step.
      *
-     * @param  list<string>  $whereClauses
+     * @param  list<SqlCondition>  $conditions
      * @return list<array{id: int, image_order: ?string}>
      */
-    public function findIdsAndImageOrderWithConditions(array $whereClauses): array
+    public function findIdsAndImageOrderWithConditions(array $conditions): array
     {
         $categoriesTable = Tables::categories();
-        $whereSql = implode("\n    AND ", $whereClauses);
+        $combined = SqlCondition::combine('AND', ...$conditions);
 
         $rows = $this->getEntityManager()
             ->getConnection()
@@ -2454,8 +2616,9 @@ final class CategoryRepository extends EntityRepository
                     id,
                     image_order
                 FROM {$categoriesTable}
-                WHERE {$whereSql}
-                SQL);
+                WHERE {$combined->sql}
+                SQL
+                , $combined->parameters, $combined->types);
 
         return array_map(
             static fn (array $row): array => [
@@ -2479,6 +2642,8 @@ final class CategoryRepository extends EntityRepository
      * when $limit !== null, matching the original's own guard.
      *
      * @param  list<string>  $whereClauses
+     * @param  array<string, mixed>  $params
+     * @param  array<string, ArrayParameterType|ParameterType>  $types
      * @return PaginatedResult<array<string, mixed>>
      */
     public function findListForWs(
@@ -2486,7 +2651,9 @@ final class CategoryRepository extends EntityRepository
         ?string $searchTerm,
         int $searchLimit,
         ?int $limit,
-        bool $limitPlusOne
+        bool $limitPlusOne,
+        array $params = [],
+        array $types = []
     ): PaginatedResult {
         $conn = $this->getEntityManager()
             ->getConnection();
@@ -2505,26 +2672,29 @@ final class CategoryRepository extends EntityRepository
             SQL;
 
         if ($searchTerm !== null) {
-            $searchTermQuoted = $conn->quote('%' . $searchTerm . '%');
             $sql .= <<<SQL
 
-                AND name LIKE {$searchTermQuoted}
+                AND name LIKE :searchTerm
                 SQL;
+            $params['searchTerm'] = '%' . $searchTerm . '%';
             if ($limit === null) {
-                $sql .= " LIMIT {$searchLimit}";
+                $sql .= ' LIMIT :searchLimit';
+                $params['searchLimit'] = $searchLimit;
+                $types['searchLimit'] = ParameterType::INTEGER;
             }
         }
 
         if ($limit !== null) {
-            $effectiveLimit = $limit + ($limitPlusOne ? 1 : 0);
             $sql .= <<<SQL
 
                 ORDER BY `rank` ASC
-                LIMIT {$effectiveLimit}
+                LIMIT :effectiveLimit
                 SQL;
+            $params['effectiveLimit'] = $limit + ($limitPlusOne ? 1 : 0);
+            $types['effectiveLimit'] = ParameterType::INTEGER;
         }
 
-        $rows = $conn->fetchAllAssociative($sql);
+        $rows = $conn->fetchAllAssociative($sql, $params, $types);
 
         $total = null;
         if ($limit !== null) {
@@ -2545,9 +2715,11 @@ final class CategoryRepository extends EntityRepository
      * $limit-gated fetch).
      *
      * @param  list<string>  $whereClauses
+     * @param  array<string, mixed>  $params
+     * @param  array<string, ArrayParameterType|ParameterType>  $types
      * @return PaginatedResult<array<string, mixed>>
      */
-    public function findAdminListForWs(array $whereClauses, ?string $searchTerm, int $searchLimit): PaginatedResult
+    public function findAdminListForWs(array $whereClauses, ?string $searchTerm, int $searchLimit, array $params = [], array $types = []): PaginatedResult
     {
         $conn = $this->getEntityManager()
             ->getConnection();
@@ -2562,15 +2734,17 @@ final class CategoryRepository extends EntityRepository
             SQL;
 
         if ($searchTerm !== null) {
-            $searchTermQuoted = $conn->quote('%' . $searchTerm . '%');
             $sql .= <<<SQL
 
-                AND name LIKE {$searchTermQuoted}
-                LIMIT {$searchLimit}
+                AND name LIKE :searchTerm
+                LIMIT :searchLimit
                 SQL;
+            $params['searchTerm'] = '%' . $searchTerm . '%';
+            $params['searchLimit'] = $searchLimit;
+            $types['searchLimit'] = ParameterType::INTEGER;
         }
 
-        $rows = $conn->fetchAllAssociative($sql);
+        $rows = $conn->fetchAllAssociative($sql, $params, $types);
         $totalRaw = $conn->fetchOne(<<<SQL
             SELECT FOUND_ROWS()
             SQL);
@@ -2592,7 +2766,6 @@ final class CategoryRepository extends EntityRepository
         }
 
         $categoriesTable = Tables::categories();
-        $parentIdsCsv = implode(',', $parentIds);
 
         $rows = $this->getEntityManager()
             ->getConnection()
@@ -2601,9 +2774,14 @@ final class CategoryRepository extends EntityRepository
                     id_uppercat,
                     COUNT(*) AS nb_subcats
                 FROM {$categoriesTable}
-                WHERE id_uppercat IN ({$parentIdsCsv})
+                WHERE id_uppercat IN (:parentIds)
                 GROUP BY id_uppercat
-                SQL);
+                SQL
+                , [
+                                'parentIds' => $parentIds,
+                            ], [
+                                'parentIds' => ArrayParameterType::INTEGER,
+                            ]);
 
         $bySubcat = [];
         foreach ($rows as $row) {
@@ -2632,15 +2810,19 @@ final class CategoryRepository extends EntityRepository
         }
 
         $categoriesTable = Tables::categories();
-        $idsCsv = implode(',', $ids);
 
         $rows = $this->getEntityManager()
             ->getConnection()
             ->fetchAllAssociative(<<<SQL
                 SELECT id, id_uppercat, `rank`
                 FROM {$categoriesTable}
-                WHERE id IN ({$idsCsv})
-                SQL);
+                WHERE id IN (:ids)
+                SQL
+                , [
+                                'ids' => $ids,
+                            ], [
+                                'ids' => ArrayParameterType::INTEGER,
+                            ]);
 
         return array_map(
             static fn (array $row): array => [
@@ -2664,7 +2846,7 @@ final class CategoryRepository extends EntityRepository
     public function findIdsByParentOrderedById(?int $parentId): array
     {
         $categoriesTable = Tables::categories();
-        $parentCondition = $parentId === null ? 'IS NULL' : '= ' . $parentId;
+        $parentCondition = $parentId === null ? 'IS NULL' : '= :parentId';
 
         return array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
@@ -2675,7 +2857,10 @@ final class CategoryRepository extends EntityRepository
                     FROM {$categoriesTable}
                     WHERE id_uppercat {$parentCondition}
                     ORDER BY `id` ASC
-                    SQL)->fetchFirstColumn()
+                    SQL
+                    , $parentId === null ? [] : [
+                                        'parentId' => $parentId,
+                                    ])->fetchFirstColumn()
         );
     }
 
@@ -2690,7 +2875,14 @@ final class CategoryRepository extends EntityRepository
     public function findSiblingIdsExcludingOrderedByRank(?int $parentId, int $excludeId): array
     {
         $categoriesTable = Tables::categories();
-        $parentCondition = $parentId === null ? 'IS NULL' : '= ' . $parentId;
+        $parentCondition = $parentId === null ? 'IS NULL' : '= :parentId';
+
+        $params = [
+            'excludeId' => $excludeId,
+        ];
+        if ($parentId !== null) {
+            $params['parentId'] = $parentId;
+        }
 
         return array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
@@ -2700,9 +2892,10 @@ final class CategoryRepository extends EntityRepository
                     SELECT id
                     FROM {$categoriesTable}
                     WHERE id_uppercat {$parentCondition}
-                        AND id != {$excludeId}
+                        AND id != :excludeId
                     ORDER BY `rank` ASC
-                    SQL)->fetchFirstColumn()
+                    SQL
+                    , $params)->fetchFirstColumn()
         );
     }
 
@@ -2723,15 +2916,19 @@ final class CategoryRepository extends EntityRepository
         }
 
         $categoriesTable = Tables::categories();
-        $idsCsv = implode(',', $ids);
 
         $rows = $this->getEntityManager()
             ->getConnection()
             ->fetchAllAssociative(<<<SQL
                 SELECT id, name, dir, uppercats
                 FROM {$categoriesTable}
-                WHERE id IN ({$idsCsv})
-                SQL);
+                WHERE id IN (:ids)
+                SQL
+                , [
+                                'ids' => $ids,
+                            ], [
+                                'ids' => ArrayParameterType::INTEGER,
+                            ]);
 
         return array_map(
             static fn (array $row): array => [
@@ -2772,11 +2969,14 @@ final class CategoryRepository extends EntityRepository
      * "caller composes trusted fragments" contract used throughout this
      * repository.
      *
+     * @param array<string, mixed> $params
+     * @param array<string, ArrayParameterType|ParameterType> $types
      * @return list<array<string, mixed>>
      */
-    public function findSyncCandidatesForSite(int $siteId, string $extraCondition): array
+    public function findSyncCandidatesForSite(int $siteId, string $extraCondition, array $params = [], array $types = []): array
     {
         $categoriesTable = Tables::categories();
+        $params['siteId'] = $siteId;
 
         return $this->getEntityManager()
             ->getConnection()
@@ -2784,9 +2984,10 @@ final class CategoryRepository extends EntityRepository
                 SELECT id, uppercats, global_rank, status, visible
                 FROM {$categoriesTable}
                 WHERE dir IS NOT NULL
-                    AND site_id = {$siteId}
+                    AND site_id = :siteId
                 {$extraCondition}
-                SQL);
+                SQL
+                , $params, $types);
     }
 
     /**

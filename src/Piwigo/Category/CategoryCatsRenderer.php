@@ -191,10 +191,10 @@ final readonly class CategoryCatsRenderer
             } elseif ($merged['count_categories'] > 0 and $merged['count_images'] > 0) { // at this point, count_images should always be >0 (used as condition above)
                 // searching a random representant among representant of sub-categories
                 $uppercats = $merged['uppercats'];
-                $permissionCondition = $this->permissionService->getSqlConditionFandF([
+                $condition = $this->permissionService->getSqlConditionFandFAsCondition([
                     'visible_categories' => 'id',
-                ], "\n  AND");
-                $found = $this->categoryRepo->findRandomRepresentativeIdAmongSubcategories($uppercats, $permissionCondition);
+                ]);
+                $found = $this->categoryRepo->findRandomRepresentativeIdAmongSubcategories($uppercats, $condition);
                 if ($found !== null) {
                     $imageId = $found;
                 }
@@ -231,11 +231,11 @@ final readonly class CategoryCatsRenderer
 
         if (\Piwigo\Config\CurrentConfig::displayFromto()) {
             if (count($categoryIds) > 0) {
-                $permissionCondition = $this->permissionService->getSqlConditionFandF([
+                $condition = $this->permissionService->getSqlConditionFandFAsCondition([
                     'visible_categories' => 'category_id',
                     'visible_images' => 'id',
-                ], 'AND');
-                $datesOfCategory = $this->categoryRepo->findDateRangeByCategory($categoryIds, $permissionCondition);
+                ]);
+                $datesOfCategory = $this->categoryRepo->findDateRangeByCategory($categoryIds, $condition);
             }
         }
 

@@ -276,15 +276,15 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             $start = \Piwigo\Core\TimingHelper::getMoment();
             // which categories to update ?
             $extra_condition = '';
+            $extra_params = [];
+            $extra_types = [];
             if (isset($post['cat']) and is_numeric($post['cat'])) {
                 if (isset($post['subcats-included']) and $post['subcats-included'] === '1') {
-                    $extra_condition = '
-    AND uppercats ' . SqlDialect::DB_REGEX_OPERATOR . ' \'(^|,)' . $post['cat'] . '(,|$)\'
-';
+                    $extra_condition = ' AND uppercats ' . SqlDialect::DB_REGEX_OPERATOR . ' :extraCatUppercatsLike';
+                    $extra_params['extraCatUppercatsLike'] = '(^|,)' . $post['cat'] . '(,|$)';
                 } else {
-                    $extra_condition = '
-    AND id = ' . $post['cat'] . '
-';
+                    $extra_condition = ' AND id = :extraCatId';
+                    $extra_params['extraCatId'] = (int) $post['cat'];
                 }
             }
             // hash_from_query()'s declared return type is under-typed (array<int|string,
@@ -296,7 +296,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             // common shape for both origins; individual fields are narrowed with
             // is_string()/is_int() at each point of use below.
             /** @var array<int|string, array<string, mixed>> $db_categories */
-            $db_categories = array_column(self::categoryService()->getSyncCandidatesForSite($site_id, $extra_condition), null, 'id');
+            $db_categories = array_column(self::categoryService()->getSyncCandidatesForSite($site_id, $extra_condition, $extra_params, $extra_types), null, 'id');
 
             // get categort full directories in an array for comparison with file
             // system directory tree

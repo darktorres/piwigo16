@@ -160,7 +160,7 @@ test('getSqlConditionFandFAsCondition builds a bound NOT IN clause from the user
     $condition = $service->getSqlConditionFandFAsCondition(['forbidden_categories' => 'category_id']);
     $key = singleParamKey($condition);
 
-    expect($condition->sql)->toBe('(category_id NOT IN (:' . $key . '))')
+    expect($condition->sql)->toBe('category_id NOT IN (:' . $key . ')')
         ->and($condition->parameters)->toBe([$key => [2, 3]])
         ->and($condition->types)->toBe([$key => ArrayParameterType::INTEGER]);
 });
@@ -178,7 +178,7 @@ test('getSqlConditionFandFAsCondition builds bound IN clauses from FilterState v
     expect($condition->parameters)->toHaveCount(2);
     [$catsKey, $imagesKey] = array_keys($condition->parameters);
 
-    expect($condition->sql)->toBe('(category_id IN (:' . $catsKey . ') AND id IN (:' . $imagesKey . '))')
+    expect($condition->sql)->toBe('(category_id IN (:' . $catsKey . ')) AND (id IN (:' . $imagesKey . '))')
         ->and($condition->parameters)->toBe([$catsKey => [1, 2], $imagesKey => [10, 11]])
         ->and($condition->types)->toBe([
             $catsKey => ArrayParameterType::INTEGER,
@@ -196,7 +196,7 @@ test('getSqlConditionFandFAsCondition falls through from visible_images into the
     expect($condition->parameters)->toHaveCount(2);
     [$imagesKey, $levelKey] = array_keys($condition->parameters);
 
-    expect($condition->sql)->toBe('(id IN (:' . $imagesKey . ') AND level<=:' . $levelKey . ')')
+    expect($condition->sql)->toBe('(id IN (:' . $imagesKey . ')) AND (level <= :' . $levelKey . ')')
         ->and($condition->parameters[$levelKey])->toBe(3)
         ->and($condition->types[$levelKey])->toBe(ParameterType::INTEGER);
 });
@@ -208,7 +208,7 @@ test('getSqlConditionFandFAsCondition forbidden_images binds the level check for
     $condition = $service->getSqlConditionFandFAsCondition(['forbidden_images' => 'i.id']);
     $key = singleParamKey($condition);
 
-    expect($condition->sql)->toBe('(i.level<=:' . $key . ')')
+    expect($condition->sql)->toBe('i.level <= :' . $key)
         ->and($condition->parameters)->toBe([$key => 5])
         ->and($condition->types)->toBe([$key => ParameterType::INTEGER]);
 });
@@ -220,7 +220,7 @@ test('getSqlConditionFandFAsCondition forbidden_images binds the raw access-list
     $condition = $service->getSqlConditionFandFAsCondition(['forbidden_images' => 'category_id']);
     $key = singleParamKey($condition);
 
-    expect($condition->sql)->toBe('(category_id NOT IN (:' . $key . '))')
+    expect($condition->sql)->toBe('category_id NOT IN (:' . $key . ')')
         ->and($condition->parameters)->toBe([$key => [7, 8]])
         ->and($condition->types)->toBe([$key => ArrayParameterType::INTEGER]);
 });

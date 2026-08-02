@@ -131,7 +131,7 @@ test('buildInnerSql browses everything visible when there is no category context
     $sql = $service->buildInnerSql('categories', false, null, '', []);
     assert($sql !== null);
 
-    // Even a fully-default CurrentUser still gets a "level<=0" clause --
+    // Even a fully-default CurrentUser still gets a "level <= 0" clause --
     // visible_images falls through into the forbidden_images level check
     // unconditionally unless image_access_type is exactly 'NOT IN' (see
     // PermissionServiceTest.php's own fallthrough coverage). The
@@ -145,7 +145,7 @@ test('buildInnerSql browses everything visible when there is no category context
     expect($sql->sql)->toBe(
         ' FROM ' . Tables::images()
         . "\nINNER JOIN " . Tables::imageCategory() . ' ON id = image_id'
-        . "\n    WHERE (level<=:{$key})"
+        . "\n    WHERE level <= :{$key}"
     )->and($sql->parameters)->toBe([$key => 0]);
 });
 
@@ -207,7 +207,7 @@ test('buildInnerSql composes forbidden/visible categories and images into the WH
     expect($sql->sql)->toBe(
         ' FROM ' . Tables::images()
         . "\nINNER JOIN " . Tables::imageCategory() . ' ON id = image_id'
-        . "\n    WHERE (category_id NOT IN (:{$forbidKey}) AND category_id IN (:{$visCatKey}) AND id IN (:{$visImgKey}) AND level<=:{$levelKey})"
+        . "\n    WHERE (category_id NOT IN (:{$forbidKey})) AND (category_id IN (:{$visCatKey})) AND (id IN (:{$visImgKey})) AND (level <= :{$levelKey})"
     )->and($sql->parameters)->toBe([
         $forbidKey => [5, 6],
         $visCatKey => [10, 20],

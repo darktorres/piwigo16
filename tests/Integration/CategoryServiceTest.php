@@ -480,7 +480,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         // always the literal 'NOT IN', 'level' always a numeric string --
         // an incomplete fixture (e.g. missing 'level') lets
         // getSqlConditionFandF()'s forbidden_images fallthrough build a
-        // malformed 'level<=' fragment with no right-hand value, a state
+        // malformed 'level <=' fragment with no right-hand value, a state
         // that can't happen in production.
         return [
             'id' => 1,

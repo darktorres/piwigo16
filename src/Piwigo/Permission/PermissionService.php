@@ -164,6 +164,7 @@ final readonly class PermissionService
         $userImageAccessList = is_scalar($userImageAccessList) ? (string) $userImageAccessList : '';
 
         $suffix = self::nextPlaceholderSuffix();
+        $expr = $this->repo->expressionBuilder();
 
         $sqlParts = [];
         $parameters = [];
@@ -174,7 +175,7 @@ final readonly class PermissionService
                 case 'forbidden_categories':
                     if ($userForbiddenCategories !== '') {
                         $placeholder = 'forbidden_categories' . $suffix;
-                        $sqlParts[] = $fieldName . ' NOT IN (:' . $placeholder . ')';
+                        $sqlParts[] = $expr->notIn($fieldName, ':' . $placeholder);
                         $parameters[$placeholder] = self::csvToIntList($userForbiddenCategories);
                         $types[$placeholder] = ArrayParameterType::INTEGER;
                     }
@@ -184,7 +185,7 @@ final readonly class PermissionService
                 case 'visible_categories':
                     if ($filterVisibleCategories !== '') {
                         $placeholder = 'visible_categories' . $suffix;
-                        $sqlParts[] = $fieldName . ' IN (:' . $placeholder . ')';
+                        $sqlParts[] = $expr->in($fieldName, ':' . $placeholder);
                         $parameters[$placeholder] = self::csvToIntList($filterVisibleCategories);
                         $types[$placeholder] = ArrayParameterType::INTEGER;
                     }
@@ -194,7 +195,7 @@ final readonly class PermissionService
                 case 'visible_images':
                     if ($filterVisibleImages !== '') {
                         $placeholder = 'visible_images' . $suffix;
-                        $sqlParts[] = $fieldName . ' IN (:' . $placeholder . ')';
+                        $sqlParts[] = $expr->in($fieldName, ':' . $placeholder);
                         $parameters[$placeholder] = self::csvToIntList($filterVisibleImages);
                         $types[$placeholder] = ArrayParameterType::INTEGER;
                     }
@@ -212,7 +213,7 @@ final readonly class PermissionService
 
                         if ($tablePrefix !== null) {
                             $placeholder = 'user_level' . $suffix;
-                            $sqlParts[] = $tablePrefix . 'level<=:' . $placeholder;
+                            $sqlParts[] = $expr->lte($tablePrefix . 'level', ':' . $placeholder);
                             $parameters[$placeholder] = $currentUser->level;
                             $types[$placeholder] = ParameterType::INTEGER;
                         } elseif ($userImageAccessList !== '' && $userImageAccessType !== '') {
@@ -225,7 +226,9 @@ final readonly class PermissionService
                             }
 
                             $placeholder = 'image_access_list' . $suffix;
-                            $sqlParts[] = $fieldName . ' ' . $userImageAccessType . ' (:' . $placeholder . ')';
+                            $sqlParts[] = $userImageAccessType === 'IN'
+                                ? $expr->in($fieldName, ':' . $placeholder)
+                                : $expr->notIn($fieldName, ':' . $placeholder);
                             $parameters[$placeholder] = self::csvToIntList($userImageAccessList);
                             $types[$placeholder] = ArrayParameterType::INTEGER;
                         }
@@ -239,7 +242,7 @@ final readonly class PermissionService
         }
 
         if ($sqlParts !== []) {
-            $sql = '(' . implode(' AND ', $sqlParts) . ')';
+            $sql = (string) $expr->and(...$sqlParts);
         } else {
             $sql = $forceOneCondition ? '1 = 1' : '';
         }

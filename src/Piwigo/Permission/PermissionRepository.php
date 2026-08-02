@@ -6,6 +6,7 @@ namespace Piwigo\Permission;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
+use Doctrine\DBAL\Query\Expression\ExpressionBuilder;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Category\UserAccessEntity;
 use Piwigo\Db\BatchWriter;
@@ -35,6 +36,22 @@ final readonly class PermissionRepository
     public function __construct(
         private EntityManagerInterface $em,
     ) {}
+
+    /**
+     * Further SQL-modernization audit, Item 2: exposes a real
+     * `Doctrine\DBAL\Query\Expression\ExpressionBuilder` for
+     * `PermissionService::getSqlConditionFandFAsCondition()` (a pure
+     * string/params builder with no DB access of its own, per its own
+     * docblock) to compose SQL-condition fragments via typed method
+     * calls instead of hand-typed string concatenation -- kept here
+     * rather than injecting Connection directly into the service, since
+     * this repository already owns the EntityManager/DB-access concern.
+     */
+    public function expressionBuilder(): ExpressionBuilder
+    {
+        return $this->em->getConnection()
+            ->createExpressionBuilder();
+    }
 
     /**
      * @return list<int>

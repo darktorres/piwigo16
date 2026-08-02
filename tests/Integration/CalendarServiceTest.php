@@ -63,7 +63,7 @@ final class CalendarServiceTest extends IntegrationTestCase
 
         // Matches getuserdata()'s own guaranteed shape -- an incomplete
         // fixture (e.g. missing 'level') lets getSqlConditionFandF()'s
-        // forbidden_images fallthrough build a malformed 'level<=' fragment
+        // forbidden_images fallthrough build a malformed 'level <=' fragment
         // with no right-hand value, same gotcha documented in
         // CategoryServiceTest/SearchServiceTest.
         CurrentUser::current()->set(User::fromUserArray([

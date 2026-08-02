@@ -40,6 +40,20 @@ test('fromRow throws when id is missing', function (): void {
     TagBrief::fromRow($row);
 })->throws(InvalidArgumentException::class);
 
+test('fromRow throws with the real debug type of a non-null but invalid id', function (): void {
+    // The test above sets id to null itself, so `$row['id'] ?? null`
+    // resolves to null whether or not that coalesce actually reads
+    // $row['id'] -- can't tell it apart from a mutated bare `null`. A
+    // non-null-but-still-invalid id (TagId::tryFrom() rejects any
+    // non-positive-integer-string) forces the exception message's own
+    // get_debug_type($row['id'] ?? null) call to reflect the real value.
+    $row = fullTagBriefRow();
+    $row['id'] = 'not-a-number';
+
+    expect(fn () => TagBrief::fromRow($row))
+        ->toThrow(InvalidArgumentException::class, 'Expected a positive tag id, got string');
+});
+
 test('toArray round-trips the exact same DB column shape fromRow narrowed', function (): void {
     $roundTripped = TagBrief::fromRow(fullTagBriefRow())->toArray();
 

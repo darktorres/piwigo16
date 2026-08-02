@@ -149,6 +149,28 @@ test('computeForce is false for an admin JS combine with no cache-busting header
     }
 });
 
+/**
+ * Confirmed-equivalent this sweep, verified live via a temporary
+ * sed-applied mutation plus a standalone script targeting the exact
+ * scenario this class's own mutation-testing report suggested (an admin
+ * combining with HTTP_PRAGMA's value starting with "no-cache" -- the
+ * one case where strpos() returns the falsy-but-real int 0 instead of
+ * false): computeForce()'s own RemoveBooleanCast on
+ * `(bool) strpos($_SERVER['HTTP_PRAGMA'], 'no-cache')`. Despite the
+ * classic PHP strpos()-returns-0-at-position-0 gotcha this cast looks
+ * like it's guarding against, it's genuinely redundant here: this
+ * expression is the last operand of an `&&` chain that itself is one
+ * side of `||`, feeding straight into `return` -- and PHP's `&&`/`||`
+ * operators *always* produce a real bool from their own truthiness
+ * coercion of each operand (0 is falsy) regardless of an explicit cast
+ * on any individual operand, same as this codebase's other
+ * already-documented redundant-cast-in-boolean-context instances (see
+ * clear_combined_files()'s own equivalence write-up further down this
+ * file, and FilesystemHelperTest.php's mkgetdir() cluster). A position-0
+ * 'no-cache' match at the very start of HTTP_PRAGMA returns false either
+ * way -- confirmed identical with and without the cast.
+ */
+
 // --- initialKey() ---
 
 /**
@@ -231,6 +253,26 @@ test('combine flushes pending items before appending a remote combinable, preser
 // for a non-template combinable reads the file directly via
 // file_get_contents()) ---
 
+/**
+ * Confirmed-equivalent this sweep, verified live via temporary
+ * sed-applied mutations plus a standalone script exercising every
+ * scalar shape combine()'s own multi-item cache key can realistically
+ * carry (int 7/0/-3, bool true/false, float 1.5, and this class's own
+ * documented default '0'): combine()'s own RemoveStringCast on
+ * `$key[] = (string) $combinable->version;` and
+ * `$key[] = (string) filemtime(...);`. $key's only consumer, in
+ * flush_pending()'s count>1 branch, is `join('>', $key)` -- and PHP's
+ * own array-to-string coercion inside join()/implode() applies the
+ * *exact same* to-string conversion rules to a non-string array element
+ * (bool/int/float/null, even a warned-about array) as an explicit
+ * `(string)` cast would. Every value tried produced a byte-identical
+ * combined filename with and without the cast (a mixed-type
+ * $combinable->version is reachable at runtime since Combinable's own
+ * $version property carries no PHP type declaration, only a
+ * `string|false` docblock). For a single-item combinable this line's
+ * mutation is doubly moot: flush_pending()'s count===1 branch discards
+ * $key entirely without ever joining it.
+ */
 test('combine merges 2+ non-template files into a single combined output on disk, respecting declaration order', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-file-combiner-multi-' . bin2hex(random_bytes(8));
     mkdir($root . '/themes/default/js', 0o777, true);
@@ -400,6 +442,26 @@ test('add merges an array of combinables', function (): void {
     expect($combiner->combine())->toBe([$first, $second]);
 });
 
+/**
+ * Confirmed-equivalent this sweep (both verified live via temporary
+ * sed-applied mutations against this file's own existing suite): line
+ * 46's own RemoveBooleanCast on `while ((bool) ($file = readdir($dir)))`
+ * -- same redundant-cast-in-boolean-context pattern already documented
+ * in FilesystemHelperTest.php's own mkgetdir() cluster (a `while`
+ * condition already coerces its operand to bool the same way an
+ * explicit cast would, so a file literally named "0" -- the one string
+ * `(bool)` treats differently from a non-empty one -- is skipped
+ * identically whether the cast is there or not); and line 51's own
+ * RemoveFunctionCall on `closedir($dir);` -- $dir is a local variable
+ * in this static method, never read again after the loop, so PHP's own
+ * refcounted resource GC closes the handle once $dir goes out of scope
+ * at function return regardless of the explicit call, confirmed live
+ * via a real /proc/self/fd descriptor-count check across 10 repeated
+ * clear_combined_files() calls with the closedir() call removed: the
+ * count never grows past its first-call baseline. Same convention as
+ * FilesystemHelperTest.php's/DerivativeCacheServiceTest.php's own
+ * closedir()/clearstatcache() equivalence write-ups.
+ */
 test('clear_combined_files deletes only .js and .css files from the combined dir', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-file-combiner-clear-' . bin2hex(random_bytes(8));
     mkdir($root . '/_data/combined', 0o777, true);
@@ -472,6 +534,36 @@ function invokeProcessCombinable(FileCombiner $combiner, Combinable $combinable,
     /** @var string|null */
     return $method->invokeArgs($combiner, [$combinable, $returnContent, $force, &$header]);
 }
+
+/**
+ * Confirmed-equivalent this sweep, verified live via temporary
+ * sed-applied mutations (each including a real reproduction script that
+ * exercises the exact scenario, run against both the mutated and
+ * original source to confirm byte-identical output):
+ *
+ * - flush_pending()'s own EmptyStringToNotEmpty on `$header = '';`
+ *   (its count===1 branch, right before calling process_combinable()
+ *   with $return_content=false): $header there is a fresh local
+ *   variable passed only into *that one* by-ref call and never read
+ *   again afterward in flush_pending() itself -- confirmed with a CSS
+ *   template combinable carrying a suspicious @import (so process_css()
+ *   really does append into $header via this exact call path), whose
+ *   written single-item cache file's content is identical regardless of
+ *   $header's starting value, since that file is built from $content
+ *   alone (see process_combinable()'s own `file_put_contents(...,
+ *   $content)`, never $header).
+ * - process_combinable()'s own RemoveEarlyReturn on the is_template
+ *   branch's trailing `return null;`: by the time this line is reached,
+ *   the earlier `if ($return_content) { return $content; }` a few lines
+ *   above has already NOT triggered, which only happens when
+ *   $return_content is false -- and $return_content is never reassigned
+ *   anywhere in this method. Falling through instead of returning here
+ *   therefore always lands on `if ($return_content) {...}` (the
+ *   non-template branch a few lines down) with that same
+ *   already-proven-false value, skipping it identically, then reaching
+ *   this method's own final `return null;` -- same return value, same
+ *   side effects (the cache write already happened above), every time.
+ */
 
 test('combine reaches process_combinable for a single template combinable via flush_pending\'s own count===1 branch, updating its path to the cached file', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-file-combiner-single-template-flush-' . bin2hex(random_bytes(8));
@@ -801,6 +893,61 @@ test('process_css throws when a combined_css_postfilter listener returns a non-s
     }
 })->throws(Exception::class, "process_css(): a 'combined_css_postfilter' event listener returned a non-string value");
 
+/**
+ * Confirmed-equivalent this sweep, verified live via temporary
+ * sed-applied mutations (individually and, for the `?? ''` cluster,
+ * together) against this file's own existing suite plus a reflection-
+ * based script calling process_css_rec() directly with $css=null:
+ *
+ * - Both RemoveBooleanCast mutations on `if ((bool) preg_match_all(...))`
+ *   (the url() pattern and the @import pattern): same redundant-cast-
+ *   in-boolean-context reasoning as this file's other documented
+ *   instances -- an `if` condition already coerces its operand to bool
+ *   the same way an explicit cast would.
+ * - All four EmptyStringToNotEmpty mutations on `$css ?? ''` (guarding
+ *   both preg_match_all() calls, and both str_replace() calls right
+ *   after them): $css is only ever null here when a caller passes null
+ *   in directly (every real call in this codebase always supplies an
+ *   actual string -- see process_combinable()'s own comment on
+ *   Template::parse()'s return type, and its file_get_contents() calls
+ *   are always false-checked first); with a real $css=null, `''`
+ *   (or this mutator's own literal replacement text, which contains
+ *   neither "url(" nor "@import") never matches either pattern, so the
+ *   guarding `if` never runs either way -- which in turn means the two
+ *   str_replace() calls' own `?? ''` can only matter on a code path
+ *   that's already provably unreachable given the *same* null input
+ *   that would be needed to make their own fallback text relevant.
+ * - The recursive-call EmptyStringToNotEmpty on
+ *   `self::process_css_rec(...) ?? ''` (the @import-inlining branch):
+ *   this only matters if the recursive call itself returns null, which
+ *   (by the same reasoning) requires *its own* $css argument to be
+ *   null -- but that argument is $sub_css, always a real string from a
+ *   file_get_contents() call already checked `=== false` a few lines
+ *   above, so this recursive call can never actually receive null
+ *   through any real @import chain.
+ * - Line 301's own DecrementInteger on `$match[1]` inside
+ *   `str_contains($match[1], '://')` (the array-index literal, not an
+ *   obvious numeric constant): $match[0] is always a superset string of
+ *   $match[1] for this exact pattern (`@import` plus optional quote as
+ *   fixed prefix, optional quote plus `;` as fixed suffix -- neither
+ *   ever contains "://" on its own), so $match[0] contains "://" if and
+ *   only if $match[1] does; str_contains() against either produces an
+ *   identical result for every real @import target.
+ *
+ * Separately (not equivalence, a mutation-testing tool-coverage gap):
+ * line 285's DecrementInteger on `$match[1][0]` (url() rewriting's
+ * first-character check) and line 302's DecrementInteger on `$match[1]`
+ * inside `is_readable($paths->root . $dir . '/' . $match[1])` are BOTH
+ * already killed by this file's own pre-existing tests -- "process_css_rec
+ * only rewrites url() references starting with '/'..." below, and
+ * "process_css_rec resolves a doubly-nested @import..." further down,
+ * respectively (confirmed live: each fails under its own sed-applied
+ * mutation). pest --mutate's own report listed them as UNTESTED anyway;
+ * same class of tool limitation as this project's other documented
+ * pest-plugin-mutate blind spots (see MEMORY.md's
+ * feedback_pest_mutate_blank_line_blind_spot /
+ * feedback_pest_mutate_invisible_to_subprocess_tests).
+ */
 test('process_css_rec resolves a nested @import file recursively into the combined output', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-file-combiner-import-ok-' . bin2hex(random_bytes(8));
     mkdir($root . '/themes/default/css', 0o777, true);
@@ -843,6 +990,37 @@ test('process_css_rec strips path-traversal, remote, and unreadable @import dire
         // file -- see FileCombiner::process_css_rec()'s own docblock).
         expect($result)->toBe("\n\n\nbody{color:red;}\n")
             ->and($header)->toBe("@import 'missing.css';@import '../evil.css';@import 'https://cdn.example.com/x.css';");
+    } finally {
+        file_combiner_test_rrmdir($root);
+    }
+});
+
+test('process_css_rec still strips a "\.\." @import even when the path it traverses to is itself a real, readable file', function (): void {
+    // The suspicious-path guard is 3 conditions OR'd together (traversal,
+    // remote, unreadable) -- each must independently be able to trigger
+    // the guard on its own. This is the ONLY way to isolate the '..'
+    // check from the '! is_readable(...)' check: unlike the sibling test
+    // above (whose '../evil.css' target is never created, so it would
+    // *also* fail the is_readable() check on its own), 'sibling.css' here
+    // genuinely exists and IS readable -- if the '..' check were ever
+    // wrongly AND'd together with the remote check instead of being its
+    // own independent OR'd clause, this '..'-but-readable-and-not-remote
+    // case would slip through and get silently inlined instead of
+    // rejected.
+    $root = sys_get_temp_dir() . '/piwigo-file-combiner-import-dotdot-readable-' . bin2hex(random_bytes(8));
+    mkdir($root . '/themes/default/css/sub', 0o777, true);
+    file_put_contents($root . '/themes/default/css/sub/main.css', "@import '../sibling.css';\n");
+    file_put_contents($root . '/themes/default/css/sibling.css', "p{color:pink;}\n");
+
+    $combinable = new Combinable('main-css', 'themes/default/css/sub/main.css');
+    $combiner = new FileCombiner('css', new UrlService(new HtmlService()), Paths::fromRoot($root), []);
+
+    try {
+        $header = '';
+        $result = invokeProcessCombinable($combiner, $combinable, true, false, $header);
+
+        expect($result)->toBe("\n")
+            ->and($header)->toBe("@import '../sibling.css';");
     } finally {
         file_combiner_test_rrmdir($root);
     }

@@ -49,9 +49,23 @@ final class ApiKeyRequestFlag
      * is the real one; this is scaffolding only). Delete once
      * `grep -rn "ApiKeyRequestFlag::isActiveStatic("` outside tests/
      * returns nothing.
+     *
+     * Falls back to `false` (the same default the old static `$active`
+     * property always started at) when `Kernel::boot()` hasn't run --
+     * matches Piwigo\Core\InstallationFlag::isActiveStatic()'s own
+     * identical reasoning: a great many tests reach `SessionService::
+     * sessionWrite()` indirectly without ever calling the old
+     * `ApiKeyRequestFlag::activate()`, so `false` is the exact
+     * behavior-preserving default for them. A real request always has a
+     * booted Kernel by the time these callers run, so this fallback is
+     * never reached in production.
      */
     public static function isActiveStatic(): bool
     {
+        if (! Kernel::isBooted()) {
+            return false;
+        }
+
         $instance = Kernel::container()->get(self::class);
         if (! $instance instanceof self) {
             throw new \LogicException('Container returned an unexpected type for ' . self::class);

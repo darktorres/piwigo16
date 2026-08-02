@@ -161,7 +161,16 @@ abstract class IntegrationTestCase extends TestCase
         // reset() above.
         \Piwigo\Core\AdminContext::reset();
         \Piwigo\Core\WsContext::reset();
-        \Piwigo\Core\InstallationFlag::reset();
+        // InstallationFlag is a container-shared instance now (singleton/
+        // service-locator elimination campaign, Phase 1), not a static
+        // facade -- most subclasses never call Kernel::boot() at all, so
+        // only resolve+reset when a container genuinely exists.
+        if (\Piwigo\Core\Kernel::isBooted()) {
+            $installationFlag = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\InstallationFlag::class);
+            if ($installationFlag instanceof \Piwigo\Core\InstallationFlag) {
+                $installationFlag->reset();
+            }
+        }
         // A test that exercises a real login/install-completion flow (e.g.
         // AuthService's own session_start()) leaves PHP's native session
         // machinery genuinely active -- PHPUnit/Pest run every Integration

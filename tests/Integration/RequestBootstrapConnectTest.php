@@ -122,7 +122,12 @@ final class RequestBootstrapConnectTest extends IntegrationTestCase
 
         EventDispatcher::reset();
         CurrentLogger::reset();
-        InstallationFlag::reset();
+        // setUp() always calls Kernel::boot(), so the container (and this
+        // instance) is always available here.
+        $installationFlag = Kernel::container()->get(InstallationFlag::class);
+        if ($installationFlag instanceof InstallationFlag) {
+            $installationFlag->reset();
+        }
         unset($_REQUEST['method']);
 
         parent::tearDown();

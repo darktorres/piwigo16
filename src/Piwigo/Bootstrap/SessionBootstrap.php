@@ -34,7 +34,7 @@ final class SessionBootstrap
     {
 
         if (\Piwigo\Config\CurrentConfig::sessionSaveHandler() === 'db'
-          and \Piwigo\Core\InstallationFlag::isActive()) {
+          and \Piwigo\Core\InstallationFlag::isActiveStatic()) {
             session_set_save_handler(new PwgSession());
 
             if (function_exists('ini_set')) {

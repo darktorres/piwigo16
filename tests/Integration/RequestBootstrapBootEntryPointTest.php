@@ -9,6 +9,7 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\InstallationFlag;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbCredentials;
 use Piwigo\Tests\Support\KernelContainerOverride;
@@ -90,7 +91,16 @@ final class RequestBootstrapBootEntryPointTest extends IntegrationTestCase
         }
         ErrorCollector::reset();
 
-        InstallationFlag::reset();
+        // Some tests above reach this point via KernelContainerOverride::
+        // with(), which already calls Kernel::reset() internally before
+        // returning -- only resolve+reset InstallationFlag when a
+        // container actually still exists.
+        if (Kernel::isBooted()) {
+            $installationFlag = Kernel::container()->get(InstallationFlag::class);
+            if ($installationFlag instanceof InstallationFlag) {
+                $installationFlag->reset();
+            }
+        }
         unset($_SERVER['PATH_INFO']);
 
         parent::tearDown();

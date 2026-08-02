@@ -301,7 +301,7 @@ final class Lang
         }
         $dirname .= 'language/';
 
-        $default_language = InstallationFlag::isActive()
+        $default_language = InstallationFlag::isActiveStatic()
             ? (self::$defaultLanguageProvider?->getDefaultLanguage() ?? AppInfo::DEFAULT_LANGUAGE)
             : AppInfo::DEFAULT_LANGUAGE;
 

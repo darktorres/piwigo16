@@ -56,6 +56,12 @@ final class ContainerSmokeTest extends TestCase
      */
     private const array REQUEST_SCOPED_ONLY_ENTRIES = [
         \Piwigo\Core\TemplateInterface::class,
+        // Piwigo\Cache\PersistentCache's binding (singleton/service-locator
+        // elimination campaign, Phase 0) resolves to PersistentFileCache,
+        // whose constructor reads Piwigo\Core\CurrentPaths::get()->root --
+        // genuinely unavailable here, same "Kernel booted with no real
+        // Paths" reasoning as TemplateInterface above, not a wiring bug.
+        \Piwigo\Cache\PersistentCache::class,
     ];
 
     public function test_every_container_entry_resolves(): void

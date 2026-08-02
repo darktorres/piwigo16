@@ -58,7 +58,11 @@ namespace Piwigo\Tests\Integration {
         {
             parent::setUp();
             $this->setUpConnectionFromEnv();
-            \Piwigo\Core\InstallationFlag::mark();
+            \Piwigo\Core\Kernel::boot();
+            $installationFlag = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\InstallationFlag::class);
+            if ($installationFlag instanceof \Piwigo\Core\InstallationFlag) {
+                $installationFlag->mark();
+            }
 
             if (! self::$fixtureReady) {
                 $this->resetDatabase();

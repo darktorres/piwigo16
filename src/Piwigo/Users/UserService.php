@@ -121,7 +121,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             return Lang::t('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
         }
 
-        if (\Piwigo\Core\InstallationFlag::isActive() && ! $isEmpty) {
+        if (\Piwigo\Core\InstallationFlag::isActiveStatic() && ! $isEmpty) {
             /** @var array<string, string> $user_fields */
             $user_fields = \Piwigo\Config\CurrentConfig::userFields();
 
@@ -141,7 +141,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     {
 
         $username = Username::tryFrom($login);
-        if (\Piwigo\Core\InstallationFlag::isActive() && $username !== null) {
+        if (\Piwigo\Core\InstallationFlag::isActiveStatic() && $username !== null) {
             /** @var array<string, string> $user_fields */
             $user_fields = \Piwigo\Config\CurrentConfig::userFields();
 

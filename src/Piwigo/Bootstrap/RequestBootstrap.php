@@ -157,7 +157,7 @@ final class RequestBootstrap
 
         try {
             self::configure($paths, $t2);
-            \Piwigo\Core\InstallationFlag::mark();
+            self::installationFlag()->mark();
             self::connect();
             self::finalize();
         } catch (\Piwigo\Http\ResponseReadyException $e) {
@@ -813,6 +813,22 @@ final class RequestBootstrap
         $flag = Kernel::container()->get(\Piwigo\Core\ApiKeyRequestFlag::class);
         if (! $flag instanceof \Piwigo\Core\ApiKeyRequestFlag) {
             throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\ApiKeyRequestFlag::class);
+        }
+
+        return $flag;
+    }
+
+    /**
+     * Resolves the container-shared instance (not `new InstallationFlag()`)
+     * so that this method's own `mark()` call is visible to every other
+     * consumer holding the same shared instance -- see that class's own
+     * docblock (singleton/service-locator elimination campaign, Phase 1).
+     */
+    private static function installationFlag(): \Piwigo\Core\InstallationFlag
+    {
+        $flag = Kernel::container()->get(\Piwigo\Core\InstallationFlag::class);
+        if (! $flag instanceof \Piwigo\Core\InstallationFlag) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\InstallationFlag::class);
         }
 
         return $flag;

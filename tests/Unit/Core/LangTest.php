@@ -210,7 +210,16 @@ function langTestMakeProvider(?string $defaultLanguage = null, ?string $currentL
 beforeEach(function (): void {
     Lang::reset();
     Translator::reset();
-    \Piwigo\Core\InstallationFlag::reset();
+    // Lang::load() unconditionally reads InstallationFlag::isActiveStatic()
+    // (singleton/service-locator elimination campaign, Phase 1 -- Lang
+    // itself isn't converted to constructor injection until Phase 8), which
+    // needs a real container -- every test in this file calls load(), not
+    // just the 2 that explicitly mark() it active.
+    \Piwigo\Core\Kernel::boot();
+    $installationFlag = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\InstallationFlag::class);
+    if ($installationFlag instanceof \Piwigo\Core\InstallationFlag) {
+        $installationFlag->reset();
+    }
     $this->langRoot = sys_get_temp_dir() . '/piwigo-lang-test-' . bin2hex(random_bytes(8));
     mkdir($this->langRoot, 0o777, true);
 });
@@ -219,7 +228,7 @@ afterEach(function (): void {
     Lang::reset();
     Translator::reset();
     CurrentPaths::reset();
-    \Piwigo\Core\InstallationFlag::reset();
+    \Piwigo\Core\Kernel::reset();
     langTestRrmdir(is_string($this->langRoot) ? $this->langRoot : '');
 });
 
@@ -514,7 +523,10 @@ test('load does not re-track (overwrite) a dirname/filename pair it has already 
 });
 
 test('load uses the default-language provider\'s own value, not the app default, once InstallationFlag is active', function (): void {
-    \Piwigo\Core\InstallationFlag::mark();
+    $installationFlag = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\InstallationFlag::class);
+    if ($installationFlag instanceof \Piwigo\Core\InstallationFlag) {
+        $installationFlag->mark();
+    }
     Lang::setDefaultLanguageProvider(langTestMakeProvider(defaultLanguage: 'zz_ZZ'));
     $dirname = $this->langRoot . '/plugins/installed-default/';
     langTestWritePo($dirname . 'language/zz_ZZ/greeting.po', 'zz_ZZ', 'Hi (provider default)');
@@ -532,7 +544,10 @@ test('load falls back to the app default language, not a fatal error, when Insta
     // never sets one at all) -- self::$defaultLanguageProvider stays
     // null, and a bare `->getDefaultLanguage()` on null would fatal
     // instead of gracefully falling through to `?? AppInfo::DEFAULT_LANGUAGE`.
-    \Piwigo\Core\InstallationFlag::mark();
+    $installationFlag = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\InstallationFlag::class);
+    if ($installationFlag instanceof \Piwigo\Core\InstallationFlag) {
+        $installationFlag->mark();
+    }
     $dirname = $this->langRoot . '/plugins/installed-no-provider/';
     langTestWritePo($dirname . 'language/en_UK/greeting.po', 'en_UK', 'Hi (app default, no provider)');
 

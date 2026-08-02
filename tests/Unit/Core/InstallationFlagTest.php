@@ -14,32 +14,26 @@ use Piwigo\Core\InstallationFlag;
  * this suite: defining it would permanently leak into every later test
  * sharing this same process.
  */
-beforeEach(function (): void {
-    InstallationFlag::reset();
-});
-
-afterEach(function (): void {
-    InstallationFlag::reset();
-});
-
 test('isActive is false before mark() has ever been called', function (): void {
-    expect(InstallationFlag::isActive())->toBeFalse();
+    expect(new InstallationFlag()->isActive())->toBeFalse();
 });
 
 test('mark() makes isActive true', function (): void {
-    InstallationFlag::mark();
+    $flag = new InstallationFlag();
+    $flag->mark();
 
-    expect(InstallationFlag::isActive())->toBeTrue();
+    expect($flag->isActive())->toBeTrue();
 });
 
 test('reset() clears the marked flag back to false, not just leaving it unset', function (): void {
-    // Kills the FalseToTrue mutation on reset()'s own self::$marked =
+    // Kills the FalseToTrue mutation on reset()'s own $this->marked =
     // false: confirmed live via a sed-applied mutation that without
     // this exact assignment, isActive() stays true after reset().
-    InstallationFlag::mark();
-    expect(InstallationFlag::isActive())->toBeTrue();
+    $flag = new InstallationFlag();
+    $flag->mark();
+    expect($flag->isActive())->toBeTrue();
 
-    InstallationFlag::reset();
+    $flag->reset();
 
-    expect(InstallationFlag::isActive())->toBeFalse();
+    expect($flag->isActive())->toBeFalse();
 });

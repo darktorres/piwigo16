@@ -223,6 +223,7 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
 
     $shimAllowedFiles = [
         '/src/Piwigo/Core/ApiKeyRequestFlag.php',
+        '/src/Piwigo/Core/InstallationFlag.php',
     ];
 
     $hits = [
@@ -498,16 +499,32 @@ test('FilterState::reset() is only called from tests/', function (): void {
     expect(describeCallSites($hits))->toBe([]);
 });
 
-test('InstallationFlag::reset() is only called from tests/', function (): void {
+test('InstallationFlag::isActiveStatic() transitional shim has a shrinking, known allow-list', function (): void {
+    // Singleton/service-locator elimination campaign, Phase 1: real callers
+    // (Piwigo\Core\Lang -- Phase 8; Piwigo\Users\UserService -- large
+    // construction-site fan-out, out of scope for this phase;
+    // Piwigo\Bootstrap\SessionBootstrap -- a genuinely static-only class)
+    // aren't converted to constructor injection yet, so they use this
+    // static shim instead of the real isActive() instance method (see
+    // that method's own docblock). Every phase that converts one more of
+    // these files should remove it from the allow-list below; once the
+    // allow-list is empty, delete isActiveStatic() itself and this test.
     $repoRoot = __DIR__ . '/../..';
 
-    $hits = [
-        ...findCallSites($repoRoot . '/src/Piwigo', 'InstallationFlag::reset('),
-        ...findCallSitesInRootPhpFiles($repoRoot, 'InstallationFlag::reset('),
-        ...findCallSitesInBinFiles($repoRoot, 'InstallationFlag::reset('),
+    $allowedFiles = [
+        '/src/Piwigo/Core/Lang.php',
+        '/src/Piwigo/Users/UserService.php',
+        '/src/Piwigo/Bootstrap/SessionBootstrap.php',
     ];
 
-    expect(describeCallSites($hits))->toBe([]);
+    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'InstallationFlag::isActiveStatic(');
+
+    $disallowed = array_values(array_filter(
+        $hits,
+        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
+    ));
+
+    expect(describeCallSites($disallowed))->toBe([]);
 });
 
 test('Lang::reset() is only called from tests/', function (): void {

@@ -1455,7 +1455,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
         }
         $dir = $real_dir;
         $cache_key = 'themeconf:' . $dir;
-        if (! ProcessCache::has($cache_key)) {
+        if (! ProcessCache::hasStatic($cache_key)) {
             $themeconf = [];
             // themeconf.inc.php may set this to push extra template
             // variables, instead of reaching for $this/$template directly
@@ -1466,11 +1466,19 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
             include $dir . '/themeconf.inc.php';
             $this->assign($theme_template_vars);
             // Put themeconf in cache
-            ProcessCache::set($cache_key, $themeconf);
+            ProcessCache::setStatic($cache_key, $themeconf);
+
+            // Return the just-computed value directly rather than falling
+            // through to the getStatic() read below -- setStatic() is a
+            // silent no-op when Kernel::isBooted() is false (singleton/
+            // service-locator elimination campaign, Phase 1's transitional
+            // shim), which would otherwise make the read-back lose this
+            // freshly-computed $themeconf entirely.
+            return $themeconf;
         }
 
         /** @var array<string, mixed> $cached */
-        $cached = ProcessCache::get($cache_key);
+        $cached = ProcessCache::getStatic($cache_key);
 
         return $cached;
     }

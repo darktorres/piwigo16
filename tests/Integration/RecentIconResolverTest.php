@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Piwigo\Core\Kernel;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\RecentIconResolver;
 
@@ -30,13 +31,22 @@ final class RecentIconResolverTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        ProcessCache::reset();
+        // RecentIconResolver's own ProcessCache usage now goes through a
+        // transitional static shim (singleton/service-locator elimination
+        // campaign, Phase 1 -- RecentIconResolver is a genuinely
+        // static-only utility, see that shim's own docblock), which needs
+        // a real container.
+        Kernel::boot();
+        $processCache = Kernel::container()->get(ProcessCache::class);
+        if ($processCache instanceof ProcessCache) {
+            $processCache->reset();
+        }
     }
 
     #[\Override]
     protected function tearDown(): void
     {
-        ProcessCache::reset();
+        Kernel::reset();
         parent::tearDown();
     }
 

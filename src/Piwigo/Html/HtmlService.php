@@ -160,13 +160,21 @@ final class HtmlService implements HtmlRenderingInterface
             $add_url_params['auth'] = $authKey;
         }
 
-        if (! \Piwigo\Core\ProcessCache::has('cat_names')) {
-            \Piwigo\Core\ProcessCache::set('cat_names', $this->categoryRepo()->findAllIdNamePermalink());
+        // Read the just-computed value directly rather than a blind
+        // set()-then-get() round trip -- setStatic() is a silent no-op
+        // when Kernel::isBooted() is false (singleton/service-locator
+        // elimination campaign, Phase 1's transitional shim), which would
+        // otherwise make a subsequent getStatic() lose it entirely.
+        if (\Piwigo\Core\ProcessCache::hasStatic('cat_names')) {
+            $cat_names_raw = \Piwigo\Core\ProcessCache::getStatic('cat_names');
+        } else {
+            $cat_names_raw = $this->categoryRepo()
+                ->findAllIdNamePermalink();
+            \Piwigo\Core\ProcessCache::setStatic('cat_names', $cat_names_raw);
         }
-        // Narrowed once here (fix pattern #7): ProcessCache::get() returns
+        // Narrowed once here (fix pattern #7): ProcessCache::getStatic() returns
         // mixed, proving the key exists does not prove the stored value is
         // array-like.
-        $cat_names_raw = \Piwigo\Core\ProcessCache::get('cat_names');
         $cat_names = is_array($cat_names_raw) ? $cat_names_raw : [];
 
         $output = '';
@@ -325,9 +333,9 @@ final class HtmlService implements HtmlRenderingInterface
         $name_a = is_string($a['name'] ?? null) ? $a['name'] : '';
         $name_b = is_string($b['name'] ?? null) ? $b['name'] : '';
 
-        // Narrowed once here (fix pattern #7): ProcessCache::get() returns
+        // Narrowed once here (fix pattern #7): ProcessCache::getStatic() returns
         // mixed, so the stored value is still mixed even after this check.
-        $transliterated_raw = \Piwigo\Core\ProcessCache::get(self::class . '::tagAlphaCompare');
+        $transliterated_raw = \Piwigo\Core\ProcessCache::getStatic(self::class . '::tagAlphaCompare');
         $transliterated = is_array($transliterated_raw) ? $transliterated_raw : [];
 
         foreach ([$name_a, $name_b] as $tag_name) {
@@ -340,7 +348,7 @@ final class HtmlService implements HtmlRenderingInterface
             }
         }
 
-        \Piwigo\Core\ProcessCache::set(self::class . '::tagAlphaCompare', $transliterated);
+        \Piwigo\Core\ProcessCache::setStatic(self::class . '::tagAlphaCompare', $transliterated);
 
         $translit_a = is_string($transliterated[$name_a] ?? null) ? $transliterated[$name_a] : \Piwigo\Core\StringHelper::pwgTransliterate($name_a);
         $translit_b = is_string($transliterated[$name_b] ?? null) ? $transliterated[$name_b] : \Piwigo\Core\StringHelper::pwgTransliterate($name_b);

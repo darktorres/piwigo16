@@ -6,6 +6,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\ErrorCollector;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
@@ -198,6 +199,11 @@ beforeEach(function (): void {
     CurrentConfig::setDataDirChecked('1');
     CurrentUser::attachGlobals();
     ScriptLoader::setUrlService(new UrlService(new HtmlService()));
+    // Template's own ProcessCache usage now goes through a transitional
+    // static shim (singleton/service-locator elimination campaign, Phase 1
+    // -- Template isn't converted to constructor injection, see that
+    // shim's own docblock), which needs a real container.
+    Kernel::boot();
 });
 
 afterEach(function (): void {
@@ -206,7 +212,7 @@ afterEach(function (): void {
     CurrentConfig::reset();
     CurrentPaths::reset();
     EventDispatcher::reset();
-    ProcessCache::reset();
+    Kernel::reset();
 });
 
 // --- constructor: Smarty engine base config -----------------------------
@@ -2061,7 +2067,7 @@ test('load_themeconf includes themeconf.inc.php, returns its $themeconf, and ass
     $result = $t->load_themeconf($dir);
 
     // A bare AlwaysReturnNull mutation on the final `return $cached;`, or a
-    // RemoveMethodCall dropping the ProcessCache::set() a few lines above
+    // RemoveMethodCall dropping the ProcessCache::setStatic() a few lines above
     // it (which would leave the trailing ProcessCache::get() reading back
     // nothing), both collapse $result to null instead of the real array.
     expect($result)->toBe(['name' => 'Real Theme'])
@@ -2102,8 +2108,8 @@ test('load_themeconf caches under the exact "themeconf:" . $dir key shape, not a
     mkdir($dir, 0o777, true);
     file_put_contents($dir . '/themeconf.inc.php', '<?php $themeconf = ["real" => true];');
     $realDir = (string) realpath($dir);
-    ProcessCache::set($realDir, ['poisoned' => 'bare-dir-key']);
-    ProcessCache::set($realDir . 'themeconf:', ['poisoned' => 'switched-key']);
+    ProcessCache::setStatic($realDir, ['poisoned' => 'bare-dir-key']);
+    ProcessCache::setStatic($realDir . 'themeconf:', ['poisoned' => 'switched-key']);
 
     $result = $t->load_themeconf($dir);
 

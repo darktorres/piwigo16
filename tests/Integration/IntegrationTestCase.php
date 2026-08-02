@@ -81,7 +81,16 @@ abstract class IntegrationTestCase extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        \Piwigo\Core\ProcessCache::reset();
+        // ProcessCache is a container-shared instance now (singleton/
+        // service-locator elimination campaign, Phase 1), not a static
+        // facade -- most subclasses never call Kernel::boot() at all, so
+        // only resolve+reset when a container genuinely exists.
+        if (\Piwigo\Core\Kernel::isBooted()) {
+            $processCache = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\ProcessCache::class);
+            if ($processCache instanceof \Piwigo\Core\ProcessCache) {
+                $processCache->reset();
+            }
+        }
         // Piwigo\Users\CurrentUser (Legacy Coupling Retirement Track A batch
         // A3) is a request-lifetime singleton; PHPUnit/Pest run every test
         // file in one shared process (see this class's own docblock above
@@ -145,7 +154,12 @@ abstract class IntegrationTestCase extends TestCase
     {
         \Piwigo\Users\CurrentUser::reset();
         \Piwigo\Core\CurrentLogger::reset();
-        \Piwigo\Core\ProcessCache::reset();
+        if (\Piwigo\Core\Kernel::isBooted()) {
+            $processCache = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\ProcessCache::class);
+            if ($processCache instanceof \Piwigo\Core\ProcessCache) {
+                $processCache->reset();
+            }
+        }
         \Piwigo\Config\CurrentConfig::reset();
         // Harmless even for test classes that never call
         // buildConfigRepository()/wire CurrentConfigService::set() at

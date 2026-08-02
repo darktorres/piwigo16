@@ -224,6 +224,7 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
     $shimAllowedFiles = [
         '/src/Piwigo/Core/ApiKeyRequestFlag.php',
         '/src/Piwigo/Core/InstallationFlag.php',
+        '/src/Piwigo/Core/ProcessCache.php',
     ];
 
     $hits = [
@@ -551,16 +552,40 @@ test('PageState::reset() is only called from tests/', function (): void {
     expect(describeCallSites($hits))->toBe([]);
 });
 
-test('ProcessCache::reset() is only called from tests/', function (): void {
+test('ProcessCache::*Static() transitional shims have a shrinking, known allow-list', function (): void {
+    // Singleton/service-locator elimination campaign, Phase 1: real callers
+    // (Piwigo\Html\HtmlService -- 444 manual construction sites, unrelated
+    // cleanup out of scope here; Piwigo\Template\Template -- constructed
+    // with runtime-computed args, never autowireable as-is; Piwigo\Users\
+    // UserService -- Phase 4/8 territory; Piwigo\Core\RecentIconResolver --
+    // a genuinely static-only utility) aren't converted to constructor
+    // injection, so they use these static shims instead of the real
+    // has()/get()/set() instance methods (see hasStatic()'s own docblock).
+    // Every phase that converts one more of these files should remove it
+    // from the allow-list below; once empty, delete all 4 shims and this
+    // test.
     $repoRoot = __DIR__ . '/../..';
 
-    $hits = [
-        ...findCallSites($repoRoot . '/src/Piwigo', 'ProcessCache::reset('),
-        ...findCallSitesInRootPhpFiles($repoRoot, 'ProcessCache::reset('),
-        ...findCallSitesInBinFiles($repoRoot, 'ProcessCache::reset('),
+    $allowedFiles = [
+        '/src/Piwigo/Html/HtmlService.php',
+        '/src/Piwigo/Template/Template.php',
+        '/src/Piwigo/Users/UserService.php',
+        '/src/Piwigo/Core/RecentIconResolver.php',
     ];
 
-    expect(describeCallSites($hits))->toBe([]);
+    $hits = [
+        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'ProcessCache::hasStatic('),
+        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'ProcessCache::getStatic('),
+        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'ProcessCache::setStatic('),
+        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'ProcessCache::forgetStatic('),
+    ];
+
+    $disallowed = array_values(array_filter(
+        $hits,
+        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
+    ));
+
+    expect(describeCallSites($disallowed))->toBe([]);
 });
 
 test('RequestMountDepth::reset() is only called from tests/', function (): void {

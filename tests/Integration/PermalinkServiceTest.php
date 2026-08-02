@@ -7,6 +7,7 @@ namespace Piwigo\Tests\Integration;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\PageState;
+use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
 use Piwigo\Permalink\PermalinkRepository;
 use Piwigo\Permalink\PermalinkService;
@@ -38,7 +39,7 @@ final class PermalinkServiceTest extends IntegrationTestCase
         PageState::attachGlobals();
 
         $this->repo = new PermalinkRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build()));
-        $this->service = new PermalinkService($this->repo);
+        $this->service = new PermalinkService($this->repo, new ProcessCache());
 
         $this->repo->clearCategoryPermalink(1);
     }

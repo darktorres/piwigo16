@@ -228,6 +228,11 @@ final class SearchServiceTest extends IntegrationTestCase
         CurrentConfig::reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
+        // UserService's own ProcessCache usage (reached via this test's own
+        // ProcessCache::forgetStatic('default_user') calls below) now goes
+        // through a transitional static shim (singleton/service-locator
+        // elimination campaign, Phase 1), which needs a real container.
+        \Piwigo\Core\Kernel::boot();
 
         $this->conn = DbConnection::build();
         $this->repo = new SearchRepository($this->conn);
@@ -272,6 +277,7 @@ final class SearchServiceTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         \Piwigo\Cache\CachePools::searchResults()->clear();
+        \Piwigo\Core\Kernel::reset();
 
         parent::tearDown();
     }
@@ -1364,7 +1370,7 @@ final class SearchServiceTest extends IntegrationTestCase
         // guest account) -- getDefaultLanguage() reads *this* row, entirely
         // independent of CurrentUser (id=1 in this file's own setUp()).
         $this->conn->executeStatement("UPDATE " . Tables::userInfos() . " SET language = 'zz_ZZ' WHERE user_id = 2");
-        \Piwigo\Core\ProcessCache::forget('default_user');
+        \Piwigo\Core\ProcessCache::forgetStatic('default_user');
 
         try {
             $this->expectException(\LogicException::class);
@@ -1373,7 +1379,7 @@ final class SearchServiceTest extends IntegrationTestCase
             $this->service->getQuickSearchResultsNoCache('nature', []);
         } finally {
             $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . ' SET language = ? WHERE user_id = 2', [$originalLanguage]);
-            \Piwigo\Core\ProcessCache::forget('default_user');
+            \Piwigo\Core\ProcessCache::forgetStatic('default_user');
         }
     }
 

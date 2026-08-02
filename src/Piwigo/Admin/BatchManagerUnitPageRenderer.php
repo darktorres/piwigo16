@@ -66,6 +66,7 @@ final class BatchManagerUnitPageRenderer
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
+        private readonly \Piwigo\Core\ProcessCache $processCache,
     ) {}
 
     private static function tagService(): TagService
@@ -438,7 +439,7 @@ final class BatchManagerUnitPageRenderer
                 // every $item in the while loop, before this point) --
                 // matches the established narrowing pattern in
                 // Piwigo\Admin\PictureModifyPageRenderer.
-                $cat_names_raw = \Piwigo\Core\ProcessCache::get('cat_names');
+                $cat_names_raw = $this->processCache->get('cat_names');
                 $cat_names = is_array($cat_names_raw) ? $cat_names_raw : [];
 
                 $row_cat_id_raw = $row['cat_id'] ?? null;

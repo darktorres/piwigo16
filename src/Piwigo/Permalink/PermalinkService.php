@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Permalink;
 
 use Piwigo\Core\Lang;
+use Piwigo\Core\ProcessCache;
 
 /**
  * Category-permalink business logic: validation, uniqueness against both
@@ -24,6 +25,7 @@ final readonly class PermalinkService
 {
     public function __construct(
         private PermalinkRepository $repo,
+        private ProcessCache $processCache,
     ) {}
 
     /**
@@ -55,7 +57,7 @@ final readonly class PermalinkService
         }
 
         $this->repo->clearCategoryPermalink($catId);
-        \Piwigo\Core\ProcessCache::forget('cat_names'); // force regeneration
+        $this->processCache->forget('cat_names'); // force regeneration
 
         if ($save) {
             if ($oldCatId !== null) {
@@ -122,7 +124,7 @@ final readonly class PermalinkService
         }
 
         $this->repo->setCategoryPermalink($catId, $permalink);
-        \Piwigo\Core\ProcessCache::forget('cat_names'); // force regeneration
+        $this->processCache->forget('cat_names'); // force regeneration
 
         return true;
     }

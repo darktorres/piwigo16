@@ -474,20 +474,28 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      */
     public function getDefaultUserInfo(): array|false
     {
-        if (! \Piwigo\Core\ProcessCache::has('default_user')) {
+        // Read the just-computed value directly rather than a blind
+        // set()-then-get() round trip -- setStatic() is a silent no-op
+        // when Kernel::isBooted() is false (singleton/service-locator
+        // elimination campaign, Phase 1's transitional shim), which would
+        // otherwise make a subsequent getStatic() lose it entirely.
+        if (\Piwigo\Core\ProcessCache::hasStatic('default_user')) {
+            $defaultUserCached = \Piwigo\Core\ProcessCache::getStatic('default_user');
+        } else {
             $defaultUserId = UserId::from(\Piwigo\Config\CurrentConfig::defaultUserId());
 
             $row = $this->repo->findDefaultUserInfoRow($defaultUserId);
             if ($row !== null) {
                 $rowArray = $row->toArray();
                 unset($rowArray['user_id'], $rowArray['status'], $rowArray['registration_date'], $rowArray['last_visit'], $rowArray['last_visit_from_history']);
-                \Piwigo\Core\ProcessCache::set('default_user', $rowArray);
+                \Piwigo\Core\ProcessCache::setStatic('default_user', $rowArray);
+                $defaultUserCached = $rowArray;
             } else {
-                \Piwigo\Core\ProcessCache::set('default_user', false);
+                \Piwigo\Core\ProcessCache::setStatic('default_user', false);
+                $defaultUserCached = false;
             }
         }
 
-        $defaultUserCached = \Piwigo\Core\ProcessCache::get('default_user');
         if (! is_array($defaultUserCached)) {
             return false;
         }

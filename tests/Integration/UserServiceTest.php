@@ -1170,7 +1170,7 @@ namespace Piwigo\Tests\Integration {
             // is the only way to reach that guard: without it,
             // ThemeCatalog::checkThemeInstalled() (a strictly-typed string
             // param) would receive an int and fatal with a TypeError.
-            \Piwigo\Core\ProcessCache::set('default_user', [
+            \Piwigo\Core\ProcessCache::setStatic('default_user', [
                 'nb_image_page' => 15,
                 'language' => 'en_UK',
                 'expand' => false,

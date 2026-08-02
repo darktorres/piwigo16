@@ -9,7 +9,7 @@ namespace Piwigo\Core;
  * include/functions.inc.php -- no natural existing class home (real
  * callers span Category and Users domains: CategoryCatsRenderer/
  * CategoryService/CategoryDefaultRenderer, and UserService), stateless
- * beyond the per-request `ProcessCache::get('get_icon')` memoization
+ * beyond the per-request `ProcessCache::getStatic('get_icon')` memoization
  * bridge it reads/writes through (Legacy Coupling Retirement Track A
  * gap-fill batch G5, formerly `$cache['get_icon']`), unchanged.
  *
@@ -38,7 +38,7 @@ final class RecentIconResolver
 
         $recent_period = $recentPeriod;
 
-        $get_icon_cache_raw = ProcessCache::get('get_icon');
+        $get_icon_cache_raw = ProcessCache::getStatic('get_icon');
         $get_icon_cache = is_array($get_icon_cache_raw) ? $get_icon_cache_raw : [];
 
         if (! isset($get_icon_cache['title'])) {
@@ -54,7 +54,7 @@ final class RecentIconResolver
         ];
 
         if (isset($get_icon_cache[$date])) {
-            ProcessCache::set('get_icon', $get_icon_cache);
+            ProcessCache::setStatic('get_icon', $get_icon_cache);
             return ((bool) $get_icon_cache[$date]) ? $icon : [];
         }
 
@@ -65,7 +65,7 @@ final class RecentIconResolver
         }
 
         $get_icon_cache[$date] = $date > $get_icon_cache['sql_recent_date'];
-        ProcessCache::set('get_icon', $get_icon_cache);
+        ProcessCache::setStatic('get_icon', $get_icon_cache);
 
         return $get_icon_cache[$date] ? $icon : [];
     }

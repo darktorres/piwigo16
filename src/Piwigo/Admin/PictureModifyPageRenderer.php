@@ -41,6 +41,7 @@ final class PictureModifyPageRenderer
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
+        private readonly \Piwigo\Core\ProcessCache $processCache,
     ) {}
 
     private static function userService(): UserService
@@ -468,7 +469,7 @@ final class PictureModifyPageRenderer
                 $authorizeds_values = array_values($authorizeds);
                 $category = $authorizeds_values[random_int(0, count($authorizeds_values) - 1)];
 
-                $cat_names_raw = \Piwigo\Core\ProcessCache::get('cat_names');
+                $cat_names_raw = $this->processCache->get('cat_names');
                 $cat_names = is_array($cat_names_raw) ? $cat_names_raw : [];
                 $url_img = $this->urlService->makePictureUrl(
                     [

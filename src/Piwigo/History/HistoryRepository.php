@@ -20,21 +20,17 @@ use Piwigo\Image\ImageEntity;
  * looked up explicitly (findSummaryRowsForHierarchy()) rather than upserted
  * blindly).
  *
- * Owns `history` ({@see HistoryEntity}) -- insert()/deleteBefore() and,
- * since the Item 14 DQL audit, findMinHistoryId()/countAll()/
- * findLatestHistoryId()/findOldestHistoryId()/search()/
- * findImageIdsByFilename() (the last against `images`/{@see
- * \Piwigo\Image\ImageEntity}, a different repository's own entity) go
- * through the ORM/DQL; every `history_summary` touch stays plain DBAL via
- * $this->getEntityManager()->getConnection() -- `history_summary` is never
- * entity-mapped at all (its NULL-inclusive composite-key WHERE has no
- * clean single-row shape an entity would help with), same "mixed
- * repository" shape Image/Category/Rate's own conversions established. A
- * handful of other classes (AuthRepository, Admin\Maintenance\
- * DbMaintenanceRepository, Admin\HistoryPageRenderer) also touch these two
- * tables directly via raw DBAL -- no cross-repository identity-map risk
- * from leaving the rest raw here either, since none of those go through
- * the ORM/entity manager for these tables.
+ * Owns `history` ({@see HistoryEntity}) and, since Item 14 Sub-phase B1/B2,
+ * `history_summary` too ({@see HistorySummaryEntity} -- previously claimed
+ * to have "no clean single-row shape an entity would help with"; re-audited
+ * and every method against it goes through the ORM/DQL now, including
+ * findSummaryRowsForHierarchy()'s own nested-conditional WHERE, a direct
+ * 1:1 port of the same fixed-shape branching the original DBAL version
+ * already did). A handful of other classes (AuthRepository, Admin\
+ * Maintenance\DbMaintenanceRepository, Admin\HistoryPageRenderer) still
+ * touch these two tables directly via raw DBAL -- no cross-repository
+ * identity-map risk from that, since none of those go through the ORM/
+ * entity manager for these tables.
  * Admin\InstallationStats/Admin\StatsPageRenderer/Ws\PwgCore were all
  * retargeted (during the raw-DBAL-out-of-non-Repository-classes pass)
  * onto this repository's own findLastByType()/findMonthlyRows()/
@@ -47,20 +43,35 @@ use Piwigo\Image\ImageEntity;
  */
 final class HistoryRepository extends EntityRepository
 {
+    /**
+     * Item 14 DQL audit, re-corrected: `history_summary` is now mapped
+     * ({@see HistorySummaryEntity}). Converted to real DQL -- single-table,
+     * static WHERE.
+     */
     public function findLastSummaryWithHistoryIdTo(): ?HistorySummaryCursor
     {
-        $row = $this->getEntityManager()
-            ->getConnection()
+        $rows = $this->getEntityManager()
             ->createQueryBuilder()
-            ->select('year', 'month', 'day', 'hour', 'history_id_to')
-            ->from(Tables::historySummary())
-            ->where('history_id_to IS NOT NULL')
-            ->orderBy('history_id_to', 'DESC')
+            ->select('hs.year', 'hs.month', 'hs.day', 'hs.hour', 'hs.historyIdTo AS history_id_to')
+            ->from(HistorySummaryEntity::class, 'hs')
+            ->where('hs.historyIdTo IS NOT NULL')
+            ->orderBy('hs.historyIdTo', 'DESC')
             ->setMaxResults(1)
-            ->executeQuery()
-            ->fetchAssociative();
+            ->getQuery()
+            ->getArrayResult();
 
-        return $row === false ? null : HistorySummaryCursor::fromRow($row);
+        $row = $rows[0] ?? null;
+        if (! is_array($row)) {
+            return null;
+        }
+
+        return HistorySummaryCursor::fromRow([
+            'year' => $row['year'] ?? null,
+            'month' => $row['month'] ?? null,
+            'day' => $row['day'] ?? null,
+            'hour' => $row['hour'] ?? null,
+            'history_id_to' => $row['history_id_to'] ?? null,
+        ]);
     }
 
     /**
@@ -125,10 +136,14 @@ final class HistoryRepository extends EntityRepository
     }
 
     /**
-     * Item 14 DQL audit: stays on DBAL -- `history_summary` is never
-     * entity-mapped (see this class's own docblock); the dynamic
-     * nullable-hierarchy WHERE it builds has no fixed property path DQL
-     * could target here either way.
+     * Item 14 DQL audit, re-corrected: `history_summary` is now mapped
+     * ({@see HistorySummaryEntity}). Converted to real DQL -- the "dynamic
+     * nullable-hierarchy WHERE" the original note flagged isn't actually
+     * caller-supplied text: it's a fixed nested-conditional *shape*
+     * (branching purely on which of $month/$day/$hour are null), the same
+     * shape the original DBAL version itself already built one clause
+     * string at a time -- a direct 1:1 port to DQL property paths, no
+     * redesign needed.
      *
      * Existing summary rows anywhere in the (year[, month[, day[, hour]]])
      * hierarchy -- e.g. for (2026, 7, 12, 3): the year-only row, the
@@ -140,112 +155,110 @@ final class HistoryRepository extends EntityRepository
     public function findSummaryRowsForHierarchy(int $year, ?int $month, ?int $day, ?int $hour): array
     {
         $qb = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select('year', 'month', 'day', 'hour', 'nb_pages')
-            ->from(Tables::historySummary())
-            ->where('year = :year')
+            ->select('hs.year', 'hs.month', 'hs.day', 'hs.hour', 'hs.nbPages AS nb_pages')
+            ->from(HistorySummaryEntity::class, 'hs')
+            ->where('hs.year = :year')
             ->setParameter('year', $year);
 
-        $monthClause = 'month IS NULL';
+        $monthClause = 'hs.month IS NULL';
         if ($month !== null) {
-            $dayClause = 'day IS NULL';
+            $dayClause = 'hs.day IS NULL';
             if ($day !== null) {
-                $hourClause = 'hour IS NULL';
+                $hourClause = 'hs.hour IS NULL';
                 if ($hour !== null) {
-                    $hourClause = '(hour IS NULL OR hour = :hour)';
+                    $hourClause = '(hs.hour IS NULL OR hs.hour = :hour)';
                     $qb->setParameter('hour', $hour);
                 }
 
-                $dayClause = '(day IS NULL OR (day = :day AND ' . $hourClause . '))';
+                $dayClause = '(hs.day IS NULL OR (hs.day = :day AND ' . $hourClause . '))';
                 $qb->setParameter('day', $day);
             }
 
-            $monthClause = '(month IS NULL OR (month = :month AND ' . $dayClause . '))';
+            $monthClause = '(hs.month IS NULL OR (hs.month = :month AND ' . $dayClause . '))';
             $qb->setParameter('month', $month);
         }
 
+        /** @var list<array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null}> */
         $rows = $qb->andWhere($monthClause)
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->getQuery()
+            ->getArrayResult();
 
         return array_map(HistorySummaryCount::fromRow(...), $rows);
     }
 
     /**
-     * Item 14 DQL audit: stays on DBAL -- `history_summary` is never
-     * entity-mapped; also a bulk per-row UPDATE loop, not a single query
-     * DQL would reshape anyway.
+     * Item 14 DQL audit, re-corrected: `history_summary` is now mapped
+     * ({@see HistorySummaryEntity}). Converted to real DQL -- still a
+     * per-row loop (each row has its own distinct WHERE, so this can't
+     * collapse into a single bulk statement), but each iteration is now a
+     * real DQL `UPDATE ... WHERE`, same "bulk UPDATE bypasses the ORM
+     * identity map" shape as {@see \Piwigo\Image\ImageRepository::
+     * updateLevelForImages()}.
      *
      * @param list<array{year: int, month: ?int, day: ?int, hour: ?int, nbPages: int, historyIdTo: int}> $rows
      */
     public function updateSummaryRows(array $rows): void
     {
-        $conn = $this->getEntityManager()
-            ->getConnection();
+        $em = $this->getEntityManager();
         foreach ($rows as $row) {
-            $qb = $conn->createQueryBuilder()
-                ->update(Tables::historySummary())
-                ->set('nb_pages', ':nbPages')
-                ->set('history_id_to', ':historyIdTo')
-                ->where('year = :year')
+            $qb = $em->createQueryBuilder()
+                ->update(HistorySummaryEntity::class, 'hs')
+                ->set('hs.nbPages', ':nbPages')
+                ->set('hs.historyIdTo', ':historyIdTo')
+                ->where('hs.year = :year')
                 ->setParameter('nbPages', $row['nbPages'])
                 ->setParameter('historyIdTo', $row['historyIdTo'])
                 ->setParameter('year', $row['year']);
 
-            $qb->andWhere($row['month'] === null ? 'month IS NULL' : 'month = :month');
+            $qb->andWhere($row['month'] === null ? 'hs.month IS NULL' : 'hs.month = :month');
             if ($row['month'] !== null) {
                 $qb->setParameter('month', $row['month']);
             }
 
-            $qb->andWhere($row['day'] === null ? 'day IS NULL' : 'day = :day');
+            $qb->andWhere($row['day'] === null ? 'hs.day IS NULL' : 'hs.day = :day');
             if ($row['day'] !== null) {
                 $qb->setParameter('day', $row['day']);
             }
 
-            $qb->andWhere($row['hour'] === null ? 'hour IS NULL' : 'hour = :hour');
+            $qb->andWhere($row['hour'] === null ? 'hs.hour IS NULL' : 'hs.hour = :hour');
             if ($row['hour'] !== null) {
                 $qb->setParameter('hour', $row['hour']);
             }
 
-            $qb->executeStatement();
+            $qb->getQuery()
+                ->execute();
         }
     }
 
     /**
-     * Item 14 DQL audit: stays on DBAL -- `history_summary` is never
-     * entity-mapped; also a bulk per-row INSERT loop, not a DQL-expressible
-     * write (ORM `persist()`/`flush()` writes one row per flush, not a
-     * bulk statement, same carve-out as `BatchWriter`-based bulk inserts
-     * elsewhere in this codebase).
+     * Item 14 DQL audit, re-corrected: `history_summary` is now mapped
+     * ({@see HistorySummaryEntity}) -- DQL still has no INSERT statement
+     * at all, but a real ORM `persist()`-per-row loop with a single
+     * `flush()` after it is the same N-individual-writes shape this raw
+     * per-row `INSERT` loop already had, same precedent as {@see
+     * \Piwigo\Activity\ActivityRepository::insertMany()}. `BatchWriter`
+     * stays the right tool for a genuine single bulk multi-row `VALUES
+     * (...), (...), ...` statement, which this was never doing anyway.
      *
      * @param list<array{year: int, month: ?int, day: ?int, hour: ?int, nbPages: int, historyIdFrom: int, historyIdTo: int}> $rows
      */
     public function insertSummaryRows(array $rows): void
     {
-        $conn = $this->getEntityManager()
-            ->getConnection();
+        $em = $this->getEntityManager();
         foreach ($rows as $row) {
-            $conn->createQueryBuilder()
-                ->insert(Tables::historySummary())
-                ->values([
-                    'year' => ':year',
-                    'month' => ':month',
-                    'day' => ':day',
-                    'hour' => ':hour',
-                    'nb_pages' => ':nbPages',
-                    'history_id_from' => ':historyIdFrom',
-                    'history_id_to' => ':historyIdTo',
-                ])
-                ->setParameter('year', $row['year'])
-                ->setParameter('month', $row['month'])
-                ->setParameter('day', $row['day'])
-                ->setParameter('hour', $row['hour'])
-                ->setParameter('nbPages', $row['nbPages'])
-                ->setParameter('historyIdFrom', $row['historyIdFrom'])
-                ->setParameter('historyIdTo', $row['historyIdTo'])
-                ->executeStatement();
+            $em->persist(new HistorySummaryEntity(
+                year: $row['year'],
+                month: $row['month'],
+                day: $row['day'],
+                hour: $row['hour'],
+                nbPages: $row['nbPages'],
+                historyIdFrom: $row['historyIdFrom'],
+                historyIdTo: $row['historyIdTo'],
+            ));
         }
+
+        $em->flush();
     }
 
     /**
@@ -263,8 +276,9 @@ final class HistoryRepository extends EntityRepository
     }
 
     /**
-     * Item 14 DQL audit: stays on DBAL -- `history_summary` is never
-     * entity-mapped.
+     * Item 14 DQL audit, re-corrected: `history_summary` is now mapped
+     * ({@see HistorySummaryEntity}). Converted to real DQL -- single-table,
+     * static WHERE, SUM() is a standard DQL function.
      *
      * Total page views across every yearly summary row (`month IS NULL`
      * is `summarize()`'s own "whole year" rollup row, distinct from its
@@ -273,26 +287,22 @@ final class HistoryRepository extends EntityRepository
      */
     public function sumPageViews(): int
     {
-        // SQL-modernization audit: verified, zero interpolation of any
-        // kind (the table name is a structural Tables::xxx() constant),
-        // nothing to bind.
-        $historySummaryTable = Tables::historySummary();
-
         $value = $this->getEntityManager()
-            ->getConnection()
-            ->fetchOne(<<<SQL
-                SELECT
-                    SUM(nb_pages)
-                FROM {$historySummaryTable}
-                WHERE month IS NULL
-                SQL);
+            ->createQueryBuilder()
+            ->select('SUM(hs.nbPages)')
+            ->from(HistorySummaryEntity::class, 'hs')
+            ->where('hs.month IS NULL')
+            ->getQuery()
+            ->getSingleScalarResult();
 
         return is_numeric($value) ? (int) $value : 0;
     }
 
     /**
-     * Item 14 DQL audit: stays on DBAL -- `history_summary` is never
-     * entity-mapped.
+     * Item 14 DQL audit, re-corrected: `history_summary` is now mapped
+     * ({@see HistorySummaryEntity}). Converted to real DQL -- single-table;
+     * `$type`'s match() only ever selects one of 4 fixed WHERE/ORDER BY
+     * shapes, not a caller-supplied dynamic fragment.
      *
      * The last $limit summary rows at the given hierarchy level ($type:
      * 'hour'/'day'/'month', or year for anything else), most recent
@@ -303,50 +313,47 @@ final class HistoryRepository extends EntityRepository
      */
     public function findLastByType(string $type, int $limit): array
     {
-        // SQL-modernization audit: $limit used to be spliced into
-        // `LIMIT {$limit}` (a real `int` param, but still a value in
-        // query text rather than bound) -- now setMaxResults().
         $qb = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select('year', 'month', 'day', 'hour', 'nb_pages')
-            ->from(Tables::historySummary())
+            ->select('hs.year', 'hs.month', 'hs.day', 'hs.hour', 'hs.nbPages AS nb_pages')
+            ->from(HistorySummaryEntity::class, 'hs')
             ->setMaxResults($limit);
 
         match ($type) {
-            'hour' => $qb->where('year IS NOT NULL')
-                ->andWhere('month IS NOT NULL')
-                ->andWhere('day IS NOT NULL')
-                ->andWhere('hour IS NOT NULL')
-                ->orderBy('year', 'DESC')
-                ->addOrderBy('month', 'DESC')
-                ->addOrderBy('day', 'DESC')
-                ->addOrderBy('hour', 'DESC'),
-            'day' => $qb->where('year IS NOT NULL')
-                ->andWhere('month IS NOT NULL')
-                ->andWhere('day IS NOT NULL')
-                ->andWhere('hour IS NULL')
-                ->orderBy('year', 'DESC')
-                ->addOrderBy('month', 'DESC')
-                ->addOrderBy('day', 'DESC'),
-            'month' => $qb->where('year IS NOT NULL')
-                ->andWhere('month IS NOT NULL')
-                ->andWhere('day IS NULL')
-                ->orderBy('year', 'DESC')
-                ->addOrderBy('month', 'DESC'),
-            default => $qb->where('year IS NOT NULL')
-                ->andWhere('month IS NULL')
-                ->orderBy('year', 'DESC'),
+            'hour' => $qb->where('hs.year IS NOT NULL')
+                ->andWhere('hs.month IS NOT NULL')
+                ->andWhere('hs.day IS NOT NULL')
+                ->andWhere('hs.hour IS NOT NULL')
+                ->orderBy('hs.year', 'DESC')
+                ->addOrderBy('hs.month', 'DESC')
+                ->addOrderBy('hs.day', 'DESC')
+                ->addOrderBy('hs.hour', 'DESC'),
+            'day' => $qb->where('hs.year IS NOT NULL')
+                ->andWhere('hs.month IS NOT NULL')
+                ->andWhere('hs.day IS NOT NULL')
+                ->andWhere('hs.hour IS NULL')
+                ->orderBy('hs.year', 'DESC')
+                ->addOrderBy('hs.month', 'DESC')
+                ->addOrderBy('hs.day', 'DESC'),
+            'month' => $qb->where('hs.year IS NOT NULL')
+                ->andWhere('hs.month IS NOT NULL')
+                ->andWhere('hs.day IS NULL')
+                ->orderBy('hs.year', 'DESC')
+                ->addOrderBy('hs.month', 'DESC'),
+            default => $qb->where('hs.year IS NOT NULL')
+                ->andWhere('hs.month IS NULL')
+                ->orderBy('hs.year', 'DESC'),
         };
 
         /** @var list<array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null}> */
-        return $qb->executeQuery()
-            ->fetchAllAssociative();
+        return $qb->getQuery()
+            ->getArrayResult();
     }
 
     /**
-     * Item 14 DQL audit: stays on DBAL -- `history_summary` is never
-     * entity-mapped.
+     * Item 14 DQL audit, re-corrected: `history_summary` is now mapped
+     * ({@see HistorySummaryEntity}). Converted to real DQL -- single-table,
+     * static WHERE.
      *
      * Every month-level summary row, most recent first, optionally capped
      * at $limit -- Admin\StatsPageRenderer's own "compare years" chart
@@ -357,27 +364,27 @@ final class HistoryRepository extends EntityRepository
     public function findMonthlyRows(?int $limit): array
     {
         $qb = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select('year', 'month', 'day', 'hour', 'nb_pages')
-            ->from(Tables::historySummary())
-            ->where('month IS NOT NULL')
-            ->andWhere('day IS NULL')
-            ->orderBy('year', 'DESC')
-            ->addOrderBy('month', 'DESC');
+            ->select('hs.year', 'hs.month', 'hs.day', 'hs.hour', 'hs.nbPages AS nb_pages')
+            ->from(HistorySummaryEntity::class, 'hs')
+            ->where('hs.month IS NOT NULL')
+            ->andWhere('hs.day IS NULL')
+            ->orderBy('hs.year', 'DESC')
+            ->addOrderBy('hs.month', 'DESC');
 
         if ($limit !== null) {
             $qb->setMaxResults($limit);
         }
 
         /** @var list<array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null}> */
-        return $qb->executeQuery()
-            ->fetchAllAssociative();
+        return $qb->getQuery()
+            ->getArrayResult();
     }
 
     /**
-     * Item 14 DQL audit: stays on DBAL -- `history_summary` is never
-     * entity-mapped.
+     * Item 14 DQL audit, re-corrected: `history_summary` is now mapped
+     * ({@see HistorySummaryEntity}). Converted to real DQL -- single-table,
+     * static WHERE (3 fixed (year, month) pairs, both bound parameters).
      *
      * Day-level summary rows for 3 specific (year, month) pairs (this
      * month, last month, this month last year) -- Admin\
@@ -390,28 +397,33 @@ final class HistoryRepository extends EntityRepository
     {
         /** @var list<array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null}> */
         return $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select('year', 'month', 'day', 'hour', 'nb_pages')
-            ->from(Tables::historySummary())
-            ->where('(year = :year1 AND month = :month1) OR (year = :year2 AND month = :month2) OR (year = :year3 AND month = :month3)')
-            ->andWhere('day IS NOT NULL')
-            ->andWhere('hour IS NULL')
-            ->orderBy('year', 'DESC')
-            ->addOrderBy('month', 'DESC')
+            ->select('hs.year', 'hs.month', 'hs.day', 'hs.hour', 'hs.nbPages AS nb_pages')
+            ->from(HistorySummaryEntity::class, 'hs')
+            ->where('(hs.year = :year1 AND hs.month = :month1) OR (hs.year = :year2 AND hs.month = :month2) OR (hs.year = :year3 AND hs.month = :month3)')
+            ->andWhere('hs.day IS NOT NULL')
+            ->andWhere('hs.hour IS NULL')
+            ->orderBy('hs.year', 'DESC')
+            ->addOrderBy('hs.month', 'DESC')
             ->setParameter('year1', $year1)
             ->setParameter('month1', $month1)
             ->setParameter('year2', $year2)
             ->setParameter('month2', $month2)
             ->setParameter('year3', $year3)
             ->setParameter('month3', $month3)
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->getQuery()
+            ->getArrayResult();
     }
 
     /**
-     * Item 14 DQL audit: stays on DBAL -- `history_summary` is never
-     * entity-mapped.
+     * Item 14 DQL audit, re-corrected: `history_summary` is now mapped
+     * ({@see HistorySummaryEntity}). Converted to real DQL -- single-table,
+     * static WHERE, AVG() is a standard DQL function. `ORDER BY` dropped
+     * from the DQL form: a bare aggregate SELECT (no GROUP BY) always
+     * collapses to a single row, so ordering the input rows before
+     * aggregating can't change the one-row result -- verified this
+     * matches the original's own real behavior, not just a DQL
+     * limitation papered over.
      *
      * Average daily page views across the trailing 12-ish months (this
      * year, plus last year from $afterMonth onward) -- Admin\
@@ -421,20 +433,17 @@ final class HistoryRepository extends EntityRepository
     public function findAverageDailyPageViewsSince(int $year, int $previousYear, int $afterMonth): ?float
     {
         $value = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select('AVG(nb_pages)')
-            ->from(Tables::historySummary())
-            ->where('year = :year OR (year = :previousYear AND month > :afterMonth)')
-            ->andWhere('day IS NOT NULL')
-            ->andWhere('hour IS NULL')
-            ->orderBy('year', 'DESC')
-            ->addOrderBy('month', 'DESC')
+            ->select('AVG(hs.nbPages)')
+            ->from(HistorySummaryEntity::class, 'hs')
+            ->where('hs.year = :year OR (hs.year = :previousYear AND hs.month > :afterMonth)')
+            ->andWhere('hs.day IS NOT NULL')
+            ->andWhere('hs.hour IS NULL')
             ->setParameter('year', $year)
             ->setParameter('previousYear', $previousYear)
             ->setParameter('afterMonth', $afterMonth)
-            ->executeQuery()
-            ->fetchOne();
+            ->getQuery()
+            ->getSingleScalarResult();
 
         return is_numeric($value) ? (float) $value : null;
     }

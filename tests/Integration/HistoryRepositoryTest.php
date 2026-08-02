@@ -184,6 +184,23 @@ final class HistoryRepositoryTest extends IntegrationTestCase
         }
     }
 
+    public function test_sum_page_views_sums_only_year_only_rows(): void
+    {
+        // Item 14 DQL audit re-audit (Item 14 Sub-phase B2): had zero
+        // existing coverage. month IS NULL is summarize()'s own
+        // "whole year" rollup row -- the month-level row below must not
+        // also get counted, or the sum would double.
+        $this->insertSummary(2026, null, null, null, 100, 1, 50);
+        $this->insertSummary(2027, null, null, null, 25, 51, 60);
+        $this->insertSummary(2026, 7, null, null, 999, 1, 30);
+
+        try {
+            self::assertSame(125, $this->repo->sumPageViews());
+        } finally {
+            $this->clearSummary();
+        }
+    }
+
     public function test_count_all_and_latest_and_oldest_and_delete_before(): void
     {
         $id1 = $this->insertHistoryLine(1, '2026-07-10', '03:00:00');

@@ -238,6 +238,35 @@ final class CommentRepositoryTest extends IntegrationTestCase
         self::assertSame(0, $this->repo->countForImage(999999, false));
     }
 
+    public function test_find_summaries_for_image_returns_the_matching_summary(): void
+    {
+        // fixture: image 2 has comment 2 (validated), untouched by
+        // insertFixtureComment() (hardcoded to image_id 1) -- deterministic
+        // across this class's full test run regardless of test order.
+        $summaries = $this->repo->findSummariesForImage(2, false, 10, 0);
+
+        self::assertCount(1, $summaries);
+        self::assertSame(2, $summaries[0]->id->value);
+        self::assertSame('regular_user', $summaries[0]->author);
+        self::assertSame('Another perspective on this photo.', $summaries[0]->content);
+    }
+
+    public function test_find_summaries_for_image_excludes_unvalidated_when_restricted(): void
+    {
+        // fixture: image 4 has only comment 5, unvalidated.
+        self::assertSame([], $this->repo->findSummariesForImage(4, true, 10, 0));
+        self::assertCount(1, $this->repo->findSummariesForImage(4, false, 10, 0));
+    }
+
+    public function test_find_summaries_for_image_respects_the_limit(): void
+    {
+        $this->repo->insert(['author' => 'fsfi_a', 'authorId' => 1, 'anonymousId' => '10.30.0.30', 'content' => 'fsfi content A', 'validated' => true, 'imageId' => 5, 'websiteUrl' => null, 'email' => null]);
+        $this->repo->insert(['author' => 'fsfi_b', 'authorId' => 1, 'anonymousId' => '10.30.0.31', 'content' => 'fsfi content B', 'validated' => true, 'imageId' => 5, 'websiteUrl' => null, 'email' => null]);
+
+        self::assertCount(2, $this->repo->findSummariesForImage(5, false, 10, 0));
+        self::assertCount(1, $this->repo->findSummariesForImage(5, false, 1, 0));
+    }
+
     public function test_find_for_image_returns_matching_rows_joined_with_user_email(): void
     {
         // fixture: image 2 has comment 2, authored by regular_user, whose

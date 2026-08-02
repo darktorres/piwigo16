@@ -192,6 +192,9 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * Number of comments posted by $authorId (and, for non-classic users,
      * also matching the $anonymousIdPrefix.* anonymous_id pattern) within
      * the last $antiFloodSeconds seconds. Used by the anti-flood check.
+     *
+     * Item 14 DQL audit: stays on DBAL -- SUBDATE(..., INTERVAL ... SECOND)
+     * is MySQL-specific date arithmetic with no native DQL function.
      */
     public function countRecentComments(int $authorId, ?string $anonymousIdPrefix, int $antiFloodSeconds): int
     {
@@ -230,6 +233,11 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * `utf8mb4_unicode_ci` default, so this comparison is case-sensitive), not
      * on anything this query controls. $usernameColumn is the configurable
      * DB column name (see \Piwigo\Config\CurrentConfig::userFields()), not user-controlled.
+     *
+     * Item 14 DQL audit: stays on DBAL -- queries `users`, not this
+     * repository's own CommentEntity, and $usernameColumn is a runtime
+     * column name (multi-auth integration support), not a fixed DQL
+     * property path.
      */
     public function usernameExists(string $usernameColumn, string $username): bool
     {
@@ -364,6 +372,11 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * raw trusted-SQL strings spliced verbatim; now real SqlCondition
      * fragments, each with its own bound parameters.
      *
+     * Item 14 DQL audit: stays on DBAL -- joins `image_category`, which is
+     * never entity-mapped anywhere in this migration (see
+     * Category\CategoryRepository's own class docblock), plus dynamic
+     * caller-supplied SqlCondition fragments DQL has no equivalent for.
+     *
      * @param  list<SqlCondition>  $whereClauses
      */
     public function countAvailableWithConditions(array $whereClauses): int
@@ -384,36 +397,37 @@ final class CommentRepository extends EntityRepository implements CommentCounter
     }
 
     /**
+     * Further SQL-modernization audit, Item 14: converted to real DQL --
+     * single-table, static WHERE, no join/aggregate DQL can't express.
+     *
      * Number of comments on a single image (the picture page's comment
      * count), optionally restricted to validated ones (non-admin viewers).
      */
     public function countForImage(int $imageId, bool $onlyValidated): int
     {
         $qb = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select('COUNT(*) AS nb_comments')
-            ->from(Tables::comments())
-            ->where('image_id = :imageId')
+            ->select('COUNT(c.id)')
+            ->from(CommentEntity::class, 'c')
+            ->where('c.imageId = :imageId')
             ->setParameter('imageId', $imageId);
 
         if ($onlyValidated) {
-            // A real tinyint(1) column now (Comment domain Stage 1a) -- a
-            // numeric literal, not the old enum('true','false') string;
-            // MySQL's non-numeric-string-to-int coercion would otherwise
-            // silently convert 'true' to 0 too, inverting this filter to
-            // count unvalidated comments instead (same bug class
-            // Category's own commentable/visible retype found).
-            $qb->andWhere('validated = 1');
+            $qb->andWhere('c.validated = :validated')
+                ->setParameter('validated', true);
         }
 
-        $value = $qb->executeQuery()
-            ->fetchOne();
+        $value = $qb->getQuery()
+            ->getSingleScalarResult();
 
         return is_numeric($value) ? (int) $value : 0;
     }
 
     /**
+     * Further SQL-modernization audit, Item 14: converted to real DQL --
+     * single-table, static WHERE/ORDER BY/LIMIT, no join/aggregate DQL
+     * can't express.
+     *
      * Paginated `id, date, author, content` summaries for a single image,
      * ordered by date ascending -- Ws\PwgImages::getInfo()'s own "related
      * comments" block, a different (narrower, no user join) shape from
@@ -424,28 +438,55 @@ final class CommentRepository extends EntityRepository implements CommentCounter
     public function findSummariesForImage(int $imageId, bool $onlyValidated, int $limit, int $offset): array
     {
         $qb = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select('id', 'date', 'author', 'content')
-            ->from(Tables::comments())
-            ->where('image_id = :imageId')
+            ->select('c.id', 'c.date', 'c.author', 'c.content')
+            ->from(CommentEntity::class, 'c')
+            ->where('c.imageId = :imageId')
             ->setParameter('imageId', $imageId)
-            ->orderBy('date', 'ASC')
+            ->orderBy('c.date', 'ASC')
             ->setMaxResults($limit)
             ->setFirstResult($offset);
 
         if ($onlyValidated) {
-            $qb->andWhere('validated = 1');
+            $qb->andWhere('c.validated = :validated')
+                ->setParameter('validated', true);
         }
 
-        return array_map(
-            CommentSummary::fromRow(...),
-            $qb->executeQuery()
-                ->fetchAllAssociative()
-        );
+        $summaries = [];
+        foreach ($qb->getQuery()->getArrayResult() as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            // c.id hydrates as a real CommentId VO here (its own
+            // 'comment_id' custom Doctrine Type applies to DQL array
+            // hydration too, unlike a raw DBAL row's plain int) --
+            // CommentSummary::fromRow()'s own contract documents a raw
+            // DBAL row shape (int|string id), so its own id is read
+            // directly instead of going through fromRow()'s narrower
+            // int|numeric-string parsing.
+            $id = $row['id'] ?? null;
+            if (! $id instanceof CommentId) {
+                throw new \UnexpectedValueException(sprintf('Expected c.id to hydrate as a CommentId, got %s', get_debug_type($id)));
+            }
+
+            $summaries[] = new CommentSummary(
+                id: $id,
+                date: is_string($row['date'] ?? null) ? $row['date'] : null,
+                author: is_string($row['author'] ?? null) ? $row['author'] : null,
+                content: is_string($row['content'] ?? null) ? $row['content'] : null,
+            );
+        }
+
+        return $summaries;
     }
 
     /**
+     * Further SQL-modernization audit, Item 14: converted to real DQL --
+     * single-table, static WHERE/GROUP BY, no join DQL can't express;
+     * imageId/COUNT(c.id) are plain integers, no custom Doctrine Type
+     * involved (unlike c.id elsewhere in this class).
+     *
      * Validated comment count per image, for a batch of images at once
      * (`CategoryDefaultRenderer`'s main-page thumbnail grid, one query
      * instead of one `countForImage()` call per thumbnail).
@@ -461,21 +502,25 @@ final class CommentRepository extends EntityRepository implements CommentCounter
         }
 
         $rows = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select('image_id', 'COUNT(*) AS nb_comments')
-            ->from(Tables::comments())
-            ->where('validated = 1')
-            ->andWhere('image_id IN (:imageIds)')
-            ->setParameter('imageIds', $imageIds, ArrayParameterType::STRING)
-            ->groupBy('image_id')
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->select('c.imageId', 'COUNT(c.id) AS nbComments')
+            ->from(CommentEntity::class, 'c')
+            ->where('c.validated = :validated')
+            ->andWhere('c.imageId IN (:imageIds)')
+            ->setParameter('validated', true)
+            ->setParameter('imageIds', array_map(strval(...), $imageIds), ArrayParameterType::STRING)
+            ->groupBy('c.imageId')
+            ->getQuery()
+            ->getArrayResult();
 
         $byImageId = [];
         foreach ($rows as $row) {
-            $imageId = $row['image_id'] ?? null;
-            $nbComments = $row['nb_comments'] ?? null;
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $imageId = $row['imageId'] ?? null;
+            $nbComments = $row['nbComments'] ?? null;
             if (is_scalar($imageId) && is_numeric($nbComments)) {
                 $byImageId[(string) $imageId] = (int) $nbComments;
             }
@@ -490,6 +535,10 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * \Piwigo\Config\CurrentConfig::userFields() maps the generic 'id'/'email' names to the
      * actual column names, resolved by the caller since that's
      * config-domain knowledge, not persistence-domain).
+     *
+     * Item 14 DQL audit: stays on DBAL -- the LEFT JOIN condition
+     * (`u.{$userIdColumn} = com.author_id`) uses a runtime column name
+     * (multi-auth integration support), not a fixed DQL property path.
      *
      * @param string $order 'ASC'|'asc'|'DESC'|'desc' only -- the caller must
      *   validate this before calling (matches the original's own
@@ -566,6 +615,12 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * category per comment, matching the original's own grouping/row
      * count exactly.
      *
+     * Item 14 DQL audit: stays on DBAL -- joins the never-entity-mapped
+     * `image_category`, a dynamic-column-name `users` join, MySQL-specific
+     * `SQL_CALC_FOUND_ROWS`/`ANY_VALUE()` (neither has a DQL equivalent),
+     * and dynamic caller-supplied SqlCondition fragments -- several
+     * independent, genuine DQL blockers on the same query.
+     *
      * @param list<SqlCondition> $whereClauses
      * @return PaginatedResult<array<string, mixed>>
      */
@@ -631,6 +686,15 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * needs the status-unfiltered condition set, unlike the 3 sibling
      * methods below.
      *
+     * Item 14 DQL audit: stays on DBAL -- `sum(validated = 1)`/`sum(validated
+     * = 0)` are MySQL's boolean-expression-as-integer idiom (would need a
+     * `SUM(CASE WHEN ... THEN 1 ELSE 0 END)` rewrite to express in DQL);
+     * buildApiConditions()/buildApiConditionsWithStatus() (shared by this
+     * method and the 3 below) also build raw-column-named SqlCondition
+     * fragments applied via applyConditions(), not DQL property-path
+     * expressions -- converting one without the other would split this
+     * class's condition-building machinery in two.
+     *
      * @return array{all_comments: mixed, validated: mixed, pending: mixed}|null
      */
     public function findSummaryCounts(CommentApiCriteria $criteria): ?array
@@ -663,6 +727,11 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * listing. $userIdColumn/$userUsernameColumn resolve
      * \Piwigo\Config\CurrentConfig::userFields(), same reasoning as
      * {@see findForImage()}'s own equivalents.
+     *
+     * Item 14 DQL audit: stays on DBAL -- dynamic-column-name `users` join
+     * (same blocker as findForImage()) plus buildApiConditionsWithStatus()'s
+     * raw-column-named SqlCondition fragments (see findSummaryCounts()'s
+     * own docblock).
      *
      * @return list<array<string, mixed>>
      */
@@ -711,6 +780,11 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * Earliest/latest `date` matching $criteria -- Ws\PwgComments::
      * getList()'s own "filters" date range.
      *
+     * Item 14 DQL audit: stays on DBAL -- MIN()/MAX() are themselves
+     * standard DQL functions, but buildApiConditionsWithStatus()'s
+     * raw-column-named SqlCondition fragments aren't (see
+     * findSummaryCounts()'s own docblock).
+     *
      * @return array{started_at: mixed, ended_at: mixed}|null
      */
     public function findDateRange(CommentApiCriteria $criteria): ?array
@@ -752,6 +826,11 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * author name per author_id, matching the original grouping/row count
      * exactly.
      *
+     * Item 14 DQL audit: stays on DBAL -- MySQL-specific `ANY_VALUE()` has
+     * no DQL equivalent, plus buildApiConditionsWithStatus()'s raw-column-
+     * named SqlCondition fragments (see findSummaryCounts()'s own
+     * docblock).
+     *
      * @return list<array<string, mixed>>
      */
     public function findAuthorCounts(CommentApiCriteria $criteria): array
@@ -770,36 +849,41 @@ final class CommentRepository extends EntityRepository implements CommentCounter
     }
 
     /**
+     * Further SQL-modernization audit, Item 14: converted to real DQL --
+     * single-table, no WHERE/join DQL can't express.
+     *
      * Total row count of `comments` -- Ws\PwgCore::getInfos()'s own
      * "nb_comments" summary figure.
      */
     public function countAll(): int
     {
         $value = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from(Tables::comments())
-            ->executeQuery()
-            ->fetchOne();
+            ->select('COUNT(c.id)')
+            ->from(CommentEntity::class, 'c')
+            ->getQuery()
+            ->getSingleScalarResult();
 
         return is_numeric($value) ? (int) $value : 0;
     }
 
     /**
+     * Further SQL-modernization audit, Item 14: converted to real DQL --
+     * single-table, static WHERE, no join DQL can't express.
+     *
      * Total count of unvalidated (pending) comments -- Ws\PwgCore::
      * getInfos()'s own "nb_unvalidated_comments" summary figure.
      */
     public function countUnvalidated(): int
     {
         $value = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from(Tables::comments())
-            ->where('validated=0')
-            ->executeQuery()
-            ->fetchOne();
+            ->select('COUNT(c.id)')
+            ->from(CommentEntity::class, 'c')
+            ->where('c.validated = :validated')
+            ->setParameter('validated', false)
+            ->getQuery()
+            ->getSingleScalarResult();
 
         return is_numeric($value) ? (int) $value : 0;
     }

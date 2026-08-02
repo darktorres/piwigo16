@@ -23,14 +23,14 @@ use Piwigo\Common\ValueObject\UserId;
  * no round-trip-fidelity requirement forces a raw-string exception here,
  * unlike Audit\AuditLogEntity's hash-chain columns.
  *
- * The `users` table itself (login/password/email) is deliberately NOT
- * mapped by any entity -- every UserRepository method touching it takes
- * its column names as caller-supplied parameters (\Piwigo\Config\
- * CurrentConfig::userFields(), Piwigo's multi-auth column remapping),
- * which Doctrine's compile-time column attributes cannot represent. Those
- * methods stay plain DBAL via $this->getEntityManager()->getConnection()
- * forever, same "not every table a repository touches gets an entity"
- * principle Group/Tag's own conversions already established.
+ * The `users` table itself (login/password/email) was previously
+ * deliberately left unmapped, reasoning that \Piwigo\Config\
+ * CurrentConfig::userFields() gave real multi-auth integrations a way to
+ * remap its column names at runtime, which Doctrine's compile-time column
+ * attributes can't represent. Re-audited (Item 14 Sub-phase C4):
+ * CurrentConfig::setUserFields() has zero real callers anywhere in
+ * `src/`, so that remapping was never actually exercised in this
+ * rewrite -- reversed, now mapped as {@see UserEntity}.
  */
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: 'user_infos')]

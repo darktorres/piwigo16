@@ -301,7 +301,6 @@ final class RequestBootstrap
         // require (ordering bug caught live via a random.php smoke test).
         \Piwigo\Auth\AccessControl::setHtmlRenderer(new HtmlService());
         \Piwigo\Auth\AccessControl::setRedirectService(new RedirectService());
-        \Piwigo\Core\FilesystemHelper::setHtmlRenderer(new HtmlService());
         Lang::setHtmlRenderer(new HtmlService());
         \Piwigo\Image\SrcImage::setHtmlRenderer(new HtmlService());
         \Piwigo\Image\SrcImage::setImageRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class));

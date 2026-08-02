@@ -17,6 +17,21 @@ namespace Piwigo\Core;
  * fataled (surfaced live via admin.php?page=comments, noted in the 8f-3
  * batch log). Class constants are autoloaded with the class itself, so
  * the default is now self-contained on every path.
+ *
+ * Singleton/service-locator elimination campaign, Phase 3: every real
+ * method here (mkgetdir()/secureDirectory()/getFsDirectories()/getDirs()/
+ * deltree()/getCacheSizeDerivatives()) is a pure static utility function
+ * with no natural "construct once, call several times" shape -- there is
+ * no instance to speak of, so unlike most classes in this campaign this
+ * one has no `createStatic()`-style factory or container-shared instance.
+ * The only real per-request state was `$htmlRenderer`, and
+ * `HtmlRenderingInterface` is already bound in container.php, so
+ * fatalError() (this class's one private, internal collaborator read)
+ * resolves it directly from the container instead -- there is no other
+ * caller-facing shim to track here (fatalError() has no external callers
+ * to convert), so this file is simply added to Kernel::container()'s own
+ * shimAllowedFiles allow-list, the same as every other class in this
+ * campaign whose own internal shim method needs direct container access.
  */
 final class FilesystemHelper
 {
@@ -50,23 +65,13 @@ final class FilesystemHelper
      */
     public const int MKGETDIR_DEFAULT = self::MKGETDIR_RECURSIVE | self::MKGETDIR_DIE_ON_ERROR | self::MKGETDIR_PROTECT_INDEX;
 
-    private static ?HtmlRenderingInterface $htmlRenderer = null;
-
-    /**
-     * Set once by Piwigo\Bootstrap\RequestBootstrap::configure() --
-     * same static-setter shape as Piwigo\Core\Lang::setDefaultLanguageProvider(),
-     * needed because this L1Infrastructure class may not depend on
-     * L3Presentation's HtmlService directly (deptrac).
-     */
-    public static function setHtmlRenderer(HtmlRenderingInterface $renderer): void
-    {
-        self::$htmlRenderer = $renderer;
-    }
-
     private static function fatalError(string $msg): never
     {
-        if (self::$htmlRenderer instanceof \Piwigo\Core\HtmlRenderingInterface) {
-            self::$htmlRenderer->fatalError($msg);
+        if (Kernel::isBooted()) {
+            $htmlRenderer = Kernel::container()->get(HtmlRenderingInterface::class);
+            if ($htmlRenderer instanceof HtmlRenderingInterface) {
+                $htmlRenderer->fatalError($msg);
+            }
         }
         throw new \RuntimeException($msg);
     }

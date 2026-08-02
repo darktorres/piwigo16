@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Tests\Support\KernelContainerOverride;
 
 /**
  * getFsDirectories()/getDirs() already have full coverage through other
@@ -19,11 +20,12 @@ use Piwigo\Core\HtmlRenderingInterface;
  * unreachable here -- left uncovered, same as any other platform-gated
  * dead branch, not chased.
  *
- * FilesystemHelper::$htmlRenderer has only a setter (setHtmlRenderer()),
- * no public reset -- same static-setter shape as Piwigo\Core\Lang's own
- * htmlRenderer. Reflection sets/restores it directly in before/afterEach,
- * matching the reflection-seed convention already used by
- * tests/Unit/Core/ErrorCollectorTest.php for similar setter-only statics.
+ * fatalError() resolves HtmlRenderingInterface directly from the
+ * container now (singleton/service-locator elimination campaign, Phase
+ * 3) -- gracefully falls back to the plain RuntimeException every test
+ * above already relies on when Kernel hasn't booted, which is every test
+ * in this file except the one below that needs a real, installed
+ * renderer (via KernelContainerOverride::with()).
  */
 function filesystemHelperTestRrmdir(string $dir): void
 {
@@ -44,12 +46,6 @@ function filesystemHelperTestRrmdir(string $dir): void
         }
     }
     @rmdir($dir);
-}
-
-function filesystemHelperTestSetRenderer(?HtmlRenderingInterface $renderer): void
-{
-    $prop = new ReflectionProperty(FilesystemHelper::class, 'htmlRenderer');
-    $prop->setValue(null, $renderer);
 }
 
 /**
@@ -155,7 +151,6 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    filesystemHelperTestSetRenderer(null);
     filesystemHelperTestRrmdir(is_string($this->root) ? $this->root : '');
     CurrentConfig::reset();
 });
@@ -262,15 +257,22 @@ test('mkgetdir throws a RuntimeException carrying the untranslated message when 
 
 test('mkgetdir delegates the fatal message to the installed HtmlRenderingInterface instead of throwing RuntimeException directly', function (): void {
     $capture = new stdClass();
-    filesystemHelperTestSetRenderer(filesystemHelperTestMakeFatalRenderer($capture));
-
     $parent = $this->root . '/locked-parent-3';
     mkdir($parent);
     chmod($parent, 0o555);
     $dir = $parent . '/child';
 
-    expect(fn () => FilesystemHelper::mkgetdir($dir, FilesystemHelper::MKGETDIR_DIE_ON_ERROR))
-        ->toThrow(\RuntimeException::class, 'renderer-fatal:' . $dir . ' no write access');
+    // fatalError() resolves HtmlRenderingInterface from the container
+    // (singleton/service-locator elimination campaign, Phase 3) --
+    // KernelContainerOverride::with() gives this one test a real
+    // container with the fake renderer bound, then tears it back down.
+    KernelContainerOverride::with(
+        [HtmlRenderingInterface::class => filesystemHelperTestMakeFatalRenderer($capture)],
+        function () use ($dir): void {
+            expect(fn () => FilesystemHelper::mkgetdir($dir, FilesystemHelper::MKGETDIR_DIE_ON_ERROR))
+                ->toThrow(\RuntimeException::class, 'renderer-fatal:' . $dir . ' no write access');
+        }
+    );
 
     expect($capture->lastMessage)->toBe($dir . ' no write access');
 });

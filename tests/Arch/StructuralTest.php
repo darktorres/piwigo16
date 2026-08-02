@@ -234,6 +234,7 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
         '/src/Piwigo/Core/WsContext.php',
         '/src/Piwigo/Core/AdminContext.php',
         '/src/Piwigo/Validation/InputValidator.php',
+        '/src/Piwigo/Core/FilesystemHelper.php',
     ];
 
     $hits = [

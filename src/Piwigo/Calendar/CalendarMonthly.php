@@ -226,38 +226,10 @@ final class CalendarMonthly extends CalendarBase
     {
         $page_chronology_date = $this->chronology_date;
         assert(count($page_chronology_date) === 0);
-        $dateYYYYMM = \Piwigo\Db\SqlDialect::getDateYYYYMM($this->date_field);
-        $query = <<<SQL
-            SELECT {$dateYYYYMM} as period,
-                COUNT(distinct id) as count
-            SQL;
         $innerSql = $this->inner_sql;
         $dateWhere = $this->get_date_where();
-        $query .= $innerSql->sql;
-        $query .= $dateWhere->sql;
-        // GROUP BY also lists the exact YEAR()/MONTH() expressions ORDER BY
-        // uses (not just the DATE_FORMAT()-derived `period` alias) -- under
-        // standard SQL mode (ONLY_FULL_GROUP_BY, never stripped by this
-        // project's DbConnection), MySQL doesn't infer that YEAR(x)/MONTH(x)
-        // are functionally dependent on DATE_FORMAT(x, '%Y%m') just because
-        // both derive from the same column; it only recognizes an ORDER BY
-        // expression as valid when it's a literal GROUP BY member. Grouping
-        // by all three doesn't change the partitioning (period and
-        // year+month already identify the same buckets), only satisfies the
-        // SQL-mode requirement.
-        $yearExpr = \Piwigo\Db\SqlDialect::getYear($this->date_field);
-        $monthExpr = \Piwigo\Db\SqlDialect::getMonth($this->date_field);
-        $query .= <<<SQL
 
-            GROUP BY period, {$yearExpr}, {$monthExpr}
-            ORDER BY {$yearExpr} DESC, {$monthExpr} ASC
-            SQL;
-
-        $rows = $this->calendarRepository->findRows(
-            $query,
-            [...$innerSql->parameters, ...$dateWhere->parameters],
-            [...$innerSql->types, ...$dateWhere->types]
-        );
+        $rows = $this->calendarRepository->countByYearMonth($this->date_field, $innerSql, $dateWhere);
         $items = [];
         foreach ($rows as $row) {
             // period is a DATE_FORMAT(...) expression (SqlDialect::
@@ -329,26 +301,10 @@ final class CalendarMonthly extends CalendarBase
     {
         $page_chronology_date = $this->chronology_date;
         assert(count($page_chronology_date) === 1);
-        $dateMMDD = \Piwigo\Db\SqlDialect::getDateMMDD($this->date_field);
-        $query = <<<SQL
-            SELECT {$dateMMDD} as period,
-                  COUNT(DISTINCT id) as count
-            SQL;
         $innerSql = $this->inner_sql;
         $dateWhere = $this->get_date_where();
-        $query .= $innerSql->sql;
-        $query .= $dateWhere->sql;
-        $query .= <<<SQL
 
-            GROUP BY period
-            ORDER BY period ASC
-            SQL;
-
-        $rows = $this->calendarRepository->findRows(
-            $query,
-            [...$innerSql->parameters, ...$dateWhere->parameters],
-            [...$innerSql->types, ...$dateWhere->types]
-        );
+        $rows = $this->calendarRepository->countByMonthDay($this->date_field, $innerSql, $dateWhere);
         $items = [];
         foreach ($rows as $row) {
             // period is a DATE_FORMAT(...) expression (SqlDialect::
@@ -428,27 +384,11 @@ final class CalendarMonthly extends CalendarBase
         $month = $page_chronology_date[self::CMONTH] ?? null;
         $month = is_int($month) || is_string($month) ? $month : 0;
 
-        $dayOfMonth = \Piwigo\Db\SqlDialect::getDayOfMonth($this->date_field);
-        $query = <<<SQL
-            SELECT {$dayOfMonth} as period,
-                  COUNT(DISTINCT id) as count
-            SQL;
         $innerSql = $this->inner_sql;
         $dateWhere = $this->get_date_where();
-        $query .= $innerSql->sql;
-        $query .= $dateWhere->sql;
-        $query .= <<<SQL
-
-            GROUP BY period
-            ORDER BY period ASC
-            SQL;
 
         $items = [];
-        $rows = $this->calendarRepository->findRows(
-            $query,
-            [...$innerSql->parameters, ...$dateWhere->parameters],
-            [...$innerSql->types, ...$dateWhere->types]
-        );
+        $rows = $this->calendarRepository->countByDayOfMonth($this->date_field, $innerSql, $dateWhere);
         foreach ($rows as $row) {
             $periodRaw = $row['period'] ?? null;
             $d = is_numeric($periodRaw) ? (int) $periodRaw : 0;
@@ -459,27 +399,11 @@ final class CalendarMonthly extends CalendarBase
 
         foreach ($items as $day => $data) {
             $this->chronology_date[self::CDAY] = $day;
-            $dayOfWeek = \Piwigo\Db\SqlDialect::getDayOfWeek($this->date_field);
-            $query = <<<SQL
-                SELECT id, file,representative_ext,path,width,height,rotation, {$dayOfWeek}-1 as dow
-                SQL;
             $innerSqlPerDay = $this->inner_sql;
             $dateWherePerDay = $this->get_date_where();
-            $query .= $innerSqlPerDay->sql;
-            $query .= $dateWherePerDay->sql;
-            $randomFunction = \Piwigo\Db\SqlDialect::DB_RANDOM_FUNCTION;
-            $query .= <<<SQL
-
-                ORDER BY {$randomFunction}()
-                LIMIT 1
-                SQL;
             unset($this->chronology_date[self::CDAY]);
 
-            $row = $this->calendarRepository->findRow(
-                $query,
-                [...$innerSqlPerDay->parameters, ...$dateWherePerDay->parameters],
-                [...$innerSqlPerDay->types, ...$dateWherePerDay->types]
-            );
+            $row = $this->calendarRepository->findRandomImageForDay($this->date_field, $innerSqlPerDay, $dateWherePerDay);
             // $day came from the grouped count query above, which only
             // includes days with at least one image, so this LIMIT 1
             // query always finds a row

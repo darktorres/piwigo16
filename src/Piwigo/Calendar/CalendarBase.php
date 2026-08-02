@@ -322,17 +322,8 @@ abstract class CalendarBase
         $levelSql = $this->calendar_levels[$level]['sql'];
         $innerSql = $this->inner_sql;
         $dateWhere = $this->get_date_where($level);
-        $query = <<<SQL
-            SELECT DISTINCT({$levelSql}) as period,
-              COUNT(DISTINCT id) as nb_images{$innerSql->sql}{$dateWhere->sql}
-              GROUP BY period;
-            SQL;
 
-        $rows = $this->calendarRepository->findRows(
-            $query,
-            [...$innerSql->parameters, ...$dateWhere->parameters],
-            [...$innerSql->types, ...$dateWhere->types]
-        );
+        $rows = $this->calendarRepository->countGroupedByLevel($levelSql, $innerSql, $dateWhere);
         $level_items = [];
         foreach ($rows as $row) {
             $keyRaw = $row['period'] ?? null;
@@ -404,14 +395,6 @@ abstract class CalendarBase
         }
         $concatWsExpr = \Piwigo\Db\SqlDialect::concatWs($sub_queries, '-');
         $innerSql = $this->inner_sql;
-        $query = <<<SQL
-            SELECT {$concatWsExpr} AS period
-            SQL;
-        $query .= $innerSql->sql . <<<SQL
-
-            AND {$this->date_field} IS NOT NULL
-            GROUP BY period
-            SQL;
 
         // $current must mirror the SQL side's own per-element treatment
         // above (every component included, whether 'any' or a real date
@@ -424,12 +407,7 @@ abstract class CalendarBase
         // implode() itself already string-casts int elements correctly,
         // just like SqlDialect::castToText() does on the SQL side.
         $current = implode('-', $page_chronology_date);
-        // period is a concatenation of non-null date parts (enforced by the
-        // "date_field IS NOT NULL" clause above), but the row's value is
-        // still typed as mixed under DBAL, so filter for real.
-        $rows = $this->calendarRepository->findRows($query, $innerSql->parameters, $innerSql->types);
-        $periods = array_map(static fn (array $row): mixed => $row['period'] ?? null, $rows);
-        $upper_items = array_values(array_filter($periods, is_string(...)));
+        $upper_items = $this->calendarRepository->findAdjacentPeriods($concatWsExpr, $innerSql, $this->date_field);
 
         $version_compare_2arg = static fn (string $a, string $b): int => version_compare($a, $b);
 

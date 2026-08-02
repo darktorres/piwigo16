@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Calendar;
 
-use Doctrine\DBAL\ArrayParameterType;
-use Doctrine\DBAL\ParameterType;
 use Piwigo\Db\AbstractRepository;
 
 /**
@@ -54,39 +52,173 @@ final class CalendarRepository extends AbstractRepository
     }
 
     /**
-     * Executes an already-built, multi-row SELECT query -- built by
-     * CalendarBase::build_nav_bar()/build_next_prev() or
-     * CalendarMonthly's build_*_calendar() methods from
-     * calendar_levels/inner_sql/get_date_where() fragments, same
-     * "caller composes trusted query text, binds its own real values"
-     * shape as findImageIds() above -- and returns the raw result rows.
-     * Column extraction/reduction (e.g. period => nb_images) stays in the
-     * calendar classes themselves, matching the shape their own existing
-     * code already expects.
+     * Further SQL-modernization audit, Item 6: findRows()/findRow() (a
+     * fully generic "execute an already-built query" pair) replaced with
+     * one typed method per real query shape, built internally from
+     * typed SqlCondition/expression-string pieces instead of a
+     * pre-assembled query the calendar classes used to concatenate
+     * themselves. Column extraction/reduction (e.g. period => nb_images)
+     * deliberately stays in the calendar classes, unchanged -- some of
+     * it has subtle, real casting differences between call sites (e.g.
+     * build_month_calendar()'s day-count loop never casts `count` to
+     * int, unlike its build_global_calendar()/build_year_calendar()
+     * siblings), not worth risking a behavior change over for this item.
      *
-     * @param array<string, mixed> $params
-     * @param array<string, ArrayParameterType|ParameterType> $types
+     * CalendarBase::build_nav_bar()'s own query: one row per distinct
+     * $levelSql value within the current inner/date-range filter.
+     *
      * @return list<array<string, mixed>>
      */
-    public function findRows(string $query, array $params = [], array $types = []): array
+    public function countGroupedByLevel(string $levelSql, \Piwigo\Permission\SqlCondition $innerSql, \Piwigo\Permission\SqlCondition $dateWhere): array
     {
-        return $this->conn->executeQuery($query, $params, $types)
-            ->fetchAllAssociative();
+        return $this->conn->executeQuery(
+            <<<SQL
+            SELECT DISTINCT({$levelSql}) as period,
+              COUNT(DISTINCT id) as nb_images{$innerSql->sql}{$dateWhere->sql}
+              GROUP BY period
+            SQL
+            ,
+            [...$innerSql->parameters, ...$dateWhere->parameters],
+            [...$innerSql->types, ...$dateWhere->types]
+        )->fetchAllAssociative();
     }
 
     /**
-     * Same as findRows(), for a query expected to match at most one row
-     * (CalendarMonthly::build_month_calendar()'s per-day random-image
-     * lookup).
+     * CalendarBase::build_next_prev()'s own query -- every distinct
+     * concatenated period string within the current inner filter, dated
+     * rows only. Unlike the other methods here, returns the fully
+     * extracted/filtered period list directly (not raw rows): the
+     * extraction is a lossless, unambiguous single-column unwrap (no
+     * casting-behavior risk the way the count methods' `nb_images`/
+     * `count` columns have), and $dateField is needed here regardless to
+     * build the query's own "IS NOT NULL" clause.
      *
-     * @param array<string, mixed> $params
-     * @param array<string, ArrayParameterType|ParameterType> $types
+     * @return list<string>
+     */
+    public function findAdjacentPeriods(string $concatWsExpr, \Piwigo\Permission\SqlCondition $innerSql, string $dateField): array
+    {
+        $rows = $this->conn->executeQuery(
+            <<<SQL
+            SELECT {$concatWsExpr} AS period{$innerSql->sql}
+              AND {$dateField} IS NOT NULL
+              GROUP BY period
+            SQL
+            ,
+            $innerSql->parameters,
+            $innerSql->types
+        )->fetchAllAssociative();
+
+        $periods = array_map(static fn (array $row): mixed => $row['period'] ?? null, $rows);
+
+        return array_values(array_filter($periods, is_string(...)));
+    }
+
+    /**
+     * CalendarMonthly::build_global_calendar()'s own query: image count
+     * per year+month within the current inner/date-range filter. GROUP BY
+     * also lists the exact YEAR()/MONTH() expressions ORDER BY uses (not
+     * just the DATE_FORMAT()-derived `period` alias) -- under standard SQL
+     * mode (ONLY_FULL_GROUP_BY, never stripped by this project's
+     * DbConnection), MySQL doesn't infer that YEAR(x)/MONTH(x) are
+     * functionally dependent on DATE_FORMAT(x, '%Y%m') just because both
+     * derive from the same column; it only recognizes an ORDER BY
+     * expression as valid when it's a literal GROUP BY member. Grouping by
+     * all three doesn't change the partitioning (period and year+month
+     * already identify the same buckets), only satisfies the SQL-mode
+     * requirement.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function countByYearMonth(string $dateField, \Piwigo\Permission\SqlCondition $innerSql, \Piwigo\Permission\SqlCondition $dateWhere): array
+    {
+        $dateYYYYMM = \Piwigo\Db\SqlDialect::getDateYYYYMM($dateField);
+        $yearExpr = \Piwigo\Db\SqlDialect::getYear($dateField);
+        $monthExpr = \Piwigo\Db\SqlDialect::getMonth($dateField);
+
+        return $this->conn->executeQuery(
+            <<<SQL
+            SELECT {$dateYYYYMM} as period,
+                COUNT(distinct id) as count{$innerSql->sql}{$dateWhere->sql}
+                GROUP BY period, {$yearExpr}, {$monthExpr}
+                ORDER BY {$yearExpr} DESC, {$monthExpr} ASC
+            SQL
+            ,
+            [...$innerSql->parameters, ...$dateWhere->parameters],
+            [...$innerSql->types, ...$dateWhere->types]
+        )->fetchAllAssociative();
+    }
+
+    /**
+     * CalendarMonthly::build_year_calendar()'s own query: image count per
+     * month+day within the current inner/date-range filter.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function countByMonthDay(string $dateField, \Piwigo\Permission\SqlCondition $innerSql, \Piwigo\Permission\SqlCondition $dateWhere): array
+    {
+        $dateMMDD = \Piwigo\Db\SqlDialect::getDateMMDD($dateField);
+
+        return $this->conn->executeQuery(
+            <<<SQL
+            SELECT {$dateMMDD} as period,
+                  COUNT(DISTINCT id) as count{$innerSql->sql}{$dateWhere->sql}
+                  GROUP BY period
+                  ORDER BY period ASC
+            SQL
+            ,
+            [...$innerSql->parameters, ...$dateWhere->parameters],
+            [...$innerSql->types, ...$dateWhere->types]
+        )->fetchAllAssociative();
+    }
+
+    /**
+     * CalendarMonthly::build_month_calendar()'s own day-count query:
+     * image count per day-of-month within the current inner/date-range
+     * filter (already scoped to a single year+month by $innerSql).
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function countByDayOfMonth(string $dateField, \Piwigo\Permission\SqlCondition $innerSql, \Piwigo\Permission\SqlCondition $dateWhere): array
+    {
+        $dayOfMonth = \Piwigo\Db\SqlDialect::getDayOfMonth($dateField);
+
+        return $this->conn->executeQuery(
+            <<<SQL
+            SELECT {$dayOfMonth} as period,
+                  COUNT(DISTINCT id) as count{$innerSql->sql}{$dateWhere->sql}
+                  GROUP BY period
+                  ORDER BY period ASC
+            SQL
+            ,
+            [...$innerSql->parameters, ...$dateWhere->parameters],
+            [...$innerSql->types, ...$dateWhere->types]
+        )->fetchAllAssociative();
+    }
+
+    /**
+     * CalendarMonthly::build_month_calendar()'s own per-day query: one
+     * random image (for the thumbnail preview) among the images available
+     * on the given day, dated rows only ($dateField IS NOT NULL is
+     * implicit in $dateWhere/$innerSql already scoping to a single day).
+     *
      * @return array<string, mixed>|null
      */
-    public function findRow(string $query, array $params = [], array $types = []): ?array
+    public function findRandomImageForDay(string $dateField, \Piwigo\Permission\SqlCondition $innerSql, \Piwigo\Permission\SqlCondition $dateWhere): ?array
     {
-        $row = $this->conn->executeQuery($query, $params, $types)
-            ->fetchAssociative();
+        $dayOfWeek = \Piwigo\Db\SqlDialect::getDayOfWeek($dateField);
+        $randomFunction = \Piwigo\Db\SqlDialect::DB_RANDOM_FUNCTION;
+
+        $row = $this->conn->executeQuery(
+            <<<SQL
+            SELECT id, file,representative_ext,path,width,height,rotation, {$dayOfWeek}-1 as dow{$innerSql->sql}{$dateWhere->sql}
+              ORDER BY {$randomFunction}()
+              LIMIT 1
+            SQL
+            ,
+            [...$innerSql->parameters, ...$dateWhere->parameters],
+            [...$innerSql->types, ...$dateWhere->types]
+        )->fetchAssociative();
+
         return $row === false ? null : $row;
     }
 }

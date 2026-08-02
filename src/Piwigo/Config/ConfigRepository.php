@@ -131,6 +131,18 @@ final class ConfigRepository extends EntityRepository
      * the winning process's row or throw a real primary-key violation
      * depending on timing) -- raw `INSERT IGNORE`, unchanged from the
      * original SQL text.
+     *
+     * "Raw" means bypassing ConfigService's typed encode()/hydrate()
+     * layer, not bypassing JSON encoding outright: `value` is a real
+     * JSON column (see ConfigEntry's own docblock), so $value is
+     * json_encode()'d here -- transparently to this method's own
+     * caller, which still deals in a plain PHP string -- rather than
+     * requiring every "raw" caller to pre-encode by hand the way
+     * `upsert()`'s own callers must (see e.g. Menu\MenubarRenderer).
+     * Real bug found and fixed here: this repository's only real caller,
+     * Core\UniqueExecLock, wrote its plain `$exec_id . '-' . time()`
+     * token straight through, which passed silently when `value` was
+     * still a plain `text` column but is genuinely invalid JSON now.
      */
     public function insertIgnoreRawValue(string $param, string $value): void
     {
@@ -152,11 +164,14 @@ final class ConfigRepository extends EntityRepository
                 , value = :value
             SQL;
 
+        $encodedValue = json_encode($value);
+        assert($encodedValue !== false);
+
         $this->getEntityManager()
             ->getConnection()
             ->executeStatement($query, [
                 'param' => $param,
-                'value' => $value,
+                'value' => $encodedValue,
             ]);
     }
 
@@ -168,6 +183,10 @@ final class ConfigRepository extends EntityRepository
      * different process than the one that populated this request's
      * identity map). `false` when no such row exists, matching the
      * original's own `fetchOne()` sentinel.
+     *
+     * json_decode()s the stored value back into the plain string
+     * {@see insertIgnoreRawValue()} originally encoded -- the read half
+     * of that same method's own JSON-column handling.
      */
     public function findRawValue(string $param): string|false
     {
@@ -181,7 +200,13 @@ final class ConfigRepository extends EntityRepository
             ->executeQuery()
             ->fetchOne();
 
-        return is_string($value) ? $value : false;
+        if (! is_string($value)) {
+            return false;
+        }
+
+        $decoded = json_decode($value, true);
+
+        return is_string($decoded) ? $decoded : false;
     }
 
     public function countByParam(string $param): int

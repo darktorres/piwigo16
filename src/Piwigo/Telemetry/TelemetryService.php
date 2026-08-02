@@ -48,18 +48,32 @@ final readonly class TelemetryService
     /**
      * Random and persisted on first use -- never derived from anything
      * identifying (site URL, admin email, IP).
+     *
+     * Goes straight to ConfigRepository::upsert() (see class docblock),
+     * so -- like Menu\MenubarRenderer's own direct upsert() call --
+     * this must json_encode()/json_decode() the value itself: `value` is
+     * a real JSON column (ConfigEntry's own docblock), and upsert()
+     * itself is a plain passthrough that assumes an already-encoded
+     * string, matching ConfigService::confUpdateParam()'s own
+     * encode()-then-upsert() convention.
      */
     public function resolveInstallId(): string
     {
         $entry = $this->configRepo->find(self::INSTALL_ID_PARAM);
         if ($entry !== null && $entry->value !== null && $entry->value !== '') {
-            return $entry->value;
+            $decoded = json_decode($entry->value, true);
+            if (is_string($decoded) && $decoded !== '') {
+                return $decoded;
+            }
         }
 
         $installId = bin2hex(random_bytes(16));
+        $encodedInstallId = json_encode($installId);
+        assert($encodedInstallId !== false);
+
         $this->configRepo->upsert(
             self::INSTALL_ID_PARAM,
-            $installId,
+            $encodedInstallId,
             'Anonymous, randomly generated install identifier used only for telemetry aggregation.'
         );
 

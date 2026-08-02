@@ -72,7 +72,11 @@ final class EntityManagerSmokeTest extends IntegrationTestCase
         self::assertInstanceOf(EntityManagerInterface::class, $em);
 
         $param = 'p14_em_smoke_' . bin2hex(random_bytes(4));
-        $entry = new ConfigEntry($param, 'smoke-test-value');
+        // `value` is a real JSON column (ConfigEntry's own docblock) --
+        // a raw un-encoded string is genuinely invalid for it.
+        $encodedValue = json_encode('smoke-test-value');
+        assert($encodedValue !== false);
+        $entry = new ConfigEntry($param, $encodedValue);
 
         $em->persist($entry);
         $em->flush();
@@ -80,7 +84,7 @@ final class EntityManagerSmokeTest extends IntegrationTestCase
 
         $found = $em->find(ConfigEntry::class, $param);
         self::assertNotNull($found);
-        self::assertSame('smoke-test-value', $found->value);
+        self::assertSame($encodedValue, $found->value);
 
         $em->remove($found);
         $em->flush();

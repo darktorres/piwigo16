@@ -1227,9 +1227,12 @@ test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end mes
     // proving line 383's IfNegated does not wrongly invoke
     // PermissionCacheInvalidator::invalidate() (whose own real,
     // observable side effect is deleting this exact param).
+    // Encoded as a JSON string ('3'), not a bare JSON number (3) --
+    // findRawValue() (below) only ever returns string|false, matching
+    // insertIgnoreRawValue()'s own string-only contract.
     $conn->executeStatement(
         "INSERT INTO " . \Piwigo\Db\Tables::config() . " (param, value) VALUES ('count_orphans', ?)",
-        [json_encode(3)]
+        [json_encode('3')]
     );
 
     // Real lounge rows across 2 categories -- exercises the real
@@ -1308,7 +1311,9 @@ test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end mes
         // confirms a real kill: this exact assertion fails
         // ('"execid-..." is false') the moment the call is removed.
         expect(\Piwigo\Config\CurrentConfigService::current()->get()->findRawValue('empty_lounge_running'))->toBeFalse();
-        expect(\Piwigo\Config\CurrentConfigService::current()->get()->findRawValue('count_orphans'))->toBe(json_encode(3));
+        // findRawValue() transparently json_decode()s the stored value
+        // back to the plain string it was originally encoded as.
+        expect(\Piwigo\Config\CurrentConfigService::current()->get()->findRawValue('count_orphans'))->toBe('3');
     } finally {
         imageServiceTestReleaseEmptyLoungeDbLock($conn);
         \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(EmptyLounge::class, $handler);
@@ -1459,7 +1464,10 @@ test('emptyLounge() does not touch a lock that is not actually stale, and logs t
         expect($messages[1])->toBe("emptyLounge, exec={$beginMatch[1]}, skip");
 
         // The fresh lock this test seeded is still there, untouched.
-        expect(\Piwigo\Config\CurrentConfigService::current()->get()->findRawValue('empty_lounge_running'))->toBe(json_encode($freshLockValue));
+        // findRawValue() transparently json_decode()s the stored value
+        // back to the plain string insertIgnoreRawValue() originally
+        // encoded (see ConfigRepository::findRawValue()'s own docblock).
+        expect(\Piwigo\Config\CurrentConfigService::current()->get()->findRawValue('empty_lounge_running'))->toBe($freshLockValue);
     } finally {
         imageServiceTestReleaseEmptyLoungeDbLock($conn);
         $_REQUEST = $originalRequest;
@@ -1555,7 +1563,10 @@ test('emptyLounge() treats a lock that is exactly 60 seconds old as still fresh,
 
         // The boundary lock this test seeded is still there, untouched
         // (real code never entered the staleness-clear branch at all).
-        expect(\Piwigo\Config\CurrentConfigService::current()->get()->findRawValue('empty_lounge_running'))->toBe(json_encode($lockValue));
+        // findRawValue() transparently json_decode()s the stored value
+        // back to the plain string insertIgnoreRawValue() originally
+        // encoded (see ConfigRepository::findRawValue()'s own docblock).
+        expect(\Piwigo\Config\CurrentConfigService::current()->get()->findRawValue('empty_lounge_running'))->toBe($lockValue);
     } finally {
         imageServiceTestReleaseEmptyLoungeDbLock($conn);
         $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param = 'empty_lounge_running'");

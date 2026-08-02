@@ -195,7 +195,12 @@ final class ConfigServiceTest extends IntegrationTestCase
         $repo = $this->buildConfigRepository();
         $entry = $repo->find($param);
         self::assertNotNull($entry);
-        self::assertSame(json_encode(['a', 'b', 'c']), $entry->value);
+        // Not a raw string comparison against json_encode()'s own PHP-side
+        // output: `value` is a real JSON column, and MySQL re-serializes
+        // stored JSON in its own canonical form (a space after each comma)
+        // rather than preserving the exact bytes originally written --
+        // decode-and-compare is the actual contract that matters here.
+        self::assertSame(['a', 'b', 'c'], json_decode($entry->value ?? 'null', true));
 
         $repo->deleteByParam($param);
     }

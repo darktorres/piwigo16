@@ -88,9 +88,14 @@ final class UniqueExecLockTest extends IntegrationTestCase
 
     public function test_begins_recovers_a_stale_lock_past_the_timeout_and_wins(): void
     {
+        // `value` is a real JSON column (ConfigEntry's own docblock),
+        // matching UniqueExecLock::begins()'s own insertIgnoreRawValue()
+        // write -- a raw un-encoded string is genuinely invalid for it.
+        $staleValue = json_encode('stale-exec-' . (time() - 120));
+        self::assertIsString($staleValue);
         $this->conn->executeStatement(
             "INSERT INTO " . Tables::config() . " (param, value) VALUES (?, ?)",
-            [$this->token . '_running', 'stale-exec-' . (time() - 120)]
+            [$this->token . '_running', $staleValue]
         );
         self::assertTrue(UniqueExecLock::isRunning($this->token));
 
@@ -102,7 +107,12 @@ final class UniqueExecLockTest extends IntegrationTestCase
             [$this->token . '_running']
         );
         self::assertIsString($row);
-        self::assertStringStartsWith($execId . '-', $row);
+        // insertIgnoreRawValue() stores json_encode()'d, matching the real
+        // JSON column type -- decode back to the plain token before
+        // comparing.
+        $decodedRow = json_decode($row, true);
+        self::assertIsString($decodedRow);
+        self::assertStringStartsWith($execId . '-', $decodedRow);
     }
 
     public function test_ends_removes_the_lock_row(): void

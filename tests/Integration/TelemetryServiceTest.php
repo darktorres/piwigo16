@@ -72,10 +72,13 @@ final class TelemetryServiceTest extends IntegrationTestCase
 
         // Read back through a fresh repository/entity manager -- proves the
         // write reached the database, not just this request's identity map.
+        // `value` is a real JSON column (ConfigEntry's own docblock), and
+        // resolveInstallId() stores it json_encode()'d -- the raw row
+        // value is the JSON-quoted form, not the bare install id.
         $fresh = $this->buildConfigRepo(DbConnection::build());
         $entry = $fresh->find('telemetry_install_id');
         self::assertNotNull($entry);
-        self::assertSame($installId, $entry->value);
+        self::assertSame(json_encode($installId), $entry->value);
     }
 
     public function test_resolve_install_id_is_stable_across_calls(): void
@@ -88,7 +91,11 @@ final class TelemetryServiceTest extends IntegrationTestCase
 
     public function test_resolve_install_id_reuses_an_existing_row_instead_of_regenerating(): void
     {
-        $this->configRepo->upsert('telemetry_install_id', 'deadbeefdeadbeefdeadbeefdeadbeef');
+        // upsert() expects an already JSON-encoded value (real `value`
+        // column type), matching what resolveInstallId() itself writes.
+        $encoded = json_encode('deadbeefdeadbeefdeadbeefdeadbeef');
+        self::assertIsString($encoded);
+        $this->configRepo->upsert('telemetry_install_id', $encoded);
 
         $service = new TelemetryService($this->conn, $this->buildConfigRepo(DbConnection::build()));
 

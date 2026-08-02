@@ -94,12 +94,17 @@ final class ConfigRepositoryTest extends IntegrationTestCase
     {
         $param = 'p14_test_upsert_new_' . bin2hex(random_bytes(4));
 
-        $this->repo->upsert($param, 'hello');
+        // upsert() is a plain passthrough that expects an already
+        // JSON-encoded value (real `value` column type, see
+        // ConfigEntry's own docblock) -- matching how upsert()'s real
+        // callers (ConfigService::confUpdateParam(),
+        // Menu\MenubarRenderer) already encode before calling it.
+        $this->repo->upsert($param, self::jsonValue('hello'));
 
         $fresh = $this->freshRepo();
         $entry = $fresh->find($param);
         self::assertNotNull($entry);
-        self::assertSame('hello', $entry->value);
+        self::assertSame(self::jsonValue('hello'), $entry->value);
 
         $fresh->deleteByParam($param);
     }
@@ -107,13 +112,13 @@ final class ConfigRepositoryTest extends IntegrationTestCase
     public function test_upsert_updates_an_existing_row(): void
     {
         $param = 'p14_test_upsert_existing_' . bin2hex(random_bytes(4));
-        $this->repo->upsert($param, 'first');
-        $this->repo->upsert($param, 'second');
+        $this->repo->upsert($param, self::jsonValue('first'));
+        $this->repo->upsert($param, self::jsonValue('second'));
 
         $fresh = $this->freshRepo();
         $entry = $fresh->find($param);
         self::assertNotNull($entry);
-        self::assertSame('second', $entry->value);
+        self::assertSame(self::jsonValue('second'), $entry->value);
 
         $fresh->deleteByParam($param);
     }
@@ -121,19 +126,19 @@ final class ConfigRepositoryTest extends IntegrationTestCase
     public function test_upsert_updates_the_comment_of_an_existing_row_when_given_one(): void
     {
         $param = 'p14_test_upsert_comment_' . bin2hex(random_bytes(4));
-        $this->repo->upsert($param, 'first', 'original comment');
+        $this->repo->upsert($param, self::jsonValue('first'), 'original comment');
 
         // a null $comment (the default) leaves the existing comment alone
-        $this->repo->upsert($param, 'second');
+        $this->repo->upsert($param, self::jsonValue('second'));
 
         $fresh = $this->freshRepo();
         $entry = $fresh->find($param);
         self::assertNotNull($entry);
-        self::assertSame('second', $entry->value);
+        self::assertSame(self::jsonValue('second'), $entry->value);
         self::assertSame('original comment', $entry->comment);
 
         // a non-null $comment on an update DOES overwrite it
-        $this->repo->upsert($param, 'third', 'updated comment');
+        $this->repo->upsert($param, self::jsonValue('third'), 'updated comment');
 
         $fresh2 = $this->freshRepo();
         $entry2 = $fresh2->find($param);
@@ -146,7 +151,7 @@ final class ConfigRepositoryTest extends IntegrationTestCase
     public function test_deleteByParam_removes_the_row(): void
     {
         $param = 'p14_test_delete_' . bin2hex(random_bytes(4));
-        $this->repo->upsert($param, 'temp');
+        $this->repo->upsert($param, self::jsonValue('temp'));
 
         $this->repo->deleteByParam($param);
 
@@ -209,6 +214,21 @@ final class ConfigRepositoryTest extends IntegrationTestCase
 
         $this->repo->deleteByParam($param);
         self::assertSame(0, $this->repo->countByParam($param));
+    }
+
+    /**
+     * upsert()'s own $value param expects an already JSON-encoded string
+     * (see test_upsert_creates_a_new_row()'s own comment) -- json_encode()
+     * on a plain string never actually returns false, but its declared
+     * return type is string|false, so this centralizes the narrowing
+     * rather than repeating it at every call site.
+     */
+    private static function jsonValue(string $value): string
+    {
+        $encoded = json_encode($value);
+        assert($encoded !== false);
+
+        return $encoded;
     }
 
     /**

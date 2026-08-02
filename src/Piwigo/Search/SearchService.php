@@ -84,6 +84,20 @@ final readonly class SearchService
         private ?\Piwigo\Users\PreferencesService $preferencesService = null,
     ) {}
 
+    /**
+     * DRY-extraction helper (Arch\StructuralTest's own "does not repeat
+     * the same multi-dependency service construction chain" rule) --
+     * $this->tagService is optional-with-lazy-default (see constructor's
+     * own docblock); this class is `readonly`, so the lazily-built
+     * instance can't be cached back onto the property (a second write
+     * to an already-initialized readonly property is a hard error), it's
+     * simply recomputed on demand by every caller.
+     */
+    private function tagService(): TagService
+    {
+        return $this->tagService ?? new TagService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Tag\TagEntity::class), $this->permissionService, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), $this->eventDispatcher, $this->currentUser);
+    }
+
     public static function getSearchIdPattern(int|string $candidate): ?string
     {
         if (preg_match('/^psk-\d{8}-[a-z0-9]{10}$/i', (string) $candidate) === 1) {
@@ -425,7 +439,7 @@ final readonly class SearchService
         $tagsMode = is_array($tagsField) && is_string($tagsField['mode'] ?? null) ? $tagsField['mode'] : 'AND';
         if (isset($searchFields['tags']) && $tagsWords !== [] && (bool) ($displayFilters['tags']['access'] ?? false)) {
             $hasFiltersFilled = true;
-            $tagService = $this->tagService ?? new TagService($this->lang, \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Tag\TagEntity::class), $this->permissionService, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), $this->eventDispatcher, $this->currentUser, $this->currentConfig);
+            $tagService = $this->tagService();
             $imageIdsForFilter['tags'] = array_values(array_map(intval(...), array_filter($tagService->getImageIdsForTags(array_map(TagId::from(...), $tagsWords), $tagsMode), is_numeric(...))));
         }
 
@@ -634,6 +648,15 @@ final readonly class SearchService
         $catIdsByWord = [];
         $tagIdsByWord = [];
 
+        // Further SQL-modernization audit, Item 7: the category-name/
+        // comment and tag-name lookups below, plus the image lookups by
+        // matching category/tag ids, are retargeted onto CategoryService/
+        // TagService (which own those tables) instead of SearchRepository's
+        // own generic findIdsByClause() -- cross-domain sub-lookups, not a
+        // genuine search-domain query shape.
+        $searchesTags = in_array('tags', $searchFields, true);
+        $tagService = $searchesTags ? $this->tagService() : null;
+
         foreach ($words as $word) {
             $fieldClauses = [];
             $params = [];
@@ -643,18 +666,14 @@ final readonly class SearchService
             }
 
             if ($catFields !== []) {
-                $catFieldClauses = [];
-                $catParams = [];
-                foreach ($catFields as $catField) {
-                    $catFieldClauses[] = $catFieldsDictionary[$catField] . ' LIKE ?';
-                    $catParams[] = '%' . $word . '%';
-                }
-
-                $catIds = $this->repo->findIdsByClause('id', Tables::categories(), implode(' OR ', $catFieldClauses), $catParams);
+                $catIds = $this->categoryService->getIdsByNameOrCommentLike(
+                    '%' . $word . '%',
+                    in_array('cat-title', $catFields, true),
+                    in_array('cat-desc', $catFields, true)
+                );
                 $catIdsByWord[$word] = $catIds;
                 if ($catIds !== []) {
-                    $placeholders = implode(',', array_fill(0, count($catIds), '?'));
-                    $catImageIds = $this->repo->findIdsByClause('image_id', Tables::imageCategory(), "category_id IN ({$placeholders})", $catIds);
+                    $catImageIds = $this->categoryService->getDistinctLinkedImageIds($catIds);
                     if ($catImageIds !== []) {
                         $inPlaceholders = implode(',', array_fill(0, count($catImageIds), '?'));
                         $fieldClauses[] = "id IN ({$inPlaceholders})";
@@ -663,12 +682,12 @@ final readonly class SearchService
                 }
             }
 
-            if (in_array('tags', $searchFields, true)) {
-                $tagIds = $this->repo->findIdsByClause('id', Tables::tags(), 'name LIKE ?', ['%' . $word . '%']);
+            if ($searchesTags) {
+                assert($tagService instanceof TagService);
+                $tagIds = $tagService->getIdsByNameLike('%' . $word . '%');
                 $tagIdsByWord[$word] = $tagIds;
                 if ($tagIds !== []) {
-                    $placeholders = implode(',', array_fill(0, count($tagIds), '?'));
-                    $tagImageIds = $this->repo->findIdsByClause('image_id', Tables::imageTag(), "tag_id IN ({$placeholders})", $tagIds);
+                    $tagImageIds = $tagService->getImageIdsForTagIds(array_map(TagId::from(...), $tagIds));
                     if ($tagImageIds !== []) {
                         $inPlaceholders = implode(',', array_fill(0, count($tagImageIds), '?'));
                         $fieldClauses[] = "id IN ({$inPlaceholders})";
@@ -1369,7 +1388,9 @@ final readonly class SearchService
         // the primary key) replaces DISTINCT here, same fix as
         // CalendarRepository::findImageIds().
         $orderBy = $this->currentConfig->orderBy();
-        $ids = $this->repo->findIdsByClause('id', $from, implode("\n AND ", $whereClauses) . "\nGROUP BY id\n" . $orderBy, $params);
+        $whereSql = (string) $this->repo->expressionBuilder()
+            ->and(...$whereClauses);
+        $ids = $this->repo->findIdsByClause('id', $from, $whereSql . "\nGROUP BY id\n" . $orderBy, $params);
 
         $debug[] = count($ids) . ' final photo count -->';
 

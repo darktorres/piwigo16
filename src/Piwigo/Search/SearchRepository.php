@@ -8,6 +8,7 @@ use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Core\ArrayHelper;
 use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\Tables;
+use Piwigo\Permission\SqlCondition;
 use Piwigo\Search\Projection\Search;
 
 /**
@@ -112,6 +113,19 @@ final class SearchRepository extends AbstractRepository
     public function quote(string $value): string
     {
         return $this->conn->quote($value);
+    }
+
+    /**
+     * Further SQL-modernization audit, Item 7: exposes a real
+     * Doctrine\DBAL\Query\Expression\ExpressionBuilder for composing
+     * dynamic OR/AND-joined clause lists via typed method calls (e.g.
+     * $expr->and(...$whereClauses)) instead of hand-rolled
+     * implode(' AND ', ...), same convention Permission\
+     * PermissionRepository::expressionBuilder() established for Item 2.
+     */
+    public function expressionBuilder(): \Doctrine\DBAL\Query\Expression\ExpressionBuilder
+    {
+        return $this->conn->createExpressionBuilder();
     }
 
     public function countByUuid(string $uuid): int
@@ -231,26 +245,40 @@ final class SearchRepository extends AbstractRepository
      * `int` instead -- those are fresh typed contracts, not a mimicked
      * legacy shape).
      *
-     * SQL-modernization audit: $params/$types added (both default `[]`,
-     * so existing zero-param callers are unaffected) -- lets a caller
-     * that builds its own bound-parameter fragment (e.g. via
-     * Permission\SqlCondition) pass real values through instead of
-     * having nowhere to put them but back into raw interpolated $sql
-     * text, same move as CategoryRepository::fetchCallerBuiltQuery().
-     * Search\SearchFilterRenderer is the real user of this.
+     * Further SQL-modernization audit, Item 7: $condition (a SqlCondition,
+     * default empty) replaces the former separate $params/$types pair --
+     * every real caller (SearchFilterRenderer) already builds its bound
+     * values via a SqlCondition (Permission\PermissionService::
+     * getSqlConditionFandFAsCondition()/getClauseForFilter()'s own return),
+     * so this removes the "unpack into two parallel arrays, then repack
+     * elsewhere" step for no real benefit. $condition->sql itself is
+     * unused here -- unlike every other SqlCondition consumer in this
+     * codebase, the WHERE clause text is already embedded directly in
+     * $sql (this method's own long-standing "caller composes trusted
+     * query text" contract, unchanged by this item -- see class docblock);
+     * a caller with no bindable values at all (e.g. the one query with no
+     * FROM/WHERE clause whatsoever) simply omits $condition, matching its
+     * own former zero-argument call shape.
      *
-     * @param array<string, mixed> $params
-     * @param array<string, ArrayParameterType|\Doctrine\DBAL\ParameterType> $types
+     * Kept as a fully generic executor deliberately, not collapsed
+     * further into e.g. one countGroupedBy()-shaped method: the 17 real
+     * call sites this repository serves span images+image_category-joined
+     * grouped counts, images+image_category-joined ungrouped row scans,
+     * a users-table lookup, and one query with no FROM/WHERE at all --
+     * genuinely too varied a set of shapes to fit one narrower signature
+     * without either dropping real cases or smuggling raw SQL back in
+     * through a different parameter.
+     *
      * @return list<array<string, string|null>>
      */
-    public function queryRows(string $sql, array $params = [], array $types = []): array
+    public function queryRows(string $sql, SqlCondition $condition = new SqlCondition('')): array
     {
         return array_map(
             static fn (array $row): array => array_map(
                 static fn (mixed $value): ?string => is_scalar($value) ? (string) $value : null,
                 $row
             ),
-            $this->conn->executeQuery($sql, $params, $types)
+            $this->conn->executeQuery($sql, $condition->parameters, $condition->types)
                 ->fetchAllAssociative()
         );
     }
@@ -259,14 +287,12 @@ final class SearchRepository extends AbstractRepository
      * Same shape as {@see \Piwigo\Db\MysqliDb::query2Array()} with both a
      * key and a value column name.
      *
-     * @param array<string, mixed> $params
-     * @param array<string, ArrayParameterType|\Doctrine\DBAL\ParameterType> $types
      * @return array<string, string|null>
      */
-    public function queryKeyedColumn(string $sql, string $keyColumn, string $valueColumn, array $params = [], array $types = []): array
+    public function queryKeyedColumn(string $sql, string $keyColumn, string $valueColumn, SqlCondition $condition = new SqlCondition('')): array
     {
         $result = [];
-        foreach ($this->queryRows($sql, $params, $types) as $row) {
+        foreach ($this->queryRows($sql, $condition) as $row) {
             $key = $row[$keyColumn] ?? '';
             $result[$key] = $row[$valueColumn] ?? null;
         }
@@ -278,15 +304,13 @@ final class SearchRepository extends AbstractRepository
      * Same shape as {@see \Piwigo\Db\MysqliDb::query2Array()} with only a
      * value column name.
      *
-     * @param array<string, mixed> $params
-     * @param array<string, ArrayParameterType|\Doctrine\DBAL\ParameterType> $types
      * @return list<string|null>
      */
-    public function queryColumn(string $sql, string $column, array $params = [], array $types = []): array
+    public function queryColumn(string $sql, string $column, SqlCondition $condition = new SqlCondition('')): array
     {
         return array_map(
             static fn (array $row): ?string => $row[$column] ?? null,
-            $this->queryRows($sql, $params, $types)
+            $this->queryRows($sql, $condition)
         );
     }
 }

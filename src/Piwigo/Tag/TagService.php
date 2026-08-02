@@ -844,6 +844,14 @@ final readonly class TagService
     }
 
     /**
+     * @return list<int>
+     */
+    public function getIdsByNameLike(string $pattern): array
+    {
+        return $this->repo->findIdsByNameLike($pattern);
+    }
+
+    /**
      * @return array<int, int>
      */
     public function getImageCountsPerTagUnrestricted(): array

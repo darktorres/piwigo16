@@ -460,6 +460,30 @@ final class TagRepository extends EntityRepository
         return $entity?->id;
     }
 
+    /**
+     * Tag ids whose name matches $pattern (already a complete SQL LIKE
+     * pattern, e.g. '%word%') -- Further SQL-modernization audit, Item 7:
+     * retargeted here from SearchRepository's own generic findIdsByClause(),
+     * SearchService::searchAllwords()'s own "all words" search feature
+     * (distinct from quick-search's separate token-based tag lookup).
+     *
+     * @return list<int>
+     */
+    public function findIdsByNameLike(string $pattern): array
+    {
+        $ids = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
+            ->select('id')
+            ->from(Tables::tags())
+            ->where('name LIKE :pattern')
+            ->setParameter('pattern', $pattern)
+            ->executeQuery()
+            ->fetchFirstColumn();
+
+        return array_values(array_map(intval(...), array_filter($ids, is_numeric(...))));
+    }
+
     public function findIdByUrlName(string $urlName): ?TagId
     {
         $entity = $this->findOneBy([

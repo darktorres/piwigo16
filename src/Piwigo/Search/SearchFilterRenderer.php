@@ -298,11 +298,11 @@ final readonly class SearchFilterRenderer
                 $cacheKey = 'author_rows_' . $userId;
                 $filterRows = $this->cacheGet($cacheKey);
                 if (! is_array($filterRows)) {
-                    $filterRows = $this->repo->queryRows($query, $filterCondition->parameters, $filterCondition->types);
+                    $filterRows = $this->repo->queryRows($query, $filterCondition);
                     $this->cacheSet($cacheKey, $filterRows);
                 }
             } else {
-                $filterRows = $this->repo->queryRows($query, $filterCondition->parameters, $filterCondition->types);
+                $filterRows = $this->repo->queryRows($query, $filterCondition);
             }
 
             // the cache pool stores this row set as plain mixed data, so
@@ -408,11 +408,11 @@ final readonly class SearchFilterRenderer
                 $cacheKey = 'added_by_rows_' . $userId;
                 $filterRows = $this->cacheGet($cacheKey);
                 if (! is_array($filterRows)) {
-                    $filterRows = $this->repo->queryRows($query, $filterCondition->parameters, $filterCondition->types);
+                    $filterRows = $this->repo->queryRows($query, $filterCondition);
                     $this->cacheSet($cacheKey, $filterRows);
                 }
             } else {
-                $filterRows = $this->repo->queryRows($query, $filterCondition->parameters, $filterCondition->types);
+                $filterRows = $this->repo->queryRows($query, $filterCondition);
             }
 
             // the cache pool stores this row set as plain mixed data, so
@@ -453,11 +453,15 @@ final readonly class SearchFilterRenderer
                     FROM {$usersTable}
                     WHERE {$userFieldId} IN (:userIds)
                     SQL;
-                $usernameOf = $this->repo->queryKeyedColumn($query, 'id', 'username', [
-                    'userIds' => $userIdsInts,
-                ], [
-                    'userIds' => ArrayParameterType::INTEGER,
-                ]);
+                $usernameOf = $this->repo->queryKeyedColumn($query, 'id', 'username', new SqlCondition(
+                    '',
+                    [
+                        'userIds' => $userIdsInts,
+                    ],
+                    [
+                        'userIds' => ArrayParameterType::INTEGER,
+                    ],
+                ));
 
                 foreach (array_keys($addedBy) as $addedByIdx) {
                     $addedById = $addedBy[$addedByIdx]['added_by_id'] ?? null;
@@ -534,7 +538,7 @@ final readonly class SearchFilterRenderer
                     FROM {$categoriesTable}
                     WHERE {$combinedCondition->sql}
                     SQL;
-                foreach ($this->repo->queryRows($query, $combinedCondition->parameters, $combinedCondition->types) as $row) {
+                foreach ($this->repo->queryRows($query, $combinedCondition) as $row) {
                     if ($row['id'] === null || $row['uppercats'] === null) {
                         continue;
                     }
@@ -597,7 +601,7 @@ final readonly class SearchFilterRenderer
                 SQL;
             $allExts = $this->cacheGet($cacheKey);
             if (! is_array($allExts)) {
-                $allExts = $this->repo->queryKeyedColumn($allExtsQuery, 'ext', 'counter', $allExtsCondition->parameters, $allExtsCondition->types);
+                $allExts = $this->repo->queryKeyedColumn($allExtsQuery, 'ext', 'counter', $allExtsCondition);
                 $this->cacheSet($cacheKey, $allExts);
             }
 
@@ -612,7 +616,7 @@ final readonly class SearchFilterRenderer
                     GROUP BY ext
                     ORDER BY counter DESC
                     SQL;
-                $filteredExts = $this->repo->queryKeyedColumn($query, 'ext', 'counter', $filterCondition->parameters, $filterCondition->types);
+                $filteredExts = $this->repo->queryKeyedColumn($query, 'ext', 'counter', $filterCondition);
 
                 $exts = [];
                 foreach ($allExts as $ext => $counter) {
@@ -650,7 +654,7 @@ final readonly class SearchFilterRenderer
                         WHERE {$filterCondition->sql}
                         SQL;
 
-                    $filterRows = $this->repo->queryRows($query, $filterCondition->parameters, $filterCondition->types);
+                    $filterRows = $this->repo->queryRows($query, $filterCondition);
 
                     $ratings = array_fill(0, 6, 0);
 
@@ -707,7 +711,7 @@ final readonly class SearchFilterRenderer
                     JOIN {$imageCategoryTable} AS ic ON ic.image_id = i.id
                 WHERE {$filterCondition->sql}
                 SQL;
-            foreach ($this->repo->queryRows($query, $filterCondition->parameters, $filterCondition->types) as $row) {
+            foreach ($this->repo->queryRows($query, $filterCondition) as $row) {
                 if (! is_numeric($row['filesize'])) {
                     continue;
                 }
@@ -776,7 +780,7 @@ final readonly class SearchFilterRenderer
                         AND height IS NOT NULL
                     SQL;
 
-                $filterRows = $this->repo->queryRows($query, $filterCondition->parameters, $filterCondition->types);
+                $filterRows = $this->repo->queryRows($query, $filterCondition);
 
                 $ratios = [
                     'Portrait' => 0,
@@ -844,11 +848,11 @@ final readonly class SearchFilterRenderer
                 $cacheKey = 'height_rows_' . $userId;
                 $filterRows = $this->cacheGet($cacheKey);
                 if (! is_array($filterRows)) {
-                    $filterRows = $this->repo->queryColumn($query, 'height', $filterCondition->parameters, $filterCondition->types);
+                    $filterRows = $this->repo->queryColumn($query, 'height', $filterCondition);
                     $this->cacheSet($cacheKey, $filterRows);
                 }
             } else {
-                $filterRows = $this->repo->queryColumn($query, 'height', $filterCondition->parameters, $filterCondition->types);
+                $filterRows = $this->repo->queryColumn($query, 'height', $filterCondition);
             }
 
             // the cache pool stores this row set as plain mixed data, so
@@ -903,11 +907,11 @@ final readonly class SearchFilterRenderer
                 $cacheKey = 'width_rows_' . $userId;
                 $filterRows = $this->cacheGet($cacheKey);
                 if (! is_array($filterRows)) {
-                    $filterRows = $this->repo->queryColumn($query, 'width', $filterCondition->parameters, $filterCondition->types);
+                    $filterRows = $this->repo->queryColumn($query, 'width', $filterCondition);
                     $this->cacheSet($cacheKey, $filterRows);
                 }
             } else {
-                $filterRows = $this->repo->queryColumn($query, 'width', $filterCondition->parameters, $filterCondition->types);
+                $filterRows = $this->repo->queryColumn($query, 'width', $filterCondition);
             }
 
             // the cache pool stores this row set as plain mixed data, so
@@ -1161,7 +1165,7 @@ final readonly class SearchFilterRenderer
             $listOfDates = [];
             $preCounters = [];
 
-            foreach ($this->repo->queryRows($query, $filterCondition->parameters, $filterCondition->types) as $row) {
+            foreach ($this->repo->queryRows($query, $filterCondition) as $row) {
                 $date = $row['date'] ?? null;
                 if (! is_string($date) || $date === '') {
                     continue;

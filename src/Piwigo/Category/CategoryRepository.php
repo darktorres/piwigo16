@@ -569,6 +569,45 @@ final class CategoryRepository extends EntityRepository
     }
 
     /**
+     * Category ids whose name and/or comment matches $pattern (already a
+     * complete SQL LIKE pattern, e.g. '%word%') -- Further SQL-
+     * modernization audit, Item 7: retargeted here from SearchRepository's
+     * own generic findIdsByClause(), SearchService::searchAllwords()'s own
+     * "all words" search feature (category-title/description match,
+     * distinct from quick-search's separate token-based category lookup).
+     *
+     * @return list<int>
+     */
+    public function findIdsByNameOrCommentLike(string $pattern, bool $matchName, bool $matchComment): array
+    {
+        if (! $matchName && ! $matchComment) {
+            return [];
+        }
+
+        $qb = $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
+            ->select('id')
+            ->from(Tables::categories());
+
+        $clauses = [];
+        if ($matchName) {
+            $clauses[] = $qb->expr()->like('name', ':pattern');
+        }
+
+        if ($matchComment) {
+            $clauses[] = $qb->expr()->like('comment', ':pattern');
+        }
+
+        $ids = $qb->where($qb->expr()->or(...$clauses))
+            ->setParameter('pattern', $pattern)
+            ->executeQuery()
+            ->fetchFirstColumn();
+
+        return array_values(array_map(intval(...), array_filter($ids, is_numeric(...))));
+    }
+
+    /**
      * @param  list<int>  $ids
      * @return list<int>
      */

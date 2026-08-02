@@ -2206,6 +2206,14 @@ final readonly class CategoryService
     }
 
     /**
+     * @return list<int>
+     */
+    public function getIdsByNameOrCommentLike(string $pattern, bool $matchName, bool $matchComment): array
+    {
+        return $this->repo->findIdsByNameOrCommentLike($pattern, $matchName, $matchComment);
+    }
+
+    /**
      * @param  list<int>  $imageIds
      * @param  list<int>  $excludeIds
      * @return list<int>

@@ -35,6 +35,7 @@ use Piwigo\Event\Template\RenderCategoryDescription;
 use Piwigo\Event\Template\RenderCategoryLiteralDescription;
 use Piwigo\Event\Template\RenderCommentAuthor;
 use Piwigo\Event\Template\RenderCommentContent;
+use Piwigo\Event\User\TryLogUser;
 use Piwigo\Filter\FilterService;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageService;
@@ -475,7 +476,7 @@ final class RequestBootstrap
         // runs during RequestPipeline::handle() -- after bootEntryPoint()
         // (connect()+finalize()) has fully returned, so it was never
         // actually affected by this ordering bug).
-        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler('try_log_user', new AuthService(
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(TryLogUser::class, new AuthService(
             new AuthRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
             self::activityService($conn),
             new HtmlService(),

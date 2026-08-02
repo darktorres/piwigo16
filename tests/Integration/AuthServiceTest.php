@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 // tryLogUser() calls the real Piwigo\PluginConfig\EventDispatcher::get()->
-// triggerChange() directly, a pure passthrough with no handlers
+// dispatchChange() directly, a pure passthrough with no handlers
 // registered, so no local stub is needed.
 
 namespace Piwigo\Tests\Integration {
@@ -14,6 +14,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Auth\AuthRepository;
     use Piwigo\Auth\AuthService;
     use Piwigo\Auth\CookieService;
+    use Piwigo\Auth\Event\FinalizeLogin;
     use Piwigo\Auth\PasswordRepository;
     use Piwigo\Auth\PasswordService;
     use Piwigo\Common\ValueObject\UserId;
@@ -21,6 +22,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\Tables;
+    use Piwigo\Event\User\TryLogUser;
     use Piwigo\Html\HtmlService;
     use Piwigo\Http\ResponseReadyException;
     use Piwigo\PluginConfig\EventDispatcher;
@@ -32,9 +34,9 @@ namespace Piwigo\Tests\Integration {
     /**
      * Covers calculateAutoLoginKey() fully (a pure DB read + HMAC
      * computation, no session/cookie/legacy-activity side effects) and
-     * tryLogUser()'s delegation to the try_log_user event (no handler is
-     * registered in this harness, so EventDispatcher::triggerChange()
-     * returns its own $data argument unchanged); also authKeyLogin()'s
+     * tryLogUser()'s delegation to the TryLogUser event (no handler is
+     * registered in this harness, so EventDispatcher::dispatchChange()
+     * returns the same event object unchanged); also authKeyLogin()'s
      * every reject-before-logUser() branch, pwgLogin()'s early-success and
      * finalize_login-denial branches, logUser()'s 2 "hacking attempt"
      * branches (both throw via HtmlRenderingInterface::fatalError() before
@@ -122,6 +124,16 @@ namespace Piwigo\Tests\Integration {
             );
         }
 
+        /**
+         * AuthService::pwgLogin() is the real, registered try_log_user
+         * handler -- it now takes/returns a TryLogUser event, not 4 loose
+         * params, matching addTypedHandler()'s own contract.
+         */
+        private function pwgLoginResult(bool $success, string $username, ?string $password, bool $rememberMe): bool
+        {
+            return $this->service->pwgLogin(new TryLogUser($success, $username, $password, $rememberMe))->success;
+        }
+
         public function test_calculate_auto_login_key_returns_a_key_and_username_for_a_real_user(): void
         {
             $result = $this->service->calculateAutoLoginKey(1, 1000);
@@ -168,8 +180,8 @@ namespace Piwigo\Tests\Integration {
         public function test_try_log_user_fails_closed_when_no_handler_is_registered(): void
         {
             // No handler is registered for this event, so
-            // EventDispatcher::triggerChange() returns its own $data
-            // argument (false) unchanged.
+            // EventDispatcher::dispatchChange() returns the same event
+            // (constructed with success=false) unchanged.
             self::assertFalse($this->service->tryLogUser('anyone', 'anything', false));
         }
 
@@ -416,7 +428,7 @@ namespace Piwigo\Tests\Integration {
             // pwgLogin() -- reached e.g. when a plugin's own
             // 'try_log_user' handler already authenticated the user before
             // this default handler runs.
-            self::assertTrue($this->service->pwgLogin(true, 'irrelevant', 'irrelevant', false));
+            self::assertTrue($this->pwgLoginResult(true, 'irrelevant', 'irrelevant', false));
         }
 
         public function test_pwg_login_denies_the_login_when_a_finalize_login_handler_blocks_it(): void
@@ -426,19 +438,21 @@ namespace Piwigo\Tests\Integration {
             // that passes pwgLogin()'s own password_verify() check, so
             // execution reaches the finalize_login trigger rather than
             // being rejected earlier for a wrong password.
-            $handler = static function (array $state): array {
-                $state['can_login'] = false;
-                $state['reason'] = 'blocked_by_test_handler';
-                return $state;
+            $handler = static function (FinalizeLogin $event): FinalizeLogin {
+                return new FinalizeLogin(
+                    ['can_login' => false, 'reason' => 'blocked_by_test_handler', 'authenticated' => $event->state['authenticated']],
+                    $event->userFound,
+                    $event->rememberMe,
+                );
             };
-            EventDispatcher::get()->addEventHandler('finalize_login', $handler);
+            EventDispatcher::get()->addTypedHandler(FinalizeLogin::class, $handler);
 
             try {
-                $result = $this->service->pwgLogin(false, 'fixture_admin', 'fixture_admin', false);
+                $result = $this->pwgLoginResult(false, 'fixture_admin', 'fixture_admin', false);
 
                 self::assertFalse($result);
             } finally {
-                EventDispatcher::get()->removeEventHandler('finalize_login', $handler);
+                EventDispatcher::get()->removeEventHandler(FinalizeLogin::class, $handler);
                 $this->conn->executeStatement('DELETE FROM ' . Tables::userFailedLogins() . ' WHERE user_id = 1');
             }
         }
@@ -453,7 +467,7 @@ namespace Piwigo\Tests\Integration {
             $before = $countFailedLoginsForFixtureAdmin();
 
             try {
-                $result = $this->service->pwgLogin(false, 'fixture_admin', 'definitely-wrong-password', false);
+                $result = $this->pwgLoginResult(false, 'fixture_admin', 'definitely-wrong-password', false);
 
                 self::assertFalse($result);
                 self::assertSame($before + 1, $countFailedLoginsForFixtureAdmin());
@@ -471,7 +485,7 @@ namespace Piwigo\Tests\Integration {
 
             try {
                 for ($i = 0; $i < 3; $i++) {
-                    self::assertFalse($this->service->pwgLogin(false, 'fixture_admin', 'definitely-wrong-password', false));
+                    self::assertFalse($this->pwgLoginResult(false, 'fixture_admin', 'definitely-wrong-password', false));
                 }
 
                 // generateFakeUser() is the only thing that ever sets this
@@ -479,7 +493,7 @@ namespace Piwigo\Tests\Integration {
                 // pwgLogin() reached it on this specific call.
                 unset($_SESSION['fake_user_cache']);
 
-                $result = $this->service->pwgLogin(false, 'fixture_admin', 'fixture_admin', false);
+                $result = $this->pwgLoginResult(false, 'fixture_admin', 'fixture_admin', false);
 
                 self::assertFalse($result, 'Expected pwgLogin() to reject a locked-out username even with the correct password.');
                 self::assertArrayNotHasKey(
@@ -540,12 +554,12 @@ namespace Piwigo\Tests\Integration {
             };
 
             try {
-                self::assertFalse($this->service->pwgLogin(false, 'fixture_admin', 'definitely-wrong-password', false));
+                self::assertFalse($this->pwgLoginResult(false, 'fixture_admin', 'definitely-wrong-password', false));
                 $afterFirstFailure = $countFailedLoginsForFixtureAdmin();
 
                 unset($_SESSION['fake_user_cache']);
 
-                $result = $this->service->pwgLogin(false, 'fixture_admin', 'fixture_admin', false);
+                $result = $this->pwgLoginResult(false, 'fixture_admin', 'fixture_admin', false);
 
                 self::assertFalse($result, 'Expected the user-scoped lockout block to reject even a correct password.');
                 self::assertArrayNotHasKey(
@@ -573,7 +587,7 @@ namespace Piwigo\Tests\Integration {
 
             try {
                 for ($i = 0; $i < 3; $i++) {
-                    self::assertFalse($this->service->pwgLogin(false, 'no-such-user-' . $i . '-' . uniqid(), 'irrelevant', false));
+                    self::assertFalse($this->pwgLoginResult(false, 'no-such-user-' . $i . '-' . uniqid(), 'irrelevant', false));
                 }
 
                 unset($_SESSION['fake_user_cache']);
@@ -581,7 +595,7 @@ namespace Piwigo\Tests\Integration {
                 // A brand-new, never-before-seen username -- proves the
                 // lockout is keyed on the IP, not on having seen this exact
                 // username fail before.
-                $result = $this->service->pwgLogin(false, 'no-such-user-final-' . uniqid(), 'irrelevant', false);
+                $result = $this->pwgLoginResult(false, 'no-such-user-final-' . uniqid(), 'irrelevant', false);
 
                 self::assertFalse($result);
                 self::assertArrayNotHasKey(
@@ -718,7 +732,7 @@ namespace Piwigo\Tests\Integration {
             CurrentConfig::setLoginLockoutMaxAttempts(3);
 
             for ($i = 0; $i < 3; $i++) {
-                self::assertFalse($this->service->pwgLogin(false, 'power_user', 'definitely-wrong-password', false));
+                self::assertFalse($this->pwgLoginResult(false, 'power_user', 'definitely-wrong-password', false));
             }
 
             try {
@@ -728,7 +742,7 @@ namespace Piwigo\Tests\Integration {
                 // narrower claim that this fast-rejects without calling
                 // password_verify() is already covered by
                 // test_pwg_login_locks_out_the_username_after_max_attempts_even_with_the_correct_password().)
-                self::assertFalse($this->service->pwgLogin(false, 'power_user', 'anything', false));
+                self::assertFalse($this->pwgLoginResult(false, 'power_user', 'anything', false));
 
                 $result = $this->service->generatePasswordLink(4, new UrlService(new HtmlService()), false);
 

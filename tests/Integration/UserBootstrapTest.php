@@ -22,6 +22,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\WsContext;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Event\User\TryLogUser;
 use Piwigo\Html\HtmlService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Url\UrlService;
@@ -203,7 +204,7 @@ final class UserBootstrapTest extends IntegrationTestCase
         // call, ported verbatim) -- tryLogUser()'s 'try_log_user' event has
         // no handler at all otherwise, so it would always resolve to
         // false regardless of the real credentials below.
-        EventDispatcher::get()->addEventHandler('try_log_user', new AuthService(
+        EventDispatcher::get()->addTypedHandler(TryLogUser::class, new AuthService(
             new AuthRepository(EntityManagerFactory::build($this->conn)),
             new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)),
             new HtmlService(),

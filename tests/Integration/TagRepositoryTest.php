@@ -515,4 +515,32 @@ final class TagRepositoryTest extends IntegrationTestCase
     {
         self::assertFalse($this->repo->existsById(999_999));
     }
+
+    public function test_find_tags_for_image_returns_every_tag_linked_to_that_image(): void
+    {
+        // Fixture image_tag: image 1 has tags 1 (nature), 2 (travel), 3 (family).
+        $names = array_column($this->repo->findTagsForImage(1), 'name');
+        sort($names);
+
+        self::assertSame(['family', 'nature', 'travel'], $names);
+    }
+
+    public function test_find_tags_for_image_returns_empty_for_an_image_with_no_tags(): void
+    {
+        self::assertSame([], $this->repo->findTagsForImage(999_999));
+    }
+
+    public function test_find_tags_by_ids_returns_empty_for_no_ids(): void
+    {
+        self::assertSame([], $this->repo->findTagsByIds([]));
+    }
+
+    public function test_find_tags_by_ids_matches_the_given_ids(): void
+    {
+        $rows = $this->repo->findTagsByIds([1, 2]);
+
+        $names = array_column($rows, 'name');
+        sort($names);
+        self::assertSame(['nature', 'travel'], $names);
+    }
 }

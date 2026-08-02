@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\BatchManager\FilterPanelRenderer;
 use Piwigo\Cache\PermissionCacheInvalidator;
@@ -13,7 +12,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Event\Location\LocBeginElementSetUnit;
 use Piwigo\Event\Location\LocEndElementSetUnit;
 use Piwigo\Image\DerivativeImage;
@@ -338,22 +336,7 @@ final class BatchManagerUnitPageRenderer
 
                 $image_file = $row['file'];
 
-                $imageTagTable = Tables::imageTag();
-                $tagsTable = Tables::tags();
-                $query = <<<SQL
-                    SELECT
-                        id,
-                        name
-                    FROM {$imageTagTable} AS it
-                        JOIN {$tagsTable} AS t ON t.id = it.tag_id
-                    WHERE image_id = :imageId
-                    SQL;
-
-                $tag_selection = $tagService->getTagList($query, $htmlRenderer, params: [
-                    'imageId' => (int) $row_id_str,
-                ], types: [
-                    'imageId' => ParameterType::INTEGER,
-                ]);
+                $tag_selection = $tagService->getTagListForImage((int) $row_id_str, $htmlRenderer);
 
                 $row_file = is_string($row['file']) ? $row['file'] : '';
                 $legend = $htmlRenderer->renderElementName($row);

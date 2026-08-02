@@ -576,7 +576,39 @@ namespace Piwigo\Tests\Integration {
             self::assertSame(['error' => 'Tag "nature" already exists'], $this->service->createTag('nature'));
         }
 
-        // --- getTagList() ---------------------------------------------------------
+        // --- getTagListForImage() --------------------------------------------------
+
+        /**
+         * Fixture image_tag: image 1 has tags 1 (nature), 2 (travel), 3
+         * (family) -- each rendered as a '~~id~~'-marked, alphabetically
+         * sorted entry (see getTagIds()'s own docblock for the marker format).
+         */
+        public function test_get_tag_list_for_image_returns_the_images_tags_sorted_alphabetically(): void
+        {
+            $result = $this->service->getTagListForImage(1, new HtmlService());
+
+            self::assertSame(
+                ['~~3~~' => 'family', '~~1~~' => 'nature', '~~2~~' => 'travel'],
+                array_combine(array_column($result, 'id'), array_column($result, 'name'))
+            );
+        }
+
+        public function test_get_tag_list_for_image_returns_empty_for_an_image_with_no_tags(): void
+        {
+            self::assertSame([], $this->service->getTagListForImage(999_999, new HtmlService()));
+        }
+
+        // --- getTagListByIds() -----------------------------------------------------
+
+        public function test_get_tag_list_by_ids_returns_the_matching_tags_sorted_alphabetically(): void
+        {
+            $result = $this->service->getTagListByIds([1, 2], new HtmlService());
+
+            self::assertSame(
+                ['~~1~~' => 'nature', '~~2~~' => 'travel'],
+                array_combine(array_column($result, 'id'), array_column($result, 'name'))
+            );
+        }
 
         /**
          * onlyUserLanguage=false additionally surfaces every alt name a
@@ -585,7 +617,7 @@ namespace Piwigo\Tests\Integration {
          * against $nameForDiff) -- both the original and surviving alt
          * entries share the same '~~id~~' marker.
          */
-        public function test_get_tag_list_includes_surviving_alt_names_when_not_restricted_to_user_language(): void
+        public function test_get_tag_list_by_ids_includes_surviving_alt_names_when_not_restricted_to_user_language(): void
         {
             EventDispatcher::get()->addTypedHandler(
                 GetTagAltNames::class,
@@ -593,8 +625,7 @@ namespace Piwigo\Tests\Integration {
             );
 
             try {
-                $query = 'SELECT id, name FROM ' . Tables::tags() . ' WHERE id = 1';
-                $result = $this->service->getTagList($query, new HtmlService(), false);
+                $result = $this->service->getTagListByIds([1], new HtmlService(), false);
 
                 $names = array_column($result, 'name');
                 sort($names);

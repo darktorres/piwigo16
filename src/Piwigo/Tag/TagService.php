@@ -5,13 +5,11 @@ declare(strict_types=1);
 namespace Piwigo\Tag;
 
 use Doctrine\DBAL\ArrayParameterType;
-use Doctrine\DBAL\ParameterType;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Event\Tag\DeleteTags;
 use Piwigo\Event\Tag\GetTagAltNames;
 use Piwigo\Event\Tag\GetTagNameLikeWhere;
@@ -39,8 +37,9 @@ use Piwigo\Tag\Projection\TagBrief;
  * go through TagRepository (Legacy Coupling Retirement: DI+DBAL migration,
  * Phase 1b).
  *
- * getAllTags()/getCommonTags()/getTagList() each take HtmlRenderingInterface
- * as an explicit parameter (P23 batch 8f-3), same per-method shape as
+ * getAllTags()/getCommonTags()/getTagListForImage()/getTagListByIds() each
+ * take HtmlRenderingInterface as an explicit parameter (P23 batch 8f-3), same
+ * per-method shape as
  * ActivityLoggerInterface above -- their real callers already construct an
  * HtmlService for their own unrelated needs, or can trivially do so (all
  * L3/L4/L2b, HtmlService itself injects nothing).
@@ -702,28 +701,27 @@ final readonly class TagService
     }
 
     /**
-     * Get tags list from SQL query (ids are surrounded by ~~, for getTagIds()).
+     * Further SQL-modernization audit, Item 10: getTagList() (a caller-built-
+     * query wrapper around the now-deleted TagRepository::fetchTagListRows())
+     * replaced with this shared row-processing tail plus one typed public
+     * method per real query shape below (ids are surrounded by ~~, for
+     * getTagIds()).
      *
-     * @param string $query a complete, already-built SELECT id, name query --
-     *   real callers each build their own WHERE clause against
-     *   Tables::tags()/Tables::imageTag() and hand the whole thing in,
-     *   with any real value bound via $params/$types rather than spliced
-     * @param bool $onlyUserLanguage - if true, only local name is returned for
+     * @param  list<array{id: int, name: string}>  $rows
+     * @param  bool  $onlyUserLanguage  if true, only local name is returned for
      *    multilingual tags (if ExtendedDescription plugin is active)
-     * @param array<string, mixed> $params
-     * @param array<string, ArrayParameterType|ParameterType> $types
      * @return array<int, array{name: string, id: string}>
      */
-    public function getTagList(string $query, HtmlRenderingInterface $htmlRenderer, bool $onlyUserLanguage = true, array $params = [], array $types = []): array
+    private function buildTagList(array $rows, HtmlRenderingInterface $htmlRenderer, bool $onlyUserLanguage): array
     {
         $taglist = [];
         $altlist = [];
 
-        foreach ($this->repo->fetchTagListRows($query, $params, $types) as $row) {
+        foreach ($rows as $row) {
             $rawName = $row['name'];
             $listNameEvent = $this->eventDispatcher->dispatchChange(new RenderTagName(is_string($rawName) ? $rawName : '', $row));
             $name = $listNameEvent->tagName;
-            $rowId = is_scalar($row['id']) ? (string) $row['id'] : '';
+            $rowId = (string) $row['id'];
 
             $taglist[] = [
                 'name' => $name,
@@ -751,6 +749,28 @@ final readonly class TagService
         }
 
         return $taglist;
+    }
+
+    /**
+     * Admin\PictureModifyPageRenderer/Admin\BatchManagerUnitPageRenderer's
+     * own per-image tag list.
+     *
+     * @return array<int, array{name: mixed, id: string}>
+     */
+    public function getTagListForImage(int $imageId, HtmlRenderingInterface $htmlRenderer, bool $onlyUserLanguage = true): array
+    {
+        return $this->buildTagList($this->repo->findTagsForImage($imageId), $htmlRenderer, $onlyUserLanguage);
+    }
+
+    /**
+     * Admin\BatchManager\FilterPanelRenderer's own tag-filter list.
+     *
+     * @param  list<int>  $ids
+     * @return array<int, array{name: mixed, id: string}>
+     */
+    public function getTagListByIds(array $ids, HtmlRenderingInterface $htmlRenderer, bool $onlyUserLanguage = true): array
+    {
+        return $this->buildTagList($this->repo->findTagsByIds($ids), $htmlRenderer, $onlyUserLanguage);
     }
 
     /**

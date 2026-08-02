@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\BatchManager;
 
-use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Event\Admin\GetBatchManagerPrefilters;
 use Piwigo\Template\Template;
 
@@ -177,25 +175,10 @@ final class FilterPanelRenderer
         if (is_array($bulk_manager_filter['tags'] ?? null) && count($bulk_manager_filter['tags']) > 0) {
             $filter_tags_ids = array_filter($bulk_manager_filter['tags'], is_scalar(...));
 
-            $tagsTable = Tables::tags();
-            $query = <<<SQL
-                SELECT
-                    id,
-                    name
-                FROM {$tagsTable}
-                WHERE id IN (:tagIds)
-                SQL;
-
             $filter_tags = $tagService
-                ->getTagList(
-                    $query,
+                ->getTagListByIds(
+                    array_map(intval(...), array_values($filter_tags_ids)),
                     $htmlService,
-                    params: [
-                        'tagIds' => array_map(intval(...), array_values($filter_tags_ids)),
-                    ],
-                    types: [
-                        'tagIds' => ArrayParameterType::INTEGER,
-                    ]
                 );
         }
 

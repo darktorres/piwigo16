@@ -609,27 +609,70 @@ final class TagRepository extends EntityRepository
     }
 
     /**
-     * Executes an arbitrary, already fully-built `SELECT id, name` query and
-     * returns the raw rows -- real callers (PictureModifyPageRenderer/
-     * BatchManagerUnitPageRenderer/FilterPanelRenderer) each build their own
-     * WHERE clause against Tables::tags()/Tables::imageTag() and hand the
-     * complete query in, matching the original get_taglist()'s own shape.
+     * Further SQL-modernization audit, Item 10: fetchTagListRows() (a fully
+     * generic "execute an already-built SELECT id, name query" escape
+     * hatch) deleted -- its 3 real callers (Admin\PictureModifyPageRenderer/
+     * Admin\BatchManagerUnitPageRenderer, both this exact
+     * image_tag-JOIN-tags-by-image_id shape) replaced with this typed
+     * method.
      *
-     * 'name' is read straight into TagService::getTagList()'s own
-     * EventDispatcher::triggerChange() call (by-design mixed), so a
-     * precise column-name shape wouldn't buy much beyond what's already
-     * documented.
-     *
-     * @param array<string, mixed> $params
-     * @param array<string, ArrayParameterType|ParameterType> $types
-     * @return list<array<string, mixed>>
+     * @return list<array{id: int, name: string}>
      */
-    public function fetchTagListRows(string $query, array $params = [], array $types = []): array
+    public function findTagsForImage(int $imageId): array
     {
-        return $this->getEntityManager()
+        $imageTagTable = Tables::imageTag();
+        $tagsTable = Tables::tags();
+
+        $rows = $this->getEntityManager()
             ->getConnection()
-            ->executeQuery($query, $params, $types)
+            ->executeQuery(<<<SQL
+                SELECT id, name
+                FROM {$imageTagTable} AS it
+                    JOIN {$tagsTable} AS t ON t.id = it.tag_id
+                WHERE image_id = ?
+                SQL
+                , [$imageId], [ParameterType::INTEGER])
             ->fetchAllAssociative();
+
+        return array_map(self::toIdNameRow(...), $rows);
+    }
+
+    /**
+     * Further SQL-modernization audit, Item 10: fetchTagListRows()'s 3rd
+     * real caller -- Admin\BatchManager\FilterPanelRenderer's own
+     * `tags WHERE id IN (...)` shape.
+     *
+     * @param  list<int>  $ids
+     * @return list<array{id: int, name: string}>
+     */
+    public function findTagsByIds(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+
+        $tagsTable = Tables::tags();
+        $rows = $this->getEntityManager()
+            ->getConnection()
+            ->executeQuery(<<<SQL
+                SELECT id, name FROM {$tagsTable} WHERE id IN (?)
+                SQL
+                , [$ids], [ArrayParameterType::INTEGER])
+            ->fetchAllAssociative();
+
+        return array_map(self::toIdNameRow(...), $rows);
+    }
+
+    /**
+     * @param  array<string, mixed>  $row
+     * @return array{id: int, name: string}
+     */
+    private static function toIdNameRow(array $row): array
+    {
+        return [
+            'id' => is_numeric($row['id']) ? (int) $row['id'] : 0,
+            'name' => is_string($row['name']) ? $row['name'] : '',
+        ];
     }
 
     /**

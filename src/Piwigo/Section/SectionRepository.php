@@ -17,9 +17,15 @@ use Piwigo\Db\AbstractRepository;
  * cleanup (2026-07-29) moved the actual query text here from
  * SectionPopulator itself, which used to build full SQL strings and hand
  * them to a generic queryColumn()/executeStatement() escape hatch. Favorites
- * queries stay in Users\UserRepository (a different domain); this class
- * still exposes queryColumn()/executeStatement() as raw escape hatches for
- * SectionInitializer's own remaining direct use.
+ * queries stay in Users\UserRepository (a different domain).
+ *
+ * Further SQL-modernization audit, Item 5: executeStatement() (a fully
+ * generic executor) deleted outright -- zero real callers anywhere in
+ * src/ (SectionInitializer's own direct use, described by this class's
+ * former docblock, was already migrated away by the time this was
+ * checked). queryColumn() stays, but as a private implementation detail
+ * of the 6 typed-ish methods below, not a generic executor meant to be
+ * called from outside this class.
  */
 final class SectionRepository extends AbstractRepository
 {
@@ -35,18 +41,13 @@ final class SectionRepository extends AbstractRepository
      * @param array<string, ArrayParameterType|ParameterType> $types
      * @return list<string|null>
      */
-    public function queryColumn(string $sql, array $params = [], array $types = []): array
+    private function queryColumn(string $sql, array $params = [], array $types = []): array
     {
         return array_map(
             static fn (mixed $value): ?string => is_scalar($value) ? (string) $value : null,
             $this->conn->executeQuery($sql, $params, $types)
                 ->fetchFirstColumn()
         );
-    }
-
-    public function executeStatement(string $sql): void
-    {
-        $this->conn->executeStatement($sql);
     }
 
     /**

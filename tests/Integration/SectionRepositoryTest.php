@@ -6,7 +6,6 @@ namespace Piwigo\Tests\Integration;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Section\SectionRepository;
 
 /**
@@ -38,36 +37,6 @@ final class SectionRepositoryTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         $this->repo = new SectionRepository($this->conn);
-    }
-
-    public function test_query_column_returns_a_list_of_string_values(): void
-    {
-        $ids = $this->repo->queryColumn('SELECT id FROM ' . Tables::images() . ' ORDER BY id');
-
-        self::assertSame(['1', '2', '3', '4', '5'], $ids);
-    }
-
-    public function test_query_column_returns_an_empty_list_for_no_matches(): void
-    {
-        $ids = $this->repo->queryColumn('SELECT id FROM ' . Tables::images() . ' WHERE id = -1');
-
-        self::assertSame([], $ids);
-    }
-
-    public function test_execute_statement_runs_a_real_mutating_query(): void
-    {
-        $this->repo->executeStatement(
-            'UPDATE ' . Tables::images() . " SET name = 'ct-section-repo-name' WHERE id = 1"
-        );
-
-        try {
-            $name = $this->conn->fetchOne('SELECT name FROM ' . Tables::images() . ' WHERE id = 1');
-            self::assertSame('ct-section-repo-name', $name);
-        } finally {
-            $this->conn->executeStatement(
-                'UPDATE ' . Tables::images() . " SET name = 'Photo 1' WHERE id = 1"
-            );
-        }
     }
 
     public function test_escape_token_escapes_a_value_without_surrounding_quotes(): void

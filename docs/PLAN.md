@@ -677,8 +677,10 @@ shipped across 12 domain batches (all 155 real events, including the
 `dispatchNotify()` alongside the original string-keyed methods (kept only
 for `'trigger'`, its own permanent internal meta-notification channel). A
 token-aware door-lock Arch test enforces zero remaining string-keyed call
-sites outside that one name. Full history and design notes:
-`~/.claude/plans/track-b-typed-events-gap.md`.
+sites outside that one name. Delivered in 14 commits
+(`25d8709bc0`..`6dd1034422`, Foundation + 12 domain batches + wrap-up);
+full commit-level history is in `git log`, the plan doc itself was
+deleted once the work landed.
 
 **Track C — `l10n()`/`get_root_url()` retarget.** Done and verified —
 `Lang/functions.php`/`Url/functions.php`/`Category/functions.php`/

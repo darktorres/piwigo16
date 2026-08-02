@@ -12,6 +12,8 @@ use Piwigo\Core\ProcessCache;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\Event\CombinedCss;
+use Piwigo\Template\Event\CombinedScript;
 use Piwigo\Template\PwgTemplateAdapter;
 use Piwigo\Template\ScriptLoader;
 use Piwigo\Template\Template;
@@ -1574,18 +1576,18 @@ test('make_script_src (via func_get_combined_scripts) uses a remote script\'s ow
     expect($result)->toBe('<script type="text/javascript" src="https://cdn.example.com/foo.js"></script>');
 });
 
-test('make_script_src (via func_get_combined_scripts) throws when a combined_script event listener returns a non-string value', function (): void {
+test('make_script_src (via func_get_combined_scripts) throws when a combined_script listener returns something other than a CombinedScript instance', function (): void {
     $t = new Template();
     file_put_contents(CurrentPaths::get()->root . '/sync.js', 'console.log(1);');
     $t->func_combine_script(['id' => 'sync-script', 'path' => 'sync.js', 'load' => 'footer']);
-    EventDispatcher::get()->addEventHandler('combined_script', static fn (): int => 42);
+    EventDispatcher::get()->addEventHandler(CombinedScript::class, static fn (): int => 42);
 
     try {
         $t->func_get_combined_scripts(['load' => 'footer']);
     } finally {
         EventDispatcher::reset();
     }
-})->throws(Exception::class, "make_script_src(): a 'combined_script' event listener returned a non-string value");
+})->throws(\Error::class, 'must return an instance of');
 
 // --- block_footer_script ----------------------------------------------------
 
@@ -1835,15 +1837,15 @@ test('finalizeOutput appends a version query string for a truthy combined_css ve
     expect($result)->toBe('<link rel="stylesheet" type="text/css" href="style.css?v7">');
 });
 
-test('finalizeOutput throws when a combined_css event listener returns a non-string value', function (): void {
+test('finalizeOutput throws when a combined_css listener returns something other than a CombinedCss instance', function (): void {
     $t = new Template();
     file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
     $t->func_combine_css(['path' => 'style.css', 'version' => '7']);
     $t->output = Template::COMBINED_CSS_TAG;
-    EventDispatcher::get()->addEventHandler('combined_css', static fn (): int => 42);
+    EventDispatcher::get()->addEventHandler(CombinedCss::class, static fn (): int => 42);
 
     $t->fetchOutput();
-})->throws(Exception::class, "flush(): a 'combined_css' event listener returned a non-string value");
+})->throws(\Error::class, 'must return an instance of');
 
 test('finalizeOutput does not append a version query string when combined_css version is exactly false', function (): void {
     $t = new Template();

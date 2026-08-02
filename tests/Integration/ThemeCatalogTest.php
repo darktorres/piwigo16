@@ -10,6 +10,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\ThemeCatalog;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Lifecycle\GetPwgThemes;
 use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
 
@@ -116,12 +117,19 @@ final class ThemeCatalogTest extends IntegrationTestCase
         expect($themes)->toBe(['default' => 'Default (Mobile)']);
     }
 
-    public function test_get_pwg_themes_returns_an_empty_array_when_a_plugin_filter_replaces_the_result_with_a_non_array(): void
+    public function test_get_pwg_themes_throws_when_a_plugin_filter_returns_something_other_than_a_get_pwg_themes_instance(): void
     {
-        EventDispatcher::get()->addEventHandler('get_pwg_themes', static fn (mixed $themes): ?string => null);
+        // addEventHandler(), not addTypedHandler() -- a real plugin
+        // handler is untyped from PHPStan's perspective, and this test
+        // exercises dispatchChange()'s own runtime enforcement, not a
+        // static one.
+        EventDispatcher::get()->addEventHandler(GetPwgThemes::class, static fn (): ?string => null);
+
+        $this->expectException(\Error::class);
+        $this->expectExceptionMessage('must return an instance of');
 
         try {
-            $themes = ThemeCatalog::getPwgThemes();
+            ThemeCatalog::getPwgThemes();
         } finally {
             // EventDispatcher is a shared process-wide singleton -- a real
             // reset (not just removing this one handler, no such API
@@ -129,7 +137,5 @@ final class ThemeCatalogTest extends IntegrationTestCase
             // Integration test's own getPwgThemes()/EventDispatcher call.
             EventDispatcher::reset();
         }
-
-        expect($themes)->toBe([]);
     }
 }

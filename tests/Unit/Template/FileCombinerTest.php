@@ -6,10 +6,12 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Paths;
+use Piwigo\Event\Template\CombinedCssPostfilter;
 use Piwigo\Html\HtmlService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\Combinable;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Event\CombinablePreparse;
 use Piwigo\Template\FileCombiner;
 use Piwigo\Template\Template;
 use Piwigo\Url\UrlService;
@@ -875,11 +877,11 @@ test('process_combinable throws when a template combinable points at a file that
     }
 })->throws(Exception::class, 'process_combinable(): file not found for themes/default/js/does-not-exist.js');
 
-test('process_css throws when a combined_css_postfilter listener returns a non-string value', function (): void {
+test('process_css throws when a combined_css_postfilter listener returns something other than a CombinedCssPostfilter instance', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-file-combiner-postfilter-' . bin2hex(random_bytes(8));
     mkdir($root . '/themes/default/css', 0o777, true);
     file_put_contents($root . '/themes/default/css/foo.css', "body{color:red;}\n");
-    EventDispatcher::get()->addEventHandler('combined_css_postfilter', static fn (): int => 42);
+    EventDispatcher::get()->addEventHandler(CombinedCssPostfilter::class, static fn (): int => 42);
 
     $combinable = new Combinable('foo-css', 'themes/default/css/foo.css');
     $combiner = new FileCombiner('css', new UrlService(new HtmlService()), Paths::fromRoot($root), []);
@@ -891,40 +893,17 @@ test('process_css throws when a combined_css_postfilter listener returns a non-s
         EventDispatcher::reset();
         file_combiner_test_rrmdir($root);
     }
-})->throws(Exception::class, "process_css(): a 'combined_css_postfilter' event listener returned a non-string value");
+})->throws(\Error::class, 'must return an instance of');
 
 /**
  * Confirmed-equivalent this sweep, verified live via temporary
- * sed-applied mutations (individually and, for the `?? ''` cluster,
- * together) against this file's own existing suite plus a reflection-
- * based script calling process_css_rec() directly with $css=null:
+ * sed-applied mutations against this file's own existing suite:
  *
  * - Both RemoveBooleanCast mutations on `if ((bool) preg_match_all(...))`
  *   (the url() pattern and the @import pattern): same redundant-cast-
  *   in-boolean-context reasoning as this file's other documented
  *   instances -- an `if` condition already coerces its operand to bool
  *   the same way an explicit cast would.
- * - All four EmptyStringToNotEmpty mutations on `$css ?? ''` (guarding
- *   both preg_match_all() calls, and both str_replace() calls right
- *   after them): $css is only ever null here when a caller passes null
- *   in directly (every real call in this codebase always supplies an
- *   actual string -- see process_combinable()'s own comment on
- *   Template::parse()'s return type, and its file_get_contents() calls
- *   are always false-checked first); with a real $css=null, `''`
- *   (or this mutator's own literal replacement text, which contains
- *   neither "url(" nor "@import") never matches either pattern, so the
- *   guarding `if` never runs either way -- which in turn means the two
- *   str_replace() calls' own `?? ''` can only matter on a code path
- *   that's already provably unreachable given the *same* null input
- *   that would be needed to make their own fallback text relevant.
- * - The recursive-call EmptyStringToNotEmpty on
- *   `self::process_css_rec(...) ?? ''` (the @import-inlining branch):
- *   this only matters if the recursive call itself returns null, which
- *   (by the same reasoning) requires *its own* $css argument to be
- *   null -- but that argument is $sub_css, always a real string from a
- *   file_get_contents() call already checked `=== false` a few lines
- *   above, so this recursive call can never actually receive null
- *   through any real @import chain.
  * - Line 301's own DecrementInteger on `$match[1]` inside
  *   `str_contains($match[1], '://')` (the array-index literal, not an
  *   obvious numeric constant): $match[0] is always a superset string of
@@ -1270,8 +1249,8 @@ test('process_combinable notifies combinable_preparse listeners before parsing a
     CurrentConfig::setDataDirChecked('1');
 
     $notifiedWith = null;
-    EventDispatcher::get()->addEventHandler('combinable_preparse', function (mixed ...$args) use (&$notifiedWith): void {
-        $notifiedWith = $args;
+    EventDispatcher::get()->addTypedHandler(CombinablePreparse::class, function (CombinablePreparse $event) use (&$notifiedWith): void {
+        $notifiedWith = $event;
     });
 
     $combiner = new FileCombiner('js', new UrlService(new HtmlService()), Paths::fromRoot($root), []);
@@ -1288,9 +1267,9 @@ test('process_combinable notifies combinable_preparse listeners before parsing a
         // PHPStan can't narrow it past that boundary from the expect()
         // assertion alone (a by-ref/closure narrowing loss, same class as
         // this codebase's other instances of the same limitation).
-        assert(is_array($notifiedWith) && array_key_exists(1, $notifiedWith));
+        assert($notifiedWith instanceof CombinablePreparse);
         expect($notifiedWith)->not->toBeNull()
-            ->and($notifiedWith[1])->toBe($combinable);
+            ->and($notifiedWith->combinable)->toBe($combinable);
     } finally {
         EventDispatcher::reset();
         CurrentTemplate::reset();

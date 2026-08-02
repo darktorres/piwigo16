@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use Piwigo\Event\Lifecycle\GetPwgThemes;
+
 /**
  * P23 batch 8d: installed-theme listing relocated from
  * include/functions.inc.php -- no natural existing class home (theme
@@ -47,10 +49,7 @@ final class ThemeCatalog
         }
 
         // plugins want remove some themes based on user status maybe?
-        $themes = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('get_pwg_themes', $themes);
-        if (! is_array($themes)) {
-            return [];
-        }
+        $themes = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetPwgThemes($themes))->themes;
 
         $filtered_themes = [];
         foreach ($themes as $key => $value) {

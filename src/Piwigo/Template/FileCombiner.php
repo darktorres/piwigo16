@@ -15,6 +15,8 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Event\Template\CombinedCssPostfilter;
+use Piwigo\Template\Event\CombinablePreparse;
 
 final class FileCombiner
 {
@@ -189,7 +191,7 @@ final class FileCombiner
                 throw new \Exception("process_combinable(): file not found for {$combinable->path}");
             }
             $template->set_filename($handle, $real_path);
-            \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('combinable_preparse', $template, $combinable, $this); // allow themes and plugins to set their own vars to template ...
+            \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new CombinablePreparse($template, $combinable, $this)); // allow themes and plugins to set their own vars to template ...
             // parse($handle, true) is always string (never null) since we
             // always pass true here (see Template::parse()'s conditional
             // return type).
@@ -250,36 +252,32 @@ final class FileCombiner
     /**
      * Process a CSS file.
      *
-     * @param string|null $css file content
      * @param string $file
      * @param string $header CSS directives that must appear first in
      *                       the minified file.
      */
-    private static function process_css(?string $css, $file, string &$header, UrlServiceInterface $urlService, Paths $paths): string
+    private static function process_css(string $css, $file, string &$header, UrlServiceInterface $urlService, Paths $paths): string
     {
         $css = self::process_css_rec($css, dirname($file), $header, $urlService, $paths);
-        $css = \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange('combined_css_postfilter', $css);
-        if (! is_string($css)) {
-            throw new \Exception("process_css(): a 'combined_css_postfilter' event listener returned a non-string value");
-        }
-        return $css;
+        $postfilterEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new CombinedCssPostfilter($css));
+
+        return $postfilterEvent->css;
     }
 
     /**
      * Resolves relative links in CSS file.
      *
-     * @param string|null $css file content
      * @param string $header CSS directives that must appear first in
      *                       the minified file.
      */
-    private static function process_css_rec(?string $css, string $dir, &$header, UrlServiceInterface $urlService, Paths $paths): ?string
+    private static function process_css_rec(string $css, string $dir, &$header, UrlServiceInterface $urlService, Paths $paths): string
     {
         /** @var non-empty-string */
         static $PATTERN_URL = "#url\(\s*['|\"]{0,1}(.*?)['|\"]{0,1}\s*\)#";
         /** @var non-empty-string */
         static $PATTERN_IMPORT = "#@import\s*['|\"]{0,1}(.*?)['|\"]{0,1};#";
 
-        if ((bool) preg_match_all($PATTERN_URL, $css ?? '', $matches, PREG_SET_ORDER)) {
+        if ((bool) preg_match_all($PATTERN_URL, $css, $matches, PREG_SET_ORDER)) {
             $search = $replace = [];
             foreach ($matches as $match) {
                 if (! $urlService->urlIsRemote($match[1]) && $match[1][0] !== '/' && ! str_contains($match[1], 'data:image/')) {
@@ -288,10 +286,10 @@ final class FileCombiner
                     $replace[] = 'url(' . $urlService->embellishUrl($urlService->getAbsoluteRootUrl(false) . $relative) . ')';
                 }
             }
-            $css = str_replace($search, $replace, $css ?? '');
+            $css = str_replace($search, $replace, $css);
         }
 
-        if ((bool) preg_match_all($PATTERN_IMPORT, $css ?? '', $matches, PREG_SET_ORDER)) {
+        if ((bool) preg_match_all($PATTERN_IMPORT, $css, $matches, PREG_SET_ORDER)) {
             $search = $replace = [];
 
             foreach ($matches as $match) {
@@ -313,10 +311,10 @@ final class FileCombiner
                     if ($sub_css === false) {
                         throw new \Exception('process_css_rec(): unable to read ' . $dir . "/{$match[1]}");
                     }
-                    $replace[] = self::process_css_rec($sub_css, dirname($dir . "/{$match[1]}"), $header, $urlService, $paths) ?? '';
+                    $replace[] = self::process_css_rec($sub_css, dirname($dir . "/{$match[1]}"), $header, $urlService, $paths);
                 }
             }
-            $css = str_replace($search, $replace, $css ?? '');
+            $css = str_replace($search, $replace, $css);
         }
         return $css;
     }

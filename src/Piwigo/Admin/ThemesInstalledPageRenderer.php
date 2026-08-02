@@ -15,6 +15,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Event\Location\LocEndThemesInstalled;
 use Piwigo\Template\Template;
 
 /**
@@ -133,7 +134,7 @@ final class ThemesInstalledPageRenderer
             ]
         );
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_themes_installed');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndThemesInstalled());
 
         $template->assign('isWebmaster', (\Piwigo\Auth\AccessControl::isWebmaster()) ? 1 : 0);
         $template->assign('ADMIN_PAGE_TITLE', Lang::t('Themes'));

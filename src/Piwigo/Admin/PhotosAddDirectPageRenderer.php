@@ -13,6 +13,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Event\Location\LocEndPhotoAddDirect;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
@@ -167,7 +168,7 @@ final class PhotosAddDirectPageRenderer
         // |                           sending html code                       |
         // +-------------------------------------------------------------------+
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_photo_add_direct');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndPhotoAddDirect());
 
         $conf_format_ext = \Piwigo\Config\CurrentConfig::formatExtensions();
 

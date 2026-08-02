@@ -17,6 +17,8 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Event\Location\LocBeginPicture;
+use Piwigo\Event\Location\LocEndPicture;
 use Piwigo\Event\Picture\AllowIncrementElementHitCount;
 use Piwigo\Event\Picture\GetElementMetadataAvailable;
 use Piwigo\Event\Picture\PicturePicturesData;
@@ -309,7 +311,7 @@ final class PictureController implements ControllerInterface
             },
         );
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_picture');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginPicture());
 
         // +-----------------------------------------------------------------+
         // |                            initialization                        |
@@ -1233,7 +1235,7 @@ final class PictureController implements ControllerInterface
         /** @var string|null $url_link */
         new \Piwigo\Page\PageHeaderRenderer()
             ->render($title, $refresh_str, $url_link ?? null);
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_picture');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndPicture());
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();
         if ($slideshow and \Piwigo\Config\CurrentConfig::lightSlideshow()) {

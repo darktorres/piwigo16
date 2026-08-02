@@ -8,6 +8,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Event\Location\LocBeginAbout;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
@@ -56,7 +57,7 @@ final class AboutController implements ControllerInterface
         $title = Lang::t('About Piwigo');
         \Piwigo\Core\PageState::current()->setBodyId('theAboutPage');
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_about');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginAbout());
 
         $template->set_filename('about', 'about.tpl');
 

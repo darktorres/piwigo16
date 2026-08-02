@@ -17,6 +17,8 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Location\LocBeginComments;
+use Piwigo\Event\Location\LocEndComments;
 use Piwigo\Event\Template\RenderCommentAuthor;
 use Piwigo\Event\Template\RenderCommentContent;
 use Piwigo\Http\ControllerInterface;
@@ -144,7 +146,7 @@ final class CommentsController implements ControllerInterface
             ], // stupid but generic
         ];
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_comments');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginComments());
 
         $commentsRequest = Request\CommentsRequest::fromGlobals($comments_page_nb_comments);
 
@@ -641,7 +643,7 @@ final class CommentsController implements ControllerInterface
         // +---------------------------------------------------------------+
         new \Piwigo\Page\PageHeaderRenderer()
             ->render($title);
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_comments');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndComments());
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();
         if (count($comments) > 0) {

@@ -10,6 +10,8 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Event\Location\LocBeginIndex;
+use Piwigo\Event\Location\LocEndIndex;
 use Piwigo\Event\Tag\RenderTagName;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
@@ -121,7 +123,7 @@ final class GalleryController implements ControllerInterface
         $tagService = self::tagService();
         $categoryService = self::categoryService();
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_index');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginIndex());
 
         $galleryDisplay = Request\GalleryDisplayRequest::fromGlobals();
 
@@ -576,7 +578,7 @@ final class GalleryController implements ControllerInterface
         // ---------------------------------------------------------- end
         new \Piwigo\Page\PageHeaderRenderer()
             ->render($title);
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_index');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndIndex());
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();
         $template->parse_index_buttons();

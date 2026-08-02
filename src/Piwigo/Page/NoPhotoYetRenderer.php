@@ -9,6 +9,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Event\Location\LocEndNoPhotoYet;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Template\Template;
@@ -105,7 +106,7 @@ final readonly class NoPhotoYetRenderer
                     );
                 }
 
-                \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_no_photo_yet');
+                \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndNoPhotoYet());
 
                 $template->pparse('no_photo_yet');
                 exit();

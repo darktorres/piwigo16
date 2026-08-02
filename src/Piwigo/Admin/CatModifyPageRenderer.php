@@ -7,6 +7,8 @@ namespace Piwigo\Admin;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\SqlDialect;
+use Piwigo\Event\Location\LocBeginCatModify;
+use Piwigo\Event\Location\LocEndCatModify;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Template\Template;
 
@@ -49,7 +51,7 @@ final class CatModifyPageRenderer
 
         $categoryService = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_cat_modify');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginCatModify());
 
         // 'id' is the categories table primary key (NOT NULL); AlbumSubController's
         // own fetchAssociative() call (one file over the include boundary PHPStan
@@ -346,7 +348,7 @@ final class CatModifyPageRenderer
 
         $template->assign('PWG_TOKEN', new \Piwigo\Csrf\CsrfService()->getToken());
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_cat_modify');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndCatModify());
 
         // ----------------------------------------------------------- sending html code
         $template->assign_var_from_handle('ADMIN_CONTENT', 'album_properties');

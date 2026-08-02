@@ -8,6 +8,8 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Event\Location\LocBeginTags;
+use Piwigo\Event\Location\LocEndTags;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
@@ -34,7 +36,7 @@ final class TagsController implements ControllerInterface
     {
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_tags');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginTags());
 
         $displayModeParam = $request->getQueryParams()['display_mode'] ?? null;
         $urlService = $this->urlService;
@@ -184,7 +186,7 @@ final class TagsController implements ControllerInterface
 
         new \Piwigo\Page\PageHeaderRenderer()
             ->render($title);
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_tags');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndTags());
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();
         $template->parse('tags', false);

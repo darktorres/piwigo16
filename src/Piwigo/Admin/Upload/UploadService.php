@@ -13,6 +13,8 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
+use Piwigo\Event\Location\LocEndAddFormat;
+use Piwigo\Event\Location\LocEndAddUploadedFile;
 use Piwigo\Event\Picture\UploadFile;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Image\DerivativeImage;
@@ -569,7 +571,7 @@ final class UploadService
         // matters.
         HttpClientService::fetch($derivative_url);
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_add_uploaded_file', $image_infos);
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndAddUploadedFile($image_infos));
 
         return $image_id;
     }
@@ -771,7 +773,7 @@ final class UploadService
         $format_infos = $insert;
         $format_infos['format_id'] = $format_id;
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_add_format', $format_infos);
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndAddFormat($format_infos));
 
         return $add_status;
     }

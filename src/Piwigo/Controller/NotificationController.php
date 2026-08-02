@@ -8,6 +8,8 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Event\Location\LocBeginNotification;
+use Piwigo\Event\Location\LocEndNotification;
 use Piwigo\Feed\FeedRepository;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
@@ -40,7 +42,7 @@ final class NotificationController implements ControllerInterface
     {
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_notification');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginNotification());
 
         $feedRepo = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Feed\FeedEntity::class);
         $feedId = $this->findAvailableFeedId($feedRepo);
@@ -91,7 +93,7 @@ final class NotificationController implements ControllerInterface
 
         new \Piwigo\Page\PageHeaderRenderer()
             ->render($title);
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_notification');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndNotification());
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();
         $template->parse('notification', false);

@@ -13,6 +13,7 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Location\LocEndPictureModify;
 use Piwigo\Event\Picture\PictureModifyBeforeUpdate;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageService;
@@ -493,7 +494,7 @@ final class PictureModifyPageRenderer
                 ->getToken(),
         ]);
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_picture_modify');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndPictureModify());
 
         // ----------------------------------------------------------- sending html code
         $template->assign_var_from_handle('ADMIN_CONTENT', 'picture_modify');

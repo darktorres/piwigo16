@@ -13,6 +13,8 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Event\Admin\ElementSetGlobalAction;
+use Piwigo\Event\Location\LocBeginElementSetGlobal;
+use Piwigo\Event\Location\LocEndElementSetGlobal;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageService;
@@ -91,7 +93,7 @@ final class BatchManagerGlobalPageRenderer
                 ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
         }
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_element_set_global');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginElementSetGlobal());
 
         $batchManagerGlobalRequest = Request\BatchManagerGlobalRequest::fromGlobals();
 
@@ -607,7 +609,7 @@ final class BatchManagerGlobalPageRenderer
             'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['tags', 'categories']),
         ]);
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_element_set_global');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndElementSetGlobal());
 
         // ----------------------------------------------------------- sending html code
         $template->assign_var_from_handle('ADMIN_CONTENT', 'batch_manager_global');

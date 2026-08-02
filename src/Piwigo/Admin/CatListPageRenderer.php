@@ -8,6 +8,8 @@ use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Event\Location\LocBeginCatList;
+use Piwigo\Event\Location\LocEndCatList;
 use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Template\Template;
 
@@ -43,7 +45,7 @@ final class CatListPageRenderer
 
         $categoryService = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_cat_list');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginCatList());
 
         $catListRequest = Request\CatListRequest::fromGlobals();
 
@@ -270,7 +272,7 @@ final class CatListPageRenderer
             $template->append('categories', $tpl_cat);
         }
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_cat_list');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndCatList());
 
         // +-------------------------------------------------------------------+
         // |                          sending html code                        |

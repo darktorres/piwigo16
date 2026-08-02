@@ -9,6 +9,8 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Event\Location\LocBeginIdentification;
+use Piwigo\Event\Location\LocEndIdentification;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
@@ -57,7 +59,7 @@ final class IdentificationController implements ControllerInterface
             $this->redirectService->redirect($this->urlService->getGalleryHomeUrl());
         }
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_identification');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginIdentification());
 
         unset($_SESSION['reset_password_code']);
 
@@ -202,7 +204,7 @@ final class IdentificationController implements ControllerInterface
 
         new \Piwigo\Page\PageHeaderRenderer()
             ->render($title);
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_identification');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndIdentification());
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()

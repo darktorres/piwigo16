@@ -23,6 +23,9 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
+use Piwigo\Event\Location\LocBeginAdmin;
+use Piwigo\Event\Location\LocBeginAdminPage;
+use Piwigo\Event\Location\LocEndAdmin;
 use Piwigo\Http\RequestFactory;
 use Piwigo\Image\ImageService;
 use Piwigo\Session\SessionService;
@@ -90,7 +93,7 @@ final class AdminShell
         CoreTabs::setUrlService($this->urlService);
         \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(TabsheetBeforeSelect::class, CoreTabs::addCoreTabs(...));
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_admin');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginAdmin());
 
         // +-------------------------------------------------------------------+
         // | Check Access and exit when user status is not ok                  |
@@ -457,7 +460,7 @@ final class AdminShell
         // | Include specific page                                             |
         // +-------------------------------------------------------------------+
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_admin_page');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginAdminPage());
 
         // SEC-19: sub-controllers read input from this PSR-7 request
         // (getQueryParams()/getParsedBody()), not $_GET/$_POST directly.
@@ -475,7 +478,7 @@ final class AdminShell
         new \Piwigo\Page\PageHeaderRenderer()
             ->render($title);
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_admin');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndAdmin());
 
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();

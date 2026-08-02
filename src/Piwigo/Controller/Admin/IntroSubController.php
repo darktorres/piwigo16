@@ -16,6 +16,7 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
+use Piwigo\Event\Location\LocEndIntro;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Template\Template;
 use Psr\Http\Message\ServerRequestInterface;
@@ -249,7 +250,7 @@ final class IntroSubController implements AdminSubControllerInterface
             }
         }
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_intro');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndIntro());
 
         // +-----------------------------------------------------------------------+
         // |                           get activity data                           |

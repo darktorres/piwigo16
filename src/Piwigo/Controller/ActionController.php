@@ -7,6 +7,7 @@ namespace Piwigo\Controller;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Event\Lifecycle\LocActionBeforeHttpHeaders;
 use Piwigo\History\HistoryService;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
@@ -184,7 +185,7 @@ final class ActionController implements ControllerInterface
                 ->logVisit($image_id_val, 'high', $format_row->formatId);
         }
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_action_before_http_headers');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocActionBeforeHttpHeaders());
 
         $http_headers = [];
 

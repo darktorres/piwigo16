@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace Piwigo\Page;
 
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Event\Lifecycle\LocAfterPageHeader;
+use Piwigo\Event\Location\LocBeginPageHeader;
+use Piwigo\Event\Location\LocEndPageHeader;
+use Piwigo\Event\Template\RenderPageBanner;
 use Piwigo\Html\HtmlService;
 use Piwigo\Url\UrlService;
 
@@ -45,7 +49,7 @@ final class PageHeaderRenderer
             'header' => 'header.tpl',
         ]);
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_page_header');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginPageHeader());
 
         $show_mobile_app_banner = \Piwigo\Config\CurrentConfig::showMobileAppBannerInGallery();
         if (\Piwigo\Core\AdminContext::isActive()) {
@@ -60,14 +64,13 @@ final class PageHeaderRenderer
             [
                 'GALLERY_TITLE' => $conf_gallery_title,
 
-                'PAGE_BANNER' => \Piwigo\PluginConfig\EventDispatcher::get()->triggerChange(
-                    'render_page_banner',
+                'PAGE_BANNER' => \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderPageBanner(
                     str_replace(
                         '%gallery_title%',
                         $conf_gallery_title,
                         $page_banner
                     )
-                ),
+                ))->banner,
 
                 'BODY_ID' => \Piwigo\Core\PageState::current()->bodyId,
 
@@ -124,12 +127,12 @@ final class PageHeaderRenderer
             );
         }
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_page_header');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndPageHeader());
 
         header('Content-Type: text/html; charset=' . \Piwigo\Core\CharsetHelper::getPwgCharset());
         $template->parse('header');
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_after_page_header');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocAfterPageHeader());
     }
 
     /**

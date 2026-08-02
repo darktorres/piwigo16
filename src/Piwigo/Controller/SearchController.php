@@ -8,6 +8,7 @@ use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Event\Location\LocBeginSearch;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Search\SearchService;
@@ -40,7 +41,7 @@ final class SearchController implements ControllerInterface
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_search');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginSearch());
 
         // +---------------------------------------------------------------+
         // | Create a default search                                      |

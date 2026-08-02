@@ -9,6 +9,8 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\SqlDialect;
+use Piwigo\Event\Location\LocBeginProfile;
+use Piwigo\Event\Location\LocEndProfile;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
@@ -100,7 +102,7 @@ final class ProfileController implements ControllerInterface
 
         $userdata = \Piwigo\Users\CurrentUser::get()->toUserArray();
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_profile');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginProfile());
 
         $fields = [
             'nb_image_page', 'expand',
@@ -196,7 +198,7 @@ final class ProfileController implements ControllerInterface
 
         $template->assign('HELP_LINK', $help_link);
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_profile');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndProfile());
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();
         $template->parse('profile', false);

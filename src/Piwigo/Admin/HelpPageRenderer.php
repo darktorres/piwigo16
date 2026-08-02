@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Event\Location\LocEndHelp;
 
 /**
  * Ported from admin/help.php (page slug "help").
@@ -32,7 +33,7 @@ final class HelpPageRenderer
         $tabsheet->select($selected);
         $tabsheet->assign();
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_help');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndHelp());
 
         $template->set_filenames([
             'help' => 'help.tpl',

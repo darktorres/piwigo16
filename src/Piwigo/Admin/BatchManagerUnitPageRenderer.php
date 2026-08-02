@@ -13,6 +13,8 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Event\Location\LocBeginElementSetUnit;
+use Piwigo\Event\Location\LocEndElementSetUnit;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
@@ -103,7 +105,7 @@ final class BatchManagerUnitPageRenderer
         $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
         $conn = DbConnection::build();
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_element_set_unit');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginElementSetUnit());
 
         // +-------------------------------------------------------------------+
         // |                        unit mode form submission                      |
@@ -531,7 +533,7 @@ final class BatchManagerUnitPageRenderer
             'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['tags', 'categories']),
         ]);
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_element_set_unit');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndElementSetUnit());
 
         // +-------------------------------------------------------------------+
         // |                           sending html code                           |

@@ -9,6 +9,8 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Event\Location\LocBeginRegister;
+use Piwigo\Event\Location\LocEndRegister;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
@@ -61,7 +63,7 @@ final class RegisterController implements ControllerInterface
                 ->pageForbidden($this->redirectService, 'User registration closed');
         }
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_register');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginRegister());
 
         $registerSubmit = Request\RegisterSubmitRequest::fromGlobals();
 
@@ -248,7 +250,7 @@ final class RegisterController implements ControllerInterface
 
         new \Piwigo\Page\PageHeaderRenderer()
             ->render($title);
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_register');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndRegister());
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()

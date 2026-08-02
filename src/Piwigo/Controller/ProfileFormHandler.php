@@ -15,6 +15,8 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
+use Piwigo\Event\User\LoadProfileInTemplate;
+use Piwigo\Event\User\SaveProfileFromPost;
 use Piwigo\Template\Template;
 use Piwigo\Users\UserService;
 
@@ -302,7 +304,7 @@ final class ProfileFormHandler
 
                 $activity_details_tables[] = 'user_infos';
             }
-            \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('save_profile_from_post', $userdata['id']);
+            \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new SaveProfileFromPost($user_id));
             self::activityService($conn)->record('user', $user_id, 'edit', [
                 'function' => __METHOD__,
                 'tables' => implode(',', $activity_details_tables),
@@ -409,7 +411,7 @@ final class ProfileFormHandler
         $template->assign('API_EMAIL_INFOS', $email_notifications_infos);
 
         // allow plugins to add their own form data to content
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('load_profile_in_template', $userdata);
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LoadProfileInTemplate($userdata));
 
         $template->assign('PWG_TOKEN', new \Piwigo\Csrf\CsrfService()->getToken());
     }

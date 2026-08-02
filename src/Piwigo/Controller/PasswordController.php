@@ -12,6 +12,8 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Event\Location\LocBeginPassword;
+use Piwigo\Event\Location\LocEndPassword;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
@@ -95,7 +97,7 @@ final class PasswordController implements ControllerInterface
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Free);
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_password');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginPassword());
 
         $this->request = Request\PasswordRequest::fromGlobals();
         $action_param = $this->request->action;
@@ -275,7 +277,7 @@ final class PasswordController implements ControllerInterface
 
         new \Piwigo\Page\PageHeaderRenderer()
             ->render($title);
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_password');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndPassword());
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()

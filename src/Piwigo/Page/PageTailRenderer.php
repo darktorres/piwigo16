@@ -7,6 +7,8 @@ namespace Piwigo\Page;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\TelemetrySenderInterface;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Event\Location\LocBeginPageTail;
+use Piwigo\Event\Location\LocEndPageTail;
 
 /**
  * Renders the page footer into $template.
@@ -77,7 +79,7 @@ final readonly class PageTailRenderer
             'tail' => 'footer.tpl',
         ]);
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_begin_page_tail');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginPageTail());
 
         $template->assign(
             [
@@ -142,7 +144,7 @@ final readonly class PageTailRenderer
             );
         }
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->triggerNotify('loc_end_page_tail');
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndPageTail());
         //
         // Generate the page
         //

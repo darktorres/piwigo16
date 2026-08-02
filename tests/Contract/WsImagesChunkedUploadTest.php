@@ -111,7 +111,7 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
         // Fixture image 1's real md5sum -- check_uniqueness (default true)
         // rejects this before addChunk is even needed.
         $response = $this->callWsAllowingServerError('pwg.images.add', [
-            'original_sum' => 'fc6fccf1f8d70f6d7c6d627871f2ea6f',
+            'original_sum' => '2e7ee450c4a4cffe42945205029782b9',
         ]);
 
         self::assertSame('fail', $response['stat']);

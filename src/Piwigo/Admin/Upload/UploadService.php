@@ -72,6 +72,15 @@ use Piwigo\Ws\PwgServer;
  */
 final class UploadService
 {
+    /**
+     * Advisory-lock acquisition timeout for addUploadedFile()'s
+     * uploadDetectDuplicate() race fix -- generous enough to cover a
+     * concurrent upload's own full image-processing pipeline (resize,
+     * representative generation), same reasoning as PwgImages::
+     * UPLOAD_UNIQUENESS_LOCK_TIMEOUT_SECONDS.
+     */
+    private const int DUP_DETECT_LOCK_TIMEOUT_SECONDS = 30;
+
     public function __construct(
         private readonly Lang $lang,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
@@ -268,7 +277,37 @@ final class UploadService
         }
 
         // we only try to detect duplicate on a new image, not when updating an existing image
+        //
+        // Further SQL-modernization audit, Item 1: this is a second,
+        // independent duplicate-detection mechanism from add()'s own
+        // check_uniqueness (different config flag, different resolution --
+        // merge into the existing image rather than reject), with the
+        // identical check-then-insert TOCTOU shape. Covered by its own
+        // advisory lock, held from this check through the INSERT below --
+        // a distinct lock-name namespace ('piwigo_iud_' prefix) from add()'s
+        // own ('piwigo_iu_' prefix) so the two mechanisms can never contend
+        // on the same lock name and self-deadlock when a
+        // single add() call has both active (add() already holds its own
+        // lock for the whole duration of this call, including this one).
+        $dup_detect_lock_conn = null;
+        $dup_detect_lock_name = null;
+
         if (! isset($image_id) and $this->currentConfig->uploadDetectDuplicate()) {
+            $dup_detect_lock_conn = DbConnection::build();
+            // GET_LOCK() names are capped at 64 characters -- hashed (with the DB
+            // prefix folded into the hashed input for the same collision-avoidance
+            // reasoning as add()'s own lock, see PwgImages::add()) rather than
+            // concatenated literally.
+            $dup_detect_lock_name = 'piwigo_iud_' . sha1(\Piwigo\Db\DbCredentials::current()->prefix . ':' . $md5sum);
+            $dup_detect_lock_acquired = $dup_detect_lock_conn->fetchOne(
+                'SELECT GET_LOCK(?, ?)',
+                [$dup_detect_lock_name, self::DUP_DETECT_LOCK_TIMEOUT_SECONDS]
+            );
+
+            if (! is_numeric($dup_detect_lock_acquired) || (int) $dup_detect_lock_acquired !== 1) {
+                throw new \Exception(__METHOD__ . '(): could not acquire upload duplicate-detection lock for md5sum ' . $md5sum);
+            }
+
             $images_found = $this->imageService->getIdsByMd5sum($md5sum);
 
             if (count($images_found) > 0) {
@@ -280,270 +319,281 @@ final class UploadService
                 // associate_images_to_categories perfectly handles this case
                 $this->addUploadedFileAddToCategories($image_id, $categories);
 
+                $dup_detect_lock_conn->executeStatement('SELECT RELEASE_LOCK(?)', [$dup_detect_lock_name]);
                 return $image_id;
             }
         }
 
-        $file_path = null;
-        // Only ever read in the "new photo" branch below (where it's also
-        // assigned) -- declared here so Psalm can see it's always defined
-        // by the time it's used, without relying on the two branches'
-        // isset($image_id) conditions staying in sync 200 lines apart.
-        $dbnow = null;
+        try {
+            $file_path = null;
+            // Only ever read in the "new photo" branch below (where it's also
+            // assigned) -- declared here so Psalm can see it's always defined
+            // by the time it's used, without relying on the two branches'
+            // isset($image_id) conditions staying in sync 200 lines apart.
+            $dbnow = null;
 
-        if (isset($image_id)) {
-            // this photo already exists, we update it
-            $existing_paths = $this->imageService->getPathsForIds([$image_id]);
-            foreach ($existing_paths as $row) {
-                $file_path = $row['path'];
-            }
-
-            if (! isset($file_path)) {
-                throw new ImageProcessingException('[' . __METHOD__ . '] this photo does not exist in the database');
-            }
-
-            // Real bug, found while writing a real "update an existing
-            // photo" integration test (confirmed live, matching what
-            // WsImagesUploadGapsTest's own docblock already documented as
-            // a pre-existing 500: "getimagesize(upload/2026/08/01/....jpg):
-            // Failed to open stream"): images.path is stored root-relative
-            // (see the "new photo" branch's own preg_replace() a bit
-            // further down, and addFormat()'s own identical "images.path
-            // ... is relative, not yet an absolute path" handling just
-            // below in this same class) -- but every downstream use of
-            // $file_path past this point (StorageRegistry::stripRoot(),
-            // chmod(), get_rotation_angle()/pwgImageInfos()'s own
-            // getimagesize()/filesize() calls) requires an absolute
-            // filesystem path, exactly like the "new photo" branch's own
-            // $file_path already is. Prefixing here, once, right after the
-            // DB read, keeps both branches producing the same absolute
-            // shape for the rest of the method.
-            $file_path = \Piwigo\Core\CurrentPaths::get()->root . $file_path;
-
-            // delete all physical files related to the photo (thumbnail, web site, HD)
-            $this->imageService
-                ->deleteElementFiles([$image_id], $urlService);
-        } else {
-            // this photo is new
-
-            // current date -- Env::now() rather than a raw "SELECT NOW();",
-            // since the latter runs on the MySQL server's real clock,
-            // invisible to Env::now()'s PIWIGO_TEST_NOW freeze. This value
-            // drives both piwigo_images.date_available and the upload
-            // directory/filename's date portion, so a real-clock read here
-            // made every fixture regeneration produce a fresh, unstable
-            // upload path and a non-reproducible photo sort order.
-            $dbnow = Env::now()
-                ->format('Y-m-d H:i:s');
-            $date_parts = preg_split('/[^\d]/', $dbnow, 4);
-            if ($date_parts === false) {
-                throw new \Exception(__METHOD__ . '(): preg_split() failed');
-            }
-            [$year, $month, $day] = $date_parts;
-
-            // upload directory hierarchy
-            //
-            // Real bug, found via a fixture-regeneration discrepancy:
-            // CurrentConfig::uploadDir()'s own default already ends in '/'
-            // ('upload/'), so appending another literal '/' before %s below
-            // produced a double slash (e.g. 'upload//2026/08/01/...') in
-            // every stored images.path -- rtrim() here matches the same
-            // defensive normalization this class's own addUploadedFile()
-            // already applies a few lines up ($upload_root).
-            $conf_upload_dir = rtrim($this->currentConfig->uploadDir(), '/');
-            $upload_dir = sprintf(
-                \Piwigo\Core\CurrentPaths::get()->root . $conf_upload_dir . '/%s/%s/%s',
-                $year,
-                $month,
-                $day
-            );
-
-            // compute file path
-            $date_string = preg_replace('/[^\d]/', '', $dbnow);
-            $random_string = substr($md5sum, 0, 4) . '%s';
-            $filename_wo_ext = $date_string . '-' . $random_string;
-            $file_path = $upload_dir . '/' . $filename_wo_ext . '.';
-
-            $image_size = getimagesize($source_filepath);
-            if ($image_size === false) {
-                // not a real image (e.g. upload_form_all_types lets through a
-                // non-image file); fall through to the same "unrecognized
-                // type" handling as any other $type that isn't a known
-                // IMAGETYPE_* constant
-                $type = false;
-            } else {
-                [$width, $height, $type] = $image_size;
-            }
-
-            if ($type === IMAGETYPE_PNG) {
-                $file_path .= 'png';
-            } elseif ($type === IMAGETYPE_GIF) {
-                $file_path .= 'gif';
-            } elseif ($type === IMAGETYPE_JPEG) {
-                $file_path .= 'jpg';
-            } elseif ($type === IMAGETYPE_WEBP) {
-                $file_path .= 'webp';
-            } elseif ($this->currentConfig->uploadFormAllTypes()) {
-                $original_extension = strtolower(\Piwigo\Core\StringHelper::getExtension($original_filename));
-
-                $finfo = finfo_open(FILEINFO_MIME_TYPE);
-                if ($finfo === false) {
-                    throw new \Exception(__METHOD__ . '(): finfo_open() failed');
+            if (isset($image_id)) {
+                // this photo already exists, we update it
+                $existing_paths = $this->imageService->getPathsForIds([$image_id]);
+                foreach ($existing_paths as $row) {
+                    $file_path = $row['path'];
                 }
-                $finfo_type = finfo_file($finfo, $source_filepath);
 
-                if (in_array($finfo_type, ['image/svg', 'image/svg+xml'], true) and $original_extension !== 'svg') {
-                    unlink($source_filepath);
-                    $error_msg = 'File extension "' . $original_extension . '" for file "' . $original_filename . '" does not match file MIME type "' . $finfo_type . '"';
-                    if (\Piwigo\Core\WsContext::isActiveStatic() && $service !== null) {
-                        $service->sendResponse(new PwgError(415, $error_msg));
-                        exit;
+                if (! isset($file_path)) {
+                    throw new ImageProcessingException('[' . __METHOD__ . '] this photo does not exist in the database');
+                }
+
+                // Real bug, found while writing a real "update an existing
+                // photo" integration test (confirmed live, matching what
+                // WsImagesUploadGapsTest's own docblock already documented as
+                // a pre-existing 500: "getimagesize(upload/2026/08/01/....jpg):
+                // Failed to open stream"): images.path is stored root-relative
+                // (see the "new photo" branch's own preg_replace() a bit
+                // further down, and addFormat()'s own identical "images.path
+                // ... is relative, not yet an absolute path" handling just
+                // below in this same class) -- but every downstream use of
+                // $file_path past this point (StorageRegistry::stripRoot(),
+                // chmod(), get_rotation_angle()/pwgImageInfos()'s own
+                // getimagesize()/filesize() calls) requires an absolute
+                // filesystem path, exactly like the "new photo" branch's own
+                // $file_path already is. Prefixing here, once, right after the
+                // DB read, keeps both branches producing the same absolute
+                // shape for the rest of the method.
+                $file_path = \Piwigo\Core\CurrentPaths::get()->root . $file_path;
+
+                // delete all physical files related to the photo (thumbnail, web site, HD)
+                $this->imageService
+                    ->deleteElementFiles([$image_id], $urlService);
+            } else {
+                // this photo is new
+
+                // current date -- Env::now() rather than a raw "SELECT NOW();",
+                // since the latter runs on the MySQL server's real clock,
+                // invisible to Env::now()'s PIWIGO_TEST_NOW freeze. This value
+                // drives both piwigo_images.date_available and the upload
+                // directory/filename's date portion, so a real-clock read here
+                // made every fixture regeneration produce a fresh, unstable
+                // upload path and a non-reproducible photo sort order.
+                $dbnow = Env::now()
+                    ->format('Y-m-d H:i:s');
+                $date_parts = preg_split('/[^\d]/', $dbnow, 4);
+                if ($date_parts === false) {
+                    throw new \Exception(__METHOD__ . '(): preg_split() failed');
+                }
+                [$year, $month, $day] = $date_parts;
+
+                // upload directory hierarchy
+                //
+                // Real bug, found via a fixture-regeneration discrepancy:
+                // CurrentConfig::uploadDir()'s own default already ends in '/'
+                // ('upload/'), so appending another literal '/' before %s below
+                // produced a double slash (e.g. 'upload//2026/08/01/...') in
+                // every stored images.path -- rtrim() here matches the same
+                // defensive normalization this class's own addUploadedFile()
+                // already applies a few lines up ($upload_root).
+                $conf_upload_dir = rtrim($this->currentConfig->uploadDir(), '/');
+                $upload_dir = sprintf(
+                    \Piwigo\Core\CurrentPaths::get()->root . $conf_upload_dir . '/%s/%s/%s',
+                    $year,
+                    $month,
+                    $day
+                );
+
+                // compute file path
+                $date_string = preg_replace('/[^\d]/', '', $dbnow);
+                $random_string = substr($md5sum, 0, 4) . '%s';
+                $filename_wo_ext = $date_string . '-' . $random_string;
+                $file_path = $upload_dir . '/' . $filename_wo_ext . '.';
+
+                $image_size = getimagesize($source_filepath);
+                if ($image_size === false) {
+                    // not a real image (e.g. upload_form_all_types lets through a
+                    // non-image file); fall through to the same "unrecognized
+                    // type" handling as any other $type that isn't a known
+                    // IMAGETYPE_* constant
+                    $type = false;
+                } else {
+                    [$width, $height, $type] = $image_size;
+                }
+
+                if ($type === IMAGETYPE_PNG) {
+                    $file_path .= 'png';
+                } elseif ($type === IMAGETYPE_GIF) {
+                    $file_path .= 'gif';
+                } elseif ($type === IMAGETYPE_JPEG) {
+                    $file_path .= 'jpg';
+                } elseif ($type === IMAGETYPE_WEBP) {
+                    $file_path .= 'webp';
+                } elseif ($this->currentConfig->uploadFormAllTypes()) {
+                    $original_extension = strtolower(\Piwigo\Core\StringHelper::getExtension($original_filename));
+
+                    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                    if ($finfo === false) {
+                        throw new \Exception(__METHOD__ . '(): finfo_open() failed');
+                    }
+                    $finfo_type = finfo_file($finfo, $source_filepath);
+
+                    if (in_array($finfo_type, ['image/svg', 'image/svg+xml'], true) and $original_extension !== 'svg') {
+                        unlink($source_filepath);
+                        $error_msg = 'File extension "' . $original_extension . '" for file "' . $original_filename . '" does not match file MIME type "' . $finfo_type . '"';
+                        if (\Piwigo\Core\WsContext::isActiveStatic() && $service !== null) {
+                            $service->sendResponse(new PwgError(415, $error_msg));
+                            exit;
+                        }
+
+                        throw new ImageProcessingException($error_msg);
                     }
 
-                    throw new ImageProcessingException($error_msg);
-                }
+                    // [SEC-21] strip <script>/event-handler content from a
+                    // genuinely-matching SVG before it ever reaches storage.
+                    $this->sanitizeSvgIfNeeded($source_filepath, is_string($finfo_type) ? $finfo_type : null);
 
-                // [SEC-21] strip <script>/event-handler content from a
-                // genuinely-matching SVG before it ever reaches storage.
-                $this->sanitizeSvgIfNeeded($source_filepath, is_string($finfo_type) ? $finfo_type : null);
-
-                $conf_file_ext = $this->currentConfig->fileExtensions();
-                if (in_array($original_extension, $conf_file_ext, true)) {
-                    $file_path .= $original_extension;
+                    $conf_file_ext = $this->currentConfig->fileExtensions();
+                    if (in_array($original_extension, $conf_file_ext, true)) {
+                        $file_path .= $original_extension;
+                    } else {
+                        unlink($source_filepath);
+                        throw new ImageProcessingException('unexpected file type');
+                    }
                 } else {
                     unlink($source_filepath);
-                    throw new ImageProcessingException('unexpected file type');
+                    throw new ImageProcessingException('forbidden file type');
                 }
+
+                $this->prepareDirectory($upload_dir);
+
+                $file_path_pattern = $file_path;
+                do {
+                    // we generate a random string for each upload. If the user uploads
+                    // the same photo twice at the same time (same timestamp, same md5sum)
+                    // we still want the path to be unique.
+                    $file_path = sprintf($file_path_pattern, substr(bin2hex(random_bytes(4)), 0, 4));
+                } while (file_exists($file_path));
+            }
+
+            // move_uploaded_file()/rename() both write $source_filepath's content
+            // to $file_path under the uploads tree and consume the source -- routed
+            // through StorageRegistry's 'uploads' disk instead so a future non-local
+            // adapter (S3/SFTP) needs no call-site change here. PHP's own SAPI-level
+            // upload cleanup deletes a real is_uploaded_file() tmp file at request
+            // end even without an explicit unlink() (verified via PHP's documented
+            // upload garbage-collection guarantee), matching what move_uploaded_file()
+            // used to do immediately; the "already local" (rename()) branch still
+            // needs an explicit unlink() since nothing else will remove that source.
+            $upload_root = rtrim(\Piwigo\Core\CurrentPaths::get()->root . $this->currentConfig->uploadDir(), '/');
+            $upload_rel_path = StorageRegistry::stripRoot($upload_root, $file_path);
+            $upload_stream = fopen($source_filepath, 'rb');
+            if ($upload_stream !== false) {
+                $this->storageRegistry->get('uploads')
+                    ->writeStream($upload_rel_path, $upload_stream);
+                fclose($upload_stream);
+                if (! is_uploaded_file($source_filepath)) {
+                    @unlink($source_filepath);
+                }
+            }
+            @chmod($file_path, 0644);
+
+            // handle the uploaded file type by potentially making a
+            // pwg_representative file.
+            $representative_ext = $this->eventDispatcher->dispatchChange(new UploadFile(null, $file_path))
+                ->representativeExt;
+
+            $logger->info(__METHOD__ . ' : force cache generation, representative_ext = ' . ($representative_ext ?? ''));
+
+            if (PwgImage::get_library() !== 'gd') {
+                if ($this->currentConfig->originalResize()) {
+                    $original_resize_maxwidth = $this->currentConfig->originalResizeMaxwidth();
+
+                    $original_resize_maxheight = $this->currentConfig->originalResizeMaxheight();
+
+                    $need_resize = $this->needResize($file_path, $original_resize_maxwidth, $original_resize_maxheight);
+
+                    if ($need_resize) {
+                        $img = new PwgImage($file_path, $this->currentLogger, $this->eventDispatcher, $this->currentConfig);
+
+                        $original_resize_quality = $this->currentConfig->originalResizeQuality();
+
+                        $img->pwg_resize(
+                            $file_path,
+                            $original_resize_maxwidth,
+                            $original_resize_maxheight,
+                            $original_resize_quality,
+                            $this->currentConfig->uploadFormAutomaticRotation(),
+                            false
+                        );
+
+                        $img->destroy();
+                    }
+                }
+            }
+
+            // we need to save the rotation angle in the database to compute
+            // width/height of "multisizes"
+            $rotation_angle = PwgImage::get_rotation_angle($file_path);
+            $rotation = PwgImage::get_rotation_code_from_angle($rotation_angle);
+
+            $file_infos = $this->pwgImageInfos($file_path);
+
+            if (isset($image_id)) {
+                $update = [
+                    'file' => $original_filename ?? basename($file_path),
+                    'filesize' => $file_infos['filesize'],
+                    'width' => $file_infos['width'],
+                    'height' => $file_infos['height'],
+                    'md5sum' => $md5sum,
+                    'added_by' => \Piwigo\Users\CurrentUser::current()->get()->id->value,
+                    'rotation' => $rotation,
+                ];
+
+                if (isset($level)) {
+                    $update['level'] = $level;
+                }
+
+                $this->imageService->updateFields($image_id, $update);
             } else {
-                unlink($source_filepath);
-                throw new ImageProcessingException('forbidden file type');
-            }
+                // database registration
+                $file = $original_filename ?? basename($file_path);
+                $insert = [
+                    'file' => $file,
+                    'name' => \Piwigo\Core\StringHelper::getNameFromFile($file),
+                    'date_available' => $dbnow,
+                    // Otherwise relies on the schema's own DEFAULT
+                    // CURRENT_TIMESTAMP, which reads the real DB-server clock --
+                    // invisible to Env::now()'s PIWIGO_TEST_NOW freeze, same
+                    // reasoning as date_available above. Reuses $dbnow rather
+                    // than a second Env::now() call so both columns agree on the
+                    // exact same instant, matching what the DB default would
+                    // have produced for a single INSERT.
+                    'lastmodified' => $dbnow,
+                    'path' => preg_replace('#^' . preg_quote(\Piwigo\Core\CurrentPaths::get()->root) . '#', '', $file_path),
+                    'filesize' => $file_infos['filesize'],
+                    'width' => $file_infos['width'],
+                    'height' => $file_infos['height'],
+                    'md5sum' => $md5sum,
+                    'added_by' => \Piwigo\Users\CurrentUser::current()->get()->id->value,
+                    'rotation' => $rotation,
+                ];
 
-            $this->prepareDirectory($upload_dir);
-
-            $file_path_pattern = $file_path;
-            do {
-                // we generate a random string for each upload. If the user uploads
-                // the same photo twice at the same time (same timestamp, same md5sum)
-                // we still want the path to be unique.
-                $file_path = sprintf($file_path_pattern, substr(bin2hex(random_bytes(4)), 0, 4));
-            } while (file_exists($file_path));
-        }
-
-        // move_uploaded_file()/rename() both write $source_filepath's content
-        // to $file_path under the uploads tree and consume the source -- routed
-        // through StorageRegistry's 'uploads' disk instead so a future non-local
-        // adapter (S3/SFTP) needs no call-site change here. PHP's own SAPI-level
-        // upload cleanup deletes a real is_uploaded_file() tmp file at request
-        // end even without an explicit unlink() (verified via PHP's documented
-        // upload garbage-collection guarantee), matching what move_uploaded_file()
-        // used to do immediately; the "already local" (rename()) branch still
-        // needs an explicit unlink() since nothing else will remove that source.
-        $upload_root = rtrim(\Piwigo\Core\CurrentPaths::get()->root . $this->currentConfig->uploadDir(), '/');
-        $upload_rel_path = StorageRegistry::stripRoot($upload_root, $file_path);
-        $upload_stream = fopen($source_filepath, 'rb');
-        if ($upload_stream !== false) {
-            $this->storageRegistry->get('uploads')
-                ->writeStream($upload_rel_path, $upload_stream);
-            fclose($upload_stream);
-            if (! is_uploaded_file($source_filepath)) {
-                @unlink($source_filepath);
-            }
-        }
-        @chmod($file_path, 0644);
-
-        // handle the uploaded file type by potentially making a
-        // pwg_representative file.
-        $representative_ext = $this->eventDispatcher->dispatchChange(new UploadFile(null, $file_path))
-            ->representativeExt;
-
-        $logger->info(__METHOD__ . ' : force cache generation, representative_ext = ' . ($representative_ext ?? ''));
-
-        if (PwgImage::get_library() !== 'gd') {
-            if ($this->currentConfig->originalResize()) {
-                $original_resize_maxwidth = $this->currentConfig->originalResizeMaxwidth();
-
-                $original_resize_maxheight = $this->currentConfig->originalResizeMaxheight();
-
-                $need_resize = $this->needResize($file_path, $original_resize_maxwidth, $original_resize_maxheight);
-
-                if ($need_resize) {
-                    $img = new PwgImage($file_path, $this->currentLogger, $this->eventDispatcher, $this->currentConfig);
-
-                    $original_resize_quality = $this->currentConfig->originalResizeQuality();
-
-                    $img->pwg_resize(
-                        $file_path,
-                        $original_resize_maxwidth,
-                        $original_resize_maxheight,
-                        $original_resize_quality,
-                        $this->currentConfig->uploadFormAutomaticRotation(),
-                        false
-                    );
-
-                    $img->destroy();
+                if (isset($level)) {
+                    $insert['level'] = $level;
                 }
+
+                if (isset($representative_ext)) {
+                    $insert['representative_ext'] = $representative_ext;
+                }
+
+                $image_id = $this->imageService->insertImage($insert);
+                $this->activityService
+                    ->record('photo', $image_id, 'add');
             }
-        }
-
-        // we need to save the rotation angle in the database to compute
-        // width/height of "multisizes"
-        $rotation_angle = PwgImage::get_rotation_angle($file_path);
-        $rotation = PwgImage::get_rotation_code_from_angle($rotation_angle);
-
-        $file_infos = $this->pwgImageInfos($file_path);
-
-        if (isset($image_id)) {
-            $update = [
-                'file' => $original_filename ?? basename($file_path),
-                'filesize' => $file_infos['filesize'],
-                'width' => $file_infos['width'],
-                'height' => $file_infos['height'],
-                'md5sum' => $md5sum,
-                'added_by' => \Piwigo\Users\CurrentUser::current()->get()->id->value,
-                'rotation' => $rotation,
-            ];
-
-            if (isset($level)) {
-                $update['level'] = $level;
+        } finally {
+            // $dup_detect_lock_name is always assigned in the same branch as
+            // $dup_detect_lock_conn (see above), so checking the connection
+            // alone is sufficient -- PHPStan proves this itself, flagging a
+            // separate null-check on the name as redundant.
+            if ($dup_detect_lock_conn !== null) {
+                $dup_detect_lock_conn->executeStatement('SELECT RELEASE_LOCK(?)', [$dup_detect_lock_name]);
             }
-
-            $this->imageService->updateFields($image_id, $update);
-        } else {
-            // database registration
-            $file = $original_filename ?? basename($file_path);
-            $insert = [
-                'file' => $file,
-                'name' => \Piwigo\Core\StringHelper::getNameFromFile($file),
-                'date_available' => $dbnow,
-                // Otherwise relies on the schema's own DEFAULT
-                // CURRENT_TIMESTAMP, which reads the real DB-server clock --
-                // invisible to Env::now()'s PIWIGO_TEST_NOW freeze, same
-                // reasoning as date_available above. Reuses $dbnow rather
-                // than a second Env::now() call so both columns agree on the
-                // exact same instant, matching what the DB default would
-                // have produced for a single INSERT.
-                'lastmodified' => $dbnow,
-                'path' => preg_replace('#^' . preg_quote(\Piwigo\Core\CurrentPaths::get()->root) . '#', '', $file_path),
-                'filesize' => $file_infos['filesize'],
-                'width' => $file_infos['width'],
-                'height' => $file_infos['height'],
-                'md5sum' => $md5sum,
-                'added_by' => \Piwigo\Users\CurrentUser::current()->get()->id->value,
-                'rotation' => $rotation,
-            ];
-
-            if (isset($level)) {
-                $insert['level'] = $level;
-            }
-
-            if (isset($representative_ext)) {
-                $insert['representative_ext'] = $representative_ext;
-            }
-
-            $image_id = $this->imageService->insertImage($insert);
-            $this->activityService
-                ->record('photo', $image_id, 'add');
         }
         $this->entityManager->clear();
 

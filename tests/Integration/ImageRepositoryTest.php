@@ -787,7 +787,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
     // shape: image_category links images 1/2/3 to category 1, images 4/5
     // to category 2 (both categories commentable=1/visible=1/status=public,
     // per tests/Fixtures/piwigo-17.0.sql); image 1's md5sum is
-    // 'fc6fccf1f8d70f6d7c6d627871f2ea6f'; every fixture image's `author` is
+    // '2e7ee450c4a4cffe42945205029782b9'; every fixture image's `author` is
     // NULL.
 
     public function test_find_by_id_or_file_pattern_matches_by_id(): void
@@ -826,7 +826,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_find_ids_by_md5sum_returns_the_matching_image(): void
     {
-        self::assertSame([1], $this->repo->findIdsByMd5sum('fc6fccf1f8d70f6d7c6d627871f2ea6f'));
+        self::assertSame([1], $this->repo->findIdsByMd5sum('2e7ee450c4a4cffe42945205029782b9'));
     }
 
     public function test_find_ids_by_md5sum_returns_empty_for_no_match(): void
@@ -847,7 +847,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_exists_with_column_value_is_true_for_a_matching_md5sum(): void
     {
-        self::assertTrue($this->repo->existsWithColumnValue('md5sum', 'fc6fccf1f8d70f6d7c6d627871f2ea6f'));
+        self::assertTrue($this->repo->existsWithColumnValue('md5sum', '2e7ee450c4a4cffe42945205029782b9'));
     }
 
     public function test_exists_with_column_value_is_true_for_a_matching_file(): void

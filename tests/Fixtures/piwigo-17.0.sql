@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 8.4.10, for Linux (x86_64)
 --
--- Host: 127.0.0.1    Database: piwigo_test
+-- Host: 127.0.0.1    Database: piwigo17_sql_test
 -- ------------------------------------------------------
 -- Server version	8.4.10-0ubuntu0.26.04.1
 
@@ -23,20 +23,20 @@ DROP TABLE IF EXISTS `piwigo_activity`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_activity` (
-  `activity_id` int unsigned NOT NULL AUTO_INCREMENT,
-  `object` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `object_id` int unsigned NOT NULL,
-  `action` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `performed_by` mediumint unsigned DEFAULT NULL,
-  `session_idx` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `ip_address` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `occured_on` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `details` json DEFAULT NULL,
-  `user_agent` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `activity_id` int unsigned NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
+  `object` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'entity type the action applies to, e.g. user, photo, album, tag, plugin',
+  `object_id` int unsigned NOT NULL COMMENT 'id of the affected object, or the target user id on a logout action',
+  `action` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'action verb, e.g. add, delete, login, logout, autoupdate',
+  `performed_by` mediumint unsigned DEFAULT NULL COMMENT 'acting user id, null for an unresolved or system actor',
+  `session_idx` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'PHP session id active during the request, or none if there was no session',
+  `ip_address` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'REMOTE_ADDR of the request that triggered the action',
+  `occured_on` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'when the action was recorded',
+  `details` json DEFAULT NULL COMMENT 'per-action heterogeneous payload, e.g. config diffs, batch-edit fields, install metadata',
+  `user_agent` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'browser user agent string, only captured on login actions',
   PRIMARY KEY (`activity_id`),
   KEY `fk_activity_performed_by` (`performed_by`),
   CONSTRAINT `fk_activity_performed_by` FOREIGN KEY (`performed_by`) REFERENCES `piwigo_users` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='general activity log of user and system actions, distinct from the tamper-evident audit_log';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -45,7 +45,7 @@ CREATE TABLE `piwigo_activity` (
 
 LOCK TABLES `piwigo_activity` WRITE;
 /*!40000 ALTER TABLE `piwigo_activity` DISABLE KEYS */;
-INSERT INTO `piwigo_activity` VALUES (1,'system',3,'activate',NULL,'none','127.0.0.1','2026-08-01 03:00:00','{\"script\": \"install\", \"theme_id\": \"default\"}',NULL),(2,'system',1,'install',NULL,'none','127.0.0.1','2026-08-01 03:00:00','{\"script\": \"install\", \"version\": \"16.3.0\"}',NULL),(3,'user',1,'login',1,'ef300a0a3c1c83163857cace74c935cc','127.0.0.1','2026-08-01 03:00:00','{\"script\": \"install\"}','PiwigoFixtureRegen/1.0'),(4,'user',1,'login',1,'7d292848aab2a85925296bb5549a73fa','127.0.0.1','2026-08-01 03:00:00','{\"method\": \"pwg.session.login\"}','PiwigoFixtureRegen/1.0'),(5,'album',1,'add',1,'7d292848aab2a85925296bb5549a73fa','127.0.0.1','2026-08-01 03:00:00','{\"method\": \"pwg.categories.add\"}',NULL),(6,'album',2,'add',1,'7d292848aab2a85925296bb5549a73fa','127.0.0.1','2026-08-01 03:00:00','{\"method\": \"pwg.categories.add\"}',NULL),(7,'photo',1,'add',1,'7d292848aab2a85925296bb5549a73fa','127.0.0.1','2026-08-01 03:00:00','{\"method\": \"pwg.images.addSimple\", \"added_with\": \"app\"}',NULL),(8,'photo',2,'add',1,'7d292848aab2a85925296bb5549a73fa','127.0.0.1','2026-08-01 03:00:00','{\"method\": \"pwg.images.addSimple\", \"added_with\": \"app\"}',NULL),(9,'photo',3,'add',1,'7d292848aab2a85925296bb5549a73fa','127.0.0.1','2026-08-01 03:00:00','{\"method\": \"pwg.images.addSimple\", \"added_with\": \"app\"}',NULL),(10,'photo',4,'add',1,'7d292848aab2a85925296bb5549a73fa','127.0.0.1','2026-08-01 03:00:00','{\"method\": \"pwg.images.addSimple\", \"added_with\": \"app\"}',NULL),(11,'photo',5,'add',1,'7d292848aab2a85925296bb5549a73fa','127.0.0.1','2026-08-01 03:00:00','{\"method\": \"pwg.images.addSimple\", \"added_with\": \"app\"}',NULL),(12,'tag',1,'add',1,'7d292848aab2a85925296bb5549a73fa','127.0.0.1','2026-08-01 03:00:00','{\"method\": \"pwg.tags.add\"}',NULL),(13,'tag',2,'add',1,'7d292848aab2a85925296bb5549a73fa','127.0.0.1','2026-08-01 03:00:00','{\"method\": \"pwg.tags.add\"}',NULL),(14,'tag',3,'add',1,'7d292848aab2a85925296bb5549a73fa','127.0.0.1','2026-08-01 03:00:00','{\"method\": \"pwg.tags.add\"}',NULL),(15,'user',3,'add',1,'7d292848aab2a85925296bb5549a73fa','127.0.0.1','2026-08-01 03:00:00','{\"method\": \"pwg.users.add\"}',NULL),(16,'user',4,'add',1,'7d292848aab2a85925296bb5549a73fa','127.0.0.1','2026-08-01 03:00:00','{\"method\": \"pwg.users.add\"}',NULL),(17,'group',1,'add',1,'7d292848aab2a85925296bb5549a73fa','127.0.0.1','2026-08-01 03:00:00','{\"method\": \"pwg.groups.add\"}',NULL),(18,'group',2,'add',1,'7d292848aab2a85925296bb5549a73fa','127.0.0.1','2026-08-01 03:00:00','{\"method\": \"pwg.groups.add\"}',NULL),(19,'group',3,'add',1,'7d292848aab2a85925296bb5549a73fa','127.0.0.1','2026-08-01 03:00:00','{\"method\": \"pwg.groups.add\"}',NULL);
+INSERT INTO `piwigo_activity` VALUES (1,'system',3,'activate',NULL,'none','::1','2026-08-01 03:00:00','{\"script\": \"install\", \"theme_id\": \"default\"}',NULL),(2,'system',1,'install',NULL,'none','::1','2026-08-01 03:00:00','{\"script\": \"install\", \"version\": \"16.3.0\"}',NULL),(3,'user',1,'login',1,'741a3c65fd70101f67b42b7ccc2da01d','::1','2026-08-01 03:00:00','{\"script\": \"install\"}','PiwigoFixtureRegen/1.0'),(4,'user',1,'login',1,'3cbfbd5734cab7e7b96bb89400ff60a3','::1','2026-08-01 03:00:00','{\"method\": \"pwg.session.login\"}','PiwigoFixtureRegen/1.0'),(5,'album',1,'add',1,'3cbfbd5734cab7e7b96bb89400ff60a3','::1','2026-08-01 03:00:00','{\"method\": \"pwg.categories.add\"}',NULL),(6,'album',2,'add',1,'3cbfbd5734cab7e7b96bb89400ff60a3','::1','2026-08-01 03:00:00','{\"method\": \"pwg.categories.add\"}',NULL),(7,'photo',1,'add',1,'3cbfbd5734cab7e7b96bb89400ff60a3','::1','2026-08-01 03:00:00','{\"method\": \"pwg.images.addSimple\", \"added_with\": \"app\"}',NULL),(8,'photo',2,'add',1,'3cbfbd5734cab7e7b96bb89400ff60a3','::1','2026-08-01 03:00:00','{\"method\": \"pwg.images.addSimple\", \"added_with\": \"app\"}',NULL),(9,'photo',3,'add',1,'3cbfbd5734cab7e7b96bb89400ff60a3','::1','2026-08-01 03:00:00','{\"method\": \"pwg.images.addSimple\", \"added_with\": \"app\"}',NULL),(10,'photo',4,'add',1,'3cbfbd5734cab7e7b96bb89400ff60a3','::1','2026-08-01 03:00:00','{\"method\": \"pwg.images.addSimple\", \"added_with\": \"app\"}',NULL),(11,'photo',5,'add',1,'3cbfbd5734cab7e7b96bb89400ff60a3','::1','2026-08-01 03:00:00','{\"method\": \"pwg.images.addSimple\", \"added_with\": \"app\"}',NULL),(12,'tag',1,'add',1,'3cbfbd5734cab7e7b96bb89400ff60a3','::1','2026-08-01 03:00:00','{\"method\": \"pwg.tags.add\"}',NULL),(13,'tag',2,'add',1,'3cbfbd5734cab7e7b96bb89400ff60a3','::1','2026-08-01 03:00:00','{\"method\": \"pwg.tags.add\"}',NULL),(14,'tag',3,'add',1,'3cbfbd5734cab7e7b96bb89400ff60a3','::1','2026-08-01 03:00:00','{\"method\": \"pwg.tags.add\"}',NULL),(15,'user',3,'add',1,'3cbfbd5734cab7e7b96bb89400ff60a3','::1','2026-08-01 03:00:00','{\"method\": \"pwg.users.add\"}',NULL),(16,'user',4,'add',1,'3cbfbd5734cab7e7b96bb89400ff60a3','::1','2026-08-01 03:00:00','{\"method\": \"pwg.users.add\"}',NULL),(17,'group',1,'add',1,'3cbfbd5734cab7e7b96bb89400ff60a3','::1','2026-08-01 03:00:00','{\"method\": \"pwg.groups.add\"}',NULL),(18,'group',2,'add',1,'3cbfbd5734cab7e7b96bb89400ff60a3','::1','2026-08-01 03:00:00','{\"method\": \"pwg.groups.add\"}',NULL),(19,'group',3,'add',1,'3cbfbd5734cab7e7b96bb89400ff60a3','::1','2026-08-01 03:00:00','{\"method\": \"pwg.groups.add\"}',NULL);
 /*!40000 ALTER TABLE `piwigo_activity` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -57,23 +57,23 @@ DROP TABLE IF EXISTS `piwigo_audit_log`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_audit_log` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `actor_id` mediumint unsigned DEFAULT NULL,
-  `action` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `entity_type` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `entity_id` int unsigned DEFAULT NULL,
-  `before_json` json DEFAULT NULL,
-  `after_json` json DEFAULT NULL,
-  `ip_address` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `created_at` datetime NOT NULL,
-  `prev_hash` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `row_hash` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
+  `actor_id` mediumint unsigned DEFAULT NULL COMMENT 'acting user id, null for an unattributed or system action',
+  `action` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'action verb, e.g. delete, grant, revoke',
+  `entity_type` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'audited entity type, e.g. group, permission',
+  `entity_id` int unsigned DEFAULT NULL COMMENT 'id of the audited entity, null when not applicable',
+  `before_json` json DEFAULT NULL COMMENT 'entity-agnostic snapshot before the change, null for a creation, folded into row_hash so must stay exactly what was recorded',
+  `after_json` json DEFAULT NULL COMMENT 'entity-agnostic snapshot after the change, null for a deletion, folded into row_hash so must stay exactly what was recorded',
+  `ip_address` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'REMOTE_ADDR of the request that performed the action',
+  `created_at` datetime NOT NULL COMMENT 'when the action was recorded',
+  `prev_hash` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'row_hash of the previous row, null for the first row, forms the hash chain',
+  `row_hash` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'sha256 of this row content plus prev_hash, tamper-evidence for the chain, see AuditService::computeHash',
   PRIMARY KEY (`id`),
   KEY `idx_audit_log_entity` (`entity_type`,`entity_id`),
   KEY `idx_audit_log_actor` (`actor_id`),
   KEY `idx_audit_log_created_at` (`created_at`),
   CONSTRAINT `fk_audit_log_actor_id` FOREIGN KEY (`actor_id`) REFERENCES `piwigo_users` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='SEC-57 append-only, hash-chained audit trail of admin actions and permission changes';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -82,7 +82,7 @@ CREATE TABLE `piwigo_audit_log` (
 
 LOCK TABLES `piwigo_audit_log` WRITE;
 /*!40000 ALTER TABLE `piwigo_audit_log` DISABLE KEYS */;
-INSERT INTO `piwigo_audit_log` VALUES (1,1,'create','group',1,NULL,'{\"name\": \"Editors\"}','127.0.0.1','2026-08-01 00:00:00',NULL,'96465d20fcc52ca3e78a5343e6710f02f6611369da0ab129094057674265ead7'),(2,1,'create','group',2,NULL,'{\"name\": \"Reviewers\"}','127.0.0.1','2026-08-01 00:00:00','96465d20fcc52ca3e78a5343e6710f02f6611369da0ab129094057674265ead7','ae584ee35499cefdbd7f90f08926c5d91801cd863a537285793cc9944e1c9c79'),(3,1,'create','group',3,NULL,'{\"name\": \"Guests\"}','127.0.0.1','2026-08-01 00:00:00','ae584ee35499cefdbd7f90f08926c5d91801cd863a537285793cc9944e1c9c79','146faef7ee8be6db1eee14ef91008c687621fa37e729266120d9d5f5ad99685a');
+INSERT INTO `piwigo_audit_log` VALUES (1,1,'create','group',1,NULL,'{\"name\": \"Editors\"}','::1','2026-08-01 00:00:00',NULL,'fb08569e0a181f3c519a47ed7faed20c576f9aee1d4ba3361bfb5d9bc9ffbbe0'),(2,1,'create','group',2,NULL,'{\"name\": \"Reviewers\"}','::1','2026-08-01 00:00:00','fb08569e0a181f3c519a47ed7faed20c576f9aee1d4ba3361bfb5d9bc9ffbbe0','425622dddcec305339ccef4d45d997d899b77bcd4fc4ead48ff7df01a6dbc53b'),(3,1,'create','group',3,NULL,'{\"name\": \"Guests\"}','::1','2026-08-01 00:00:00','425622dddcec305339ccef4d45d997d899b77bcd4fc4ead48ff7df01a6dbc53b','964f6fe6c7316cb7897260dffb899337c55e0d85c47c386f131533c5b209052f');
 /*!40000 ALTER TABLE `piwigo_audit_log` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -94,13 +94,13 @@ DROP TABLE IF EXISTS `piwigo_caddie`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_caddie` (
-  `user_id` mediumint unsigned NOT NULL DEFAULT '0',
-  `element_id` mediumint unsigned NOT NULL DEFAULT '0',
+  `user_id` mediumint unsigned NOT NULL DEFAULT '0' COMMENT 'owning user id',
+  `element_id` mediumint unsigned NOT NULL DEFAULT '0' COMMENT 'image id added to the caddie',
   PRIMARY KEY (`user_id`,`element_id`),
   KEY `fk_caddie_element_id` (`element_id`),
   CONSTRAINT `fk_caddie_element_id` FOREIGN KEY (`element_id`) REFERENCES `piwigo_images` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_caddie_user_id` FOREIGN KEY (`user_id`) REFERENCES `piwigo_users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='per-user temporary photo selection (caddie/basket) used by batch operations';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -120,22 +120,22 @@ DROP TABLE IF EXISTS `piwigo_categories`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_categories` (
-  `id` smallint unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
-  `id_uppercat` smallint unsigned DEFAULT NULL,
-  `comment` text COLLATE utf8mb4_unicode_ci,
-  `dir` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `rank` smallint unsigned DEFAULT NULL,
-  `status` enum('public','private') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'public',
-  `site_id` tinyint unsigned DEFAULT NULL,
-  `visible` tinyint(1) NOT NULL DEFAULT '1',
-  `representative_picture_id` mediumint unsigned DEFAULT NULL,
-  `uppercats` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
-  `commentable` tinyint(1) NOT NULL DEFAULT '1',
-  `global_rank` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `image_order` varchar(128) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `permalink` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `lastmodified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `id` smallint unsigned NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'album display name',
+  `id_uppercat` smallint unsigned DEFAULT NULL COMMENT 'parent album id, null for a root album',
+  `comment` text COLLATE utf8mb4_unicode_ci COMMENT 'album description shown on its page',
+  `dir` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'filesystem subdirectory name for a physical, synchronized album, null for a virtual album',
+  `rank` smallint unsigned DEFAULT NULL COMMENT 'sibling display order within the same parent, distinct from global_rank',
+  `status` enum('public','private') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'public' COMMENT 'private albums require an explicit user_access or group_access grant to view',
+  `site_id` tinyint unsigned DEFAULT NULL COMMENT 'owning site id, resolves to sites.galleries_url for a physical album',
+  `visible` tinyint(1) NOT NULL DEFAULT '1' COMMENT 'whether the album is shown in navigation, forced false at creation if its parent is not visible',
+  `representative_picture_id` mediumint unsigned DEFAULT NULL COMMENT 'image id used as the album thumbnail',
+  `uppercats` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'comma-separated ancestor album id path, from root to this album',
+  `commentable` tinyint(1) NOT NULL DEFAULT '1' COMMENT 'whether photo comments are allowed for images in this album',
+  `global_rank` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'full-tree sort key derived from rank along the ancestor path, used to order albums across different parents',
+  `image_order` varchar(128) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'preferred ORDER BY expression for images in this album, inheritable to descendant albums',
+  `permalink` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'unique URL-friendly slug for this album',
+  `lastmodified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'row last-update timestamp',
   PRIMARY KEY (`id`),
   UNIQUE KEY `categories_i3` (`permalink`),
   KEY `categories_i2` (`id_uppercat`),
@@ -144,7 +144,7 @@ CREATE TABLE `piwigo_categories` (
   FULLTEXT KEY `categories_ft_name_comment` (`name`,`comment`),
   CONSTRAINT `fk_categories_id_uppercat` FOREIGN KEY (`id_uppercat`) REFERENCES `piwigo_categories` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_categories_representative_picture_id` FOREIGN KEY (`representative_picture_id`) REFERENCES `piwigo_images` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='photo albums, both physical filesystem-synced and virtual';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -153,7 +153,7 @@ CREATE TABLE `piwigo_categories` (
 
 LOCK TABLES `piwigo_categories` WRITE;
 /*!40000 ALTER TABLE `piwigo_categories` DISABLE KEYS */;
-INSERT INTO `piwigo_categories` VALUES (1,'Sample Album',NULL,NULL,NULL,1,'public',NULL,1,1,'1',1,'1',NULL,NULL,'2026-07-27 02:10:36'),(2,'Nested Sub Album',1,NULL,NULL,1,'public',NULL,1,4,'1,2',1,'1.1',NULL,NULL,'2026-07-27 02:10:37');
+INSERT INTO `piwigo_categories` VALUES (1,'Sample Album',NULL,NULL,NULL,1,'public',NULL,1,1,'1',1,'1',NULL,NULL,'2026-08-02 05:25:51'),(2,'Nested Sub Album',1,NULL,NULL,1,'public',NULL,1,4,'1,2',1,'1.1',NULL,NULL,'2026-08-02 05:25:52');
 /*!40000 ALTER TABLE `piwigo_categories` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -165,24 +165,24 @@ DROP TABLE IF EXISTS `piwigo_comments`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_comments` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `image_id` mediumint unsigned NOT NULL DEFAULT '0',
-  `date` datetime DEFAULT NULL,
-  `author` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `email` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `author_id` mediumint unsigned DEFAULT NULL,
-  `anonymous_id` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `website_url` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `content` longtext COLLATE utf8mb4_unicode_ci,
-  `validated` tinyint(1) NOT NULL DEFAULT '0',
-  `validation_date` datetime DEFAULT NULL,
+  `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
+  `image_id` mediumint unsigned NOT NULL DEFAULT '0' COMMENT 'commented image id',
+  `date` datetime DEFAULT NULL COMMENT 'when the comment was submitted',
+  `author` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'display name shown with the comment, the account username for a logged-in user or the guest-entered name otherwise',
+  `email` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'guest-provided email address',
+  `author_id` mediumint unsigned DEFAULT NULL COMMENT 'commenting user id, null for a guest comment',
+  `anonymous_id` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'full IP address of a guest commenter, used for anti-flood throttling',
+  `website_url` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'guest-provided homepage link',
+  `content` longtext COLLATE utf8mb4_unicode_ci COMMENT 'comment body',
+  `validated` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'moderation approval flag, gates visibility when comments_validation is enabled',
+  `validation_date` datetime DEFAULT NULL COMMENT 'when the comment was approved',
   PRIMARY KEY (`id`),
   KEY `comments_i2` (`validation_date`),
   KEY `comments_i1` (`image_id`),
   KEY `fk_comments_author_id` (`author_id`),
   CONSTRAINT `fk_comments_author_id` FOREIGN KEY (`author_id`) REFERENCES `piwigo_users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_comments_image_id` FOREIGN KEY (`image_id`) REFERENCES `piwigo_images` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='visitor comments left on photos';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -203,9 +203,9 @@ DROP TABLE IF EXISTS `piwigo_config`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_config` (
-  `param` varchar(40) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
-  `value` text COLLATE utf8mb4_unicode_ci,
-  `comment` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `param` varchar(40) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'configuration key',
+  `value` json DEFAULT NULL COMMENT 'JSON-encoded configuration value, see ConfigService::encode()/hydrate()',
+  `comment` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'human-readable description of the param, seeded for built-in settings by install/config.sql',
   PRIMARY KEY (`param`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='configuration table';
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -216,7 +216,7 @@ CREATE TABLE `piwigo_config` (
 
 LOCK TABLES `piwigo_config` WRITE;
 /*!40000 ALTER TABLE `piwigo_config` DISABLE KEYS */;
-INSERT INTO `piwigo_config` VALUES ('activate_comments','true','Global parameter for usage of comments system'),('allow_user_customization','true','allow users to customize their gallery?'),('allow_user_registration','true','allow visitors to register?'),('c13y_ignore',NULL,'List of ignored anomalies'),('comments_author_mandatory','false','Comment author is mandatory'),('comments_email_mandatory','false','Comment email is mandatory'),('comments_enable_website','true','Enable \"website\" field on add comment form'),('comments_forall','false','even guest not registered can post comments'),('comments_order','\"ASC\"','comments order on picture page and cie'),('comments_validation','true','administrators validate users comments before becoming visible'),('dashboard_check_for_updates','false',NULL),('data_dir_checked','\"1\"',NULL),('derivatives','a:4:{s:1:\"d\";a:9:{s:6:\"square\";O:29:\"Piwigo\\Image\\DerivativeParams\":3:{s:13:\"last_mod_time\";i:1785118235;s:6:\"sizing\";O:25:\"Piwigo\\Image\\SizingParams\":3:{s:10:\"ideal_size\";a:2:{i:0;i:120;i:1;i:120;}s:8:\"max_crop\";i:1;s:8:\"min_size\";a:2:{i:0;i:120;i:1;i:120;}}s:7:\"sharpen\";d:0;}s:5:\"thumb\";O:29:\"Piwigo\\Image\\DerivativeParams\":3:{s:13:\"last_mod_time\";i:1785118235;s:6:\"sizing\";O:25:\"Piwigo\\Image\\SizingParams\":3:{s:10:\"ideal_size\";a:2:{i:0;i:144;i:1;i:144;}s:8:\"max_crop\";i:0;s:8:\"min_size\";N;}s:7:\"sharpen\";d:0;}s:6:\"2small\";O:29:\"Piwigo\\Image\\DerivativeParams\":3:{s:13:\"last_mod_time\";i:1785118235;s:6:\"sizing\";O:25:\"Piwigo\\Image\\SizingParams\":3:{s:10:\"ideal_size\";a:2:{i:0;i:240;i:1;i:240;}s:8:\"max_crop\";i:0;s:8:\"min_size\";N;}s:7:\"sharpen\";d:0;}s:6:\"xsmall\";O:29:\"Piwigo\\Image\\DerivativeParams\":3:{s:13:\"last_mod_time\";i:1785118235;s:6:\"sizing\";O:25:\"Piwigo\\Image\\SizingParams\":3:{s:10:\"ideal_size\";a:2:{i:0;i:432;i:1;i:324;}s:8:\"max_crop\";i:0;s:8:\"min_size\";N;}s:7:\"sharpen\";d:0;}s:5:\"small\";O:29:\"Piwigo\\Image\\DerivativeParams\":3:{s:13:\"last_mod_time\";i:1785118235;s:6:\"sizing\";O:25:\"Piwigo\\Image\\SizingParams\":3:{s:10:\"ideal_size\";a:2:{i:0;i:576;i:1;i:432;}s:8:\"max_crop\";i:0;s:8:\"min_size\";N;}s:7:\"sharpen\";d:0;}s:6:\"medium\";O:29:\"Piwigo\\Image\\DerivativeParams\":3:{s:13:\"last_mod_time\";i:1785118235;s:6:\"sizing\";O:25:\"Piwigo\\Image\\SizingParams\":3:{s:10:\"ideal_size\";a:2:{i:0;i:792;i:1;i:594;}s:8:\"max_crop\";i:0;s:8:\"min_size\";N;}s:7:\"sharpen\";d:0;}s:5:\"large\";O:29:\"Piwigo\\Image\\DerivativeParams\":3:{s:13:\"last_mod_time\";i:1785118235;s:6:\"sizing\";O:25:\"Piwigo\\Image\\SizingParams\":3:{s:10:\"ideal_size\";a:2:{i:0;i:1008;i:1;i:756;}s:8:\"max_crop\";i:0;s:8:\"min_size\";N;}s:7:\"sharpen\";d:0;}s:6:\"xlarge\";O:29:\"Piwigo\\Image\\DerivativeParams\":3:{s:13:\"last_mod_time\";i:1785118235;s:6:\"sizing\";O:25:\"Piwigo\\Image\\SizingParams\":3:{s:10:\"ideal_size\";a:2:{i:0;i:1224;i:1;i:918;}s:8:\"max_crop\";i:0;s:8:\"min_size\";N;}s:7:\"sharpen\";d:0;}s:7:\"xxlarge\";O:29:\"Piwigo\\Image\\DerivativeParams\":3:{s:13:\"last_mod_time\";i:1785118235;s:6:\"sizing\";O:25:\"Piwigo\\Image\\SizingParams\":3:{s:10:\"ideal_size\";a:2:{i:0;i:1656;i:1;i:1242;}s:8:\"max_crop\";i:0;s:8:\"min_size\";N;}s:7:\"sharpen\";d:0;}}s:1:\"q\";i:95;s:1:\"w\";O:28:\"Piwigo\\Image\\WatermarkParams\":7:{s:4:\"file\";s:0:\"\";s:8:\"min_size\";a:2:{i:0;i:500;i:1;i:500;}s:4:\"xpos\";i:50;s:4:\"ypos\";i:50;s:7:\"xrepeat\";i:0;s:7:\"yrepeat\";i:0;s:7:\"opacity\";i:100;}s:1:\"c\";a:0:{}}',NULL),('disabled_derivatives','a:2:{s:7:\"3xlarge\";O:29:\"Piwigo\\Image\\DerivativeParams\":3:{s:13:\"last_mod_time\";i:1785118235;s:6:\"sizing\";O:25:\"Piwigo\\Image\\SizingParams\":3:{s:10:\"ideal_size\";a:2:{i:0;i:2232;i:1;i:1674;}s:8:\"max_crop\";i:0;s:8:\"min_size\";N;}s:7:\"sharpen\";d:0;}s:7:\"4xlarge\";O:29:\"Piwigo\\Image\\DerivativeParams\":3:{s:13:\"last_mod_time\";i:1785118235;s:6:\"sizing\";O:25:\"Piwigo\\Image\\SizingParams\":3:{s:10:\"ideal_size\";a:2:{i:0;i:3000;i:1;i:2250;}s:8:\"max_crop\";i:0;s:8:\"min_size\";N;}s:7:\"sharpen\";d:0;}}',NULL),('display_fromto','false',NULL),('email_admin_on_comment','false','Send an email to the administrators when a valid comment is entered'),('email_admin_on_comment_deletion','false','Send an email to the administrators when a comment is deleted'),('email_admin_on_comment_edition','false','Send an email to the administrators when a comment is modified'),('email_admin_on_comment_validation','true','Send an email to the administrators when a comment requires validation'),('email_admin_on_new_user','\"none\"','Send an email to theadministrators when a user registers'),('extents_for_templates','[]','Actived template-extension(s)'),('gallery_locked','false','Lock your gallery temporary for non admin users'),('gallery_title','\"Fixture Gallery\"','Title at top of each page and for RSS feed'),('history_admin','false','keep a history of administrator visits on your website'),('history_guest','true','keep a history of guest visits on your website'),('index_caddie_icon','true',NULL),('index_created_date_icon','true','Display calendar by creation date icon'),('index_edit_icon','true',NULL),('index_flat_icon','false','Display flat icon'),('index_new_icon','true','Display new icons next albums and pictures'),('index_posted_date_icon','true','Display calendar by posted date'),('index_search_in_set_action','\"true\"',NULL),('index_search_in_set_button','false',NULL),('index_sizes_icon','true',NULL),('index_slideshow_icon','true','Display slideshow icon'),('index_sort_order_input','true','Display image order selection list'),('last_major_update','\"2026-07-26 23:10:35\"',NULL),('log','true','keep an history of visits on your website'),('lounge_active','true',NULL),('mail_theme','\"clear\"',NULL),('menubar_filter_icon','false','Display filter icon'),('mobile_theme',NULL,NULL),('nb_categories_page','12','Param for categories pagination'),('nb_comment_page','10','number of comments to display on each page'),('nbm_complementary_mail_content','\"\"','Complementary mail content for notification by mail'),('nbm_send_detailed_content','true','Send detailed content for notification by mail'),('nbm_send_html_mail','true','Send mail on HTML format for notification by mail'),('nbm_send_mail_as','\"\"','Send mail as param value for notification by mail'),('nbm_send_recent_post_dates','true','Send recent post by dates for notification by mail'),('no_photo_yet','\"false\"',NULL),('obligatory_user_mail_address','false','Mail address is obligatory for users'),('order_by','\"ORDER BY date_available DESC, file ASC, id ASC\"','default photo order'),('order_by_inside_category','\"ORDER BY date_available DESC, file ASC, id ASC\"','default photo order inside category'),('original_resize','false',NULL),('original_resize_maxheight','2016',NULL),('original_resize_maxwidth','2016',NULL),('original_resize_quality','95',NULL),('page_banner','\"<h1>%gallery_title%<\\/h1>\\n\\n<p>Welcome to my photo gallery<\\/p>\"','html displayed on the top each page of your gallery'),('picture_caddie_icon','true',NULL),('picture_download_icon','true','Display download icon on picture page'),('picture_edit_icon','true',NULL),('picture_favorite_icon','true','Display favorite icon on picture page'),('picture_informations','{\"author\":true,\"created_on\":true,\"posted_on\":true,\"dimensions\":false,\"file\":false,\"filesize\":false,\"tags\":true,\"categories\":true,\"visits\":true,\"rating_score\":true,\"privacy_level\":true}','Information displayed on picture page'),('picture_menu','false','Show menubar on picture page'),('picture_metadata_icon','true','Display metadata icon on picture page'),('picture_navigation_icons','true','Display navigation icons on picture page'),('picture_navigation_thumb','true','Display navigation thumbnails on picture page'),('picture_representative_icon','true',NULL),('picture_sizes_icon','true',NULL),('picture_slideshow_icon','true','Display slideshow icon on picture page'),('piwigo_installed_version','\"16.3.0\"',NULL),('rate','true','Rating pictures feature is enabled'),('rate_anonymous','true','Rating pictures feature is also enabled for visitors'),('secret_key','\"de32f9cc2f556c2957a4d12d31aa147f7380c601\"','a secret key specific to the gallery for internal use'),('show_mobile_app_banner_in_admin','true',NULL),('show_mobile_app_banner_in_gallery','false',NULL),('show_piwigo_latest_news','false',NULL),('updates_ignored','{\"plugins\":[],\"themes\":[],\"languages\":[]}','Extensions ignored for update'),('upload_detect_duplicate','true',NULL),('use_standard_pages','true',NULL),('user_can_delete_comment','false','administrators can allow user delete their own comments'),('user_can_edit_comment','false','administrators can allow user edit their own comments'),('webmaster_id','1',NULL),('week_starts_on','\"monday\"','Monday may not be the first day of the week');
+INSERT INTO `piwigo_config` VALUES ('activate_comments','true','Global parameter for usage of comments system'),('allow_user_customization','true','allow users to customize their gallery?'),('allow_user_registration','true','allow visitors to register?'),('comments_author_mandatory','false','Comment author is mandatory'),('comments_email_mandatory','false','Comment email is mandatory'),('comments_enable_website','true','Enable \"website\" field on add comment form'),('comments_forall','false','even guest not registered can post comments'),('comments_order','\"ASC\"','comments order on picture page and cie'),('comments_validation','true','administrators validate users comments before becoming visible'),('dashboard_check_for_updates','false',NULL),('data_dir_checked','\"1\"',NULL),('display_fromto','false',NULL),('email_admin_on_comment','false','Send an email to the administrators when a valid comment is entered'),('email_admin_on_comment_deletion','false','Send an email to the administrators when a comment is deleted'),('email_admin_on_comment_edition','false','Send an email to the administrators when a comment is modified'),('email_admin_on_comment_validation','true','Send an email to the administrators when a comment requires validation'),('email_admin_on_new_user','\"none\"','Send an email to theadministrators when a user registers'),('extents_for_templates','[]','Actived template-extension(s)'),('gallery_locked','false','Lock your gallery temporary for non admin users'),('gallery_title','\"Fixture Gallery\"','Title at top of each page and for RSS feed'),('history_admin','false','keep a history of administrator visits on your website'),('history_guest','true','keep a history of guest visits on your website'),('index_caddie_icon','true',NULL),('index_created_date_icon','true','Display calendar by creation date icon'),('index_edit_icon','true',NULL),('index_flat_icon','false','Display flat icon'),('index_new_icon','true','Display new icons next albums and pictures'),('index_posted_date_icon','true','Display calendar by posted date'),('index_search_in_set_action','\"true\"',NULL),('index_search_in_set_button','false',NULL),('index_sizes_icon','true',NULL),('index_slideshow_icon','true','Display slideshow icon'),('index_sort_order_input','true','Display image order selection list'),('last_major_update','\"2026-08-01 00:00:00\"',NULL),('log','true','keep an history of visits on your website'),('lounge_active','true',NULL),('mail_theme','\"clear\"',NULL),('menubar_filter_icon','false','Display filter icon'),('mobile_theme',NULL,NULL),('nb_categories_page','12','Param for categories pagination'),('nb_comment_page','10','number of comments to display on each page'),('nbm_complementary_mail_content','\"\"','Complementary mail content for notification by mail'),('nbm_send_detailed_content','true','Send detailed content for notification by mail'),('nbm_send_html_mail','true','Send mail on HTML format for notification by mail'),('nbm_send_mail_as','\"\"','Send mail as param value for notification by mail'),('nbm_send_recent_post_dates','true','Send recent post by dates for notification by mail'),('no_photo_yet','\"false\"',NULL),('obligatory_user_mail_address','false','Mail address is obligatory for users'),('order_by','\"ORDER BY date_available DESC, file ASC, id ASC\"','default photo order'),('order_by_inside_category','\"ORDER BY date_available DESC, file ASC, id ASC\"','default photo order inside category'),('original_resize','false',NULL),('original_resize_maxheight','2016',NULL),('original_resize_maxwidth','2016',NULL),('original_resize_quality','95',NULL),('page_banner','\"<h1>%gallery_title%</h1>\\n\\n<p>Welcome to my photo gallery</p>\"','html displayed on the top each page of your gallery'),('picture_caddie_icon','true',NULL),('picture_download_icon','true','Display download icon on picture page'),('picture_edit_icon','true',NULL),('picture_favorite_icon','true','Display favorite icon on picture page'),('picture_informations','{\"file\": false, \"tags\": true, \"author\": true, \"visits\": true, \"filesize\": false, \"posted_on\": true, \"categories\": true, \"created_on\": true, \"dimensions\": false, \"rating_score\": true, \"privacy_level\": true}','Information displayed on picture page'),('picture_menu','false','Show menubar on picture page'),('picture_metadata_icon','true','Display metadata icon on picture page'),('picture_navigation_icons','true','Display navigation icons on picture page'),('picture_navigation_thumb','true','Display navigation thumbnails on picture page'),('picture_representative_icon','true',NULL),('picture_sizes_icon','true',NULL),('picture_slideshow_icon','true','Display slideshow icon on picture page'),('piwigo_installed_version','\"16.3.0\"',NULL),('rate','true','Rating pictures feature is enabled'),('rate_anonymous','true','Rating pictures feature is also enabled for visitors'),('secret_key','\"f7a68f3a664394347c06f44938273525bde07288\"','a secret key specific to the gallery for internal use'),('show_mobile_app_banner_in_admin','true',NULL),('show_mobile_app_banner_in_gallery','false',NULL),('show_piwigo_latest_news','false',NULL),('upload_detect_duplicate','true',NULL),('use_standard_pages','true',NULL),('user_can_delete_comment','false','administrators can allow user delete their own comments'),('user_can_edit_comment','false','administrators can allow user edit their own comments'),('webmaster_id','1',NULL),('week_starts_on','\"monday\"','Monday may not be the first day of the week');
 /*!40000 ALTER TABLE `piwigo_config` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -228,12 +228,12 @@ DROP TABLE IF EXISTS `piwigo_derivative_settings`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_derivative_settings` (
-  `id` smallint NOT NULL,
-  `default_quality` int NOT NULL DEFAULT '95',
-  `watermark_json` json NOT NULL,
-  `custom_json` json NOT NULL,
+  `id` smallint NOT NULL COMMENT 'settings row identifier',
+  `default_quality` int NOT NULL DEFAULT '95' COMMENT 'default JPEG compression quality, 0 to 100, for generated derivative images',
+  `watermark_json` json NOT NULL COMMENT 'encoded watermark configuration',
+  `custom_json` json NOT NULL COMMENT 'encoded custom derivative-generation parameters',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='global derivative-image generation settings, read and written by ImageStdParams via DerivativeSettingsRepository';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -242,6 +242,7 @@ CREATE TABLE `piwigo_derivative_settings` (
 
 LOCK TABLES `piwigo_derivative_settings` WRITE;
 /*!40000 ALTER TABLE `piwigo_derivative_settings` DISABLE KEYS */;
+INSERT INTO `piwigo_derivative_settings` VALUES (1,95,'{\"file\": \"\", \"xpos\": 50, \"ypos\": 50, \"opacity\": 100, \"xrepeat\": 0, \"yrepeat\": 0, \"min_size\": [500, 500]}','[]');
 /*!40000 ALTER TABLE `piwigo_derivative_settings` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -253,17 +254,17 @@ DROP TABLE IF EXISTS `piwigo_derivative_size`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_derivative_size` (
-  `name` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `enabled` smallint NOT NULL DEFAULT '1',
-  `max_width` int NOT NULL DEFAULT '0',
-  `max_height` int NOT NULL DEFAULT '0',
-  `max_crop` decimal(5,4) NOT NULL DEFAULT '0.0000',
-  `min_width` int DEFAULT NULL,
-  `min_height` int DEFAULT NULL,
-  `sharpen` decimal(5,4) NOT NULL DEFAULT '0.0000',
-  `last_mod_time` int NOT NULL DEFAULT '0',
+  `name` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'derivative size name, e.g. thumb, medium, xxlarge',
+  `enabled` smallint NOT NULL DEFAULT '1' COMMENT 'whether this derivative size is generated',
+  `max_width` int NOT NULL DEFAULT '0' COMMENT 'maximum output width in pixels, see SizingParams',
+  `max_height` int NOT NULL DEFAULT '0' COMMENT 'maximum output height in pixels, see SizingParams',
+  `max_crop` decimal(5,4) NOT NULL DEFAULT '0.0000' COMMENT 'cropping ratio from 0, no cropping, to 1, max cropping, see SizingParams::max_crop',
+  `min_width` int DEFAULT NULL COMMENT 'minimum output width required to allow cropping, see SizingParams::min_size',
+  `min_height` int DEFAULT NULL COMMENT 'minimum output height required to allow cropping, see SizingParams::min_size',
+  `sharpen` decimal(5,4) NOT NULL DEFAULT '0.0000' COMMENT 'sharpening amount from 0, none, to 1, max, see DerivativeParams::sharpen',
+  `last_mod_time` int NOT NULL DEFAULT '0' COMMENT 'unix timestamp of the last parameter change, used to invalidate cached derivatives, see DerivativeParams::last_mod_time',
   PRIMARY KEY (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='per-named derivative size definitions, read and written by ImageStdParams via DerivativeSizeRepository';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -272,6 +273,7 @@ CREATE TABLE `piwigo_derivative_size` (
 
 LOCK TABLES `piwigo_derivative_size` WRITE;
 /*!40000 ALTER TABLE `piwigo_derivative_size` DISABLE KEYS */;
+INSERT INTO `piwigo_derivative_size` VALUES ('2small',1,240,240,0.0000,NULL,NULL,0.0000,1785648350),('3xlarge',0,2232,1674,0.0000,NULL,NULL,0.0000,1785648350),('4xlarge',0,3000,2250,0.0000,NULL,NULL,0.0000,1785648350),('large',1,1008,756,0.0000,NULL,NULL,0.0000,1785648350),('medium',1,792,594,0.0000,NULL,NULL,0.0000,1785648350),('small',1,576,432,0.0000,NULL,NULL,0.0000,1785648350),('square',1,120,120,1.0000,120,120,0.0000,1785648350),('thumb',1,144,144,0.0000,NULL,NULL,0.0000,1785648350),('xlarge',1,1224,918,0.0000,NULL,NULL,0.0000,1785648350),('xsmall',1,432,324,0.0000,NULL,NULL,0.0000,1785648350),('xxlarge',1,1656,1242,0.0000,NULL,NULL,0.0000,1785648350);
 /*!40000 ALTER TABLE `piwigo_derivative_size` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -283,11 +285,11 @@ DROP TABLE IF EXISTS `piwigo_extension_ignored_updates`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_extension_ignored_updates` (
-  `extension_type` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `extension_id` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `ignored_at` datetime NOT NULL,
+  `extension_type` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'plugin, theme, or language, see ExtensionType',
+  `extension_id` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'directory-name identifier of the extension whose update is being ignored',
+  `ignored_at` datetime NOT NULL COMMENT 'when the update was dismissed',
   PRIMARY KEY (`extension_type`,`extension_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='extension updates an admin dismissed, read and written by ExtensionUpdateChecker via ExtensionIgnoredUpdateRepository';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -307,13 +309,13 @@ DROP TABLE IF EXISTS `piwigo_favorites`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_favorites` (
-  `user_id` mediumint unsigned NOT NULL DEFAULT '0',
-  `image_id` mediumint unsigned NOT NULL DEFAULT '0',
+  `user_id` mediumint unsigned NOT NULL DEFAULT '0' COMMENT 'owning user id',
+  `image_id` mediumint unsigned NOT NULL DEFAULT '0' COMMENT 'image the user marked as a favorite',
   PRIMARY KEY (`user_id`,`image_id`),
   KEY `fk_favorites_image_id` (`image_id`),
   CONSTRAINT `fk_favorites_image_id` FOREIGN KEY (`image_id`) REFERENCES `piwigo_images` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_favorites_user_id` FOREIGN KEY (`user_id`) REFERENCES `piwigo_users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='per-user favorited images';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -334,13 +336,13 @@ DROP TABLE IF EXISTS `piwigo_group_access`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_group_access` (
-  `group_id` smallint unsigned NOT NULL DEFAULT '0',
-  `cat_id` smallint unsigned NOT NULL DEFAULT '0',
+  `group_id` smallint unsigned NOT NULL DEFAULT '0' COMMENT 'granted group id',
+  `cat_id` smallint unsigned NOT NULL DEFAULT '0' COMMENT 'private album the group is granted access to',
   PRIMARY KEY (`group_id`,`cat_id`),
   KEY `fk_group_access_cat_id` (`cat_id`),
   CONSTRAINT `fk_group_access_cat_id` FOREIGN KEY (`cat_id`) REFERENCES `piwigo_categories` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_group_access_group_id` FOREIGN KEY (`group_id`) REFERENCES `piwigo_groups` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='per-group private album permission grants';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -361,14 +363,14 @@ DROP TABLE IF EXISTS `piwigo_groups`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_groups` (
-  `id` smallint unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
-  `is_default` tinyint(1) NOT NULL DEFAULT '0',
-  `lastmodified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `id` smallint unsigned NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'group display name, unique',
+  `is_default` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'every newly registered user is automatically added to groups marked default',
+  `lastmodified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'row last-update timestamp, set on insert only',
   PRIMARY KEY (`id`),
   UNIQUE KEY `groups_ui1` (`name`),
   KEY `lastmodified` (`lastmodified`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='user groups for bulk permission and membership management';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -389,19 +391,19 @@ DROP TABLE IF EXISTS `piwigo_history`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_history` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `date` date DEFAULT NULL,
-  `time` time NOT NULL DEFAULT '00:00:00',
-  `user_id` mediumint unsigned NOT NULL DEFAULT '0',
-  `IP` char(39) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
-  `section` enum('categories','tags','search','list','favorites','most_visited','best_rated','recent_pics','recent_cats') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `category_id` smallint unsigned DEFAULT NULL,
-  `search_id` int unsigned DEFAULT NULL,
-  `tag_ids` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `image_id` mediumint unsigned DEFAULT NULL,
-  `image_type` enum('picture','high','other') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `format_id` int unsigned DEFAULT NULL,
-  `auth_key_id` int unsigned DEFAULT NULL,
+  `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
+  `date` date DEFAULT NULL COMMENT 'calendar date of the visit',
+  `time` time NOT NULL DEFAULT '00:00:00' COMMENT 'time of day of the visit',
+  `user_id` mediumint unsigned NOT NULL DEFAULT '0' COMMENT 'visiting user id, the guest user id for anonymous visitors',
+  `IP` char(39) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'REMOTE_ADDR of the request, truncated to fit an IPv6 address',
+  `section` enum('categories','tags','search','list','favorites','most_visited','best_rated','recent_pics','recent_cats') COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'gallery navigation view the visit occurred in, plugin-defined sections are appended to this enum automatically',
+  `category_id` smallint unsigned DEFAULT NULL COMMENT 'album being viewed, set when section is a category-based view',
+  `search_id` int unsigned DEFAULT NULL COMMENT 'search being viewed, set when section is search',
+  `tag_ids` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'comma-separated tag ids being viewed, set when section is tags, truncated to fit',
+  `image_id` mediumint unsigned DEFAULT NULL COMMENT 'viewed image id, null for a listing/section page-view',
+  `image_type` enum('picture','high','other') COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'size the image was viewed at',
+  `format_id` int unsigned DEFAULT NULL COMMENT 'image_format row downloaded or viewed, when applicable',
+  `auth_key_id` int unsigned DEFAULT NULL COMMENT 'API auth key the request was authenticated with, if any',
   PRIMARY KEY (`id`),
   KEY `idx_history_date_desc` (`date` DESC,`id` DESC),
   KEY `fk_history_image_id` (`image_id`),
@@ -416,7 +418,7 @@ CREATE TABLE `piwigo_history` (
   CONSTRAINT `fk_history_image_id` FOREIGN KEY (`image_id`) REFERENCES `piwigo_images` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_history_search_id` FOREIGN KEY (`search_id`) REFERENCES `piwigo_search` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_history_user_id` FOREIGN KEY (`user_id`) REFERENCES `piwigo_users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='per-visit page-view log, periodically rolled up into history_summary';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -436,17 +438,17 @@ DROP TABLE IF EXISTS `piwigo_history_summary`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_history_summary` (
-  `summary_id` int unsigned NOT NULL AUTO_INCREMENT,
-  `year` smallint NOT NULL DEFAULT '0',
-  `month` tinyint DEFAULT NULL,
-  `day` tinyint DEFAULT NULL,
-  `hour` tinyint DEFAULT NULL,
-  `nb_pages` int DEFAULT NULL,
-  `history_id_from` int unsigned DEFAULT NULL,
-  `history_id_to` int unsigned DEFAULT NULL,
+  `summary_id` int unsigned NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
+  `year` smallint NOT NULL DEFAULT '0' COMMENT 'rollup year',
+  `month` tinyint DEFAULT NULL COMMENT 'rollup month, null for a year-level summary row',
+  `day` tinyint DEFAULT NULL COMMENT 'rollup day, null for a year- or month-level summary row',
+  `hour` tinyint DEFAULT NULL COMMENT 'rollup hour, null for a year-, month-, or day-level summary row',
+  `nb_pages` int DEFAULT NULL COMMENT 'number of history page-views folded into this summary row',
+  `history_id_from` int unsigned DEFAULT NULL COMMENT 'lowest history.id folded into this summary row',
+  `history_id_to` int unsigned DEFAULT NULL COMMENT 'highest history.id folded into this summary row, the next run resumes past this id',
   PRIMARY KEY (`summary_id`),
   UNIQUE KEY `history_summary_ymdh` (`year`,`month`,`day`,`hour`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='year/month/day/hour rollup of piwigo_history, one row per granularity level, letting old detail rows be purged';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -466,14 +468,14 @@ DROP TABLE IF EXISTS `piwigo_image_category`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_image_category` (
-  `image_id` mediumint unsigned NOT NULL DEFAULT '0',
-  `category_id` smallint unsigned NOT NULL DEFAULT '0',
-  `rank` mediumint unsigned DEFAULT NULL,
+  `image_id` mediumint unsigned NOT NULL DEFAULT '0' COMMENT 'member image id',
+  `category_id` smallint unsigned NOT NULL DEFAULT '0' COMMENT 'album the image belongs to',
+  `rank` mediumint unsigned DEFAULT NULL COMMENT 'manual sort position of the image within this specific album',
   PRIMARY KEY (`image_id`,`category_id`),
   KEY `image_category_i1` (`category_id`),
   CONSTRAINT `fk_image_category_category_id` FOREIGN KEY (`category_id`) REFERENCES `piwigo_categories` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_image_category_image_id` FOREIGN KEY (`image_id`) REFERENCES `piwigo_images` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='image-to-album membership, an image can belong to more than one album';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -494,14 +496,14 @@ DROP TABLE IF EXISTS `piwigo_image_format`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_image_format` (
-  `format_id` int unsigned NOT NULL AUTO_INCREMENT,
-  `image_id` mediumint unsigned NOT NULL DEFAULT '0',
-  `ext` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `filesize` mediumint unsigned DEFAULT NULL,
+  `format_id` int unsigned NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
+  `image_id` mediumint unsigned NOT NULL DEFAULT '0' COMMENT 'image this alternate format file belongs to',
+  `ext` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'file extension of this alternate format, e.g. a RAW file stored alongside the main JPEG',
+  `filesize` mediumint unsigned DEFAULT NULL COMMENT 'file size of this alternate format in KB',
   PRIMARY KEY (`format_id`),
   KEY `fk_image_format_image_id` (`image_id`),
   CONSTRAINT `fk_image_format_image_id` FOREIGN KEY (`image_id`) REFERENCES `piwigo_images` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='alternate format files stored alongside an image (the multiple formats feature)';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -521,13 +523,13 @@ DROP TABLE IF EXISTS `piwigo_image_tag`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_image_tag` (
-  `image_id` mediumint unsigned NOT NULL DEFAULT '0',
-  `tag_id` smallint unsigned NOT NULL DEFAULT '0',
+  `image_id` mediumint unsigned NOT NULL DEFAULT '0' COMMENT 'tagged image id',
+  `tag_id` smallint unsigned NOT NULL DEFAULT '0' COMMENT 'tag applied to the image',
   PRIMARY KEY (`image_id`,`tag_id`),
   KEY `image_tag_i1` (`tag_id`),
   CONSTRAINT `fk_image_tag_image_id` FOREIGN KEY (`image_id`) REFERENCES `piwigo_images` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_image_tag_tag_id` FOREIGN KEY (`tag_id`) REFERENCES `piwigo_tags` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='image-to-tag associations';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -548,30 +550,30 @@ DROP TABLE IF EXISTS `piwigo_images`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_images` (
-  `id` mediumint unsigned NOT NULL AUTO_INCREMENT,
-  `file` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '',
-  `date_available` datetime DEFAULT NULL,
-  `date_creation` datetime DEFAULT NULL,
-  `name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `comment` text COLLATE utf8mb4_unicode_ci,
-  `author` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `hit` int unsigned NOT NULL DEFAULT '0',
-  `filesize` mediumint unsigned DEFAULT NULL,
-  `width` smallint unsigned DEFAULT NULL,
-  `height` smallint unsigned DEFAULT NULL,
+  `id` mediumint unsigned NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
+  `file` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '' COMMENT 'base filename of the original file',
+  `date_available` datetime DEFAULT NULL COMMENT 'date the photo is considered added/visible in the gallery, can be mapped from EXIF/IPTC or admin-edited',
+  `date_creation` datetime DEFAULT NULL COMMENT 'date the photo was taken, typically synced from EXIF/IPTC metadata',
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'display title, distinct from the filename',
+  `comment` text COLLATE utf8mb4_unicode_ci COMMENT 'photo description shown on its page',
+  `author` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'photographer/author credit',
+  `hit` int unsigned NOT NULL DEFAULT '0' COMMENT 'view counter',
+  `filesize` mediumint unsigned DEFAULT NULL COMMENT 'original file size in KB',
+  `width` smallint unsigned DEFAULT NULL COMMENT 'original pixel width',
+  `height` smallint unsigned DEFAULT NULL COMMENT 'original pixel height',
   `coi` char(4) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'center of interest',
-  `representative_ext` varchar(4) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `date_metadata_update` date DEFAULT NULL,
-  `rating_score` float(5,2) unsigned DEFAULT NULL,
-  `path` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
-  `storage_category_id` smallint unsigned DEFAULT NULL,
-  `level` tinyint unsigned NOT NULL DEFAULT '0',
-  `md5sum` char(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `added_by` mediumint unsigned DEFAULT NULL,
-  `rotation` tinyint unsigned DEFAULT NULL,
-  `latitude` double(8,6) DEFAULT NULL,
-  `longitude` double(9,6) DEFAULT NULL,
-  `lastmodified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `representative_ext` varchar(4) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'file extension of a separate representative thumbnail, for formats that cannot be thumbnailed directly, e.g. PDF/video',
+  `date_metadata_update` date DEFAULT NULL COMMENT 'date the row was last synced from the file EXIF/IPTC metadata, null if never synced',
+  `rating_score` float(5,2) unsigned DEFAULT NULL COMMENT 'bayesian average of piwigo_rate ratings, recomputed by RateService::updateRatingScore',
+  `path` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'full relative filesystem path to the original file',
+  `storage_category_id` smallint unsigned DEFAULT NULL COMMENT 'album the file is physically stored under, distinct from possibly multiple image_category memberships',
+  `level` tinyint unsigned NOT NULL DEFAULT '0' COMMENT 'minimum permission level required to view the image, see PwgImages::setPrivacyLevel and available_permission_levels',
+  `md5sum` char(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'MD5 checksum of the original file, computed lazily for duplicate detection',
+  `added_by` mediumint unsigned DEFAULT NULL COMMENT 'uploading user id',
+  `rotation` tinyint unsigned DEFAULT NULL COMMENT 'pending quarter-turn rotation to apply when rendering, 0 to 3',
+  `latitude` double(8,6) DEFAULT NULL COMMENT 'GPS latitude, from EXIF',
+  `longitude` double(9,6) DEFAULT NULL COMMENT 'GPS longitude, from EXIF',
+  `lastmodified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'row last-update timestamp',
   PRIMARY KEY (`id`),
   KEY `images_i2` (`date_available`),
   KEY `images_i3` (`rating_score`),
@@ -580,6 +582,8 @@ CREATE TABLE `piwigo_images` (
   KEY `images_i1` (`storage_category_id`),
   KEY `images_i6` (`latitude`),
   KEY `images_i7` (`path`),
+  KEY `images_i8` (`md5sum`),
+  KEY `images_i9` (`file`),
   KEY `lastmodified` (`lastmodified`),
   KEY `idx_images_date_desc` (`date_available` DESC,`id` DESC),
   KEY `fk_images_added_by` (`added_by`),
@@ -587,7 +591,7 @@ CREATE TABLE `piwigo_images` (
   FULLTEXT KEY `images_ft_author` (`author`),
   CONSTRAINT `fk_images_added_by` FOREIGN KEY (`added_by`) REFERENCES `piwigo_users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_images_storage_category_id` FOREIGN KEY (`storage_category_id`) REFERENCES `piwigo_categories` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='photo/media metadata and file location, one row per uploaded image';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -596,7 +600,7 @@ CREATE TABLE `piwigo_images` (
 
 LOCK TABLES `piwigo_images` WRITE;
 /*!40000 ALTER TABLE `piwigo_images` DISABLE KEYS */;
-INSERT INTO `piwigo_images` VALUES (1,'fixture-photo-1.jpg','2026-08-01 00:00:00',NULL,'Photo 1',NULL,NULL,0,1,200,150,NULL,NULL,'2026-07-27',4.50,'upload/2026/08/01/20260801000000-2e7e64c7.jpg',NULL,0,'fc6fccf1f8d70f6d7c6d627871f2ea6f',1,0,NULL,NULL,'2026-07-27 02:10:38'),(2,'fixture-photo-2.jpg','2026-08-01 00:00:00',NULL,'Photo 2',NULL,NULL,0,1,200,150,NULL,NULL,'2026-07-27',3.00,'upload/2026/08/01/20260801000000-4a016abc.jpg',NULL,0,'1a9f270d14115544c399edf1589bd83d',1,0,NULL,NULL,'2026-07-27 02:10:38'),(3,'fixture-photo-3.jpg','2026-08-01 00:00:00',NULL,'Photo 3',NULL,NULL,0,1,200,150,NULL,NULL,'2026-07-27',5.00,'upload/2026/08/01/20260801000000-a6a06ec9.jpg',NULL,0,'b0a46a8d02dc4233552d5128409abacc',1,0,NULL,NULL,'2026-07-27 02:10:38'),(4,'fixture-photo-4.jpg','2026-08-01 00:00:00',NULL,'Photo 4',NULL,NULL,0,1,200,150,NULL,NULL,'2026-07-27',2.00,'upload/2026/08/01/20260801000000-3df6982d.jpg',NULL,0,'0fa2ad89d23f188d00da35c42ea7a054',1,0,NULL,NULL,'2026-07-27 02:10:38'),(5,'fixture-photo-5.jpg','2026-08-01 00:00:00',NULL,'Photo 5',NULL,NULL,0,1,200,150,NULL,NULL,'2026-07-27',NULL,'upload/2026/08/01/20260801000000-4b017763.jpg',NULL,0,'c6ff1b121a4a32e084af1779bc798c7c',1,0,NULL,NULL,'2026-07-27 02:10:37');
+INSERT INTO `piwigo_images` VALUES (1,'fixture-photo-1.jpg','2026-08-01 00:00:00',NULL,'Photo 1',NULL,NULL,0,1,200,150,NULL,NULL,'2026-08-02',4.50,'upload/2026/08/01/20260801000000-2e7e9c93.jpg',NULL,0,'2e7ee450c4a4cffe42945205029782b9',1,0,NULL,NULL,'2026-08-02 05:25:53'),(2,'fixture-photo-2.jpg','2026-08-01 00:00:00',NULL,'Photo 2',NULL,NULL,0,1,200,150,NULL,NULL,'2026-08-02',3.00,'upload/2026/08/01/20260801000000-4a019d76.jpg',NULL,0,'4a010138f010067cfc713afb6dcf45e1',1,0,NULL,NULL,'2026-08-02 05:25:53'),(3,'fixture-photo-3.jpg','2026-08-01 00:00:00',NULL,'Photo 3',NULL,NULL,0,1,200,150,NULL,NULL,'2026-08-02',5.00,'upload/2026/08/01/20260801000000-a6a02c4e.jpg',NULL,0,'a6a04acded208db63890b74c4252a012',1,0,NULL,NULL,'2026-08-02 05:25:53'),(4,'fixture-photo-4.jpg','2026-08-01 00:00:00',NULL,'Photo 4',NULL,NULL,0,1,200,150,NULL,NULL,'2026-08-02',2.00,'upload/2026/08/01/20260801000000-3df69a36.jpg',NULL,0,'3df6bd0ebb6f22ea988f2ffb1c3a9566',1,0,NULL,NULL,'2026-08-02 05:25:53'),(5,'fixture-photo-5.jpg','2026-08-01 00:00:00',NULL,'Photo 5',NULL,NULL,0,1,200,150,NULL,NULL,'2026-08-02',NULL,'upload/2026/08/01/20260801000000-4b01cdd1.jpg',NULL,0,'4b01d21f3d56009c3b1f913fafda86c5',1,0,NULL,NULL,'2026-08-02 05:25:52');
 /*!40000 ALTER TABLE `piwigo_images` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -608,11 +612,11 @@ DROP TABLE IF EXISTS `piwigo_integrity_ignored_anomalies`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_integrity_ignored_anomalies` (
-  `anomaly_id` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `piwigo_version` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `ignored_at` datetime NOT NULL,
+  `anomaly_id` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'add_anomaly()-generated md5 id, see CheckIntegrity',
+  `piwigo_version` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Piwigo version the anomaly was ignored under',
+  `ignored_at` datetime NOT NULL COMMENT 'when the anomaly was dismissed',
   PRIMARY KEY (`anomaly_id`,`piwigo_version`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='integrity-check anomalies an admin dismissed, read and written by CheckIntegrity via IntegrityIgnoredAnomalyRepository';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -632,11 +636,11 @@ DROP TABLE IF EXISTS `piwigo_languages`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_languages` (
-  `id` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
-  `version` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '0',
-  `name` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `id` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'language directory-name identifier, e.g. en_UK, row existence alone means installed and active',
+  `version` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '0' COMMENT 'installed language pack version string',
+  `name` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'human-readable language display name',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='installed/active language packs, row deleted outright on deactivation';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -657,13 +661,13 @@ DROP TABLE IF EXISTS `piwigo_lounge`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_lounge` (
-  `image_id` mediumint unsigned NOT NULL DEFAULT '0',
-  `category_id` smallint unsigned NOT NULL DEFAULT '0',
+  `image_id` mediumint unsigned NOT NULL DEFAULT '0' COMMENT 'newly uploaded image pending album association',
+  `category_id` smallint unsigned NOT NULL DEFAULT '0' COMMENT 'album the image is intended for once the lounge is emptied',
   PRIMARY KEY (`image_id`,`category_id`),
   KEY `fk_lounge_category_id` (`category_id`),
   CONSTRAINT `fk_lounge_category_id` FOREIGN KEY (`category_id`) REFERENCES `piwigo_categories` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_lounge_image_id` FOREIGN KEY (`image_id`) REFERENCES `piwigo_images` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='pending image-to-album associations, applied in bulk by ImageService::emptyLounge';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -683,13 +687,13 @@ DROP TABLE IF EXISTS `piwigo_old_permalinks`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_old_permalinks` (
-  `cat_id` smallint unsigned NOT NULL DEFAULT '0',
-  `permalink` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '',
-  `date_deleted` datetime DEFAULT NULL,
-  `last_hit` datetime DEFAULT NULL,
-  `hit` int unsigned NOT NULL DEFAULT '0',
+  `cat_id` smallint unsigned NOT NULL DEFAULT '0' COMMENT 'album the removed permalink used to point to',
+  `permalink` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '' COMMENT 'the retired URL slug, kept so it is not immediately reusable by another album',
+  `date_deleted` datetime DEFAULT NULL COMMENT 'when the permalink was retired',
+  `last_hit` datetime DEFAULT NULL COMMENT 'when the dead permalink was last visited',
+  `hit` int unsigned NOT NULL DEFAULT '0' COMMENT 'visit count against the dead permalink',
   PRIMARY KEY (`permalink`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='retired album permalinks, kept to block reuse and shown on the admin permalinks page';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -710,11 +714,11 @@ DROP TABLE IF EXISTS `piwigo_plugin_migrations`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_plugin_migrations` (
-  `plugin_id` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `version` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `executed_at` datetime NOT NULL,
+  `plugin_id` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'directory-name identifier of the plugin that ran this migration',
+  `version` varchar(191) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'plugin-internal migration version identifier',
+  `executed_at` datetime NOT NULL COMMENT 'when this plugin migration ran',
   PRIMARY KEY (`plugin_id`,`version`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='per-plugin install/update history, read and written by ExtensionLifecycle via PluginMigrationRepository, not a real migration runner';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -734,11 +738,11 @@ DROP TABLE IF EXISTS `piwigo_plugins`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_plugins` (
-  `id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '',
-  `state` enum('inactive','active') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'inactive',
-  `version` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '0',
+  `id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '' COMMENT 'plugin directory-name identifier, row existence alone means installed, active or not',
+  `state` enum('inactive','active') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'inactive' COMMENT 'whether the installed plugin is currently active',
+  `version` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '0' COMMENT 'installed plugin version string',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='installed plugins and their active/inactive state';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -758,16 +762,16 @@ DROP TABLE IF EXISTS `piwigo_rate`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_rate` (
-  `user_id` mediumint unsigned NOT NULL DEFAULT '0',
-  `element_id` mediumint unsigned NOT NULL DEFAULT '0',
-  `anonymous_id` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
-  `rate` tinyint unsigned NOT NULL DEFAULT '0',
-  `date` date DEFAULT NULL,
+  `user_id` mediumint unsigned NOT NULL DEFAULT '0' COMMENT 'rating user id, the guest user id for anonymous visitors',
+  `element_id` mediumint unsigned NOT NULL DEFAULT '0' COMMENT 'rated image id',
+  `anonymous_id` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'truncated IP address identifying an anonymous rater, from the anonymous_rater cookie',
+  `rate` tinyint unsigned NOT NULL DEFAULT '0' COMMENT 'submitted rating value, restricted to the configured rate_items',
+  `date` date DEFAULT NULL COMMENT 'date the rate was submitted',
   PRIMARY KEY (`element_id`,`user_id`,`anonymous_id`),
   KEY `fk_rate_user_id` (`user_id`),
   CONSTRAINT `fk_rate_element_id` FOREIGN KEY (`element_id`) REFERENCES `piwigo_images` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_rate_user_id` FOREIGN KEY (`user_id`) REFERENCES `piwigo_users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='per-user or per-anonymous-visitor image ratings, aggregated into images.rating_score';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -788,18 +792,18 @@ DROP TABLE IF EXISTS `piwigo_search`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_search` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `search_uuid` char(23) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `created_on` datetime DEFAULT NULL,
-  `created_by` mediumint unsigned DEFAULT NULL,
-  `forked_from` int unsigned DEFAULT NULL,
-  `rules` json DEFAULT NULL,
+  `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
+  `search_uuid` char(23) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'public, shareable identifier for this saved search, used in URLs instead of id',
+  `created_on` datetime DEFAULT NULL COMMENT 'when the search was saved',
+  `created_by` mediumint unsigned DEFAULT NULL COMMENT 'user id who saved the search, null for an anonymous search',
+  `forked_from` int unsigned DEFAULT NULL COMMENT 'search this one was refined/derived from, null for an original search',
+  `rules` json DEFAULT NULL COMMENT 'encoded search criteria (query terms, filters) evaluated by SearchService',
   PRIMARY KEY (`id`),
   KEY `fk_search_created_by` (`created_by`),
   KEY `fk_search_forked_from` (`forked_from`),
   CONSTRAINT `fk_search_created_by` FOREIGN KEY (`created_by`) REFERENCES `piwigo_users` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_search_forked_from` FOREIGN KEY (`forked_from`) REFERENCES `piwigo_search` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='saved/shareable search queries';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -819,11 +823,11 @@ DROP TABLE IF EXISTS `piwigo_search_filter_view`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_search_filter_view` (
-  `name` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `config_json` json NOT NULL,
-  `created_at` datetime NOT NULL,
+  `name` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'saved filter view name',
+  `config_json` json NOT NULL COMMENT 'encoded search filter configuration',
+  `created_at` datetime NOT NULL COMMENT 'when the filter view was saved',
   PRIMARY KEY (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='named, reusable saved search-filter presets, unused: not read or written by any repository or service in this codebase';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -843,11 +847,11 @@ DROP TABLE IF EXISTS `piwigo_sessions`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_sessions` (
-  `id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '',
-  `data` mediumtext COLLATE utf8mb4_unicode_ci NOT NULL,
-  `expiration` datetime DEFAULT NULL,
+  `id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '' COMMENT 'composite PHP session id, IP-hash-prefixed by SessionService',
+  `data` mediumtext COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'serialized PHP session payload',
+  `expiration` datetime DEFAULT NULL COMMENT 'when this session becomes invalid',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='PHP session storage backend';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -856,7 +860,7 @@ CREATE TABLE `piwigo_sessions` (
 
 LOCK TABLES `piwigo_sessions` WRITE;
 /*!40000 ALTER TABLE `piwigo_sessions` DISABLE KEYS */;
-INSERT INTO `piwigo_sessions` VALUES ('7F001c4f83726db809b1733c3f9a4ed3dbea','','2026-08-01 00:00:00'),('7F00262fa12728358b14cd54d36e60de35f2','','2026-08-01 00:00:00'),('7F002cffa2a047863ac0582e519fa9cca3e9','','2026-08-01 00:00:00'),('7F007d292848aab2a85925296bb5549a73fa','pwg_uid|i:1;connected_with|s:16:\"ws_session_login\";','2026-08-01 00:00:00'),('7F008bc784a2c14ce077db410fef77d2b96a','','2026-08-01 00:00:00'),('7F008d7c64fe56e053e4580ebd7f7016271f','','2026-08-01 00:00:00'),('7F00cba5ec74a05a02d60439f36c253dfb21','','2026-08-01 00:00:00');
+INSERT INTO `piwigo_sessions` VALUES ('2b120e1536eab1aa01eb34d91cfc12fe','','2026-08-01 00:00:00'),('2feb4d31fd7b174e9f62dc9ebc48a5a0','','2026-08-01 00:00:00'),('3cbfbd5734cab7e7b96bb89400ff60a3','pwg_uid|i:1;connected_with|s:16:\"ws_session_login\";','2026-08-01 00:00:00'),('7721130df9b3fb7dd19f5438eb004a02','','2026-08-01 00:00:00'),('867dd076ca2f63fbb49caf8bae6dbfb4','','2026-08-01 00:00:00'),('968445f251f49b97280b1cb17c1d3dbb','','2026-08-01 00:00:00');
 /*!40000 ALTER TABLE `piwigo_sessions` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -868,11 +872,11 @@ DROP TABLE IF EXISTS `piwigo_sites`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_sites` (
-  `id` tinyint unsigned NOT NULL AUTO_INCREMENT,
-  `galleries_url` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
+  `id` tinyint unsigned NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key, referenced by categories.site_id',
+  `galleries_url` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'base path or URL this site synchronizes photos from, local or remote (see UrlService::urlIsRemote)',
   PRIMARY KEY (`id`),
   UNIQUE KEY `sites_ui1` (`galleries_url`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='multi-site photo sources synchronized into albums';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -881,7 +885,7 @@ CREATE TABLE `piwigo_sites` (
 
 LOCK TABLES `piwigo_sites` WRITE;
 /*!40000 ALTER TABLE `piwigo_sites` DISABLE KEYS */;
-INSERT INTO `piwigo_sites` VALUES (1,'/home/torres/piwigo17-rewrite/galleries/');
+INSERT INTO `piwigo_sites` VALUES (1,'/home/torres/piwigo17-rewrite-sql/galleries/');
 /*!40000 ALTER TABLE `piwigo_sites` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -893,15 +897,15 @@ DROP TABLE IF EXISTS `piwigo_tags`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_tags` (
-  `id` smallint unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
-  `url_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '',
-  `lastmodified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `id` smallint unsigned NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'tag display name',
+  `url_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '' COMMENT 'URL-friendly slug derived from name',
+  `lastmodified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'row last-update timestamp, set on insert only',
   PRIMARY KEY (`id`),
   KEY `tags_i1` (`url_name`),
   KEY `lastmodified` (`lastmodified`),
   FULLTEXT KEY `tags_ft_name` (`name`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='photo tags/keywords';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -922,11 +926,11 @@ DROP TABLE IF EXISTS `piwigo_themes`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_themes` (
-  `id` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
-  `version` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '0',
-  `name` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `id` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'theme directory-name identifier, referenced by user_infos.theme, row existence alone means installed and active',
+  `version` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '0' COMMENT 'installed theme version string',
+  `name` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'human-readable theme display name',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='installed/active themes, row deleted outright on deactivation';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -946,13 +950,13 @@ DROP TABLE IF EXISTS `piwigo_user_access`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_user_access` (
-  `user_id` mediumint unsigned NOT NULL DEFAULT '0',
-  `cat_id` smallint unsigned NOT NULL DEFAULT '0',
+  `user_id` mediumint unsigned NOT NULL DEFAULT '0' COMMENT 'granted user id',
+  `cat_id` smallint unsigned NOT NULL DEFAULT '0' COMMENT 'private album the user is granted access to',
   PRIMARY KEY (`user_id`,`cat_id`),
   KEY `fk_user_access_cat_id` (`cat_id`),
   CONSTRAINT `fk_user_access_cat_id` FOREIGN KEY (`cat_id`) REFERENCES `piwigo_categories` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_user_access_user_id` FOREIGN KEY (`user_id`) REFERENCES `piwigo_users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='per-user private album permission grants';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -972,22 +976,22 @@ DROP TABLE IF EXISTS `piwigo_user_auth_keys`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_user_auth_keys` (
-  `auth_key_id` int unsigned NOT NULL AUTO_INCREMENT,
-  `auth_key` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `apikey_secret` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `user_id` mediumint unsigned NOT NULL,
-  `created_on` datetime NOT NULL,
-  `duration` int unsigned DEFAULT NULL,
-  `expired_on` datetime NOT NULL,
-  `apikey_name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `key_type` varchar(40) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `revoked_on` datetime DEFAULT NULL,
-  `last_used_on` datetime DEFAULT NULL,
-  `last_notified_on` datetime DEFAULT NULL,
+  `auth_key_id` int unsigned NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
+  `auth_key` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'the token value: a random persistent-login token for key_type=auth_key, or the public pkid-... identifier for key_type=api_key',
+  `apikey_secret` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'hashed secret half of a key_type=api_key pair, null for auth_key rows',
+  `user_id` mediumint unsigned NOT NULL COMMENT 'owning user id',
+  `created_on` datetime NOT NULL COMMENT 'when the key was issued',
+  `duration` int unsigned DEFAULT NULL COMMENT 'requested key lifetime, seconds for auth_key rows or days for api_key rows, see expired_on for the actual cutoff',
+  `expired_on` datetime NOT NULL COMMENT 'when the key stops being valid',
+  `apikey_name` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'user-given label for a key_type=api_key row, null for auth_key rows',
+  `key_type` varchar(40) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'auth_key for a persistent-login/URL-login token, api_key for a personal API key',
+  `revoked_on` datetime DEFAULT NULL COMMENT 'when the key was manually revoked, null if still live',
+  `last_used_on` datetime DEFAULT NULL COMMENT 'when the key last authenticated a request',
+  `last_notified_on` datetime DEFAULT NULL COMMENT 'when the owner was last emailed an expiration notice',
   PRIMARY KEY (`auth_key_id`),
   KEY `fk_user_auth_keys_user_id` (`user_id`),
   CONSTRAINT `fk_user_auth_keys_user_id` FOREIGN KEY (`user_id`) REFERENCES `piwigo_users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='persistent-login tokens and personal API keys, two row shapes sharing one table';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1007,15 +1011,15 @@ DROP TABLE IF EXISTS `piwigo_user_failed_logins`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_user_failed_logins` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `user_id` mediumint unsigned DEFAULT NULL,
-  `ip` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `attempted_at` datetime NOT NULL,
+  `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key',
+  `user_id` mediumint unsigned DEFAULT NULL COMMENT 'targeted user id, if the attempted username resolved to a real account',
+  `ip` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'REMOTE_ADDR the failed login attempt came from',
+  `attempted_at` datetime NOT NULL COMMENT 'when the failed attempt occurred',
   PRIMARY KEY (`id`),
   KEY `idx_user_failed_logins_user_time` (`user_id`,`attempted_at`),
   KEY `idx_user_failed_logins_ip_time` (`ip`,`attempted_at`),
   CONSTRAINT `fk_user_failed_logins_user_id` FOREIGN KEY (`user_id`) REFERENCES `piwigo_users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='failed login attempts, read and written by AuthService::pwgLogin() via UserFailedLoginRepository to back its dual-scope (username + IP) lockout';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1035,13 +1039,13 @@ DROP TABLE IF EXISTS `piwigo_user_feed`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_user_feed` (
-  `id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '',
-  `user_id` mediumint unsigned NOT NULL DEFAULT '0',
-  `last_check` datetime DEFAULT NULL,
+  `id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '' COMMENT 'private feed token, passed as ?feed= to authenticate as the owning user without a login',
+  `user_id` mediumint unsigned NOT NULL DEFAULT '0' COMMENT 'user this feed token authenticates as',
+  `last_check` datetime DEFAULT NULL COMMENT 'when this feed URL was last polled',
   PRIMARY KEY (`id`),
   KEY `fk_user_feed_user_id` (`user_id`),
   CONSTRAINT `fk_user_feed_user_id` FOREIGN KEY (`user_id`) REFERENCES `piwigo_users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='per-user private RSS feed tokens';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1061,13 +1065,13 @@ DROP TABLE IF EXISTS `piwigo_user_group`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_user_group` (
-  `user_id` mediumint unsigned NOT NULL DEFAULT '0',
-  `group_id` smallint unsigned NOT NULL DEFAULT '0',
+  `user_id` mediumint unsigned NOT NULL DEFAULT '0' COMMENT 'member user id',
+  `group_id` smallint unsigned NOT NULL DEFAULT '0' COMMENT 'group the user belongs to',
   PRIMARY KEY (`group_id`,`user_id`),
   KEY `fk_user_group_user_id` (`user_id`),
   CONSTRAINT `fk_user_group_group_id` FOREIGN KEY (`group_id`) REFERENCES `piwigo_groups` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_user_group_user_id` FOREIGN KEY (`user_id`) REFERENCES `piwigo_users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='user to group membership';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1088,28 +1092,28 @@ DROP TABLE IF EXISTS `piwigo_user_infos`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_user_infos` (
-  `user_id` mediumint unsigned NOT NULL DEFAULT '0',
-  `nb_image_page` smallint unsigned NOT NULL DEFAULT '15',
-  `status` enum('webmaster','admin','normal','generic','guest') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'guest',
-  `language` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'en_UK',
-  `expand` tinyint(1) NOT NULL DEFAULT '0',
-  `show_nb_comments` tinyint(1) NOT NULL DEFAULT '0',
-  `show_nb_hits` tinyint(1) NOT NULL DEFAULT '0',
-  `recent_period` tinyint unsigned NOT NULL DEFAULT '7',
-  `theme` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'modus',
-  `registration_date` datetime DEFAULT NULL,
-  `enabled_high` tinyint(1) NOT NULL DEFAULT '1',
-  `level` tinyint unsigned NOT NULL DEFAULT '0',
-  `activation_key` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `activation_key_expire` datetime DEFAULT NULL,
-  `last_visit` datetime DEFAULT NULL,
-  `last_visit_from_history` tinyint(1) NOT NULL DEFAULT '0',
-  `lastmodified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `preferences` json DEFAULT NULL,
+  `user_id` mediumint unsigned NOT NULL DEFAULT '0' COMMENT 'the owning users.id row, application-assigned, never auto-generated here',
+  `nb_image_page` smallint unsigned NOT NULL DEFAULT '15' COMMENT 'photos per page preference',
+  `status` enum('webmaster','admin','normal','generic','guest') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'guest' COMMENT 'account role, gates admin access and permission checks',
+  `language` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'en_UK' COMMENT 'interface language, references languages.id',
+  `expand` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'whether the album tree auto-expands in the menu',
+  `show_nb_comments` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'whether comment counts are shown alongside thumbnails',
+  `show_nb_hits` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'whether view counts are shown alongside thumbnails',
+  `recent_period` tinyint unsigned NOT NULL DEFAULT '7' COMMENT 'number of days considered recent for the recent photos/albums views',
+  `theme` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'modus' COMMENT 'interface theme, references themes.id',
+  `registration_date` datetime DEFAULT NULL COMMENT 'account creation date',
+  `enabled_high` tinyint(1) NOT NULL DEFAULT '1' COMMENT 'whether the user may view/download the original, high-definition photo',
+  `level` tinyint unsigned NOT NULL DEFAULT '0' COMMENT 'effective permission level, gates access to images.level-restricted photos',
+  `activation_key` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'hashed password-reset token, see AuthService::setActivationKey and password.php',
+  `activation_key_expire` datetime DEFAULT NULL COMMENT 'when activation_key stops being valid',
+  `last_visit` datetime DEFAULT NULL COMMENT 'when the user was last seen, refreshed once per session length',
+  `last_visit_from_history` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'whether last_visit was already backfilled from the history table, avoids repeating that lookup',
+  `lastmodified` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'row last-update timestamp',
+  `preferences` json DEFAULT NULL COMMENT 'generic per-user key-value bag for preferences with no dedicated column',
   PRIMARY KEY (`user_id`),
   KEY `lastmodified` (`lastmodified`),
   CONSTRAINT `fk_user_infos_user_id` FOREIGN KEY (`user_id`) REFERENCES `piwigo_users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='per-user profile and preferences, one row per users.id';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1118,7 +1122,7 @@ CREATE TABLE `piwigo_user_infos` (
 
 LOCK TABLES `piwigo_user_infos` WRITE;
 /*!40000 ALTER TABLE `piwigo_user_infos` DISABLE KEYS */;
-INSERT INTO `piwigo_user_infos` VALUES (1,15,'webmaster','en_UK',0,0,0,7,'default','2026-08-01 00:00:00',1,8,NULL,NULL,NULL,0,'2026-07-27 02:10:35','{\"show_whats_new_16\": false}'),(2,15,'guest','en_UK',0,0,0,7,'default','2026-08-01 00:00:00',1,0,NULL,NULL,NULL,0,'2026-08-01 03:00:00',NULL),(3,15,'normal','en_UK',0,0,0,7,'default','2026-08-01 00:00:00',1,0,NULL,NULL,NULL,0,'2026-08-01 03:00:00',NULL),(4,15,'normal','en_UK',0,0,0,7,'default','2026-08-01 00:00:00',1,0,NULL,NULL,NULL,0,'2026-08-01 03:00:00',NULL);
+INSERT INTO `piwigo_user_infos` VALUES (1,15,'webmaster','en_UK',0,0,0,7,'default','2026-08-01 00:00:00',1,8,NULL,NULL,NULL,0,'2026-08-02 05:25:50','{\"show_whats_new_16\": false}'),(2,15,'guest','en_UK',0,0,0,7,'default','2026-08-01 00:00:00',1,0,NULL,NULL,NULL,0,'2026-08-01 03:00:00',NULL),(3,15,'normal','en_UK',0,0,0,7,'default','2026-08-01 00:00:00',1,0,NULL,NULL,NULL,0,'2026-08-01 03:00:00',NULL),(4,15,'normal','en_UK',0,0,0,7,'default','2026-08-01 00:00:00',1,0,NULL,NULL,NULL,0,'2026-08-01 03:00:00',NULL);
 /*!40000 ALTER TABLE `piwigo_user_infos` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1130,14 +1134,14 @@ DROP TABLE IF EXISTS `piwigo_user_mail_notification`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_user_mail_notification` (
-  `user_id` mediumint unsigned NOT NULL DEFAULT '0',
-  `check_key` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '',
-  `enabled` tinyint(1) NOT NULL DEFAULT '0',
-  `last_send` datetime DEFAULT NULL,
+  `user_id` mediumint unsigned NOT NULL DEFAULT '0' COMMENT 'subscribing user id',
+  `check_key` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '' COMMENT 'private token used in subscribe/unsubscribe confirmation email links',
+  `enabled` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'whether the user currently receives new-photo notification emails',
+  `last_send` datetime DEFAULT NULL COMMENT 'when a notification email was last sent to this user',
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `user_mail_notification_ui1` (`check_key`),
   CONSTRAINT `fk_user_mail_notification_user_id` FOREIGN KEY (`user_id`) REFERENCES `piwigo_users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='per-user new-photo email notification subscriptions';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1158,13 +1162,13 @@ DROP TABLE IF EXISTS `piwigo_users`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `piwigo_users` (
-  `id` mediumint unsigned NOT NULL AUTO_INCREMENT,
-  `username` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '',
-  `password` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `mail_address` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `id` mediumint unsigned NOT NULL AUTO_INCREMENT COMMENT 'surrogate primary key, referenced by user_id everywhere else',
+  `username` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '' COMMENT 'login name, unique',
+  `password` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'hashed login password',
+  `mail_address` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'account email address',
   PRIMARY KEY (`id`),
   UNIQUE KEY `users_ui1` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='core login accounts, column names configurable via CurrentConfig::userFields for multi-auth integrations';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1173,7 +1177,7 @@ CREATE TABLE `piwigo_users` (
 
 LOCK TABLES `piwigo_users` WRITE;
 /*!40000 ALTER TABLE `piwigo_users` DISABLE KEYS */;
-INSERT INTO `piwigo_users` VALUES (1,'fixture_admin','$2y$04$VuZ3zAb.Fxs8q1ccvNjIQelERD0ysbS.zlVnPFgczm7x5EhVhsGBq','fixture_admin@example.test'),(2,'guest',NULL,NULL),(3,'regular_user','$2y$04$qUf0vZskfve1wnKmV0fpnO49Xvz9f/MaFm5QxgKLtJDpeBZeKfUGm',NULL),(4,'power_user','$2y$04$0veTZZtqRXebwhaTRptJcu.gAvj.9r4rW4wrEykMJXbhS.qBziDm2',NULL);
+INSERT INTO `piwigo_users` VALUES (1,'fixture_admin','$2y$04$kJuu1KzUWuD00eLylWTs5.BoY3vlW0G/pAJ.DeMNTO.mw5YuiRLEy','fixture_admin@example.test'),(2,'guest',NULL,NULL),(3,'regular_user','$2y$04$7VBdaoxPiuHG9suEpy2fFeDKpiI.NQ6.6iezylTWK3MnxXNezYBhi',NULL),(4,'power_user','$2y$04$dqnX/kHFLRDDwjwdPSh9.u6DhMXiiHUfz9T2oTYAFFxDhsq5.2A1O',NULL);
 /*!40000 ALTER TABLE `piwigo_users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -1186,4 +1190,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-07-26 23:10:38
+-- Dump completed on 2026-08-02  2:25:53

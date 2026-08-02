@@ -25,7 +25,7 @@ use Piwigo\Url\UrlService;
  * different: it returns early (addUploadedFile()'s own `return $image_id;`
  * right after `unlink($source_filepath)`) before that HTTP call is ever
  * reached, so it's exercised for real here against the fixture's own
- * photo #1 (md5sum 'fc6fccf1f8d70f6d7c6d627871f2ea6f') -- no fake/mock
+ * photo #1 (md5sum '2e7ee450c4a4cffe42945205029782b9') -- no fake/mock
  * needed, and this closes 100% of this handler's own coverage gap (its
  * entire body is one call expression + assert + return, all executed
  * together the moment any successful invocation runs).
@@ -163,7 +163,7 @@ test('__invoke returns the existing image id and deletes the newly uploaded file
             // (fixture-photo-1.jpg) exactly -- triggers the "this md5sum
             // already exists" early-return branch instead of a real new-photo
             // insert.
-            originalMd5sum: 'fc6fccf1f8d70f6d7c6d627871f2ea6f',
+            originalMd5sum: '2e7ee450c4a4cffe42945205029782b9',
         ));
 
         expect($imageId)->toBe(1)

@@ -104,7 +104,7 @@ final class UploadServiceTestThemeConfProvider implements ThemeConfProviderInter
  * Fixture shape (tests/Fixtures/piwigo-17.0.sql), same as
  * MetadataRepositoryTest/BatchUploadHandlerTest: images 1-5 exist before
  * any test runs here; image 1's md5sum is the well-known
- * 'fc6fccf1f8d70f6d7c6d627871f2ea6f' (BatchUploadHandlerTest's own
+ * '2e7ee450c4a4cffe42945205029782b9' (BatchUploadHandlerTest's own
  * duplicate-detection fixture value, reused here for the same reason);
  * category 1 "Sample Album" and category 2 "Nested Sub Album" both exist,
  * with image 1 linked only to category 1 (not 2) in the stock fixture.
@@ -466,7 +466,7 @@ final class UploadServiceTest extends IntegrationTestCase
             // (fixture-photo-1.jpg) exactly, same fixture value
             // BatchUploadHandlerTest.php's own duplicate-detection test
             // already relies on.
-            original_md5sum: 'fc6fccf1f8d70f6d7c6d627871f2ea6f',
+            original_md5sum: '2e7ee450c4a4cffe42945205029782b9',
         );
 
         self::assertSame(1, $result);

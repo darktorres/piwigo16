@@ -28,6 +28,8 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Core\WsError;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\DbCredentials;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Event\Picture\RenderElementName;
@@ -58,6 +60,14 @@ use Piwigo\Ws\Encoder\PwgResponseEncoder;
  */
 final class PwgImages
 {
+    /**
+     * Advisory-lock acquisition timeout for add()'s check_uniqueness race
+     * fix below -- generous enough to cover a concurrent upload's own
+     * full image-processing pipeline (resize, representative generation)
+     * rather than just a DB round-trip.
+     */
+    private const int UPLOAD_UNIQUENESS_LOCK_TIMEOUT_SECONDS = 30;
+
     public function __construct(
         private readonly PermissionService $permissionService,
         private readonly CategoryService $categoryService,
@@ -1290,6 +1300,20 @@ final class PwgImages
         // contract) -- both are registered with zero WS-level type
         // constraints, so this was a real SQL injection. Fixed by binding
         // the value through existsWithColumnValue() instead.
+        //
+        // Further SQL-modernization audit, Item 1: neither piwigo_images.md5sum
+        // nor .file was indexed, and the check-then-insert sequence below was a
+        // genuine time-of-check-to-time-of-use race (two concurrent uploads of
+        // the same value could both pass this check before either INSERT
+        // completes). A MySQL advisory lock, scoped to the specific
+        // column/value being uploaded and held from this check through
+        // addUploadedFile()'s completion, closes the race without touching the
+        // check_uniqueness=false escape hatch (the lock is only ever acquired
+        // inside this same `if`, so a caller that opts out of the uniqueness
+        // check never touches it).
+        $uniqueness_lock_conn = null;
+        $uniqueness_lock_name = null;
+
         if ($params['check_uniqueness']) {
             $uniqueness_column = match ($this->currentConfig->uniquenessMode()) {
                 'md5sum' => 'md5sum',
@@ -1299,7 +1323,31 @@ final class PwgImages
 
             if ($uniqueness_column !== null) {
                 $uniqueness_value = $uniqueness_column === 'md5sum' ? $params['original_sum'] : ($params['original_filename'] ?? '');
-                if ($this->imageService->existsWithColumnValue($uniqueness_column, $uniqueness_value)) {
+
+                $uniqueness_lock_conn = DbConnection::build();
+                // GET_LOCK() names are capped at 64 characters -- $uniqueness_value
+                // is a caller-supplied filename in the 'file' uniqueness mode (up to
+                // piwigo_images.file's own 255-char width), so it's hashed rather
+                // than concatenated literally. DbCredentials::current()->prefix is
+                // folded into the hashed input (not just a literal prefix) so it
+                // still contributes to collision-avoidance against unrelated
+                // applications on a shared MySQL server, same reasoning as Item 18.
+                $uniqueness_lock_name = 'piwigo_iu_' . sha1(DbCredentials::current()->prefix . ':' . $uniqueness_column . ':' . $uniqueness_value);
+                $uniqueness_lock_acquired = $uniqueness_lock_conn->fetchOne(
+                    'SELECT GET_LOCK(?, ?)',
+                    [$uniqueness_lock_name, self::UPLOAD_UNIQUENESS_LOCK_TIMEOUT_SECONDS]
+                );
+                $uniqueness_lock_ok = is_numeric($uniqueness_lock_acquired) && (int) $uniqueness_lock_acquired === 1;
+
+                // A failed/timed-out acquisition means another request is right
+                // now checking or inserting this exact value -- treated the same
+                // as "file already exists" rather than silently proceeding
+                // unprotected, since that concurrent request is the same
+                // condition this check exists to catch.
+                if (! $uniqueness_lock_ok || $this->imageService->existsWithColumnValue($uniqueness_column, $uniqueness_value)) {
+                    if ($uniqueness_lock_ok) {
+                        $uniqueness_lock_conn->executeStatement('SELECT RELEASE_LOCK(?)', [$uniqueness_lock_name]);
+                    }
                     return new PwgError(500, 'file already exists');
                 }
             }
@@ -1324,17 +1372,27 @@ final class PwgImages
         $this->mergeChunks($file_path, $params['original_sum'], $original_type);
         chmod($file_path, 0644);
 
-        $image_id = $this->uploadService
-            ->addUploadedFile(
-                $file_path,
-                $this->urlService,
-                $params['original_filename'],
-                null, // categories
-                $params['level'],
-                $params['image_id'] > 0 ? $params['image_id'] : null,
-                $params['original_sum'],
-                $service
-            );
+        try {
+            $image_id = $this->uploadService
+                ->addUploadedFile(
+                    $file_path,
+                    $this->urlService,
+                    $params['original_filename'],
+                    null, // categories
+                    $params['level'],
+                    $params['image_id'] > 0 ? $params['image_id'] : null,
+                    $params['original_sum'],
+                    $service
+                );
+        } finally {
+            // $uniqueness_lock_name is always assigned in the same branch as
+            // $uniqueness_lock_conn (see above), so checking the connection
+            // alone is sufficient -- PHPStan proves this itself, flagging a
+            // separate null-check on the name as redundant.
+            if ($uniqueness_lock_conn !== null) {
+                $uniqueness_lock_conn->executeStatement('SELECT RELEASE_LOCK(?)', [$uniqueness_lock_name]);
+            }
+        }
 
         $info_columns = [
             'name',

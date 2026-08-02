@@ -249,6 +249,8 @@ CREATE TABLE `piwigo_images` (
   KEY `images_i1` (`storage_category_id`),
   KEY `images_i6` (`latitude`),
   KEY `images_i7` (`path`),
+  KEY `images_i8` (`md5sum`),
+  KEY `images_i9` (`file`),
   KEY `lastmodified` (`lastmodified`),
   KEY `idx_images_date_desc` (`date_available` DESC, `id` DESC),
   FULLTEXT KEY `images_ft_name_comment` (`name`,`comment`),

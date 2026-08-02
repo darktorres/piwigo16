@@ -14,7 +14,7 @@ final class WsImagesTest extends ContractTestCase
     private const int FIXTURE_IMAGE_ID = 1;
 
     /** Fixture image 1's real md5sum (tests/Fixtures/piwigo-17.0.sql). */
-    private const string FIXTURE_IMAGE_MD5 = 'fc6fccf1f8d70f6d7c6d627871f2ea6f';
+    private const string FIXTURE_IMAGE_MD5 = '2e7ee450c4a4cffe42945205029782b9';
 
     private Connection $conn;
 

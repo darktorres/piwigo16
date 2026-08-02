@@ -11,10 +11,11 @@ use Doctrine\ORM\Mapping as ORM;
  * Piwigo\Db\TablePrefixListener applies db_prefix at metadata-load time).
  * `date`/`time` stay plain string, not \DateTimeImmutable -- every real
  * consumer wants the raw DB DATE/TIME string form. `history_summary`
- * (this repository's other owned table) is never entity-mapped -- every
- * one of its own touches has a dynamic composite-nullable-key WHERE
- * (year/month?/day?/hour?), with no clean single-row shape an entity
- * would help with.
+ * (this repository's other owned table) was previously claimed to have
+ * no clean single-row shape an entity would help with -- re-audited
+ * (Item 14 Sub-phase B1) and only true for `findSummaryRowsForHierarchy()`'s
+ * own dynamic composite-nullable-key WHERE; several sibling methods are
+ * genuinely clean. Now mapped as {@see HistorySummaryEntity}.
  */
 #[ORM\Entity(repositoryClass: HistoryRepository::class)]
 #[ORM\Table(name: 'history')]

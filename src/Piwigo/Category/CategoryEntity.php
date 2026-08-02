@@ -19,13 +19,17 @@ use Doctrine\ORM\Mapping as ORM;
  * deleteRowsWhereColumnIn/deleteInconsistentAccess), or a cross-domain
  * table this repository doesn't own -- those stay plain DBAL via
  * $this->getEntityManager()->getConnection(), same "mixed repository"
- * shape Image/Tag's own conversions already established. `image_category`
- * is deliberately never entity-mapped by any repository in this whole
- * migration (unlike `group_access`/`user_access`, see UserAccessEntity) --
- * almost every one of its own touches, across both Image and Category,
- * is a dynamic-fragment or cross-table-join method with no real ORM
- * benefit, and the couple of clean exceptions don't justify the
- * cross-repository coordination a shared entity would need.
+ * shape Image/Tag's own conversions already established.
+ *
+ * `image_category` was previously deliberately left unmapped here,
+ * reasoning that a shared entity's cross-repository coordination cost
+ * wasn't worth it for the "couple of clean exceptions" among its
+ * touches. Re-audited (Item 14 Sub-phase B1) and reversed: `group_access`/
+ * `user_access` already prove a join-table entity works fine shared
+ * across repositories, and a fuller re-read found considerably more than
+ * a couple of clean single-table candidates. Now mapped as {@see
+ * \Piwigo\Image\ImageCategoryEntity}, placed in `Piwigo\Image` (the
+ * heaviest real consumer) rather than here.
  */
 #[ORM\Entity(repositoryClass: CategoryRepository::class)]
 #[ORM\Table(name: 'categories')]

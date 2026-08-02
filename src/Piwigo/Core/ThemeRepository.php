@@ -8,16 +8,21 @@ use Piwigo\Db\AbstractRepository;
 use Piwigo\Db\Tables;
 
 /**
- * Persistence layer for the `themes` table -- no ORM entity exists for it
- * (no real caller ever needed one beyond the id/name listing below), so
- * this stays plain DBAL via {@see AbstractRepository}, same shape as
- * Notification\NotificationByMailRepository. Lives alongside ThemeCatalog
- * in `Piwigo\Core` (L1Infrastructure) rather than a new `Piwigo\Theme`
- * namespace -- deptrac.yaml's own L1Infrastructure collector is a fixed
- * namespace enumeration, and ThemeCatalog itself already established this
- * namespace as the correct L1 home for "no natural existing class home,
- * but a real L2aCoreDomain caller (Users\UserService) exists" theme
- * concerns (see ThemeCatalog's own docblock).
+ * Persistence layer for the `themes` table's own id/name listing below.
+ * Stays plain DBAL via {@see AbstractRepository} rather than an ORM
+ * `EntityRepository`, same shape as Notification\NotificationByMailRepository
+ * -- this query's own `ORDER BY name` shape has no other real caller to
+ * share an entity-based repository with. `themes` itself is entity-mapped
+ * ({@see ThemeEntity}, added in Item 14 Sub-phase B1 for
+ * `Users\UserRepository`'s own DQL conversions -- this class's original
+ * docblock claim that "no real caller ever needed one" predates that).
+ * Lives alongside ThemeCatalog in `Piwigo\Core` (L1Infrastructure) rather
+ * than a new `Piwigo\Theme` namespace -- deptrac.yaml's own
+ * L1Infrastructure collector is a fixed namespace enumeration, and
+ * ThemeCatalog itself already established this namespace as the correct
+ * L1 home for "no natural existing class home, but a real L2aCoreDomain
+ * caller (Users\UserService) exists" theme concerns (see ThemeCatalog's
+ * own docblock).
  */
 final class ThemeRepository extends AbstractRepository
 {

@@ -190,11 +190,7 @@ final readonly class SearchService
         $matchingCatIds = null;
         $matchingTagIds = null;
 
-        $forbidden = $this->permissionService->getSqlConditionFandF([
-            'forbidden_categories' => 'category_id',
-            'visible_categories' => 'category_id',
-            'visible_images' => 'id',
-        ], "\n  AND");
+        $forbidden = $this->forbiddenConditionPositional();
 
         /** @var array<string, list<int>> $imageIdsForFilter */
         $imageIdsForFilter = [];
@@ -358,15 +354,18 @@ final readonly class SearchService
         if (\Piwigo\Config\CurrentConfig::rateEnabled() && $ratings !== [] && (bool) ($displayFilters['rating']['access'] ?? false)) {
             $hasFiltersFilled = true;
             $clauses = [];
+            $ratingParams = [];
             foreach ($ratings as $r) {
                 if ((int) $r === 0) {
                     $clauses[] = 'rating_score IS NULL';
                 } else {
-                    $clauses[] = '(rating_score >= ' . ((int) $r - 1) . ' AND rating_score < ' . (int) $r . ')';
+                    $clauses[] = '(rating_score >= ? AND rating_score < ?)';
+                    $ratingParams[] = (int) $r - 1;
+                    $ratingParams[] = (int) $r;
                 }
             }
 
-            $imageIdsForFilter['ratings'] = $this->queryImageIdsFor('(' . implode(' OR ', $clauses) . ')', [], $forbidden);
+            $imageIdsForFilter['ratings'] = $this->queryImageIdsFor('(' . implode(' OR ', $clauses) . ')', $ratingParams, $forbidden);
         }
 
         // filesize
@@ -433,7 +432,7 @@ final readonly class SearchService
             // CurrentConfig::orderBy() (the typed SCHEMA accessor) models a
             // structured {field,dir}[] shape that no real code writes --
             $orderBy = \Piwigo\Config\CurrentConfig::orderBy();
-            $items = $this->repo->findIdsByClause('id', Tables::images() . ' i', 'id IN (' . implode(',', array_map(strval(...), $items)) . ') ' . $orderBy);
+            $items = $this->repo->findIdsByClause('id', Tables::images() . ' i', 'id IN (' . implode(',', array_fill(0, count($items), '?')) . ') ' . $orderBy, $items);
         }
 
         return [
@@ -448,6 +447,62 @@ final readonly class SearchService
     }
 
     /**
+     * SearchRepository's own executors are positional-`?`-only (its own
+     * "generic parameterized executor" design, see that class's docblock)
+     * -- unlike every other repository in the SQL-modernization initiative,
+     * so PermissionService::getSqlConditionFandFAsCondition()'s
+     * named-placeholder SqlCondition is rewritten to positional `?`s here,
+     * same manual per-element expansion convention this file's own
+     * IN-clause callers already use for their own array params (e.g.
+     * `implode(',', array_fill(0, count($x), '?'))`). Bare fragment, no
+     * prefix -- callers that need a leading " AND " add it themselves.
+     *
+     * @param  array<string, string>  $conditionFields
+     * @return array{0: string, 1: list<mixed>}
+     */
+    private function positionalCondition(array $conditionFields, bool $forceOneCondition = false): array
+    {
+        $condition = $this->permissionService->getSqlConditionFandFAsCondition($conditionFields, $forceOneCondition);
+
+        if ($condition->isEmpty()) {
+            return ['', []];
+        }
+
+        $values = [];
+        $sql = preg_replace_callback('/:(\w+)/', static function (array $matches) use ($condition, &$values): string {
+            $value = $condition->parameters[$matches[1]];
+            if (is_array($value)) {
+                $values = [...$values, ...$value];
+
+                return implode(',', array_fill(0, count($value), '?'));
+            }
+
+            $values[] = $value;
+
+            return '?';
+        }, $condition->sql);
+        if ($sql === null) {
+            throw new \RuntimeException('positionalCondition(): preg_replace_callback() failed');
+        }
+
+        return [$sql, array_values($values)];
+    }
+
+    /**
+     * @return array{0: string, 1: list<mixed>}
+     */
+    private function forbiddenConditionPositional(): array
+    {
+        [$sql, $values] = $this->positionalCondition([
+            'forbidden_categories' => 'category_id',
+            'visible_categories' => 'category_id',
+            'visible_images' => 'id',
+        ]);
+
+        return [$sql === '' ? '' : ' AND ' . $sql, $values];
+    }
+
+    /**
      * Shared "images matching this WHERE fragment, filtered by the current
      * user's permissions" executor for every advanced-search criterion --
      * all 12 share the exact same
@@ -455,15 +510,18 @@ final readonly class SearchService
      * WHERE <criterion> <forbidden>` shape.
      *
      * @param  list<mixed>  $params
+     * @param  array{0: string, 1: list<mixed>}  $forbidden
      * @return list<int>
      */
-    private function queryImageIdsFor(string $whereSql, array $params, string $forbidden): array
+    private function queryImageIdsFor(string $whereSql, array $params, array $forbidden): array
     {
+        [$forbiddenSql, $forbiddenParams] = $forbidden;
+
         return $this->repo->findIdsByClause(
             'DISTINCT(id)',
             Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id',
-            $whereSql . ' ' . $forbidden,
-            $params
+            $whereSql . ' ' . $forbiddenSql,
+            [...$params, ...$forbiddenParams]
         );
     }
 
@@ -543,9 +601,10 @@ final readonly class SearchService
      * @param  array<array-key, mixed>  $allwordsField
      * @param  list<string>  $words
      * @param  list<string>  $searchFields
+     * @param  array{0: string, 1: list<mixed>}  $forbidden
      * @return array{0: list<int>, 1: ?list<int>, 2: ?list<int>}
      */
-    private function searchAllwords(array $allwordsField, array $words, array $searchFields, string $forbidden): array
+    private function searchAllwords(array $allwordsField, array $words, array $searchFields, array $forbidden): array
     {
         $fields = array_intersect(['file', 'name', 'comment', 'author'], $searchFields);
 
@@ -617,12 +676,13 @@ final readonly class SearchService
         $filterClauseParts = array_map(static fn (array $c): string => '(' . $c['sql'] . ')', $wordClauses);
         $filterClause = "\n         " . implode("\n         " . $allwordsMode . "\n         ", $filterClauseParts);
         $allParams = array_merge(...array_map(static fn (array $c): array => $c['params'], $wordClauses));
+        [$forbiddenSql, $forbiddenParams] = $forbidden;
 
         $imageIds = $this->repo->findIdsByClause(
             'DISTINCT(id)',
             Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id',
-            $filterClause . ' ' . $forbidden,
-            $allParams
+            $filterClause . ' ' . $forbiddenSql,
+            [...$allParams, ...$forbiddenParams]
         );
 
         $matchingCatIds = null;
@@ -857,14 +917,15 @@ final readonly class SearchService
 
         $positiveIds = $notIds = [];
         for ($i = 0; $i < count($expr->stokens); $i++) {
-            $tagIds = $tokenTagIds[$i];
+            $tagIds = array_values($tokenTagIds[$i]);
             $token = $expr->stokens[$i];
 
             if ($tagIds !== []) {
                 $qsr->tag_iids[$i] = $this->repo->findIdsByClause(
                     'image_id',
                     Tables::imageTag(),
-                    'tag_id IN (' . implode(',', $tagIds) . ') GROUP BY image_id'
+                    'tag_id IN (' . implode(',', array_fill(0, count($tagIds), '?')) . ') GROUP BY image_id',
+                    $tagIds
                 );
                 if ((bool) ($expr->stoken_modifiers[$i] & QSingleToken::QST_NOT)) {
                     $notIds = array_merge($notIds, $tagIds);
@@ -909,7 +970,11 @@ final readonly class SearchService
         // Reading it directly here needs no query at all, on either a
         // cache-hit or cache-miss request.
         $forbiddenCategories = \Piwigo\Users\CurrentUser::get()->forbiddenCategories;
-        $forbiddenCategoriesCsv = $forbiddenCategories !== '' ? $forbiddenCategories : '0';
+        $forbiddenIds = array_values(array_map(intval(...), array_filter(explode(',', $forbiddenCategories), is_numeric(...))));
+        if ($forbiddenIds === []) {
+            $forbiddenIds = [0];
+        }
+        $forbiddenPlaceholders = implode(',', array_fill(0, count($forbiddenIds), '?'));
 
         $tokenCatIds = $qsr->cat_iids = array_fill(0, count($expr->stokens), []);
         $allCats = [];
@@ -927,7 +992,8 @@ final readonly class SearchService
             $clauses = $this->qsearchGetTextTokenSearchSql($token, ['name', 'comment']);
             $rows = $this->repo->findRowsByClause(
                 Tables::categories(),
-                '(' . implode("\n OR ", $clauses) . ') AND id NOT IN (' . $forbiddenCategoriesCsv . ')'
+                '(' . implode("\n OR ", $clauses) . ') AND id NOT IN (' . $forbiddenPlaceholders . ')',
+                $forbiddenIds
             );
             foreach ($rows as $cat) {
                 if (! is_numeric($cat['id'])) {
@@ -953,7 +1019,7 @@ final readonly class SearchService
 
         $positiveIds = $notIds = [];
         for ($i = 0; $i < count($expr->stokens); $i++) {
-            $catIds = $tokenCatIds[$i];
+            $catIds = array_values($tokenCatIds[$i]);
             $token = $expr->stokens[$i];
 
             if ($catIds !== []) {
@@ -963,7 +1029,8 @@ final readonly class SearchService
                         ? $this->repo->findIdsByClause(
                             'id',
                             Tables::categories(),
-                            'id IN (' . implode(',', $subcatIds) . ') AND id NOT IN (' . $forbiddenCategoriesCsv . ')'
+                            'id IN (' . implode(',', array_fill(0, count($subcatIds), '?')) . ') AND id NOT IN (' . $forbiddenPlaceholders . ')',
+                            [...$subcatIds, ...$forbiddenIds]
                         )
                         : [];
                 }
@@ -971,7 +1038,8 @@ final readonly class SearchService
                 $qsr->cat_iids[$i] = $catIds !== [] ? $this->repo->findIdsByClause(
                     'image_id',
                     Tables::imageCategory(),
-                    'category_id IN (' . implode(',', $catIds) . ') GROUP BY image_id'
+                    'category_id IN (' . implode(',', array_fill(0, count($catIds), '?')) . ') GROUP BY image_id',
+                    $catIds
                 ) : [];
                 if ((bool) ($expr->stoken_modifiers[$i] & QSingleToken::QST_NOT)) {
                     $notIds = array_merge($notIds, $catIds);
@@ -1263,10 +1331,12 @@ final readonly class SearchService
         }
 
         if ($permissions) {
-            $whereClauses[] = $this->permissionService->getSqlConditionFandF([
+            [$permissionSql, $permissionValues] = $this->positionalCondition([
                 'forbidden_categories' => 'category_id',
                 'forbidden_images' => 'i.id',
-            ], null, true);
+            ], true);
+            $whereClauses[] = $permissionSql;
+            $params = [...$params, ...$permissionValues];
         }
 
         $from = Tables::images() . ' i';

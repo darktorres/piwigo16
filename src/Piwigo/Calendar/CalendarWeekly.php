@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Calendar;
 
 use Piwigo\Core\Lang;
+use Piwigo\Permission\SqlCondition;
 
 /**
  * Weekly calendar style (composed of years/week in years and days in week)
@@ -20,10 +21,9 @@ final class CalendarWeekly extends CalendarBase
 {
     /**
      * Initialize the calendar
-     * @param string $inner_sql
      */
     #[\Override]
-    public function initialize($inner_sql): void
+    public function initialize(SqlCondition $inner_sql): void
     {
         parent::initialize($inner_sql);
         $week_no_labels = [];
@@ -92,29 +92,34 @@ final class CalendarWeekly extends CalendarBase
      * @param int $max_levels (e.g. 2=only year and month)
      */
     #[\Override]
-    public function get_date_where($max_levels = 3): string
+    public function get_date_where($max_levels = 3): SqlCondition
     {
         $date = $this->chronology_date;
         while (count($date) > $max_levels) {
             array_pop($date);
         }
         $res = '';
+        $params = [];
         if (isset($date[self::CYEAR]) and $date[self::CYEAR] !== 'any') {
             $y = $date[self::CYEAR];
-            $res = " AND {$this->date_field} BETWEEN '{$y}-01-01' AND '{$y}-12-31 23:59:59'";
+            $res = " AND {$this->date_field} BETWEEN :dateWhereYearStart AND :dateWhereYearEnd";
+            $params['dateWhereYearStart'] = $y . '-01-01';
+            $params['dateWhereYearEnd'] = $y . '-12-31 23:59:59';
         }
 
         if (isset($date[self::CWEEK]) and $date[self::CWEEK] !== 'any') {
             $week = $date[self::CWEEK];
-            $res .= ' AND ' . $this->calendar_levels[self::CWEEK]['sql'] . '=' . $week;
+            $res .= ' AND ' . $this->calendar_levels[self::CWEEK]['sql'] . '= :dateWhereWeek';
+            $params['dateWhereWeek'] = $week;
         }
         if (isset($date[self::CDAY]) and $date[self::CDAY] !== 'any') {
             $day = $date[self::CDAY];
-            $res .= ' AND ' . $this->calendar_levels[self::CDAY]['sql'] . '=' . $day;
+            $res .= ' AND ' . $this->calendar_levels[self::CDAY]['sql'] . '= :dateWhereDay';
+            $params['dateWhereDay'] = $day;
         }
         if ($res === '') {
             $res = ' AND ' . $this->date_field . ' IS NOT NULL';
         }
-        return $res;
+        return new SqlCondition($res, $params);
     }
 }

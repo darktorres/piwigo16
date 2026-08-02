@@ -15,6 +15,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Lang\Translator;
+use Piwigo\Permission\SqlCondition;
 use Piwigo\Template\Template;
 
 function calendar_weekly_test_rrmdir(string $dir): void
@@ -119,7 +120,7 @@ final class CalendarWeeklyTest extends IntegrationTestCase
     {
         $calendar = new CalendarWeekly(new CalendarRepository($this->conn), $this->urlService);
         $calendar->chronology_field = 'posted';
-        $calendar->initialize(' FROM ' . Tables::images() . ' WHERE id IN (1,2,3,4,5)');
+        $calendar->initialize(new SqlCondition(' FROM ' . Tables::images() . ' WHERE id IN (1,2,3,4,5)'));
 
         return $calendar;
     }
@@ -182,7 +183,9 @@ final class CalendarWeeklyTest extends IntegrationTestCase
         $calendar = $this->makeCalendar();
         $calendar->chronology_date = [];
 
-        self::assertSame(' AND date_available IS NOT NULL', $calendar->get_date_where());
+        $where = $calendar->get_date_where();
+        self::assertSame(' AND date_available IS NOT NULL', $where->sql);
+        self::assertSame([], $where->parameters);
     }
 
     public function test_get_date_where_for_a_year_week_and_day(): void
@@ -190,12 +193,19 @@ final class CalendarWeeklyTest extends IntegrationTestCase
         $calendar = $this->makeCalendar();
         $calendar->chronology_date = [2024, 11, 6];
 
+        $where = $calendar->get_date_where();
         self::assertSame(
-            " AND date_available BETWEEN '2024-01-01' AND '2024-12-31 23:59:59'"
-            . ' AND WEEK(date_available, 5)+1=11'
-            . ' AND WEEKDAY(date_available)=6',
-            $calendar->get_date_where()
+            ' AND date_available BETWEEN :dateWhereYearStart AND :dateWhereYearEnd'
+            . ' AND WEEK(date_available, 5)+1= :dateWhereWeek'
+            . ' AND WEEKDAY(date_available)= :dateWhereDay',
+            $where->sql
         );
+        self::assertSame([
+            'dateWhereYearStart' => '2024-01-01',
+            'dateWhereYearEnd' => '2024-12-31 23:59:59',
+            'dateWhereWeek' => 11,
+            'dateWhereDay' => 6,
+        ], $where->parameters);
     }
 
     public function test_get_date_where_treats_any_week_as_a_wildcard_for_the_whole_year(): void
@@ -203,10 +213,9 @@ final class CalendarWeeklyTest extends IntegrationTestCase
         $calendar = $this->makeCalendar();
         $calendar->chronology_date = [2024, 'any'];
 
-        self::assertSame(
-            " AND date_available BETWEEN '2024-01-01' AND '2024-12-31 23:59:59'",
-            $calendar->get_date_where()
-        );
+        $where = $calendar->get_date_where();
+        self::assertSame(' AND date_available BETWEEN :dateWhereYearStart AND :dateWhereYearEnd', $where->sql);
+        self::assertSame(['dateWhereYearStart' => '2024-01-01', 'dateWhereYearEnd' => '2024-12-31 23:59:59'], $where->parameters);
     }
 
     public function test_generate_category_content_builds_year_nav_bar_when_nothing_selected(): void
@@ -325,11 +334,17 @@ final class CalendarWeeklyTest extends IntegrationTestCase
         $calendar = $this->makeCalendar();
         $calendar->chronology_date = [2024, 12, 3];
 
+        $where = $calendar->get_date_where(2);
         self::assertSame(
-            " AND date_available BETWEEN '2024-01-01' AND '2024-12-31 23:59:59'"
-            . ' AND WEEK(date_available, 5)+1=12',
-            $calendar->get_date_where(2)
+            ' AND date_available BETWEEN :dateWhereYearStart AND :dateWhereYearEnd'
+            . ' AND WEEK(date_available, 5)+1= :dateWhereWeek',
+            $where->sql
         );
+        self::assertSame([
+            'dateWhereYearStart' => '2024-01-01',
+            'dateWhereYearEnd' => '2024-12-31 23:59:59',
+            'dateWhereWeek' => 12,
+        ], $where->parameters);
     }
 }
 

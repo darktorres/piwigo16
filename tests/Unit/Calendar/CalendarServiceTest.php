@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Calendar\CalendarService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
@@ -79,8 +80,11 @@ test('buildInnerSql builds a WHERE id IN clause for a non-category section', fun
     $service = makeCalendarService();
 
     $sql = $service->buildInnerSql('tags', false, null, '', [1, 2, 3]);
+    assert($sql !== null);
 
-    expect($sql)->toBe(' FROM ' . Tables::images() . "\nWHERE id IN (1,2,3)");
+    expect($sql->sql)->toBe(' FROM ' . Tables::images() . "\nWHERE id IN (:innerItems)")
+        ->and($sql->parameters)->toBe(['innerItems' => ['1', '2', '3']])
+        ->and($sql->types)->toBe(['innerItems' => ArrayParameterType::STRING]);
 });
 
 test('buildInnerSql returns null when there is a category context but no resolved category id', function (): void {
@@ -96,16 +100,24 @@ test('buildInnerSql browses everything visible when there is no category context
     $service = makeCalendarService();
 
     $sql = $service->buildInnerSql('categories', false, null, '', []);
+    assert($sql !== null);
 
     // Even a fully-default CurrentUser still gets a "level<=0" clause --
     // visible_images falls through into the forbidden_images level check
     // unconditionally unless image_access_type is exactly 'NOT IN' (see
-    // PermissionServiceTest.php's own fallthrough coverage).
-    expect($sql)->toBe(
+    // PermissionServiceTest.php's own fallthrough coverage). The
+    // placeholder name is a monotonic per-process counter (see
+    // PermissionServiceTest.php's own singleParamKey() convention), so
+    // extract whatever name was actually generated.
+    $key = array_key_first($sql->parameters);
+    expect($key)->toBeString();
+    assert(is_string($key));
+
+    expect($sql->sql)->toBe(
         ' FROM ' . Tables::images()
         . "\nINNER JOIN " . Tables::imageCategory() . ' ON id = image_id'
-        . "\n    WHERE (level<=0)"
-    );
+        . "\n    WHERE (level<=:{$key})"
+    )->and($sql->parameters)->toBe([$key => 0]);
 });
 
 test('buildInnerSql falls back to a forced 1 = 1 condition when no permission clause applies at all', function (): void {
@@ -133,12 +145,13 @@ test('buildInnerSql falls back to a forced 1 = 1 condition when no permission cl
     $service = makeCalendarService();
 
     $sql = $service->buildInnerSql('categories', false, null, '', []);
+    assert($sql !== null);
 
-    expect($sql)->toBe(
+    expect($sql->sql)->toBe(
         ' FROM ' . Tables::images()
         . "\nINNER JOIN " . Tables::imageCategory() . ' ON id = image_id'
         . "\n    WHERE 1 = 1"
-    );
+    )->and($sql->parameters)->toBe([]);
 });
 
 test('buildInnerSql composes forbidden/visible categories and images into the WHERE clause', function (): void {
@@ -157,10 +170,19 @@ test('buildInnerSql composes forbidden/visible categories and images into the WH
     $service = makeCalendarService();
 
     $sql = $service->buildInnerSql('categories', false, null, '', []);
+    assert($sql !== null);
 
-    expect($sql)->toBe(
+    expect($sql->parameters)->toHaveCount(4);
+    [$forbidKey, $visCatKey, $visImgKey, $levelKey] = array_keys($sql->parameters);
+
+    expect($sql->sql)->toBe(
         ' FROM ' . Tables::images()
         . "\nINNER JOIN " . Tables::imageCategory() . ' ON id = image_id'
-        . "\n    WHERE (category_id NOT IN (5,6) AND category_id IN (10,20) AND id IN (100,200) AND level<=2)"
-    );
+        . "\n    WHERE (category_id NOT IN (:{$forbidKey}) AND category_id IN (:{$visCatKey}) AND id IN (:{$visImgKey}) AND level<=:{$levelKey})"
+    )->and($sql->parameters)->toBe([
+        $forbidKey => [5, 6],
+        $visCatKey => [10, 20],
+        $visImgKey => [100, 200],
+        $levelKey => 2,
+    ]);
 });

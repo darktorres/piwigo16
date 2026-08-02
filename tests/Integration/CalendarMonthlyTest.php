@@ -18,6 +18,7 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
+use Piwigo\Permission\SqlCondition;
 use Piwigo\Template\Template;
 
 /**
@@ -118,7 +119,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
     {
         $calendar = new CalendarMonthly(new CalendarRepository($this->conn), $this->urlService);
         $calendar->chronology_field = 'posted';
-        $calendar->initialize(' FROM ' . Tables::images() . ' WHERE id IN (1,2,3,4,5)');
+        $calendar->initialize(new SqlCondition(' FROM ' . Tables::images() . ' WHERE id IN (1,2,3,4,5)'));
 
         return $calendar;
     }
@@ -162,12 +163,12 @@ final class CalendarMonthlyTest extends IntegrationTestCase
     {
         $posted = new CalendarMonthly(new CalendarRepository($this->conn), $this->urlService);
         $posted->chronology_field = 'posted';
-        $posted->initialize(' FROM ' . Tables::images());
+        $posted->initialize(new SqlCondition(' FROM ' . Tables::images()));
         self::assertSame('date_available', $posted->date_field);
 
         $created = new CalendarMonthly(new CalendarRepository($this->conn), $this->urlService);
         $created->chronology_field = 'created';
-        $created->initialize(' FROM ' . Tables::images());
+        $created->initialize(new SqlCondition(' FROM ' . Tables::images()));
         self::assertSame('date_creation', $created->date_field);
     }
 
@@ -176,10 +177,10 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $calendar = $this->makeCalendar();
         $calendar->chronology_date = [2024, 3, 10];
 
-        self::assertSame(
-            " AND date_available BETWEEN '2024-03-10' AND '2024-03-10 23:59:59'",
-            $calendar->get_date_where()
-        );
+        $where = $calendar->get_date_where();
+
+        self::assertSame(' AND date_available BETWEEN :dateWhereStart AND :dateWhereEnd', $where->sql);
+        self::assertSame(['dateWhereStart' => '2024-03-10', 'dateWhereEnd' => '2024-03-10 23:59:59'], $where->parameters);
     }
 
     /**
@@ -193,16 +194,14 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $calendar = $this->makeCalendar();
 
         $calendar->chronology_date = [2024, 2]; // 2024 is a leap year
-        self::assertSame(
-            " AND date_available BETWEEN '2024-02-01' AND '2024-02-29 23:59:59'",
-            $calendar->get_date_where()
-        );
+        $where2024 = $calendar->get_date_where();
+        self::assertSame(' AND date_available BETWEEN :dateWhereStart AND :dateWhereEnd', $where2024->sql);
+        self::assertSame(['dateWhereStart' => '2024-02-01', 'dateWhereEnd' => '2024-02-29 23:59:59'], $where2024->parameters);
 
         $calendar->chronology_date = [2023, 2]; // 2023 is not a leap year
-        self::assertSame(
-            " AND date_available BETWEEN '2023-02-01' AND '2023-02-28 23:59:59'",
-            $calendar->get_date_where()
-        );
+        $where2023 = $calendar->get_date_where();
+        self::assertSame(' AND date_available BETWEEN :dateWhereStart AND :dateWhereEnd', $where2023->sql);
+        self::assertSame(['dateWhereStart' => '2023-02-01', 'dateWhereEnd' => '2023-02-28 23:59:59'], $where2023->parameters);
     }
 
     public function test_get_date_where_treats_any_as_a_wildcard_for_year_or_month(): void
@@ -212,17 +211,15 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         // year 'any', month given: skips the year BETWEEN bound entirely,
         // filters only by month.
         $calendar->chronology_date = ['any', 3];
-        self::assertSame(
-            ' AND date_available IS NOT NULL AND MONTH(date_available)=3',
-            $calendar->get_date_where()
-        );
+        $whereMonthOnly = $calendar->get_date_where();
+        self::assertSame(' AND date_available IS NOT NULL AND MONTH(date_available)= :dateWhereMonth', $whereMonthOnly->sql);
+        self::assertSame(['dateWhereMonth' => 3], $whereMonthOnly->parameters);
 
         // year given, month 'any': the whole year, no month/day narrowing.
         $calendar->chronology_date = [2024, 'any'];
-        self::assertSame(
-            " AND date_available BETWEEN '2024-01-01' AND '2024-12-31 23:59:59'",
-            $calendar->get_date_where()
-        );
+        $whereYearOnly = $calendar->get_date_where();
+        self::assertSame(' AND date_available BETWEEN :dateWhereStart AND :dateWhereEnd', $whereYearOnly->sql);
+        self::assertSame(['dateWhereStart' => '2024-01-01', 'dateWhereEnd' => '2024-12-31 23:59:59'], $whereYearOnly->parameters);
     }
 
     public function test_get_date_where_with_nothing_selected_falls_back_to_is_not_null(): void
@@ -230,7 +227,9 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $calendar = $this->makeCalendar();
         $calendar->chronology_date = [];
 
-        self::assertSame(' AND date_available IS NOT NULL', $calendar->get_date_where());
+        $where = $calendar->get_date_where();
+        self::assertSame(' AND date_available IS NOT NULL', $where->sql);
+        self::assertSame([], $where->parameters);
     }
 
     /**
@@ -398,10 +397,9 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         // Empty grid cells (no images) carry only DAY, no DOW/IMAGE/etc.
         self::assertSame(['DAY' => 1], $this->dig($calendarVars, ['month_view', 'weeks', 0, 4]));
 
-        self::assertSame(
-            " AND date_available BETWEEN '2024-03-01' AND '2024-03-31 23:59:59'",
-            $calendar->get_date_where()
-        );
+        $where = $calendar->get_date_where();
+        self::assertSame(' AND date_available BETWEEN :dateWhereStart AND :dateWhereEnd', $where->sql);
+        self::assertSame(['dateWhereStart' => '2024-03-01', 'dateWhereEnd' => '2024-03-31 23:59:59'], $where->parameters);
 
         self::assertSame(
             ' / <a href="/fake-index?' . json_encode(['chronology_date' => [2024]]) . '|removed=' . json_encode(['start']) . '">2024</a>'
@@ -543,7 +541,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $calendar->chronology_field = 'created';
         $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
         $calendar->chronology_date = [];
-        $calendar->initialize(' FROM ' . Tables::images() . ' WHERE id IN (1,2,3,4,5)');
+        $calendar->initialize(new SqlCondition(' FROM ' . Tables::images() . ' WHERE id IN (1,2,3,4,5)'));
 
         self::assertSame('date_creation', $calendar->date_field);
 
@@ -579,7 +577,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $calendar->chronology_field = 'posted';
         $calendar->chronology_view = CalendarBase::CAL_VIEW_LIST;
         $calendar->chronology_date = [2025];
-        $calendar->initialize(' FROM ' . Tables::images() . ' WHERE id IN (4,5)');
+        $calendar->initialize(new SqlCondition(' FROM ' . Tables::images() . ' WHERE id IN (4,5)'));
 
         $template = new Template();
         $ret = $calendar->generate_category_content($template);
@@ -613,10 +611,13 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $calendar = $this->makeCalendar();
         $calendar->chronology_date = [2024, 'any', 15];
 
-        self::assertSame(
-            " AND date_available BETWEEN '2024-01-01' AND '2024-12-31 23:59:59' AND DAYOFMONTH(date_available)=15",
-            $calendar->get_date_where()
-        );
+        $where = $calendar->get_date_where();
+        self::assertSame(' AND date_available BETWEEN :dateWhereStart AND :dateWhereEnd AND DAYOFMONTH(date_available)= :dateWhereDay', $where->sql);
+        self::assertSame([
+            'dateWhereDay' => 15,
+            'dateWhereStart' => '2024-01-01',
+            'dateWhereEnd' => '2024-12-31 23:59:59',
+        ], $where->parameters);
     }
 
     /**
@@ -628,10 +629,9 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $calendar = $this->makeCalendar();
         $calendar->chronology_date = ['any', 'any', 15];
 
-        self::assertSame(
-            ' AND date_available IS NOT NULL AND DAYOFMONTH(date_available)=15',
-            $calendar->get_date_where()
-        );
+        $where = $calendar->get_date_where();
+        self::assertSame(' AND date_available IS NOT NULL AND DAYOFMONTH(date_available)= :dateWhereDay', $where->sql);
+        self::assertSame(['dateWhereDay' => 15], $where->parameters);
     }
 
     /**
@@ -731,7 +731,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
     {
         $calendar = new CalendarMonthly(new CalendarRepository($this->conn), $this->urlService);
         $calendar->chronology_field = 'posted';
-        $calendar->initialize(' FROM ' . Tables::images() . ' WHERE id IN (1,2,3)');
+        $calendar->initialize(new SqlCondition(' FROM ' . Tables::images() . ' WHERE id IN (1,2,3)'));
         $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
         $calendar->chronology_date = [];
         $template = new Template();
@@ -750,7 +750,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
     {
         $calendar = new CalendarMonthly(new CalendarRepository($this->conn), $this->urlService);
         $calendar->chronology_field = 'posted';
-        $calendar->initialize(' FROM ' . Tables::images() . ' WHERE id IN (4,5)');
+        $calendar->initialize(new SqlCondition(' FROM ' . Tables::images() . ' WHERE id IN (4,5)'));
         $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
         $calendar->chronology_date = [2025];
         $template = new Template();
@@ -774,7 +774,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         try {
             $calendar = new CalendarMonthly(new CalendarRepository($this->conn), $this->urlService);
             $calendar->chronology_field = 'posted';
-            $calendar->initialize(' FROM ' . Tables::images() . ' WHERE id = 1');
+            $calendar->initialize(new SqlCondition(' FROM ' . Tables::images() . ' WHERE id = 1'));
             $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
             $calendar->chronology_date = [2024, 9];
             $template = new Template();
@@ -801,7 +801,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
     {
         $calendar = new CalendarMonthly(new CalendarRepository($this->conn), $this->urlService);
         $calendar->chronology_field = 'posted';
-        $calendar->initialize(' FROM ' . Tables::images() . ' WHERE id = 3');
+        $calendar->initialize(new SqlCondition(' FROM ' . Tables::images() . ' WHERE id = 3'));
         $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
         $calendar->chronology_date = [2024, 7];
         $template = new Template();

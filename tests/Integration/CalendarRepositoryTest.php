@@ -10,6 +10,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Permission\SqlCondition;
 
 final class CalendarRepositoryTest extends IntegrationTestCase
 {
@@ -42,8 +43,8 @@ final class CalendarRepositoryTest extends IntegrationTestCase
     public function test_find_image_ids_returns_matching_ids_in_order(): void
     {
         $ids = $this->repo->findImageIds(
-            ' FROM ' . Tables::images() . ' WHERE id IN (3, 1, 2)',
-            '',
+            new SqlCondition(' FROM ' . Tables::images() . ' WHERE id IN (3, 1, 2)'),
+            new SqlCondition(''),
             'ORDER BY id ASC'
         );
 
@@ -53,8 +54,8 @@ final class CalendarRepositoryTest extends IntegrationTestCase
     public function test_find_image_ids_returns_empty_for_no_match(): void
     {
         $ids = $this->repo->findImageIds(
-            ' FROM ' . Tables::images() . ' WHERE id = 999999',
-            '',
+            new SqlCondition(' FROM ' . Tables::images() . ' WHERE id = 999999'),
+            new SqlCondition(''),
             ''
         );
 
@@ -70,8 +71,8 @@ final class CalendarRepositoryTest extends IntegrationTestCase
         // for ORDER BY columns not in the SELECT list). A real regression
         // here previously 500'd every live calendar page.
         $ids = $this->repo->findImageIds(
-            ' FROM ' . Tables::images() . ' WHERE id IN (1, 2, 3)',
-            '',
+            new SqlCondition(' FROM ' . Tables::images() . ' WHERE id IN (1, 2, 3)'),
+            new SqlCondition(''),
             'ORDER BY date_available DESC, file ASC, id ASC'
         );
 
@@ -85,8 +86,8 @@ final class CalendarRepositoryTest extends IntegrationTestCase
         // (one row per category an image belongs to) -- GROUP BY id must
         // still collapse that back down to one id per image.
         $ids = $this->repo->findImageIds(
-            ' FROM ' . Tables::images() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id = image_id WHERE category_id IN (1, 2)',
-            '',
+            new SqlCondition(' FROM ' . Tables::images() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id = image_id WHERE category_id IN (1, 2)'),
+            new SqlCondition(''),
             'ORDER BY id ASC'
         );
 
@@ -109,8 +110,8 @@ final class CalendarRepositoryTest extends IntegrationTestCase
         );
 
         $ids = $this->repo->findImageIds(
-            ' FROM ' . Tables::images() . ' WHERE id IN (1, 2, 3)',
-            "AND (date_available = '2026-08-01 00:00:00')",
+            new SqlCondition(' FROM ' . Tables::images() . ' WHERE id IN (1, 2, 3)'),
+            new SqlCondition("AND (date_available = '2026-08-01 00:00:00')"),
             'ORDER BY id ASC'
         );
 

@@ -14,37 +14,18 @@ namespace Piwigo\Calendar;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Permission\SqlCondition;
 
 /**
  * Monthly calendar style (composed of years/months and days)
  */
 final class CalendarMonthly extends CalendarBase
 {
-    // SQL-modernization audit: verified, same shape as CalendarBase.php's
-    // own finding (see that file's docblock for the full trace) -- every
-    // heredoc block in this file (build_global_calendar()/
-    // build_year_calendar()/build_month_calendar()) only concatenates
-    // fixed SqlDialect::getYear()/getMonth()/getDayOfMonth()/
-    // getDayOfWeek()/DB_RANDOM_FUNCTION fragment expressions, never a raw
-    // value directly. get_date_where() below builds real value content
-    // (year/month/day) via string concatenation rather than binding --
-    // numeric-only in practice (chronology_date components are sanitized
-    // to real ints upstream by CalendarRenderer, or by this class's own
-    // int-keyed query results), not a live injection risk today, but
-    // still not a bound parameter. Fixing this properly means widening
-    // CalendarRepository::findRows()/findRow() to accept params (same
-    // move as CategoryRepository::fetchCallerBuiltQuery() got) and
-    // redesigning how CalendarService::buildInnerSql()/get_date_where()
-    // compose fragments through CalendarBase/CalendarMonthly/
-    // CalendarWeekly/CalendarRenderer together -- a genuinely separate,
-    // subsystem-wide redesign, not fixable piecemeal within this file's
-    // own stage. Tracked in the plan, not silently skipped.
     /**
      * Initialize the calendar.
-     * @param string $inner_sql
      */
     #[\Override]
-    public function initialize($inner_sql): void
+    public function initialize(SqlCondition $inner_sql): void
     {
         parent::initialize($inner_sql);
         $month_labels = \Piwigo\Core\Lang::months();
@@ -137,13 +118,14 @@ final class CalendarMonthly extends CalendarBase
      * @param int $max_levels (e.g. 2=only year and month)
      */
     #[\Override]
-    public function get_date_where($max_levels = 3): string
+    public function get_date_where($max_levels = 3): SqlCondition
     {
         $date = $this->chronology_date;
         while (count($date) > $max_levels) {
             array_pop($date);
         }
         $res = '';
+        $params = [];
         if (isset($date[self::CYEAR]) and $date[self::CYEAR] !== 'any') {
             $year = $date[self::CYEAR];
             $b = $year . '-';
@@ -170,22 +152,27 @@ final class CalendarMonthly extends CalendarBase
                 // condition above, so it can never be true.
                 if (isset($date[self::CDAY]) and $date[self::CDAY] !== 'any') {
                     $day = $date[self::CDAY];
-                    $res .= ' AND ' . $this->calendar_levels[self::CDAY]['sql'] . '=' . $day;
+                    $res .= ' AND ' . $this->calendar_levels[self::CDAY]['sql'] . '= :dateWhereDay';
+                    $params['dateWhereDay'] = $day;
                 }
             }
-            $res = " AND {$this->date_field} BETWEEN '{$b}' AND '{$e} 23:59:59'" . $res;
+            $res = " AND {$this->date_field} BETWEEN :dateWhereStart AND :dateWhereEnd" . $res;
+            $params['dateWhereStart'] = $b;
+            $params['dateWhereEnd'] = $e . ' 23:59:59';
         } else {
             $res = ' AND ' . $this->date_field . ' IS NOT NULL';
             if (isset($date[self::CMONTH]) and $date[self::CMONTH] !== 'any') {
                 $month = $date[self::CMONTH];
-                $res .= ' AND ' . $this->calendar_levels[self::CMONTH]['sql'] . '=' . $month;
+                $res .= ' AND ' . $this->calendar_levels[self::CMONTH]['sql'] . '= :dateWhereMonth';
+                $params['dateWhereMonth'] = $month;
             }
             if (isset($date[self::CDAY]) and $date[self::CDAY] !== 'any') {
                 $day = $date[self::CDAY];
-                $res .= ' AND ' . $this->calendar_levels[self::CDAY]['sql'] . '=' . $day;
+                $res .= ' AND ' . $this->calendar_levels[self::CDAY]['sql'] . '= :dateWhereDay';
+                $params['dateWhereDay'] = $day;
             }
         }
-        return $res;
+        return new SqlCondition($res, $params);
     }
 
     /**
@@ -244,8 +231,10 @@ final class CalendarMonthly extends CalendarBase
             SELECT {$dateYYYYMM} as period,
                 COUNT(distinct id) as count
             SQL;
-        $query .= $this->inner_sql;
-        $query .= $this->get_date_where();
+        $innerSql = $this->inner_sql;
+        $dateWhere = $this->get_date_where();
+        $query .= $innerSql->sql;
+        $query .= $dateWhere->sql;
         // GROUP BY also lists the exact YEAR()/MONTH() expressions ORDER BY
         // uses (not just the DATE_FORMAT()-derived `period` alias) -- under
         // standard SQL mode (ONLY_FULL_GROUP_BY, never stripped by this
@@ -264,7 +253,11 @@ final class CalendarMonthly extends CalendarBase
             ORDER BY {$yearExpr} DESC, {$monthExpr} ASC
             SQL;
 
-        $rows = $this->calendarRepository->findRows($query);
+        $rows = $this->calendarRepository->findRows(
+            $query,
+            [...$innerSql->parameters, ...$dateWhere->parameters],
+            [...$innerSql->types, ...$dateWhere->types]
+        );
         $items = [];
         foreach ($rows as $row) {
             // period is a DATE_FORMAT(...) expression (SqlDialect::
@@ -341,15 +334,21 @@ final class CalendarMonthly extends CalendarBase
             SELECT {$dateMMDD} as period,
                   COUNT(DISTINCT id) as count
             SQL;
-        $query .= $this->inner_sql;
-        $query .= $this->get_date_where();
+        $innerSql = $this->inner_sql;
+        $dateWhere = $this->get_date_where();
+        $query .= $innerSql->sql;
+        $query .= $dateWhere->sql;
         $query .= <<<SQL
 
             GROUP BY period
             ORDER BY period ASC
             SQL;
 
-        $rows = $this->calendarRepository->findRows($query);
+        $rows = $this->calendarRepository->findRows(
+            $query,
+            [...$innerSql->parameters, ...$dateWhere->parameters],
+            [...$innerSql->types, ...$dateWhere->types]
+        );
         $items = [];
         foreach ($rows as $row) {
             // period is a DATE_FORMAT(...) expression (SqlDialect::
@@ -434,8 +433,10 @@ final class CalendarMonthly extends CalendarBase
             SELECT {$dayOfMonth} as period,
                   COUNT(DISTINCT id) as count
             SQL;
-        $query .= $this->inner_sql;
-        $query .= $this->get_date_where();
+        $innerSql = $this->inner_sql;
+        $dateWhere = $this->get_date_where();
+        $query .= $innerSql->sql;
+        $query .= $dateWhere->sql;
         $query .= <<<SQL
 
             GROUP BY period
@@ -443,7 +444,11 @@ final class CalendarMonthly extends CalendarBase
             SQL;
 
         $items = [];
-        $rows = $this->calendarRepository->findRows($query);
+        $rows = $this->calendarRepository->findRows(
+            $query,
+            [...$innerSql->parameters, ...$dateWhere->parameters],
+            [...$innerSql->types, ...$dateWhere->types]
+        );
         foreach ($rows as $row) {
             $periodRaw = $row['period'] ?? null;
             $d = is_numeric($periodRaw) ? (int) $periodRaw : 0;
@@ -458,8 +463,10 @@ final class CalendarMonthly extends CalendarBase
             $query = <<<SQL
                 SELECT id, file,representative_ext,path,width,height,rotation, {$dayOfWeek}-1 as dow
                 SQL;
-            $query .= $this->inner_sql;
-            $query .= $this->get_date_where();
+            $innerSqlPerDay = $this->inner_sql;
+            $dateWherePerDay = $this->get_date_where();
+            $query .= $innerSqlPerDay->sql;
+            $query .= $dateWherePerDay->sql;
             $randomFunction = \Piwigo\Db\SqlDialect::DB_RANDOM_FUNCTION;
             $query .= <<<SQL
 
@@ -468,7 +475,11 @@ final class CalendarMonthly extends CalendarBase
                 SQL;
             unset($this->chronology_date[self::CDAY]);
 
-            $row = $this->calendarRepository->findRow($query);
+            $row = $this->calendarRepository->findRow(
+                $query,
+                [...$innerSqlPerDay->parameters, ...$dateWherePerDay->parameters],
+                [...$innerSqlPerDay->types, ...$dateWherePerDay->types]
+            );
             // $day came from the grouped count query above, which only
             // includes days with at least one image, so this LIMIT 1
             // query always finds a row

@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Calendar;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Category\CategoryService;
 use Piwigo\Db\Tables;
 use Piwigo\Permission\PermissionService;
+use Piwigo\Permission\SqlCondition;
 
 /**
  * The DB-query-building half of `CalendarRenderer::render()`
@@ -40,7 +42,7 @@ final readonly class CalendarService
      *
      * @param  list<bool|float|int|string>  $items  used only when $section !== 'categories'
      */
-    public function buildInnerSql(string $section, bool $hasCategoryContext, int|string|null $categoryId, string $forbiddenCategories, array $items): ?string
+    public function buildInnerSql(string $section, bool $hasCategoryContext, int|string|null $categoryId, string $forbiddenCategories, array $items): ?SqlCondition
     {
         $imagesTable = Tables::images();
         $sql = " FROM {$imagesTable}";
@@ -55,31 +57,46 @@ final readonly class CalendarService
                     return null;
                 }
 
-                $subIdsCsv = implode(',', $subIds);
-                $sql .= "\nWHERE category_id IN ({$subIdsCsv})";
-                $permissionCondition = $this->permissionService->getSqlConditionFandF([
+                $sql .= "\nWHERE category_id IN (:innerSubIds)";
+                $params = [
+                    'innerSubIds' => array_values(array_map(intval(...), $subIds)),
+                ];
+                $types = [
+                    'innerSubIds' => ArrayParameterType::INTEGER,
+                ];
+
+                $permissionCondition = $this->permissionService->getSqlConditionFandFAsCondition([
                     'visible_images' => 'id',
-                ], 'AND', false);
-                $sql .= "\n    {$permissionCondition}";
+                ]);
+                if (! $permissionCondition->isEmpty()) {
+                    $sql .= "\n    AND {$permissionCondition->sql}";
+                    $params = [...$params, ...$permissionCondition->parameters];
+                    $types = [...$types, ...$permissionCondition->types];
+                }
             } else {
-                $permissionCondition = $this->permissionService->getSqlConditionFandF([
+                $permissionCondition = $this->permissionService->getSqlConditionFandFAsCondition([
                     'forbidden_categories' => 'category_id',
                     'visible_categories' => 'category_id',
                     'visible_images' => 'id',
-                ], 'WHERE', true);
-                $sql .= "\n    {$permissionCondition}";
+                ], true);
+                $sql .= "\n    WHERE {$permissionCondition->sql}";
+                $params = $permissionCondition->parameters;
+                $types = $permissionCondition->types;
             }
 
-            return $sql;
+            return new SqlCondition($sql, $params, $types);
         }
 
         if ($items === []) {
             return null;
         }
 
-        $itemsCsv = implode(',', $items);
-        $sql .= "\nWHERE id IN ({$itemsCsv})";
+        $sql .= "\nWHERE id IN (:innerItems)";
 
-        return $sql;
+        return new SqlCondition($sql, [
+            'innerItems' => array_map(strval(...), $items),
+        ], [
+            'innerItems' => ArrayParameterType::STRING,
+        ]);
     }
 }

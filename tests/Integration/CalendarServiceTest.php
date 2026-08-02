@@ -77,8 +77,9 @@ final class CalendarServiceTest extends IntegrationTestCase
         $sql = $this->service->buildInnerSql('categories', true, 1, '', []);
 
         self::assertNotNull($sql);
-        self::assertStringContainsString('category_id IN (1,2)', $sql);
-        self::assertStringContainsString('INNER JOIN', $sql);
+        self::assertStringContainsString('category_id IN (:innerSubIds)', $sql->sql);
+        self::assertSame([1, 2], $sql->parameters['innerSubIds']);
+        self::assertStringContainsString('INNER JOIN', $sql->sql);
     }
 
     public function test_build_inner_sql_returns_null_when_the_category_has_no_subcategories_left(): void
@@ -110,8 +111,7 @@ final class CalendarServiceTest extends IntegrationTestCase
         $sql = $this->service->buildInnerSql('categories', true, 1, '2', []);
 
         self::assertNotNull($sql);
-        self::assertStringContainsString('category_id IN (1)', $sql);
-        self::assertStringNotContainsString('category_id IN (1,2)', $sql);
+        self::assertSame([1], $sql->parameters['innerSubIds']);
     }
 
     public function test_build_inner_sql_for_browsing_everything_visible(): void
@@ -119,8 +119,8 @@ final class CalendarServiceTest extends IntegrationTestCase
         $sql = $this->service->buildInnerSql('categories', false, null, '', []);
 
         self::assertNotNull($sql);
-        self::assertStringContainsString('WHERE', $sql);
-        self::assertStringContainsString('INNER JOIN', $sql);
+        self::assertStringContainsString('WHERE', $sql->sql);
+        self::assertStringContainsString('INNER JOIN', $sql->sql);
     }
 
     public function test_build_inner_sql_for_an_explicit_item_list(): void
@@ -128,7 +128,8 @@ final class CalendarServiceTest extends IntegrationTestCase
         $sql = $this->service->buildInnerSql('items', false, null, '', [1, 2, 3]);
 
         self::assertNotNull($sql);
-        self::assertStringContainsString('WHERE id IN (1,2,3)', $sql);
+        self::assertStringContainsString('WHERE id IN (:innerItems)', $sql->sql);
+        self::assertSame(['1', '2', '3'], $sql->parameters['innerItems']);
     }
 
     public function test_build_inner_sql_returns_null_for_an_empty_item_list(): void

@@ -13,6 +13,7 @@ namespace Piwigo\Calendar;
 
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Permission\SqlCondition;
 use Piwigo\Template\Template;
 
 /**
@@ -82,10 +83,8 @@ abstract class CalendarBase
 
     /**
      * used for queries (INNER JOIN or normal)
-     *
-     * @var string
      */
-    public $inner_sql;
+    public SqlCondition $inner_sql;
 
     /**
      * used to store db fields
@@ -140,16 +139,13 @@ abstract class CalendarBase
      * Returns a sql WHERE subquery for the date field.
      *
      * @param int $max_levels (e.g. 2=only year and month)
-     * @return string
      */
-    abstract public function get_date_where($max_levels = 3);
+    abstract public function get_date_where($max_levels = 3): SqlCondition;
 
     /**
      * Initialize the calendar.
-     *
-     * @param string $inner_sql
      */
-    public function initialize($inner_sql): void
+    public function initialize(SqlCondition $inner_sql): void
     {
         if ($this->chronology_field === 'posted') {
             $this->date_field = 'date_available';
@@ -321,30 +317,20 @@ abstract class CalendarBase
      */
     protected function build_nav_bar($level, ?array $labels, \Piwigo\Core\TemplateInterface $template): void
     {
-        // SQL-modernization audit: verified, no local defect -- every
-        // interpolated piece here (levelSql/innerSql/dateWhere) is a
-        // fragment-expression STRING built by another method/caller, not
-        // a raw scalar value spliced directly in this file. Traced
-        // $innerSql to its real producer, CalendarService::buildInnerSql():
-        // it does splice CSV id lists and a getSqlConditionFandF()
-        // fragment (a real, if already-documented-as-deliberate, instance
-        // of this initiative's target pattern -- see CalendarRepository::
-        // findRows()'s own docblock, which explicitly allows it). Fixing
-        // that means redesigning how inner_sql flows through
-        // CalendarService/CalendarRenderer/CalendarBase/CalendarMonthly/
-        // CalendarWeekly together -- deferred to CalendarMonthly.php's own
-        // stage (mid-size repos), where get_date_where()'s concrete
-        // implementation actually lives, not fixable piecemeal here.
         $levelSql = $this->calendar_levels[$level]['sql'];
         $innerSql = $this->inner_sql;
         $dateWhere = $this->get_date_where($level);
         $query = <<<SQL
             SELECT DISTINCT({$levelSql}) as period,
-              COUNT(DISTINCT id) as nb_images{$innerSql}{$dateWhere}
+              COUNT(DISTINCT id) as nb_images{$innerSql->sql}{$dateWhere->sql}
               GROUP BY period;
             SQL;
 
-        $rows = $this->calendarRepository->findRows($query);
+        $rows = $this->calendarRepository->findRows(
+            $query,
+            [...$innerSql->parameters, ...$dateWhere->parameters],
+            [...$innerSql->types, ...$dateWhere->types]
+        );
         $level_items = [];
         foreach ($rows as $row) {
             $keyRaw = $row['period'] ?? null;
@@ -415,10 +401,11 @@ abstract class CalendarBase
             }
         }
         $concatWsExpr = \Piwigo\Db\SqlDialect::concatWs($sub_queries, '-');
+        $innerSql = $this->inner_sql;
         $query = <<<SQL
             SELECT {$concatWsExpr} AS period
             SQL;
-        $query .= $this->inner_sql . <<<SQL
+        $query .= $innerSql->sql . <<<SQL
 
             AND {$this->date_field} IS NOT NULL
             GROUP BY period
@@ -438,7 +425,7 @@ abstract class CalendarBase
         // period is a concatenation of non-null date parts (enforced by the
         // "date_field IS NOT NULL" clause above), but the row's value is
         // still typed as mixed under DBAL, so filter for real.
-        $rows = $this->calendarRepository->findRows($query);
+        $rows = $this->calendarRepository->findRows($query, $innerSql->parameters, $innerSql->types);
         $periods = array_map(static fn (array $row): mixed => $row['period'] ?? null, $rows);
         $upper_items = array_values(array_filter($periods, is_string(...)));
 

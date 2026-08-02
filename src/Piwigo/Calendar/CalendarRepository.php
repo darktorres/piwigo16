@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Calendar;
 
+use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\ParameterType;
 use Piwigo\Db\AbstractRepository;
 
 /**
@@ -18,15 +20,14 @@ use Piwigo\Db\AbstractRepository;
 final class CalendarRepository extends AbstractRepository
 {
     /**
-     * $fromWhereSql (CalendarService::buildInnerSql()), $dateWhereSql (the
-     * pre-existing CalendarBase::get_date_where() -- despite the name, a
-     * WHERE-clause *continuation* fragment, e.g. `AND (date_available
-     * BETWEEN ...)`, not an ORDER BY) and $orderBySql are raw,
-     * already-built SQL fragments, dynamically assembled from a variable
-     * number of conditions -- same "hand-written parameterized SQL on
-     * complex dynamic queries" allowance as SearchRepository, not a
-     * bound-parameter mismatch: none of the three ever embed free-text
-     * user input, only internally-trusted ids/dates.
+     * $fromWhereSql (CalendarService::buildInnerSql()) and $dateWhereSql
+     * (the pre-existing CalendarBase::get_date_where() -- despite the
+     * name, a WHERE-clause *continuation* fragment, e.g. `AND
+     * (date_available BETWEEN ...)`, not an ORDER BY) are already-built
+     * SqlCondition fragments; $orderBySql is a raw, already-built trusted
+     * fragment (config-driven column/direction, never a real value), same
+     * "caller composes trusted fragments" contract used throughout this
+     * initiative -- unlike the other two, it carries no bindable value.
      *
      * `GROUP BY id`, not `SELECT DISTINCT id` -- the original's own
      * `SELECT DISTINCT id ... ORDER BY <config-driven column not in the
@@ -41,10 +42,12 @@ final class CalendarRepository extends AbstractRepository
      *
      * @return list<int>
      */
-    public function findImageIds(string $fromWhereSql, string $dateWhereSql, string $orderBySql): array
+    public function findImageIds(\Piwigo\Permission\SqlCondition $fromWhere, \Piwigo\Permission\SqlCondition $dateWhere, string $orderBySql): array
     {
         $ids = $this->conn->executeQuery(
-            'SELECT id ' . $fromWhereSql . ' ' . $dateWhereSql . ' GROUP BY id ' . $orderBySql
+            'SELECT id ' . $fromWhere->sql . ' ' . $dateWhere->sql . ' GROUP BY id ' . $orderBySql,
+            [...$fromWhere->parameters, ...$dateWhere->parameters],
+            [...$fromWhere->types, ...$dateWhere->types]
         )->fetchFirstColumn();
 
         return array_values(array_map(intval(...), array_filter($ids, is_numeric(...))));
@@ -55,17 +58,19 @@ final class CalendarRepository extends AbstractRepository
      * CalendarBase::build_nav_bar()/build_next_prev() or
      * CalendarMonthly's build_*_calendar() methods from
      * calendar_levels/inner_sql/get_date_where() fragments, same
-     * "hand-written SQL on complex dynamic queries" allowance as
-     * findImageIds() above -- and returns the raw result rows. Column
-     * extraction/reduction (e.g. period => nb_images) stays in the
+     * "caller composes trusted query text, binds its own real values"
+     * shape as findImageIds() above -- and returns the raw result rows.
+     * Column extraction/reduction (e.g. period => nb_images) stays in the
      * calendar classes themselves, matching the shape their own existing
      * code already expects.
      *
+     * @param array<string, mixed> $params
+     * @param array<string, ArrayParameterType|ParameterType> $types
      * @return list<array<string, mixed>>
      */
-    public function findRows(string $query): array
+    public function findRows(string $query, array $params = [], array $types = []): array
     {
-        return $this->conn->executeQuery($query)
+        return $this->conn->executeQuery($query, $params, $types)
             ->fetchAllAssociative();
     }
 
@@ -74,11 +79,13 @@ final class CalendarRepository extends AbstractRepository
      * (CalendarMonthly::build_month_calendar()'s per-day random-image
      * lookup).
      *
+     * @param array<string, mixed> $params
+     * @param array<string, ArrayParameterType|ParameterType> $types
      * @return array<string, mixed>|null
      */
-    public function findRow(string $query): ?array
+    public function findRow(string $query, array $params = [], array $types = []): ?array
     {
-        $row = $this->conn->executeQuery($query)
+        $row = $this->conn->executeQuery($query, $params, $types)
             ->fetchAssociative();
         return $row === false ? null : $row;
     }

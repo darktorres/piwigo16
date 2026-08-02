@@ -56,7 +56,7 @@ final readonly class AlbumNotificationSubmitRequest
         // $users output. Confirmed while investigating a mutation-testing
         // gap, same redundancy as the `group` sentinel array below.
         if ($who === 'users' and is_array($post_users) and count($post_users) > 0) {
-            new InputValidator()
+            InputValidator::createStatic()
                 ->validate('users', $post, true, \Piwigo\Core\ValidationPattern::ID);
 
             foreach ($post_users as $post_user_id) {
@@ -78,7 +78,7 @@ final readonly class AlbumNotificationSubmitRequest
         // doesn't list -- still produce identical (non-throwing) behavior
         // either way. `who === 'group'` is the only real gate here.
         if ($who === 'group' and ! in_array($group, [null, false, 0, '0', '', []], true)) {
-            new InputValidator()
+            InputValidator::createStatic()
                 ->validate('group', $post, false, \Piwigo\Core\ValidationPattern::ID);
         }
 

@@ -64,7 +64,7 @@ final readonly class SiteUpdateRequest
         $cat_id_raw = $get['cat_id'] ?? null;
         $cat_id = null;
         if (isset($get['cat_id'])) {
-            new InputValidator()
+            InputValidator::createStatic()
                 ->validate('cat_id', $get, false, ValidationPattern::ID);
             $cat_id = is_string($cat_id_raw) ? $cat_id_raw : null;
         }

@@ -271,7 +271,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
             }
 
             if (isset($post['filter_category_use'])) {
-                new \Piwigo\Validation\InputValidator()
+                \Piwigo\Validation\InputValidator::createStatic()
                     ->validate('filter_category', $post, false, ValidationPattern::ID);
 
                 $_SESSION['bulk_manager_filter']['category'] = $post['filter_category'];
@@ -308,7 +308,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
             }
 
             if (isset($post['filter_level_use'])) {
-                new \Piwigo\Validation\InputValidator()
+                \Piwigo\Validation\InputValidator::createStatic()
                     ->validate('filter_level', $post, false, '/^\d+$/');
 
                 // $_POST['filter_level'] is a numeric string (validated by

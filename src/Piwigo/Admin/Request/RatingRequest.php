@@ -43,7 +43,7 @@ final readonly class RatingRequest
      */
     public static function fromArray(array $get): self
     {
-        new InputValidator()
+        InputValidator::createStatic()
             ->validate('display', $get, false, ValidationPattern::ID);
 
         $start = 0;

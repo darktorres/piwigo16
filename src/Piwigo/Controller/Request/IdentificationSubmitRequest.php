@@ -50,7 +50,7 @@ final readonly class IdentificationSubmitRequest
 
         // security (level 1): the redirect must occur within Piwigo, so the
         // redirect param must start with the relative home url
-        new InputValidator()
+        InputValidator::createStatic()
             ->validate(
                 'redirect_decoded',
                 [

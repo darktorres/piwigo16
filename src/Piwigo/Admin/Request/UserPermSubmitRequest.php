@@ -45,9 +45,9 @@ final readonly class UserPermSubmitRequest
     {
         $isSubmitted = $post !== [];
         if ($isSubmitted) {
-            new InputValidator()
+            InputValidator::createStatic()
                 ->validate('cat_true', $post, true, ValidationPattern::ID);
-            new InputValidator()
+            InputValidator::createStatic()
                 ->validate('cat_false', $post, true, ValidationPattern::ID);
         }
 

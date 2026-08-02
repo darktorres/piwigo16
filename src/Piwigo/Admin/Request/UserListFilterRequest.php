@@ -34,9 +34,9 @@ final readonly class UserListFilterRequest
      */
     public static function fromArray(array $source): self
     {
-        new InputValidator()
+        InputValidator::createStatic()
             ->validate('group', $source, false, ValidationPattern::ID);
-        new InputValidator()
+        InputValidator::createStatic()
             ->validate('user_id', $source, false, ValidationPattern::ID);
 
         $group = $source['group'] ?? null;

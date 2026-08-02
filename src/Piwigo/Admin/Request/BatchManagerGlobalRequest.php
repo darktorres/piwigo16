@@ -64,19 +64,19 @@ final readonly class BatchManagerGlobalRequest
      */
     public static function fromArrays(array $get, array $post): self
     {
-        new InputValidator()
+        InputValidator::createStatic()
             ->validate('del_tags', $post, true, ValidationPattern::ID);
-        new InputValidator()
+        InputValidator::createStatic()
             ->validate('associate', $post, true, ValidationPattern::ID);
-        new InputValidator()
+        InputValidator::createStatic()
             ->validate('move', $post, false, ValidationPattern::ID);
-        new InputValidator()
+        InputValidator::createStatic()
             ->validate('dissociate', $post, false, ValidationPattern::ID);
 
         $nb_photos_deleted_present = isset($post['nb_photos_deleted']);
         $nb_photos_deleted = 0;
         if ($nb_photos_deleted_present) {
-            new InputValidator()
+            InputValidator::createStatic()
                 ->validate('nb_photos_deleted', $post, false, '/^\d+$/');
             $nb_photos_deleted = is_numeric($post['nb_photos_deleted']) ? (int) $post['nb_photos_deleted'] : 0;
         }

@@ -46,9 +46,9 @@ final readonly class GroupPermSubmitRequest
     {
         $isSubmitted = $post !== [];
         if ($isSubmitted) {
-            new InputValidator()
+            InputValidator::createStatic()
                 ->validate('cat_true', $post, true, ValidationPattern::ID);
-            new InputValidator()
+            InputValidator::createStatic()
                 ->validate('cat_false', $post, true, ValidationPattern::ID);
         }
 
@@ -72,7 +72,7 @@ final readonly class GroupPermSubmitRequest
             }
         }
 
-        new InputValidator()
+        InputValidator::createStatic()
             ->validate('group_id', $get, false, ValidationPattern::ID);
 
         return new self(

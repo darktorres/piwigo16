@@ -37,7 +37,7 @@ final readonly class CatListRequest
      */
     public static function fromArrays(array $get, array $post): self
     {
-        new InputValidator()
+        InputValidator::createStatic()
             ->validate('parent_id', $get, false, ValidationPattern::ID);
 
         $parent_id = null;

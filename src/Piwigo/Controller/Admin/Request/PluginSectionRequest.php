@@ -80,7 +80,7 @@ final readonly class PluginSectionRequest
             static fn (string $segment): bool => $segment !== '',
         ));
 
-        $validator = new InputValidator();
+        $validator = InputValidator::createStatic();
         foreach ($sections as $section) {
             // Explicit "not literally .." check (not folded into the regex
             // below): a bare charset pattern can't distinguish "a dot

@@ -44,7 +44,7 @@ final readonly class UpdatesPwgRequest
         if ($ctEnv === 'Official') {
             // Remove optional ? on [a-z]? since it will only be available on piwigo 16.3
             // Docker images started to use letter suffix in 16.2
-            new InputValidator()
+            InputValidator::createStatic()
                 ->validate('to', $get, false, '/^\d+\.\d+\.\d+[a-z]?$/');
             $get_to = $get['to'] ?? null;
             // preg_replace() only returns null on a genuine PCRE engine
@@ -55,7 +55,7 @@ final readonly class UpdatesPwgRequest
             // mutation-testing gap.
             $upgradeTo = is_string($get_to) ? (preg_replace('/[a-z]$/', '', $get_to) ?? '') : '';
         } else {
-            new InputValidator()
+            InputValidator::createStatic()
                 ->validate('to', $get, false, '/^\d+\.\d+\.\d+$/');
             $get_to = $get['to'] ?? '';
             $upgradeTo = is_string($get_to) ? $get_to : '';

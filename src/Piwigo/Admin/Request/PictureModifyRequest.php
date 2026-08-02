@@ -72,11 +72,11 @@ final readonly class PictureModifyRequest
      */
     public static function fromArrays(array $get, array $post): self
     {
-        new InputValidator()
+        InputValidator::createStatic()
             ->validate('image_id', $get, false, ValidationPattern::ID);
-        new InputValidator()
+        InputValidator::createStatic()
             ->validate('level', $post, false, '/^\d+$/');
-        new InputValidator()
+        InputValidator::createStatic()
             ->validate('date_creation', $post, false, '/^\d\d\d\d-\d\d-\d\d( \d\d:\d\d:\d\d)?$/');
 
         $image_id = 0;
@@ -97,7 +97,7 @@ final readonly class PictureModifyRequest
         $date_creation = is_string($date_creation_raw) ? $date_creation_raw : null;
 
         $post_associate = $post['associate'] ?? [];
-        new InputValidator()
+        InputValidator::createStatic()
             ->validate('associate', [
                 'associate' => $post_associate,
             ], true, ValidationPattern::ID);
@@ -111,7 +111,7 @@ final readonly class PictureModifyRequest
         }
 
         $post_represent = $post['represent'] ?? [];
-        new InputValidator()
+        InputValidator::createStatic()
             ->validate('represent', [
                 'represent' => $post_represent,
             ], true, ValidationPattern::ID);

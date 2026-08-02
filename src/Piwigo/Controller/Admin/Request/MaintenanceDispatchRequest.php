@@ -32,7 +32,7 @@ final readonly class MaintenanceDispatchRequest
         $requiresCsrfCheck = isset($source['action']);
 
         if (isset($source['tab'])) {
-            new InputValidator()
+            InputValidator::createStatic()
                 ->validate('tab', $source, false, '/^(actions|env|sys)$/');
             $tab_raw = $source['tab'];
             $tab = is_string($tab_raw) ? $tab_raw : 'actions';

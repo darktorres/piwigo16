@@ -32,7 +32,7 @@ final readonly class ExtensionTabRequest
     public static function fromArray(array $source, string $pattern): self
     {
         if (isset($source['tab'])) {
-            new InputValidator()
+            InputValidator::createStatic()
                 ->validate('tab', $source, false, $pattern);
             $tab_raw = $source['tab'];
             $tab = is_string($tab_raw) ? $tab_raw : 'installed';

@@ -46,7 +46,7 @@ final readonly class NotificationByMailRequest
      */
     public static function fromArrays(array $get, array $post): self
     {
-        new InputValidator()
+        InputValidator::createStatic()
             ->validate('mode', $get, false, '/^(param|subscribe|send)$/');
 
         $mode_raw = $get['mode'] ?? null;

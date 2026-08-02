@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Tests\Unit\Validation\InputValidatorTestFakeHtmlRenderer;
 use Piwigo\Validation\InputValidator;
@@ -187,39 +186,23 @@ test('checkUrlFormat rejects a non-http(s) url that filter_var itself would othe
     expect(InputValidator::checkUrlFormat('ftp://example.com'))->toBeFalse();
 });
 
-/**
- * setHtmlRenderer()/$htmlRenderer is a setter-only static with no public
- * reset (same shape documented by AccessControlTest.php for
- * Piwigo\Auth\AccessControl::$htmlRenderer) -- reflection sets/restores it
- * directly here so this doesn't leak a non-null renderer into every other
- * test in this process (every other test above relies on it being null,
- * which is how they reach the plain `throw new \RuntimeException($msg)`
- * fallback).
- */
-function inputValidatorTestSetRenderer(?HtmlRenderingInterface $renderer): void
-{
-    $prop = new ReflectionProperty(InputValidator::class, 'htmlRenderer');
-    $prop->setValue(null, $renderer);
-}
-
 test('fatalError calls the installed HtmlRenderingInterface before throwing, when one is configured', function (): void {
+    // $htmlRenderer is a real constructor-injected instance property now
+    // (singleton/service-locator elimination campaign, Phase 3) -- every
+    // other test above passes none at all, relying on the same default
+    // (null) `new InputValidator()` already had before this conversion,
+    // reaching the plain `throw new \RuntimeException($msg)` fallback.
     $renderer = new InputValidatorTestFakeHtmlRenderer();
-    inputValidatorTestSetRenderer($renderer);
+    $validator = new InputValidator($renderer);
 
-    try {
-        $validator = new InputValidator();
+    expect(fn (): ?true => $validator->validate('id', [], false, ValidationPattern::ID, true))
+        ->toThrow(RuntimeException::class, '[Hacking attempt] the input parameter "id" is not valid');
 
-        expect(fn (): ?true => $validator->validate('id', [], false, ValidationPattern::ID, true))
-            ->toThrow(RuntimeException::class, '[Hacking attempt] the input parameter "id" is not valid');
-
-        // The RuntimeException above is thrown either way (by the fake
-        // itself when the renderer IS called, or by InputValidator's own
-        // fallback throw when it is NOT) -- only this flag distinguishes
-        // whether the `instanceof HtmlRenderingInterface` guard actually
-        // ran true and delegated to the renderer first.
-        expect($renderer->fatalErrorWasCalled)->toBeTrue()
-            ->and($renderer->lastMessage)->toBe('[Hacking attempt] the input parameter "id" is not valid');
-    } finally {
-        inputValidatorTestSetRenderer(null);
-    }
+    // The RuntimeException above is thrown either way (by the fake
+    // itself when the renderer IS called, or by InputValidator's own
+    // fallback throw when it is NOT) -- only this flag distinguishes
+    // whether the `instanceof HtmlRenderingInterface` guard actually
+    // ran true and delegated to the renderer first.
+    expect($renderer->fatalErrorWasCalled)->toBeTrue()
+        ->and($renderer->lastMessage)->toBe('[Hacking attempt] the input parameter "id" is not valid');
 });

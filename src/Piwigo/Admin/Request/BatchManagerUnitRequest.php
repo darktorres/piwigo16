@@ -61,7 +61,7 @@ final readonly class BatchManagerUnitRequest
         $is_submitted = isset($post['submit']);
         $element_ids = '';
         if ($is_submitted) {
-            new InputValidator()
+            InputValidator::createStatic()
                 ->validate('element_ids', $post, false, '/^\d+(,\d+)*$/');
             $element_ids_raw = $post['element_ids'] ?? null;
             $element_ids = is_string($element_ids_raw) ? $element_ids_raw : '';
@@ -70,7 +70,7 @@ final readonly class BatchManagerUnitRequest
         $nb_photos_deleted_present = isset($post['nb_photos_deleted']);
         $nb_photos_deleted = 0;
         if ($nb_photos_deleted_present) {
-            new InputValidator()
+            InputValidator::createStatic()
                 ->validate('nb_photos_deleted', $post, false, '/^\d+$/');
             $nb_photos_deleted = is_numeric($post['nb_photos_deleted']) ? (int) $post['nb_photos_deleted'] : 0;
         }

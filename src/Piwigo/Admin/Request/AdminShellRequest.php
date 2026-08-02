@@ -56,9 +56,9 @@ final readonly class AdminShellRequest
      */
     public static function fromArrays(array $get, array $post): self
     {
-        new InputValidator()
+        InputValidator::createStatic()
             ->validate('page', $get, false, '/^[a-zA-Z\d_-]+$/');
-        new InputValidator()
+        InputValidator::createStatic()
             ->validate('section', $get, false, '/^[a-z]+[a-z_\/-]*(\.php)?$/i');
 
         $change_theme_url_params = [];

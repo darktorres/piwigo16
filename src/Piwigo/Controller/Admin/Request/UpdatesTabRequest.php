@@ -30,7 +30,7 @@ final readonly class UpdatesTabRequest
      */
     public static function fromArray(array $source): self
     {
-        new InputValidator()
+        InputValidator::createStatic()
             ->validate('tab', $source, false, '/^(pwg|ext)$/');
 
         $tab = $source['tab'] ?? null;

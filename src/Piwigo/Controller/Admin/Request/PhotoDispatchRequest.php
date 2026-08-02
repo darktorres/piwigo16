@@ -42,7 +42,7 @@ final readonly class PhotoDispatchRequest
      */
     public static function fromArray(array $source, array $knownTabs): self
     {
-        new InputValidator()
+        InputValidator::createStatic()
             ->validate('image_id', $source, false, ValidationPattern::ID);
 
         $get_image_id_raw = $source['image_id'] ?? null;

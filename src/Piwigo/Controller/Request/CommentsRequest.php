@@ -105,7 +105,7 @@ final readonly class CommentsRequest
 
         $cat_id = null;
         if (isset($get['cat']) and ! (is_numeric($cat_raw) and (int) $cat_raw === 0)) {
-            new InputValidator()
+            InputValidator::createStatic()
                 ->validate('cat', $get, false, ValidationPattern::ID);
             $cat_id = is_string($get['cat']) ? $get['cat'] : '0';
         }
@@ -117,7 +117,7 @@ final readonly class CommentsRequest
         $comment_id_raw = $get['comment_id'] ?? null;
         $comment_id = null;
         if (is_string($comment_id_raw) && $comment_id_raw !== '' && $comment_id_raw !== '0') {
-            new InputValidator()
+            InputValidator::createStatic()
                 ->validate('comment_id', $get, false, ValidationPattern::ID);
             assert(is_numeric($comment_id_raw));
             $comment_id = (int) $comment_id_raw;
@@ -131,7 +131,7 @@ final readonly class CommentsRequest
         $action_comment_id = null;
         foreach (['delete', 'validate', 'edit'] as $loop_action) {
             if (isset($get[$loop_action])) {
-                new InputValidator()
+                InputValidator::createStatic()
                     ->validate($loop_action, $get, false, ValidationPattern::ID);
                 $action_id_raw = $get[$loop_action] ?? null;
                 assert(is_numeric($action_id_raw));

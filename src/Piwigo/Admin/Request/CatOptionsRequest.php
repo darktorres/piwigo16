@@ -58,11 +58,11 @@ final readonly class CatOptionsRequest
     {
         $is_submitted = $post !== [];
         if ($is_submitted) {
-            new InputValidator()
+            InputValidator::createStatic()
                 ->validate('cat_true', $post, true, ValidationPattern::ID);
-            new InputValidator()
+            InputValidator::createStatic()
                 ->validate('cat_false', $post, true, ValidationPattern::ID);
-            new InputValidator()
+            InputValidator::createStatic()
                 ->validate('section', $get, false, '/^[a-z0-9_-]+$/i');
         }
 

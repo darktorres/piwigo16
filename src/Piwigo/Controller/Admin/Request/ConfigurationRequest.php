@@ -60,7 +60,7 @@ final readonly class ConfigurationRequest
      */
     public static function fromArrays(array $get, array $post, array $files): self
     {
-        new InputValidator()
+        InputValidator::createStatic()
             ->validate('section', $get, false, '/^[a-z]+$/i');
 
         $section_raw = $get['section'] ?? null;

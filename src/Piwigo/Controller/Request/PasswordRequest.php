@@ -49,7 +49,7 @@ final readonly class PasswordRequest
      */
     public static function fromArrays(array $get, array $post): self
     {
-        new InputValidator()
+        InputValidator::createStatic()
             ->validate('action', $get, false, '/^(lost|reset|lost_code|reset_end|none)$/');
         $action_raw = $get['action'] ?? null;
         $action = is_string($action_raw) ? $action_raw : null;

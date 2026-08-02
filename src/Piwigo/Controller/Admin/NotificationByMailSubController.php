@@ -148,11 +148,11 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                     $nbm_send_mail_as = $post['nbm_send_mail_as'] ?? null;
                     $post['nbm_send_mail_as'] = strip_tags(is_string($nbm_send_mail_as) ? $nbm_send_mail_as : '');
 
-                    new \Piwigo\Validation\InputValidator()
+                    \Piwigo\Validation\InputValidator::createStatic()
                         ->validate('nbm_send_html_mail', $post, false, '/^(true|false)$/');
-                    new \Piwigo\Validation\InputValidator()
+                    \Piwigo\Validation\InputValidator::createStatic()
                         ->validate('nbm_send_detailed_content', $post, false, '/^(true|false)$/');
-                    new \Piwigo\Validation\InputValidator()
+                    \Piwigo\Validation\InputValidator::createStatic()
                         ->validate('nbm_send_recent_post_dates', $post, false, '/^(true|false)$/');
 
                     $updated_param_count = 0;

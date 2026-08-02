@@ -32,9 +32,9 @@ final readonly class LanguagesInstalledActionRequest
      */
     public static function fromArray(array $source, string $languageIdPattern): self
     {
-        new InputValidator()
+        InputValidator::createStatic()
             ->validate('action', $source, false, '/^(activate|deactivate|set_default|delete)$/');
-        new InputValidator()
+        InputValidator::createStatic()
             ->validate('language', $source, false, $languageIdPattern);
 
         $action = $source['action'] ?? null;

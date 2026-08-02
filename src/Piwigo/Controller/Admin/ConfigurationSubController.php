@@ -283,7 +283,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
                     if (\Piwigo\Config\CurrentConfig::orderByCustom() === null and \Piwigo\Config\CurrentConfig::orderByInsideCategoryCustom() === null) {
                         if (! self::emptyValue($post['order_by'] ?? null)) {
-                            new \Piwigo\Validation\InputValidator()
+                            \Piwigo\Validation\InputValidator::createStatic()
                                 ->validate('order_by', $post, true, '/^(' . implode('|', array_keys($sort_fields)) . ')$/');
 
                             // check_input_parameter() above fatal_error()s unless

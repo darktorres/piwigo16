@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Validation;
 
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\ValidationPattern;
 
 /**
@@ -15,31 +16,60 @@ use Piwigo\Core\ValidationPattern;
  * class's `validate()` directly (same end state as `get_ephemeral_key()`'s
  * own migration).
  *
- * P23 batch 8f-3: `validate()` is this class's own single, near-universal
- * method (81 real construction sites) -- constructor- or parameter-
- * injecting `HtmlRenderingInterface` would ripple across every one of
- * them for zero real benefit, so this uses the same static-setter shape
- * as `Piwigo\Core\Lang::setDefaultLanguageProvider()` instead: set once by
- * `Bootstrap\RequestBootstrap` (not subject to deptrac), reused by
- * every `validate()` call in the request. Needed because this
- * L1Infrastructure class may not depend on L3Presentation's HtmlService
- * directly (deptrac), and every real call site already relies on
- * fatalError()'s `never` return type to halt the request exactly as
- * before.
+ * Container-shared instance (singleton/service-locator elimination
+ * campaign, Phase 3): `$htmlRenderer` stayed a static-setter collaborator
+ * originally because constructor-/parameter-injecting it would ripple
+ * across every one of its ~90 real construction sites for zero benefit --
+ * but every one of those sites turned out to be a `Request\*Request::
+ * fromGlobals()` static factory (P27/SEC-40), with no instance context to
+ * receive constructor injection through at all. `HtmlRenderingInterface`
+ * is already bound in container.php, so this class needs no explicit
+ * wiring any more (RequestBootstrap::configure()'s former
+ * `setHtmlRenderer(new HtmlService())` call is gone, autowiring handles
+ * it) -- createStatic() is the `@deprecated` transitional bridge those ~90
+ * static factories use instead of `new self()` directly.
  */
 final class InputValidator
 {
-    private static ?HtmlRenderingInterface $htmlRenderer = null;
+    public function __construct(
+        private readonly ?HtmlRenderingInterface $htmlRenderer = null,
+    ) {}
 
-    public static function setHtmlRenderer(HtmlRenderingInterface $renderer): void
+    /**
+     * @deprecated transitional bridge for the ~90 Request DTO static
+     * `fromGlobals()` factory methods (Admin/Request/, Controller/.../Request/)
+     * that construct this class outside any container-resolved object
+     * graph -- there is no instance context for those static factories to
+     * receive constructor injection through.
+     * Gracefully falls back to a bare, renderer-less instance (the same
+     * "never wired up" shape the static-setter version had before any
+     * `setHtmlRenderer()` call, still exercised directly by
+     * InputValidatorTest.php's own `new InputValidator()` sites) when
+     * Kernel hasn't booted -- fatalError() below already handles that
+     * case by throwing RuntimeException, matching every request-input
+     * rejection test in this codebase that predates this conversion.
+     * Delete once every Request DTO itself stops being a static factory
+     * (a separate, not-yet-planned initiative -- Request DTOs are their
+     * own architectural layer, not part of this campaign's scope).
+     */
+    public static function createStatic(): self
     {
-        self::$htmlRenderer = $renderer;
+        if (! Kernel::isBooted()) {
+            return new self();
+        }
+
+        $instance = Kernel::container()->get(self::class);
+        if (! $instance instanceof self) {
+            throw new \LogicException('Container returned an unexpected type for ' . self::class);
+        }
+
+        return $instance;
     }
 
-    private static function fatalError(string $msg): never
+    private function fatalError(string $msg): never
     {
-        if (self::$htmlRenderer instanceof \Piwigo\Core\HtmlRenderingInterface) {
-            self::$htmlRenderer->fatalError($msg);
+        if ($this->htmlRenderer instanceof HtmlRenderingInterface) {
+            $this->htmlRenderer->fatalError($msg);
         }
         throw new \RuntimeException($msg);
     }
@@ -57,7 +87,7 @@ final class InputValidator
      */
     public static function fail(string $msg): never
     {
-        self::fatalError($msg);
+        self::createStatic()->fatalError($msg);
     }
 
     /**
@@ -70,14 +100,14 @@ final class InputValidator
         // it's ok if the input parameter is null
         if (self::emptyValue($paramValue)) {
             if ($mandatory) {
-                self::fatalError('[Hacking attempt] the input parameter "' . $paramName . '" is not valid');
+                $this->fatalError('[Hacking attempt] the input parameter "' . $paramName . '" is not valid');
             }
             return true;
         }
 
         if ($isArray) {
             if (! is_array($paramValue)) {
-                self::fatalError('[Hacking attempt] the input parameter "' . $paramName . '" should be an array');
+                $this->fatalError('[Hacking attempt] the input parameter "' . $paramName . '" should be an array');
             }
 
             foreach ($paramValue as $key => $itemToCheck) {
@@ -85,20 +115,20 @@ final class InputValidator
                 // sane string form to validate against $pattern -- that's a
                 // malformed/hacking-attempt input in its own right.
                 if (! is_scalar($itemToCheck)) {
-                    self::fatalError('[Hacking attempt] an item is not valid in input parameter "' . $paramName . '"');
+                    $this->fatalError('[Hacking attempt] an item is not valid in input parameter "' . $paramName . '"');
                 }
 
                 if ($pattern === '' || ! (bool) preg_match(ValidationPattern::ID, (string) $key) || ! (bool) preg_match($pattern, (string) $itemToCheck)) {
-                    self::fatalError('[Hacking attempt] an item is not valid in input parameter "' . $paramName . '"');
+                    $this->fatalError('[Hacking attempt] an item is not valid in input parameter "' . $paramName . '"');
                 }
             }
         } else {
             if (! is_scalar($paramValue)) {
-                self::fatalError('[Hacking attempt] the input parameter "' . $paramName . '" is not valid');
+                $this->fatalError('[Hacking attempt] the input parameter "' . $paramName . '" is not valid');
             }
 
             if ($pattern === '' || ! (bool) preg_match($pattern, (string) $paramValue)) {
-                self::fatalError('[Hacking attempt] the input parameter "' . $paramName . '" is not valid');
+                $this->fatalError('[Hacking attempt] the input parameter "' . $paramName . '" is not valid');
             }
         }
 

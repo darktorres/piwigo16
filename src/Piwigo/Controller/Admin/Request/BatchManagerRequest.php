@@ -76,9 +76,9 @@ final readonly class BatchManagerRequest
      */
     public static function fromArrays(array $get, array $post, array $request): self
     {
-        new InputValidator()
+        InputValidator::createStatic()
             ->validate('selection', $post, true, ValidationPattern::ID);
-        new InputValidator()
+        InputValidator::createStatic()
             ->validate('display', $request, false, '/^(\d+|all)$/');
 
         $page_raw = $get['page'] ?? null;
@@ -98,7 +98,7 @@ final readonly class BatchManagerRequest
 
         $tab = 'global';
         if (isset($get['mode'])) {
-            new InputValidator()
+            InputValidator::createStatic()
                 ->validate('mode', $get, false, '/^(global|unit)$/');
             $tab = is_string($get['mode']) ? $get['mode'] : 'global';
         }
@@ -108,7 +108,7 @@ final readonly class BatchManagerRequest
 
         $nb_orphans_deleted = null;
         if ($action === 'delete_orphans' && isset($get['nb_orphans_deleted'])) {
-            new InputValidator()
+            InputValidator::createStatic()
                 ->validate('nb_orphans_deleted', $get, false, '/^\d+$/');
             $nb_orphans_deleted_raw = $get['nb_orphans_deleted'];
             $nb_orphans_deleted = is_numeric($nb_orphans_deleted_raw) ? (int) $nb_orphans_deleted_raw : 0;
@@ -116,7 +116,7 @@ final readonly class BatchManagerRequest
 
         $nb_md5sum_added = null;
         if ($action === 'sync_md5sum' && isset($get['nb_md5sum_added'])) {
-            new InputValidator()
+            InputValidator::createStatic()
                 ->validate('nb_md5sum_added', $get, false, '/^\d+$/');
             $nb_md5sum_added_raw = $get['nb_md5sum_added'];
             $nb_md5sum_added = is_numeric($nb_md5sum_added_raw) ? (int) $nb_md5sum_added_raw : 0;

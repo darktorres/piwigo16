@@ -303,7 +303,6 @@ final class RequestBootstrap
         \Piwigo\Auth\AccessControl::setRedirectService(new RedirectService());
         \Piwigo\Core\FilesystemHelper::setHtmlRenderer(new HtmlService());
         Lang::setHtmlRenderer(new HtmlService());
-        \Piwigo\Validation\InputValidator::setHtmlRenderer(new HtmlService());
         \Piwigo\Image\SrcImage::setHtmlRenderer(new HtmlService());
         \Piwigo\Image\SrcImage::setImageRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class));
         \Piwigo\Image\SrcImage::setUrlService(new UrlService(new HtmlService()));

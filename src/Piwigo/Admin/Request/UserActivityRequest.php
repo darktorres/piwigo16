@@ -39,11 +39,11 @@ final readonly class UserActivityRequest
      */
     public static function fromArray(array $source): self
     {
-        new InputValidator()
+        InputValidator::createStatic()
             ->validate('photo', $source, false, ValidationPattern::ID);
-        new InputValidator()
+        InputValidator::createStatic()
             ->validate('album', $source, false, ValidationPattern::ID);
-        new InputValidator()
+        InputValidator::createStatic()
             ->validate('group', $source, false, ValidationPattern::ID);
 
         return new self(($source['type'] ?? null) === 'download_logs', $source);

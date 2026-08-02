@@ -30,7 +30,7 @@ final readonly class PictureFormatsImageIdRequest
      */
     public static function fromArray(array $source): self
     {
-        new InputValidator()
+        InputValidator::createStatic()
             ->validate('image_id', $source, false, ValidationPattern::ID);
 
         $image_id_raw = $source['image_id'] ?? null;

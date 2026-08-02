@@ -42,7 +42,7 @@ final readonly class AlbumsRequest
      */
     public static function fromArrays(array $get, array $post): self
     {
-        new InputValidator()
+        InputValidator::createStatic()
             ->validate('parent_id', $get, false, ValidationPattern::ID);
 
         $simpleAutoOrder = isset($post['simpleAutoOrder']);
@@ -51,7 +51,7 @@ final readonly class AlbumsRequest
         $id = '';
         $rawId = null;
         if ($simpleAutoOrder || $recursiveAutoOrder) {
-            new InputValidator()
+            InputValidator::createStatic()
                 ->validate('id', $post, false, '/^-?\d+$/');
             $rawId = $post['id'] ?? null;
             $id = is_string($rawId) ? $rawId : '';

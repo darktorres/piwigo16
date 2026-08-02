@@ -253,7 +253,7 @@ final class AdminShell
         // $_GET['tab'] is often used to perform and
         // include('admin_page_'.$_GET['tab'].'.php') : we need to protect it to
         // avoid any unexpected file inclusion
-        new \Piwigo\Validation\InputValidator()
+        \Piwigo\Validation\InputValidator::createStatic()
             ->validate('tab', $_GET, false, '/^[a-zA-Z\d_-]+$/');
 
         // +-------------------------------------------------------------------+

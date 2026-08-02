@@ -52,7 +52,7 @@ final readonly class InstallWizardRequest
      */
     public static function fromArrays(array $get, array $post): self
     {
-        new InputValidator()
+        InputValidator::createStatic()
             ->validate('dl', $get, false, '/^[a-f0-9]{32}$/');
 
         $dl_raw = $get['dl'] ?? null;

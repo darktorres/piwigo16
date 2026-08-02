@@ -63,7 +63,7 @@ final readonly class ActionRequest
         $format_requested = $isFormatsEnabled && isset($get['format']);
         $format_id = null;
         if ($format_requested) {
-            new InputValidator()
+            InputValidator::createStatic()
                 ->validate('format', $get, false, ValidationPattern::ID);
             $format_id = is_numeric($get['format']) ? (int) $get['format'] : null;
         }

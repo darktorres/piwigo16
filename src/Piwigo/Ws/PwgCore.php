@@ -922,14 +922,14 @@ final class PwgCore
 
         // date start
         if (! in_array($param['start'], [null, ''], true)) {
-            new \Piwigo\Validation\InputValidator()
+            \Piwigo\Validation\InputValidator::createStatic()
                 ->validate('start', $param, false, '/^\d{4}-\d{2}-\d{2}$/');
             $search['fields']['date-after'] = $param['start'];
         }
 
         // date end
         if (! in_array($param['end'], [null, ''], true)) {
-            new \Piwigo\Validation\InputValidator()
+            \Piwigo\Validation\InputValidator::createStatic()
                 ->validate('end', $param, false, '/^\d{4}-\d{2}-\d{2}$/');
             $search['fields']['date-before'] = $param['end'];
         }
@@ -938,7 +938,7 @@ final class PwgCore
         if ($param['types'] === []) {
             $search['fields']['types'] = $types;
         } else {
-            new \Piwigo\Validation\InputValidator()
+            \Piwigo\Validation\InputValidator::createStatic()
                 ->validate('types', $param, true, '/^(' . implode('|', $types) . ')$/');
             $search['fields']['types'] = $param['types'];
         }
@@ -969,7 +969,7 @@ final class PwgCore
         }
 
         // thumbnails
-        new \Piwigo\Validation\InputValidator()
+        \Piwigo\Validation\InputValidator::createStatic()
             ->validate('display_thumbnail', $param, false, '/^(' . implode('|', array_keys($display_thumbnails)) . ')$/');
 
         $search['fields']['display_thumbnail'] = $param['display_thumbnail'];

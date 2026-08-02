@@ -43,13 +43,13 @@ final readonly class SearchQueryRequest
 
         $hasCatId = isset($source['cat_id']);
         if ($hasCatId) {
-            new InputValidator()
+            InputValidator::createStatic()
                 ->validate('cat_id', $source, false, ValidationPattern::ID);
         }
 
         $hasTagId = isset($source['tag_id']);
         if ($hasTagId) {
-            new InputValidator()
+            InputValidator::createStatic()
                 ->validate('tag_id', $source, false, '/^\d+(,\d+)*$/');
         }
 

@@ -51,7 +51,7 @@ final readonly class PhotosAddDirectRequest
     {
         $batch_present = isset($get['batch']);
         if ($batch_present) {
-            new InputValidator()
+            InputValidator::createStatic()
                 ->validate('batch', $get, false, '/^\d+(,\d+)*$/');
         }
         $batch_raw = $get['batch'] ?? null;
@@ -72,7 +72,7 @@ final readonly class PhotosAddDirectRequest
             // is PHP-falsy -- the two sets are complementary, so
             // validate()'s own emptyValue() short-circuit (the only place
             // $mandatory is read) can never trigger on this call.
-            new InputValidator()
+            InputValidator::createStatic()
                 ->validate('formats', $get, false, ValidationPattern::ID, false);
             $formats_raw = $get['formats'] ?? null;
             $formats_id = is_string($formats_raw) ? $formats_raw : '';
@@ -81,7 +81,7 @@ final readonly class PhotosAddDirectRequest
         $album_present = isset($get['album']);
         $album_id = null;
         if ($album_present) {
-            new InputValidator()
+            InputValidator::createStatic()
                 ->validate('album', $get, false, ValidationPattern::ID);
             $album_id = is_numeric($get['album']) ? (int) $get['album'] : null;
         }

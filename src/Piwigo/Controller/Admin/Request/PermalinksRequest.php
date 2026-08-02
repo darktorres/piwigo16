@@ -46,7 +46,7 @@ final readonly class PermalinksRequest
      */
     public static function fromArrays(array $get, array $post): self
     {
-        new InputValidator()
+        InputValidator::createStatic()
             ->validate('cat_id', $post, false, ValidationPattern::ID);
 
         $post_cat_id = isset($post['cat_id']) && is_numeric($post['cat_id']) ? (int) $post['cat_id'] : 0;

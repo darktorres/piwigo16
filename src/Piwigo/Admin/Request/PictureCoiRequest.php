@@ -35,7 +35,7 @@ final readonly class PictureCoiRequest
      */
     public static function fromArrays(array $get, array $post): self
     {
-        new InputValidator()
+        InputValidator::createStatic()
             ->validate('image_id', $get, false, ValidationPattern::ID);
 
         $image_id = 0;

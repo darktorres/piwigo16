@@ -30,7 +30,7 @@ final readonly class FeedRequest
      */
     public static function fromArray(array $source): self
     {
-        new InputValidator()
+        InputValidator::createStatic()
             ->validate('feed', $source, false, '/^[0-9a-z]{50}$/i');
 
         $feed_id = $source['feed'] ?? '';

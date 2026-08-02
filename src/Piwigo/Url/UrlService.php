@@ -120,10 +120,16 @@ final class UrlService implements UrlServiceInterface
                     if (\Piwigo\Config\CurrentConfig::urlPort() === 'none') {
                         // do nothing
                     } elseif (\Piwigo\Config\CurrentConfig::urlPort() === 'auto') {
-                        $server_port_raw = $_SERVER['SERVER_PORT'] ?? null;
-                        $server_port = is_numeric($server_port_raw) ? (int) $server_port_raw : null;
+                        // Default to 80 (matching 16.x-rewrite's own
+                        // UrlService) when SERVER_PORT is genuinely absent --
+                        // real bug found via mutation-gap test-writing
+                        // (2026-08-01): defaulting to null instead left
+                        // $server_port !== 80/443 vacuously true, appending a
+                        // bare trailing ':' with no port digits after it.
+                        $server_port_raw = $_SERVER['SERVER_PORT'] ?? 80;
+                        $server_port = is_numeric($server_port_raw) ? (int) $server_port_raw : 80;
                         if ((! $is_https && $server_port !== 80) || ($is_https && $server_port !== 443)) {
-                            $url_port = ':' . (is_string($server_port_raw) ? $server_port_raw : '');
+                            $url_port = ':' . $server_port;
                         }
                     } else {
                         // we have a custom port

@@ -120,6 +120,13 @@ COPY --from=builder /app/vendor ./vendor
 COPY --from=frontend /app/dist ./dist
 COPY . .
 COPY --from=builder /app/vendor/autoload.php ./vendor/autoload.php
+# Overwrites the base image's default site (already enabled via
+# sites-enabled/000-default.conf -> ../sites-available/000-default.conf, so
+# no a2ensite call needed) to point DocumentRoot at public/ instead of
+# /var/www/html -- without this, the `COPY . .` above would serve the
+# entire source tree, the exact exposure docker/Caddyfile's `root *
+# /app/public` prevents on the FrankenPHP stage. See docker/apache-vhost.conf.
+COPY docker/apache-vhost.conf /etc/apache2/sites-available/000-default.conf
 
 RUN mkdir -p _data local galleries upload \
     && chown -R www-data:www-data _data local galleries upload

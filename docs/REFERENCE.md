@@ -320,9 +320,15 @@ sensitive root-level tooling configs (`composer.json`, `phpstan.neon`,
 `.env*`, any root `*.ts` config, etc.) must never be served directly, on
 every supported front end:
 
-- **Apache**: `public/.htaccess`.
+- **Apache**: `public/.htaccess` for the deny rules; `docker/apache-vhost.conf`
+  sets `DocumentRoot` to `public/` itself (baked into the
+  `production-apache` image the same way `docker/Caddyfile` is baked into
+  `production` below) — without it the base `php:8.5-apache` image's
+  default `DocumentRoot` (`/var/www/html`) would serve the whole app
+  directory the `COPY . .` step puts there, deny rules or not.
 - **FrankenPHP/Caddy**: `docker/Caddyfile` (baked into the production
-  image).
+  image; its `root * /app/public` sets the document root itself, not just
+  the deny rules).
 - **nginx** (not a runtime this project ships an image for, but commonly
   fronting one, and not covered by CI's deny-rule jobs the way the other
   two are — docs-only guidance):

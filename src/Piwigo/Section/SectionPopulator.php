@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Section;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Calendar\CalendarRenderer;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\IpAddress;
@@ -207,11 +208,14 @@ final readonly class SectionPopulator
             }
         }
 
-        $forbidden = $this->permissionService->getSqlConditionFandF([
+        $forbiddenCondition = $this->permissionService->getSqlConditionFandFAsCondition([
             'forbidden_categories' => 'category_id',
             'visible_categories' => 'category_id',
             'visible_images' => 'id',
-        ], 'AND');
+        ]);
+        $forbidden = $forbiddenCondition->isEmpty() ? '' : ' AND ' . $forbiddenCondition->sql;
+        $forbidden_params = $forbiddenCondition->parameters;
+        $forbidden_types = $forbiddenCondition->types;
 
         // parse_section_url()'s own return type is the generic array<string, mixed>
         // (functions_url.inc.php), so $page['category'] loses the more precise
@@ -292,25 +296,35 @@ final readonly class SectionPopulator
                     }
                 }
 
+                $where_params = [];
+                $where_types = [];
                 // flat categories mode
                 if (isset($page['flat'])) {
                     // get all allowed sub-categories
                     if ($page_category !== null) {
                         $uppercats = $page_category['uppercats'];
+                        $subcatsCondition = $this->permissionService->getSqlConditionFandFAsCondition([
+                            'forbidden_categories' => 'id',
+                            'visible_categories' => 'id',
+                        ]);
                         $subcat_ids_raw = $this->repo->findVisibleSubcategoryIds(
                             $uppercats,
-                            $this->permissionService->getSqlConditionFandF([
-                                'forbidden_categories' => 'id',
-                                'visible_categories' => 'id',
-                            ], "\n  AND")
+                            $subcatsCondition->isEmpty() ? '' : ' AND ' . $subcatsCondition->sql,
+                            $subcatsCondition->parameters,
+                            $subcatsCondition->types
                         );
                         $subcat_ids = array_values(array_filter($subcat_ids_raw, is_string(...)));
                         $subcat_ids[] = (string) $page_category['id'];
-                        $where_sql = 'category_id IN (' . implode(',', $subcat_ids) . ')';
+                        $where_sql = 'category_id IN (:subcatIds)';
+                        $where_params['subcatIds'] = $subcat_ids;
+                        $where_types['subcatIds'] = ArrayParameterType::STRING;
                         // remove categories from forbidden because just checked above
-                        $forbidden = $this->permissionService->getSqlConditionFandF([
+                        $forbiddenCondition = $this->permissionService->getSqlConditionFandFAsCondition([
                             'visible_images' => 'id',
-                        ], 'AND');
+                        ]);
+                        $forbidden = $forbiddenCondition->isEmpty() ? '' : ' AND ' . $forbiddenCondition->sql;
+                        $forbidden_params = $forbiddenCondition->parameters;
+                        $forbidden_types = $forbiddenCondition->types;
                     } else {
                         $currentUser = \Piwigo\Users\CurrentUser::get();
                         $user_id_for_cache = $currentUser->id->value;
@@ -327,7 +341,8 @@ final readonly class SectionPopulator
                     // (see the `if (isset($page['flat']))` above), so category
                     // must be the one that's set
                     assert($page_category !== null);
-                    $where_sql = 'category_id = ' . $page_category['id'];
+                    $where_sql = 'category_id = :categoryId';
+                    $where_params['categoryId'] = $page_category['id'];
                 }
 
                 // $cache_item is only ever assigned in the flat-mode/no-
@@ -350,7 +365,7 @@ final readonly class SectionPopulator
                     // here, same fix as CalendarRepository::findImageIds()/
                     // SearchService::getQuickSearchResultsNoCache() -- `id`
                     // and `image_id` are equal per the JOIN condition.
-                    $page['items'] = $this->repo->findSectionImageIds($where_sql, $forbidden, $order_by);
+                    $page['items'] = $this->repo->findSectionImageIds($where_sql, $forbidden, $order_by, array_merge($where_params, $forbidden_params), array_merge($where_types, $forbidden_types));
 
                     if ($cache_item instanceof \Psr\Cache\CacheItemInterface) {
                         $cache_item->set($page['items']);
@@ -520,7 +535,9 @@ final readonly class SectionPopulator
                         'items' => $this->repo->findRecentImageIds(
                             $this->userService->getRecentPhotosSql('date_available'),
                             $forbidden,
-                            $order_by
+                            $order_by,
+                            $forbidden_params,
+                            $forbidden_types
                         ),
                     ]
                 );
@@ -557,7 +574,7 @@ final readonly class SectionPopulator
                             'start' => 0,
                         ]) . '">'
                                     . $top_number . ' ' . Lang::t('Most visited') . '</a>',
-                        'items' => $this->repo->findTopByHitsImageIds($forbidden, $order_by, $top_number),
+                        'items' => $this->repo->findTopByHitsImageIds($forbidden, $order_by, $top_number, $forbidden_params, $forbidden_types),
                     ]
                 );
             }
@@ -580,7 +597,7 @@ final readonly class SectionPopulator
                             'start' => 0,
                         ]) . '">'
                                     . $top_number . ' ' . Lang::t('Best rated') . '</a>',
-                        'items' => $this->repo->findTopRatedImageIds($forbidden, $order_by, $top_number),
+                        'items' => $this->repo->findTopRatedImageIds($forbidden, $order_by, $top_number, $forbidden_params, $forbidden_types),
                     ]
                 );
             }
@@ -602,7 +619,7 @@ final readonly class SectionPopulator
                             'start' => 0,
                         ]) . '">'
                                     . Lang::t('Random photos') . '</a>',
-                        'items' => $this->repo->findImageIdsAmongList($list_ids, $forbidden, $order_by),
+                        'items' => $this->repo->findImageIdsAmongList($list_ids, $forbidden, $order_by, $forbidden_params, $forbidden_types),
                     ]
                 );
             }

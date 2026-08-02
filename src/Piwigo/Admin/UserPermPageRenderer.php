@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
@@ -122,14 +123,20 @@ final class UserPermPageRenderer
 SELECT id,name,uppercats,global_rank
   FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::userAccess() . ' ON cat_id = id
   WHERE status = \'private\'
-    AND user_id = ' . $user_id;
+    AND user_id = :userId';
+        $params_true = [
+            'userId' => $user_id,
+        ];
+        $types_true = [];
         if (count($group_authorized) > 0) {
             $query_true .= '
-    AND cat_id NOT IN (' . implode(',', $group_authorized) . ')';
+    AND cat_id NOT IN (:groupAuthorized)';
+            $params_true['groupAuthorized'] = $group_authorized;
+            $types_true['groupAuthorized'] = ArrayParameterType::STRING;
         }
         $query_true .= '
 ;';
-        $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true', $htmlRenderer, $template);
+        $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true', $htmlRenderer, $template, params: $params_true, types: $types_true);
 
         $authorized_ids = array_map(
             strval(...),
@@ -140,17 +147,23 @@ SELECT id,name,uppercats,global_rank
 SELECT id,name,uppercats,global_rank
   FROM ' . Tables::categories() . '
   WHERE status = \'private\'';
+        $params_false = [];
+        $types_false = [];
         if (count($authorized_ids) > 0) {
             $query_false .= '
-    AND id NOT IN (' . implode(',', $authorized_ids) . ')';
+    AND id NOT IN (:authorizedIds)';
+            $params_false['authorizedIds'] = $authorized_ids;
+            $types_false['authorizedIds'] = ArrayParameterType::STRING;
         }
         if (count($group_authorized) > 0) {
             $query_false .= '
-    AND id NOT IN (' . implode(',', $group_authorized) . ')';
+    AND id NOT IN (:groupAuthorized)';
+            $params_false['groupAuthorized'] = $group_authorized;
+            $types_false['groupAuthorized'] = ArrayParameterType::STRING;
         }
         $query_false .= '
 ;';
-        $categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false', $htmlRenderer, $template);
+        $categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false', $htmlRenderer, $template, params: $params_false, types: $types_false);
 
         $template->assign('PWG_TOKEN', new \Piwigo\Csrf\CsrfService()->getToken());
 

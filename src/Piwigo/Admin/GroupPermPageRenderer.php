@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Audit\AuditService;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\GroupId;
@@ -128,9 +129,11 @@ final class GroupPermPageRenderer
 SELECT id,name,uppercats,global_rank
   FROM ' . Tables::categories() . ' INNER JOIN ' . Tables::groupAccess() . ' ON cat_id = id
   WHERE status = \'private\'
-    AND group_id = ' . $groupId->value . '
+    AND group_id = :groupId
 ;';
-        $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true', \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $template);
+        $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true', \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $template, params: [
+            'groupId' => $groupId->value,
+        ]);
 
         $authorized_ids = array_map(strval(...), $categoryService->getPrivateCategoryIdsGrantedToGroup($groupId->value));
 
@@ -138,13 +141,17 @@ SELECT id,name,uppercats,global_rank
 SELECT id,name,uppercats,global_rank
   FROM ' . Tables::categories() . '
   WHERE status = \'private\'';
+        $params_false = [];
+        $types_false = [];
         if (count($authorized_ids) > 0) {
             $query_false .= '
-    AND id NOT IN (' . implode(',', $authorized_ids) . ')';
+    AND id NOT IN (:authorizedIds)';
+            $params_false['authorizedIds'] = $authorized_ids;
+            $types_false['authorizedIds'] = ArrayParameterType::STRING;
         }
         $query_false .= '
 ;';
-        $categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false', \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $template);
+        $categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false', \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $template, params: $params_false, types: $types_false);
 
         $template->assign('PWG_TOKEN', new \Piwigo\Csrf\CsrfService()->getToken());
 

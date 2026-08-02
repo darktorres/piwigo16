@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Section;
 
+use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\ParameterType;
 use Piwigo\Db\AbstractRepository;
 
 /**
@@ -29,13 +31,15 @@ final class SectionRepository extends AbstractRepository
      * 1:1 API swap for SectionPopulator's own single-column item-id
      * queries.
      *
+     * @param array<string, mixed> $params
+     * @param array<string, ArrayParameterType|ParameterType> $types
      * @return list<string|null>
      */
-    public function queryColumn(string $sql): array
+    public function queryColumn(string $sql, array $params = [], array $types = []): array
     {
         return array_map(
             static fn (mixed $value): ?string => is_scalar($value) ? (string) $value : null,
-            $this->conn->executeQuery($sql)
+            $this->conn->executeQuery($sql, $params, $types)
                 ->fetchFirstColumn()
         );
     }
@@ -49,28 +53,39 @@ final class SectionRepository extends AbstractRepository
      * Visible subcategory ids directly under $uppercatsPattern (a category's
      * own `uppercats` value, matched as `uppercats LIKE '$uppercatsPattern,%'`)
      * -- SectionPopulator's own "flat categories" mode subcategory expansion.
+     * $permissionCondition is an already-built, trusted SQL fragment
+     * (leading "\n  AND"); any real value it references is bound via
+     * $params/$types rather than spliced.
      *
+     * @param array<string, mixed> $params
+     * @param array<string, ArrayParameterType|ParameterType> $types
      * @return list<string|null>
      */
-    public function findVisibleSubcategoryIds(string $uppercatsPattern, string $permissionCondition): array
+    public function findVisibleSubcategoryIds(string $uppercatsPattern, string $permissionCondition, array $params = [], array $types = []): array
     {
+        $params['uppercatsPattern'] = $uppercatsPattern . ',%';
+
         return $this->queryColumn('
 SELECT id
   FROM ' . \Piwigo\Db\Tables::categories() . '
   WHERE
-    uppercats LIKE \'' . $uppercatsPattern . ',%\' '
-    . $permissionCondition);
+    uppercats LIKE :uppercatsPattern '
+    . $permissionCondition, $params, $types);
     }
 
     /**
      * Image ids for the current category/flat-mode section, given
      * $whereSql (either a plain `category_id = X` or the flat-mode
      * `category_id IN (...)` SectionPopulator already resolved) --
-     * SectionPopulator's own main categories-section query.
+     * SectionPopulator's own main categories-section query. $whereSql/
+     * $forbiddenSql/$orderBySql are already-built, trusted SQL fragments;
+     * any real value they reference is bound via $params/$types.
      *
+     * @param array<string, mixed> $params
+     * @param array<string, ArrayParameterType|ParameterType> $types
      * @return list<string|null>
      */
-    public function findSectionImageIds(string $whereSql, string $forbiddenSql, string $orderBySql): array
+    public function findSectionImageIds(string $whereSql, string $forbiddenSql, string $orderBySql, array $params = [], array $types = []): array
     {
         return $this->queryColumn('
 SELECT id
@@ -81,16 +96,18 @@ SELECT id
 ' . $forbiddenSql . '
   GROUP BY id
   ' . $orderBySql . '
-;');
+;', $params, $types);
     }
 
     /**
      * Image ids for the "recent_pics" section -- $recentSql is
      * UserService::getRecentPhotosSql()'s own raw WHERE fragment.
      *
+     * @param array<string, mixed> $params
+     * @param array<string, ArrayParameterType|ParameterType> $types
      * @return list<string|null>
      */
-    public function findRecentImageIds(string $recentSql, string $forbiddenSql, string $orderBySql): array
+    public function findRecentImageIds(string $recentSql, string $forbiddenSql, string $orderBySql, array $params = [], array $types = []): array
     {
         return $this->queryColumn('
 SELECT id
@@ -101,16 +118,21 @@ SELECT id
   ' . $forbiddenSql . '
   GROUP BY id
   ' . $orderBySql . '
-;');
+;', $params, $types);
     }
 
     /**
      * Image ids for the "most_visited" section, capped at $limit.
      *
+     * @param array<string, mixed> $params
+     * @param array<string, ArrayParameterType|ParameterType> $types
      * @return list<string|null>
      */
-    public function findTopByHitsImageIds(string $forbiddenSql, string $orderBySql, int $limit): array
+    public function findTopByHitsImageIds(string $forbiddenSql, string $orderBySql, int $limit, array $params = [], array $types = []): array
     {
+        $params['limit'] = $limit;
+        $types['limit'] = ParameterType::INTEGER;
+
         return $this->queryColumn('
 SELECT id
   FROM ' . \Piwigo\Db\Tables::images() . '
@@ -119,17 +141,22 @@ SELECT id
     ' . $forbiddenSql . '
     GROUP BY id
     ' . $orderBySql . '
-  LIMIT ' . $limit . '
-;');
+  LIMIT :limit
+;', $params, $types);
     }
 
     /**
      * Image ids for the "best_rated" section, capped at $limit.
      *
+     * @param array<string, mixed> $params
+     * @param array<string, ArrayParameterType|ParameterType> $types
      * @return list<string|null>
      */
-    public function findTopRatedImageIds(string $forbiddenSql, string $orderBySql, int $limit): array
+    public function findTopRatedImageIds(string $forbiddenSql, string $orderBySql, int $limit, array $params = [], array $types = []): array
     {
+        $params['limit'] = $limit;
+        $types['limit'] = ParameterType::INTEGER;
+
         return $this->queryColumn('
 SELECT id
   FROM ' . \Piwigo\Db\Tables::images() . '
@@ -138,8 +165,8 @@ SELECT id
     ' . $forbiddenSql . '
     GROUP BY id
     ' . $orderBySql . '
-  LIMIT ' . $limit . '
-;');
+  LIMIT :limit
+;', $params, $types);
     }
 
     /**
@@ -147,19 +174,24 @@ SELECT id
      * random-photos block), restricted to $imageIds and visibility.
      *
      * @param list<string> $imageIds
+     * @param array<string, mixed> $params
+     * @param array<string, ArrayParameterType|ParameterType> $types
      * @return list<string|null>
      */
-    public function findImageIdsAmongList(array $imageIds, string $forbiddenSql, string $orderBySql): array
+    public function findImageIdsAmongList(array $imageIds, string $forbiddenSql, string $orderBySql, array $params = [], array $types = []): array
     {
+        $params['imageIds'] = $imageIds;
+        $types['imageIds'] = ArrayParameterType::STRING;
+
         return $this->queryColumn('
 SELECT id
   FROM ' . \Piwigo\Db\Tables::images() . '
     INNER JOIN ' . \Piwigo\Db\Tables::imageCategory() . ' AS ic ON id = ic.image_id
-  WHERE image_id IN (' . implode(',', $imageIds) . ')
+  WHERE image_id IN (:imageIds)
     ' . $forbiddenSql . '
   GROUP BY id
   ' . $orderBySql . '
-;');
+;', $params, $types);
     }
 
     /**

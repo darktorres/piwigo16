@@ -14,19 +14,17 @@ use Piwigo\Filter\FilterService;
 // defensive guard (a corrupted unserialize() result) now lives once, at
 // the write site in FilterService::initializeFromRequest() itself, not on
 // every read.
-
-beforeEach(function (): void {
-    FilterState::reset();
-});
-
-afterEach(function (): void {
-    FilterState::reset();
-});
+//
+// Singleton/service-locator elimination campaign, Phase 2: FilterState is
+// now a container-shared instance, constructor-injected into FilterService
+// -- each test constructs its own fresh instance directly, no
+// reset()/Kernel::boot() needed.
 
 test('updateCatsWithFilteredData leaves cats untouched when the filter is disabled', function (): void {
-    FilterState::set(false, '', '', [1 => ['nb_images' => 999]]);
+    $filterState = new FilterState();
+    $filterState->set(false, '', '', [1 => ['nb_images' => 999]]);
     $cats = [0 => ['id' => 1, 'nb_images' => 5]];
-    $service = new FilterService();
+    $service = new FilterService($filterState);
 
     $service->updateCatsWithFilteredData($cats);
 
@@ -34,7 +32,8 @@ test('updateCatsWithFilteredData leaves cats untouched when the filter is disabl
 });
 
 test('updateCatsWithFilteredData overwrites the aggregate fields for a matched category id', function (): void {
-    FilterState::set(true, '', '', [
+    $filterState = new FilterState();
+    $filterState->set(true, '', '', [
         1 => [
             'date_last' => '2026-01-01',
             'max_date_last' => '2026-01-02',
@@ -44,7 +43,7 @@ test('updateCatsWithFilteredData overwrites the aggregate fields for a matched c
         ],
     ]);
     $cats = [0 => ['id' => 1, 'nb_images' => 5, 'untouched' => 'kept']];
-    $service = new FilterService();
+    $service = new FilterService($filterState);
 
     $service->updateCatsWithFilteredData($cats);
 
@@ -60,9 +59,10 @@ test('updateCatsWithFilteredData overwrites the aggregate fields for a matched c
 });
 
 test('updateCatsWithFilteredData skips a category id with no matching filter entry', function (): void {
-    FilterState::set(true, '', '', [2 => ['nb_images' => 20]]);
+    $filterState = new FilterState();
+    $filterState->set(true, '', '', [2 => ['nb_images' => 20]]);
     $cats = [0 => ['id' => 1, 'nb_images' => 5]];
-    $service = new FilterService();
+    $service = new FilterService($filterState);
 
     $service->updateCatsWithFilteredData($cats);
 
@@ -70,9 +70,10 @@ test('updateCatsWithFilteredData skips a category id with no matching filter ent
 });
 
 test('updateCatsWithFilteredData skips a category row with a non-int/string id', function (): void {
-    FilterState::set(true, '', '', [1 => ['nb_images' => 20]]);
+    $filterState = new FilterState();
+    $filterState->set(true, '', '', [1 => ['nb_images' => 20]]);
     $cats = [0 => ['id' => null, 'nb_images' => 5]];
-    $service = new FilterService();
+    $service = new FilterService($filterState);
 
     $service->updateCatsWithFilteredData($cats);
 
@@ -80,9 +81,10 @@ test('updateCatsWithFilteredData skips a category row with a non-int/string id',
 });
 
 test('updateCatsWithFilteredData matches a string category id', function (): void {
-    FilterState::set(true, '', '', ['abc' => ['nb_images' => 30]]);
+    $filterState = new FilterState();
+    $filterState->set(true, '', '', ['abc' => ['nb_images' => 30]]);
     $cats = [0 => ['id' => 'abc', 'nb_images' => 5]];
-    $service = new FilterService();
+    $service = new FilterService($filterState);
 
     $service->updateCatsWithFilteredData($cats);
 
@@ -94,9 +96,10 @@ test('updateCatsWithFilteredData continues past a non-int/string id to still pro
     // -- confirmed live that a `break` there wrongly aborts the whole
     // foreach after the first non-int/string id, leaving every later
     // (even valid) category row untouched.
-    FilterState::set(true, '', '', [2 => ['nb_images' => 99]]);
+    $filterState = new FilterState();
+    $filterState->set(true, '', '', [2 => ['nb_images' => 99]]);
     $cats = [0 => ['id' => null, 'nb_images' => 5], 1 => ['id' => 2, 'nb_images' => 7]];
-    $service = new FilterService();
+    $service = new FilterService($filterState);
 
     $service->updateCatsWithFilteredData($cats);
 
@@ -108,9 +111,10 @@ test('updateCatsWithFilteredData continues past a non-matching filter entry to s
     // -- confirmed live that a `break` there wrongly aborts the whole
     // foreach after the first category id with no filter entry, leaving
     // a later, genuinely matching category row untouched.
-    FilterState::set(true, '', '', [2 => ['nb_images' => 99]]);
+    $filterState = new FilterState();
+    $filterState->set(true, '', '', [2 => ['nb_images' => 99]]);
     $cats = [0 => ['id' => 1, 'nb_images' => 5], 1 => ['id' => 2, 'nb_images' => 7]];
-    $service = new FilterService();
+    $service = new FilterService($filterState);
 
     $service->updateCatsWithFilteredData($cats);
 
@@ -118,9 +122,10 @@ test('updateCatsWithFilteredData continues past a non-matching filter entry to s
 });
 
 test('updateCatsWithFilteredData fills a missing aggregate field with null', function (): void {
-    FilterState::set(true, '', '', [1 => ['nb_images' => 20]]);
+    $filterState = new FilterState();
+    $filterState->set(true, '', '', [1 => ['nb_images' => 20]]);
     $cats = [0 => ['id' => 1, 'nb_images' => 5]];
-    $service = new FilterService();
+    $service = new FilterService($filterState);
 
     $service->updateCatsWithFilteredData($cats);
 

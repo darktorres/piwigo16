@@ -225,6 +225,8 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
         '/src/Piwigo/Core/ApiKeyRequestFlag.php',
         '/src/Piwigo/Core/InstallationFlag.php',
         '/src/Piwigo/Core/ProcessCache.php',
+        '/src/Piwigo/Core/FilterState.php',
+        '/src/Piwigo/Core/CurrentLogger.php',
     ];
 
     $hits = [
@@ -434,16 +436,36 @@ test('ApiKeyRequestFlag::isActiveStatic() transitional shim has a shrinking, kno
     expect(describeCallSites($disallowed))->toBe([]);
 });
 
-test('CurrentLogger::reset() is only called from tests/', function (): void {
+test('CurrentLogger::getStatic() transitional shim has a shrinking, known allow-list', function (): void {
+    // Singleton/service-locator elimination campaign, Phase 2: real callers
+    // (Piwigo\Core\UniqueExecLock -- genuinely static-only; Piwigo\Admin\
+    // Upload\UploadService's 6 uploadFile* static event handlers;
+    // Piwigo\Tag\TagService::setTagsOf(); Piwigo\Image\ImageService::
+    // emptyLounge(); Piwigo\Ws\PwgUsers/Piwigo\Ws\PwgImages -- the
+    // still-static Ws\Pwg* dispatch layer, Phase 10) aren't converted to
+    // constructor injection, so they use this static shim instead of the
+    // real get() instance method (see that method's own docblock). Every
+    // phase that converts one more of these files should remove it from
+    // the allow-list below; once empty, delete the shim and this test.
     $repoRoot = __DIR__ . '/../..';
 
-    $hits = [
-        ...findCallSites($repoRoot . '/src/Piwigo', 'CurrentLogger::reset('),
-        ...findCallSitesInRootPhpFiles($repoRoot, 'CurrentLogger::reset('),
-        ...findCallSitesInBinFiles($repoRoot, 'CurrentLogger::reset('),
+    $allowedFiles = [
+        '/src/Piwigo/Core/UniqueExecLock.php',
+        '/src/Piwigo/Admin/Upload/UploadService.php',
+        '/src/Piwigo/Tag/TagService.php',
+        '/src/Piwigo/Image/ImageService.php',
+        '/src/Piwigo/Ws/PwgUsers.php',
+        '/src/Piwigo/Ws/PwgImages.php',
     ];
 
-    expect(describeCallSites($hits))->toBe([]);
+    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'CurrentLogger::getStatic(');
+
+    $disallowed = array_values(array_filter(
+        $hits,
+        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
+    ));
+
+    expect(describeCallSites($disallowed))->toBe([]);
 });
 
 test('CurrentPaths::reset() is only called from tests/ or the Kernel::reset() cascade', function (): void {
@@ -476,16 +498,38 @@ test('ErrorCollector::reset() is only called from tests/', function (): void {
     expect(describeCallSites($hits))->toBe([]);
 });
 
-test('FilterState::reset() is only called from tests/', function (): void {
+test('FilterState::*Static() transitional shims have a shrinking, known allow-list', function (): void {
+    // Singleton/service-locator elimination campaign, Phase 2: the real
+    // writer (Piwigo\Filter\FilterService/Piwigo\Bootstrap\RequestBootstrap)
+    // and most readers (SectionPopulator, Category\CategoryService,
+    // Menu\MenubarRenderer, Controller\PictureController, and every
+    // controller that calls MenubarRenderer::render()) take FilterState via
+    // constructor/explicit-parameter injection. Piwigo\Permission\
+    // PermissionService::getSqlConditionFandFAsCondition() is the one
+    // exception: it has ~30 real callers, several inside the still-static
+    // Ws\Pwg* dispatch layer (Phase 10), so it uses these static shims
+    // instead of the real isInitialized()/visibleCategories()/
+    // visibleImages() instance methods (see isInitializedStatic()'s own
+    // docblock). Delete the shims and this test once PermissionService
+    // itself takes FilterState via constructor injection.
     $repoRoot = __DIR__ . '/../..';
 
-    $hits = [
-        ...findCallSites($repoRoot . '/src/Piwigo', 'FilterState::reset('),
-        ...findCallSitesInRootPhpFiles($repoRoot, 'FilterState::reset('),
-        ...findCallSitesInBinFiles($repoRoot, 'FilterState::reset('),
+    $allowedFiles = [
+        '/src/Piwigo/Permission/PermissionService.php',
     ];
 
-    expect(describeCallSites($hits))->toBe([]);
+    $hits = [
+        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'FilterState::isInitializedStatic('),
+        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'FilterState::visibleCategoriesStatic('),
+        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'FilterState::visibleImagesStatic('),
+    ];
+
+    $disallowed = array_values(array_filter(
+        $hits,
+        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
+    ));
+
+    expect(describeCallSites($disallowed))->toBe([]);
 });
 
 test('InstallationFlag::isActiveStatic() transitional shim has a shrinking, known allow-list', function (): void {

@@ -50,7 +50,7 @@ final class PluginsInstalledPageRenderer
      * slug statically (it's the only class registered for the 'plugins'
      * slug in config/admin_pages.php).
      */
-    public function render(string $pageSlug, UrlServiceInterface $urlService): void
+    public function render(string $pageSlug, UrlServiceInterface $urlService, \Piwigo\Core\CurrentLogger $currentLogger): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -77,7 +77,7 @@ final class PluginsInstalledPageRenderer
 
         $conn = DbConnection::build();
         $extension_repository = new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($conn));
-        $pem_catalog = new PemCatalog(new ZipExtractor());
+        $pem_catalog = new PemCatalog(new ZipExtractor(), $currentLogger);
         // ExtensionScanner::scan()'s own declared return type is a generic
         // array<string, array<string, mixed>> dispatch shape by design (see
         // that method's own docblock) -- every $fs_plugin read below

@@ -14,6 +14,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\ActivityLoggerInterface;
+use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\FilterUpdaterInterface;
 use Piwigo\Db\DbConnection;
@@ -170,6 +171,9 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
 
         $this->template = new Template(CurrentPaths::get()->root . 'themes', 'default');
 
+        $currentLogger = new CurrentLogger();
+        $currentLogger->set(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::OFF]));
+
         $this->renderer = new CategoryCatsRenderer(
             $this->filterUpdater,
             $htmlService,
@@ -178,7 +182,8 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             $this->categoryService,
             $permissionService,
             $imageRepo,
-            $urlService
+            $urlService,
+            $currentLogger,
         );
     }
 

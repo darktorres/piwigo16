@@ -7,6 +7,7 @@ namespace Piwigo\Bootstrap;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfigService;
+use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
@@ -73,5 +74,25 @@ final class InstallBootstrap
             throw new \LogicException('Container returned an unexpected type for ' . ConfigService::class);
         }
         CurrentConfigService::set($configService);
+    }
+
+    /**
+     * Resolves the container-shared instance so that `InstallWizard::
+     * boot()`'s own `set()` write (the install path's no-RequestBootstrap
+     * counterpart to `RequestBootstrap::connect()`'s own seeding) is
+     * visible to every other consumer holding the same shared instance --
+     * `InstallWizard` itself lives outside `Bootstrap/`, so this is called
+     * from there rather than resolving `Kernel::container()` directly
+     * (singleton/service-locator elimination campaign, Phase 2), same
+     * shape as `activateConfigService()` above.
+     */
+    public static function currentLogger(): CurrentLogger
+    {
+        $currentLogger = Kernel::container()->get(CurrentLogger::class);
+        if (! $currentLogger instanceof CurrentLogger) {
+            throw new \LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
+        }
+
+        return $currentLogger;
     }
 }

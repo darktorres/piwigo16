@@ -32,12 +32,37 @@ function upload_service_test_marker(): string
     return $marker ??= sys_get_temp_dir() . '/piwigo-upload-service-test-' . bin2hex(random_bytes(8));
 }
 
+/**
+ * UploadService takes CurrentLogger via constructor injection; its 6
+ * `uploadFile*` static event handlers read it through the `getStatic()`
+ * transitional shim instead (singleton/service-locator elimination
+ * campaign, Phase 2 -- see that class's own docblock: their real callers
+ * include the still-static Ws\Pwg* dispatch layer, Phase 10). Both paths
+ * resolve the same container-shared instance once Kernel::boot() has run,
+ * so this one helper seeds both.
+ */
+function upload_service_test_current_logger(): CurrentLogger
+{
+    $currentLogger = Kernel::container()->get(CurrentLogger::class);
+    if (! $currentLogger instanceof CurrentLogger) {
+        throw new \LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
+    }
+
+    return $currentLogger;
+}
+
+function upload_service_test_make(): UploadService
+{
+    return new UploadService(upload_service_test_current_logger());
+}
+
 beforeEach(function (): void {
     mkdir(upload_service_test_marker(), 0o777, true);
+    Kernel::boot();
     // needResize() reads Piwigo\Core\CurrentLogger directly (an info-level
     // log line on its own "too big" branch) -- OFF severity is a real,
     // side-effect-free logger, never touching the filesystem.
-    CurrentLogger::set(new Logger(['severity' => Logger::OFF]));
+    upload_service_test_current_logger()->set(new Logger(['severity' => Logger::OFF]));
 });
 
 /** Recursively removes a directory tree (uploadFile* handlers create a nested pwg_representative/ subdirectory). */
@@ -62,13 +87,13 @@ function upload_service_rrmdir(string $dir): void
 }
 
 afterEach(function (): void {
-    CurrentLogger::reset();
+    Kernel::reset();
     upload_service_rrmdir(upload_service_test_marker());
 });
 
 function upload_service_call_sanitize(string $path, ?string $finfoType): void
 {
-    $service = new UploadService();
+    $service = upload_service_test_make();
     $method = new ReflectionMethod($service, 'sanitizeSvgIfNeeded');
     $method->invoke($service, $path, $finfoType);
 }
@@ -184,7 +209,7 @@ test('sanitizeSvgIfNeeded returns without modifying anything when the source fil
 });
 
 test('getUploadFormConfig returns the 4 known fields', function (): void {
-    $config = new UploadService()->getUploadFormConfig();
+    $config = upload_service_test_make()->getUploadFormConfig();
 
     expect(array_keys($config))->toBe([
         'original_resize',
@@ -195,7 +220,7 @@ test('getUploadFormConfig returns the 4 known fields', function (): void {
 });
 
 test('getUploadFormConfig returns the exact default/min/max/pattern/can_be_null shape for every field', function (): void {
-    $config = new UploadService()->getUploadFormConfig();
+    $config = upload_service_test_make()->getUploadFormConfig();
 
     expect($config['original_resize'])->toBe([
         'default' => false,
@@ -232,7 +257,7 @@ test('getUploadFormConfig returns the exact default/min/max/pattern/can_be_null 
 });
 
 test('fileUploadErrorMessage maps every UPLOAD_ERR_* constant to a non-empty message', function (): void {
-    $service = new UploadService();
+    $service = upload_service_test_make();
 
     foreach ([
         UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE, UPLOAD_ERR_PARTIAL,
@@ -246,27 +271,27 @@ test('fileUploadErrorMessage maps every UPLOAD_ERR_* constant to a non-empty mes
 });
 
 test('fileUploadErrorMessage embeds the real upload_max_filesize value for UPLOAD_ERR_INI_SIZE', function (): void {
-    $service = new UploadService();
+    $service = upload_service_test_make();
 
     expect($service->fileUploadErrorMessage(UPLOAD_ERR_INI_SIZE))
         ->toBe('The uploaded file exceeds the upload_max_filesize directive in php.ini: ' . ini_get('upload_max_filesize') . 'B');
 });
 
 test('getIniSize converts a shorthand ini value to bytes', function (): void {
-    $service = new UploadService();
+    $service = upload_service_test_make();
 
     expect($service->getIniSize('memory_limit', true))->not->toBeFalse();
 });
 
 test('getIniSize returns the raw ini value unconverted when in_bytes is false', function (): void {
-    $service = new UploadService();
+    $service = upload_service_test_make();
 
     expect($service->getIniSize('upload_max_filesize', false))->toBe(ini_get('upload_max_filesize'));
 });
 
 function upload_service_convert_shorthand(string|false $value): int|string|false
 {
-    $service = new UploadService();
+    $service = upload_service_test_make();
     $method = new ReflectionMethod($service, 'convertShorthandNotationToBytes');
 
     /** @var int|string|false */
@@ -283,7 +308,7 @@ test('convertShorthandNotationToBytes multiplies K/M/G suffixes and passes throu
 
 function upload_service_is_falsy(mixed $value): bool
 {
-    $service = new UploadService();
+    $service = upload_service_test_make();
     $method = new ReflectionMethod($service, 'isFalsy');
 
     /** @var bool */
@@ -300,7 +325,7 @@ test('isFalsy matches PHP\'s own empty() falsy set exactly, including the ones e
 });
 
 test('isValidImageExtension returns the lowercased, deduplicated picture extensions by default', function (): void {
-    $service = new UploadService();
+    $service = upload_service_test_make();
     $result = $service->isValidImageExtension('JPG');
 
     expect($result)->toBe(array_unique($result));
@@ -320,7 +345,7 @@ test('isValidImageExtension actually deduplicates case-variant extensions, not j
     // dedup actually happens.
     CurrentConfig::setPictureExtensions(['JPG', 'jpg', 'PNG']);
     try {
-        $service = new UploadService();
+        $service = upload_service_test_make();
         $result = $service->isValidImageExtension('JPG');
 
         expect($result)->toHaveCount(2)
@@ -333,7 +358,7 @@ test('isValidImageExtension actually deduplicates case-variant extensions, not j
 test('isValidImageExtension returns the lowercased, deduplicated file extensions when all types are allowed', function (): void {
     CurrentConfig::setUploadFormAllTypes(true);
     try {
-        $service = new UploadService();
+        $service = upload_service_test_make();
         $result = $service->isValidImageExtension('PDF');
 
         expect($result)->toBe(array_unique($result));
@@ -351,7 +376,7 @@ test('isValidImageExtension returns the lowercased, deduplicated file extensions
 
 test('addUploadError appends to, rather than replaces, an existing upload_id\'s error list', function (): void {
     $_SESSION['uploads_error'] = [];
-    $service = new UploadService();
+    $service = upload_service_test_make();
 
     $service->addUploadError('42', 'first error');
     $service->addUploadError('42', 'second error');
@@ -380,7 +405,7 @@ function upload_service_unset_key(array &$superglobal, string $key): void
 
 test('addUploadError initializes uploads_error when it is missing or not an array', function (): void {
     upload_service_unset_key($_SESSION, 'uploads_error');
-    $service = new UploadService();
+    $service = upload_service_test_make();
 
     $service->addUploadError('7', 'boom');
 
@@ -404,7 +429,7 @@ test('pwgImageInfos reads real width/height/filesize from a generated image', fu
     }
     imagepng($img, $path);
 
-    $service = new UploadService();
+    $service = upload_service_test_make();
     $infos = $service->pwgImageInfos($path);
     $realBytes = filesize($path);
     if ($realBytes === false) {
@@ -429,7 +454,7 @@ test('pwgImageInfos returns null width/height when getimagesize() can\'t read th
     $path = upload_service_test_marker() . '/not-an-image.png';
     file_put_contents($path, 'definitely not a real PNG');
 
-    $service = new UploadService();
+    $service = upload_service_test_make();
     $infos = $service->pwgImageInfos($path);
 
     expect($infos['width'])->toBeNull();
@@ -438,7 +463,7 @@ test('pwgImageInfos returns null width/height when getimagesize() can\'t read th
 });
 
 test('pwgImageInfos throws when filesize() fails for a path that does not exist at all', function (): void {
-    $service = new UploadService();
+    $service = upload_service_test_make();
     $missing = upload_service_test_marker() . '/does-not-exist-anywhere.jpg';
 
     // getimagesize() on a missing path also warns (handled the same way the
@@ -458,7 +483,7 @@ test('pwgImageInfos throws when filesize() fails for a path that does not exist 
 
 function upload_service_need_resize(string $path, int $maxWidth, int $maxHeight): bool
 {
-    $service = new UploadService();
+    $service = upload_service_test_make();
     $method = new ReflectionMethod($service, 'needResize');
 
     /** @var bool */
@@ -606,7 +631,7 @@ test('needResize is case-insensitive about the file extension', function (): voi
 test('needResize logs the exact current/max dimensions when a resize is needed', function (): void {
     $logDir = upload_service_test_marker() . '/logs';
     mkdir($logDir, 0o777, true);
-    CurrentLogger::set(new Logger(['severity' => Logger::INFO, 'directory' => $logDir, 'filename' => 'needresize.log']));
+    upload_service_test_current_logger()->set(new Logger(['severity' => Logger::INFO, 'directory' => $logDir, 'filename' => 'needresize.log']));
 
     try {
         $path = upload_service_test_marker() . '/logged-too-big.jpg';
@@ -621,12 +646,12 @@ test('needResize logs the exact current/max dimensions when a resize is needed',
         $logged = file_get_contents($logDir . '/needresize.log');
         expect($logged)->toContain($path . ' is too big (current=500x50px Vs max=200x20px)');
     } finally {
-        CurrentLogger::set(new Logger(['severity' => Logger::OFF]));
+        upload_service_test_current_logger()->set(new Logger(['severity' => Logger::OFF]));
     }
 });
 
 test('saveUploadFormConfig returns false without writing anything when given no data', function (): void {
-    $service = new UploadService();
+    $service = upload_service_test_make();
     $errors = [];
     $formErrors = [];
 
@@ -636,7 +661,7 @@ test('saveUploadFormConfig returns false without writing anything when given no 
 });
 
 test('saveUploadFormConfig collects a range error and a field-keyed form_errors marker, without persisting anything', function (): void {
-    $service = new UploadService();
+    $service = upload_service_test_make();
     $errors = [];
     $formErrors = [];
 
@@ -652,7 +677,7 @@ test('saveUploadFormConfig keeps processing later fields after skipping an unkno
     Kernel::reset();
     Kernel::boot();
     try {
-        $service = new UploadService();
+        $service = upload_service_test_make();
         $errors = [];
         $formErrors = [];
 
@@ -687,7 +712,7 @@ test('saveUploadFormConfig rejects a value that only satisfies the pattern check
     Kernel::reset();
     Kernel::boot();
     try {
-        $service = new UploadService();
+        $service = upload_service_test_make();
         $errors = [];
         $formErrors = [];
 
@@ -707,7 +732,7 @@ test('saveUploadFormConfig rejects a below-minimum value that only satisfies the
     Kernel::reset();
     Kernel::boot();
     try {
-        $service = new UploadService();
+        $service = upload_service_test_make();
         $errors = [];
         $formErrors = [];
 
@@ -724,7 +749,7 @@ test('saveUploadFormConfig accepts a value exactly at the min or max boundary', 
     Kernel::reset();
     Kernel::boot();
     try {
-        $service = new UploadService();
+        $service = upload_service_test_make();
 
         $errorsMin = [];
         $formErrorsMin = [];
@@ -753,7 +778,7 @@ test('saveUploadFormConfig accepts a real int value without a TypeError, not jus
     Kernel::reset();
     Kernel::boot();
     try {
-        $service = new UploadService();
+        $service = upload_service_test_make();
         $errors = [];
         $formErrors = [];
 
@@ -778,7 +803,7 @@ test('saveUploadFormConfig silently skips a field name absent from getUploadForm
     Kernel::reset();
     Kernel::boot();
     try {
-        $service = new UploadService();
+        $service = upload_service_test_make();
         $errors = [];
         $formErrors = [];
 
@@ -799,7 +824,7 @@ test('saveUploadFormConfig skips a numeric field whose posted value is non-scala
     Kernel::reset();
     Kernel::boot();
     try {
-        $service = new UploadService();
+        $service = upload_service_test_make();
         $errors = [];
         $formErrors = [];
 
@@ -820,7 +845,7 @@ test('saveUploadFormConfig sets the boolean field true whenever it is present, e
     Kernel::reset();
     Kernel::boot();
     try {
-        $service = new UploadService();
+        $service = upload_service_test_make();
         $errors = [];
         $formErrors = [];
 
@@ -848,7 +873,7 @@ test('saveUploadFormConfig persists a valid in-range numeric field', function ()
     Kernel::reset();
     Kernel::boot();
     try {
-        $service = new UploadService();
+        $service = upload_service_test_make();
         $errors = [];
         $formErrors = [];
 
@@ -875,7 +900,7 @@ test('saveUploadFormConfig persists a valid in-range numeric field', function ()
 });
 
 test('addUploadedFile throws when md5_file() fails to read the source file', function (): void {
-    $service = new UploadService();
+    $service = upload_service_test_make();
     $missingPath = upload_service_test_marker() . '/does-not-exist-at-all.jpg';
     $urlService = new UrlService(new HtmlService());
 
@@ -902,7 +927,7 @@ test('readyForUploadMessage returns null when the real upload directory exists a
     CurrentPaths::set(Paths::fromRoot($root));
     CurrentConfig::setUploadDir('upload/');
 
-    expect(new UploadService()->readyForUploadMessage())->toBeNull();
+    expect(upload_service_test_make()->readyForUploadMessage())->toBeNull();
 
     CurrentPaths::reset();
 });
@@ -914,7 +939,7 @@ test('readyForUploadMessage reports a missing-directory message when the parent 
     CurrentConfig::setUploadDir('upload/');
 
     try {
-        expect(new UploadService()->readyForUploadMessage())
+        expect(upload_service_test_make()->readyForUploadMessage())
             ->toBe('Create the "upload/" directory at the root of your Piwigo installation');
     } finally {
         chmod($root, 0o777);
@@ -929,7 +954,7 @@ test('readyForUploadMessage reports a chmod message and fixes an unwritable exis
     CurrentPaths::set(Paths::fromRoot($root));
     CurrentConfig::setUploadDir('upload/');
 
-    $message = new UploadService()->readyForUploadMessage();
+    $message = upload_service_test_make()->readyForUploadMessage();
 
     // @chmod(0777) inside the method itself is expected to succeed for a
     // directory this test process owns, so the real branch exercised here
@@ -999,7 +1024,7 @@ test('prepareDirectoryStatic throws when mkdir() fails under a real unwritable p
 
 test('addFormat throws when formats are disabled', function (): void {
     CurrentConfig::setIsFormatsEnabled(false);
-    $service = new UploadService();
+    $service = upload_service_test_make();
 
     expect(fn () => $service->addFormat('/tmp/whatever', 'tif', 1))
         ->toThrow(ImageProcessingException::class, '[Piwigo\Admin\Upload\UploadService::addFormat] formats are disabled');
@@ -1008,7 +1033,7 @@ test('addFormat throws when formats are disabled', function (): void {
 test('addFormat throws for an unauthorized format extension', function (): void {
     CurrentConfig::setIsFormatsEnabled(true);
     CurrentConfig::setFormatExtensions(['tif', 'psd']);
-    $service = new UploadService();
+    $service = upload_service_test_make();
 
     try {
         expect(fn () => $service->addFormat('/tmp/whatever', 'exe', 1))
@@ -1113,7 +1138,7 @@ test('uploadFileVideo returns null for a non-matching extension without even att
 test('uploadFileVideo logs the exact file_path/representative_ext it was called with', function (): void {
     $logDir = upload_service_test_marker() . '/video-logs';
     mkdir($logDir, 0o777, true);
-    CurrentLogger::set(new Logger(['severity' => Logger::INFO, 'directory' => $logDir, 'filename' => 'video.log']));
+    upload_service_test_current_logger()->set(new Logger(['severity' => Logger::INFO, 'directory' => $logDir, 'filename' => 'video.log']));
 
     try {
         $path = upload_service_test_marker() . '/whatever.mp4';
@@ -1122,7 +1147,7 @@ test('uploadFileVideo logs the exact file_path/representative_ext it was called 
         $logged = file_get_contents($logDir . '/video.log');
         expect($logged)->toContain('uploadFileVideo, $file_path = ' . $path . ', $representative_ext = already-set');
     } finally {
-        CurrentLogger::set(new Logger(['severity' => Logger::OFF]));
+        upload_service_test_current_logger()->set(new Logger(['severity' => Logger::OFF]));
     }
 });
 
@@ -1395,7 +1420,7 @@ test('uploadFileHeic converts a real image into a representative jpg via the ext
 test('uploadFileHeic logs its exact ImageMagick exec string, including the resize/quality flags', function (): void {
     $logDir = upload_service_test_marker() . '/heic-logs';
     mkdir($logDir, 0o777, true);
-    CurrentLogger::set(new Logger(['severity' => Logger::INFO, 'directory' => $logDir, 'filename' => 'heic.log']));
+    upload_service_test_current_logger()->set(new Logger(['severity' => Logger::INFO, 'directory' => $logDir, 'filename' => 'heic.log']));
 
     try {
         $dir = upload_service_test_marker();
@@ -1408,7 +1433,7 @@ test('uploadFileHeic logs its exact ImageMagick exec string, including the resiz
         expect($logged)->toContain('uploadFileHeic, exec = ')
             ->toContain('-sampling-factor 4:2:0 -quality 85 -interlace JPEG -colorspace sRGB -auto-orient +repage -resize "');
     } finally {
-        CurrentLogger::set(new Logger(['severity' => Logger::OFF]));
+        upload_service_test_current_logger()->set(new Logger(['severity' => Logger::OFF]));
     }
 });
 
@@ -1543,7 +1568,7 @@ test('the 5 ext_imagick handlers reject a real, otherwise-convertible file whose
 test('the 5 ext_imagick handlers log the exact file_path/representative_ext they were called with', function (): void {
     $logDir = upload_service_test_marker() . '/handler-logs';
     mkdir($logDir, 0o777, true);
-    CurrentLogger::set(new Logger(['severity' => Logger::INFO, 'directory' => $logDir, 'filename' => 'handlers.log']));
+    upload_service_test_current_logger()->set(new Logger(['severity' => Logger::INFO, 'directory' => $logDir, 'filename' => 'handlers.log']));
 
     try {
         upload_service_test_upload(UploadService::uploadFilePdf(...), 'pdf-ext', '/whatever/document.pdf');
@@ -1559,7 +1584,7 @@ test('the 5 ext_imagick handlers log the exact file_path/representative_ext they
             ->toContain('uploadFilePsd, $file_path = /whatever/layered.psd, $representative_ext = psd-ext')
             ->toContain('uploadFileEps, $file_path = /whatever/vector.eps, $representative_ext = eps-ext');
     } finally {
-        CurrentLogger::set(new Logger(['severity' => Logger::OFF]));
+        upload_service_test_current_logger()->set(new Logger(['severity' => Logger::OFF]));
     }
 });
 

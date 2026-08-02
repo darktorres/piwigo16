@@ -331,7 +331,7 @@ final readonly class ImageService
      */
     public function emptyLounge(bool $invalidateUserCache = true): ?array
     {
-        $logger = \Piwigo\Core\CurrentLogger::get();
+        $logger = \Piwigo\Core\CurrentLogger::getStatic();
 
         $emptyLoungeRunning = \Piwigo\Config\CurrentConfig::emptyLoungeRunning();
         if ($emptyLoungeRunning !== null) {

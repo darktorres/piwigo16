@@ -7,6 +7,7 @@ use Doctrine\DBAL\ParameterType;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\FilterState;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupRepository;
@@ -34,6 +35,23 @@ function makePermissionService(): PermissionService
         \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class),
         \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class),
     );
+}
+
+/**
+ * getSqlConditionFandFAsCondition() reads FilterState through the
+ * `isInitializedStatic()`/`visibleCategoriesStatic()`/`visibleImagesStatic()`
+ * transitional shims (singleton/service-locator elimination campaign,
+ * Phase 2 -- see FilterState::isInitializedStatic()'s own docblock), which
+ * resolve the real container-shared instance once Kernel::boot() has run.
+ */
+function seedFilterState(bool $enabled, string $visibleCategories = '', string $visibleImages = ''): void
+{
+    $filterState = Kernel::container()->get(FilterState::class);
+    if (! $filterState instanceof FilterState) {
+        throw new \LogicException('Container returned an unexpected type for ' . FilterState::class);
+    }
+
+    $filterState->set($enabled, $visibleCategories, $visibleImages);
 }
 
 function seedPermissionUser(string $forbiddenCategories = '', int $level = 0, string $imageAccessType = '', string $imageAccessList = ''): void
@@ -83,15 +101,16 @@ function seedPermissionUserRaw(array $rawAttributes): void
 }
 
 beforeEach(function (): void {
+    Kernel::boot();
     seedPermissionUser();
 });
 
 afterEach(function (): void {
     CurrentUser::reset();
-    FilterState::reset();
     CurrentConfig::reset();
     Lang::reset();
     Translator::reset();
+    Kernel::reset();
 });
 
 /**
@@ -143,7 +162,7 @@ test('getSqlConditionFandFAsCondition builds a bound NOT IN clause from the user
 
 test('getSqlConditionFandFAsCondition builds bound IN clauses from FilterState visible categories/images', function (): void {
     seedPermissionUser(imageAccessType: 'NOT IN');
-    FilterState::set(true, visibleCategories: '1,2', visibleImages: '10,11');
+    seedFilterState(true, visibleCategories: '1,2', visibleImages: '10,11');
     $service = makePermissionService();
 
     $condition = $service->getSqlConditionFandFAsCondition([
@@ -164,7 +183,7 @@ test('getSqlConditionFandFAsCondition builds bound IN clauses from FilterState v
 
 test('getSqlConditionFandFAsCondition falls through from visible_images into the bound level check', function (): void {
     seedPermissionUser(level: 3);
-    FilterState::set(true, visibleImages: '10,11');
+    seedFilterState(true, visibleImages: '10,11');
     $service = makePermissionService();
 
     $condition = $service->getSqlConditionFandFAsCondition(['visible_images' => 'id']);

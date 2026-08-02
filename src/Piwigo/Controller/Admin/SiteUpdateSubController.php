@@ -99,6 +99,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
+        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
     ) {}
 
     private static function permissionService(): PermissionService
@@ -124,7 +125,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        $logger = \Piwigo\Core\CurrentLogger::get();
+        $logger = $this->currentLogger->get();
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         // +-----------------------------------------------------------------------+
@@ -199,7 +200,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->fatalError('remote sites not supported');
         } else {
-            $site_reader = new LocalSiteReader($site_url);
+            $site_reader = new LocalSiteReader($site_url, new \Piwigo\Metadata\MetadataService(new \Piwigo\Metadata\MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), $this->currentLogger));
         }
 
         if (\Piwigo\Core\PageState::current()->noMd5sumNumber !== null) {

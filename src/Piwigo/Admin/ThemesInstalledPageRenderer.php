@@ -44,6 +44,7 @@ final class ThemesInstalledPageRenderer
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
+        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
     ) {}
 
     /**
@@ -65,7 +66,7 @@ final class ThemesInstalledPageRenderer
 
         $conn = DbConnection::build();
         $extension_repository = new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($conn));
-        $pem_catalog = new PemCatalog(new ZipExtractor());
+        $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger);
         $extension_scanner = new ExtensionScanner();
         $plugin_migration_repo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class);
         $extension_lifecycle = new ExtensionLifecycle($extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo);

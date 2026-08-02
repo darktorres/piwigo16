@@ -50,6 +50,7 @@ final class CommentsController implements ControllerInterface
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
+        private readonly \Piwigo\Core\FilterState $filterState,
     ) {}
 
     private static function permissionService(): PermissionService
@@ -635,7 +636,7 @@ final class CommentsController implements ControllerInterface
         $themeconf = is_array($themeconf) ? $themeconf : [];
         if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theCommentsPage', $themeconf['hide_menu_on'], true)) {
             new MenubarRenderer()
-                ->render($urlService);
+                ->render($urlService, $this->filterState);
         }
 
         // +---------------------------------------------------------------+

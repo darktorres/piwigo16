@@ -15,6 +15,8 @@ namespace Piwigo\Tests\Integration {
     use Doctrine\DBAL\Connection;
     use Piwigo\Config\CurrentConfig;
     use Piwigo\Config\ConfigLoader;
+    use Piwigo\Core\CurrentLogger;
+    use Piwigo\Core\Logger;
     use Piwigo\Db\DbConnection;
     use Piwigo\Event\Picture\CleanIptcValue;
     use Piwigo\Event\Picture\FormatExifData;
@@ -48,7 +50,9 @@ final class MetadataServiceTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->service = new MetadataService(new MetadataRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)));
+        $currentLogger = new CurrentLogger();
+        $currentLogger->set(new Logger(['severity' => Logger::OFF]));
+        $this->service = new MetadataService(new MetadataRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), $currentLogger);
 
         CurrentConfig::setUseIptc(false);
         CurrentConfig::setUseExif(true);

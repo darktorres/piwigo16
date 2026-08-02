@@ -47,7 +47,7 @@ final class PageTail
         // (L4) is the one place the concrete L4 implementation gets
         // constructed. Legacy Coupling Retirement Phase 4c: UrlServiceInterface
         // is wired the same way, see PageTailRenderer's own docblock.
-        new PageTailRenderer(new PiwigoInfosSender(), new UrlService(new HtmlService()))
+        new PageTailRenderer(new PiwigoInfosSender(self::currentLogger()), new UrlService(new HtmlService()))
             ->render(\Piwigo\Core\PageState::current()->requestStart);
     }
 
@@ -61,8 +61,24 @@ final class PageTail
     {
         self::checkForUpdates();
 
-        return new PageTailRenderer(new PiwigoInfosSender(), new UrlService(new HtmlService()))
+        return new PageTailRenderer(new PiwigoInfosSender(self::currentLogger()), new UrlService(new HtmlService()))
             ->renderToString(\Piwigo\Core\PageState::current()->requestStart);
+    }
+
+    /**
+     * Resolves the container-shared instance -- PiwigoInfosSender lives
+     * outside `Bootstrap/`, so this is called from here rather than
+     * resolving `Kernel::container()` directly (singleton/service-locator
+     * elimination campaign, Phase 2).
+     */
+    private static function currentLogger(): \Piwigo\Core\CurrentLogger
+    {
+        $currentLogger = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\CurrentLogger::class);
+        if (! $currentLogger instanceof \Piwigo\Core\CurrentLogger) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\CurrentLogger::class);
+        }
+
+        return $currentLogger;
     }
 
     private static function checkForUpdates(): void

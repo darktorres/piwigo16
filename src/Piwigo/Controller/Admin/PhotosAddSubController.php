@@ -29,6 +29,10 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class PhotosAddSubController implements AdminSubControllerInterface
 {
+    public function __construct(
+        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+    ) {}
+
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
@@ -37,7 +41,7 @@ final class PhotosAddSubController implements AdminSubControllerInterface
         // upload form config is loaded here to match the original page's
         // own behavior (validated/used by the tab templates), even though
         // this sub-controller doesn't read it directly itself.
-        new UploadService()
+        new UploadService($this->currentLogger)
             ->getUploadFormConfig();
 
         // admin.php's own shared check_input_parameter('section', ...,

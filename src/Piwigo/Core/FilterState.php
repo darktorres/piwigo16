@@ -15,24 +15,27 @@ namespace Piwigo\Core;
  * `deptrac.yaml`), not `Piwigo\Filter` (L2bExtendedDomain) where it would
  * more "naturally" sit next to `FilterService` -- 2 of the 5 real readers
  * (`Permission\PermissionService`, `Category\CategoryService`) are
- * L2aCoreDomain, and L2a may not depend sideways on L2b. This is almost
- * certainly *why* `$filter` was still a raw global after all of Phase 1:
- * `deptrac.yaml`'s own comment on Filter's layer placement already notes
- * it "reads/mutates a plain category-row array via the $filter global, no
- * domain-namespace dependency of its own" -- i.e. the raw global was very
- * likely a deliberate original workaround for this exact layering
- * conflict. Same shape as `PageState` (also L1Infrastructure for the same
- * kind of reason): a self-managed static instance, not constructor-
- * injected DI, so every reader can reach it regardless of its own layer
- * with zero constructor changes.
+ * L2aCoreDomain, and L2a may not depend sideways on L2b -- L2a may depend
+ * *downward* on L1 without issue, so this placement doesn't block
+ * constructor injection into either.
+ *
+ * Singleton/service-locator elimination campaign, Phase 2: converted from
+ * a self-managed static facade to a container-shared instance.
+ * `FilterService`/`RequestBootstrap` (the real writers), `SectionPopulator`,
+ * `Category\CategoryService::getCategoriesMenu()`, `Menu\MenubarRenderer::
+ * render()`, and `Controller\PictureController` all take it via
+ * constructor/explicit-parameter injection. `Permission\PermissionService::
+ * getSqlConditionFandFAsCondition()` is the one exception: it has ~30 real
+ * callers, several inside the still-static `Ws\Pwg*` dispatch layer (Phase
+ * 10) -- see the 3 `*Static()` shims below.
  */
 final class FilterState
 {
-    private static bool $enabled = false;
+    private bool $enabled = false;
 
-    private static string $visibleCategories = '';
+    private string $visibleCategories = '';
 
-    private static string $visibleImages = '';
+    private string $visibleImages = '';
 
     /**
      * Normally CategoryService::getComputedCategories()'s own 'categories'
@@ -46,75 +49,131 @@ final class FilterState
      *
      * @var array<int|string, array<int|string, mixed>>
      */
-    private static array $categories = [];
+    private array $categories = [];
 
-    private static bool $initialized = false;
+    private bool $initialized = false;
 
     /**
      * @param array<int|string, array<int|string, mixed>> $categories
      */
-    public static function set(bool $enabled, string $visibleCategories = '', string $visibleImages = '', array $categories = []): void
+    public function set(bool $enabled, string $visibleCategories = '', string $visibleImages = '', array $categories = []): void
     {
-        self::$enabled = $enabled;
-        self::$visibleCategories = $visibleCategories;
-        self::$visibleImages = $visibleImages;
-        self::$categories = $categories;
-        self::$initialized = true;
+        $this->enabled = $enabled;
+        $this->visibleCategories = $visibleCategories;
+        $this->visibleImages = $visibleImages;
+        $this->categories = $categories;
+        $this->initialized = true;
     }
 
-    public static function isEnabled(): bool
+    public function isEnabled(): bool
     {
-        self::assertInitialized();
+        $this->assertInitialized();
 
-        return self::$enabled;
+        return $this->enabled;
     }
 
-    public static function visibleCategories(): string
+    public function visibleCategories(): string
     {
-        self::assertInitialized();
+        $this->assertInitialized();
 
-        return self::$visibleCategories;
+        return $this->visibleCategories;
     }
 
-    public static function visibleImages(): string
+    public function visibleImages(): string
     {
-        self::assertInitialized();
+        $this->assertInitialized();
 
-        return self::$visibleImages;
+        return $this->visibleImages;
     }
 
     /**
      * @return array<int|string, array<int|string, mixed>>
      */
-    public static function categories(): array
+    public function categories(): array
     {
-        self::assertInitialized();
+        $this->assertInitialized();
 
-        return self::$categories;
+        return $this->categories;
     }
 
-    public static function isInitialized(): bool
+    public function isInitialized(): bool
     {
-        return self::$initialized;
+        return $this->initialized;
     }
 
-    private static function assertInitialized(): void
+    private function assertInitialized(): void
     {
-        if (! self::$initialized) {
+        if (! $this->initialized) {
             throw new \LogicException('FilterState not initialised -- call Piwigo\Filter\FilterService::initializeFromRequest() (or RequestBootstrap::finalize()\'s own disabled-filter fallback) first.');
         }
     }
 
-    /**
-     * Test-only -- restricted to tests/ by an arch test, mirroring the
-     * equivalent guard on SessionService's/Config's own reset() methods.
-     */
-    public static function reset(): void
+    public function reset(): void
     {
-        self::$enabled = false;
-        self::$visibleCategories = '';
-        self::$visibleImages = '';
-        self::$categories = [];
-        self::$initialized = false;
+        $this->enabled = false;
+        $this->visibleCategories = '';
+        $this->visibleImages = '';
+        $this->categories = [];
+        $this->initialized = false;
+    }
+
+    /**
+     * @deprecated transitional bridge for `Permission\PermissionService::
+     * getSqlConditionFandFAsCondition()`, whose ~30 real callers include the
+     * still-static `Ws\Pwg*` dispatch layer (Phase 10) -- delete once
+     * `PermissionService` itself takes `FilterState` via constructor
+     * injection, which needs Phase 10 to convert `Ws\Pwg*` first. Falls
+     * back to `false` (the same default `isInitialized()` reports before
+     * any real request initializes this) when `Kernel::boot()` hasn't run.
+     */
+    public static function isInitializedStatic(): bool
+    {
+        if (! Kernel::isBooted()) {
+            return false;
+        }
+
+        $instance = Kernel::container()->get(self::class);
+        if (! $instance instanceof self) {
+            throw new \LogicException('Container returned an unexpected type for ' . self::class);
+        }
+
+        return $instance->isInitialized();
+    }
+
+    /**
+     * @deprecated transitional bridge -- see isInitializedStatic(). Falls
+     * back to '' (an empty visible-categories list) when `Kernel::boot()`
+     * hasn't run; real callers always guard with `isInitializedStatic()`
+     * first, so this default is never actually read in that case.
+     */
+    public static function visibleCategoriesStatic(): string
+    {
+        if (! Kernel::isBooted()) {
+            return '';
+        }
+
+        $instance = Kernel::container()->get(self::class);
+        if (! $instance instanceof self) {
+            throw new \LogicException('Container returned an unexpected type for ' . self::class);
+        }
+
+        return $instance->visibleCategories();
+    }
+
+    /**
+     * @deprecated transitional bridge -- see isInitializedStatic().
+     */
+    public static function visibleImagesStatic(): string
+    {
+        if (! Kernel::isBooted()) {
+            return '';
+        }
+
+        $instance = Kernel::container()->get(self::class);
+        if (! $instance instanceof self) {
+            throw new \LogicException('Container returned an unexpected type for ' . self::class);
+        }
+
+        return $instance->visibleImages();
     }
 }

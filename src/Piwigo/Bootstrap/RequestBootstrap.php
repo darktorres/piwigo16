@@ -398,7 +398,7 @@ final class RequestBootstrap
         $log_data_location = \Piwigo\Config\CurrentConfig::dataLocation();
         $log_dir = \Piwigo\Config\CurrentConfig::logDir();
 
-        \Piwigo\Core\CurrentLogger::set(new Logger([
+        self::currentLogger()->set(new Logger([
             'directory' => CurrentPaths::get()->root . $log_data_location . $log_dir,
             'severity' => \Piwigo\Config\CurrentConfig::logLevel(),
             // we use an hashed filename to prevent direct file access, and we salt with
@@ -493,6 +493,7 @@ final class RequestBootstrap
             new RedirectService(),
             new UrlService(new HtmlService()),
             self::apiKeyRequestFlag(),
+            self::currentLogger(),
         )->initialize();
     }
 
@@ -668,10 +669,10 @@ final class RequestBootstrap
         if (\Piwigo\Config\CurrentConfig::filterPages() !== [] and (bool) \Piwigo\Core\PageFilterHelper::getFilterPageValue('used')) {
             // Formerly a conditional `include PHPWG_ROOT_PATH .
             // 'include/filter.inc.php';` (deleted, P23 sub-batch 8f-5).
-            new FilterService($conn)
+            new FilterService(self::filterState(), $conn)
                 ->initializeFromRequest();
         } else {
-            \Piwigo\Core\FilterState::set(false);
+            self::filterState()->set(false);
         }
 
         $pageState->headerNotes = array_merge($pageState->headerNotes, \Piwigo\Config\CurrentConfig::headerNotes());
@@ -850,6 +851,38 @@ final class RequestBootstrap
         }
 
         return $loadedPlugins;
+    }
+
+    /**
+     * Resolves the container-shared instance so that this method's own
+     * `FilterService::initializeFromRequest()`/direct `set(false)` writes
+     * are visible to every other consumer holding the same shared instance
+     * (singleton/service-locator elimination campaign, Phase 2).
+     */
+    private static function filterState(): \Piwigo\Core\FilterState
+    {
+        $filterState = Kernel::container()->get(\Piwigo\Core\FilterState::class);
+        if (! $filterState instanceof \Piwigo\Core\FilterState) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\FilterState::class);
+        }
+
+        return $filterState;
+    }
+
+    /**
+     * Resolves the container-shared instance so that this method's own
+     * `set()` write is visible to every other consumer holding the same
+     * shared instance (singleton/service-locator elimination campaign,
+     * Phase 2).
+     */
+    private static function currentLogger(): \Piwigo\Core\CurrentLogger
+    {
+        $currentLogger = Kernel::container()->get(\Piwigo\Core\CurrentLogger::class);
+        if (! $currentLogger instanceof \Piwigo\Core\CurrentLogger) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\CurrentLogger::class);
+        }
+
+        return $currentLogger;
     }
 
     /**

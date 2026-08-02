@@ -225,7 +225,7 @@ final class PwgImages
      */
     private static function mergeChunks(string $output_filepath, string $original_sum, string $type): ?PwgError
     {
-        $logger = \Piwigo\Core\CurrentLogger::get();
+        $logger = \Piwigo\Core\CurrentLogger::getStatic();
 
         $logger->debug('[merge_chunks] input parameter $output_filepath : ' . $output_filepath, 'WS');
 
@@ -1145,7 +1145,7 @@ final class PwgImages
      */
     public static function addChunk(array $params, PwgServer $service): ?PwgError
     {
-        $logger = \Piwigo\Core\CurrentLogger::get();
+        $logger = \Piwigo\Core\CurrentLogger::getStatic();
 
         foreach ($params as $param_key => $param_value) {
             if ($param_key === 'data') {
@@ -1200,7 +1200,7 @@ final class PwgImages
      */
     public static function addFile(array $params, PwgServer $service): PwgError|bool|null
     {
-        $logger = \Piwigo\Core\CurrentLogger::get();
+        $logger = \Piwigo\Core\CurrentLogger::getStatic();
 
         $logger->debug(__FUNCTION__, 'WS', $params);
 
@@ -1240,7 +1240,7 @@ final class PwgImages
         if ($params['type'] === 'file') {
             $do_update = false;
 
-            $infos = new UploadService()
+            $infos = new UploadService(\Piwigo\Bootstrap\InfrastructureAccessor::currentLogger())
                 ->pwgImageInfos($file_path);
 
             foreach (['width', 'height', 'filesize'] as $image_info) {
@@ -1255,7 +1255,7 @@ final class PwgImages
             }
         }
 
-        $image_id = new UploadService()
+        $image_id = new UploadService(\Piwigo\Bootstrap\InfrastructureAccessor::currentLogger())
             ->addUploadedFile(
                 $file_path,
                 \Piwigo\Bootstrap\PresentationAccessor::urlService(),
@@ -1284,7 +1284,7 @@ final class PwgImages
      */
     public static function add(array $params, PwgServer $service): PwgError|array
     {
-        $logger = \Piwigo\Core\CurrentLogger::get();
+        $logger = \Piwigo\Core\CurrentLogger::getStatic();
 
         foreach ($params as $param_key => $param_value) {
             $logger->debug(sprintf(
@@ -1341,7 +1341,7 @@ final class PwgImages
         self::mergeChunks($file_path, $params['original_sum'], $original_type);
         chmod($file_path, 0644);
 
-        $image_id = new UploadService()
+        $image_id = new UploadService(\Piwigo\Bootstrap\InfrastructureAccessor::currentLogger())
             ->addUploadedFile(
                 $file_path,
                 \Piwigo\Bootstrap\PresentationAccessor::urlService(),
@@ -1420,7 +1420,7 @@ final class PwgImages
      */
     public static function addSimple(array $params, PwgServer $service): PwgError|array
     {
-        $logger = \Piwigo\Core\CurrentLogger::get();
+        $logger = \Piwigo\Core\CurrentLogger::getStatic();
 
         $uploaded_image = \Piwigo\Ws\Request\UploadedFileRequest::fromFilesKey('image');
         if (! $uploaded_image->present) {
@@ -1457,7 +1457,7 @@ final class PwgImages
             return new PwgError(500, '[ws_images_addSimple] missing uploaded file temp name');
         }
 
-        $image_id = new UploadService()
+        $image_id = new UploadService(\Piwigo\Bootstrap\InfrastructureAccessor::currentLogger())
             ->addUploadedFile(
                 $uploaded_tmp_name,
                 \Piwigo\Bootstrap\PresentationAccessor::urlService(),
@@ -1654,7 +1654,7 @@ final class PwgImages
                 }
                 $image = $imageRow->toArray();
 
-                $add_status = new UploadService()
+                $add_status = new UploadService(\Piwigo\Bootstrap\InfrastructureAccessor::currentLogger())
                     ->addFormat($filePath, $format_ext, $imageRow->id);
 
                 return [
@@ -1677,7 +1677,7 @@ final class PwgImages
                 }
             }
 
-            $image_id = new UploadService()
+            $image_id = new UploadService(\Piwigo\Bootstrap\InfrastructureAccessor::currentLogger())
                 ->addUploadedFile(
                     $filePath,
                     \Piwigo\Bootstrap\PresentationAccessor::urlService(),
@@ -1739,7 +1739,7 @@ final class PwgImages
      */
     public static function uploadAsync(array $params, PwgServer &$service): mixed
     {
-        $logger = \Piwigo\Core\CurrentLogger::get();
+        $logger = \Piwigo\Core\CurrentLogger::getStatic();
 
         // the username/password parameters have been used in include/user.inc.php
         // to authenticate the request (a much better time/place than here)
@@ -1899,7 +1899,7 @@ final class PwgImages
 
         $logger->debug(__FUNCTION__ . ' ' . $output_filepath . ' MD5 checksum OK');
 
-        $image_id = new UploadService()
+        $image_id = new UploadService(\Piwigo\Bootstrap\InfrastructureAccessor::currentLogger())
             ->addUploadedFile(
                 $output_filepath,
                 \Piwigo\Bootstrap\PresentationAccessor::urlService(),
@@ -1994,7 +1994,7 @@ final class PwgImages
      */
     public static function exist(array $params, PwgServer $service): array
     {
-        $logger = \Piwigo\Core\CurrentLogger::get();
+        $logger = \Piwigo\Core\CurrentLogger::getStatic();
 
         $logger->debug(__FUNCTION__, 'WS', $params);
 
@@ -2059,7 +2059,7 @@ final class PwgImages
      */
     public static function formatsSearchImage(array $params, PwgServer $service): array
     {
-        $logger = \Piwigo\Core\CurrentLogger::get();
+        $logger = \Piwigo\Core\CurrentLogger::getStatic();
 
         $logger->debug(__FUNCTION__, 'WS', $params);
 
@@ -2241,7 +2241,7 @@ final class PwgImages
      */
     public static function checkFiles(array $params, PwgServer $service): PwgError|array
     {
-        $logger = \Piwigo\Core\CurrentLogger::get();
+        $logger = \Piwigo\Core\CurrentLogger::getStatic();
 
         $logger->debug(__FUNCTION__, 'WS', $params);
 
@@ -2504,7 +2504,7 @@ final class PwgImages
     public static function checkUpload(array $params, PwgServer $service): array
     {
         $ret = [];
-        $ret['message'] = new UploadService()->readyForUploadMessage();
+        $ret['message'] = new UploadService(\Piwigo\Bootstrap\InfrastructureAccessor::currentLogger())->readyForUploadMessage();
         $ret['ready_for_upload'] = true;
         if (! in_array($ret['message'], [null, ''], true)) {
             $ret['ready_for_upload'] = false;

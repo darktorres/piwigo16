@@ -123,7 +123,7 @@ function extensionUpdateChecker(): ExtensionUpdateChecker
 
     return new ExtensionUpdateChecker(
         new ExtensionScanner(),
-        new PemCatalog(new ZipExtractor()),
+        new PemCatalog(new ZipExtractor(), new \Piwigo\Core\CurrentLogger()),
         new UrlService(new HtmlService()),
         $repo,
     );

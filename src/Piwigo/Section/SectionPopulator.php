@@ -67,11 +67,13 @@ final readonly class SectionPopulator
         private UserService $userService,
         private RedirectServiceInterface $redirectService,
         private UrlServiceInterface $urlService,
+        private \Piwigo\Core\FilterState $filterState,
+        private \Piwigo\Core\CurrentLogger $currentLogger,
     ) {}
 
     public function populate(): void
     {
-        $logger = \Piwigo\Core\CurrentLogger::get();
+        $logger = $this->currentLogger->get();
         $template = $this->template;
 
         // Legacy Coupling Retirement Track A batch A5.2e: $page is a local
@@ -682,7 +684,7 @@ final readonly class SectionPopulator
         // onto Piwigo\Core\FilterState, preserving the same lenient
         // "not initialized yet -> treat as disabled" fallback the old `??
         // false` had.
-        $filter_enabled = \Piwigo\Core\FilterState::isInitialized() && \Piwigo\Core\FilterState::isEnabled();
+        $filter_enabled = $this->filterState->isInitialized() && $this->filterState->isEnabled();
         \Piwigo\Core\PageState::current()->setMetaRobots(self::computeMetaRobots($page, $filter_enabled));
 
         // see if we need a redirect because of a permalink

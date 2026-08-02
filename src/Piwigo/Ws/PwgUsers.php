@@ -999,7 +999,7 @@ final class PwgUsers
      */
     public static function createApiKey(array $params, PwgServer &$service): PwgError|array
     {
-        $logger = \Piwigo\Core\CurrentLogger::get();
+        $logger = \Piwigo\Core\CurrentLogger::getStatic();
 
         if (AccessControl::isAGuest() or ! self::apiKeyService()->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
@@ -1044,7 +1044,7 @@ final class PwgUsers
      */
     public static function revokeApiKey(array $params, PwgServer &$service): PwgError|string
     {
-        $logger = \Piwigo\Core\CurrentLogger::get();
+        $logger = \Piwigo\Core\CurrentLogger::getStatic();
 
         if (AccessControl::isAGuest() or ! self::apiKeyService()->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
@@ -1082,7 +1082,7 @@ final class PwgUsers
      */
     public static function editApiKey(array $params, PwgServer &$service): PwgError|string
     {
-        $logger = \Piwigo\Core\CurrentLogger::get();
+        $logger = \Piwigo\Core\CurrentLogger::getStatic();
 
         if (AccessControl::isAGuest()) {
             return new PwgError(401, 'Acces Denied');

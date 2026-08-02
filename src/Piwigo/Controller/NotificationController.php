@@ -35,6 +35,7 @@ final class NotificationController implements ControllerInterface
 {
     public function __construct(
         private readonly UrlServiceInterface $urlService,
+        private readonly \Piwigo\Core\FilterState $filterState,
     ) {}
 
     #[\Override]
@@ -88,7 +89,7 @@ final class NotificationController implements ControllerInterface
         $themeconf = is_array($themeconf) ? $themeconf : [];
         if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theNotificationPage', $themeconf['hide_menu_on'], true)) {
             new MenubarRenderer()
-                ->render($urlService);
+                ->render($urlService, $this->filterState);
         }
 
         new \Piwigo\Page\PageHeaderRenderer()

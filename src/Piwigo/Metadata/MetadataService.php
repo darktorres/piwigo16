@@ -31,6 +31,7 @@ final readonly class MetadataService
 {
     public function __construct(
         private MetadataRepository $repo,
+        private \Piwigo\Core\CurrentLogger $currentLogger,
     ) {}
 
     /**
@@ -132,7 +133,7 @@ final readonly class MetadataService
      */
     public function getExifData(string $filename, array $map): array
     {
-        $logger = \Piwigo\Core\CurrentLogger::get();
+        $logger = $this->currentLogger->get();
 
         $result = [];
 

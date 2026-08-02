@@ -55,6 +55,7 @@ final class BatchManagerGlobalPageRenderer
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
+        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
     ) {}
 
     private static function tagService(): TagService
@@ -490,7 +491,7 @@ final class BatchManagerGlobalPageRenderer
         );
 
         // metadata
-        $site_reader = new LocalSiteReader('./');
+        $site_reader = new LocalSiteReader('./', new \Piwigo\Metadata\MetadataService(new \Piwigo\Metadata\MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())), $this->currentLogger));
         $used_metadata = implode(', ', $site_reader->get_metadata_attributes());
 
         $template->assign(

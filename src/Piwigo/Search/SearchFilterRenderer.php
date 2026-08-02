@@ -50,6 +50,7 @@ final readonly class SearchFilterRenderer
         private CategoryRepository $categoryRepo,
         private PermissionService $permissionService,
         private UrlServiceInterface $urlService,
+        private \Piwigo\Core\CurrentLogger $currentLogger,
     ) {}
 
     private function cacheGet(string $key): mixed
@@ -1330,7 +1331,7 @@ final readonly class SearchFilterRenderer
      */
     private function getItemsForFilter(string $filterName, array &$page): false|array
     {
-        $logger = \Piwigo\Core\CurrentLogger::get();
+        $logger = $this->currentLogger->get();
 
         // $page['search_details'] is set (as
         // SearchService::getRegularSearchResults()'s return

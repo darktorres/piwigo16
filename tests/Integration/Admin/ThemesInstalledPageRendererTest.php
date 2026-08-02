@@ -10,9 +10,11 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
+use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\Logger;
 use Piwigo\Core\Paths;
 use Piwigo\Html\HtmlService;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -88,7 +90,12 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
         CurrentTemplate::set(new Template(CurrentPaths::get()->root . 'themes/admin', 'default'));
 
         $urlService = new UrlService(new HtmlService());
-        $this->renderer = new ThemesInstalledPageRenderer(new RedirectService(), $urlService, $this->configService);
+        $currentLogger = Kernel::container()->get(CurrentLogger::class);
+        if (! $currentLogger instanceof CurrentLogger) {
+            throw new \LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
+        }
+        $currentLogger->set(new Logger(['severity' => Logger::OFF]));
+        $this->renderer = new ThemesInstalledPageRenderer(new RedirectService(), $urlService, $this->configService, $currentLogger);
 
         $this->fixtureRoot = sys_get_temp_dir() . '/piwigo-themes-installed-integration-' . bin2hex(random_bytes(6)) . '/';
         mkdir($this->fixtureRoot . 'themes', 0o777, true);

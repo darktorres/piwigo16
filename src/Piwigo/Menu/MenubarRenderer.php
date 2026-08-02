@@ -57,7 +57,7 @@ final class MenubarRenderer
      * write to, this method returns that value instead; every caller but
      * GalleryController ignores it.
      */
-    public function render(UrlServiceInterface $urlService): ?int
+    public function render(UrlServiceInterface $urlService, \Piwigo\Core\FilterState $filterState): ?int
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
         $section_context = \Piwigo\Section\SectionContextRegistry::current();
@@ -122,7 +122,7 @@ final class MenubarRenderer
         $block = $menu->get_block('mbCategories');
         // ------------------------------------------------------------------------ filter
         if (\Piwigo\Config\CurrentConfig::menubarFilterIcon() and ! self::emptyValue(\Piwigo\Config\CurrentConfig::filterPages()) and (bool) \Piwigo\Core\PageFilterHelper::getFilterPageValue('used')) {
-            if (\Piwigo\Core\FilterState::isEnabled()) {
+            if ($filterState->isEnabled()) {
                 $template->assign(
                     'U_STOP_FILTER',
                     $urlService->addUrlParams($urlService->makeIndexUrl([]), [
@@ -143,7 +143,7 @@ final class MenubarRenderer
 
         $categoryCountCategories = null;
         if ($block !== null) {
-            $categoriesMenu = $categoryService->getCategoriesMenu($section_context?->category, new FilterService(), $urlService);
+            $categoriesMenu = $categoryService->getCategoriesMenu($section_context?->category, new FilterService($filterState), $urlService, $filterState);
             $categoryCountCategories = $categoriesMenu['categoryCountCategories'];
             $block->data = [
                 'NB_PICTURE' => \Piwigo\Users\CurrentUser::get()->rawAttributes['nb_total_images'] ?? null,

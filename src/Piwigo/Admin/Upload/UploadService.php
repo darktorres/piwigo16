@@ -72,6 +72,10 @@ use Piwigo\Ws\PwgServer;
  */
 final class UploadService
 {
+    public function __construct(
+        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+    ) {}
+
     /**
      * @return array<string, array{default: bool|int, min: int|null, max: int|null, pattern: string|null, can_be_null: bool, error_message: string|null}>
      */
@@ -239,7 +243,7 @@ final class UploadService
      */
     public function addUploadedFile(string $source_filepath, UrlServiceInterface $urlService, ?string $original_filename = null, ?array $categories = null, ?int $level = null, ?int $image_id = null, ?string $original_md5sum = null, ?PwgServer $service = null): int
     {
-        $logger = \Piwigo\Core\CurrentLogger::get();
+        $logger = $this->currentLogger->get();
 
         if ($original_filename !== null) {
             $original_filename = htmlspecialchars($original_filename);
@@ -453,7 +457,7 @@ final class UploadService
                 $need_resize = $this->needResize($file_path, $original_resize_maxwidth, $original_resize_maxheight);
 
                 if ($need_resize) {
-                    $img = new PwgImage($file_path);
+                    $img = new PwgImage($file_path, $this->currentLogger);
 
                     $original_resize_quality = \Piwigo\Config\CurrentConfig::originalResizeQuality();
 
@@ -782,7 +786,7 @@ final class UploadService
     {
         $representative_ext = $event->representativeExt;
         $file_path = $event->filePath;
-        $logger = \Piwigo\Core\CurrentLogger::get();
+        $logger = \Piwigo\Core\CurrentLogger::getStatic();
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
@@ -844,7 +848,7 @@ final class UploadService
     {
         $representative_ext = $event->representativeExt;
         $file_path = $event->filePath;
-        $logger = \Piwigo\Core\CurrentLogger::get();
+        $logger = \Piwigo\Core\CurrentLogger::getStatic();
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
@@ -900,7 +904,7 @@ final class UploadService
     {
         $representative_ext = $event->representativeExt;
         $file_path = $event->filePath;
-        $logger = \Piwigo\Core\CurrentLogger::get();
+        $logger = \Piwigo\Core\CurrentLogger::getStatic();
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
@@ -985,7 +989,7 @@ final class UploadService
     {
         $representative_ext = $event->representativeExt;
         $file_path = $event->filePath;
-        $logger = \Piwigo\Core\CurrentLogger::get();
+        $logger = \Piwigo\Core\CurrentLogger::getStatic();
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
@@ -1074,7 +1078,7 @@ final class UploadService
     {
         $representative_ext = $event->representativeExt;
         $file_path = $event->filePath;
-        $logger = \Piwigo\Core\CurrentLogger::get();
+        $logger = \Piwigo\Core\CurrentLogger::getStatic();
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
@@ -1153,7 +1157,7 @@ final class UploadService
     {
         $representative_ext = $event->representativeExt;
         $file_path = $event->filePath;
-        $logger = \Piwigo\Core\CurrentLogger::get();
+        $logger = \Piwigo\Core\CurrentLogger::getStatic();
 
         $logger->info(__METHOD__ . ', $file_path = ' . $file_path . ', $representative_ext = ' . $representative_ext);
 
@@ -1260,7 +1264,7 @@ final class UploadService
 
     private function needResize(string $image_filepath, int $max_width, int $max_height): bool
     {
-        $logger = \Piwigo\Core\CurrentLogger::get();
+        $logger = $this->currentLogger->get();
 
         $picture_ext = \Piwigo\Config\CurrentConfig::pictureExtensions();
         if (! in_array(strtolower(\Piwigo\Core\StringHelper::getExtension($image_filepath)), $picture_ext, true)) {

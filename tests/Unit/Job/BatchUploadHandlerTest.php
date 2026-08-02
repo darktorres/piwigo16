@@ -35,13 +35,24 @@ use Piwigo\Url\UrlService;
  * CurrentConfigService wired for no reason (categories is null here, so
  * the rest of that method's body is skipped either way).
  */
+function batch_upload_handler_test_current_logger(): CurrentLogger
+{
+    $currentLogger = Kernel::container()->get(CurrentLogger::class);
+    if (! $currentLogger instanceof CurrentLogger) {
+        throw new \LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
+    }
+
+    return $currentLogger;
+}
+
 beforeEach(function (): void {
-    CurrentLogger::set(new Logger(['severity' => Logger::OFF]));
+    Kernel::boot();
+    batch_upload_handler_test_current_logger()->set(new Logger(['severity' => Logger::OFF]));
     CurrentConfig::setLoungeActive(true);
 });
 
 afterEach(function (): void {
-    CurrentLogger::reset();
+    Kernel::reset();
     CurrentConfig::reset();
 });
 
@@ -52,11 +63,12 @@ test('__invoke returns the existing image id and deletes the newly uploaded file
     // UploadServiceTest's own container-touching cases.
     Kernel::reset();
     Kernel::boot();
+    batch_upload_handler_test_current_logger()->set(new Logger(['severity' => Logger::OFF]));
     try {
         $sourceFilepath = sys_get_temp_dir() . '/piwigo-batch-upload-handler-test-' . bin2hex(random_bytes(8)) . '.jpg';
         file_put_contents($sourceFilepath, 'duplicate-upload-bytes');
 
-        $handler = new BatchUploadHandler(new UrlService(new HtmlService()));
+        $handler = new BatchUploadHandler(new UrlService(new HtmlService()), batch_upload_handler_test_current_logger());
 
         $imageId = $handler(new BatchUploadJob(
             sourceFilepath: $sourceFilepath,

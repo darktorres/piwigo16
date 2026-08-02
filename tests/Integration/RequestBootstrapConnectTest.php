@@ -121,12 +121,15 @@ final class RequestBootstrapConnectTest extends IntegrationTestCase
         ErrorCollector::reset();
 
         EventDispatcher::reset();
-        CurrentLogger::reset();
-        // setUp() always calls Kernel::boot(), so the container (and this
-        // instance) is always available here.
+        // setUp() always calls Kernel::boot(), so the container (and these
+        // instances) is always available here.
         $installationFlag = Kernel::container()->get(InstallationFlag::class);
         if ($installationFlag instanceof InstallationFlag) {
             $installationFlag->reset();
+        }
+        $currentLogger = Kernel::container()->get(CurrentLogger::class);
+        if ($currentLogger instanceof CurrentLogger) {
+            $currentLogger->reset();
         }
         unset($_REQUEST['method']);
 

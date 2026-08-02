@@ -112,6 +112,7 @@ final class ImageDerivativeController implements ControllerInterface
 
     public function __construct(
         private readonly Paths $paths,
+        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
     ) {}
 
     #[\Override]
@@ -124,7 +125,7 @@ final class ImageDerivativeController implements ControllerInterface
         // controller used to fetch itself, and connect() already calls
         // ImageStdParams::load_from_db() and builds the same
         // hashed-filename Logger this used to construct a second time.
-        $logger = \Piwigo\Core\CurrentLogger::get();
+        $logger = $this->currentLogger->get();
 
         $begin = $step = microtime(true);
         $timing = [];
@@ -266,7 +267,7 @@ final class ImageDerivativeController implements ControllerInterface
         ignore_user_abort(true);
         @set_time_limit(0);
 
-        $image = new PwgImage($this->srcPath);
+        $image = new PwgImage($this->srcPath, $this->currentLogger);
         $timing['load'] = $this->timeStep($step);
 
         $changes = 0;
@@ -308,7 +309,7 @@ final class ImageDerivativeController implements ControllerInterface
 
         if ($params->will_watermark($d_size)) {
             $wm = ImageStdParams::get_watermark();
-            $wm_image = new PwgImage($this->paths->root . $wm->file);
+            $wm_image = new PwgImage($this->paths->root . $wm->file, $this->currentLogger);
             $wm_size = [(int) $wm_image->get_width(), (int) $wm_image->get_height()];
             if ($d_size[0] < $wm_size[0] or $d_size[1] < $wm_size[1]) {
                 $wm_scaling_params = SizingParams::classic($d_size[0], $d_size[1]);
@@ -466,7 +467,7 @@ final class ImageDerivativeController implements ControllerInterface
      */
     private function ierror(string $msg, int $code, array $extraHeaders = []): never
     {
-        $logger = \Piwigo\Core\CurrentLogger::get();
+        $logger = $this->currentLogger->get();
         if ($code === 301 || $code === 302) {
             // default url is on html format
             $url = html_entity_decode($msg);

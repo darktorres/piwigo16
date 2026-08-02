@@ -11,42 +11,43 @@ use Piwigo\Core\FilterState;
  * LogicException, never triggered by any real caller since
  * RequestBootstrap::finalize() always calls set() (directly or via its
  * disabled-filter fallback) before anything else can read this class.
+ *
+ * Container-shared instance (singleton/service-locator elimination
+ * campaign, Phase 2) -- each test constructs its own fresh instance
+ * directly; no reset()/Kernel::boot() needed.
  */
-beforeEach(function (): void {
-    FilterState::reset();
-});
-
-afterEach(function (): void {
-    FilterState::reset();
-});
-
 test('every getter throws before set() has ever been called', function (): void {
-    expect(FilterState::isInitialized())->toBeFalse();
+    $filterState = new FilterState();
+
+    expect($filterState->isInitialized())->toBeFalse();
 
     $message = 'FilterState not initialised -- call Piwigo\Filter\FilterService::initializeFromRequest() (or RequestBootstrap::finalize()\'s own disabled-filter fallback) first.';
 
-    expect(fn () => FilterState::isEnabled())->toThrow(\LogicException::class, $message);
-    expect(fn () => FilterState::visibleCategories())->toThrow(\LogicException::class, $message);
-    expect(fn () => FilterState::visibleImages())->toThrow(\LogicException::class, $message);
-    expect(fn () => FilterState::categories())->toThrow(\LogicException::class, $message);
+    expect(fn () => $filterState->isEnabled())->toThrow(\LogicException::class, $message);
+    expect(fn () => $filterState->visibleCategories())->toThrow(\LogicException::class, $message);
+    expect(fn () => $filterState->visibleImages())->toThrow(\LogicException::class, $message);
+    expect(fn () => $filterState->categories())->toThrow(\LogicException::class, $message);
 });
 
 test('set() initializes every field and isInitialized flips to true', function (): void {
-    FilterState::set(true, 'a,b,c', 'x,y', ['1' => ['name' => 'Holidays']]);
+    $filterState = new FilterState();
 
-    expect(FilterState::isInitialized())->toBeTrue()
-        ->and(FilterState::isEnabled())->toBeTrue()
-        ->and(FilterState::visibleCategories())->toBe('a,b,c')
-        ->and(FilterState::visibleImages())->toBe('x,y')
-        ->and(FilterState::categories())->toBe(['1' => ['name' => 'Holidays']]);
+    $filterState->set(true, 'a,b,c', 'x,y', ['1' => ['name' => 'Holidays']]);
+
+    expect($filterState->isInitialized())->toBeTrue()
+        ->and($filterState->isEnabled())->toBeTrue()
+        ->and($filterState->visibleCategories())->toBe('a,b,c')
+        ->and($filterState->visibleImages())->toBe('x,y')
+        ->and($filterState->categories())->toBe(['1' => ['name' => 'Holidays']]);
 });
 
 test('reset() clears every field back to its uninitialized default', function (): void {
-    FilterState::set(true, 'a,b,c', 'x,y', ['1' => ['name' => 'Holidays']]);
+    $filterState = new FilterState();
+    $filterState->set(true, 'a,b,c', 'x,y', ['1' => ['name' => 'Holidays']]);
 
-    FilterState::reset();
+    $filterState->reset();
 
-    expect(FilterState::isInitialized())->toBeFalse();
+    expect($filterState->isInitialized())->toBeFalse();
 });
 
 test('reset() clears $enabled/$visibleCategories/$visibleImages/$categories to their real default values, not just $initialized', function (): void {
@@ -58,14 +59,15 @@ test('reset() clears $enabled/$visibleCategories/$visibleImages/$categories to t
     // codebase's established convention for exactly this kind of
     // internal-state assertion (e.g. LangTest.php's own Reflection-based
     // helpers).
-    FilterState::set(true, 'a,b,c', 'x,y', ['1' => ['name' => 'Holidays']]);
+    $filterState = new FilterState();
+    $filterState->set(true, 'a,b,c', 'x,y', ['1' => ['name' => 'Holidays']]);
 
-    FilterState::reset();
+    $filterState->reset();
 
     $class = new ReflectionClass(FilterState::class);
 
-    expect($class->getProperty('enabled')->getValue())->toBeFalse();
-    expect($class->getProperty('visibleCategories')->getValue())->toBe('');
-    expect($class->getProperty('visibleImages')->getValue())->toBe('');
-    expect($class->getProperty('categories')->getValue())->toBe([]);
+    expect($class->getProperty('enabled')->getValue($filterState))->toBeFalse();
+    expect($class->getProperty('visibleCategories')->getValue($filterState))->toBe('');
+    expect($class->getProperty('visibleImages')->getValue($filterState))->toBe('');
+    expect($class->getProperty('categories')->getValue($filterState))->toBe([]);
 });

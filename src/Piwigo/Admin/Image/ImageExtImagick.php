@@ -36,7 +36,8 @@ final class ImageExtImagick implements ImageInterface
     public $commands = [];
 
     public function __construct(
-        public string $source_filepath
+        public string $source_filepath,
+        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
     ) {
         $imagick_dir = \Piwigo\Config\CurrentConfig::extImagickDir();
         $this->imagickdir = $imagick_dir;
@@ -202,7 +203,7 @@ final class ImageExtImagick implements ImageInterface
         // Set unconditionally by i.php / include/common.inc.php before any
         // code in this file runs (both entry points construct it during
         // bootstrap) — not a lazy-init global.
-        $logger = \Piwigo\Core\CurrentLogger::get();
+        $logger = $this->currentLogger->get();
 
         $this->add_command('interlace', 'line'); // progressive rendering
         // use 4:2:2 chroma subsampling (reduce file size by 20-30% with "almost" no human perception)

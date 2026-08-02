@@ -61,6 +61,7 @@ final class GalleryController implements ControllerInterface
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
+        private readonly \Piwigo\Core\FilterState $filterState,
     ) {}
 
     private static function categoryService(): CategoryService
@@ -191,7 +192,7 @@ final class GalleryController implements ControllerInterface
 
         // -------------------------------------------------- menubar
         $categoryCountCategories = new MenubarRenderer()
-            ->render($urlService);
+            ->render($urlService, $this->filterState);
 
         $template->set_filename('index', 'index.tpl');
 

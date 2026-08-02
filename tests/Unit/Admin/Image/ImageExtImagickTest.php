@@ -8,6 +8,7 @@ use Piwigo\Admin\Image\ImageProcessingException;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
 
 /**
@@ -122,14 +123,37 @@ function imageExtImagickTestMakeTruncatedAnimatedWebp(string $path): void
     file_put_contents($path, $riff);
 }
 
+/**
+ * ImageExtImagick reads CurrentLogger through real constructor injection
+ * (singleton/service-locator elimination campaign, Phase 2) -- resolves
+ * the container-shared instance rather than a bare `new CurrentLogger()`
+ * so every construction in this file shares the one Kernel::boot()-seeded
+ * instance, same as a real request would.
+ */
+function imageExtImagickTestCurrentLogger(): CurrentLogger
+{
+    $currentLogger = Kernel::container()->get(CurrentLogger::class);
+    if (! $currentLogger instanceof CurrentLogger) {
+        throw new \LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
+    }
+
+    return $currentLogger;
+}
+
+function imageExtImagickTestMake(string $path): ImageExtImagick
+{
+    return new ImageExtImagick($path, imageExtImagickTestCurrentLogger());
+}
+
 beforeEach(function (): void {
     mkdir(imageExtImagickTestMarker(), 0o777, true);
-    CurrentLogger::set(new Logger(['severity' => Logger::OFF]));
+    Kernel::boot();
+    imageExtImagickTestCurrentLogger()->set(new Logger(['severity' => Logger::OFF]));
 });
 
 afterEach(function (): void {
     CurrentConfig::reset();
-    CurrentLogger::reset();
+    Kernel::reset();
     $dir = imageExtImagickTestMarker();
     $files = glob($dir . '/*');
     foreach ($files !== false ? $files : [] as $file) {
@@ -144,7 +168,7 @@ test('construct throws when identify cannot determine the image dimensions', fun
     $path = imageExtImagickTestMarker() . '/photo.jpg';
     file_put_contents($path, 'this is plain text, not a real image at all');
 
-    expect(fn () => new ImageExtImagick($path))
+    expect(fn () => imageExtImagickTestMake($path))
         ->toThrow(ImageProcessingException::class, '[External ImageMagick] Corrupt image');
 });
 
@@ -154,7 +178,7 @@ test('construct detects an animated WebP and reads dimensions via getimagesize i
     $path = imageExtImagickTestMarker() . '/animated.webp';
     imageExtImagickTestMakeAnimatedWebp($path, 20, 14);
 
-    $image = new ImageExtImagick($path);
+    $image = imageExtImagickTestMake($path);
 
     expect($image->is_animated_webp)->toBeTrue()
         ->and($image->get_width())->toBe(20)
@@ -169,7 +193,7 @@ test('construct throws when an animated webp is too short for getimagesize to re
     expect(PwgImage::webp_info($path)['has-animation'])->toBeTrue();
     expect(getimagesize($path))->toBeFalse();
 
-    expect(fn () => new ImageExtImagick($path))
+    expect(fn () => imageExtImagickTestMake($path))
         ->toThrow(\Exception::class, "ImageExtImagick(): getimagesize({$path}): Failed");
 });
 
@@ -184,7 +208,7 @@ test('construct sets MAGICK_THREAD_LIMIT=1 when SCRIPT_FILENAME starts with /kun
     $_SERVER['SCRIPT_FILENAME'] = '/kunden/homepages/1/example/htdocs/i.php';
 
     try {
-        new ImageExtImagick($path);
+        imageExtImagickTestMake($path);
 
         expect(getenv('MAGICK_THREAD_LIMIT'))->toBe('1');
     } finally {
@@ -209,7 +233,7 @@ test('rotate by 0 degrees is a no-op that adds no command', function (): void {
 
     $path = imageExtImagickTestMarker() . '/rotate-noop.jpg';
     imageExtImagickTestMakeJpeg($path, 40, 20, 10, 20, 30);
-    $image = new ImageExtImagick($path);
+    $image = imageExtImagickTestMake($path);
 
     $result = $image->rotate(0);
 
@@ -224,7 +248,7 @@ test('rotate by 90 degrees swaps width/height and queues rotate+orient commands'
 
     $path = imageExtImagickTestMarker() . '/rotate-90.jpg';
     imageExtImagickTestMakeJpeg($path, 40, 20, 10, 20, 30);
-    $image = new ImageExtImagick($path);
+    $image = imageExtImagickTestMake($path);
 
     $result = $image->rotate(90);
 
@@ -240,7 +264,7 @@ test('set_compression_quality caps the requested quality via animatedWebpCompres
 
     $path = imageExtImagickTestMarker() . '/animated-quality.webp';
     imageExtImagickTestMakeAnimatedWebp($path, 16, 10);
-    $image = new ImageExtImagick($path);
+    $image = imageExtImagickTestMake($path);
 
     $result = $image->set_compression_quality(90);
 
@@ -254,7 +278,7 @@ test('sharpen builds the morphology convolve command and produces a valid deriva
     $path = imageExtImagickTestMarker() . '/sharpen-src.jpg';
     $dest = imageExtImagickTestMarker() . '/sharpen-out.jpg';
     imageExtImagickTestMakeJpeg($path, 20, 14, 120, 120, 120);
-    $image = new ImageExtImagick($path);
+    $image = imageExtImagickTestMake($path);
 
     // Independently rebuild the expected command string from the same
     // shared matrix PwgImage::get_sharpen_matrix() produces -- this locks
@@ -296,8 +320,8 @@ test('compose throws a LogicException when the overlay uses a different image ba
     $overlayPath = imageExtImagickTestMarker() . '/compose-overlay.jpg';
     imageExtImagickTestMakeJpeg($basePath, 20, 14, 10, 10, 10);
     imageExtImagickTestMakeJpeg($overlayPath, 8, 8, 200, 200, 200);
-    $base = new ImageExtImagick($basePath);
-    $overlay = new PwgImage($overlayPath, 'ext_imagick');
+    $base = imageExtImagickTestMake($basePath);
+    $overlay = new PwgImage($overlayPath, imageExtImagickTestCurrentLogger(), 'ext_imagick');
     // Swap in a fake, non-ImageExtImagick backend to force the mismatch --
     // same idea as ImageGdTest's own compose()-mismatch test, this class's
     // guard only cares that it's genuinely not `self` (ImageExtImagick).
@@ -364,8 +388,8 @@ test('compose throws when the overlay source path cannot be resolved', function 
     $overlayPath = imageExtImagickTestMarker() . '/compose-overlay2.jpg';
     imageExtImagickTestMakeJpeg($basePath, 20, 14, 10, 10, 10);
     imageExtImagickTestMakeJpeg($overlayPath, 8, 8, 200, 200, 200);
-    $base = new ImageExtImagick($basePath);
-    $overlay = new PwgImage($overlayPath, 'ext_imagick');
+    $base = imageExtImagickTestMake($basePath);
+    $overlay = new PwgImage($overlayPath, imageExtImagickTestCurrentLogger(), 'ext_imagick');
     expect($overlay->image)->toBeInstanceOf(ImageExtImagick::class);
     // The overlay backend was legitimately constructed from a real file,
     // but that file is now gone by the time compose() actually resolves
@@ -381,7 +405,7 @@ test('write throws when the destination directory cannot be resolved', function 
 
     $path = imageExtImagickTestMarker() . '/dirfail-src.jpg';
     imageExtImagickTestMakeJpeg($path, 10, 10, 5, 5, 5);
-    $image = new ImageExtImagick($path);
+    $image = imageExtImagickTestMake($path);
 
     $missingDir = imageExtImagickTestMarker() . '/no-such-subdir';
     $dest = $missingDir . '/out.jpg';
@@ -395,7 +419,7 @@ test('write throws when the destination path has no directory component at all',
 
     $path = imageExtImagickTestMarker() . '/emptydest-src.jpg';
     imageExtImagickTestMakeJpeg($path, 10, 10, 5, 5, 5);
-    $image = new ImageExtImagick($path);
+    $image = imageExtImagickTestMake($path);
 
     // pathinfo('') is the one real value that omits the 'dirname' key
     // entirely (confirmed live: only 'basename'/'filename' come back, both
@@ -410,7 +434,7 @@ test('write triggers E_USER_WARNING for each line of real CLI failure output', f
 
     $path = imageExtImagickTestMarker() . '/cli-fail-src.jpg';
     imageExtImagickTestMakeJpeg($path, 12, 8, 10, 20, 30);
-    $image = new ImageExtImagick($path);
+    $image = imageExtImagickTestMake($path);
     // Corrupt the source file in place *after* a successful construct() --
     // write()'s own real `convert`/`magick` invocation now fails
     // deterministically (bad header, unreadable content), independent of
@@ -447,7 +471,7 @@ test('write adds the -layers coalesce flag and preserves every frame of an anima
     $path = imageExtImagickTestMarker() . '/anim-write-src.webp';
     $dest = imageExtImagickTestMarker() . '/anim-write-out.webp';
     imageExtImagickTestMakeAnimatedWebp($path, 20, 14);
-    $image = new ImageExtImagick($path);
+    $image = imageExtImagickTestMake($path);
     expect($image->is_animated_webp)->toBeTrue();
     expect(imageExtImagickTestFrameCount($path))->toBeGreaterThan(1);
 

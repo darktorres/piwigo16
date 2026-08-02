@@ -105,17 +105,18 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
+        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
     ) {}
 
     /**
-     * Set by processSizes() (a static method) when a submitted "sizes" tab
-     * form fails validation, so handle()'s own tab-render branch below
-     * knows the template vars are already populated with the (invalid)
-     * submitted values and skips overwriting them with fresh defaults --
-     * shared across two static call sites of this same class, hence a
-     * static property rather than a local variable.
+     * Set by processSizes() when a submitted "sizes" tab form fails
+     * validation, so handle()'s own tab-render branch below knows the
+     * template vars are already populated with the (invalid) submitted
+     * values and skips overwriting them with fresh defaults -- shared
+     * across two call sites of this same request's instance, hence an
+     * instance property rather than a local variable.
      */
-    private static bool $sizesLoadedInTpl = false;
+    private bool $sizesLoadedInTpl = false;
 
     private static function activityService(Connection $conn): \Piwigo\Activity\ActivityService
     {
@@ -355,7 +356,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
                 case 'sizes':
 
-                    self::processSizes($post);
+                    $this->processSizes($post);
                     break;
 
                 case 'comments':
@@ -660,7 +661,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
                 // we only load the derivatives if it was not already loaded: it occurs
                 // when submitting the form and an error remains
-                if (! self::$sizesLoadedInTpl) {
+                if (! $this->sizesLoadedInTpl) {
                     $is_gd = (PwgImage::get_library() === 'gd') ? true : false;
                     $template->assign('is_gd', $is_gd);
                     $template->assign(
@@ -935,7 +936,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
      *   set_and_save_disabled() calls rather than the generic config-row
      *   UPDATE loop, so nothing needs to flow back out.
      */
-    private static function processSizes(array $post): void
+    private function processSizes(array $post): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -966,7 +967,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         // PluginLoader::autoupdatePlugin()).
         $page_errors = \Piwigo\Core\PageState::current()->errors;
 
-        new UploadService()
+        new UploadService($this->currentLogger)
             ->saveUploadFormConfig($updates, $page_errors, $errors);
 
         \Piwigo\Core\PageState::current()->errors = array_values($page_errors);
@@ -1188,7 +1189,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             $template->assign('derivatives', $pderivatives);
             $template->assign('ferrors', $errors + $derivative_errors);
             $template->assign('resize_quality', $post['resize_quality']);
-            self::$sizesLoadedInTpl = true;
+            $this->sizesLoadedInTpl = true;
         }
     }
 

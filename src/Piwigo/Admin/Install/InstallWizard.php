@@ -254,7 +254,7 @@ final class InstallWizard
         // as RequestBootstrap::connect()'s (the normal request pipeline's
         // own site) -- no DB access needed, just Config/DbCredentials reads
         // already valid this early (the DB password was just seeded above).
-        \Piwigo\Core\CurrentLogger::set(new Logger([
+        \Piwigo\Bootstrap\InstallBootstrap::currentLogger()->set(new Logger([
             'directory' => $this->paths->root . CurrentConfig::dataLocation() . CurrentConfig::logDir(),
             'severity' => CurrentConfig::logLevel(),
             'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . \Piwigo\Db\DbCredentials::current()->password) . '.txt',
@@ -557,7 +557,7 @@ define(\'DB_COLLATE\', \'\');
         $languageActivationConn = DbConnection::build();
         new ExtensionLifecycle(
             new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($languageActivationConn)),
-            new PemCatalog(new ZipExtractor()),
+            new PemCatalog(new ZipExtractor(), \Piwigo\Bootstrap\InstallBootstrap::currentLogger()),
             $urlService,
             $configService,
             \Piwigo\Db\EntityManagerFactory::build($languageActivationConn)->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class),

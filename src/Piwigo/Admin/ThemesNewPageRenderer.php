@@ -29,6 +29,7 @@ final class ThemesNewPageRenderer
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
+        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
     ) {}
 
     /**
@@ -51,7 +52,7 @@ final class ThemesNewPageRenderer
 
         $base_url = $this->urlService->getRootUrl() . 'admin.php?page=' . $pageSlug . '&tab=' . $tab;
 
-        $pem_catalog = new PemCatalog(new ZipExtractor());
+        $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger);
         $extension_scanner = new ExtensionScanner();
 
         // +-----------------------------------------------------------------------+

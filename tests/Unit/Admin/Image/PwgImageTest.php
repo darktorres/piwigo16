@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Admin\Image\ImageProcessingException;
 use Piwigo\Admin\Image\PwgImage;
+use Piwigo\Core\CurrentLogger;
 use Piwigo\Event\Lifecycle\LoadImageLibrary;
 
 /**
@@ -72,6 +73,19 @@ function pwgImageTestMarker(): string
 }
 
 /**
+ * PwgImage takes CurrentLogger via constructor injection (singleton/
+ * service-locator elimination campaign, Phase 2), forwarded only to the
+ * 'ext_imagick' branch (ImageExtImagick::write()'s own read) -- a fresh,
+ * never-set() instance is safe here since every test in this file uses
+ * 'gd' or lets get_library() fall back to it (this environment has no
+ * ext_imagick/imagick binary available, see this file's own docblock).
+ */
+function pwgImageTestMake(string $sourceFilepath, ?string $library = null): PwgImage
+{
+    return new PwgImage($sourceFilepath, new CurrentLogger(), $library);
+}
+
+/**
  * Runs $script (appended after `require '<real vendor/autoload.php>';`)
  * in a genuinely separate `php` CLI process started with $flags -- see
  * tests/Unit/Core/ContainerDetectorTest.php's own docblock for why this
@@ -135,7 +149,7 @@ test('construct throws for an unsupported file extension', function (): void {
     $path = pwgImageTestMarker() . '/photo.bmp';
     file_put_contents($path, 'not a real bmp, extension alone is enough to hit the guard');
 
-    expect(fn () => new PwgImage($path))
+    expect(fn () => pwgImageTestMake($path))
         ->toThrow(ImageProcessingException::class, '[Image] unsupported file extension');
 });
 
@@ -526,7 +540,7 @@ test('constructor uses a plugin-provided image instance and skips its own librar
         // outright (unsupported extension) -- proving the plugin-provided
         // $image really did short-circuit __construct() before that check
         // ever ran, not merely that it happened to also pass.
-        $img = new PwgImage(pwgImageTestMarker() . '/whatever.totally-unsupported-ext');
+        $img = pwgImageTestMake(pwgImageTestMarker() . '/whatever.totally-unsupported-ext');
 
         expect($img->get_width())->toBe(123);
         expect($img->library)->toBe('');
@@ -550,7 +564,7 @@ test('destroy delegates to a GD-backed image that implements it', function (): v
     }
     imagejpeg($gdImg, $path);
 
-    $img = new PwgImage($path, 'gd');
+    $img = pwgImageTestMake($path, 'gd');
 
     expect($img->destroy())->toBeTrue();
 });
@@ -564,7 +578,7 @@ test('pwg_resize copies the source unchanged when it already fits within the max
     }
     imagejpeg($gdImg, $source);
 
-    $img = new PwgImage($source, 'gd');
+    $img = pwgImageTestMake($source, 'gd');
     $result = $img->pwg_resize($dest, 200, 200, 90, automatic_rotation: false);
 
     expect($result['width'])->toBe(40);
@@ -596,7 +610,7 @@ test('pwg_resize scales a real oversized image down and writes the resized desti
     }
     imagejpeg($gdImg, $source);
 
-    $img = new PwgImage($source, 'gd');
+    $img = pwgImageTestMake($source, 'gd');
     $result = $img->pwg_resize($dest, 100, 100, 85, automatic_rotation: false, strip_metadata: true);
 
     // ratio_width(4) > ratio_height(2) -> width pinned to max_width(100),
@@ -620,7 +634,7 @@ test('pwg_resize crops a mismatched-aspect image before resizing', function (): 
     }
     imagejpeg($gdImg, $source);
 
-    $img = new PwgImage($source, 'gd');
+    $img = pwgImageTestMake($source, 'gd');
     $result = $img->pwg_resize($dest, 100, 100, 85, automatic_rotation: false, crop: true);
 
     expect($result['width'])->toBe(100.0);
@@ -639,7 +653,7 @@ test('pwg_resize rotates the destination when the source carries a real EXIF ori
     // Orientation 6 -> get_rotation_angle() maps it to a 270-degree rotation.
     file_put_contents($source, pwgImageMakeJpegWithOrientation(6));
 
-    $img = new PwgImage($source, 'gd');
+    $img = pwgImageTestMake($source, 'gd');
     $result = $img->pwg_resize($dest, 15, 15, 85, automatic_rotation: true);
 
     // The 20x20 source already fits within 15x15 on neither axis untouched,

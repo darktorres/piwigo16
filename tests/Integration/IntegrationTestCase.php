@@ -99,24 +99,41 @@ abstract class IntegrationTestCase extends TestCase
         // setUp() calling CurrentUser::set() with a specific fixture user
         // right after parent::setUp() simply overwrites it.
         \Piwigo\Users\CurrentUser::attachGlobals();
-        // Piwigo\Core\CurrentLogger (Legacy Coupling Retirement Track A
-        // gap-fill batch G5) is the same shape of per-request singleton --
-        // tests that construct a domain service directly (not through a
-        // real HTTP request, so RequestBootstrap::connect() never runs)
-        // need a real instance too, or the first CurrentLogger::get() call
-        // throws. severity => OFF makes every log call an immediate no-op
-        // (Logger::log() checks severity() >= $level, and OFF is -1, below
-        // every real level), so this never touches the filesystem.
-        \Piwigo\Core\CurrentLogger::set(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::OFF]));
-        // Piwigo\Core\FilterState (Phase 2 global-residual sweep) is the
-        // same shape of per-request singleton -- a disabled-filter
-        // baseline here means tests that construct a domain service
-        // directly (not through a real HTTP request, so
-        // RequestBootstrap::finalize() never runs) still get a valid,
-        // non-throwing FilterState::isEnabled()/visibleCategories()/etc.
-        // A subclass's own setUp() calling FilterState::set() with real
-        // filter values right after parent::setUp() simply overwrites it.
-        \Piwigo\Core\FilterState::set(false);
+        // Piwigo\Core\CurrentLogger (singleton/service-locator elimination
+        // campaign, Phase 2: container-shared instance) -- a real,
+        // no-op-severity instance here means a subclass resolving its
+        // SUT's CurrentLogger from the container (Kernel::boot() already
+        // ran) still gets a valid, non-throwing get() rather than the
+        // "not initialised" LogicException. severity => OFF makes every
+        // log call an immediate no-op (Logger::log() checks severity() >=
+        // $level, and OFF is -1, below every real level), so this never
+        // touches the filesystem. Harmless no-op for subclasses that never
+        // boot Kernel: those construct their SUT's own CurrentLogger
+        // directly instead (same "construct your own fixture" shape as
+        // every other now-instance-based class in this campaign).
+        if (\Piwigo\Core\Kernel::isBooted()) {
+            $currentLogger = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\CurrentLogger::class);
+            if ($currentLogger instanceof \Piwigo\Core\CurrentLogger) {
+                $currentLogger->set(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::OFF]));
+            }
+        }
+        // Piwigo\Core\FilterState (singleton/service-locator elimination
+        // campaign, Phase 2: container-shared instance) -- a disabled-
+        // filter baseline here means a subclass resolving its SUT's
+        // FilterState from the container (Kernel::boot() already ran)
+        // still gets a valid, non-throwing isEnabled()/visibleCategories()/
+        // etc. Harmless no-op for subclasses that never boot Kernel: those
+        // construct their SUT's own FilterState directly instead (same
+        // "construct your own fixture" shape as every other now-instance-
+        // based class in this campaign). A subclass's own setUp() calling
+        // ->set() with real filter values right after parent::setUp()
+        // simply overwrites it.
+        if (\Piwigo\Core\Kernel::isBooted()) {
+            $filterState = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\FilterState::class);
+            if ($filterState instanceof \Piwigo\Core\FilterState) {
+                $filterState->set(false);
+            }
+        }
         // Piwigo\Core\CurrentPaths (Legacy Coupling Retirement gap-closure,
         // entry-shell define()/include round) is the same shape of
         // per-request singleton -- tests that construct a domain service
@@ -153,11 +170,14 @@ abstract class IntegrationTestCase extends TestCase
     protected function tearDown(): void
     {
         \Piwigo\Users\CurrentUser::reset();
-        \Piwigo\Core\CurrentLogger::reset();
         if (\Piwigo\Core\Kernel::isBooted()) {
             $processCache = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\ProcessCache::class);
             if ($processCache instanceof \Piwigo\Core\ProcessCache) {
                 $processCache->reset();
+            }
+            $currentLogger = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\CurrentLogger::class);
+            if ($currentLogger instanceof \Piwigo\Core\CurrentLogger) {
+                $currentLogger->reset();
             }
         }
         \Piwigo\Config\CurrentConfig::reset();
@@ -166,7 +186,12 @@ abstract class IntegrationTestCase extends TestCase
         // all -- reset() on an already-unset registry is a no-op.
         \Piwigo\Config\CurrentConfigService::reset();
         \Piwigo\Core\PageState::reset();
-        \Piwigo\Core\FilterState::reset();
+        if (\Piwigo\Core\Kernel::isBooted()) {
+            $filterState = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\FilterState::class);
+            if ($filterState instanceof \Piwigo\Core\FilterState) {
+                $filterState->reset();
+            }
+        }
         CurrentPaths::reset();
         // Legacy Coupling Retirement gap-closure (entry-shell define()/
         // include round, Part 0b) -- same per-request-singleton shape as

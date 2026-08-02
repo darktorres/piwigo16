@@ -48,6 +48,7 @@ final class UserBootstrap
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly ApiKeyRequestFlag $apiKeyRequestFlag,
+        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
     ) {}
 
     public function initialize(): void
@@ -156,7 +157,7 @@ final class UserBootstrap
                 $_POST['pwg_token'] = $_GET['pwg_token'] = new \Piwigo\Csrf\CsrfService()->getToken();
 
                 // logger
-                $logger = \Piwigo\Core\CurrentLogger::get();
+                $logger = $this->currentLogger->get();
                 $logger->info('[api_key][pkid=' . explode(':', $auth_header)[0] . '][method=' . $userBootstrapRequest->wsMethod . ']');
             }
         }

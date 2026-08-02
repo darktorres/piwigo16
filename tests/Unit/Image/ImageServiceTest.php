@@ -1121,6 +1121,24 @@ function imageServiceTestReadLogMessages(string $logPath): array
 }
 
 /**
+ * emptyLounge() reads CurrentLogger through the transitional
+ * `getStatic()` shim (singleton/service-locator elimination campaign,
+ * Phase 2 -- see that method's own docblock: its callers include the
+ * still-static Ws\PwgImages dispatch layer, Phase 10), which resolves the
+ * real container-shared instance once Kernel::boot() has run.
+ */
+function imageServiceTestSeedCurrentLogger(\Piwigo\Core\Logger $logger): void
+{
+    \Piwigo\Core\Kernel::boot();
+    $currentLogger = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\CurrentLogger::class);
+    if (! $currentLogger instanceof \Piwigo\Core\CurrentLogger) {
+        throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\CurrentLogger::class);
+    }
+
+    $currentLogger->set($logger);
+}
+
+/**
  * Confirmed-equivalent: line 374's IncrementInteger
  * (`isset($rows[$idx + 2])` instead of `$idx + 1`, inside the
  * "category changes" grouping guard's isset() half only -- the
@@ -1149,7 +1167,7 @@ test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end mes
     imageServiceTestAcquireEmptyLoungeDbLock($conn);
     $logDir = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
     mkdir($logDir, 0o777, true);
-    \Piwigo\Core\CurrentLogger::set(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::DEBUG, 'directory' => $logDir, 'filename' => 'emptylounge.log']));
+    imageServiceTestSeedCurrentLogger(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::DEBUG, 'directory' => $logDir, 'filename' => 'emptylounge.log']));
     $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param = 'empty_lounge_running'");
     // Single hyphen, matching the real "$execId-$startTime" shape
     // tryAcquireLoungeLock() itself always constructs (SessionService::
@@ -1256,7 +1274,7 @@ test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end mes
         $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::images() . ' WHERE id IN (?, ?)', [$imageA, $imageB]);
         $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
         \Piwigo\Config\CurrentConfigService::reset();
-        \Piwigo\Core\CurrentLogger::reset();
+        \Piwigo\Core\Kernel::reset();
         CurrentConfig::reset();
         imageServiceTestRrmdir($logDir);
     }
@@ -1274,7 +1292,7 @@ test('emptyLounge() invalidates the permission cache (and its orphan-count cache
     // blank-line-mutation blind spot as line 387's sibling test).
     [$conn, $repo] = imageServiceTestConnAndRepo();
     imageServiceTestAcquireEmptyLoungeDbLock($conn);
-    \Piwigo\Core\CurrentLogger::set(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::OFF]));
+    imageServiceTestSeedCurrentLogger(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::OFF]));
     $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
     $configRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Config\ConfigEntry::class);
     expect($configRepo)->toBeInstanceOf(\Piwigo\Config\ConfigRepository::class);
@@ -1294,7 +1312,7 @@ test('emptyLounge() invalidates the permission cache (and its orphan-count cache
         imageServiceTestReleaseEmptyLoungeDbLock($conn);
         $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
         \Piwigo\Config\CurrentConfigService::reset();
-        \Piwigo\Core\CurrentLogger::reset();
+        \Piwigo\Core\Kernel::reset();
         CurrentConfig::reset();
     }
 });
@@ -1313,7 +1331,7 @@ test('emptyLounge() actually clears a stale lock\'s real database row, letting t
     // array.
     [$conn, $repo] = imageServiceTestConnAndRepo();
     imageServiceTestAcquireEmptyLoungeDbLock($conn);
-    \Piwigo\Core\CurrentLogger::set(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::OFF]));
+    imageServiceTestSeedCurrentLogger(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::OFF]));
     $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param = 'empty_lounge_running'");
     $staleValue = 'reallystale-' . (time() - 100);
     $conn->executeStatement(
@@ -1335,7 +1353,7 @@ test('emptyLounge() actually clears a stale lock\'s real database row, letting t
         imageServiceTestReleaseEmptyLoungeDbLock($conn);
         $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param = 'empty_lounge_running'");
         \Piwigo\Config\CurrentConfigService::reset();
-        \Piwigo\Core\CurrentLogger::reset();
+        \Piwigo\Core\Kernel::reset();
         CurrentConfig::reset();
     }
 });
@@ -1360,7 +1378,7 @@ test('emptyLounge() does not touch a lock that is not actually stale, and logs t
     imageServiceTestAcquireEmptyLoungeDbLock($conn);
     $logDir = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
     mkdir($logDir, 0o777, true);
-    \Piwigo\Core\CurrentLogger::set(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::DEBUG, 'directory' => $logDir, 'filename' => 'emptylounge2.log']));
+    imageServiceTestSeedCurrentLogger(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::DEBUG, 'directory' => $logDir, 'filename' => 'emptylounge2.log']));
     $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param = 'empty_lounge_running'");
     $freshLockValue = 'freshexecid-' . (time() - 30);
     // A real row, not just CurrentConfig's static cache below -- this is
@@ -1403,7 +1421,7 @@ test('emptyLounge() does not touch a lock that is not actually stale, and logs t
         $_REQUEST = $originalRequest;
         $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param = 'empty_lounge_running'");
         \Piwigo\Config\CurrentConfigService::reset();
-        \Piwigo\Core\CurrentLogger::reset();
+        \Piwigo\Core\Kernel::reset();
         CurrentConfig::reset();
         imageServiceTestRrmdir($logDir);
     }
@@ -1465,7 +1483,7 @@ test('emptyLounge() treats a lock that is exactly 60 seconds old as still fresh,
     imageServiceTestAcquireEmptyLoungeDbLock($conn);
     $logDir = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
     mkdir($logDir, 0o777, true);
-    \Piwigo\Core\CurrentLogger::set(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::DEBUG, 'directory' => $logDir, 'filename' => 'emptylounge3.log']));
+    imageServiceTestSeedCurrentLogger(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::DEBUG, 'directory' => $logDir, 'filename' => 'emptylounge3.log']));
     $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param = 'empty_lounge_running'");
     $t0 = time();
     $lockValue = 'boundaryexecid-' . ($t0 - 60);
@@ -1498,7 +1516,7 @@ test('emptyLounge() treats a lock that is exactly 60 seconds old as still fresh,
         imageServiceTestReleaseEmptyLoungeDbLock($conn);
         $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param = 'empty_lounge_running'");
         \Piwigo\Config\CurrentConfigService::reset();
-        \Piwigo\Core\CurrentLogger::reset();
+        \Piwigo\Core\Kernel::reset();
         CurrentConfig::reset();
         imageServiceTestRrmdir($logDir);
     }
@@ -1517,7 +1535,7 @@ test('emptyLounge() treats a lock that is exactly 61 seconds old as genuinely st
     // was genuinely cleared first.
     [$conn, $repo] = imageServiceTestConnAndRepo();
     imageServiceTestAcquireEmptyLoungeDbLock($conn);
-    \Piwigo\Core\CurrentLogger::set(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::OFF]));
+    imageServiceTestSeedCurrentLogger(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::OFF]));
     $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param = 'empty_lounge_running'");
     $staleValue = 'boundary61execid-' . (time() - 61);
     $conn->executeStatement(
@@ -1539,7 +1557,7 @@ test('emptyLounge() treats a lock that is exactly 61 seconds old as genuinely st
         imageServiceTestReleaseEmptyLoungeDbLock($conn);
         $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param = 'empty_lounge_running'");
         \Piwigo\Config\CurrentConfigService::reset();
-        \Piwigo\Core\CurrentLogger::reset();
+        \Piwigo\Core\Kernel::reset();
         CurrentConfig::reset();
     }
 });
@@ -1547,7 +1565,7 @@ test('emptyLounge() treats a lock that is exactly 61 seconds old as genuinely st
 test('emptyLounge() returns null when a different, still-fresh execution already holds the lock', function (): void {
     [$conn, $repo] = imageServiceTestConnAndRepo();
     imageServiceTestAcquireEmptyLoungeDbLock($conn);
-    \Piwigo\Core\CurrentLogger::set(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::OFF]));
+    imageServiceTestSeedCurrentLogger(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::OFF]));
     $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param = 'empty_lounge_running'");
     $conn->executeStatement(
         "INSERT INTO " . \Piwigo\Db\Tables::config() . " (param, value) VALUES ('empty_lounge_running', ?)",
@@ -1565,6 +1583,7 @@ test('emptyLounge() returns null when a different, still-fresh execution already
     } finally {
         imageServiceTestReleaseEmptyLoungeDbLock($conn);
         $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param = 'empty_lounge_running'");
+        \Piwigo\Core\Kernel::reset();
         CurrentConfig::reset();
     }
 });

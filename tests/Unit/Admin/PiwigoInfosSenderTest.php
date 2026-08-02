@@ -22,18 +22,18 @@ use Piwigo\Core\Logger;
 
 afterEach(function (): void {
     CurrentConfig::setSendPiwigoInfos(true);
-    CurrentLogger::reset();
 });
 
 test('send returns immediately without touching the DB or network when telemetry is disabled', function (): void {
-    CurrentLogger::set(new Logger(['severity' => Logger::OFF]));
+    $currentLogger = new CurrentLogger();
+    $currentLogger->set(new Logger(['severity' => Logger::OFF]));
     CurrentConfig::setSendPiwigoInfos(false);
 
     // No exception, no fatal, no side effect to assert beyond "returned" --
     // proven by simply completing without the DB-reload/network code below
     // it ever running (both would throw or hang in this sandboxed test
     // environment if reached).
-    new PiwigoInfosSender()->send();
+    new PiwigoInfosSender($currentLogger)->send();
 
     expect(true)->toBeTrue();
 });

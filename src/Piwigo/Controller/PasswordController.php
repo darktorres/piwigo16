@@ -43,6 +43,7 @@ final class PasswordController implements ControllerInterface
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
+        private readonly \Piwigo\Core\FilterState $filterState,
     ) {}
 
     /**
@@ -239,7 +240,7 @@ final class PasswordController implements ControllerInterface
         $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
         if (! is_array($hide_menu_on) or ! in_array('thePasswordPage', $hide_menu_on, true)) {
             new MenubarRenderer()
-                ->render($urlService);
+                ->render($urlService, $this->filterState);
         }
 
         // Load language if cookie is set from login/register/password

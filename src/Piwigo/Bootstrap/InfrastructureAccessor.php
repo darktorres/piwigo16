@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Bootstrap;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Kernel;
 
 /**
@@ -35,5 +36,21 @@ final class InfrastructureAccessor
             throw new \LogicException('Container returned an unexpected type for ' . EntityManagerInterface::class);
         }
         return $em;
+    }
+
+    /**
+     * Same rationale as entityManager() above -- gives still-static callers
+     * (e.g. Ws\PwgExtensions's PemCatalog construction) the real
+     * container-shared CurrentLogger instance, not just the Logger value
+     * CurrentLogger::getStatic() itself unwraps to (singleton/
+     * service-locator elimination campaign, Phase 2).
+     */
+    public static function currentLogger(): CurrentLogger
+    {
+        $currentLogger = Kernel::container()->get(CurrentLogger::class);
+        if (! $currentLogger instanceof CurrentLogger) {
+            throw new \LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
+        }
+        return $currentLogger;
     }
 }

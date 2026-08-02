@@ -16,9 +16,12 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\AdminContext;
+use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\FilterState;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Logger;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
@@ -92,6 +95,10 @@ final class SectionPopulatorTest extends IntegrationTestCase
 
     private SectionRepository $sectionRepo;
 
+    private FilterState $filterState;
+
+    private CurrentLogger $currentLogger;
+
     #[\Override]
     protected function setUp(): void
     {
@@ -123,6 +130,9 @@ final class SectionPopulatorTest extends IntegrationTestCase
         $this->searchService = new SearchService(new SearchRepository($this->conn), $this->permissionService, $this->categoryService, new MailService(), new HtmlService(), new RedirectService(), $this->tagService);
         $this->userService = new UserService($em->getRepository(UserInfoEntity::class), $em->getRepository(GroupEntity::class), new MailService(), new ActivityService($em->getRepository(ActivityEntity::class)), new HtmlService(), $this->conn);
         $this->sectionRepo = new SectionRepository($this->conn);
+        $this->filterState = new FilterState();
+        $this->currentLogger = new CurrentLogger();
+        $this->currentLogger->set(new Logger(['severity' => Logger::OFF]));
 
         $this->setRegularUser();
         CurrentTemplate::set($this->makeTemplate());
@@ -167,6 +177,8 @@ final class SectionPopulatorTest extends IntegrationTestCase
             $this->userService,
             new RedirectService(),
             new UrlService(new HtmlService()),
+            $this->filterState,
+            $this->currentLogger,
         );
     }
 

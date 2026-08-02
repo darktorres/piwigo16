@@ -46,6 +46,10 @@ use Piwigo\Users\UserService;
  */
 final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
 {
+    public function __construct(
+        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+    ) {}
+
     /**
      * DRY extraction (Phase 1k DI-chain audit): the same UserService
      * recipe was repeated verbatim at 2 sites in this file.
@@ -58,7 +62,7 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
     #[\Override]
     public function send(): void
     {
-        $logger = \Piwigo\Core\CurrentLogger::get();
+        $logger = $this->currentLogger->get();
 
         $startTime = TimingHelper::getMoment();
 
@@ -511,7 +515,7 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
 
     private function retryLater(int $waitTime): void
     {
-        $logger = \Piwigo\Core\CurrentLogger::get();
+        $logger = $this->currentLogger->get();
 
         // let's fake a last_notice so that we only try 1 day later
         $existingLastNotice = \Piwigo\Config\CurrentConfig::sendPiwigoInfosLastNotice() ?? null;

@@ -50,6 +50,7 @@ final readonly class HistoryService
     public function __construct(
         private HistoryRepository $repo,
         private ConfigService $configService,
+        private \Piwigo\Core\CurrentLogger $currentLogger,
     ) {}
 
     /**
@@ -417,7 +418,7 @@ final readonly class HistoryService
      */
     public function autopurge(): void
     {
-        $logger = \Piwigo\Core\CurrentLogger::get();
+        $logger = $this->currentLogger->get();
 
         $keepLines = \Piwigo\Config\CurrentConfig::historyAutopurgeKeepLines();
         if ($keepLines === 0) {

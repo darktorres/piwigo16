@@ -126,7 +126,7 @@ test('compareByDownloads treats an identical count as a tie, not "$a has fewer"'
 });
 
 test('getLocallyMergedExtensions parses the real install/obsolete_extensions.list', function (): void {
-    $catalog = new PemCatalog(new ZipExtractor());
+    $catalog = new PemCatalog(new ZipExtractor(), new \Piwigo\Core\CurrentLogger());
     $merged = $catalog->getLocallyMergedExtensions();
 
     // install/obsolete_extensions.list is a committed, static asset --
@@ -139,7 +139,7 @@ test('getLocallyMergedExtensions parses the real install/obsolete_extensions.lis
 
 function pem_catalog_delete_obsolete_files(ExtensionType $type, string $extractPath): void
 {
-    $catalog = new PemCatalog(new ZipExtractor());
+    $catalog = new PemCatalog(new ZipExtractor(), new \Piwigo\Core\CurrentLogger());
     $method = new ReflectionMethod($catalog, 'deleteObsoleteFiles');
     $method->invoke($catalog, $type, $extractPath, new Logger(['severity' => Logger::OFF]));
 }

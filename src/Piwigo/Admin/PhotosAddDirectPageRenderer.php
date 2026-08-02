@@ -38,6 +38,7 @@ final class PhotosAddDirectPageRenderer
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
+        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
     ) {}
 
     /**
@@ -199,7 +200,7 @@ final class PhotosAddDirectPageRenderer
 
         $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
 
-        $uploadService = new UploadService();
+        $uploadService = new UploadService($this->currentLogger);
 
         // +-------------------------------------------------------------------+
         // | Photo selection                                                    |

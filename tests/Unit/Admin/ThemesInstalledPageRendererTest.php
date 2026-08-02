@@ -225,7 +225,10 @@ function themesInstalledLifecycle(): ExtensionLifecycle
     $pluginMigrationRepo = EntityManagerFactory::build($conn)->getRepository(PluginMigrationEntity::class);
     expect($pluginMigrationRepo)->toBeInstanceOf(PluginMigrationRepository::class);
 
-    return new ExtensionLifecycle($repo, new PemCatalog(new ZipExtractor()), new UrlService(new HtmlService()), new ConfigService($configRepo), $pluginMigrationRepo);
+    $currentLogger = new \Piwigo\Core\CurrentLogger();
+    $currentLogger->set(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::OFF]));
+
+    return new ExtensionLifecycle($repo, new PemCatalog(new ZipExtractor(), $currentLogger), new UrlService(new HtmlService()), new ConfigService($configRepo), $pluginMigrationRepo);
 }
 
 /**

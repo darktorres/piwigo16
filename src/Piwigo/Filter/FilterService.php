@@ -24,6 +24,7 @@ use Piwigo\Session\SessionService;
 final class FilterService implements FilterUpdaterInterface
 {
     public function __construct(
+        private readonly \Piwigo\Core\FilterState $filterState,
         private ?Connection $conn = null,
     ) {}
 
@@ -215,7 +216,7 @@ final class FilterService implements FilterUpdaterInterface
             // rows are dropped rather than trusted.
             $filter_categories_raw = $filter['categories'] ?? null;
             $filter_categories = is_array($filter_categories_raw) ? array_filter($filter_categories_raw, is_array(...)) : [];
-            \Piwigo\Core\FilterState::set(
+            $this->filterState->set(
                 true,
                 is_scalar($filter_visible_categories) ? (string) $filter_visible_categories : '',
                 is_scalar($filter_visible_images) ? (string) $filter_visible_images : '',
@@ -230,7 +231,7 @@ final class FilterService implements FilterUpdaterInterface
                 SessionService::get()->unsetSessionVar('filter_visible_images');
             }
 
-            \Piwigo\Core\FilterState::set(false);
+            $this->filterState->set(false);
         }
     }
 
@@ -249,13 +250,13 @@ final class FilterService implements FilterUpdaterInterface
         // `$filter['enabled'] ?? false` semantics -- a request that never
         // reaches RequestBootstrap::finalize() at all (no FilterState::set()
         // call yet) silently does nothing here, same as before.
-        if (! \Piwigo\Core\FilterState::isInitialized() || ! \Piwigo\Core\FilterState::isEnabled()) {
+        if (! $this->filterState->isInitialized() || ! $this->filterState->isEnabled()) {
             return;
         }
 
         $upd_fields = ['date_last', 'max_date_last', 'count_images', 'count_categories', 'nb_images'];
 
-        $filter_categories = \Piwigo\Core\FilterState::categories();
+        $filter_categories = $this->filterState->categories();
 
         foreach ($cats as $cat_id => $category) {
             $ref_cat_id = $category['id'] ?? null;

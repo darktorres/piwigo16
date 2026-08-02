@@ -50,6 +50,7 @@ final class PwgImage
 
     public function __construct(
         public string $source_filepath,
+        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
         ?string $library = null
     ) {
 
@@ -71,7 +72,7 @@ final class PwgImage
         }
 
         $this->image = match ($this->library) {
-            'ext_imagick' => new ImageExtImagick($this->source_filepath),
+            'ext_imagick' => new ImageExtImagick($this->source_filepath, $this->currentLogger),
             'imagick' => new ImageImagick($this->source_filepath),
             'gd' => new ImageGd($this->source_filepath),
             default => throw new \Exception("PwgImage: unknown image library '{$this->library}'"),

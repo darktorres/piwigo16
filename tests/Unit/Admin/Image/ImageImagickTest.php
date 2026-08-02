@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Admin\Image\ImageImagick;
 use Piwigo\Admin\Image\PwgImage;
+use Piwigo\Core\CurrentLogger;
 
 /**
  * Only runs the real ext-imagick extension when it's genuinely available in
@@ -229,7 +230,7 @@ test('compose composites a same-backend overlay and preserves the base dimension
     imageImagickTestMakeJpeg($basePath, 200, 120, 0, 0, 0);
     imageImagickTestMakeJpeg($overlayPath, 50, 50, 255, 255, 255);
     $base = new ImageImagick($basePath);
-    $overlay = new PwgImage($overlayPath, 'imagick');
+    $overlay = new PwgImage($overlayPath, new CurrentLogger(), 'imagick');
 
     $result = $base->compose($overlay, 10, 10, 50);
 
@@ -258,7 +259,7 @@ test('compose only dims a shared overlay once across repeated calls', function (
     imageImagickTestMakeJpeg($basePath, 200, 120, 0, 0, 0);
     imageImagickTestMakeJpeg($overlayPath, 50, 50, 255, 255, 255);
     $base = new ImageImagick($basePath);
-    $overlay = new PwgImage($overlayPath, 'imagick');
+    $overlay = new PwgImage($overlayPath, new CurrentLogger(), 'imagick');
     $overlayBackend = $overlay->image;
     expect($overlayBackend)->toBeInstanceOf(ImageImagick::class);
     // dirtyTrickXrepeatApplied gates the alpha-dimming evaluateImage() call
@@ -290,7 +291,7 @@ test('compose throws when the overlay uses a different image backend', function 
     imageImagickTestMakeJpeg($basePath, 200, 120, 0, 0, 0);
     imageImagickTestMakeJpeg($overlayPath, 50, 50, 255, 255, 255);
     $base = new ImageImagick($basePath);
-    $overlay = new PwgImage($overlayPath, 'gd');
+    $overlay = new PwgImage($overlayPath, new CurrentLogger(), 'gd');
 
     expect(fn () => $base->compose($overlay, 0, 0, 50))
         ->toThrow(\LogicException::class, 'PwgImage::compose(): overlay must use the same image backend');

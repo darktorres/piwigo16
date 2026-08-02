@@ -156,8 +156,8 @@ final readonly class PermissionService
         $currentUser = \Piwigo\Users\CurrentUser::get();
 
         $userForbiddenCategories = $currentUser->forbiddenCategories;
-        $filterVisibleCategories = \Piwigo\Core\FilterState::isInitialized() ? \Piwigo\Core\FilterState::visibleCategories() : '';
-        $filterVisibleImages = \Piwigo\Core\FilterState::isInitialized() ? \Piwigo\Core\FilterState::visibleImages() : '';
+        $filterVisibleCategories = \Piwigo\Core\FilterState::isInitializedStatic() ? \Piwigo\Core\FilterState::visibleCategoriesStatic() : '';
+        $filterVisibleImages = \Piwigo\Core\FilterState::isInitializedStatic() ? \Piwigo\Core\FilterState::visibleImagesStatic() : '';
         $userImageAccessType = $currentUser->rawAttributes['image_access_type'] ?? null;
         $userImageAccessType = is_scalar($userImageAccessType) ? (string) $userImageAccessType : '';
         $userImageAccessList = $currentUser->rawAttributes['image_access_list'] ?? null;

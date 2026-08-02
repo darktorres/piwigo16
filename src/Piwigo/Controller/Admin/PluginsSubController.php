@@ -51,6 +51,7 @@ final class PluginsSubController implements AdminSubControllerInterface
     public function __construct(
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
+        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
     ) {}
 
     #[\Override]
@@ -80,7 +81,7 @@ final class PluginsSubController implements AdminSubControllerInterface
                 ->render('plugins', $tab);
         } else {
             new PluginsInstalledPageRenderer()
-                ->render('plugins', $this->urlService);
+                ->render('plugins', $this->urlService, $this->currentLogger);
         }
     }
 }

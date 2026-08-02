@@ -89,6 +89,8 @@ final class PictureController implements ControllerInterface
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
+        private readonly \Piwigo\Core\FilterState $filterState,
+        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
     ) {}
 
     private static function permissionService(): PermissionService
@@ -214,7 +216,7 @@ final class PictureController implements ControllerInterface
                 // '-1' means "the filter computed an empty visible-images
                 // list" (see FilterService's own "Must be not empty"
                 // comment), not a real id to match against.
-                $visible_images = \Piwigo\Core\FilterState::isInitialized() ? \Piwigo\Core\FilterState::visibleImages() : '';
+                $visible_images = $this->filterState->isInitialized() ? $this->filterState->visibleImages() : '';
                 if ($visible_images !== '' && $visible_images !== '-1' &&
                   ! in_array((string) $image_id, explode(',', $visible_images), true)) {
                     \Piwigo\Bootstrap\PresentationAccessor::htmlService()
@@ -1217,7 +1219,7 @@ final class PictureController implements ControllerInterface
         }
         if ($metadata_showable and SessionService::get()->getSessionVar('show_metadata') !== null) {
             new PictureMetadataRenderer()
-                ->render($picture);
+                ->render($picture, $this->currentLogger);
         }
 
         // include menubar
@@ -1225,7 +1227,7 @@ final class PictureController implements ControllerInterface
         $themeconf = is_array($themeconf) ? $themeconf : [];
         if (\Piwigo\Config\CurrentConfig::pictureMenu() and (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('thePicturePage', $themeconf['hide_menu_on'], true))) {
             new MenubarRenderer()
-                ->render($urlService);
+                ->render($urlService, $this->filterState);
         }
 
         // The slideshow branch above may have set $refresh/$url_link

@@ -68,6 +68,7 @@ final class IntroSubController implements AdminSubControllerInterface
     public function __construct(
         private readonly \Piwigo\Core\UrlServiceInterface $urlService,
         private readonly LoadedPlugins $loadedPlugins,
+        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
     ) {}
 
     #[\Override]
@@ -83,7 +84,7 @@ final class IntroSubController implements AdminSubControllerInterface
         // `admin.php?page=comments`. Computed locally instead, matching
         // AdminShell's own exact value.
         $link_start = $this->urlService->getRootUrl() . 'admin.php?page=';
-        $logger = \Piwigo\Core\CurrentLogger::get();
+        $logger = $this->currentLogger->get();
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         // A single connection for the whole request -- mirrors the

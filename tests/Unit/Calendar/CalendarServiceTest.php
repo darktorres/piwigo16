@@ -7,6 +7,7 @@ use Piwigo\Calendar\CalendarService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\FilterState;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -53,7 +54,25 @@ function makeCalendarService(): CalendarService
     );
 }
 
+/**
+ * PermissionService::getSqlConditionFandFAsCondition() (buildInnerSql()'s
+ * own dependency) reads FilterState through the transitional
+ * `*Static()` shims (singleton/service-locator elimination campaign,
+ * Phase 2 -- see FilterState::isInitializedStatic()'s own docblock), which
+ * resolve the real container-shared instance once Kernel::boot() has run.
+ */
+function seedCalendarFilterState(bool $enabled, string $visibleCategories = '', string $visibleImages = ''): void
+{
+    $filterState = Kernel::container()->get(FilterState::class);
+    if (! $filterState instanceof FilterState) {
+        throw new \LogicException('Container returned an unexpected type for ' . FilterState::class);
+    }
+
+    $filterState->set($enabled, $visibleCategories, $visibleImages);
+}
+
 beforeEach(function (): void {
+    Kernel::boot();
     CurrentUser::set(new User(
         id: \Piwigo\Common\ValueObject\UserId::from(1),
         username: '',
@@ -67,7 +86,7 @@ beforeEach(function (): void {
 
 afterEach(function (): void {
     CurrentUser::reset();
-    FilterState::reset();
+    Kernel::reset();
 });
 
 test('buildInnerSql returns null for a non-category section with no items', function (): void {
@@ -166,7 +185,7 @@ test('buildInnerSql composes forbidden/visible categories and images into the WH
         forbiddenCategories: '5,6',
         level: 2,
     ));
-    FilterState::set(true, visibleCategories: '10,20', visibleImages: '100,200');
+    seedCalendarFilterState(true, visibleCategories: '10,20', visibleImages: '100,200');
     $service = makeCalendarService();
 
     $sql = $service->buildInnerSql('categories', false, null, '', []);

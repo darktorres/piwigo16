@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\ImageDerivativeController;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\Logger;
 use Piwigo\Image\ImageStdParams;
 
 // Workstream C3 Part III: ImageDerivativeController's own trySwitchSource()
@@ -121,16 +123,15 @@ test('parseCustomParams() rejects a genuinely empty token array', function (): v
     // DerivativeUrlCodec::urlToSize(null), which throws a TypeError
     // instead of the real, controlled 400 -- a real behavioral
     // difference either way.
-    \Piwigo\Core\CurrentLogger::set(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::OFF]));
-    $controller = new ImageDerivativeController(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)));
+    $currentLogger = new CurrentLogger();
+    $currentLogger->set(new Logger(['severity' => Logger::OFF]));
+    $controller = new ImageDerivativeController(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)), $currentLogger);
 
     $exception = callIerrorFor400($controller, []);
 
     $response = $exception->response();
     expect($response->getStatusCode())->toBe(400)
         ->and((string) $response->getBody())->toBe('Empty array while parsing Sizing');
-
-    \Piwigo\Core\CurrentLogger::reset();
 });
 
 test('parseCustomParams() parses a single bare "s"-prefixed size token', function (): void {
@@ -144,7 +145,7 @@ test('parseCustomParams() parses a single bare "s"-prefixed size token', functio
     // index 0 for 's100x100', falling through to the else branch, which
     // then 400s on the resulting empty $tokens -- success vs. a thrown
     // exception is directly observable either way).
-    $controller = new ImageDerivativeController(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)));
+    $controller = new ImageDerivativeController(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)), new CurrentLogger());
 
     $params = callParseCustomParams($controller, ['s100x100']);
 
@@ -158,7 +159,7 @@ test('parseCustomParams() parses a single bare "e"-prefixed exact-crop token', f
     // way the 's' test above kills line 513's: $token[-1]/$token[1]
     // for 'e50x50' both miss the 'e' at index 0, falling through to the
     // else branch and 400ing instead of succeeding.
-    $controller = new ImageDerivativeController(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)));
+    $controller = new ImageDerivativeController(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)), new CurrentLogger());
 
     $params = callParseCustomParams($controller, ['e50x50']);
 
@@ -178,16 +179,15 @@ test('parseCustomParams() rejects a plain size token with no crop/min-size token
     // neither fires/executes at this exact count, but both fall through
     // to the pre-existing null-token guard a few lines down, which
     // throws the *identical* ResponseReadyException(400, 'Sizing arr').
-    \Piwigo\Core\CurrentLogger::set(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::OFF]));
-    $controller = new ImageDerivativeController(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)));
+    $currentLogger = new CurrentLogger();
+    $currentLogger->set(new Logger(['severity' => Logger::OFF]));
+    $controller = new ImageDerivativeController(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)), $currentLogger);
 
     $exception = callIerrorFor400($controller, ['100x100', 'a']);
 
     $response = $exception->response();
     expect($response->getStatusCode())->toBe(400)
         ->and((string) $response->getBody())->toBe('Sizing arr');
-
-    \Piwigo\Core\CurrentLogger::reset();
 });
 
 test('parseCustomParams() accepts a size+crop+min-size token triple, exactly at the 2-remaining-tokens boundary', function (): void {
@@ -197,7 +197,7 @@ test('parseCustomParams() accepts a size+crop+min-size token triple, exactly at 
     // SmallerToGreaterOrEqual, SmallerToSmallerOrEqual, and
     // IncrementInteger mutants -- each would wrongly 400 this exact
     // input instead of succeeding.
-    $controller = new ImageDerivativeController(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)));
+    $controller = new ImageDerivativeController(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)), new CurrentLogger());
 
     $params = callParseCustomParams($controller, ['100x100', 'n', '50x50']);
 
@@ -213,7 +213,7 @@ test('parseCustomParams() takes the min-size token from the front of the remaini
     // instead) -- with only exactly 2 remaining tokens (the test
     // above), shift and pop are indistinguishable (only one real
     // candidate either way).
-    $controller = new ImageDerivativeController(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)));
+    $controller = new ImageDerivativeController(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)), new CurrentLogger());
 
     $params = callParseCustomParams($controller, ['100x100', 'n', '50x50', 'ignored-extra']);
 
@@ -252,13 +252,14 @@ test('ierror() builds a real redirect response for a 301 code, decoding entities
     // $extraHeaders here, asserted present on the response).
     $dir = sys_get_temp_dir() . '/piwigo-idc-ierror-redirect-test-' . bin2hex(random_bytes(8));
     mkdir($dir, 0o777, true);
-    $logger = new \Piwigo\Core\Logger(['directory' => $dir, 'filename' => 'ierror-redirect.txt']);
-    \Piwigo\Core\CurrentLogger::set($logger);
+    $logger = new Logger(['directory' => $dir, 'filename' => 'ierror-redirect.txt']);
+    $currentLogger = new CurrentLogger();
+    $currentLogger->set($logger);
 
     $originalRequestUri = $_SERVER['REQUEST_URI'] ?? null;
     $_SERVER['REQUEST_URI'] = '/i.php/upload/2026/08/01/bar-th.jpg';
 
-    $controller = new ImageDerivativeController(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)));
+    $controller = new ImageDerivativeController(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)), $currentLogger);
 
     $exception = callIerror(
         $controller,
@@ -274,7 +275,6 @@ test('ierror() builds a real redirect response for a 301 code, decoding entities
     } else {
         $_SERVER['REQUEST_URI'] = $originalRequestUri;
     }
-    \Piwigo\Core\CurrentLogger::reset();
     @unlink($dir . '/ierror-redirect.txt');
     @rmdir($dir);
 
@@ -294,16 +294,15 @@ test('ierror() builds a real redirect response for a 302 code too', function ():
     // literal 302 specifically -- the 301 test above can't (a code=301
     // call takes the redirect branch regardless of how the *302*
     // literal alone is mutated).
-    \Piwigo\Core\CurrentLogger::set(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::OFF]));
-    $controller = new ImageDerivativeController(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)));
+    $currentLogger = new CurrentLogger();
+    $currentLogger->set(new Logger(['severity' => Logger::OFF]));
+    $controller = new ImageDerivativeController(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)), $currentLogger);
 
     $exception = callIerror($controller, 'https://example.test/target-302', 302);
 
     $response = $exception->response();
     expect($response->getStatusCode())->toBe(302)
         ->and($response->getHeaderLine('Location'))->toBe('https://example.test/target-302');
-
-    \Piwigo\Core\CurrentLogger::reset();
 });
 
 test('ierror() logs the exact code+message concatenation and the real request URI for a non-redirect code', function (): void {
@@ -321,13 +320,14 @@ test('ierror() logs the exact code+message concatenation and the real request UR
     // URI would be silently missing from the log either way).
     $dir = sys_get_temp_dir() . '/piwigo-idc-ierror-test-' . bin2hex(random_bytes(8));
     mkdir($dir, 0o777, true);
-    $logger = new \Piwigo\Core\Logger(['directory' => $dir, 'filename' => 'ierror.txt']);
-    \Piwigo\Core\CurrentLogger::set($logger);
+    $logger = new Logger(['directory' => $dir, 'filename' => 'ierror.txt']);
+    $currentLogger = new CurrentLogger();
+    $currentLogger->set($logger);
 
     $originalRequestUri = $_SERVER['REQUEST_URI'] ?? null;
     $_SERVER['REQUEST_URI'] = '/i.php/upload/2026/08/01/foo-th.jpg';
 
-    $controller = new ImageDerivativeController(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)));
+    $controller = new ImageDerivativeController(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)), $currentLogger);
     $exception = callIerror($controller, 'Db file path not found', 404);
 
     $contents = file_get_contents($dir . '/ierror.txt');
@@ -337,7 +337,6 @@ test('ierror() logs the exact code+message concatenation and the real request UR
     } else {
         $_SERVER['REQUEST_URI'] = $originalRequestUri;
     }
-    \Piwigo\Core\CurrentLogger::reset();
     @unlink($dir . '/ierror.txt');
     @rmdir($dir);
 
@@ -349,9 +348,10 @@ test('ierror() logs the exact code+message concatenation and the real request UR
 });
 
 test('parseCustomParams() 400s its own "impossible" null-token guard when invoked with a malformed token array', function (): void {
-    \Piwigo\Core\CurrentLogger::set(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::OFF]));
+    $currentLogger = new CurrentLogger();
+    $currentLogger->set(new Logger(['severity' => Logger::OFF]));
 
-    $controller = new ImageDerivativeController(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)));
+    $controller = new ImageDerivativeController(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)), $currentLogger);
     $method = new ReflectionMethod(ImageDerivativeController::class, 'parseCustomParams');
 
     $exception = null;
@@ -372,6 +372,4 @@ test('parseCustomParams() 400s its own "impossible" null-token guard when invoke
     $response = $exception->response();
     expect($response->getStatusCode())->toBe(400)
         ->and((string) $response->getBody())->toBe('Sizing arr');
-
-    \Piwigo\Core\CurrentLogger::reset();
 });

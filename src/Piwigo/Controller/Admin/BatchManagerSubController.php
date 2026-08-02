@@ -69,6 +69,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
+        private readonly \Piwigo\Core\CurrentLogger $currentLogger,
     ) {}
 
     private static function imageService(): ImageService
@@ -168,7 +169,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
             \Piwigo\Bootstrap\AdminAccessor::batchManagerUnitPageRenderer()
                 ->render($cat_elements_id, $start);
         } else {
-            new BatchManagerGlobalPageRenderer($this->redirectService, $this->urlService)
+            new BatchManagerGlobalPageRenderer($this->redirectService, $this->urlService, $this->currentLogger)
                 ->render($cat_elements_id, $start, $duplicates_on_fields);
         }
     }

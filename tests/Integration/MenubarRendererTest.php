@@ -47,6 +47,8 @@ final class MenubarRendererTest extends IntegrationTestCase
 
     private Template $template;
 
+    private FilterState $filterState;
+
     #[\Override]
     protected function setUp(): void
     {
@@ -101,6 +103,7 @@ final class MenubarRendererTest extends IntegrationTestCase
         ]));
 
         $this->renderer = new MenubarRenderer();
+        $this->filterState = new FilterState();
     }
 
     #[\Override]
@@ -117,7 +120,7 @@ final class MenubarRendererTest extends IntegrationTestCase
             qsearchDetails: ['q' => '<script>alert(1)</script>'],
         ));
 
-        $this->renderer->render($this->urlService);
+        $this->renderer->render($this->urlService, $this->filterState);
 
         self::assertSame('&lt;script&gt;alert(1)&lt;/script&gt;', $this->template->get_template_vars('QUERY_SEARCH'));
     }
@@ -126,7 +129,7 @@ final class MenubarRendererTest extends IntegrationTestCase
     {
         SectionContextRegistry::set(new SectionContext(section: 'categories'));
 
-        $this->renderer->render($this->urlService);
+        $this->renderer->render($this->urlService, $this->filterState);
 
         self::assertNull($this->template->get_template_vars('QUERY_SEARCH'));
     }
@@ -135,9 +138,9 @@ final class MenubarRendererTest extends IntegrationTestCase
     {
         CurrentConfig::setMenubarFilterIcon(true);
         CurrentConfig::setFilterPages(['default' => ['used' => true]]);
-        FilterState::set(true, '', '', []);
+        $this->filterState->set(true, '', '', []);
 
-        $this->renderer->render($this->urlService);
+        $this->renderer->render($this->urlService, $this->filterState);
 
         $expected = $this->urlService->addUrlParams($this->urlService->makeIndexUrl([]), ['filter' => 'stop']);
         self::assertSame($expected, $this->template->get_template_vars('U_STOP_FILTER'));
@@ -148,10 +151,10 @@ final class MenubarRendererTest extends IntegrationTestCase
     {
         CurrentConfig::setMenubarFilterIcon(true);
         CurrentConfig::setFilterPages(['default' => ['used' => true]]);
-        FilterState::set(false, '', '', []);
+        $this->filterState->set(false, '', '', []);
         CurrentUser::set(CurrentUser::get()->withRawAttribute('recent_period', 7));
 
-        $this->renderer->render($this->urlService);
+        $this->renderer->render($this->urlService, $this->filterState);
 
         $expected = $this->urlService->addUrlParams($this->urlService->makeIndexUrl([]), ['filter' => 'start-recent-7']);
         self::assertSame($expected, $this->template->get_template_vars('U_START_FILTER'));
@@ -177,7 +180,7 @@ final class MenubarRendererTest extends IntegrationTestCase
             combinedCategories: null,
         ));
 
-        $this->renderer->render($this->urlService);
+        $this->renderer->render($this->urlService, $this->filterState);
 
         $menubar = $this->template->get_template_vars('MENUBAR');
         self::assertIsString($menubar);
@@ -203,7 +206,7 @@ final class MenubarRendererTest extends IntegrationTestCase
             combinedCategories: [['id' => 2, 'name' => 'Nested Sub Album', 'permalink' => null]],
         ));
 
-        $this->renderer->render($this->urlService);
+        $this->renderer->render($this->urlService, $this->filterState);
 
         $menubar = $this->template->get_template_vars('MENUBAR');
         self::assertIsString($menubar);

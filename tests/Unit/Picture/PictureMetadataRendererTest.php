@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Paths;
 use Piwigo\Picture\PictureMetadataRenderer;
@@ -57,7 +58,7 @@ test('render appends nothing when both show_exif and show_iptc are disabled', fu
     CurrentConfig::setShowIptc(false);
     $renderer = new PictureMetadataRenderer();
 
-    $renderer->render([]);
+    $renderer->render([], new CurrentLogger());
 
     expect(CurrentTemplate::get()->get_template_vars('metadata'))->toBeNull();
 });

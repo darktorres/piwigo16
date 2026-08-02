@@ -8,8 +8,10 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
+use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Logger;
 use Piwigo\Core\Paths;
 use Piwigo\Image\SrcImage;
 use Piwigo\Picture\PictureMetadataRenderer;
@@ -33,6 +35,8 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
 
     private PictureMetadataRenderer $renderer;
 
+    private CurrentLogger $currentLogger;
+
     #[\Override]
     protected function setUp(): void
     {
@@ -50,6 +54,8 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
         @mkdir($this->scratchDir, 0o777, true);
 
         $this->renderer = new PictureMetadataRenderer();
+        $this->currentLogger = new CurrentLogger();
+        $this->currentLogger->set(new Logger(['severity' => Logger::OFF]));
     }
 
     #[\Override]
@@ -178,7 +184,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
             $this->makeJpegWithSegments($this->buildApp1ExifSegment(['Artist' => 'Jane Photographer', 'ImageDescription' => 'A test photo']))
         );
 
-        $this->renderer->render($this->makePicture($relativePath));
+        $this->renderer->render($this->makePicture($relativePath), $this->currentLogger);
 
         $metadata = CurrentTemplate::get()->get_template_vars('metadata');
         self::assertIsArray($metadata);
@@ -218,7 +224,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
             $this->makeJpegWithSegments($this->buildApp1ExifSegment([]))
         );
 
-        $this->renderer->render($this->makePicture($relativePath));
+        $this->renderer->render($this->makePicture($relativePath), $this->currentLogger);
 
         $metadata = CurrentTemplate::get()->get_template_vars('metadata');
         self::assertIsArray($metadata);
@@ -237,7 +243,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
         $relativePath = '_data/picture-metadata-renderer-test-scratch/exif-empty.jpg';
         file_put_contents(dirname(__DIR__, 2) . '/' . $relativePath, $this->makeJpegWithSegments($this->buildApp1ExifSegment(['Artist' => 'Jane'])));
 
-        $this->renderer->render($this->makePicture($relativePath));
+        $this->renderer->render($this->makePicture($relativePath), $this->currentLogger);
 
         self::assertNull(CurrentTemplate::get()->get_template_vars('metadata'));
     }
@@ -265,7 +271,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
             $this->makeJpegWithSegments($this->buildApp13IptcSegment([[5, 'Sunset Over The Bay'], [80, 'Jane Photographer']]))
         );
 
-        $this->renderer->render($this->makePicture($relativePath));
+        $this->renderer->render($this->makePicture($relativePath), $this->currentLogger);
 
         $metadata = CurrentTemplate::get()->get_template_vars('metadata');
         self::assertIsArray($metadata);
@@ -294,7 +300,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
         );
         file_put_contents(dirname(__DIR__, 2) . '/' . $relativePath, $combined);
 
-        $this->renderer->render($this->makePicture($relativePath));
+        $this->renderer->render($this->makePicture($relativePath), $this->currentLogger);
 
         $metadata = CurrentTemplate::get()->get_template_vars('metadata');
         self::assertIsArray($metadata);

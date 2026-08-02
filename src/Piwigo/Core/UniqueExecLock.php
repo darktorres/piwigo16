@@ -46,7 +46,7 @@ final class UniqueExecLock
 {
     public static function begins(string $tokenName, int $timeout = 60): false|string
     {
-        $logger = \Piwigo\Core\CurrentLogger::get();
+        $logger = \Piwigo\Core\CurrentLogger::getStatic();
         $configService = \Piwigo\Config\CurrentConfigService::get();
 
         $exec_id = substr(sha1(random_bytes(1000)), 0, 8);
@@ -87,7 +87,7 @@ final class UniqueExecLock
 
     public static function ends(string $tokenName): void
     {
-        $logger = \Piwigo\Core\CurrentLogger::get();
+        $logger = \Piwigo\Core\CurrentLogger::getStatic();
 
         \Piwigo\Config\CurrentConfigService::get()->confDeleteParam($tokenName . '_running');
         $logger->info('[' . $tokenName . '] ends now');

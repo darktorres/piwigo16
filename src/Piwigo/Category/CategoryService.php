@@ -683,7 +683,7 @@ final readonly class CategoryService
      * @param array<string, mixed>|null $category
      * @return array{menu: array<int, array<string, mixed>>, categoryCountCategories: ?int}
      */
-    public function getCategoriesMenu(?array $category, FilterUpdaterInterface $filterUpdater, UrlServiceInterface $urlService): array
+    public function getCategoriesMenu(?array $category, FilterUpdaterInterface $filterUpdater, UrlServiceInterface $urlService, \Piwigo\Core\FilterState $filterState): array
     {
         $currentUser = \Piwigo\Users\CurrentUser::get();
 
@@ -710,8 +710,8 @@ final readonly class CategoryService
             $allRows,
             $categoryPage,
             (bool) $currentUser->rawAttributes['expand'],
-            \Piwigo\Core\FilterState::isEnabled(),
-            \Piwigo\Core\FilterState::visibleCategories()
+            $filterState->isEnabled(),
+            $filterState->visibleCategories()
         );
 
         $cats = [];

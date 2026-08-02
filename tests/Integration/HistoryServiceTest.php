@@ -8,6 +8,7 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
+use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Logger;
 use Piwigo\Core\PageState;
 use Piwigo\Db\DbConnection;
@@ -74,7 +75,9 @@ final class HistoryServiceTest extends IntegrationTestCase
         $GLOBALS['logger'] = new Logger(['severity' => Logger::OFF]);
 
         $this->conn = DbConnection::build();
-        $this->service = new HistoryService(EntityManagerFactory::build($this->conn)->getRepository(HistoryEntity::class), new ConfigService($this->buildConfigRepository()));
+        $currentLogger = new CurrentLogger();
+        $currentLogger->set(new Logger(['severity' => Logger::OFF]));
+        $this->service = new HistoryService(EntityManagerFactory::build($this->conn)->getRepository(HistoryEntity::class), new ConfigService($this->buildConfigRepository()), $currentLogger);
     }
 
     #[\Override]

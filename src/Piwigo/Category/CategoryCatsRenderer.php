@@ -65,6 +65,7 @@ final readonly class CategoryCatsRenderer
         private PermissionService $permissionService,
         private ImageRepository $imageRepo,
         private UrlServiceInterface $urlService,
+        private \Piwigo\Core\CurrentLogger $currentLogger,
     ) {}
 
     /**
@@ -81,7 +82,7 @@ final readonly class CategoryCatsRenderer
      */
     public function render(string $section, ?array $category, int $startcat): void
     {
-        $logger = \Piwigo\Core\CurrentLogger::get();
+        $logger = $this->currentLogger->get();
         $template = $this->template;
 
         $categoryRepo = $this->categoryRepo;

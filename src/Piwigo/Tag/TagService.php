@@ -603,7 +603,7 @@ final readonly class TagService
             return;
         }
 
-        $logger = \Piwigo\Core\CurrentLogger::get();
+        $logger = \Piwigo\Core\CurrentLogger::getStatic();
 
         $taglistBefore = $this->getImageTagIds(array_keys($tagsOf));
         $logger->debug('taglist_before', $taglistBefore);

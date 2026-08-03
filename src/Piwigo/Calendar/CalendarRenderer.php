@@ -91,15 +91,15 @@ final readonly class CalendarRenderer
             $forbidden_categories = $this->currentUser->get()
                 ->forbiddenCategories;
 
-            $inner_sql = $calendarService->buildInnerSql('categories', $category !== null, $category_id, $forbidden_categories, []);
+            $scope = $calendarService->buildInnerSql('categories', $category !== null, $category_id, $forbidden_categories, []);
 
-            if ($inner_sql === null) {
+            if ($scope === null) {
                 return new CalendarRenderResult($items, '', $chronologyDate, $chronologyStyle, $chronologyView); // nothing to do
             }
         } else {
-            $inner_sql = $calendarService->buildInnerSql('items', false, null, '', $items);
+            $scope = $calendarService->buildInnerSql('items', false, null, '', $items);
 
-            if ($inner_sql === null) {
+            if ($scope === null) {
                 return new CalendarRenderResult($items, '', $chronologyDate, $chronologyStyle, $chronologyView); // nothing to do
             }
         }
@@ -144,7 +144,7 @@ final readonly class CalendarRenderer
         $cal_style = $chronology_style;
         $classname = $styles[$cal_style]['classname'];
 
-        $calendar = new $classname($this->lang, new CalendarRepository($conn), $this->urlService, $this->currentConfig);
+        $calendar = new $classname($this->lang, new CalendarRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), $this->urlService, $this->currentConfig);
         $calendar->chronology_field = $chronologyField;
 
         // Retrieve view
@@ -194,7 +194,7 @@ final readonly class CalendarRenderer
 
         $calendar->chronology_date = $page_chronology_date;
 
-        $calendar->initialize($inner_sql);
+        $calendar->initialize($scope);
 
         // echo ('<pre>'. var_export($calendar, true) . '</pre>');
 
@@ -295,9 +295,9 @@ final readonly class CalendarRenderer
                 /** @var list<int> $cached_items */
                 $items = $cached_items;
             } else {
-                $items = new CalendarRepository($conn)
+                $items = new CalendarRepository(\Piwigo\Db\EntityManagerFactory::build($conn))
                     ->findImageIds(
-                        $calendar->inner_sql,
+                        $calendar->scope->rawSqlFromWhere,
                         $calendar->get_date_where(),
                         $order_by
                     );

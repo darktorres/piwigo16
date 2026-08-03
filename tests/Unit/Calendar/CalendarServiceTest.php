@@ -108,12 +108,15 @@ test('buildInnerSql returns null for a non-category section with no items', func
 test('buildInnerSql builds a WHERE id IN clause for a non-category section', function (): void {
     $service = makeCalendarService();
 
-    $sql = $service->buildInnerSql('tags', false, null, '', [1, 2, 3]);
-    assert($sql !== null);
+    $scope = $service->buildInnerSql('tags', false, null, '', [1, 2, 3]);
+    assert($scope !== null);
 
-    expect($sql->sql)->toBe(' FROM ' . Tables::images() . "\nWHERE id IN (:innerItems)")
-        ->and($sql->parameters)->toBe(['innerItems' => ['1', '2', '3']])
-        ->and($sql->types)->toBe(['innerItems' => ArrayParameterType::STRING]);
+    expect($scope->rawSqlFromWhere->sql)->toBe(' FROM ' . Tables::images() . "\nWHERE id IN (:innerItems)")
+        ->and($scope->rawSqlFromWhere->parameters)->toBe(['innerItems' => ['1', '2', '3']])
+        ->and($scope->rawSqlFromWhere->types)->toBe(['innerItems' => ArrayParameterType::STRING])
+        ->and($scope->joinImageCategory)->toBeFalse()
+        ->and($scope->dqlWhere->sql)->toBe('i.id IN (:innerItems)')
+        ->and($scope->dqlWhere->parameters)->toBe(['innerItems' => [1, 2, 3]]);
 });
 
 test('buildInnerSql returns null when there is a category context but no resolved category id', function (): void {
@@ -128,8 +131,8 @@ test('buildInnerSql returns null when there is a category context but no resolve
 test('buildInnerSql browses everything visible when there is no category context', function (): void {
     $service = makeCalendarService();
 
-    $sql = $service->buildInnerSql('categories', false, null, '', []);
-    assert($sql !== null);
+    $scope = $service->buildInnerSql('categories', false, null, '', []);
+    assert($scope !== null);
 
     // Even a fully-default CurrentUser still gets a "level <= 0" clause --
     // visible_images falls through into the forbidden_images level check
@@ -138,15 +141,22 @@ test('buildInnerSql browses everything visible when there is no category context
     // placeholder name is a monotonic per-process counter (see
     // PermissionServiceTest.php's own singleParamKey() convention), so
     // extract whatever name was actually generated.
-    $key = array_key_first($sql->parameters);
+    $key = array_key_first($scope->rawSqlFromWhere->parameters);
     expect($key)->toBeString();
     assert(is_string($key));
 
-    expect($sql->sql)->toBe(
+    expect($scope->rawSqlFromWhere->sql)->toBe(
         ' FROM ' . Tables::images()
         . "\nINNER JOIN " . Tables::imageCategory() . ' ON id = image_id'
         . "\n    WHERE level <= :{$key}"
-    )->and($sql->parameters)->toBe([$key => 0]);
+    )->and($scope->rawSqlFromWhere->parameters)->toBe([$key => 0]);
+
+    expect($scope->joinImageCategory)->toBeTrue();
+    $dqlKey = array_key_first($scope->dqlWhere->parameters);
+    expect($dqlKey)->toBeString();
+    assert(is_string($dqlKey));
+    expect($scope->dqlWhere->sql)->toBe("i.level <= :{$dqlKey}")
+        ->and($scope->dqlWhere->parameters)->toBe([$dqlKey => 0]);
 });
 
 test('buildInnerSql falls back to a forced 1 = 1 condition when no permission clause applies at all', function (): void {
@@ -173,14 +183,19 @@ test('buildInnerSql falls back to a forced 1 = 1 condition when no permission cl
     ));
     $service = makeCalendarService();
 
-    $sql = $service->buildInnerSql('categories', false, null, '', []);
-    assert($sql !== null);
+    $scope = $service->buildInnerSql('categories', false, null, '', []);
+    assert($scope !== null);
 
-    expect($sql->sql)->toBe(
+    expect($scope->rawSqlFromWhere->sql)->toBe(
         ' FROM ' . Tables::images()
         . "\nINNER JOIN " . Tables::imageCategory() . ' ON id = image_id'
         . "\n    WHERE 1 = 1"
-    )->and($sql->parameters)->toBe([]);
+    )->and($scope->rawSqlFromWhere->parameters)->toBe([]);
+
+    // No '1 = 1' fallback needed on the DQL side -- CalendarRepository's
+    // own applyCondition() helper skips an empty SqlCondition entirely
+    // (no andWhere() call at all) rather than requiring non-empty text.
+    expect($scope->dqlWhere->isEmpty())->toBeTrue();
 });
 
 test('buildInnerSql composes forbidden/visible categories and images into the WHERE clause', function (): void {
@@ -198,20 +213,32 @@ test('buildInnerSql composes forbidden/visible categories and images into the WH
     seedCalendarFilterState(true, visibleCategories: '10,20', visibleImages: '100,200');
     $service = makeCalendarService();
 
-    $sql = $service->buildInnerSql('categories', false, null, '', []);
-    assert($sql !== null);
+    $scope = $service->buildInnerSql('categories', false, null, '', []);
+    assert($scope !== null);
 
-    expect($sql->parameters)->toHaveCount(4);
-    [$forbidKey, $visCatKey, $visImgKey, $levelKey] = array_keys($sql->parameters);
+    expect($scope->rawSqlFromWhere->parameters)->toHaveCount(4);
+    [$forbidKey, $visCatKey, $visImgKey, $levelKey] = array_keys($scope->rawSqlFromWhere->parameters);
 
-    expect($sql->sql)->toBe(
+    expect($scope->rawSqlFromWhere->sql)->toBe(
         ' FROM ' . Tables::images()
         . "\nINNER JOIN " . Tables::imageCategory() . ' ON id = image_id'
         . "\n    WHERE category_id NOT IN (:{$forbidKey}) AND category_id IN (:{$visCatKey}) AND id IN (:{$visImgKey}) AND level <= :{$levelKey}"
-    )->and($sql->parameters)->toBe([
+    )->and($scope->rawSqlFromWhere->parameters)->toBe([
         $forbidKey => [5, 6],
         $visCatKey => [10, 20],
         $visImgKey => [100, 200],
         $levelKey => 2,
+    ]);
+
+    expect($scope->dqlWhere->parameters)->toHaveCount(4);
+    [$dqlForbidKey, $dqlVisCatKey, $dqlVisImgKey, $dqlLevelKey] = array_keys($scope->dqlWhere->parameters);
+
+    expect($scope->dqlWhere->sql)->toBe(
+        "ic.categoryId NOT IN (:{$dqlForbidKey}) AND ic.categoryId IN (:{$dqlVisCatKey}) AND i.id IN (:{$dqlVisImgKey}) AND i.level <= :{$dqlLevelKey}"
+    )->and($scope->dqlWhere->parameters)->toBe([
+        $dqlForbidKey => [5, 6],
+        $dqlVisCatKey => [10, 20],
+        $dqlVisImgKey => [100, 200],
+        $dqlLevelKey => 2,
     ]);
 });

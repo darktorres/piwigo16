@@ -25,21 +25,24 @@ final class CalendarMonthly extends CalendarBase
      * Initialize the calendar.
      */
     #[\Override]
-    public function initialize(SqlCondition $inner_sql): void
+    public function initialize(CalendarQueryScope $scope): void
     {
-        parent::initialize($inner_sql);
+        parent::initialize($scope);
         $month_labels = $this->lang->months();
         $this->calendar_levels = [
             [
-                'sql' => \Piwigo\Db\SqlDialect::getYear($this->date_field),
+                'sql' => 'YEAR(' . $this->date_field . ')',
+                'dql' => 'YEAR(' . $this->date_field_dql . ')',
                 'labels' => null,
             ],
             [
-                'sql' => \Piwigo\Db\SqlDialect::getMonth($this->date_field),
+                'sql' => 'MONTH(' . $this->date_field . ')',
+                'dql' => 'MONTH(' . $this->date_field_dql . ')',
                 'labels' => $month_labels,
             ],
             [
-                'sql' => \Piwigo\Db\SqlDialect::getDayOfMonth($this->date_field),
+                'sql' => 'DAYOFMONTH(' . $this->date_field . ')',
+                'dql' => 'DAYOFMONTH(' . $this->date_field_dql . ')',
                 'labels' => null,
             ],
         ];
@@ -118,8 +121,11 @@ final class CalendarMonthly extends CalendarBase
      * @param int $max_levels (e.g. 2=only year and month)
      */
     #[\Override]
-    public function get_date_where($max_levels = 3): SqlCondition
+    public function get_date_where($max_levels = 3, bool $forDql = false): SqlCondition
     {
+        $dateField = $forDql ? $this->date_field_dql : $this->date_field;
+        $levelKey = $forDql ? 'dql' : 'sql';
+
         $date = $this->chronology_date;
         while (count($date) > $max_levels) {
             array_pop($date);
@@ -152,26 +158,37 @@ final class CalendarMonthly extends CalendarBase
                 // condition above, so it can never be true.
                 if (isset($date[self::CDAY]) and $date[self::CDAY] !== 'any') {
                     $day = $date[self::CDAY];
-                    $res .= ' AND ' . $this->calendar_levels[self::CDAY]['sql'] . '= :dateWhereDay';
+                    $res .= ' AND ' . $this->calendar_levels[self::CDAY][$levelKey] . '= :dateWhereDay';
                     $params['dateWhereDay'] = $day;
                 }
             }
-            $res = " AND {$this->date_field} BETWEEN :dateWhereStart AND :dateWhereEnd" . $res;
+            $res = " AND {$dateField} BETWEEN :dateWhereStart AND :dateWhereEnd" . $res;
             $params['dateWhereStart'] = $b;
             $params['dateWhereEnd'] = $e . ' 23:59:59';
         } else {
-            $res = ' AND ' . $this->date_field . ' IS NOT NULL';
+            $res = ' AND ' . $dateField . ' IS NOT NULL';
             if (isset($date[self::CMONTH]) and $date[self::CMONTH] !== 'any') {
                 $month = $date[self::CMONTH];
-                $res .= ' AND ' . $this->calendar_levels[self::CMONTH]['sql'] . '= :dateWhereMonth';
+                $res .= ' AND ' . $this->calendar_levels[self::CMONTH][$levelKey] . '= :dateWhereMonth';
                 $params['dateWhereMonth'] = $month;
             }
             if (isset($date[self::CDAY]) and $date[self::CDAY] !== 'any') {
                 $day = $date[self::CDAY];
-                $res .= ' AND ' . $this->calendar_levels[self::CDAY]['sql'] . '= :dateWhereDay';
+                $res .= ' AND ' . $this->calendar_levels[self::CDAY][$levelKey] . '= :dateWhereDay';
                 $params['dateWhereDay'] = $day;
             }
         }
+
+        // $res always starts with ' AND ' by construction above -- meant
+        // to be concatenated directly after existing raw SQL WHERE text
+        // (findImageIds()'s own raw-DBAL path). The DQL side applies this
+        // condition via applyCondition()'s own andWhere() call, which
+        // already supplies that connector -- a leading 'AND ' there would
+        // double up into invalid DQL ("... AND AND ...").
+        if ($forDql) {
+            $res = substr($res, strlen(' AND '));
+        }
+
         return new SqlCondition($res, $params);
     }
 
@@ -226,15 +243,15 @@ final class CalendarMonthly extends CalendarBase
     {
         $page_chronology_date = $this->chronology_date;
         assert(count($page_chronology_date) === 0);
-        $innerSql = $this->inner_sql;
-        $dateWhere = $this->get_date_where();
+        $scope = $this->scope;
+        $dateWhere = $this->get_date_where(forDql: true);
 
-        $rows = $this->calendarRepository->countByYearMonth($this->date_field, $innerSql, $dateWhere);
+        $rows = $this->calendarRepository->countByYearMonth($this->date_field_dql, $scope, $dateWhere);
         $items = [];
         foreach ($rows as $row) {
-            // period is a DATE_FORMAT(...) expression (SqlDialect::
-            // getDateYYYYMM()), always a scalar; DBAL row values are
-            // typed mixed regardless, so narrow before casting.
+            // period is a DATE_FORMAT_YEAR_MONTH(...) expression, always a
+            // scalar; DQL array-hydrated row values are typed mixed
+            // regardless, so narrow before casting.
             $periodRaw = $row['period'] ?? null;
             $period = is_scalar($periodRaw) ? (string) $periodRaw : '';
             $y = substr($period, 0, 4);
@@ -301,15 +318,15 @@ final class CalendarMonthly extends CalendarBase
     {
         $page_chronology_date = $this->chronology_date;
         assert(count($page_chronology_date) === 1);
-        $innerSql = $this->inner_sql;
-        $dateWhere = $this->get_date_where();
+        $scope = $this->scope;
+        $dateWhere = $this->get_date_where(forDql: true);
 
-        $rows = $this->calendarRepository->countByMonthDay($this->date_field, $innerSql, $dateWhere);
+        $rows = $this->calendarRepository->countByMonthDay($this->date_field_dql, $scope, $dateWhere);
         $items = [];
         foreach ($rows as $row) {
-            // period is a DATE_FORMAT(...) expression (SqlDialect::
-            // getDateMMDD()), always a scalar; DBAL row values are typed
-            // mixed regardless, so narrow before casting.
+            // period is a DATE_FORMAT_MONTH_DAY(...) expression, always a
+            // scalar; DQL array-hydrated row values are typed mixed
+            // regardless, so narrow before casting.
             $periodRaw = $row['period'] ?? null;
             $period = is_scalar($periodRaw) ? (string) $periodRaw : '';
             $m = (int) substr($period, 0, 2);
@@ -384,11 +401,11 @@ final class CalendarMonthly extends CalendarBase
         $month = $page_chronology_date[self::CMONTH] ?? null;
         $month = is_int($month) || is_string($month) ? $month : 0;
 
-        $innerSql = $this->inner_sql;
-        $dateWhere = $this->get_date_where();
+        $scope = $this->scope;
+        $dateWhere = $this->get_date_where(forDql: true);
 
         $items = [];
-        $rows = $this->calendarRepository->countByDayOfMonth($this->date_field, $innerSql, $dateWhere);
+        $rows = $this->calendarRepository->countByDayOfMonth($this->date_field_dql, $scope, $dateWhere);
         foreach ($rows as $row) {
             $periodRaw = $row['period'] ?? null;
             $d = is_numeric($periodRaw) ? (int) $periodRaw : 0;
@@ -399,11 +416,11 @@ final class CalendarMonthly extends CalendarBase
 
         foreach ($items as $day => $data) {
             $this->chronology_date[self::CDAY] = $day;
-            $innerSqlPerDay = $this->inner_sql;
-            $dateWherePerDay = $this->get_date_where();
+            $scopePerDay = $this->scope;
+            $dateWherePerDay = $this->get_date_where(forDql: true);
             unset($this->chronology_date[self::CDAY]);
 
-            $row = $this->calendarRepository->findRandomImageForDay($this->date_field, $innerSqlPerDay, $dateWherePerDay);
+            $row = $this->calendarRepository->findRandomImageForDay($this->date_field_dql, $scopePerDay, $dateWherePerDay);
             // $day came from the grouped count query above, which only
             // includes days with at least one image, so this LIMIT 1
             // query always finds a row

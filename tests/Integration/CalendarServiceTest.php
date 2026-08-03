@@ -80,12 +80,18 @@ final class CalendarServiceTest extends IntegrationTestCase
         // get_subcat_ids([1]) includes category 1's own subcategory (2),
         // not just 1 itself -- matches CategoryRepositoryTest's own
         // findSubcategoryIds([1]) === [1, 2] finding.
-        $sql = $this->service->buildInnerSql('categories', true, 1, '', []);
+        $scope = $this->service->buildInnerSql('categories', true, 1, '', []);
 
-        self::assertNotNull($sql);
-        self::assertStringContainsString('category_id IN (:innerSubIds)', $sql->sql);
-        self::assertSame([1, 2], $sql->parameters['innerSubIds']);
-        self::assertStringContainsString('INNER JOIN', $sql->sql);
+        self::assertNotNull($scope);
+        self::assertStringContainsString('category_id IN (:innerSubIds)', $scope->rawSqlFromWhere->sql);
+        self::assertSame([1, 2], $scope->rawSqlFromWhere->parameters['innerSubIds']);
+        self::assertStringContainsString('INNER JOIN', $scope->rawSqlFromWhere->sql);
+
+        // DQL representation: same subcategory ids, DQL property path
+        // (ic.categoryId) instead of the raw column name, join flag set.
+        self::assertTrue($scope->joinImageCategory);
+        self::assertStringContainsString('ic.categoryId IN (:innerSubIds)', $scope->dqlWhere->sql);
+        self::assertSame([1, 2], $scope->dqlWhere->parameters['innerSubIds']);
     }
 
     public function test_build_inner_sql_returns_null_when_the_category_has_no_subcategories_left(): void
@@ -93,9 +99,9 @@ final class CalendarServiceTest extends IntegrationTestCase
         // category 999999 doesn't exist -- get_subcat_ids() finds nothing,
         // so the sub_ids set is empty (same "nothing to do" early return
         // as the original function).
-        $sql = $this->service->buildInnerSql('categories', true, 999999, '', []);
+        $scope = $this->service->buildInnerSql('categories', true, 999999, '', []);
 
-        self::assertNull($sql);
+        self::assertNull($scope);
     }
 
     public function test_build_inner_sql_returns_null_when_category_context_is_malformed(): void
@@ -104,9 +110,9 @@ final class CalendarServiceTest extends IntegrationTestCase
         // present but missing a valid 'id') must take the "specific
         // category" branch's own empty-sub_ids early return, not silently
         // fall through to "browse everything visible".
-        $sql = $this->service->buildInnerSql('categories', true, null, '', []);
+        $scope = $this->service->buildInnerSql('categories', true, null, '', []);
 
-        self::assertNull($sql);
+        self::assertNull($scope);
     }
 
     public function test_build_inner_sql_excludes_forbidden_subcategories(): void
@@ -114,28 +120,38 @@ final class CalendarServiceTest extends IntegrationTestCase
         // category 1's only subcategory (besides itself) is 2 -- marking 2
         // forbidden must remove it from the sub_ids set without touching
         // category 1 itself.
-        $sql = $this->service->buildInnerSql('categories', true, 1, '2', []);
+        $scope = $this->service->buildInnerSql('categories', true, 1, '2', []);
 
-        self::assertNotNull($sql);
-        self::assertSame([1], $sql->parameters['innerSubIds']);
+        self::assertNotNull($scope);
+        self::assertSame([1], $scope->rawSqlFromWhere->parameters['innerSubIds']);
+        self::assertSame([1], $scope->dqlWhere->parameters['innerSubIds']);
     }
 
     public function test_build_inner_sql_for_browsing_everything_visible(): void
     {
-        $sql = $this->service->buildInnerSql('categories', false, null, '', []);
+        $scope = $this->service->buildInnerSql('categories', false, null, '', []);
 
-        self::assertNotNull($sql);
-        self::assertStringContainsString('WHERE', $sql->sql);
-        self::assertStringContainsString('INNER JOIN', $sql->sql);
+        self::assertNotNull($scope);
+        self::assertStringContainsString('WHERE', $scope->rawSqlFromWhere->sql);
+        self::assertStringContainsString('INNER JOIN', $scope->rawSqlFromWhere->sql);
+        self::assertTrue($scope->joinImageCategory);
+        // Every real condition below references ic.categoryId/i.id/i.level
+        // (DQL property paths), never the raw ic.category_id/id/level
+        // column names the raw-SQL side uses.
+        self::assertStringContainsString('ic.categoryId', $scope->dqlWhere->sql);
     }
 
     public function test_build_inner_sql_for_an_explicit_item_list(): void
     {
-        $sql = $this->service->buildInnerSql('items', false, null, '', [1, 2, 3]);
+        $scope = $this->service->buildInnerSql('items', false, null, '', [1, 2, 3]);
 
-        self::assertNotNull($sql);
-        self::assertStringContainsString('WHERE id IN (:innerItems)', $sql->sql);
-        self::assertSame(['1', '2', '3'], $sql->parameters['innerItems']);
+        self::assertNotNull($scope);
+        self::assertStringContainsString('WHERE id IN (:innerItems)', $scope->rawSqlFromWhere->sql);
+        self::assertSame(['1', '2', '3'], $scope->rawSqlFromWhere->parameters['innerItems']);
+
+        self::assertFalse($scope->joinImageCategory);
+        self::assertSame('i.id IN (:innerItems)', $scope->dqlWhere->sql);
+        self::assertSame([1, 2, 3], $scope->dqlWhere->parameters['innerItems']);
     }
 
     public function test_build_inner_sql_returns_null_for_an_empty_item_list(): void

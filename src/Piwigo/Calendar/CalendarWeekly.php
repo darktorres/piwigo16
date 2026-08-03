@@ -22,9 +22,9 @@ final class CalendarWeekly extends CalendarBase
      * Initialize the calendar
      */
     #[\Override]
-    public function initialize(SqlCondition $inner_sql): void
+    public function initialize(CalendarQueryScope $scope): void
     {
-        parent::initialize($inner_sql);
+        parent::initialize($scope);
         $week_no_labels = [];
         for ($i = 1; $i <= 53; $i++) {
             $week_no_labels[$i] = $this->lang->t('Week %d', $i);
@@ -35,23 +35,28 @@ final class CalendarWeekly extends CalendarBase
 
         $this->calendar_levels = [
             [
-                'sql' => \Piwigo\Db\SqlDialect::getYear($this->date_field),
+                'sql' => 'YEAR(' . $this->date_field . ')',
+                'dql' => 'YEAR(' . $this->date_field_dql . ')',
                 'labels' => null,
             ],
             [
-                'sql' => \Piwigo\Db\SqlDialect::getWeek($this->date_field) . '+1',
+                'sql' => 'WEEK(' . $this->date_field . ')+1',
+                'dql' => 'WEEK(' . $this->date_field_dql . ')+1',
                 'labels' => $week_no_labels,
             ],
             [
-                'sql' => \Piwigo\Db\SqlDialect::getDayOfWeek($this->date_field) . '-1',
+                'sql' => 'DAYOFWEEK(' . $this->date_field . ')-1',
+                'dql' => 'DAYOFWEEK(' . $this->date_field_dql . ')-1',
                 'labels' => $day_labels,
             ],
         ];
         // Comment next lines for week starting on Sunday or if MySQL version<4.0.17
         // WEEK(date,5) = "0-53 - Week 1=the first week with a Monday in this year"
         if ($this->currentConfig->weekStartsOn() === 'monday') {
-            $this->calendar_levels[self::CWEEK]['sql'] = \Piwigo\Db\SqlDialect::getWeek($this->date_field, 5) . '+1';
-            $this->calendar_levels[self::CDAY]['sql'] = \Piwigo\Db\SqlDialect::getWeekday($this->date_field);
+            $this->calendar_levels[self::CWEEK]['sql'] = 'WEEK(' . $this->date_field . ', 5)+1';
+            $this->calendar_levels[self::CWEEK]['dql'] = 'WEEK(' . $this->date_field_dql . ', 5)+1';
+            $this->calendar_levels[self::CDAY]['sql'] = 'WEEKDAY(' . $this->date_field . ')';
+            $this->calendar_levels[self::CDAY]['dql'] = 'WEEKDAY(' . $this->date_field_dql . ')';
             // Always a real array here: $day_labels above comes from
             // Lang::days(), which never returns null.
             $cday_labels = $this->calendar_levels[self::CDAY]['labels'];
@@ -91,8 +96,11 @@ final class CalendarWeekly extends CalendarBase
      * @param int $max_levels (e.g. 2=only year and month)
      */
     #[\Override]
-    public function get_date_where($max_levels = 3): SqlCondition
+    public function get_date_where($max_levels = 3, bool $forDql = false): SqlCondition
     {
+        $dateField = $forDql ? $this->date_field_dql : $this->date_field;
+        $levelKey = $forDql ? 'dql' : 'sql';
+
         $date = $this->chronology_date;
         while (count($date) > $max_levels) {
             array_pop($date);
@@ -101,24 +109,35 @@ final class CalendarWeekly extends CalendarBase
         $params = [];
         if (isset($date[self::CYEAR]) and $date[self::CYEAR] !== 'any') {
             $y = $date[self::CYEAR];
-            $res = " AND {$this->date_field} BETWEEN :dateWhereYearStart AND :dateWhereYearEnd";
+            $res = " AND {$dateField} BETWEEN :dateWhereYearStart AND :dateWhereYearEnd";
             $params['dateWhereYearStart'] = $y . '-01-01';
             $params['dateWhereYearEnd'] = $y . '-12-31 23:59:59';
         }
 
         if (isset($date[self::CWEEK]) and $date[self::CWEEK] !== 'any') {
             $week = $date[self::CWEEK];
-            $res .= ' AND ' . $this->calendar_levels[self::CWEEK]['sql'] . '= :dateWhereWeek';
+            $res .= ' AND ' . $this->calendar_levels[self::CWEEK][$levelKey] . '= :dateWhereWeek';
             $params['dateWhereWeek'] = $week;
         }
         if (isset($date[self::CDAY]) and $date[self::CDAY] !== 'any') {
             $day = $date[self::CDAY];
-            $res .= ' AND ' . $this->calendar_levels[self::CDAY]['sql'] . '= :dateWhereDay';
+            $res .= ' AND ' . $this->calendar_levels[self::CDAY][$levelKey] . '= :dateWhereDay';
             $params['dateWhereDay'] = $day;
         }
         if ($res === '') {
-            $res = ' AND ' . $this->date_field . ' IS NOT NULL';
+            $res = ' AND ' . $dateField . ' IS NOT NULL';
         }
+
+        // $res always starts with ' AND ' by construction above -- meant
+        // to be concatenated directly after existing raw SQL WHERE text
+        // (findImageIds()'s own raw-DBAL path). The DQL side applies this
+        // condition via applyCondition()'s own andWhere() call, which
+        // already supplies that connector -- a leading 'AND ' there would
+        // double up into invalid DQL ("... AND AND ...").
+        if ($forDql) {
+            $res = substr($res, strlen(' AND '));
+        }
+
         return new SqlCondition($res, $params);
     }
 }

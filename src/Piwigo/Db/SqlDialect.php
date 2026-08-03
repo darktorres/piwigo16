@@ -15,16 +15,26 @@ use Piwigo\Core\Env;
  * `MysqliDb::getEnums()`/`getRecentPeriod()`/`doMaintenanceAllTables()`,
  * which stay on the DB-access side of the migration since they do.
  *
- * MySQL-specific today (`DB_RANDOM_FUNCTION`/date-function names), same
- * as the class this was extracted from -- `DbCredentials::current()->driver`
- * already supports `'pgsql'` for the DBAL connection layer itself, but
- * nothing under `src/Piwigo/` ever exercised pgsql beyond
- * `DbConnection::build()`'s own driver branch supporting it -- no
- * `install/schema/pgsql.sql` or equivalent exists in this repo; a real
- * multi-dialect split (a
- * `Piwigo\Db\SqlDialect` interface with MySQL/Postgres implementations,
- * selected by `DbCredentials::current()->driver`) is out of scope for this pass and left as a
- * follow-up once a real pgsql install path is exercised end-to-end.
+ * MySQL-specific today (`DB_RANDOM_FUNCTION`/`getRecentPeriodExpression()`'s
+ * `SUBDATE()`), same as the class this was extracted from --
+ * `DbCredentials::current()->driver` already supports `'pgsql'` for the
+ * DBAL connection layer itself, but nothing under `src/Piwigo/` ever
+ * exercised pgsql beyond `DbConnection::build()`'s own driver branch
+ * supporting it -- no `install/schema/pgsql.sql` or equivalent exists in
+ * this repo; a real multi-dialect split (a `Piwigo\Db\SqlDialect`
+ * interface with MySQL/Postgres implementations, selected by
+ * `DbCredentials::current()->driver`) is out of scope for this pass and
+ * left as a follow-up once a real pgsql install path is exercised end to
+ * end.
+ *
+ * Further SQL-modernization audit, Item 15G: the 10 Calendar-exclusive
+ * date-part/`CONCAT_WS`/cast-passthrough methods this class used to carry
+ * (`getYear`/`getMonth`/`getWeek`/`getWeekday`/`getDayOfMonth`/
+ * `getDayOfWeek`/`getDateYYYYMM`/`getDateMMDD`/`concatWs`/`castToText`)
+ * moved to `Piwigo\Db\DqlFunction\*` (real DQL functions, same per-
+ * platform-`instanceof`-branch shape as `RegexpFunction`/`RandFunction`/
+ * `GroupConcatFunction`) once the Calendar subsystem -- their only real
+ * caller -- became real DQL.
  */
 final class SqlDialect
 {
@@ -53,21 +63,6 @@ final class SqlDialect
         $string = implode(',', $array);
 
         return 'CONCAT(' . $string . ')';
-    }
-
-    /**
-     * @param string[] $array
-     */
-    public static function concatWs(array $array, string $separator): string
-    {
-        $string = implode(',', $array);
-
-        return 'CONCAT_WS(\'' . $separator . '\',' . $string . ')';
-    }
-
-    public static function castToText(string $string): string
-    {
-        return $string;
     }
 
     /**
@@ -170,50 +165,6 @@ final class SqlDialect
     public static function getHour(string $date): string
     {
         return 'HOUR(' . $date . ')';
-    }
-
-    public static function getDateYYYYMM(string $date): string
-    {
-        return 'DATE_FORMAT(' . $date . ', \'%Y%m\')';
-    }
-
-    public static function getDateMMDD(string $date): string
-    {
-        return 'DATE_FORMAT(' . $date . ', \'%m%d\')';
-    }
-
-    public static function getYear(string $date): string
-    {
-        return 'YEAR(' . $date . ')';
-    }
-
-    public static function getMonth(string $date): string
-    {
-        return 'MONTH(' . $date . ')';
-    }
-
-    public static function getWeek(string $date, ?int $mode = null): string
-    {
-        if ((bool) $mode) {
-            return 'WEEK(' . $date . ', ' . $mode . ')';
-        }
-
-        return 'WEEK(' . $date . ')';
-    }
-
-    public static function getDayOfMonth(string $date): string
-    {
-        return 'DAYOFMONTH(' . $date . ')';
-    }
-
-    public static function getDayOfWeek(string $date): string
-    {
-        return 'DAYOFWEEK(' . $date . ')';
-    }
-
-    public static function getWeekday(string $date): string
-    {
-        return 'WEEKDAY(' . $date . ')';
     }
 
     public static function dateToTs(string $date): string

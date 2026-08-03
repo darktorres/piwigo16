@@ -75,21 +75,33 @@ abstract class CalendarBase
     public const int CDAY = 2;
 
     /**
-     * db column on which this calendar works
+     * db column on which this calendar works -- raw SQL column name, used
+     * only by {@see CalendarRepository::findImageIds()}'s own raw-DBAL
+     * path (see its own docblock for why it alone stays off DQL).
      *
      * @var string
      */
     public $date_field;
 
     /**
-     * used for queries (INNER JOIN or normal)
+     * DQL property-path equivalent of $date_field (e.g. `i.dateAvailable`)
+     * -- used by every other query in this hierarchy, all of which are
+     * real DQL as of the Item 15G Calendar redesign.
      */
-    public SqlCondition $inner_sql;
+    public string $date_field_dql = '';
 
     /**
-     * used to store db fields
+     * used for queries (INNER JOIN or normal)
+     */
+    public CalendarQueryScope $scope;
+
+    /**
+     * used to store db fields -- 'sql' is the raw SQL expression (feeds
+     * {@see CalendarRepository::findImageIds()}'s own raw-DBAL path via
+     * get_date_where()), 'dql' is the DQL property-path equivalent (feeds
+     * every other query).
      *
-     * @var array<int, array{sql: string, labels: array<int|string, string>|null}>
+     * @var array<int, array{sql: string, dql: string, labels: array<int|string, string>|null}>
      */
     public $calendar_levels;
 
@@ -141,20 +153,26 @@ abstract class CalendarBase
      * Returns a sql WHERE subquery for the date field.
      *
      * @param int $max_levels (e.g. 2=only year and month)
+     * @param bool $forDql when true, reads $date_field_dql/calendar_levels[$level]['dql']
+     *   instead of $date_field/calendar_levels[$level]['sql'] -- every real caller except
+     *   {@see CalendarRenderer::render()}'s own findImageIds() feed passes true, since every
+     *   other CalendarRepository method is real DQL (see CalendarRepository's own docblock).
      */
-    abstract public function get_date_where($max_levels = 3): SqlCondition;
+    abstract public function get_date_where($max_levels = 3, bool $forDql = false): SqlCondition;
 
     /**
      * Initialize the calendar.
      */
-    public function initialize(SqlCondition $inner_sql): void
+    public function initialize(CalendarQueryScope $scope): void
     {
         if ($this->chronology_field === 'posted') {
             $this->date_field = 'date_available';
+            $this->date_field_dql = 'i.dateAvailable';
         } else {
             $this->date_field = 'date_creation';
+            $this->date_field_dql = 'i.dateCreation';
         }
-        $this->inner_sql = $inner_sql;
+        $this->scope = $scope;
     }
 
     /**
@@ -319,11 +337,11 @@ abstract class CalendarBase
      */
     protected function build_nav_bar($level, ?array $labels, \Piwigo\Core\TemplateInterface $template): void
     {
-        $levelSql = $this->calendar_levels[$level]['sql'];
-        $innerSql = $this->inner_sql;
-        $dateWhere = $this->get_date_where($level);
+        $levelDql = $this->calendar_levels[$level]['dql'];
+        $scope = $this->scope;
+        $dateWhere = $this->get_date_where($level, forDql: true);
 
-        $rows = $this->calendarRepository->countGroupedByLevel($levelSql, $innerSql, $dateWhere);
+        $rows = $this->calendarRepository->countGroupedByLevel($levelDql, $scope, $dateWhere);
         $level_items = [];
         foreach ($rows as $row) {
             $keyRaw = $row['period'] ?? null;
@@ -390,11 +408,10 @@ abstract class CalendarBase
             if ($page_chronology_date[$i] === 'any') {
                 $sub_queries[] = '\'any\'';
             } else {
-                $sub_queries[] = \Piwigo\Db\SqlDialect::castToText($this->calendar_levels[$i]['sql']);
+                $sub_queries[] = $this->calendar_levels[$i]['dql'];
             }
         }
-        $concatWsExpr = \Piwigo\Db\SqlDialect::concatWs($sub_queries, '-');
-        $innerSql = $this->inner_sql;
+        $scope = $this->scope;
 
         // $current must mirror the SQL side's own per-element treatment
         // above (every component included, whether 'any' or a real date
@@ -404,10 +421,9 @@ abstract class CalendarBase
         // sanitizes non-'any', non-empty chronology_date tokens into real
         // ints before setting this property, so $current came back ''
         // (empty string, matching no real period) on every real request.
-        // implode() itself already string-casts int elements correctly,
-        // just like SqlDialect::castToText() does on the SQL side.
+        // implode() itself already string-casts int elements correctly.
         $current = implode('-', $page_chronology_date);
-        $upper_items = $this->calendarRepository->findAdjacentPeriods($concatWsExpr, $innerSql, $this->date_field);
+        $upper_items = $this->calendarRepository->findAdjacentPeriods($sub_queries, $scope, $this->date_field_dql);
 
         $version_compare_2arg = static fn (string $a, string $b): int => version_compare($a, $b);
 

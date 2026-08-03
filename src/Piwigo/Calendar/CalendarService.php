@@ -41,9 +41,20 @@ final readonly class CalendarService
      * empty-sub_ids early return), not silently fall through to the
      * "browse everything visible" branch.
      *
+     * Further SQL-modernization audit, Item 15G: returns a
+     * {@see CalendarQueryScope} instead of a single opaque `?SqlCondition`
+     * -- `CalendarRepository::findImageIds()` alone stays on raw DBAL (see
+     * that method's own docblock), every other `CalendarRepository`
+     * method is now real DQL. Both representations are built from the
+     * same subcategory-id resolution and `PermissionCriteria` calls,
+     * computed once; only the final field-path strings differ per target
+     * syntax (raw SQL column names vs. DQL property paths), same "one
+     * `PermissionCriteria` call per representation" shape already used
+     * throughout the rest of this DQL-modernization campaign.
+     *
      * @param  list<bool|float|int|string>  $items  used only when $section !== 'categories'
      */
-    public function buildInnerSql(string $section, bool $hasCategoryContext, int|string|null $categoryId, string $forbiddenCategories, array $items): ?SqlCondition
+    public function buildInnerSql(string $section, bool $hasCategoryContext, int|string|null $categoryId, string $forbiddenCategories, array $items): ?CalendarQueryScope
     {
         $imagesTable = Tables::images();
         $sql = " FROM {$imagesTable}";
@@ -58,9 +69,11 @@ final readonly class CalendarService
                     return null;
                 }
 
+                $subIdsInt = array_values(array_map(intval(...), $subIds));
+
                 $sql .= "\nWHERE category_id IN (:innerSubIds)";
                 $params = [
-                    'innerSubIds' => array_values(array_map(intval(...), $subIds)),
+                    'innerSubIds' => $subIdsInt,
                 ];
                 $types = [
                     'innerSubIds' => ArrayParameterType::INTEGER,
@@ -80,6 +93,21 @@ final readonly class CalendarService
                     $params = [...$params, ...$permissionCondition->parameters];
                     $types = [...$types, ...$permissionCondition->types];
                 }
+
+                $dqlPermissionCondition = SqlCondition::combine(
+                    'AND',
+                    $criteria->visibleImagesCondition('i.id'),
+                    $criteria->maxLevelCondition('i.level'),
+                );
+                $dqlWhere = SqlCondition::combine(
+                    'AND',
+                    new SqlCondition('ic.categoryId IN (:innerSubIds)', [
+                        'innerSubIds' => $subIdsInt,
+                    ], [
+                        'innerSubIds' => ArrayParameterType::INTEGER,
+                    ]),
+                    $dqlPermissionCondition,
+                );
             } else {
                 $criteria = $this->permissionService->getPermissionCriteria();
                 $permissionCondition = SqlCondition::combine(
@@ -98,9 +126,20 @@ final readonly class CalendarService
                 $sql .= "\n    WHERE {$whereSql}";
                 $params = $permissionCondition->parameters;
                 $types = $permissionCondition->types;
+
+                // No '1 = 1' fallback needed on the DQL side: CalendarRepository's
+                // own applyCondition() helper already skips an empty SqlCondition
+                // (no andWhere() call at all) rather than requiring non-empty text.
+                $dqlWhere = SqlCondition::combine(
+                    'AND',
+                    $criteria->forbiddenCategoriesCondition('ic.categoryId'),
+                    $criteria->visibleCategoriesCondition('ic.categoryId'),
+                    $criteria->visibleImagesCondition('i.id'),
+                    $criteria->maxLevelCondition('i.level'),
+                );
             }
 
-            return new SqlCondition($sql, $params, $types);
+            return new CalendarQueryScope(new SqlCondition($sql, $params, $types), true, $dqlWhere);
         }
 
         if ($items === []) {
@@ -109,10 +148,23 @@ final readonly class CalendarService
 
         $sql .= "\nWHERE id IN (:innerItems)";
 
-        return new SqlCondition($sql, [
-            'innerItems' => array_map(strval(...), $items),
-        ], [
-            'innerItems' => ArrayParameterType::STRING,
-        ]);
+        return new CalendarQueryScope(
+            new SqlCondition($sql, [
+                'innerItems' => array_map(strval(...), $items),
+            ], [
+                'innerItems' => ArrayParameterType::STRING,
+            ]),
+            false,
+            // i.id is a mapped `integer` property (unlike the raw-SQL side
+            // above, which compares against the column as a string and
+            // relies on MySQL's own implicit coercion) -- bound as real ints
+            // here so DQL's own type checking against the mapped column
+            // type stays honest.
+            new SqlCondition('i.id IN (:innerItems)', [
+                'innerItems' => array_map(static fn (bool|float|int|string $v): int => is_numeric($v) ? (int) $v : 0, $items),
+            ], [
+                'innerItems' => ArrayParameterType::INTEGER,
+            ]),
+        );
     }
 }

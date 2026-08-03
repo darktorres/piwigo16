@@ -10,9 +10,17 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Events;
 use Doctrine\ORM\ORMSetup;
+use Piwigo\Db\DqlFunction\DateFormatMonthDayFunction;
+use Piwigo\Db\DqlFunction\DateFormatYearMonthFunction;
+use Piwigo\Db\DqlFunction\DayOfMonthFunction;
+use Piwigo\Db\DqlFunction\DayOfWeekFunction;
 use Piwigo\Db\DqlFunction\GroupConcatFunction;
+use Piwigo\Db\DqlFunction\MonthFunction;
 use Piwigo\Db\DqlFunction\RandFunction;
 use Piwigo\Db\DqlFunction\RegexpFunction;
+use Piwigo\Db\DqlFunction\WeekdayFunction;
+use Piwigo\Db\DqlFunction\WeekFunction;
+use Piwigo\Db\DqlFunction\YearFunction;
 use Piwigo\Db\Type\CategoryIdType;
 use Piwigo\Db\Type\CommentIdType;
 use Piwigo\Db\Type\GroupIdType;
@@ -60,6 +68,14 @@ final class EntityManagerFactory
         $config->addCustomStringFunction('REGEXP', RegexpFunction::class);
         $config->addCustomStringFunction('GROUP_CONCAT', GroupConcatFunction::class);
         $config->addCustomNumericFunction('RAND', RandFunction::class);
+        $config->addCustomStringFunction('DATE_FORMAT_YEAR_MONTH', DateFormatYearMonthFunction::class);
+        $config->addCustomStringFunction('DATE_FORMAT_MONTH_DAY', DateFormatMonthDayFunction::class);
+        $config->addCustomNumericFunction('DAYOFMONTH', DayOfMonthFunction::class);
+        $config->addCustomNumericFunction('DAYOFWEEK', DayOfWeekFunction::class);
+        $config->addCustomNumericFunction('WEEKDAY', WeekdayFunction::class);
+        $config->addCustomNumericFunction('WEEK', WeekFunction::class);
+        $config->addCustomNumericFunction('YEAR', YearFunction::class);
+        $config->addCustomNumericFunction('MONTH', MonthFunction::class);
 
         $em = new EntityManager($conn ?? DbConnection::build(), $config);
         $em->getEventManager()

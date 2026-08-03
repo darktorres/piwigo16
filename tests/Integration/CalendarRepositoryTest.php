@@ -41,7 +41,7 @@ final class CalendarRepositoryTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->repo = new CalendarRepository($this->conn);
+        $this->repo = new CalendarRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn));
     }
 
     public function test_find_image_ids_returns_matching_ids_in_order(): void

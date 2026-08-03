@@ -7,6 +7,7 @@ namespace Piwigo\Tests\Integration {
 use Doctrine\DBAL\Connection;
 use Piwigo\Calendar\CalendarBase;
 use Piwigo\Calendar\CalendarMonthly;
+use Piwigo\Calendar\CalendarQueryScope;
 use Piwigo\Calendar\CalendarRepository;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
@@ -116,11 +117,29 @@ final class CalendarMonthlyTest extends IntegrationTestCase
 
     private function makeCalendar(): CalendarMonthly
     {
-        $calendar = new CalendarMonthly(\Piwigo\Core\Lang::current(), new CalendarRepository($this->conn), $this->urlService, CurrentConfig::current());
+        $calendar = new CalendarMonthly(\Piwigo\Core\Lang::current(), new CalendarRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current());
         $calendar->chronology_field = 'posted';
-        $calendar->initialize(new SqlCondition(' FROM ' . Tables::images() . ' WHERE id IN (1,2,3,4,5)'));
+        $calendar->initialize($this->makeScope('id IN (1,2,3,4,5)'));
 
         return $calendar;
+    }
+
+    /**
+     * Builds a no-join {@see CalendarQueryScope} filtered to $idFilterSql
+     * (an `id ...` fragment, e.g. `'id IN (1,2,3)'`) -- both
+     * representations are the same literal filter text, only the column
+     * reference differs (`id` for the raw-SQL side, `i.id` for the DQL
+     * side), same shape {@see \Piwigo\Calendar\CalendarService::
+     * buildInnerSql()} itself produces. $idFilterSql omitted means no
+     * WHERE filter at all (every real image row in scope).
+     */
+    private function makeScope(?string $idFilterSql = null): CalendarQueryScope
+    {
+        return new CalendarQueryScope(
+            new SqlCondition(' FROM ' . Tables::images() . ($idFilterSql === null ? '' : ' WHERE ' . $idFilterSql)),
+            false,
+            new SqlCondition($idFilterSql === null ? '' : 'i.' . $idFilterSql),
+        );
     }
 
     /**
@@ -160,14 +179,14 @@ final class CalendarMonthlyTest extends IntegrationTestCase
 
     public function test_initialize_selects_date_available_for_posted_and_date_creation_for_created(): void
     {
-        $posted = new CalendarMonthly(\Piwigo\Core\Lang::current(), new CalendarRepository($this->conn), $this->urlService, CurrentConfig::current());
+        $posted = new CalendarMonthly(\Piwigo\Core\Lang::current(), new CalendarRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current());
         $posted->chronology_field = 'posted';
-        $posted->initialize(new SqlCondition(' FROM ' . Tables::images()));
+        $posted->initialize($this->makeScope());
         self::assertSame('date_available', $posted->date_field);
 
-        $created = new CalendarMonthly(\Piwigo\Core\Lang::current(), new CalendarRepository($this->conn), $this->urlService, CurrentConfig::current());
+        $created = new CalendarMonthly(\Piwigo\Core\Lang::current(), new CalendarRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current());
         $created->chronology_field = 'created';
-        $created->initialize(new SqlCondition(' FROM ' . Tables::images()));
+        $created->initialize($this->makeScope());
         self::assertSame('date_creation', $created->date_field);
     }
 
@@ -421,8 +440,8 @@ final class CalendarMonthlyTest extends IntegrationTestCase
      * making "next" always point at the *currently viewed* period instead
      * of genuinely advancing, and "previous" never appearing at all. Fixed
      * by dropping the is_string() filter entirely -- implode() already
-     * string-casts int elements correctly on its own, exactly like
-     * SqlDialect::castToText() does for the SQL side of the same value.
+     * string-casts int elements correctly on its own, same as every real
+     * int-typed component in the SQL/DQL side's own $concatDqlExpr build.
      *
      * Demonstrated here with both chronology_date shapes on the exact
      * same underlying data to prove the fix: string components and int
@@ -536,11 +555,11 @@ final class CalendarMonthlyTest extends IntegrationTestCase
      */
     public function test_created_field_uses_date_creation_and_returns_an_empty_calendar_for_zero_matching_rows(): void
     {
-        $calendar = new CalendarMonthly(\Piwigo\Core\Lang::current(), new CalendarRepository($this->conn), $this->urlService, CurrentConfig::current());
+        $calendar = new CalendarMonthly(\Piwigo\Core\Lang::current(), new CalendarRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current());
         $calendar->chronology_field = 'created';
         $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
         $calendar->chronology_date = [];
-        $calendar->initialize(new SqlCondition(' FROM ' . Tables::images() . ' WHERE id IN (1,2,3,4,5)'));
+        $calendar->initialize($this->makeScope('id IN (1,2,3,4,5)'));
 
         self::assertSame('date_creation', $calendar->date_field);
 
@@ -572,11 +591,11 @@ final class CalendarMonthlyTest extends IntegrationTestCase
      */
     public function test_build_nav_bar_auto_narrows_chronology_date_and_skips_the_bar_for_a_single_value(): void
     {
-        $calendar = new CalendarMonthly(\Piwigo\Core\Lang::current(), new CalendarRepository($this->conn), $this->urlService, CurrentConfig::current());
+        $calendar = new CalendarMonthly(\Piwigo\Core\Lang::current(), new CalendarRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current());
         $calendar->chronology_field = 'posted';
         $calendar->chronology_view = CalendarBase::CAL_VIEW_LIST;
         $calendar->chronology_date = [2025];
-        $calendar->initialize(new SqlCondition(' FROM ' . Tables::images() . ' WHERE id IN (4,5)'));
+        $calendar->initialize($this->makeScope('id IN (4,5)'));
 
         $template = new Template();
         $ret = $calendar->generate_category_content($template);
@@ -728,9 +747,9 @@ final class CalendarMonthlyTest extends IntegrationTestCase
      */
     public function test_build_global_calendar_bails_out_to_year_view_when_only_one_year_exists(): void
     {
-        $calendar = new CalendarMonthly(\Piwigo\Core\Lang::current(), new CalendarRepository($this->conn), $this->urlService, CurrentConfig::current());
+        $calendar = new CalendarMonthly(\Piwigo\Core\Lang::current(), new CalendarRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current());
         $calendar->chronology_field = 'posted';
-        $calendar->initialize(new SqlCondition(' FROM ' . Tables::images() . ' WHERE id IN (1,2,3)'));
+        $calendar->initialize($this->makeScope('id IN (1,2,3)'));
         $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
         $calendar->chronology_date = [];
         $template = new Template();
@@ -747,9 +766,9 @@ final class CalendarMonthlyTest extends IntegrationTestCase
      */
     public function test_build_year_calendar_bails_out_to_month_view_when_only_one_month_exists(): void
     {
-        $calendar = new CalendarMonthly(\Piwigo\Core\Lang::current(), new CalendarRepository($this->conn), $this->urlService, CurrentConfig::current());
+        $calendar = new CalendarMonthly(\Piwigo\Core\Lang::current(), new CalendarRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current());
         $calendar->chronology_field = 'posted';
-        $calendar->initialize(new SqlCondition(' FROM ' . Tables::images() . ' WHERE id IN (4,5)'));
+        $calendar->initialize($this->makeScope('id IN (4,5)'));
         $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
         $calendar->chronology_date = [2025];
         $template = new Template();
@@ -771,9 +790,9 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_available = '2024-09-15 00:00:00' WHERE id = 1");
 
         try {
-            $calendar = new CalendarMonthly(\Piwigo\Core\Lang::current(), new CalendarRepository($this->conn), $this->urlService, CurrentConfig::current());
+            $calendar = new CalendarMonthly(\Piwigo\Core\Lang::current(), new CalendarRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current());
             $calendar->chronology_field = 'posted';
-            $calendar->initialize(new SqlCondition(' FROM ' . Tables::images() . ' WHERE id = 1'));
+            $calendar->initialize($this->makeScope('id = 1'));
             $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
             $calendar->chronology_date = [2024, 9];
             $template = new Template();
@@ -798,9 +817,9 @@ final class CalendarMonthlyTest extends IntegrationTestCase
      */
     public function test_build_month_calendar_pads_trailing_days_to_complete_the_final_week(): void
     {
-        $calendar = new CalendarMonthly(\Piwigo\Core\Lang::current(), new CalendarRepository($this->conn), $this->urlService, CurrentConfig::current());
+        $calendar = new CalendarMonthly(\Piwigo\Core\Lang::current(), new CalendarRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfig::current());
         $calendar->chronology_field = 'posted';
-        $calendar->initialize(new SqlCondition(' FROM ' . Tables::images() . ' WHERE id = 3'));
+        $calendar->initialize($this->makeScope('id = 3'));
         $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
         $calendar->chronology_date = [2024, 7];
         $template = new Template();

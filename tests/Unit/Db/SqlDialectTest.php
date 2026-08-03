@@ -33,14 +33,6 @@ test('concat wraps a comma-joined column list in CONCAT()', function (): void {
     expect(SqlDialect::concat(['a', 'b', 'c']))->toBe('CONCAT(a,b,c)');
 });
 
-test('concatWs wraps a comma-joined column list and separator in CONCAT_WS()', function (): void {
-    expect(SqlDialect::concatWs(['a', 'b'], '-'))->toBe("CONCAT_WS('-',a,b)");
-});
-
-test('castToText is an identity passthrough', function (): void {
-    expect(SqlDialect::castToText('anything'))->toBe('anything');
-});
-
 test('getBoolean treats the string "false" as false, everything else by normal truthiness', function (): void {
     expect(SqlDialect::getBoolean('false'))->toBeFalse();
     expect(SqlDialect::getBoolean('FALSE'))->toBeFalse();
@@ -68,26 +60,6 @@ test('getHour wraps a date expression in HOUR()', function (): void {
     expect(SqlDialect::getHour('images.date_available'))->toBe('HOUR(images.date_available)');
 });
 
-test('getDateYYYYMM/getDateMMDD wrap a date expression in DATE_FORMAT()', function (): void {
-    expect(SqlDialect::getDateYYYYMM('d'))->toBe("DATE_FORMAT(d, '%Y%m')");
-    expect(SqlDialect::getDateMMDD('d'))->toBe("DATE_FORMAT(d, '%m%d')");
-});
-
-test('getYear/getMonth/getDayOfMonth/getDayOfWeek/getWeekday wrap a date expression in their SQL function name', function (): void {
-    expect(SqlDialect::getYear('d'))->toBe('YEAR(d)');
-    expect(SqlDialect::getMonth('d'))->toBe('MONTH(d)');
-    expect(SqlDialect::getDayOfMonth('d'))->toBe('DAYOFMONTH(d)');
-    expect(SqlDialect::getDayOfWeek('d'))->toBe('DAYOFWEEK(d)');
-    expect(SqlDialect::getWeekday('d'))->toBe('WEEKDAY(d)');
-});
-
-test('getWeek omits the mode argument when null/falsy, includes it when given', function (): void {
-    expect(SqlDialect::getWeek('d'))->toBe('WEEK(d)');
-    expect(SqlDialect::getWeek('d', null))->toBe('WEEK(d)');
-    expect(SqlDialect::getWeek('d', 0))->toBe('WEEK(d)');
-    expect(SqlDialect::getWeek('d', 3))->toBe('WEEK(d, 3)');
-});
-
 test('dateToTs wraps a date expression in UNIX_TIMESTAMP()', function (): void {
     expect(SqlDialect::dateToTs('d'))->toBe('UNIX_TIMESTAMP(d)');
 });
@@ -101,12 +73,3 @@ test('dateToTs wraps a date expression in UNIX_TIMESTAMP()', function (): void {
 test('getRecentPeriodExpression builds a SUBDATE(...) fragment for a caller-supplied bound-parameter placeholder', function (): void {
     expect(SqlDialect::getRecentPeriodExpression(7, ':lastDate'))->toBe('SUBDATE(:lastDate,INTERVAL 7 DAY)');
 });
-
-/**
- * Confirmed-equivalent: line 176's RemoveBooleanCast (dropping `(bool)`
- * around `$mode` in getWeek()'s `if`). An `if` condition already coerces
- * a nullable int to bool on its own -- 0/null are falsy, any other int
- * is truthy either way, so the explicit cast changes nothing about
- * which branch runs. Confirmed live: the full suite in this file passes
- * identically with the cast removed.
- */

@@ -212,11 +212,16 @@ it('rejects a non-image logo upload with the generic invalid-image save_error, a
 
         // str2url()'s own slugging lowercases and replaces spaces with
         // underscores (confirmed live) -- "My Custom Logo!.png" becomes
-        // "my_custom_logo.png", not a hyphenated slug. Config stores it as
-        // a JSON string, which json_encode() escapes the '/' in by default
-        // (a literal "\/" in the raw column value).
+        // "my_custom_logo.png", not a hyphenated slug. ConfigService::encode()
+        // itself produces a PHP json_encode() string with the '/' escaped
+        // ("\/"), but piwigo_config.value is a real MySQL JSON column
+        // (install/piwigo_structure-mysql.sql), which parses the inserted
+        // text and re-serializes it in MySQL's own canonical form on
+        // storage -- '/' needs no escaping per the JSON spec, so MySQL
+        // drops the backslash; the raw column value read back here is
+        // MySQL's canonical form, not PHP's literal encode() output.
         $storedPath = H::configValue('standard_pages_selected_logo_path');
-        expect($storedPath)->toBe('"logo\/my_custom_logo.png"');
+        expect($storedPath)->toBe('"logo/my_custom_logo.png"');
 
         $uploadedPath = dirname(__DIR__, 2) . '/local/logo/my_custom_logo.png';
         expect(file_exists($uploadedPath))->toBeTrue();

@@ -52,6 +52,16 @@ it('protects other admin/webmaster users from deletion for a plain "admin"-statu
         // plain "admin"-status session -- fixture_admin itself is
         // "webmaster", which every other test in this file uses.
         $adminPage = H::navigateOk($adminPage, '/admin.php?page=user_list');
+        // AdminShell::run() shows the "what's new" popin (footer.tpl's
+        // #whats_new_popin) whenever a user has no show_whats_new_<major>
+        // preference yet, which defaults getParam(..., true) -- true for
+        // this session's brand-new user, unlike fixture_admin (already
+        // dismissed via fixture data), which every other test in this file
+        // uses. The popin overlays the whole page, so the pagination click
+        // below would otherwise time out waiting for an obscured element.
+        // Dismiss it via the app's own real dismiss function first, same
+        // as a real user clicking "Ok, got it!".
+        $adminPage->script("if (typeof hide_user_whats_new === 'function') { hide_user_whats_new(); }");
         // The user grid defaults to 5 per page (sorted newest-registered
         // first) -- the users table is shared, ever-growing state across
         // this whole Browser suite run, so fixture_admin (seeded with the

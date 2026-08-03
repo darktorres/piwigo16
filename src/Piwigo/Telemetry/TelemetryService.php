@@ -4,13 +4,19 @@ declare(strict_types=1);
 
 namespace Piwigo\Telemetry;
 
-use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Platforms\AbstractMySQLPlatform;
 use Doctrine\DBAL\Platforms\MariaDBPlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
+use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Category\CategoryEntity;
+use Piwigo\Comment\CommentEntity;
 use Piwigo\Config\ConfigRepository;
 use Piwigo\Core\AppInfo;
-use Piwigo\Db\Tables;
+use Piwigo\Core\ThemeEntity;
+use Piwigo\Image\ImageEntity;
+use Piwigo\Lang\LanguageEntity;
+use Piwigo\PluginConfig\PluginEntity;
+use Piwigo\Users\UserEntity;
 
 /**
  * Builds the anonymous "phone home" telemetry payload: version strings and
@@ -23,13 +29,20 @@ use Piwigo\Db\Tables;
  * Goes straight to ConfigRepository rather than ConfigService/CurrentConfig::,
  * since resolveInstallId()'s get-or-create must read/write the real DB
  * row every time, not the request-scoped CurrentConfig:: snapshot.
+ *
+ * Item 15 audit: galleryStats()/extensionStats()'s 7 counts converted to
+ * DQL via {@see TelemetryCountedEntity}'s enumerated dispatch --
+ * `databaseInfo()`'s `SELECT VERSION()` stays DBAL (no DQL equivalent for
+ * a driver-version probe). Holds `EntityManagerInterface` directly rather
+ * than a raw `Connection` -- `detectDriverLabel()`/`databaseInfo()` reach
+ * the connection via `$this->em->getConnection()` when they need it.
  */
 final readonly class TelemetryService
 {
     private const string INSTALL_ID_PARAM = 'telemetry_install_id';
 
     public function __construct(
-        private Connection $conn,
+        private EntityManagerInterface $em,
         private ConfigRepository $configRepo,
     ) {}
 
@@ -87,7 +100,8 @@ final readonly class TelemetryService
 
     private function databaseInfo(): DatabaseInfo
     {
-        $version = $this->conn->executeQuery(<<<SQL
+        $version = $this->em->getConnection()
+            ->executeQuery(<<<SQL
             SELECT VERSION()
             SQL)
             ->fetchOne();
@@ -98,34 +112,47 @@ final readonly class TelemetryService
     private function galleryStats(): GalleryStats
     {
         return new GalleryStats(
-            $this->count(Tables::images()),
-            $this->count(Tables::categories()),
-            $this->count(Tables::users()),
-            $this->count(Tables::comments()),
+            $this->count(TelemetryCountedEntity::Images),
+            $this->count(TelemetryCountedEntity::Categories),
+            $this->count(TelemetryCountedEntity::Users),
+            $this->count(TelemetryCountedEntity::Comments),
         );
     }
 
     private function extensionStats(): ExtensionStats
     {
         return new ExtensionStats(
-            $this->count(Tables::plugins()),
-            $this->count(Tables::themes()),
-            $this->count(Tables::languages()),
+            $this->count(TelemetryCountedEntity::Plugins),
+            $this->count(TelemetryCountedEntity::Themes),
+            $this->count(TelemetryCountedEntity::Languages),
         );
     }
 
-    private function count(string $table): int
+    private function count(TelemetryCountedEntity $entity): int
     {
-        $count = $this->conn->executeQuery(<<<SQL
-            SELECT COUNT(*) FROM {$table}
-            SQL)->fetchOne();
+        [$entityClass, $alias] = match ($entity) {
+            TelemetryCountedEntity::Images => [ImageEntity::class, 'i'],
+            TelemetryCountedEntity::Categories => [CategoryEntity::class, 'c'],
+            TelemetryCountedEntity::Users => [UserEntity::class, 'u'],
+            TelemetryCountedEntity::Comments => [CommentEntity::class, 'cm'],
+            TelemetryCountedEntity::Plugins => [PluginEntity::class, 'p'],
+            TelemetryCountedEntity::Themes => [ThemeEntity::class, 't'],
+            TelemetryCountedEntity::Languages => [LanguageEntity::class, 'l'],
+        };
+
+        $count = $this->em->createQueryBuilder()
+            ->select("COUNT({$alias}.id)")
+            ->from($entityClass, $alias)
+            ->getQuery()
+            ->getSingleScalarResult();
 
         return is_numeric($count) ? (int) $count : 0;
     }
 
     private function detectDriverLabel(): string
     {
-        $platform = $this->conn->getDatabasePlatform();
+        $platform = $this->em->getConnection()
+            ->getDatabasePlatform();
 
         if ($platform instanceof MariaDBPlatform) {
             return 'mariadb';

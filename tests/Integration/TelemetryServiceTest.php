@@ -9,6 +9,7 @@ use Doctrine\DBAL\Platforms\MariaDBPlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Platforms\SQLitePlatform;
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Events;
 use Doctrine\ORM\ORMSetup;
 use Piwigo\Config\CurrentConfig;
@@ -52,7 +53,7 @@ final class TelemetryServiceTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         $this->configRepo = $this->buildConfigRepo($this->conn);
-        $this->service = new TelemetryService($this->conn, $this->configRepo);
+        $this->service = new TelemetryService(\Piwigo\Db\EntityManagerFactory::build($this->conn), $this->configRepo);
     }
 
     #[\Override]
@@ -97,7 +98,7 @@ final class TelemetryServiceTest extends IntegrationTestCase
         self::assertIsString($encoded);
         $this->configRepo->upsert('telemetry_install_id', $encoded);
 
-        $service = new TelemetryService($this->conn, $this->buildConfigRepo(DbConnection::build()));
+        $service = new TelemetryService(\Piwigo\Db\EntityManagerFactory::build($this->conn), $this->buildConfigRepo(DbConnection::build()));
 
         self::assertSame('deadbeefdeadbeefdeadbeefdeadbeef', $service->resolveInstallId());
     }
@@ -153,13 +154,19 @@ final class TelemetryServiceTest extends IntegrationTestCase
      * of just that one method is enough. Reflection reaches the private
      * method directly since none of its 3 sibling branches are reachable
      * through buildPayload() in this environment either.
+     *
+     * Item 15 audit: detectDriverLabel() now reaches the connection via
+     * `$this->em->getConnection()` -- the stub Connection is wrapped in a
+     * stub EntityManagerInterface whose only expectation is returning it.
      */
     public function test_detect_driver_label_recognizes_mariadb(): void
     {
         $conn = self::createStub(Connection::class);
         $conn->method('getDatabasePlatform')->willReturn(new MariaDBPlatform());
+        $em = self::createStub(EntityManagerInterface::class);
+        $em->method('getConnection')->willReturn($conn);
 
-        $service = new TelemetryService($conn, $this->configRepo);
+        $service = new TelemetryService($em, $this->configRepo);
         $method = new \ReflectionMethod(TelemetryService::class, 'detectDriverLabel');
 
         self::assertSame('mariadb', $method->invoke($service));
@@ -169,8 +176,10 @@ final class TelemetryServiceTest extends IntegrationTestCase
     {
         $conn = self::createStub(Connection::class);
         $conn->method('getDatabasePlatform')->willReturn(new PostgreSQLPlatform());
+        $em = self::createStub(EntityManagerInterface::class);
+        $em->method('getConnection')->willReturn($conn);
 
-        $service = new TelemetryService($conn, $this->configRepo);
+        $service = new TelemetryService($em, $this->configRepo);
         $method = new \ReflectionMethod(TelemetryService::class, 'detectDriverLabel');
 
         self::assertSame('pgsql', $method->invoke($service));
@@ -180,8 +189,10 @@ final class TelemetryServiceTest extends IntegrationTestCase
     {
         $conn = self::createStub(Connection::class);
         $conn->method('getDatabasePlatform')->willReturn(new SQLitePlatform());
+        $em = self::createStub(EntityManagerInterface::class);
+        $em->method('getConnection')->willReturn($conn);
 
-        $service = new TelemetryService($conn, $this->configRepo);
+        $service = new TelemetryService($em, $this->configRepo);
         $method = new \ReflectionMethod(TelemetryService::class, 'detectDriverLabel');
 
         self::assertSame('unknown', $method->invoke($service));

@@ -20,6 +20,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Mail\MailService;
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
+    use Piwigo\Permission\SqlCondition;
     use Piwigo\PluginConfig\EventDispatcher;
     use Piwigo\Search\Event\QsearchResults;
     use Piwigo\Search\QExpression;
@@ -548,7 +549,7 @@ final class SearchServiceTest extends IntegrationTestCase
 
     public function test_get_regular_search_results_custom_search_clause(): void
     {
-        $results = $this->service->getRegularSearchResults([], 'id = 1');
+        $results = $this->service->getRegularSearchResults([], new SqlCondition('i.id = 1'));
 
         self::assertSame([1], $results['items']);
     }

@@ -5,7 +5,12 @@ declare(strict_types=1);
 namespace Piwigo\Search;
 
 use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Query\Expr\Join;
+use Doctrine\ORM\QueryBuilder;
+use Piwigo\Image\ImageCategoryEntity;
+use Piwigo\Image\ImageEntity;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\Search\Projection\Search;
 
@@ -31,6 +36,10 @@ use Piwigo\Search\Projection\Search;
  * need for dynamically-varying table/column/operator combinations
  * (MySQL FULLTEXT search, a plugin extensibility hook accepting raw SQL)
  * has no DQL representation, confirmed by reading it, not assumed.
+ * `SearchService::getRegularSearchResults()`'s 12 advanced-search criteria
+ * and `searchAllwords()` -- both genuinely bounded shapes, unlike the
+ * quicksearch path -- converted to {@see findImageIdsMatching()} instead,
+ * which they no longer share `findIdsByClause()` with.
  *
  * Every `mixed` below stays that way by design: $params mirrors DBAL
  * Connection::executeQuery()'s own untyped bound-parameter contract
@@ -176,6 +185,44 @@ final class SearchRepository
         }
 
         return $result;
+    }
+
+    private static function applyCondition(QueryBuilder $qb, SqlCondition $condition): void
+    {
+        if ($condition->isEmpty()) {
+            return;
+        }
+
+        $qb->andWhere($condition->sql);
+        foreach ($condition->parameters as $name => $value) {
+            $qb->setParameter($name, $value, $condition->types[$name] ?? ParameterType::STRING);
+        }
+    }
+
+    /**
+     * Shared "images matching this WHERE fragment" executor for every
+     * `SearchService::getRegularSearchResults()` advanced-search criterion
+     * and `searchAllwords()` -- all of them share the exact same `FROM
+     * ImageEntity i INNER JOIN ImageCategoryEntity ic WITH ic.imageId =
+     * i.id WHERE <criterion>` shape (the caller already AND-combines its
+     * own criterion condition with `PermissionCriteria`'s forbidden/
+     * visible conditions into $whereDql before calling this).
+     *
+     * @return list<int>
+     */
+    public function findImageIdsMatching(SqlCondition $whereDql): array
+    {
+        $qb = $this->em->createQueryBuilder()
+            ->select('DISTINCT i.id')
+            ->from(ImageEntity::class, 'i')
+            ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'ic.imageId = i.id');
+        self::applyCondition($qb, $whereDql);
+
+        return array_values(array_map(
+            static fn (mixed $id): int => is_numeric($id) ? (int) $id : 0,
+            $qb->getQuery()
+                ->getSingleColumnResult()
+        ));
     }
 
     /**

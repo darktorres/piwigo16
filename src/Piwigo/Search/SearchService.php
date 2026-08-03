@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Search;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\TagId;
@@ -216,13 +217,13 @@ final readonly class SearchService
      * @param  array<string, mixed>  $search
      * @return array{items: list<int>, search_details: array{matching_cat_ids: ?list<int>, matching_tag_ids: ?list<int>, has_filters_filled: bool, image_ids_for_filter: array<string, list<int>>}}
      */
-    public function getRegularSearchResults(array $search, string $imagesWhere = ''): array
+    public function getRegularSearchResults(array $search, SqlCondition $imagesWhere = new SqlCondition('')): array
     {
         $hasFiltersFilled = false;
         $matchingCatIds = null;
         $matchingTagIds = null;
 
-        $forbidden = $this->forbiddenConditionPositional();
+        $forbidden = $this->forbiddenCondition();
 
         /** @var array<string, list<int>> $imageIdsForFilter */
         $imageIdsForFilter = [];
@@ -277,8 +278,14 @@ final readonly class SearchService
             : [];
         if (isset($searchFields['author']) && $authorWords !== [] && (bool) ($displayFilters['author']['access'] ?? false)) {
             $hasFiltersFilled = true;
-            $placeholders = implode(',', array_fill(0, count($authorWords), '?'));
-            $imageIdsForFilter['author'] = $this->queryImageIdsFor("author IN ({$placeholders})", $authorWords, $forbidden);
+            $imageIdsForFilter['author'] = $this->queryImageIdsFor(
+                new SqlCondition('i.author IN (:authorWords)', [
+                    'authorWords' => $authorWords,
+                ], [
+                    'authorWords' => ArrayParameterType::STRING,
+                ]),
+                $forbidden
+            );
         }
 
         // filetypes
@@ -288,12 +295,12 @@ final readonly class SearchService
             $hasFiltersFilled = true;
             $clauses = [];
             $params = [];
-            foreach ($filetypes as $ext) {
-                $clauses[] = 'path LIKE ?';
-                $params[] = '%.' . $ext;
+            foreach ($filetypes as $i => $ext) {
+                $clauses[] = "i.path LIKE :filetype{$i}";
+                $params["filetype{$i}"] = '%.' . $ext;
             }
 
-            $imageIdsForFilter['filetypes'] = $this->queryImageIdsFor('(' . implode(' OR ', $clauses) . ')', $params, $forbidden);
+            $imageIdsForFilter['filetypes'] = $this->queryImageIdsFor(new SqlCondition('(' . implode(' OR ', $clauses) . ')', $params), $forbidden);
         }
 
         // added_by
@@ -301,8 +308,14 @@ final readonly class SearchService
         $addedByIds = is_array($addedByField) ? array_values(array_map(intval(...), array_filter($addedByField, is_numeric(...)))) : [];
         if ($addedByIds !== [] && (bool) ($displayFilters['added_by']['access'] ?? false)) {
             $hasFiltersFilled = true;
-            $placeholders = implode(',', array_fill(0, count($addedByIds), '?'));
-            $imageIdsForFilter['added_by'] = $this->queryImageIdsFor("added_by IN ({$placeholders})", $addedByIds, $forbidden);
+            $imageIdsForFilter['added_by'] = $this->queryImageIdsFor(
+                new SqlCondition('i.addedBy IN (:addedByIds)', [
+                    'addedByIds' => $addedByIds,
+                ], [
+                    'addedByIds' => ArrayParameterType::INTEGER,
+                ]),
+                $forbidden
+            );
         }
 
         // cat
@@ -322,8 +335,14 @@ final readonly class SearchService
                 : $catWords;
 
             if ($catIds !== []) {
-                $placeholders = implode(',', array_fill(0, count($catIds), '?'));
-                $imageIdsForFilter['cat'] = $this->queryImageIdsFor("category_id IN ({$placeholders})", $catIds, $forbidden);
+                $imageIdsForFilter['cat'] = $this->queryImageIdsFor(
+                    new SqlCondition('ic.categoryId IN (:catIds)', [
+                        'catIds' => $catIds,
+                    ], [
+                        'catIds' => ArrayParameterType::INTEGER,
+                    ]),
+                    $forbidden
+                );
             }
         }
 
@@ -332,14 +351,14 @@ final readonly class SearchService
         $datePostedPreset = is_array($datePostedField) && is_string($datePostedField['preset'] ?? null) ? $datePostedField['preset'] : null;
         if ($datePostedPreset !== null && $datePostedPreset !== '' && (bool) ($displayFilters['post_date']['access'] ?? false)) {
             $hasFiltersFilled = true;
-            [$clause, $params] = $this->dateFilterClause('date_available', $datePostedPreset, $datePostedField, [
-                '24h' => '24 HOUR',
-                '7d' => '7 DAY',
-                '30d' => '30 DAY',
-                '3m' => '3 MONTH',
-                '6m' => '6 MONTH',
+            $condition = $this->dateFilterClause('i.dateAvailable', $datePostedPreset, $datePostedField, [
+                '24h' => [24, 'HOUR'],
+                '7d' => [7, 'DAY'],
+                '30d' => [30, 'DAY'],
+                '3m' => [3, 'MONTH'],
+                '6m' => [6, 'MONTH'],
             ]);
-            $imageIdsForFilter['date_posted'] = $this->queryImageIdsFor($clause, $params, $forbidden);
+            $imageIdsForFilter['date_posted'] = $this->queryImageIdsFor($condition, $forbidden);
         }
 
         // date_created
@@ -347,14 +366,14 @@ final readonly class SearchService
         $dateCreatedPreset = is_array($dateCreatedField) && is_string($dateCreatedField['preset'] ?? null) ? $dateCreatedField['preset'] : null;
         if ($dateCreatedPreset !== null && $dateCreatedPreset !== '' && (bool) ($displayFilters['creation_date']['access'] ?? false)) {
             $hasFiltersFilled = true;
-            [$clause, $params] = $this->dateFilterClause('date_creation', $dateCreatedPreset, $dateCreatedField, [
-                '7d' => '7 DAY',
-                '30d' => '30 DAY',
-                '3m' => '3 MONTH',
-                '6m' => '6 MONTH',
-                '12m' => '12 MONTH',
+            $condition = $this->dateFilterClause('i.dateCreation', $dateCreatedPreset, $dateCreatedField, [
+                '7d' => [7, 'DAY'],
+                '30d' => [30, 'DAY'],
+                '3m' => [3, 'MONTH'],
+                '6m' => [6, 'MONTH'],
+                '12m' => [12, 'MONTH'],
             ]);
-            $imageIdsForFilter['date_created'] = $this->queryImageIdsFor($clause, $params, $forbidden);
+            $imageIdsForFilter['date_created'] = $this->queryImageIdsFor($condition, $forbidden);
         }
 
         // ratios
@@ -363,10 +382,23 @@ final readonly class SearchService
         if ($ratios !== [] && (bool) ($displayFilters['ratio']['access'] ?? false)) {
             $hasFiltersFilled = true;
             $clauseForRatio = [
-                'Portrait' => 'width/height < 0.95',
-                'square' => 'width/height BETWEEN 0.95 AND 1.05',
-                'Landscape' => '(width/height > 1.05 AND width/height < 2)',
-                'Panorama' => 'width/height >= 2',
+                'Portrait' => 'i.width / i.height < 0.95',
+                // Not `BETWEEN` -- a real DQL grammar limitation found
+                // empirically: SimpleConditionalExpression()'s own
+                // lookahead dispatch only walks past a *simple* path
+                // expression (`i.width`) to decide whether what follows is
+                // a BETWEEN/LIKE/IN clause, not past a full arithmetic
+                // expression (`i.width / i.height`) -- so a BETWEEN
+                // immediately after a division LHS mis-dispatches into
+                // ComparisonExpression() instead, which then chokes
+                // expecting a `=`/`<`/etc operator and finds `BETWEEN`.
+                // Plain comparison operators on the exact same division
+                // LHS parse fine (proven by the 3 buckets below), so this
+                // expresses the identical inclusive range via two ANDed
+                // comparisons instead (BETWEEN's own definition).
+                'square' => '(i.width / i.height >= 0.95 AND i.width / i.height <= 1.05)',
+                'Landscape' => '(i.width / i.height > 1.05 AND i.width / i.height < 2)',
+                'Panorama' => 'i.width / i.height >= 2',
             ];
             $clauses = [];
             foreach ($ratios as $r) {
@@ -376,7 +408,7 @@ final readonly class SearchService
             }
 
             if ($clauses !== []) {
-                $imageIdsForFilter['ratios'] = $this->queryImageIdsFor('(' . implode(' OR ', $clauses) . ')', [], $forbidden);
+                $imageIdsForFilter['ratios'] = $this->queryImageIdsFor(new SqlCondition('(' . implode(' OR ', $clauses) . ')'), $forbidden);
             }
         }
 
@@ -387,17 +419,17 @@ final readonly class SearchService
             $hasFiltersFilled = true;
             $clauses = [];
             $ratingParams = [];
-            foreach ($ratings as $r) {
+            foreach ($ratings as $i => $r) {
                 if ((int) $r === 0) {
-                    $clauses[] = 'rating_score IS NULL';
+                    $clauses[] = 'i.ratingScore IS NULL';
                 } else {
-                    $clauses[] = '(rating_score >= ? AND rating_score < ?)';
-                    $ratingParams[] = (int) $r - 1;
-                    $ratingParams[] = (int) $r;
+                    $clauses[] = "(i.ratingScore >= :ratingMin{$i} AND i.ratingScore < :ratingMax{$i})";
+                    $ratingParams["ratingMin{$i}"] = (int) $r - 1;
+                    $ratingParams["ratingMax{$i}"] = (int) $r;
                 }
             }
 
-            $imageIdsForFilter['ratings'] = $this->queryImageIdsFor('(' . implode(' OR ', $clauses) . ')', $ratingParams, $forbidden);
+            $imageIdsForFilter['ratings'] = $this->queryImageIdsFor(new SqlCondition('(' . implode(' OR ', $clauses) . ')', $ratingParams), $forbidden);
         }
 
         // filesize
@@ -406,8 +438,10 @@ final readonly class SearchService
         if ($filesizeMinRaw !== null && $filesizeMinRaw !== 0 && $filesizeMaxRaw !== null && $filesizeMaxRaw !== 0 && is_numeric($filesizeMinRaw) && is_numeric($filesizeMaxRaw) && (bool) ($displayFilters['file_size']['access'] ?? false)) {
             $hasFiltersFilled = true;
             $imageIdsForFilter['filesize'] = $this->queryImageIdsFor(
-                'filesize BETWEEN ? AND ?',
-                [(float) $filesizeMinRaw - 100.0, (float) $filesizeMaxRaw + 100.0],
+                new SqlCondition('i.filesize BETWEEN :filesizeMin AND :filesizeMax', [
+                    'filesizeMin' => (float) $filesizeMinRaw - 100.0,
+                    'filesizeMax' => (float) $filesizeMaxRaw + 100.0,
+                ]),
                 $forbidden
             );
         }
@@ -417,7 +451,13 @@ final readonly class SearchService
         $heightMaxRaw = $searchFields['height_max'] ?? null;
         if ($heightMinRaw !== null && $heightMinRaw !== 0 && $heightMaxRaw !== null && $heightMaxRaw !== 0 && is_scalar($heightMinRaw) && is_scalar($heightMaxRaw) && (bool) ($displayFilters['height']['access'] ?? false)) {
             $hasFiltersFilled = true;
-            $imageIdsForFilter['height'] = $this->queryImageIdsFor('height BETWEEN ? AND ?', [$heightMinRaw, $heightMaxRaw], $forbidden);
+            $imageIdsForFilter['height'] = $this->queryImageIdsFor(
+                new SqlCondition('i.height BETWEEN :heightMin AND :heightMax', [
+                    'heightMin' => $heightMinRaw,
+                    'heightMax' => $heightMaxRaw,
+                ]),
+                $forbidden
+            );
         }
 
         // width
@@ -425,7 +465,13 @@ final readonly class SearchService
         $widthMaxRaw = $searchFields['width_max'] ?? null;
         if ($widthMinRaw !== null && $widthMinRaw !== 0 && $widthMaxRaw !== null && $widthMaxRaw !== 0 && is_scalar($widthMinRaw) && is_scalar($widthMaxRaw) && (bool) ($displayFilters['width']['access'] ?? false)) {
             $hasFiltersFilled = true;
-            $imageIdsForFilter['width'] = $this->queryImageIdsFor('width BETWEEN ? AND ?', [$widthMinRaw, $widthMaxRaw], $forbidden);
+            $imageIdsForFilter['width'] = $this->queryImageIdsFor(
+                new SqlCondition('i.width BETWEEN :widthMin AND :widthMax', [
+                    'widthMin' => $widthMinRaw,
+                    'widthMax' => $widthMaxRaw,
+                ]),
+                $forbidden
+            );
         }
 
         // tags
@@ -446,8 +492,8 @@ final readonly class SearchService
         }
 
         // custom search
-        if ($imagesWhere !== '' && $imagesWhere !== '0') {
-            $imageIdsForFilter['custom'] = $this->queryImageIdsFor($imagesWhere, [], $forbidden);
+        if (! $imagesWhere->isEmpty()) {
+            $imageIdsForFilter['custom'] = $this->queryImageIdsFor($imagesWhere, $forbidden);
         }
 
         $items = [];
@@ -479,15 +525,16 @@ final readonly class SearchService
     }
 
     /**
-     * SearchRepository's own executors are positional-`?`-only (its own
-     * "generic parameterized executor" design, see that class's docblock)
-     * -- unlike every other repository in the SQL-modernization initiative,
-     * so a {@see PermissionCriteria} fragment's own named-placeholder
-     * SqlCondition is rewritten to positional `?`s here, same manual
-     * per-element expansion convention this file's own IN-clause callers
-     * already use for their own array params (e.g. `implode(',',
-     * array_fill(0, count($x), '?'))`). Bare fragment, no prefix --
-     * callers that need a leading " AND " add it themselves.
+     * SearchRepository's own quicksearch-facing executors are
+     * positional-`?`-only (its own "generic parameterized executor"
+     * design, see that class's docblock) -- unlike every other repository
+     * in the SQL-modernization initiative, so a {@see PermissionCriteria}
+     * fragment's own named-placeholder SqlCondition is rewritten to
+     * positional `?`s here, same manual per-element expansion convention
+     * this file's own IN-clause callers already use for their own array
+     * params (e.g. `implode(',', array_fill(0, count($x), '?'))`). Bare
+     * fragment, no prefix -- callers that need a leading " AND " add it
+     * themselves.
      *
      * @return array{0: string, 1: list<mixed>}
      */
@@ -518,60 +565,85 @@ final readonly class SearchService
     }
 
     /**
-     * @return array{0: string, 1: list<mixed>}
+     * Further SQL-modernization audit, Item 15H: `PermissionCriteria`'s own
+     * 5 `*Condition(string): SqlCondition` methods work unchanged against a
+     * DQL `QueryBuilder` -- a caller just passes a DQL property path
+     * (`ic.categoryId`) instead of a raw column name (same finding as
+     * every other consumer this campaign). This retires the former
+     * `forbiddenConditionPositional()` -- its only real caller was the
+     * regular-search (12-criteria) path converted below.
+     * {@see positionalCondition()} itself stays -- the quicksearch token
+     * evaluator's own `getQuickSearchResultsNoCache()` still builds its
+     * permission fragment through it, a genuine, permanent DBAL-only
+     * caller (see `SearchRepository`'s class docblock).
      */
-    private function forbiddenConditionPositional(): array
+    private function forbiddenCondition(): SqlCondition
     {
         $criteria = $this->permissionService->getPermissionCriteria();
+
         // visible_images's own old fallthrough into forbidden_images
         // (fieldName 'id' -> the images-table's own level check) -- see
         // PermissionCriteria's own docblock.
-        [$sql, $values] = $this->positionalCondition(SqlCondition::combine(
+        return SqlCondition::combine(
             'AND',
-            $criteria->forbiddenCategoriesCondition('category_id'),
-            $criteria->visibleCategoriesCondition('category_id'),
-            $criteria->visibleImagesCondition('id'),
-            $criteria->maxLevelCondition('level'),
-        ));
-
-        return [$sql === '' ? '' : ' AND ' . $sql, $values];
+            $criteria->forbiddenCategoriesCondition('ic.categoryId'),
+            $criteria->visibleCategoriesCondition('ic.categoryId'),
+            $criteria->visibleImagesCondition('i.id'),
+            $criteria->maxLevelCondition('i.level'),
+        );
     }
 
     /**
      * Shared "images matching this WHERE fragment, filtered by the current
      * user's permissions" executor for every advanced-search criterion --
-     * all 12 share the exact same
-     * `SELECT DISTINCT(id) FROM images i INNER JOIN image_category ic ON id=ic.image_id
-     * WHERE <criterion> <forbidden>` shape.
+     * all 12 share the exact same `FROM ImageEntity i INNER JOIN
+     * ImageCategoryEntity ic WITH ic.imageId = i.id WHERE <criterion>
+     * <forbidden>` shape. $criterion is AND-combined with $forbidden
+     * unparenthesized -- every real criterion built above already wraps
+     * its own internal OR-joined clauses in parens itself when it has any,
+     * same convention {@see \Piwigo\Ws\PwgCategories} already established.
      *
-     * @param  list<mixed>  $params
-     * @param  array{0: string, 1: list<mixed>}  $forbidden
      * @return list<int>
      */
-    private function queryImageIdsFor(string $whereSql, array $params, array $forbidden): array
+    private function queryImageIdsFor(SqlCondition $criterion, SqlCondition $forbidden): array
     {
-        [$forbiddenSql, $forbiddenParams] = $forbidden;
-
-        return $this->repo->findIdsByClause(
-            'DISTINCT(id)',
-            Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id',
-            $whereSql . ' ' . $forbiddenSql,
-            [...$params, ...$forbiddenParams]
-        );
+        return $this->repo->findImageIdsMatching(SqlCondition::combine('AND', $criterion, $forbidden));
     }
 
     /**
      * date_posted/date_created share this exact preset-or-custom-range
-     * clause-building logic, differing only in the target column and the
-     * preset options list.
+     * clause-building logic, differing only in the target DQL property
+     * path and the preset options list.
      *
-     * @param  array<string, string>  $presetOptions
-     * @return array{0: string, 1: list<mixed>}
+     * Further SQL-modernization audit, Item 15H: the preset branch's own
+     * `SUBDATE(NOW(), INTERVAL ...)` converts to DQL's own real `DATE_SUB()`/
+     * `CURRENT_TIMESTAMP()` built-ins (confirmed real DQL grammar, unlike
+     * `YEAR()`/`MONTH()` -- see the Calendar redesign's own
+     * `Db\DqlFunction\` classes for that distinction) instead of a PHP
+     * `Env::now()`-computed threshold: this
+     * filter's own real semantics ("posted in the last 24h") are
+     * genuinely relative to the DB server's real wall clock, deliberately
+     * NOT `PIWIGO_TEST_NOW`-frozen (unlike most other date-computation
+     * call sites this campaign converted) -- confirmed by this file's own
+     * integration test writing fixture rows via the DB's own real `NOW()`
+     * and expecting a real-time-relative threshold to match, not a frozen
+     * one. $presetOptions carries a `[int $amount, string $unit]` tuple
+     * (`$unit` one of `DATE_SUB()`'s own accepted set: `HOUR`/`DAY`/
+     * `MONTH`) instead of raw MySQL INTERVAL syntax.
+     *
+     * @param  array<string, array{0: int, 1: string}>  $presetOptions
      */
-    private function dateFilterClause(string $column, string $preset, mixed $field, array $presetOptions): array
+    private function dateFilterClause(string $dqlColumn, string $preset, mixed $field, array $presetOptions): SqlCondition
     {
         if (isset($presetOptions[$preset])) {
-            return [$column . ' > SUBDATE(NOW(), INTERVAL ' . $presetOptions[$preset] . ')', []];
+            [$amount, $unit] = $presetOptions[$preset];
+
+            return new SqlCondition(
+                $dqlColumn . " > DATE_SUB(CURRENT_TIMESTAMP(), :dateAmount, '{$unit}')",
+                [
+                    'dateAmount' => $amount,
+                ]
+            );
         }
 
         $custom = [];
@@ -586,8 +658,7 @@ final readonly class SearchService
         }
 
         if ($preset === 'custom' && $custom !== []) {
-            $subclauses = [];
-            $params = [];
+            $subconditions = [];
             // $customDates (a flip, kept only for its isset() lookups
             // below) canonicalizes a purely-numeric string value (e.g.
             // (string) 20250101) into an int array key -- confirmed live,
@@ -598,7 +669,7 @@ final readonly class SearchService
             // that entirely.
             $customDates = array_flip($custom);
 
-            foreach (array_unique($custom) as $customDate) {
+            foreach (array_unique($custom) as $i => $customDate) {
                 $begin = $end = null;
                 $ymd = substr($customDate, 0, 1);
                 if ($ymd === 'y') {
@@ -620,28 +691,53 @@ final readonly class SearchService
                 }
 
                 if ($begin !== null) {
-                    $subclauses[] = '(' . $column . ' BETWEEN ? AND ?)';
-                    $params[] = $begin;
-                    $params[] = $end;
+                    $subconditions[] = new SqlCondition(
+                        "({$dqlColumn} BETWEEN :dateBegin{$i} AND :dateEnd{$i})",
+                        [
+                            "dateBegin{$i}" => $begin,
+                            "dateEnd{$i}" => $end,
+                        ]
+                    );
                 }
             }
 
-            return ['(' . implode(' OR ', $subclauses) . ')', $params];
+            $combined = SqlCondition::combine('OR', ...$subconditions);
+
+            return $combined->isEmpty() ? $combined : new SqlCondition('(' . $combined->sql . ')', $combined->parameters, $combined->types);
         }
 
-        return ['1=1', []];
+        return new SqlCondition('1=1');
     }
 
     /**
+     * Further SQL-modernization audit, Item 15H: converted to DQL, same
+     * shape as every other advanced-search criterion -- `$dqlFieldsByColumn`
+     * maps the 4 known searchable `ImageEntity` columns; each word's own
+     * field-clauses stay OR-joined and parenthesized exactly like before,
+     * and (a real pre-existing bug this redesign fixes for free, not a new
+     * behavior change) the whole word-clause group is now wrapped in an
+     * *outer* pair of parens before it's AND-combined with $forbidden --
+     * the former raw-string version glued `$filterClause . ' ' .
+     * $forbiddenSql` unparenthesized, so an 'OR' $allwordsMode with 2+
+     * words let $forbidden's own permission restriction bind only to the
+     * last OR-branch instead of the whole clause, same class of fix
+     * dateFilterClause()'s own custom-range branch already needed its
+     * outer parens for.
+     *
      * @param  array<array-key, mixed>  $allwordsField
      * @param  list<string>  $words
      * @param  list<string>  $searchFields
-     * @param  array{0: string, 1: list<mixed>}  $forbidden
      * @return array{0: list<int>, 1: ?list<int>, 2: ?list<int>}
      */
-    private function searchAllwords(array $allwordsField, array $words, array $searchFields, array $forbidden): array
+    private function searchAllwords(array $allwordsField, array $words, array $searchFields, SqlCondition $forbidden): array
     {
         $fields = array_intersect(['file', 'name', 'comment', 'author'], $searchFields);
+        $dqlFieldsByColumn = [
+            'file' => 'i.file',
+            'name' => 'i.name',
+            'comment' => 'i.comment',
+            'author' => 'i.author',
+        ];
 
         $catFieldsDictionary = [
             'cat-title' => 'name',
@@ -649,7 +745,7 @@ final readonly class SearchService
         ];
         $catFields = array_intersect(array_keys($catFieldsDictionary), $searchFields);
 
-        $wordClauses = [];
+        $wordConditions = [];
         $catIdsByWord = [];
         $tagIdsByWord = [];
 
@@ -662,12 +758,14 @@ final readonly class SearchService
         $searchesTags = in_array('tags', $searchFields, true);
         $tagService = $searchesTags ? $this->tagService() : null;
 
-        foreach ($words as $word) {
+        foreach ($words as $wordIndex => $word) {
             $fieldClauses = [];
             $params = [];
+            $types = [];
             foreach ($fields as $field) {
-                $fieldClauses[] = $field . ' LIKE ?';
-                $params[] = '%' . $word . '%';
+                $paramName = "word{$wordIndex}_{$field}";
+                $fieldClauses[] = $dqlFieldsByColumn[$field] . ' LIKE :' . $paramName;
+                $params[$paramName] = '%' . $word . '%';
             }
 
             if ($catFields !== []) {
@@ -680,9 +778,10 @@ final readonly class SearchService
                 if ($catIds !== []) {
                     $catImageIds = $this->categoryService->getDistinctLinkedImageIds($catIds);
                     if ($catImageIds !== []) {
-                        $inPlaceholders = implode(',', array_fill(0, count($catImageIds), '?'));
-                        $fieldClauses[] = "id IN ({$inPlaceholders})";
-                        $params = [...$params, ...$catImageIds];
+                        $paramName = "word{$wordIndex}_catImages";
+                        $fieldClauses[] = "i.id IN (:{$paramName})";
+                        $params[$paramName] = $catImageIds;
+                        $types[$paramName] = ArrayParameterType::INTEGER;
                     }
                 }
             }
@@ -694,18 +793,16 @@ final readonly class SearchService
                 if ($tagIds !== []) {
                     $tagImageIds = $tagService->getImageIdsForTagIds(array_map(TagId::from(...), $tagIds));
                     if ($tagImageIds !== []) {
-                        $inPlaceholders = implode(',', array_fill(0, count($tagImageIds), '?'));
-                        $fieldClauses[] = "id IN ({$inPlaceholders})";
-                        $params = [...$params, ...$tagImageIds];
+                        $paramName = "word{$wordIndex}_tagImages";
+                        $fieldClauses[] = "i.id IN (:{$paramName})";
+                        $params[$paramName] = $tagImageIds;
+                        $types[$paramName] = ArrayParameterType::INTEGER;
                     }
                 }
             }
 
             if ($fieldClauses !== []) {
-                $wordClauses[] = [
-                    'sql' => implode("\n          OR ", $fieldClauses),
-                    'params' => $params,
-                ];
+                $wordConditions[] = new SqlCondition('(' . implode(' OR ', $fieldClauses) . ')', $params, $types);
             }
         }
 
@@ -713,17 +810,10 @@ final readonly class SearchService
             ? $allwordsField['mode']
             : 'AND';
 
-        $filterClauseParts = array_map(static fn (array $c): string => '(' . $c['sql'] . ')', $wordClauses);
-        $filterClause = "\n         " . implode("\n         " . $allwordsMode . "\n         ", $filterClauseParts);
-        $allParams = array_merge(...array_map(static fn (array $c): array => $c['params'], $wordClauses));
-        [$forbiddenSql, $forbiddenParams] = $forbidden;
+        $combined = SqlCondition::combine($allwordsMode, ...$wordConditions);
+        $filterCondition = $combined->isEmpty() ? $combined : new SqlCondition('(' . $combined->sql . ')', $combined->parameters, $combined->types);
 
-        $imageIds = $this->repo->findIdsByClause(
-            'DISTINCT(id)',
-            Tables::images() . ' AS i INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id',
-            $filterClause . ' ' . $forbiddenSql,
-            [...$allParams, ...$forbiddenParams]
-        );
+        $imageIds = $this->repo->findImageIdsMatching(SqlCondition::combine('AND', $filterCondition, $forbidden));
 
         $matchingCatIds = null;
         if ($catIdsByWord !== []) {
@@ -1496,6 +1586,16 @@ final readonly class SearchService
     }
 
     /**
+     * $imagesWhere stays a raw string here -- it also feeds the
+     * quicksearch dispatch branch below (`'images_where'`), a genuinely
+     * raw-SQL-text option consumed by the qsearch token evaluator's own
+     * permanent DBAL boundary (see SearchRepository's class docblock).
+     * No real production caller ever passes a non-default value (traced
+     * via SectionPopulator.php's own single real call site) -- the regular-
+     * search dispatch branch below wraps it into a SqlCondition right at
+     * the point of use, since getRegularSearchResults() itself now targets
+     * DQL and needs a real bindable condition, not raw text.
+     *
      * @return array<string, mixed>
      */
     public function getSearchResults(int|string $searchId, ?bool $superOrderBy, string $imagesWhere = ''): array
@@ -1506,7 +1606,7 @@ final readonly class SearchService
         }
 
         if (! isset($search['q']) || ! is_string($search['q'])) {
-            return $this->getRegularSearchResults($search, $imagesWhere);
+            return $this->getRegularSearchResults($search, new SqlCondition($imagesWhere));
         }
 
         return $this->getQuickSearchResults($search['q'], [

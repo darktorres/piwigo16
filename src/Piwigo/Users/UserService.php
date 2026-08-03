@@ -1514,7 +1514,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     public function syncUsers(): void
     {
         $baseUsers = $this->repo->findAllUserIds();
-        $infosUsers = $this->repo->findDistinctUserIdsInTable(Tables::userInfos());
+        $infosUsers = $this->repo->findDistinctUserIdsInMappedTable(UserRelatedTable::UserInfos);
 
         // users present in $baseUsers and not in $infosUsers must be added
         $toCreate = array_values(array_diff($baseUsers, $infosUsers));
@@ -1524,16 +1524,13 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         }
 
         // users present in user related tables must be present in the base user
-        // table
-        $tables = [
+        // table. user_mail_notification/user_feed stay on the raw-table-name
+        // method permanently -- see UserRelatedTable's own docblock.
+        $rawTables = [
             Tables::userMailNotification(),
             Tables::userFeed(),
-            Tables::userInfos(),
-            Tables::userAccess(),
-            Tables::userGroup(),
         ];
-
-        foreach ($tables as $table) {
+        foreach ($rawTables as $table) {
             $toDelete = array_values(array_diff(
                 $this->repo->findDistinctUserIdsInTable($table),
                 $baseUsers
@@ -1541,6 +1538,22 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
             if (count($toDelete) > 0) {
                 $this->repo->deleteUsersFromTable($table, $toDelete);
+            }
+        }
+
+        $mappedTables = [
+            UserRelatedTable::UserInfos,
+            UserRelatedTable::UserAccess,
+            UserRelatedTable::UserGroup,
+        ];
+        foreach ($mappedTables as $table) {
+            $toDelete = array_values(array_diff(
+                $this->repo->findDistinctUserIdsInMappedTable($table),
+                $baseUsers
+            ));
+
+            if (count($toDelete) > 0) {
+                $this->repo->deleteUsersFromMappedTable($table, $toDelete);
             }
         }
     }

@@ -16,7 +16,6 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Event\Album\CreateVirtualCategory;
 use Piwigo\Event\Album\DeleteCategories;
 use Piwigo\Event\Album\GetCategoryPreferredImageOrders;
@@ -1133,18 +1132,18 @@ final readonly class CategoryService
      */
     public function checkCategoriesIntegrity(): void
     {
-        $relatedColumns = [
-            [Tables::imageCategory(), 'category_id'],
-            [Tables::userAccess(), 'cat_id'],
-            [Tables::groupAccess(), 'cat_id'],
-            [Tables::oldPermalinks(), 'cat_id'],
+        $relatedTargets = [
+            CategoryOrphanTarget::ImageCategory,
+            CategoryOrphanTarget::UserAccess,
+            CategoryOrphanTarget::GroupAccess,
+            CategoryOrphanTarget::OldPermalinks,
         ];
 
-        foreach ($relatedColumns as [$table, $column]) {
-            $orphans = $this->repo->findOrphanedColumnValues($table, $column);
+        foreach ($relatedTargets as $target) {
+            $orphans = $this->repo->findOrphanedColumnValues($target);
 
             if (count($orphans) > 0) {
-                $this->repo->deleteRowsWhereColumnIn($table, $column, $orphans);
+                $this->repo->deleteRowsWhereColumnIn($target, $orphans);
             }
         }
     }
@@ -1447,11 +1446,6 @@ final readonly class CategoryService
                 $parentCats = $this->repo->findStatusByIds($parentIds);
             }
 
-            $tables = [
-                Tables::userAccess() => 'user_id',
-                Tables::groupAccess() => 'group_id',
-            ];
-
             foreach ($topCategories as $topCategory) {
                 // what is the "reference" for list of permissions? The parent album
                 // if it is private, else the album itself
@@ -1469,9 +1463,9 @@ final readonly class CategoryService
 
                 $subcats = $this->getSubcatIds([$topCategoryId]);
 
-                foreach ($tables as $table => $field) {
+                foreach (CategoryAccessTarget::cases() as $target) {
                     // what are the permissions user/group of the reference album
-                    $refAccess = $field === 'user_id'
+                    $refAccess = $target === CategoryAccessTarget::UserAccess
                         ? $this->repo->findAccessUserIds($refCatId)
                         : $this->repo->findAccessGroupIds($refCatId);
 
@@ -1480,7 +1474,7 @@ final readonly class CategoryService
                     }
 
                     // step 3, remove the inconsistant permissions from sub-albums
-                    $this->repo->deleteInconsistentAccess($table, $field, $refAccess, $subcats);
+                    $this->repo->deleteInconsistentAccess($target, $refAccess, $subcats);
                 }
             }
         }
@@ -1545,7 +1539,7 @@ final readonly class CategoryService
      * @param  list<int>  $categoryIds
      * @return array<int, mixed> keyed by category_id
      */
-    public function getRefDatesByCategoryIds(array $categoryIds, string $field, string $minmax): array
+    public function getRefDatesByCategoryIds(array $categoryIds, CategoryRefDateField $field, CategoryRefDateAggregate $minmax): array
     {
         return $this->repo->findRefDatesByCategoryIds($categoryIds, $field, $minmax);
     }

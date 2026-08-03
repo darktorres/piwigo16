@@ -623,7 +623,7 @@ final readonly class ImageService
     /**
      * @param array<int, int> $imageIds
      */
-    public function updateTextFieldForImages(array $imageIds, string $field, ?string $value): void
+    public function updateTextFieldForImages(array $imageIds, ImageTextField $field, ?string $value): void
     {
         $this->repo->updateTextFieldForImages($imageIds, $field, $value);
     }
@@ -1104,7 +1104,7 @@ final readonly class ImageService
         return $this->repo->findPathById($imageId);
     }
 
-    public function existsWithColumnValue(string $column, string $value): bool
+    public function existsWithColumnValue(ImageUniquenessColumn $column, string $value): bool
     {
         return $this->repo->existsWithColumnValue($column, $value);
     }
@@ -1246,7 +1246,7 @@ final readonly class ImageService
     }
 
     /**
-     * @param list<string> $fields
+     * @param list<ImageDuplicateField> $fields
      * @return list<int>
      */
     public function getIdsGroupedByDuplicateFields(array $fields): array

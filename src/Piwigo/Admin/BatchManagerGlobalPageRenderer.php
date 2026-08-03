@@ -18,8 +18,10 @@ use Piwigo\Event\Location\LocBeginElementSetGlobal;
 use Piwigo\Event\Location\LocEndElementSetGlobal;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageDuplicateField;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\ImageTextField;
 use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
 use Piwigo\Session\SessionService;
@@ -79,7 +81,7 @@ final class BatchManagerGlobalPageRenderer
      * @param array<array-key, int|string|float|bool> $catElementsId a
      *   scalar-filtered image id set -- see
      *   {@see \Piwigo\Controller\Admin\BatchManagerSubController::computeCurrentSet()}
-     * @param ?list<string> $duplicatesOnFields
+     * @param ?list<ImageDuplicateField> $duplicatesOnFields
      */
     public function render(array $catElementsId, int $pageStart, ?array $duplicatesOnFields = null): void
     {
@@ -321,7 +323,7 @@ final class BatchManagerGlobalPageRenderer
                     $post['author'] = null;
                 }
 
-                $imageService->updateTextFieldForImages($collection, 'author', is_string($post['author'] ?? null) ? $post['author'] : null);
+                $imageService->updateTextFieldForImages($collection, ImageTextField::Author, is_string($post['author'] ?? null) ? $post['author'] : null);
                 $this->entityManager->clear();
 
                 $this->activityService
@@ -336,7 +338,7 @@ final class BatchManagerGlobalPageRenderer
                     $post['title'] = null;
                 }
 
-                $imageService->updateTextFieldForImages($collection, 'name', is_string($post['title'] ?? null) ? $post['title'] : null);
+                $imageService->updateTextFieldForImages($collection, ImageTextField::Name, is_string($post['title'] ?? null) ? $post['title'] : null);
                 $this->entityManager->clear();
 
                 $this->activityService
@@ -353,7 +355,7 @@ final class BatchManagerGlobalPageRenderer
                     $date_creation = is_string($post['date_creation'] ?? null) ? $post['date_creation'] : null;
                 }
 
-                $imageService->updateTextFieldForImages($collection, 'date_creation', $date_creation);
+                $imageService->updateTextFieldForImages($collection, ImageTextField::DateCreation, $date_creation);
                 $this->entityManager->clear();
 
                 $this->activityService
@@ -554,7 +556,7 @@ final class BatchManagerGlobalPageRenderer
             if (isset($bulk_manager_filter['prefilter'])
                 and $bulk_manager_filter['prefilter'] === 'duplicates'
                 and $duplicatesOnFields !== null) {
-                $order_by_fields = array_merge($duplicatesOnFields, ['id']);
+                $order_by_fields = array_merge(array_map(static fn (ImageDuplicateField $field): string => $field->column(), $duplicatesOnFields), ['id']);
                 $order_by = ' ORDER BY ' . join(', ', $order_by_fields);
             } else {
                 // order_by is a raw "ORDER BY ..." SQL fragment string --

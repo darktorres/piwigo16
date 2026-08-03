@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Category;
 
+use Piwigo\Category\CategoryRefDateAggregate;
+use Piwigo\Category\CategoryRefDateField;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\ActivityLoggerInterface;
@@ -77,7 +79,7 @@ final class CategoryAdminService
      * @param list<int|string> $ids
      * @return array<int|string, mixed>
      */
-    public function getCategoriesRefDate(array $ids, string $field = 'date_available', string $minmax = 'max'): array
+    public function getCategoriesRefDate(array $ids, CategoryRefDateField $field = CategoryRefDateField::DateAvailable, CategoryRefDateAggregate $minmax = CategoryRefDateAggregate::Max): array
     {
         // we need to work on the whole tree under each category, even if we
         // don't want to sort sub categories
@@ -120,7 +122,7 @@ final class CategoryAdminService
             }
 
             if (count($to_compare) > 0) {
-                $ref_dates[$cat_id] = $minmax === 'max' ? max($to_compare) : min($to_compare);
+                $ref_dates[$cat_id] = $minmax === CategoryRefDateAggregate::Max ? max($to_compare) : min($to_compare);
             } else {
                 $ref_dates[$cat_id] = null;
             }

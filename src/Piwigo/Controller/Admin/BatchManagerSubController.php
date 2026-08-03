@@ -22,6 +22,7 @@ use Piwigo\Event\Admin\BatchManagerPerformFilters;
 use Piwigo\Event\Admin\BatchManagerRegisterFilters;
 use Piwigo\Event\Admin\BatchManagerUrlFilter;
 use Piwigo\Event\Admin\PerformBatchManagerPrefilters;
+use Piwigo\Image\ImageDuplicateField;
 use Piwigo\Image\ImageService;
 use Piwigo\Lang\Translator;
 use Piwigo\Session\SessionService;
@@ -507,7 +508,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
 
     /**
      * @param array<string, mixed> $bulkFilter
-     * @param ?list<string> $duplicatesOnFields by-ref out-param, only ever
+     * @param ?list<ImageDuplicateField> $duplicatesOnFields by-ref out-param, only ever
      *   computed for the 'duplicates' prefilter (matching the legacy
      *   switch's own scoping) -- fed back to the caller so it can pass it on
      *   to BatchManagerGlobalPageRenderer for its own duplicates-mode

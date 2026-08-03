@@ -132,6 +132,17 @@ final class GroupRepository extends EntityRepository
      * runtime ORDER BY fragment; DQL's orderBy() takes a fixed field path,
      * not a caller-supplied string.
      *
+     * Item 15 audit, re-verified: this plan's own text speculated $order
+     * "is regex-validated... re-derive that pattern's real bounded token
+     * set and build a GroupSortField-shaped enum" -- wrong once actually
+     * checked. {@see \Piwigo\Core\ValidationPattern::ORDER}'s real regex
+     * (`/^(rand(om)?|[a-z_]+(\s+(asc|desc))?)(\s*,\s*...)*$/i`) matches
+     * any `[a-z_]+` token, not a small fixed vocabulary -- genuinely
+     * open-ended, same "caller composes trusted ORDER BY text"
+     * architecture as {@see \Piwigo\Image\PhotoSortField}'s own
+     * documented exception. No enum conversion here; the existing Item 14
+     * exclusion stands.
+     *
      * @param list<GroupId> $groupIds when non-empty, restricts to these ids
      * @return list<array{id: int, name: string, is_default: bool, lastmodified: string, nb_users: int}>
      */

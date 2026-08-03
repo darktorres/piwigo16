@@ -1119,11 +1119,14 @@ final class CategoryRepository extends EntityRepository
     /**
      * @return list<string>
      *
-     * Item 14 DQL audit: stays on DBAL -- $table/$column are dynamic
-     * runtime table/column names, not a fixed DQL property path.
+     * Item 15 audit: `$table`/`$column` converted from arbitrary runtime
+     * strings to {@see CategoryOrphanTarget}'s bounded enum -- see that
+     * enum's own docblock for why this stays on DBAL raw SQL rather than
+     * going all the way to DQL.
      */
-    public function findOrphanedColumnValues(string $table, string $column): array
+    public function findOrphanedColumnValues(CategoryOrphanTarget $target): array
     {
+        [$table, $column] = $target->tableAndColumn();
         $categoriesTable = Tables::categories();
 
         return array_values(array_unique(array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $this->getEntityManager()->getConnection()->executeQuery(<<<SQL
@@ -1138,12 +1141,14 @@ final class CategoryRepository extends EntityRepository
     /**
      * @param  list<int|string>  $values
      *
-     * Item 14 DQL audit: stays on DBAL -- $table/$column are dynamic
-     * runtime table/column names, same reason as
-     * {@see findOrphanedColumnValues()} above.
+     * Item 15 audit: `$table`/`$column` converted from arbitrary runtime
+     * strings to {@see CategoryOrphanTarget}'s bounded enum, same reason
+     * as {@see findOrphanedColumnValues()} above.
      */
-    public function deleteRowsWhereColumnIn(string $table, string $column, array $values): void
+    public function deleteRowsWhereColumnIn(CategoryOrphanTarget $target, array $values): void
     {
+        [$table, $column] = $target->tableAndColumn();
+
         $this->getEntityManager()
             ->getConnection()
             ->executeStatement(<<<SQL
@@ -1370,12 +1375,15 @@ final class CategoryRepository extends EntityRepository
      *   the original's own `$ref_access[] = -1;` sentinel)
      * @param  list<int>  $catIds
      *
-     * Item 14 DQL audit: stays on DBAL -- $table/$field are dynamic runtime
-     * table/column names, same reason as {@see findOrphanedColumnValues()}
-     * above.
+     * Item 15 audit: `$table`/`$field` converted from arbitrary runtime
+     * strings to {@see CategoryAccessTarget}'s bounded enum -- see that
+     * enum's own docblock for why this stays on DBAL raw SQL rather than
+     * going all the way to DQL.
      */
-    public function deleteInconsistentAccess(string $table, string $field, array $keepIds, array $catIds): void
+    public function deleteInconsistentAccess(CategoryAccessTarget $target, array $keepIds, array $catIds): void
     {
+        [$table, $field] = $target->tableAndField();
+
         $em = $this->getEntityManager();
         $em->getConnection()
             ->executeStatement(<<<SQL
@@ -1475,12 +1483,18 @@ final class CategoryRepository extends EntityRepository
      * @param  list<int>  $categoryIds
      * @return array<int, mixed> keyed by category_id
      *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see \Piwigo\Image\ImageCategoryEntity}), but stays on DBAL for its
-     * other, still-real blocker: `$field`/`$minmax` are dynamic runtime
-     * column/function names, not a fixed DQL property path/aggregate.
+     * Item 15 audit: `$field`/`$minmax` converted from arbitrary runtime
+     * strings to {@see CategoryRefDateField}/{@see CategoryRefDateAggregate}'s
+     * bounded enums -- `image_category` is mapped
+     * ({@see \Piwigo\Image\ImageCategoryEntity}), but this stays on DBAL
+     * raw SQL regardless: DQL's aggregate functions (`MIN()`/`MAX()`) take
+     * a fixed property path, not a caller-selected column, and DQL has no
+     * `GROUP BY` shorthand that avoids re-deriving the same "which
+     * property does this enum case mean" match() DQL would also need --
+     * closing the actual gap here (an arbitrary string -> a bounded enum)
+     * doesn't require the extra DQL-rewrite risk on top.
      */
-    public function findRefDatesByCategoryIds(array $categoryIds, string $field, string $minmax): array
+    public function findRefDatesByCategoryIds(array $categoryIds, CategoryRefDateField $field, CategoryRefDateAggregate $minmax): array
     {
         if ($categoryIds === []) {
             return [];
@@ -1488,13 +1502,15 @@ final class CategoryRepository extends EntityRepository
 
         $imageCategoryTable = Tables::imageCategory();
         $imagesTable = Tables::images();
+        $fieldColumn = $field->column();
+        $minmaxFunction = $minmax->sqlFunction();
 
         $rows = $this->getEntityManager()
             ->getConnection()
             ->executeQuery(<<<SQL
                 SELECT
                     category_id,
-                    {$minmax}({$field}) as ref_date
+                    {$minmaxFunction}({$fieldColumn}) as ref_date
                 FROM {$imageCategoryTable}
                     JOIN {$imagesTable} ON image_id = id
                 WHERE category_id IN (:categoryIds)

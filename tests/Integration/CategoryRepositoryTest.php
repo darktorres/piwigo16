@@ -7,6 +7,8 @@ namespace Piwigo\Tests\Integration {
     use Doctrine\DBAL\Connection;
     use Piwigo\Category\CategoryAdminListCriteria;
     use Piwigo\Category\CategoryListCriteria;
+    use Piwigo\Category\CategoryRefDateAggregate;
+    use Piwigo\Category\CategoryRefDateField;
     use Piwigo\Category\CategoryRepository;
     use Piwigo\Category\Projection\Category;
     use Piwigo\Config\CurrentConfig;
@@ -503,7 +505,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
 
     public function test_find_ref_dates_by_category_ids_returns_empty_for_no_ids(): void
     {
-        self::assertSame([], $this->repo->findRefDatesByCategoryIds([], 'date_creation', 'MIN'));
+        self::assertSame([], $this->repo->findRefDatesByCategoryIds([], CategoryRefDateField::DateCreation, CategoryRefDateAggregate::Min));
     }
 
     public function test_find_uppercat_ids_returns_empty_for_no_ids(): void

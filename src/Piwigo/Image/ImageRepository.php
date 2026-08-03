@@ -14,7 +14,6 @@ use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Core\Env;
 use Piwigo\Db\BatchWriter;
-use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Image\Projection\Image;
 use Piwigo\Image\Projection\ImageFormat;
@@ -458,34 +457,35 @@ final class ImageRepository extends EntityRepository
      * batch of image ids -- Admin\BatchManagerGlobalPageRenderer's own
      * per-action batch edit (author/name/date_creation), same "many ids,
      * one shared value" shape as updateLevelForImages() above but for a
-     * text column, so $value is bound rather than interpolated. $field is
-     * a fixed, non-caller-controlled column name at every real call site
-     * (author/name/date_creation), never built from user input.
+     * text column, so $value is bound rather than interpolated.
      *
-     * Item 14 DQL audit: stays on DBAL -- $field is still a runtime
-     * column-name parameter (even though every real call site's own
-     * value is fixed), and DQL requires a fixed property path, not a
-     * variable one.
+     * Item 15 audit: converted to real DQL -- $field is now
+     * {@see ImageTextField}, a fixed compile-time-safe property path
+     * instead of a runtime column-name string.
      *
      * @param array<int, int> $imageIds
      */
-    public function updateTextFieldForImages(array $imageIds, string $field, ?string $value): void
+    public function updateTextFieldForImages(array $imageIds, ImageTextField $field, ?string $value): void
     {
         if ($imageIds === []) {
             return;
         }
 
-        $protectedField = SqlDialect::protectColumnName($field);
+        $property = match ($field) {
+            ImageTextField::Author => 'i.author',
+            ImageTextField::Name => 'i.name',
+            ImageTextField::DateCreation => 'i.dateCreation',
+        };
 
         $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->update(Tables::images())
-            ->set($protectedField, ':value')
-            ->where('id IN (:ids)')
+            ->update(ImageEntity::class, 'i')
+            ->set($property, ':value')
+            ->where('i.id IN (:ids)')
             ->setParameter('value', $value)
             ->setParameter('ids', $imageIds, ArrayParameterType::INTEGER)
-            ->executeStatement();
+            ->getQuery()
+            ->execute();
     }
 
     /**
@@ -1184,24 +1184,25 @@ final class ImageRepository extends EntityRepository
      * itself was always raw client input. Fixed by taking the column and
      * value as separate parameters and binding the value.
      *
-     * Item 14 DQL audit: stays on DBAL -- $column is still a runtime
-     * column-name parameter (even though its value never comes from user
-     * input), and DQL requires a fixed property path, not a variable
-     * one.
+     * Item 15 audit: converted to real DQL -- $column is now
+     * {@see ImageUniquenessColumn}, a fixed compile-time-safe property
+     * path instead of a runtime column-name string.
      */
-    public function existsWithColumnValue(string $column, string $value): bool
+    public function existsWithColumnValue(ImageUniquenessColumn $column, string $value): bool
     {
-        $protectedColumn = SqlDialect::protectColumnName($column);
+        $property = match ($column) {
+            ImageUniquenessColumn::Md5sum => 'i.md5sum',
+            ImageUniquenessColumn::File => 'i.file',
+        };
 
         $result = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from(Tables::images())
-            ->where("{$protectedColumn} = :value")
+            ->select('COUNT(i.id)')
+            ->from(ImageEntity::class, 'i')
+            ->where("{$property} = :value")
             ->setParameter('value', $value)
-            ->executeQuery()
-            ->fetchOne();
+            ->getQuery()
+            ->getSingleScalarResult();
 
         return is_numeric($result) && (int) $result > 0;
     }
@@ -2175,6 +2176,12 @@ final class ImageRepository extends EntityRepository
      * $orderBySql is a caller-composed raw SQL fragment spliced directly
      * into the query, which DQL has no way to embed.
      *
+     * Item 15 audit, re-verified: this plan's own text speculated
+     * $orderBySql "likely shares tokens with PhotoSortField or needs its
+     * own small enum" -- wrong once traced to its real source
+     * (`CurrentConfig::orderBy()`, free-form admin-configurable text, not
+     * a bounded token set). No enum conversion here.
+     *
      * @param array<array-key, int|string|float|bool> $imageIds
      * @return list<array<string, mixed>>
      */
@@ -2270,6 +2277,10 @@ final class ImageRepository extends EntityRepository
      * findBatchManagerThumbnails() above -- `image_category` is now
      * mapped ({@see ImageCategoryEntity}), but $orderBySql is a
      * caller-composed raw fragment DQL has no way to embed.
+     *
+     * Item 15 audit, re-verified: same "genuinely open-ended, not a small
+     * token set" re-check as findBatchManagerThumbnails() above -- no
+     * enum conversion here either.
      *
      * @param array<array-key, int|string|float|bool> $imageIds
      * @return list<array<string, mixed>>
@@ -3475,25 +3486,19 @@ final class ImageRepository extends EntityRepository
     /**
      * Ids of images that share the same value across every column in
      * $fields with at least one other image -- Admin\BatchManager\
-     * FilterResolver's own "duplicates" prefilter. $fields is a
-     * caller-validated column-name allowlist (file/md5sum/date_creation/
-     * width+height), never raw user input -- same "caller composes
-     * trusted fragments" contract as findWithConditionsPaginated() above.
-     * GROUP_CONCAT truncates at 1024 chars by default, so a duplicate
-     * group larger than ~250 ids silently loses members -- a pre-existing
-     * limitation, not introduced here.
+     * FilterResolver's own "duplicates" prefilter. GROUP_CONCAT truncates
+     * at 1024 chars by default, so a duplicate group larger than ~250 ids
+     * silently loses members -- a pre-existing limitation, not introduced
+     * here.
      *
-     * Item 14 DQL audit: stays on DBAL -- MySQL's `GROUP_CONCAT()` now has
-     * a portable custom DQL function
-     * ({@see \Piwigo\Db\DqlFunction\GroupConcatFunction}, Sub-phase B5
-     * Tier 3), but that alone doesn't unblock this method: $fields is
-     * itself a caller-supplied dynamic column-name list (`groupBy()`'s own
-     * argument), not fixed DQL property paths -- DQL requires a
-     * compile-time-known property path, so this stays permanently out of
-     * scope for DQL conversion regardless (see this plan's own "Out of
-     * scope" section).
+     * Item 15 audit: converted to real DQL -- $fields is now
+     * {@see ImageDuplicateField}[], each case mapping to a fixed
+     * compile-time-safe property path via match(), unblocking the
+     * `groupBy()`/`GROUP_CONCAT()` combination Item 14's own audit had
+     * left on DBAL (the property-path list itself is now always
+     * enum-derived, never a raw caller-supplied column-name list).
      *
-     * @param list<string> $fields
+     * @param list<ImageDuplicateField> $fields
      * @return list<int>
      */
     public function findIdsGroupedByDuplicateFields(array $fields): array
@@ -3503,20 +3508,30 @@ final class ImageRepository extends EntityRepository
         }
 
         $qb = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select('GROUP_CONCAT(id) AS ids')
-            ->from(Tables::images());
+            ->select('GROUP_CONCAT(i.id) AS ids')
+            ->from(ImageEntity::class, 'i');
 
-        if (in_array('md5sum', $fields, true)) {
-            $qb->where('md5sum IS NOT NULL');
+        if (in_array(ImageDuplicateField::Md5sum, $fields, true)) {
+            $qb->where('i.md5sum IS NOT NULL');
         }
 
-        $qb->groupBy(implode(',', $fields))
-            ->having('COUNT(*) > 1');
+        $groupByProperties = array_map(
+            static fn (ImageDuplicateField $field): string => 'i.' . match ($field) {
+                ImageDuplicateField::File => 'file',
+                ImageDuplicateField::Md5sum => 'md5sum',
+                ImageDuplicateField::DateCreation => 'dateCreation',
+                ImageDuplicateField::Width => 'width',
+                ImageDuplicateField::Height => 'height',
+            },
+            $fields
+        );
 
-        $idLists = $qb->executeQuery()
-            ->fetchFirstColumn();
+        $qb->groupBy(implode(', ', $groupByProperties))
+            ->having('COUNT(i.id) > 1');
+
+        $idLists = $qb->getQuery()
+            ->getSingleColumnResult();
 
         $ids = [];
         foreach ($idLists as $idList) {

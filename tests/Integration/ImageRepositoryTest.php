@@ -12,6 +12,8 @@ use Piwigo\Db\Tables;
 use Piwigo\Image\CategoryImagesCriteria;
 use Piwigo\Image\ImageFilterCriteria;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Image\ImageTextField;
+use Piwigo\Image\ImageUniquenessColumn;
 use Piwigo\Image\MissingDerivativesCriteria;
 use Piwigo\Image\Projection\Image;
 use Piwigo\Permission\PermissionCriteria;
@@ -563,7 +565,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
             ->executeQuery()
             ->fetchOne();
 
-        $this->repo->updateTextFieldForImages([], 'name', 'Should Not Apply');
+        $this->repo->updateTextFieldForImages([], ImageTextField::Name, 'Should Not Apply');
 
         $after = $this->conn->createQueryBuilder()
             ->select('name')
@@ -891,17 +893,17 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_exists_with_column_value_is_true_for_a_matching_md5sum(): void
     {
-        self::assertTrue($this->repo->existsWithColumnValue('md5sum', '2e7ee450c4a4cffe42945205029782b9'));
+        self::assertTrue($this->repo->existsWithColumnValue(ImageUniquenessColumn::Md5sum, '2e7ee450c4a4cffe42945205029782b9'));
     }
 
     public function test_exists_with_column_value_is_true_for_a_matching_file(): void
     {
-        self::assertTrue($this->repo->existsWithColumnValue('file', 'fixture-photo-1.jpg'));
+        self::assertTrue($this->repo->existsWithColumnValue(ImageUniquenessColumn::File, 'fixture-photo-1.jpg'));
     }
 
     public function test_exists_with_column_value_is_false_for_no_match(): void
     {
-        self::assertFalse($this->repo->existsWithColumnValue('md5sum', 'no-such-md5sum'));
+        self::assertFalse($this->repo->existsWithColumnValue(ImageUniquenessColumn::Md5sum, 'no-such-md5sum'));
     }
 
     /**
@@ -914,7 +916,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
      */
     public function test_exists_with_column_value_treats_sql_syntax_as_a_literal_value(): void
     {
-        self::assertFalse($this->repo->existsWithColumnValue('file', "fixture-photo-1.jpg' OR '1'='1"));
+        self::assertFalse($this->repo->existsWithColumnValue(ImageUniquenessColumn::File, "fixture-photo-1.jpg' OR '1'='1"));
     }
 
     /**

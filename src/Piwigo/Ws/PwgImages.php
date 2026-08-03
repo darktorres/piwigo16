@@ -40,6 +40,7 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\ImageUniquenessColumn;
 use Piwigo\Metadata\MetadataService;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -1334,7 +1335,10 @@ final class PwgImages
                 // as "file already exists" rather than silently proceeding
                 // unprotected, since that concurrent request is the same
                 // condition this check exists to catch.
-                if (! $uniqueness_lock_ok || $this->imageService->existsWithColumnValue($uniqueness_column, $uniqueness_value)) {
+                if (! $uniqueness_lock_ok || $this->imageService->existsWithColumnValue(
+                    $uniqueness_column === 'md5sum' ? ImageUniquenessColumn::Md5sum : ImageUniquenessColumn::File,
+                    $uniqueness_value
+                )) {
                     if ($uniqueness_lock_ok) {
                         $uniqueness_lock_conn->executeStatement('SELECT RELEASE_LOCK(?)', [$uniqueness_lock_name]);
                     }

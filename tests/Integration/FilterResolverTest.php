@@ -15,6 +15,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
+use Piwigo\Image\ImageDuplicateField;
 use Piwigo\Image\ImageService;
 use Piwigo\Mail\MailService;
 use Piwigo\Permission\PermissionRepository;
@@ -171,7 +172,7 @@ final class FilterResolverTest extends IntegrationTestCase
 
     public function test_duplicate_photo_ids_groups_every_fixture_image_by_shared_dimensions(): void
     {
-        $ids = $this->resolver->duplicatePhotoIds(['width', 'height']);
+        $ids = $this->resolver->duplicatePhotoIds([ImageDuplicateField::Width, ImageDuplicateField::Height]);
 
         sort($ids);
         self::assertSame([1, 2, 3, 4, 5], $ids, 'every fixture image shares 200x150');

@@ -630,9 +630,13 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
     }
 
     /**
-     * Item 14 DQL audit: stays on DBAL -- `$table` is itself a
-     * caller-supplied dynamic table name, not resolvable to a single
-     * mapped entity at compile time.
+     * Item 15 audit: `user_mail_notification`/`user_feed` are the only 2
+     * of {@see \Piwigo\Users\UserService::syncUsers()}'s own 5-table list
+     * this method still serves -- both a real `deleteSiteRow`-class
+     * deptrac boundary (`Users` is `L2aCoreDomain`, those 2 tables'
+     * domains are `L2bExtendedDomain`), so `$table` stays a raw runtime
+     * string here permanently. The other 3 tables go through
+     * {@see findDistinctUserIdsInMappedTable()}'s bounded enum instead.
      *
      * @return list<UserId>
      */
@@ -648,9 +652,9 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
     }
 
     /**
-     * Item 14 DQL audit: stays on DBAL -- `$table` is itself a
-     * caller-supplied dynamic table name, not resolvable to a single
-     * mapped entity at compile time.
+     * Item 15 audit: same permanent DBAL/deptrac reasoning as
+     * {@see findDistinctUserIdsInTable()} above -- only
+     * `user_mail_notification`/`user_feed` still reach this method.
      *
      * @param list<UserId> $userIds
      */
@@ -672,6 +676,82 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
         // UserInfoEntity already in this EntityManager's identity map for
         // one of these ids would otherwise stay stale (same reasoning as
         // deleteUser()'s own comment).
+        $em->clear();
+    }
+
+    /**
+     * Item 15 audit: real DQL replacement for
+     * {@see findDistinctUserIdsInTable()}, for the 3 of
+     * {@see \Piwigo\Users\UserService::syncUsers()}'s own tables this
+     * repository can actually reach via DQL -- see
+     * {@see \Piwigo\Users\UserRelatedTable}'s own docblock for why the
+     * other 2 stay on that raw-string method permanently.
+     *
+     * @return list<UserId>
+     */
+    public function findDistinctUserIdsInMappedTable(UserRelatedTable $table): array
+    {
+        [$entityClass, $alias] = match ($table) {
+            UserRelatedTable::UserInfos => [UserInfoEntity::class, 'ui'],
+            UserRelatedTable::UserAccess => [UserAccessEntity::class, 'ua'],
+            UserRelatedTable::UserGroup => [UserGroupEntity::class, 'ug'],
+        };
+
+        $rows = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select("DISTINCT {$alias}.userId")
+            ->from($entityClass, $alias)
+            ->getQuery()
+            ->getSingleColumnResult();
+
+        $ids = [];
+        foreach ($rows as $row) {
+            $id = $row instanceof UserId ? $row : UserId::tryFrom($row);
+            if ($id !== null) {
+                $ids[] = $id;
+            }
+        }
+
+        return $ids;
+    }
+
+    /**
+     * Item 15 audit: real DQL replacement for
+     * {@see deleteUsersFromTable()}, same 3-of-5-tables scope as
+     * {@see findDistinctUserIdsInMappedTable()} above. `UserAccessEntity::
+     * $userId` is a plain int column (unlike `UserInfoEntity`/
+     * `UserGroupEntity`'s custom `user_id` Doctrine Type), so it binds
+     * `$userIds` unwrapped to raw ints -- same "bind the VO for a
+     * custom-typed target, unwrap for a plain-int one" pattern already
+     * established by {@see deleteUser()}.
+     *
+     * @param list<UserId> $userIds
+     */
+    public function deleteUsersFromMappedTable(UserRelatedTable $table, array $userIds): void
+    {
+        if ($userIds === []) {
+            return;
+        }
+
+        [$entityClass, $alias] = match ($table) {
+            UserRelatedTable::UserInfos => [UserInfoEntity::class, 'ui'],
+            UserRelatedTable::UserAccess => [UserAccessEntity::class, 'ua'],
+            UserRelatedTable::UserGroup => [UserGroupEntity::class, 'ug'],
+        };
+
+        $em = $this->getEntityManager();
+        $em->createQueryBuilder()
+            ->delete($entityClass, $alias)
+            ->where("{$alias}.userId IN (:userIds)")
+            ->setParameter(
+                'userIds',
+                $table === UserRelatedTable::UserAccess
+                    ? array_map(static fn (UserId $id): int => $id->value, $userIds)
+                    : $userIds,
+                $table === UserRelatedTable::UserAccess ? ArrayParameterType::INTEGER : null,
+            )
+            ->getQuery()
+            ->execute();
         $em->clear();
     }
 
@@ -1114,9 +1194,10 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * $userIds at once. $updates stays a raw column => scalar-value map,
      * same dynamic-column reasoning as fetchBasicUserRow() above.
      *
-     * Item 14 DQL audit: stays on DBAL -- `$updates`'s keys are dynamic
-     * column names (the set() calls in the loop below), which DQL requires
-     * as fixed property paths.
+     * Item 15 audit: `$updates`'s keys are now validated against
+     * {@see UserInfoField}'s bounded enum before reaching the `set()`
+     * calls below -- see that enum's own docblock for why this stays on
+     * DBAL raw SQL rather than DQL despite `user_infos` being mapped.
      *
      * @param list<UserId> $userIds
      * @param array<string, mixed> $updates
@@ -1135,6 +1216,9 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             ->setParameter('userIds', array_map(static fn (UserId $id): int => $id->value, $userIds), ArrayParameterType::INTEGER);
 
         foreach ($updates as $field => $value) {
+            if (UserInfoField::fromToken($field) === null) {
+                throw new \InvalidArgumentException("Unknown user_infos field: {$field}");
+            }
             assert(is_scalar($value));
             $placeholder = 'v_' . $field;
             $qb->set($field, ':' . $placeholder)

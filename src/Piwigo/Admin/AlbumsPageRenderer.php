@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Admin\Category\CategoryAdminService;
+use Piwigo\Category\CategoryRefDateAggregate;
+use Piwigo\Category\CategoryRefDateField;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\SqlDialect;
@@ -110,8 +112,9 @@ final class AlbumsPageRenderer
             if (str_starts_with($order_by_field, 'date_')) {
                 $order_by_date = true;
 
+                $refDateField = $order_by_field === 'date_creation' ? CategoryRefDateField::DateCreation : CategoryRefDateField::DateAvailable;
                 $ref_dates = $categoryAdminService
-                    ->getCategoriesRefDate($category_ids, $order_by_field, $order_by_asc === 'ASC' ? 'min' : 'max');
+                    ->getCategoriesRefDate($category_ids, $refDateField, $order_by_asc === 'ASC' ? CategoryRefDateAggregate::Min : CategoryRefDateAggregate::Max);
             }
 
             foreach ($categoryService->getIdsNamesUppercatsForIds($category_ids) as $cat_row) {

@@ -7,6 +7,7 @@ namespace Piwigo\Admin\BatchManager;
 use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Image\ImageDuplicateField;
 use Piwigo\Image\ImageService;
 use Piwigo\Users\UserService;
 
@@ -139,7 +140,7 @@ final readonly class FilterResolver
      * than ~250 ids silently loses members -- matches the legacy code's
      * own equivalent limitation.
      *
-     * @param list<string> $fields
+     * @param list<ImageDuplicateField> $fields
      * @return list<int>
      */
     public function duplicatePhotoIds(array $fields): array
@@ -155,23 +156,23 @@ final readonly class FilterResolver
      * different places.
      *
      * @param array<string, mixed> $bulkFilter
-     * @return list<string>
+     * @return list<ImageDuplicateField>
      */
     public function duplicateFieldsFromFilter(array $bulkFilter): array
     {
         $fields = [];
         if (isset($bulkFilter['duplicates_filename'])) {
-            $fields[] = 'file';
+            $fields[] = ImageDuplicateField::File;
         }
         if (isset($bulkFilter['duplicates_checksum'])) {
-            $fields[] = 'md5sum';
+            $fields[] = ImageDuplicateField::Md5sum;
         }
         if (isset($bulkFilter['duplicates_date'])) {
-            $fields[] = 'date_creation';
+            $fields[] = ImageDuplicateField::DateCreation;
         }
         if (isset($bulkFilter['duplicates_dimensions'])) {
-            $fields[] = 'width';
-            $fields[] = 'height';
+            $fields[] = ImageDuplicateField::Width;
+            $fields[] = ImageDuplicateField::Height;
         }
 
         return $fields;

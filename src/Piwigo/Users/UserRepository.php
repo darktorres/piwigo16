@@ -21,6 +21,7 @@ use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Mail\GetWebmasterMailAddress;
 use Piwigo\Group\UserGroupEntity;
+use Piwigo\Image\ImageEntity;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\Users\Projection\UserInfo;
@@ -1104,14 +1105,50 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * (CurrentConfig::orderBy(), trusted internal config, same "caller
      * composes trusted fragments" contract used throughout this codebase).
      *
-     * Item 14 DQL audit: stays on DBAL -- `favorites` has no entity
+     * Item 14 DQL audit: stayed on DBAL -- `favorites` has no entity
      * anywhere in this migration, and $orderBySql concatenates a
      * caller-composed raw ORDER BY fragment directly.
+     *
+     * Item 16J: `favorites` is now mapped ({@see FavoriteEntity}), and
+     * this method runs real DQL whenever $orderBySql parses against the
+     * bounded `$sort_fields` vocabulary, falling back to the original raw
+     * DBAL query -- unchanged below -- otherwise. Never offers an
+     * `image_category` alias for `Rank`: unlike {@see \Piwigo\Category\
+     * CategoryRepository::findImageIdsForCategories()}, a favorites
+     * listing has no single-category context to make "the" rank
+     * well-defined.
      *
      * @return list<string|null>
      */
     public function findVisibleFavoriteImageIds(UserId $userId, PermissionCriteria $criteria, string $orderBySql): array
     {
+        $dqlOrderBy = self::resolveFavoritesDqlOrderBy($orderBySql);
+        if ($dqlOrderBy !== null) {
+            $qb = $this->getEntityManager()
+                ->createQueryBuilder()
+                ->select('i.id')
+                ->from(FavoriteEntity::class, 'f')
+                ->innerJoin(ImageEntity::class, 'i', Join::WITH, 'f.imageId = i.id')
+                ->where('f.userId = :userId')
+                ->setParameter('userId', $userId);
+            self::applyCondition($qb, SqlCondition::combine(
+                'AND',
+                $criteria->visibleImagesCondition('i.id'),
+                $criteria->maxLevelCondition('i.level'),
+            ));
+            foreach ($dqlOrderBy as $entry) {
+                $qb->addOrderBy($entry['property'], $entry['dir']);
+            }
+
+            $ids = $qb->getQuery()
+                ->getSingleColumnResult();
+
+            return array_values(array_map(
+                static fn (mixed $v): ?string => is_scalar($v) ? (string) $v : null,
+                $ids
+            ));
+        }
+
         $favoritesTable = Tables::favorites();
         $imagesTable = Tables::images();
 
@@ -1151,6 +1188,18 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             static fn (mixed $v): ?string => is_scalar($v) ? (string) $v : null,
             $rows
         );
+    }
+
+    /**
+     * @return list<array{property: string, dir: 'ASC'|'DESC'}>|null
+     */
+    private static function resolveFavoritesDqlOrderBy(string $orderBySql): ?array
+    {
+        if (\Piwigo\Config\CurrentConfig::orderByCustom() !== null) {
+            return null;
+        }
+
+        return \Piwigo\Image\PhotoSortField::resolveDqlOrderBy($orderBySql, 'i');
     }
 
     /**

@@ -722,6 +722,59 @@ final class UserRepositoryTest extends IntegrationTestCase
         }
     }
 
+    public function test_find_visible_favorite_image_ids_returns_the_real_ids(): void
+    {
+        // Item 16J: had zero existing coverage. Fixture: user 1 has
+        // favorites [1, 3, 5].
+        $ids = $this->repo->findVisibleFavoriteImageIds(
+            \Piwigo\Common\ValueObject\UserId::from(1),
+            self::noPermissionRestriction(),
+            'ORDER BY id ASC'
+        );
+
+        self::assertSame(['1', '3', '5'], $ids);
+    }
+
+    public function test_find_visible_favorite_image_ids_orders_by_the_given_fragment(): void
+    {
+        $ids = $this->repo->findVisibleFavoriteImageIds(
+            \Piwigo\Common\ValueObject\UserId::from(1),
+            self::noPermissionRestriction(),
+            'ORDER BY id DESC'
+        );
+
+        self::assertSame(['5', '3', '1'], $ids);
+    }
+
+    public function test_find_visible_favorite_image_ids_falls_back_to_raw_dbal_for_unparseable_order_by(): void
+    {
+        $ids = $this->repo->findVisibleFavoriteImageIds(
+            \Piwigo\Common\ValueObject\UserId::from(1),
+            self::noPermissionRestriction(),
+            'ORDER BY RAND()'
+        );
+        sort($ids);
+
+        self::assertSame(['1', '3', '5'], $ids);
+    }
+
+    public function test_find_visible_favorite_image_ids_returns_empty_for_a_user_with_no_favorites(): void
+    {
+        self::assertSame(
+            [],
+            $this->repo->findVisibleFavoriteImageIds(
+                \Piwigo\Common\ValueObject\UserId::from(2),
+                self::noPermissionRestriction(),
+                'ORDER BY id ASC'
+            )
+        );
+    }
+
+    private static function noPermissionRestriction(): \Piwigo\Permission\PermissionCriteria
+    {
+        return new \Piwigo\Permission\PermissionCriteria(null, null, null, null, null, null);
+    }
+
     /**
      * Item 15 audit: had zero existing coverage -- covers every one of
      * deleteUser()'s 9 target tables (user_access/user_auth_keys/

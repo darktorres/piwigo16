@@ -55,6 +55,7 @@ final readonly class CommentService
         private UrlServiceInterface $urlService,
         private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private \Piwigo\Core\PageState $pageState,
+        private \Piwigo\Users\CurrentUser $currentUser,
     ) {}
 
     /**
@@ -69,7 +70,7 @@ final readonly class CommentService
      */
     public static function getNbAvailableComments(): int
     {
-        $currentUser = \Piwigo\Users\CurrentUser::get();
+        $currentUser = \Piwigo\Users\CurrentUser::current()->get();
 
         if (! isset($currentUser->rawAttributes['nb_available_comments'])) {
             $where = [];
@@ -84,7 +85,7 @@ final readonly class CommentService
 
             $nbAvailableComments = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Comment\CommentEntity::class)->countAvailableWithConditions($where);
             $currentUser = $currentUser->withRawAttribute('nb_available_comments', $nbAvailableComments);
-            \Piwigo\Users\CurrentUser::set($currentUser);
+            \Piwigo\Users\CurrentUser::current()->set($currentUser);
         }
         $nb_available_comments = $currentUser->rawAttributes['nb_available_comments'];
         return is_numeric($nb_available_comments) ? (int) $nb_available_comments : 0;
@@ -263,9 +264,9 @@ final readonly class CommentService
                 }
             }
         } else {
-            $currentUser = \Piwigo\Users\CurrentUser::get();
-            $comm['author'] = addslashes($currentUser->username);
-            $comm['author_id'] = $currentUser->id->value;
+            $user = $this->currentUser->get();
+            $comm['author'] = addslashes($user->username);
+            $comm['author_id'] = $user->id->value;
         }
 
         if (self::emptyValue($comm['content'])) {
@@ -302,7 +303,8 @@ final readonly class CommentService
 
         // email
         if (self::emptyValue($comm['email'] ?? null)) {
-            $currentUserEmail = \Piwigo\Users\CurrentUser::get()->email;
+            $currentUserEmail = $this->currentUser->get()
+                ->email;
             if (! self::emptyValue($currentUserEmail)) {
                 $comm['email'] = $currentUserEmail;
             } elseif (\Piwigo\Config\CurrentConfig::commentsEmailMandatory()) {
@@ -411,7 +413,8 @@ final readonly class CommentService
 
         $authorId = null;
         if (! \Piwigo\Auth\AccessControl::isAdmin()) {
-            $authorId = \Piwigo\Users\CurrentUser::get()->id->value;
+            $authorId = $this->currentUser->get()
+                ->id->value;
         }
 
         if ($this->repo->delete($ids, $authorId) === 0) {
@@ -428,7 +431,8 @@ final readonly class CommentService
             ? array_map(static fn (CommentId $id): int => $id->value, $commentId)
             : $commentId->value;
 
-        $username = \Piwigo\Users\CurrentUser::get()->username;
+        $username = $this->currentUser->get()
+            ->username;
         $this->emailAdmin('delete', [
             'author' => $username,
             'comment_id' => $rawCommentId,
@@ -463,7 +467,8 @@ final readonly class CommentService
      */
     public function updateComment(array $comment, string $postKey): string
     {
-        $username = \Piwigo\Users\CurrentUser::get()->username;
+        $username = $this->currentUser->get()
+            ->username;
 
         $imageIdRaw = is_scalar($comment['image_id'] ?? null) ? (string) $comment['image_id'] : '';
 
@@ -501,7 +506,8 @@ final readonly class CommentService
         if ($commentAction !== 'reject') {
             $authorId = null;
             if (! \Piwigo\Auth\AccessControl::isAdmin()) {
-                $authorId = \Piwigo\Users\CurrentUser::get()->id->value;
+                $authorId = $this->currentUser->get()
+                    ->id->value;
             }
 
             $content = is_string($comment['content']) ? $comment['content'] : '';
@@ -642,7 +648,7 @@ final readonly class CommentService
      */
     public function invalidateNbCommentsCache(): void
     {
-        \Piwigo\Users\CurrentUser::set(\Piwigo\Users\CurrentUser::get()->withRawAttribute('nb_available_comments', null));
+        $this->currentUser->set($this->currentUser->get()->withRawAttribute('nb_available_comments', null));
     }
 
     private function pushCrReason(string $reason): void

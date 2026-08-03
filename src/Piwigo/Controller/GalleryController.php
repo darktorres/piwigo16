@@ -68,6 +68,7 @@ final class GalleryController implements ControllerInterface
         private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
         private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
         private readonly \Piwigo\Core\PageState $pageState,
+        private readonly \Piwigo\Users\CurrentUser $currentUser,
     ) {}
 
     private static function categoryService(): CategoryService
@@ -110,7 +111,7 @@ final class GalleryController implements ControllerInterface
 
         // access authorization check
         if ($section_context->category !== null && is_numeric($section_context->category['id'] ?? null)) {
-            self::categoryService()->checkRestrictions((int) $section_context->category['id'], \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
+            self::categoryService()->checkRestrictions((int) $section_context->category['id'], \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService, $this->currentUser);
         }
         if ($page_start > 0 && $page_start >= count($page_items)) {
             \Piwigo\Bootstrap\PresentationAccessor::htmlService()
@@ -198,7 +199,7 @@ final class GalleryController implements ControllerInterface
 
         // -------------------------------------------------- menubar
         $categoryCountCategories = new MenubarRenderer()
-            ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy);
+            ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser);
 
         $template->set_filename('index', 'index.tpl');
 

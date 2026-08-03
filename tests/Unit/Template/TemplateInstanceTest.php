@@ -201,7 +201,6 @@ beforeEach(function (): void {
     mkdir($root, 0o777, true);
     CurrentConfig::setDataLocation('data/');
     CurrentConfig::setDataDirChecked('1');
-    CurrentUser::attachGlobals();
     ScriptLoader::setUrlService(new UrlService(new HtmlService()));
     // Template's own ProcessCache usage now goes through a transitional
     // static shim (singleton/service-locator elimination campaign, Phase 1
@@ -210,11 +209,16 @@ beforeEach(function (): void {
     // (Phase 3) is itself a pure shim reading Paths::class straight out of
     // that same container, so this one Kernel::boot() call establishes both.
     Kernel::boot(Paths::fromRoot($root));
+    // Booted first (above) -- CurrentUser::current() must resolve the
+    // container-shared instance, not the memoized pre-boot fallback, or
+    // this seed is invisible to every later current()->get() call (Phase 5
+    // execution finding, same pitfall Translator/EventDispatcher already hit).
+    CurrentUser::current()->attachGlobals();
 });
 
 afterEach(function (): void {
     template_instance_test_rrmdir(is_string($this->root) ? $this->root : '');
-    CurrentUser::reset();
+    CurrentUser::current()->reset();
     CurrentConfig::reset();
     EventDispatcher::get()->reset();
     Kernel::reset();

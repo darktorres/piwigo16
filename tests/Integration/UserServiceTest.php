@@ -88,7 +88,7 @@ namespace Piwigo\Tests\Integration {
             CurrentConfig::setAvailablePermissionLevels([0, 1, 2, 4, 8]);
 
             $this->conn = DbConnection::build();
-            $this->service = new UserService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new MailService(), new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), new HtmlService(), $this->conn, new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy());
+            $this->service = new UserService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new MailService(), new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), new HtmlService(), $this->conn, new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current());
 
             // checkAndSaveUserInfos()'s own success path (any call that
             // doesn't return an early 'error') reaches
@@ -290,7 +290,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_get_current_language_returns_null_when_current_user_is_not_initialized(): void
         {
-            \Piwigo\Users\CurrentUser::reset();
+            \Piwigo\Users\CurrentUser::current()->reset();
 
             self::assertNull($this->service->getCurrentLanguage());
         }
@@ -298,12 +298,12 @@ namespace Piwigo\Tests\Integration {
         public function test_get_current_language_returns_the_initialized_current_users_own_language(): void
         {
             $user = $this->service->buildUser(UserId::from(1));
-            \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
+            \Piwigo\Users\CurrentUser::current()->set(\Piwigo\Users\User::fromUserArray($user));
 
             try {
                 self::assertSame($user['language'], $this->service->getCurrentLanguage());
             } finally {
-                \Piwigo\Users\CurrentUser::reset();
+                \Piwigo\Users\CurrentUser::current()->reset();
             }
         }
 
@@ -372,7 +372,7 @@ namespace Piwigo\Tests\Integration {
             // always protected against a non-webmaster's password change
             // regardless of who the current user is -- the default guest
             // current user (id 2, per CurrentConfig::guestId() above)
-            // suffices, no CurrentUser::set() needed.
+            // suffices, no CurrentUser::current()->set() needed.
             $result = $this->service->checkAndSaveUserInfos(['user_id' => [1], 'password' => 'newpass123'], \Piwigo\Core\PageState::current());
 
             self::assertSame(
@@ -390,7 +390,7 @@ namespace Piwigo\Tests\Integration {
         {
             $originalHash = $this->conn->fetchOne('SELECT password FROM ' . Tables::users() . ' WHERE id = 4');
             self::assertIsString($originalHash);
-            CurrentUser::set(CurrentUser::get()->withStatus(UserStatus::Webmaster));
+            CurrentUser::current()->set(CurrentUser::current()->get()->withStatus(UserStatus::Webmaster));
 
             try {
                 $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'password' => 'newpass123'], \Piwigo\Core\PageState::current());
@@ -399,7 +399,7 @@ namespace Piwigo\Tests\Integration {
                 self::assertIsArray($result['account']);
                 self::assertArrayHasKey('password', $result['account']);
             } finally {
-                CurrentUser::reset();
+                CurrentUser::current()->reset();
                 $this->conn->executeStatement('UPDATE ' . Tables::users() . ' SET password = ? WHERE id = 4', [$originalHash]);
             }
         }
@@ -583,17 +583,17 @@ namespace Piwigo\Tests\Integration {
         {
             // 'normal' isn't in the ['webmaster', 'admin'] granting-restricted
             // list, so an admin current user passes that first guard --
-            // but CurrentUser::get()->status === UserStatus::Admin also
+            // but CurrentUser::current()->get()->status === UserStatus::Admin also
             // merges every real webmaster/admin user_id into
             // $protected_users, so target user 1 (webmaster) is silently
             // excluded from $user_ids_for_status: the call "succeeds"
             // (no error) yet user 1's status never actually changes.
-            CurrentUser::set(CurrentUser::get()->withStatus(UserStatus::Admin));
+            CurrentUser::current()->set(CurrentUser::current()->get()->withStatus(UserStatus::Admin));
 
             try {
                 $result = $this->service->checkAndSaveUserInfos(['user_id' => [1], 'status' => 'normal'], \Piwigo\Core\PageState::current());
             } finally {
-                CurrentUser::reset();
+                CurrentUser::current()->reset();
             }
 
             self::assertArrayNotHasKey('error', $result);
@@ -644,12 +644,12 @@ namespace Piwigo\Tests\Integration {
         public function test_get_recent_photos_sql_builds_a_least_expression_when_last_photo_date_is_set(): void
         {
             $user = $this->service->buildUser(UserId::from(1));
-            \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
+            \Piwigo\Users\CurrentUser::current()->set(\Piwigo\Users\User::fromUserArray($user));
 
             try {
                 $sql = $this->service->getRecentPhotosSql('i.date_available');
             } finally {
-                \Piwigo\Users\CurrentUser::reset();
+                \Piwigo\Users\CurrentUser::current()->reset();
             }
 
             // The exact SUBDATE(...) fragment is SqlDialectTest's own
@@ -670,7 +670,7 @@ namespace Piwigo\Tests\Integration {
          */
         public function test_get_recent_photos_sql_falls_back_to_zero_days_for_a_non_numeric_recent_period(): void
         {
-            \Piwigo\Users\CurrentUser::set(new \Piwigo\Users\User(
+            \Piwigo\Users\CurrentUser::current()->set(new \Piwigo\Users\User(
                 id: UserId::from(1),
                 username: 'torres',
                 email: '',
@@ -687,7 +687,7 @@ namespace Piwigo\Tests\Integration {
             try {
                 $sql = $this->service->getRecentPhotosSql('i.date_available');
             } finally {
-                CurrentUser::reset();
+                CurrentUser::current()->reset();
             }
 
             self::assertStringNotContainsString('not-a-number', $sql);
@@ -1040,7 +1040,7 @@ namespace Piwigo\Tests\Integration {
             // DeploymentPolicy is now a real constructor dependency, not a
             // mutable static, so this test can no longer flip it on the
             // shared instance.
-            $service = new UserService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new MailService(), new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), new HtmlService(), $this->conn, new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(externalAuthentification: true));
+            $service = new UserService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new MailService(), new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), new HtmlService(), $this->conn, new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(externalAuthentification: true), \Piwigo\Users\CurrentUser::current());
 
             try {
                 self::assertSame(0, $this->fetchOneInt(
@@ -1134,12 +1134,12 @@ namespace Piwigo\Tests\Integration {
             // favorite unauthorized -- 1 and 3 stay untouched.
             $u1 = $this->service->buildUser(UserId::from(1));
             $u1['forbidden_categories'] = '2';
-            \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($u1));
+            \Piwigo\Users\CurrentUser::current()->set(\Piwigo\Users\User::fromUserArray($u1));
 
             try {
                 $this->service->checkUserFavorites();
             } finally {
-                \Piwigo\Users\CurrentUser::reset();
+                \Piwigo\Users\CurrentUser::current()->reset();
             }
 
             $after = $this->conn->fetchFirstColumn('SELECT image_id FROM ' . Tables::favorites() . ' WHERE user_id = 1 ORDER BY image_id');
@@ -1251,7 +1251,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_save_edit_context_ignores_a_non_numeric_image_id(): void
         {
-            \Piwigo\Users\CurrentUser::set(\Piwigo\Users\CurrentUser::get()->withStatus(\Piwigo\Users\UserStatus::Admin));
+            \Piwigo\Users\CurrentUser::current()->set(\Piwigo\Users\CurrentUser::current()->get()->withStatus(\Piwigo\Users\UserStatus::Admin));
             $this->resetEditContext();
 
             try {
@@ -1259,14 +1259,14 @@ namespace Piwigo\Tests\Integration {
 
                 self::assertArrayNotHasKey('edit_context', $_SESSION);
             } finally {
-                \Piwigo\Users\CurrentUser::reset();
+                \Piwigo\Users\CurrentUser::current()->reset();
                 $this->resetEditContext();
             }
         }
 
         public function test_save_edit_context_and_get_edit_context_round_trip(): void
         {
-            \Piwigo\Users\CurrentUser::set(\Piwigo\Users\CurrentUser::get()->withStatus(\Piwigo\Users\UserStatus::Admin));
+            \Piwigo\Users\CurrentUser::current()->set(\Piwigo\Users\CurrentUser::current()->get()->withStatus(\Piwigo\Users\UserStatus::Admin));
             $this->resetEditContext();
 
             try {
@@ -1277,7 +1277,7 @@ namespace Piwigo\Tests\Integration {
                 // off the stored section URL.
                 self::assertSame('list/2,69,198', $this->service->getEditContext(198));
             } finally {
-                \Piwigo\Users\CurrentUser::reset();
+                \Piwigo\Users\CurrentUser::current()->reset();
                 $this->resetEditContext();
             }
         }

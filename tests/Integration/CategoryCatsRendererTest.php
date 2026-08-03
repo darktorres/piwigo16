@@ -186,6 +186,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             $currentLogger,
             EventDispatcher::get(),
             ImageStdParams::current(),
+            \Piwigo\Users\CurrentUser::current(),
         );
     }
 
@@ -202,7 +203,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
      */
     private function seedUser(array $overrides = []): void
     {
-        CurrentUser::set(User::fromUserArray(array_merge([
+        CurrentUser::current()->set(User::fromUserArray(array_merge([
             'id' => 1,
             'level' => 0,
             'forbidden_categories' => '',
@@ -235,7 +236,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
     public function test_render_recent_cats_excludes_a_category_with_zero_images(): void
     {
         $this->seedUser();
-        $result = $this->categoryService->createVirtualCategory('Empty Recent Test', new CategoryCatsRendererFakeActivityLogger());
+        $result = $this->categoryService->createVirtualCategory('Empty Recent Test', new CategoryCatsRendererFakeActivityLogger(), \Piwigo\Users\CurrentUser::current());
         $newIdRaw = $result['id'] ?? null;
         self::assertTrue(is_numeric($newIdRaw));
         $newId = (int) $newIdRaw;
@@ -262,7 +263,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         // count_images > 0 -- unlike createVirtualCategory()'s own
         // zero-image "Empty Recent Test" sibling above (which never gets
         // anywhere near findFullCategoriesByIds() at all).
-        $result = $this->categoryService->createVirtualCategory('Toctou Probe Album', new CategoryCatsRendererFakeActivityLogger());
+        $result = $this->categoryService->createVirtualCategory('Toctou Probe Album', new CategoryCatsRendererFakeActivityLogger(), \Piwigo\Users\CurrentUser::current());
         $newIdRaw = $result['id'] ?? null;
         self::assertTrue(is_numeric($newIdRaw));
         $newId = (int) $newIdRaw;

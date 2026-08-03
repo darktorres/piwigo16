@@ -299,7 +299,7 @@ final class WsDefaultMethods
                     'type' => WsParamType::ID,
                 ],
                 'author' => [
-                    'default' => \Piwigo\Auth\AccessControl::isAGuest() ? 'guest' : \Piwigo\Users\CurrentUser::get()->username,
+                    'default' => \Piwigo\Auth\AccessControl::isAGuest() ? 'guest' : \Piwigo\Users\CurrentUser::current()->get()->username,
                 ],
                 'content' => [],
                 'key' => [],

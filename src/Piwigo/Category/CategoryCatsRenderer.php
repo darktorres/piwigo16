@@ -68,6 +68,7 @@ final readonly class CategoryCatsRenderer
         private \Piwigo\Core\CurrentLogger $currentLogger,
         private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private \Piwigo\Image\ImageStdParams $imageStdParams,
+        private \Piwigo\Users\CurrentUser $currentUser,
     ) {}
 
     /**
@@ -92,15 +93,15 @@ final readonly class CategoryCatsRenderer
         $reprPool = CachePools::categoryTree();
         $treeCache = new CategoryTreeCache($categoryService, $categoryRepo, $reprPool);
 
-        $currentUser = \Piwigo\Users\CurrentUser::get();
-        $userId = $currentUser->id->value;
+        $user = $this->currentUser->get();
+        $userId = $user->id->value;
         $isRecentCats = $section === 'recent_cats';
 
-        $tree = $treeCache->getForUser($currentUser->rawAttributes);
+        $tree = $treeCache->getForUser($user->rawAttributes);
 
         if ($isRecentCats) {
-            $recentPeriod = is_numeric($currentUser->rawAttributes['recent_period'] ?? null) ? (int) $currentUser->rawAttributes['recent_period'] : 0;
-            $lastPhotoDate = is_string($currentUser->rawAttributes['last_photo_date'] ?? null) ? $currentUser->rawAttributes['last_photo_date'] : null;
+            $recentPeriod = is_numeric($user->rawAttributes['recent_period'] ?? null) ? (int) $user->rawAttributes['recent_period'] : 0;
+            $lastPhotoDate = is_string($user->rawAttributes['last_photo_date'] ?? null) ? $user->rawAttributes['last_photo_date'] : null;
             $now = \DateTimeImmutable::createFromMutable(Env::now());
 
             $filtered = array_filter($tree, static function (array $row) use ($recentPeriod, $lastPhotoDate, $now): bool {
@@ -261,7 +262,7 @@ final readonly class CategoryCatsRenderer
             $newImageIds = [];
 
             foreach ($this->imageRepo->findByIds(array_values(array_filter($imageIds, is_string(...)))) as $imageRowId => $row) {
-                if ($row->level <= $currentUser->level) {
+                if ($row->level <= $user->level) {
                     $infosOfImage[$imageRowId] = $row->toArray();
                 } else {
                     // problem: we must not display the thumbnail of a photo which has a
@@ -392,7 +393,7 @@ final readonly class CategoryCatsRenderer
                     $categoryMaxDateLast = is_string($categoryMaxDateLast) ? $categoryMaxDateLast : '';
                     $categoryIsChildDateLast = $category['is_child_date_last'];
                     $categoryIsChildDateLast = is_bool($categoryIsChildDateLast) ? $categoryIsChildDateLast : false;
-                    $recentPeriodForIcon = is_numeric($currentUser->rawAttributes['recent_period'] ?? null) ? (int) $currentUser->rawAttributes['recent_period'] : 0;
+                    $recentPeriodForIcon = is_numeric($user->rawAttributes['recent_period'] ?? null) ? (int) $user->rawAttributes['recent_period'] : 0;
                     $tplVar['icon_ts'] = \Piwigo\Core\RecentIconResolver::getIcon($categoryMaxDateLast, $recentPeriodForIcon, $categoryIsChildDateLast);
                 }
 

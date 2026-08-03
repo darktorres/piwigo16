@@ -39,9 +39,9 @@ final class PreferencesServiceTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->service = new PreferencesService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Users\UserInfoEntity::class));
+        $this->service = new PreferencesService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Users\CurrentUser::current());
 
-        CurrentUser::set(User::fromUserArray(['id' => 1, 'preferences' => []]));
+        CurrentUser::current()->set(User::fromUserArray(['id' => 1, 'preferences' => []]));
     }
 
     #[\Override]
@@ -57,7 +57,7 @@ final class PreferencesServiceTest extends IntegrationTestCase
 
         self::assertSame('dark', $this->service->getParam('theme'));
 
-        self::assertSame('dark', CurrentUser::get()->preferences['theme']);
+        self::assertSame('dark', CurrentUser::current()->get()->preferences['theme']);
     }
 
     public function test_update_param_persists_to_the_database(): void

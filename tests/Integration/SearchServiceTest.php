@@ -239,7 +239,7 @@ final class SearchServiceTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         $this->repo = new SearchRepository($this->conn);
 
-        CurrentUser::set(User::fromUserArray(self::realisticUserGlobal()));
+        CurrentUser::current()->set(User::fromUserArray(self::realisticUserGlobal()));
         CurrentConfig::setDefaultFiltersViews(null);
         CurrentConfig::setFiltersViews([
             'expert' => ['access' => 'everybody'],
@@ -273,6 +273,7 @@ final class SearchServiceTest extends IntegrationTestCase
             new HtmlService(),
             new RedirectService(),
             new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)), \Piwigo\PluginConfig\EventDispatcher::get(),
+            \Piwigo\Users\CurrentUser::current(),
         );
     }
 
@@ -304,6 +305,7 @@ final class SearchServiceTest extends IntegrationTestCase
             $htmlRenderer,
             new RedirectService(),
             new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)), \Piwigo\PluginConfig\EventDispatcher::get(),
+            \Piwigo\Users\CurrentUser::current(),
         );
     }
 
@@ -758,7 +760,7 @@ final class SearchServiceTest extends IntegrationTestCase
         // Same search as above, but with category 2 marked forbidden for
         // this user -- proves the NOT IN (...) replacement actually
         // excludes it, not just that it's syntactically present.
-        CurrentUser::set(User::fromUserArray(array_merge(self::realisticUserGlobal(), ['forbidden_categories' => '2'])));
+        CurrentUser::current()->set(User::fromUserArray(array_merge(self::realisticUserGlobal(), ['forbidden_categories' => '2'])));
 
         $results = $this->service->getQuickSearchResultsNoCache('Nested', []);
 

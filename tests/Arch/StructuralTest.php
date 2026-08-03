@@ -243,6 +243,7 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
         '/src/Piwigo/Config/DeploymentPolicy.php',
         '/src/Piwigo/Image/ImageStdParams.php',
         '/src/Piwigo/Core/PageState.php',
+        '/src/Piwigo/Users/CurrentUser.php',
     ];
 
     $hits = [
@@ -1206,6 +1207,73 @@ test('CurrentUser::reset() is only called from tests/', function (): void {
     ];
 
     expect(describeCallSites($hits))->toBe([]);
+});
+
+test('CurrentUser::current() transitional bridge has a shrinking, known allow-list', function (): void {
+    // Singleton/service-locator elimination campaign, Phase 5: current()
+    // kept its original name (no `Static` suffix, matching PageState/
+    // ImageStdParams/DeploymentPolicy/DbCredentials's own precedent -- no
+    // competing real instance method to disambiguate from). Every phase
+    // that converts one more of these files to constructor-injected
+    // CurrentUser should remove it from the allow-list below.
+    // ExtensionScanner.php/AccessControl.php/PwgTOTP.php/CaddieService.php
+    // are genuinely static-context-only utilities/classes with too many
+    // manual construction sites for a required constructor param (same
+    // "no wrapper needed" precedent as FilesystemHelper/HtmlService).
+    // HtmlService.php/MailService.php/UrlService.php/MetadataService.php
+    // are Phase-6-entangled (dozens of manual construction sites each).
+    // Ws/Pwg*.php + WsDefaultMethods.php/WsHelper.php are Phase-10-locked
+    // static dispatch. CommentService::getNbAvailableComments() and
+    // ActivityService::record() are the one method on each class still
+    // reachable from a genuinely static context (no `$this`), same shape
+    // already established for CategoryService.php's own
+    // moveCategories()-adjacent statics during the Translator phase.
+    // InstallWizard.php/PemCatalog.php/PermissionService.php match
+    // DeploymentPolicy::current()'s own identical allow-list reasoning:
+    // one-off manual construction sites or a method already known to be
+    // entangled with the still-static Ws/Pwg* layer
+    // (PermissionService::getSqlConditionFandFAsCondition()).
+    // public/random.php is a raw entry-shell root file, no constructor to
+    // inject through.
+    $repoRoot = __DIR__ . '/../..';
+
+    $allowedFiles = [
+        '/public/random.php',
+        '/src/Piwigo/Activity/ActivityService.php',
+        '/src/Piwigo/Admin/Extensions/ExtensionScanner.php',
+        '/src/Piwigo/Admin/Extensions/PemCatalog.php',
+        '/src/Piwigo/Admin/Install/InstallWizard.php',
+        '/src/Piwigo/Admin/Upload/UploadService.php',
+        '/src/Piwigo/Auth/AccessControl.php',
+        '/src/Piwigo/Auth/PwgTOTP.php',
+        '/src/Piwigo/Caddie/CaddieService.php',
+        '/src/Piwigo/Comment/CommentService.php',
+        '/src/Piwigo/Html/HtmlService.php',
+        '/src/Piwigo/Mail/MailService.php',
+        '/src/Piwigo/Metadata/MetadataService.php',
+        '/src/Piwigo/Permission/PermissionService.php',
+        '/src/Piwigo/Url/UrlService.php',
+        '/src/Piwigo/Ws/PwgCategories.php',
+        '/src/Piwigo/Ws/PwgComments.php',
+        '/src/Piwigo/Ws/PwgCore.php',
+        '/src/Piwigo/Ws/PwgGroups.php',
+        '/src/Piwigo/Ws/PwgImages.php',
+        '/src/Piwigo/Ws/PwgUsers.php',
+        '/src/Piwigo/Ws/WsDefaultMethods.php',
+        '/src/Piwigo/Ws/WsHelper.php',
+    ];
+
+    $hits = [
+        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'CurrentUser::current('),
+        ...findCallSitesOutsideComments($repoRoot . '/public', 'CurrentUser::current('),
+    ];
+
+    $disallowed = array_values(array_filter(
+        $hits,
+        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
+    ));
+
+    expect(describeCallSites($disallowed))->toBe([]);
 });
 
 // P16: src/Piwigo/ is the typed source of truth for the 52 retired

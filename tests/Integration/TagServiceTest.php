@@ -55,14 +55,14 @@ namespace Piwigo\Tests\Integration {
             CurrentConfig::setTagsLevels(5);
 
             $this->conn = DbConnection::build();
-            $this->service = new TagService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Tag\TagEntity::class), new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class)), new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), EventDispatcher::get());
+            $this->service = new TagService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Tag\TagEntity::class), new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class)), new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), EventDispatcher::get(), \Piwigo\Users\CurrentUser::current());
         }
 
         #[\Override]
         protected function tearDown(): void
         {
             CachePools::tagCloud()->clear();
-            CurrentUser::reset();
+            CurrentUser::current()->reset();
             parent::tearDown();
         }
 
@@ -152,7 +152,7 @@ namespace Piwigo\Tests\Integration {
          */
         public function test_get_available_tags_with_no_filter_caches_the_result_via_cache_pools_tag_cloud(): void
         {
-            CurrentUser::set(new User(
+            CurrentUser::current()->set(new User(
                 id: \Piwigo\Common\ValueObject\UserId::from(2),
                 username: 'fixture_guest',
                 email: '',
@@ -347,7 +347,7 @@ namespace Piwigo\Tests\Integration {
          */
         public function test_get_available_tags_skips_a_tag_absent_from_the_counters_once_past_the_1000_id_threshold(): void
         {
-            CurrentUser::set(new User(
+            CurrentUser::current()->set(new User(
                 id: \Piwigo\Common\ValueObject\UserId::from(2),
                 username: 'fixture_guest',
                 email: '',

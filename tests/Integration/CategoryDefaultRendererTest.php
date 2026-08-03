@@ -100,7 +100,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         // own DerivativeImage::setUrlService() call.
         DerivativeImage::setUrlService($urlService);
 
-        $this->renderer = new CategoryDefaultRenderer($htmlService, $this->buildTemplate(), $imageRepo, $commentRepo, $urlService, new SessionService($em->getRepository(SessionEntity::class)), EventDispatcher::get(), ImageStdParams::current());
+        $this->renderer = new CategoryDefaultRenderer($htmlService, $this->buildTemplate(), $imageRepo, $commentRepo, $urlService, new SessionService($em->getRepository(SessionEntity::class)), EventDispatcher::get(), ImageStdParams::current(), \Piwigo\Users\CurrentUser::current());
     }
 
     #[\Override]
@@ -132,7 +132,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
 
     private function seedUser(bool $showNbHits, bool $showNbComments): void
     {
-        CurrentUser::set(User::fromUserArray([
+        CurrentUser::current()->set(User::fromUserArray([
             'id' => 3,
             'username' => 'fixture_regular_user',
             'status' => 'normal',

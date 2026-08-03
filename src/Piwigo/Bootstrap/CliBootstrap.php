@@ -92,8 +92,12 @@ final class CliBootstrap
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         Kernel::boot($paths);
-        CurrentUser::attachGlobals();
         $container = Kernel::container();
+        $currentUser = $container->get(CurrentUser::class);
+        if (! $currentUser instanceof CurrentUser) {
+            throw new \LogicException('Container returned an unexpected type for ' . CurrentUser::class);
+        }
+        $currentUser->attachGlobals();
         $configService = $container->get(ConfigService::class);
         if (! $configService instanceof ConfigService) {
             throw new \LogicException('Container returned an unexpected type for ' . ConfigService::class);

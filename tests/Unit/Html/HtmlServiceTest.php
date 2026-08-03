@@ -40,14 +40,14 @@ beforeEach(function (): void {
     if ($processCache instanceof ProcessCache) {
         $processCache->reset();
     }
-    CurrentUser::reset();
+    CurrentUser::current()->reset();
     CurrentTemplate::reset();
     CurrentConfig::reset();
 });
 
 afterEach(function (): void {
     Kernel::reset();
-    CurrentUser::reset();
+    CurrentUser::current()->reset();
     CurrentTemplate::reset();
     CurrentConfig::reset();
 });
@@ -1263,7 +1263,7 @@ test('accessDenied renders a 401 page instead of redirecting when a real (non-gu
     // CurrentUser at all, so isInitialized() alone is already false and
     // can't distinguish the second condition. A real, non-guest
     // CurrentUser is required to reach this branch at all.
-    CurrentUser::set(new \Piwigo\Users\User(
+    CurrentUser::current()->set(new \Piwigo\Users\User(
         id: \Piwigo\Common\ValueObject\UserId::from(1),
         username: 'alice',
         email: '',

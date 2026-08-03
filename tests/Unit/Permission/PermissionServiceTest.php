@@ -56,7 +56,7 @@ function seedFilterState(bool $enabled, string $visibleCategories = '', string $
 
 function seedPermissionUser(string $forbiddenCategories = '', int $level = 0, string $imageAccessType = '', string $imageAccessList = ''): void
 {
-    CurrentUser::set(new User(
+    CurrentUser::current()->set(new User(
         id: \Piwigo\Common\ValueObject\UserId::from(1),
         username: 'torres',
         email: '',
@@ -88,7 +88,7 @@ function seedPermissionUser(string $forbiddenCategories = '', int $level = 0, st
  */
 function seedPermissionUserRaw(array $rawAttributes): void
 {
-    CurrentUser::set(new User(
+    CurrentUser::current()->set(new User(
         id: \Piwigo\Common\ValueObject\UserId::from(1),
         username: 'torres',
         email: '',
@@ -106,7 +106,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    CurrentUser::reset();
+    CurrentUser::current()->reset();
     CurrentConfig::reset();
     Lang::reset();
     Translator::get()->reset();

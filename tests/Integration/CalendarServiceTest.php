@@ -60,7 +60,7 @@ final class CalendarServiceTest extends IntegrationTestCase
         // forbidden_images fallthrough build a malformed 'level<=' fragment
         // with no right-hand value, same gotcha documented in
         // CategoryServiceTest/SearchServiceTest.
-        CurrentUser::set(User::fromUserArray([
+        CurrentUser::current()->set(User::fromUserArray([
             'id' => 1,
             'forbidden_categories' => '0',
             'level' => '0',

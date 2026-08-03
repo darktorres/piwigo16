@@ -31,7 +31,7 @@ use Sentry\SentrySdk;
 beforeEach(function (): void {
     Kernel::reset();
     CurrentConfig::reset();
-    CurrentUser::reset();
+    CurrentUser::current()->reset();
     // Legacy Coupling Retirement Phase 8, 8d: bootConfigOnly() now reuses
     // an already-set CurrentConfigService instead of always resolving+
     // loading its own -- without this reset, a set() left over from an
@@ -47,7 +47,7 @@ beforeEach(function (): void {
 afterEach(function (): void {
     Kernel::reset();
     CurrentConfig::reset();
-    CurrentUser::reset();
+    CurrentUser::current()->reset();
     CurrentConfigService::reset();
     Lang::reset();
     Translator::get()->reset();
@@ -97,7 +97,7 @@ test('bootConfigOnly merges DB-persisted config overrides into CurrentConfig (P2
 test('bootConfigOnly attaches a guest CurrentUser', function (): void {
     RequestBootstrap::bootConfigOnly(Paths::fromRoot(sys_get_temp_dir()));
 
-    expect(CurrentUser::isInitialized())->toBeTrue();
+    expect(CurrentUser::current()->isInitialized())->toBeTrue();
 });
 
 test('bootConfigOnly initializes Sentry when SENTRY_DSN is set', function (): void {

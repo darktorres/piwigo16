@@ -153,7 +153,7 @@ final readonly class PermissionService
         array $conditionFields,
         bool $forceOneCondition = false,
     ): SqlCondition {
-        $currentUser = \Piwigo\Users\CurrentUser::get();
+        $currentUser = \Piwigo\Users\CurrentUser::current()->get();
 
         $userForbiddenCategories = $currentUser->forbiddenCategories;
         $filterVisibleCategories = \Piwigo\Core\FilterState::isInitializedStatic() ? \Piwigo\Core\FilterState::visibleCategoriesStatic() : '';

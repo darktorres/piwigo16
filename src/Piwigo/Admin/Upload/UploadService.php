@@ -493,7 +493,7 @@ final class UploadService
                 'width' => $file_infos['width'],
                 'height' => $file_infos['height'],
                 'md5sum' => $md5sum,
-                'added_by' => \Piwigo\Users\CurrentUser::get()->id->value,
+                'added_by' => \Piwigo\Users\CurrentUser::current()->get()->id->value,
                 'rotation' => $rotation,
             ];
 
@@ -522,7 +522,7 @@ final class UploadService
                 'width' => $file_infos['width'],
                 'height' => $file_infos['height'],
                 'md5sum' => $md5sum,
-                'added_by' => \Piwigo\Users\CurrentUser::get()->id->value,
+                'added_by' => \Piwigo\Users\CurrentUser::current()->get()->id->value,
                 'rotation' => $rotation,
             ];
 

@@ -1177,14 +1177,14 @@ test('embellishUrl leaves a /../ segment unresolved when there is no preceding s
 });
 
 test('getUserFavorites returns an empty array for a guest', function (): void {
-    \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray(['id' => 2, 'status' => 'guest']));
+    \Piwigo\Users\CurrentUser::current()->set(\Piwigo\Users\User::fromUserArray(['id' => 2, 'status' => 'guest']));
 
     try {
         $service = new UrlService(new HtmlService());
 
         expect($service->getUserFavorites())->toBe([]);
     } finally {
-        \Piwigo\Users\CurrentUser::reset();
+        \Piwigo\Users\CurrentUser::current()->reset();
     }
 });
 
@@ -1371,7 +1371,7 @@ test('getQueryStringDiff does not prefix a purely-numeric query key', function (
 });
 
 test('getUserFavorites returns early for a guest without ever touching the database connection', function (): void {
-    \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray(['id' => 2, 'status' => 'guest']));
+    \Piwigo\Users\CurrentUser::current()->set(\Piwigo\Users\User::fromUserArray(['id' => 2, 'status' => 'guest']));
 
     try {
         $service = new UrlService(new HtmlService());
@@ -1385,6 +1385,6 @@ test('getUserFavorites returns early for a guest without ever touching the datab
         $conn = new ReflectionProperty($service, 'conn')->getValue($service);
         expect($conn)->toBeNull();
     } finally {
-        \Piwigo\Users\CurrentUser::reset();
+        \Piwigo\Users\CurrentUser::current()->reset();
     }
 });

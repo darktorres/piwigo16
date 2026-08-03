@@ -206,6 +206,15 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         // untranslated literal instead of the real po wording every
         // assertion in this file expects.
         Lang::load('admin.lang');
+        // Kernel::reset() also discards the container-shared CurrentUser
+        // instance setUp()'s own attachGlobals() seed populated
+        // (singleton/service-locator elimination campaign, Phase 5 --
+        // CurrentUser is now rebuilt fresh per container, not a true
+        // process-global survivor) -- without reseeding here, any
+        // CurrentUser::current()->get() reached from the fresh sender
+        // (e.g. via AccessControl) throws "not initialised" against this
+        // now-unseeded container.
+        \Piwigo\Users\CurrentUser::current()->attachGlobals();
 
         return PresentationAccessor::notificationByMailSender();
     }

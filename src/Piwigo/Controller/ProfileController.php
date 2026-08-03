@@ -52,6 +52,7 @@ final class ProfileController implements ControllerInterface
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
         private readonly \Piwigo\Core\PageState $pageState,
+        private readonly \Piwigo\Users\CurrentUser $currentUser,
     ) {}
 
     private static function userService(): UserService
@@ -87,7 +88,7 @@ final class ProfileController implements ControllerInterface
         // 'language' field) consistently reflects the just-switched
         // language.
         $cookie_lang = $_COOKIE['lang'] ?? null;
-        if ($cookie_lang !== null and (! is_string($cookie_lang) or \Piwigo\Users\CurrentUser::get()->language !== $cookie_lang)) {
+        if ($cookie_lang !== null and (! is_string($cookie_lang) or $this->currentUser->get()->language !== $cookie_lang)) {
             if (! is_string($cookie_lang)) {
                 \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                     ->fatalError('[Hacking attempt] the input parameter "lang" is not valid');
@@ -97,8 +98,8 @@ final class ProfileController implements ControllerInterface
                     ->fatalError('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
             }
 
-            \Piwigo\Users\CurrentUser::updateLanguage($cookie_lang);
-            self::userService()->updateInfosForUser(\Piwigo\Users\CurrentUser::get()->id, [
+            $this->currentUser->updateLanguage($cookie_lang);
+            self::userService()->updateInfosForUser($this->currentUser->get()->id, [
                 'language' => $cookie_lang,
             ]);
             \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
@@ -108,7 +109,8 @@ final class ProfileController implements ControllerInterface
             ]);
         }
 
-        $userdata = \Piwigo\Users\CurrentUser::get()->toUserArray();
+        $userdata = $this->currentUser->get()
+            ->toUserArray();
 
         $this->eventDispatcher->dispatchNotify(new LocBeginProfile());
 
@@ -148,7 +150,7 @@ final class ProfileController implements ControllerInterface
             $userdata = array_merge($userdata, $default_user);
         }
 
-        $profileFormHandler = new ProfileFormHandler($this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState);
+        $profileFormHandler = new ProfileFormHandler($this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser);
 
         $page_errors = $this->pageState->errors;
         $profileFormHandler->saveFromPost($userdata, $page_errors);
@@ -179,7 +181,7 @@ final class ProfileController implements ControllerInterface
         if (! is_array($hide_menu_on) or ! in_array('theProfilePage', $hide_menu_on, true)) {
             if (($themeconf['id'] ?? null) !== 'standard_pages') {
                 new MenubarRenderer()
-                    ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy);
+                    ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser);
             }
         }
 
@@ -194,11 +196,12 @@ final class ProfileController implements ControllerInterface
 
         $template->assign([
             'language_options' => $language_options,
-            'language_selection' => \Piwigo\Users\CurrentUser::get()->language,
+            'language_selection' => $this->currentUser->get()
+                ->language,
         ]);
 
         // Get link to doc
-        if (str_starts_with(\Piwigo\Users\CurrentUser::get()->language, 'fr')) {
+        if (str_starts_with($this->currentUser->get()->language, 'fr')) {
             $help_link = 'https://upstream.example.invalid/help/fr/';
         } else {
             $help_link = 'https://upstream.example.invalid/help/';

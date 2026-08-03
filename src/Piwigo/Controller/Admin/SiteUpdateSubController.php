@@ -105,6 +105,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         private readonly SessionService $sessionService,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Core\PageState $pageState,
+        private readonly \Piwigo\Users\CurrentUser $currentUser,
     ) {}
 
     private static function permissionService(): PermissionService
@@ -612,7 +613,8 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                     'path' => $path,
                     'representative_ext' => $fs[$path]['representative_ext'],
                     'storage_category_id' => $db_fulldirs[$dirname],
-                    'added_by' => \Piwigo\Users\CurrentUser::get()->id->value,
+                    'added_by' => $this->currentUser->get()
+                        ->id->value,
                 ];
 
                 if ($post['privacy_level'] !== '0') {

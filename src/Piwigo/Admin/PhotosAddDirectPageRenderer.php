@@ -43,6 +43,7 @@ final class PhotosAddDirectPageRenderer
         private readonly StorageRegistry $storageRegistry,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Core\PageState $pageState,
+        private readonly \Piwigo\Users\CurrentUser $currentUser,
     ) {}
 
     /**
@@ -67,7 +68,8 @@ final class PhotosAddDirectPageRenderer
         $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
         $conn = DbConnection::build();
 
-        $user_id = \Piwigo\Users\CurrentUser::get()->id->value;
+        $user_id = $this->currentUser->get()
+            ->id->value;
 
         $photosAddDirectRequest = Request\PhotosAddDirectRequest::fromGlobals(\Piwigo\Config\CurrentConfig::isFormatsEnabled());
 

@@ -48,6 +48,7 @@ final readonly class CalendarRenderer
         private HtmlRenderingInterface $htmlRenderer,
         private TemplateInterface $template,
         private UrlServiceInterface $urlService,
+        private \Piwigo\Users\CurrentUser $currentUser,
     ) {}
 
     /**
@@ -85,7 +86,8 @@ final readonly class CalendarRenderer
                 && (is_int($category['id']) || is_string($category['id']))
                 ? $category['id']
                 : null;
-            $forbidden_categories = \Piwigo\Users\CurrentUser::get()->forbiddenCategories;
+            $forbidden_categories = $this->currentUser->get()
+                ->forbiddenCategories;
 
             $inner_sql = $calendarService->buildInnerSql('categories', $category !== null, $category_id, $forbidden_categories, []);
 
@@ -279,9 +281,9 @@ final readonly class CalendarRenderer
               && (count($page_chronology_date) === 0
                     or ($page_chronology_date[0] === 'any' && count($page_chronology_date) === 1))
             ) {
-                $currentUser = \Piwigo\Users\CurrentUser::get();
+                $user = $this->currentUser->get();
                 $cache_item = \Piwigo\Cache\CachePools::calendarNav()
-                    ->getItem('nav_' . $currentUser->id->value . '_' . md5($calendar->date_field . $order_by));
+                    ->getItem('nav_' . $user->id->value . '_' . md5($calendar->date_field . $order_by));
             }
 
             $cache_item ??= null;

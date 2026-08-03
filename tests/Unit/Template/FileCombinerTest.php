@@ -47,11 +47,11 @@ use Piwigo\Users\UserStatus;
 beforeEach(function (): void {
     CurrentConfig::setTemplateCompileCheck(false);
     CurrentConfig::setTemplateCombineFiles(false);
-    CurrentUser::attachGlobals();
+    CurrentUser::current()->attachGlobals();
 });
 
 afterEach(function (): void {
-    CurrentUser::reset();
+    CurrentUser::current()->reset();
     CurrentConfig::reset();
 });
 
@@ -73,7 +73,7 @@ function invokeComputeForce(FileCombiner $combiner): bool
 
 function setAdminUser(): void
 {
-    CurrentUser::set(new User(
+    CurrentUser::current()->set(new User(
         id: UserId::from(2),
         username: 'admin',
         email: '',
@@ -114,8 +114,8 @@ test('computeForce is true for an admin combining CSS with a cache-busting heade
         expect(invokeComputeForce($combiner))->toBeTrue();
     } finally {
         unset($_SERVER['HTTP_CACHE_CONTROL']);
-        CurrentUser::reset();
-        CurrentUser::attachGlobals();
+        CurrentUser::current()->reset();
+        CurrentUser::current()->attachGlobals();
     }
 });
 
@@ -133,8 +133,8 @@ test('computeForce is true for an admin combining JS with templateCompileCheck o
         expect(invokeComputeForce($combiner))->toBeTrue();
     } finally {
         unset($_SERVER['HTTP_CACHE_CONTROL']);
-        CurrentUser::reset();
-        CurrentUser::attachGlobals();
+        CurrentUser::current()->reset();
+        CurrentUser::current()->attachGlobals();
     }
 });
 
@@ -147,8 +147,8 @@ test('computeForce is false for an admin JS combine with no cache-busting header
 
         expect(invokeComputeForce($combiner))->toBeFalse();
     } finally {
-        CurrentUser::reset();
-        CurrentUser::attachGlobals();
+        CurrentUser::current()->reset();
+        CurrentUser::current()->attachGlobals();
     }
 });
 
@@ -472,6 +472,7 @@ test('clear_combined_files deletes only .js and .css files from the combined dir
     file_put_contents($root . '/_data/combined/b.css', 'x');
     file_put_contents($root . '/_data/combined/c.txt', 'x');
     \Piwigo\Core\Kernel::boot(Paths::fromRoot($root));
+    CurrentUser::current()->attachGlobals();
     CurrentConfig::setDataLocation('_data/');
 
     try {
@@ -492,6 +493,7 @@ test('clear_combined_files deletes only .js and .css files from the combined dir
 test('clear_combined_files returns without error when the combined dir does not exist', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-file-combiner-noclear-' . bin2hex(random_bytes(8));
     \Piwigo\Core\Kernel::boot(Paths::fromRoot($root));
+    CurrentUser::current()->attachGlobals();
     CurrentConfig::setDataLocation('_data/');
 
     set_error_handler(static fn (): bool => true);
@@ -573,6 +575,7 @@ test('combine reaches process_combinable for a single template combinable via fl
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/foo.js', "var a = 1;\n");
     Kernel::boot(Paths::fromRoot($root));
+    CurrentUser::current()->attachGlobals();
     CurrentConfig::setDataLocation('_data/');
     CurrentConfig::setDataDirChecked('1');
 
@@ -607,6 +610,7 @@ test('process_combinable\'s single-file cache key is sensitive to the combinable
     file_put_contents($root . '/themes/default/js/foo.js', "var a = 1;\n");
     file_put_contents($root . '/themes/default/js/bar.js', "var a = 1;\n");
     Kernel::boot(Paths::fromRoot($root));
+    CurrentUser::current()->attachGlobals();
     CurrentConfig::setDataLocation('_data/');
     CurrentConfig::setDataDirChecked('1');
 
@@ -637,6 +641,7 @@ test('process_combinable\'s single-file cache key is sensitive to the combinable
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/foo.js', "var a = 1;\n");
     Kernel::boot(Paths::fromRoot($root));
+    CurrentUser::current()->attachGlobals();
     CurrentConfig::setDataLocation('_data/');
     CurrentConfig::setDataDirChecked('1');
 
@@ -667,6 +672,7 @@ test('process_combinable\'s single-file cache filename exactly matches the crc32
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/foo.js', "var a = 1;\n");
     Kernel::boot(Paths::fromRoot($root));
+    CurrentUser::current()->attachGlobals();
     CurrentConfig::setDataLocation('_data/');
     CurrentConfig::setDataDirChecked('1');
     // templateCompileCheck=true folds filemtime() into the key -- pins
@@ -700,6 +706,7 @@ test('process_combinable reuses an already-combined template file (matching a fi
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/foo.js', "var a = 1;\n");
     Kernel::boot(Paths::fromRoot($root));
+    CurrentUser::current()->attachGlobals();
     CurrentConfig::setDataLocation('_data/');
     CurrentConfig::setDataDirChecked('1');
     // templateCompileCheck=true makes the cache key include filemtime() --
@@ -749,6 +756,7 @@ test('process_combinable builds and writes a new combined JS file on a cache mis
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/foo.js', "var a = 1;\n");
     Kernel::boot(Paths::fromRoot($root));
+    CurrentUser::current()->attachGlobals();
     CurrentConfig::setDataLocation('_data/');
     CurrentConfig::setDataDirChecked('1');
 
@@ -789,6 +797,7 @@ test('process_combinable builds and writes a new combined CSS file on a cache mi
     // template=true) must escape its own rule bodies.
     file_put_contents($root . '/themes/default/css/foo.css', "{literal}body{color:red;}{/literal}\n");
     Kernel::boot(Paths::fromRoot($root));
+    CurrentUser::current()->attachGlobals();
     CurrentConfig::setDataLocation('_data/');
     CurrentConfig::setDataDirChecked('1');
 
@@ -827,6 +836,7 @@ test('process_combinable returns rendered content directly for a template combin
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/foo.js', "var a = {\$value};\n");
     Kernel::boot(Paths::fromRoot($root));
+    CurrentUser::current()->attachGlobals();
     CurrentConfig::setDataLocation('_data/');
     CurrentConfig::setDataDirChecked('1');
 
@@ -859,6 +869,7 @@ test('process_combinable throws when a template combinable points at a file that
     $root = sys_get_temp_dir() . '/piwigo-file-combiner-missing-real-path-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
     Kernel::boot(Paths::fromRoot($root));
+    CurrentUser::current()->attachGlobals();
     CurrentConfig::setDataLocation('_data/');
     CurrentConfig::setDataDirChecked('1');
 
@@ -1219,6 +1230,7 @@ test('process_combinable registers the template file under a handle combining th
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/foo.js', "var a = 1;\n");
     Kernel::boot(Paths::fromRoot($root));
+    CurrentUser::current()->attachGlobals();
     CurrentConfig::setDataLocation('_data/');
     CurrentConfig::setDataDirChecked('1');
 
@@ -1246,6 +1258,7 @@ test('process_combinable notifies combinable_preparse listeners before parsing a
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/foo.js', "var a = 1;\n");
     Kernel::boot(Paths::fromRoot($root));
+    CurrentUser::current()->attachGlobals();
     CurrentConfig::setDataLocation('_data/');
     CurrentConfig::setDataDirChecked('1');
 

@@ -13,7 +13,7 @@ use Piwigo\Users\UserStatus;
 // desired status is enough, matching this test's old $GLOBALS['user'] stub.
 function seedCurrentUserStatus(UserStatus $status): void
 {
-    CurrentUser::set(new User(
+    CurrentUser::current()->set(new User(
         id: \Piwigo\Common\ValueObject\UserId::from(1),
         username: '',
         email: '',
@@ -29,7 +29,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    CurrentUser::reset();
+    CurrentUser::current()->reset();
 });
 
 test('resolveCandidates matches an empty-string condition', function (): void {

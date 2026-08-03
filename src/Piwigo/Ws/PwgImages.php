@@ -350,7 +350,7 @@ final class PwgImages
         ];
 
         $infos = [];
-        $comment_action = new CommentService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), \Piwigo\Bootstrap\PresentationAccessor::urlService(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current())
+        $comment_action = new CommentService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), \Piwigo\Bootstrap\PresentationAccessor::urlService(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current())
             ->insertComment($comm, $params['key'], $infos);
 
         switch ($comment_action) {
@@ -527,7 +527,7 @@ final class PwgImages
               or \Piwigo\Config\CurrentConfig::commentsForall()
             )
         ) {
-            $username = \Piwigo\Users\CurrentUser::get()->username;
+            $username = \Piwigo\Users\CurrentUser::current()->get()->username;
             $comment_post_data['author'] = stripslashes($username);
             $comment_post_data['key'] = new EphemeralKeyService()->generate(2, (string) $params['image_id']);
         }
@@ -1756,7 +1756,7 @@ final class PwgImages
         }
 
         $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\CurrentConfig::uploadDir();
-        $output_filepath_prefix = $upload_dir_conf . '/buffer/' . $params['original_sum'] . '-u' . \Piwigo\Users\CurrentUser::get()->id->value;
+        $output_filepath_prefix = $upload_dir_conf . '/buffer/' . $params['original_sum'] . '-u' . \Piwigo\Users\CurrentUser::current()->get()->id->value;
         $chunkfile_path_pattern = $output_filepath_prefix . '-%03uof%03u.chunk';
 
         $chunkfile_path = sprintf($chunkfile_path_pattern, $params['chunk'] + 1, $params['chunks']);
@@ -1935,12 +1935,12 @@ final class PwgImages
         PermissionCacheInvalidator::invalidate();
 
         // trick to bypass get_sql_condition_FandF
-        if ($params['level'] !== 0 and $params['level'] > \Piwigo\Users\CurrentUser::get()->level) {
+        if ($params['level'] !== 0 and $params['level'] > \Piwigo\Users\CurrentUser::current()->get()->level) {
             // this will not persist -- Legacy Coupling Retirement Phase 8,
             // 8i: CurrentUser is the only real reader now (the parallel
             // `global $user;` array was never read by anything else in
             // src/Piwigo/, confirmed via grep before deleting it).
-            \Piwigo\Users\CurrentUser::set(\Piwigo\Users\CurrentUser::get()->withLevel($params['level']));
+            \Piwigo\Users\CurrentUser::current()->set(\Piwigo\Users\CurrentUser::current()->get()->withLevel($params['level']));
         }
 
         // delete chunks older than a week

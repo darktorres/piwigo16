@@ -46,6 +46,7 @@ final class PictureModifyPageRenderer
         private readonly SessionService $sessionService,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Core\PageState $pageState,
+        private readonly \Piwigo\Users\CurrentUser $currentUser,
     ) {}
 
     private static function userService(): UserService
@@ -455,7 +456,7 @@ final class PictureModifyPageRenderer
             $template->assign('U_JUMPTO', $this->urlService->makePictureUrl([
                 'image_id' => $image_id,
             ]) . '/' . $custom_context);
-        } elseif (\Piwigo\Users\CurrentUser::get()->level >= $image_level) {
+        } elseif ($this->currentUser->get()->level >= $image_level) {
             $authorized_category_ids = array_map(
                 strval(...),
                 $imageService->getCategoryIdsForImage($image_id)
@@ -466,7 +467,7 @@ final class PictureModifyPageRenderer
                 explode(
                     ',',
                     new \Piwigo\Permission\ForbiddenCategoriesCache(self::permissionService(), \Piwigo\Cache\CachePools::permissions())
-                        ->getForUser(\Piwigo\Users\CurrentUser::get()->id->value, \Piwigo\Users\CurrentUser::get()->status->value)
+                        ->getForUser($this->currentUser->get()->id->value, $this->currentUser->get()->status->value)
                 )
             );
 

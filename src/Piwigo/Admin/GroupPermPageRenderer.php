@@ -26,6 +26,7 @@ final class GroupPermPageRenderer
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
+        private readonly \Piwigo\Users\CurrentUser $currentUser,
     ) {}
 
     private static function auditService(): AuditService
@@ -70,7 +71,8 @@ final class GroupPermPageRenderer
         $group_service = \Piwigo\Bootstrap\CoreDomainAccessor::groupService();
 
         // [SEC-57] actor for either branch below
-        $actor_id = \Piwigo\Users\CurrentUser::get()->id->value;
+        $actor_id = $this->currentUser->get()
+            ->id->value;
 
         if ($groupPermSubmit->isFalsify
             and count($cat_true) > 0) {

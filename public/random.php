@@ -43,7 +43,7 @@ $paths = Paths::fromRoot(dirname(__DIR__));
 // documented promotion bar for a named property -- read via
 // rawAttributes, same as every other low-frequency legacy $user key.
 $top_number = CurrentConfig::topNumber();
-$rawNbImagePage = CurrentUser::get()->rawAttributes['nb_image_page'] ?? null;
+$rawNbImagePage = CurrentUser::current()->get()->rawAttributes['nb_image_page'] ?? null;
 $nb_image_page = is_numeric($rawNbImagePage) ? (int) $rawNbImagePage : 15;
 
 $conn = \Piwigo\Db\DbConnection::build();

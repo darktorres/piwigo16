@@ -46,7 +46,7 @@ final class TemplateDefineDerivativeTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
         CurrentConfigService::set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
         ImageStdParams::current()->load_from_db();
-        CurrentUser::attachGlobals();
+        CurrentUser::current()->attachGlobals();
 
         $this->template = new Template();
     }
@@ -54,7 +54,7 @@ final class TemplateDefineDerivativeTest extends IntegrationTestCase
     #[\Override]
     protected function tearDown(): void
     {
-        CurrentUser::reset();
+        CurrentUser::current()->reset();
         parent::tearDown();
     }
 

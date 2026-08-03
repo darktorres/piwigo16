@@ -86,8 +86,8 @@ namespace Piwigo\Tests\Integration {
             // production value so the real filesystem check runs against
             // the real themes/ dir.
             CurrentConfig::setThemesDir(\Piwigo\Core\CurrentPaths::get()->root . 'themes');
-            CurrentUser::set(User::fromUserArray(['id' => 1]));
-            CurrentUser::markRealUserResolved();
+            CurrentUser::current()->set(User::fromUserArray(['id' => 1]));
+            CurrentUser::current()->markRealUserResolved();
             unset($_REQUEST['method'], $_REQUEST['action']);
             $_SERVER['SCRIPT_NAME'] = '/admin.php';
         }

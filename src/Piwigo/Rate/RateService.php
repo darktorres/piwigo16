@@ -28,6 +28,7 @@ final readonly class RateService
         private RateRepository $repo,
         private CookieService $cookies,
         private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private \Piwigo\Users\CurrentUser $currentUser,
     ) {}
 
     /**
@@ -67,7 +68,8 @@ final readonly class RateService
             return false;
         }
 
-        $userId = \Piwigo\Users\CurrentUser::get()->id->value;
+        $userId = $this->currentUser->get()
+            ->id->value;
 
         $remoteAddr = IpAddress::fromRemoteAddr()->value ?? '';
         $ipComponents = explode('.', $remoteAddr);

@@ -97,6 +97,7 @@ final class PictureController implements ControllerInterface
         private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
         private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
         private readonly \Piwigo\Core\PageState $pageState,
+        private readonly \Piwigo\Users\CurrentUser $currentUser,
     ) {}
 
     private static function permissionService(): PermissionService
@@ -126,7 +127,7 @@ final class PictureController implements ControllerInterface
 
     private function commentService(Connection $conn, UrlServiceInterface $urlService): CommentService
     {
-        return new CommentService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $urlService, $this->eventDispatcher, $this->pageState);
+        return new CommentService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $urlService, $this->eventDispatcher, $this->pageState, $this->currentUser);
     }
 
     #[\Override]
@@ -161,7 +162,7 @@ final class PictureController implements ControllerInterface
         // access authorization check
         if ($page_category !== null) {
             $category_id = $page_category['id'] ?? null;
-            self::categoryService()->checkRestrictions(is_numeric($category_id) ? (int) $category_id : 0, \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
+            self::categoryService()->checkRestrictions(is_numeric($category_id) ? (int) $category_id : 0, \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService, $this->currentUser);
         }
 
         // $section_context->items is mutated in place below (best_rated
@@ -177,7 +178,7 @@ final class PictureController implements ControllerInterface
         $image_id = is_numeric($image_id) ? (int) $image_id : 0;
         $image_file = $section_context->imageFile;
 
-        $currentUser = \Piwigo\Users\CurrentUser::get();
+        $user = $this->currentUser->get();
 
         // if this image_id doesn't correspond to this category, an error
         // message is displayed, and execution is stopped
@@ -198,7 +199,7 @@ final class PictureController implements ControllerInterface
                     );
             }
             $row_level = $row['level'];
-            $user_level = $currentUser->level;
+            $user_level = $user->level;
             if ((is_numeric($row_level) ? (int) $row_level : 0) > $user_level) {
                 \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                     ->accessDenied($this->redirectService);
@@ -383,14 +384,14 @@ final class PictureController implements ControllerInterface
             switch ($pictureRequest->action) {
                 case 'add_to_favorites':
 
-                    self::userService()->addFavorite($currentUser->id, $image_id);
+                    self::userService()->addFavorite($user->id, $image_id);
 
                     $this->redirectService->redirect($url_self);
 
                     // no break
                 case 'remove_from_favorites':
 
-                    self::userService()->removeFavorite($currentUser->id, $image_id);
+                    self::userService()->removeFavorite($user->id, $image_id);
 
                     if ($section_context->section === 'favorites') {
                         $this->redirectService->redirect($url_up);
@@ -635,7 +636,7 @@ final class PictureController implements ControllerInterface
                 $row_id = $row['id'];
 
                 if ($row['src_image']->is_original()) {// we have a photo
-                    if (\Piwigo\Users\CurrentUser::get()->enabledHigh) {
+                    if ($this->currentUser->get()->enabledHigh) {
                         $row['element_url'] = $row['src_image']->get_url();
                         $row['download_url'] = $urlService->getActionUrl($row_id, 'e', true);
                     }
@@ -805,7 +806,7 @@ final class PictureController implements ControllerInterface
         }
         $download_url = $picture['current']['download_url'] ?? null;
         $download_url_present = is_string($download_url) && $download_url !== '' && $download_url !== '0';
-        if (\Piwigo\Config\CurrentConfig::pictureDownloadIcon() and $download_url_present and \Piwigo\Users\CurrentUser::get()->enabledHigh) {
+        if (\Piwigo\Config\CurrentConfig::pictureDownloadIcon() and $download_url_present and $this->currentUser->get()->enabledHigh) {
             $template->append('current', [
                 'U_DOWNLOAD' => $download_url,
             ], true);
@@ -991,7 +992,7 @@ final class PictureController implements ControllerInterface
         if (! \Piwigo\Auth\AccessControl::isAGuest() and \Piwigo\Config\CurrentConfig::pictureFavoriteIcon()) {
             // verify if the picture is already in the favorite of the
             // user
-            $is_favorite = self::userService()->isFavorite($currentUser->id, $image_id);
+            $is_favorite = self::userService()->isFavorite($user->id, $image_id);
 
             $template->assign(
                 'favorite',
@@ -1222,7 +1223,7 @@ final class PictureController implements ControllerInterface
             ->render($image_id, $urlService, $picture, $url_self);
         if (\Piwigo\Config\CurrentConfig::activateComments()) {
             new PictureCommentRenderer()
-                ->render($edit_comment, $image_id, $section_context->start, $urlService, $related_categories, $url_self, $this->sessionService, $this->eventDispatcher, $this->pageState);
+                ->render($edit_comment, $image_id, $section_context->start, $urlService, $related_categories, $url_self, $this->sessionService, $this->eventDispatcher, $this->pageState, $this->currentUser);
         }
         if ($metadata_showable and $this->sessionService->getSessionVar('show_metadata') !== null) {
             new PictureMetadataRenderer()
@@ -1234,7 +1235,7 @@ final class PictureController implements ControllerInterface
         $themeconf = is_array($themeconf) ? $themeconf : [];
         if (\Piwigo\Config\CurrentConfig::pictureMenu() and (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('thePicturePage', $themeconf['hide_menu_on'], true))) {
             new MenubarRenderer()
-                ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy);
+                ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser);
         }
 
         // The slideshow branch above may have set $refresh/$url_link

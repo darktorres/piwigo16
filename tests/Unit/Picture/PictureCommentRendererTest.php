@@ -65,7 +65,7 @@ function makePictureCommentTestTemplate(): Template
 
 beforeEach(function (): void {
     CurrentTemplate::set(makePictureCommentTestTemplate());
-    CurrentUser::set(new User(
+    CurrentUser::current()->set(new User(
         id: \Piwigo\Common\ValueObject\UserId::from(1),
         username: 'torres',
         email: '',
@@ -81,7 +81,7 @@ afterEach(function (): void {
     picture_comment_test_rrmdir(CurrentPaths::get()->root);
     CurrentTemplate::reset();
     Kernel::reset();
-    CurrentUser::reset();
+    CurrentUser::current()->reset();
     CurrentConfig::reset();
     unset($_POST['content'], $_POST['author'], $_POST['website_url'], $_POST['email'], $_POST['key']);
 });
@@ -102,7 +102,7 @@ test('render does nothing when no related category is commentable', function ():
     $renderer->render(null, 42, 0, makePictureCommentUrlService(), [
         ['commentable' => false],
         ['commentable' => 0],
-    ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current());
+    ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
 
     expect(CurrentTemplate::get()->get_template_vars('comments'))->toBeNull()
         ->and(CurrentTemplate::get()->get_template_vars('comment_add'))->toBeNull();
@@ -149,7 +149,7 @@ test('render only counts the first commentable related category then stops (`bre
     // ResponseReadyException either way (guest + comments_forall off,
     // same as the test below) -- so only the warning capture
     // distinguishes the two.
-    CurrentUser::set(new User(
+    CurrentUser::current()->set(new User(
         id: \Piwigo\Common\ValueObject\UserId::from(1),
         username: '',
         email: '',
@@ -174,7 +174,7 @@ test('render only counts the first commentable related category then stops (`bre
         $renderer->render(null, 42, 0, makePictureCommentUrlService(), [
             ['commentable' => true],
             ['id' => 999], // no 'commentable' key -- only reached by `continue`
-        ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current());
+        ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
     } catch (ResponseReadyException $e) {
         $exception = $e;
     } finally {
@@ -199,7 +199,7 @@ test('render rejects a posted comment as "ugly spammer" when no related category
     try {
         $renderer->render(null, 42, 0, makePictureCommentUrlService(), [
             ['commentable' => false],
-        ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current());
+        ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
     } catch (ResponseReadyException $e) {
         $exception = $e;
     }
@@ -214,7 +214,7 @@ test('render rejects a posted comment as "ugly spammer" when no related category
 });
 
 test('render rejects a posted comment as "Session expired" for a guest when comments_forall is off', function (): void {
-    CurrentUser::set(new User(
+    CurrentUser::current()->set(new User(
         id: \Piwigo\Common\ValueObject\UserId::from(1),
         username: '',
         email: '',
@@ -231,7 +231,7 @@ test('render rejects a posted comment as "Session expired" for a guest when comm
     try {
         $renderer->render(null, 42, 0, makePictureCommentUrlService(), [
             ['commentable' => true],
-        ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current());
+        ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
     } catch (ResponseReadyException $e) {
         $exception = $e;
     }
@@ -246,7 +246,7 @@ test('render rejects a posted comment as "Session expired" for a guest when comm
 });
 
 test('render lets a guest post a comment when comments_forall is on', function (): void {
-    CurrentUser::set(new User(
+    CurrentUser::current()->set(new User(
         id: \Piwigo\Common\ValueObject\UserId::from(1),
         username: '',
         email: '',
@@ -264,7 +264,7 @@ test('render lets a guest post a comment when comments_forall is on', function (
     $renderer = new PictureCommentRenderer();
     $renderer->render(null, 42, 0, makePictureCommentUrlService(), [
         ['commentable' => false],
-    ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current());
+    ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
 
     expect(CurrentTemplate::get()->get_template_vars('comments'))->toBeNull();
 });
@@ -307,7 +307,7 @@ test('render does not reject a logged-in (non-guest) user\'s posted comment even
     // is never entered either.
     $renderer->render(null, 999999999, 0, makePictureCommentUrlService(), [
         ['commentable' => true],
-    ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current());
+    ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
 
     expect(CurrentTemplate::get()->get_template_vars('COMMENT_LIST'))->toBe('STATIC-COMMENT-LIST-CONTENT')
         ->and(CurrentTemplate::get()->get_template_vars('comments'))->toBe([]);

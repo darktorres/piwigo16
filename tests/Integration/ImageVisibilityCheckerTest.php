@@ -42,19 +42,19 @@ final class ImageVisibilityCheckerTest extends IntegrationTestCase
         }
 
         $this->conn = DbConnection::build();
-        $this->checker = new ImageVisibilityChecker(new PermissionRepository(EntityManagerFactory::build($this->conn)));
+        $this->checker = new ImageVisibilityChecker(new PermissionRepository(EntityManagerFactory::build($this->conn)), \Piwigo\Users\CurrentUser::current());
     }
 
     #[\Override]
     protected function tearDown(): void
     {
-        CurrentUser::reset();
+        CurrentUser::current()->reset();
         parent::tearDown();
     }
 
     private static function setCurrentUserForbiddenCategories(string $forbiddenCategories): void
     {
-        CurrentUser::set(User::fromUserArray([
+        CurrentUser::current()->set(User::fromUserArray([
             'id' => 2,
             'status' => 'normal',
             'forbidden_categories' => $forbiddenCategories,

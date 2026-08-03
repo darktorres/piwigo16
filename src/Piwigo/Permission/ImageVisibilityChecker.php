@@ -46,11 +46,12 @@ final readonly class ImageVisibilityChecker
 {
     public function __construct(
         private PermissionRepository $permissionRepository,
+        private \Piwigo\Users\CurrentUser $currentUser,
     ) {}
 
     public function isVisibleToUser(int $imageId): bool
     {
-        $forbidden = trim(\Piwigo\Users\CurrentUser::get()->forbiddenCategories);
+        $forbidden = trim($this->currentUser->get()->forbiddenCategories);
 
         if ($forbidden === '' || $forbidden === '0') {
             return true; // nothing forbidden for this user -- fast accept

@@ -620,11 +620,12 @@ final readonly class CategoryService
      * Is the category accessible to the connected user? If the user is not
      * authorized to see this category, the script exits.
      */
-    public function checkRestrictions(int $categoryId, HtmlRenderingInterface $htmlRenderer, RedirectServiceInterface $redirectService): void
+    public function checkRestrictions(int $categoryId, HtmlRenderingInterface $htmlRenderer, RedirectServiceInterface $redirectService, \Piwigo\Users\CurrentUser $currentUser): void
     {
         // $filter['visible_categories'] and $filter['visible_images']
         // are not used because it's not necessary (filter <> restriction)
-        $forbiddenCategoriesStr = \Piwigo\Users\CurrentUser::get()->forbiddenCategories;
+        $forbiddenCategoriesStr = $currentUser->get()
+            ->forbiddenCategories;
         if (in_array((string) $categoryId, explode(',', $forbiddenCategoriesStr), true)) {
             $htmlRenderer->accessDenied($redirectService);
         }
@@ -684,9 +685,9 @@ final readonly class CategoryService
      * @param array<string, mixed>|null $category
      * @return array{menu: array<int, array<string, mixed>>, categoryCountCategories: ?int}
      */
-    public function getCategoriesMenu(?array $category, FilterUpdaterInterface $filterUpdater, UrlServiceInterface $urlService, \Piwigo\Core\FilterState $filterState): array
+    public function getCategoriesMenu(?array $category, FilterUpdaterInterface $filterUpdater, UrlServiceInterface $urlService, \Piwigo\Core\FilterState $filterState, \Piwigo\Users\CurrentUser $currentUser): array
     {
-        $currentUser = \Piwigo\Users\CurrentUser::get();
+        $user = $currentUser->get();
 
         $categoryPage = $category;
         $countCategories = null;
@@ -705,12 +706,12 @@ final readonly class CategoryService
             $this,
             $this->repo,
             CachePools::categoryTree()
-        )->getForUser($currentUser->rawAttributes);
+        )->getForUser($user->rawAttributes);
 
         $rows = self::filterMenuRows(
             $allRows,
             $categoryPage,
-            (bool) $currentUser->rawAttributes['expand'],
+            (bool) $user->rawAttributes['expand'],
             $filterState->isEnabled(),
             $filterState->visibleCategories()
         );
@@ -751,7 +752,7 @@ final readonly class CategoryService
             );
             if (\Piwigo\Config\CurrentConfig::indexNewIcon()) {
                 $maxDateLast = $row['max_date_last'] ?? null;
-                $recentPeriodForIcon = is_numeric($currentUser->rawAttributes['recent_period'] ?? null) ? (int) $currentUser->rawAttributes['recent_period'] : 0;
+                $recentPeriodForIcon = is_numeric($user->rawAttributes['recent_period'] ?? null) ? (int) $user->rawAttributes['recent_period'] : 0;
                 $row['icon_ts'] = \Piwigo\Core\RecentIconResolver::getIcon(is_string($maxDateLast) ? $maxDateLast : '', $recentPeriodForIcon, $childDateLast);
             }
             $cats[] = $row;
@@ -1706,7 +1707,7 @@ final readonly class CategoryService
      *   values are validated internally (is_bool()/==), not trusted from callers
      * @return array{error: string}|array{info: string, id: int|string}
      */
-    public function createVirtualCategory(string $categoryName, ActivityLoggerInterface $activityLogger, int|string|null $parentId = null, array $options = []): array
+    public function createVirtualCategory(string $categoryName, ActivityLoggerInterface $activityLogger, \Piwigo\Users\CurrentUser $currentUser, int|string|null $parentId = null, array $options = []): array
     {
 
         // is the given category name only containing blank spaces ?
@@ -1829,7 +1830,8 @@ final readonly class CategoryService
             $grantedUsers = $this->repo->findAccessUserIds($insertIdUppercat);
             $this->permissionService->addPermissionOnCategory((int) $insertedId, $grantedUsers);
         } elseif ($insert['status'] === 'private') {
-            $currentUserId = \Piwigo\Users\CurrentUser::get()->id->value;
+            $currentUserId = $currentUser->get()
+                ->id->value;
             $adminIds = array_map(
                 static fn (\Piwigo\Common\ValueObject\UserId $id): int => $id->value,
                 $this->userRepository()
@@ -1854,11 +1856,12 @@ final readonly class CategoryService
      * Note : if the user is not authorized to see this category, category jump
      * will be replaced by admin cat_modify page
      */
-    public function catAdminAccess(int $categoryId): bool
+    public function catAdminAccess(int $categoryId, \Piwigo\Users\CurrentUser $currentUser): bool
     {
         // $filter['visible_categories'] and $filter['visible_images']
         // are not used because it's not necessary (filter <> restriction)
-        $forbiddenCategories = \Piwigo\Users\CurrentUser::get()->forbiddenCategories;
+        $forbiddenCategories = $currentUser->get()
+            ->forbiddenCategories;
         return ! in_array((string) $categoryId, explode(',', $forbiddenCategories), true);
     }
 

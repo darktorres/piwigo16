@@ -384,7 +384,7 @@ final class PwgCategories
      */
     public static function getList(array $params, PwgServer &$service): PwgError|array
     {
-        $currentUser = \Piwigo\Users\CurrentUser::get();
+        $currentUser = \Piwigo\Users\CurrentUser::current()->get();
 
         $categoryConn = DbConnection::build();
         $categoryService = self::categoryService();
@@ -929,6 +929,7 @@ final class PwgCategories
         $creation_output = self::categoryService()->createVirtualCategory(
             (! \Piwigo\Config\CurrentConfig::allowHtmlDescriptions() or ! isset($params['pwg_token'])) ? strip_tags($params['name']) : $params['name'],
             \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(),
+            \Piwigo\Users\CurrentUser::current(),
             $params['parent'],
             $options
         );

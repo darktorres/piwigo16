@@ -24,12 +24,13 @@ final class AlbumsSubController implements AdminSubControllerInterface
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly \Piwigo\Users\CurrentUser $currentUser,
     ) {}
 
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
         new AlbumsPageRenderer()
-            ->render($this->urlService, $this->coreTabs, $this->eventDispatcher);
+            ->render($this->urlService, $this->coreTabs, $this->eventDispatcher, $this->currentUser);
     }
 }

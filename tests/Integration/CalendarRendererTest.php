@@ -91,7 +91,7 @@ final class CalendarRendererTest extends IntegrationTestCase
         // Matches CalendarServiceTest's own fixture shape/guaranteed-shape
         // rationale: getSqlConditionFandF()'s forbidden_images fallthrough
         // needs a complete row, not just a partial one.
-        CurrentUser::set(User::fromUserArray([
+        CurrentUser::current()->set(User::fromUserArray([
             'id' => 1,
             'forbidden_categories' => '0',
             'level' => '0',
@@ -121,7 +121,7 @@ final class CalendarRendererTest extends IntegrationTestCase
 
     private function makeRenderer(): CalendarRenderer
     {
-        return new CalendarRenderer($this->htmlService, new Template(), $this->urlService);
+        return new CalendarRenderer($this->htmlService, new Template(), $this->urlService, CurrentUser::current());
     }
 
     /**
@@ -254,7 +254,7 @@ final class CalendarRendererTest extends IntegrationTestCase
     public function test_render_groups_multiple_years_and_months_for_the_default_monthly_calendar_view(): void
     {
         $template = new Template();
-        $renderer = new CalendarRenderer($this->htmlService, $template, $this->urlService);
+        $renderer = new CalendarRenderer($this->htmlService, $template, $this->urlService, CurrentUser::current());
 
         $result = $renderer->render(
             section: 'items',
@@ -302,7 +302,7 @@ final class CalendarRendererTest extends IntegrationTestCase
     public function test_render_normalizes_chronology_date_to_ints_and_next_prev_navigation_still_works(): void
     {
         $template = new Template();
-        $renderer = new CalendarRenderer($this->htmlService, $template, $this->urlService);
+        $renderer = new CalendarRenderer($this->htmlService, $template, $this->urlService, CurrentUser::current());
 
         $result = $renderer->render(
             section: 'items',
@@ -390,7 +390,7 @@ final class CalendarRendererTest extends IntegrationTestCase
             $first = $render();
             self::assertSame([5, 4, 3, 2, 1], $first->items);
 
-            CurrentUser::set(User::fromUserArray([
+            CurrentUser::current()->set(User::fromUserArray([
                 'id' => 1,
                 'forbidden_categories' => '2',
                 'level' => '0',

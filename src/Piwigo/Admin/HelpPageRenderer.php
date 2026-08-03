@@ -14,7 +14,7 @@ use Piwigo\Event\Location\LocEndHelp;
  */
 final class HelpPageRenderer
 {
-    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState): void
+    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -52,7 +52,8 @@ final class HelpPageRenderer
             ]
         );
 
-        $user_language = \Piwigo\Users\CurrentUser::get()->language;
+        $user_language = $currentUser->get()
+            ->language;
         $language_prefix = substr($user_language, 0, 3);
         if ($language_prefix === 'en_') {
             $pageState->addMessage(sprintf(

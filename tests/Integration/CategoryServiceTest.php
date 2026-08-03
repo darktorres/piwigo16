@@ -220,7 +220,7 @@ final class CategoryServiceTest extends IntegrationTestCase
             new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class))
         );
 
-        CurrentUser::set(User::fromUserArray(['id' => 1]));
+        CurrentUser::current()->set(User::fromUserArray(['id' => 1]));
         CurrentConfig::setRateEnabled(true);
         // getCategoryRepresentantProperties()'s own DerivativeImage::thumb_url()/
         // url() calls need a real, populated ImageStdParams type map (and
@@ -303,7 +303,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_get_preferred_image_orders_returns_the_fixed_option_list(): void
     {
-        CurrentUser::set(User::fromUserArray(['id' => 1, 'status' => 'normal']));
+        CurrentUser::current()->set(User::fromUserArray(['id' => 1, 'status' => 'normal']));
 
         $orders = $this->service->getPreferredImageOrders();
 
@@ -316,7 +316,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_get_preferred_image_orders_permissions_option_visible_to_admin(): void
     {
-        CurrentUser::set(User::fromUserArray(['id' => 1, 'status' => 'admin']));
+        CurrentUser::current()->set(User::fromUserArray(['id' => 1, 'status' => 'admin']));
 
         $orders = $this->service->getPreferredImageOrders();
 
@@ -489,7 +489,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         // exercising usePermissions=true with a genuinely non-empty
         // condition is what catches the andWhere() double-AND-wrap bug
         // that an empty (guest-default) CurrentUser silently skips.
-        CurrentUser::set(User::fromUserArray(self::realisticUserGlobal()));
+        CurrentUser::current()->set(User::fromUserArray(self::realisticUserGlobal()));
 
         $ids = $this->service->getImageIdsForCategories([1], 'AND', '', '', true);
         sort($ids);
@@ -499,7 +499,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_get_common_categories_with_permissions_builds_valid_sql(): void
     {
-        CurrentUser::set(User::fromUserArray(self::realisticUserGlobal()));
+        CurrentUser::current()->set(User::fromUserArray(self::realisticUserGlobal()));
 
         $common = $this->service->getCommonCategories([1, 2, 3], null, [4, 5], true);
 
@@ -511,7 +511,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         // getRelatedCategoriesMenu() always calls getCommonCategories()
         // with usePermissions defaulted to true internally -- this is the
         // real menubar.inc.php code path the bug above was caught on.
-        CurrentUser::set(User::fromUserArray(self::realisticUserGlobal()));
+        CurrentUser::current()->set(User::fromUserArray(self::realisticUserGlobal()));
 
         $cats = $this->service->getRelatedCategoriesMenu([1, 2, 3], []);
 
@@ -651,12 +651,12 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_check_restrictions_denies_access_to_a_forbidden_category(): void
     {
-        CurrentUser::set(User::fromUserArray(['id' => 1, 'forbidden_categories' => '2,5']));
+        CurrentUser::current()->set(User::fromUserArray(['id' => 1, 'forbidden_categories' => '2,5']));
 
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('CATEGORY_SERVICE_ACCESS_DENIED_MARKER');
 
-        $this->service->checkRestrictions(2, new CategoryServiceFakeHtmlRendererDeniesAccess(), new CategoryServiceFakeRedirectServiceNeverCalled());
+        $this->service->checkRestrictions(2, new CategoryServiceFakeHtmlRendererDeniesAccess(), new CategoryServiceFakeRedirectServiceNeverCalled(), \Piwigo\Users\CurrentUser::current());
     }
 
     public function test_get_subcat_ids_warns_and_skips_a_non_numeric_id(): void
@@ -744,7 +744,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         $activityLogger = new CategoryServiceFakeActivityLogger();
         $urlService = new UrlService(new HtmlService());
 
-        $result = $this->service->createVirtualCategory('Orphan Diff Temp', $activityLogger);
+        $result = $this->service->createVirtualCategory('Orphan Diff Temp', $activityLogger, \Piwigo\Users\CurrentUser::current());
         $tempIdRaw = $result['id'] ?? null;
         self::assertTrue(is_numeric($tempIdRaw));
         $tempId = (int) $tempIdRaw;
@@ -959,7 +959,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_create_virtual_category_returns_an_error_when_the_parent_does_not_exist(): void
     {
-        $result = $this->service->createVirtualCategory('Orphan Parent Test', new CategoryServiceFakeActivityLogger(), 999999);
+        $result = $this->service->createVirtualCategory('Orphan Parent Test', new CategoryServiceFakeActivityLogger(), \Piwigo\Users\CurrentUser::current(), 999999);
 
         self::assertSame(['error' => 'The parent album does not exist'], $result);
     }
@@ -969,7 +969,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET visible = 0 WHERE id = 1");
 
         try {
-            $result = $this->service->createVirtualCategory('Invisible Child Test', new CategoryServiceFakeActivityLogger(), 1);
+            $result = $this->service->createVirtualCategory('Invisible Child Test', new CategoryServiceFakeActivityLogger(), \Piwigo\Users\CurrentUser::current(), 1);
             $newIdRaw = $result['id'] ?? null;
             self::assertTrue(is_numeric($newIdRaw));
             $newId = (int) $newIdRaw;
@@ -994,7 +994,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         $this->conn->executeStatement('INSERT INTO ' . Tables::userAccess() . ' (user_id, cat_id) VALUES (3, 1)');
 
         try {
-            $result = $this->service->createVirtualCategory('Inherited Child Test', new CategoryServiceFakeActivityLogger(), 1, ['inherit' => true]);
+            $result = $this->service->createVirtualCategory('Inherited Child Test', new CategoryServiceFakeActivityLogger(), \Piwigo\Users\CurrentUser::current(), 1, ['inherit' => true]);
             $newIdRaw = $result['id'] ?? null;
             self::assertTrue(is_numeric($newIdRaw));
             $newId = (int) $newIdRaw;
@@ -1142,6 +1142,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         $privateParent = $this->service->createVirtualCategory(
             'ct_move_private_parent_' . uniqid(),
             $activityLogger,
+            \Piwigo\Users\CurrentUser::current(),
             null,
             ['status' => 'private']
         );
@@ -1170,7 +1171,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         CurrentConfig::setNewcatDefaultPosition('last');
 
         try {
-            $result = $this->service->createVirtualCategory('ct_last_position_' . uniqid(), new CategoryServiceFakeActivityLogger());
+            $result = $this->service->createVirtualCategory('ct_last_position_' . uniqid(), new CategoryServiceFakeActivityLogger(), \Piwigo\Users\CurrentUser::current());
             $newIdRaw = $result['id'] ?? null;
             self::assertTrue(is_numeric($newIdRaw));
             $newId = (int) $newIdRaw;

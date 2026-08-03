@@ -77,6 +77,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
         private readonly \Piwigo\Core\PageState $pageState,
+        private readonly \Piwigo\Users\CurrentUser $currentUser,
     ) {}
 
     private static function imageService(): ImageService
@@ -101,7 +102,8 @@ final class BatchManagerSubController implements AdminSubControllerInterface
 
         $batchManagerRequest = Request\BatchManagerRequest::fromGlobals();
 
-        $user_id = \Piwigo\Users\CurrentUser::get()->id->value;
+        $user_id = $this->currentUser->get()
+            ->id->value;
 
         $available_permission_levels = \Piwigo\Config\CurrentConfig::availablePermissionLevels();
         $conf_order_by = \Piwigo\Config\CurrentConfig::orderBy();
@@ -176,7 +178,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
             \Piwigo\Bootstrap\AdminAccessor::batchManagerUnitPageRenderer()
                 ->render($cat_elements_id, $start);
         } else {
-            new BatchManagerGlobalPageRenderer($this->redirectService, $this->urlService, $this->currentLogger, $this->sessionService, $this->translator, $this->eventDispatcher, $this->imageStdParams, $this->pageState)
+            new BatchManagerGlobalPageRenderer($this->redirectService, $this->urlService, $this->currentLogger, $this->sessionService, $this->translator, $this->eventDispatcher, $this->imageStdParams, $this->pageState, $this->currentUser)
                 ->render($cat_elements_id, $start, $duplicates_on_fields);
         }
     }

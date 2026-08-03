@@ -51,6 +51,7 @@ final readonly class SearchFilterRenderer
         private PermissionService $permissionService,
         private UrlServiceInterface $urlService,
         private \Piwigo\Core\CurrentLogger $currentLogger,
+        private \Piwigo\Users\CurrentUser $currentUser,
     ) {}
 
     private function cacheGet(string $key): mixed
@@ -134,8 +135,8 @@ final readonly class SearchFilterRenderer
             }
         }
 
-        $currentUser = \Piwigo\Users\CurrentUser::get();
-        $userId = (string) $currentUser->id->value;
+        $userId = (string) $this->currentUser->get()
+            ->id->value;
 
         $langMonth = \Piwigo\Core\Lang::months();
 
@@ -993,7 +994,8 @@ final readonly class SearchFilterRenderer
 
         $allowedCatIds = self::filterAccessibleCategoryIds(
             $catIds,
-            \Piwigo\Users\CurrentUser::get()->forbiddenCategories
+            $this->currentUser->get()
+                ->forbiddenCategories
         );
         if ($allowedCatIds === []) {
             return;

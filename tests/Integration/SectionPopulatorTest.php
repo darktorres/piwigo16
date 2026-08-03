@@ -131,10 +131,10 @@ final class SectionPopulatorTest extends IntegrationTestCase
         $categoryRepo = $em->getRepository(CategoryEntity::class);
         $this->permissionService = new PermissionService(new PermissionRepository($em), $em->getRepository(GroupEntity::class), $categoryRepo);
         $this->categoryService = new CategoryService($categoryRepo, $this->permissionService);
-        $this->tagService = new TagService($em->getRepository(TagEntity::class), $this->permissionService, new ActivityService($em->getRepository(ActivityEntity::class)), new \Piwigo\PluginConfig\EventDispatcher());
+        $this->tagService = new TagService($em->getRepository(TagEntity::class), $this->permissionService, new ActivityService($em->getRepository(ActivityEntity::class)), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Users\CurrentUser::current());
         $this->sessionService = new SessionService($em->getRepository(SessionEntity::class));
-        $this->searchService = new SearchService(new SearchRepository($this->conn), $this->permissionService, $this->categoryService, new MailService(), new HtmlService(), new RedirectService(), $this->sessionService, new \Piwigo\PluginConfig\EventDispatcher(), $this->tagService);
-        $this->userService = new UserService($em->getRepository(UserInfoEntity::class), $em->getRepository(GroupEntity::class), new MailService(), new ActivityService($em->getRepository(ActivityEntity::class)), new HtmlService(), $this->conn, $this->sessionService, new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy());
+        $this->searchService = new SearchService(new SearchRepository($this->conn), $this->permissionService, $this->categoryService, new MailService(), new HtmlService(), new RedirectService(), $this->sessionService, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Users\CurrentUser::current(), $this->tagService);
+        $this->userService = new UserService($em->getRepository(UserInfoEntity::class), $em->getRepository(GroupEntity::class), new MailService(), new ActivityService($em->getRepository(ActivityEntity::class)), new HtmlService(), $this->conn, $this->sessionService, new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current());
         $this->sectionRepo = new SectionRepository($this->conn);
         $this->filterState = new FilterState();
         $this->currentLogger = new CurrentLogger();
@@ -162,7 +162,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
     {
         unset($_SERVER['PATH_INFO'], $_SERVER['SCRIPT_NAME'], $_SERVER['SCRIPT_FILENAME'], $_SERVER['PHP_SELF']);
         unset($_SESSION['pwg_image_order'], $_GET['action']);
-        CurrentUser::reset();
+        CurrentUser::current()->reset();
         CurrentTemplate::reset();
         PageState::current()->reset();
         CurrentConfig::reset();
@@ -194,12 +194,13 @@ final class SectionPopulatorTest extends IntegrationTestCase
             $this->sessionService,
             new \Piwigo\PluginConfig\EventDispatcher(),
             \Piwigo\Core\PageState::current(),
+            \Piwigo\Users\CurrentUser::current(),
         );
     }
 
     private function setRegularUser(): void
     {
-        CurrentUser::set(new User(
+        CurrentUser::current()->set(new User(
             id: UserId::from(3),
             username: 'regular_user',
             email: 'regular@example.test',
@@ -212,7 +213,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
 
     private function setAdminUser(): void
     {
-        CurrentUser::set(new User(
+        CurrentUser::current()->set(new User(
             id: UserId::from(1),
             username: 'fixture_admin',
             email: 'fixture_admin@example.test',

@@ -194,7 +194,7 @@ test('verifyCode checks the full inclusive [-check_interval, +check_interval] ra
 });
 
 test('getOtpAuthUrl builds an otpauth:// url from the current user and a scheme-stripped-of-trailing-slash root url', function (): void {
-    CurrentUser::set(new User(
+    CurrentUser::current()->set(new User(
         id: UserId::from(9),
         username: 'totp_user',
         email: '',
@@ -211,12 +211,12 @@ test('getOtpAuthUrl builds an otpauth:// url from the current user and a scheme-
             'otpauth://totp/totp_user:https://gallery.example.test/piwigo?secret=JBSWY3DPEHPK3PXP&issuer=Piwigo&algorithm=sha1&digits=6&period=30'
         );
     } finally {
-        CurrentUser::reset();
+        CurrentUser::current()->reset();
     }
 });
 
 test('getQrCode returns a base64 PNG data uri encoding the same otpauth url as getOtpAuthUrl', function (): void {
-    CurrentUser::set(new User(
+    CurrentUser::current()->set(new User(
         id: UserId::from(9),
         username: 'totp_user',
         email: '',
@@ -231,6 +231,6 @@ test('getQrCode returns a base64 PNG data uri encoding the same otpauth url as g
 
         expect($dataUri)->toStartWith('data:image/png;base64,');
     } finally {
-        CurrentUser::reset();
+        CurrentUser::current()->reset();
     }
 });

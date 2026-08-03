@@ -58,7 +58,7 @@ final class AccessControl
     public static function getUserStatus(string $userStatus = ''): string
     {
         if ($userStatus === '') {
-            return \Piwigo\Users\CurrentUser::get()->status->value;
+            return \Piwigo\Users\CurrentUser::current()->get()->status->value;
         }
 
         return $userStatus;
@@ -144,7 +144,7 @@ final class AccessControl
             return false;
         }
 
-        $currentUserId = \Piwigo\Users\CurrentUser::get()->id->value;
+        $currentUserId = \Piwigo\Users\CurrentUser::current()->get()->id->value;
 
         if ($action === 'edit' && \Piwigo\Config\CurrentConfig::userCanEditComment()) {
             if ((int) $commentAuthorId === $currentUserId) {

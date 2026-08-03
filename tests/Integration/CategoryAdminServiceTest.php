@@ -350,7 +350,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
 
     public function test_create_virtual_category_rejects_a_blank_name(): void
     {
-        $result = $this->service->createVirtualCategory('   ', new CategoryAdminServiceFakeActivityLogger());
+        $result = $this->service->createVirtualCategory('   ', new CategoryAdminServiceFakeActivityLogger(), \Piwigo\Users\CurrentUser::current());
 
         self::assertFalse($result->success);
         self::assertNotNull($result->message);
@@ -359,7 +359,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
 
     public function test_create_virtual_category_creates_a_real_row(): void
     {
-        $result = $this->service->createVirtualCategory('Integration Test Album', new CategoryAdminServiceFakeActivityLogger());
+        $result = $this->service->createVirtualCategory('Integration Test Album', new CategoryAdminServiceFakeActivityLogger(), \Piwigo\Users\CurrentUser::current());
 
         self::assertTrue($result->success);
         self::assertNotNull($result->categoryId);

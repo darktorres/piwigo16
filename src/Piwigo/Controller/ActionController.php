@@ -57,6 +57,7 @@ final class ActionController implements ControllerInterface
     public function __construct(
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly \Piwigo\Users\CurrentUser $currentUser,
     ) {}
 
     private function historyService(): HistoryService
@@ -111,7 +112,7 @@ final class ActionController implements ControllerInterface
         $is_admin_download = false;
         if (\Piwigo\Auth\AccessControl::isAdmin() and $actionRequest->pwgToken === new \Piwigo\Csrf\CsrfService()->getToken()) {
             $is_admin_download = true;
-            \Piwigo\Users\CurrentUser::set(\Piwigo\Users\CurrentUser::get()->withEnabledHigh(true));
+            $this->currentUser->set($this->currentUser->get()->withEnabledHigh(true));
         }
 
         $src_image = new SrcImage($element_info);
@@ -137,7 +138,7 @@ final class ActionController implements ControllerInterface
         $file = '';
         switch ($get_part) {
             case 'e':
-                if ($src_image->is_original() and ! \Piwigo\Users\CurrentUser::get()->enabledHigh) {// we have a photo and the user has no access to HD
+                if ($src_image->is_original() and ! $this->currentUser->get()->enabledHigh) {// we have a photo and the user has no access to HD
                     $deriv = new DerivativeImage(ImageStdParams::XXLARGE, $src_image);
                     if (! $deriv->same_as_source()) {
                         return $this->doError(401, 'Access denied e');

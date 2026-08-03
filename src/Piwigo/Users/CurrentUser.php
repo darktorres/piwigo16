@@ -9,11 +9,19 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
 
 /**
- * Static accessor for the authenticated-user singleton. In v17 this is the
- * P17-P23 bridge shape (the doc's own callout: "in v17 CurrentUser is a
- * container singleton with instance get()/set(); the static API is the
- * bridge only, deleted in P23") -- kept static for now since no
- * UserBootstrap/auth domain exists yet to inject a real instance into.
+ * Container-shared instance holding the authenticated-user-for-this-request
+ * state (singleton/service-locator elimination campaign, Phase 5).
+ *
+ * `current()` is a memoized `@deprecated` transitional bridge for callers
+ * not yet converted to constructor injection -- same "load once, read/write
+ * many times per request" reasoning as `Translator`/`EventDispatcher`/
+ * `PageState`/`ImageStdParams`: the not-booted fallback is memoized
+ * (`self::$fallback ??= new self()`), not fresh-per-call, so a caller that
+ * writes via `current()` in one call and reads via `current()` in a later
+ * call sees the same instance. This also preserves `get()`'s existing
+ * throw-if-uninitialized semantics exactly: a fresh fallback instance's
+ * `$user` starts `null`, same as the pre-conversion static's own
+ * `self::$instance`.
  *
  * `attachGlobals()` is called by `RequestBootstrap::finalize()`/
  * `bootConfigOnly()`/`CliBootstrap::buildApplication()` -- NOT from
@@ -23,7 +31,9 @@ use Piwigo\Core\AppInfo;
  */
 final class CurrentUser
 {
-    private static ?User $instance = null;
+    private static ?self $fallback = null;
+
+    private ?User $user = null;
 
     /**
      * Legacy Coupling Retirement Phase 8, 8h: distinguishes "a real,
@@ -37,16 +47,30 @@ final class CurrentUser
      * depends on it -- `0` is not a valid id, AUTO_INCREMENT starts at 1),
      * not the guest id.
      */
-    private static bool $realUserResolved = false;
+    private bool $realUserResolved = false;
+
+    public static function current(): self
+    {
+        if (\Piwigo\Core\Kernel::isBooted()) {
+            $instance = \Piwigo\Core\Kernel::container()->get(self::class);
+            if (! $instance instanceof self) {
+                throw new \LogicException('Container returned an unexpected type for ' . self::class);
+            }
+
+            return $instance;
+        }
+
+        return self::$fallback ??= new self();
+    }
 
     /**
-     * Initialises the singleton with an empty guest user if not already
-     * set. Idempotent -- a later real `set()` call (once auth exists,
-     * P17-23) is never clobbered by a redundant `attachGlobals()`.
+     * Initialises the instance with an empty guest user if not already
+     * set. Idempotent -- a later real `set()` call is never clobbered by a
+     * redundant `attachGlobals()`.
      */
-    public static function attachGlobals(): void
+    public function attachGlobals(): void
     {
-        self::$instance ??= new User(
+        $this->user ??= new User(
             id: UserId::from(CurrentConfig::guestId()),
             username: '',
             email: '',
@@ -57,42 +81,43 @@ final class CurrentUser
         );
     }
 
-    public static function isInitialized(): bool
+    public function isInitialized(): bool
     {
-        return self::$instance instanceof \Piwigo\Users\User;
+        return $this->user instanceof User;
     }
 
-    public static function get(): User
+    public function get(): User
     {
-        if (! self::$instance instanceof \Piwigo\Users\User) {
+        if (! $this->user instanceof User) {
             throw new \LogicException('CurrentUser not initialised -- call Kernel::boot() first.');
         }
 
-        return self::$instance;
+        return $this->user;
     }
 
-    public static function set(User $user): void
+    public function set(User $user): void
     {
-        self::$instance = $user;
+        $this->user = $user;
     }
 
-    public static function updateLanguage(string $language): void
+    public function updateLanguage(string $language): void
     {
-        self::$instance = self::get()->withLanguage($language);
+        $this->user = $this->get()
+            ->withLanguage($language);
     }
 
     /**
      * Called by UserBootstrap::initialize() -- the only real per-request
      * user resolver -- right alongside its own set() call.
      */
-    public static function markRealUserResolved(): void
+    public function markRealUserResolved(): void
     {
-        self::$realUserResolved = true;
+        $this->realUserResolved = true;
     }
 
-    public static function wasRealUserResolved(): bool
+    public function wasRealUserResolved(): bool
     {
-        return self::$realUserResolved;
+        return $this->realUserResolved;
     }
 
     /**
@@ -103,18 +128,18 @@ final class CurrentUser
      * which is arch-test-restricted to tests/ and resets more than this
      * flag needs.
      */
-    public static function resetRealUserResolvedFlag(): void
+    public function resetRealUserResolvedFlag(): void
     {
-        self::$realUserResolved = false;
+        $this->realUserResolved = false;
     }
 
     /**
      * Test-only -- restricted to tests/ by an arch test (matching the same
      * test-isolation precedent as Config's and Kernel's own reset() methods).
      */
-    public static function reset(): void
+    public function reset(): void
     {
-        self::$instance = null;
-        self::$realUserResolved = false;
+        $this->user = null;
+        $this->realUserResolved = false;
     }
 }

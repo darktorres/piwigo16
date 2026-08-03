@@ -135,6 +135,7 @@ final class MailService implements MailerInterface
                 \Piwigo\Session\SessionService::get(),
                 \Piwigo\PluginConfig\EventDispatcher::get(),
                 \Piwigo\Core\PageState::current(),
+                \Piwigo\Users\CurrentUser::current(),
             );
     }
 
@@ -178,6 +179,7 @@ final class MailService implements MailerInterface
             \Piwigo\Session\SessionService::get(),
             \Piwigo\PluginConfig\EventDispatcher::get(),
             \Piwigo\Config\DeploymentPolicy::current(),
+            \Piwigo\Users\CurrentUser::current(),
         );
     }
 
@@ -423,7 +425,7 @@ final class MailService implements MailerInterface
      */
     public function switchLangTo(string $language): void
     {
-        $currentUserLanguage = CurrentUser::get()->language;
+        $currentUserLanguage = CurrentUser::current()->get()->language;
 
         // Language of the current user is saved (considered OK on first call).
         if (! self::$switchLangInitialised && ! isset(self::$switchLangLanguages[$currentUserLanguage])) {
@@ -443,7 +445,7 @@ final class MailService implements MailerInterface
         }
 
         self::$switchLangStack[] = $currentUserLanguage;
-        CurrentUser::updateLanguage($language);
+        CurrentUser::current()->updateLanguage($language);
 
         if (! isset(self::$switchLangLanguages[$language])) {
             // Re-init language arrays.
@@ -509,7 +511,7 @@ final class MailService implements MailerInterface
             Lang::restore($entry['lang']);
             \Piwigo\Lang\Translator::get()->restoreFrom($entry['translator']);
         }
-        CurrentUser::updateLanguage($language);
+        CurrentUser::current()->updateLanguage($language);
     }
 
     /**
@@ -542,7 +544,7 @@ final class MailService implements MailerInterface
 
         $tplVars = [];
         if ($sendTechnicalDetails) {
-            $username = \Piwigo\Users\CurrentUser::get()->username;
+            $username = \Piwigo\Users\CurrentUser::current()->get()->username;
             $tplVars['TECHNICAL'] = [
                 'username' => stripslashes($username),
                 'ip' => IpAddress::fromRemoteAddr()->value ?? '',
@@ -597,7 +599,7 @@ final class MailService implements MailerInterface
                 $userFields['email'],
                 $userStatuses,
                 $groupId !== null ? (int) $groupId : null,
-                $excludeCurrentUser ? \Piwigo\Users\CurrentUser::get()->id->value : null,
+                $excludeCurrentUser ? \Piwigo\Users\CurrentUser::current()->get()->id->value : null,
             );
 
         if ($admins === []) {
@@ -1069,7 +1071,7 @@ final class MailService implements MailerInterface
 
         $dir = CurrentPaths::get()->root . $dataLocation . 'tmp';
         if (\Piwigo\Core\FilesystemHelper::mkgetdir($dir, \Piwigo\Core\FilesystemHelper::MKGETDIR_DEFAULT & ~\Piwigo\Core\FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
-            $username = \Piwigo\Users\CurrentUser::get()->username;
+            $username = \Piwigo\Users\CurrentUser::current()->get()->username;
             $langCode = Lang::langInfo()['code'] ?? null;
             $langCode = is_string($langCode) ? $langCode : '';
 

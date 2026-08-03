@@ -53,6 +53,7 @@ final readonly class HistoryService
         private \Piwigo\Core\CurrentLogger $currentLogger,
         private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private \Piwigo\Core\PageState $pageState,
+        private \Piwigo\Users\CurrentUser $currentUser,
     ) {}
 
     /**
@@ -108,8 +109,8 @@ final readonly class HistoryService
         ?array $tagIds = null,
         ?int $searchId = null,
     ): bool {
-        $currentUser = \Piwigo\Users\CurrentUser::get();
-        $lastVisit = $currentUser->rawAttributes['last_visit'] ?? null;
+        $user = $this->currentUser->get();
+        $lastVisit = $user->rawAttributes['last_visit'] ?? null;
         $lastVisitStr = is_string($lastVisit) ? $lastVisit : (is_numeric($lastVisit) ? (string) $lastVisit : '');
         $sessionLength = \Piwigo\Config\CurrentConfig::sessionLength();
 
@@ -120,7 +121,7 @@ final readonly class HistoryService
         $updateLastVisit = $this->eventDispatcher->dispatchChange(new PwgLogUpdateLastVisit($updateLastVisit))
             ->update;
 
-        $userId = $currentUser->id->value;
+        $userId = $user->id->value;
 
         if ($updateLastVisit) {
             $this->repo->updateLastVisitNow($userId);

@@ -102,6 +102,7 @@ final class NotificationByMailSender
         private readonly Translator $translator,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Core\PageState $pageState,
+        private readonly \Piwigo\Users\CurrentUser $currentUser,
     ) {
         $nbmMaxTreatmentTimeoutPercent = \Piwigo\Config\CurrentConfig::nbmMaxTreatmentTimeoutPercent();
 
@@ -153,7 +154,7 @@ final class NotificationByMailSender
 
     public function beginUsersEnv(bool $isToSendMail = false): void
     {
-        $this->saveCurrentUser = \Piwigo\Users\CurrentUser::get();
+        $this->saveCurrentUser = $this->currentUser->get();
         $userLanguage = $this->saveCurrentUser->language;
         new MailService()
             ->switchLangTo($userLanguage !== '' ? $userLanguage : $this->userService->getDefaultLanguage());
@@ -189,7 +190,7 @@ final class NotificationByMailSender
     public function endUsersEnv(): void
     {
         if ($this->saveCurrentUser instanceof \Piwigo\Users\User) {
-            \Piwigo\Users\CurrentUser::set($this->saveCurrentUser);
+            $this->currentUser->set($this->saveCurrentUser);
         }
         new MailService()
             ->switchLangBack();
@@ -212,9 +213,10 @@ final class NotificationByMailSender
     public function setUserOnEnv(UserMailNotification $nbmUser, bool $isActionSend): void
     {
         $user = $this->userService->buildUser(\Piwigo\Common\ValueObject\UserId::from($nbmUser->userId));
-        \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
+        $this->currentUser->set(\Piwigo\Users\User::fromUserArray($user));
 
-        $currentUserLanguage = \Piwigo\Users\CurrentUser::get()->language;
+        $currentUserLanguage = $this->currentUser->get()
+            ->language;
         new MailService()
             ->switchLangTo($currentUserLanguage !== '' ? $currentUserLanguage : $this->userService->getDefaultLanguage());
 

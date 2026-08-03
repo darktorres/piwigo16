@@ -126,7 +126,7 @@ final readonly class PemCatalog
 
         $pemBaseUrl = \Piwigo\Bootstrap\RequestBootstrap::pemUrl();
         $url = $pemBaseUrl . '/api/get_revision_list-next.php';
-        $userLanguage = \Piwigo\Users\CurrentUser::get()->language;
+        $userLanguage = \Piwigo\Users\CurrentUser::current()->get()->language;
         $getData = [
             'category_id' => $type->pemCategoryId(),
             'format' => 'php',

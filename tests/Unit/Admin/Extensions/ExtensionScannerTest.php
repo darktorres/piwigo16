@@ -38,7 +38,7 @@ beforeEach(function (): void {
 afterEach(function (): void {
     CurrentConfig::reset();
     Kernel::reset();
-    CurrentUser::reset();
+    CurrentUser::current()->reset();
     Lang::reset();
 });
 
@@ -319,7 +319,7 @@ test('scan reports hasSettings=true for a webmaster-gated plugin when the curren
     $root = extensionScannerFixtureRoot();
     try {
         extensionScannerFixturePlugin($root, 'webmaster_gated_plugin');
-        CurrentUser::set(User::fromUserArray(['id' => 1, 'status' => 'webmaster']));
+        CurrentUser::current()->set(User::fromUserArray(['id' => 1, 'status' => 'webmaster']));
 
         $found = new ExtensionScanner()->scan(ExtensionType::Plugin, new UrlService(new HtmlService()));
 
@@ -341,7 +341,7 @@ test('scan reports hasSettings=false for a webmaster-gated plugin when the curre
     $root = extensionScannerFixtureRoot();
     try {
         extensionScannerFixturePlugin($root, 'webmaster_gated_plugin_normal_user');
-        CurrentUser::set(User::fromUserArray(['id' => 2, 'status' => 'normal']));
+        CurrentUser::current()->set(User::fromUserArray(['id' => 2, 'status' => 'normal']));
 
         $found = new ExtensionScanner()->scan(ExtensionType::Plugin, new UrlService(new HtmlService()));
 

@@ -48,10 +48,10 @@ final class CategoryAdminService
     /**
      * @param array{commentable?: bool, visible?: bool, status?: string, comment?: string, inherit?: bool} $options
      */
-    public function createVirtualCategory(string $name, ActivityLoggerInterface $activityLogger, ?int $parentId = null, array $options = []): CreateCategoryResult
+    public function createVirtualCategory(string $name, ActivityLoggerInterface $activityLogger, \Piwigo\Users\CurrentUser $currentUser, ?int $parentId = null, array $options = []): CreateCategoryResult
     {
         /** @var array{error?: string, info?: string, id?: int|string} $result */
-        $result = $this->categoryService->createVirtualCategory($name, $activityLogger, $parentId, $options);
+        $result = $this->categoryService->createVirtualCategory($name, $activityLogger, $currentUser, $parentId, $options);
 
         if (isset($result['error'])) {
             return CreateCategoryResult::failure($result['error']);

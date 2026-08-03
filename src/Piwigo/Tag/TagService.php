@@ -58,6 +58,7 @@ final readonly class TagService
         private PermissionService $permissionService,
         private ActivityLoggerInterface $activityLogger,
         private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private \Piwigo\Users\CurrentUser $currentUser,
     ) {
         $this->tagIdFromTagNameCache = new TagIdCache();
     }
@@ -241,7 +242,7 @@ final readonly class TagService
             // (same reasoning as CachePools::config()'s own inline use in
             // ConfigService).
             $pool = \Piwigo\Cache\CachePools::tagCloud();
-            $item = $pool->getItem('counts_' . \Piwigo\Users\CurrentUser::get()->id->value);
+            $item = $pool->getItem('counts_' . $this->currentUser->get()->id->value);
             $cached = $item->isHit() ? $item->get() : null;
             $tagCounters = is_array($cached) ? array_map(
                 static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
@@ -283,15 +284,15 @@ final readonly class TagService
      */
     public function getNbAvailableTags(): int
     {
-        $currentUser = \Piwigo\Users\CurrentUser::get();
+        $user = $this->currentUser->get();
 
-        if (! isset($currentUser->rawAttributes['nb_available_tags'])) {
+        if (! isset($user->rawAttributes['nb_available_tags'])) {
             $nbAvailableTags = count($this->getAvailableTags());
-            $currentUser = $currentUser->withRawAttribute('nb_available_tags', $nbAvailableTags);
-            \Piwigo\Users\CurrentUser::set($currentUser);
+            $user = $user->withRawAttribute('nb_available_tags', $nbAvailableTags);
+            $this->currentUser->set($user);
         }
 
-        $nbAvailableTags = $currentUser->rawAttributes['nb_available_tags'] ?? null;
+        $nbAvailableTags = $user->rawAttributes['nb_available_tags'] ?? null;
 
         return is_numeric($nbAvailableTags) ? (int) $nbAvailableTags : 0;
     }
@@ -476,7 +477,7 @@ final readonly class TagService
         $this->newImageService()
             ->updateImagesLastmodified($imagesToUpdate);
 
-        \Piwigo\Users\CurrentUser::set(\Piwigo\Users\CurrentUser::get()->withRawAttribute('nb_available_tags', null));
+        $this->currentUser->set($this->currentUser->get()->withRawAttribute('nb_available_tags', null));
     }
 
     /**
@@ -515,7 +516,7 @@ final readonly class TagService
 
         $this->newImageService()
             ->updateImagesLastmodified($imageIds);
-        \Piwigo\Users\CurrentUser::set(\Piwigo\Users\CurrentUser::get()->withRawAttribute('nb_available_tags', null));
+        $this->currentUser->set($this->currentUser->get()->withRawAttribute('nb_available_tags', null));
     }
 
     /**
@@ -581,7 +582,7 @@ final readonly class TagService
                     $newId = $this->repo->insertWithoutTimestamp($tagName, $urlName);
                     $this->tagIdFromTagNameCache->set($tagName, $newId);
 
-                    \Piwigo\Users\CurrentUser::set(\Piwigo\Users\CurrentUser::get()->withRawAttribute('nb_available_tags', null));
+                    $this->currentUser->set($this->currentUser->get()->withRawAttribute('nb_available_tags', null));
 
                     return $newId;
                 }
@@ -633,7 +634,7 @@ final readonly class TagService
 
         $this->newImageService()
             ->updateImagesLastmodified($imagesToUpdate);
-        \Piwigo\Users\CurrentUser::set(\Piwigo\Users\CurrentUser::get()->withRawAttribute('nb_available_tags', null));
+        $this->currentUser->set($this->currentUser->get()->withRawAttribute('nb_available_tags', null));
     }
 
     /**

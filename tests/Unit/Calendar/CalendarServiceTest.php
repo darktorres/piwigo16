@@ -73,7 +73,7 @@ function seedCalendarFilterState(bool $enabled, string $visibleCategories = '', 
 
 beforeEach(function (): void {
     Kernel::boot();
-    CurrentUser::set(new User(
+    CurrentUser::current()->set(new User(
         id: \Piwigo\Common\ValueObject\UserId::from(1),
         username: '',
         email: '',
@@ -85,7 +85,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    CurrentUser::reset();
+    CurrentUser::current()->reset();
     Kernel::reset();
 });
 
@@ -151,7 +151,7 @@ test('buildInnerSql falls back to a forced 1 = 1 condition when no permission cl
     // image_access_list empties every one of the 3 conditions passed
     // here (see PermissionService::getSqlConditionFandF()'s own
     // visible_images/forbidden_images fallthrough case).
-    CurrentUser::set(new User(
+    CurrentUser::current()->set(new User(
         id: \Piwigo\Common\ValueObject\UserId::from(1),
         username: '',
         email: '',
@@ -174,7 +174,7 @@ test('buildInnerSql falls back to a forced 1 = 1 condition when no permission cl
 });
 
 test('buildInnerSql composes forbidden/visible categories and images into the WHERE clause', function (): void {
-    CurrentUser::set(new User(
+    CurrentUser::current()->set(new User(
         id: \Piwigo\Common\ValueObject\UserId::from(1),
         username: '',
         email: '',

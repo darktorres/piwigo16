@@ -25,7 +25,7 @@ use RuntimeException;
  */
 function seedAccessControlUser(UserStatus $status, int $id = 1): void
 {
-    CurrentUser::set(new User(
+    CurrentUser::current()->set(new User(
         id: \Piwigo\Common\ValueObject\UserId::from($id),
         username: '',
         email: '',
@@ -41,7 +41,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    CurrentUser::reset();
+    CurrentUser::current()->reset();
     CurrentConfig::reset();
 });
 

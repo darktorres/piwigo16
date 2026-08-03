@@ -393,7 +393,7 @@ final class PwgCore
      */
     public static function caddieAdd(array $params, PwgServer &$service): int
     {
-        $user_id = \Piwigo\Users\CurrentUser::get()->id->value;
+        $user_id = \Piwigo\Users\CurrentUser::current()->get()->id->value;
 
         return new CaddieRepository(DbConnection::build())
             ->addElements($user_id, $params['image_id']);
@@ -486,7 +486,7 @@ final class PwgCore
     public static function sessionGetStatus(array $params, PwgServer &$service): array
     {
 
-        $currentUser = \Piwigo\Users\CurrentUser::get();
+        $currentUser = \Piwigo\Users\CurrentUser::current()->get();
         $res = [];
         $res['username'] = \Piwigo\Auth\AccessControl::isAGuest() ? 'guest' : stripslashes($currentUser->username);
         $res['status'] = $currentUser->status->value;

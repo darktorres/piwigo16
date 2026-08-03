@@ -126,6 +126,7 @@ namespace Piwigo\Tests\Integration {
                 new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class)),
                 EventDispatcher::get(),
                 \Piwigo\Core\PageState::current(),
+                \Piwigo\Users\CurrentUser::current(),
             );
         }
 
@@ -218,7 +219,7 @@ namespace Piwigo\Tests\Integration {
             // but $_COOKIE is untyped -- logUser() defends against it
             // before touching any session/cookie code, so this is safe to
             // exercise directly.
-            CurrentUser::set(new User(
+            CurrentUser::current()->set(new User(
                 id: UserId::from(1),
                 username: 'fixture_admin',
                 email: '',
@@ -257,7 +258,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_log_user_treats_an_unrecognised_language_code_as_a_hacking_attempt(): void
         {
-            CurrentUser::set(new User(
+            CurrentUser::current()->set(new User(
                 id: UserId::from(1),
                 username: 'fixture_admin',
                 email: '',
@@ -298,7 +299,7 @@ namespace Piwigo\Tests\Integration {
                 "INSERT INTO " . Tables::languages() . " (id, version, name) VALUES ('fr_FR', '16.3.0', 'Francais')"
             );
 
-            CurrentUser::set(new User(
+            CurrentUser::current()->set(new User(
                 id: UserId::from(1),
                 username: 'fixture_admin',
                 email: '',

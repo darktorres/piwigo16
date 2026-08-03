@@ -231,7 +231,7 @@ final class WsHelper
         $provide_download_url = false;
 
         if ($src_image->is_original()) {// we have a photo
-            if (\Piwigo\Users\CurrentUser::get()->enabledHigh) {
+            if (\Piwigo\Users\CurrentUser::current()->get()->enabledHigh) {
                 $ret['element_url'] = $src_image->get_url();
                 $provide_download_url = true;
             }

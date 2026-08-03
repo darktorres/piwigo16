@@ -73,7 +73,7 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
         // process (same reasoning as CategoryAdminServiceTest's own setUp()).
         Kernel::boot();
 
-        CurrentUser::set(User::fromUserArray([
+        CurrentUser::current()->set(User::fromUserArray([
             'id' => 1,
             'status' => 'webmaster',
             'username' => 'fixture_admin',

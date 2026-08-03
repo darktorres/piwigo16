@@ -36,6 +36,7 @@ final readonly class CategoryDefaultRenderer
         private SessionService $sessionService,
         private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private \Piwigo\Image\ImageStdParams $imageStdParams,
+        private \Piwigo\Users\CurrentUser $currentUser,
     ) {}
 
     /**
@@ -112,7 +113,7 @@ final readonly class CategoryDefaultRenderer
                   ]
               );
 
-            if (\Piwigo\Config\CurrentConfig::activateComments() and (bool) \Piwigo\Users\CurrentUser::get()->rawAttributes['show_nb_comments']) {
+            if (\Piwigo\Config\CurrentConfig::activateComments() and (bool) $this->currentUser->get()->rawAttributes['show_nb_comments']) {
                 $nbCommentsOf = $this->commentCounter->countValidatedByImageIds($selection);
             }
         }
@@ -164,12 +165,13 @@ final readonly class CategoryDefaultRenderer
                 // exactly like a non-string/null column value would, so
                 // behavior is unchanged.
                 $dateAvailable = is_string($row['date_available']) ? $row['date_available'] : '';
-                $recentPeriodRaw = \Piwigo\Users\CurrentUser::get()->rawAttributes['recent_period'] ?? null;
+                $recentPeriodRaw = $this->currentUser->get()
+                    ->rawAttributes['recent_period'] ?? null;
                 $recentPeriodForIcon = is_numeric($recentPeriodRaw) ? (int) $recentPeriodRaw : 0;
                 $tplVar['icon_ts'] = \Piwigo\Core\RecentIconResolver::getIcon($dateAvailable, $recentPeriodForIcon);
             }
 
-            if ((bool) \Piwigo\Users\CurrentUser::get()->rawAttributes['show_nb_hits']) {
+            if ((bool) $this->currentUser->get()->rawAttributes['show_nb_hits']) {
                 $tplVar['NB_HITS'] = $row['hit'];
             }
 
@@ -190,7 +192,7 @@ final readonly class CategoryDefaultRenderer
                     break;
 
                 case 'most_visited':
-                    if (! (bool) \Piwigo\Users\CurrentUser::get()->rawAttributes['show_nb_hits']) {
+                    if (! (bool) $this->currentUser->get()->rawAttributes['show_nb_hits']) {
                         $name = '(' . $row['hit'] . ') ' . $name;
                     }
                     break;

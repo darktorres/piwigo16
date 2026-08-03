@@ -34,7 +34,7 @@ final class StatsPageRenderer
      * shared 'history' tabsheet group (see HistoryPageRenderer, its
      * sibling in that same group).
      */
-    public function render(string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, CoreTabs $coreTabs): void
+    public function render(string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, CoreTabs $coreTabs, \Piwigo\Users\CurrentUser $currentUser): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -132,7 +132,8 @@ final class StatsPageRenderer
             'lastDays' => $last_days,
             'lastMonths' => $last_months,
             'lastYears' => $last_years,
-            'langCode' => \Piwigo\Users\CurrentUser::get()->language,
+            'langCode' => $currentUser->get()
+                ->language,
             'month_labels' => join('~', array_filter($lang_month, is_string(...))),
             'ADMIN_PAGE_TITLE' => Lang::t('History'),
         ]);

@@ -292,6 +292,13 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
             config: $root . 'config/',
             vendor: $root . 'vendor/',
         ));
+        // Kernel::reset() above also discards the container-shared
+        // CurrentUser instance parent::setUp()'s own attachGlobals() seed
+        // populated (singleton/service-locator elimination campaign, Phase
+        // 5) -- without reseeding here, AccessControl::isWebmaster() (read
+        // by this renderer) throws "not initialised" against this fresh,
+        // unseeded container.
+        \Piwigo\Users\CurrentUser::current()->attachGlobals();
         $this->renderer = $this->makeRenderer();
     }
 

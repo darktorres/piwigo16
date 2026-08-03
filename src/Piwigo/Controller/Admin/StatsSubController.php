@@ -26,12 +26,13 @@ final class StatsSubController implements AdminSubControllerInterface
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
         private readonly CoreTabs $coreTabs,
+        private readonly \Piwigo\Users\CurrentUser $currentUser,
     ) {}
 
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
         new StatsPageRenderer()
-            ->render('stats', $this->urlService, $this->configService, $this->coreTabs);
+            ->render('stats', $this->urlService, $this->configService, $this->coreTabs, $this->currentUser);
     }
 }

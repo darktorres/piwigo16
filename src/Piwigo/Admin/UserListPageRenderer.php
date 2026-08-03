@@ -31,7 +31,7 @@ final class UserListPageRenderer
         return \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService();
     }
 
-    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState): void
+    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
         $conn = DbConnection::build();
@@ -89,7 +89,8 @@ final class UserListPageRenderer
         $webmaster_id = \Piwigo\Config\CurrentConfig::webmasterId();
 
         $protected_users = [
-            \Piwigo\Users\CurrentUser::get()->id->value,
+            $currentUser->get()
+                ->id->value,
             $guest_id,
             $default_user_id,
             $webmaster_id,
@@ -98,12 +99,13 @@ final class UserListPageRenderer
         $password_protected_users = [$guest_id];
 
         // an admin can't delete other admin/webmaster
-        if (\Piwigo\Users\CurrentUser::get()->status === \Piwigo\Users\UserStatus::Admin) {
+        if ($currentUser->get()->status === \Piwigo\Users\UserStatus::Admin) {
             $admin_ids = array_map(strval(...), self::userService()->getAdminIds());
 
             $protected_users = array_merge($protected_users, $admin_ids);
 
-            $current_user_id = (string) \Piwigo\Users\CurrentUser::get()->id->value;
+            $current_user_id = (string) $currentUser->get()
+                ->id->value;
 
             // we add all admin+webmaster users BUT the user herself
             $password_protected_users = array_merge($password_protected_users, array_diff($admin_ids, [$current_user_id]));
@@ -137,8 +139,10 @@ final class UserListPageRenderer
                 'guest_user' => $guest_id,
                 'filter_group' => $userListFilter->groupId,
                 'search_input' => $userListFilter->userSearchInput,
-                'connected_user' => \Piwigo\Users\CurrentUser::get()->id->value,
-                'connected_user_status' => \Piwigo\Users\CurrentUser::get()->status->value,
+                'connected_user' => $currentUser->get()
+                    ->id->value,
+                'connected_user_status' => $currentUser->get()
+                    ->status->value,
                 'owner' => $webmaster_id,
                 'owner_username' => $owner_username,
             ]
@@ -167,7 +171,7 @@ final class UserListPageRenderer
         $pref_status_options = $label_of_status;
 
         // a simple "admin" can't set/remove statuses webmaster/admin
-        if (\Piwigo\Users\CurrentUser::get()->status === \Piwigo\Users\UserStatus::Admin) {
+        if ($currentUser->get()->status === \Piwigo\Users\UserStatus::Admin) {
             unset($pref_status_options['webmaster']);
             unset($pref_status_options['admin']);
         }

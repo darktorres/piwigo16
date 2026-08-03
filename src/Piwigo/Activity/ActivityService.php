@@ -141,7 +141,7 @@ final readonly class ActivityService implements ActivityLoggerInterface
             // misattribute these rows to the guest user instead of
             // 'unknown actor' (null) in exactly the case this fallback
             // exists for.
-            $performedBy = CurrentUser::wasRealUserResolved() ? CurrentUser::get()->id->value : null;
+            $performedBy = CurrentUser::current()->wasRealUserResolved() ? CurrentUser::current()->get()->id->value : null;
 
             if ($action === 'logout') {
                 $performedBy = is_numeric($loopObjectId) ? (int) $loopObjectId : null;

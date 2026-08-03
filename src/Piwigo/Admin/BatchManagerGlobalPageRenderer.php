@@ -62,6 +62,7 @@ final class BatchManagerGlobalPageRenderer
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly ImageStdParams $imageStdParams,
         private readonly \Piwigo\Core\PageState $pageState,
+        private readonly \Piwigo\Users\CurrentUser $currentUser,
     ) {}
 
     private static function tagService(): TagService
@@ -187,7 +188,8 @@ final class BatchManagerGlobalPageRenderer
             $imageService = new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), $this->sessionService, $this->eventDispatcher);
 
             if ($action === 'remove_from_caddie') {
-                $current_user_id = \Piwigo\Users\CurrentUser::get()->id->value;
+                $current_user_id = $this->currentUser->get()
+                    ->id->value;
                 new \Piwigo\Caddie\CaddieRepository($conn)
                     ->removeElementsForUser($current_user_id, $collection);
 

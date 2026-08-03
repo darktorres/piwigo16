@@ -122,7 +122,7 @@ final class ExtensionScanner
         }
         if ((bool) preg_match('/Has Settings:\s*([Tt]rue|[Ww]ebmaster)/', $data, $val)) {
             if (strtolower($val[1]) === 'webmaster') {
-                if (\Piwigo\Users\CurrentUser::get()->status === \Piwigo\Users\UserStatus::Webmaster) {
+                if (\Piwigo\Users\CurrentUser::current()->get()->status === \Piwigo\Users\UserStatus::Webmaster) {
                     $plugin['hasSettings'] = true;
                 }
             } else {
@@ -229,7 +229,7 @@ final class ExtensionScanner
         if (file_exists($screenshotPath)) {
             $theme['screenshot'] = $screenshotPath;
         } else {
-            $adminTheme = new \Piwigo\Users\PreferencesService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class))->getParam('admin_theme', \Piwigo\Config\CurrentConfig::adminTheme());
+            $adminTheme = new \Piwigo\Users\PreferencesService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Users\CurrentUser::current())->getParam('admin_theme', \Piwigo\Config\CurrentConfig::adminTheme());
             $theme['screenshot'] = $urlService->getRootUrl() . 'themes/admin/'
                 . (is_string($adminTheme) ? $adminTheme : \Piwigo\Config\CurrentConfig::adminTheme())
                 . '/images/missing_screenshot.png';

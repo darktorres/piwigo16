@@ -72,6 +72,7 @@ final class BatchManagerUnitPageRenderer
         private readonly SessionService $sessionService,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Core\PageState $pageState,
+        private readonly \Piwigo\Users\CurrentUser $currentUser,
     ) {}
 
     private static function tagService(): TagService
@@ -425,7 +426,7 @@ final class BatchManagerUnitPageRenderer
                 // jump to link
                 $image_file = $row['file'];
 
-                $currentUser = \Piwigo\Users\CurrentUser::get();
+                $user = $this->currentUser->get();
                 $authorizeds = array_diff(
                     array_map(
                         strval(...),
@@ -434,7 +435,7 @@ final class BatchManagerUnitPageRenderer
                     explode(
                         ',',
                         new \Piwigo\Permission\ForbiddenCategoriesCache(self::permissionService(), \Piwigo\Cache\CachePools::permissions())
-                            ->getForUser($currentUser->id->value, $currentUser->status->value)
+                            ->getForUser($user->id->value, $user->status->value)
                     )
                 );
 
@@ -515,7 +516,7 @@ final class BatchManagerUnitPageRenderer
                             'FILE' => Lang::t('%s', $row['file']),
                             'related_categories' => $related_categories,
                             'related_category_ids' => json_encode($related_category_ids),
-                            'U_JUMPTO' => (isset($url_img) and $currentUser->level >= $media['image']['level']) ? $url_img : null,
+                            'U_JUMPTO' => (isset($url_img) and $user->level >= $media['image']['level']) ? $url_img : null,
                             'tag_selection' => $tag_selection,
                             'U_DOWNLOAD' => 'action.php?id=' . $row_id_str . '&amp;part=e&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken() . '&amp;download',
                             'U_HISTORY' => $this->urlService->getRootUrl() . 'admin.php?page=history&amp;filter_image_id=' . $row_id_str,

@@ -59,6 +59,7 @@ final class AdminShell
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
         private readonly \Piwigo\Core\PageState $pageState,
+        private readonly \Piwigo\Users\CurrentUser $currentUser,
     ) {}
 
     /**
@@ -274,7 +275,8 @@ final class AdminShell
 
         $template->assign(
             [
-                'USERNAME' => \Piwigo\Users\CurrentUser::get()->username,
+                'USERNAME' => $this->currentUser->get()
+                    ->username,
                 'ENABLE_SYNCHRONIZATION' => \Piwigo\Config\CurrentConfig::enableSynchronization(),
                 'U_SITE_MANAGER' => $link_start . 'site_manager',
                 'U_HISTORY_STAT' => $link_start . 'stats&amp;year=' . date('Y') . '&amp;month=' . date('n'),
@@ -327,7 +329,8 @@ final class AdminShell
         }
 
         // any photo in the caddie?
-        $user_id = \Piwigo\Users\CurrentUser::get()->id->value;
+        $user_id = $this->currentUser->get()
+            ->id->value;
         $nb_photos_in_caddie = count(new \Piwigo\Caddie\CaddieRepository($conn)->findElementIdsForUser($user_id));
 
         if ($nb_photos_in_caddie > 0) {
@@ -410,12 +413,13 @@ final class AdminShell
         $whats_new_major_version = \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION);
 
         if ((bool) \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService()->getParam('show_whats_new_' . $whats_new_major_version, true) and $this->configService->pwgIsDbconfWriteable()) {
-            if (\Piwigo\Users\CurrentUser::get()->rawAttributes['registration_date'] > \Piwigo\Config\CurrentConfig::lastMajorUpdate()) {
+            if ($this->currentUser->get()->rawAttributes['registration_date'] > \Piwigo\Config\CurrentConfig::lastMajorUpdate()) {
                 \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService()
                     ->updateParam('show_whats_new_' . $whats_new_major_version, false);
             } else {
                 // purge old whats_new_*
-                $user_preferences = \Piwigo\Users\CurrentUser::get()->preferences;
+                $user_preferences = $this->currentUser->get()
+                    ->preferences;
                 $userprefs_params_to_delete = [];
 
                 foreach (array_keys($user_preferences) as $pref_param) {

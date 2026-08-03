@@ -71,7 +71,7 @@ final class NotificationServiceTest extends IntegrationTestCase
             $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . " SET registration_date = '2026-07-07 05:02:38' WHERE user_id IN (3, 4)");
         }
 
-        CurrentUser::set(User::fromUserArray([
+        CurrentUser::current()->set(User::fromUserArray([
             'id' => 1,
             'status' => 'normal',
             'cache_update_time' => '2026-07-07 05:02:38',
@@ -87,6 +87,7 @@ final class NotificationServiceTest extends IntegrationTestCase
             new HtmlService(),
             new UrlService(new HtmlService()),
             new Translator(),
+            \Piwigo\Users\CurrentUser::current(),
         );
     }
 
@@ -234,14 +235,14 @@ final class NotificationServiceTest extends IntegrationTestCase
 
     public function test_news_exists_is_true_when_new_elements_exist(): void
     {
-        CurrentUser::set(CurrentUser::get()->withStatus(UserStatus::Normal));
+        CurrentUser::current()->set(CurrentUser::current()->get()->withStatus(UserStatus::Normal));
 
         self::assertTrue($this->service->newsExists('2026-07-07 05:02:36', '2026-07-07 05:02:38'));
     }
 
     public function test_news_exists_is_false_for_an_empty_window(): void
     {
-        CurrentUser::set(CurrentUser::get()->withStatus(UserStatus::Normal));
+        CurrentUser::current()->set(CurrentUser::current()->get()->withStatus(UserStatus::Normal));
 
         self::assertFalse($this->service->newsExists('2026-07-08 00:00:00', '2026-07-09 00:00:00'));
     }
@@ -256,10 +257,10 @@ final class NotificationServiceTest extends IntegrationTestCase
             ['test author', '127.0.0.9', 'pending test comment']
         );
 
-        CurrentUser::set(CurrentUser::get()->withStatus(UserStatus::Normal));
+        CurrentUser::current()->set(CurrentUser::current()->get()->withStatus(UserStatus::Normal));
         self::assertFalse($this->service->newsExists('2026-07-31 00:00:00', '2026-08-02 00:00:00'));
 
-        CurrentUser::set(CurrentUser::get()->withStatus(UserStatus::Admin));
+        CurrentUser::current()->set(CurrentUser::current()->get()->withStatus(UserStatus::Admin));
         self::assertTrue($this->service->newsExists('2026-07-31 00:00:00', '2026-08-02 00:00:00'));
 
         $this->conn->executeStatement("DELETE FROM " . Tables::comments() . " WHERE author = 'test author'");
@@ -303,7 +304,7 @@ final class NotificationServiceTest extends IntegrationTestCase
 
     public function test_news_appends_the_auth_key_to_every_generated_url(): void
     {
-        CurrentUser::set(CurrentUser::get()->withStatus(UserStatus::Normal));
+        CurrentUser::current()->set(CurrentUser::current()->get()->withStatus(UserStatus::Normal));
 
         // This window has new elements, updated categories, and new
         // comments all firing at once (see the elements/categories/
@@ -324,7 +325,7 @@ final class NotificationServiceTest extends IntegrationTestCase
 
     public function test_news_omits_the_auth_param_entirely_when_no_auth_key_is_given(): void
     {
-        CurrentUser::set(CurrentUser::get()->withStatus(UserStatus::Normal));
+        CurrentUser::current()->set(CurrentUser::current()->get()->withStatus(UserStatus::Normal));
 
         $news = $this->service->news(
             '2026-07-07 05:02:36',

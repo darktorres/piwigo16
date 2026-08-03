@@ -70,14 +70,14 @@ final class PictureRateRendererTest extends IntegrationTestCase
         // regardless of run order.
         $this->conn->executeStatement('DELETE FROM ' . Tables::rate() . ' WHERE element_id = 1');
 
-        $this->renderer = new PictureRateRenderer($this->repo);
+        $this->renderer = new PictureRateRenderer($this->repo, \Piwigo\Users\CurrentUser::current());
     }
 
     #[\Override]
     protected function tearDown(): void
     {
         CurrentTemplate::reset();
-        CurrentUser::reset();
+        CurrentUser::current()->reset();
         $this->conn->executeStatement('DELETE FROM ' . Tables::rate() . ' WHERE element_id = 1');
         parent::tearDown();
     }
@@ -105,7 +105,7 @@ final class PictureRateRendererTest extends IntegrationTestCase
         // 3 real votes (5, 3, 4) on image 1 -- count=3, average=4.0.
         $this->conn->executeStatement("INSERT INTO " . Tables::rate() . " (user_id, element_id, anonymous_id, rate) VALUES (1, 1, '', 5), (3, 1, '', 3), (4, 1, '', 4)");
 
-        CurrentUser::set(new User(
+        CurrentUser::current()->set(new User(
             id: \Piwigo\Common\ValueObject\UserId::from(3),
             username: 'fixture_user_3',
             email: '',
@@ -138,7 +138,7 @@ final class PictureRateRendererTest extends IntegrationTestCase
         // the exact anonymous_id shape render() itself computes.
         $this->conn->executeStatement("INSERT INTO " . Tables::rate() . " (user_id, element_id, anonymous_id, rate) VALUES (2, 1, '203.0.113', 5)");
 
-        CurrentUser::set(new User(
+        CurrentUser::current()->set(new User(
             id: \Piwigo\Common\ValueObject\UserId::from(2),
             username: 'guest',
             email: '',

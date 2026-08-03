@@ -39,6 +39,7 @@ final class RegisterController implements ControllerInterface
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
         private readonly \Piwigo\Core\PageState $pageState,
+        private readonly \Piwigo\Users\CurrentUser $currentUser,
     ) {}
 
     #[\Override]
@@ -168,10 +169,10 @@ final class RegisterController implements ControllerInterface
                         // the 'login' row logUser() itself records internally,
                         // which is why this must run BEFORE calling it, not
                         // after -- to performed_by=NULL instead of their own new id.
-                        \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray(
+                        $this->currentUser->set(\Piwigo\Users\User::fromUserArray(
                             $userService->buildUser(\Piwigo\Common\ValueObject\UserId::from($new_user_id))
                         ));
-                        \Piwigo\Users\CurrentUser::markRealUserResolved();
+                        $this->currentUser->markRealUserResolved();
                         \Piwigo\Bootstrap\CoreDomainAccessor::authService()
                             ->logUser($new_user_id, false);
                     }
@@ -215,13 +216,13 @@ final class RegisterController implements ControllerInterface
         $hide_menu_on = is_array($themeconf) ? ($themeconf['hide_menu_on'] ?? null) : null;
         if (! is_array($hide_menu_on) or ! in_array('theRegisterPage', $hide_menu_on, true)) {
             new MenubarRenderer()
-                ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy);
+                ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser);
         }
 
         // Load language if cookie is set from login/register/password
         // pages
         $lang_cookie = $_COOKIE['lang'] ?? null;
-        if ($lang_cookie !== null and (! is_string($lang_cookie) or \Piwigo\Users\CurrentUser::get()->language !== $lang_cookie)) {
+        if ($lang_cookie !== null and (! is_string($lang_cookie) or $this->currentUser->get()->language !== $lang_cookie)) {
             if (! is_string($lang_cookie)) {
                 \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                     ->fatalError('[Hacking attempt] the input parameter "lang" is not valid');
@@ -231,7 +232,7 @@ final class RegisterController implements ControllerInterface
                     ->fatalError('[Hacking attempt] the input parameter "' . $lang_cookie . '" is not valid');
             }
 
-            \Piwigo\Users\CurrentUser::updateLanguage($lang_cookie);
+            $this->currentUser->updateLanguage($lang_cookie);
             Lang::load('common.lang', '', [
                 'language' => $lang_cookie,
             ]);
@@ -244,10 +245,11 @@ final class RegisterController implements ControllerInterface
 
         $template->assign([
             'language_options' => $language_options,
-            'current_language' => \Piwigo\Users\CurrentUser::get()->language,
+            'current_language' => $this->currentUser->get()
+                ->language,
         ]);
 
-        if (str_starts_with(\Piwigo\Users\CurrentUser::get()->language, 'fr')) {
+        if (str_starts_with($this->currentUser->get()->language, 'fr')) {
             $help_link = 'https://upstream.example.invalid/help/fr/';
         } else {
             $help_link = 'https://upstream.example.invalid/help/';

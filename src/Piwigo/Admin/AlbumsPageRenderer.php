@@ -34,7 +34,7 @@ use Piwigo\Template\Template;
  */
 final class AlbumsPageRenderer
 {
-    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher): void
+    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Users\CurrentUser $currentUser): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -230,7 +230,8 @@ final class AlbumsPageRenderer
         // of an album or change permissions, this variable is reset and not recalculated until
         // you open the gallery. As this situation doesn't occur each time you use the
         // administration, it's quite reliable but not as much as on gallery side.
-        $forbidden_categories = \Piwigo\Users\CurrentUser::get()->forbiddenCategories;
+        $forbidden_categories = $currentUser->get()
+            ->forbiddenCategories;
         $is_forbidden = array_fill_keys(@explode(',', $forbidden_categories), 1);
 
         $nb_photos_in = $categoryService->getPhotoCountsByCategory();

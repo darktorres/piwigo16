@@ -41,6 +41,7 @@ final class NotificationController implements ControllerInterface
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
         private readonly \Piwigo\Core\PageState $pageState,
+        private readonly \Piwigo\Users\CurrentUser $currentUser,
     ) {}
 
     #[\Override]
@@ -59,7 +60,8 @@ final class NotificationController implements ControllerInterface
         // file reads $GLOBALS['title']. Plain local, not global.
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        $user_id = \Piwigo\Users\CurrentUser::get()->id->value;
+        $user_id = $this->currentUser->get()
+            ->id->value;
 
         $feedRepo->insert($feedId, $user_id);
 
@@ -94,7 +96,7 @@ final class NotificationController implements ControllerInterface
         $themeconf = is_array($themeconf) ? $themeconf : [];
         if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theNotificationPage', $themeconf['hide_menu_on'], true)) {
             new MenubarRenderer()
-                ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy);
+                ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser);
         }
 
         new \Piwigo\Page\PageHeaderRenderer()

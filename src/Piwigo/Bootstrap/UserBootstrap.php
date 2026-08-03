@@ -73,6 +73,10 @@ final class UserBootstrap
         if (! $pageState instanceof \Piwigo\Core\PageState) {
             throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\PageState::class);
         }
+        $currentUser = Kernel::container()->get(\Piwigo\Users\CurrentUser::class);
+        if (! $currentUser instanceof \Piwigo\Users\CurrentUser) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Users\CurrentUser::class);
+        }
         $authService = new AuthService(
             new AuthRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
             new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)),
@@ -83,6 +87,7 @@ final class UserBootstrap
             $sessionService,
             $eventDispatcher,
             $pageState,
+            $currentUser,
         );
         $userService = new \Piwigo\Users\UserService(
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class),
@@ -94,6 +99,7 @@ final class UserBootstrap
             $sessionService,
             $eventDispatcher,
             $this->deploymentPolicy,
+            $currentUser,
         );
 
         $guest_id_int = \Piwigo\Config\CurrentConfig::guestId();
@@ -226,17 +232,17 @@ final class UserBootstrap
         // request (caught via a live Contract-test HTTP 500, not a unit
         // test -- the Integration/Unit harnesses independently seed
         // CurrentUser in their own setUp(), masking the gap).
-        \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
+        $currentUser->set(\Piwigo\Users\User::fromUserArray($user));
         // Legacy Coupling Retirement Phase 8, 8h: this is the only real
         // per-request user resolver, so this is where ActivityService::
         // record()'s "was a real user ever resolved this request" flag
         // gets marked -- see CurrentUser::wasRealUserResolved()'s own
         // docblock for why isInitialized() can't substitute.
-        \Piwigo\Users\CurrentUser::markRealUserResolved();
+        $currentUser->markRealUserResolved();
 
         if (\Piwigo\Config\CurrentConfig::browserLanguage() and (\Piwigo\Auth\AccessControl::isAGuest() or \Piwigo\Auth\AccessControl::isGeneric()) and (bool) ($language = $userService->getBrowserLanguage())) {
             $user['language'] = $language;
-            \Piwigo\Users\CurrentUser::updateLanguage($language);
+            $currentUser->updateLanguage($language);
         }
         $eventDispatcher->dispatchNotify(new UserInit($user));
     }

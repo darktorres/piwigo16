@@ -53,12 +53,12 @@ namespace Piwigo\Tests\Integration {
             CurrentConfig::setRateAnonymous(true);
             CurrentConfig::setRateItems([0, 1, 2, 3, 4, 5]);
             CurrentConfig::setGuestAccess(true);
-            CurrentUser::set(User::fromUserArray(['id' => 3, 'status' => 'normal']));
+            CurrentUser::current()->set(User::fromUserArray(['id' => 3, 'status' => 'normal']));
             $_SERVER['REMOTE_ADDR'] = '10.20.30.40';
             unset($_COOKIE['pwg_anonymous_rater']);
 
             $this->conn = DbConnection::build();
-            $this->service = new RateService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Rate\RateEntity::class), new CookieService(), EventDispatcher::get());
+            $this->service = new RateService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Rate\RateEntity::class), new CookieService(), EventDispatcher::get(), \Piwigo\Users\CurrentUser::current());
         }
 
         public function test_rate_returns_false_for_a_null_rate(): void
@@ -86,7 +86,7 @@ namespace Piwigo\Tests\Integration {
         public function test_rate_returns_false_for_an_anonymous_user_when_rate_anonymous_is_disabled(): void
         {
             CurrentConfig::setRateAnonymous(false);
-            CurrentUser::set(User::fromUserArray(['id' => 2, 'status' => 'guest']));
+            CurrentUser::current()->set(User::fromUserArray(['id' => 2, 'status' => 'guest']));
 
             self::assertFalse($this->service->rate(5, 3));
         }
@@ -139,7 +139,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_rate_for_an_anonymous_user_sets_the_cookie_and_records_the_ip(): void
         {
-            CurrentUser::set(User::fromUserArray(['id' => 2, 'status' => 'guest']));
+            CurrentUser::current()->set(User::fromUserArray(['id' => 2, 'status' => 'guest']));
 
             try {
                 $result = $this->service->rate(5, 3);
@@ -211,7 +211,7 @@ namespace Piwigo\Tests\Integration {
          */
         public function test_rate_for_a_returning_anonymous_user_deletes_the_stale_duplicate_before_reassigning(): void
         {
-            CurrentUser::set(User::fromUserArray(['id' => 2, 'status' => 'guest']));
+            CurrentUser::current()->set(User::fromUserArray(['id' => 2, 'status' => 'guest']));
             $_COOKIE['pwg_anonymous_rater'] = '99.99.99';
 
             $this->conn->insert(Tables::rate(), ['element_id' => 4, 'user_id' => 2, 'anonymous_id' => '99.99.99', 'rate' => 2, 'date' => '2026-08-01']);

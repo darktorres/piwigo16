@@ -27,6 +27,7 @@ use Piwigo\Image\SrcImage;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Url\UrlService;
+use Piwigo\Users\CurrentUser;
 
 /**
  * Real, minimal fake for SrcImage::setThemeConfProvider() -- only reached
@@ -180,6 +181,18 @@ final class UploadServiceTest extends IntegrationTestCase
         }
         $currentLogger->set(new Logger(['severity' => Logger::OFF]));
         $this->currentLogger = $currentLogger;
+
+        // Kernel::reset() above also discards the container-shared
+        // CurrentUser instance parent::setUp()'s own attachGlobals() seed
+        // populated (singleton/service-locator elimination campaign, Phase
+        // 5) -- without reseeding here, addUploadedFile()'s own
+        // AccessControl-reaching call chain throws "not initialised"
+        // against this fresh, unseeded container.
+        $currentUser = Kernel::container()->get(CurrentUser::class);
+        if (! $currentUser instanceof CurrentUser) {
+            throw new \LogicException('Container returned an unexpected type for ' . CurrentUser::class);
+        }
+        $currentUser->attachGlobals();
 
         $this->conn = DbConnection::build();
 

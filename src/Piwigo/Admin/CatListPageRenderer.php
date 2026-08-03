@@ -42,6 +42,7 @@ final class CatListPageRenderer
         private readonly SessionService $sessionService,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Core\PageState $pageState,
+        private readonly \Piwigo\Users\CurrentUser $currentUser,
     ) {}
 
     public function render(): void
@@ -130,6 +131,7 @@ final class CatListPageRenderer
                 ->createVirtualCategory(
                     $virtual_name,
                     \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(),
+                    $this->currentUser,
                     $parent_id
                 );
 
@@ -264,7 +266,7 @@ final class CatListPageRenderer
                   'U_MOVE' => $base_url . 'albums#cat-' . $cat_id,
 
                   'IS_VIRTUAL' => in_array($category['dir'], [null, '', '0'], true),
-                  'CAT_ADMIN_ACCESS' => $categoryService->catAdminAccess($cat_id),
+                  'CAT_ADMIN_ACCESS' => $categoryService->catAdminAccess($cat_id, $this->currentUser),
               ];
 
             if (in_array($category['dir'], [null, '', '0'], true)) {

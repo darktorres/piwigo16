@@ -121,7 +121,7 @@ final class UserBootstrapTest extends IntegrationTestCase
         unset($_SESSION['connected_with'], $_SESSION['pwg_uid']);
 
         EventDispatcher::get()->reset();
-        CurrentUser::reset();
+        CurrentUser::current()->reset();
         Kernel::reset();
         parent::tearDown();
     }
@@ -146,7 +146,7 @@ final class UserBootstrapTest extends IntegrationTestCase
         try {
             $this->bootstrap(deploymentPolicy: new DeploymentPolicy(apacheAuthentication: true))->initialize();
 
-            self::assertSame($remoteUser, CurrentUser::get()->username);
+            self::assertSame($remoteUser, CurrentUser::current()->get()->username);
             $row = $this->conn->fetchAssociative(
                 'SELECT id, username FROM piwigo_users WHERE username = ?',
                 [$remoteUser]
@@ -167,7 +167,7 @@ final class UserBootstrapTest extends IntegrationTestCase
 
         $this->bootstrap(deploymentPolicy: new DeploymentPolicy(apacheAuthentication: true))->initialize();
 
-        self::assertSame('regular_user', CurrentUser::get()->username);
+        self::assertSame('regular_user', CurrentUser::current()->get()->username);
         // No 2nd row was created for an account that already exists.
         $count = $this->conn->fetchOne(
             'SELECT COUNT(*) FROM piwigo_users WHERE username = ?',
@@ -189,7 +189,7 @@ final class UserBootstrapTest extends IntegrationTestCase
         // key never resolves to a real user.
         $this->bootstrap()->initialize();
 
-        self::assertSame(\Piwigo\Config\CurrentConfig::guestId(), CurrentUser::get()->id->value);
+        self::assertSame(\Piwigo\Config\CurrentConfig::guestId(), CurrentUser::current()->get()->id->value);
     }
 
     public function test_initialize_logs_in_via_ws_uploadAsync_and_marks_the_session_connected_with(): void
@@ -217,6 +217,7 @@ final class UserBootstrapTest extends IntegrationTestCase
             new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)),
             EventDispatcher::get(),
             \Piwigo\Core\PageState::current(),
+            \Piwigo\Users\CurrentUser::current(),
         )->pwgLogin(...));
 
         $_SERVER = [];

@@ -75,12 +75,12 @@ final class PictureCommentRenderer
      *   native DBAL int -- only `uppercats`/`status`/`global_rank` are
      *   genuinely string|null.
      */
-    public function render(?CommentId $editCommentId, int $imageId, int $start, UrlServiceInterface $urlService, array $related_categories, string $url_self, SessionService $sessionService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState): void
+    public function render(?CommentId $editCommentId, int $imageId, int $start, UrlServiceInterface $urlService, array $related_categories, string $url_self, SessionService $sessionService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $commentRepository = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Comment\CommentEntity::class);
-        $commentService = new CommentService($commentRepository, new EphemeralKeyService(), new MailService(), new HtmlService(), $urlService, $eventDispatcher, $pageState);
+        $commentService = new CommentService($commentRepository, new EphemeralKeyService(), new MailService(), new HtmlService(), $urlService, $eventDispatcher, $pageState, $currentUser);
 
         $commentAction = null;
 
@@ -308,7 +308,8 @@ final class PictureCommentRenderer
             $key = new \Piwigo\Auth\EphemeralKeyService()
                 ->generate(3, (string) $imageId);
 
-            $userEmail = \Piwigo\Users\CurrentUser::get()->email;
+            $userEmail = $currentUser->get()
+                ->email;
             $userEmailEmpty = $userEmail === '' || $userEmail === '0';
 
             $tplVar = [

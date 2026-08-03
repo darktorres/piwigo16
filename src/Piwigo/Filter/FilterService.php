@@ -47,7 +47,7 @@ final class FilterService implements FilterUpdaterInterface
      *  List of visible categories (count(visible) < count(forbidden) more often)
      * $filter['visible_images']: List of visible images
      */
-    public function initializeFromRequest(\Piwigo\Core\PageState $pageState): void
+    public function initializeFromRequest(\Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser): void
     {
         // Phase 2 global-residual sweep: $filter is now a local scratch
         // array for this method's own body only (no longer `global
@@ -65,7 +65,7 @@ final class FilterService implements FilterUpdaterInterface
         /** @var array<string, mixed> */
         $filter = [];
 
-        $currentUser = \Piwigo\Users\CurrentUser::get();
+        $user = $currentUser->get();
 
         $recentFilterRequest = Request\RecentFilterRequest::fromGlobals();
 
@@ -115,7 +115,7 @@ final class FilterService implements FilterUpdaterInterface
                 // populates both matches[0] and matches[1].
                 $filter['recent_period'] = $filter_matches[1] ?? null;
             } else {
-                $filter['recent_period'] = $filter_key['recent_period'] > 0 ? $filter_key['recent_period'] : $currentUser->rawAttributes['recent_period'];
+                $filter['recent_period'] = $filter_key['recent_period'] > 0 ? $filter_key['recent_period'] : $user->rawAttributes['recent_period'];
             }
 
             // $filter['recent_period'] above comes from an untyped regex capture,
@@ -137,13 +137,13 @@ final class FilterService implements FilterUpdaterInterface
                 // visible well within one user session.
                 time() - $filter_key_time >= 30 or
                 // Date, period, user are changed
-                $filter_key['user'] !== $currentUser->id->value or
+                $filter_key['user'] !== $user->id->value or
                 (is_numeric($filter_key['recent_period']) ? (int) $filter_key['recent_period'] : 0) !== $filter_recent_period or
                 (is_string($filter_key['date']) ? $filter_key['date'] : '') !== date('Ymd')
             ) {
                 // Need to compute dats
                 $filter_key = [
-                    'user' => $currentUser->id->value,
+                    'user' => $user->id->value,
                     'recent_period' => $filter_recent_period,
                     'time' => time(),
                     'date' => date('Ymd'),
@@ -161,9 +161,9 @@ final class FilterService implements FilterUpdaterInterface
                 $computedCategories = new CategoryService(
                     \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Category\CategoryEntity::class),
                     new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn)), \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Category\CategoryEntity::class))
-                )->getComputedCategories($currentUser->toUserArray(), $filter_recent_period);
+                )->getComputedCategories($user->toUserArray(), $filter_recent_period);
                 $filter['categories'] = $computedCategories['categories'];
-                \Piwigo\Users\CurrentUser::set($currentUser->withRawAttribute('last_photo_date', $computedCategories['lastPhotoDate']));
+                $currentUser->set($user->withRawAttribute('last_photo_date', $computedCategories['lastPhotoDate']));
 
                 $filter['visible_categories'] = implode(',', array_keys($filter['categories']));
                 if ($filter['visible_categories'] === '') {

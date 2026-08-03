@@ -71,6 +71,15 @@ final class RedirectService implements RedirectServiceInterface
         return $userService;
     }
 
+    private static function currentUser(): CurrentUser
+    {
+        $currentUser = Kernel::container()->get(CurrentUser::class);
+        if (! $currentUser instanceof CurrentUser) {
+            throw new \LogicException('Container returned an unexpected type for ' . CurrentUser::class);
+        }
+        return $currentUser;
+    }
+
     #[\Override]
     public function redirectHttp(string $url, int $status = 302): never
     {
@@ -100,7 +109,7 @@ final class RedirectService implements RedirectServiceInterface
             $paths = CurrentPaths::get();
             $guest_id = CurrentConfig::guestId();
             $user = self::userService()->buildUser(\Piwigo\Common\ValueObject\UserId::from($guest_id));
-            CurrentUser::set(User::fromUserArray($user));
+            self::currentUser()->set(User::fromUserArray($user));
             Lang::load('common.lang');
             EventDispatcher::get()->dispatchNotify(new LoadingLang());
             Lang::load('lang', $paths->siteLocal, [

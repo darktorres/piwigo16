@@ -202,11 +202,11 @@ namespace Piwigo\Tests\Integration {
             CurrentConfig::setEmailAdminOnCommentValidation(false);
             CurrentConfig::setEmailAdminOnCommentEdition(false);
             CurrentConfig::setEmailAdminOnCommentDeletion(false);
-            CurrentUser::set(User::fromUserArray(['id' => 1, 'status' => 'normal', 'username' => 'fixture_admin', 'email' => 'fixture_admin@example.test']));
+            CurrentUser::current()->set(User::fromUserArray(['id' => 1, 'status' => 'normal', 'username' => 'fixture_admin', 'email' => 'fixture_admin@example.test']));
             \Piwigo\Core\PageState::current()->reset();
 
             $this->conn = DbConnection::build();
-            $this->service = new CommentService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), new MailService(), new HtmlService(), new UrlService(new HtmlService()), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current());
+            $this->service = new CommentService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), new MailService(), new HtmlService(), new UrlService(new HtmlService()), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
         }
 
         // --- checkForSpam() -------------------------------------------------
@@ -226,14 +226,14 @@ namespace Piwigo\Tests\Integration {
 
         public function test_check_for_spam_leaves_action_alone_for_a_non_guest(): void
         {
-            CurrentUser::set(CurrentUser::get()->withStatus(UserStatus::Normal));
+            CurrentUser::current()->set(CurrentUser::current()->get()->withStatus(UserStatus::Normal));
 
             self::assertSame('moderate', $this->checkForSpam('moderate', ['content' => 'hi', 'author' => 'a', 'image_id' => 1]));
         }
 
         public function test_check_for_spam_escalates_when_link_count_exceeds_the_max(): void
         {
-            CurrentUser::set(CurrentUser::get()->withStatus(UserStatus::Guest));
+            CurrentUser::current()->set(CurrentUser::current()->get()->withStatus(UserStatus::Guest));
 
             $content = 'http://a.test http://b.test http://c.test http://d.test';
             self::assertSame('reject', $this->checkForSpam('moderate', ['content' => $content, 'author' => 'a', 'image_id' => 1]));
@@ -242,7 +242,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_check_for_spam_leaves_action_alone_under_the_link_limit(): void
         {
-            CurrentUser::set(CurrentUser::get()->withStatus(UserStatus::Guest));
+            CurrentUser::current()->set(CurrentUser::current()->get()->withStatus(UserStatus::Guest));
 
             self::assertSame('moderate', $this->checkForSpam('moderate', ['content' => 'http://a.test', 'author' => 'a', 'image_id' => 1]));
         }
@@ -271,7 +271,7 @@ namespace Piwigo\Tests\Integration {
          */
         public function test_check_for_spam_counts_a_link_embedded_in_the_author_name(): void
         {
-            CurrentUser::set(CurrentUser::get()->withStatus(UserStatus::Guest));
+            CurrentUser::current()->set(CurrentUser::current()->get()->withStatus(UserStatus::Guest));
             CurrentConfig::setCommentSpamMaxLinks(0);
 
             $action = $this->checkForSpam('moderate', ['content' => 'no links in here at all', 'author' => 'http://spammer.example', 'image_id' => 1]);
@@ -334,7 +334,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_insert_comment_rejects_a_guest_impersonating_an_existing_username(): void
         {
-            CurrentUser::set(CurrentUser::get()->withStatus(UserStatus::Guest));
+            CurrentUser::current()->set(CurrentUser::current()->get()->withStatus(UserStatus::Guest));
 
             $comm = $this->baseComm();
             $comm['author'] = 'fixture_admin';
@@ -387,7 +387,7 @@ namespace Piwigo\Tests\Integration {
         {
             CurrentConfig::setCommentsValidation(false);
             CurrentConfig::setAntiFloodTime(3600);
-            CurrentUser::set(User::fromUserArray(['id' => 3, 'status' => 'normal', 'username' => 'regular_user']));
+            CurrentUser::current()->set(User::fromUserArray(['id' => 3, 'status' => 'normal', 'username' => 'regular_user']));
 
             $first = $this->baseComm();
             $infos = [];
@@ -409,7 +409,7 @@ namespace Piwigo\Tests\Integration {
          */
         public function test_insert_comment_rejects_a_missing_author_when_mandatory(): void
         {
-            CurrentUser::set(User::fromUserArray(['id' => 6, 'status' => 'guest', 'username' => '']));
+            CurrentUser::current()->set(User::fromUserArray(['id' => 6, 'status' => 'guest', 'username' => '']));
             CurrentConfig::setCommentsAuthorMandatory(true);
 
             $comm = $this->baseComm();
@@ -431,7 +431,7 @@ namespace Piwigo\Tests\Integration {
         public function test_insert_comment_defaults_a_missing_guest_author_to_guest(): void
         {
             CurrentConfig::setCommentsValidation(false);
-            CurrentUser::set(User::fromUserArray(['id' => 6, 'status' => 'guest', 'username' => '']));
+            CurrentUser::current()->set(User::fromUserArray(['id' => 6, 'status' => 'guest', 'username' => '']));
 
             $comm = $this->baseComm();
             $infos = [];
@@ -490,7 +490,7 @@ namespace Piwigo\Tests\Integration {
          */
         public function test_insert_comment_rejects_a_missing_email_when_mandatory(): void
         {
-            CurrentUser::set(User::fromUserArray(['id' => 6, 'status' => 'guest', 'username' => 'emailless_guest', 'email' => '']));
+            CurrentUser::current()->set(User::fromUserArray(['id' => 6, 'status' => 'guest', 'username' => 'emailless_guest', 'email' => '']));
             CurrentConfig::setCommentsEmailMandatory(true);
 
             $comm = $this->baseComm();
@@ -577,7 +577,7 @@ namespace Piwigo\Tests\Integration {
             // authorized this exact edit, same as the real comments.php/
             // picture_comment.inc.php callers do via can_manage_comment()
             // before ever reaching this method.
-            CurrentUser::set(User::fromUserArray(['id' => 3, 'status' => 'normal', 'username' => 'regular_user']));
+            CurrentUser::current()->set(User::fromUserArray(['id' => 3, 'status' => 'normal', 'username' => 'regular_user']));
             $comment = ['comment_id' => 2, 'image_id' => 2, 'content' => 'edited content', 'website_url' => ''];
 
             $action = $this->service->updateComment($comment, $this->validKey(2));
@@ -608,7 +608,7 @@ namespace Piwigo\Tests\Integration {
         public function test_update_comment_notifies_admins_by_mail_on_moderation(): void
         {
             CurrentConfig::setEmailAdminOnCommentValidation(true);
-            CurrentUser::set(User::fromUserArray(['id' => 3, 'status' => 'normal', 'username' => 'mail_dispatch_owner']));
+            CurrentUser::current()->set(User::fromUserArray(['id' => 3, 'status' => 'normal', 'username' => 'mail_dispatch_owner']));
             $comment = ['comment_id' => 2, 'image_id' => 2, 'content' => 'edited for mail dispatch', 'website_url' => ''];
 
             $mailer = new CommentServiceFakeMailerRecordsNotifications();
@@ -633,14 +633,14 @@ namespace Piwigo\Tests\Integration {
 
         public function test_delete_comment_returns_false_for_a_missing_comment(): void
         {
-            CurrentUser::set(CurrentUser::get()->withStatus(UserStatus::Admin));
+            CurrentUser::current()->set(CurrentUser::current()->get()->withStatus(UserStatus::Admin));
 
             self::assertFalse($this->service->deleteComment(CommentId::from(999999)));
         }
 
         public function test_delete_comment_removes_as_admin(): void
         {
-            CurrentUser::set(CurrentUser::get()->withStatus(UserStatus::Admin));
+            CurrentUser::current()->set(CurrentUser::current()->get()->withStatus(UserStatus::Admin));
 
             self::assertTrue($this->service->deleteComment(CommentId::from(3)));
             self::assertNull($this->fetchColumn(3, 'content'));
@@ -648,7 +648,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_delete_comment_denied_for_a_non_owning_user(): void
         {
-            CurrentUser::set(User::fromUserArray(['id' => 999, 'status' => 'normal', 'username' => 'someone-else']));
+            CurrentUser::current()->set(User::fromUserArray(['id' => 999, 'status' => 'normal', 'username' => 'someone-else']));
 
             self::assertFalse($this->service->deleteComment(CommentId::from(4))); // owned by author_id 4
             self::assertNotNull($this->fetchColumn(4, 'content'));
@@ -656,7 +656,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_delete_comment_allowed_for_the_owning_user(): void
         {
-            CurrentUser::set(User::fromUserArray(['id' => 4, 'status' => 'normal', 'username' => 'power_user']));
+            CurrentUser::current()->set(User::fromUserArray(['id' => 4, 'status' => 'normal', 'username' => 'power_user']));
 
             self::assertTrue($this->service->deleteComment(CommentId::from(4)));
         }
@@ -788,11 +788,11 @@ namespace Piwigo\Tests\Integration {
          */
         public function test_invalidate_nb_comments_cache_unsets_the_global(): void
         {
-            CurrentUser::set(CurrentUser::get()->withRawAttribute('nb_available_comments', 5));
+            CurrentUser::current()->set(CurrentUser::current()->get()->withRawAttribute('nb_available_comments', 5));
 
             $this->service->invalidateNbCommentsCache();
 
-            self::assertFalse(isset(CurrentUser::get()->rawAttributes['nb_available_comments']));
+            self::assertFalse(isset(CurrentUser::current()->get()->rawAttributes['nb_available_comments']));
         }
 
         /**
@@ -827,6 +827,7 @@ namespace Piwigo\Tests\Integration {
                 new UrlService(new HtmlService()),
                 new \Piwigo\PluginConfig\EventDispatcher(),
                 \Piwigo\Core\PageState::current(),
+                \Piwigo\Users\CurrentUser::current(),
             );
         }
 
@@ -846,6 +847,7 @@ namespace Piwigo\Tests\Integration {
                 new UrlService(new HtmlService()),
                 new \Piwigo\PluginConfig\EventDispatcher(),
                 \Piwigo\Core\PageState::current(),
+                \Piwigo\Users\CurrentUser::current(),
             );
         }
 

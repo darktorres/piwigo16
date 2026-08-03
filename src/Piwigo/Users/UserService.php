@@ -70,6 +70,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         private SessionService $sessionService,
         private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
+        private \Piwigo\Users\CurrentUser $currentUser,
     ) {}
 
     /**
@@ -797,9 +798,9 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      */
     public function checkUserFavorites(): void
     {
-        $currentUser = CurrentUser::get();
+        $user = $this->currentUser->get();
 
-        if ($currentUser->forbiddenCategories === '') {
+        if ($user->forbiddenCategories === '') {
             return;
         }
 
@@ -808,18 +809,18 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         // retrieving images allowed : belonging to at least one authorized
         // category
         $authorizeds = $this->repo->findAuthorizedFavoriteImageIds(
-            $currentUser->id,
+            $user->id,
             $this->permissionService()
                 ->getSqlConditionFandFAsCondition([
                     'forbidden_categories' => 'ic.category_id',
                 ])
         );
 
-        $favorites = $this->repo->findFavoriteImageIds($currentUser->id);
+        $favorites = $this->repo->findFavoriteImageIds($user->id);
 
         $to_deletes = array_diff($favorites, $authorizeds);
         if (count($to_deletes) > 0) {
-            $this->repo->deleteFavoritesForImages($currentUser->id, array_values($to_deletes));
+            $this->repo->deleteFavoritesForImages($user->id, array_values($to_deletes));
         }
     }
 
@@ -970,7 +971,8 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     #[\Override]
     public function getCurrentLanguage(): ?string
     {
-        return CurrentUser::isInitialized() ? CurrentUser::get()->language : null;
+        return $this->currentUser->isInitialized() ? $this->currentUser->get()
+            ->language : null;
     }
 
     /**
@@ -1079,8 +1081,8 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      */
     public function getRecentPhotosSql(string $dbField): string
     {
-        $currentUser = CurrentUser::get();
-        if (! isset($currentUser->rawAttributes['last_photo_date'])) {
+        $user = $this->currentUser->get();
+        if (! isset($user->rawAttributes['last_photo_date'])) {
             return '0=1';
         }
 
@@ -1093,10 +1095,10 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         // that method's own $period param is now `int`-only, and a
         // corrupted/non-numeric value correctly falls back to 0 like any
         // other malformed input, rather than being passed through.
-        $recent_period = $currentUser->rawAttributes['recent_period'] ?? null;
+        $recent_period = $user->rawAttributes['recent_period'] ?? null;
         $recent_period = is_numeric($recent_period) ? (int) $recent_period : 0;
 
-        $last_photo_date = $currentUser->rawAttributes['last_photo_date'];
+        $last_photo_date = $user->rawAttributes['last_photo_date'];
         $last_photo_date = is_string($last_photo_date) ? $last_photo_date : '';
 
         return $dbField . '>=LEAST('
@@ -1289,7 +1291,8 @@ final readonly class UserService implements DefaultLanguageProviderInterface
                         $this->repo->findAdminIds(includeWebmaster: true)
                     );
 
-                    $current_user_id_str = (string) CurrentUser::get()->id->value;
+                    $current_user_id_str = (string) $this->currentUser->get()
+                        ->id->value;
 
                     // we add all admin+webmaster users BUT the user herself
                     $password_protected_users = array_merge($password_protected_users, array_diff($admin_ids, [$current_user_id_str]));
@@ -1335,7 +1338,8 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             // values) and string-castable.
             $protected_users = array_filter(
                 [
-                    CurrentUser::get()->id->value,
+                    $this->currentUser->get()
+                        ->id->value,
                     \Piwigo\Config\CurrentConfig::guestId(),
                     \Piwigo\Config\CurrentConfig::webmasterId(),
                 ],
@@ -1343,7 +1347,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             );
 
             // an admin can't change status of other admin/webmaster
-            if (CurrentUser::get()->status === UserStatus::Admin) {
+            if ($this->currentUser->get()->status === UserStatus::Admin) {
                 $protected_users = array_merge(
                     $protected_users,
                     array_map(static fn (UserId $id): int => $id->value, $this->repo->findAdminIds(includeWebmaster: true))
@@ -1436,6 +1440,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             $this->sessionService,
             $this->eventDispatcher,
             $pageState,
+            $this->currentUser,
         );
 
         if (isset($updates[$user_fields['password']])) {

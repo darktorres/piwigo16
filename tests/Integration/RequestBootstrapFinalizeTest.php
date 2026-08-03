@@ -72,7 +72,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         // same as PageTailTest/RedirectServiceTest's own identical setup.
         ScriptLoader::setUrlService(new UrlService(new HtmlService()));
 
-        CurrentUser::set(new User(
+        CurrentUser::current()->set(new User(
             id: UserId::from(3),
             username: 'regular_user',
             email: 'regular@example.test',
@@ -86,7 +86,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
     #[\Override]
     protected function tearDown(): void
     {
-        CurrentUser::reset();
+        CurrentUser::current()->reset();
         CurrentTemplate::reset();
         EventDispatcher::get()->reset();
         PageState::current()->reset();
@@ -152,7 +152,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
 
     public function test_finalize_adds_a_header_warning_when_guest_must_be_guest_is_flagged(): void
     {
-        CurrentUser::set(new User(
+        CurrentUser::current()->set(new User(
             id: UserId::from(2),
             username: 'guest',
             email: '',

@@ -59,7 +59,7 @@ final class MenubarRenderer
      * write to, this method returns that value instead; every caller but
      * GalleryController ignores it.
      */
-    public function render(UrlServiceInterface $urlService, \Piwigo\Core\FilterState $filterState, \Piwigo\Section\SectionContextRegistry $sectionContextRegistry, SessionService $sessionService, \Piwigo\Config\DeploymentPolicy $deploymentPolicy): ?int
+    public function render(UrlServiceInterface $urlService, \Piwigo\Core\FilterState $filterState, \Piwigo\Section\SectionContextRegistry $sectionContextRegistry, SessionService $sessionService, \Piwigo\Config\DeploymentPolicy $deploymentPolicy, \Piwigo\Users\CurrentUser $currentUser): ?int
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
         $section_context = $sectionContextRegistry->current();
@@ -68,7 +68,7 @@ final class MenubarRenderer
         // Built once, reused below -- was the same PermissionService recipe
         // repeated verbatim at 2 sites in this method (Phase 1k DI-chain audit).
         $permissionService = new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class));
-        $tagService = new TagService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Tag\TagEntity::class), $permissionService, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\PluginConfig\EventDispatcher::get());
+        $tagService = new TagService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Tag\TagEntity::class), $permissionService, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\PluginConfig\EventDispatcher::get(), $currentUser);
         $categoryService = new CategoryService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class), $permissionService);
 
         $menu = new BlockManager('menubar', \Piwigo\PluginConfig\EventDispatcher::get());
@@ -132,7 +132,8 @@ final class MenubarRenderer
                     ])
                 );
             } else {
-                $recent_period = \Piwigo\Users\CurrentUser::get()->rawAttributes['recent_period'] ?? null;
+                $recent_period = $currentUser->get()
+                    ->rawAttributes['recent_period'] ?? null;
                 $recent_period = is_numeric($recent_period) ? (int) $recent_period : (is_string($recent_period) ? $recent_period : 0);
                 $template->assign(
                     'U_START_FILTER',
@@ -145,10 +146,11 @@ final class MenubarRenderer
 
         $categoryCountCategories = null;
         if ($block !== null) {
-            $categoriesMenu = $categoryService->getCategoriesMenu($section_context?->category, new FilterService($filterState, $sessionService, Translator::get()), $urlService, $filterState);
+            $categoriesMenu = $categoryService->getCategoriesMenu($section_context?->category, new FilterService($filterState, $sessionService, Translator::get()), $urlService, $filterState, $currentUser);
             $categoryCountCategories = $categoriesMenu['categoryCountCategories'];
             $block->data = [
-                'NB_PICTURE' => \Piwigo\Users\CurrentUser::get()->rawAttributes['nb_total_images'] ?? null,
+                'NB_PICTURE' => $currentUser->get()
+                    ->rawAttributes['nb_total_images'] ?? null,
                 'MENU_CATEGORIES' => $categoriesMenu['menu'],
                 'U_CATEGORIES' => $urlService->makeIndexUrl([
                     'section' => 'categories',
@@ -365,7 +367,8 @@ final class MenubarRenderer
                 $template->assign('U_REGISTER', $urlService->getRootUrl() . 'register.php');
             }
         } else {
-            $username = \Piwigo\Users\CurrentUser::get()->username;
+            $username = $currentUser->get()
+                ->username;
             $template->assign('USERNAME', stripslashes($username));
             if (\Piwigo\Auth\AccessControl::isAuthorizeStatus(AccessLevel::Classic)) {
                 $template->assign('U_PROFILE', $urlService->getRootUrl() . 'profile.php');

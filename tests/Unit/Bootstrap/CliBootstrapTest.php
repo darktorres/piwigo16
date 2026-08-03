@@ -57,13 +57,13 @@ test('the built Application also exposes the Console built-in commands', functio
 });
 
 test('buildApplication attaches a real CurrentUser (guest) globally', function (): void {
-    \Piwigo\Users\CurrentUser::reset();
+    \Piwigo\Users\CurrentUser::current()->reset();
 
     CliBootstrap::buildApplication();
 
-    expect(\Piwigo\Users\CurrentUser::get()->status)->toBe(\Piwigo\Users\UserStatus::Guest);
+    expect(\Piwigo\Users\CurrentUser::current()->get()->status)->toBe(\Piwigo\Users\UserStatus::Guest);
 
-    \Piwigo\Users\CurrentUser::reset();
+    \Piwigo\Users\CurrentUser::current()->reset();
 });
 
 test('buildApplication initializes CurrentConfigService with a real, resolved ConfigService', function (): void {

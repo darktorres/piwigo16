@@ -46,6 +46,7 @@ final readonly class NoPhotoYetRenderer
         private readonly SessionService $sessionService,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
+        private readonly \Piwigo\Users\CurrentUser $currentUser,
     ) {}
 
     public function render(): void
@@ -64,8 +65,9 @@ final readonly class NoPhotoYetRenderer
             if ($nb_photos === 0) {
                 // make sure we don't use the mobile theme, which is not compatible with
                 // the "no photo yet" feature
-                $user_theme = \Piwigo\Users\CurrentUser::get()->theme;
-                $user_theme = $user_theme !== '' ? $user_theme : new \Piwigo\Users\UserService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), new HtmlService(), \Piwigo\Db\DbConnection::build(), $this->sessionService, $this->eventDispatcher, $this->deploymentPolicy)->getDefaultTheme();
+                $user_theme = $this->currentUser->get()
+                    ->theme;
+                $user_theme = $user_theme !== '' ? $user_theme : new \Piwigo\Users\UserService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), new HtmlService(), \Piwigo\Db\DbConnection::build(), $this->sessionService, $this->eventDispatcher, $this->deploymentPolicy, $this->currentUser)->getDefaultTheme();
                 $template = new Template($this->paths->root . 'themes', $user_theme);
                 \Piwigo\Template\CurrentTemplate::set($template);
 
@@ -96,7 +98,8 @@ final readonly class NoPhotoYetRenderer
                             'step' => 2,
                             'intro' => Lang::t(
                                 'Hello %s, your Piwigo photo gallery is empty!',
-                                \Piwigo\Users\CurrentUser::get()->username
+                                $this->currentUser->get()
+                                    ->username
                             ),
                             'next_step_url' => $url,
                             'deactivate_url' => $this->urlService->getRootUrl() . '?no_photo_yet=deactivate',

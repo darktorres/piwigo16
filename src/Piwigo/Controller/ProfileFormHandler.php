@@ -41,6 +41,7 @@ final class ProfileFormHandler
         private readonly AdminContext $adminContext,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Core\PageState $pageState,
+        private readonly \Piwigo\Users\CurrentUser $currentUser,
     ) {}
 
     private static function activityService(Connection $conn): \Piwigo\Activity\ActivityService
@@ -408,7 +409,8 @@ final class ProfileFormHandler
         $template->assign('API_SELECTED_EXPIRATION', array_key_first($display_duration));
         $template->assign('API_CAN_MANAGE', 'pwg_ui' === ($_SESSION['connected_with'] ?? null));
 
-        $current_user_email = \Piwigo\Users\CurrentUser::get()->email;
+        $current_user_email = $this->currentUser->get()
+            ->email;
         $email_notifications_infos = $current_user_email !== '' ?
           Lang::t('The email <em>%s</em> will be used to notify you when your API key is about to expire.', $current_user_email)
           : Lang::t('You have no email address, so you will not be notified when your API key is about to expire.');

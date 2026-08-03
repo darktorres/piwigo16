@@ -127,13 +127,13 @@ final class MailServiceTest extends IntegrationTestCase
         $this->conn->executeStatement('UPDATE ' . Tables::users() . ' SET mail_address = NULL WHERE id = 3');
         CurrentConfig::setSmtpHost('');
         CurrentConfig::setDebugMail(false);
-        // CurrentUser::attachGlobals() is a lazy-init `??=` -- once
-        // setCurrentUserToFixtureAdmin() has called CurrentUser::set(),
+        // CurrentUser::current()->attachGlobals() is a lazy-init `??=` -- once
+        // setCurrentUserToFixtureAdmin() has called CurrentUser::current()->set(),
         // attachGlobals() alone is a no-op (self::$instance is already
         // non-null) and the webmaster identity would leak into every
         // later test in this file/process. reset() first is required.
-        CurrentUser::reset();
-        CurrentUser::attachGlobals();
+        CurrentUser::current()->reset();
+        CurrentUser::current()->attachGlobals();
         MailService::reset();
         Kernel::reset();
         parent::tearDown();
@@ -151,13 +151,14 @@ final class MailServiceTest extends IntegrationTestCase
             new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)),
             new \Piwigo\PluginConfig\EventDispatcher(),
             new \Piwigo\Config\DeploymentPolicy(),
+            \Piwigo\Users\CurrentUser::current(),
         );
     }
 
     private function setCurrentUserToFixtureAdmin(): void
     {
         $data = $this->buildUserService()->buildUser(UserId::from(1));
-        CurrentUser::set(User::fromUserArray($data));
+        CurrentUser::current()->set(User::fromUserArray($data));
     }
 
     /**
@@ -340,7 +341,7 @@ final class MailServiceTest extends IntegrationTestCase
         // it fails, exercising the "file couldn't be opened" early return.
         // suppressMailerWarning() below also swallows the resulting
         // fopen() warning, not just the expected "Mailer Error" one.
-        CurrentUser::set(new User(
+        CurrentUser::current()->set(new User(
             id: UserId::from(1),
             username: 'nonexistent-subdir/evil',
             email: '',

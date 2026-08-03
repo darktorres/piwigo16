@@ -43,6 +43,7 @@ final class AlbumSubController implements AdminSubControllerInterface
         private readonly CoreTabs $coreTabs,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Core\PageState $pageState,
+        private readonly \Piwigo\Users\CurrentUser $currentUser,
     ) {}
 
     #[\Override]
@@ -83,7 +84,7 @@ final class AlbumSubController implements AdminSubControllerInterface
 
         if ($tab === 'properties') {
             new CatModifyPageRenderer()
-                ->render($this->urlService, $category, $this->eventDispatcher, $this->pageState);
+                ->render($this->urlService, $category, $this->eventDispatcher, $this->pageState, $this->currentUser);
         } elseif ($tab === 'sort_order') {
             \Piwigo\Bootstrap\AdminAccessor::elementSetRanksPageRenderer()
                 ->render();

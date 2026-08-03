@@ -75,6 +75,7 @@ final class IntroSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Lang\Translator $translator,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Core\PageState $pageState,
+        private readonly \Piwigo\Users\CurrentUser $currentUser,
     ) {}
 
     #[\Override]
@@ -178,12 +179,12 @@ final class IntroSubController implements AdminSubControllerInterface
             $register_date_str = is_string($register_date) ? $register_date : '';
 
             if (strtotime($register_date_str) < strtotime('2 weeks ago') and $nb_cats >= 3 and $nb_images >= 30) {
-                $currentUser = \Piwigo\Users\CurrentUser::get();
-                $user_language = $currentUser->language !== '' ? $currentUser->language : 'en_UK';
+                $user = $this->currentUser->get();
+                $user_language = $user->language !== '' ? $user->language : 'en_UK';
 
                 $template->assign(
                     [
-                        'EMAIL' => $currentUser->email,
+                        'EMAIL' => $user->email,
                         'SUBSCRIBE_BASE_URL' => AdminUiHelper::getNewsletterSubscribeBaseUrl($user_language),
                         'OLD_NEWSLETTERS_URL' => AdminUiHelper::getOldNewslettersBaseUrl($user_language),
                     ]

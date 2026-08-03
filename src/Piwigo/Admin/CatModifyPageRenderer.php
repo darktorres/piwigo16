@@ -43,7 +43,7 @@ final class CatModifyPageRenderer
      *
      * @param array<string, mixed> $category
      */
-    public function render(UrlServiceInterface $urlService, array $category, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState): void
+    public function render(UrlServiceInterface $urlService, array $category, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -160,7 +160,7 @@ final class CatModifyPageRenderer
                 'CAT_NAME' => @htmlspecialchars(is_string($category['name']) ? $category['name'] : ''),
                 'CAT_COMMENT' => @htmlspecialchars(is_string($category['comment']) ? $category['comment'] : ''),
                 'IS_VISIBLE' => SqlDialect::booleanToString((bool) $category['visible']),
-                'CAT_ADMIN_ACCESS' => $categoryService->catAdminAccess($category_id),
+                'CAT_ADMIN_ACCESS' => $categoryService->catAdminAccess($category_id, $currentUser),
 
                 'U_DELETE' => $base_url . 'albums',
 

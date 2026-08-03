@@ -133,7 +133,10 @@ abstract class IntegrationTestCase extends TestCase
         // a fresh guest baseline here -- idempotent, so a subclass's own
         // setUp() calling CurrentUser::set() with a specific fixture user
         // right after parent::setUp() simply overwrites it.
-        \Piwigo\Users\CurrentUser::attachGlobals();
+        $currentUser = \Piwigo\Core\Kernel::container()->get(\Piwigo\Users\CurrentUser::class);
+        if ($currentUser instanceof \Piwigo\Users\CurrentUser) {
+            $currentUser->attachGlobals();
+        }
         // Piwigo\Core\CurrentLogger (singleton/service-locator elimination
         // campaign, Phase 2: container-shared instance) -- a real,
         // no-op-severity instance here means a subclass resolving its
@@ -183,8 +186,11 @@ abstract class IntegrationTestCase extends TestCase
     #[\Override]
     protected function tearDown(): void
     {
-        \Piwigo\Users\CurrentUser::reset();
         if (\Piwigo\Core\Kernel::isBooted()) {
+            $currentUser = \Piwigo\Core\Kernel::container()->get(\Piwigo\Users\CurrentUser::class);
+            if ($currentUser instanceof \Piwigo\Users\CurrentUser) {
+                $currentUser->reset();
+            }
             $processCache = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\ProcessCache::class);
             if ($processCache instanceof \Piwigo\Core\ProcessCache) {
                 $processCache->reset();

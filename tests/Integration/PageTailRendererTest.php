@@ -64,7 +64,7 @@ final class PageTailRendererTest extends IntegrationTestCase
         ScriptLoader::setUrlService(new UrlService(new HtmlService()));
         CurrentTemplate::set(new Template(CurrentPaths::get()->root . 'themes', 'default'));
 
-        CurrentUser::set(User::fromUserArray(['id' => 2, 'status' => 'guest', 'username' => 'fixture_guest']));
+        CurrentUser::current()->set(User::fromUserArray(['id' => 2, 'status' => 'guest', 'username' => 'fixture_guest']));
 
         $_SESSION = [];
 
@@ -88,7 +88,7 @@ final class PageTailRendererTest extends IntegrationTestCase
     {
         CurrentTemplate::reset();
         PageState::current()->reset();
-        CurrentUser::reset();
+        CurrentUser::current()->reset();
         $_SESSION = [];
         parent::tearDown();
     }

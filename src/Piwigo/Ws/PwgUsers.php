@@ -44,7 +44,7 @@ final class PwgUsers
 {
     private static function userService(): UserService
     {
-        return new UserService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), DbConnection::build(), \Piwigo\Session\SessionService::get(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\DeploymentPolicy::current());
+        return new UserService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), DbConnection::build(), \Piwigo\Session\SessionService::get(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\DeploymentPolicy::current(), \Piwigo\Users\CurrentUser::current());
     }
 
     /**
@@ -539,7 +539,7 @@ final class PwgUsers
             return new PwgError(403, 'Invalid security token');
         }
 
-        $currentUser = \Piwigo\Users\CurrentUser::get();
+        $currentUser = \Piwigo\Users\CurrentUser::current()->get();
 
         $protected_users = [
             $currentUser->id->value,
@@ -642,7 +642,7 @@ final class PwgUsers
             return new PwgError(401, 'Access Denied');
         }
 
-        $currentUser = \Piwigo\Users\CurrentUser::get();
+        $currentUser = \Piwigo\Users\CurrentUser::current()->get();
 
         // ACTIVATE_COMMENTS
         if (! \Piwigo\Config\CurrentConfig::activateComments()) {
@@ -754,7 +754,7 @@ final class PwgUsers
 
         \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService()->updateParam($params['param'], $value);
 
-        return \Piwigo\Users\CurrentUser::get()->preferences;
+        return \Piwigo\Users\CurrentUser::current()->get()->preferences;
     }
 
     /**
@@ -775,7 +775,7 @@ final class PwgUsers
             return new PwgError(404, 'image_id not found');
         }
 
-        self::userService()->addFavorite(\Piwigo\Users\CurrentUser::get()->id, $params['image_id'], ignoreDuplicate: true);
+        self::userService()->addFavorite(\Piwigo\Users\CurrentUser::current()->get()->id, $params['image_id'], ignoreDuplicate: true);
 
         return true;
     }
@@ -798,7 +798,7 @@ final class PwgUsers
             return new PwgError(404, 'image_id not found');
         }
 
-        self::userService()->removeFavorite(\Piwigo\Users\CurrentUser::get()->id, $params['image_id']);
+        self::userService()->removeFavorite(\Piwigo\Users\CurrentUser::current()->get()->id, $params['image_id']);
 
         return true;
     }
@@ -830,7 +830,7 @@ final class PwgUsers
         ]);
 
         $images = [];
-        foreach (self::userService()->getVisibleFavoriteImages(\Piwigo\Users\CurrentUser::get()->id, $permission_condition, $order_by) as $row) {
+        foreach (self::userService()->getVisibleFavoriteImages(\Piwigo\Users\CurrentUser::current()->get()->id, $permission_condition, $order_by) as $row) {
             $image = [];
 
             foreach (['id', 'width', 'height', 'hit'] as $k) {
@@ -901,7 +901,7 @@ final class PwgUsers
         }
 
         // Only webmaster can perform this action for another webmaster
-        if (\Piwigo\Users\CurrentUser::get()->status === \Piwigo\Users\UserStatus::Admin && $user_lost_status === 'webmaster') {
+        if (\Piwigo\Users\CurrentUser::current()->get()->status === \Piwigo\Users\UserStatus::Admin && $user_lost_status === 'webmaster') {
             return new PwgError(403, 'You cannot perform this action');
         }
 
@@ -1025,7 +1025,7 @@ final class PwgUsers
         // it can never be 0 here.
         $duration = $params['duration'];
 
-        $user_id = \Piwigo\Users\CurrentUser::get()->id->value;
+        $user_id = \Piwigo\Users\CurrentUser::current()->get()->id->value;
 
         $secret = self::apiKeyService()->create($user_id, $duration, $key_name);
 
@@ -1058,7 +1058,7 @@ final class PwgUsers
             return new PwgError(403, Lang::t('Invalid pkid format'));
         }
 
-        $user_id = \Piwigo\Users\CurrentUser::get()->id->value;
+        $user_id = \Piwigo\Users\CurrentUser::current()->get()->id->value;
 
         $revoked_key = self::apiKeyService()->revoke($user_id, $params['pkid']);
 
@@ -1104,7 +1104,7 @@ final class PwgUsers
         // parameterizes apikey_name instead of interpolating it, same
         // "dead pre-escaping" rationale as createApiKey() above.
         $key_name = $params['key_name'];
-        $user_id = \Piwigo\Users\CurrentUser::get()->id->value;
+        $user_id = \Piwigo\Users\CurrentUser::current()->get()->id->value;
         $edited_key = self::apiKeyService()->edit($user_id, $params['pkid'], $key_name);
 
         if ($edited_key !== true) {
@@ -1146,7 +1146,7 @@ final class PwgUsers
         // "requires a string $user_id", which was itself just describing
         // the bug). Every other ApiKeyService method here (create/revoke/
         // edit) already passes a plain int for the same user id value.
-        $user_id = \Piwigo\Users\CurrentUser::get()->id->value;
+        $user_id = \Piwigo\Users\CurrentUser::current()->get()->id->value;
         $api_keys = self::apiKeyService()->get($user_id);
 
         return ((bool) $api_keys) ? $api_keys : Lang::t('No API key found');

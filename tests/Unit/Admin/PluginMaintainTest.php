@@ -36,16 +36,16 @@ use Piwigo\Users\UserStatus;
  * alone.
  */
 beforeEach(function (): void {
-    CurrentUser::reset();
+    CurrentUser::current()->reset();
 });
 
 afterEach(function (): void {
-    CurrentUser::reset();
+    CurrentUser::current()->reset();
 });
 
 function pluginMaintainSetUserStatus(UserStatus $status): void
 {
-    CurrentUser::set(new User(
+    CurrentUser::current()->set(new User(
         id: UserId::from(1),
         username: 'plugin-maintain-test-user',
         email: '',
@@ -122,8 +122,6 @@ test('autoUpdate() stays silent for a normal (non-admin) user', function (): voi
 });
 
 test('autoUpdate() stays silent for an admin user inside an active WS request', function (): void {
-    pluginMaintainSetUserStatus(UserStatus::Admin);
-
     $triggered = false;
     set_error_handler(static function () use (&$triggered): bool {
         $triggered = true;
@@ -136,9 +134,16 @@ test('autoUpdate() stays silent for an admin user inside an active WS request', 
         // instance (singleton/service-locator elimination campaign, Phase
         // 3) -- KernelContainerOverride::with() gives this one test a real
         // container with WsContext bound active, then tears it back down.
+        // The user status must be seeded INSIDE the callback, once the
+        // container exists -- seeding beforehand only reaches the pre-boot
+        // memoized CurrentUser::current() fallback, which is a different
+        // instance from the one AccessControl::isAdmin() resolves once
+        // Kernel is booted here (Phase 5 execution finding, same pitfall
+        // Translator/EventDispatcher already hit).
         KernelContainerOverride::with(
             [WsContext::class => new WsContext(true)],
             static function (): void {
+                pluginMaintainSetUserStatus(UserStatus::Admin);
                 new PluginMaintain('some-plugin')->autoUpdate();
             }
         );

@@ -74,6 +74,7 @@ final readonly class SectionPopulator
         private SessionService $sessionService,
         private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private \Piwigo\Core\PageState $pageState,
+        private \Piwigo\Users\CurrentUser $currentUser,
     ) {}
 
     public function populate(): void
@@ -181,7 +182,7 @@ final readonly class SectionPopulator
 
         // $page['nb_image_page'] is the number of picture to display on this page
         // By default, it is the same as CurrentUser::get()->rawAttributes['nb_image_page']
-        $page['nb_image_page'] = \Piwigo\Users\CurrentUser::get()->rawAttributes['nb_image_page'] ?? null;
+        $page['nb_image_page'] = $this->currentUser->get()->rawAttributes['nb_image_page'] ?? null;
 
         // if flat mode is active, we must consider the image set as a standard set
         // and not as a category set because we can't use the #image_category.rank :
@@ -333,8 +334,8 @@ final readonly class SectionPopulator
                         $forbidden_params = $forbiddenCondition->parameters;
                         $forbidden_types = $forbiddenCondition->types;
                     } else {
-                        $currentUser = \Piwigo\Users\CurrentUser::get();
-                        $user_id_for_cache = $currentUser->id->value;
+                        $user = $this->currentUser->get();
+                        $user_id_for_cache = $user->id->value;
                         $cache_item = \Piwigo\Cache\CachePools::sectionImageIds()
                             ->getItem('all_iids_' . $user_id_for_cache . '_' . md5($order_by));
                         unset($page['is_homepage']);
@@ -478,7 +479,8 @@ final readonly class SectionPopulator
                     ]
                 );
 
-                $current_user_id = \Piwigo\Users\CurrentUser::get()->id;
+                $current_user_id = $this->currentUser->get()
+                    ->id;
                 if (Request\FavoritesActionRequest::fromGlobals()->removeAllFromFavorites) {
                     $this->userService->removeAllFavorites($current_user_id);
                     $this->redirectService->redirect($this->urlService->makeIndexUrl([
@@ -652,7 +654,7 @@ final readonly class SectionPopulator
             $calendar_items_raw = is_array($page['items'] ?? null) ? $page['items'] : [];
             $calendar_items = array_values(array_filter($calendar_items_raw, static fn (mixed $v): bool => is_int($v) || is_string($v)));
 
-            $calendar_result = new CalendarRenderer($this->htmlRenderer, $this->template, $this->urlService)
+            $calendar_result = new CalendarRenderer($this->htmlRenderer, $this->template, $this->urlService, $this->currentUser)
                 ->render(
                     $section,
                     $page_category,
@@ -705,7 +707,7 @@ final readonly class SectionPopulator
             $expected_cat_url_name = \Piwigo\Core\StringHelper::str2url($category_name);
 
             if (self::needsPermalinkRedirect($category_permalink, $category_url_style, $hit_by_cat_url_name, $hit_by_cat_permalink, $expected_cat_url_name)) {
-                $this->categoryService->checkRestrictions($page_category['id'], $this->htmlRenderer, $this->redirectService);
+                $this->categoryService->checkRestrictions($page_category['id'], $this->htmlRenderer, $this->redirectService, $this->currentUser);
                 // duplicateIndexUrl()/duplicatePictureUrl() read the
                 // current section's params from SectionContextRegistry,
                 // which this method otherwise only populates at its very

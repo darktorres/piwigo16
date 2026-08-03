@@ -228,7 +228,7 @@ final class RequestBootstrap
             \Piwigo\Config\CurrentConfigService::set($configService);
             $configService->loadConfFromDb();
         }
-        CurrentUser::attachGlobals();
+        self::currentUser()->attachGlobals();
         self::pageState();
         Lang::attachGlobals();
 
@@ -277,7 +277,7 @@ final class RequestBootstrap
         // (UserBootstrap::initialize()). Monotonic within a request, so it
         // needs a real reset here rather than relying on CurrentUser's own
         // full reset (restricted to tests/ by an arch test).
-        \Piwigo\Users\CurrentUser::resetRealUserResolvedFlag();
+        self::currentUser()->resetRealUserResolvedFlag();
 
         // include/common.inc.php captures $requestStart = microtime(true)
         // at true top-level scope (before this class is even autoloadable)
@@ -519,6 +519,7 @@ final class RequestBootstrap
             self::sessionService(),
             \Piwigo\PluginConfig\EventDispatcher::get(),
             self::pageState(),
+            self::currentUser(),
         )->pwgLogin(...));
         new UserBootstrap(
             new RedirectService(),
@@ -573,6 +574,7 @@ final class RequestBootstrap
             self::sessionService(),
             \Piwigo\PluginConfig\EventDispatcher::get(),
             self::deploymentPolicy(),
+            self::currentUser(),
         ));
         Lang::load('common.lang');
         if (\Piwigo\Auth\AccessControl::isAdmin() || self::adminContext()->isActive()) {
@@ -595,7 +597,7 @@ final class RequestBootstrap
             // username), so only the localized-username case needs a
             // second sync; the non-guest path never mutates CurrentUser
             // again after initialize()'s own sync.
-            CurrentUser::set(CurrentUser::get()->withUsername(Lang::t('guest')));
+            self::currentUser()->set(self::currentUser()->get()->withUsername(Lang::t('guest')));
         }
 
         $pageState = self::pageState();
@@ -612,8 +614,8 @@ final class RequestBootstrap
         // check if we need to notified user about api_key expiration
         $notify_api_key_expiration = $pageState->notifyApiKeyExpiration;
         if ($notify_api_key_expiration !== null) {
-            $notify_username = CurrentUser::get()->username;
-            $notify_email = CurrentUser::get()->email;
+            $notify_username = self::currentUser()->get()->username;
+            $notify_email = self::currentUser()->get()->email;
             $apiKeyRepo = new \Piwigo\Auth\ApiKeyRepository(\Piwigo\Db\EntityManagerFactory::build($conn));
             $is_mail_send = new \Piwigo\Auth\ApiKeyService(new MailService(), $apiKeyRepo, new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn), self::deploymentPolicy()), new UrlService(new HtmlService()), self::sessionService())
                 ->notifyExpiration($notify_username, $notify_email, $notify_api_key_expiration['days_left']);
@@ -621,7 +623,7 @@ final class RequestBootstrap
             if ($is_mail_send) {
                 $apiKeyRepo->updateLastNotifiedOn(
                     $notify_api_key_expiration['auth_key'],
-                    CurrentUser::get()->id->value,
+                    self::currentUser()->get()->id->value,
                     $notify_api_key_expiration['dbnow'],
                 );
             }
@@ -636,12 +638,12 @@ final class RequestBootstrap
             // untyped array<string, mixed>), so its return is inferred as
             // mixed; narrow to the same CurrentConfig::adminTheme() fallback
             // already passed as the default value.
-            $admin_theme = new \Piwigo\Users\PreferencesService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class))
+            $admin_theme = new \Piwigo\Users\PreferencesService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class), self::currentUser())
                 ->getParam('admin_theme', \Piwigo\Config\CurrentConfig::adminTheme());
             $admin_theme = is_string($admin_theme) ? $admin_theme : \Piwigo\Config\CurrentConfig::adminTheme();
             $template = new Template(CurrentPaths::get()->root . 'themes/admin', $admin_theme);
         } else { // Classic template
-            $theme = CurrentUser::get()->theme;
+            $theme = self::currentUser()->get()->theme;
             if (\Piwigo\Core\PageFilterHelper::scriptBasename() !== 'ws' and \Piwigo\Core\DeviceHelper::mobileTheme()) {
                 $theme = \Piwigo\Config\CurrentConfig::mobilTheme();
             }
@@ -670,11 +672,11 @@ final class RequestBootstrap
             // when it decides to take over the page. CurrentConfigService::get()
             // reuses the instance connect() already resolved earlier in the
             // same request (Legacy Coupling Retirement Phase 8, 8d).
-            new NoPhotoYetRenderer(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), \Piwigo\Config\CurrentConfigService::get(), new RedirectService(), new UrlService(new HtmlService()), CurrentPaths::get(), self::adminContext(), self::sessionService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::deploymentPolicy())
+            new NoPhotoYetRenderer(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), \Piwigo\Config\CurrentConfigService::get(), new RedirectService(), new UrlService(new HtmlService()), CurrentPaths::get(), self::adminContext(), self::sessionService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::deploymentPolicy(), self::currentUser())
                 ->render();
         }
 
-        $user_internal_status = CurrentUser::get()->internalStatus;
+        $user_internal_status = self::currentUser()->get()->internalStatus;
         if (($user_internal_status['guest_must_be_guest'] ?? false) === true) {
             $pageState->addHeaderMessage(Lang::t('Bad status for user "guest", using default status. Please notify the webmaster.'));
         }
@@ -706,7 +708,7 @@ final class RequestBootstrap
             // Formerly a conditional `include PHPWG_ROOT_PATH .
             // 'include/filter.inc.php';` (deleted, P23 sub-batch 8f-5).
             new FilterService(self::filterState(), self::sessionService(), self::translator(), $conn)
-                ->initializeFromRequest(self::pageState());
+                ->initializeFromRequest(self::pageState(), self::currentUser());
         } else {
             self::filterState()->set(false);
         }
@@ -772,7 +774,7 @@ final class RequestBootstrap
         // (unlike UploadService's static upload_file handlers below), hence the
         // bound first-class-callable form rather than a bare [Class::class, 'method']
         // array.
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(UserCommentCheck::class, new CommentService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), new MailService(), new HtmlService(), new UrlService(new HtmlService()), \Piwigo\PluginConfig\EventDispatcher::get(), self::pageState())->checkForSpam(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(UserCommentCheck::class, new CommentService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), new MailService(), new HtmlService(), new UrlService(new HtmlService()), \Piwigo\PluginConfig\EventDispatcher::get(), self::pageState(), self::currentUser())->checkForSpam(...));
         // try_log_user's own handler is registered in connect() instead,
         // before UserBootstrap::initialize() -- see that registration's
         // own comment for why.
@@ -820,7 +822,7 @@ final class RequestBootstrap
         // requirement -- it snapshots Translator's already-loaded strings,
         // so it must run after this method's own Lang::load() calls above,
         // not before.
-        CurrentUser::attachGlobals();
+        self::currentUser()->attachGlobals();
         self::pageState();
         Lang::attachGlobals();
     }
@@ -990,6 +992,26 @@ final class RequestBootstrap
         }
 
         return $errorCollector;
+    }
+
+    /**
+     * Public (unlike most resolver helpers here): public/admin.php's own
+     * legacy-style `new AdminShell(...)` manual construction needs a way to
+     * obtain the same container-shared instance every other CurrentUser
+     * consumer receives via constructor injection, without calling
+     * Kernel::container() directly itself (arch-tested to Bootstrap/ only)
+     * -- same "public accessor on this class" shape as coreTabs()/
+     * filesystemIntegrityChecker()/pageState() above (singleton/
+     * service-locator elimination campaign, Phase 5).
+     */
+    public static function currentUser(): CurrentUser
+    {
+        $currentUser = Kernel::container()->get(CurrentUser::class);
+        if (! $currentUser instanceof CurrentUser) {
+            throw new \LogicException('Container returned an unexpected type for ' . CurrentUser::class);
+        }
+
+        return $currentUser;
     }
 
     /**

@@ -15,13 +15,14 @@ final readonly class PreferencesService
 {
     public function __construct(
         private UserRepository $repo,
+        private CurrentUser $currentUser,
     ) {}
 
     public function save(): void
     {
-        $currentUser = CurrentUser::get();
+        $user = $this->currentUser->get();
 
-        $this->repo->savePreferences($currentUser->id, $currentUser->preferences);
+        $this->repo->savePreferences($user->id, $user->preferences);
     }
 
     /**
@@ -38,9 +39,10 @@ final readonly class PreferencesService
             $value = false;
         }
 
-        $preferences = CurrentUser::get()->preferences;
+        $preferences = $this->currentUser->get()
+            ->preferences;
         $preferences[$param] = $value;
-        CurrentUser::set(CurrentUser::get()->withPreferences($preferences));
+        $this->currentUser->set($this->currentUser->get()->withPreferences($preferences));
 
         $this->save();
     }
@@ -55,17 +57,19 @@ final readonly class PreferencesService
             return;
         }
 
-        $preferences = CurrentUser::get()->preferences;
+        $preferences = $this->currentUser->get()
+            ->preferences;
         foreach ($paramList as $param) {
             unset($preferences[$param]);
         }
-        CurrentUser::set(CurrentUser::get()->withPreferences($preferences));
+        $this->currentUser->set($this->currentUser->get()->withPreferences($preferences));
 
         $this->save();
     }
 
     public function getParam(string $param, mixed $default = null): mixed
     {
-        return CurrentUser::get()->preferences[$param] ?? $default;
+        return $this->currentUser->get()
+            ->preferences[$param] ?? $default;
     }
 }

@@ -28,6 +28,7 @@ final class SearchController implements ControllerInterface
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly \Piwigo\Users\CurrentUser $currentUser,
     ) {}
 
     private static function permissionService(): PermissionService
@@ -131,7 +132,8 @@ final class SearchController implements ControllerInterface
             // (include/functions_user.inc.php) already computes into
             // CurrentUser::get()->forbiddenCategories (see SearchService::
             // qsearchGetCategories()'s identical fix for the full trace).
-            $forbidden_categories = \Piwigo\Users\CurrentUser::get()->forbiddenCategories;
+            $forbidden_categories = $this->currentUser->get()
+                ->forbiddenCategories;
             $forbidden_categories_csv = $forbidden_categories !== '' ? $forbidden_categories : '0';
 
             $category_accessible = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService()

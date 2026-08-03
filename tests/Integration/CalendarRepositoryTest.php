@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
+use Piwigo\Calendar\CalendarQueryScope;
 use Piwigo\Calendar\CalendarRepository;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
@@ -120,5 +122,71 @@ final class CalendarRepositoryTest extends IntegrationTestCase
         );
 
         self::assertSame([1, 2], $ids);
+    }
+
+    /**
+     * Item 16J: passing the DQL-shaped $dqlScope/$dqlDateWhere counterparts
+     * attempts real DQL when $orderBySql parses.
+     */
+    public function test_find_image_ids_runs_dql_when_dql_scope_and_order_by_are_given(): void
+    {
+        $ids = $this->repo->findImageIds(
+            new SqlCondition(' FROM ' . Tables::images() . ' WHERE id IN (1, 2, 3)'),
+            new SqlCondition(''),
+            'ORDER BY id DESC',
+            new CalendarQueryScope(
+                new SqlCondition(''),
+                false,
+                new SqlCondition('i.id IN (:ids)', ['ids' => [1, 2, 3]], ['ids' => ArrayParameterType::INTEGER])
+            ),
+            new SqlCondition('')
+        );
+
+        self::assertSame([3, 2, 1], $ids);
+    }
+
+    /**
+     * Mirrors CalendarRenderer::render()'s own real, non-superOrderBy
+     * composition: $calendar->date_field prepended ahead of
+     * CurrentConfig::orderBy()'s own entries -- confirms
+     * PhotoSortField::resolveDqlOrderBy() parses that dynamically-composed
+     * string just as well as a plain config value.
+     */
+    public function test_find_image_ids_runs_dql_for_a_date_field_prepended_order(): void
+    {
+        $ids = $this->repo->findImageIds(
+            new SqlCondition(' FROM ' . Tables::images() . ' WHERE id IN (1, 2, 3)'),
+            new SqlCondition(''),
+            'ORDER BY id DESC, file ASC',
+            new CalendarQueryScope(
+                new SqlCondition(''),
+                false,
+                new SqlCondition('i.id IN (:ids)', ['ids' => [1, 2, 3]], ['ids' => ArrayParameterType::INTEGER])
+            ),
+            new SqlCondition('')
+        );
+
+        self::assertSame([3, 2, 1], $ids);
+    }
+
+    public function test_find_image_ids_falls_back_to_raw_dbal_when_dql_scope_is_given_but_order_by_does_not_parse(): void
+    {
+        // $orderBySql doesn't match the bounded $sort_fields vocabulary --
+        // must still return the right members via the raw-DBAL fallback,
+        // not throw, even though a $dqlScope is given.
+        $ids = $this->repo->findImageIds(
+            new SqlCondition(' FROM ' . Tables::images() . ' WHERE id IN (1, 2, 3)'),
+            new SqlCondition(''),
+            'ORDER BY RAND()',
+            new CalendarQueryScope(
+                new SqlCondition(''),
+                false,
+                new SqlCondition('i.id IN (:ids)', ['ids' => [1, 2, 3]], ['ids' => ArrayParameterType::INTEGER])
+            ),
+            new SqlCondition('')
+        );
+        sort($ids);
+
+        self::assertSame([1, 2, 3], $ids);
     }
 }

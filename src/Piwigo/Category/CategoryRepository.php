@@ -557,13 +557,14 @@ final class CategoryRepository extends EntityRepository
     }
 
     /**
-     * Shared Item 16J helper: resolves `CurrentConfig::orderBy()`'s stored
-     * fragment into a list of DQL property paths for a query aliasing
-     * `ImageEntity` as $imageAlias and `ImageCategoryEntity` as
-     * $imageCategoryAlias (or null, for a query with no such join -- any
-     * parsed `Rank` entry then makes this return null too, since
-     * `` `rank` `` has no property path without that join). Null means
-     * "fall back to raw DBAL for this call," never "no order."
+     * Resolves `CurrentConfig::orderBy()`'s stored fragment into a list of
+     * DQL property paths, or null to fall back to raw DBAL -- either the
+     * text doesn't parse ({@see \Piwigo\Image\PhotoSortField::
+     * resolveDqlOrderBy()}), or `orderByCustom()`'s sysadmin-local-config
+     * override is active (checked here, not in that shared helper, since
+     * which custom flag applies -- or whether $orderBySql is even a plain
+     * config value to begin with -- is each call site's own decision; see
+     * that method's own docblock).
      *
      * @return list<array{property: string, dir: 'ASC'|'DESC'}>|null
      */
@@ -573,25 +574,7 @@ final class CategoryRepository extends EntityRepository
             return null;
         }
 
-        $parsed = \Piwigo\Image\PhotoSortField::parseOrderByFragment(\Piwigo\Config\CurrentConfig::orderBy());
-        if ($parsed === null) {
-            return null;
-        }
-
-        $entries = [];
-        foreach ($parsed as $entry) {
-            $property = $entry['field']->dqlOrderProperty($imageAlias, $imageCategoryAlias);
-            if ($property === null) {
-                return null;
-            }
-
-            $entries[] = [
-                'property' => $property,
-                'dir' => $entry['dir'],
-            ];
-        }
-
-        return $entries;
+        return \Piwigo\Image\PhotoSortField::resolveDqlOrderBy(\Piwigo\Config\CurrentConfig::orderBy(), $imageAlias, $imageCategoryAlias);
     }
 
     /**

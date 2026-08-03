@@ -220,4 +220,43 @@ enum PhotoSortField
             self::Rank => $imageCategoryAlias === null ? null : $imageCategoryAlias . '.rank',
         };
     }
+
+    /**
+     * Shared Item 16J entry point: parses $orderBySql and maps every entry
+     * to a DQL property path in one step, for a query aliasing `ImageEntity`
+     * as $imageAlias and (optionally) `ImageCategoryEntity` as
+     * $imageCategoryAlias. Null means "fall back to raw DBAL for this
+     * call" (unparseable text, or an entry -- almost always `Rank` --
+     * this particular query has no alias to express), never "no order."
+     * Deliberately doesn't check `CurrentConfig::orderByCustom()`/
+     * `orderByInsideCategoryCustom()` itself -- which flag applies (or
+     * whether the caller's $orderBySql is a plain config value at all, as
+     * opposed to a dynamically-composed one like
+     * {@see \Piwigo\Calendar\CalendarRenderer::render()}'s own
+     * date-field-prepended fragment) is each call site's own decision.
+     *
+     * @return list<array{property: string, dir: 'ASC'|'DESC'}>|null
+     */
+    public static function resolveDqlOrderBy(string $orderBySql, string $imageAlias, ?string $imageCategoryAlias = null): ?array
+    {
+        $parsed = self::parseOrderByFragment($orderBySql);
+        if ($parsed === null) {
+            return null;
+        }
+
+        $entries = [];
+        foreach ($parsed as $entry) {
+            $property = $entry['field']->dqlOrderProperty($imageAlias, $imageCategoryAlias);
+            if ($property === null) {
+                return null;
+            }
+
+            $entries[] = [
+                'property' => $property,
+                'dir' => $entry['dir'],
+            ];
+        }
+
+        return $entries;
+    }
 }

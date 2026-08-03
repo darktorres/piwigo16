@@ -299,7 +299,9 @@ final readonly class CalendarRenderer
                     ->findImageIds(
                         $calendar->scope->rawSqlFromWhere,
                         $calendar->get_date_where(),
-                        $order_by
+                        $order_by,
+                        $calendar->scope,
+                        $calendar->get_date_where(forDql: true)
                     );
                 if ($cache_item instanceof \Psr\Cache\CacheItemInterface) {
                     $cache_item->set($items);

@@ -18,15 +18,13 @@ use Piwigo\Permission\SqlCondition;
  * matching image ids" query, and for CalendarBase/CalendarMonthly/
  * CalendarWeekly's own remaining query-execution sites.
  *
- * Further SQL-modernization audit, Item 15G: every method here is now
- * real DQL except {@see findImageIds()}, which stays on raw DBAL --
- * its own `$orderBySql` traces to `CurrentConfig::orderBy()`/
- * `orderByCustom()`, genuinely open-ended admin-typed raw SQL (a real
- * Item-16-scoped blocker, see that method's own docblock). Dropped
- * `extends AbstractRepository` (this repository queries `Image\
- * ImageEntity`/`ImageCategoryEntity`, not an entity of its own -- same
- * shape as {@see \Piwigo\Notification\NotificationRepository}) in favor
- * of a directly-injected `EntityManagerInterface`.
+ * Further SQL-modernization audit, Item 15G: every method here is real
+ * DQL except {@see findImageIds()}, which only conditionally is --
+ * see its own docblock (Item 16J). Dropped `extends AbstractRepository`
+ * (this repository queries `Image\ImageEntity`/`ImageCategoryEntity`, not
+ * an entity of its own -- same shape as {@see \Piwigo\Notification\
+ * NotificationRepository}) in favor of a directly-injected
+ * `EntityManagerInterface`.
  */
 final class CalendarRepository
 {
@@ -56,25 +54,58 @@ final class CalendarRepository
      * query has to be valid under it from the start, unlike the pre-DBAL
      * version.
      *
-     * Further SQL-modernization audit, Item 15G: stays on raw DBAL --
-     * $orderBySql traces back to `CurrentConfig::orderBy()`/
-     * `orderByCustom()` ({@see \Piwigo\Calendar\CalendarRenderer::render()}'s
-     * own call site), a plain admin-typed free-text `"ORDER BY ..."` SQL
-     * string (`orderByCustom()` lets an admin override it with arbitrary
-     * raw SQL via the admin UI) -- not a bounded token set like every
-     * other "genuinely open-ended ORDER BY" exclusion accepted throughout
-     * this DQL-modernization campaign. DQL requires every identifier to
-     * be an alias-qualified property path; there is no safe, general way
-     * to transform arbitrary admin-typed raw SQL column names into DQL
-     * property paths by string manipulation. Redesigning
-     * `CurrentConfig::orderBy()`'s own contract into something
-     * DQL-compatible is a real, separate, cross-cutting redesign --
-     * Item 16's territory, not this one's.
+     * Item 16J: the raw-DBAL blocker above is now conditional -- corrected
+     * too, `orderByCustom()` was never actually admin-UI-reachable (see
+     * {@see \Piwigo\Image\PhotoSortField}'s own docblock). $orderBySql
+     * traces to `CurrentConfig::orderBy()`, but {@see \Piwigo\Calendar\
+     * CalendarRenderer::render()}'s own call site dynamically prepends
+     * `$calendar->date_field` (always `date_available`/`date_creation`)
+     * ahead of it -- {@see \Piwigo\Image\PhotoSortField::
+     * resolveDqlOrderBy()} doesn't care about that, it just parses
+     * whatever string it's handed. $dqlScope/$dqlDateWhere are the
+     * DQL-shaped counterparts of $fromWhere/$dateWhere (already computed
+     * by the caller for every *other* real method in this file via
+     * {@see CalendarQueryScope::$dqlWhere}/`CalendarBase::
+     * get_date_where($max_levels, forDql: true)`) -- null from either
+     * (this method's only other real caller,
+     * `tests/Integration/CalendarRepositoryTest.php`, never passes them)
+     * means "don't even attempt DQL," same as an unparseable $orderBySql.
      *
      * @return list<int>
      */
-    public function findImageIds(SqlCondition $fromWhere, SqlCondition $dateWhere, string $orderBySql): array
-    {
+    public function findImageIds(
+        SqlCondition $fromWhere,
+        SqlCondition $dateWhere,
+        string $orderBySql,
+        ?CalendarQueryScope $dqlScope = null,
+        ?SqlCondition $dqlDateWhere = null
+    ): array {
+        if ($dqlScope !== null && $dqlDateWhere !== null) {
+            // Never offered an `ic` alias for Rank: whether image_category
+            // is even joined is conditional ($scope->joinImageCategory),
+            // and a calendar view has no single category context the way
+            // CategoryRepository::findImageIdsForCategories() does, so
+            // there's no query-independent way to express it here.
+            $dqlOrderBy = \Piwigo\Image\PhotoSortField::resolveDqlOrderBy($orderBySql, 'i');
+            if ($dqlOrderBy !== null) {
+                $qb = $this->baseQueryBuilder($dqlScope)
+                    ->select('i.id')
+                    ->groupBy('i.id');
+                self::applyCondition($qb, $dqlDateWhere);
+                foreach ($dqlOrderBy as $entry) {
+                    $qb->addOrderBy($entry['property'], $entry['dir']);
+                }
+
+                $ids = $qb->getQuery()
+                    ->getSingleColumnResult();
+
+                return array_values(array_map(
+                    static fn (mixed $id): int => (int) $id,
+                    array_filter($ids, is_numeric(...))
+                ));
+            }
+        }
+
         $ids = $this->em->getConnection()
             ->executeQuery(
                 'SELECT id ' . $fromWhere->sql . ' ' . $dateWhere->sql . ' GROUP BY id ' . $orderBySql,
@@ -91,9 +122,10 @@ final class CalendarRepository
      * every other `applyCondition()` in this DQL-modernization campaign.
      * DQL-only (unlike most of its siblings elsewhere in this campaign,
      * which stay a `QueryBuilder|Doctrine\DBAL\Query\QueryBuilder` union)
-     * -- every consumer in this file is real DQL; {@see findImageIds()}
-     * above is the only method still on raw DBAL, and it doesn't go
-     * through this helper at all (a plain string-concatenated query).
+     * -- every consumer in this file uses real DQL, including
+     * {@see findImageIds()} above whenever its own conditional DQL
+     * attempt succeeds; its raw-DBAL fallback path is a plain
+     * string-concatenated query and doesn't go through this helper.
      */
     private static function applyCondition(QueryBuilder $qb, SqlCondition $condition): void
     {

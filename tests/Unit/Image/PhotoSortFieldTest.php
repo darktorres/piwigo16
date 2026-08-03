@@ -126,3 +126,26 @@ test('dqlOrderProperty returns null for Rank without an image_category alias', f
 test('dqlOrderProperty resolves Rank against the image_category alias when given one', function (): void {
     expect(PhotoSortField::Rank->dqlOrderProperty('i', 'ic'))->toBe('ic.rank');
 });
+
+test('resolveDqlOrderBy parses and maps a multi-field fragment in one step', function (): void {
+    expect(PhotoSortField::resolveDqlOrderBy('ORDER BY date_available DESC, file ASC, id ASC', 'i'))->toBe([
+        ['property' => 'i.dateAvailable', 'dir' => 'DESC'],
+        ['property' => 'i.file', 'dir' => 'ASC'],
+        ['property' => 'i.id', 'dir' => 'ASC'],
+    ]);
+});
+
+test('resolveDqlOrderBy returns null for unparseable text', function (): void {
+    expect(PhotoSortField::resolveDqlOrderBy('ORDER BY RAND()', 'i'))->toBeNull();
+});
+
+test('resolveDqlOrderBy returns null when an entry has no property path in this query', function (): void {
+    // Rank requested, but no image_category alias supplied.
+    expect(PhotoSortField::resolveDqlOrderBy('ORDER BY `rank` ASC', 'i'))->toBeNull();
+});
+
+test('resolveDqlOrderBy resolves Rank when an image_category alias is supplied', function (): void {
+    expect(PhotoSortField::resolveDqlOrderBy('ORDER BY `rank` ASC', 'i', 'ic'))->toBe([
+        ['property' => 'ic.rank', 'dir' => 'ASC'],
+    ]);
+});

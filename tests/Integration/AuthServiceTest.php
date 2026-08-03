@@ -125,6 +125,7 @@ namespace Piwigo\Tests\Integration {
                 $this->failedLoginRepo,
                 new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class)),
                 EventDispatcher::get(),
+                \Piwigo\Core\PageState::current(),
             );
         }
 

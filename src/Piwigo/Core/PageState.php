@@ -16,10 +16,17 @@ namespace Piwigo\Core;
  * RequestBootstrap.php) already read `PageState::current()->headerNotes`/
  * `headerMessages`, never the raw global. The bridge and
  * `include/common.inc.php`'s own `$page`/`$GLOBALS['header_msgs']`/
- * `$GLOBALS['header_notes']` seeding are both gone. `attachGlobals()` is
- * kept as a name (matches `CurrentUser::attachGlobals()`'s own already-
- * established "same call shape, no globals left to attach" precedent) --
- * it just seeds the singleton now, same as `current()`.
+ * `$GLOBALS['header_notes']` seeding are both gone.
+ *
+ * Singleton/service-locator elimination campaign, Phase 4: converted to a
+ * plain, container-shared instance (default autowiring -- a zero-arg
+ * public constructor needs no `container.php` entry at all). The former
+ * `attachGlobals()` seeding-point marker is gone entirely: constructing
+ * this class no longer has any globals-bridging work to do, and
+ * `RequestBootstrap` now simply resolves the shared instance from the
+ * container like every other converted class in this campaign.
+ * `current()` is the transitional `@deprecated` shim for callers not yet
+ * converted to constructor injection -- see its own docblock.
  *
  * Deliberately no `keyedErrors`/`setKeyedError()` (present in the plan
  * doc's inline sketch) -- no legacy correspondent and no real caller exist
@@ -63,7 +70,7 @@ namespace Piwigo\Core;
  */
 final class PageState
 {
-    private static ?self $instance = null;
+    private static ?self $fallback = null;
 
     /**
      * @var list<string>
@@ -189,29 +196,72 @@ final class PageState
      */
     public array $commentRejectionReasons = [];
 
-    private function __construct() {}
+    public function __construct() {}
 
     /**
-     * Called by RequestBootstrap::finalize() (and bootConfigOnly(), its
-     * lighter standalone-callable equivalent) -- HTTP-path only
-     * (index.php), matching CurrentUser::attachGlobals()/
-     * Lang::attachGlobals()'s own per-request seeding point; CliBootstrap
-     * never calls this. Idempotent: a second call is a no-op once the
-     * singleton exists (matches current()'s own semantics -- this method
-     * exists as a distinct name only to mark the intentional per-request
-     * seeding point, not because it does anything current() doesn't).
-     */
-    public static function attachGlobals(): void
-    {
-        self::$instance ??= new self();
-    }
-
-    /**
-     * Returns the current singleton, creating an empty one if boot hasn't run yet.
+     * @deprecated transitional bridge for callers not yet converted to
+     * constructor injection -- singleton/service-locator elimination
+     * campaign, Phase 4. Memoized fallback (not fresh-per-call), same
+     * reasoning as Translator::get()/EventDispatcher::get()/
+     * ImageStdParams::current(): this class accumulates state written by
+     * one caller (e.g. addError()) and read by another later in the same
+     * request (PageHeaderRenderer's own hasErrors() read) -- a fresh
+     * instance per not-booted call would silently lose every write
+     * between calls. Real production code never hits the not-booted
+     * branch (RequestBootstrap resolves this container-shared instance
+     * early in finalize()/bootConfigOnly(), before any real caller runs),
+     * but a pure-Unit test reaching deep into a class using PageState
+     * shouldn't have to bootstrap a full Kernel first.
      */
     public static function current(): self
     {
-        return self::$instance ??= new self();
+        if (\Piwigo\Core\Kernel::isBooted()) {
+            $instance = \Piwigo\Core\Kernel::container()->get(self::class);
+            if (! $instance instanceof self) {
+                throw new \LogicException('Container returned an unexpected type for ' . self::class);
+            }
+            return $instance;
+        }
+
+        return self::$fallback ??= new self();
+    }
+
+    /**
+     * Test-only -- re-initializes every property back to its constructed
+     * default. Unlike DeploymentPolicy/StorageRegistry (which carry no
+     * real per-request-mutable state once container-shared), this class
+     * genuinely accumulates real state across a request (add*() calls
+     * from one caller, read back by another later), so test isolation
+     * still needs a real reset, same as SessionService/FilterState/
+     * CurrentLogger's own instance reset() methods.
+     */
+    public function reset(): void
+    {
+        $this->errors = [];
+        $this->warnings = [];
+        $this->messages = [];
+        $this->infos = [];
+        $this->headerMessages = [];
+        $this->headerNotes = [];
+        $this->bodyClasses = [];
+        $this->bodyData = [];
+        $this->executionUuid = '';
+        $this->metaRobots = [];
+        $this->authKeyId = null;
+        $this->countQueries = 0;
+        $this->queriesTime = 0.0;
+        $this->requestStart = 0.0;
+        $this->debugOutput = '';
+        $this->bodyId = '';
+        $this->pageBanner = null;
+        $this->nbPendingComments = null;
+        $this->noMd5sumNumber = null;
+        $this->nbOrphans = 0;
+        $this->nbPhotosTotal = 0;
+        $this->updatedVersion = null;
+        $this->authKeyInvalid = false;
+        $this->notifyApiKeyExpiration = null;
+        $this->commentRejectionReasons = [];
     }
 
     public function addError(string $message): void
@@ -359,13 +409,5 @@ final class PageState
     public function hasErrors(): bool
     {
         return $this->errors !== [];
-    }
-
-    /**
-     * Test-only -- restricted to tests/ by an arch test.
-     */
-    public static function reset(): void
-    {
-        self::$instance = null;
     }
 }

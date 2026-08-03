@@ -216,6 +216,7 @@ final class UserBootstrapTest extends IntegrationTestCase
             EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class),
             new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)),
             EventDispatcher::get(),
+            \Piwigo\Core\PageState::current(),
         )->pwgLogin(...));
 
         $_SERVER = [];

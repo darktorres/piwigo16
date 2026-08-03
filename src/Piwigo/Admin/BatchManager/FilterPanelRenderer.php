@@ -54,6 +54,7 @@ final class FilterPanelRenderer
         int $pageStart,
         UrlServiceInterface $urlService,
         \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        \Piwigo\Core\PageState $pageState,
     ): void {
         $conn = DbConnection::build();
 
@@ -136,7 +137,7 @@ final class FilterPanelRenderer
         // the sole real writer, computed once per admin request and shared
         // by both this filter panel and SiteUpdateSubController's own
         // save-error notice, hence PageState rather than a per-caller param.
-        $no_md5sum_number = \Piwigo\Core\PageState::current()->noMd5sumNumber;
+        $no_md5sum_number = $pageState->noMd5sumNumber;
         if ($no_md5sum_number !== null) {
             $template->assign(
                 [

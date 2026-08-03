@@ -71,13 +71,13 @@ final class HistoryServiceTest extends IntegrationTestCase
         // overrides don't apply).
         CurrentConfig::setLogConf(true);
         CurrentUser::set(User::fromUserArray(['id' => 1, 'status' => 'normal', 'username' => 'fixture_admin']));
-        PageState::reset();
+        PageState::current()->reset();
         $GLOBALS['logger'] = new Logger(['severity' => Logger::OFF]);
 
         $this->conn = DbConnection::build();
         $currentLogger = new CurrentLogger();
         $currentLogger->set(new Logger(['severity' => Logger::OFF]));
-        $this->service = new HistoryService(EntityManagerFactory::build($this->conn)->getRepository(HistoryEntity::class), new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()), $currentLogger, new \Piwigo\PluginConfig\EventDispatcher());
+        $this->service = new HistoryService(EntityManagerFactory::build($this->conn)->getRepository(HistoryEntity::class), new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()), $currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current());
     }
 
     #[\Override]

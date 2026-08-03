@@ -2,25 +2,27 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\Kernel;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
 
-beforeEach(function (): void {
-    PageState::reset();
-});
+// Container-shared instance (singleton/service-locator elimination
+// campaign, Phase 4) -- each test constructs its own fresh instance
+// directly; no reset() needed.
 
 afterEach(function (): void {
-    PageState::reset();
+    Kernel::reset();
 });
 
-test('current lazily creates an empty instance before attachGlobals runs', function (): void {
-    $state = PageState::current();
+test('a fresh instance starts with no errors', function (): void {
+    $state = new PageState();
 
     expect($state->errors)->toBe([])
         ->and($state->hasErrors())->toBeFalse();
 });
 
-test('add* methods accumulate into the singleton', function (): void {
-    $state = PageState::current();
+test('add* methods accumulate on the instance', function (): void {
+    $state = new PageState();
     $state->addError('bad thing');
     $state->addWarning('careful');
     $state->addMessage('saved');
@@ -46,7 +48,7 @@ test('addDebugOutput appends to prior debug output rather than replacing it', fu
     // single call can't distinguish append from overwrite (both start
     // from the same empty string) -- a second call is needed to prove
     // the first line survives.
-    $state = PageState::current();
+    $state = new PageState();
     $state->addDebugOutput('first line');
     $state->addDebugOutput('second line');
 
@@ -54,7 +56,7 @@ test('addDebugOutput appends to prior debug output rather than replacing it', fu
 });
 
 test('setMetaRobots replaces the whole map, setMetaRobotsFlag adds to it', function (): void {
-    $state = PageState::current();
+    $state = new PageState();
     $state->setMetaRobots(['noindex' => 1]);
     $state->setMetaRobotsFlag('nofollow');
 
@@ -66,7 +68,7 @@ test('setMetaRobots replaces the whole map, setMetaRobotsFlag adds to it', funct
 });
 
 test('setAuthKeyId sets and clears the current auth key id', function (): void {
-    $state = PageState::current();
+    $state = new PageState();
 
     expect($state->authKeyId)->toBeNull();
 
@@ -80,7 +82,7 @@ test('setAuthKeyId sets and clears the current auth key id', function (): void {
 });
 
 test('addQueryTime accumulates count and time', function (): void {
-    $state = PageState::current();
+    $state = new PageState();
     $state->addQueryTime(0.5);
     $state->addQueryTime(0.25);
 
@@ -89,7 +91,7 @@ test('addQueryTime accumulates count and time', function (): void {
 });
 
 test('setUpdatedVersion/markAuthKeyInvalid set their respective fields', function (): void {
-    $state = PageState::current();
+    $state = new PageState();
 
     expect($state->updatedVersion)->toBeNull()
         ->and($state->authKeyInvalid)->toBeFalse();
@@ -101,13 +103,30 @@ test('setUpdatedVersion/markAuthKeyInvalid set their respective fields', functio
         ->and($state->authKeyInvalid)->toBeTrue();
 });
 
-test('attachGlobals seeds the singleton like current(), idempotently', function (): void {
-    PageState::attachGlobals();
-    $state = PageState::current();
-    $state->addError('bad thing');
+test('current() falls back to a memoized instance when Kernel is not booted', function (): void {
+    // Memoized (not fresh-per-call), same reasoning as Translator::get()/
+    // EventDispatcher::get()/ImageStdParams::current(): a caller that
+    // writes via current() in one call and reads via current() in a
+    // later call must see the same instance, or the write would be lost.
+    // reset() first: the memoized fallback is one real object shared by
+    // every not-booted caller across the whole test process (other test
+    // files' own NotificationByMailSubController-style shim calls can
+    // leave prior errors on it), so this test must start from a clean
+    // slate rather than assume it's the first ever caller.
+    $first = PageState::current();
+    $first->reset();
+    $first->addError('bad thing');
 
-    PageState::attachGlobals();
+    $second = PageState::current();
 
-    expect(PageState::current())->toBe($state)
-        ->and($state->errors)->toBe(['bad thing']);
+    expect($second)->toBe($first)
+        ->and($second->errors)->toBe(['bad thing']);
+});
+
+test('current() resolves the container-shared instance once Kernel is booted', function (): void {
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-page-state-test'));
+
+    $instance = Kernel::container()->get(PageState::class);
+
+    expect(PageState::current())->toBe($instance);
 });

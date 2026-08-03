@@ -35,6 +35,7 @@ final class TagsController implements ControllerInterface
         private readonly SessionService $sessionService,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
+        private readonly \Piwigo\Core\PageState $pageState,
     ) {}
 
     #[\Override]
@@ -53,7 +54,7 @@ final class TagsController implements ControllerInterface
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $title = Lang::t('Tags');
-        \Piwigo\Core\PageState::current()->setBodyId('theTagsPage');
+        $this->pageState->setBodyId('theTagsPage');
 
         $template->set_filenames([
             'tags' => 'tags.tpl',
@@ -191,7 +192,7 @@ final class TagsController implements ControllerInterface
         }
 
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher);
+            ->render($title, $this->eventDispatcher, $this->pageState);
         $this->eventDispatcher->dispatchNotify(new LocEndTags());
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();

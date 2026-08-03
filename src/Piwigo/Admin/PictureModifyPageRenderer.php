@@ -45,6 +45,7 @@ final class PictureModifyPageRenderer
         private readonly \Piwigo\Core\ProcessCache $processCache,
         private readonly SessionService $sessionService,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly \Piwigo\Core\PageState $pageState,
     ) {}
 
     private static function userService(): UserService
@@ -149,7 +150,7 @@ final class PictureModifyPageRenderer
 
             \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService()
                 ->syncMetadata([$image_id]);
-            \Piwigo\Core\PageState::current()->addInfo(Lang::t('Metadata synchronized from file'));
+            $this->pageState->addInfo(Lang::t('Metadata synchronized from file'));
         }
 
         // --------------------------------------------------------- update informations

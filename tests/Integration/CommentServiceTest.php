@@ -203,10 +203,10 @@ namespace Piwigo\Tests\Integration {
             CurrentConfig::setEmailAdminOnCommentEdition(false);
             CurrentConfig::setEmailAdminOnCommentDeletion(false);
             CurrentUser::set(User::fromUserArray(['id' => 1, 'status' => 'normal', 'username' => 'fixture_admin', 'email' => 'fixture_admin@example.test']));
-            \Piwigo\Core\PageState::reset();
+            \Piwigo\Core\PageState::current()->reset();
 
             $this->conn = DbConnection::build();
-            $this->service = new CommentService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), new MailService(), new HtmlService(), new UrlService(new HtmlService()), new \Piwigo\PluginConfig\EventDispatcher());
+            $this->service = new CommentService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), new MailService(), new HtmlService(), new UrlService(new HtmlService()), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current());
         }
 
         // --- checkForSpam() -------------------------------------------------
@@ -826,6 +826,7 @@ namespace Piwigo\Tests\Integration {
                 new HtmlService(),
                 new UrlService(new HtmlService()),
                 new \Piwigo\PluginConfig\EventDispatcher(),
+                \Piwigo\Core\PageState::current(),
             );
         }
 
@@ -844,6 +845,7 @@ namespace Piwigo\Tests\Integration {
                 $htmlRenderer,
                 new UrlService(new HtmlService()),
                 new \Piwigo\PluginConfig\EventDispatcher(),
+                \Piwigo\Core\PageState::current(),
             );
         }
 

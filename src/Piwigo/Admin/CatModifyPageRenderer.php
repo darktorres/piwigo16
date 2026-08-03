@@ -43,7 +43,7 @@ final class CatModifyPageRenderer
      *
      * @param array<string, mixed> $category
      */
-    public function render(UrlServiceInterface $urlService, array $category, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher): void
+    public function render(UrlServiceInterface $urlService, array $category, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -149,7 +149,7 @@ final class CatModifyPageRenderer
         }
 
         // We show or hide this warning in JS
-        \Piwigo\Core\PageState::current()->addWarning(Lang::t('This album is currently locked, visible only to administrators.') . '<span class="icon-cone unlock-album">' . Lang::t('Unlock it') . '</span>');
+        $pageState->addWarning(Lang::t('This album is currently locked, visible only to administrators.') . '<span class="icon-cone unlock-album">' . Lang::t('Unlock it') . '</span>');
 
         $template->assign(
             [

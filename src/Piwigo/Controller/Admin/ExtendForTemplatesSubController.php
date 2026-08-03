@@ -27,12 +27,13 @@ final class ExtendForTemplatesSubController implements AdminSubControllerInterfa
     public function __construct(
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
+        private readonly \Piwigo\Core\PageState $pageState,
     ) {}
 
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
         new ExtendForTemplatesPageRenderer()
-            ->render($this->urlService, $this->configService);
+            ->render($this->urlService, $this->configService, $this->pageState);
     }
 }

@@ -38,6 +38,7 @@ final class RegisterController implements ControllerInterface
         private readonly SessionService $sessionService,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
+        private readonly \Piwigo\Core\PageState $pageState,
     ) {}
 
     #[\Override]
@@ -196,7 +197,7 @@ final class RegisterController implements ControllerInterface
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $title = Lang::t('Registration');
-        \Piwigo\Core\PageState::current()->setBodyId('theRegisterPage');
+        $this->pageState->setBodyId('theRegisterPage');
 
         $template->set_filenames([
             'register' => 'register.tpl',
@@ -255,7 +256,7 @@ final class RegisterController implements ControllerInterface
         $template->assign('HELP_LINK', $help_link);
 
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher);
+            ->render($title, $this->eventDispatcher, $this->pageState);
         $this->eventDispatcher->dispatchNotify(new LocEndRegister());
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();

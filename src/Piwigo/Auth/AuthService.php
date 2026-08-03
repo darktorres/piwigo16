@@ -62,6 +62,7 @@ final readonly class AuthService
         private UserFailedLoginRepository $failedLoginRepo,
         private SessionService $sessionService,
         private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private \Piwigo\Core\PageState $pageState,
     ) {}
 
     /**
@@ -573,7 +574,7 @@ final readonly class AuthService
 
         // is the key still valid?
         if (strtotime($key->expiredOn) < $now->getTimestamp()) {
-            \Piwigo\Core\PageState::current()->markAuthKeyInvalid();
+            $this->pageState->markAuthKeyInvalid();
             return false;
         }
 
@@ -612,7 +613,7 @@ final readonly class AuthService
                     or strtotime($key->lastNotifiedOn) < $fortyEightHoursAgo->getTimestamp() // OR when the last email was sent more than 48 hours ago
                 )
             ) {
-                \Piwigo\Core\PageState::current()->setNotifyApiKeyExpiration([
+                $this->pageState->setNotifyApiKeyExpiration([
                     'days_left' => $days_left,
                     'dbnow' => $now->format('Y-m-d H:i:s'),
                     'auth_key' => $key->authKey,
@@ -642,7 +643,7 @@ final readonly class AuthService
         $this->eventDispatcher->dispatchNotify(new LoginSuccess($key->username));
 
         // to be registered in history table by HistoryService::logVisit()
-        \Piwigo\Core\PageState::current()->setAuthKeyId((int) $key->authKeyId);
+        $this->pageState->setAuthKeyId((int) $key->authKeyId);
 
         return true;
     }

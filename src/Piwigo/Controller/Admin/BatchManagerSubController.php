@@ -76,6 +76,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         private readonly Translator $translator,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
+        private readonly \Piwigo\Core\PageState $pageState,
     ) {}
 
     private static function imageService(): ImageService
@@ -175,7 +176,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
             \Piwigo\Bootstrap\AdminAccessor::batchManagerUnitPageRenderer()
                 ->render($cat_elements_id, $start);
         } else {
-            new BatchManagerGlobalPageRenderer($this->redirectService, $this->urlService, $this->currentLogger, $this->sessionService, $this->translator, $this->eventDispatcher, $this->imageStdParams)
+            new BatchManagerGlobalPageRenderer($this->redirectService, $this->urlService, $this->currentLogger, $this->sessionService, $this->translator, $this->eventDispatcher, $this->imageStdParams, $this->pageState)
                 ->render($cat_elements_id, $start, $duplicates_on_fields);
         }
     }

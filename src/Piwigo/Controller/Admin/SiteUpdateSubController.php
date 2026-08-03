@@ -104,6 +104,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         private readonly CoreTabs $coreTabs,
         private readonly SessionService $sessionService,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly \Piwigo\Core\PageState $pageState,
     ) {}
 
     private static function permissionService(): PermissionService
@@ -207,7 +208,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             $site_reader = new LocalSiteReader($site_url, new \Piwigo\Metadata\MetadataService(new \Piwigo\Metadata\MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), $this->currentLogger, $this->eventDispatcher));
         }
 
-        if (\Piwigo\Core\PageState::current()->noMd5sumNumber !== null) {
+        if ($this->pageState->noMd5sumNumber !== null) {
             $template->assign(
                 [
                     'save_error' => '<a href="admin.php?page=batch_manager&amp;filter=prefilter-no_sync_md5sum">' . Lang::t('Some checksums are missing.') . '<i class="icon-right"></i></a>',

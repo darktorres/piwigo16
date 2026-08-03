@@ -57,6 +57,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
         private readonly CoreTabs $coreTabs,
         private readonly SessionService $sessionService,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly \Piwigo\Core\PageState $pageState,
     ) {}
 
     #[\Override]
@@ -121,17 +122,17 @@ final class SiteManagerSubController implements AdminSubControllerInterface
             // site must not exists
             $site_repo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Site\SiteEntity::class);
             if ($site_repo->countByUrl($url) > 0) {
-                \Piwigo\Core\PageState::current()->addError(Lang::t('This site already exists') . ' [' . $url . ']');
+                $this->pageState->addError(Lang::t('This site already exists') . ' [' . $url . ']');
             }
-            if (! \Piwigo\Core\PageState::current()->hasErrors()) {
+            if (! $this->pageState->hasErrors()) {
                 if (! file_exists($url)) {
-                    \Piwigo\Core\PageState::current()->addError(Lang::t('Directory does not exist') . ' [' . $url . ']');
+                    $this->pageState->addError(Lang::t('Directory does not exist') . ' [' . $url . ']');
                 }
             }
 
-            if (! \Piwigo\Core\PageState::current()->hasErrors()) {
+            if (! $this->pageState->hasErrors()) {
                 $site_repo->insert($url);
-                \Piwigo\Core\PageState::current()->addInfo($url . ' ' . Lang::t('created'));
+                $this->pageState->addInfo($url . ' ' . Lang::t('created'));
             }
         }
 
@@ -146,7 +147,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
                 case 'delete':
 
                     \Piwigo\Bootstrap\CoreDomainAccessor::categoryService()->deleteSite($site_id, \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), $this->urlService, $this->sessionService, $this->eventDispatcher);
-                    \Piwigo\Core\PageState::current()->addInfo($galleries_url . ' ' . Lang::t('deleted'));
+                    $this->pageState->addInfo($galleries_url . ' ' . Lang::t('deleted'));
                     break;
 
             }

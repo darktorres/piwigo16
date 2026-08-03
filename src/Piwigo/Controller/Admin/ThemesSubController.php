@@ -57,6 +57,7 @@ final class ThemesSubController implements AdminSubControllerInterface
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
         private readonly CoreTabs $coreTabs,
+        private readonly \Piwigo\Core\PageState $pageState,
     ) {}
 
     #[\Override]
@@ -79,7 +80,7 @@ final class ThemesSubController implements AdminSubControllerInterface
 
         if ($tab === 'update') {
             new UpdatesExtPageRenderer()
-                ->render('themes', $this->urlService, $this->configService);
+                ->render('themes', $this->urlService, $this->configService, $this->pageState);
             $template->assign('ADMIN_PAGE_TITLE', Lang::t('Themes'));
         } elseif ($tab === 'new') {
             \Piwigo\Bootstrap\AdminAccessor::themesNewPageRenderer()

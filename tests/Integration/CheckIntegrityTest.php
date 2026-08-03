@@ -130,7 +130,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
     private function newCheckIntegrity(): CheckIntegrity
     {
-        return new CheckIntegrity($this->buildIntegrityRepo(), new Translator(), \Piwigo\PluginConfig\EventDispatcher::get());
+        return new CheckIntegrity($this->buildIntegrityRepo(), new Translator(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current());
     }
 
     public function test_check_reports_no_header_note_when_zero_anomalies_are_found(): void

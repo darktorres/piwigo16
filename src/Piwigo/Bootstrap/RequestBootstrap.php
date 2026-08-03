@@ -216,7 +216,7 @@ final class RequestBootstrap
             $configService->loadConfFromDb();
         }
         CurrentUser::attachGlobals();
-        \Piwigo\Core\PageState::attachGlobals();
+        self::pageState();
         Lang::attachGlobals();
 
         ServerTiming::stop('boot');
@@ -264,7 +264,7 @@ final class RequestBootstrap
         // for maximum precision, and passes it straight through as a
         // parameter -- this is the one-time handoff into PageState, which
         // every other consumer reads from instead.
-        \Piwigo\Core\PageState::current()->requestStart = $requestStart;
+        self::pageState()->requestStart = $requestStart;
 
         // @set_magic_quotes_runtime(0); // Disable magic_quotes_runtime
         //
@@ -363,7 +363,7 @@ final class RequestBootstrap
 
         SessionBootstrap::register();
 
-        \Piwigo\Core\PageState::current()->executionUuid = self::sessionService()->generateKey(10);
+        self::pageState()->executionUuid = self::sessionService()->generateKey(10);
 
         // Database connection. DbConnection::build() itself deliberately
         // never touches the session-level ONLY_FULL_GROUP_BY server mode
@@ -498,6 +498,7 @@ final class RequestBootstrap
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class),
             self::sessionService(),
             \Piwigo\PluginConfig\EventDispatcher::get(),
+            self::pageState(),
         )->pwgLogin(...));
         new UserBootstrap(
             new RedirectService(),
@@ -577,7 +578,7 @@ final class RequestBootstrap
             CurrentUser::set(CurrentUser::get()->withUsername(Lang::t('guest')));
         }
 
-        $pageState = \Piwigo\Core\PageState::current();
+        $pageState = self::pageState();
 
         // in case an auth key was provided and is no longer valid, we must wait to
         // be here, with language loaded, to prepare the message
@@ -685,7 +686,7 @@ final class RequestBootstrap
             // Formerly a conditional `include PHPWG_ROOT_PATH .
             // 'include/filter.inc.php';` (deleted, P23 sub-batch 8f-5).
             new FilterService(self::filterState(), self::sessionService(), self::translator(), $conn)
-                ->initializeFromRequest();
+                ->initializeFromRequest(self::pageState());
         } else {
             self::filterState()->set(false);
         }
@@ -751,7 +752,7 @@ final class RequestBootstrap
         // (unlike UploadService's static upload_file handlers below), hence the
         // bound first-class-callable form rather than a bare [Class::class, 'method']
         // array.
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(UserCommentCheck::class, new CommentService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), new MailService(), new HtmlService(), new UrlService(new HtmlService()), \Piwigo\PluginConfig\EventDispatcher::get())->checkForSpam(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(UserCommentCheck::class, new CommentService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), new MailService(), new HtmlService(), new UrlService(new HtmlService()), \Piwigo\PluginConfig\EventDispatcher::get(), self::pageState())->checkForSpam(...));
         // try_log_user's own handler is registered in connect() instead,
         // before UserBootstrap::initialize() -- see that registration's
         // own comment for why.
@@ -792,15 +793,15 @@ final class RequestBootstrap
         // here (still last) when that class was retired. CurrentUser's/
         // PageState's own `??=` guards are already satisfied by this
         // point on the real HTTP path (UserBootstrap::initialize() in
-        // connect(), PageState::current()'s own lazy-init in configure()),
-        // so both calls are no-ops here in practice; kept for parity with
-        // callers that reach finalize() without having run those earlier
-        // steps. Lang::attachGlobals() is the one with a real ordering
+        // connect(), pageState()'s own resolution in configure()), so both
+        // calls are no-ops here in practice; kept for parity with callers
+        // that reach finalize() without having run those earlier steps.
+        // Lang::attachGlobals() is the one with a real ordering
         // requirement -- it snapshots Translator's already-loaded strings,
         // so it must run after this method's own Lang::load() calls above,
         // not before.
         CurrentUser::attachGlobals();
-        \Piwigo\Core\PageState::attachGlobals();
+        self::pageState();
         Lang::attachGlobals();
     }
 
@@ -931,6 +932,27 @@ final class RequestBootstrap
         }
 
         return $imageStdParams;
+    }
+
+    /**
+     * Public (unlike the private resolver helpers above): public/admin.php's
+     * own legacy-style `new AdminShell(...)` manual construction needs a way
+     * to obtain the same container-shared instance every other PageState
+     * consumer receives via constructor injection, without calling
+     * Kernel::container() directly itself (arch-tested to Bootstrap/ only)
+     * -- same "public accessor on this class" shape as coreTabs()/
+     * filesystemIntegrityChecker()/sessionService()/eventDispatcher()/
+     * deploymentPolicy() above (singleton/service-locator elimination
+     * campaign, Phase 4).
+     */
+    public static function pageState(): \Piwigo\Core\PageState
+    {
+        $pageState = Kernel::container()->get(\Piwigo\Core\PageState::class);
+        if (! $pageState instanceof \Piwigo\Core\PageState) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\PageState::class);
+        }
+
+        return $pageState;
     }
 
     /**

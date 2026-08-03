@@ -164,7 +164,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
         unset($_SESSION['pwg_image_order'], $_GET['action']);
         CurrentUser::reset();
         CurrentTemplate::reset();
-        PageState::reset();
+        PageState::current()->reset();
         CurrentConfig::reset();
         parent::tearDown();
     }
@@ -193,6 +193,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
             new RequestMountDepth(),
             $this->sessionService,
             new \Piwigo\PluginConfig\EventDispatcher(),
+            \Piwigo\Core\PageState::current(),
         );
     }
 

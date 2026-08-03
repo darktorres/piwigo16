@@ -73,6 +73,7 @@ final readonly class SectionPopulator
         private \Piwigo\Core\RequestMountDepth $requestMountDepth,
         private SessionService $sessionService,
         private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private \Piwigo\Core\PageState $pageState,
     ) {}
 
     public function populate(): void
@@ -689,7 +690,7 @@ final readonly class SectionPopulator
         // "not initialized yet -> treat as disabled" fallback the old `??
         // false` had.
         $filter_enabled = $this->filterState->isInitialized() && $this->filterState->isEnabled();
-        \Piwigo\Core\PageState::current()->setMetaRobots(self::computeMetaRobots($page, $filter_enabled));
+        $this->pageState->setMetaRobots(self::computeMetaRobots($page, $filter_enabled));
 
         // see if we need a redirect because of a permalink
         if ($section === 'categories' and $page_category !== null and ! isset($page['combined_categories'])) {
@@ -771,8 +772,8 @@ final readonly class SectionPopulator
             $body_data['image_id'] = $body_image_id;
         }
 
-        \Piwigo\Core\PageState::current()->bodyClasses = $body_classes;
-        \Piwigo\Core\PageState::current()->bodyData = $body_data;
+        $this->pageState->bodyClasses = $body_classes;
+        $this->pageState->bodyData = $body_data;
 
         $this->sectionContextRegistry->set(self::buildSectionContext($page));
 

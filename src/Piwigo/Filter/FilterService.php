@@ -47,7 +47,7 @@ final class FilterService implements FilterUpdaterInterface
      *  List of visible categories (count(visible) < count(forbidden) more often)
      * $filter['visible_images']: List of visible images
      */
-    public function initializeFromRequest(): void
+    public function initializeFromRequest(\Piwigo\Core\PageState $pageState): void
     {
         // Phase 2 global-residual sweep: $filter is now a local scratch
         // array for this method's own body only (no longer `global
@@ -204,7 +204,7 @@ final class FilterService implements FilterUpdaterInterface
             }
             unset($filter_key);
             if ((bool) \Piwigo\Core\PageFilterHelper::getFilterPageValue('add_notes')) {
-                \Piwigo\Core\PageState::current()->addHeaderNote($this->translator->plural(
+                $pageState->addHeaderNote($this->translator->plural(
                     'Photos posted within the last %d day.',
                     'Photos posted within the last %d days.',
                     $filter_recent_period

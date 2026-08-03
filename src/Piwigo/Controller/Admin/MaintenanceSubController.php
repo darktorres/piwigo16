@@ -59,6 +59,7 @@ final class MaintenanceSubController implements AdminSubControllerInterface
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
+        private readonly \Piwigo\Core\PageState $pageState,
     ) {}
 
     #[\Override]
@@ -166,7 +167,7 @@ final class MaintenanceSubController implements AdminSubControllerInterface
                 ->render();
         } elseif ($tab === 'sys') {
             new MaintenanceSysPageRenderer()
-                ->render($maintActions);
+                ->render($maintActions, $this->pageState);
         } else {
             \Piwigo\Bootstrap\AdminAccessor::maintenanceActionsPageRenderer()
                 ->render($maintActions);

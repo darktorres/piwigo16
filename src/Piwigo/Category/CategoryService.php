@@ -1631,7 +1631,7 @@ final readonly class CategoryService
      * @param array<int, int> $categoryIds
      * @param int $newParent (-1 for root)
      */
-    public function moveCategories(array $categoryIds, ActivityLoggerInterface $activityLogger, int $newParent = -1): void
+    public function moveCategories(array $categoryIds, ActivityLoggerInterface $activityLogger, \Piwigo\Core\PageState $pageState, int $newParent = -1): void
     {
         if (count($categoryIds) === 0) {
             return;
@@ -1665,7 +1665,7 @@ final readonly class CategoryService
                 // technically, you can't move a category with uppercats 12,125,13,14
                 // into a new parent category with uppercats 12,125,13,14,24
                 if ((bool) preg_match('/^' . $category['uppercats'] . '(,|$)/', $newParentUppercats)) {
-                    \Piwigo\Core\PageState::current()->addError(Lang::t('You cannot move an album in its own sub album'));
+                    $pageState->addError(Lang::t('You cannot move an album in its own sub album'));
                     return;
                 }
             }
@@ -1687,7 +1687,7 @@ final readonly class CategoryService
             $this->setCatStatus(array_map(intval(...), array_keys($categories)), 'private');
         }
 
-        \Piwigo\Core\PageState::current()->addInfo(Translator::get()->plural(
+        $pageState->addInfo(Translator::get()->plural(
             '%d album moved',
             '%d albums moved',
             count($categories)

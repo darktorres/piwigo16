@@ -69,6 +69,10 @@ final class UserBootstrap
         if (! $eventDispatcher instanceof \Piwigo\PluginConfig\EventDispatcher) {
             throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\PluginConfig\EventDispatcher::class);
         }
+        $pageState = Kernel::container()->get(\Piwigo\Core\PageState::class);
+        if (! $pageState instanceof \Piwigo\Core\PageState) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\PageState::class);
+        }
         $authService = new AuthService(
             new AuthRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
             new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)),
@@ -78,6 +82,7 @@ final class UserBootstrap
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class),
             $sessionService,
             $eventDispatcher,
+            $pageState,
         );
         $userService = new \Piwigo\Users\UserService(
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class),

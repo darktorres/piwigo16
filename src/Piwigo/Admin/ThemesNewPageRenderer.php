@@ -30,6 +30,7 @@ final class ThemesNewPageRenderer
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+        private readonly \Piwigo\Core\PageState $pageState,
     ) {}
 
     /**
@@ -61,7 +62,7 @@ final class ThemesNewPageRenderer
 
         $themes_dir = \Piwigo\Core\CurrentPaths::get()->themes;
         if (! is_writable($themes_dir)) {
-            \Piwigo\Core\PageState::current()->addError(Lang::t('Add write access to the "%s" directory', 'themes'));
+            $this->pageState->addError(Lang::t('Add write access to the "%s" directory', 'themes'));
         }
 
         // +-----------------------------------------------------------------------+
@@ -72,7 +73,7 @@ final class ThemesNewPageRenderer
 
         if ($themesNewInstall->revision !== null and $themesNewInstall->extension !== null) {
             if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
-                \Piwigo\Core\PageState::current()->addError(Lang::t('Webmaster status is required.'));
+                $this->pageState->addError(Lang::t('Webmaster status is required.'));
             } else {
                 new \Piwigo\Csrf\CsrfService()
                     ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
@@ -92,7 +93,7 @@ final class ThemesNewPageRenderer
         if ($themesNewInstall->installStatus !== null) {
             switch ($themesNewInstall->installStatus) {
                 case 'ok':
-                    \Piwigo\Core\PageState::current()->addInfo(Lang::t('Theme has been successfully installed'));
+                    $this->pageState->addInfo(Lang::t('Theme has been successfully installed'));
 
                     $installed_theme_id = $themesNewInstall->installedThemeId;
                     $installed_fs_theme = $installed_theme_id !== null ? ($extension_scanner->scan(ExtensionType::Theme, $this->urlService)[$installed_theme_id] ?? null) : null;
@@ -105,19 +106,19 @@ final class ThemesNewPageRenderer
                     break;
 
                 case 'temp_path_error':
-                    \Piwigo\Core\PageState::current()->addError(Lang::t('Can\'t create temporary file.'));
+                    $this->pageState->addError(Lang::t('Can\'t create temporary file.'));
                     break;
 
                 case 'dl_archive_error':
-                    \Piwigo\Core\PageState::current()->addError(Lang::t('Can\'t download archive.'));
+                    $this->pageState->addError(Lang::t('Can\'t download archive.'));
                     break;
 
                 case 'archive_error':
-                    \Piwigo\Core\PageState::current()->addError(Lang::t('Can\'t read or extract archive.'));
+                    $this->pageState->addError(Lang::t('Can\'t read or extract archive.'));
                     break;
 
                 default:
-                    \Piwigo\Core\PageState::current()->addError(
+                    $this->pageState->addError(
                         Lang::t(
                             'An error occured during extraction (%s).',
                             htmlspecialchars($themesNewInstall->installStatus)
@@ -171,7 +172,7 @@ final class ThemesNewPageRenderer
                 );
             }
         } else {
-            \Piwigo\Core\PageState::current()->addError(Lang::t('Can\'t connect to server.'));
+            $this->pageState->addError(Lang::t('Can\'t connect to server.'));
         }
 
         $admin_theme_pref = \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService()->getParam('admin_theme', \Piwigo\Config\CurrentConfig::adminTheme());

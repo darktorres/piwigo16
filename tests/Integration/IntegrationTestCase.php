@@ -199,8 +199,11 @@ abstract class IntegrationTestCase extends TestCase
         // buildConfigRepository()/wire CurrentConfigService::set() at
         // all -- reset() on an already-unset registry is a no-op.
         \Piwigo\Config\CurrentConfigService::reset();
-        \Piwigo\Core\PageState::reset();
         if (\Piwigo\Core\Kernel::isBooted()) {
+            $pageState = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\PageState::class);
+            if ($pageState instanceof \Piwigo\Core\PageState) {
+                $pageState->reset();
+            }
             $filterState = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\FilterState::class);
             if ($filterState instanceof \Piwigo\Core\FilterState) {
                 $filterState->reset();

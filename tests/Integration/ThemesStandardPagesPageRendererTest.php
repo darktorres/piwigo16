@@ -265,6 +265,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
             new UrlService(new HtmlService()),
             $this->configService,
             StorageRegistry::fromConfig(dirname(__DIR__, 2) . '/config/storage.php'),
+            \Piwigo\Core\PageState::current(),
         );
     }
 

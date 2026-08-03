@@ -134,6 +134,7 @@ final class MailService implements MailerInterface
                 \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class),
                 \Piwigo\Session\SessionService::get(),
                 \Piwigo\PluginConfig\EventDispatcher::get(),
+                \Piwigo\Core\PageState::current(),
             );
     }
 

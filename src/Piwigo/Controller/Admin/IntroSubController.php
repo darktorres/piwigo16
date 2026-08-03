@@ -74,6 +74,7 @@ final class IntroSubController implements AdminSubControllerInterface
         private readonly SessionService $sessionService,
         private readonly \Piwigo\Lang\Translator $translator,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly \Piwigo\Core\PageState $pageState,
     ) {}
 
     #[\Override]
@@ -117,20 +118,20 @@ final class IntroSubController implements AdminSubControllerInterface
         // |                                actions                                |
         // +-----------------------------------------------------------------------+
 
-        $nb_pending_comments = \Piwigo\Core\PageState::current()->nbPendingComments;
+        $nb_pending_comments = $this->pageState->nbPendingComments;
         if ($nb_pending_comments !== null) {
             $message = Lang::t('User comments') . ' <i class="icon-chat"></i> ';
             $message .= '<a href="' . $link_start . 'comments">';
             $message .= Lang::t('%d waiting for validation', $nb_pending_comments);
             $message .= ' <i class="icon-right"></i></a>';
 
-            \Piwigo\Core\PageState::current()->addMessage($message);
+            $this->pageState->addMessage($message);
         }
 
         // any orphan photo?
-        $nb_orphans = \Piwigo\Core\PageState::current()->nbOrphans; // already calculated in admin.php
+        $nb_orphans = $this->pageState->nbOrphans; // already calculated in admin.php
 
-        if (\Piwigo\Core\PageState::current()->nbPhotosTotal >= 100000) { // but has not been calculated on a big gallery, so force it now
+        if ($this->pageState->nbPhotosTotal >= 100000) { // but has not been calculated on a big gallery, so force it now
             $nb_orphans = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()
                 ->countOrphans();
         }
@@ -142,7 +143,7 @@ final class IntroSubController implements AdminSubControllerInterface
             $message .= Lang::t('Orphans') . '</a>';
             $message .= '<span class="adminMenubarCounter">' . $nb_orphans . '</span>';
 
-            \Piwigo\Core\PageState::current()->addWarning($message);
+            $this->pageState->addWarning($message);
         }
 
         // locked album ?
@@ -154,7 +155,7 @@ final class IntroSubController implements AdminSubControllerInterface
             $message .= Lang::t('Locked album') . '</a>';
             $message .= '<span class="adminMenubarCounter">' . (string) $locked_album . '</span>';
 
-            \Piwigo\Core\PageState::current()->addWarning($message);
+            $this->pageState->addWarning($message);
         }
 
         $this->filesystemIntegrityChecker->fsQuickCheck();
@@ -248,7 +249,7 @@ final class IntroSubController implements AdminSubControllerInterface
                 $news_subject = $latest_news['subject'] ?? null;
                 $news_subject = is_string($news_subject) ? $news_subject : '';
 
-                \Piwigo\Core\PageState::current()->addMessage(sprintf(
+                $this->pageState->addMessage(sprintf(
                     '%s <a href="%s" title="%s" target="_blank"><i class="icon-bell"></i> %s</a>',
                     Lang::t('Latest Piwigo news'),
                     $news_url,
@@ -542,9 +543,9 @@ final class IntroSubController implements AdminSubControllerInterface
 
         // Check integrity
         $integrityRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity::class);
-        $c13y = new CheckIntegrity($integrityRepo, $this->translator, $this->eventDispatcher);
+        $c13y = new CheckIntegrity($integrityRepo, $this->translator, $this->eventDispatcher, $this->pageState);
         // add internal checks
-        new C13yInternal($this->sessionService, $this->eventDispatcher)
+        new C13yInternal($this->sessionService, $this->eventDispatcher, $this->pageState)
             ->registerHandlers();
         // check and display
         $c13y->check();

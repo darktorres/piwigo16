@@ -96,6 +96,7 @@ final class PictureController implements ControllerInterface
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
         private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
+        private readonly \Piwigo\Core\PageState $pageState,
     ) {}
 
     private static function permissionService(): PermissionService
@@ -125,7 +126,7 @@ final class PictureController implements ControllerInterface
 
     private function commentService(Connection $conn, UrlServiceInterface $urlService): CommentService
     {
-        return new CommentService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $urlService, $this->eventDispatcher);
+        return new CommentService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $urlService, $this->eventDispatcher, $this->pageState);
     }
 
     #[\Override]
@@ -675,7 +676,7 @@ final class PictureController implements ControllerInterface
 
         if ($pictureRequest->slideshowPresent) {
             $slideshow = true;
-            \Piwigo\Core\PageState::current()->setMetaRobots([
+            $this->pageState->setMetaRobots([
                 'noindex' => 1,
                 'nofollow' => 1,
             ]);
@@ -742,13 +743,13 @@ final class PictureController implements ControllerInterface
         ))->available;
 
         if ($pictureRequest->metadataPresent) {
-            \Piwigo\Core\PageState::current()->setMetaRobots([
+            $this->pageState->setMetaRobots([
                 'noindex' => 1,
                 'nofollow' => 1,
             ]);
         }
 
-        \Piwigo\Core\PageState::current()->setBodyId('thePicturePage');
+        $this->pageState->setBodyId('thePicturePage');
 
         // allow plugins to change what we computed before passing data
         // to template
@@ -1221,7 +1222,7 @@ final class PictureController implements ControllerInterface
             ->render($image_id, $urlService, $picture, $url_self);
         if (\Piwigo\Config\CurrentConfig::activateComments()) {
             new PictureCommentRenderer()
-                ->render($edit_comment, $image_id, $section_context->start, $urlService, $related_categories, $url_self, $this->sessionService, $this->eventDispatcher);
+                ->render($edit_comment, $image_id, $section_context->start, $urlService, $related_categories, $url_self, $this->sessionService, $this->eventDispatcher, $this->pageState);
         }
         if ($metadata_showable and $this->sessionService->getSessionVar('show_metadata') !== null) {
             new PictureMetadataRenderer()
@@ -1242,7 +1243,7 @@ final class PictureController implements ControllerInterface
         $refresh_str = isset($refresh) && is_numeric($refresh) ? (string) $refresh : null;
         /** @var string|null $url_link */
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $refresh_str, $url_link ?? null);
+            ->render($title, $this->eventDispatcher, $this->pageState, $refresh_str, $url_link ?? null);
         $this->eventDispatcher->dispatchNotify(new LocEndPicture());
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();

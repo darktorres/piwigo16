@@ -46,6 +46,7 @@ final class AboutController implements ControllerInterface
         private readonly SessionService $sessionService,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
+        private readonly \Piwigo\Core\PageState $pageState,
     ) {}
 
     #[\Override]
@@ -61,7 +62,7 @@ final class AboutController implements ControllerInterface
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $title = Lang::t('About Piwigo');
-        \Piwigo\Core\PageState::current()->setBodyId('theAboutPage');
+        $this->pageState->setBodyId('theAboutPage');
 
         $this->eventDispatcher->dispatchNotify(new LocBeginAbout());
 
@@ -88,7 +89,7 @@ final class AboutController implements ControllerInterface
         }
 
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher);
+            ->render($title, $this->eventDispatcher, $this->pageState);
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();
         $template->parse('about', false);

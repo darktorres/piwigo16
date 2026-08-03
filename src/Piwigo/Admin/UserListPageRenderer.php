@@ -31,7 +31,7 @@ final class UserListPageRenderer
         return \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService();
     }
 
-    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher): void
+    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
         $conn = DbConnection::build();
@@ -219,7 +219,7 @@ final class UserListPageRenderer
         }
 
         if (self::webmasterIdIsLocal()) {
-            \Piwigo\Core\PageState::current()->addWarning(Lang::t('You have specified <i>$conf[\'webmaster_id\']</i> in your local configuration file, this parameter in deprecated, please remove it!'));
+            $pageState->addWarning(Lang::t('You have specified <i>$conf[\'webmaster_id\']</i> in your local configuration file, this parameter in deprecated, please remove it!'));
         }
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'user_list');

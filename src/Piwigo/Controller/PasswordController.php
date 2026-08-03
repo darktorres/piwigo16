@@ -49,6 +49,7 @@ final class PasswordController implements ControllerInterface
         private readonly SessionService $sessionService,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
+        private readonly \Piwigo\Core\PageState $pageState,
     ) {}
 
     /**
@@ -115,14 +116,14 @@ final class PasswordController implements ControllerInterface
 
             if ($action_param === 'lost') {
                 if ($this->processVerificationCode()) {
-                    \Piwigo\Core\PageState::current()->addInfo(Lang::t('If your account exists, a verification code has been sent to your email address.'));
+                    $this->pageState->addInfo(Lang::t('If your account exists, a verification code has been sent to your email address.'));
                     $this->action = 'lost_code';
                 }
             }
 
             if ($action_param === 'lost_code') {
                 if ($this->processPasswordRequest()) {
-                    \Piwigo\Core\PageState::current()->addInfo(Lang::t('Verification successful! You can now choose a new password.'));
+                    $this->pageState->addInfo(Lang::t('Verification successful! You can now choose a new password.'));
                     $this->action = 'reset';
                 }
             }
@@ -224,7 +225,7 @@ final class PasswordController implements ControllerInterface
             $template->assign('is_first_login', true);
         }
 
-        \Piwigo\Core\PageState::current()->setBodyId('thePasswordPage');
+        $this->pageState->setBodyId('thePasswordPage');
 
         $template->set_filenames([
             'password' => 'password.tpl',
@@ -282,7 +283,7 @@ final class PasswordController implements ControllerInterface
         $template->assign('HELP_LINK', $help_link);
 
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher);
+            ->render($title, $this->eventDispatcher, $this->pageState);
         $this->eventDispatcher->dispatchNotify(new LocEndPassword());
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();
@@ -637,8 +638,8 @@ final class PasswordController implements ControllerInterface
 
         self::activityService($conn)->record('user', $user_id, 'reset_password_success');
 
-        \Piwigo\Core\PageState::current()->addInfo(Lang::t('Your password has been reset'));
-        \Piwigo\Core\PageState::current()->addInfo('<a href="' . $this->urlService->getRootUrl() . 'identification.php">' . Lang::t('Login') . '</a>');
+        $this->pageState->addInfo(Lang::t('Your password has been reset'));
+        $this->pageState->addInfo('<a href="' . $this->urlService->getRootUrl() . 'identification.php">' . Lang::t('Login') . '</a>');
 
         return true;
     }

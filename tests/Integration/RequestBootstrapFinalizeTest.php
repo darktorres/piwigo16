@@ -89,7 +89,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         CurrentUser::reset();
         CurrentTemplate::reset();
         EventDispatcher::get()->reset();
-        PageState::reset();
+        PageState::current()->reset();
         CurrentConfig::reset();
         parent::tearDown();
     }

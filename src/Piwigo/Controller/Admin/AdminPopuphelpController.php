@@ -44,6 +44,7 @@ final class AdminPopuphelpController implements ControllerInterface
 {
     public function __construct(
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly \Piwigo\Core\PageState $pageState,
     ) {}
 
     #[\Override]
@@ -61,10 +62,10 @@ final class AdminPopuphelpController implements ControllerInterface
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         if ($output !== 'content_only') {
-            \Piwigo\Core\PageState::current()->setBodyId('thePopuphelpPage');
+            $this->pageState->setBodyId('thePopuphelpPage');
             $title = Lang::t('Piwigo Help');
-            \Piwigo\Core\PageState::current()->setPageBanner('<h1>' . $title . '</h1>');
-            \Piwigo\Core\PageState::current()->setMetaRobots([
+            $this->pageState->setPageBanner('<h1>' . $title . '</h1>');
+            $this->pageState->setMetaRobots([
                 'noindex' => 1,
                 'nofollow' => 1,
             ]);
@@ -81,7 +82,7 @@ final class AdminPopuphelpController implements ControllerInterface
             );
 
             new \Piwigo\Page\PageHeaderRenderer()
-                ->render($title, $this->eventDispatcher);
+                ->render($title, $this->eventDispatcher, $this->pageState);
         }
 
         if (! is_string($rawPage) || ! (bool) preg_match('/^[a-z_]*$/', $rawPage)) {

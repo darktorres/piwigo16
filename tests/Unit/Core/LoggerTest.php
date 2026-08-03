@@ -46,12 +46,19 @@ function loggerTestRrmdir(string $dir): void
 beforeEach(function (): void {
     $this->root = sys_get_temp_dir() . '/piwigo-logger-test-' . bin2hex(random_bytes(8));
     mkdir($this->root, 0o777, true);
-    PageState::reset();
+    // PageState is a container-shared instance now (singleton/service-
+    // locator elimination campaign, Phase 4) -- no more reset(). Logger's
+    // own formatMessage() only ever reads executionUuid off the pre-boot
+    // memoized fallback here (this file never boots Kernel), so resetting
+    // just that one field keeps the "unkonwn" fallback test below
+    // independent of whatever an earlier test/file left behind on the
+    // shared fallback instance.
+    PageState::current()->executionUuid = '';
 });
 
 afterEach(function (): void {
     loggerTestRrmdir(is_string($this->root) ? $this->root : '');
-    PageState::reset();
+    PageState::current()->executionUuid = '';
 });
 
 test('accepts severity as a string code, converting it to the matching level constant', function (): void {

@@ -56,6 +56,7 @@ final class PluginsSubController implements AdminSubControllerInterface
         private readonly CoreTabs $coreTabs,
         private readonly SessionService $sessionService,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly \Piwigo\Core\PageState $pageState,
     ) {}
 
     #[\Override]
@@ -78,7 +79,7 @@ final class PluginsSubController implements AdminSubControllerInterface
 
         if ($tab === 'update') {
             new UpdatesExtPageRenderer()
-                ->render('plugins', $this->urlService, $this->configService);
+                ->render('plugins', $this->urlService, $this->configService, $this->pageState);
             $template->assign('ADMIN_PAGE_TITLE', Lang::t('Plugins'));
         } elseif ($tab === 'new') {
             \Piwigo\Bootstrap\AdminAccessor::pluginsNewPageRenderer()

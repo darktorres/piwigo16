@@ -67,6 +67,7 @@ final class GalleryController implements ControllerInterface
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
         private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
+        private readonly \Piwigo\Core\PageState $pageState,
     ) {}
 
     private static function categoryService(): CategoryService
@@ -148,7 +149,7 @@ final class GalleryController implements ControllerInterface
             );
         }
         if ($galleryDisplay->hasDisplayParam) {
-            \Piwigo\Core\PageState::current()->setMetaRobotsFlag('noindex');
+            $this->pageState->setMetaRobotsFlag('noindex');
             if ($galleryDisplay->display !== null && array_key_exists($galleryDisplay->display, $this->imageStdParams->get_defined_type_map())) {
                 $this->sessionService->setSessionVar('index_deriv', $galleryDisplay->display);
             }
@@ -210,7 +211,7 @@ final class GalleryController implements ControllerInterface
         // defaults false and nothing ever passes true) -- not a 17.x
         // porting gap, so the guard is dropped rather than ported.
         // ------------------------------------------------- template init
-        \Piwigo\Core\PageState::current()->setBodyId('theCategoryPage');
+        $this->pageState->setBodyId('theCategoryPage');
 
         if ($section_context->flat or $section_context->chronologyField !== null) {
             $template->assign(
@@ -283,7 +284,7 @@ final class GalleryController implements ControllerInterface
             );
         }
 
-        $bodyData = \Piwigo\Core\PageState::current()->bodyData;
+        $bodyData = $this->pageState->bodyData;
         if (isset($bodyData['tag_ids']) and is_array($bodyData['tag_ids'])) {
             // get tags for related tags "button", with the
             // possibility to combine them
@@ -556,7 +557,7 @@ final class GalleryController implements ControllerInterface
         // We want all pages that display thumbnails, except on the
         // tags page
         // Fill related tags action
-        $body_data_section = \Piwigo\Core\PageState::current()->bodyData['section'] ?? null;
+        $body_data_section = $this->pageState->bodyData['section'] ?? null;
         if ($page_items !== [] and $body_data_section !== 'tags') {
             $selection = array_slice($page_items, $page_start, $page_nb_image_page);
             $tags = $tagService->addLevelToTags($tagService->getCommonTags($selection, \Piwigo\Config\CurrentConfig::contentTagCloudItemsNumber(), \Piwigo\Bootstrap\PresentationAccessor::htmlService()));
@@ -583,7 +584,7 @@ final class GalleryController implements ControllerInterface
 
         // ---------------------------------------------------------- end
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher);
+            ->render($title, $this->eventDispatcher, $this->pageState);
         $this->eventDispatcher->dispatchNotify(new LocEndIndex());
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();

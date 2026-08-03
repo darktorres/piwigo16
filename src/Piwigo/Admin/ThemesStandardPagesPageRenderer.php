@@ -48,6 +48,7 @@ final class ThemesStandardPagesPageRenderer
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
         private readonly StorageRegistry $storageRegistry,
+        private readonly \Piwigo\Core\PageState $pageState,
     ) {}
 
     public function render(): void
@@ -55,7 +56,7 @@ final class ThemesStandardPagesPageRenderer
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
-            \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
+            $this->pageState->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
         // +-----------------------------------------------------------------------+

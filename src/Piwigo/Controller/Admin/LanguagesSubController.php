@@ -51,6 +51,7 @@ final class LanguagesSubController implements AdminSubControllerInterface
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
         private readonly CoreTabs $coreTabs,
+        private readonly \Piwigo\Core\PageState $pageState,
     ) {}
 
     #[\Override]
@@ -73,7 +74,7 @@ final class LanguagesSubController implements AdminSubControllerInterface
 
         if ($tab === 'update') {
             new UpdatesExtPageRenderer()
-                ->render('languages', $this->urlService, $this->configService);
+                ->render('languages', $this->urlService, $this->configService, $this->pageState);
             $template->assign('ADMIN_PAGE_TITLE', Lang::t('Languages'));
         } elseif ($tab === 'new') {
             \Piwigo\Bootstrap\AdminAccessor::languagesNewPageRenderer()

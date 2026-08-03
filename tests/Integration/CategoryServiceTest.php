@@ -941,10 +941,10 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_move_categories_rejects_moving_a_category_into_its_own_sub_album(): void
     {
-        PageState::reset();
+        PageState::current()->reset();
         $activityLogger = new CategoryServiceFakeActivityLogger();
 
-        $this->service->moveCategories([1], $activityLogger, 2);
+        $this->service->moveCategories([1], $activityLogger, \Piwigo\Core\PageState::current(), 2);
 
         self::assertContains('You cannot move an album in its own sub album', PageState::current()->errors);
         // the move must not have actually happened.
@@ -1093,10 +1093,10 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_move_categories_returns_early_for_no_category_ids(): void
     {
-        PageState::reset();
+        PageState::current()->reset();
         $activityLogger = new CategoryServiceFakeActivityLogger();
 
-        $this->service->moveCategories([], $activityLogger);
+        $this->service->moveCategories([], $activityLogger, \Piwigo\Core\PageState::current());
 
         // the count()===0 early return skips updateCategoryParent(),
         // updateUppercats()/updateGlobalRank(), the PageState::addInfo()
@@ -1110,14 +1110,14 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_move_categories_to_root_sets_parent_status_public(): void
     {
-        PageState::reset();
+        PageState::current()->reset();
         $activityLogger = new CategoryServiceFakeActivityLogger();
 
         try {
             // default $newParent = -1 -> $newParentSql = 'NULL' -> moving
             // to root, the branch that hardcodes $parentStatus = 'public'
             // rather than looking an actual parent category up.
-            $this->service->moveCategories([2], $activityLogger);
+            $this->service->moveCategories([2], $activityLogger, \Piwigo\Core\PageState::current());
 
             $idUppercat = $this->conn->createQueryBuilder()
                 ->select('id_uppercat')
@@ -1136,7 +1136,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_move_categories_into_a_private_parent_cascades_private_status(): void
     {
-        PageState::reset();
+        PageState::current()->reset();
         $activityLogger = new CategoryServiceFakeActivityLogger();
 
         $privateParent = $this->service->createVirtualCategory(
@@ -1154,7 +1154,7 @@ final class CategoryServiceTest extends IntegrationTestCase
             // findCategoryStatus()) that happens to be private -- the
             // setCatStatus(..., 'private') cascade onto the moved
             // categories themselves only fires on this branch.
-            $this->service->moveCategories([2], $activityLogger, $privateParentId);
+            $this->service->moveCategories([2], $activityLogger, \Piwigo\Core\PageState::current(), $privateParentId);
 
             self::assertSame('private', $this->repo->findCategoryStatus(2));
         } finally {

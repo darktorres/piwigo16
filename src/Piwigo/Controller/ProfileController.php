@@ -51,6 +51,7 @@ final class ProfileController implements ControllerInterface
         private readonly SessionService $sessionService,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
+        private readonly \Piwigo\Core\PageState $pageState,
     ) {}
 
     private static function userService(): UserService
@@ -147,13 +148,13 @@ final class ProfileController implements ControllerInterface
             $userdata = array_merge($userdata, $default_user);
         }
 
-        $profileFormHandler = new ProfileFormHandler($this->redirectService, $this->adminContext, $this->eventDispatcher);
+        $profileFormHandler = new ProfileFormHandler($this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState);
 
-        $page_errors = \Piwigo\Core\PageState::current()->errors;
+        $page_errors = $this->pageState->errors;
         $profileFormHandler->saveFromPost($userdata, $page_errors);
-        \Piwigo\Core\PageState::current()->errors = array_values($page_errors);
+        $this->pageState->errors = array_values($page_errors);
 
-        \Piwigo\Core\PageState::current()->setBodyId('theProfilePage');
+        $this->pageState->setBodyId('theProfilePage');
         $template->set_filename('profile', 'profile.tpl');
         $template->set_filename('profile_content', 'profile_content.tpl');
 
@@ -183,7 +184,7 @@ final class ProfileController implements ControllerInterface
         }
 
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher);
+            ->render($title, $this->eventDispatcher, $this->pageState);
 
         // Get list of languages
         $language_options = [];

@@ -46,6 +46,7 @@ final class ThemesInstalledPageRenderer
         private readonly ConfigService $configService,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly \Piwigo\Core\PageState $pageState,
     ) {}
 
     /**
@@ -60,7 +61,7 @@ final class ThemesInstalledPageRenderer
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
-            \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
+            $this->pageState->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
         $base_url = $this->urlService->getRootUrl() . 'admin.php?page=' . $pageSlug;
@@ -83,7 +84,7 @@ final class ThemesInstalledPageRenderer
 
             $fs_theme_entry = $extension_scanner->scan(ExtensionType::Theme, $this->urlService)[$themesAction->themeId] ?? null;
             $action_errors = $extension_lifecycle->performAction(ExtensionType::Theme, $themesAction->action, $themesAction->themeId, $fs_theme_entry);
-            \Piwigo\Core\PageState::current()->errors = array_values(array_filter($action_errors, is_string(...)));
+            $this->pageState->errors = array_values(array_filter($action_errors, is_string(...)));
 
             if ($action_errors === []) {
                 if ($themesAction->action === 'activate' or $themesAction->action === 'deactivate') {

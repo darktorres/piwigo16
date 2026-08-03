@@ -1380,6 +1380,7 @@ final class PwgCategories
         self::categoryService()->moveCategories(
             $category_ids,
             \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(),
+            $pageState,
             $params['parent']
         );
         PermissionCacheInvalidator::invalidate();

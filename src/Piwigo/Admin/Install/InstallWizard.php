@@ -626,7 +626,8 @@ define(\'DB_COLLATE\', \'\');
             [
                 'id' => 1, // must be the same value as webmaster_id in config.sql
                 'username' => $this->adminName,
-                'password' => $this->passwordService($conn)->hash($this->adminPass1),
+                'password' => $this->passwordService($conn)
+                    ->hash($this->adminPass1),
                 'mail_address' => $this->adminMail,
             ],
             [
@@ -747,7 +748,7 @@ define(\'DB_COLLATE\', \'\');
             // data; this mirrors that method's own two calls verbatim.
             \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
             \Piwigo\Users\CurrentUser::markRealUserResolved();
-            new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->passwordService($conn), new \Piwigo\Auth\CookieService(), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class), new \Piwigo\Session\SessionService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Session\SessionEntity::class)), \Piwigo\PluginConfig\EventDispatcher::get())
+            new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->passwordService($conn), new \Piwigo\Auth\CookieService(), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class), new \Piwigo\Session\SessionService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Session\SessionEntity::class)), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current())
                 ->logUser($login_user_id, false);
             $_SESSION['connected_with'] = 'pwg_ui';
 

@@ -40,6 +40,7 @@ final class PopuphelpController implements ControllerInterface
 {
     public function __construct(
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly \Piwigo\Core\PageState $pageState,
     ) {}
 
     #[\Override]
@@ -63,15 +64,15 @@ final class PopuphelpController implements ControllerInterface
         // other file reads $GLOBALS['title']. Plain local, not global.
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        \Piwigo\Core\PageState::current()->setBodyId('thePopuphelpPage');
+        $this->pageState->setBodyId('thePopuphelpPage');
         $title = Lang::t('Piwigo Help');
-        \Piwigo\Core\PageState::current()->setPageBanner('');
-        \Piwigo\Core\PageState::current()->setMetaRobots([
+        $this->pageState->setPageBanner('');
+        $this->pageState->setMetaRobots([
             'noindex' => 1,
             'nofollow' => 1,
         ]);
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher);
+            ->render($title, $this->eventDispatcher, $this->pageState);
 
         if (! is_string($rawPage) || ! (bool) preg_match('/^[a-z_]*$/', $rawPage)) {
             throw new ResponseReadyException(ResponseFactory::text('Hacking attempt!', 400));

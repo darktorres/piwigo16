@@ -41,7 +41,7 @@ final class PageHeaderRenderer
      *   $refresh/$url_link top-level-scope contract -- Bootstrap\RedirectService::redirectHtml()
      *   is the one real caller that sets both today.
      */
-    public function render(string $title, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, ?string $refresh = null, ?string $urlLink = null): void
+    public function render(string $title, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, ?string $refresh = null, ?string $urlLink = null): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -58,7 +58,7 @@ final class PageHeaderRenderer
 
         /** @var string $conf_gallery_title */
         $conf_gallery_title = \Piwigo\Config\CurrentConfig::galleryTitle();
-        $page_banner = \Piwigo\Core\PageState::current()->pageBanner ?? \Piwigo\Config\CurrentConfig::pageBanner();
+        $page_banner = $pageState->pageBanner ?? \Piwigo\Config\CurrentConfig::pageBanner();
 
         $template->assign(
             [
@@ -72,7 +72,7 @@ final class PageHeaderRenderer
                     )
                 ))->banner,
 
-                'BODY_ID' => \Piwigo\Core\PageState::current()->bodyId,
+                'BODY_ID' => $pageState->bodyId,
 
                 'CONTENT_ENCODING' => \Piwigo\Core\CharsetHelper::getPwgCharset(),
                 'PAGE_TITLE' => strip_tags($title),
@@ -83,19 +83,18 @@ final class PageHeaderRenderer
 
                 'SHOW_MOBILE_APP_BANNER' => $show_mobile_app_banner,
 
-                'BODY_CLASSES' => \Piwigo\Core\PageState::current()->bodyClasses,
+                'BODY_CLASSES' => $pageState->bodyClasses,
 
-                'BODY_DATA' => json_encode(\Piwigo\Core\PageState::current()->bodyData),
+                'BODY_DATA' => json_encode($pageState->bodyData),
             ]
         );
 
         // Header notes
-        $header_notes = \Piwigo\Core\PageState::current()->headerNotes;
+        $header_notes = $pageState->headerNotes;
         if (! self::emptyValue($header_notes)) {
             $template->assign('header_notes', $header_notes);
         }
 
-        $pageState = \Piwigo\Core\PageState::current();
         if (! \Piwigo\Config\CurrentConfig::metaRef()) {
             $pageState->setMetaRobotsFlag('noindex');
             $pageState->setMetaRobotsFlag('nofollow');

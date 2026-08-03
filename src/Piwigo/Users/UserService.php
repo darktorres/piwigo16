@@ -1198,7 +1198,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      *
      * @return mixed[]
      */
-    public function checkAndSaveUserInfos(array $params): array
+    public function checkAndSaveUserInfos(array $params, \Piwigo\Core\PageState $pageState): array
     {
         if (isset($params['username'])) {
             $username_check = $params['username'];
@@ -1435,6 +1435,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class),
             $this->sessionService,
             $this->eventDispatcher,
+            $pageState,
         );
 
         if (isset($updates[$user_fields['password']])) {

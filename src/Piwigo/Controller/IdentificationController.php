@@ -47,6 +47,7 @@ final class IdentificationController implements ControllerInterface
         private readonly SessionService $sessionService,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
+        private readonly \Piwigo\Core\PageState $pageState,
     ) {}
 
     #[\Override]
@@ -140,7 +141,7 @@ final class IdentificationController implements ControllerInterface
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $title = Lang::t('Identification');
-        \Piwigo\Core\PageState::current()->setBodyId('theIdentificationPage');
+        $this->pageState->setBodyId('theIdentificationPage');
 
         $template->set_filenames([
             'identification' => 'identification.tpl',
@@ -209,7 +210,7 @@ final class IdentificationController implements ControllerInterface
         $template->assign('HELP_LINK', $help_link);
 
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher);
+            ->render($title, $this->eventDispatcher, $this->pageState);
         $this->eventDispatcher->dispatchNotify(new LocEndIdentification());
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();

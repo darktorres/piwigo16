@@ -40,6 +40,7 @@ final class ProfileFormHandler
         private readonly RedirectServiceInterface $redirectService,
         private readonly AdminContext $adminContext,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly \Piwigo\Core\PageState $pageState,
     ) {}
 
     private static function activityService(Connection $conn): \Piwigo\Activity\ActivityService
@@ -219,7 +220,7 @@ final class ProfileFormHandler
                     $username = $username_for_update;
                     $usernameVo = \Piwigo\Common\ValueObject\Username::tryFrom($username);
                     if ($username !== $userdata['username'] and $usernameVo !== null and self::userService()->getUserId($usernameVo) !== null) {
-                        \Piwigo\Core\PageState::current()->addError(Lang::t('this login is already used'));
+                        $this->pageState->addError(Lang::t('this login is already used'));
                         unset($post['redirect']);
                     } else {
                         $fields[] = $user_fields['username'];

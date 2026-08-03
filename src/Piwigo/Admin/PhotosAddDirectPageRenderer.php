@@ -42,6 +42,7 @@ final class PhotosAddDirectPageRenderer
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
         private readonly StorageRegistry $storageRegistry,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly \Piwigo\Core\PageState $pageState,
     ) {}
 
     /**
@@ -158,7 +159,7 @@ final class PhotosAddDirectPageRenderer
 
                 $have_formats_original = true;
             } else {
-                \Piwigo\Core\PageState::current()->addError(Lang::t('The original picture selected dosen\'t exists.'));
+                $this->pageState->addError(Lang::t('The original picture selected dosen\'t exists.'));
             }
         }
 

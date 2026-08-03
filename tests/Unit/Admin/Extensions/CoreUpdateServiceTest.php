@@ -30,7 +30,7 @@ function core_update_service(): CoreUpdateService
 {
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(ConfigEntry::class);
 
-    return new CoreUpdateService(new ZipExtractor(), new RedirectService(), new UrlService(new HtmlService()), new ConfigService($repo, new \Piwigo\PluginConfig\EventDispatcher()), Paths::fromRoot(dirname(__DIR__, 4)));
+    return new CoreUpdateService(new ZipExtractor(), new RedirectService(), new UrlService(new HtmlService()), new ConfigService($repo, new \Piwigo\PluginConfig\EventDispatcher()), Paths::fromRoot(dirname(__DIR__, 4)), \Piwigo\Core\PageState::current());
 }
 
 test('containerVersionCompare orders by semantic version first', function (): void {
@@ -79,7 +79,7 @@ function core_update_service_at(string $root): CoreUpdateService
 {
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(ConfigEntry::class);
 
-    return new CoreUpdateService(new ZipExtractor(), new RedirectService(), new UrlService(new HtmlService()), new ConfigService($repo, new \Piwigo\PluginConfig\EventDispatcher()), Paths::fromRoot($root));
+    return new CoreUpdateService(new ZipExtractor(), new RedirectService(), new UrlService(new HtmlService()), new ConfigService($repo, new \Piwigo\PluginConfig\EventDispatcher()), Paths::fromRoot($root), \Piwigo\Core\PageState::current());
 }
 
 function core_update_service_step_is(int|string $step, int $target): bool

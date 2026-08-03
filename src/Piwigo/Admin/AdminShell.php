@@ -58,6 +58,7 @@ final class AdminShell
         private readonly SessionService $sessionService,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
+        private readonly \Piwigo\Core\PageState $pageState,
     ) {}
 
     /**
@@ -264,8 +265,8 @@ final class AdminShell
         // +-------------------------------------------------------------------+
 
         $title = Lang::t('Piwigo Administration'); // for the PageHeaderRenderer::render() call below
-        \Piwigo\Core\PageState::current()->setPageBanner('<h1>' . Lang::t('Piwigo Administration') . '</h1>');
-        \Piwigo\Core\PageState::current()->setBodyId('theAdminPage');
+        $this->pageState->setPageBanner('<h1>' . Lang::t('Piwigo Administration') . '</h1>');
+        $this->pageState->setBodyId('theAdminPage');
 
         $template->set_filenames([
             'admin' => 'admin.tpl',
@@ -321,7 +322,7 @@ final class AdminShell
 
             if ($nb_comments > 0) {
                 $template->assign('NB_PENDING_COMMENTS', $nb_comments);
-                \Piwigo\Core\PageState::current()->setNbPendingComments($nb_comments);
+                $this->pageState->setNbPendingComments($nb_comments);
             }
         }
 
@@ -352,7 +353,7 @@ final class AdminShell
             $nb_no_md5sum = count($imageService->getPhotosNoMd5sum());
 
             if ($nb_no_md5sum > 0) {
-                \Piwigo\Core\PageState::current()->setNoMd5sumNumber($nb_no_md5sum);
+                $this->pageState->setNoMd5sumNumber($nb_no_md5sum);
             }
         }
 
@@ -364,8 +365,8 @@ final class AdminShell
             $nb_orphans = self::imageService()
                 ->countOrphans();
         }
-        \Piwigo\Core\PageState::current()->setNbPhotosTotal($nb_photos_total);
-        \Piwigo\Core\PageState::current()->setNbOrphans($nb_orphans);
+        $this->pageState->setNbPhotosTotal($nb_photos_total);
+        $this->pageState->setNbOrphans($nb_orphans);
 
         $template->assign(
             [
@@ -480,7 +481,7 @@ final class AdminShell
         $template->assign('pwgmenu', AdminUiHelper::pwgUrl());
 
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher);
+            ->render($title, $this->eventDispatcher, $this->pageState);
 
         $this->eventDispatcher->dispatchNotify(new LocEndAdmin());
 

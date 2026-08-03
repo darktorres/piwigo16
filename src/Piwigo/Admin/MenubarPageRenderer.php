@@ -26,12 +26,12 @@ use Piwigo\Menu\BlockManager;
  */
 final class MenubarPageRenderer
 {
-    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher): void
+    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
-            \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
+            $pageState->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
         // Legacy Coupling Retirement Phase 8, 8g: real, previously-unfixed

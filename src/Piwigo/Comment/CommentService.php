@@ -54,6 +54,7 @@ final readonly class CommentService
         private HtmlRenderingInterface $htmlRenderer,
         private UrlServiceInterface $urlService,
         private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private \Piwigo\Core\PageState $pageState,
     ) {}
 
     /**
@@ -209,7 +210,7 @@ final readonly class CommentService
         $maxLinks = \Piwigo\Config\CurrentConfig::commentSpamMaxLinks();
 
         if ($linkCount > $maxLinks) {
-            self::pushCrReason('links');
+            $this->pushCrReason('links');
             $event->commentAction = $myAction;
 
             return $event;
@@ -276,14 +277,14 @@ final readonly class CommentService
 
         if (! $this->ephemeralKeys->verify($key, $imageIdRaw)) {
             $commentAction = 'reject';
-            self::pushCrReason('key'); // rvelices: I use this outside to see how spam robots work
+            $this->pushCrReason('key'); // rvelices: I use this outside to see how spam robots work
         }
 
         // website
         if (! self::emptyValue($comm['website_url'] ?? null)) {
             if (! \Piwigo\Config\CurrentConfig::commentsEnableWebsite()) { // honeypot: if the field is disabled, it should be empty !
                 $commentAction = 'reject';
-                self::pushCrReason('website_url');
+                $this->pushCrReason('website_url');
             } else {
                 $websiteUrl = is_string($comm['website_url'] ?? null) ? $comm['website_url'] : '';
                 $websiteUrl = strip_tags($websiteUrl);
@@ -341,7 +342,7 @@ final readonly class CommentService
             if ($counter > 0) {
                 $infos[] = Lang::t('Anti-flood system : please wait for a moment before trying to post another comment');
                 $commentAction = 'reject';
-                self::pushCrReason('flood_time');
+                $this->pushCrReason('flood_time');
             }
         }
 
@@ -492,7 +493,7 @@ final readonly class CommentService
 
             $comment['website_url'] = $websiteUrl;
             if (! \Piwigo\Validation\InputValidator::checkUrlFormat($websiteUrl)) {
-                \Piwigo\Core\PageState::current()->addError(Lang::t('Your website URL is invalid'));
+                $this->pageState->addError(Lang::t('Your website URL is invalid'));
                 $commentAction = 'reject';
             }
         }
@@ -644,9 +645,9 @@ final readonly class CommentService
         \Piwigo\Users\CurrentUser::set(\Piwigo\Users\CurrentUser::get()->withRawAttribute('nb_available_comments', null));
     }
 
-    private static function pushCrReason(string $reason): void
+    private function pushCrReason(string $reason): void
     {
-        \Piwigo\Core\PageState::current()->addCommentRejectionReason($reason);
+        $this->pageState->addCommentRejectionReason($reason);
     }
 
     /**

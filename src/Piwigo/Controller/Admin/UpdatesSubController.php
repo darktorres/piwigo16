@@ -61,6 +61,7 @@ final class UpdatesSubController implements AdminSubControllerInterface
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
         private readonly CoreTabs $coreTabs,
+        private readonly \Piwigo\Core\PageState $pageState,
     ) {}
 
     #[\Override]
@@ -86,7 +87,7 @@ final class UpdatesSubController implements AdminSubControllerInterface
 
         if ($tab === 'ext') {
             new UpdatesExtPageRenderer()
-                ->render('updates', $this->urlService, $this->configService);
+                ->render('updates', $this->urlService, $this->configService, $this->pageState);
         } else {
             \Piwigo\Bootstrap\AdminAccessor::updatesPwgPageRenderer()
                 ->render();

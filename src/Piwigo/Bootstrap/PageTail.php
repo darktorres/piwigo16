@@ -47,8 +47,8 @@ final class PageTail
         // (L4) is the one place the concrete L4 implementation gets
         // constructed. Legacy Coupling Retirement Phase 4c: UrlServiceInterface
         // is wired the same way, see PageTailRenderer's own docblock.
-        new PageTailRenderer(new PiwigoInfosSender(self::currentLogger(), self::imageStdParams()), new UrlService(new HtmlService()), \Piwigo\PluginConfig\EventDispatcher::get())
-            ->render(\Piwigo\Core\PageState::current()->requestStart);
+        new PageTailRenderer(new PiwigoInfosSender(self::currentLogger(), self::imageStdParams()), new UrlService(new HtmlService()), \Piwigo\PluginConfig\EventDispatcher::get(), self::pageState())
+            ->render(self::pageState()->requestStart);
     }
 
     /**
@@ -61,8 +61,8 @@ final class PageTail
     {
         self::checkForUpdates();
 
-        return new PageTailRenderer(new PiwigoInfosSender(self::currentLogger(), self::imageStdParams()), new UrlService(new HtmlService()), \Piwigo\PluginConfig\EventDispatcher::get())
-            ->renderToString(\Piwigo\Core\PageState::current()->requestStart);
+        return new PageTailRenderer(new PiwigoInfosSender(self::currentLogger(), self::imageStdParams()), new UrlService(new HtmlService()), \Piwigo\PluginConfig\EventDispatcher::get(), self::pageState())
+            ->renderToString(self::pageState()->requestStart);
     }
 
     /**
@@ -97,6 +97,23 @@ final class PageTail
         return $imageStdParams;
     }
 
+    /**
+     * Same reasoning as currentLogger()/imageStdParams() above -- PageState
+     * is only read here for its requestStart property, outside `Bootstrap/`'s
+     * own manual-construction call sites, so this is called from here
+     * rather than resolving `Kernel::container()` directly (singleton/
+     * service-locator elimination campaign, Phase 4).
+     */
+    private static function pageState(): \Piwigo\Core\PageState
+    {
+        $pageState = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\PageState::class);
+        if (! $pageState instanceof \Piwigo\Core\PageState) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\PageState::class);
+        }
+
+        return $pageState;
+    }
+
     private static function checkForUpdates(): void
     {
         // ----------------------------------------------- update notification
@@ -118,7 +135,7 @@ final class PageTail
             if ($check_for_updates) {
                 $exec_id = UniqueExecLock::begins('check_for_updates');
                 if ($exec_id !== false) {
-                    new CoreUpdateService(new ZipExtractor(), new RedirectService(), new UrlService(new HtmlService()), CurrentConfigService::get(), \Piwigo\Core\CurrentPaths::get())
+                    new CoreUpdateService(new ZipExtractor(), new RedirectService(), new UrlService(new HtmlService()), CurrentConfigService::get(), \Piwigo\Core\CurrentPaths::get(), self::pageState())
                         ->notifyPiwigoNewVersions();
 
                     UniqueExecLock::ends('check_for_updates');

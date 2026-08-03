@@ -29,7 +29,7 @@ use Piwigo\Template\Template;
  */
 final class ExtendForTemplatesPageRenderer
 {
-    public function render(UrlServiceInterface $urlService, ConfigService $configService): void
+    public function render(UrlServiceInterface $urlService, ConfigService $configService, \Piwigo\Core\PageState $pageState): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -152,7 +152,7 @@ final class ExtendForTemplatesPageRenderer
             $tpl_extension = $replacements;
             /* ecrire la nouvelle conf */
             $configService->confUpdateParam('extents_for_templates', $replacements);
-            \Piwigo\Core\PageState::current()->addInfo(Lang::t('Templates configuration has been recorded.'));
+            $pageState->addInfo(Lang::t('Templates configuration has been recorded.'));
         }
 
         /* Clearing (remove old extents, add new ones) */

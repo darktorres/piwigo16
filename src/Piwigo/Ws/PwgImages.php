@@ -350,7 +350,7 @@ final class PwgImages
         ];
 
         $infos = [];
-        $comment_action = new CommentService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), \Piwigo\Bootstrap\PresentationAccessor::urlService(), \Piwigo\PluginConfig\EventDispatcher::get())
+        $comment_action = new CommentService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), \Piwigo\Bootstrap\PresentationAccessor::urlService(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current())
             ->insertComment($comm, $params['key'], $infos);
 
         switch ($comment_action) {

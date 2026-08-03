@@ -28,7 +28,7 @@ final class MaintenanceSysPageRenderer
     /**
      * @param array<string, array{icon: string, label: string}> $maintActions
      */
-    public function render(array $maintActions): void
+    public function render(array $maintActions, \Piwigo\Core\PageState $pageState): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -63,7 +63,7 @@ final class MaintenanceSysPageRenderer
                 exit;
             }
         } else {
-            \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
+            $pageState->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
         // +-------------------------------------------------------------------+

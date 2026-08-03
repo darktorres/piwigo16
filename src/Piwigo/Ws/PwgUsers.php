@@ -597,7 +597,7 @@ final class PwgUsers
             return new PwgError(403, 'Invalid security token');
         }
 
-        $updated_users = self::userService()->checkAndSaveUserInfos($params);
+        $updated_users = self::userService()->checkAndSaveUserInfos($params, \Piwigo\Core\PageState::current());
 
         if (isset($updated_users['error'])) {
             // UserService::checkAndSaveUserInfos() is declared to return plain
@@ -710,7 +710,7 @@ final class PwgUsers
         );
 
         $params['user_id'] = [$currentUser->id->value];
-        $updated_users = self::userService()->checkAndSaveUserInfos($params);
+        $updated_users = self::userService()->checkAndSaveUserInfos($params, \Piwigo\Core\PageState::current());
 
         if (isset($updated_users['error'])) {
             // UserService::checkAndSaveUserInfos() is declared to return plain

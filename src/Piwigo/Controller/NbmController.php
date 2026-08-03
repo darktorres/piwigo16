@@ -35,6 +35,7 @@ final class NbmController implements ControllerInterface
         private readonly SessionService $sessionService,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
+        private readonly \Piwigo\Core\PageState $pageState,
     ) {}
 
     #[\Override]
@@ -71,11 +72,11 @@ final class NbmController implements ControllerInterface
         } elseif (is_string($unsubscribe) && (bool) preg_match('/^[A-Za-z0-9]{16}$/', $unsubscribe)) {
             $nbmSender->unsubscribeNotificationByMail(false, [$unsubscribe]);
         } else {
-            \Piwigo\Core\PageState::current()->addError(Lang::t('Unknown identifier'));
+            $this->pageState->addError(Lang::t('Unknown identifier'));
         }
 
         $title = Lang::t('Notification');
-        \Piwigo\Core\PageState::current()->setBodyId('theNBMPage');
+        $this->pageState->setBodyId('theNBMPage');
 
         $template->set_filenames([
             'nbm' => 'nbm.tpl',
@@ -90,7 +91,7 @@ final class NbmController implements ControllerInterface
         }
 
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher);
+            ->render($title, $this->eventDispatcher, $this->pageState);
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();
         $template->parse('nbm');

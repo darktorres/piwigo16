@@ -14,7 +14,7 @@ use Piwigo\Event\Location\LocEndHelp;
  */
 final class HelpPageRenderer
 {
-    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher): void
+    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -55,12 +55,12 @@ final class HelpPageRenderer
         $user_language = \Piwigo\Users\CurrentUser::get()->language;
         $language_prefix = substr($user_language, 0, 3);
         if ($language_prefix === 'en_') {
-            \Piwigo\Core\PageState::current()->addMessage(sprintf(
+            $pageState->addMessage(sprintf(
                 'Need help to use Piwigo? <a href="%s" target="_blank">Check the online documentation</a> !',
                 'https://upstream.example.invalid/help/'
             ));
         } elseif ($language_prefix === 'fr_') {
-            \Piwigo\Core\PageState::current()->addMessage(sprintf(
+            $pageState->addMessage(sprintf(
                 'Besoin d\'aide pour utiliser Piwigo ? Consultez la <a href="%s" target="_blank">documentation en ligne</a> !',
                 'https://upstream.example.invalid/help/fr/'
             ));

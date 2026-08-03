@@ -44,6 +44,7 @@ final class LanguagesInstalledPageRenderer
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+        private readonly \Piwigo\Core\PageState $pageState,
     ) {}
 
     private static function userService(): UserService
@@ -65,7 +66,7 @@ final class LanguagesInstalledPageRenderer
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
-            \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
+            $this->pageState->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
         $template->set_filenames([
@@ -93,7 +94,7 @@ final class LanguagesInstalledPageRenderer
 
             $fs_language_entry = $fs_languages[$languagesAction->languageId] ?? null;
             $action_errors = $extension_lifecycle->performAction(ExtensionType::Language, $languagesAction->action, $languagesAction->languageId, $fs_language_entry);
-            \Piwigo\Core\PageState::current()->errors = array_values(array_filter($action_errors, is_string(...)));
+            $this->pageState->errors = array_values(array_filter($action_errors, is_string(...)));
 
             if ($action_errors === []) {
                 $this->redirectService->redirect($base_url);

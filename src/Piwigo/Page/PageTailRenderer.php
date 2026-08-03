@@ -48,6 +48,7 @@ final readonly class PageTailRenderer
         private TelemetrySenderInterface $telemetrySender,
         private UrlServiceInterface $urlService,
         private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private \Piwigo\Core\PageState $pageState,
     ) {}
 
     public function render(float $startTime): void
@@ -109,13 +110,13 @@ final readonly class PageTailRenderer
 
         if (\Piwigo\Config\CurrentConfig::showQueries()) {
             $debug_vars = array_merge($debug_vars, [
-                'QUERIES_LIST' => \Piwigo\Core\PageState::current()->debugOutput,
+                'QUERIES_LIST' => $this->pageState->debugOutput,
             ]);
         }
 
         if (\Piwigo\Config\CurrentConfig::showGt()) {
-            $count_queries = \Piwigo\Core\PageState::current()->countQueries;
-            $queries_time = \Piwigo\Core\PageState::current()->queriesTime;
+            $count_queries = $this->pageState->countQueries;
+            $queries_time = $this->pageState->queriesTime;
 
             $time = \Piwigo\Core\TimingHelper::getElapsedTime($startTime, \Piwigo\Core\TimingHelper::getMoment());
 

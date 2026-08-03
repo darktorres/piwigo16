@@ -78,7 +78,8 @@ final class PageTailRendererTest extends IntegrationTestCase
                 }
             },
             new UrlService(new HtmlService()),
-            new \Piwigo\PluginConfig\EventDispatcher()
+            new \Piwigo\PluginConfig\EventDispatcher(),
+            \Piwigo\Core\PageState::current()
         );
     }
 
@@ -86,7 +87,7 @@ final class PageTailRendererTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         CurrentTemplate::reset();
-        PageState::reset();
+        PageState::current()->reset();
         CurrentUser::reset();
         $_SESSION = [];
         parent::tearDown();

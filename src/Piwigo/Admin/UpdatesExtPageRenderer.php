@@ -41,7 +41,7 @@ final class UpdatesExtPageRenderer
      * slug statically (config/admin_pages.php registers each of those 4
      * controllers for exactly one slug), so each passes its own literal.
      */
-    public function render(string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService): void
+    public function render(string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, \Piwigo\Core\PageState $pageState): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -51,7 +51,7 @@ final class UpdatesExtPageRenderer
         }
 
         if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
-            \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
+            $pageState->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
         // updates.class.php::__construct() restricts itself to a single type when
@@ -151,7 +151,7 @@ final class UpdatesExtPageRenderer
             // used throughout every other renderer), so the page just
             // renders without the update-list content below rather than
             // needing a dedicated termination mechanism.
-            \Piwigo\Core\PageState::current()->addError(Lang::t('Can\'t connect to server.'));
+            $pageState->addError(Lang::t('Can\'t connect to server.'));
             return;
         }
 

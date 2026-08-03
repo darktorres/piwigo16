@@ -136,7 +136,7 @@ final class RedirectService implements RedirectServiceInterface
 
         $refresh_str = (string) $refresh_time;
         new PageHeaderRenderer()
-            ->render($title, \Piwigo\PluginConfig\EventDispatcher::get(), $refresh_str, $url_link);
+            ->render($title, \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current(), $refresh_str, $url_link);
 
         $template->set_filenames([
             'redirect' => 'redirect.tpl',

@@ -14,11 +14,11 @@ use Psr\Container\ContainerInterface;
  * L0Data, not upward on L2a. `RequestBootstrap`/`CliBootstrap` (both
  * L4Integration, already allowed to depend on L2aCoreDomain) call it
  * instead, once the real per-request user is resolved.
- * `PageState::attachGlobals()` is ALSO not called from here, despite
- * `Piwigo\Core\` being this class's own layer -- it seeds an HTTP-only
- * per-request singleton (no `$page` concept on the CLI path that also
- * calls `Kernel::boot()`). `RequestBootstrap::finalize()` calls it
- * instead, right alongside `CurrentUser::attachGlobals()`.
+ * `PageState` is ALSO not resolved from here, despite `Piwigo\Core\` being
+ * this class's own layer -- it holds HTTP-only per-request state (no
+ * `$page` concept on the CLI path that also calls `Kernel::boot()`).
+ * `RequestBootstrap::configure()`/`finalize()` resolve it instead, right
+ * alongside `CurrentUser::attachGlobals()`.
  *
  * Deliberately does NOT run the P9 middleware pipeline -- that's
  * Piwigo\Bootstrap\RequestPipeline's job. Kernel must stay

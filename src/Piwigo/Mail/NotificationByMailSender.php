@@ -101,6 +101,7 @@ final class NotificationByMailSender
         private readonly UrlServiceInterface $urlService,
         private readonly Translator $translator,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly \Piwigo\Core\PageState $pageState,
     ) {
         $nbmMaxTreatmentTimeoutPercent = \Piwigo\Config\CurrentConfig::nbmMaxTreatmentTimeoutPercent();
 
@@ -239,7 +240,7 @@ final class NotificationByMailSender
         $this->sentMailCount++;
 
         $msgInfo = $this->msgInfo ?? 'Mail sent to %s [%s].';
-        \Piwigo\Core\PageState::current()->addInfo(sprintf($msgInfo, stripslashes($nbmUser->username), $nbmUser->mailAddress));
+        $this->pageState->addInfo(sprintf($msgInfo, stripslashes($nbmUser->username), $nbmUser->mailAddress));
     }
 
     public function incMailSentFailed(UserMailNotification $nbmUser): void
@@ -247,20 +248,20 @@ final class NotificationByMailSender
         $this->errorOnMailCount++;
 
         $msgError = $this->msgError ?? 'Error when sending email to %s [%s].';
-        \Piwigo\Core\PageState::current()->addError(sprintf($msgError, stripslashes($nbmUser->username), $nbmUser->mailAddress));
+        $this->pageState->addError(sprintf($msgError, stripslashes($nbmUser->username), $nbmUser->mailAddress));
     }
 
     public function displayCounterInfo(): void
     {
         if ($this->errorOnMailCount !== 0) {
-            \Piwigo\Core\PageState::current()->addError($this->translator->plural(
+            $this->pageState->addError($this->translator->plural(
                 '%d mail was not sent.',
                 '%d mails were not sent.',
                 $this->errorOnMailCount
             ));
 
             if ($this->sentMailCount !== 0) {
-                \Piwigo\Core\PageState::current()->addInfo($this->translator->plural(
+                $this->pageState->addInfo($this->translator->plural(
                     '%d mail was sent.',
                     '%d mails were sent.',
                     $this->sentMailCount
@@ -268,9 +269,9 @@ final class NotificationByMailSender
             }
         } else {
             if ($this->sentMailCount === 0) {
-                \Piwigo\Core\PageState::current()->addInfo(Lang::t('No mail to send.'));
+                $this->pageState->addInfo(Lang::t('No mail to send.'));
             } else {
-                \Piwigo\Core\PageState::current()->addInfo($this->translator->plural(
+                $this->pageState->addInfo($this->translator->plural(
                     '%d mail was sent.',
                     '%d mails were sent.',
                     $this->sentMailCount
@@ -348,7 +349,7 @@ final class NotificationByMailSender
             foreach ($dataUsers as $nbmUser) {
                 if ($this->checkSendmailTimeout()) {
                     // Stop fill list on 'send', if the quota is override
-                    \Piwigo\Core\PageState::current()->addError($msgBreakTimeout);
+                    $this->pageState->addError($msgBreakTimeout);
                     break;
                 }
 
@@ -411,10 +412,10 @@ final class NotificationByMailSender
                         'enabled' => $enabledValue,
                     ];
                     ++$updatedDataCount;
-                    \Piwigo\Core\PageState::current()->addInfo(sprintf($msgInfo, stripslashes($nbmUser->username), $nbmUser->mailAddress));
+                    $this->pageState->addInfo(sprintf($msgInfo, stripslashes($nbmUser->username), $nbmUser->mailAddress));
                 } else {
                     ++$errorOnUpdatedDataCount;
-                    \Piwigo\Core\PageState::current()->addError(sprintf($msgError, stripslashes($nbmUser->username), $nbmUser->mailAddress));
+                    $this->pageState->addError(sprintf($msgError, stripslashes($nbmUser->username), $nbmUser->mailAddress));
                 }
             }
 
@@ -432,14 +433,14 @@ final class NotificationByMailSender
             );
         }
 
-        \Piwigo\Core\PageState::current()->addInfo($this->translator->plural(
+        $this->pageState->addInfo($this->translator->plural(
             '%d user was updated.',
             '%d users were updated.',
             $updatedDataCount
         ));
 
         if ($errorOnUpdatedDataCount !== 0) {
-            \Piwigo\Core\PageState::current()->addError($this->translator->plural(
+            $this->pageState->addError($this->translator->plural(
                 '%d user was not updated.',
                 '%d users were not updated.',
                 $errorOnUpdatedDataCount
@@ -504,12 +505,12 @@ final class NotificationByMailSender
                     foreach ($dataUsers as $nbmUser) {
                         if ((! $isActionSend) and $this->checkSendmailTimeout()) {
                             // Stop fill list on 'list_to_send', if the quota is override
-                            \Piwigo\Core\PageState::current()->addInfo($msgBreakTimeout);
+                            $this->pageState->addInfo($msgBreakTimeout);
                             break;
                         }
                         if (($isActionSend) and $this->checkSendmailTimeout()) {
                             // Stop fill list on 'send', if the quota is override
-                            \Piwigo\Core\PageState::current()->addError($msgBreakTimeout);
+                            $this->pageState->addError($msgBreakTimeout);
                             break;
                         }
 
@@ -690,7 +691,7 @@ final class NotificationByMailSender
                     }
                 } else {
                     if ($isActionSend) {
-                        \Piwigo\Core\PageState::current()->addError(Lang::t('No user to send notifications by mail.'));
+                        $this->pageState->addError(Lang::t('No user to send notifications by mail.'));
                     }
                 }
             } else {

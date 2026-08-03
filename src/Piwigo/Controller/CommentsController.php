@@ -57,6 +57,7 @@ final class CommentsController implements ControllerInterface
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
         private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
+        private readonly \Piwigo\Core\PageState $pageState,
     ) {}
 
     private static function permissionService(): PermissionService
@@ -295,7 +296,7 @@ final class CommentsController implements ControllerInterface
         $comment_id = $commentsRequest->actionCommentId;
         $edit_comment = null;
 
-        $commentService = new CommentService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->urlService, $this->eventDispatcher);
+        $commentService = new CommentService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->urlService, $this->eventDispatcher, $this->pageState);
 
         if (isset($action) and $comment_id !== null) {
             $commentIdVo = CommentId::from($comment_id);
@@ -380,7 +381,7 @@ final class CommentsController implements ControllerInterface
         // +---------------------------------------------------------------+
 
         $title = Lang::t('User comments');
-        \Piwigo\Core\PageState::current()->setBodyId('theCommentsPage');
+        $this->pageState->setBodyId('theCommentsPage');
 
         $template->set_filenames([
             'comments' => 'comments.tpl',
@@ -649,7 +650,7 @@ final class CommentsController implements ControllerInterface
         // |                      html code display                        |
         // +---------------------------------------------------------------+
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher);
+            ->render($title, $this->eventDispatcher, $this->pageState);
         $this->eventDispatcher->dispatchNotify(new LocEndComments());
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();

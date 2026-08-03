@@ -52,6 +52,7 @@ final readonly class HistoryService
         private ConfigService $configService,
         private \Piwigo\Core\CurrentLogger $currentLogger,
         private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private \Piwigo\Core\PageState $pageState,
     ) {}
 
     /**
@@ -200,7 +201,7 @@ final readonly class HistoryService
         $categoryForQuery = $category ?? [];
         $categoryId = $categoryForQuery['id'] ?? null;
         $categoryId = is_numeric($categoryId) ? (int) $categoryId : null;
-        $authKeyId = \Piwigo\Core\PageState::current()->authKeyId;
+        $authKeyId = $this->pageState->authKeyId;
 
         $historyId = $this->repo->insert([
             'userId' => $userId,

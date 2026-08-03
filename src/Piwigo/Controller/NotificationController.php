@@ -40,6 +40,7 @@ final class NotificationController implements ControllerInterface
         private readonly SessionService $sessionService,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
+        private readonly \Piwigo\Core\PageState $pageState,
     ) {}
 
     #[\Override]
@@ -72,8 +73,8 @@ final class NotificationController implements ControllerInterface
         }
 
         $title = Lang::t('Notification');
-        \Piwigo\Core\PageState::current()->setBodyId('theNotificationPage');
-        \Piwigo\Core\PageState::current()->setMetaRobots([
+        $this->pageState->setBodyId('theNotificationPage');
+        $this->pageState->setMetaRobots([
             'noindex' => 1,
             'nofollow' => 1,
         ]);
@@ -97,7 +98,7 @@ final class NotificationController implements ControllerInterface
         }
 
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher);
+            ->render($title, $this->eventDispatcher, $this->pageState);
         $this->eventDispatcher->dispatchNotify(new LocEndNotification());
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();

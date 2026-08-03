@@ -40,6 +40,7 @@ final readonly class CoreUpdateService
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
         private readonly Paths $paths,
+        private readonly \Piwigo\Core\PageState $pageState,
     ) {}
 
     public function checkPiwigoUpgrade(): void
@@ -269,7 +270,7 @@ final readonly class CoreUpdateService
             $obsoleteList = $this->paths->root . 'install/obsolete.list';
         }
 
-        if (\Piwigo\Core\PageState::current()->hasErrors()) {
+        if ($this->pageState->hasErrors()) {
             return;
         }
 
@@ -309,14 +310,14 @@ final readonly class CoreUpdateService
         }
 
         if (! (bool) @filesize($filename)) {
-            \Piwigo\Core\PageState::current()->addError(Lang::t('Piwigo cannot retrieve upgrade file from server'));
+            $this->pageState->addError(Lang::t('Piwigo cannot retrieve upgrade file from server'));
             return;
         }
 
         $result = $this->zipExtractor->extract($filename, $this->paths->root, $removePath, 0755);
         if ($result === null) {
             FilesystemHelper::deltree($this->paths->root . $dataLocation . 'update');
-            \Piwigo\Core\PageState::current()->addError(Lang::t('An error has occured during upgrade.'));
+            $this->pageState->addError(Lang::t('An error has occured during upgrade.'));
             return;
         }
 
@@ -342,7 +343,7 @@ final readonly class CoreUpdateService
         if ($error !== '') {
             file_put_contents($this->paths->root . $dataLocation . 'update/log_error.txt', $error);
 
-            \Piwigo\Core\PageState::current()->addError(Lang::t(
+            $this->pageState->addError(Lang::t(
                 'An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href="%s">Click here to show log error</a>.',
                 $this->urlService->getRootUrl() . $dataLocation . 'update/log_error.txt'
             ));
@@ -365,9 +366,9 @@ final readonly class CoreUpdateService
             $template->delete_compiled_templates();
             $this->configService->confDeleteParam('fs_quick_check_last_check');
 
-            \Piwigo\Core\PageState::current()->addInfo(Lang::t('Update Complete'));
-            \Piwigo\Core\PageState::current()->addInfo($upgradeTo);
-            \Piwigo\Core\PageState::current()->setUpdatedVersion($upgradeTo);
+            $this->pageState->addInfo(Lang::t('Update Complete'));
+            $this->pageState->addInfo($upgradeTo);
+            $this->pageState->setUpdatedVersion($upgradeTo);
             $step = -1;
         } else {
             $this->redirectService->redirect($this->urlService->getRootUrl() . 'upgrade.php?now=');

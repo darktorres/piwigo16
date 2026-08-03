@@ -71,6 +71,7 @@ final class BatchManagerUnitPageRenderer
         private readonly LoadedPlugins $loadedPlugins,
         private readonly SessionService $sessionService,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly \Piwigo\Core\PageState $pageState,
     ) {}
 
     private static function tagService(): TagService
@@ -187,7 +188,7 @@ final class BatchManagerUnitPageRenderer
             );
             \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
-            \Piwigo\Core\PageState::current()->addInfo(Lang::t('Photo informations updated'));
+            $this->pageState->addInfo(Lang::t('Photo informations updated'));
             PermissionCacheInvalidator::invalidate();
         }
 
@@ -244,7 +245,7 @@ final class BatchManagerUnitPageRenderer
         $page_start = $pageStart;
 
         new FilterPanelRenderer()
-            ->render($template, $base_url, $collection, $cat_elements_id, $page_start, $this->urlService, $this->eventDispatcher);
+            ->render($template, $base_url, $collection, $cat_elements_id, $page_start, $this->urlService, $this->eventDispatcher, $this->pageState);
         // +-------------------------------------------------------------------+
         // |                        global mode thumbnails                         |
         // +-------------------------------------------------------------------+

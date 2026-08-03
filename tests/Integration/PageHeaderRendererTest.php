@@ -74,7 +74,7 @@ final class PageHeaderRendererTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         CurrentTemplate::reset();
-        PageState::reset();
+        PageState::current()->reset();
         parent::tearDown();
     }
 
@@ -82,7 +82,7 @@ final class PageHeaderRendererTest extends IntegrationTestCase
     {
         PageState::current()->addHeaderNote('Photos posted within the last 3 days.');
 
-        $this->renderer->render('Header Notes Test', new \Piwigo\PluginConfig\EventDispatcher());
+        $this->renderer->render('Header Notes Test', new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current());
 
         $output = CurrentTemplate::get()->fetchOutput();
         self::assertStringContainsString('Photos posted within the last 3 days.', $output);
@@ -90,7 +90,7 @@ final class PageHeaderRendererTest extends IntegrationTestCase
 
     public function test_render_omits_the_header_notes_container_when_page_state_has_none(): void
     {
-        $this->renderer->render('No Header Notes Test', new \Piwigo\PluginConfig\EventDispatcher());
+        $this->renderer->render('No Header Notes Test', new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current());
 
         $output = CurrentTemplate::get()->fetchOutput();
         self::assertStringNotContainsString('Photos posted within the last', $output);
@@ -100,7 +100,7 @@ final class PageHeaderRendererTest extends IntegrationTestCase
     {
         CurrentConfig::setMetaRef(false);
 
-        $this->renderer->render('Meta Robots Test', new \Piwigo\PluginConfig\EventDispatcher());
+        $this->renderer->render('Meta Robots Test', new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current());
 
         self::assertSame(['noindex' => 1, 'nofollow' => 1], PageState::current()->metaRobots);
 
@@ -112,7 +112,7 @@ final class PageHeaderRendererTest extends IntegrationTestCase
     {
         CurrentConfig::setMetaRef(true);
 
-        $this->renderer->render('Meta Ref Enabled Test', new \Piwigo\PluginConfig\EventDispatcher());
+        $this->renderer->render('Meta Ref Enabled Test', new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current());
 
         self::assertSame([], PageState::current()->metaRobots);
     }

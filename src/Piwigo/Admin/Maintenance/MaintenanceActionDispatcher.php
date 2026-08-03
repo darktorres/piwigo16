@@ -62,6 +62,7 @@ final class MaintenanceActionDispatcher
         private readonly SessionService $sessionService,
         private readonly \Piwigo\Lang\Translator $translator,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly \Piwigo\Core\PageState $pageState,
         private readonly ?\Piwigo\Cache\PersistentCache $persistentCache = null,
     ) {}
 
@@ -119,7 +120,7 @@ final class MaintenanceActionDispatcher
                 $categoriesService->updateCategory('all');
                 $categoriesService->updateGlobalRank();
                 PermissionCacheInvalidator::invalidate();
-                \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', Lang::t('Update albums informations'), Lang::t('action successfully performed.')));
+                $this->pageState->addInfo(sprintf('%s : %s', Lang::t('Update albums informations'), Lang::t('action successfully performed.')));
                 break;
 
             case 'images':
@@ -130,32 +131,32 @@ final class MaintenanceActionDispatcher
                 \Piwigo\Bootstrap\ExtendedDomainAccessor::rateService()
                     ->updateRatingScore();
                 PermissionCacheInvalidator::invalidate();
-                \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', Lang::t('Update photos information'), Lang::t('action successfully performed.')));
+                $this->pageState->addInfo(sprintf('%s : %s', Lang::t('Update photos information'), Lang::t('action successfully performed.')));
                 break;
 
             case 'delete_orphan_tags':
 
                 \Piwigo\Bootstrap\CoreDomainAccessor::tagService()
                     ->deleteOrphanTags();
-                \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', Lang::t('Delete orphan tags'), Lang::t('action successfully performed.')));
+                $this->pageState->addInfo(sprintf('%s : %s', Lang::t('Delete orphan tags'), Lang::t('action successfully performed.')));
                 break;
 
             case 'user_cache':
 
                 PermissionCacheInvalidator::invalidate();
-                \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', Lang::t('Purge user cache'), Lang::t('action successfully performed.')));
+                $this->pageState->addInfo(sprintf('%s : %s', Lang::t('Purge user cache'), Lang::t('action successfully performed.')));
                 break;
 
             case 'history_detail':
 
                 $db_maintenance->purgeHistoryDetail();
-                \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', Lang::t('Purge history detail'), Lang::t('action successfully performed.')));
+                $this->pageState->addInfo(sprintf('%s : %s', Lang::t('Purge history detail'), Lang::t('action successfully performed.')));
                 break;
 
             case 'history_summary':
 
                 $db_maintenance->purgeHistorySummary();
-                \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', Lang::t('Purge history summary'), Lang::t('action successfully performed.')));
+                $this->pageState->addInfo(sprintf('%s : %s', Lang::t('Purge history summary'), Lang::t('action successfully performed.')));
                 break;
 
             case 'sessions':
@@ -166,40 +167,40 @@ final class MaintenanceActionDispatcher
                 $id_field = $user_fields['id'];
 
                 $db_maintenance->purgeSessionsForDeletedUsers($id_field);
-                \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', Lang::t('Purge sessions'), Lang::t('action successfully performed.')));
+                $this->pageState->addInfo(sprintf('%s : %s', Lang::t('Purge sessions'), Lang::t('action successfully performed.')));
                 break;
 
             case 'feeds':
 
                 $db_maintenance->purgeUnusedFeeds();
-                \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', Lang::t('Purge never used notification feeds'), Lang::t('action successfully performed.')));
+                $this->pageState->addInfo(sprintf('%s : %s', Lang::t('Purge never used notification feeds'), Lang::t('action successfully performed.')));
                 break;
 
             case 'database':
 
                 $db_maintenance->repairOptimizeAllTables();
-                \Piwigo\Core\PageState::current()->addInfo(Lang::t('All optimizations have been successfully completed.'));
+                $this->pageState->addInfo(Lang::t('All optimizations have been successfully completed.'));
                 break;
 
             case 'c13y':
 
                 $integrityRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity::class);
-                $c13y = new CheckIntegrity($integrityRepo, $this->translator, $this->eventDispatcher);
+                $c13y = new CheckIntegrity($integrityRepo, $this->translator, $this->eventDispatcher, $this->pageState);
                 $c13y->maintenance();
-                \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', Lang::t('Reinitialize check integrity'), Lang::t('action successfully performed.')));
+                $this->pageState->addInfo(sprintf('%s : %s', Lang::t('Reinitialize check integrity'), Lang::t('action successfully performed.')));
                 break;
 
             case 'empty_lounge':
 
                 $rows = new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), $this->sessionService, $this->eventDispatcher)
                     ->emptyLounge();
-                \Piwigo\Core\PageState::current()->addInfo(sprintf('%d photos were moved from the upload lounge to their albums', count($rows ?? [])));
+                $this->pageState->addInfo(sprintf('%d photos were moved from the upload lounge to their albums', count($rows ?? [])));
                 break;
 
             case 'search':
 
                 $db_maintenance->purgeSearchHistory();
-                \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', Lang::t('Purge search history'), Lang::t('action successfully performed.')));
+                $this->pageState->addInfo(sprintf('%s : %s', Lang::t('Purge search history'), Lang::t('action successfully performed.')));
                 break;
 
             case 'compiled-templates':
@@ -211,7 +212,7 @@ final class MaintenanceActionDispatcher
                         ->fatalError('persistent cache not initialized');
                 }
                 $this->persistentCache->purge(true);
-                \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', Lang::t('Purge compiled templates'), Lang::t('action successfully performed.')));
+                $this->pageState->addInfo(sprintf('%s : %s', Lang::t('Purge compiled templates'), Lang::t('action successfully performed.')));
                 break;
 
             case 'derivatives':
@@ -227,14 +228,14 @@ final class MaintenanceActionDispatcher
                             ->clearDerivativeCache($type_to_clear);
                     }
                 }
-                \Piwigo\Core\PageState::current()->addInfo(Lang::t('action successfully performed.'));
+                $this->pageState->addInfo(Lang::t('action successfully performed.'));
                 break;
 
             case 'check_upgrade':
 
                 $result = HttpClientService::fetch(AppInfo::URL . '/download/latest_version');
                 if ($result === false) {
-                    \Piwigo\Core\PageState::current()->addError(Lang::t('Unable to check for upgrade.'));
+                    $this->pageState->addError(Lang::t('Unable to check for upgrade.'));
                 } else {
                     $versions = [
                         'current' => AppInfo::VERSION,
@@ -258,14 +259,14 @@ final class MaintenanceActionDispatcher
                     }
 
                     if ($versions['latest'] === '') {
-                        \Piwigo\Core\PageState::current()->addError(Lang::t('Check for upgrade failed for unknown reasons.'));
+                        $this->pageState->addError(Lang::t('Check for upgrade failed for unknown reasons.'));
                     } elseif (version_compare($versions['current'], $versions['latest']) < 0) {
-                        \Piwigo\Core\PageState::current()->addInfo(Lang::t('A new version of Piwigo is available.'));
+                        $this->pageState->addInfo(Lang::t('A new version of Piwigo is available.'));
 
                         $update_url = $this->urlService->getRootUrl() . 'admin.php?page=updates';
-                        \Piwigo\Core\PageState::current()->addInfo('<a href="' . $update_url . '">' . Lang::t('Update to Piwigo %s', $versions['latest']) . '</a>');
+                        $this->pageState->addInfo('<a href="' . $update_url . '">' . Lang::t('Update to Piwigo %s', $versions['latest']) . '</a>');
                     } else {
-                        \Piwigo\Core\PageState::current()->addInfo(Lang::t('You are running the latest version of Piwigo.'));
+                        $this->pageState->addInfo(Lang::t('You are running the latest version of Piwigo.'));
                     }
                 }
 

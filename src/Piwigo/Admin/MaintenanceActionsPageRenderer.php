@@ -51,6 +51,7 @@ final class MaintenanceActionsPageRenderer
         private readonly \Piwigo\Lang\Translator $translator,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
+        private readonly \Piwigo\Core\PageState $pageState,
         private readonly ?\Piwigo\Cache\PersistentCache $persistentCache = null,
     ) {}
 
@@ -64,7 +65,7 @@ final class MaintenanceActionsPageRenderer
         $this->filesystemIntegrityChecker->fsQuickCheck();
 
         $action = MaintenanceActionRequest::fromGlobals()->action;
-        new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->filesystemIntegrityChecker, $this->sessionService, $this->translator, $this->eventDispatcher, $this->persistentCache)
+        new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->filesystemIntegrityChecker, $this->sessionService, $this->translator, $this->eventDispatcher, $this->pageState, $this->persistentCache)
             ->dispatch($action);
 
         // +-------------------------------------------------------------------+
@@ -79,7 +80,7 @@ final class MaintenanceActionsPageRenderer
         $url_format = $this->urlService->getRootUrl() . 'admin.php?page=maintenance&amp;action=%s&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken();
 
         if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
-            \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
+            $this->pageState->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
         /** @var array<string, string> $purge_urls */

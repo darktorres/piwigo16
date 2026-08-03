@@ -61,6 +61,7 @@ final class BatchManagerGlobalPageRenderer
         private readonly Translator $translator,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly ImageStdParams $imageStdParams,
+        private readonly \Piwigo\Core\PageState $pageState,
     ) {}
 
     private static function tagService(): TagService
@@ -176,7 +177,7 @@ final class BatchManagerGlobalPageRenderer
             // if the user tries to apply an action, it means that there is at least 1
             // photo in the selection
             if (count($collection) === 0) {
-                \Piwigo\Core\PageState::current()->addError(Lang::t('Select at least one photo'));
+                $this->pageState->addError(Lang::t('Select at least one photo'));
             }
 
             $action = $batchManagerGlobalRequest->selectAction;
@@ -195,7 +196,7 @@ final class BatchManagerGlobalPageRenderer
             } elseif ($action === 'add_tags') {
                 $post_add_tags = $post['add_tags'] ?? null;
                 if (! is_array($post_add_tags) || count($post_add_tags) === 0) {
-                    \Piwigo\Core\PageState::current()->addError(Lang::t('Select at least one tag'));
+                    $this->pageState->addError(Lang::t('Select at least one tag'));
                 } else {
                     $add_tags = [];
                     foreach ($post_add_tags as $raw_tag) {
@@ -238,14 +239,14 @@ final class BatchManagerGlobalPageRenderer
                         $redirect = true;
                     }
                 } else {
-                    \Piwigo\Core\PageState::current()->addError(Lang::t('Select at least one tag'));
+                    $this->pageState->addError(Lang::t('Select at least one tag'));
                 }
             }
 
             if ($action === 'associate') {
                 $post_associate = $post['associate'] ?? null;
                 if (! is_array($post_associate) || count($post_associate) === 0) {
-                    \Piwigo\Core\PageState::current()->addError(Lang::t('Select at least one album'));
+                    $this->pageState->addError(Lang::t('Select at least one album'));
                 } else {
                     $associate_categories = [];
                     foreach ($post_associate as $raw_category_id) {
@@ -404,16 +405,16 @@ final class BatchManagerGlobalPageRenderer
                         $redirect_url = $this->urlService->getRootUrl() . 'admin.php?page=' . $get_page;
                         $redirect = true;
                     } else {
-                        \Piwigo\Core\PageState::current()->addError(Lang::t('No photo can be deleted'));
+                        $this->pageState->addError(Lang::t('No photo can be deleted'));
                     }
                 } else {
-                    \Piwigo\Core\PageState::current()->addError(Lang::t('You need to confirm deletion'));
+                    $this->pageState->addError(Lang::t('You need to confirm deletion'));
                 }
             }
 
             // synchronize metadata
             elseif ($action === 'metadata') {
-                \Piwigo\Core\PageState::current()->addInfo(Lang::t('Metadata synchronized from file') . ' <span class="badge">' . count($collection) . '</span>');
+                $this->pageState->addInfo(Lang::t('Metadata synchronized from file') . ' <span class="badge">' . count($collection) . '</span>');
             } elseif ($action === 'delete_derivatives' && isset($post['del_derivatives_type']) && is_array($post['del_derivatives_type']) && count($post['del_derivatives_type']) > 0) {
                 foreach ($imageService->getPathsForFileDeletion($collection) as $info) {
                     $derivative_infos = [
@@ -431,10 +432,10 @@ final class BatchManagerGlobalPageRenderer
                 }
             } elseif ($action === 'generate_derivatives') {
                 if (($post['regenerateSuccess'] ?? '0') !== '0') {
-                    \Piwigo\Core\PageState::current()->addInfo(Lang::t('%s photos have been regenerated', $post['regenerateSuccess'] ?? '0'));
+                    $this->pageState->addInfo(Lang::t('%s photos have been regenerated', $post['regenerateSuccess'] ?? '0'));
                 }
                 if (($post['regenerateError'] ?? '0') !== '0') {
-                    \Piwigo\Core\PageState::current()->addWarning(Lang::t('%s photos can not be regenerated', $post['regenerateError'] ?? '0'));
+                    $this->pageState->addWarning(Lang::t('%s photos can not be regenerated', $post['regenerateError'] ?? '0'));
                 }
             }
 
@@ -464,7 +465,7 @@ final class BatchManagerGlobalPageRenderer
         $page_start = $pageStart;
 
         new FilterPanelRenderer()
-            ->render($template, $base_url, $collection, $cat_elements_id, $page_start, $this->urlService, $this->eventDispatcher);
+            ->render($template, $base_url, $collection, $cat_elements_id, $page_start, $this->urlService, $this->eventDispatcher, $this->pageState);
 
         // +-------------------------------------------------------------------+
         // |                            caddie options                             |

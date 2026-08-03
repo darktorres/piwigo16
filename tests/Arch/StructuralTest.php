@@ -242,6 +242,7 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
         '/src/Piwigo/PluginConfig/EventDispatcher.php',
         '/src/Piwigo/Config/DeploymentPolicy.php',
         '/src/Piwigo/Image/ImageStdParams.php',
+        '/src/Piwigo/Core/PageState.php',
     ];
 
     $hits = [
@@ -427,6 +428,58 @@ test('ImageStdParams::current() transitional bridge has a shrinking, known allow
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'ImageStdParams::current(');
+
+    $disallowed = array_values(array_filter(
+        $hits,
+        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
+    ));
+
+    expect(describeCallSites($disallowed))->toBe([]);
+});
+
+test('PageState::current() transitional bridge has a shrinking, known allow-list', function (): void {
+    // Singleton/service-locator elimination campaign, Phase 4: current()
+    // kept its original name (no `Static` suffix, matching
+    // ImageStdParams/DeploymentPolicy/DbCredentials's own precedent -- no
+    // competing real instance method to disambiguate from). Every phase
+    // that converts one more of these files to constructor-injected
+    // PageState should remove it from the allow-list below.
+    // PluginLoader.php/Logger.php/TimingHelper.php are genuinely static-
+    // context-only utilities (no wrapper instance needed, matching
+    // FilesystemHelper's own precedent). HtmlService.php/Template.php are
+    // Phase-6-entangled (dozens of manual construction sites each).
+    // Ws/Pwg*.php are Phase-10-locked static dispatch.
+    // NotificationByMailSubController.php's 2 sites are both inside its
+    // own `private static` doTimeoutTreatment()/
+    // insertNewDataUserMailNotification() helpers (no $this there either,
+    // same shape already established for CategoryService.php's own
+    // moveCategories()-adjacent statics during the Translator phase).
+    // InstallWizard.php/RedirectService.php/MailService.php match
+    // DeploymentPolicy::current()'s own identical allow-list reasoning:
+    // RedirectService needs zero constructor args by design (early-crash
+    // fallback shape), MailService's authService() is a lazy-default
+    // helper for a rarely-needed dependency (~50 manual construction
+    // sites), and InstallWizard's one site is a one-off manual
+    // AuthService construction inside the install flow.
+    $repoRoot = __DIR__ . '/../..';
+
+    $allowedFiles = [
+        '/src/Piwigo/Admin/Install/InstallWizard.php',
+        '/src/Piwigo/Admin/PluginLoader.php',
+        '/src/Piwigo/Bootstrap/RedirectService.php',
+        '/src/Piwigo/Controller/Admin/NotificationByMailSubController.php',
+        '/src/Piwigo/Core/Logger.php',
+        '/src/Piwigo/Core/TimingHelper.php',
+        '/src/Piwigo/Html/HtmlService.php',
+        '/src/Piwigo/Mail/MailService.php',
+        '/src/Piwigo/Template/Template.php',
+        '/src/Piwigo/Ws/PwgCategories.php',
+        '/src/Piwigo/Ws/PwgComments.php',
+        '/src/Piwigo/Ws/PwgImages.php',
+        '/src/Piwigo/Ws/PwgUsers.php',
+    ];
+
+    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'PageState::current(');
 
     $disallowed = array_values(array_filter(
         $hits,
@@ -780,6 +833,11 @@ test('Lang::reset() is only called from tests/', function (): void {
 });
 
 test('PageState::reset() is only called from tests/', function (): void {
+    // Same test-isolation rationale as SessionService::reset() above --
+    // PageState genuinely accumulates real per-request state (unlike
+    // DeploymentPolicy/StorageRegistry, which had nothing left to reset
+    // once container-shared), so its instance reset() stayed a real
+    // method rather than being deleted outright.
     $repoRoot = __DIR__ . '/../..';
 
     $hits = [

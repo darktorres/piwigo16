@@ -35,6 +35,7 @@ final class UpdatesPwgPageRenderer
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly \Piwigo\Core\PageState $pageState,
     ) {}
 
     public function render(): void
@@ -137,13 +138,13 @@ final class UpdatesPwgPageRenderer
         // +-----------------------------------------------------------------------+
 
         if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
-            \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
+            $this->pageState->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
         $template->assign(
             [
                 'STEP' => $step,
-                'PIWIGO_CURRENT_VERSION' => \Piwigo\Core\PageState::current()->updatedVersion ?? AppInfo::VERSION,
+                'PIWIGO_CURRENT_VERSION' => $this->pageState->updatedVersion ?? AppInfo::VERSION,
                 'UPGRADE_TO' => $upgrade_to,
                 'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
                     ->getToken(),

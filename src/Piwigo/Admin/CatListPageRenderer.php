@@ -41,6 +41,7 @@ final class CatListPageRenderer
         private readonly CoreTabs $coreTabs,
         private readonly SessionService $sessionService,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly \Piwigo\Core\PageState $pageState,
     ) {}
 
     public function render(): void
@@ -135,10 +136,10 @@ final class CatListPageRenderer
             PermissionCacheInvalidator::invalidate();
             $output_create_message = is_string($output_create->message) ? $output_create->message : '';
             if (! $output_create->success) {
-                \Piwigo\Core\PageState::current()->addError($output_create_message);
+                $this->pageState->addError($output_create_message);
             } else {
                 $edit_url = $this->urlService->getRootUrl() . 'admin.php?page=album-' . (string) $output_create->categoryId;
-                \Piwigo\Core\PageState::current()->addInfo($output_create_message . ' <a class="icon-pencil" href="' . $edit_url . '">' . Lang::t('Edit album') . '</a>');
+                $this->pageState->addInfo($output_create_message . ' <a class="icon-pencil" href="' . $edit_url . '">' . Lang::t('Edit album') . '</a>');
             }
         }
         // +-------------------------------------------------------------------+

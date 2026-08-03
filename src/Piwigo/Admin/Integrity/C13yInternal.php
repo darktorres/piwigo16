@@ -25,6 +25,7 @@ final class C13yInternal
     public function __construct(
         private readonly SessionService $sessionService,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly \Piwigo\Core\PageState $pageState,
     ) {}
 
     /**
@@ -227,7 +228,7 @@ final class C13yInternal
 
                         self::userService()->createUserInfos([\Piwigo\Common\ValueObject\UserId::from($id)]);
 
-                        \Piwigo\Core\PageState::current()->addInfo(sprintf(Lang::t('User "%s" created with "%s" like password'), $name, $password ?? ''));
+                        $this->pageState->addInfo(sprintf(Lang::t('User "%s" created with "%s" like password'), $name, $password ?? ''));
 
                         $result = true;
                     }
@@ -245,7 +246,7 @@ final class C13yInternal
                         self::userService()->updateStatusForUsers([\Piwigo\Common\ValueObject\UserId::from($id)], $status);
 
                         $updated_username = self::userService()->getUsername(\Piwigo\Common\ValueObject\UserId::from($id));
-                        \Piwigo\Core\PageState::current()->addInfo(sprintf(Lang::t('Status of user "%s" updated'), $updated_username === null ? '' : $updated_username->value));
+                        $this->pageState->addInfo(sprintf(Lang::t('Status of user "%s" updated'), $updated_username === null ? '' : $updated_username->value));
 
                         $result = true;
                     }

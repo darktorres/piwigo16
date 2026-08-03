@@ -95,7 +95,7 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
             throw new \LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
         }
         $currentLogger->set(new Logger(['severity' => Logger::OFF]));
-        $this->renderer = new ThemesInstalledPageRenderer(new RedirectService(), $urlService, $this->configService, $currentLogger, new \Piwigo\PluginConfig\EventDispatcher());
+        $this->renderer = new ThemesInstalledPageRenderer(new RedirectService(), $urlService, $this->configService, $currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current());
 
         $this->fixtureRoot = sys_get_temp_dir() . '/piwigo-themes-installed-integration-' . bin2hex(random_bytes(6)) . '/';
         mkdir($this->fixtureRoot . 'themes', 0o777, true);

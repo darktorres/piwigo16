@@ -75,12 +75,12 @@ final class PictureCommentRenderer
      *   native DBAL int -- only `uppercats`/`status`/`global_rank` are
      *   genuinely string|null.
      */
-    public function render(?CommentId $editCommentId, int $imageId, int $start, UrlServiceInterface $urlService, array $related_categories, string $url_self, SessionService $sessionService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher): void
+    public function render(?CommentId $editCommentId, int $imageId, int $start, UrlServiceInterface $urlService, array $related_categories, string $url_self, SessionService $sessionService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $commentRepository = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Comment\CommentEntity::class);
-        $commentService = new CommentService($commentRepository, new EphemeralKeyService(), new MailService(), new HtmlService(), $urlService, $eventDispatcher);
+        $commentService = new CommentService($commentRepository, new EphemeralKeyService(), new MailService(), new HtmlService(), $urlService, $eventDispatcher, $pageState);
 
         $commentAction = null;
 
@@ -121,13 +121,13 @@ final class PictureCommentRenderer
             // result is written back below.
             $commentErrors = [];
             $commentAction = $commentService->insertComment($comm, $postKey ?? '', $commentErrors);
-            \Piwigo\Core\PageState::current()->errors = $commentErrors;
+            $pageState->errors = $commentErrors;
 
             // Narrowed once into local variables and written back after the
             // switch, so the case bodies below don't re-read PageState
             // directly (switch branches lose property narrowing in this
             // codebase, see the other L10 fixes for the same pattern).
-            $commentInfos = \Piwigo\Core\PageState::current()->infos;
+            $commentInfos = $pageState->infos;
 
             switch ($commentAction) {
                 case 'moderate':
@@ -145,8 +145,8 @@ final class PictureCommentRenderer
                     trigger_error('Invalid comment action ' . $commentAction, E_USER_WARNING);
             }
 
-            \Piwigo\Core\PageState::current()->infos = $commentInfos;
-            \Piwigo\Core\PageState::current()->errors = $commentErrors;
+            $pageState->infos = $commentInfos;
+            $pageState->errors = $commentErrors;
 
             // allow plugins to notify what's going on
             $eventDispatcher->dispatchNotify(new UserCommentInsertion(

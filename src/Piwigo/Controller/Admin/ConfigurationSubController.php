@@ -111,6 +111,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         private readonly CoreTabs $coreTabs,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
+        private readonly \Piwigo\Core\PageState $pageState,
     ) {}
 
     /**
@@ -148,7 +149,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         $conn = DbConnection::build();
 
         if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
-            \Piwigo\Core\PageState::current()->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
+            $this->pageState->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
         // -------------------------------------------------------- sections definitions
@@ -313,7 +314,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                                 }
                             }
                             if (! (bool) count($order_by_input)) {
-                                \Piwigo\Core\PageState::current()->addError(Lang::t('No order field selected'));
+                                $this->pageState->addError(Lang::t('No order field selected'));
                             } else {
                                 // limit to the number of available parameters
                                 $order_by = $order_by_inside_category = array_slice($order_by_input, 0, (int) ceil(count($sort_fields) / 2));
@@ -332,7 +333,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                                 $post['order_by_inside_category'] = 'ORDER BY ' . implode(', ', $order_by_inside_category);
                             }
                         } else {
-                            \Piwigo\Core\PageState::current()->addError(Lang::t('No order field selected'));
+                            $this->pageState->addError(Lang::t('No order field selected'));
                         }
                     }
 
@@ -372,7 +373,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     if (! (bool) preg_match($int_pattern, is_string($nb_comment_page) ? $nb_comment_page : '')
                          or $nb_comment_page < 5
                          or $nb_comment_page > 50) {
-                        \Piwigo\Core\PageState::current()->addError(Lang::t('The number of comments a page must be between 5 and 50 included.'));
+                        $this->pageState->addError(Lang::t('The number of comments a page must be between 5 and 50 included.'));
                     }
                     foreach ($comments_checkboxes as $checkbox) {
                         $post[$checkbox] = self::emptyValue($post[$checkbox] ?? null) ? 'false' : 'true';
@@ -389,7 +390,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     $nb_categories_page = $post['nb_categories_page'] ?? null;
                     if (! (bool) preg_match($int_pattern, is_string($nb_categories_page) ? $nb_categories_page : '')
                           or $nb_categories_page < 4) {
-                        \Piwigo\Core\PageState::current()->addError(Lang::t('The number of albums a page must be above 4.'));
+                        $this->pageState->addError(Lang::t('The number of albums a page must be above 4.'));
                     }
                     foreach ($display_checkboxes as $checkbox) {
                         $post[$checkbox] = self::emptyValue($post[$checkbox] ?? null) ? 'false' : 'true';
@@ -438,7 +439,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             }
 
             // updating configuration if no error found
-            if (! in_array($page_section, ['sizes', 'watermark'], true) and ! \Piwigo\Core\PageState::current()->hasErrors() and \Piwigo\Auth\AccessControl::isWebmaster()) {
+            if (! in_array($page_section, ['sizes', 'watermark'], true) and ! $this->pageState->hasErrors() and \Piwigo\Auth\AccessControl::isWebmaster()) {
                 foreach ($this->configService->getAllParamNames() as $param_name) {
                     if (isset($post[$param_name])) {
                         $post_value = $post[$param_name];
@@ -530,7 +531,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             case 'main':
 
                 if (self::orderByIsLocal()) {
-                    \Piwigo\Core\PageState::current()->addWarning(Lang::t('You have specified <i>$conf[\'order_by\']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf[\'order_by_custom\']</i> !'));
+                    $this->pageState->addWarning(Lang::t('You have specified <i>$conf[\'order_by\']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf[\'order_by_custom\']</i> !'));
                 }
 
                 if (\Piwigo\Config\CurrentConfig::orderByCustom() !== null or \Piwigo\Config\CurrentConfig::orderByInsideCategoryCustom() !== null) {
@@ -622,15 +623,15 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 // P22: profile.php's own save_profile_from_post()/
                 // load_profile_in_template() ported to Piwigo\Controller\
                 // ProfileFormHandler in P23 batch 8c.
-                $profileFormHandler = new ProfileFormHandler($this->redirectService, $this->adminContext, $this->eventDispatcher);
+                $profileFormHandler = new ProfileFormHandler($this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState);
 
                 $errors = [];
                 if ($profileFormHandler->saveFromPost($edit_user, $errors)) {
                     // Reload user
                     $edit_user = self::userService($conn)->buildUser(\Piwigo\Common\ValueObject\UserId::from($guest_id));
-                    \Piwigo\Core\PageState::current()->addInfo(Lang::t('Information data registered in database'));
+                    $this->pageState->addInfo(Lang::t('Information data registered in database'));
                 }
-                \Piwigo\Core\PageState::current()->errors = array_merge(\Piwigo\Core\PageState::current()->errors, array_values(array_filter($errors, is_string(...))));
+                $this->pageState->errors = array_merge($this->pageState->errors, array_values(array_filter($errors, is_string(...))));
 
                 $profileFormHandler->loadIntoTemplate(
                     $action,
@@ -970,12 +971,12 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         // narrower than PageState::$errors' list<string> -- round-trip through
         // a local var and re-index on the way back in (same pattern as
         // PluginLoader::autoupdatePlugin()).
-        $page_errors = \Piwigo\Core\PageState::current()->errors;
+        $page_errors = $this->pageState->errors;
 
         new UploadService($this->currentLogger, $this->storageRegistry, $this->eventDispatcher)
             ->saveUploadFormConfig($updates, $page_errors, $errors);
 
-        \Piwigo\Core\PageState::current()->errors = array_values($page_errors);
+        $this->pageState->errors = array_values($page_errors);
 
         if ($post['resize_quality'] < 50 or $post['resize_quality'] > 98) {
             $errors['resize_quality'] = '[50..98]';
@@ -1294,10 +1295,10 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                         // project's Browser suite doesn't do for the class under
                         // test (see this file's own "no mocks of the class under
                         // test" convention).
-                        \Piwigo\Core\PageState::current()->addError($errors['watermarkImage'] = "{$file_path} " . Lang::t('no write access'));
+                        $this->pageState->addError($errors['watermarkImage'] = "{$file_path} " . Lang::t('no write access'));
                     }
                 } else {
-                    \Piwigo\Core\PageState::current()->addError($errors['watermarkImage'] = sprintf(Lang::t('Add write access to the "%s" directory'), $upload_dir));
+                    $this->pageState->addError($errors['watermarkImage'] = sprintf(Lang::t('Add write access to the "%s" directory'), $upload_dir));
                 }
             }
         }

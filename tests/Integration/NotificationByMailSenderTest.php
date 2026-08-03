@@ -146,7 +146,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         ];
 
         $this->sender = PresentationAccessor::notificationByMailSender();
-        PageState::reset();
+        PageState::current()->reset();
     }
 
     #[\Override]
@@ -162,7 +162,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         CurrentConfig::setSmtpHost('');
         CurrentConfig::setNbmListAllEnabledUsersToSend(false);
         CurrentConfig::setNbmSendDetailedContent(true);
-        PageState::reset();
+        PageState::current()->reset();
         Kernel::reset();
         parent::tearDown();
     }
@@ -285,7 +285,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
     public function test_displayCounterInfo_reports_only_a_success_count_when_nothing_failed(): void
     {
         $this->sender->incMailSentSuccess($this->fakeUser());
-        PageState::reset();
+        PageState::current()->reset();
 
         $this->sender->displayCounterInfo();
 
@@ -297,7 +297,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
     {
         $this->sender->incMailSentSuccess($this->fakeUser());
         $this->sender->incMailSentFailed($this->fakeUser());
-        PageState::reset();
+        PageState::current()->reset();
 
         $this->sender->displayCounterInfo();
 
@@ -308,7 +308,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
     public function test_displayCounterInfo_reports_only_a_failure_count_when_nothing_succeeded(): void
     {
         $this->sender->incMailSentFailed($this->fakeUser());
-        PageState::reset();
+        PageState::current()->reset();
 
         $this->sender->displayCounterInfo();
 

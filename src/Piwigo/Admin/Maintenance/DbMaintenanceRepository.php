@@ -6,8 +6,16 @@ namespace Piwigo\Admin\Maintenance;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Query\Expr\Join;
+use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Db\DbCredentials;
 use Piwigo\Db\Tables;
+use Piwigo\Feed\FeedEntity;
+use Piwigo\History\HistoryEntity;
+use Piwigo\History\HistorySummaryEntity;
+use Piwigo\Image\LoungeEntity;
+use Piwigo\Tag\ImageTagEntity;
+use Piwigo\Tag\TagEntity;
 
 /**
  * Persistence layer for admin/maintenance_actions.php's own raw SQL
@@ -22,6 +30,13 @@ use Piwigo\Db\Tables;
  * rather than being resolved via getRepository(), same shape as
  * Auth\AuthRepository, and clears the identity map after each bulk write
  * that bypasses one of those owned entities.
+ *
+ * Item 15 audit: `purgeHistoryDetail`/`purgeHistorySummary`/
+ * `purgeUnusedFeeds`/`countLoungeItems`/`purgeSessionsForDeletedUsers`/
+ * `deleteOrphanTags` converted to DQL against their owning entities.
+ * `repairOptimizeAllTables()` stays DBAL permanently (DDL has no DQL
+ * grammar); `purgeSearchHistory()` stays DBAL until 15H maps a `search`
+ * entity.
  */
 final readonly class DbMaintenanceRepository
 {
@@ -32,28 +47,24 @@ final readonly class DbMaintenanceRepository
 
     public function purgeHistoryDetail(): void
     {
-        $this->em->getConnection()
-            ->createQueryBuilder()
-            ->delete(Tables::history())
-            ->executeStatement();
+        $this->em->createQuery('DELETE FROM ' . HistoryEntity::class . ' h')
+            ->execute();
         $this->em->clear();
     }
 
     public function purgeHistorySummary(): void
     {
-        $this->em->getConnection()
-            ->createQueryBuilder()
-            ->delete(Tables::historySummary())
-            ->executeStatement();
+        $this->em->createQuery('DELETE FROM ' . HistorySummaryEntity::class . ' hs')
+            ->execute();
     }
 
     public function purgeUnusedFeeds(): void
     {
-        $this->em->getConnection()
-            ->createQueryBuilder()
-            ->delete(Tables::userFeed())
-            ->where('last_check IS NULL')
-            ->executeStatement();
+        $this->em->createQueryBuilder()
+            ->delete(FeedEntity::class, 'f')
+            ->where('f.lastCheck IS NULL')
+            ->getQuery()
+            ->execute();
         $this->em->clear();
     }
 
@@ -80,31 +91,44 @@ final readonly class DbMaintenanceRepository
      * plain DB cleanup is the correct scope. The existing admin web UI
      * action (`admin/maintenance_actions.php`'s `delete_orphan_tags` case)
      * is untouched and keeps the full side-effect behavior.
+     *
+     * The cutoff uses DQL's own `CURRENT_TIMESTAMP()`/`DATE_SUB()`
+     * (compiles to the DB server's real clock), not a PHP-computed
+     * `Env::now()` parameter -- same reasoning as
+     * {@see \Piwigo\Tag\TagRepository::findOrphanTags()}'s own docblock
+     * (a real clock-source-mismatch bug found and fixed converting that
+     * method): this sweep must line up with real wall-clock-backdated
+     * data, not a frozen `PIWIGO_TEST_NOW` value.
      */
     public function deleteOrphanTags(): int
     {
-        $conn = $this->em->getConnection();
-        $orphanTagIds = $conn->createQueryBuilder()
+        $orphanTagIds = $this->em->createQueryBuilder()
             ->select('t.id')
-            ->from(Tables::tags(), 't')
-            ->leftJoin('t', Tables::imageTag(), 'it', 't.id = it.tag_id')
-            ->where('it.tag_id IS NULL')
-            ->andWhere('t.lastmodified < SUBDATE(NOW(), INTERVAL 1 DAY)')
-            ->executeQuery()
-            ->fetchFirstColumn();
+            ->from(TagEntity::class, 't')
+            ->leftJoin(ImageTagEntity::class, 'it', Join::WITH, 't.id = it.tagId')
+            ->where('it.tagId IS NULL')
+            ->andWhere("t.lastmodified < DATE_SUB(CURRENT_TIMESTAMP(), 1, 'day')")
+            ->getQuery()
+            ->getSingleColumnResult();
 
         if ($orphanTagIds === []) {
             return 0;
         }
 
-        $conn->createQueryBuilder()
-            ->delete(Tables::tags())
-            ->where('id IN (:ids)')
-            ->setParameter('ids', $orphanTagIds, ArrayParameterType::INTEGER)
-            ->executeStatement();
+        $orphanTagIdValues = array_map(
+            static fn (mixed $id): int => $id instanceof TagId ? $id->value : (is_numeric($id) ? (int) $id : 0),
+            $orphanTagIds
+        );
+
+        $this->em->createQueryBuilder()
+            ->delete(TagEntity::class, 't')
+            ->where('t.id IN (:ids)')
+            ->setParameter('ids', $orphanTagIdValues, ArrayParameterType::INTEGER)
+            ->getQuery()
+            ->execute();
         $this->em->clear();
 
-        return count($orphanTagIds);
+        return count($orphanTagIdValues);
     }
 
     /**
@@ -174,12 +198,11 @@ final readonly class DbMaintenanceRepository
 
     public function countLoungeItems(): int
     {
-        $value = $this->em->getConnection()
-            ->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from(Tables::lounge())
-            ->executeQuery()
-            ->fetchOne();
+        $value = $this->em->createQueryBuilder()
+            ->select('COUNT(l.imageId)')
+            ->from(LoungeEntity::class, 'l')
+            ->getQuery()
+            ->getSingleScalarResult();
 
         return is_numeric($value) ? (int) $value : 0;
     }
@@ -194,12 +217,11 @@ final readonly class DbMaintenanceRepository
      */
     public function purgeSessionsForDeletedUsers(): void
     {
-        $conn = $this->em->getConnection();
-        $sessions = $conn->createQueryBuilder()
-            ->select('id', 'data')
-            ->from(Tables::sessions())
-            ->executeQuery()
-            ->fetchAllAssociative();
+        $sessions = $this->em->createQueryBuilder()
+            ->select('s.id', 's.data')
+            ->from(\Piwigo\Session\SessionEntity::class, 's')
+            ->getQuery()
+            ->getArrayResult();
 
         $allUserIds = $this->em->createQueryBuilder()
             ->select('u.id')
@@ -215,6 +237,9 @@ final readonly class DbMaintenanceRepository
 
         $sessionsToDelete = [];
         foreach ($sessions as $session) {
+            if (! is_array($session)) {
+                continue;
+            }
             $data = $session['data'] ?? null;
             if (! is_string($data)) {
                 continue;
@@ -232,11 +257,12 @@ final readonly class DbMaintenanceRepository
             return;
         }
 
-        $conn->createQueryBuilder()
-            ->delete(Tables::sessions())
-            ->where('id IN (:ids)')
+        $this->em->createQueryBuilder()
+            ->delete(\Piwigo\Session\SessionEntity::class, 's')
+            ->where('s.id IN (:ids)')
             ->setParameter('ids', $sessionsToDelete, ArrayParameterType::STRING)
-            ->executeStatement();
+            ->getQuery()
+            ->execute();
         $this->em->clear();
     }
 }

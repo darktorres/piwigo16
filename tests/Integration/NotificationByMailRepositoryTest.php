@@ -61,7 +61,7 @@ final class NotificationByMailRepositoryTest extends IntegrationTestCase
 
     public function test_find_user_notifications_subscribe_returns_every_subscriber(): void
     {
-        $rows = $this->repo->findUserNotifications('subscribe', [], '', 'username', 'mail_address', 'id');
+        $rows = $this->repo->findUserNotifications('subscribe', [], '');
 
         $usernames = array_column($rows, 'username');
         self::assertSame(['fixture_admin', 'regular_user'], $usernames);
@@ -70,7 +70,7 @@ final class NotificationByMailRepositoryTest extends IntegrationTestCase
     public function test_find_user_notifications_send_excludes_users_with_no_email_or_disabled(): void
     {
         // regular_user has no email and is also disabled -- excluded either way.
-        $rows = $this->repo->findUserNotifications('send', [], '', 'username', 'mail_address', 'id');
+        $rows = $this->repo->findUserNotifications('send', [], '');
 
         self::assertCount(1, $rows);
         self::assertSame('fixture_admin', $rows[0]->username);
@@ -78,7 +78,7 @@ final class NotificationByMailRepositoryTest extends IntegrationTestCase
 
     public function test_find_user_notifications_filters_by_check_key_list(): void
     {
-        $rows = $this->repo->findUserNotifications('subscribe', ['abcdef1234567890'], '', 'username', 'mail_address', 'id');
+        $rows = $this->repo->findUserNotifications('subscribe', ['abcdef1234567890'], '');
 
         self::assertCount(1, $rows);
         self::assertSame('fixture_admin', $rows[0]->username);
@@ -86,7 +86,7 @@ final class NotificationByMailRepositoryTest extends IntegrationTestCase
 
     public function test_find_user_notifications_filters_by_enabled_value(): void
     {
-        $rows = $this->repo->findUserNotifications('subscribe', [], '0', 'username', 'mail_address', 'id');
+        $rows = $this->repo->findUserNotifications('subscribe', [], '0');
 
         self::assertCount(1, $rows);
         self::assertSame('regular_user', $rows[0]->username);
@@ -94,7 +94,7 @@ final class NotificationByMailRepositoryTest extends IntegrationTestCase
 
     public function test_find_user_notifications_narrows_user_id_to_a_real_int(): void
     {
-        $rows = $this->repo->findUserNotifications('subscribe', [], '', 'username', 'mail_address', 'id');
+        $rows = $this->repo->findUserNotifications('subscribe', [], '');
 
         // UserMailNotification::fromRow() narrows user_id to a real int
         // (P17-23 Stage 1b), replacing the legacy \Piwigo\Db\MysqliDb::fetchAssoc()-style

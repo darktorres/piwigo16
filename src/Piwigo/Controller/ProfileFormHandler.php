@@ -84,13 +84,6 @@ final class ProfileFormHandler
         // for reuse below.
         $user_id = is_numeric($userdata['id']) ? (int) $userdata['id'] : 0;
 
-        // \Piwigo\Config\CurrentConfig::userFields() maps generic field names to table-specific DB
-        // column names (see include/config_default.inc.php); always a
-        // string=>string map at runtime (same invariant documented in
-        // validate_mail_address(), functions_user.inc.php).
-        /** @var array<string, string> $user_fields */
-        $user_fields = $this->currentConfig->userFields();
-
         $special_user = in_array($userdata['id'], [$this->currentConfig->guestId(), $this->currentConfig->defaultUserId()], true);
         if ($special_user) {
             unset(
@@ -170,7 +163,7 @@ final class ProfileFormHandler
             }
 
             if (! $this->adminContext->isActive()) {// changing password requires old password
-                $current_password = $this->authService->getPasswordHash($user_id, $user_fields['id'], $user_fields['username'], $user_fields['password']);
+                $current_password = $this->authService->getPasswordHash(\Piwigo\Common\ValueObject\UserId::from($user_id));
 
                 // the password column allows NULL (external-authentication
                 // accounts with no local password set); such an account can
@@ -189,18 +182,14 @@ final class ProfileFormHandler
 
             if (isset($post['mail_address'])) {
                 // update common user informations
-                $fields = [$user_fields['email']];
                 $mail_address = is_string($post['mail_address']) ? $post['mail_address'] : '';
-
-                $data = [];
-                $data[$user_fields['id']] = $userdata['id'];
-                $data[$user_fields['email']] = $mail_address;
+                $username_update = null;
+                $password_update = null;
 
                 // password is updated only if filled
                 $new_pwd_for_update = $post['use_new_pwd'] ?? null;
                 if (is_string($new_pwd_for_update) and $new_pwd_for_update !== '' and $new_pwd_for_update !== '0') {
-                    $fields[] = $user_fields['password'];
-                    $data[$user_fields['password']] = $this->passwordService->hash($new_pwd_for_update);
+                    $password_update = $this->passwordService->hash($new_pwd_for_update);
 
                     $this->authService->deactivateUserAuthKeys($user_id);
                 }
@@ -214,8 +203,7 @@ final class ProfileFormHandler
                         $this->pageState->addError($this->lang->t('this login is already used'));
                         unset($post['redirect']);
                     } else {
-                        $fields[] = $user_fields['username'];
-                        $data[$user_fields['username']] = $username;
+                        $username_update = $username;
 
                         // send email to the user
                         if ($username !== $userdata['username']) {
@@ -245,11 +233,7 @@ final class ProfileFormHandler
                     }
                 }
 
-                $accountUpdates = [];
-                foreach ($fields as $field) {
-                    $accountUpdates[$field] = $data[$field];
-                }
-                $this->userService->updateAccountFields($user_id, $user_fields['id'], $accountUpdates);
+                $this->userService->updateAccountFields(\Piwigo\Common\ValueObject\UserId::from($user_id), $username_update, $password_update, $mail_address);
 
                 if ($mail_address !== $userdata['email']) {
                     $this->authService->deactivatePasswordResetKey($user_id);

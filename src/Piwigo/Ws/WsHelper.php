@@ -11,14 +11,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
-use Doctrine\DBAL\ParameterType;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsError;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageFilterCriteria;
+use Piwigo\Image\PhotoSortField;
 use Piwigo\Image\SrcImage;
-use Piwigo\Permission\SqlCondition;
 use Piwigo\Ws\Event\WsInvokeAllowed;
 
 /**
@@ -49,31 +49,33 @@ final class WsHelper
     }
 
     /**
-     * returns a "standard" (for our web service) sql condition that
-     * filters the images (images table only)
+     * Builds the "standard" (for our web service) image-filter criteria --
+     * the shared f_* range-filter set (images table only).
      *
      * Called from every WS method that merges ws.php's shared $f_params into
      * its registration (pwg.images.search, pwg.categories.getImages,
      * pwg.getMissingDerivatives, pwg.tags.getImages) -- all 11 f_* keys are
      * always present, per that shared registration block.
      *
-     * SQL-modernization audit: every f_* value used to splice raw into the
-     * returned clause strings -- not currently exploitable (f_min_rate/
-     * f_max_rate/f_min_hit/f_max_hit/f_min_ratio/f_max_ratio/f_max_level
-     * are all gated by is_numeric(), and the 4 date fields are validated
-     * above via DateHelper::isValidMysqlDatetime(), which round-trips
-     * through DateTime::createFromFormat() and can never let a
-     * non-digit/hyphen/space/colon character through) -- but converted
-     * regardless, per this initiative's "regardless of exploitability"
-     * stance. Returns a single SqlCondition (its own internal clauses
-     * ANDed together, same "one more bound fragment for the caller's own
-     * $where_clauses list" shape as PermissionService::
-     * getSqlConditionFandFAsCondition()) instead of a raw clause list, so
-     * every real caller composes it the same way.
+     * SQL-modernization audit, Item 14 Sub-phase C3: converted to return a
+     * typed {@see \Piwigo\Image\ImageFilterCriteria} instead of a raw
+     * `Piwigo\Permission\SqlCondition` -- the old return type forced every
+     * consumer through a runtime `$tbl_name` alias-prefix parameter and a
+     * monotonic placeholder-suffix counter (so its own fragment could be
+     * combined with a caller's other bound fragments in one query without a
+     * name collision); each real consumer now applies these 11 fields
+     * directly against its own entity alias/column names, so neither
+     * mechanism is needed anymore. $params's own float|null/int|null typing
+     * (PwgServer's own WsParamType::FLOAT/WsParamType::INT coercion, per
+     * this method's own $params shape below) already guarantees each f_*
+     * value's real type -- the 4 date fields are validated below via
+     * DateHelper::isValidMysqlDatetime(), which round-trips through
+     * DateTime::createFromFormat() and can never let a
+     * non-digit/hyphen/space/colon character through.
      *
      * @param array{f_min_rate: float|null, f_max_rate: float|null, f_min_hit: int|null, f_max_hit: int|null, f_min_ratio: float|null, f_max_ratio: float|null, f_max_level: int|null, f_min_date_available: string|null, f_max_date_available: string|null, f_min_date_created: string|null, f_max_date_created: string|null, ...} $params
      */
-    public static function stdImageSqlFilter(array $params, PwgServer $service, string $tbl_name = ''): SqlCondition
+    public static function stdImageSqlFilterCriteria(array $params, PwgServer $service): ImageFilterCriteria
     {
         foreach (['f_min_date_available', 'f_max_date_available', 'f_min_date_created', 'f_max_date_created'] as $datefield) {
             if (isset($params[$datefield]) and ! DateHelper::isValidMysqlDatetime($params[$datefield])) {
@@ -82,81 +84,30 @@ final class WsHelper
             }
         }
 
-        $suffix = self::nextPlaceholderSuffix();
-        $clauses = [];
-        $parameters = [];
-        $types = [];
-
-        if (is_numeric($params['f_min_rate'])) {
-            $clauses[] = $tbl_name . 'rating_score >= :f_min_rate' . $suffix;
-            $parameters['f_min_rate' . $suffix] = $params['f_min_rate'];
-        }
-        if (is_numeric($params['f_max_rate'])) {
-            $clauses[] = $tbl_name . 'rating_score <= :f_max_rate' . $suffix;
-            $parameters['f_max_rate' . $suffix] = $params['f_max_rate'];
-        }
-        if (is_numeric($params['f_min_hit'])) {
-            $clauses[] = $tbl_name . 'hit >= :f_min_hit' . $suffix;
-            $parameters['f_min_hit' . $suffix] = $params['f_min_hit'];
-            $types['f_min_hit' . $suffix] = ParameterType::INTEGER;
-        }
-        if (is_numeric($params['f_max_hit'])) {
-            $clauses[] = $tbl_name . 'hit <= :f_max_hit' . $suffix;
-            $parameters['f_max_hit' . $suffix] = $params['f_max_hit'];
-            $types['f_max_hit' . $suffix] = ParameterType::INTEGER;
-        }
-        if (isset($params['f_min_date_available'])) {
-            $clauses[] = $tbl_name . 'date_available >= :f_min_date_available' . $suffix;
-            $parameters['f_min_date_available' . $suffix] = $params['f_min_date_available'];
-        }
-        if (isset($params['f_max_date_available'])) {
-            $clauses[] = $tbl_name . 'date_available < :f_max_date_available' . $suffix;
-            $parameters['f_max_date_available' . $suffix] = $params['f_max_date_available'];
-        }
-        if (isset($params['f_min_date_created'])) {
-            $clauses[] = $tbl_name . 'date_creation >= :f_min_date_created' . $suffix;
-            $parameters['f_min_date_created' . $suffix] = $params['f_min_date_created'];
-        }
-        if (isset($params['f_max_date_created'])) {
-            $clauses[] = $tbl_name . 'date_creation < :f_max_date_created' . $suffix;
-            $parameters['f_max_date_created' . $suffix] = $params['f_max_date_created'];
-        }
-        if (is_numeric($params['f_min_ratio'])) {
-            $clauses[] = $tbl_name . 'width/' . $tbl_name . 'height >= :f_min_ratio' . $suffix;
-            $parameters['f_min_ratio' . $suffix] = $params['f_min_ratio'];
-        }
-        if (is_numeric($params['f_max_ratio'])) {
-            $clauses[] = $tbl_name . 'width/' . $tbl_name . 'height <= :f_max_ratio' . $suffix;
-            $parameters['f_max_ratio' . $suffix] = $params['f_max_ratio'];
-        }
-        if (is_numeric($params['f_max_level'])) {
-            $clauses[] = $tbl_name . 'level <= :f_max_level' . $suffix;
-            $parameters['f_max_level' . $suffix] = $params['f_max_level'];
-            $types['f_max_level' . $suffix] = ParameterType::INTEGER;
-        }
-
-        return new SqlCondition($clauses === [] ? '' : '(' . implode(' AND ', $clauses) . ')', $parameters, $types);
-    }
-
-    /**
-     * Monotonic per-process suffix for stdImageSqlFilter()'s placeholder
-     * names -- same "static local, not a class property" shape as
-     * PermissionService::nextPlaceholderSuffix(), and for the same
-     * reason: real callers can combine this with other bound fragments
-     * (getSqlConditionFandFAsCondition(), a caller's own `id IN (...)`)
-     * in one query, and Doctrine only supports one binding per named
-     * placeholder per query.
-     */
-    private static function nextPlaceholderSuffix(): string
-    {
-        /** @var int */
-        static $counter = 0;
-
-        return '_' . $counter++;
+        return new ImageFilterCriteria(
+            minRate: $params['f_min_rate'],
+            maxRate: $params['f_max_rate'],
+            minHit: $params['f_min_hit'],
+            maxHit: $params['f_max_hit'],
+            minDateAvailable: $params['f_min_date_available'],
+            maxDateAvailable: $params['f_max_date_available'],
+            minDateCreated: $params['f_min_date_created'],
+            maxDateCreated: $params['f_max_date_created'],
+            minRatio: $params['f_min_ratio'],
+            maxRatio: $params['f_max_ratio'],
+            maxLevel: $params['f_max_level'],
+        );
     }
 
     /**
      * returns a "standard" (for our web service) ORDER BY sql clause for images
+     *
+     * SQL-modernization audit, Item 14 Sub-phase C2: the per-token
+     * alias-remapping `switch` + `$sortable_fields` allowlist array
+     * replaced by {@see \Piwigo\Image\PhotoSortField::fromToken()} -- see
+     * that enum's own docblock for why this is deliberately scoped to just
+     * this one method (the tokenization regex itself is unchanged, same
+     * exact field-name/direction-case handling as before).
      *
      * @param array{order: string|null, ...} $params order has no WS_TYPE flag
      *   and a null default, but PwgServer::invoke() still guarantees a plain
@@ -177,27 +128,15 @@ final class WsHelper
             $matches
         );
         for ($i = 0; $i < count($matches[1]); $i++) {
-            switch ($matches[1][$i]) {
-                case 'date_created':
-                    $matches[1][$i] = 'date_creation';
-                    break;
-                case 'date_posted':
-                    $matches[1][$i] = 'date_available';
-                    break;
-                case 'rand': case 'random':
-                    $matches[1][$i] = \Piwigo\Db\SqlDialect::DB_RANDOM_FUNCTION . '()';
-                    break;
-            }
-            $sortable_fields = ['id', 'file', 'name', 'hit', 'rating_score',
-                'date_creation', 'date_available', \Piwigo\Db\SqlDialect::DB_RANDOM_FUNCTION . '()'];
-            if (in_array($matches[1][$i], $sortable_fields, true)) {
+            $field = PhotoSortField::fromToken($matches[1][$i]);
+            if ($field instanceof PhotoSortField) {
                 if ($ret !== '') {
                     $ret .= ', ';
                 }
-                if ($matches[1][$i] !== \Piwigo\Db\SqlDialect::DB_RANDOM_FUNCTION . '()') {
+                if ($field !== PhotoSortField::Random) {
                     $ret .= $tbl_name;
                 }
-                $ret .= $matches[1][$i];
+                $ret .= $field->column();
                 $ret .= ' ' . $matches[2][$i];
             }
         }

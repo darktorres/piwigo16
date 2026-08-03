@@ -10,6 +10,11 @@ use Piwigo\Mail\Projection\MailRecipient;
  * Seam MailService::__construct()'s $mailRecipientRepo parameter type-hints
  * against, so tests can substitute a fake implementation without extending
  * the final MailRecipientRepository directly.
+ *
+ * SQL-modernization audit, Item 14 Sub-phase C4: dropped every
+ * `$idColumn`/`$usernameColumn`/`$emailColumn` multi-auth column-name
+ * param -- `users` is now mapped ({@see \Piwigo\Users\UserEntity}), always
+ * `id`/`username`/`mail_address`.
  */
 interface MailRecipientRepositoryInterface
 {
@@ -18,9 +23,6 @@ interface MailRecipientRepositoryInterface
      * @return list<MailRecipient>
      */
     public function findAdminsAndWebmasters(
-        string $idColumn,
-        string $usernameColumn,
-        string $emailColumn,
         array $userStatuses,
         ?int $groupId,
         ?int $excludeUserId
@@ -30,8 +32,6 @@ interface MailRecipientRepositoryInterface
      * @return list<string>
      */
     public function findDistinctLanguagesInGroup(
-        string $idColumn,
-        string $emailColumn,
         int $groupId,
         ?string $languageFilter
     ): array;
@@ -40,9 +40,6 @@ interface MailRecipientRepositoryInterface
      * @return list<MailRecipient>
      */
     public function findByGroupAndLanguage(
-        string $idColumn,
-        string $usernameColumn,
-        string $emailColumn,
         int $groupId,
         string $language
     ): array;

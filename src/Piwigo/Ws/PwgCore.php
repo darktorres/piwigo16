@@ -108,7 +108,7 @@ final class PwgCore
      *    (makeArrayParam() converts to []). max_urls: WsParamType::INT|POSITIVE,
      *    default 200 (non-null) -- always int. prev_page: WsParamType::INT|
      *    POSITIVE, null default -- int|null. f_* (see
-     *    WsHelper::stdImageSqlFilter()'s docblock): shared filter set merged in
+     *    WsHelper::stdImageSqlFilterCriteria()'s docblock): shared filter set merged in
      *    via ws.php's $f_params.
      * @return PwgError|array{next_page?: int|string, urls?: string[]}
      */
@@ -145,7 +145,7 @@ final class PwgCore
 
         $qlimit = (int) min(5000, ceil(max($image_count / 500, $max_urls / count($types))));
         $criteria = new MissingDerivativesCriteria(
-            filterCondition: WsHelper::stdImageSqlFilter($params, $service, ''),
+            filterCriteria: WsHelper::stdImageSqlFilterCriteria($params, $service),
             ids: array_values($params['ids']),
         );
 

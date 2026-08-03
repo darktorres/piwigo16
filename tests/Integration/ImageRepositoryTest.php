@@ -5,15 +5,16 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\ParameterType;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Image\CategoryImagesCriteria;
+use Piwigo\Image\ImageFilterCriteria;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\MissingDerivativesCriteria;
 use Piwigo\Image\Projection\Image;
+use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\SqlCondition;
 
 final class ImageRepositoryTest extends IntegrationTestCase
@@ -787,7 +788,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_find_category_links_for_image_ids_with_condition_returns_empty_array_for_empty_image_ids(): void
     {
-        self::assertSame([], $this->repo->findCategoryLinksForImageIdsWithCondition([], new SqlCondition('1=1')));
+        self::assertSame([], $this->repo->findCategoryLinksForImageIdsWithCondition([], self::noPermissionRestriction()));
     }
 
     public function test_find_ids_and_paths_by_storage_category_ids_returns_empty_array_for_empty_input(): void
@@ -916,19 +917,33 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertFalse($this->repo->existsWithColumnValue('file', "fixture-photo-1.jpg' OR '1'='1"));
     }
 
+    /**
+     * A {@see PermissionCriteria} with every dimension null -- "no
+     * restriction on any dimension", the typed equivalent of the old
+     * `new SqlCondition('')` no-op baseline these tests used before Item 14
+     * Sub-phase C1.
+     */
+    private static function noPermissionRestriction(): PermissionCriteria
+    {
+        return new PermissionCriteria(null, null, null, null, null, null);
+    }
+
     public function test_is_image_accessible_with_condition_is_true_with_no_restriction(): void
     {
-        self::assertTrue($this->repo->isImageAccessibleWithCondition(1, new SqlCondition('')));
+        self::assertTrue($this->repo->isImageAccessibleWithCondition(1, self::noPermissionRestriction()));
     }
 
     public function test_is_image_accessible_with_condition_applies_the_given_condition(): void
     {
-        self::assertFalse($this->repo->isImageAccessibleWithCondition(1, new SqlCondition('category_id = -1')));
+        // fixture: image 1 belongs to category 1 -- excluding it via
+        // forbiddenCategoryIds (checked against ic.category_id) excludes
+        // image 1.
+        self::assertFalse($this->repo->isImageAccessibleWithCondition(1, new PermissionCriteria([1], null, null, null, null, null)));
     }
 
     public function test_find_row_with_condition_returns_the_matching_row(): void
     {
-        $row = $this->repo->findRowWithCondition(1, new SqlCondition(''));
+        $row = $this->repo->findRowWithCondition(1, self::noPermissionRestriction());
 
         self::assertNotNull($row);
         self::assertSame('fixture-photo-1.jpg', $row['file']);
@@ -936,12 +951,12 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_find_row_with_condition_returns_null_when_the_condition_excludes_it(): void
     {
-        self::assertNull($this->repo->findRowWithCondition(1, new SqlCondition('id = -1')));
+        self::assertNull($this->repo->findRowWithCondition(1, new PermissionCriteria(null, null, [999_999], null, null, null)));
     }
 
     public function test_find_related_categories_for_image_returns_matching_rows(): void
     {
-        $rows = $this->repo->findRelatedCategoriesForImage(1, new SqlCondition(''));
+        $rows = $this->repo->findRelatedCategoriesForImage(1, self::noPermissionRestriction());
 
         self::assertCount(1, $rows);
         self::assertSame(1, $rows[0]['id']);
@@ -950,22 +965,22 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_find_related_categories_for_image_applies_the_given_condition(): void
     {
-        self::assertSame([], $this->repo->findRelatedCategoriesForImage(1, new SqlCondition('category_id = -1')));
+        self::assertSame([], $this->repo->findRelatedCategoriesForImage(1, new PermissionCriteria([1], null, null, null, null, null)));
     }
 
     public function test_is_image_commentable_with_condition_is_true_for_a_commentable_category(): void
     {
-        self::assertTrue($this->repo->isImageCommentableWithCondition(1, new SqlCondition('')));
+        self::assertTrue($this->repo->isImageCommentableWithCondition(1, self::noPermissionRestriction()));
     }
 
     public function test_is_image_commentable_with_condition_applies_the_given_condition(): void
     {
-        self::assertFalse($this->repo->isImageCommentableWithCondition(1, new SqlCondition('category_id = -1')));
+        self::assertFalse($this->repo->isImageCommentableWithCondition(1, new PermissionCriteria([1], null, null, null, null, null)));
     }
 
     public function test_find_visible_categories_for_image_returns_matching_rows(): void
     {
-        $rows = $this->repo->findVisibleCategoriesForImage(1, new SqlCondition(''));
+        $rows = $this->repo->findVisibleCategoriesForImage(1, self::noPermissionRestriction());
 
         self::assertCount(1, $rows);
         self::assertSame(1, $rows[0]['id']);
@@ -973,12 +988,12 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_find_visible_categories_for_image_applies_the_given_condition(): void
     {
-        self::assertSame([], $this->repo->findVisibleCategoriesForImage(1, new SqlCondition('category_id = -1')));
+        self::assertSame([], $this->repo->findVisibleCategoriesForImage(1, new PermissionCriteria([1], null, null, null, null, null)));
     }
 
     public function test_has_accessible_image_with_author_is_false_when_no_image_has_an_author(): void
     {
-        self::assertFalse($this->repo->hasAccessibleImageWithAuthor(new SqlCondition('')));
+        self::assertFalse($this->repo->hasAccessibleImageWithAuthor(self::noPermissionRestriction()));
     }
 
     public function test_has_accessible_image_with_author_is_true_once_one_image_has_an_author(): void
@@ -986,7 +1001,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         $this->conn->executeStatement('UPDATE ' . Tables::images() . " SET author = 'fixture-author' WHERE id = 1");
 
         try {
-            self::assertTrue($this->repo->hasAccessibleImageWithAuthor(new SqlCondition('')));
+            self::assertTrue($this->repo->hasAccessibleImageWithAuthor(self::noPermissionRestriction()));
         } finally {
             $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET author = NULL WHERE id = 1');
         }
@@ -994,17 +1009,17 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_is_image_accessible_via_category_with_condition_is_true_with_no_restriction(): void
     {
-        self::assertTrue($this->repo->isImageAccessibleViaCategoryWithCondition(1, new SqlCondition('')));
+        self::assertTrue($this->repo->isImageAccessibleViaCategoryWithCondition(1, self::noPermissionRestriction()));
     }
 
     public function test_is_image_accessible_via_category_with_condition_applies_the_given_condition(): void
     {
-        self::assertFalse($this->repo->isImageAccessibleViaCategoryWithCondition(1, new SqlCondition('category_id = -1')));
+        self::assertFalse($this->repo->isImageAccessibleViaCategoryWithCondition(1, new PermissionCriteria([1], null, null, null, null, null)));
     }
 
     public function test_find_with_conditions_paginated_returns_matching_rows_and_total(): void
     {
-        $criteria = new CategoryImagesCriteria(new SqlCondition(''), [1], new SqlCondition(''));
+        $criteria = new CategoryImagesCriteria(new ImageFilterCriteria(), [1], new SqlCondition(''));
         $result = $this->repo->findWithConditionsPaginated($criteria, '', 10, 0);
 
         self::assertCount(3, $result->rows);
@@ -1013,7 +1028,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_find_with_conditions_paginated_respects_the_limit(): void
     {
-        $criteria = new CategoryImagesCriteria(new SqlCondition(''), [1], new SqlCondition(''));
+        $criteria = new CategoryImagesCriteria(new ImageFilterCriteria(), [1], new SqlCondition(''));
         $result = $this->repo->findWithConditionsPaginated($criteria, '', 1, 0);
 
         self::assertCount(1, $result->rows);
@@ -1022,16 +1037,18 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_find_with_conditions_paginated_applies_the_filter_condition(): void
     {
-        $criteria = new CategoryImagesCriteria(new SqlCondition('i.id = :imageId', ['imageId' => 1], ['imageId' => ParameterType::INTEGER]), [1], new SqlCondition(''));
+        // fixture: category 1's images are 1 (rating_score 4.50), 2
+        // (3.00), 3 (5.00) -- minRate: 4.0 keeps only 1 and 3.
+        $criteria = new CategoryImagesCriteria(new ImageFilterCriteria(minRate: 4.0), [1], new SqlCondition(''));
         $result = $this->repo->findWithConditionsPaginated($criteria, '', 10, 0);
 
-        self::assertCount(1, $result->rows);
-        self::assertSame(1, $result->total);
+        self::assertCount(2, $result->rows);
+        self::assertSame(2, $result->total);
     }
 
     public function test_find_with_conditions_paginated_applies_the_visible_images_condition(): void
     {
-        $criteria = new CategoryImagesCriteria(new SqlCondition(''), [1], new SqlCondition('i.id = -1'));
+        $criteria = new CategoryImagesCriteria(new ImageFilterCriteria(), [1], new SqlCondition('i.id = -1'));
         $result = $this->repo->findWithConditionsPaginated($criteria, '', 10, 0);
 
         self::assertSame([], $result->rows);
@@ -1040,7 +1057,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_find_category_links_for_image_ids_with_condition_returns_matching_rows(): void
     {
-        $rows = $this->repo->findCategoryLinksForImageIdsWithCondition([1, 2], new SqlCondition(''));
+        $rows = $this->repo->findCategoryLinksForImageIdsWithCondition([1, 2], self::noPermissionRestriction());
 
         $pairs = array_map(static fn (array $row): string => $row['image_id'] . ':' . $row['category_id'], $rows);
         sort($pairs);
@@ -1050,21 +1067,24 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_find_category_links_for_image_ids_with_condition_applies_the_given_condition(): void
     {
-        self::assertSame([], $this->repo->findCategoryLinksForImageIdsWithCondition([1, 2], new SqlCondition('category_id = -1')));
+        self::assertSame([], $this->repo->findCategoryLinksForImageIdsWithCondition([1, 2], new PermissionCriteria([1], null, null, null, null, null)));
     }
 
     public function test_find_for_missing_derivatives_matches_the_given_filter_condition(): void
     {
-        $criteria = new MissingDerivativesCriteria(new SqlCondition('id = :imageId', ['imageId' => 1], ['imageId' => ParameterType::INTEGER]));
+        // fixture ratings: 1=>4.50, 2=>3.00, 3=>5.00, 4=>2.00, 5=>NULL --
+        // minRate: 4.6 keeps only image 3 (a NULL rating never satisfies a
+        // >= comparison).
+        $criteria = new MissingDerivativesCriteria(new ImageFilterCriteria(minRate: 4.6));
         $rows = $this->repo->findForMissingDerivatives($criteria, 999_999, 10);
 
         self::assertCount(1, $rows);
-        self::assertSame(1, $rows[0]['id']);
+        self::assertSame(3, $rows[0]['id']);
     }
 
     public function test_find_for_missing_derivatives_filters_by_ids(): void
     {
-        $criteria = new MissingDerivativesCriteria(new SqlCondition(''), [2, 3]);
+        $criteria = new MissingDerivativesCriteria(new ImageFilterCriteria(), [2, 3]);
         $rows = $this->repo->findForMissingDerivatives($criteria, 999_999, 10);
 
         $ids = array_map(static fn (array $row): int => is_numeric($row['id']) ? (int) $row['id'] : 0, $rows);

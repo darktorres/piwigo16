@@ -12,10 +12,12 @@ use Piwigo\Mail\Projection\MailRecipient;
 /**
  * Persistence layer for mailing-recipient discovery: MailService's own
  * `mailAdmins()`/`mailGroup()` queries against `users`/`user_infos`/
- * `user_group`. `$idColumn`/`$usernameColumn`/`$emailColumn` are the
- * runtime-configurable column names from \Piwigo\Config\CurrentConfig::userFields()
- * (resolved by the caller, matching Piwigo\Auth\AuthRepository's own
- * pattern for the same reason).
+ * `user_group`.
+ *
+ * SQL-modernization audit, Item 14 Sub-phase C4: dropped every
+ * `$idColumn`/`$usernameColumn`/`$emailColumn` multi-auth column-name
+ * param -- `users` is now mapped ({@see \Piwigo\Users\UserEntity}), always
+ * `id`/`username`/`mail_address`.
  */
 final class MailRecipientRepository extends AbstractRepository implements MailRecipientRepositoryInterface
 {
@@ -25,9 +27,6 @@ final class MailRecipientRepository extends AbstractRepository implements MailRe
      */
     #[\Override]
     public function findAdminsAndWebmasters(
-        string $idColumn,
-        string $usernameColumn,
-        string $emailColumn,
         array $userStatuses,
         ?int $groupId,
         ?int $excludeUserId
@@ -35,13 +34,13 @@ final class MailRecipientRepository extends AbstractRepository implements MailRe
         $qb = $this->conn->createQueryBuilder()
             ->select(
                 'i.user_id',
-                'u.' . $usernameColumn . ' AS name',
-                'u.' . $emailColumn . ' AS email',
+                'u.username AS name',
+                'u.mail_address AS email',
             )
             ->from(Tables::users(), 'u')
-            ->join('u', Tables::userInfos(), 'i', 'i.user_id = u.' . $idColumn)
+            ->join('u', Tables::userInfos(), 'i', 'i.user_id = u.id')
             ->where('i.status IN (:statuses)')
-            ->andWhere('u.' . $emailColumn . ' IS NOT NULL')
+            ->andWhere('u.mail_address IS NOT NULL')
             ->orderBy('name')
             ->setParameter('statuses', $userStatuses, ArrayParameterType::STRING);
 
@@ -67,18 +66,16 @@ final class MailRecipientRepository extends AbstractRepository implements MailRe
      */
     #[\Override]
     public function findDistinctLanguagesInGroup(
-        string $idColumn,
-        string $emailColumn,
         int $groupId,
         ?string $languageFilter
     ): array {
         $qb = $this->conn->createQueryBuilder()
             ->select('DISTINCT ui.language')
             ->from(Tables::userGroup(), 'ug')
-            ->join('ug', Tables::users(), 'u', $idColumn . ' = ug.user_id')
+            ->join('ug', Tables::users(), 'u', 'u.id = ug.user_id')
             ->join('ug', Tables::userInfos(), 'ui', 'ui.user_id = ug.user_id')
             ->where('ug.group_id = :groupId')
-            ->andWhere('u.' . $emailColumn . ' <> \'\'')
+            ->andWhere('u.mail_address <> \'\'')
             ->setParameter('groupId', $groupId);
 
         if ($languageFilter !== null && $languageFilter !== '') {
@@ -97,9 +94,6 @@ final class MailRecipientRepository extends AbstractRepository implements MailRe
      */
     #[\Override]
     public function findByGroupAndLanguage(
-        string $idColumn,
-        string $usernameColumn,
-        string $emailColumn,
         int $groupId,
         string $language
     ): array {
@@ -107,14 +101,14 @@ final class MailRecipientRepository extends AbstractRepository implements MailRe
             ->select(
                 'ui.user_id',
                 'ui.status',
-                'u.' . $usernameColumn . ' AS name',
-                'u.' . $emailColumn . ' AS email',
+                'u.username AS name',
+                'u.mail_address AS email',
             )
             ->from(Tables::userGroup(), 'ug')
-            ->join('ug', Tables::users(), 'u', $idColumn . ' = ug.user_id')
+            ->join('ug', Tables::users(), 'u', 'u.id = ug.user_id')
             ->join('ug', Tables::userInfos(), 'ui', 'ui.user_id = ug.user_id')
             ->where('ug.group_id = :groupId')
-            ->andWhere('u.' . $emailColumn . ' <> \'\'')
+            ->andWhere('u.mail_address <> \'\'')
             ->andWhere('ui.language = :language')
             ->setParameter('groupId', $groupId)
             ->setParameter('language', $language)

@@ -70,7 +70,7 @@ final class MailRecipientRepositoryTest extends IntegrationTestCase
 
     public function test_find_admins_and_webmasters_returns_only_the_webmaster_when_no_admin_status_exists(): void
     {
-        $recipients = $this->repo->findAdminsAndWebmasters('id', 'username', 'mail_address', ['webmaster'], null, null);
+        $recipients = $this->repo->findAdminsAndWebmasters(['webmaster'], null, null);
 
         self::assertCount(1, $recipients);
         self::assertEquals(
@@ -84,7 +84,7 @@ final class MailRecipientRepositoryTest extends IntegrationTestCase
         $this->conn->executeStatement("UPDATE " . Tables::users() . " SET mail_address = 'power.user@example.test' WHERE id = 4");
         $this->conn->executeStatement("UPDATE " . Tables::userInfos() . " SET status = 'admin' WHERE user_id = 4");
 
-        $recipients = $this->repo->findAdminsAndWebmasters('id', 'username', 'mail_address', ['webmaster', 'admin'], null, null);
+        $recipients = $this->repo->findAdminsAndWebmasters(['webmaster', 'admin'], null, null);
 
         $byId = $this->indexByUserId($recipients);
         self::assertSame([1, 4], array_keys($byId));
@@ -94,7 +94,7 @@ final class MailRecipientRepositoryTest extends IntegrationTestCase
 
     public function test_find_admins_and_webmasters_excludes_the_given_user_id(): void
     {
-        $recipients = $this->repo->findAdminsAndWebmasters('id', 'username', 'mail_address', ['webmaster'], null, 1);
+        $recipients = $this->repo->findAdminsAndWebmasters(['webmaster'], null, 1);
 
         self::assertSame([], $recipients);
     }
@@ -102,8 +102,8 @@ final class MailRecipientRepositoryTest extends IntegrationTestCase
     public function test_find_admins_and_webmasters_filters_by_group(): void
     {
         // user 1 (webmaster) is a member of group 1 only.
-        $inGroup = $this->repo->findAdminsAndWebmasters('id', 'username', 'mail_address', ['webmaster'], 1, null);
-        $notInGroup = $this->repo->findAdminsAndWebmasters('id', 'username', 'mail_address', ['webmaster'], 3, null);
+        $inGroup = $this->repo->findAdminsAndWebmasters(['webmaster'], 1, null);
+        $notInGroup = $this->repo->findAdminsAndWebmasters(['webmaster'], 3, null);
 
         self::assertCount(1, $inGroup);
         self::assertSame(1, $inGroup[0]->userId);
@@ -112,7 +112,7 @@ final class MailRecipientRepositoryTest extends IntegrationTestCase
 
     public function test_find_admins_and_webmasters_returns_empty_for_a_status_nobody_has(): void
     {
-        self::assertSame([], $this->repo->findAdminsAndWebmasters('id', 'username', 'mail_address', ['guest'], null, null));
+        self::assertSame([], $this->repo->findAdminsAndWebmasters(['guest'], null, null));
     }
 
     public function test_find_distinct_languages_in_group_returns_only_eligible_members_languages(): void
@@ -121,7 +121,7 @@ final class MailRecipientRepositoryTest extends IntegrationTestCase
         $this->conn->executeStatement("UPDATE " . Tables::userInfos() . " SET language = 'fr_FR' WHERE user_id = 3");
 
         // group 1 has users 1 (en_UK, real email) and 3 (fr_FR, now a real email).
-        $languages = $this->repo->findDistinctLanguagesInGroup('id', 'mail_address', 1, null);
+        $languages = $this->repo->findDistinctLanguagesInGroup(1, null);
         sort($languages);
 
         self::assertSame(['en_UK', 'fr_FR'], $languages);
@@ -132,7 +132,7 @@ final class MailRecipientRepositoryTest extends IntegrationTestCase
         $this->conn->executeStatement("UPDATE " . Tables::users() . " SET mail_address = 'regular.user@example.test' WHERE id = 3");
         $this->conn->executeStatement("UPDATE " . Tables::userInfos() . " SET language = 'fr_FR' WHERE user_id = 3");
 
-        $languages = $this->repo->findDistinctLanguagesInGroup('id', 'mail_address', 1, 'fr_FR');
+        $languages = $this->repo->findDistinctLanguagesInGroup(1, 'fr_FR');
 
         self::assertSame(['fr_FR'], $languages);
     }
@@ -140,12 +140,12 @@ final class MailRecipientRepositoryTest extends IntegrationTestCase
     public function test_find_distinct_languages_in_group_returns_empty_when_the_only_member_has_no_email(): void
     {
         // group 3's only member is user 4, whose mail_address is still NULL.
-        self::assertSame([], $this->repo->findDistinctLanguagesInGroup('id', 'mail_address', 3, null));
+        self::assertSame([], $this->repo->findDistinctLanguagesInGroup(3, null));
     }
 
     public function test_find_by_group_and_language_returns_the_matching_recipient_with_its_status(): void
     {
-        $recipients = $this->repo->findByGroupAndLanguage('id', 'username', 'mail_address', 1, 'en_UK');
+        $recipients = $this->repo->findByGroupAndLanguage(1, 'en_UK');
 
         self::assertCount(1, $recipients);
         self::assertEquals(
@@ -156,7 +156,7 @@ final class MailRecipientRepositoryTest extends IntegrationTestCase
 
     public function test_find_by_group_and_language_returns_empty_for_a_language_nobody_in_the_group_has(): void
     {
-        self::assertSame([], $this->repo->findByGroupAndLanguage('id', 'username', 'mail_address', 1, 'de_DE'));
+        self::assertSame([], $this->repo->findByGroupAndLanguage(1, 'de_DE'));
     }
 
     public function test_find_by_group_and_language_scopes_correctly_across_two_languages_in_the_same_group(): void
@@ -164,8 +164,8 @@ final class MailRecipientRepositoryTest extends IntegrationTestCase
         $this->conn->executeStatement("UPDATE " . Tables::users() . " SET mail_address = 'regular.user@example.test' WHERE id = 3");
         $this->conn->executeStatement("UPDATE " . Tables::userInfos() . " SET language = 'fr_FR' WHERE user_id = 3");
 
-        $frenchRecipients = $this->repo->findByGroupAndLanguage('id', 'username', 'mail_address', 1, 'fr_FR');
-        $englishRecipients = $this->repo->findByGroupAndLanguage('id', 'username', 'mail_address', 1, 'en_UK');
+        $frenchRecipients = $this->repo->findByGroupAndLanguage(1, 'fr_FR');
+        $englishRecipients = $this->repo->findByGroupAndLanguage(1, 'en_UK');
 
         self::assertCount(1, $frenchRecipients);
         self::assertEquals(

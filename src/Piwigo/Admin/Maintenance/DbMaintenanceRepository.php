@@ -186,11 +186,13 @@ final readonly class DbMaintenanceRepository
 
     /**
      * Sessions belonging to a since-deleted user id -- should never happen
-     * in practice, purged defensively. $idColumn is $conf['user_fields']['id']
-     * (external-auth column mapping, same convention as every other admin
-     * page reading the users table).
+     * in practice, purged defensively.
+     *
+     * SQL-modernization audit, Item 14 Sub-phase C4: `users` is now
+     * mapped ({@see \Piwigo\Users\UserEntity}) -- the multi-auth column
+     * indirection this used to take as an `$idColumn` parameter is gone.
      */
-    public function purgeSessionsForDeletedUsers(string $idColumn): void
+    public function purgeSessionsForDeletedUsers(): void
     {
         $conn = $this->em->getConnection();
         $sessions = $conn->createQueryBuilder()
@@ -199,15 +201,15 @@ final readonly class DbMaintenanceRepository
             ->executeQuery()
             ->fetchAllAssociative();
 
-        $allUserIds = $conn->createQueryBuilder()
-            ->select($idColumn . ' AS id')
-            ->from(Tables::users())
-            ->executeQuery()
-            ->fetchFirstColumn();
+        $allUserIds = $this->em->createQueryBuilder()
+            ->select('u.id')
+            ->from(\Piwigo\Users\UserEntity::class, 'u')
+            ->getQuery()
+            ->getArrayResult();
         $allUserIdStrings = [];
-        foreach ($allUserIds as $userId) {
-            if (is_scalar($userId)) {
-                $allUserIdStrings[] = (string) $userId;
+        foreach ($allUserIds as $row) {
+            if (is_array($row) && ($row['id'] ?? null) instanceof \Piwigo\Common\ValueObject\UserId) {
+                $allUserIdStrings[] = (string) $row['id']->value;
             }
         }
 

@@ -24,6 +24,7 @@ use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageService;
 use Piwigo\Lang\Translator;
+use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\Session\SessionService;
@@ -383,13 +384,7 @@ final readonly class CategoryService
         $uppercats = $category['uppercats'];
         $uppercats = is_string($uppercats) ? $uppercats : '';
 
-        $condition = $this->permissionService->getSqlConditionFandFAsCondition([
-            'forbidden_categories' => 'c.id',
-            'visible_categories' => 'c.id',
-            'visible_images' => 'image_id',
-        ]);
-
-        return $this->repo->findRandomImageId($catId, $uppercats, $recursive, $condition);
+        return $this->repo->findRandomImageId($catId, $uppercats, $recursive, $this->permissionService->getPermissionCriteria());
     }
 
     /**
@@ -522,15 +517,11 @@ final readonly class CategoryService
             return [];
         }
 
-        $condition = $usePermissions
-            ? $this->permissionService->getSqlConditionFandFAsCondition([
-                'forbidden_categories' => 'category_id',
-                'visible_categories' => 'category_id',
-                'visible_images' => 'id',
-            ])
-            : new SqlCondition('');
+        $criteria = $usePermissions
+            ? $this->permissionService->getPermissionCriteria()
+            : new PermissionCriteria(null, null, null, null, null, null);
 
-        return $this->repo->findImageIdsForCategories($catIds, $mode, $condition);
+        return $this->repo->findImageIdsForCategories($catIds, $mode, $criteria);
     }
 
     /**
@@ -544,14 +535,11 @@ final readonly class CategoryService
             return [];
         }
 
-        $condition = $usePermissions
-            ? $this->permissionService->getSqlConditionFandFAsCondition([
-                'forbidden_categories' => 'category_id',
-                'visible_categories' => 'category_id',
-            ])
-            : new SqlCondition('');
+        $criteria = $usePermissions
+            ? $this->permissionService->getPermissionCriteria()
+            : new PermissionCriteria(null, null, null, null, null, null);
 
-        return $this->repo->findCommonCategories($items, $max, $excludedCatIds, $condition);
+        return $this->repo->findCommonCategories($items, $max, $excludedCatIds, $criteria);
     }
 
     /**
@@ -921,9 +909,9 @@ final readonly class CategoryService
      *
      * @param  array<int, mixed>  $selecteds
      */
-    public function displaySelectByCondition(SqlCondition $condition, array $selecteds, string $blockname, HtmlRenderingInterface $htmlRenderer, TemplateInterface $template): void
+    public function displaySelectByCondition(PermissionCriteria $criteria, array $selecteds, string $blockname, HtmlRenderingInterface $htmlRenderer, TemplateInterface $template): void
     {
-        $this->sortAndDisplaySelectCategories($this->repo->findIdNameUppercatsRank($condition), $selecteds, $blockname, $htmlRenderer, $template);
+        $this->sortAndDisplaySelectCategories($this->repo->findIdNameUppercatsRank($criteria), $selecteds, $blockname, $htmlRenderer, $template);
     }
 
     /**
@@ -2183,9 +2171,9 @@ final readonly class CategoryService
         return $this->repo->existsById($id);
     }
 
-    public function getRandomRepresentativeIdAmongSubcategories(string $uppercats, SqlCondition $condition): ?string
+    public function getRandomRepresentativeIdAmongSubcategories(string $uppercats, PermissionCriteria $criteria): ?string
     {
-        return $this->repo->findRandomRepresentativeIdAmongSubcategories($uppercats, $condition);
+        return $this->repo->findRandomRepresentativeIdAmongSubcategories($uppercats, $criteria);
     }
 
     /**

@@ -7,6 +7,7 @@ namespace Piwigo\Calendar;
 use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Category\CategoryService;
 use Piwigo\Db\Tables;
+use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
 
@@ -65,21 +66,36 @@ final readonly class CalendarService
                     'innerSubIds' => ArrayParameterType::INTEGER,
                 ];
 
-                $permissionCondition = $this->permissionService->getSqlConditionFandFAsCondition([
-                    'visible_images' => 'id',
-                ]);
+                $criteria = $this->permissionService->getPermissionCriteria();
+                // visible_images's own old fallthrough into forbidden_images
+                // (fieldName 'id' -> the images-table's own level check) --
+                // see PermissionCriteria's own docblock.
+                $permissionCondition = SqlCondition::combine(
+                    'AND',
+                    $criteria->visibleImagesCondition('id'),
+                    $criteria->maxLevelCondition('level'),
+                );
                 if (! $permissionCondition->isEmpty()) {
                     $sql .= "\n    AND {$permissionCondition->sql}";
                     $params = [...$params, ...$permissionCondition->parameters];
                     $types = [...$types, ...$permissionCondition->types];
                 }
             } else {
-                $permissionCondition = $this->permissionService->getSqlConditionFandFAsCondition([
-                    'forbidden_categories' => 'category_id',
-                    'visible_categories' => 'category_id',
-                    'visible_images' => 'id',
-                ], true);
-                $sql .= "\n    WHERE {$permissionCondition->sql}";
+                $criteria = $this->permissionService->getPermissionCriteria();
+                $permissionCondition = SqlCondition::combine(
+                    'AND',
+                    $criteria->forbiddenCategoriesCondition('category_id'),
+                    $criteria->visibleCategoriesCondition('category_id'),
+                    $criteria->visibleImagesCondition('id'),
+                    $criteria->maxLevelCondition('level'),
+                );
+                // The old $forceOneCondition: true guaranteed a non-empty
+                // fragment here -- this WHERE clause is spliced unconditionally
+                // below (no isEmpty() guard around it), so an empty criteria
+                // (no real restriction for this user) would otherwise produce
+                // a bare "WHERE" with nothing after it, a real SQL syntax error.
+                $whereSql = $permissionCondition->isEmpty() ? '1 = 1' : $permissionCondition->sql;
+                $sql .= "\n    WHERE {$whereSql}";
                 $params = $permissionCondition->parameters;
                 $types = $permissionCondition->types;
             }

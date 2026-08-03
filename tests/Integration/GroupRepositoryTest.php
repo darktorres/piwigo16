@@ -177,7 +177,7 @@ final class GroupRepositoryTest extends IntegrationTestCase
 
     public function test_find_member_usernames_returns_fixture_usernames(): void
     {
-        $names = $this->repo->findMemberUsernames(GroupId::from(1), 'username', 'id');
+        $names = $this->repo->findMemberUsernames(GroupId::from(1));
 
         self::assertSame(['fixture_admin', 'regular_user'], $names);
     }

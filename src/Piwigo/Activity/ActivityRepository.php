@@ -7,10 +7,12 @@ namespace Piwigo\Activity;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\Query\Expr\Join;
 use Piwigo\Activity\Projection\SystemActivityLogEntry;
 use Piwigo\Activity\Projection\UserActivityLogEntry;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Db\Tables;
+use Piwigo\Users\UserEntity;
 
 /**
  * Persistence layer for the activity domain: `activity` (an append-only
@@ -161,31 +163,33 @@ final class ActivityRepository extends EntityRepository
     /**
      * Every activity-log line for object='user', joined with the acting
      * user's own username -- used only by the CSV export
-     * (admin/user_activity.php's `type=download_logs`). $usernameColumn/
-     * $idColumn are the configurable DB column names (see
-     * \Piwigo\Config\CurrentConfig::userFields()), not user-controlled --
-     * `users` is never ORM-mapped, so this join stays plain DBAL.
+     * (admin/user_activity.php's `type=download_logs`).
      *
      * `details` stays the raw JSON text here, not decoded to `?array` --
      * the CSV export writes it out as one opaque column value, unlike
      * {@see findSystemObjectLogWithUsernames()}'s own consumer, which does
      * structured `$details['key']` access and needs the real array.
      *
-     * Item 14 DQL audit: stays on DBAL -- joins `users`, which is never
-     * entity-mapped anywhere in this migration (only `user_infos` is, via
-     * UserInfoEntity), and $usernameColumn/$idColumn are runtime column
-     * names DQL can't express as a property path.
+     * SQL-modernization audit, Item 14 Sub-phase C4: `users` is now
+     * mapped ({@see \Piwigo\Users\UserEntity}), so the multi-auth column
+     * indirection this used to take as `$usernameColumn`/`$idColumn`
+     * parameters is gone -- but this still stays on DBAL: `details`'s own
+     * consumer here wants the raw JSON text (this method's own docblock,
+     * above), and `ActivityEntity::$details`'s custom `json` Doctrine
+     * Type means DQL array hydration would always decode it to a real
+     * array instead, a real behavior change for the CSV export this
+     * feeds, not just a column-name question.
      *
      * @return list<UserActivityLogEntry>
      */
-    public function findUserObjectLogWithUsernames(string $usernameColumn, string $idColumn): array
+    public function findUserObjectLogWithUsernames(): array
     {
         $rows = $this->getEntityManager()
             ->getConnection()
             ->createQueryBuilder()
-            ->select('activity_id', 'performed_by', 'object', 'object_id', 'action', 'ip_address', 'occured_on', 'details', 'u.' . $usernameColumn . ' AS username')
+            ->select('activity_id', 'performed_by', 'object', 'object_id', 'action', 'ip_address', 'occured_on', 'details', 'u.username AS username')
             ->from(Tables::activity(), 'a')
-            ->innerJoin('a', Tables::users(), 'u', 'a.performed_by = u.' . $idColumn)
+            ->innerJoin('a', Tables::users(), 'u', 'a.performed_by = u.id')
             ->where("a.object = 'user'")
             ->orderBy('a.activity_id', 'DESC')
             ->executeQuery()
@@ -217,27 +221,43 @@ final class ActivityRepository extends EntityRepository
      * does structured `$details['key']` access and used to `unserialize()`
      * it itself.
      *
-     * Item 14 DQL audit: stays on DBAL -- same `users`-is-unmapped and
-     * runtime-column-name blockers as {@see findUserObjectLogWithUsernames()}
-     * above, plus a MySQL-specific `IF(...)` expression with no DQL
-     * equivalent.
+     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real DQL
+     * -- `users` is now mapped ({@see \Piwigo\Users\UserEntity}), so the
+     * `$usernameColumn`/`$idColumn` multi-auth indirection is gone (always
+     * `u.username`/`u.id`), and the MySQL `IF(...)` expression translates
+     * directly to DQL's own `CASE WHEN ... END`. Unlike
+     * {@see findUserObjectLogWithUsernames()}, `details`'s own consumer
+     * here wants the decoded array, which DQL array hydration's `json`
+     * Type conversion gives for free.
      *
      * @return list<SystemActivityLogEntry>
      */
-    public function findSystemObjectLogWithUsernames(string $usernameColumn, string $idColumn): array
+    public function findSystemObjectLogWithUsernames(): array
     {
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('activity_id', 'performed_by', 'object_id', 'action', 'occured_on', 'details', "IF(performed_by = 0 OR performed_by IS NULL, 'System', u." . $usernameColumn . ') AS username')
-            ->from(Tables::activity(), 'a')
-            ->leftJoin('a', Tables::users(), 'u', 'a.performed_by = u.' . $idColumn)
+        $rows = $this->createQueryBuilder('a')
+            ->select(
+                'a.activityId AS activity_id',
+                'a.performedBy AS performed_by',
+                'a.objectId AS object_id',
+                'a.action AS action',
+                'a.occuredOn AS occured_on',
+                'a.details AS details',
+                "CASE WHEN a.performedBy = 0 OR a.performedBy IS NULL THEN 'System' ELSE u.username END AS username"
+            )
+            ->leftJoin(UserEntity::class, 'u', Join::WITH, 'u.id = a.performedBy')
             ->where("a.object = 'system'")
-            ->orderBy('a.activity_id', 'DESC')
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->orderBy('a.activityId', 'DESC')
+            ->getQuery()
+            ->getArrayResult();
 
-        return array_map(SystemActivityLogEntry::fromRow(...), $rows);
+        $result = [];
+        foreach ($rows as $row) {
+            if (is_array($row)) {
+                $result[] = SystemActivityLogEntry::fromRow($row);
+            }
+        }
+
+        return $result;
     }
 
     /**

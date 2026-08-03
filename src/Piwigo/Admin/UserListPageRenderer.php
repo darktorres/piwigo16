@@ -101,9 +101,7 @@ final class UserListPageRenderer
             $password_protected_users = array_merge($password_protected_users, array_diff($admin_ids, [$current_user_id]));
         }
 
-        $user_fields = $currentConfig->userFields();
-
-        $owner_username = $userService->getUsernameById(\Piwigo\Common\ValueObject\UserId::from($webmaster_id), $user_fields['id'], $user_fields['username'])->value ?? '';
+        $owner_username = $userService->getUsernameById(\Piwigo\Common\ValueObject\UserId::from($webmaster_id))->value ?? '';
 
         // protected_users/password_protected_users mix CurrentUser::get()->id, several $conf
         // ids (already normalized to int above) and $admin_ids (query2array

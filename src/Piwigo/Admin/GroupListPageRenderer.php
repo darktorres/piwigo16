@@ -75,11 +75,8 @@ final class GroupListPageRenderer
 
         $group_counter = 0;
 
-        /** @var array<string, string> $user_fields */
-        $user_fields = $this->currentConfig->userFields();
-
         foreach ($groups as $row) {
-            $members = $group_repo->findMemberUsernames($row->id, $user_fields['username'], $user_fields['id']);
+            $members = $group_repo->findMemberUsernames($row->id);
 
             $template->append(
                 'groups',

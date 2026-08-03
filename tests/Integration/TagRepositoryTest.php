@@ -4,16 +4,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\ParameterType;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\Tables;
-use Piwigo\Permission\SqlCondition;
+use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Tag\TagEntity;
 use Piwigo\Tag\TagRepository;
 
@@ -408,15 +406,15 @@ final class TagRepositoryTest extends IntegrationTestCase
 
     /**
      * SQL-modernization audit: countImagesPerTag()'s own former
-     * $fandFSql raw-string parameter is now a bound SqlCondition -- these
-     * 3 tests (previously zero direct coverage on this method at all)
+     * $fandFSql raw-string parameter is now a typed PermissionCriteria --
+     * these 3 tests (previously zero direct coverage on this method at all)
      * are the first to exercise it. Fixture shape (see this class's own
      * findTagIdsByImageIds test): image 1 has tags 1/2/3, images 2/3 have
      * only tag 1, all three sit in category 1 (image_category).
      */
     public function test_count_images_per_tag_counts_distinct_images_per_tag(): void
     {
-        $counters = $this->repo->countImagesPerTag([], new SqlCondition(''));
+        $counters = $this->repo->countImagesPerTag([], self::noPermissionRestriction());
 
         self::assertSame(3, $counters[1] ?? null);
         self::assertSame(1, $counters[2] ?? null);
@@ -425,12 +423,12 @@ final class TagRepositoryTest extends IntegrationTestCase
 
     public function test_count_images_per_tag_filters_by_the_given_tag_ids(): void
     {
-        self::assertSame([1 => 3], $this->repo->countImagesPerTag([1], new SqlCondition('')));
+        self::assertSame([1 => 3], $this->repo->countImagesPerTag([1], self::noPermissionRestriction()));
     }
 
     public function test_count_images_per_tag_applies_the_given_condition(): void
     {
-        self::assertSame([], $this->repo->countImagesPerTag([], new SqlCondition('category_id = -1')));
+        self::assertSame([], $this->repo->countImagesPerTag([], new PermissionCriteria(null, [999_999], null, null, null, null)));
     }
 
     /**
@@ -479,31 +477,29 @@ final class TagRepositoryTest extends IntegrationTestCase
      */
     public function test_find_image_ids_for_tags_binds_named_parameters(): void
     {
-        $ids = $this->repo->findImageIdsForTags([1], 'AND', false, new SqlCondition(''));
+        $ids = $this->repo->findImageIdsForTags([1], 'AND', false, self::noPermissionRestriction());
         sort($ids);
 
         self::assertSame([1, 2, 3], $ids);
     }
 
-    public function test_find_image_ids_for_tags_applies_an_extra_where_fragment_with_its_own_bound_params(): void
+    public function test_find_image_ids_for_tags_applies_an_image_filter_criteria(): void
     {
-        // Proves $extraImagesWhereSql/$extraParams/$extraTypes (the one
-        // legitimate caller-supplied fragment this method still accepts,
-        // see its own docblock) reach the query and stay correctly bound
-        // -- excludes image 1 by id, matching all 3 of category 1's images
-        // (1, 2, 3) down to just 2 and 3.
+        // Proves $filterCriteria (the one legitimate caller-supplied
+        // fragment this method still accepts, see its own docblock)
+        // reaches the query and stays correctly bound -- fixture: tag 1
+        // tags images 1 (rating_score 4.50), 2 (3.00), 3 (5.00);
+        // minRate: 4.0 excludes image 2.
         $ids = $this->repo->findImageIdsForTags(
             [1],
             'AND',
             false,
-            new SqlCondition(''),
-            'i.id != :excludedId',
-            ['excludedId' => 1],
-            ['excludedId' => ParameterType::INTEGER],
+            self::noPermissionRestriction(),
+            new \Piwigo\Image\ImageFilterCriteria(minRate: 4.0),
         );
         sort($ids);
 
-        self::assertSame([2, 3], $ids);
+        self::assertSame([1, 3], $ids);
     }
 
     public function test_exists_by_id_is_true_for_a_real_tag(): void
@@ -596,5 +592,15 @@ final class TagRepositoryTest extends IntegrationTestCase
         } finally {
             $this->conn->delete(Tables::imageTag(), ['image_id' => 5, 'tag_id' => 2]);
         }
+    }
+
+    /**
+     * A {@see PermissionCriteria} with every dimension null -- "no
+     * restriction on anything," the direct replacement for the old
+     * `new SqlCondition('')` sentinel.
+     */
+    private static function noPermissionRestriction(): PermissionCriteria
+    {
+        return new PermissionCriteria(null, null, null, null, null, null);
     }
 }

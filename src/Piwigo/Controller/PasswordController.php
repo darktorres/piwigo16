@@ -587,18 +587,13 @@ final class PasswordController implements ControllerInterface
             return false;
         }
 
-        // see validate_mail_address() for why this is string=>string
-        /** @var array<string, string> $user_fields */
-        $user_fields = $this->currentConfig->userFields();
-
         $conn = DbConnection::build();
 
         $this->userService->updateAccountFields(
-            $user_id,
-            $user_fields['id'],
-            [
-                $user_fields['password'] => $this->passwordService->hash($new_password),
-            ]
+            \Piwigo\Common\ValueObject\UserId::from($user_id),
+            null,
+            $this->passwordService->hash($new_password),
+            null,
         );
 
         $reset_session = $_SESSION['valid_reset_password_code'] ?? null;

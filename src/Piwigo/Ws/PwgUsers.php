@@ -12,8 +12,6 @@ declare(strict_types=1);
 namespace Piwigo\Ws;
 
 use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\ParameterType;
-use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\ApiKeyService;
 use Piwigo\Auth\AuthService;
@@ -104,15 +102,6 @@ final class PwgUsers
         // pair below -- FOUND_ROWS() reflects the immediately-preceding
         // query on the SAME connection/session, so this must stay one
         // connection for the whole method.
-
-        // $this->currentConfig->userFields() maps generic field names to table-specific DB
-        // column names (see Piwigo\Users\UserService for the same pattern);
-        // extracted once here since this function reads id/username/
-        // email repeatedly below.
-        $user_fields = $this->currentConfig->userFields();
-        $user_field_id = $user_fields['id'];
-        $user_field_username = $user_fields['username'];
-        $user_field_email = $user_fields['email'];
 
         $available_permission_levels = $this->currentConfig->availablePermissionLevels();
 
@@ -224,7 +213,7 @@ final class PwgUsers
         );
 
         $display = [
-            'u.' . $user_field_id => 'id',
+            'u.id' => 'id',
         ];
 
         // $params['display'] is a comma-separated string per the WS contract
@@ -269,10 +258,10 @@ final class PwgUsers
             }
 
             if (isset($display_flags['username'])) {
-                $display['u.' . $user_field_username] = 'username';
+                $display['u.username'] = 'username';
             }
             if (isset($display_flags['email'])) {
-                $display['u.' . $user_field_email] = 'email';
+                $display['u.mail_address'] = 'email';
             }
 
             $ui_fields = [
@@ -289,9 +278,6 @@ final class PwgUsers
 
         $apply_limit = $params['per_page'] !== 0 || $display_flags !== [];
         $paginated_users = $this->userService->getListForWs(
-            $user_field_id,
-            $user_field_username,
-            $user_field_email,
             $display,
             isset($display['ui.last_visit']),
             $criteria,
@@ -649,12 +635,7 @@ final class PwgUsers
                 return new PwgError(403, $this->lang->t('The passwords do not match'));
             }
 
-            // $this->currentConfig->userFields() maps generic field names to table-specific
-            // DB column names (see Piwigo\Users\UserService for the same
-            // pattern).
-            $user_fields = $this->currentConfig->userFields();
-
-            $current_password = $this->authService->getPasswordHash($currentUser->id->value, $user_fields['id'], $user_fields['username'], $user_fields['password']);
+            $current_password = $this->authService->getPasswordHash($currentUser->id);
             $current_password ??= '';
 
             // $params['password'] is declared string via this function's own
@@ -798,9 +779,7 @@ final class PwgUsers
         $order_by = WsHelper::stdImageSqlOrder($params, 'i.');
         $order_by = $order_by === '' ? $this->currentConfig->orderBy() : 'ORDER BY ' . $order_by;
 
-        $permission_condition = $this->permissionService->getSqlConditionFandFAsCondition([
-            'visible_images' => 'id',
-        ]);
+        $permission_condition = $this->permissionService->getPermissionCriteria();
 
         $images = [];
         foreach ($this->userService->getVisibleFavoriteImages($this->currentUser->get()->id, $permission_condition, $order_by) as $row) {

@@ -42,12 +42,8 @@ final class MaintenanceSysPageRenderer
             if (Request\MaintenanceSysMethodRequest::fromGlobals()->isActivitySysGetList) {
                 $data = [];
 
-                $user_fields = $currentConfig->userFields();
-                $username_field = $user_fields['username'];
-                $id_field = $user_fields['id'];
-
                 $activity_log = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)
-                    ->findSystemObjectLogWithUsernames($username_field, $id_field);
+                    ->findSystemObjectLogWithUsernames();
 
                 $formatter = new ActivityLogEntryFormatter();
 

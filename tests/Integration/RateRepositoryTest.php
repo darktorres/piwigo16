@@ -280,7 +280,7 @@ final class RateRepositoryTest extends IntegrationTestCase
      */
     public function test_find_usernames_by_id_maps_id_to_username(): void
     {
-        $usernames = $this->repo->findUsernamesById('id', 'username');
+        $usernames = $this->repo->findUsernamesById();
 
         ksort($usernames);
         self::assertSame(
@@ -366,7 +366,7 @@ final class RateRepositoryTest extends IntegrationTestCase
 
     public function test_find_users_with_status_by_id_username(): void
     {
-        $users = $this->repo->findUsersWithStatusByIdUsername('id', 'username');
+        $users = $this->repo->findUsersWithStatusByIdUsername();
 
         self::assertCount(4, $users);
         $byId = [];

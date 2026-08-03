@@ -5168,41 +5168,6 @@ final class CurrentConfig
         $this->useIptcMapping = $result;
     }
 
-    // === user_fields ===
-    /**
-     * Simplified from the reference's typed UserFieldsMap return -- no such
-     * VO exists in this codebase's Piwigo\Users namespace; returns the same
-     * column-name mapping as a plain array instead.
-     * @var array{id: string, username: string, password: string, email: string}
-     */
-    private array $userFields = [
-        'id' => 'id',
-        'username' => 'username',
-        'password' => 'password',
-        'email' => 'mail_address',
-    ];
-
-    /**
-     * @return array{id: string, username: string, password: string, email: string}
-     */
-    public function userFields(): array
-    {
-        return $this->userFields;
-    }
-
-    /**
-     * @param array<mixed> $value
-     */
-    public function setUserFields(array $value): void
-    {
-        $this->userFields = [
-            'id' => isset($value['id']) && is_scalar($value['id']) ? (string) $value['id'] : 'id',
-            'username' => isset($value['username']) && is_scalar($value['username']) ? (string) $value['username'] : 'username',
-            'password' => isset($value['password']) && is_scalar($value['password']) ? (string) $value['password'] : 'password',
-            'email' => isset($value['email']) && is_scalar($value['email']) ? (string) $value['email'] : 'mail_address',
-        ];
-    }
-
     // ---- Composed accessors (no config key of their own) ---------------
 
     /**

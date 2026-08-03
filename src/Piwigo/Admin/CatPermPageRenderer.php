@@ -131,16 +131,7 @@ final class CatPermPageRenderer
         $template->assign('groups_selected', $group_granted_ids);
 
         // users...
-        $users = [];
-
-        // \Piwigo\Config\CurrentConfig::userFields() maps generic field names to table-specific column
-        // names (see include/config_default.inc.php); every value is a plain
-        // string.
-        $user_fields = $this->currentConfig->userFields();
-        $user_field_id = $user_fields['id'];
-        $user_field_username = $user_fields['username'];
-
-        $users = $this->userService->getAllUsernamesById($user_field_id, $user_field_username);
+        $users = $this->userService->getAllUsernamesById();
         $template->assign('users', $users);
 
         $user_granted_direct_ids = $permissionRepository->findGrantedUserIdsByCategory([$cat_id])[$cat_id] ?? [];

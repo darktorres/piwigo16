@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Auth\Projection;
 
+use Piwigo\Common\ValueObject\UserId;
+
 /**
  * Typed row shape for
  * {@see \Piwigo\Auth\AuthRepository::findByUsernameOrEmail()} (P17-23
- * Stage 1b, Auth domain) -- a `users`/`user_infos` join, keyed by
- * runtime-configurable column names (see `CurrentConfig::userFields()`).
+ * Stage 1b, Auth domain) -- a `users`/`user_infos` join.
  * `fromRow()` centralises the narrowing
  * {@see \Piwigo\Auth\AuthService::pwgLogin()} used to duplicate for itself
  * across several `$user_found['x']` accesses in this security-sensitive,
@@ -30,12 +31,25 @@ final readonly class AuthUser
     ) {}
 
     /**
-     * @param array<string, mixed> $row a {@see \Piwigo\Auth\AuthRepository::findByUsernameOrEmail()} row
+     * @param array<array-key, mixed> $row a {@see \Piwigo\Auth\AuthRepository::findByUsernameOrEmail()}
+     *   row -- Doctrine's own `getOneOrNullResult()` return type is bare
+     *   `mixed`, so this can't be declared `array<string, mixed>` the way
+     *   DBAL's own `fetchAssociative()` could; every real row still has
+     *   string keys (this DQL query's own explicit `AS` aliases), just not
+     *   statically provable from Doctrine's return type.
      */
     public static function fromRow(array $row): self
     {
         return new self(
-            id: is_scalar($row['id'] ?? null) ? (string) $row['id'] : '',
+            // `id` is `users.id`, now a custom-Typed UserId under DQL array
+            // hydration (this domain's own gotcha #4 territory) -- unwrap
+            // it explicitly rather than letting the generic is_scalar()
+            // check below silently treat a VO as absent.
+            id: match (true) {
+                ($row['id'] ?? null) instanceof UserId => (string) $row['id']->value,
+                is_scalar($row['id'] ?? null) => (string) $row['id'],
+                default => '',
+            },
             username: is_string($row['username'] ?? null) ? $row['username'] : '',
             email: is_string($row['email'] ?? null) ? $row['email'] : '',
             password: is_string($row['password'] ?? null) ? $row['password'] : '',

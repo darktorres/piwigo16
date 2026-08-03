@@ -79,11 +79,10 @@ final readonly class CommentService
             if (! AccessControl::current()->isAdmin()) {
                 $where[] = new SqlCondition('validated=1');
             }
-            $where[] = new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Category\CategoryEntity::class))
-                ->getSqlConditionFandFAsCondition([
-                    'forbidden_categories' => 'category_id',
-                    'forbidden_images' => 'ic.image_id',
-                ], true);
+            $permissionCriteria = new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Category\CategoryEntity::class))
+                ->getPermissionCriteria();
+            $where[] = $permissionCriteria->forbiddenCategoriesCondition('category_id');
+            $where[] = $permissionCriteria->imageAccessCondition('ic.image_id');
 
             $nbAvailableComments = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Comment\CommentEntity::class)->countAvailableWithConditions($where);
             $currentUser = $currentUser->withRawAttribute('nb_available_comments', $nbAvailableComments);
@@ -99,14 +98,12 @@ final readonly class CommentService
      */
     public function getAllCommentsWithConditions(
         array $whereClauses,
-        string $userIdColumn,
-        string $userEmailColumn,
         string $sortByColumn,
         string $sortOrder,
         int|string $limit,
         int $offset
     ): PaginatedResult {
-        return $this->repo->findAllWithConditions($whereClauses, $userIdColumn, $userEmailColumn, $sortByColumn, $sortOrder, $limit, $offset);
+        return $this->repo->findAllWithConditions($whereClauses, $sortByColumn, $sortOrder, $limit, $offset);
     }
 
     /**
@@ -122,12 +119,10 @@ final readonly class CommentService
      */
     public function getListForAdminWs(
         CommentApiCriteria $criteria,
-        string $userIdColumn,
-        string $userUsernameColumn,
         int $offset,
         int $limit
     ): array {
-        return $this->repo->findListForAdminWs($criteria, $userIdColumn, $userUsernameColumn, $offset, $limit);
+        return $this->repo->findListForAdminWs($criteria, $offset, $limit);
     }
 
     /**
@@ -253,10 +248,8 @@ final readonly class CommentService
             // they must be rejected
             if ($comm['author'] !== 'guest') {
                 $authorName = $comm['author'];
-                $user_fields = $this->currentConfig->userFields();
-                $usernameColumn = $user_fields['username'];
 
-                if ($this->repo->usernameExists($usernameColumn, $authorName)) {
+                if ($this->repo->usernameExists($authorName)) {
                     $infos[] = $this->lang->t('This login is already used by another user');
                     $commentAction = 'reject';
                 }

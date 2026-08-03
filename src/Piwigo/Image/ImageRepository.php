@@ -18,6 +18,7 @@ use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Image\Projection\Image;
 use Piwigo\Image\Projection\ImageFormat;
+use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\SqlCondition;
 
 /**
@@ -60,23 +61,24 @@ final class ImageRepository extends EntityRepository
      * `Notification\NotificationRepository::applyCondition()`/
      * `Tag\TagRepository::applyCondition()`.
      *
-     * SQL-modernization audit, Item 14 Sub-phase B3 re-investigation: every
-     * real caller of every one of this helper's own callers
+     * SQL-modernization audit, Item 14 Sub-phase B3 re-investigation found
+     * every real caller of every one of this helper's own callers
      * (isImageAccessibleWithCondition/findRowWithCondition/
      * findRelatedCategoriesForImage/isImageCommentableWithCondition/
      * findVisibleCategoriesForImage/hasAccessibleImageWithAuthor/
      * isImageAccessibleViaCategoryWithCondition/
      * findCategoryLinksForImageIdsWithCondition) traces back to
      * {@see \Piwigo\Permission\PermissionService::getSqlConditionFandFAsCondition()}
-     * -- confirmed by reading every real WS/Controller call site (PwgImages,
-     * PwgCategories, SearchController, PictureController, ActionController).
-     * This is a genuinely dynamic, multi-clause, cross-cutting permission
-     * condition builder, not a small finite set of shapes a typed DTO could
-     * replace the way {@see \Piwigo\Comment\CommentApiCriteria}/
-     * {@see \Piwigo\Activity\ActivityListCriteria} did for their own
-     * bounded, single-purpose callers -- giving `PermissionService` itself
-     * a DQL-producing path is a cross-cutting change well outside this
-     * sub-phase's scope, so this entire cluster stays on DBAL.
+     * -- Sub-phase C1 gave that method's own output a typed
+     * {@see \Piwigo\Permission\PermissionCriteria} replacement, and every
+     * method in this cluster now takes that DTO instead of a raw
+     * SqlCondition, translating it to a bound fragment via
+     * `PermissionCriteria`'s own `*Condition()` builders before reaching
+     * this shared applier. This cluster stays on DBAL regardless (not a
+     * DQL blocker this sub-phase resolves) -- `image_category`/`categories`
+     * joins here are plain `Doctrine\DBAL\Query\QueryBuilder` queries, and
+     * converting them to DQL is a separate, unrelated concern from the
+     * permission-condition typing this sub-phase targets.
      */
     private static function applyCondition(QueryBuilder $qb, SqlCondition $condition): void
     {
@@ -1449,67 +1451,111 @@ final class ImageRepository extends EntityRepository
      * Further SQL-modernization audit, Item 13: one page of images with id
      * below $startId, matching $criteria -- Ws\PwgCore::
      * getMissingDerivatives()'s own cursor-paginated scan, one real
-     * caller. $criteria's filter condition and optional id restriction are
-     * combined with this method's own `id < :startId` cursor condition
-     * internally via SqlCondition::combine(), replacing the caller-built
-     * `list<string> $whereClauses` this used to take.
+     * caller.
      *
-     * SQL-modernization audit, Item 14 Sub-phase B3 re-investigation:
-     * $criteria->filterCondition traces back to {@see \Piwigo\Ws\WsHelper::
-     * stdImageSqlFilter()} -- a shared, cross-cutting generic image-filter
-     * builder used across many different WS methods (rate/hit/date/
-     * ratio/level ranges, each independently optional, plus a runtime
-     * `$tbl_name` alias prefix), not a small finite set of shapes specific
-     * to this one method the way {@see \Piwigo\Comment\CommentApiCriteria}/
-     * {@see \Piwigo\Activity\ActivityListCriteria} were for their own
-     * bounded, single-purpose callers. Converting this would mean giving
-     * `WsHelper::stdImageSqlFilter()` itself a DQL-producing path, a
-     * cross-cutting change well outside this sub-phase's scope. Stays on
-     * DBAL -- $criteria->filterCondition is a caller-supplied raw
-     * SqlCondition fragment, not a DQL property-path expression.
+     * SQL-modernization audit, Item 14 Sub-phase C3: converted to real
+     * DQL -- $criteria->filterCriteria is now a typed
+     * {@see \Piwigo\Image\ImageFilterCriteria} (see that class's own
+     * docblock for why this was previously a permanent-looking blocker),
+     * applied here via {@see applyImageFilterCriteria()} against this
+     * method's own `i` alias.
      *
-     * @return list<array<string, mixed>>
+     * @return list<array{id: mixed, path: mixed, representative_ext: mixed, width: mixed, height: mixed, rotation: mixed}>
      */
     public function findForMissingDerivatives(MissingDerivativesCriteria $criteria, int $startId, int $limit): array
     {
-        $conditions = [$criteria->filterCondition];
+        $qb = $this->createQueryBuilder('i')
+            ->select('i.id AS id', 'i.path AS path', 'i.representativeExt AS representative_ext', 'i.width AS width', 'i.height AS height', 'i.rotation AS rotation')
+            ->where('i.id < :startId')
+            ->setParameter('startId', $startId)
+            ->orderBy('i.id', 'DESC')
+            ->setMaxResults($limit);
+
+        self::applyImageFilterCriteria($qb, $criteria->filterCriteria, 'i');
 
         if ($criteria->ids !== []) {
-            $conditions[] = new SqlCondition('id IN (:ids)', [
-                'ids' => $criteria->ids,
-            ], [
-                'ids' => ArrayParameterType::INTEGER,
-            ]);
+            $qb->andWhere('i.id IN (:ids)')
+                ->setParameter('ids', $criteria->ids, ArrayParameterType::INTEGER);
         }
 
-        $conditions[] = new SqlCondition('id < :startId', [
-            'startId' => $startId,
-        ], [
-            'startId' => ParameterType::INTEGER,
-        ]);
+        $rows = $qb->getQuery()
+            ->getArrayResult();
 
-        $combined = SqlCondition::combine('AND', ...$conditions);
+        // getArrayResult() is declared bare `mixed` by Doctrine itself, so
+        // is_array($row) alone only narrows to array<array-key, mixed> --
+        // rebuilt explicitly here into the known, string-keyed shape every
+        // real row has (this query's own `AS` aliases above).
+        $result = [];
+        foreach ($rows as $row) {
+            if (is_array($row)) {
+                $result[] = [
+                    'id' => $row['id'] ?? null,
+                    'path' => $row['path'] ?? null,
+                    'representative_ext' => $row['representative_ext'] ?? null,
+                    'width' => $row['width'] ?? null,
+                    'height' => $row['height'] ?? null,
+                    'rotation' => $row['rotation'] ?? null,
+                ];
+            }
+        }
 
-        $imagesTable = Tables::images();
-        $params = $combined->parameters;
-        $params['limit'] = $limit;
-        $types = $combined->types;
-        $types['limit'] = ParameterType::INTEGER;
+        return $result;
+    }
 
-        return $this->getEntityManager()
-            ->getConnection()
-            ->fetchAllAssociative(
-                <<<SQL
-                SELECT id, path, representative_ext, width, height, rotation
-                FROM {$imagesTable}
-                WHERE {$combined->sql}
-                ORDER BY id DESC
-                LIMIT :limit
-                SQL
-                ,
-                $params,
-                $types
-            );
+    /**
+     * Applies an {@see ImageFilterCriteria}'s own up-to-11 range
+     * predicates as `andWhere()`s against $alias's own columns -- shared by
+     * every DQL-based consumer of the shared f_* WS filter set (see
+     * {@see \Piwigo\Ws\WsHelper::stdImageSqlFilterCriteria()}'s own
+     * docblock). Each entry is independently optional (null = no
+     * restriction on that dimension).
+     */
+    private static function applyImageFilterCriteria(\Doctrine\ORM\QueryBuilder $qb, ImageFilterCriteria $criteria, string $alias): void
+    {
+        if ($criteria->minRate !== null) {
+            $qb->andWhere($alias . '.ratingScore >= :filterMinRate')
+                ->setParameter('filterMinRate', $criteria->minRate);
+        }
+        if ($criteria->maxRate !== null) {
+            $qb->andWhere($alias . '.ratingScore <= :filterMaxRate')
+                ->setParameter('filterMaxRate', $criteria->maxRate);
+        }
+        if ($criteria->minHit !== null) {
+            $qb->andWhere($alias . '.hit >= :filterMinHit')
+                ->setParameter('filterMinHit', $criteria->minHit);
+        }
+        if ($criteria->maxHit !== null) {
+            $qb->andWhere($alias . '.hit <= :filterMaxHit')
+                ->setParameter('filterMaxHit', $criteria->maxHit);
+        }
+        if ($criteria->minDateAvailable !== null) {
+            $qb->andWhere($alias . '.dateAvailable >= :filterMinDateAvailable')
+                ->setParameter('filterMinDateAvailable', $criteria->minDateAvailable);
+        }
+        if ($criteria->maxDateAvailable !== null) {
+            $qb->andWhere($alias . '.dateAvailable < :filterMaxDateAvailable')
+                ->setParameter('filterMaxDateAvailable', $criteria->maxDateAvailable);
+        }
+        if ($criteria->minDateCreated !== null) {
+            $qb->andWhere($alias . '.dateCreation >= :filterMinDateCreated')
+                ->setParameter('filterMinDateCreated', $criteria->minDateCreated);
+        }
+        if ($criteria->maxDateCreated !== null) {
+            $qb->andWhere($alias . '.dateCreation < :filterMaxDateCreated')
+                ->setParameter('filterMaxDateCreated', $criteria->maxDateCreated);
+        }
+        if ($criteria->minRatio !== null) {
+            $qb->andWhere($alias . '.width / ' . $alias . '.height >= :filterMinRatio')
+                ->setParameter('filterMinRatio', $criteria->minRatio);
+        }
+        if ($criteria->maxRatio !== null) {
+            $qb->andWhere($alias . '.width / ' . $alias . '.height <= :filterMaxRatio')
+                ->setParameter('filterMaxRatio', $criteria->maxRatio);
+        }
+        if ($criteria->maxLevel !== null) {
+            $qb->andWhere($alias . '.level <= :filterMaxLevel')
+                ->setParameter('filterMaxLevel', $criteria->maxLevel);
+        }
     }
 
     /**
@@ -2634,25 +2680,23 @@ final class ImageRepository extends EntityRepository
 
     /**
      * Whether $imageId is reachable via at least one category satisfying
-     * $condition -- Controller\PictureController's own "can this image
-     * still be accessed differently" fallback check.
+     * $criteria -- Controller\PictureController's own "can this image
+     * still be accessed differently" fallback check, and Ws\PwgImages::
+     * rate()'s own accessibility gate.
      *
-     * SQL-modernization audit: $forbiddenCondition (raw
-     * getSqlConditionFandF() output) replaced with a bound SqlCondition.
-     *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}), but stays on DBAL regardless --
-     * $condition is a caller-supplied raw SqlCondition fragment applied
-     * via the shared applyCondition() helper several sibling methods in
-     * this file also use. Sub-phase B3 re-investigation confirmed this
-     * isn't just "converting one would split shared machinery in two" --
-     * every real caller across this whole family traces back to
-     * `PermissionService::getSqlConditionFandFAsCondition()`, a genuinely
-     * cross-cutting blocker outside this sub-phase's scope regardless of
-     * whether the machinery stays shared or gets split; see
-     * {@see applyCondition()}'s own docblock for the full finding.
+     * SQL-modernization audit, Item 14 Sub-phase C1: converted to a typed
+     * {@see PermissionCriteria} -- both real callers traced directly
+     * (their own surrounding code, not just their own
+     * `getSqlConditionFandFAsCondition()` field list): PictureController's
+     * caller omitted the old `forbidden_images => 'id'` field, but only
+     * because it had already independently confirmed `$row['level'] <=
+     * $user_level` a few lines above for this exact same image -- applying
+     * $criteria->maxLevel here unconditionally re-confirms the same
+     * already-true fact for that caller (a harmless redundant check, not a
+     * behavior change) while correctly gating Ws\PwgImages::rate()'s own
+     * caller, which never performed that check itself.
      */
-    public function isImageAccessibleWithCondition(int $imageId, SqlCondition $condition): bool
+    public function isImageAccessibleWithCondition(int $imageId, PermissionCriteria $criteria): bool
     {
         $qb = $this->getEntityManager()
             ->getConnection()
@@ -2664,31 +2708,32 @@ final class ImageRepository extends EntityRepository
             ->setMaxResults(1)
             ->setParameter('imageId', $imageId, ParameterType::INTEGER);
 
-        self::applyCondition($qb, $condition);
+        self::applyCondition($qb, SqlCondition::combine(
+            'AND',
+            $criteria->forbiddenCategoriesCondition('ic.category_id'),
+            $criteria->maxLevelCondition('i.level'),
+        ));
 
         return $qb->executeQuery()
             ->fetchOne() !== false;
     }
 
     /**
-     * Every column of $imageId's own row, if it satisfies $condition --
+     * Every column of $imageId's own row, if it satisfies $criteria --
      * Ws\PwgImages::getInfo()'s own image lookup.
      *
-     * SQL-modernization audit: $permissionCondition replaced with a bound
-     * SqlCondition, same move as isImageAccessibleWithCondition() above.
-     *
-     * Item 14 DQL audit, re-corrected: this one is single-table
-     * (`images`, no join into `image_category` -- which is now mapped as
-     * {@see ImageCategoryEntity} regardless), but $condition is a
-     * caller-supplied raw SqlCondition fragment applied via the shared
-     * applyCondition() helper the rest of this SqlCondition family also
-     * uses; converting this one alone would split that shared
-     * condition-building machinery in two, so the whole family stays
-     * together.
+     * SQL-modernization audit, Item 14 Sub-phase C1: converted to a typed
+     * {@see PermissionCriteria} -- the one real caller passed only
+     * `visible_images => 'id'` to the old `getSqlConditionFandFAsCondition()`,
+     * but that method's own `visible_images` case falls through into
+     * `forbidden_images` with no `break` (see its own docblock/that
+     * method's body) -- with fieldName `'id'`, this also applies the
+     * images-table's own `level <= x` check, so both visibleImageIds and
+     * maxLevel apply here, not visibleImageIds alone.
      *
      * @return ?array<string, mixed>
      */
-    public function findRowWithCondition(int $imageId, SqlCondition $condition): ?array
+    public function findRowWithCondition(int $imageId, PermissionCriteria $criteria): ?array
     {
         $qb = $this->getEntityManager()
             ->getConnection()
@@ -2699,7 +2744,11 @@ final class ImageRepository extends EntityRepository
             ->setMaxResults(1)
             ->setParameter('imageId', $imageId, ParameterType::INTEGER);
 
-        self::applyCondition($qb, $condition);
+        self::applyCondition($qb, SqlCondition::combine(
+            'AND',
+            $criteria->visibleImagesCondition('id'),
+            $criteria->maxLevelCondition('level'),
+        ));
 
         $row = $qb->executeQuery()
             ->fetchAssociative();
@@ -2708,22 +2757,18 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * Categories $imageId belongs to that satisfy $condition, with each
+     * Categories $imageId belongs to that satisfy $criteria, with each
      * category's own display-relevant columns (including `commentable`,
      * unlike findVisibleCategoriesForImage() below) -- Ws\PwgImages::
      * getInfo()'s own "related categories" block.
      *
-     * SQL-modernization audit: $forbiddenCondition replaced with a bound
-     * SqlCondition, same move as isImageAccessibleWithCondition() above.
-     *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}), but stays on DBAL regardless -- the
-     * shared applyCondition() family reason (see
-     * isImageAccessibleWithCondition() above).
+     * SQL-modernization audit, Item 14 Sub-phase C1: converted to a typed
+     * {@see PermissionCriteria} -- the one real caller only ever applies
+     * $criteria->forbiddenCategoryIds, against `ic.category_id`.
      *
      * @return list<array<string, mixed>>
      */
-    public function findRelatedCategoriesForImage(int $imageId, SqlCondition $condition): array
+    public function findRelatedCategoriesForImage(int $imageId, PermissionCriteria $criteria): array
     {
         $qb = $this->getEntityManager()
             ->getConnection()
@@ -2734,7 +2779,7 @@ final class ImageRepository extends EntityRepository
             ->where('image_id = :imageId')
             ->setParameter('imageId', $imageId, ParameterType::INTEGER);
 
-        self::applyCondition($qb, $condition);
+        self::applyCondition($qb, $criteria->forbiddenCategoriesCondition('ic.category_id'));
 
         return $qb->executeQuery()
             ->fetchAllAssociative();
@@ -2742,18 +2787,20 @@ final class ImageRepository extends EntityRepository
 
     /**
      * Whether $imageId belongs to at least one commentable category
-     * satisfying $condition -- Ws\PwgImages::addComment()'s own "can this
+     * satisfying $criteria -- Ws\PwgImages::addComment()'s own "can this
      * image receive a comment" check.
      *
-     * SQL-modernization audit: $permissionCondition replaced with a bound
-     * SqlCondition, same move as isImageAccessibleWithCondition() above.
-     *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}), but stays on DBAL regardless -- the
-     * shared applyCondition() family reason (see
-     * isImageAccessibleWithCondition() above).
+     * SQL-modernization audit, Item 14 Sub-phase C1: converted to a typed
+     * {@see PermissionCriteria} -- the one real caller applies
+     * forbiddenCategoryIds/visibleCategoryIds against `c.id`. It also
+     * passed `visible_images => 'image_id'` to the old
+     * `getSqlConditionFandFAsCondition()`, whose own `visible_images` case
+     * falls through into `forbidden_images` with no `break` -- with
+     * fieldName `'image_id'` (not `'id'`/`'i.id'`), that's the
+     * `image_access_list` branch, not the level check, so
+     * visibleImageIds/imageAccessIds both apply against `ic.image_id`.
      */
-    public function isImageCommentableWithCondition(int $imageId, SqlCondition $condition): bool
+    public function isImageCommentableWithCondition(int $imageId, PermissionCriteria $criteria): bool
     {
         $qb = $this->getEntityManager()
             ->getConnection()
@@ -2765,29 +2812,31 @@ final class ImageRepository extends EntityRepository
             ->andWhere('image_id = :imageId')
             ->setParameter('imageId', $imageId, ParameterType::INTEGER);
 
-        self::applyCondition($qb, $condition);
+        self::applyCondition($qb, SqlCondition::combine(
+            'AND',
+            $criteria->forbiddenCategoriesCondition('c.id'),
+            $criteria->visibleCategoriesCondition('c.id'),
+            $criteria->visibleImagesCondition('ic.image_id'),
+            $criteria->imageAccessCondition('ic.image_id'),
+        ));
 
         return $qb->executeQuery()
             ->fetchOne() !== false;
     }
 
     /**
-     * Categories $imageId belongs to that satisfy $condition, with each
+     * Categories $imageId belongs to that satisfy $criteria, with each
      * category's own display-relevant columns -- Controller\
      * PictureController's own "related categories" block, ordered by
      * CategoryService::compareByGlobalRank() afterwards (not here).
      *
-     * SQL-modernization audit: $permissionCondition replaced with a bound
-     * SqlCondition, same move as isImageAccessibleWithCondition() above.
-     *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}), but stays on DBAL regardless -- the
-     * shared applyCondition() family reason (see
-     * isImageAccessibleWithCondition() above).
+     * SQL-modernization audit, Item 14 Sub-phase C1: converted to a typed
+     * {@see PermissionCriteria} -- the one real caller applies
+     * forbiddenCategoryIds/visibleCategoryIds against `c.id`.
      *
      * @return list<array<string, mixed>>
      */
-    public function findVisibleCategoriesForImage(int $imageId, SqlCondition $condition): array
+    public function findVisibleCategoriesForImage(int $imageId, PermissionCriteria $criteria): array
     {
         $qb = $this->getEntityManager()
             ->getConnection()
@@ -2798,7 +2847,11 @@ final class ImageRepository extends EntityRepository
             ->where('image_id = :imageId')
             ->setParameter('imageId', $imageId, ParameterType::INTEGER);
 
-        self::applyCondition($qb, $condition);
+        self::applyCondition($qb, SqlCondition::combine(
+            'AND',
+            $criteria->forbiddenCategoriesCondition('c.id'),
+            $criteria->visibleCategoriesCondition('c.id'),
+        ));
 
         return $qb->executeQuery()
             ->fetchAllAssociative();
@@ -2965,19 +3018,20 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * Whether at least one accessible image (satisfying $condition) has a
+     * Whether at least one accessible image (satisfying $criteria) has a
      * non-null author -- Controller\SearchController's own "does this
      * gallery even have authors, for this user" check.
      *
-     * SQL-modernization audit: $permissionCondition replaced with a bound
-     * SqlCondition, same move as isImageAccessibleWithCondition() above.
-     *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}), but stays on DBAL regardless -- the
-     * shared applyCondition() family reason (see
-     * isImageAccessibleWithCondition() above).
+     * SQL-modernization audit, Item 14 Sub-phase C1: converted to a typed
+     * {@see PermissionCriteria} -- the one real caller applies
+     * forbiddenCategoryIds/visibleCategoryIds against `ic.category_id` and
+     * visibleImageIds against `i.id`. It also passed `visible_images =>
+     * 'id'` to the old `getSqlConditionFandFAsCondition()`, whose own
+     * `visible_images` case falls through into `forbidden_images` with no
+     * `break` -- with fieldName `'id'`, that's the images-table's own
+     * `level <= x` check, so maxLevel applies here too, against `i.level`.
      */
-    public function hasAccessibleImageWithAuthor(SqlCondition $condition): bool
+    public function hasAccessibleImageWithAuthor(PermissionCriteria $criteria): bool
     {
         $qb = $this->getEntityManager()
             ->getConnection()
@@ -2988,7 +3042,13 @@ final class ImageRepository extends EntityRepository
             ->andWhere('author IS NOT NULL')
             ->setMaxResults(1);
 
-        self::applyCondition($qb, $condition);
+        self::applyCondition($qb, SqlCondition::combine(
+            'AND',
+            $criteria->forbiddenCategoriesCondition('ic.category_id'),
+            $criteria->visibleCategoriesCondition('ic.category_id'),
+            $criteria->visibleImagesCondition('i.id'),
+            $criteria->maxLevelCondition('i.level'),
+        ));
 
         return $qb->executeQuery()
             ->fetchAllAssociative() !== [];
@@ -2996,21 +3056,20 @@ final class ImageRepository extends EntityRepository
 
     /**
      * Whether $imageId is reachable via at least one of its own categories
-     * satisfying $condition -- Controller\ActionController's own
+     * satisfying $criteria -- Controller\ActionController's own
      * download-permission check. A different query shape from
      * isImageAccessibleWithCondition() above (this one starts from
      * `categories`, joined onto `image_category` by category_id, filtered
      * by image_id -- that one starts from `images`).
      *
-     * SQL-modernization audit: $permissionCondition replaced with a bound
-     * SqlCondition, same move as isImageAccessibleWithCondition() above.
-     *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}), but stays on DBAL regardless -- the
-     * shared applyCondition() family reason (see
-     * isImageAccessibleWithCondition() above).
+     * SQL-modernization audit, Item 14 Sub-phase C1: converted to a typed
+     * {@see PermissionCriteria} -- the one real caller applies
+     * forbiddenCategoryIds against `ic.category_id` and (the field name it
+     * passed was `image_id`, a foreign-key column, never the images
+     * table's own `id`) imageAccessIds against `ic.image_id`, not
+     * maxLevel.
      */
-    public function isImageAccessibleViaCategoryWithCondition(int $imageId, SqlCondition $condition): bool
+    public function isImageAccessibleViaCategoryWithCondition(int $imageId, PermissionCriteria $criteria): bool
     {
         $qb = $this->getEntityManager()
             ->getConnection()
@@ -3022,7 +3081,11 @@ final class ImageRepository extends EntityRepository
             ->setMaxResults(1)
             ->setParameter('imageId', $imageId, ParameterType::INTEGER);
 
-        self::applyCondition($qb, $condition);
+        self::applyCondition($qb, SqlCondition::combine(
+            'AND',
+            $criteria->forbiddenCategoriesCondition('ic.category_id'),
+            $criteria->imageAccessCondition('ic.image_id'),
+        ));
 
         return $qb->executeQuery()
             ->fetchOne() !== false;
@@ -3048,8 +3111,12 @@ final class ImageRepository extends EntityRepository
      * Item 14 DQL audit, re-corrected: `image_category` is now mapped
      * ({@see ImageCategoryEntity}), but stays on DBAL regardless --
      * MySQL-specific `SQL_CALC_FOUND_ROWS`/`FOUND_ROWS()` have no DQL
-     * equivalent, and $criteria's own 3 conditions are caller-supplied
-     * raw SqlCondition fragments.
+     * equivalent. SQL-modernization audit, Item 14 Sub-phase C3:
+     * $criteria->filterCriteria is now a typed
+     * {@see \Piwigo\Image\ImageFilterCriteria} -- translated to a raw
+     * fragment here via its own `toSqlCondition()`, since this method
+     * itself can't become DQL regardless (the `SQL_CALC_FOUND_ROWS`
+     * blocker above).
      *
      * @return PaginatedResult<array<string, mixed>>
      */
@@ -3060,7 +3127,7 @@ final class ImageRepository extends EntityRepository
 
         $combined = SqlCondition::combine(
             'AND',
-            $criteria->filterCondition,
+            $criteria->filterCriteria->toSqlCondition('i.'),
             new SqlCondition('category_id IN (:categoryIds)', [
                 'categoryIds' => $criteria->categoryIds,
             ], [
@@ -3151,19 +3218,19 @@ final class ImageRepository extends EntityRepository
      * Ws\PwgCategories::getImages()'s own "which albums (that the caller
      * may see) is each returned photo linked to" step.
      *
-     * SQL-modernization audit: $permissionCondition replaced with a bound
-     * SqlCondition, same move as isImageAccessibleWithCondition() above.
-     * $imageIds' own CSV splice also bound.
-     *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}), but stays on DBAL regardless -- the
-     * shared applyCondition() family reason (see
-     * isImageAccessibleWithCondition() above).
+     * SQL-modernization audit, Item 14 Sub-phase C1: converted to a typed
+     * {@see PermissionCriteria} -- the one real caller only ever applies
+     * forbiddenCategoryIds, against the unqualified `category_id` (single
+     * table, no join, so no alias needed). The old call site's own
+     * `forceOneCondition: true` is a no-op here regardless: an empty
+     * criteria field already produces an empty SqlCondition that
+     * applyCondition() silently skips, the same net effect as adding a
+     * harmless `1 = 1`. $imageIds' own CSV splice also bound.
      *
      * @param  list<int>  $imageIds
      * @return list<array{image_id: int, category_id: int}>
      */
-    public function findCategoryLinksForImageIdsWithCondition(array $imageIds, SqlCondition $condition): array
+    public function findCategoryLinksForImageIdsWithCondition(array $imageIds, PermissionCriteria $criteria): array
     {
         if ($imageIds === []) {
             return [];
@@ -3177,7 +3244,7 @@ final class ImageRepository extends EntityRepository
             ->where('image_id IN (:imageIds)')
             ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER);
 
-        self::applyCondition($qb, $condition);
+        self::applyCondition($qb, $criteria->forbiddenCategoriesCondition('category_id'));
 
         $rows = $qb->executeQuery()
             ->fetchAllAssociative();

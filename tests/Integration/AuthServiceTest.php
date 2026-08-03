@@ -113,7 +113,6 @@ namespace Piwigo\Tests\Integration {
             ConfigLoader::applyDefaults();
             ConfigLoader::applyEnvOverrides();
 
-            $currentConfig->setUserFields(['id' => 'id', 'username' => 'username', 'password' => 'password']);
             $currentConfig->setSecretKey('test-secret-key');
 
             $this->conn = DbConnection::build();

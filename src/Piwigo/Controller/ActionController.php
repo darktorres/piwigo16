@@ -120,14 +120,11 @@ final class ActionController implements ControllerInterface
 
         // $filter['visible_categories'] and $filter['visible_images']
         // are not used because it's not necessary (filter <> restriction)
-        $permissionCondition = $this->permissionService->getSqlConditionFandFAsCondition([
-            'forbidden_categories' => 'category_id',
-            'forbidden_images' => 'image_id',
-        ]);
+        $permissionCriteria = $this->permissionService->getPermissionCriteria();
         if (
             ! $is_admin_download
             and ! $this->imageService
-                ->isImageAccessibleViaCategoryWithCondition($image_id, $permissionCondition)
+                ->isImageAccessibleViaCategoryWithCondition($image_id, $permissionCriteria)
         ) {
             return $this->doError(401, 'Access denied');
         }

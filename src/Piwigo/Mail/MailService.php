@@ -241,14 +241,6 @@ final class MailService implements MailerInterface
             || $value === 0 || $value === 0.0 || $value === '0';
     }
 
-    /**
-     * @return array{id: string, username: string, password: string, email: string}
-     */
-    private static function userFields(): array
-    {
-        return \Piwigo\Config\CurrentConfig::current()->userFields();
-    }
-
     public function getMailSenderName(): string
     {
         $senderName = \Piwigo\Config\CurrentConfig::current()->mailSenderName();
@@ -611,13 +603,8 @@ final class MailService implements MailerInterface
             $userStatuses[] = 'admin';
         }
 
-        $userFields = self::userFields();
-
         $admins = $this->recipientRepo()
             ->findAdminsAndWebmasters(
-                $userFields['id'],
-                $userFields['username'],
-                $userFields['email'],
                 $userStatuses,
                 $groupId !== null ? (int) $groupId : null,
                 $excludeCurrentUser ? \Piwigo\Users\CurrentUser::current()->get()->id->value : null,
@@ -653,7 +640,6 @@ final class MailService implements MailerInterface
             return false;
         }
 
-        $userFields = self::userFields();
         $return = true;
 
         $languageSelected = isset($args['language_selected']) && ! self::emptyValue($args['language_selected'])
@@ -662,8 +648,6 @@ final class MailService implements MailerInterface
 
         $languages = $this->recipientRepo()
             ->findDistinctLanguagesInGroup(
-                $userFields['id'],
-                $userFields['email'],
                 $groupId,
                 $languageSelected,
             );
@@ -679,9 +663,6 @@ final class MailService implements MailerInterface
 
             $users = $this->recipientRepo()
                 ->findByGroupAndLanguage(
-                    $userFields['id'],
-                    $userFields['username'],
-                    $userFields['email'],
                     $groupId,
                     $language,
                 );

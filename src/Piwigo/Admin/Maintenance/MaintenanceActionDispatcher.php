@@ -163,10 +163,7 @@ final class MaintenanceActionDispatcher
 
                 $this->sessionService->sessionGc();
 
-                $user_fields = $this->currentConfig->userFields();
-                $id_field = $user_fields['id'];
-
-                $db_maintenance->purgeSessionsForDeletedUsers($id_field);
+                $db_maintenance->purgeSessionsForDeletedUsers();
                 $this->pageState->addInfo(sprintf('%s : %s', $this->lang->t('Purge sessions'), $this->lang->t('action successfully performed.')));
                 break;
 

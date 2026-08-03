@@ -20,7 +20,7 @@ use Piwigo\Users\UserStatus;
 
 /**
  * PermissionRepository/GroupRepository/CategoryRepository are only ever
- * constructed here, never queried -- getSqlConditionFandFAsCondition()/
+ * constructed here, never queried -- getPermissionCriteria()/
  * getPrivacyLevelOptions() are pure string/params builders reading
  * CurrentUser/FilterState/CurrentConfig directly (see the class's own
  * docblock), same "real repository, DB never touched by the tested
@@ -118,134 +118,160 @@ afterEach(function (): void {
     Kernel::reset();
 });
 
-/**
- * The one real placeholder name out of a single-condition SqlCondition --
- * getSqlConditionFandFAsCondition()'s suffix is a monotonic per-process
- * counter (see PermissionService::nextPlaceholderSuffix()), so tests can't
- * assert a fixed name; they extract whatever name was actually generated
- * instead.
- */
-function singleParamKey(\Piwigo\Permission\SqlCondition $condition): string
-{
-    $key = array_key_first($condition->parameters);
-    expect($key)->toBeString();
-    assert(is_string($key));
-
-    return $key;
-}
-
-test('getSqlConditionFandFAsCondition returns an empty condition when nothing applies', function (): void {
+test('getPermissionCriteria returns every field null when nothing applies', function (): void {
     $service = makePermissionService();
 
-    $condition = $service->getSqlConditionFandFAsCondition(['forbidden_categories' => 'category_id']);
+    $criteria = $service->getPermissionCriteria();
 
-    expect($condition->sql)->toBe('')
-        ->and($condition->parameters)->toBe([])
-        ->and($condition->types)->toBe([]);
+    expect($criteria->forbiddenCategoryIds)->toBeNull()
+        ->and($criteria->visibleCategoryIds)->toBeNull()
+        ->and($criteria->visibleImageIds)->toBeNull()
+        // level=0 (seedPermissionUser()'s own default) with image_access_type
+        // '' (not 'NOT IN') satisfies $forbiddenImagesApplies, so maxLevel is
+        // 0, not null -- pins the "applies" gate independently of the
+        // access-list/type pair below.
+        ->and($criteria->maxLevel)->toBe(0)
+        ->and($criteria->imageAccessIds)->toBeNull()
+        ->and($criteria->imageAccessIsAllowlist)->toBeNull();
+
+    // Every *Condition() builder must return an empty fragment for a null
+    // field, so callers can combine them unconditionally.
+    expect($criteria->forbiddenCategoriesCondition('category_id')->isEmpty())->toBeTrue()
+        ->and($criteria->visibleCategoriesCondition('category_id')->isEmpty())->toBeTrue()
+        ->and($criteria->visibleImagesCondition('id')->isEmpty())->toBeTrue()
+        ->and($criteria->imageAccessCondition('category_id')->isEmpty())->toBeTrue();
 });
 
-test('getSqlConditionFandFAsCondition forces a tautology when forceOneCondition is set and nothing applies', function (): void {
-    $service = makePermissionService();
-
-    $condition = $service->getSqlConditionFandFAsCondition(['forbidden_categories' => 'category_id'], true);
-
-    expect($condition->sql)->toBe('1 = 1')
-        ->and($condition->parameters)->toBe([]);
-});
-
-test('getSqlConditionFandFAsCondition builds a bound NOT IN clause from the user forbidden categories', function (): void {
+test('getPermissionCriteria computes forbiddenCategoryIds from the user forbidden categories, bound via forbiddenCategoriesCondition', function (): void {
     seedPermissionUser(forbiddenCategories: '2,3');
     $service = makePermissionService();
 
-    $condition = $service->getSqlConditionFandFAsCondition(['forbidden_categories' => 'category_id']);
-    $key = singleParamKey($condition);
+    $criteria = $service->getPermissionCriteria();
 
-    expect($condition->sql)->toBe('category_id NOT IN (:' . $key . ')')
-        ->and($condition->parameters)->toBe([$key => [2, 3]])
-        ->and($condition->types)->toBe([$key => ArrayParameterType::INTEGER]);
+    expect($criteria->forbiddenCategoryIds)->toBe([2, 3]);
+
+    $condition = $criteria->forbiddenCategoriesCondition('category_id');
+
+    expect($condition->sql)->toBe('category_id NOT IN (:permForbiddenCategoryIds)')
+        ->and($condition->parameters)->toBe(['permForbiddenCategoryIds' => [2, 3]])
+        ->and($condition->types)->toBe(['permForbiddenCategoryIds' => ArrayParameterType::INTEGER]);
 });
 
-test('getSqlConditionFandFAsCondition builds bound IN clauses from FilterState visible categories/images', function (): void {
+test('getPermissionCriteria computes visibleCategoryIds/visibleImageIds from FilterState, each bound via its own *Condition builder', function (): void {
     seedPermissionUser(imageAccessType: 'NOT IN');
     seedFilterState(true, visibleCategories: '1,2', visibleImages: '10,11');
     $service = makePermissionService();
 
-    $condition = $service->getSqlConditionFandFAsCondition([
-        'visible_categories' => 'category_id',
-        'visible_images' => 'id',
-    ]);
+    $criteria = $service->getPermissionCriteria();
 
-    expect($condition->parameters)->toHaveCount(2);
-    [$catsKey, $imagesKey] = array_keys($condition->parameters);
+    expect($criteria->visibleCategoryIds)->toBe([1, 2])
+        ->and($criteria->visibleImageIds)->toBe([10, 11]);
 
-    expect($condition->sql)->toBe('(category_id IN (:' . $catsKey . ')) AND (id IN (:' . $imagesKey . '))')
-        ->and($condition->parameters)->toBe([$catsKey => [1, 2], $imagesKey => [10, 11]])
-        ->and($condition->types)->toBe([
-            $catsKey => ArrayParameterType::INTEGER,
-            $imagesKey => ArrayParameterType::INTEGER,
-        ]);
+    $catCondition = $criteria->visibleCategoriesCondition('category_id');
+    $imgCondition = $criteria->visibleImagesCondition('id');
+
+    expect($catCondition->sql)->toBe('category_id IN (:permVisibleCategoryIds)')
+        ->and($catCondition->parameters)->toBe(['permVisibleCategoryIds' => [1, 2]])
+        ->and($imgCondition->sql)->toBe('id IN (:permVisibleImageIds)')
+        ->and($imgCondition->parameters)->toBe(['permVisibleImageIds' => [10, 11]]);
 });
 
-test('getSqlConditionFandFAsCondition falls through from visible_images into the bound level check', function (): void {
+test('getPermissionCriteria always computes maxLevel alongside visibleImageIds, not one gating the other', function (): void {
+    // The old getSqlConditionFandFAsCondition()'s own `visible_images` case
+    // fell through into `forbidden_images` with no `break` -- callers that
+    // requested visibleImageIds always implicitly got the level check too.
+    // The typed replacement computes both fields unconditionally instead
+    // (see PermissionCriteria's own docblock); this pins that both are
+    // populated together whenever the "applies" gate is satisfied, matching
+    // the old fallthrough's real net effect.
     seedPermissionUser(level: 3);
     seedFilterState(true, visibleImages: '10,11');
     $service = makePermissionService();
 
-    $condition = $service->getSqlConditionFandFAsCondition(['visible_images' => 'id']);
+    $criteria = $service->getPermissionCriteria();
 
-    expect($condition->parameters)->toHaveCount(2);
-    [$imagesKey, $levelKey] = array_keys($condition->parameters);
+    expect($criteria->visibleImageIds)->toBe([10, 11])
+        ->and($criteria->maxLevel)->toBe(3);
 
-    expect($condition->sql)->toBe('(id IN (:' . $imagesKey . ')) AND (level <= :' . $levelKey . ')')
-        ->and($condition->parameters[$levelKey])->toBe(3)
-        ->and($condition->types[$levelKey])->toBe(ParameterType::INTEGER);
+    $levelCondition = $criteria->maxLevelCondition('level');
+
+    expect($levelCondition->sql)->toBe('level <= :permMaxLevel')
+        ->and($levelCondition->parameters)->toBe(['permMaxLevel' => 3])
+        ->and($levelCondition->types)->toBe(['permMaxLevel' => ParameterType::INTEGER]);
 });
 
-test('getSqlConditionFandFAsCondition forbidden_images binds the level check for the i.id field', function (): void {
+test('getPermissionCriteria computes maxLevel from the user level, bound via maxLevelCondition', function (): void {
     seedPermissionUser(level: 5);
     $service = makePermissionService();
 
-    $condition = $service->getSqlConditionFandFAsCondition(['forbidden_images' => 'i.id']);
-    $key = singleParamKey($condition);
+    $criteria = $service->getPermissionCriteria();
 
-    expect($condition->sql)->toBe('i.level <= :' . $key)
-        ->and($condition->parameters)->toBe([$key => 5])
-        ->and($condition->types)->toBe([$key => ParameterType::INTEGER]);
+    expect($criteria->maxLevel)->toBe(5);
+
+    $condition = $criteria->maxLevelCondition('i.level');
+
+    expect($condition->sql)->toBe('i.level <= :permMaxLevel')
+        ->and($condition->parameters)->toBe(['permMaxLevel' => 5])
+        ->and($condition->types)->toBe(['permMaxLevel' => ParameterType::INTEGER]);
 });
 
-test('getSqlConditionFandFAsCondition forbidden_images binds the raw access-list clause for a non-id field', function (): void {
+test('getPermissionCriteria computes imageAccessIds/imageAccessIsAllowlist from the user access list, bound via imageAccessCondition', function (): void {
     seedPermissionUser(imageAccessType: 'NOT IN', imageAccessList: '7,8');
     $service = makePermissionService();
 
-    $condition = $service->getSqlConditionFandFAsCondition(['forbidden_images' => 'category_id']);
-    $key = singleParamKey($condition);
+    $criteria = $service->getPermissionCriteria();
 
-    expect($condition->sql)->toBe('category_id NOT IN (:' . $key . ')')
-        ->and($condition->parameters)->toBe([$key => [7, 8]])
-        ->and($condition->types)->toBe([$key => ArrayParameterType::INTEGER]);
+    expect($criteria->imageAccessIds)->toBe([7, 8])
+        ->and($criteria->imageAccessIsAllowlist)->toBeFalse();
+
+    $condition = $criteria->imageAccessCondition('category_id');
+
+    expect($condition->sql)->toBe('category_id NOT IN (:permImageAccessIds)')
+        ->and($condition->parameters)->toBe(['permImageAccessIds' => [7, 8]])
+        ->and($condition->types)->toBe(['permImageAccessIds' => ArrayParameterType::INTEGER]);
 });
 
-test('getSqlConditionFandFAsCondition uses a distinct placeholder per call, not a fixed name', function (): void {
-    seedPermissionUser(forbiddenCategories: '9');
+test('imageAccessCondition builds an IN clause, not NOT IN, when imageAccessIsAllowlist is true', function (): void {
+    seedPermissionUser(imageAccessType: 'IN', imageAccessList: '7,8');
     $service = makePermissionService();
 
-    $first = $service->getSqlConditionFandFAsCondition(['forbidden_categories' => 'category_id']);
-    $second = $service->getSqlConditionFandFAsCondition(['forbidden_categories' => 'category_id']);
+    $criteria = $service->getPermissionCriteria();
 
-    expect(array_key_first($first->parameters))->not->toBe(array_key_first($second->parameters));
+    expect($criteria->imageAccessIsAllowlist)->toBeTrue();
+
+    $condition = $criteria->imageAccessCondition('category_id');
+
+    expect($condition->sql)->toBe('category_id IN (:permImageAccessIds)');
 });
 
-test('getSqlConditionFandFAsCondition throws for an unknown condition key', function (): void {
+test('every *Condition builder uses a distinct placeholder name, so combining several in one query never collides', function (): void {
+    seedPermissionUser(forbiddenCategories: '1', level: 2, imageAccessType: 'IN', imageAccessList: '3');
+    seedFilterState(true, visibleCategories: '4', visibleImages: '5');
     $service = makePermissionService();
 
-    $service->getSqlConditionFandFAsCondition(['not_a_real_condition' => 'x']);
-})->throws(InvalidArgumentException::class, 'Unknown condition: not_a_real_condition');
+    $criteria = $service->getPermissionCriteria();
 
-test('getSqlConditionFandFAsCondition treats a non-string scalar image_access_type as empty, not as a truthy bypass', function (): void {
+    $combined = \Piwigo\Permission\SqlCondition::combine(
+        'AND',
+        $criteria->forbiddenCategoriesCondition('a'),
+        $criteria->visibleCategoriesCondition('b'),
+        $criteria->visibleImagesCondition('c'),
+        $criteria->maxLevelCondition('d'),
+        $criteria->imageAccessCondition('e'),
+    );
+
+    // 5 distinct fragments, each with its own single bound parameter -- if
+    // any two shared a placeholder name, this count would be lower than 5
+    // (a later setParameter()-equivalent silently overwriting an earlier
+    // one in the merged array).
+    expect($combined->parameters)->toHaveCount(5);
+});
+
+test('getPermissionCriteria treats a non-string scalar image_access_type as empty, not as a truthy bypass', function (): void {
     // rawAttributes['image_access_type'] as a real PHP bool (not a string) is
     // exactly what the is_scalar()-then-(string)-cast guard on the method's
     // own image_access_type read exists for. The cast collapses `false` to
-    // '' before the elseif's own `$userImageAccessType !== ''` check --
+    // '' before the `&&`'s own `$userImageAccessType !== ''` check --
     // without the cast, `false !== ''` is true (mismatched types are never
     // `===`), which would wrongly let a malformed "field  (list)" clause (no
     // operator between field and list) through even though there is no real
@@ -253,14 +279,13 @@ test('getSqlConditionFandFAsCondition treats a non-string scalar image_access_ty
     seedPermissionUserRaw(['image_access_type' => false, 'image_access_list' => '7,8']);
     $service = makePermissionService();
 
-    $condition = $service->getSqlConditionFandFAsCondition(['forbidden_images' => 'category_id']);
+    $criteria = $service->getPermissionCriteria();
 
-    expect($condition->sql)->toBe('')
-        ->and($condition->parameters)->toBe([])
-        ->and($condition->types)->toBe([]);
+    expect($criteria->imageAccessIds)->toBeNull()
+        ->and($criteria->imageAccessIsAllowlist)->toBeNull();
 });
 
-test('getSqlConditionFandFAsCondition treats a genuinely absent image_access_type as empty', function (): void {
+test('getPermissionCriteria treats a genuinely absent image_access_type as empty', function (): void {
     // No 'image_access_type' key at all -- the `?? null` fallback then
     // is_scalar(null) === false, landing in the ternary's '' branch (not the
     // (string)-cast branch above, so this exercises the *fallback literal*
@@ -270,14 +295,13 @@ test('getSqlConditionFandFAsCondition treats a genuinely absent image_access_typ
     seedPermissionUserRaw(['image_access_list' => '7,8']);
     $service = makePermissionService();
 
-    $condition = $service->getSqlConditionFandFAsCondition(['forbidden_images' => 'category_id']);
+    $criteria = $service->getPermissionCriteria();
 
-    expect($condition->sql)->toBe('')
-        ->and($condition->parameters)->toBe([])
-        ->and($condition->types)->toBe([]);
+    expect($criteria->imageAccessIds)->toBeNull()
+        ->and($criteria->imageAccessIsAllowlist)->toBeNull();
 });
 
-test('getSqlConditionFandFAsCondition treats a non-string scalar image_access_list as empty, not as a truthy bypass', function (): void {
+test('getPermissionCriteria treats a non-string scalar image_access_list as empty, not as a truthy bypass', function (): void {
     // Mirror of the image_access_type case above, for the method's own
     // is_scalar()-then-(string)-cast guard on image_access_list.
     // image_access_type is set to a real, distinct-from-'NOT IN' value
@@ -286,67 +310,78 @@ test('getSqlConditionFandFAsCondition treats a non-string scalar image_access_li
     seedPermissionUserRaw(['image_access_type' => 'IN', 'image_access_list' => false]);
     $service = makePermissionService();
 
-    $condition = $service->getSqlConditionFandFAsCondition(['forbidden_images' => 'category_id']);
+    $criteria = $service->getPermissionCriteria();
 
-    expect($condition->sql)->toBe('')
-        ->and($condition->parameters)->toBe([])
-        ->and($condition->types)->toBe([]);
+    expect($criteria->imageAccessIds)->toBeNull()
+        ->and($criteria->imageAccessIsAllowlist)->toBeNull();
 });
 
-test('getSqlConditionFandFAsCondition treats a genuinely absent image_access_list as empty', function (): void {
+test('getPermissionCriteria treats a genuinely absent image_access_list as empty', function (): void {
     // No 'image_access_list' key at all -- exercises the fallback ''
     // literal (not its cast) the same way the image_access_type test above
     // exercises its own.
     seedPermissionUserRaw(['image_access_type' => 'IN']);
     $service = makePermissionService();
 
-    $condition = $service->getSqlConditionFandFAsCondition(['forbidden_images' => 'category_id']);
+    $criteria = $service->getPermissionCriteria();
 
-    expect($condition->sql)->toBe('')
-        ->and($condition->parameters)->toBe([])
-        ->and($condition->types)->toBe([]);
+    expect($criteria->imageAccessIds)->toBeNull()
+        ->and($criteria->imageAccessIsAllowlist)->toBeNull();
 });
 
-test('getSqlConditionFandFAsCondition requires both a non-empty access list AND a non-empty access type for the raw clause', function (): void {
+test('getPermissionCriteria requires both a non-empty access list AND a non-empty access type for imageAccessIds', function (): void {
     // image_access_type is non-empty ('IN', deliberately not 'NOT IN' so the
     // type-side gate is satisfied) but image_access_list stays '' (default)
-    // -- the elseif's `&&` must reject this: an access *type* with no list
-    // to pair it with is exactly as unusable as a list with no type (the
-    // test below). Also pins the elseif's own '' literal on the list side:
-    // nothing about "list is empty" changes if that literal were some other
-    // string, since '' really is what $userImageAccessList holds here.
+    // -- the `&&` must reject this: an access *type* with no list to pair it
+    // with is exactly as unusable as a list with no type (the test below).
+    // Also pins the '' literal on the list side: nothing about "list is
+    // empty" changes if that literal were some other string, since '' really
+    // is what $userImageAccessList holds here.
     seedPermissionUser(imageAccessType: 'IN');
     $service = makePermissionService();
 
-    $condition = $service->getSqlConditionFandFAsCondition(['forbidden_images' => 'category_id']);
+    $criteria = $service->getPermissionCriteria();
 
-    expect($condition->sql)->toBe('')
-        ->and($condition->parameters)->toBe([])
-        ->and($condition->types)->toBe([]);
+    expect($criteria->imageAccessIds)->toBeNull()
+        ->and($criteria->imageAccessIsAllowlist)->toBeNull();
 });
 
-test('getSqlConditionFandFAsCondition requires both a non-empty access list AND a non-empty access type, not just a list', function (): void {
+test('getPermissionCriteria requires both a non-empty access list AND a non-empty access type, not just a list', function (): void {
     // Flip side of the test above: a non-empty access list ('7,8') with
-    // image_access_type left at its '' default. Pins the elseif's `&&` (an
-    // `||` mutant would wrongly build "category_id  (7,8)", a malformed
-    // clause with no operator) and the elseif's own '' literal on the type
-    // side.
+    // image_access_type left at its '' default. Pins the `&&` (an `||`
+    // mutant would wrongly compute imageAccessIds from a list with no real
+    // operator to pair it with) and the '' literal on the type side.
     seedPermissionUser(imageAccessList: '7,8');
     $service = makePermissionService();
 
-    $condition = $service->getSqlConditionFandFAsCondition(['forbidden_images' => 'category_id']);
+    $criteria = $service->getPermissionCriteria();
 
-    expect($condition->sql)->toBe('')
-        ->and($condition->parameters)->toBe([])
-        ->and($condition->types)->toBe([]);
+    expect($criteria->imageAccessIds)->toBeNull()
+        ->and($criteria->imageAccessIsAllowlist)->toBeNull();
 });
 
-test('getSqlConditionFandFAsCondition throws for a corrupted image_access_type', function (): void {
+test('getPermissionCriteria throws for a corrupted image_access_type', function (): void {
     seedPermissionUser(imageAccessType: 'bogus', imageAccessList: '1');
     $service = makePermissionService();
 
-    $service->getSqlConditionFandFAsCondition(['forbidden_images' => 'category_id']);
+    $service->getPermissionCriteria();
 })->throws(UnexpectedValueException::class, 'Unexpected image_access_type: bogus');
+
+test('getPermissionCriteria suppresses maxLevel/imageAccessIds together when access list is empty and type is NOT IN', function (): void {
+    // The one real "$forbiddenImagesApplies" false case: an empty access
+    // list paired with the literal type 'NOT IN' (an empty NOT IN list is
+    // vacuously "everything", the original's own sentinel for "no real
+    // restriction to apply"). Both maxLevel and imageAccessIds must stay
+    // null here, not just imageAccessIds.
+    seedPermissionUser(level: 9, imageAccessType: 'NOT IN');
+    $service = makePermissionService();
+
+    $criteria = $service->getPermissionCriteria();
+
+    expect($criteria->maxLevel)->toBeNull()
+        ->and($criteria->imageAccessIds)->toBeNull()
+        ->and($criteria->imageAccessIsAllowlist)->toBeNull();
+});
 
 test('getPrivacyLevelOptions labels level 0 as Everybody and stacks the rest', function (): void {
     $options = PermissionService::getPrivacyLevelOptions();

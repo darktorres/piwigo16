@@ -198,17 +198,12 @@ final class CommentsController implements ControllerInterface
             );
         }
 
-        $user_fields = $this->currentConfig->userFields();
-        $username_field = $user_fields['username'];
-        $email_field = $user_fields['email'];
-        $id_field = $user_fields['id'];
-
         // search a particular author
         $author_filter = $commentsRequest->authorFilter;
         if ($author_filter !== null) {
             $author_search = $author_filter;
             $whereClauses[] = new SqlCondition(
-                '(u.' . $username_field . ' = :authorSearchUsername OR author = :authorSearchAuthor)',
+                '(u.username = :authorSearchUsername OR author = :authorSearchAuthor)',
                 [
                     'authorSearchUsername' => $author_search,
                     'authorSearchAuthor' => $author_search,
@@ -281,11 +276,11 @@ final class CommentsController implements ControllerInterface
             $whereClauses[] = new SqlCondition('validated=1');
         }
 
-        $whereClauses[] = $this->permissionService->getSqlConditionFandFAsCondition([
-            'forbidden_categories' => 'category_id',
-            'visible_categories' => 'category_id',
-            'visible_images' => 'ic.image_id',
-        ], true);
+        $commentsPermissionCriteria = $this->permissionService->getPermissionCriteria();
+        $whereClauses[] = $commentsPermissionCriteria->forbiddenCategoriesCondition('category_id');
+        $whereClauses[] = $commentsPermissionCriteria->visibleCategoriesCondition('category_id');
+        $whereClauses[] = $commentsPermissionCriteria->visibleImagesCondition('ic.image_id');
+        $whereClauses[] = $commentsPermissionCriteria->imageAccessCondition('ic.image_id');
 
         // +-----------------------------------------------------------+
         // |                   comments management                     |
@@ -404,12 +399,8 @@ final class CommentsController implements ControllerInterface
         // Search in a particular category
         $blockname = 'categories';
 
-        $categoryCondition = $this->permissionService->getSqlConditionFandFAsCondition([
-            'forbidden_categories' => 'id',
-            'visible_categories' => 'id',
-        ]);
         $this->categoryService
-            ->displaySelectByCondition($categoryCondition, [$commentsRequest->catDisplay], $blockname, $this->htmlService, $template);
+            ->displaySelectByCondition($this->permissionService->getPermissionCriteria(), [$commentsRequest->catDisplay], $blockname, $this->htmlService, $template);
 
         // Filter on recent comments...
         $tpl_var = [];
@@ -454,8 +445,6 @@ final class CommentsController implements ControllerInterface
 
         $paginated_comments = $commentService->getAllCommentsWithConditions(
             $where_clauses,
-            $id_field,
-            $email_field,
             $sort_by_value,
             $sort_order_value,
             $selected_items_number,

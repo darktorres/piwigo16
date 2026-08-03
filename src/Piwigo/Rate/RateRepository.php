@@ -9,10 +9,11 @@ use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr\Join;
 use Piwigo\Core\Env;
-use Piwigo\Db\Tables;
 use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Rate\Projection\Rate;
+use Piwigo\Users\UserEntity;
+use Piwigo\Users\UserInfoEntity;
 
 /**
  * Persistence layer for the rate domain: `rate` itself, plus the
@@ -246,28 +247,31 @@ final class RateRepository extends EntityRepository
     }
 
     /**
-     * Item 14 DQL audit: stays on DBAL -- $idColumn/$usernameColumn are
-     * runtime-resolved column names (Piwigo's multi-auth
-     * CurrentConfig::userFields() remapping), not fixed DQL property paths;
-     * `users` is also deliberately not entity-mapped (see UserInfoEntity's
-     * own docblock).
+     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
+     * DQL -- `users` is now mapped ({@see UserEntity}); the multi-auth
+     * column indirection this used to take as `$idColumn`/`$usernameColumn`
+     * parameters is gone.
      *
      * @return array<int, string>
      */
-    public function findUsernamesById(string $idColumn, string $usernameColumn): array
+    public function findUsernamesById(): array
     {
         $rows = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select($idColumn . ' AS id', $usernameColumn . ' AS username')
-            ->from(Tables::users())
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->select('u.id AS id', 'u.username AS username')
+            ->from(UserEntity::class, 'u')
+            ->getQuery()
+            ->getArrayResult();
 
         $result = [];
         foreach ($rows as $row) {
-            if (is_numeric($row['id'])) {
-                $result[(int) $row['id']] = is_string($row['username']) ? $row['username'] : '';
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $id = $row['id'] ?? null;
+            if ($id instanceof \Piwigo\Common\ValueObject\UserId) {
+                $result[$id->value] = is_string($row['username'] ?? null) ? $row['username'] : '';
             }
         }
 
@@ -512,34 +516,33 @@ final class RateRepository extends EntityRepository
      * status (used by the page to decide whether to render them as an
      * anonymous rater).
      *
-     * Item 14 DQL audit: stays on DBAL -- $idColumn/$usernameColumn are
-     * runtime-resolved multi-auth column names, not fixed DQL property
-     * paths, and it joins `users`, which is deliberately not entity-mapped
-     * (see UserInfoEntity's own docblock).
+     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
+     * DQL -- `users` is now mapped ({@see UserEntity}); the multi-auth
+     * column indirection this used to take as `$idColumn`/`$usernameColumn`
+     * parameters is gone.
      *
      * @return list<array{id: int, name: string, status: string}>
      */
-    public function findUsersWithStatusByIdUsername(string $idColumn, string $usernameColumn): array
+    public function findUsersWithStatusByIdUsername(): array
     {
         $rows = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select('DISTINCT u.' . $idColumn . ' AS id', 'u.' . $usernameColumn . ' AS name', 'ui.status')
-            ->from(Tables::users(), 'u')
-            ->innerJoin('u', Tables::userInfos(), 'ui', 'u.' . $idColumn . ' = ui.user_id')
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->select('DISTINCT u.id AS id', 'u.username AS name', 'ui.status AS status')
+            ->from(UserEntity::class, 'u')
+            ->innerJoin(UserInfoEntity::class, 'ui', Join::WITH, 'u.id = ui.userId')
+            ->getQuery()
+            ->getArrayResult();
 
         $result = [];
         foreach ($rows as $row) {
-            if (! is_numeric($row['id'])) {
+            if (! is_array($row) || ! ($row['id'] instanceof \Piwigo\Common\ValueObject\UserId)) {
                 continue;
             }
 
             $result[] = [
-                'id' => (int) $row['id'],
-                'name' => is_string($row['name']) ? $row['name'] : '',
-                'status' => is_string($row['status']) ? $row['status'] : '',
+                'id' => $row['id']->value,
+                'name' => is_string($row['name'] ?? null) ? $row['name'] : '',
+                'status' => is_string($row['status'] ?? null) ? $row['status'] : '',
             ];
         }
 

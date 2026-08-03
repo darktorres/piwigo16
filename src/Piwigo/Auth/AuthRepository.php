@@ -21,10 +21,10 @@ use Piwigo\Users\UserInfoEntity;
  *
  * Owns no entity itself ({@see UserAuthKeyEntity} has no `repositoryClass`,
  * shared with ApiKeyRepository) -- holds EntityManagerInterface directly.
- * `users` is never ORM-mapped (Users\UserRepository's own docblock);
- * every method touching it takes caller-supplied column names
- * (\Piwigo\Config\CurrentConfig::userFields()) and stays plain DBAL via
- * $this->em->getConnection(). `user_infos` IS ORM-mapped
+ * `users` is now ORM-mapped too ({@see \Piwigo\Users\UserEntity}, Item 14
+ * Sub-phase C4 -- the multi-auth column indirection every method touching
+ * it used to take as caller-supplied column names is gone, confirmed
+ * dead code). `user_infos` IS ORM-mapped
  * ({@see UserInfoEntity}, owned by Users\UserRepository) -- writes here
  * go through it (find+set+flush) rather than raw DBAL, since a raw write
  * would leave any UserInfoEntity already in this EntityManager's identity
@@ -48,30 +48,31 @@ final readonly class AuthRepository
     ) {}
 
     /**
+     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
+     * DQL -- `users` is now mapped ({@see \Piwigo\Users\UserEntity}); the
+     * multi-auth column indirection this used to take as `$idColumn`/
+     * `$usernameColumn`/`$passwordColumn` parameters is gone (see this
+     * class's own docblock).
+     *
      * @return array{username: string, password: string}|null
      */
-    public function findUsernameAndPassword(
-        int|string $userId,
-        string $idColumn,
-        string $usernameColumn,
-        string $passwordColumn
-    ): ?array {
-        $row = $this->em->getConnection()
-            ->createQueryBuilder()
-            ->select($usernameColumn . ' AS username', $passwordColumn . ' AS password')
-            ->from(Tables::users())
-            ->where($idColumn . ' = :id')
+    public function findUsernameAndPassword(UserId $userId): ?array
+    {
+        $row = $this->em->createQueryBuilder()
+            ->select('u.username AS username', 'u.password AS password')
+            ->from(\Piwigo\Users\UserEntity::class, 'u')
+            ->where('u.id = :id')
             ->setParameter('id', $userId)
-            ->executeQuery()
-            ->fetchAssociative();
+            ->getQuery()
+            ->getOneOrNullResult(\Doctrine\ORM\Query::HYDRATE_ARRAY);
 
-        if ($row === false) {
+        if (! is_array($row)) {
             return null;
         }
 
         return [
-            'username' => is_string($row['username']) ? $row['username'] : '',
-            'password' => is_string($row['password']) ? $row['password'] : '',
+            'username' => is_string($row['username'] ?? null) ? $row['username'] : '',
+            'password' => is_string($row['password'] ?? null) ? $row['password'] : '',
         ];
     }
 
@@ -88,41 +89,39 @@ final readonly class AuthRepository
 
     /**
      * Finds a user by username first, falling back to email -- matches the
-     * original's own two-query try-username-then-email order (needed
-     * because $usernameColumn/$emailColumn are runtime-configurable via
-     * \Piwigo\Config\CurrentConfig::userFields(), not always literally 'username'/'email').
+     * original's own two-query try-username-then-email order.
+     *
+     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
+     * DQL -- `users` is now mapped ({@see \Piwigo\Users\UserEntity}); the
+     * multi-auth column indirection this used to take as `$idColumn`/
+     * `$usernameColumn`/`$emailColumn`/`$passwordColumn` parameters is
+     * gone (see this class's own docblock).
      */
-    public function findByUsernameOrEmail(
-        string $usernameOrEmail,
-        string $idColumn,
-        string $usernameColumn,
-        string $emailColumn,
-        string $passwordColumn
-    ): ?AuthUser {
-        $qb = $this->em->getConnection()
-            ->createQueryBuilder()
+    public function findByUsernameOrEmail(string $usernameOrEmail): ?AuthUser
+    {
+        $qb = $this->em->createQueryBuilder()
             ->select(
-                'u.' . $idColumn . ' AS id',
-                'u.' . $usernameColumn . ' AS username',
-                'u.' . $emailColumn . ' AS email',
-                'u.' . $passwordColumn . ' AS password',
+                'u.id AS id',
+                'u.username AS username',
+                'u.mailAddress AS email',
+                'u.password AS password',
                 'i.status AS status',
             )
-            ->from(Tables::users(), 'u')
-            ->leftJoin('u', Tables::userInfos(), 'i', 'u.' . $idColumn . ' = i.user_id')
+            ->from(\Piwigo\Users\UserEntity::class, 'u')
+            ->leftJoin(UserInfoEntity::class, 'i', \Doctrine\ORM\Query\Expr\Join::WITH, 'u.id = i.userId')
             ->setParameter('value', $usernameOrEmail);
 
-        $row = (clone $qb)->where('u.' . $usernameColumn . ' = :value')
-            ->executeQuery()
-            ->fetchAssociative();
+        $row = (clone $qb)->where('u.username = :value')
+            ->getQuery()
+            ->getOneOrNullResult(\Doctrine\ORM\Query::HYDRATE_ARRAY);
 
-        if ($row === false) {
-            $row = $qb->where('u.' . $emailColumn . ' = :value')
-                ->executeQuery()
-                ->fetchAssociative();
+        if (! is_array($row)) {
+            $row = $qb->where('u.mailAddress = :value')
+                ->getQuery()
+                ->getOneOrNullResult(\Doctrine\ORM\Query::HYDRATE_ARRAY);
         }
 
-        return $row === false ? null : AuthUser::fromRow($row);
+        return is_array($row) ? AuthUser::fromRow($row) : null;
     }
 
     /**
@@ -131,32 +130,38 @@ final readonly class AuthRepository
      * pseudo-column in the original (NOW(), DATEDIFF, SUBDATE) is left to
      * the caller to compute from \Piwigo\Core\Env::now() instead.
      */
-    public function findAuthKeyDetails(string $authKey, string $idColumn, string $usernameColumn, string $emailColumn): ?AuthKeyDetails
+    /**
+     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
+     * DQL -- `users` is now mapped ({@see \Piwigo\Users\UserEntity}); the
+     * multi-auth column indirection this used to take as `$idColumn`/
+     * `$usernameColumn`/`$emailColumn` parameters is gone (see this
+     * class's own docblock).
+     */
+    public function findAuthKeyDetails(string $authKey): ?AuthKeyDetails
     {
-        $row = $this->em->getConnection()
-            ->createQueryBuilder()
+        $row = $this->em->createQueryBuilder()
             ->select(
-                'uak.auth_key_id',
-                'uak.user_id',
-                'uak.auth_key',
-                'uak.expired_on',
-                'uak.revoked_on',
-                'uak.last_used_on',
-                'uak.last_notified_on',
-                'uak.apikey_secret',
-                'ui.status',
-                'u.' . $usernameColumn . ' AS username',
-                'u.' . $emailColumn . ' AS email',
+                'uak.authKeyId AS auth_key_id',
+                'uak.userId AS user_id',
+                'uak.authKey AS auth_key',
+                'uak.expiredOn AS expired_on',
+                'uak.revokedOn AS revoked_on',
+                'uak.lastUsedOn AS last_used_on',
+                'uak.lastNotifiedOn AS last_notified_on',
+                'uak.apikeySecret AS apikey_secret',
+                'ui.status AS status',
+                'u.username AS username',
+                'u.mailAddress AS email',
             )
-            ->from(Tables::userAuthKeys(), 'uak')
-            ->join('uak', Tables::userInfos(), 'ui', 'uak.user_id = ui.user_id')
-            ->join('uak', Tables::users(), 'u', 'u.' . $idColumn . ' = ui.user_id')
-            ->where('uak.auth_key = :authKey')
+            ->from(UserAuthKeyEntity::class, 'uak')
+            ->innerJoin(UserInfoEntity::class, 'ui', \Doctrine\ORM\Query\Expr\Join::WITH, 'uak.userId = ui.userId')
+            ->innerJoin(\Piwigo\Users\UserEntity::class, 'u', \Doctrine\ORM\Query\Expr\Join::WITH, 'u.id = ui.userId')
+            ->where('uak.authKey = :authKey')
             ->setParameter('authKey', $authKey)
-            ->executeQuery()
-            ->fetchAssociative();
+            ->getQuery()
+            ->getOneOrNullResult(\Doctrine\ORM\Query::HYDRATE_ARRAY);
 
-        return $row === false ? null : AuthKeyDetails::fromRow($row);
+        return is_array($row) ? AuthKeyDetails::fromRow($row) : null;
     }
 
     public function touchAuthKeyLastUsed(int|string $userId, string $authKey, \DateTimeInterface $lastUsedOn): void

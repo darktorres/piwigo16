@@ -16,6 +16,7 @@ use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\Section\SectionContext;
 use Piwigo\Tag\TagService;
+use Piwigo\Users\UserService;
 
 /**
  * Renders the search-refinement sidebar (author/tags/date_posted/
@@ -56,6 +57,7 @@ final readonly class SearchFilterRenderer
         private \Piwigo\Core\CurrentLogger $currentLogger,
         private \Piwigo\Users\CurrentUser $currentUser,
         private \Piwigo\Config\CurrentConfig $currentConfig,
+        private UserService $userService,
     ) {}
 
     private function cacheGet(string $key): mixed
@@ -168,11 +170,25 @@ final readonly class SearchFilterRenderer
         // SqlCondition::combine() instead of string concatenation, so no
         // prefix is needed). Confirmed via direct grep this key is never
         // read outside this file.
-        $page['search_details']['forbidden'] = $this->permissionService->getSqlConditionFandFAsCondition([
-            'forbidden_categories' => 'category_id',
-            'visible_categories' => 'category_id',
-            'visible_images' => 'id',
-        ]);
+        //
+        // SQL-modernization audit, Item 14 Sub-phase C1: converted to a
+        // typed PermissionCriteria -- every real consumer of this
+        // condition throughout this file (author/filetypes/added_by/
+        // ratings/filesize/ratios/height/width filter queries) joins
+        // `images AS i`/`image_category AS ic`, where unqualified
+        // `category_id`/`id` unambiguously resolve to `ic.category_id`/
+        // `i.id` (neither table has the other's column). The old
+        // `visible_images => 'id'` also fell through into `forbidden_images`
+        // with no `break` -- fieldName `'id'` is the images-table's own
+        // level check, so maxLevel applies here too, against `level`.
+        $searchPermissionCriteria = $this->permissionService->getPermissionCriteria();
+        $page['search_details']['forbidden'] = SqlCondition::combine(
+            'AND',
+            $searchPermissionCriteria->forbiddenCategoriesCondition('category_id'),
+            $searchPermissionCriteria->visibleCategoriesCondition('category_id'),
+            $searchPermissionCriteria->visibleImagesCondition('id'),
+            $searchPermissionCriteria->maxLevelCondition('level'),
+        );
 
         // we want filters to be filled with values related to current items
         // ONLY IF we have some filters filled
@@ -435,33 +451,12 @@ final readonly class SearchFilterRenderer
                     }
                 }
 
-                $confUserFields = $this->currentConfig->userFields();
-                $userFieldId = $confUserFields['id'];
-                $userFieldUsername = $confUserFields['username'];
-
-                // SQL-modernization audit: $userIdsCsv used to be spliced
-                // directly (implode() CSV) -- now bound. $userIds are
-                // added_by_id column values (DB-sourced strings, not
-                // request input), but converted regardless per this
-                // initiative's "regardless of exploitability" scope.
-                $usersTable = Tables::users();
-                $userIdsInts = array_map(intval(...), $userIds);
-                $query = <<<SQL
-                    SELECT
-                        {$userFieldId} AS id,
-                        {$userFieldUsername} AS username
-                    FROM {$usersTable}
-                    WHERE {$userFieldId} IN (:userIds)
-                    SQL;
-                $usernameOf = $this->repo->queryKeyedColumn($query, 'id', 'username', new SqlCondition(
-                    '',
-                    [
-                        'userIds' => $userIdsInts,
-                    ],
-                    [
-                        'userIds' => ArrayParameterType::INTEGER,
-                    ],
-                ));
+                // SQL-modernization audit, Item 14 Sub-phase C4: `users` is
+                // now mapped ({@see \Piwigo\Users\UserEntity}), so this no
+                // longer needs its own raw query -- reuses
+                // UserService::getUsernamesByIds(), the same id => username
+                // map shape this block already builds.
+                $usernameOf = $this->userService->getUsernamesByIds($userIds);
 
                 foreach (array_keys($addedBy) as $addedByIdx) {
                     $addedById = $addedBy[$addedByIdx]['added_by_id'] ?? null;
@@ -515,9 +510,8 @@ final readonly class SearchFilterRenderer
                 // be a raw already-prefixed string; $catWordsCsv used to
                 // be spliced via implode() CSV. Both now bound, combined
                 // via SqlCondition::combine().
-                $permissionCondition = $this->permissionService->getSqlConditionFandFAsCondition([
-                    'visible_categories' => 'id',
-                ]);
+                $permissionCondition = $this->permissionService->getPermissionCriteria()
+                    ->visibleCategoriesCondition('id');
                 $catWordsInts = array_map(static fn (int|string $v): int => (int) $v, $catWords);
                 $idsCondition = new SqlCondition(
                     'id IN (:catWords)',

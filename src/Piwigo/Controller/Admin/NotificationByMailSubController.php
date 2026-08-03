@@ -443,18 +443,11 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         $conn = DbConnection::build();
         $notificationByMailService = new \Piwigo\Notification\NotificationByMailService(new \Piwigo\Notification\NotificationByMailRepository($conn), $sessionService, $currentConfig);
 
-        // user_fields maps generic field names to table-specific column names
-        // (see include/config_default.inc.php); every value is a plain string.
-        $user_fields = $currentConfig->userFields();
-        $user_field_email = $user_fields['email'];
-        $user_field_id = $user_fields['id'];
-        $user_field_username = $user_fields['username'];
-
         // Set null mail_address empty
-        $notificationByMailService->nullifyBlankEmails($user_field_email);
+        $notificationByMailService->nullifyBlankEmails();
 
         // null mail_address are not selected in the list
-        $rows = $notificationByMailService->getUsersWithoutNotificationRow($user_field_id, $user_field_username, $user_field_email);
+        $rows = $notificationByMailService->getUsersWithoutNotificationRow();
 
         if ($rows !== []) {
             $inserts = [];

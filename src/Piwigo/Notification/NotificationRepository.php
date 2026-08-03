@@ -17,8 +17,9 @@ use Piwigo\Permission\SqlCondition;
  * per-date thumbnails/categories).
  *
  * $restrictCondition is always an already-built permission fragment
- * (NotificationService::getSqlWhereRestrictCondition(), itself
- * PermissionService::getSqlConditionFandFAsCondition()) -- SQL-
+ * ({@see NotificationService::getCommentsRestrictCondition()}/
+ * {@see NotificationService::getElementsRestrictCondition()}, themselves
+ * built from {@see \Piwigo\Permission\PermissionCriteria}) -- SQL-
  * modernization audit: this and $start/$end (the only other genuinely
  * dynamic/external-origin values here) are now always bound, via
  * QueryBuilder throughout instead of hand-assembled heredoc SQL text.

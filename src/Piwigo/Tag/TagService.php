@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Tag;
 
-use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -15,9 +14,9 @@ use Piwigo\Event\Tag\GetTagAltNames;
 use Piwigo\Event\Tag\GetTagNameLikeWhere;
 use Piwigo\Event\Tag\RenderTagName;
 use Piwigo\Event\Tag\RenderTagUrl;
+use Piwigo\Image\ImageFilterCriteria;
 use Piwigo\Image\ImageService;
 use Piwigo\Permission\PermissionService;
-use Piwigo\Permission\SqlCondition;
 use Piwigo\Tag\Projection\Tag;
 use Piwigo\Tag\Projection\TagBrief;
 
@@ -226,11 +225,7 @@ final readonly class TagService
     {
         $usePersistentCache = $tagIds === [];
 
-        $condition = $this->permissionService->getSqlConditionFandFAsCondition([
-            'forbidden_categories' => 'category_id',
-            'visible_categories' => 'category_id',
-            'visible_images' => 'ic.image_id',
-        ]);
+        $condition = $this->permissionService->getPermissionCriteria();
 
         if ($usePersistentCache) {
             // CachePools::tagCloud() (P23 Stage 1d) replaces the older
@@ -303,37 +298,25 @@ final readonly class TagService
      * Return the list of image ids corresponding to given tags. AND & OR
      * mode supported.
      *
-     * SQL-modernization audit: $extraParams/$extraTypes widened
-     * additively (both default `[]`) so a caller building its own bound
-     * fragment into $extraImagesWhereSql (e.g. Ws\PwgTags::getImages()'s
-     * own WsHelper::stdImageSqlFilter() output) can bind its values
-     * instead of splicing them.
+     * SQL-modernization audit, Item 14 Sub-phase C3: $extraImagesWhereSql/
+     * $extraParams/$extraTypes (a caller-built bound-fragment escape hatch,
+     * only ever populated by Ws\PwgTags::getImages()'s own
+     * `WsHelper::stdImageSqlFilterCriteria()` output) replaced by
+     * `?ImageFilterCriteria $filterCriteria` -- see that class's own
+     * docblock.
      *
      * @param list<TagId> $tagIds
-     * @param string|null $extraImagesWhereSql optionally apply a sql where
-     *   filter to retrieved images; null is treated the same as '' (both
-     *   are matched via a strict in_array() check below), and
-     *   BatchManagerSubController passes null explicitly
      * @param string|null $orderBy optionally overwrite default photo order;
      *   null is treated the same as '' for the same reason
-     * @param array<string, mixed> $extraParams
-     * @param array<string, ArrayParameterType|\Doctrine\DBAL\ParameterType> $extraTypes
+     *   BatchManagerSubController passes null explicitly
      * @return list<int>
      */
-    public function getImageIdsForTags(array $tagIds, string $mode = 'AND', ?string $extraImagesWhereSql = '', ?string $orderBy = '', bool $usePermissions = true, array $extraParams = [], array $extraTypes = []): array
+    public function getImageIdsForTags(array $tagIds, string $mode = 'AND', ?ImageFilterCriteria $filterCriteria = null, ?string $orderBy = '', bool $usePermissions = true): array
     {
 
         if ($tagIds === []) {
             return [];
         }
-
-        $condition = $usePermissions
-            ? $this->permissionService->getSqlConditionFandFAsCondition([
-                'forbidden_categories' => 'category_id',
-                'visible_categories' => 'category_id',
-                'visible_images' => 'id',
-            ])
-            : new SqlCondition('');
 
         $orderBySql = in_array($orderBy, [null, ''], true) ? $this->currentConfig->orderBy() : $orderBy;
 
@@ -341,10 +324,8 @@ final readonly class TagService
             array_map(static fn (TagId $id): int => $id->value, $tagIds),
             $mode,
             $usePermissions,
-            $condition,
-            in_array($extraImagesWhereSql, [null, ''], true) ? '' : $extraImagesWhereSql,
-            $extraParams,
-            $extraTypes,
+            $this->permissionService->getPermissionCriteria(),
+            $filterCriteria,
             $orderBySql
         );
     }

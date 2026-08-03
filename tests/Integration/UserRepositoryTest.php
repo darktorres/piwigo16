@@ -46,34 +46,34 @@ final class UserRepositoryTest extends IntegrationTestCase
 
     public function test_find_id_by_username_returns_a_fixture_user(): void
     {
-        self::assertEquals(\Piwigo\Common\ValueObject\UserId::from(1), $this->repo->findIdByUsername(\Piwigo\Common\ValueObject\Username::from('fixture_admin'), 'id', 'username'));
-        self::assertNull($this->repo->findIdByUsername(\Piwigo\Common\ValueObject\Username::from('does-not-exist'), 'id', 'username'));
+        self::assertEquals(\Piwigo\Common\ValueObject\UserId::from(1), $this->repo->findIdByUsername(\Piwigo\Common\ValueObject\Username::from('fixture_admin')));
+        self::assertNull($this->repo->findIdByUsername(\Piwigo\Common\ValueObject\Username::from('does-not-exist')));
     }
 
     public function test_find_username_by_id_returns_a_fixture_user(): void
     {
-        self::assertEquals(\Piwigo\Common\ValueObject\Username::from('fixture_admin'), $this->repo->findUsernameById(\Piwigo\Common\ValueObject\UserId::from(1), 'id', 'username'));
+        self::assertEquals(\Piwigo\Common\ValueObject\Username::from('fixture_admin'), $this->repo->findUsernameById(\Piwigo\Common\ValueObject\UserId::from(1)));
     }
 
     public function test_find_username_by_id_returns_null_for_a_nonexistent_user(): void
     {
-        self::assertNull($this->repo->findUsernameById(\Piwigo\Common\ValueObject\UserId::from(999999), 'id', 'username'));
+        self::assertNull($this->repo->findUsernameById(\Piwigo\Common\ValueObject\UserId::from(999999)));
     }
 
     public function test_find_id_by_email_returns_a_fixture_user(): void
     {
-        self::assertEquals(\Piwigo\Common\ValueObject\UserId::from(1), $this->repo->findIdByEmail(\Piwigo\Common\ValueObject\Email::from('fixture_admin@example.test'), 'id', 'mail_address'));
-        self::assertNull($this->repo->findIdByEmail(\Piwigo\Common\ValueObject\Email::from('nobody@example.test'), 'id', 'mail_address'));
+        self::assertEquals(\Piwigo\Common\ValueObject\UserId::from(1), $this->repo->findIdByEmail(\Piwigo\Common\ValueObject\Email::from('fixture_admin@example.test')));
+        self::assertNull($this->repo->findIdByEmail(\Piwigo\Common\ValueObject\Email::from('nobody@example.test')));
     }
 
     public function test_find_id_by_email_is_case_insensitive(): void
     {
-        self::assertEquals(\Piwigo\Common\ValueObject\UserId::from(1), $this->repo->findIdByEmail(\Piwigo\Common\ValueObject\Email::from('FIXTURE_ADMIN@EXAMPLE.TEST'), 'id', 'mail_address'));
+        self::assertEquals(\Piwigo\Common\ValueObject\UserId::from(1), $this->repo->findIdByEmail(\Piwigo\Common\ValueObject\Email::from('FIXTURE_ADMIN@EXAMPLE.TEST')));
     }
 
     public function test_find_by_username_case_insensitive_matches_regardless_of_case(): void
     {
-        $found = $this->repo->findByUsernameCaseInsensitive('FIXTURE_ADMIN', 'id', 'username', 'mail_address');
+        $found = $this->repo->findByUsernameCaseInsensitive('FIXTURE_ADMIN');
 
         self::assertNotNull($found);
         self::assertSame('1', $found['id']);
@@ -83,30 +83,30 @@ final class UserRepositoryTest extends IntegrationTestCase
 
     public function test_find_by_username_case_insensitive_returns_null_when_missing(): void
     {
-        self::assertNull($this->repo->findByUsernameCaseInsensitive('nope', 'id', 'username', 'mail_address'));
+        self::assertNull($this->repo->findByUsernameCaseInsensitive('nope'));
     }
 
     public function test_username_exists_case_insensitive(): void
     {
-        self::assertTrue($this->repo->usernameExistsCaseInsensitive(\Piwigo\Common\ValueObject\Username::from('FIXTURE_ADMIN'), 'username'));
-        self::assertFalse($this->repo->usernameExistsCaseInsensitive(\Piwigo\Common\ValueObject\Username::from('nope'), 'username'));
+        self::assertTrue($this->repo->usernameExistsCaseInsensitive(\Piwigo\Common\ValueObject\Username::from('FIXTURE_ADMIN')));
+        self::assertFalse($this->repo->usernameExistsCaseInsensitive(\Piwigo\Common\ValueObject\Username::from('nope')));
     }
 
     public function test_email_exists(): void
     {
-        self::assertTrue($this->repo->emailExists(\Piwigo\Common\ValueObject\Email::from('fixture_admin@example.test'), 'mail_address', 'id', null));
-        self::assertFalse($this->repo->emailExists(\Piwigo\Common\ValueObject\Email::from('nobody@example.test'), 'mail_address', 'id', null));
+        self::assertTrue($this->repo->emailExists(\Piwigo\Common\ValueObject\Email::from('fixture_admin@example.test'), null));
+        self::assertFalse($this->repo->emailExists(\Piwigo\Common\ValueObject\Email::from('nobody@example.test'), null));
     }
 
     public function test_email_exists_excludes_the_given_user_id(): void
     {
-        self::assertFalse($this->repo->emailExists(\Piwigo\Common\ValueObject\Email::from('fixture_admin@example.test'), 'mail_address', 'id', \Piwigo\Common\ValueObject\UserId::from(1)));
-        self::assertTrue($this->repo->emailExists(\Piwigo\Common\ValueObject\Email::from('fixture_admin@example.test'), 'mail_address', 'id', \Piwigo\Common\ValueObject\UserId::from(2)));
+        self::assertFalse($this->repo->emailExists(\Piwigo\Common\ValueObject\Email::from('fixture_admin@example.test'), \Piwigo\Common\ValueObject\UserId::from(1)));
+        self::assertTrue($this->repo->emailExists(\Piwigo\Common\ValueObject\Email::from('fixture_admin@example.test'), \Piwigo\Common\ValueObject\UserId::from(2)));
     }
 
     public function test_find_all_usernames_includes_fixture_users(): void
     {
-        $names = $this->repo->findAllUsernames('username');
+        $names = $this->repo->findAllUsernames();
 
         self::assertContains('fixture_admin', $names);
         self::assertContains('guest', $names);
@@ -116,13 +116,9 @@ final class UserRepositoryTest extends IntegrationTestCase
     {
         $username = 'p18-test-' . bin2hex(random_bytes(4));
 
-        $id = $this->repo->insertUser([
-            'username' => $username,
-            'password' => 'irrelevant-hash',
-            'mail_address' => null,
-        ]);
+        $id = $this->repo->insertUser($username, 'irrelevant-hash', null);
 
-        self::assertEquals($id, $this->repo->findIdByUsername(\Piwigo\Common\ValueObject\Username::from($username), 'id', 'username'));
+        self::assertEquals($id, $this->repo->findIdByUsername(\Piwigo\Common\ValueObject\Username::from($username)));
 
         $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ' . $id->value);
     }
@@ -130,11 +126,7 @@ final class UserRepositoryTest extends IntegrationTestCase
     public function test_insert_user_infos_then_find_default_user_info_row_round_trips(): void
     {
         $username = 'p18-test-' . bin2hex(random_bytes(4));
-        $id = $this->repo->insertUser([
-            'username' => $username,
-            'password' => 'irrelevant-hash',
-            'mail_address' => null,
-        ]);
+        $id = $this->repo->insertUser($username, 'irrelevant-hash', null);
 
         $this->repo->insertUserInfos([$id], [
             'status' => 'normal',
@@ -147,7 +139,7 @@ final class UserRepositoryTest extends IntegrationTestCase
         self::assertNotNull($row);
         self::assertSame('normal', $row->status);
 
-        $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ' . $id);
+        $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ' . $id->value);
     }
 
     public function test_insert_user_infos_accepts_real_bool_for_the_tinyint_columns(): void
@@ -166,11 +158,7 @@ final class UserRepositoryTest extends IntegrationTestCase
         // is '1', a valid numeric string, so only the `false` case ever
         // surfaced this.
         $username = 'p18-test-' . bin2hex(random_bytes(4));
-        $id = $this->repo->insertUser([
-            'username' => $username,
-            'password' => 'irrelevant-hash',
-            'mail_address' => null,
-        ]);
+        $id = $this->repo->insertUser($username, 'irrelevant-hash', null);
 
         $this->repo->insertUserInfos([$id], [
             'status' => 'normal',
@@ -192,7 +180,7 @@ final class UserRepositoryTest extends IntegrationTestCase
         self::assertTrue($row->enabledHigh);
         self::assertFalse($row->lastVisitFromHistory);
 
-        $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ' . $id);
+        $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ' . $id->value);
     }
 
     public function test_insert_user_infos_with_no_ids_is_a_noop(): void
@@ -359,11 +347,7 @@ final class UserRepositoryTest extends IntegrationTestCase
         $username = 'p18-test-' . bin2hex(random_bytes(4));
         $theme = 'p18-test-theme-' . bin2hex(random_bytes(4));
 
-        $id = $this->repo->insertUser([
-            'username' => $username,
-            'password' => 'irrelevant-hash',
-            'mail_address' => null,
-        ]);
+        $id = $this->repo->insertUser($username, 'irrelevant-hash', null);
         $this->repo->insertUserInfos([$id], [
             'status' => 'normal',
             'theme' => $theme,
@@ -383,11 +367,7 @@ final class UserRepositoryTest extends IntegrationTestCase
         $username = 'p18-test-' . bin2hex(random_bytes(4));
         $language = 'p18-test-lang-' . bin2hex(random_bytes(4));
 
-        $id = $this->repo->insertUser([
-            'username' => $username,
-            'password' => 'irrelevant-hash',
-            'mail_address' => null,
-        ]);
+        $id = $this->repo->insertUser($username, 'irrelevant-hash', null);
         $this->repo->insertUserInfos([$id], [
             'status' => 'normal',
             'language' => $language,
@@ -404,17 +384,17 @@ final class UserRepositoryTest extends IntegrationTestCase
 
     public function test_find_notification_recipients_by_ids_with_no_ids_returns_empty(): void
     {
-        self::assertSame([], $this->repo->findNotificationRecipientsByIds([], 'id', 'username', 'mail_address'));
+        self::assertSame([], $this->repo->findNotificationRecipientsByIds([]));
     }
 
     public function test_find_usernames_by_ids_with_no_ids_returns_empty(): void
     {
-        self::assertSame([], $this->repo->findUsernamesByIds(['username' => 'username', 'id' => 'id'], []));
+        self::assertSame([], $this->repo->findUsernamesByIds([]));
     }
 
     public function test_find_all_usernames_by_id_returns_every_fixture_user(): void
     {
-        $byId = $this->repo->findAllUsernamesById('id', 'username');
+        $byId = $this->repo->findAllUsernamesById();
 
         $normalized = [];
         foreach ($byId as $id => $username) {
@@ -529,7 +509,7 @@ final class UserRepositoryTest extends IntegrationTestCase
 
     public function test_find_status_by_ids_with_no_ids_returns_empty(): void
     {
-        self::assertSame([], $this->repo->findStatusByIds('id', []));
+        self::assertSame([], $this->repo->findStatusByIds([]));
     }
 
     // Five defensive branches in this class stay genuinely unreached by any
@@ -563,18 +543,19 @@ final class UserRepositoryTest extends IntegrationTestCase
     //   null-result case is instead reached one line down, via
     //   `is_string($minRegistrationDate)` on the real NULL value.
     //
-    // - findStatusByIds()'s `! is_int($id) && ! is_string($id)` continue:
-    //   `id` comes from `u.{$idColumn}`, the left/outer side of the LEFT
-    //   JOIN against `users`' own primary key (never NULL), typed
-    //   int/string by the same native mysqli casting as above -- there is
-    //   no real row shape where it becomes anything else.
+    // - findStatusByIds()'s `! $id instanceof UserId` continue: `id` comes
+    //   from `u.id`, DQL array hydration through the 'user_id' custom
+    //   Doctrine type (see UserEntity), which converts every hydrated
+    //   value to a real UserId instance unconditionally -- there is no way
+    //   to make the ORM hand back a non-UserId value through this method's
+    //   public contract.
 
     /**
      * @return list<int>
      */
     private function findListForWsIds(UserListCriteria $criteria): array
     {
-        $result = $this->repo->findListForWs('id', 'username', 'mail_address', ['u.id' => 'id'], false, $criteria, 'u.id ASC', false, null, 0);
+        $result = $this->repo->findListForWs(['u.id' => 'id'], false, $criteria, 'u.id ASC', false, null, 0);
 
         return array_map(
             static fn (array $row): int => is_numeric($row['id']) ? (int) $row['id'] : 0,
@@ -654,7 +635,7 @@ final class UserRepositoryTest extends IntegrationTestCase
 
     public function test_find_list_for_ws_applies_the_limit_and_reports_the_total(): void
     {
-        $result = $this->repo->findListForWs('id', 'username', 'mail_address', ['u.id' => 'id'], false, new UserListCriteria(), 'u.id ASC', true, 2, 0);
+        $result = $this->repo->findListForWs(['u.id' => 'id'], false, new UserListCriteria(), 'u.id ASC', true, 2, 0);
 
         self::assertCount(2, $result->rows);
         self::assertSame(4, $result->total);

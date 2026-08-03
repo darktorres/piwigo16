@@ -306,7 +306,7 @@ final class ActivityServiceTest extends IntegrationTestCase
 
     public function test_get_user_object_log_with_usernames_delegates_to_the_repository(): void
     {
-        $rows = $this->service->getUserObjectLogWithUsernames('username', 'id');
+        $rows = $this->service->getUserObjectLogWithUsernames();
 
         // Fixture: object='user' rows are activity_id 3, 4, 15, 16 (2
         // logins + 2 adds), all performed_by fixture_admin -- same baseline

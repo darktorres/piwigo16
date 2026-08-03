@@ -234,7 +234,7 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
         // happens to create.
         $before = $this->countRows(Tables::sessions());
 
-        $this->repo->purgeSessionsForDeletedUsers('id');
+        $this->repo->purgeSessionsForDeletedUsers();
 
         self::assertSame($before, $this->countRows(Tables::sessions()), 'no session here references a deleted user, so nothing should be purged');
 
@@ -259,7 +259,7 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
             ->executeStatement();
 
         try {
-            $this->repo->purgeSessionsForDeletedUsers('id');
+            $this->repo->purgeSessionsForDeletedUsers();
 
             $remaining = $this->conn->createQueryBuilder()
                 ->select('id')

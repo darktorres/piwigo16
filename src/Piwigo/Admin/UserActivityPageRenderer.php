@@ -35,17 +35,12 @@ final class UserActivityPageRenderer
         $tabsheet->select('user_activity');
         $tabsheet->assign($currentTemplate);
 
-        // \Piwigo\Config\CurrentConfig::userFields() maps generic field names to table-specific column
-        // names; narrow once here and reuse below.
-        /** @var array<string, string> $user_fields */
-        $user_fields = $currentConfig->userFields();
-
         $activity_service = $activityService;
 
         if ($userActivityRequest->isDownloadLogs) {
             $output_lines = [];
 
-            $rows = $activity_service->getUserObjectLogWithUsernames($user_fields['username'], $user_fields['id']);
+            $rows = $activity_service->getUserObjectLogWithUsernames();
             array_push($output_lines, ['User', 'ID_User', 'Object', 'Object_ID', 'Action', 'Date', 'Hour', 'IP_Address', 'Details']);
             foreach ($rows as $row) {
                 $details = str_replace(['`groups`', '`rank`'], ['groups', 'rank'], (string) $row->details);

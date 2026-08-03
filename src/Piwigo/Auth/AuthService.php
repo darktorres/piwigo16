@@ -81,17 +81,11 @@ final readonly class AuthService
      */
     public function calculateAutoLoginKey(int|string $userId, int|string $time): array
     {
-
-        // see validate_mail_address() for why this is string=>string
-        /** @var array<string, string> $user_fields */
-        $user_fields = $this->currentConfig->userFields();
-
-        $found = $this->repo->findUsernameAndPassword(
-            $userId,
-            $user_fields['id'],
-            $user_fields['username'],
-            $user_fields['password']
-        );
+        // $userId is untrusted (a raw remember-me cookie value) --
+        // tryFrom() rather than from() so a tampered/malformed value
+        // degrades to "not found" below instead of throwing.
+        $userIdVo = UserId::tryFrom($userId);
+        $found = $userIdVo === null ? null : $this->repo->findUsernameAndPassword($userIdVo);
 
         if ($found === null) {
             return [
@@ -121,9 +115,9 @@ final readonly class AuthService
      * (same shape as {@see calculateAutoLoginKey()} above), discarding the
      * username half.
      */
-    public function getPasswordHash(int|string $userId, string $idColumn, string $usernameColumn, string $passwordColumn): ?string
+    public function getPasswordHash(UserId $userId): ?string
     {
-        $found = $this->repo->findUsernameAndPassword($userId, $idColumn, $usernameColumn, $passwordColumn);
+        $found = $this->repo->findUsernameAndPassword($userId);
 
         return $found['password'] ?? null;
     }
@@ -476,18 +470,7 @@ final readonly class AuthService
      */
     public function findUserByUsernameOrEmail(string $usernameOrEmail): ?\Piwigo\Auth\Projection\AuthUser
     {
-
-        // see UserService::validateMailAddress() for why this is string=>string
-        /** @var array<string, string> $user_fields */
-        $user_fields = $this->currentConfig->userFields();
-
-        return $this->repo->findByUsernameOrEmail(
-            $usernameOrEmail,
-            $user_fields['id'],
-            $user_fields['username'],
-            $user_fields['email'],
-            $user_fields['password'],
-        );
+        return $this->repo->findByUsernameOrEmail($usernameOrEmail);
     }
 
     /**
@@ -545,10 +528,6 @@ final readonly class AuthService
      */
     public function authKeyLogin(mixed $authKey, bool $connectionByHeader = false): bool
     {
-        // see UserService::validateMailAddress() for why this is string=>string
-        /** @var array<string, string> $user_fields */
-        $user_fields = $this->currentConfig->userFields();
-
         $authKey = is_string($authKey) ? $authKey : '';
 
         $valid_key = false;
@@ -566,7 +545,7 @@ final readonly class AuthService
             return false;
         }
 
-        $key = $this->repo->findAuthKeyDetails($authKey, $user_fields['id'], $user_fields['username'], $user_fields['email']);
+        $key = $this->repo->findAuthKeyDetails($authKey);
 
         if ($key === null) {
             return false;

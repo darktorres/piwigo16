@@ -201,7 +201,6 @@ namespace Piwigo\Tests\Integration {
             CurrentConfig::current()->setAntiFloodTime(0);
             CurrentConfig::current()->setGuestId(2);
             CurrentConfig::current()->setGuestAccess(true);
-            CurrentConfig::current()->setUserFields(['id' => 'id', 'username' => 'username', 'password' => 'password', 'email' => 'mail_address']);
             CurrentConfig::current()->setEmailAdminOnComment(false);
             CurrentConfig::current()->setEmailAdminOnCommentValidation(false);
             CurrentConfig::current()->setEmailAdminOnCommentEdition(false);

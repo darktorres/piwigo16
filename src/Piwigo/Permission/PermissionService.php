@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Permission;
 
-use Doctrine\DBAL\ArrayParameterType;
-use Doctrine\DBAL\ParameterType;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\UserId;
@@ -122,37 +120,34 @@ final readonly class PermissionService
     }
 
     /**
-     * Returns a `SqlCondition` (bound-parameter carrier) filtering by
-     * forbidden/visible categories and images, from CurrentUser and the
-     * request-scoped $filter global -- same "reads session/request
-     * globals directly" shape as AuditService's
-     * $_SERVER['REMOTE_ADDR'] read; a pure string/params builder with no
-     * DB access of its own. Was originally paired with a
-     * `getSqlConditionFandF(): string` sibling during the SQL-
-     * modernization initiative's file-by-file migration (see the
-     * initiative's own plan for the full history) -- deleted once every
-     * real call site had migrated to this method, since every one of
-     * this initiative's 335 heredoc call sites ultimately needed real
-     * bound parameters, not a raw interpolated string.
+     * SQL-modernization audit, Item 14 Sub-phase C1: typed replacement for
+     * the former `getSqlConditionFandFAsCondition()`'s own
+     * `array<string,string> $conditionFields` + raw `SqlCondition` return
+     * (deleted once every real call site migrated here -- confirmed via a
+     * full-repo grep) -- see {@see PermissionCriteria}'s own docblock for
+     * the full per-field mapping. Computes every field unconditionally (no
+     * `$conditionFields` argument -- the caller now picks which fields it
+     * actually needs off the returned object, same "typed DTO computed
+     * once, each consumer translates its own subset" pattern
+     * {@see \Piwigo\Image\ImageFilterCriteria} (Sub-phase C3) already
+     * established), same "reads session/request globals directly, no DB
+     * access of its own" shape the old method had.
      *
-     * No `$prefixCondition` parameter: a `SqlCondition`-based caller
-     * composes conjunction via `QueryBuilder::andWhere()`/
-     * `SqlCondition::combine()` instead of splicing a raw
-     * `"\n  AND"`-shaped continuation directly into a returned string.
-     *
-     * Every placeholder name gets a per-call unique suffix (a monotonic
-     * counter, not fixed names): real call sites combine multiple
-     * `SqlCondition` results into one query, and Doctrine only supports
-     * one binding per named placeholder per query.
-     *
-     * @param array<string, string> $conditionFields condition name
-     *   (forbidden_categories|visible_categories|visible_images|
-     *   forbidden_images) => SQL field/table.column to filter on
+     * The `UnexpectedValueException` for a malformed `image_access_type`
+     * (old code only reached this when a caller's own `$fieldName`
+     * happened to route into the `image_access_list` branch) now always
+     * runs when $imageAccessIds/$imageAccessIsAllowlist would otherwise be
+     * computed -- a deliberate widening, not an oversight:
+     * `image_access_type`/`image_access_list` are the current user's own
+     * account data (`CurrentUser::get()->rawAttributes`, set by
+     * `getuserdata()`), and an unexpected value there means that data is
+     * corrupted regardless of which condition dimension any particular
+     * caller happens to read -- the same "fail fast on corrupted account
+     * data, don't let it silently vary by caller" reasoning the old
+     * method's own `default => throw` branch already had.
      */
-    public function getSqlConditionFandFAsCondition(
-        array $conditionFields,
-        bool $forceOneCondition = false,
-    ): SqlCondition {
+    public function getPermissionCriteria(): PermissionCriteria
+    {
         $currentUser = \Piwigo\Users\CurrentUser::current()->get();
 
         $userForbiddenCategories = $currentUser->forbiddenCategories;
@@ -163,106 +158,27 @@ final readonly class PermissionService
         $userImageAccessList = $currentUser->rawAttributes['image_access_list'] ?? null;
         $userImageAccessList = is_scalar($userImageAccessList) ? (string) $userImageAccessList : '';
 
-        $suffix = self::nextPlaceholderSuffix();
-        $expr = $this->repo->expressionBuilder();
+        $forbiddenImagesApplies = $userImageAccessList !== '' || $userImageAccessType !== 'NOT IN';
 
-        $sqlParts = [];
-        $parameters = [];
-        $types = [];
-
-        foreach ($conditionFields as $condition => $fieldName) {
-            switch ($condition) {
-                case 'forbidden_categories':
-                    if ($userForbiddenCategories !== '') {
-                        $placeholder = 'forbidden_categories' . $suffix;
-                        $sqlParts[] = $expr->notIn($fieldName, ':' . $placeholder);
-                        $parameters[$placeholder] = self::csvToIntList($userForbiddenCategories);
-                        $types[$placeholder] = ArrayParameterType::INTEGER;
-                    }
-
-                    break;
-
-                case 'visible_categories':
-                    if ($filterVisibleCategories !== '') {
-                        $placeholder = 'visible_categories' . $suffix;
-                        $sqlParts[] = $expr->in($fieldName, ':' . $placeholder);
-                        $parameters[$placeholder] = self::csvToIntList($filterVisibleCategories);
-                        $types[$placeholder] = ArrayParameterType::INTEGER;
-                    }
-
-                    break;
-
-                case 'visible_images':
-                    if ($filterVisibleImages !== '') {
-                        $placeholder = 'visible_images' . $suffix;
-                        $sqlParts[] = $expr->in($fieldName, ':' . $placeholder);
-                        $parameters[$placeholder] = self::csvToIntList($filterVisibleImages);
-                        $types[$placeholder] = ArrayParameterType::INTEGER;
-                    }
-
-                    // note there is no break - visible include forbidden
-                    // no break
-                case 'forbidden_images':
-                    if ($userImageAccessList !== '' || $userImageAccessType !== 'NOT IN') {
-                        $tablePrefix = null;
-                        if ($fieldName === 'id') {
-                            $tablePrefix = '';
-                        } elseif ($fieldName === 'i.id') {
-                            $tablePrefix = 'i.';
-                        }
-
-                        if ($tablePrefix !== null) {
-                            $placeholder = 'user_level' . $suffix;
-                            $sqlParts[] = $expr->lte($tablePrefix . 'level', ':' . $placeholder);
-                            $parameters[$placeholder] = $currentUser->level;
-                            $types[$placeholder] = ParameterType::INTEGER;
-                        } elseif ($userImageAccessList !== '' && $userImageAccessType !== '') {
-                            if (! in_array($userImageAccessType, ['IN', 'NOT IN'], true)) {
-                                // image_access_type is always either literal string
-                                // set by getuserdata() -- an unexpected value here
-                                // means the raw legacy read is corrupted, not a
-                                // real code path to silently tolerate.
-                                throw new \UnexpectedValueException('Unexpected image_access_type: ' . $userImageAccessType);
-                            }
-
-                            $placeholder = 'image_access_list' . $suffix;
-                            $sqlParts[] = $userImageAccessType === 'IN'
-                                ? $expr->in($fieldName, ':' . $placeholder)
-                                : $expr->notIn($fieldName, ':' . $placeholder);
-                            $parameters[$placeholder] = self::csvToIntList($userImageAccessList);
-                            $types[$placeholder] = ArrayParameterType::INTEGER;
-                        }
-                    }
-
-                    break;
-
-                default:
-                    throw new \InvalidArgumentException('Unknown condition: ' . $condition);
+        $imageAccessIds = null;
+        $imageAccessIsAllowlist = null;
+        if ($forbiddenImagesApplies && $userImageAccessList !== '' && $userImageAccessType !== '') {
+            if (! in_array($userImageAccessType, ['IN', 'NOT IN'], true)) {
+                throw new \UnexpectedValueException('Unexpected image_access_type: ' . $userImageAccessType);
             }
+
+            $imageAccessIds = self::csvToIntList($userImageAccessList);
+            $imageAccessIsAllowlist = $userImageAccessType === 'IN';
         }
 
-        if ($sqlParts !== []) {
-            $sql = (string) $expr->and(...$sqlParts);
-        } else {
-            $sql = $forceOneCondition ? '1 = 1' : '';
-        }
-
-        return new SqlCondition($sql, $parameters, $types);
-    }
-
-    /**
-     * Monotonic per-process suffix for getSqlConditionFandFAsCondition()'s
-     * placeholder names. A `static` local rather than a class property:
-     * PermissionService is a class-level `readonly class`, and a static
-     * property there can't carry a mutable default/be incremented (PHP
-     * rejects a readonly static property outright).
-     */
-    private static function nextPlaceholderSuffix(): string
-    {
-        /** @var int */
-        static $counter = 0;
-
-        return '_' . $counter++;
+        return new PermissionCriteria(
+            forbiddenCategoryIds: $userForbiddenCategories === '' ? null : self::csvToIntList($userForbiddenCategories),
+            visibleCategoryIds: $filterVisibleCategories === '' ? null : self::csvToIntList($filterVisibleCategories),
+            visibleImageIds: $filterVisibleImages === '' ? null : self::csvToIntList($filterVisibleImages),
+            maxLevel: $forbiddenImagesApplies ? $currentUser->level : null,
+            imageAccessIds: $imageAccessIds,
+            imageAccessIsAllowlist: $imageAccessIsAllowlist,
+        );
     }
 
     /**

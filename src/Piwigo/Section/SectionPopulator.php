@@ -18,6 +18,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Event\Location\LocEndSectionInit;
 use Piwigo\Event\Template\RenderCategoryDescription;
 use Piwigo\Permission\PermissionService;
+use Piwigo\Permission\SqlCondition;
 use Piwigo\Search\SearchService;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
@@ -222,11 +223,17 @@ final readonly class SectionPopulator
             }
         }
 
-        $forbiddenCondition = $this->permissionService->getSqlConditionFandFAsCondition([
-            'forbidden_categories' => 'category_id',
-            'visible_categories' => 'category_id',
-            'visible_images' => 'id',
-        ]);
+        $permissionCriteria = $this->permissionService->getPermissionCriteria();
+        // visible_images's own old fallthrough into forbidden_images
+        // (fieldName 'id' -> the images-table's own level check) -- see
+        // PermissionCriteria's own docblock.
+        $forbiddenCondition = SqlCondition::combine(
+            'AND',
+            $permissionCriteria->forbiddenCategoriesCondition('category_id'),
+            $permissionCriteria->visibleCategoriesCondition('category_id'),
+            $permissionCriteria->visibleImagesCondition('id'),
+            $permissionCriteria->maxLevelCondition('level'),
+        );
         $forbidden = $forbiddenCondition->isEmpty() ? '' : ' AND ' . $forbiddenCondition->sql;
         $forbidden_params = $forbiddenCondition->parameters;
         $forbidden_types = $forbiddenCondition->types;
@@ -315,10 +322,12 @@ final readonly class SectionPopulator
                     // get all allowed sub-categories
                     if ($page_category !== null) {
                         $uppercats = $page_category['uppercats'];
-                        $subcatsCondition = $this->permissionService->getSqlConditionFandFAsCondition([
-                            'forbidden_categories' => 'id',
-                            'visible_categories' => 'id',
-                        ]);
+                        $subcatsCriteria = $this->permissionService->getPermissionCriteria();
+                        $subcatsCondition = SqlCondition::combine(
+                            'AND',
+                            $subcatsCriteria->forbiddenCategoriesCondition('id'),
+                            $subcatsCriteria->visibleCategoriesCondition('id'),
+                        );
                         $subcat_ids_raw = $this->repo->findVisibleSubcategoryIds(
                             $uppercats,
                             $subcatsCondition->isEmpty() ? '' : ' AND ' . $subcatsCondition->sql,
@@ -331,9 +340,17 @@ final readonly class SectionPopulator
                         $where_params['subcatIds'] = $subcat_ids;
                         $where_types['subcatIds'] = ArrayParameterType::STRING;
                         // remove categories from forbidden because just checked above
-                        $forbiddenCondition = $this->permissionService->getSqlConditionFandFAsCondition([
-                            'visible_images' => 'id',
-                        ]);
+                        //
+                        // visible_images's own old fallthrough into
+                        // forbidden_images (fieldName 'id' -> the
+                        // images-table's own level check) -- see
+                        // PermissionCriteria's own docblock.
+                        $flatCriteria = $this->permissionService->getPermissionCriteria();
+                        $forbiddenCondition = SqlCondition::combine(
+                            'AND',
+                            $flatCriteria->visibleImagesCondition('id'),
+                            $flatCriteria->maxLevelCondition('level'),
+                        );
                         $forbidden = $forbiddenCondition->isEmpty() ? '' : ' AND ' . $forbiddenCondition->sql;
                         $forbidden_params = $forbiddenCondition->parameters;
                         $forbidden_types = $forbiddenCondition->types;
@@ -496,9 +513,7 @@ final readonly class SectionPopulator
                         [
                             'items' => $this->userService->getVisibleFavoriteImageIds(
                                 $current_user_id,
-                                $this->permissionService->getSqlConditionFandFAsCondition([
-                                    'visible_images' => 'id',
-                                ]),
+                                $this->permissionService->getPermissionCriteria(),
                                 $order_by
                             ),
                         ]

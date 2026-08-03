@@ -202,10 +202,7 @@ final readonly class CategoryCatsRenderer
             } elseif ($merged['count_categories'] > 0 and $merged['count_images'] > 0) { // at this point, count_images should always be >0 (used as condition above)
                 // searching a random representant among representant of sub-categories
                 $uppercats = $merged['uppercats'];
-                $condition = $this->permissionService->getSqlConditionFandFAsCondition([
-                    'visible_categories' => 'id',
-                ]);
-                $found = $this->categoryRepo->findRandomRepresentativeIdAmongSubcategories($uppercats, $condition);
+                $found = $this->categoryRepo->findRandomRepresentativeIdAmongSubcategories($uppercats, $this->permissionService->getPermissionCriteria());
                 if ($found !== null) {
                     $imageId = $found;
                 }
@@ -242,11 +239,7 @@ final readonly class CategoryCatsRenderer
 
         if ($this->currentConfig->displayFromto()) {
             if (count($categoryIds) > 0) {
-                $condition = $this->permissionService->getSqlConditionFandFAsCondition([
-                    'visible_categories' => 'category_id',
-                    'visible_images' => 'id',
-                ]);
-                $datesOfCategory = $this->categoryRepo->findDateRangeByCategory($categoryIds, $condition);
+                $datesOfCategory = $this->categoryRepo->findDateRangeByCategory($categoryIds, $this->permissionService->getPermissionCriteria());
             }
         }
 

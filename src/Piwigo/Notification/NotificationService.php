@@ -38,22 +38,63 @@ final readonly class NotificationService
 
     /**
      * The image/category junction table must be aliased "ic" in whatever
-     * query this feeds into.
+     * query this feeds into -- {@see NotificationRepository::buildQuery()}'s
+     * own `new_comments` case (`comments c INNER JOIN image_category ic`).
      *
-     * SQL-modernization audit: was getSqlWhereRestrictFilter(), returning
-     * an already-prefixed ('AND '/'WHERE ') raw string via
-     * PermissionService::getSqlConditionFandF() -- now SqlCondition via
-     * getSqlConditionFandFAsCondition(); every caller composes
-     * conjunction through QueryBuilder::andWhere() instead of a string
-     * prefix, so $prefixCondition is gone.
+     * SQL-modernization audit, Item 14 Sub-phase C1: replaces the old
+     * `getSqlWhereRestrictCondition('ic.image_id')` default -- fieldName
+     * `'ic.image_id'` isn't `'id'`/`'i.id'`, so the old
+     * `getSqlConditionFandFAsCondition()`'s own `visible_images` fallthrough
+     * into `forbidden_images` hit the `image_access_list` branch, not the
+     * level check; imageAccessCondition applies here, not maxLevel. Every
+     * real consumer of the returned SqlCondition applies it via
+     * `applyCondition()`'s own `isEmpty()`-skip (never an unguarded
+     * splice), so dropping the old `$forceOneCondition` parameter (no real
+     * caller ever passed `true` for this specific field) changes nothing.
      */
-    public function getSqlWhereRestrictCondition(string $imgField = 'ic.image_id', bool $forceOneCondition = false): SqlCondition
+    public function getCommentsRestrictCondition(): SqlCondition
     {
-        return $this->permissionService->getSqlConditionFandFAsCondition([
-            'forbidden_categories' => 'ic.category_id',
-            'visible_categories' => 'ic.category_id',
-            'visible_images' => $imgField,
-        ], $forceOneCondition);
+        $criteria = $this->permissionService->getPermissionCriteria();
+
+        return SqlCondition::combine(
+            'AND',
+            $criteria->forbiddenCategoriesCondition('ic.category_id'),
+            $criteria->visibleCategoriesCondition('ic.category_id'),
+            $criteria->visibleImagesCondition('ic.image_id'),
+            $criteria->imageAccessCondition('ic.image_id'),
+        );
+    }
+
+    /**
+     * The images table must be aliased "i" in whatever query this feeds
+     * into -- {@see NotificationRepository::buildQuery()}'s own
+     * `new_elements`/`updated_categories` cases, and
+     * findRecentPostDates()/findRecentElementsForDate()/
+     * findRecentCategoriesForDate() below.
+     *
+     * SQL-modernization audit, Item 14 Sub-phase C1: replaces the old
+     * `getSqlWhereRestrictCondition('id')`/`getSqlWhereRestrictCondition('i.id',
+     * true)` call sites -- fieldName `'id'`/`'i.id'` matches the old
+     * `getSqlConditionFandFAsCondition()`'s own `$fieldName === 'id' ||
+     * $fieldName === 'i.id'` branch, so the `visible_images` fallthrough
+     * into `forbidden_images` hit the images-table's own level check;
+     * maxLevel applies here, against `i.level`. Every real consumer
+     * applies the returned SqlCondition via `applyCondition()`'s own
+     * `isEmpty()`-skip, so dropping the old `$forceOneCondition` parameter
+     * (only ever passed `true` by getRecentPostDates(), and a no-op for
+     * that consumer too) changes nothing.
+     */
+    public function getElementsRestrictCondition(): SqlCondition
+    {
+        $criteria = $this->permissionService->getPermissionCriteria();
+
+        return SqlCondition::combine(
+            'AND',
+            $criteria->forbiddenCategoriesCondition('ic.category_id'),
+            $criteria->visibleCategoriesCondition('ic.category_id'),
+            $criteria->visibleImagesCondition('i.id'),
+            $criteria->maxLevelCondition('i.level'),
+        );
     }
 
     private const array KNOWN_TYPES = ['new_comments', 'unvalidated_comments', 'new_elements', 'updated_categories', 'new_users'];
@@ -68,8 +109,8 @@ final readonly class NotificationService
         }
 
         $restrictCondition = match ($type) {
-            'new_comments' => $this->getSqlWhereRestrictCondition(),
-            'new_elements', 'updated_categories' => $this->getSqlWhereRestrictCondition('id'),
+            'new_comments' => $this->getCommentsRestrictCondition(),
+            'new_elements', 'updated_categories' => $this->getElementsRestrictCondition(),
             default => new SqlCondition(''),
         };
 
@@ -82,7 +123,7 @@ final readonly class NotificationService
 
     public function nbNewComments(?string $start = null, ?string $end = null): int
     {
-        return $this->repo->countByType('new_comments', $start, $end, $this->getSqlWhereRestrictCondition());
+        return $this->repo->countByType('new_comments', $start, $end, $this->getCommentsRestrictCondition());
     }
 
     /**
@@ -90,7 +131,7 @@ final readonly class NotificationService
      */
     public function newComments(?string $start = null, ?string $end = null): array
     {
-        return $this->repo->findIdsByType('new_comments', $start, $end, $this->getSqlWhereRestrictCondition());
+        return $this->repo->findIdsByType('new_comments', $start, $end, $this->getCommentsRestrictCondition());
     }
 
     public function nbUnvalidatedComments(?string $start = null, ?string $end = null): int
@@ -100,7 +141,7 @@ final readonly class NotificationService
 
     public function nbNewElements(?string $start = null, ?string $end = null): int
     {
-        return $this->repo->countByType('new_elements', $start, $end, $this->getSqlWhereRestrictCondition('id'));
+        return $this->repo->countByType('new_elements', $start, $end, $this->getElementsRestrictCondition());
     }
 
     /**
@@ -108,12 +149,12 @@ final readonly class NotificationService
      */
     public function newElements(?string $start = null, ?string $end = null): array
     {
-        return $this->repo->findIdsByType('new_elements', $start, $end, $this->getSqlWhereRestrictCondition('id'));
+        return $this->repo->findIdsByType('new_elements', $start, $end, $this->getElementsRestrictCondition());
     }
 
     public function nbUpdatedCategories(?string $start = null, ?string $end = null): int
     {
-        return $this->repo->countByType('updated_categories', $start, $end, $this->getSqlWhereRestrictCondition('id'));
+        return $this->repo->countByType('updated_categories', $start, $end, $this->getElementsRestrictCondition());
     }
 
     /**
@@ -121,7 +162,7 @@ final readonly class NotificationService
      */
     public function updatedCategories(?string $start = null, ?string $end = null): array
     {
-        return $this->repo->findIdsByType('updated_categories', $start, $end, $this->getSqlWhereRestrictCondition('id'));
+        return $this->repo->findIdsByType('updated_categories', $start, $end, $this->getElementsRestrictCondition());
     }
 
     public function nbNewUsers(?string $start = null, ?string $end = null): int
@@ -168,7 +209,7 @@ final readonly class NotificationService
             }
         }
 
-        $restrictCondition = $this->getSqlWhereRestrictCondition('i.id', true);
+        $restrictCondition = $this->getElementsRestrictCondition();
 
         $dates = $this->repo->findRecentPostDates($restrictCondition, $maxDates);
 

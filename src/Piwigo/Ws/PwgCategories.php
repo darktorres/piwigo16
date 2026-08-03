@@ -146,7 +146,7 @@ final class PwgCategories
      *   cat_id: WsParamFlag::FORCE_ARRAY|WsParamType::INT|WsParamType::POSITIVE, null default
      *   -- makeArrayParam() converts the null default to [], always a list of
      *   positive ints. f_* keys: the shared $f_params block merged into this
-     *   registration, see WsHelper::stdImageSqlFilter()/WsHelper::stdImageSqlOrder().
+     *   registration, see WsHelper::stdImageSqlFilterCriteria()/WsHelper::stdImageSqlOrder().
      * @return PwgError|array{paging: PwgNamedStruct, images: PwgNamedArray}
      */
     public function getImages(array $params, PwgServer &$service): PwgError|array
@@ -189,9 +189,7 @@ final class PwgCategories
         if ($catClauses !== []) {
             $catConditions[] = new SqlCondition('(' . implode("\n    OR ", $catClauses) . ')', $catParams);
         }
-        $catConditions[] = $this->permissionService->getSqlConditionFandFAsCondition([
-            'forbidden_categories' => 'id',
-        ], true);
+        $catConditions[] = self::permissionService()->getPermissionCriteria()->forbiddenCategoriesCondition('id');
 
         $cats = [];
         foreach ($this->categoryService->getIdsAndImageOrderWithConditions($catConditions) as $row) {
@@ -200,12 +198,18 @@ final class PwgCategories
 
         // -------------------------------------------------------- get the images
         if ($cats !== []) {
+            $permissionCriteria = self::permissionService()->getPermissionCriteria();
             $imagesCriteria = new CategoryImagesCriteria(
-                filterCondition: WsHelper::stdImageSqlFilter($params, $service, 'i.'),
+                filterCriteria: WsHelper::stdImageSqlFilterCriteria($params, $service),
                 categoryIds: array_keys($cats),
-                visibleImagesCondition: $this->permissionService->getSqlConditionFandFAsCondition([
-                    'visible_images' => 'i.id',
-                ], true),
+                // visible_images's own old fallthrough into forbidden_images
+                // (fieldName 'i.id' -> the images-table's own level check) --
+                // see PermissionCriteria's own docblock.
+                visibleImagesCondition: SqlCondition::combine(
+                    'AND',
+                    $permissionCriteria->visibleImagesCondition('i.id'),
+                    $permissionCriteria->maxLevelCondition('i.level'),
+                ),
             );
 
             $order_by = WsHelper::stdImageSqlOrder($params, 'i.');
@@ -265,9 +269,7 @@ final class PwgCategories
                 // find the complete list (given permissions) of albums linked to photos
                 $image_category_rows = $this->imageService->getCategoryLinksForImageIdsWithCondition(
                     $image_ids,
-                    $this->permissionService->getSqlConditionFandFAsCondition([
-                        'forbidden_categories' => 'category_id',
-                    ], true)
+                    self::permissionService()->getPermissionCriteria()
                 );
                 $categories_of_image = [];
                 foreach ($image_category_rows as $image_category_row) {
@@ -579,9 +581,7 @@ final class PwgCategories
                     // findRandomRepresentativeIdAmongSubcategories().
                     $subrow_image_id = $categoryService->getRandomRepresentativeIdAmongSubcategories(
                         $row['uppercats'],
-                        $this->permissionService->getSqlConditionFandFAsCondition([
-                            'visible_categories' => 'id',
-                        ])
+                        self::permissionService()->getPermissionCriteria()
                     );
 
                     if ($subrow_image_id !== null) {

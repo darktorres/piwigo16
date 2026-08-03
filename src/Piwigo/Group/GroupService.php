@@ -95,9 +95,9 @@ final readonly class GroupService
     /**
      * @return list<string>
      */
-    public function getMemberUsernames(GroupId $groupId, string $usernameColumn, string $idColumn): array
+    public function getMemberUsernames(GroupId $groupId): array
     {
-        return $this->repo->findMemberUsernames($groupId, $usernameColumn, $idColumn);
+        return $this->repo->findMemberUsernames($groupId);
     }
 
     /**

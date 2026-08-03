@@ -33,7 +33,7 @@ use Piwigo\Ws\Protocol\PwgXmlRpcEncoder;
  * instead. Legacy Coupling Retirement Phase 8, 8m: the original top-level
  * `$service = new PwgServer();` global-scope contract this used to also
  * preserve via a `$GLOBALS['service'] = $service;` publish is gone --
- * WsHelper::stdImageSqlFilter()/UploadService::addUploadedFile() now take
+ * WsHelper::stdImageSqlFilterCriteria()/UploadService::addUploadedFile() now take
  * PwgServer as a real parameter instead of reading the global, and
  * WsController/UserBootstrap were already reading init()'s return value
  * directly, never the global.

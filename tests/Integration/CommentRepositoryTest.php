@@ -207,7 +207,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
 
     public function test_username_exists_matches_an_existing_username(): void
     {
-        self::assertTrue($this->repo->usernameExists('username', 'fixture_admin'));
+        self::assertTrue($this->repo->usernameExists('fixture_admin'));
         // users.username is utf8mb4_bin (case-sensitive) -- fixed in
         // Migrations\Version20260711150858, whose combined ALTER TABLE
         // (CONVERT TO CHARACTER SET + MODIFY ... COLLATE utf8mb4_bin in one
@@ -216,8 +216,8 @@ final class CommentRepositoryTest extends IntegrationTestCase
         // utf8mb4_unicode_ci. This assertion previously expected that bug's
         // behavior (a case-insensitive match) as if it were correct; not a
         // property of this query, but of the schema it queries.
-        self::assertFalse($this->repo->usernameExists('username', 'FIXTURE_ADMIN'));
-        self::assertFalse($this->repo->usernameExists('username', 'does-not-exist'));
+        self::assertFalse($this->repo->usernameExists('FIXTURE_ADMIN'));
+        self::assertFalse($this->repo->usernameExists('does-not-exist'));
     }
 
     public function test_count_for_image_counts_only_validated_by_default(): void
@@ -273,7 +273,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
         // own mail_address is NULL -- this exercises the LEFT JOIN's own
         // "known user, no email on file" case, not "unknown/anonymous
         // author" (author_id IS NULL), which findForImage() also allows.
-        $rows = $this->repo->findForImage(2, true, 'id', 'mail_address', 'ASC', 10, 0);
+        $rows = $this->repo->findForImage(2, true, 'ASC', 10, 0);
 
         self::assertCount(1, $rows);
         self::assertEquals(CommentId::from(2), $rows[0]->id);
@@ -284,12 +284,12 @@ final class CommentRepositoryTest extends IntegrationTestCase
     public function test_find_for_image_excludes_unvalidated_when_restricted(): void
     {
         // fixture: image 4 has only comment 5, which is unvalidated.
-        self::assertSame([], $this->repo->findForImage(4, true, 'id', 'mail_address', 'ASC', 10, 0));
+        self::assertSame([], $this->repo->findForImage(4, true, 'ASC', 10, 0));
     }
 
     public function test_find_for_image_includes_unvalidated_when_not_restricted(): void
     {
-        $rows = $this->repo->findForImage(4, false, 'id', 'mail_address', 'ASC', 10, 0);
+        $rows = $this->repo->findForImage(4, false, 'ASC', 10, 0);
 
         self::assertCount(1, $rows);
         self::assertEquals(CommentId::from(5), $rows[0]->id);
@@ -307,8 +307,8 @@ final class CommentRepositoryTest extends IntegrationTestCase
 
         self::assertSame(3, $this->repo->countForImage(3, true));
 
-        $firstPage = $this->repo->findForImage(3, true, 'id', 'mail_address', 'ASC', 2, 0);
-        $secondPage = $this->repo->findForImage(3, true, 'id', 'mail_address', 'ASC', 2, 2);
+        $firstPage = $this->repo->findForImage(3, true, 'ASC', 2, 0);
+        $secondPage = $this->repo->findForImage(3, true, 'ASC', 2, 2);
 
         self::assertCount(2, $firstPage);
         self::assertCount(1, $secondPage);
@@ -321,7 +321,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
 
     public function test_find_for_image_returns_empty_for_an_image_with_no_comments(): void
     {
-        self::assertSame([], $this->repo->findForImage(999999, false, 'id', 'mail_address', 'ASC', 10, 0));
+        self::assertSame([], $this->repo->findForImage(999999, false, 'ASC', 10, 0));
     }
 
     public function test_count_validated_by_image_ids_short_circuits_on_an_empty_list(): void
@@ -396,9 +396,9 @@ final class CommentRepositoryTest extends IntegrationTestCase
 
         $condition = new SqlCondition('com.id IN (:ids)', ['ids' => [$first->value, $second->value]], ['ids' => ArrayParameterType::INTEGER]);
 
-        $firstPage = $this->repo->findAllWithConditions([$condition], 'id', 'mail_address', 'com.id', 'ASC', 1, 0);
-        $secondPage = $this->repo->findAllWithConditions([$condition], 'id', 'mail_address', 'com.id', 'ASC', 1, 1);
-        $allAtOnce = $this->repo->findAllWithConditions([$condition], 'id', 'mail_address', 'com.id', 'ASC', 'all', 0);
+        $firstPage = $this->repo->findAllWithConditions([$condition], 'com.id', 'ASC', 1, 0);
+        $secondPage = $this->repo->findAllWithConditions([$condition], 'com.id', 'ASC', 1, 1);
+        $allAtOnce = $this->repo->findAllWithConditions([$condition], 'com.id', 'ASC', 'all', 0);
 
         self::assertCount(1, $firstPage->rows);
         self::assertSame(2, $firstPage->total);
@@ -428,7 +428,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
             ['authorA' => ParameterType::STRING, 'authorB' => ParameterType::STRING],
         );
 
-        $result = $this->repo->findAllWithConditions([$maliciousCondition], 'id', 'mail_address', 'com.id', 'ASC', 'all', 0);
+        $result = $this->repo->findAllWithConditions([$maliciousCondition], 'com.id', 'ASC', 'all', 0);
 
         // If the payload had broken out of its string literal (the old
         // raw-splice behavior), `OR '1'='1'` would make the WHERE clause
@@ -481,7 +481,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
         $marker = 'flfaw-marker-' . uniqid();
         $id = $this->repo->insert(['author' => 'flfaw_author', 'authorId' => 1, 'anonymousId' => '10.30.0.8', 'content' => $marker, 'validated' => true, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
 
-        $rows = $this->repo->findListForAdminWs(new CommentApiCriteria(search: $marker), 'id', 'username', 0, 10);
+        $rows = $this->repo->findListForAdminWs(new CommentApiCriteria(search: $marker), 0, 10);
 
         self::assertCount(1, $rows);
         self::assertSame($id->value, is_numeric($rows[0]['id']) ? (int) $rows[0]['id'] : null);
@@ -495,7 +495,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
         $this->repo->insert(['author' => 'flfaws_author', 'authorId' => 1, 'anonymousId' => '10.30.0.22', 'content' => $marker . ' validated', 'validated' => true, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
         $pendingId = $this->repo->insert(['author' => 'flfaws_author', 'authorId' => 1, 'anonymousId' => '10.30.0.23', 'content' => $marker . ' pending', 'validated' => false, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
 
-        $rows = $this->repo->findListForAdminWs(new CommentApiCriteria(search: $marker, status: 'pending'), 'id', 'username', 0, 10);
+        $rows = $this->repo->findListForAdminWs(new CommentApiCriteria(search: $marker, status: 'pending'), 0, 10);
 
         self::assertCount(1, $rows);
         self::assertSame($pendingId->value, is_numeric($rows[0]['id']) ? (int) $rows[0]['id'] : null);

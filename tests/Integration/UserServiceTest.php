@@ -81,7 +81,6 @@ namespace Piwigo\Tests\Integration {
             ConfigLoader::applyDefaults();
             ConfigLoader::applyEnvOverrides();
 
-            $currentConfig->setUserFields(['id' => 'id', 'username' => 'username', 'password' => 'password', 'email' => 'mail_address']);
             $currentConfig->setObligatoryUserMailAddress(false);
             $currentConfig->setInsensitiveCaseLogon(false);
             $currentConfig->setBrowserLanguage(false);

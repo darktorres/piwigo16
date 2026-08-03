@@ -12,6 +12,8 @@ use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Core\Env;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
+use Piwigo\Image\ImageFilterCriteria;
+use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\Tag\Projection\Tag;
 use Piwigo\Tag\Projection\TagBrief;
@@ -120,17 +122,19 @@ final class TagRepository extends EntityRepository
      * {@see \Piwigo\Image\ImageRepository::applyCondition()}'s own
      * docblock, outside Sub-phase B3/B4's scope.
      *
-     * SQL-modernization audit: $fandFSql (a raw, already-built
-     * `PermissionService::getSqlConditionFandF()` fragment) replaced with
-     * a bound `SqlCondition` (its `getSqlConditionFandFAsCondition()`
-     * sibling) -- {@see TagService::getAvailableTags()}, this method's
-     * one real caller, migrated in the same pass. $tagIds' own CSV splice
-     * also bound.
+     * SQL-modernization audit, Item 14 Sub-phase C1: converted to a typed
+     * {@see PermissionCriteria} -- the one real caller
+     * ({@see TagService::getAvailableTags()}) applies
+     * forbiddenCategoryIds/visibleCategoryIds against `ic.category_id` and
+     * imageAccessIds against `ic.image_id` (fieldName was already
+     * qualified `'ic.image_id'`, not `'id'`/`'i.id'`, so the old
+     * `visible_images`-fallthrough hit the `image_access_list` branch, not
+     * the level check). $tagIds' own CSV splice also bound.
      *
      * @param array<int, int|string> $tagIds empty means "no tag_id filter" (every tag counted)
      * @return array<int, int> [tag_id => counter]
      */
-    public function countImagesPerTag(array $tagIds, SqlCondition $condition): array
+    public function countImagesPerTag(array $tagIds, PermissionCriteria $criteria): array
     {
         $qb = $this->getEntityManager()
             ->getConnection()
@@ -140,7 +144,13 @@ final class TagRepository extends EntityRepository
             ->innerJoin('ic', Tables::imageTag(), 'it', 'ic.image_id = it.image_id')
             ->groupBy('tag_id');
 
-        self::applyCondition($qb, $condition);
+        self::applyCondition($qb, SqlCondition::combine(
+            'AND',
+            $criteria->forbiddenCategoriesCondition('ic.category_id'),
+            $criteria->visibleCategoriesCondition('ic.category_id'),
+            $criteria->visibleImagesCondition('ic.image_id'),
+            $criteria->imageAccessCondition('ic.image_id'),
+        ));
 
         if ($tagIds !== []) {
             $qb->andWhere($qb->expr()->in('tag_id', ':tagIds'))
@@ -238,31 +248,41 @@ final class TagRepository extends EntityRepository
      * $groupHavingSql used to be fully assembled by TagService::
      * getImageIdsForTags() itself and handed here pre-built -- now typed,
      * the repository builds its own join/base-where/group-having
-     * internally from $tagIds/$mode/$usePermissions/$permissionCondition.
-     * $extraImagesWhereSql/$extraParams/$extraTypes/$orderBySql stay raw,
-     * caller-supplied opaque fragments -- the one legitimate exception,
-     * not the norm: Ws\PwgTags::getImages() passes WsHelper::
-     * stdImageSqlFilter()'s own SqlCondition->sql straight through as the
-     * public WS API's genuine generic image-filter feature (f_min_rate
-     * etc.), which can't be modeled as a fixed set of typed params.
+     * internally from $tagIds/$mode/$usePermissions/$criteria.
+     * $orderBySql stays a raw, caller-supplied opaque fragment.
+     *
+     * SQL-modernization audit, Item 14 Sub-phase C3: $extraImagesWhereSql/
+     * $extraParams/$extraTypes (the one legitimate escape hatch, only ever
+     * populated by Ws\PwgTags::getImages()'s own generic image-filter
+     * feature, f_min_rate etc.) replaced by `?ImageFilterCriteria
+     * $filterCriteria` -- see that class's own docblock.
+     *
+     * SQL-modernization audit, Item 14 Sub-phase C1: $permissionCondition
+     * (a raw SqlCondition) replaced by a typed {@see PermissionCriteria} --
+     * the one real caller (with $usePermissions true) applies
+     * forbiddenCategoryIds/visibleCategoryIds against `ic.category_id` and
+     * visibleImageIds against `i.id`. It also passed `visible_images =>
+     * 'id'` to the old `getSqlConditionFandFAsCondition()`, whose own
+     * `visible_images` case falls through into `forbidden_images` with no
+     * `break` -- with fieldName `'id'`, that's the images-table's own
+     * `level <= x` check, so maxLevel applies here too, against `i.level`.
+     * $usePermissions now also gates $criteria's own application directly
+     * (previously the caller passed an empty SqlCondition instead when
+     * false) -- same net effect, one fewer caller-side branch.
      *
      * Item 14 DQL audit: stays on DBAL -- conditionally joins the
      * never-entity-mapped `image_category`, plus the caller-supplied raw
-     * $extraImagesWhereSql/$orderBySql fragments documented above.
+     * $orderBySql fragment.
      *
      * @param list<int> $tagIds already-unwrapped TagId values
-     * @param array<string, mixed> $extraParams
-     * @param array<string, ArrayParameterType|ParameterType> $extraTypes
      * @return list<int>
      */
     public function findImageIdsForTags(
         array $tagIds,
         string $mode,
         bool $usePermissions,
-        SqlCondition $permissionCondition,
-        string $extraImagesWhereSql = '',
-        array $extraParams = [],
-        array $extraTypes = [],
+        PermissionCriteria $criteria,
+        ?ImageFilterCriteria $filterCriteria = null,
         string $orderBySql = ''
     ): array {
         $qb = $this->getEntityManager()
@@ -280,17 +300,29 @@ final class TagRepository extends EntityRepository
             ->setParameter('tagIds', $tagIds, ArrayParameterType::INTEGER)
             ->groupBy('id');
 
-        self::applyCondition($qb, $permissionCondition);
+        if ($usePermissions) {
+            // visible_images's own old fallthrough into forbidden_images
+            // (fieldName 'id' -> the images-table's own level check) -- see
+            // PermissionCriteria's own docblock.
+            self::applyCondition($qb, SqlCondition::combine(
+                'AND',
+                $criteria->forbiddenCategoriesCondition('ic.category_id'),
+                $criteria->visibleCategoriesCondition('ic.category_id'),
+                $criteria->visibleImagesCondition('i.id'),
+                $criteria->maxLevelCondition('i.level'),
+            ));
+        }
 
-        if ($extraImagesWhereSql !== '') {
-            // Parenthesized: $extraImagesWhereSql (e.g. WsHelper::
-            // stdImageSqlFilter()'s own fragment) can itself contain a
-            // top-level OR, which andWhere()'s plain string concatenation
-            // wouldn't otherwise scope correctly against the conditions
-            // already applied above.
-            $qb->andWhere('(' . $extraImagesWhereSql . ')');
-            foreach ($extraParams as $name => $value) {
-                $qb->setParameter($name, $value, $extraTypes[$name] ?? ParameterType::STRING);
+        if ($filterCriteria !== null && ! $filterCriteria->isEmpty()) {
+            // toSqlCondition()'s own fragment is already self-contained
+            // (its own clauses are wrapped in one outer set of parens), so
+            // andWhere()'s plain string concatenation scopes it correctly
+            // against the conditions already applied above with no
+            // further wrapping needed.
+            $filterCondition = $filterCriteria->toSqlCondition('i.');
+            $qb->andWhere($filterCondition->sql);
+            foreach ($filterCondition->parameters as $name => $value) {
+                $qb->setParameter($name, $value, $filterCondition->types[$name] ?? ParameterType::STRING);
             }
         }
 

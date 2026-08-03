@@ -33,12 +33,10 @@ final class RatingUserPageRenderer
         $consensus_top_number = $ratingFilter->consensusTopNumber;
 
         // build users
-        /** @var array<string, string> $user_fields */
-        $user_fields = $currentConfig->userFields();
         $rate_repository = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Rate\RateEntity::class);
 
         $users_by_id = [];
-        foreach ($rate_repository->findUsersWithStatusByIdUsername($user_fields['id'], $user_fields['username']) as $u) {
+        foreach ($rate_repository->findUsersWithStatusByIdUsername() as $u) {
             $users_by_id[$u['id']] = [
                 'name' => $u['name'],
                 'anon' => ! $accessControl->isAuthorizeStatus(AccessLevel::Classic, $u['status']),

@@ -112,7 +112,7 @@ final class PwgTags
      *   always present. order: null default, no 'type' flag -- always
      *   present, string|null. f_* keys: the shared $f_params block merged
      *   into this registration, see
-     *   WsHelper::stdImageSqlFilter()/WsHelper::stdImageSqlOrder().
+     *   WsHelper::stdImageSqlFilterCriteria()/WsHelper::stdImageSqlOrder().
      * @return array{paging: PwgNamedStruct, images: PwgNamedArray}
      */
     public function getImages(array $params, PwgServer &$service): array
@@ -128,7 +128,7 @@ final class PwgTags
         unset($tags);
         $tag_ids = array_keys($tags_by_id);
 
-        $filterCondition = WsHelper::stdImageSqlFilter($params, $service);
+        $filterCriteria = WsHelper::stdImageSqlFilterCriteria($params, $service);
 
         $order_by = WsHelper::stdImageSqlOrder($params, 'i.');
         if ($order_by !== '') {
@@ -137,11 +137,8 @@ final class PwgTags
         $image_ids = $tagService->getImageIdsForTags(
             array_map(TagId::from(...), $tag_ids),
             $params['tag_mode_and'] ? 'AND' : 'OR',
-            $filterCondition->isEmpty() ? '' : $filterCondition->sql,
+            $filterCriteria,
             $order_by,
-            true,
-            $filterCondition->parameters,
-            $filterCondition->types
         );
         // Cast to int at the source (not just at each read site) so
         // array_flip($image_ids) below produces int keys matching $row_id's

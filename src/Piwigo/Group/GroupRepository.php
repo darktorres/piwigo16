@@ -305,36 +305,31 @@ final class GroupRepository extends EntityRepository
     }
 
     /**
-     * Usernames of a group's members, via the configurable user-id/username
-     * DB column names (see \Piwigo\Config\CurrentConfig::userFields()).
-     * `users` isn't ORM-mapped (Users\UserRepository's own domain) -- plain
-     * DBAL via the entity manager's own connection, so $groupId unwraps to
-     * a raw int before binding regardless of the custom Type.
+     * Usernames of a group's members.
      *
-     * Item 14 DQL audit: stays on DBAL -- `users` has no mapped Entity in
-     * this codebase, and $usernameColumn/$idColumn are runtime-resolved
-     * column names (CurrentConfig::userFields()), not fixed DQL property
-     * paths.
+     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
+     * DQL -- `users` is now mapped ({@see \Piwigo\Users\UserEntity}); the
+     * multi-auth column indirection this used to take as
+     * `$usernameColumn`/`$idColumn` parameters is gone.
      *
      * @return list<string>
      */
-    public function findMemberUsernames(GroupId $groupId, string $usernameColumn, string $idColumn): array
+    public function findMemberUsernames(GroupId $groupId): array
     {
         $names = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select('u.' . $usernameColumn . ' AS username')
-            ->from(\Piwigo\Db\Tables::users(), 'u')
-            ->innerJoin('u', \Piwigo\Db\Tables::userGroup(), 'ug', 'u.' . $idColumn . ' = ug.user_id')
-            ->where('ug.group_id = :groupId')
-            ->setParameter('groupId', $groupId->value)
-            ->executeQuery()
-            ->fetchFirstColumn();
+            ->select('u.username')
+            ->from(\Piwigo\Users\UserEntity::class, 'u')
+            ->innerJoin(UserGroupEntity::class, 'ug', \Doctrine\ORM\Query\Expr\Join::WITH, 'u.id = ug.userId')
+            ->where('ug.groupId = :groupId')
+            ->setParameter('groupId', $groupId)
+            ->getQuery()
+            ->getSingleColumnResult();
 
-        return array_map(
+        return array_values(array_map(
             static fn (mixed $name): string => is_scalar($name) ? (string) $name : '',
             $names
-        );
+        ));
     }
 
     /**

@@ -329,7 +329,6 @@ final readonly class ConfigService
         'use_standard_pages' => 'useStandardPages',
         'user_can_delete_comment' => 'userCanDeleteComment',
         'user_can_edit_comment' => 'userCanEditComment',
-        'user_fields' => 'userFields',
         'webmaster_id' => 'webmasterId',
         'week_starts_on' => 'weekStartsOn',
         'ws_max_images_per_page' => 'wsMaxImagesPerPage',

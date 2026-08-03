@@ -69,14 +69,6 @@ final class AlbumNotificationPageRenderer
         $category_id = $category['id'];
         $page['cat'] = $category_id;
 
-        // \Piwigo\Config\CurrentConfig::userFields() maps generic field names to table-specific column
-        // names (see include/config_default.inc.php); every value is a plain
-        // string. Extracted once here and reused by both user-list queries below.
-        $user_fields = $this->currentConfig->userFields();
-        $user_field_id = $user_fields['id'];
-        $user_field_username = $user_fields['username'];
-        $user_field_email = $user_fields['email'];
-
         // +-------------------------------------------------------------------+
         // |                           form submission                         |
         // +-------------------------------------------------------------------+
@@ -145,7 +137,7 @@ final class AlbumNotificationPageRenderer
                 // private content beyond a public category name/link.
                 $post_user_ids = $albumNotificationSubmit->users;
 
-                $users = $this->userService->getNotificationRecipientsByIds($post_user_ids, $user_field_id, $user_field_username, $user_field_email);
+                $users = $this->userService->getNotificationRecipientsByIds($post_user_ids);
                 $usernames = [];
 
                 foreach ($users as $u) {
@@ -328,10 +320,6 @@ final class AlbumNotificationPageRenderer
         }
 
         if (count($user_ids) > 0) {
-            // WHERE must filter on the same (possibly remapped, see $user_fields
-            // above) id column the SELECT aliases to "id" -- a literal `id` here
-            // would silently filter on the wrong column for a site using a
-            // non-default external-auth $conf['user_fields']['id'] mapping.
             $users = $this->userService->getUsernamesByIds(array_values($user_ids));
 
             $template->assign('user_options', $users);

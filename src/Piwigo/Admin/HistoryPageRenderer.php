@@ -109,17 +109,9 @@ final class HistoryPageRenderer
         }
 
         if ($form_param['user_id'] !== -1) {
-            // \Piwigo\Config\CurrentConfig::userFields() maps generic field names to table-specific DB
-            // column names (see include/config_default.inc.php, used for external
-            // auth integrations) -- the previous raw query here hardcoded the
-            // literal 'id'/'username' column names, unlike sibling admin pages
-            // (e.g. admin/batch_manager_unit.php) that already read this mapping.
-            /** @var array<string, string> $user_fields */
-            $user_fields = $currentConfig->userFields();
-
             $form_param_user_id = \Piwigo\Common\ValueObject\UserId::tryFrom($form_param['user_id']);
             $form_param_username = $form_param_user_id === null ? null : \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class)
-                ->findUsernameById($form_param_user_id, $user_fields['id'], $user_fields['username']);
+                ->findUsernameById($form_param_user_id);
             $form_param['user_name'] = $form_param_username?->value;
             $form_param['user_id'] = $form_param['user_name'] === null ? -1 : $form_param['user_id'];
         }

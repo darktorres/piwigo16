@@ -20,6 +20,7 @@ use Piwigo\Group\GroupAccessEntity;
 use Piwigo\Group\UserGroupEntity;
 use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
+use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\SqlCondition;
 
 /**
@@ -324,14 +325,24 @@ final class CategoryRepository extends EntityRepository
     }
 
     /**
+     * SQL-modernization audit, Item 14 Sub-phase C1: converted to a typed
+     * {@see PermissionCriteria} -- the one real caller applies
+     * forbiddenCategoryIds/visibleCategoryIds against `c.id` and
+     * visibleImageIds against `ic.image_id`. It also passed `visible_images
+     * => 'image_id'` to the old `getSqlConditionFandFAsCondition()`, whose
+     * own `visible_images` case falls through into `forbidden_images` with
+     * no `break` -- with fieldName `'image_id'` (not `'id'`/`'i.id'`),
+     * that's the `image_access_list` branch, so imageAccessIds applies
+     * here too, against `ic.image_id`.
+     *
      * Item 14 DQL audit, re-corrected: `image_category` is now mapped
      * ({@see \Piwigo\Image\ImageCategoryEntity}), and Sub-phase B5 Tier 3
      * gives `RAND()` a portable custom DQL function
      * ({@see \Piwigo\Db\DqlFunction\RandFunction}), but this method stays
-     * on DBAL for its other, still-real blocker: a caller-built
-     * SqlCondition fragment (Sub-phase B3 scope, not yet done).
+     * on DBAL -- $criteria's own fragments are built for a plain DBAL
+     * QueryBuilder, not DQL.
      */
-    public function findRandomImageId(int $catId, string $uppercats, bool $recursive, SqlCondition $condition): ?int
+    public function findRandomImageId(int $catId, string $uppercats, bool $recursive, PermissionCriteria $criteria): ?int
     {
         $scope = $recursive
             ? '(c.id = :catId OR uppercats LIKE :uppercatsLike)'
@@ -347,7 +358,13 @@ final class CategoryRepository extends EntityRepository
             ->orderBy('RAND()')
             ->setMaxResults(1)
             ->setParameter('catId', $catId);
-        self::applyCondition($qb, $condition);
+        self::applyCondition($qb, SqlCondition::combine(
+            'AND',
+            $criteria->forbiddenCategoriesCondition('c.id'),
+            $criteria->visibleCategoriesCondition('c.id'),
+            $criteria->visibleImagesCondition('ic.image_id'),
+            $criteria->imageAccessCondition('ic.image_id'),
+        ));
 
         if ($recursive) {
             $qb->setParameter('uppercatsLike', $uppercats . ',%');
@@ -436,15 +453,24 @@ final class CategoryRepository extends EntityRepository
      * @param  list<int>  $catIds
      * @return list<int>
      *
+     * SQL-modernization audit, Item 14 Sub-phase C1: converted to a typed
+     * {@see PermissionCriteria} -- the one real caller applies
+     * forbiddenCategoryIds/visibleCategoryIds against `ic.category_id` and
+     * visibleImageIds against `i.id`. It also passed `visible_images =>
+     * 'id'` to the old `getSqlConditionFandFAsCondition()`, whose own
+     * `visible_images` case falls through into `forbidden_images` with no
+     * `break` -- with fieldName `'id'`, that's the images-table's own
+     * `level <= x` check, so maxLevel applies here too, against `i.level`.
+     *
      * Item 14 DQL audit, re-corrected: `image_category` is now mapped
      * ({@see \Piwigo\Image\ImageCategoryEntity}), but stays on DBAL for its
-     * two other, still-real blockers: a caller-built SqlCondition fragment,
-     * and a raw `CurrentConfig::orderBy()` ORDER BY fragment.
+     * other, still-real blocker: a raw `CurrentConfig::orderBy()` ORDER BY
+     * fragment.
      */
     public function findImageIdsForCategories(
         array $catIds,
         string $mode,
-        SqlCondition $condition
+        PermissionCriteria $criteria
     ): array {
         if ($catIds === []) {
             return [];
@@ -459,7 +485,13 @@ final class CategoryRepository extends EntityRepository
             ->where('category_id IN (:catIds)')
             ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER)
             ->groupBy('id');
-        self::applyCondition($qb, $condition);
+        self::applyCondition($qb, SqlCondition::combine(
+            'AND',
+            $criteria->forbiddenCategoriesCondition('ic.category_id'),
+            $criteria->visibleCategoriesCondition('ic.category_id'),
+            $criteria->visibleImagesCondition('i.id'),
+            $criteria->maxLevelCondition('i.level'),
+        ));
 
         if ($mode === 'AND' && count($catIds) > 1) {
             $qb->having('COUNT(DISTINCT category_id) = :catCount')
@@ -490,18 +522,17 @@ final class CategoryRepository extends EntityRepository
      * @param  list<int>  $excludedCatIds
      * @return array<int, array{id: int, uppercats: string, counter: int}> keyed by id
      *
+     * SQL-modernization audit, Item 14 Sub-phase C1: converted to a typed
+     * {@see PermissionCriteria} -- the one real caller applies
+     * forbiddenCategoryIds/visibleCategoryIds against the base table's own
+     * unqualified `category_id` (no alias on `image_category` here).
+     *
      * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see \Piwigo\Image\ImageCategoryEntity}), but stays on DBAL for its
-     * other, still-real blocker: a caller-built SqlCondition fragment.
-     * Sub-phase B3/B4 re-investigation: this method's real caller
-     * ({@see \Piwigo\Category\CategoryService::getCommonCategories()})
-     * feeds it a `PermissionService::getSqlConditionFandFAsCondition()`
-     * result by default (the only way its one real caller invokes it) --
-     * same genuinely dynamic, cross-cutting permission-condition blocker
-     * documented in {@see \Piwigo\Image\ImageRepository::applyCondition()}'s
-     * own docblock, outside this sub-phase's scope.
+     * ({@see \Piwigo\Image\ImageCategoryEntity}), but stays on DBAL --
+     * $criteria's own fragments are built for a plain DBAL QueryBuilder,
+     * not DQL.
      */
-    public function findCommonCategories(array $itemIds, ?int $max, array $excludedCatIds, SqlCondition $condition): array
+    public function findCommonCategories(array $itemIds, ?int $max, array $excludedCatIds, PermissionCriteria $criteria): array
     {
         if ($itemIds === []) {
             return [];
@@ -516,7 +547,11 @@ final class CategoryRepository extends EntityRepository
             ->where('image_id IN (:itemIds)')
             ->setParameter('itemIds', $itemIds, ArrayParameterType::INTEGER)
             ->groupBy('c.id');
-        self::applyCondition($qb, $condition);
+        self::applyCondition($qb, SqlCondition::combine(
+            'AND',
+            $criteria->forbiddenCategoriesCondition('category_id'),
+            $criteria->visibleCategoriesCondition('category_id'),
+        ));
 
         if ($excludedCatIds !== []) {
             $qb->andWhere('category_id NOT IN (:excludedCatIds)')
@@ -2069,21 +2104,16 @@ final class CategoryRepository extends EntityRepository
      *
      * SQL-modernization audit, Item 14 Sub-phase B3 re-investigation: this
      * method's own sole real caller ({@see \Piwigo\Controller\
-     * CommentsController}'s "search by album" listing) traced back to
-     * {@see \Piwigo\Permission\PermissionService::getSqlConditionFandFAsCondition()}
-     * -- a genuinely dynamic, multi-clause, cross-cutting permission
-     * condition builder (forbidden/visible categories, image access
-     * type/list, ...), not a small finite set of shapes a typed DTO could
-     * replace the way {@see \Piwigo\Comment\CommentApiCriteria}/
-     * {@see \Piwigo\Activity\ActivityListCriteria} did for their own
-     * bounded, WS-param-driven callers. Converting this would mean giving
-     * `PermissionService` itself a DQL-producing path, a cross-cutting
-     * change affecting every other repository it feeds (Category/Image/
-     * Comment/Rate/...), clearly outside this sub-phase's own scope.
-     * Stays on DBAL -- takes a caller-built SqlCondition fragment (same
-     * family as {@see applyCondition()}'s other callers).
+     * CommentsController}'s "search by album" listing, via
+     * {@see \Piwigo\Category\CategoryService::displaySelectByCondition()})
+     * only ever applies forbiddenCategoryIds/visibleCategoryIds against
+     * the unqualified `id` (this table's own, no alias/join here).
+     *
+     * SQL-modernization audit, Item 14 Sub-phase C1: converted to a typed
+     * {@see PermissionCriteria}. Stays on DBAL -- $criteria's own
+     * fragments are built for a plain DBAL QueryBuilder, not DQL.
      */
-    public function findIdNameUppercatsRank(SqlCondition $condition): array
+    public function findIdNameUppercatsRank(PermissionCriteria $criteria): array
     {
         $qb = $this->getEntityManager()
             ->getConnection()
@@ -2091,7 +2121,11 @@ final class CategoryRepository extends EntityRepository
             ->select('id', 'name', 'uppercats', 'global_rank')
             ->from(Tables::categories());
 
-        self::applyCondition($qb, $condition);
+        self::applyCondition($qb, SqlCondition::combine(
+            'AND',
+            $criteria->forbiddenCategoriesCondition('id'),
+            $criteria->visibleCategoriesCondition('id'),
+        ));
 
         return $qb->executeQuery()
             ->fetchAllAssociative();
@@ -2369,9 +2403,11 @@ final class CategoryRepository extends EntityRepository
     /**
      * Picks a random representative image among a category's sub-categories
      * (`CategoryCatsRenderer`'s own fallback when a category has no direct
-     * representative but does have sub-albums with images). $condition is
-     * an already-built permission `SqlCondition`, same shape as every other
-     * repository method here.
+     * representative but does have sub-albums with images).
+     *
+     * SQL-modernization audit, Item 14 Sub-phase C1: converted to a typed
+     * {@see PermissionCriteria} -- the one real caller only ever applies
+     * visibleCategoryIds, against the unqualified `id` (no alias here).
      *
      * Gap-closure Stage 4h (docs/plan/gap-closure-p0-p23.md): dropped the
      * `user_cache_categories` `INNER JOIN` -- a real, live regression this
@@ -2388,20 +2424,23 @@ final class CategoryRepository extends EntityRepository
      * `$userId` is dropped too -- its only use was the JOIN's own
      * `user_id = :userId` condition.
      *
-     * Item 14 DQL audit: stays on DBAL -- caller-built SqlCondition
-     * fragment (Sub-phase B3 scope). MySQL's `RAND()` now has a portable
-     * custom DQL function ({@see \Piwigo\Db\DqlFunction\RandFunction},
-     * Sub-phase B5 Tier 3), but that alone doesn't unblock this method;
-     * this call site's own `SqlDialect::DB_RANDOM_FUNCTION` stays as-is
+     * Item 14 DQL audit: stays on DBAL -- $criteria's own fragment is a
+     * raw SQL string spliced via heredoc (this method's own real
+     * blocker: no `QueryBuilder` at all here, plain `executeQuery()`
+     * string interpolation). MySQL's `RAND()` now has a portable custom
+     * DQL function ({@see \Piwigo\Db\DqlFunction\RandFunction}, Sub-phase
+     * B5 Tier 3), but that alone doesn't unblock this method; this call
+     * site's own `SqlDialect::DB_RANDOM_FUNCTION` stays as-is
      * for now -- a broader `SqlDialect` portability rewrite is Item 16's
      * own scope, not this one (see this plan's Context section).
      */
-    public function findRandomRepresentativeIdAmongSubcategories(string $uppercats, SqlCondition $condition): ?string
+    public function findRandomRepresentativeIdAmongSubcategories(string $uppercats, PermissionCriteria $criteria): ?string
     {
         $categoriesTable = Tables::categories();
         $dbRandomFunction = SqlDialect::DB_RANDOM_FUNCTION;
         $uppercatsLike = $uppercats . ',%';
 
+        $condition = $criteria->visibleCategoriesCondition('id');
         $conditionSql = $condition->isEmpty() ? '' : ' AND ' . $condition->sql;
         $params = array_merge([
             'uppercatsLike' => $uppercatsLike,
@@ -2431,17 +2470,28 @@ final class CategoryRepository extends EntityRepository
     /**
      * First/last photo creation date per category (`CategoryCatsRenderer`'s
      * "from/to" date-range display, gated by `CurrentConfig::displayFromto()`).
-     * $condition is an already-built permission fragment, same shape as
-     * {@see findRandomRepresentativeIdAmongSubcategories()}.
+     *
+     * SQL-modernization audit, Item 14 Sub-phase C1: converted to a typed
+     * {@see PermissionCriteria} -- the one real caller applies
+     * visibleCategoryIds against the unqualified `category_id`
+     * (`image_category`'s own column, no alias here) and visibleImageIds
+     * against `images`' own unqualified `id`. It also passed
+     * `visible_images => 'id'` to the old
+     * `getSqlConditionFandFAsCondition()`, whose own `visible_images` case
+     * falls through into `forbidden_images` with no `break` -- with
+     * fieldName `'id'`, that's the images-table's own `level <= x` check,
+     * so maxLevel applies here too, against the unqualified `level`
+     * (only `images` has that column in this join).
      *
      * @param  list<int>  $categoryIds
      * @return array<string, array{from: ?string, to: ?string}> keyed by category id
      *
      * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see \Piwigo\Image\ImageCategoryEntity}), but stays on DBAL for its
-     * other, still-real blocker: a caller-built SqlCondition fragment.
+     * ({@see \Piwigo\Image\ImageCategoryEntity}), but stays on DBAL --
+     * $criteria's own fragment is a raw SQL string spliced via heredoc,
+     * same blocker as {@see findRandomRepresentativeIdAmongSubcategories()}.
      */
-    public function findDateRangeByCategory(array $categoryIds, SqlCondition $condition): array
+    public function findDateRangeByCategory(array $categoryIds, PermissionCriteria $criteria): array
     {
         if ($categoryIds === []) {
             return [];
@@ -2450,6 +2500,12 @@ final class CategoryRepository extends EntityRepository
         $imageCategoryTable = Tables::imageCategory();
         $imagesTable = Tables::images();
 
+        $condition = SqlCondition::combine(
+            'AND',
+            $criteria->visibleCategoriesCondition('category_id'),
+            $criteria->visibleImagesCondition('id'),
+            $criteria->maxLevelCondition('level'),
+        );
         $conditionSql = $condition->isEmpty() ? '' : ' AND ' . $condition->sql;
         $params = array_merge([
             'categoryIds' => $categoryIds,
@@ -3289,21 +3345,23 @@ final class CategoryRepository extends EntityRepository
      * @param  list<SqlCondition>  $conditions
      * @return list<array{id: int, image_order: ?string}>
      *
-     * SQL-modernization audit, Item 14 Sub-phase B3 re-investigation: this
-     * method's own sole real caller ({@see \Piwigo\Ws\PwgCategories::
-     * getImages()}) combines a dynamically-sized per-`cat_id` OR-chain
-     * (itself convertible -- a bound loop, not free-form text) with a
-     * {@see \Piwigo\Permission\PermissionService::getSqlConditionFandFAsCondition()}
-     * fragment -- the same genuinely dynamic, cross-cutting permission
-     * condition covered in {@see findIdNameUppercatsRank()}'s own docblock.
      * Stays on DBAL -- $conditions is a list of caller-built SqlCondition
-     * fragments (combined via `SqlCondition::combine()`), same family as
-     * `applyCondition()`'s other callers.
+     * fragments (its one real caller combines a dynamically-sized
+     * per-`cat_id` OR-chain with a
+     * {@see \Piwigo\Permission\PermissionCriteria} fragment; unlike the
+     * `applyCondition()` family, this method splices `{$combined->sql}`
+     * directly into a required `WHERE` clause with no `isEmpty()` guard,
+     * so it falls back to `1 = 1` itself when every condition is empty
+     * (e.g. no `cat_id` filter and no permission restriction for this
+     * user) -- the old caller-side `forceOneCondition: true` was load-
+     * bearing for exactly this case, not a no-op; moved here so the
+     * guarantee lives with the method that actually needs it.
      */
     public function findIdsAndImageOrderWithConditions(array $conditions): array
     {
         $categoriesTable = Tables::categories();
         $combined = SqlCondition::combine('AND', ...$conditions);
+        $whereSql = $combined->isEmpty() ? '1 = 1' : $combined->sql;
 
         $rows = $this->getEntityManager()
             ->getConnection()
@@ -3312,7 +3370,7 @@ final class CategoryRepository extends EntityRepository
                     id,
                     image_order
                 FROM {$categoriesTable}
-                WHERE {$combined->sql}
+                WHERE {$whereSql}
                 SQL
                 , $combined->parameters, $combined->types);
 

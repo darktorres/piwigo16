@@ -492,21 +492,21 @@ final class MailServiceTest extends IntegrationTestCase
             public function __construct(private readonly MailRecipientRepositoryInterface $real) {}
 
             #[\Override]
-            public function findAdminsAndWebmasters(string $idColumn, string $usernameColumn, string $emailColumn, array $userStatuses, ?int $groupId, ?int $excludeUserId): array
+            public function findAdminsAndWebmasters(array $userStatuses, ?int $groupId, ?int $excludeUserId): array
             {
-                return $this->real->findAdminsAndWebmasters($idColumn, $usernameColumn, $emailColumn, $userStatuses, $groupId, $excludeUserId);
+                return $this->real->findAdminsAndWebmasters($userStatuses, $groupId, $excludeUserId);
             }
 
             #[\Override]
-            public function findDistinctLanguagesInGroup(string $idColumn, string $emailColumn, int $groupId, ?string $languageFilter): array
+            public function findDistinctLanguagesInGroup(int $groupId, ?string $languageFilter): array
             {
                 return [''];
             }
 
             #[\Override]
-            public function findByGroupAndLanguage(string $idColumn, string $usernameColumn, string $emailColumn, int $groupId, string $language): array
+            public function findByGroupAndLanguage(int $groupId, string $language): array
             {
-                return $this->real->findByGroupAndLanguage($idColumn, $usernameColumn, $emailColumn, $groupId, $language);
+                return $this->real->findByGroupAndLanguage($groupId, $language);
             }
         };
         $mailer = new MailService(mailRecipientRepo: $repo);
@@ -536,19 +536,19 @@ final class MailServiceTest extends IntegrationTestCase
             public function __construct(private readonly MailRecipientRepositoryInterface $real) {}
 
             #[\Override]
-            public function findAdminsAndWebmasters(string $idColumn, string $usernameColumn, string $emailColumn, array $userStatuses, ?int $groupId, ?int $excludeUserId): array
+            public function findAdminsAndWebmasters(array $userStatuses, ?int $groupId, ?int $excludeUserId): array
             {
-                return $this->real->findAdminsAndWebmasters($idColumn, $usernameColumn, $emailColumn, $userStatuses, $groupId, $excludeUserId);
+                return $this->real->findAdminsAndWebmasters($userStatuses, $groupId, $excludeUserId);
             }
 
             #[\Override]
-            public function findDistinctLanguagesInGroup(string $idColumn, string $emailColumn, int $groupId, ?string $languageFilter): array
+            public function findDistinctLanguagesInGroup(int $groupId, ?string $languageFilter): array
             {
                 return ['en_UK'];
             }
 
             #[\Override]
-            public function findByGroupAndLanguage(string $idColumn, string $usernameColumn, string $emailColumn, int $groupId, string $language): array
+            public function findByGroupAndLanguage(int $groupId, string $language): array
             {
                 return [];
             }

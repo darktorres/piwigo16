@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Activity\Projection;
 
-use Piwigo\Core\ArrayHelper;
-
 /**
  * Typed row shape for
  * {@see \Piwigo\Activity\ActivityRepository::findSystemObjectLogWithUsernames()}
@@ -37,7 +35,7 @@ final readonly class SystemActivityLogEntry
     ) {}
 
     /**
-     * @param array<string, mixed> $row a {@see \Piwigo\Activity\ActivityRepository::findSystemObjectLogWithUsernames()} row
+     * @param array<array-key, mixed> $row a {@see \Piwigo\Activity\ActivityRepository::findSystemObjectLogWithUsernames()} row
      */
     public static function fromRow(array $row): self
     {
@@ -47,8 +45,8 @@ final readonly class SystemActivityLogEntry
             objectId: is_numeric($row['object_id'] ?? null) ? (int) $row['object_id'] : 0,
             action: is_string($row['action'] ?? null) ? $row['action'] : '',
             occuredOn: is_string($row['occured_on'] ?? null) ? $row['occured_on'] : '',
-            details: is_string($row['details'] ?? null)
-                ? array_filter(ArrayHelper::safeJsonDecode($row['details']), is_string(...), ARRAY_FILTER_USE_KEY)
+            details: is_array($row['details'] ?? null)
+                ? array_filter($row['details'], is_string(...), ARRAY_FILTER_USE_KEY)
                 : null,
             username: is_string($row['username'] ?? null) ? $row['username'] : null,
         );

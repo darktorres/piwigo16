@@ -325,12 +325,9 @@ final class PictureModifyPageRenderer
         );
 
         $added_by = 'N/A';
-        $user_fields = $this->currentConfig->userFields();
-        $uf_username = $user_fields['username'];
-        $uf_id = $user_fields['id'];
         $row_added_by = \Piwigo\Common\ValueObject\UserId::tryFrom($row['added_by']);
         $added_by_username = $row_added_by === null ? null : \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class)
-            ->findUsernameById($row_added_by, $uf_id, $uf_username);
+            ->findUsernameById($row_added_by);
         if ($added_by_username !== null) {
             $row['added_by'] = $added_by_username->value;
         }

@@ -48,11 +48,14 @@ $nb_image_page = is_numeric($rawNbImagePage) ? (int) $rawNbImagePage : 15;
 
 $conn = \Piwigo\Db\DbConnection::build();
 
-$condition = new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class))->getSqlConditionFandFAsCondition([
-    'forbidden_categories' => 'category_id',
-    'visible_categories' => 'category_id',
-    'visible_images' => 'id',
-]);
+$permissionCriteria = new \Piwigo\Permission\PermissionService(new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class))->getPermissionCriteria();
+$condition = \Piwigo\Permission\SqlCondition::combine(
+    'AND',
+    $permissionCriteria->forbiddenCategoriesCondition('category_id'),
+    $permissionCriteria->visibleCategoriesCondition('category_id'),
+    $permissionCriteria->visibleImagesCondition('id'),
+    $permissionCriteria->maxLevelCondition('level'),
+);
 
 $query = '
 SELECT id

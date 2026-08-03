@@ -48,11 +48,6 @@ final readonly class NotificationByMailService
             return [];
         }
 
-        $userFields = $this->currentConfig->userFields();
-        $usernameField = $userFields['username'];
-        $emailField = $userFields['email'];
-        $idField = $userFields['id'];
-
         // Matches the original's `$enabled_filter_value != ''` loose
         // comparison exactly: against a bool|string value, PHP casts the
         // '' side to bool for a bool operand, so a bare `false` means "no
@@ -76,23 +71,20 @@ final readonly class NotificationByMailService
             $action,
             array_values(array_filter($checkKeyList, is_string(...))),
             $enabledFilterString,
-            $usernameField,
-            $emailField,
-            $idField
         );
     }
 
-    public function nullifyBlankEmails(string $emailColumn): void
+    public function nullifyBlankEmails(): void
     {
-        $this->repo->nullifyBlankEmails($emailColumn);
+        $this->repo->nullifyBlankEmails();
     }
 
     /**
      * @return list<array<string, mixed>>
      */
-    public function getUsersWithoutNotificationRow(string $idColumn, string $usernameColumn, string $emailColumn): array
+    public function getUsersWithoutNotificationRow(): array
     {
-        return $this->repo->findUsersWithoutNotificationRow($idColumn, $usernameColumn, $emailColumn);
+        return $this->repo->findUsersWithoutNotificationRow();
     }
 
     /**

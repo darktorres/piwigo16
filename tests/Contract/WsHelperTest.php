@@ -11,7 +11,7 @@ use Piwigo\Ws\WsHelper;
 
 /**
  * Ws\WsHelper -- static helpers shared by several pwg.* WS methods, reached
- * here mostly through pwg.images.search (stdImageSqlFilter()/
+ * here mostly through pwg.images.search (stdImageSqlFilterCriteria()/
  * stdImageSqlOrder()/stdGetUrls()) and pwg.categories.getList
  * (categoriesFlatlistToTree()).
  *
@@ -19,12 +19,12 @@ use Piwigo\Ws\WsHelper;
  * guest_access-disabled test (same EventDispatcher handler, reached
  * through every WS call, not specific to any one method here).
  *
- * WsHelper::stdImageSqlFilter()'s "invalid date -> sendResponse()+exit"
- * branch really does call PHP's exit() -- confirmed live it's safe to
- * exercise through a real HTTP request (each request is an independent
- * script execution; exit() just ends that one normally, same as any
- * request's natural end, no shared process is torn down), unlike a bare
- * PHPUnit-process exit() would be.
+ * WsHelper::stdImageSqlFilterCriteria()'s "invalid date ->
+ * sendResponse()+exit" branch really does call PHP's exit() -- confirmed
+ * live it's safe to exercise through a real HTTP request (each request is
+ * an independent script execution; exit() just ends that one normally,
+ * same as any request's natural end, no shared process is torn down),
+ * unlike a bare PHPUnit-process exit() would be.
  *
  * stdImageSqlOrder()'s own `case 'rand': case 'random': ... break;` is
  * already exercised for real by
@@ -75,9 +75,9 @@ final class WsHelperTest extends ContractTestCase
         return array_values(array_map(static fn (mixed $im): int => is_array($im) && is_numeric($im['id']) ? (int) $im['id'] : 0, $images));
     }
 
-    // ------------------------------------------------------- stdImageSqlFilter
+    // ------------------------------------------------- stdImageSqlFilterCriteria
 
-    public function test_stdImageSqlFilter_invalid_date_sends_an_error_response_and_stops(): void
+    public function test_stdImageSqlFilterCriteria_invalid_date_sends_an_error_response_and_stops(): void
     {
         // Fixture images 1-5's real ratings (4.5, 3, 5, 2, null) confirmed
         // live via a direct DB read before writing the assertions below.
@@ -93,19 +93,19 @@ final class WsHelperTest extends ContractTestCase
         self::assertSame('Invalid f_min_date_available', $response['message']);
     }
 
-    public function test_stdImageSqlFilter_f_min_rate_keeps_only_images_at_or_above(): void
+    public function test_stdImageSqlFilterCriteria_f_min_rate_keeps_only_images_at_or_above(): void
     {
         $ids = $this->searchIds('Photo', ['f_min_rate' => 4]);
         self::assertSame([1, 3], $ids);
     }
 
-    public function test_stdImageSqlFilter_f_max_rate_keeps_only_images_at_or_below(): void
+    public function test_stdImageSqlFilterCriteria_f_max_rate_keeps_only_images_at_or_below(): void
     {
         $ids = $this->searchIds('Photo', ['f_max_rate' => 3]);
         self::assertSame([2, 4], $ids);
     }
 
-    public function test_stdImageSqlFilter_f_min_hit_keeps_only_images_at_or_above(): void
+    public function test_stdImageSqlFilterCriteria_f_min_hit_keeps_only_images_at_or_above(): void
     {
         // All 5 fixture images start with hit=0 -- seed a real nonzero
         // value on image 1 so the filter has something to actually
@@ -120,7 +120,7 @@ final class WsHelperTest extends ContractTestCase
         }
     }
 
-    public function test_stdImageSqlFilter_f_min_ratio_excludes_a_squarer_image(): void
+    public function test_stdImageSqlFilterCriteria_f_min_ratio_excludes_a_squarer_image(): void
     {
         // fixture image 1 is 200x150 (ratio 1.333) -- a min_ratio above
         // that excludes it.
@@ -128,7 +128,7 @@ final class WsHelperTest extends ContractTestCase
         self::assertSame([], $ids);
     }
 
-    public function test_stdImageSqlFilter_f_max_ratio_excludes_a_wider_image(): void
+    public function test_stdImageSqlFilterCriteria_f_max_ratio_excludes_a_wider_image(): void
     {
         // fixture image 1 is 200x150 (ratio 1.333) -- a max_ratio below
         // that excludes it; a max_ratio above it keeps it.
@@ -139,7 +139,7 @@ final class WsHelperTest extends ContractTestCase
         self::assertSame([1], $included);
     }
 
-    public function test_stdImageSqlFilter_f_max_hit_keeps_only_images_at_or_below(): void
+    public function test_stdImageSqlFilterCriteria_f_max_hit_keeps_only_images_at_or_below(): void
     {
         // All 5 fixture images start with hit=0 -- seed a real nonzero
         // value on image 1 so the filter has something to actually
@@ -154,7 +154,7 @@ final class WsHelperTest extends ContractTestCase
         }
     }
 
-    public function test_stdImageSqlFilter_f_min_date_available_keeps_only_images_at_or_after(): void
+    public function test_stdImageSqlFilterCriteria_f_min_date_available_keeps_only_images_at_or_after(): void
     {
         // Every fixture image shares date_available='2026-08-01 00:00:00'.
         $included = $this->searchIds('Photo 1', ['f_min_date_available' => '2026-07-01']);
@@ -164,7 +164,7 @@ final class WsHelperTest extends ContractTestCase
         self::assertSame([], $excluded);
     }
 
-    public function test_stdImageSqlFilter_f_max_date_available_keeps_only_images_strictly_before(): void
+    public function test_stdImageSqlFilterCriteria_f_max_date_available_keeps_only_images_strictly_before(): void
     {
         $included = $this->searchIds('Photo 1', ['f_max_date_available' => '2026-09-01']);
         self::assertSame([1], $included);
@@ -173,7 +173,7 @@ final class WsHelperTest extends ContractTestCase
         self::assertSame([], $excluded);
     }
 
-    public function test_stdImageSqlFilter_f_min_date_created_keeps_only_images_at_or_after(): void
+    public function test_stdImageSqlFilterCriteria_f_min_date_created_keeps_only_images_at_or_after(): void
     {
         // Every fixture image starts with date_creation=NULL -- `date_creation
         // >= '...'` is always false (NULL) against it, so a real value is
@@ -191,7 +191,7 @@ final class WsHelperTest extends ContractTestCase
         }
     }
 
-    public function test_stdImageSqlFilter_f_max_date_created_keeps_only_images_strictly_before(): void
+    public function test_stdImageSqlFilterCriteria_f_max_date_created_keeps_only_images_strictly_before(): void
     {
         $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_creation = '2026-01-15 00:00:00' WHERE id = 1");
 
@@ -206,7 +206,7 @@ final class WsHelperTest extends ContractTestCase
         }
     }
 
-    public function test_stdImageSqlFilter_f_max_level_keeps_a_public_level_zero_image(): void
+    public function test_stdImageSqlFilterCriteria_f_max_level_keeps_a_public_level_zero_image(): void
     {
         $ids = $this->searchIds('Photo 1', ['f_max_level' => 0]);
         self::assertSame([1], $ids);

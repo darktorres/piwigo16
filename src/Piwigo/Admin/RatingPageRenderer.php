@@ -55,11 +55,9 @@ final class RatingPageRenderer
             $exclude_filter_user = false;
         }
 
-        /** @var array<string, string> $user_fields */
-        $user_fields = $currentConfig->userFields();
         $rate_repository = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Rate\RateEntity::class);
 
-        $usernames_by_id = $rate_repository->findUsernamesById($user_fields['id'], $user_fields['username']);
+        $usernames_by_id = $rate_repository->findUsernamesById();
         $users = [];
         foreach ($usernames_by_id as $user_id => $username) {
             $users[$user_id] = stripslashes($username);

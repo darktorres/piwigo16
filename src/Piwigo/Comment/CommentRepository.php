@@ -8,6 +8,7 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\Query\Expr\Join;
 use Piwigo\Comment\Projection\Comment;
 use Piwigo\Comment\Projection\CommentSummary;
 use Piwigo\Common\Dto\PaginatedResult;
@@ -234,25 +235,22 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * the column's collation (this schema's `users` table defines `username`
      * with an explicit `utf8mb4_bin` collation, overriding the table's own
      * `utf8mb4_unicode_ci` default, so this comparison is case-sensitive), not
-     * on anything this query controls. $usernameColumn is the configurable
-     * DB column name (see \Piwigo\Config\CurrentConfig::userFields()), not user-controlled.
+     * on anything this query controls.
      *
-     * Item 14 DQL audit: stays on DBAL -- queries `users`, not this
-     * repository's own CommentEntity, and $usernameColumn is a runtime
-     * column name (multi-auth integration support), not a fixed DQL
-     * property path.
+     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real DQL
+     * -- `users` is now mapped ({@see \Piwigo\Users\UserEntity}), so the
+     * `$usernameColumn` multi-auth column-name param is gone.
      */
-    public function usernameExists(string $usernameColumn, string $username): bool
+    public function usernameExists(string $username): bool
     {
         $value = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from(Tables::users())
-            ->where($usernameColumn . ' = :username')
+            ->select('COUNT(u.id)')
+            ->from(\Piwigo\Users\UserEntity::class, 'u')
+            ->where('u.username = :username')
             ->setParameter('username', $username)
-            ->executeQuery()
-            ->fetchOne();
+            ->getQuery()
+            ->getSingleScalarResult();
 
         return is_numeric($value) && (int) $value > 0;
     }
@@ -602,61 +600,63 @@ final class CommentRepository extends EntityRepository implements CommentCounter
 
     /**
      * Paginated comment listing for a single image, joined with the
-     * commenting user's email column (looked up by DB primary key --
-     * \Piwigo\Config\CurrentConfig::userFields() maps the generic 'id'/'email' names to the
-     * actual column names, resolved by the caller since that's
-     * config-domain knowledge, not persistence-domain).
+     * commenting user's email column (looked up by DB primary key).
      *
-     * Item 14 DQL audit: stays on DBAL -- the LEFT JOIN condition
-     * (`u.{$userIdColumn} = com.author_id`) uses a runtime column name
-     * (multi-auth integration support), not a fixed DQL property path.
+     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
+     * DQL -- `users` is now mapped ({@see \Piwigo\Users\UserEntity}); the
+     * multi-auth column indirection this used to take as `$userIdColumn`/
+     * `$userEmailColumn` parameters is gone.
      *
      * @param string $order 'ASC'|'asc'|'DESC'|'desc' only -- the caller must
      *   validate this before calling (matches the original's own
      *   in_array(strtoupper($x), ['ASC', 'DESC']) check), this method
-     *   concatenates it directly into the query with no further validation.
+     *   passes it straight to DQL's own orderBy() with no further
+     *   validation.
      * @return list<Comment>
      */
     public function findForImage(
         int $imageId,
         bool $onlyValidated,
-        string $userIdColumn,
-        string $userEmailColumn,
         string $order,
         int $limit,
         int $offset
     ): array {
-        $qb = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
+        $qb = $this->createQueryBuilder('com')
             ->select(
-                'com.id',
-                'com.author',
-                'com.author_id',
-                'u.' . $userEmailColumn . ' AS user_email',
-                'com.date',
-                'com.image_id',
-                'com.website_url',
-                'com.email',
-                'com.content',
-                'com.validated'
+                'com.id AS id',
+                'com.author AS author',
+                'com.authorId AS author_id',
+                'u.mailAddress AS user_email',
+                'com.date AS date',
+                'com.imageId AS image_id',
+                'com.websiteUrl AS website_url',
+                'com.email AS email',
+                'com.content AS content',
+                'com.validated AS validated',
             )
-            ->from(Tables::comments(), 'com')
-            ->leftJoin('com', Tables::users(), 'u', 'u.' . $userIdColumn . ' = com.author_id')
-            ->where('com.image_id = :imageId')
+            ->leftJoin(\Piwigo\Users\UserEntity::class, 'u', Join::WITH, 'u.id = com.authorId')
+            ->where('com.imageId = :imageId')
             ->orderBy('com.date', $order)
             ->setMaxResults($limit)
             ->setFirstResult($offset)
             ->setParameter('imageId', $imageId);
 
         if ($onlyValidated) {
-            $qb->andWhere('com.validated = 1');
+            $qb->andWhere('com.validated = :validated')
+                ->setParameter('validated', true);
         }
 
-        $rows = $qb->executeQuery()
-            ->fetchAllAssociative();
+        $rows = $qb->getQuery()
+            ->getArrayResult();
 
-        return array_map(Comment::fromRow(...), $rows);
+        $result = [];
+        foreach ($rows as $row) {
+            if (is_array($row)) {
+                $result[] = Comment::fromRow($row);
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -664,14 +664,12 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * page) -- $whereClauses are already-built SqlCondition fragments
      * (permission/status/search/author/keyword filters, same "caller
      * composes fragments" contract as {@see countAvailableWithConditions()}),
-     * combined via {@see applyConditions()}. $userIdColumn/$userEmailColumn
-     * resolve \Piwigo\Config\CurrentConfig::userFields() same as
-     * {@see findForImage()}'s identical parameters. $sortByColumn/
-     * $sortOrder concatenate directly into ORDER BY with no further
-     * validation -- caller must restrict these to a known-safe set first
-     * (confirmed: Controller\CommentsController's own real caller
-     * validates both against small fixed allowlists before this point),
-     * same contract as {@see findForImage()}'s own $order.
+     * combined via {@see applyConditions()}. $sortByColumn/$sortOrder
+     * concatenate directly into ORDER BY with no further validation --
+     * caller must restrict these to a known-safe set first (confirmed:
+     * Controller\CommentsController's own real caller validates both
+     * against small fixed allowlists before this point), same contract as
+     * {@see findForImage()}'s own $order.
      *
      * Deliberately returns raw rows, not a {@see Comment} Projection: the
      * `category_id`/`comment_id`-aliased shape here differs from
@@ -686,19 +684,20 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * category per comment, matching the original's own grouping/row
      * count exactly.
      *
-     * Item 14 DQL audit: stays on DBAL -- joins the never-entity-mapped
-     * `image_category`, a dynamic-column-name `users` join, MySQL-specific
+     * SQL-modernization audit, Item 14 Sub-phase C4: dropped the
+     * `$userIdColumn`/`$userEmailColumn` multi-auth column-name params --
+     * `users` is now mapped ({@see \Piwigo\Users\UserEntity}), always
+     * `id`/`mail_address`. Item 14 DQL audit: still stays on DBAL -- joins
+     * the never-entity-mapped `image_category`, MySQL-specific
      * `SQL_CALC_FOUND_ROWS`/`ANY_VALUE()` (neither has a DQL equivalent),
      * and dynamic caller-supplied SqlCondition fragments -- several
-     * independent, genuine DQL blockers on the same query.
+     * independent, genuine DQL blockers remain on this query.
      *
      * @param list<SqlCondition> $whereClauses
      * @return PaginatedResult<array<string, mixed>>
      */
     public function findAllWithConditions(
         array $whereClauses,
-        string $userIdColumn,
-        string $userEmailColumn,
         string $sortByColumn,
         string $sortOrder,
         int|string $limit,
@@ -713,7 +712,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
                 'ANY_VALUE(ic.category_id) AS category_id',
                 'com.author',
                 'com.author_id',
-                'u.' . $userEmailColumn . ' AS user_email',
+                'u.mail_address AS user_email',
                 'com.email',
                 'com.date',
                 'com.website_url',
@@ -722,7 +721,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
             )
             ->from(Tables::imageCategory(), 'ic')
             ->innerJoin('ic', Tables::comments(), 'com', 'ic.image_id = com.image_id')
-            ->leftJoin('com', Tables::users(), 'u', 'u.' . $userIdColumn . ' = com.author_id')
+            ->leftJoin('com', Tables::users(), 'u', 'u.id = com.author_id')
             ->groupBy('comment_id')
             ->orderBy($sortByColumn, $sortOrder)
             ->addOrderBy('comment_id', $sortOrder);
@@ -794,23 +793,20 @@ final class CommentRepository extends EntityRepository implements CommentCounter
     /**
      * Paginated admin comment listing (joined with the commenting image
      * and user) matching $criteria -- Ws\PwgComments::getList()'s own row
-     * listing. $userIdColumn/$userUsernameColumn resolve
-     * \Piwigo\Config\CurrentConfig::userFields(), same reasoning as
-     * {@see findForImage()}'s own equivalents.
+     * listing.
      *
-     * Item 14 DQL audit: stays on DBAL -- dynamic-column-name `users` join
-     * (same blocker as findForImage()), a permanent blocker DQL can never
-     * express (see this plan's own "Out of scope" section). Keeps using
-     * the SqlCondition/DBAL-based buildApiConditionsWithStatus() rather
-     * than {@see applyApiConditionsWithStatus()}'s DQL version -- see that
-     * method's own docblock for why.
+     * SQL-modernization audit, Item 14 Sub-phase C4: dropped the
+     * `$userIdColumn`/`$userUsernameColumn` multi-auth column-name params
+     * -- `users` is now mapped ({@see \Piwigo\Users\UserEntity}), always
+     * `id`/`username`. Item 14 DQL audit: still stays on DBAL -- keeps
+     * using the SqlCondition/DBAL-based buildApiConditionsWithStatus()
+     * rather than {@see applyApiConditionsWithStatus()}'s DQL version --
+     * see that method's own docblock for why.
      *
      * @return list<array<string, mixed>>
      */
     public function findListForAdminWs(
         CommentApiCriteria $criteria,
-        string $userIdColumn,
-        string $userUsernameColumn,
         int $offset,
         int $limit
     ): array {
@@ -823,7 +819,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
                 'c.date',
                 'c.author',
                 'c.author_id',
-                $userUsernameColumn . ' AS username',
+                'u.username AS username',
                 'ui.status',
                 'c.content',
                 'i.path',
@@ -835,7 +831,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
             )
             ->from(Tables::comments(), 'c')
             ->innerJoin('c', Tables::images(), 'i', 'i.id = c.image_id')
-            ->leftJoin('c', Tables::users(), 'u', 'u.' . $userIdColumn . ' = c.author_id')
+            ->leftJoin('c', Tables::users(), 'u', 'u.id = c.author_id')
             ->leftJoin('c', Tables::userInfos(), 'ui', 'ui.user_id = c.author_id')
             ->orderBy('c.date', 'DESC')
             ->addOrderBy('c.id', 'DESC')

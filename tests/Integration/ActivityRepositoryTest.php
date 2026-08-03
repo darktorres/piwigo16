@@ -226,7 +226,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
 
     public function test_find_user_object_log_with_usernames(): void
     {
-        $rows = $this->repo->findUserObjectLogWithUsernames('username', 'id');
+        $rows = $this->repo->findUserObjectLogWithUsernames();
 
         // fixture: object='user' rows are activity_id 3, 4, 15, 16
         // (2 logins + 2 adds), all performed_by fixture_admin
@@ -256,7 +256,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
         ]]);
 
         try {
-            $rows = $this->repo->findSystemObjectLogWithUsernames('username', 'id');
+            $rows = $this->repo->findSystemObjectLogWithUsernames();
 
             // The fixture's own rows 1 (action='activate') and 2
             // (action='install') are also 'system' rows -- filter to this
@@ -298,7 +298,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
         ]]);
 
         try {
-            $rows = $this->repo->findSystemObjectLogWithUsernames('username', 'id');
+            $rows = $this->repo->findSystemObjectLogWithUsernames();
 
             // The fixture's own rows 1 (action='activate') and 2
             // (action='install'), both also performed_by NULL, legitimately

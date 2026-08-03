@@ -207,7 +207,7 @@ test('buildInnerSql composes forbidden/visible categories and images into the WH
     expect($sql->sql)->toBe(
         ' FROM ' . Tables::images()
         . "\nINNER JOIN " . Tables::imageCategory() . ' ON id = image_id'
-        . "\n    WHERE (category_id NOT IN (:{$forbidKey})) AND (category_id IN (:{$visCatKey})) AND (id IN (:{$visImgKey})) AND (level <= :{$levelKey})"
+        . "\n    WHERE category_id NOT IN (:{$forbidKey}) AND category_id IN (:{$visCatKey}) AND id IN (:{$visImgKey}) AND level <= :{$levelKey}"
     )->and($sql->parameters)->toBe([
         $forbidKey => [5, 6],
         $visCatKey => [10, 20],

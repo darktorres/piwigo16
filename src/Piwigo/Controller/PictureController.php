@@ -234,9 +234,7 @@ final class PictureController implements ControllerInterface
                 } else {// try to see if we can access it differently
                     $accessible = $this->imageService->isImageAccessibleWithCondition(
                         $image_id,
-                        $this->permissionService->getSqlConditionFandFAsCondition([
-                            'forbidden_categories' => 'category_id',
-                        ])
+                        $this->permissionService->getPermissionCriteria()
                     );
                     if (! $accessible) {
                         $this->htmlService
@@ -585,10 +583,7 @@ final class PictureController implements ControllerInterface
         // real per-column breakdown.
         $related_categories = $this->imageService->getVisibleCategoriesForImage(
             $image_id,
-            $this->permissionService->getSqlConditionFandFAsCondition([
-                'forbidden_categories' => 'id',
-                'visible_categories' => 'id',
-            ])
+            $this->permissionService->getPermissionCriteria()
         );
         usort($related_categories, CategoryService::compareByGlobalRank(...));
         // ---------------------- first, prev, current, next & last picture management

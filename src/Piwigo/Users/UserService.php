@@ -36,6 +36,7 @@ use Piwigo\Event\User\RegisterUser;
 use Piwigo\Event\User\RegisterUserCheck;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Permission\EffectiveForbiddenCategoriesCache;
+use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
@@ -129,10 +130,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         }
 
         if (\Piwigo\Core\InstallationFlag::isActiveStatic() && ! $isEmpty) {
-            /** @var array<string, string> $user_fields */
-            $user_fields = $this->currentConfig->userFields();
-
-            if ($this->repo->emailExists($email, $user_fields['email'], $user_fields['id'], $userId)) {
+            if ($this->repo->emailExists($email, $userId)) {
                 return $this->lang->t('this email address is already in use');
             }
         }
@@ -149,10 +147,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         $username = Username::tryFrom($login);
         if (\Piwigo\Core\InstallationFlag::isActiveStatic() && $username !== null) {
-            /** @var array<string, string> $user_fields */
-            $user_fields = $this->currentConfig->userFields();
-
-            if ($this->repo->usernameExistsCaseInsensitive($username, $user_fields['username'])) {
+            if ($this->repo->usernameExistsCaseInsensitive($username)) {
                 return $this->lang->t('this login is already used');
             }
         }
@@ -165,13 +160,9 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      */
     public function searchCaseUsername(string $username): string
     {
-
-        /** @var array<string, string> $user_fields */
-        $user_fields = $this->currentConfig->userFields();
-
         $usernameLower = strtolower($username);
         $byLower = [];
-        foreach ($this->repo->findAllUsernames($user_fields['username']) as $existing) {
+        foreach ($this->repo->findAllUsernames() as $existing) {
             $byLower[$existing] = strtolower($existing);
         }
 
@@ -187,20 +178,12 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
     public function getUserId(Username $username): ?UserId
     {
-
-        /** @var array<string, string> $user_fields */
-        $user_fields = $this->currentConfig->userFields();
-
-        return $this->repo->findIdByUsername($username, $user_fields['id'], $user_fields['username']);
+        return $this->repo->findIdByUsername($username);
     }
 
     public function getUserIdByEmail(Email $email): ?UserId
     {
-
-        /** @var array<string, string> $user_fields */
-        $user_fields = $this->currentConfig->userFields();
-
-        return $this->repo->findIdByEmail($email, $user_fields['id'], $user_fields['email']);
+        return $this->repo->findIdByEmail($email);
     }
 
     /**
@@ -212,11 +195,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      */
     public function getUsername(UserId $userId): ?Username
     {
-
-        /** @var array<string, string> $user_fields */
-        $user_fields = $this->currentConfig->userFields();
-
-        $username = $this->repo->findUsernameById($userId, $user_fields['id'], $user_fields['username']);
+        $username = $this->repo->findUsernameById($userId);
 
         return $username === null ? null : Username::from(stripslashes($username->value));
     }
@@ -230,10 +209,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      */
     public function getUsernamesByIds(array $userIds): array
     {
-        /** @var array<string, string> $user_fields */
-        $user_fields = $this->currentConfig->userFields();
-
-        $rows = $this->repo->findUsernamesByIds($user_fields, $userIds);
+        $rows = $this->repo->findUsernamesByIds($userIds);
 
         $usernames = [];
         foreach ($rows as $row) {
@@ -340,13 +316,12 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             ];
         }
 
-        /** @var array<string, string> $user_fields */
-        $user_fields = $this->currentConfig->userFields();
-        $userId = $this->repo->insertUser([
-            $user_fields['username'] => $login,
-            $user_fields['password'] => new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($this->conn), $this->deploymentPolicy)->hash($password),
-            $user_fields['email'] => $mailAddress,
-        ]);
+        $userId = $this->repo->insertUser(
+            $login,
+            new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($this->conn), $this->deploymentPolicy)
+                ->hash($password),
+            $mailAddress,
+        );
 
         // Real bug fixed here: this used to call
         // $this->groupRepo->addMembers($userId, $defaultGroupIds) directly,
@@ -537,11 +512,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
     private function notifyExistingAccountOfDuplicateRegistration(string $login, ?string $mailAddress): void
     {
-
-        /** @var array<string, string> $user_fields */
-        $user_fields = $this->currentConfig->userFields();
-
-        $existing = $this->repo->findByUsernameCaseInsensitive($login, $user_fields['id'], $user_fields['username'], $user_fields['email']);
+        $existing = $this->repo->findByUsernameCaseInsensitive($login);
         if ($existing === null || $existing['email'] === '' || ! \Piwigo\Validation\InputValidator::checkEmailFormat($existing['email'])) {
             return;
         }
@@ -676,12 +647,8 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      */
     public function getUserData(UserId $userId): array
     {
-        // see validateMailAddress() for why this is string=>string
-        /** @var array<string, string> $user_fields */
-        $user_fields = $this->currentConfig->userFields();
-
         // retrieve basic user data
-        $row = $this->repo->fetchBasicUserRow($userId, $user_fields);
+        $row = $this->repo->fetchBasicUserRow($userId);
         if ($row === false) {
             throw new \Exception('UserService::getUserData(): no such user_id ' . $userId->value);
         }
@@ -815,9 +782,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         $authorizeds = $this->repo->findAuthorizedFavoriteImageIds(
             $user->id,
             $this->permissionService()
-                ->getSqlConditionFandFAsCondition([
-                    'forbidden_categories' => 'ic.category_id',
-                ])
+                ->getPermissionCriteria()
         );
 
         $favorites = $this->repo->findFavoriteImageIds($user->id);
@@ -847,20 +812,13 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     }
 
     /**
-     * Raw `users` row insert -- Admin\Integrity\C13yInternal's own
-     * "recreate a missing guest/default/webmaster user row, with its
-     * exact known id" repair step. Unlike this method's other real
-     * caller (registration, always auto-increment), $columns here
-     * includes an explicit 'id' -- UserRepository::insertUser() already
-     * builds its INSERT from whichever columns it's given, and MySQL's
-     * LAST_INSERT_ID() reflects an explicitly-inserted auto_increment
-     * value, so the returned UserId is correct either way.
-     *
-     * @param array<string, mixed> $columns
+     * `users` row insert with an explicit, caller-chosen id --
+     * Admin\Integrity\C13yInternal's own "recreate a missing guest/
+     * default/webmaster user row, with its exact known id" repair step.
      */
-    public function insertUserRow(array $columns): UserId
+    public function insertUserRow(UserId $id, string $username, ?string $password): UserId
     {
-        return $this->repo->insertUser($columns);
+        return $this->repo->insertUserWithId($id, $username, $password);
     }
 
     /**
@@ -892,9 +850,9 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     /**
      * @return array<int|string, mixed> keyed by id
      */
-    public function getAllUsernamesById(string $idColumn, string $usernameColumn): array
+    public function getAllUsernamesById(): array
     {
-        return $this->repo->findAllUsernamesById($idColumn, $usernameColumn);
+        return $this->repo->findAllUsernamesById();
     }
 
     /**
@@ -909,17 +867,17 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     /**
      * @return list<string|null>
      */
-    public function getVisibleFavoriteImageIds(UserId $userId, SqlCondition $condition, string $orderBySql): array
+    public function getVisibleFavoriteImageIds(UserId $userId, PermissionCriteria $criteria, string $orderBySql): array
     {
-        return $this->repo->findVisibleFavoriteImageIds($userId, $condition, $orderBySql);
+        return $this->repo->findVisibleFavoriteImageIds($userId, $criteria, $orderBySql);
     }
 
     /**
      * @return list<array<string, mixed>>
      */
-    public function getVisibleFavoriteImages(UserId $userId, SqlCondition $condition, string $orderBySql): array
+    public function getVisibleFavoriteImages(UserId $userId, PermissionCriteria $criteria, string $orderBySql): array
     {
-        return $this->repo->findVisibleFavoriteImages($userId, $condition, $orderBySql);
+        return $this->repo->findVisibleFavoriteImages($userId, $criteria, $orderBySql);
     }
 
     /**
@@ -996,15 +954,11 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     /**
      * Persists a `users` (account) field update for a single user --
      * Controller\ProfileFormHandler's own profile form save
-     * (username/email/password, whichever changed). $idColumn stays a raw
-     * column-name parameter, same dynamic field-name-mapping reasoning as
-     * UserRepository::updateAccountFields()'s own docblock.
-     *
-     * @param array<string, mixed> $updates
+     * (username/email/password, whichever changed).
      */
-    public function updateAccountFields(int $userId, string $idColumn, array $updates): void
+    public function updateAccountFields(UserId $userId, ?string $username, ?string $password, ?string $mailAddress): void
     {
-        $this->repo->updateAccountFields($userId, $idColumn, $updates);
+        $this->repo->updateAccountFields($userId, $username, $password, $mailAddress);
     }
 
     /**
@@ -1234,11 +1188,10 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             }
         }
 
-        // see validateMailAddress() for why this is string=>string
-        /** @var array<string, string> $user_fields */
-        $user_fields = $this->currentConfig->userFields();
-
-        $updates = $updates_infos = [];
+        $updates_infos = [];
+        $username_update = null;
+        $email_update = null;
+        $password_update = null;
         $update_status = null;
         $user_ids_for_status = [];
 
@@ -1284,7 +1237,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
                         ],
                     ];
                 }
-                $updates[$user_fields['username']] = $username_param;
+                $username_update = $username_param;
             }
 
             if (! self::emptyValue($params['email'] ?? null)) {
@@ -1298,7 +1251,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
                         ],
                     ];
                 }
-                $updates[$user_fields['email']] = $email_param;
+                $email_update = $email_param;
             }
 
             if (! self::emptyValue($params['password'] ?? null)) {
@@ -1328,7 +1281,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
                 $password_param = $params['password'] ?? null;
                 assert(is_string($password_param));
-                $updates[$user_fields['password']] = $this->passwordService()
+                $password_update = $this->passwordService()
                     ->hash($password_param);
             }
         }
@@ -1447,7 +1400,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         }
 
         // perform updates
-        $this->repo->updateAccountFields($user_ids[0], $user_fields['id'], $updates);
+        $this->repo->updateAccountFields(UserId::from($user_ids[0]), $username_update, $password_update, $email_update);
 
         $authService = new AuthService(
             new AuthRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)),
@@ -1463,11 +1416,11 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             $this->currentConfig,
         );
 
-        if (isset($updates[$user_fields['password']])) {
+        if ($password_update !== null) {
             $authService->deactivateUserAuthKeys($user_ids[0]);
         }
 
-        if (isset($updates[$user_fields['email']])) {
+        if ($email_update !== null) {
             $authService->deactivatePasswordResetKey($user_ids[0]);
         }
 
@@ -1530,10 +1483,16 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         $this->activityLogger->record('user', $user_ids, 'edit');
 
+        $account_updates = array_filter([
+            'username' => $username_update,
+            'password' => $password_update,
+            'mail_address' => $email_update,
+        ], static fn (?string $v): bool => $v !== null);
+
         return [
             'user_id' => $params['user_id'],
             'infos' => $updates_infos,
-            'account' => $updates,
+            'account' => $account_updates,
         ];
     }
 
@@ -1554,11 +1513,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      */
     public function syncUsers(): void
     {
-
-        $userFields = $this->currentConfig->userFields();
-        $userIdField = $userFields['id'];
-
-        $baseUsers = $this->repo->findAllUserIds($userIdField);
+        $baseUsers = $this->repo->findAllUserIds();
         $infosUsers = $this->repo->findDistinctUserIdsInTable(Tables::userInfos());
 
         // users present in $baseUsers and not in $infosUsers must be added
@@ -1602,9 +1557,9 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      * @param  list<int|string>  $ids
      * @return array<int|string, ?string>
      */
-    public function getStatusByIds(string $idColumn, array $ids): array
+    public function getStatusByIds(array $ids): array
     {
-        return $this->repo->findStatusByIds($idColumn, $ids);
+        return $this->repo->findStatusByIds($ids);
     }
 
     public function getTotalUserCount(): int
@@ -1630,9 +1585,9 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         return array_map(static fn (UserId $id): int => $id->value, $this->repo->findAdminIds($includeWebmaster));
     }
 
-    public function getUsernameById(UserId $userId, string $idColumn, string $usernameColumn): ?Username
+    public function getUsernameById(UserId $userId): ?Username
     {
-        return $this->repo->findUsernameById($userId, $idColumn, $usernameColumn);
+        return $this->repo->findUsernameById($userId);
     }
 
     /**
@@ -1671,9 +1626,9 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      * @param  list<int|string>  $userIds
      * @return list<array<string, mixed>>
      */
-    public function getNotificationRecipientsByIds(array $userIds, string $idColumn, string $usernameColumn, string $emailColumn): array
+    public function getNotificationRecipientsByIds(array $userIds): array
     {
-        return $this->repo->findNotificationRecipientsByIds($userIds, $idColumn, $usernameColumn, $emailColumn);
+        return $this->repo->findNotificationRecipientsByIds($userIds);
     }
 
     /**
@@ -1681,9 +1636,6 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      * @return PaginatedResult<array<string, mixed>>
      */
     public function getListForWs(
-        string $idColumn,
-        string $usernameColumn,
-        string $emailColumn,
         array $displayColumns,
         bool $includeLastVisitFromHistory,
         UserListCriteria $criteria,
@@ -1692,6 +1644,6 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         ?int $limit,
         int $offset
     ): PaginatedResult {
-        return $this->repo->findListForWs($idColumn, $usernameColumn, $emailColumn, $displayColumns, $includeLastVisitFromHistory, $criteria, $orderBy, $includeTotalCount, $limit, $offset);
+        return $this->repo->findListForWs($displayColumns, $includeLastVisitFromHistory, $criteria, $orderBy, $includeTotalCount, $limit, $offset);
     }
 }

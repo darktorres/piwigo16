@@ -45,7 +45,7 @@ final class AuthRepositoryTest extends IntegrationTestCase
 
     public function test_find_username_and_password_returns_a_fixture_user(): void
     {
-        $found = $this->repo->findUsernameAndPassword(1, 'id', 'username', 'password');
+        $found = $this->repo->findUsernameAndPassword(\Piwigo\Common\ValueObject\UserId::from(1));
 
         self::assertNotNull($found);
         self::assertSame('fixture_admin', $found['username']);
@@ -54,7 +54,7 @@ final class AuthRepositoryTest extends IntegrationTestCase
 
     public function test_find_username_and_password_returns_null_for_a_missing_user(): void
     {
-        self::assertNull($this->repo->findUsernameAndPassword(999999, 'id', 'username', 'password'));
+        self::assertNull($this->repo->findUsernameAndPassword(\Piwigo\Common\ValueObject\UserId::from(999999)));
     }
 
     public function test_update_language_persists_the_new_value(): void

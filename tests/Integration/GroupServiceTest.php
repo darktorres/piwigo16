@@ -194,7 +194,7 @@ final class GroupServiceTest extends IntegrationTestCase
 
     public function test_get_member_usernames_delegates_to_the_repository(): void
     {
-        $names = $this->service->getMemberUsernames(GroupId::from(1), 'username', 'id');
+        $names = $this->service->getMemberUsernames(GroupId::from(1));
 
         self::assertSame(['fixture_admin', 'regular_user'], $names);
     }

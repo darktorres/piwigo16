@@ -33,16 +33,21 @@ final class NotificationByMailRepository extends AbstractRepository
     }
 
     /**
-     * $usernameField/$emailField/$idField are trusted admin-configured
-     * column names (\Piwigo\Config\CurrentConfig::userFields(), not user input -- can't be bound
-     * as parameters anyway, SQL doesn't allow placeholders for
-     * identifiers). $checkKeyList, by contrast, IS bound -- [SEC-18]-class
-     * improvement over the original's unescaped `'\'' . $s . '\''`
-     * string-literal quoting. `NotificationByMailSender::quoteCheckKeyList()`
-     * used to reproduce that same unescaped quoting for {@see deleteByCheckKeys()}'s
-     * own now-former "already-quoted" input -- removed in the
-     * SQL-modernization pass (its only real caller), see that method's
-     * own docblock.
+     * $checkKeyList IS bound -- [SEC-18]-class improvement over the
+     * original's unescaped `'\'' . $s . '\''` string-literal quoting.
+     * `NotificationByMailSender::quoteCheckKeyList()` used to reproduce
+     * that same unescaped quoting for {@see deleteByCheckKeys()}'s own
+     * now-former "already-quoted" input -- removed in the SQL-modernization
+     * pass (its only real caller), see that method's own docblock.
+     *
+     * SQL-modernization audit, Item 14 Sub-phase C4: dropped the
+     * `$usernameField`/`$emailField`/`$idField` multi-auth column-name
+     * params -- `users`'s columns are now fixed
+     * ({@see \Piwigo\Users\UserEntity}), see this repository's own class
+     * docblock note. Stays on DBAL -- this repository has no `EntityManager`
+     * access (extends `AbstractRepository`, not `EntityRepository`), and
+     * the `N`/`UI` joins plus conditional `WHERE`/`ORDER BY` shape aren't
+     * this item's own blocker to redesign.
      *
      * @param  list<string>  $checkKeyList
      * @return list<UserMailNotification>
@@ -51,22 +56,19 @@ final class NotificationByMailRepository extends AbstractRepository
         string $action,
         array $checkKeyList,
         string $enabledFilterValue,
-        string $usernameField,
-        string $emailField,
-        string $idField
     ): array {
         $userMailNotificationTable = Tables::userMailNotification();
         $usersTable = Tables::users();
         $userInfosTable = Tables::userInfos();
 
         $sql = <<<SQL
-            SELECT N.user_id, N.check_key, U.{$usernameField} AS username, U.{$emailField} AS mail_address, N.enabled, N.last_send, UI.status FROM {$userMailNotificationTable} AS N JOIN {$usersTable} AS U ON N.user_id = U.{$idField} JOIN {$userInfosTable} AS UI ON UI.user_id = N.user_id WHERE 1=1
+            SELECT N.user_id, N.check_key, U.username AS username, U.mail_address AS mail_address, N.enabled, N.last_send, UI.status FROM {$userMailNotificationTable} AS N JOIN {$usersTable} AS U ON N.user_id = U.id JOIN {$userInfosTable} AS UI ON UI.user_id = N.user_id WHERE 1=1
             SQL;
         $params = [];
 
         if ($action === 'send') {
             $sql .= <<<SQL
-                 AND N.enabled = ? AND U.{$emailField} IS NOT NULL
+                 AND N.enabled = ? AND U.mail_address IS NOT NULL
                 SQL;
             $params[] = 1;
         }
@@ -100,21 +102,21 @@ final class NotificationByMailRepository extends AbstractRepository
      * insertNewDataUserMailNotification()'s own pre-sync cleanup, so
      * `WHERE email IS NOT NULL` below can't false-negative on a
      * whitespace-only address.
+     *
+     * SQL-modernization audit, Item 14 Sub-phase C4: dropped the
+     * `$emailColumn` multi-auth column-name param -- see
+     * {@see findUserNotifications()}'s own docblock.
      */
-    public function nullifyBlankEmails(string $emailColumn): void
+    public function nullifyBlankEmails(): void
     {
-        // SQL-modernization audit: verified, both interpolated values are
-        // structural (Tables::users(), and $emailColumn is a trusted
-        // admin-configured column name -- see findUserNotifications()'s
-        // own docblock for the same reasoning), nothing to bind.
         $usersTable = Tables::users();
         $this->conn->executeStatement(<<<SQL
             UPDATE
               {$usersTable}
             SET
-              {$emailColumn} = NULL
+              mail_address = NULL
             WHERE
-              TRIM({$emailColumn}) = ''
+              TRIM(mail_address) = ''
             SQL);
     }
 
@@ -124,25 +126,26 @@ final class NotificationByMailRepository extends AbstractRepository
      * NotificationByMailSubController's own "which users need a fresh
      * subscription row" step.
      *
+     * SQL-modernization audit, Item 14 Sub-phase C4: dropped the
+     * `$idColumn`/`$usernameColumn`/`$emailColumn` multi-auth column-name
+     * params -- see {@see findUserNotifications()}'s own docblock.
+     *
      * @return list<array<string, mixed>>
      */
-    public function findUsersWithoutNotificationRow(string $idColumn, string $usernameColumn, string $emailColumn): array
+    public function findUsersWithoutNotificationRow(): array
     {
-        // SQL-modernization audit: verified, same structural-only shape
-        // as nullifyBlankEmails() above -- table names + trusted
-        // admin-configured column names, nothing to bind.
         $usersTable = Tables::users();
         $userMailNotificationTable = Tables::userMailNotification();
 
         return $this->conn->fetchAllAssociative(<<<SQL
             SELECT
-              u.{$idColumn} AS user_id,
-              u.{$usernameColumn} AS username,
-              u.{$emailColumn} AS mail_address
+              u.id AS user_id,
+              u.username AS username,
+              u.mail_address AS mail_address
             FROM
-              {$usersTable} AS u LEFT JOIN {$userMailNotificationTable} AS m ON u.{$idColumn} = m.user_id
+              {$usersTable} AS u LEFT JOIN {$userMailNotificationTable} AS m ON u.id = m.user_id
             WHERE
-              u.{$emailColumn} IS NOT NULL AND
+              u.mail_address IS NOT NULL AND
               m.user_id IS NULL
             ORDER BY
               user_id

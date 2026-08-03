@@ -197,15 +197,9 @@ final class PictureCommentRenderer
                 'COMMENTS_ORDER_TITLE' => $commentsOrder === 'ASC' ? $lang->t('Show latest comments first') : $lang->t('Show oldest comments first'),
             ]);
 
-            $userFields = $currentConfig->userFields();
-            $userFieldEmail = $userFields['email'];
-            $userFieldId = $userFields['id'];
-
             $rows = $commentRepository->findForImage(
                 $imageId,
                 $onlyValidated,
-                $userFieldId,
-                $userFieldEmail,
                 $commentsOrder,
                 $nbCommentPage,
                 $start

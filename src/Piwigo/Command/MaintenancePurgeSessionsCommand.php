@@ -15,17 +15,6 @@ use Symfony\Component\Console\Output\OutputInterface;
  * action -- deletes sessions belonging to a since-deleted user id, via
  * DbMaintenanceRepository::purgeSessionsForDeletedUsers() (built P21, zero
  * real callers until this command).
- *
- * $idColumn (normally \Piwigo\Config\CurrentConfig::userFields()['id'], the
- * external-auth column-mapping convention) is hardcoded to the literal
- * 'id' default here rather than calling CurrentConfig::userFields()
- * itself -- purely to avoid this command depending on Config bootstrap
- * state at all, not because the accessor is unavailable to CLI code (it's
- * a plain static getter with a compile-time default, already called
- * directly from CLI-reachable code elsewhere). Only affects installs using
- * Apache-auth external user tables with a non-default id column name --
- * confirm/extend if that ever becomes a real deployment target for the CLI
- * tool.
  */
 #[AsCommand(name: 'maintenance:purge-sessions', description: 'Purge sessions belonging to since-deleted users')]
 final class MaintenancePurgeSessionsCommand extends Command
@@ -39,7 +28,7 @@ final class MaintenancePurgeSessionsCommand extends Command
     #[\Override]
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $this->repo->purgeSessionsForDeletedUsers('id');
+        $this->repo->purgeSessionsForDeletedUsers();
 
         $output->writeln('Purged sessions belonging to since-deleted users.');
 

@@ -55,14 +55,27 @@ final readonly class Comment
     ) {}
 
     /**
-     * @param array<string, mixed> $row a {@see \Piwigo\Comment\CommentRepository::findForImage()} row
+     * @param array<array-key, mixed> $row a {@see \Piwigo\Comment\CommentRepository::findForImage()}
+     *   row -- straight from DQL array hydration since Item 14 Sub-phase
+     *   C4 (Doctrine's own `getArrayResult()` return type is bare
+     *   `mixed[]`, so this can't be declared `array<string, mixed>` the
+     *   way DBAL's own `fetchAllAssociative()` rows could)
      */
     public static function fromRow(array $row): self
     {
-        $id = CommentId::tryFrom($row['id'] ?? null);
+        // `id` is `com.id`, a custom-Typed CommentId under DQL array
+        // hydration (this domain's own gotcha #4 territory) -- accept
+        // either the VO directly or a raw scalar.
+        $idValue = $row['id'] ?? null;
+        $id = $idValue instanceof CommentId ? $idValue : CommentId::tryFrom($idValue);
         if ($id === null) {
-            throw new \InvalidArgumentException(sprintf('Expected a positive comment id, got %s', get_debug_type($row['id'] ?? null)));
+            throw new \InvalidArgumentException(sprintf('Expected a positive comment id, got %s', get_debug_type($idValue)));
         }
+
+        // `validated` is a real boolean column -- DQL array hydration
+        // gives a native bool, not the 0/1 a raw DBAL driver read used to.
+        $validatedValue = $row['validated'] ?? null;
+        $validated = is_bool($validatedValue) ? $validatedValue : is_numeric($validatedValue) && (int) $validatedValue !== 0;
 
         return new self(
             id: $id,
@@ -74,7 +87,7 @@ final readonly class Comment
             websiteUrl: is_string($row['website_url'] ?? null) ? $row['website_url'] : null,
             email: is_string($row['email'] ?? null) ? $row['email'] : null,
             content: is_string($row['content'] ?? null) ? $row['content'] : null,
-            validated: is_numeric($row['validated'] ?? null) ? (bool) (int) $row['validated'] : false,
+            validated: $validated,
         );
     }
 

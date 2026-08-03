@@ -326,13 +326,9 @@ final class PwgImages
             return new PwgError(403, 'Comments are disabled');
         }
 
-        $permissionCondition = $this->permissionService->getSqlConditionFandFAsCondition([
-            'forbidden_categories' => 'id',
-            'visible_categories' => 'id',
-            'visible_images' => 'image_id',
-        ]);
+        $permissionCriteria = $this->permissionService->getPermissionCriteria();
 
-        if (! $this->imageService->isImageCommentableWithCondition($params['image_id'], $permissionCondition)) {
+        if (! $this->imageService->isImageCommentableWithCondition($params['image_id'], $permissionCriteria)) {
             return new PwgError(WsError::INVALID_PARAM, 'Invalid image_id');
         }
 
@@ -380,9 +376,7 @@ final class PwgImages
 
         $image_row = $this->imageService->getRowWithCondition(
             $params['image_id'],
-            $this->permissionService->getSqlConditionFandFAsCondition([
-                'visible_images' => 'id',
-            ])
+            $this->permissionService->getPermissionCriteria()
         );
         if ($image_row === null) {
             return new PwgError(404, 'image_id not found');
@@ -414,9 +408,7 @@ final class PwgImages
         // -------------------------------------------------------- related categories
         $related_category_rows = $this->imageService->getRelatedCategoriesForImage(
             $image_id,
-            $this->permissionService->getSqlConditionFandFAsCondition([
-                'forbidden_categories' => 'category_id',
-            ])
+            $this->permissionService->getPermissionCriteria()
         );
 
         $is_commentable = false;
@@ -591,10 +583,7 @@ final class PwgImages
     {
         $accessible = $this->imageService->isImageAccessibleWithCondition(
             $params['image_id'],
-            $this->permissionService->getSqlConditionFandFAsCondition([
-                'forbidden_categories' => 'category_id',
-                'forbidden_images' => 'id',
-            ])
+            $this->permissionService->getPermissionCriteria()
         );
         if (! $accessible) {
             return new PwgError(404, 'Invalid image_id or access denied');
@@ -615,14 +604,14 @@ final class PwgImages
      * Returns a list of elements corresponding to a query search
      * @param array{query: string, per_page: int, page: int, order: string|null, f_min_rate: float|null, f_max_rate: float|null, f_min_hit: int|null, f_max_hit: int|null, f_min_ratio: float|null, f_max_ratio: float|null, f_max_level: int|null, f_min_date_available: string|null, f_max_date_available: string|null, f_min_date_created: string|null, f_max_date_created: string|null, ...} $params
      *    query: no WS_TYPE flag, mandatory -- always a plain string (see
-     *    WsHelper::stdImageSqlFilter()'s docblock for the shared f_* filter set,
+     *    WsHelper::stdImageSqlFilterCriteria()'s docblock for the shared f_* filter set,
      *    merged in via ws.php's $f_params)
      * @return array{paging: PwgNamedStruct, images: PwgNamedArray}
      */
     public function search(array $params, PwgServer $service): array
     {
         $images = [];
-        $filterCondition = WsHelper::stdImageSqlFilter($params, $service, 'i.');
+        $filterCondition = WsHelper::stdImageSqlFilterCriteria($params, $service)->toSqlCondition('i.');
         $order_by = WsHelper::stdImageSqlOrder($params, 'i.');
 
         $super_order_by = false;
@@ -641,9 +630,10 @@ final class PwgImages
         // side-channel -- SearchService.php isn't part of this initiative's
         // own file scope, so flattened back into literal SQL here rather
         // than threading a $params/$types channel through an unscoped file.
-        // Safe to do so: every one of stdImageSqlFilter()'s own parameter
+        // Safe to do so: every one of ImageFilterCriteria's own field
         // values is already is_numeric()/DateHelper::isValidMysqlDatetime()-
-        // validated before ever reaching $filterCondition, so no
+        // validated (see WsHelper::stdImageSqlFilterCriteria()'s own
+        // docblock) before ever reaching $filterCondition, so no
         // injection-capable character can survive this substitution.
         $images_where = $filterCondition->sql;
         foreach ($filterCondition->parameters as $placeholder => $value) {

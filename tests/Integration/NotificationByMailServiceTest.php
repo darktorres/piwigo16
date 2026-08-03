@@ -46,8 +46,6 @@ final class NotificationByMailServiceTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         $this->service = new NotificationByMailService(new NotificationByMailRepository($this->conn), new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()), CurrentConfig::current());
-
-        $currentConfig->setUserFields(['username' => 'username', 'email' => 'mail_address', 'id' => 'id']);
     }
 
     public function test_find_available_check_key_matches_the_expected_shape(): void

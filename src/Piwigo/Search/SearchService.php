@@ -19,6 +19,7 @@ use Piwigo\Event\Search\QsearchPre;
 use Piwigo\Event\Tag\RenderTagName;
 use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Permission\PermissionService;
+use Piwigo\Permission\SqlCondition;
 use Piwigo\Search\Event\QsearchBeforeEval;
 use Piwigo\Search\Event\QsearchExpressionParsed;
 use Piwigo\Search\Event\QsearchGetImagesSqlScopes;
@@ -480,20 +481,17 @@ final readonly class SearchService
      * SearchRepository's own executors are positional-`?`-only (its own
      * "generic parameterized executor" design, see that class's docblock)
      * -- unlike every other repository in the SQL-modernization initiative,
-     * so PermissionService::getSqlConditionFandFAsCondition()'s
-     * named-placeholder SqlCondition is rewritten to positional `?`s here,
-     * same manual per-element expansion convention this file's own
-     * IN-clause callers already use for their own array params (e.g.
-     * `implode(',', array_fill(0, count($x), '?'))`). Bare fragment, no
-     * prefix -- callers that need a leading " AND " add it themselves.
+     * so a {@see PermissionCriteria} fragment's own named-placeholder
+     * SqlCondition is rewritten to positional `?`s here, same manual
+     * per-element expansion convention this file's own IN-clause callers
+     * already use for their own array params (e.g. `implode(',',
+     * array_fill(0, count($x), '?'))`). Bare fragment, no prefix --
+     * callers that need a leading " AND " add it themselves.
      *
-     * @param  array<string, string>  $conditionFields
      * @return array{0: string, 1: list<mixed>}
      */
-    private function positionalCondition(array $conditionFields, bool $forceOneCondition = false): array
+    private function positionalCondition(SqlCondition $condition): array
     {
-        $condition = $this->permissionService->getSqlConditionFandFAsCondition($conditionFields, $forceOneCondition);
-
         if ($condition->isEmpty()) {
             return ['', []];
         }
@@ -523,11 +521,17 @@ final readonly class SearchService
      */
     private function forbiddenConditionPositional(): array
     {
-        [$sql, $values] = $this->positionalCondition([
-            'forbidden_categories' => 'category_id',
-            'visible_categories' => 'category_id',
-            'visible_images' => 'id',
-        ]);
+        $criteria = $this->permissionService->getPermissionCriteria();
+        // visible_images's own old fallthrough into forbidden_images
+        // (fieldName 'id' -> the images-table's own level check) -- see
+        // PermissionCriteria's own docblock.
+        [$sql, $values] = $this->positionalCondition(SqlCondition::combine(
+            'AND',
+            $criteria->forbiddenCategoriesCondition('category_id'),
+            $criteria->visibleCategoriesCondition('category_id'),
+            $criteria->visibleImagesCondition('id'),
+            $criteria->maxLevelCondition('level'),
+        ));
 
         return [$sql === '' ? '' : ' AND ' . $sql, $values];
     }
@@ -1386,12 +1390,21 @@ final readonly class SearchService
         }
 
         if ($permissions) {
-            [$permissionSql, $permissionValues] = $this->positionalCondition([
-                'forbidden_categories' => 'category_id',
-                'forbidden_images' => 'i.id',
-            ], true);
-            $whereClauses[] = $permissionSql;
-            $params = [...$params, ...$permissionValues];
+            $criteria = $this->permissionService->getPermissionCriteria();
+            [$permissionSql, $permissionValues] = $this->positionalCondition(SqlCondition::combine(
+                'AND',
+                $criteria->forbiddenCategoriesCondition('category_id'),
+                $criteria->maxLevelCondition('i.level'),
+            ));
+            // The old $forceOneCondition: true guaranteed a non-empty
+            // fragment here -- $whereClauses is later joined via Doctrine's
+            // own ExpressionBuilder::and(), which doesn't skip empty parts
+            // (a bare "()" is a real SQL syntax error), so an empty
+            // fragment must be skipped here instead of pushed.
+            if ($permissionSql !== '') {
+                $whereClauses[] = $permissionSql;
+                $params = [...$params, ...$permissionValues];
+            }
         }
 
         $from = Tables::images() . ' i';

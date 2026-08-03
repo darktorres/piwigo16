@@ -36,7 +36,12 @@ final readonly class AuthKeyDetails
     ) {}
 
     /**
-     * @param array<string, mixed> $row a {@see \Piwigo\Auth\AuthRepository::findAuthKeyDetails()} row
+     * @param array<array-key, mixed> $row a {@see \Piwigo\Auth\AuthRepository::findAuthKeyDetails()}
+     *   row -- Doctrine's own `getOneOrNullResult()` return type is bare
+     *   `mixed`, so this can't be declared `array<string, mixed>` the way
+     *   DBAL's own `fetchAssociative()` could; every real row still has
+     *   string keys (this DQL query's own explicit `AS` aliases), just not
+     *   statically provable from Doctrine's return type.
      */
     public static function fromRow(array $row): self
     {

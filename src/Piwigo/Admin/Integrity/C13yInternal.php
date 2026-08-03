@@ -143,14 +143,7 @@ final class C13yInternal
             'l10n_bad_status' => 'Main "webmaster" user status is incorrect',
         ];
 
-        // \Piwigo\Config\CurrentConfig::userFields() maps generic field names to table-specific DB
-        // column names (see include/config_default.inc.php); always a
-        // string=>string map at runtime.
-        /** @var array<string, string> $user_fields */
-        $user_fields = $this->currentConfig->userFields();
-        $user_id_field = $user_fields['id'];
-
-        $status = $this->userService->getStatusByIds($user_id_field, array_keys($c13y_users));
+        $status = $this->userService->getStatusByIds(array_keys($c13y_users));
 
         foreach ($c13y_users as $id => $data) {
             if (! array_key_exists($id, $status)) {
@@ -218,11 +211,11 @@ final class C13yInternal
                             }
                         }
 
-                        $this->userService->insertUserRow([
-                            'id' => $id,
-                            'username' => addslashes($name),
-                            'password' => $password,
-                        ]);
+                        $this->userService->insertUserRow(
+                            \Piwigo\Common\ValueObject\UserId::from($id),
+                            addslashes($name),
+                            $password,
+                        );
 
                         $this->userService->createUserInfos([\Piwigo\Common\ValueObject\UserId::from($id)]);
 

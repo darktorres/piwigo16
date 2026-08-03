@@ -8,6 +8,7 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr\Join;
 use Piwigo\Auth\UserAuthKeyEntity;
 use Piwigo\Category\UserAccessEntity;
@@ -20,6 +21,7 @@ use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Mail\GetWebmasterMailAddress;
 use Piwigo\Group\UserGroupEntity;
+use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\Users\Projection\UserInfo;
 
@@ -28,14 +30,18 @@ use Piwigo\Users\Projection\UserInfo;
  * slice: `users` (login/password/email), `user_infos` (profile row,
  * preferences), `user_group` (default-group assignment on registration).
  *
- * `user_infos` is ORM-mapped ({@see UserInfoEntity}). `users` is
- * deliberately NOT mapped by any entity -- every method touching it takes
- * its column names as caller-supplied parameters (\Piwigo\Config\
- * CurrentConfig::userFields(), Piwigo's multi-auth column remapping),
- * which Doctrine's compile-time column attributes cannot represent. Those
- * methods stay plain DBAL via $this->getEntityManager()->getConnection(),
- * same "not every table a repository touches gets an entity" principle
- * Group/Tag's own conversions already established.
+ * `user_infos` is ORM-mapped ({@see UserInfoEntity}); `users` is now also
+ * mapped ({@see UserEntity}) -- SQL-modernization audit, Item 14
+ * Sub-phase C4: `users` used to be deliberately left un-entity-mapped,
+ * every method touching it taking its column names as caller-supplied
+ * parameters (`\Piwigo\Config\CurrentConfig::userFields()`, Piwigo's
+ * multi-auth column remapping). That indirection had zero real callers
+ * (`CurrentConfig::setUserFields()` was dead code), so it was retired
+ * entirely -- `users`'s columns are fixed now, and every method that used
+ * to take a `$userIdColumn`/`$usernameColumn`/`$emailColumn` parameter has
+ * dropped it. Some methods below still stay on plain DBAL via
+ * `$this->getEntityManager()->getConnection()` for their own remaining,
+ * unrelated blockers (documented per-method).
  *
  * `build_user()`/`getuserdata()`/`check_user_favorites()` (the original
  * free-function names) ended up ported into
@@ -96,80 +102,90 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      *
      * P23 batch 8d: relocated from include/functions.inc.php's
      * get_webmaster_mail_address(), unchanged logic (including its
-     * trigger_change('get_webmaster_mail_address', ...) filter hook and
-     * its own \Piwigo\Config\CurrentConfig::userFields() column-name resolution) -- stays
-     * zero-arg, matching the original's own signature exactly, so every
-     * real call site retargets as a pure rename.
+     * trigger_change('get_webmaster_mail_address', ...) filter hook) --
+     * stays zero-arg, matching the original's own signature exactly, so
+     * every real call site retargets as a pure rename.
      *
-     * Item 14 DQL audit: stays on DBAL -- `$id_field`/`$email_field` are
-     * caller-resolved dynamic column names (\Piwigo\Config\CurrentConfig::
-     * userFields()) against the never-entity-mapped `users` table (see this
-     * class's own docblock); DQL needs a fixed property path.
+     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
+     * DQL -- `users` is now mapped ({@see UserEntity}); the multi-auth
+     * column indirection this used to resolve via `CurrentConfig::
+     * userFields()` is gone (see this class's own docblock).
      */
     #[\Override]
     public function getWebmasterMailAddress(): string
     {
-
-        $user_fields = \Piwigo\Config\CurrentConfig::current()->userFields();
-        $email_field = $user_fields['email'];
-        $id_field = $user_fields['id'];
         $webmaster_id = \Piwigo\Config\CurrentConfig::current()->webmasterId();
 
-        $value = $this->getEntityManager()
-            ->getConnection()
+        $values = $this->getEntityManager()
             ->createQueryBuilder()
-            ->select($email_field)
-            ->from(Tables::users())
-            ->where($id_field . ' = :webmasterId')
-            ->setParameter('webmasterId', $webmaster_id)
-            ->executeQuery()
-            ->fetchOne();
+            ->select('u.mailAddress')
+            ->from(UserEntity::class, 'u')
+            ->where('u.id = :webmasterId')
+            ->setMaxResults(1)
+            ->setParameter('webmasterId', UserId::from($webmaster_id))
+            ->getQuery()
+            ->getSingleColumnResult();
 
-        // users.email is nullable — a webmaster without an email set is real,
-        // not a bug, so this degrades to '' rather than asserting non-null.
+        $value = $values[0] ?? null;
+
+        // users.mail_address is nullable — a webmaster without an email set
+        // is real, not a bug, so this degrades to '' rather than asserting
+        // non-null.
         $email = is_string($value) ? $value : '';
 
         return \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetWebmasterMailAddress($email))->email;
     }
 
     /**
-     * Item 14 DQL audit: stays on DBAL -- `$idColumn`/`$usernameColumn` are
-     * caller-supplied dynamic column names against the never-entity-mapped
-     * `users` table.
+     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
+     * DQL -- `users` is now mapped ({@see UserEntity}); the multi-auth
+     * column indirection this used to take as `$idColumn`/`$usernameColumn`
+     * parameters is gone (see this class's own docblock). Uses
+     * `getOneOrNullResult(Query::HYDRATE_ARRAY)`, not
+     * `getSingleColumnResult()` -- `u.id`'s custom `user_id` Doctrine Type
+     * only gets applied by array/object hydration, not scalar-column
+     * hydration (this audit's own gotcha #4).
      */
-    public function findIdByUsername(Username $username, string $idColumn, string $usernameColumn): ?UserId
+    public function findIdByUsername(Username $username): ?UserId
     {
-        $value = $this->getEntityManager()
-            ->getConnection()
+        $row = $this->getEntityManager()
             ->createQueryBuilder()
-            ->select($idColumn)
-            ->from(Tables::users())
-            ->where($usernameColumn . ' = :username')
+            ->select('u.id')
+            ->from(UserEntity::class, 'u')
+            ->where('u.username = :username')
+            ->setMaxResults(1)
             ->setParameter('username', $username->value)
-            ->executeQuery()
-            ->fetchOne();
+            ->getQuery()
+            ->getOneOrNullResult(Query::HYDRATE_ARRAY);
 
-        return UserId::tryFrom($value);
+        $value = is_array($row) ? ($row['id'] ?? null) : null;
+
+        return $value instanceof UserId ? $value : null;
     }
 
     /**
-     * Item 14 DQL audit: stays on DBAL -- `$idColumn`/`$emailColumn` are
-     * caller-supplied dynamic column names against the never-entity-mapped
-     * `users` table.
+     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
+     * DQL -- `users` is now mapped ({@see UserEntity}); the multi-auth
+     * column indirection this used to take as `$idColumn`/`$emailColumn`
+     * parameters is gone (see this class's own docblock). Same
+     * `getOneOrNullResult(Query::HYDRATE_ARRAY)` reasoning as
+     * {@see findIdByUsername()} above (this audit's own gotcha #4).
      */
-    public function findIdByEmail(Email $email, string $idColumn, string $emailColumn): ?UserId
+    public function findIdByEmail(Email $email): ?UserId
     {
-        $value = $this->getEntityManager()
-            ->getConnection()
+        $row = $this->getEntityManager()
             ->createQueryBuilder()
-            ->select($idColumn)
-            ->from(Tables::users())
-            ->where('UPPER(' . $emailColumn . ') = UPPER(:email)')
+            ->select('u.id')
+            ->from(UserEntity::class, 'u')
+            ->where('UPPER(u.mailAddress) = UPPER(:email)')
+            ->setMaxResults(1)
             ->setParameter('email', $email->value)
-            ->executeQuery()
-            ->fetchOne();
+            ->getQuery()
+            ->getOneOrNullResult(Query::HYDRATE_ARRAY);
 
-        return UserId::tryFrom($value);
+        $value = is_array($row) ? ($row['id'] ?? null) : null;
+
+        return $value instanceof UserId ? $value : null;
     }
 
     /**
@@ -179,170 +195,219 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      *   account for the SEC-31 duplicate-registration notice, and for the
      *   password.php-style "find by username or email" flow.
      *
-     * Item 14 DQL audit: stays on DBAL -- `$idColumn`/`$usernameColumn`/
-     * `$emailColumn` are caller-supplied dynamic column names against the
-     * never-entity-mapped `users` table.
+     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
+     * DQL -- `users` is now mapped ({@see UserEntity}); the multi-auth
+     * column indirection this used to take as `$idColumn`/`$usernameColumn`/
+     * `$emailColumn` parameters is gone (see this class's own docblock).
      */
-    public function findByUsernameCaseInsensitive(string $username, string $idColumn, string $usernameColumn, string $emailColumn): ?array
+    public function findByUsernameCaseInsensitive(string $username): ?array
     {
         $row = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select($idColumn . ' AS id', $usernameColumn . ' AS username', $emailColumn . ' AS email')
-            ->from(Tables::users())
-            ->where('LOWER(' . $usernameColumn . ') = LOWER(:username)')
+            ->select('u.id AS id', 'u.username AS username', 'u.mailAddress AS email')
+            ->from(UserEntity::class, 'u')
+            ->where('LOWER(u.username) = LOWER(:username)')
+            ->setMaxResults(1)
             ->setParameter('username', $username)
-            ->executeQuery()
-            ->fetchAssociative();
+            ->getQuery()
+            ->getOneOrNullResult(Query::HYDRATE_ARRAY);
 
-        if ($row === false) {
+        if (! is_array($row)) {
             return null;
         }
 
+        $id = $row['id'] ?? null;
+
         return [
-            'id' => is_scalar($row['id']) ? (string) $row['id'] : '',
-            'username' => is_string($row['username']) ? $row['username'] : '',
-            'email' => is_string($row['email']) ? $row['email'] : '',
+            'id' => $id instanceof UserId ? (string) $id->value : '',
+            'username' => is_string($row['username'] ?? null) ? $row['username'] : '',
+            'email' => is_string($row['email'] ?? null) ? $row['email'] : '',
         ];
     }
 
     /**
-     * Item 14 DQL audit: stays on DBAL -- `$usernameColumn` is a
-     * caller-supplied dynamic column name against the never-entity-mapped
-     * `users` table.
+     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
+     * DQL -- `users` is now mapped ({@see UserEntity}); the multi-auth
+     * column indirection this used to take as a `$usernameColumn`
+     * parameter is gone (see this class's own docblock).
      */
-    public function usernameExistsCaseInsensitive(Username $username, string $usernameColumn): bool
+    public function usernameExistsCaseInsensitive(Username $username): bool
     {
         $value = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from(Tables::users())
-            ->where('LOWER(' . $usernameColumn . ') = LOWER(:username)')
+            ->select('COUNT(u.id)')
+            ->from(UserEntity::class, 'u')
+            ->where('LOWER(u.username) = LOWER(:username)')
             ->setParameter('username', $username->value)
-            ->executeQuery()
-            ->fetchOne();
+            ->getQuery()
+            ->getSingleScalarResult();
 
         return is_numeric($value) && (int) $value > 0;
     }
 
     /**
-     * Item 14 DQL audit: stays on DBAL -- `$emailColumn`/`$idColumn` are
-     * caller-supplied dynamic column names against the never-entity-mapped
-     * `users` table.
+     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
+     * DQL -- `users` is now mapped ({@see UserEntity}); the multi-auth
+     * column indirection this used to take as `$emailColumn`/`$idColumn`
+     * parameters is gone (see this class's own docblock).
      */
-    public function emailExists(Email $email, string $emailColumn, string $idColumn, ?UserId $excludeUserId): bool
+    public function emailExists(Email $email, ?UserId $excludeUserId): bool
     {
         $qb = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from(Tables::users())
-            ->where('UPPER(' . $emailColumn . ') = UPPER(:email)')
+            ->select('COUNT(u.id)')
+            ->from(UserEntity::class, 'u')
+            ->where('UPPER(u.mailAddress) = UPPER(:email)')
             ->setParameter('email', $email->value);
 
         if ($excludeUserId !== null) {
-            $qb->andWhere($idColumn . ' != :excludeUserId')
-                ->setParameter('excludeUserId', $excludeUserId->value);
+            $qb->andWhere('u.id != :excludeUserId')
+                ->setParameter('excludeUserId', $excludeUserId);
         }
 
-        $value = $qb->executeQuery()
-            ->fetchOne();
+        $value = $qb->getQuery()
+            ->getSingleScalarResult();
 
         return is_numeric($value) && (int) $value > 0;
     }
 
     /**
-     * Item 14 DQL audit: stays on DBAL -- `$idColumn`/`$usernameColumn` are
-     * caller-supplied dynamic column names against the never-entity-mapped
-     * `users` table.
+     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
+     * DQL -- `users` is now mapped ({@see UserEntity}); the multi-auth
+     * column indirection this used to take as `$idColumn`/`$usernameColumn`
+     * parameters is gone (see this class's own docblock).
      */
-    public function findUsernameById(UserId $userId, string $idColumn, string $usernameColumn): ?Username
+    public function findUsernameById(UserId $userId): ?Username
     {
-        $value = $this->getEntityManager()
-            ->getConnection()
+        $values = $this->getEntityManager()
             ->createQueryBuilder()
-            ->select($usernameColumn)
-            ->from(Tables::users())
-            ->where($idColumn . ' = :id')
-            ->setParameter('id', $userId->value)
-            ->executeQuery()
-            ->fetchOne();
+            ->select('u.username')
+            ->from(UserEntity::class, 'u')
+            ->where('u.id = :id')
+            ->setMaxResults(1)
+            ->setParameter('id', $userId)
+            ->getQuery()
+            ->getSingleColumnResult();
 
-        return Username::tryFrom($value);
+        $value = $values[0] ?? null;
+
+        return is_string($value) ? Username::tryFrom($value) : null;
     }
 
     /**
-     * Item 14 DQL audit: stays on DBAL -- `$usernameColumn` is a
-     * caller-supplied dynamic column name against the never-entity-mapped
-     * `users` table.
+     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
+     * DQL -- `users` is now mapped ({@see UserEntity}); the multi-auth
+     * column indirection this used to take as a `$usernameColumn`
+     * parameter is gone (see this class's own docblock).
      *
      * @return list<string>
      */
-    public function findAllUsernames(string $usernameColumn): array
+    public function findAllUsernames(): array
     {
         $names = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select($usernameColumn . ' AS username')
-            ->from(Tables::users())
-            ->executeQuery()
-            ->fetchFirstColumn();
+            ->select('u.username')
+            ->from(UserEntity::class, 'u')
+            ->getQuery()
+            ->getSingleColumnResult();
 
-        return array_map(
+        return array_values(array_map(
             static fn (mixed $name): string => is_scalar($name) ? (string) $name : '',
             $names
-        );
+        ));
     }
 
     /**
-     * Every username keyed by id, both via caller-supplied dynamic column
-     * names -- Admin\CatPermPageRenderer's own "list every user for the
-     * groups/users permission form" lookup.
+     * Every username keyed by id -- Admin\CatPermPageRenderer's own "list
+     * every user for the groups/users permission form" lookup.
      *
-     * Item 14 DQL audit: stays on DBAL -- both column names are dynamic
-     * against the never-entity-mapped `users` table.
+     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
+     * DQL -- `users` is now mapped ({@see UserEntity}); the multi-auth
+     * column indirection this used to take as `$idColumn`/`$usernameColumn`
+     * parameters is gone (see this class's own docblock).
      *
      * @return array<int|string, mixed> keyed by id
      */
-    public function findAllUsernamesById(string $idColumn, string $usernameColumn): array
+    public function findAllUsernamesById(): array
     {
-        return array_column($this->getEntityManager()
-            ->getConnection()
+        $rows = $this->getEntityManager()
             ->createQueryBuilder()
-            ->select($idColumn . ' AS id', $usernameColumn . ' AS username')
-            ->from(Tables::users())
-            ->executeQuery()
-            ->fetchAllAssociative(), 'username', 'id');
+            ->select('u.id AS id', 'u.username AS username')
+            ->from(UserEntity::class, 'u')
+            ->getQuery()
+            ->getArrayResult();
+
+        $byId = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $id = $row['id'] ?? null;
+            if (! $id instanceof UserId) {
+                continue;
+            }
+
+            $byId[$id->value] = $row['username'] ?? null;
+        }
+
+        return $byId;
     }
 
     /**
-     * @param array<string, mixed> $columns generic pwgfield => real DB
-     *   column-name-and-value pairs (username/password/email), matching
-     *   the original's \Piwigo\Config\CurrentConfig::userFields() mapping
+     * New user row, always auto-increment -- UserService's own
+     * registration flow. See {@see insertUserWithId()} below for the one
+     * real caller that needs an explicit, caller-chosen id instead.
      *
-     * Item 14 DQL audit: stays on DBAL -- `$columns` carries dynamic
-     * column names against the never-entity-mapped `users` table.
+     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
+     * DQL -- `users` is now mapped ({@see UserEntity}); this used to take
+     * a `$columns` generic pwgfield => column-name-and-value map (the
+     * multi-auth indirection this class's own docblock explains), now
+     * typed params directly.
      */
-    public function insertUser(array $columns): UserId
+    public function insertUser(string $username, ?string $password, ?string $mailAddress): UserId
     {
-        $conn = $this->getEntityManager()
-            ->getConnection();
+        $entity = new UserEntity($username, $password, $mailAddress);
+        $em = $this->getEntityManager();
+        $em->persist($entity);
+        $em->flush();
 
-        $qb = $conn->createQueryBuilder()
-            ->insert(Tables::users());
-        $values = [];
-        foreach (array_keys($columns) as $i => $column) {
-            $placeholder = ':v' . $i;
-            $values[$column] = $placeholder;
+        if ($entity->id === null) {
+            throw new \RuntimeException('UserEntity::$id not populated after flush()');
         }
-        $qb->values($values);
-        foreach (array_values($columns) as $i => $value) {
-            $qb->setParameter('v' . $i, $value);
-        }
-        $qb->executeStatement();
 
-        return UserId::from((int) $conn->lastInsertId());
+        return $entity->id;
+    }
+
+    /**
+     * New user row with an explicit, caller-chosen id -- Admin\Integrity\
+     * C13yInternal's own "recreate a missing guest/default/webmaster user
+     * row with its exact known id" repair step.
+     *
+     * Item 14 DQL audit: stays on DBAL, deliberately -- Doctrine's
+     * `IDENTITY` id-generator strategy (MySQL `AUTO_INCREMENT`) always
+     * overwrites a pre-set id with the driver's own `lastInsertId()` after
+     * `persist()`/`flush()`, so the ORM can't express "insert with this
+     * exact id" the way a raw INSERT can; not a multi-auth-column
+     * question anymore, a real ORM limitation for this one caller's shape.
+     */
+    public function insertUserWithId(UserId $id, string $username, ?string $password): UserId
+    {
+        $this->getEntityManager()
+            ->getConnection()
+            ->createQueryBuilder()
+            ->insert(Tables::users())
+            ->values([
+                'id' => ':id',
+                'username' => ':username',
+                'password' => ':password',
+            ])
+            ->setParameter('id', $id->value)
+            ->setParameter('username', $username)
+            ->setParameter('password', $password)
+            ->executeStatement();
+
+        return $id;
     }
 
     /**
@@ -468,9 +533,13 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * has a single documented owner (FeedRepository) with no existing
      * cross-domain DQL precedent, so it stays on raw DBAL to avoid a new
      * coupling. `user_mail_notification`/`favorites`/`caddie` have no
-     * entity anywhere in this migration, and the final `users` row delete
-     * needs a caller-supplied dynamic id column (multi-auth) -- both stay
-     * DBAL too.
+     * entity anywhere in this migration, so those stay DBAL too.
+     *
+     * SQL-modernization audit, Item 14 Sub-phase C4: the final `users` row
+     * delete converted to real DQL alongside the other 4 -- `users` is now
+     * mapped ({@see UserEntity}), the caller-supplied dynamic id column
+     * (multi-auth) this used to need is gone (see this class's own
+     * docblock).
      */
     public function deleteUser(UserId $userId): void
     {
@@ -498,6 +567,20 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             ->getQuery()
             ->execute();
 
+        $em->createQueryBuilder()
+            ->delete(UserInfoEntity::class, 'ui')
+            ->where('ui.userId = :userId')
+            ->setParameter('userId', $userId)
+            ->getQuery()
+            ->execute();
+
+        $em->createQueryBuilder()
+            ->delete(UserEntity::class, 'u')
+            ->where('u.id = :userId')
+            ->setParameter('userId', $userId)
+            ->getQuery()
+            ->execute();
+
         foreach ([Tables::userMailNotification(), Tables::userFeed(), Tables::favorites(), Tables::caddie()] as $table) {
             $conn->createQueryBuilder()
                 ->delete($table)
@@ -506,51 +589,44 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
                 ->executeStatement();
         }
 
-        $em->createQueryBuilder()
-            ->delete(UserInfoEntity::class, 'ui')
-            ->where('ui.userId = :userId')
-            ->setParameter('userId', $userId)
-            ->getQuery()
-            ->execute();
-
         // Bypassed the ORM for user_mail_notification/user_feed/favorites/
-        // caddie/users above -- any entity this EntityManager already
-        // loaded for this user (UserInfoEntity, UserAccessEntity,
+        // caddie above -- any entity this EntityManager already loaded for
+        // this user (UserEntity, UserInfoEntity, UserAccessEntity,
         // UserAuthKeyEntity, UserGroupEntity) would otherwise stay stale
         // (same identity-map reasoning as GroupRepository::delete()'s own
         // comment).
         $em->clear();
-
-        $userFields = \Piwigo\Config\CurrentConfig::current()->userFields();
-        $userIdField = $userFields['id'];
-        $conn->createQueryBuilder()
-            ->delete(Tables::users())
-            ->where($userIdField . ' = :userId')
-            ->setParameter('userId', $userId->value)
-            ->executeStatement();
     }
 
     /**
-     * Every user id from the base users table -- `$userIdColumn` matches
-     * {@see deleteUser()}'s own `$conf['user_fields']['id']` multi-auth
-     * compat column-name lookup (the caller passes it, this method never
-     * reads `$conf` itself).
+     * Every user id from the base users table.
      *
-     * Item 14 DQL audit: stays on DBAL -- `$userIdColumn` is a
-     * caller-supplied dynamic column name against the never-entity-mapped
-     * `users` table.
+     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
+     * DQL -- `users` is now mapped ({@see UserEntity}); the multi-auth
+     * column indirection this used to take as a `$userIdColumn` parameter
+     * is gone (see this class's own docblock). Uses `getArrayResult()`,
+     * not `getSingleColumnResult()` -- `u.id`'s custom `user_id` Doctrine
+     * Type only gets applied by the former (this audit's own gotcha #4).
      *
      * @return list<UserId>
      */
-    public function findAllUserIds(string $userIdColumn): array
+    public function findAllUserIds(): array
     {
-        return array_values(array_filter(array_map(static fn (mixed $v): ?UserId => UserId::tryFrom($v), $this->getEntityManager()
-            ->getConnection()
+        $rows = $this->getEntityManager()
             ->createQueryBuilder()
-            ->select($userIdColumn . ' AS id')
-            ->from(Tables::users())
-            ->executeQuery()
-            ->fetchFirstColumn())));
+            ->select('u.id')
+            ->from(UserEntity::class, 'u')
+            ->getQuery()
+            ->getArrayResult();
+
+        $ids = [];
+        foreach ($rows as $row) {
+            if (is_array($row) && ($row['id'] ?? null) instanceof UserId) {
+                $ids[] = $row['id'];
+            }
+        }
+
+        return $ids;
     }
 
     /**
@@ -600,34 +676,49 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
     }
 
     /**
-     * Basic `users`-table row for UserService::getUserData() -- `$userFields`
-     * is \Piwigo\Config\CurrentConfig::userFields() (pwgfield => dbfield),
-     * same dynamic-column-mapping reason `users` stays unmapped by any
-     * entity (see this class's own docblock).
+     * Basic `users`-table row for UserService::getUserData(), keyed
+     * id/username/password/email (matching the generic pwgfield names
+     * `CurrentConfig::userFields()` used to map to real columns -- see
+     * this class's own docblock for why that indirection is gone now).
+     * `id` is `$userId->value` directly, not re-selected -- the caller
+     * already has it, and every real downstream consumer of this array
+     * (templates, WS responses) expects a raw scalar there, not a UserId
+     * VO (this audit's own gotcha #4 territory, sidestepped entirely by
+     * not selecting the custom-Typed column at all).
      *
-     * Item 14 DQL audit: stays on DBAL -- `$userFields` carries dynamic
-     * column names against the never-entity-mapped `users` table.
+     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
+     * DQL -- `users` is now mapped ({@see UserEntity}). Declared
+     * `array<string, mixed>`, not the more precise shape this method's own
+     * literal return would otherwise infer -- UserService::getUserData()
+     * array_merge()s this with a second, loosely-typed row and reads
+     * several keys neither row declares (preferences/status, from the
+     * `user_infos` half); a precise shape here would make PHPStan treat
+     * those as possibly-missing after the merge, which isn't a new risk
+     * this conversion introduces.
      *
-     * @param array<string, string> $userFields
      * @return array<string, mixed>|false
      */
-    public function fetchBasicUserRow(UserId $userId, array $userFields): array|false
+    public function fetchBasicUserRow(UserId $userId): array|false
     {
-        $columnPairs = [];
-        foreach ($userFields as $pwgfield => $dbfield) {
-            $columnPairs[] = "{$dbfield} AS {$pwgfield}";
-        }
-        $idField = $userFields['id'];
-
-        return $this->getEntityManager()
-            ->getConnection()
+        $row = $this->getEntityManager()
             ->createQueryBuilder()
-            ->select(...$columnPairs)
-            ->from(Tables::users())
-            ->where($idField . ' = :userId')
-            ->setParameter('userId', $userId->value)
-            ->executeQuery()
-            ->fetchAssociative();
+            ->select('u.username AS username', 'u.password AS password', 'u.mailAddress AS email')
+            ->from(UserEntity::class, 'u')
+            ->where('u.id = :userId')
+            ->setParameter('userId', $userId)
+            ->getQuery()
+            ->getOneOrNullResult(Query::HYDRATE_ARRAY);
+
+        if (! is_array($row)) {
+            return false;
+        }
+
+        return [
+            'id' => $userId->value,
+            'username' => is_string($row['username'] ?? null) ? $row['username'] : '',
+            'password' => is_string($row['password'] ?? null) ? $row['password'] : null,
+            'email' => is_string($row['email'] ?? null) ? $row['email'] : null,
+        ];
     }
 
     /**
@@ -693,26 +784,21 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
     }
 
     /**
-     * Favorite image ids for $userId restricted to $condition --
+     * Favorite image ids for $userId restricted to $criteria --
      * UserService::checkUserFavorites()'s own "images still in an
      * authorized category" half of the comparison.
      *
-     * SQL-modernization audit: $forbiddenCondition (raw
-     * getSqlConditionFandF() output) replaced with a bound SqlCondition,
-     * migrated together with this method's one real caller
-     * (UserService::checkUserFavorites()).
+     * SQL-modernization audit, Item 14 Sub-phase C1: converted to a typed
+     * {@see PermissionCriteria} -- the one real caller only ever applies
+     * forbiddenCategoryIds, against `ic.category_id`.
      *
      * Item 14 DQL audit: stays on DBAL -- joins `image_category`, which has
      * no entity anywhere in this migration (see Category\
-     * CategoryRepository's own class docblock), and applies a caller-built
-     * SqlCondition raw fragment via the shared applyCondition() helper
-     * above (used by this method and findVisibleFavoriteImageIds()/
-     * findVisibleFavoriteImages() below; converting one without the
-     * others would split that shared machinery in two).
+     * CategoryRepository's own class docblock).
      *
      * @return list<int>
      */
-    public function findAuthorizedFavoriteImageIds(UserId $userId, SqlCondition $condition): array
+    public function findAuthorizedFavoriteImageIds(UserId $userId, PermissionCriteria $criteria): array
     {
         $qb = $this->getEntityManager()
             ->getConnection()
@@ -723,7 +809,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             ->where('f.user_id = :userId')
             ->setParameter('userId', $userId->value);
 
-        self::applyCondition($qb, $condition);
+        self::applyCondition($qb, $criteria->forbiddenCategoriesCondition('ic.category_id'));
 
         return self::toIntList(array_column($qb->executeQuery()->fetchAllAssociative(), 'image_id'));
     }
@@ -868,25 +954,34 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * merges this directly alongside that repository's sibling section
      * queries into the same $page['items'] slot.
      *
-     * SQL-modernization audit: $permissionCondition (raw
-     * getSqlConditionFandF() output) replaced with a bound SqlCondition,
-     * migrated together with this method's one real caller
-     * (Section\SectionPopulator.php). $orderBySql stays a raw fragment
+     * SQL-modernization audit, Item 14 Sub-phase C1: converted to a typed
+     * {@see PermissionCriteria} -- the one real caller only ever applies
+     * visibleImageIds against the unqualified `id` (only `images` has a
+     * bare `id` column in this join, no alias needed). It also passed
+     * `visible_images => 'id'` to the old `getSqlConditionFandFAsCondition()`,
+     * whose own `visible_images` case falls through into `forbidden_images`
+     * with no `break` -- with fieldName `'id'`, that's the images-table's
+     * own `level <= x` check, so maxLevel applies here too, against the
+     * unqualified `level`. $orderBySql stays a raw fragment
      * (CurrentConfig::orderBy(), trusted internal config, same "caller
      * composes trusted fragments" contract used throughout this codebase).
      *
      * Item 14 DQL audit: stays on DBAL -- `favorites` has no entity
-     * anywhere in this migration, $condition is a caller-built raw SQL
-     * fragment (same shared-family reasoning as
-     * findAuthorizedFavoriteImageIds() above), and $orderBySql concatenates
-     * a caller-composed raw ORDER BY fragment directly.
+     * anywhere in this migration, and $orderBySql concatenates a
+     * caller-composed raw ORDER BY fragment directly.
      *
      * @return list<string|null>
      */
-    public function findVisibleFavoriteImageIds(UserId $userId, SqlCondition $condition, string $orderBySql): array
+    public function findVisibleFavoriteImageIds(UserId $userId, PermissionCriteria $criteria, string $orderBySql): array
     {
         $favoritesTable = Tables::favorites();
         $imagesTable = Tables::images();
+
+        $condition = SqlCondition::combine(
+            'AND',
+            $criteria->visibleImagesCondition('id'),
+            $criteria->maxLevelCondition('level'),
+        );
 
         $whereSql = 'WHERE user_id = :userId';
         $params = [
@@ -927,24 +1022,33 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * {@see findVisibleFavoriteImageIds()} above (that one is
      * `image_id`-only, this one is `i.*`).
      *
-     * SQL-modernization audit: $permissionCondition replaced with a bound
-     * SqlCondition, migrated together with this method's one real caller
-     * (Ws\PwgUsers::favoritesGetList()). $orderBySql stays a raw fragment,
-     * same reasoning as findVisibleFavoriteImageIds() above.
+     * SQL-modernization audit, Item 14 Sub-phase C1: converted to a typed
+     * {@see PermissionCriteria} -- the one real caller only ever applies
+     * visibleImageIds against `i.id`. It also passed `visible_images =>
+     * 'id'` to the old `getSqlConditionFandFAsCondition()`, whose own
+     * `visible_images` case falls through into `forbidden_images` with no
+     * `break` -- with fieldName `'id'`, that's the images-table's own
+     * `level <= x` check, so maxLevel applies here too, against `i.level`.
+     * $orderBySql stays a raw fragment, same reasoning as
+     * findVisibleFavoriteImageIds() above.
      *
      * Item 14 DQL audit: stays on DBAL -- `favorites` has no entity
-     * anywhere in this migration, $condition is a caller-built raw SQL
-     * fragment (same shared family as findAuthorizedFavoriteImageIds()/
-     * findVisibleFavoriteImageIds() above), $orderBySql concatenates a
+     * anywhere in this migration, $orderBySql concatenates a
      * caller-composed raw fragment, and it selects `i.*` (a whole-row
      * shape, not a fixed DQL property list).
      *
      * @return list<array<string, mixed>>
      */
-    public function findVisibleFavoriteImages(UserId $userId, SqlCondition $condition, string $orderBySql): array
+    public function findVisibleFavoriteImages(UserId $userId, PermissionCriteria $criteria, string $orderBySql): array
     {
         $favoritesTable = Tables::favorites();
         $imagesTable = Tables::images();
+
+        $condition = SqlCondition::combine(
+            'AND',
+            $criteria->visibleImagesCondition('i.id'),
+            $criteria->maxLevelCondition('i.level'),
+        );
 
         $whereSql = 'WHERE user_id = :userId';
         $params = [
@@ -1043,25 +1147,40 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
     /**
      * Single-row `users` table update -- UserService::checkAndSaveUserInfos()'s
      * account-field branch (username/email/password, whichever changed).
-     * $updates/$idColumn stay raw column => value / column-name, same
-     * dynamic field-name-mapping reasoning as fetchBasicUserRow() above.
+     * Confirmed at both real callers: never more than these 3 fields, each
+     * independently optional.
      *
-     * Item 14 DQL audit: not a DQL-vs-DBAL question -- write via
-     * BatchWriter; `$updates`/`$idColumn` are also dynamic column names
-     * against the never-entity-mapped `users` table regardless.
-     *
-     * @param array<string, mixed> $updates
+     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
+     * DQL (`find()` + mutate + `flush()`) -- `users` is now mapped
+     * ({@see UserEntity}); this used to take `$updates`/`$idColumn` as
+     * dynamic column-name-and-value pairs (see this class's own
+     * docblock).
      */
-    public function updateAccountFields(int $userId, string $idColumn, array $updates): void
+    public function updateAccountFields(UserId $userId, ?string $username, ?string $password, ?string $mailAddress): void
     {
-        if ($updates === []) {
+        if ($username === null && $password === null && $mailAddress === null) {
             return;
         }
 
-        new BatchWriter($this->getEntityManager()->getConnection())
-            ->singleUpdate(Tables::users(), $updates, [
-                $idColumn => $userId,
-            ]);
+        $em = $this->getEntityManager();
+        $entity = $em->find(UserEntity::class, $userId);
+        if ($entity === null) {
+            return;
+        }
+
+        if ($username !== null) {
+            $entity->username = $username;
+        }
+
+        if ($password !== null) {
+            $entity->password = $password;
+        }
+
+        if ($mailAddress !== null) {
+            $entity->mailAddress = $mailAddress;
+        }
+
+        $em->flush();
     }
 
     /**
@@ -1254,12 +1373,12 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * Ws\PwgUsers::getList()'s own original "appended only when its
      * corresponding $params key is present" chain.
      */
-    private static function buildListForWsCondition(UserListCriteria $criteria, string $idColumn, string $usernameColumn, string $emailColumn): SqlCondition
+    private static function buildListForWsCondition(UserListCriteria $criteria): SqlCondition
     {
         $conditions = [];
 
         if ($criteria->userId !== null) {
-            $conditions[] = new SqlCondition('u.' . $idColumn . ' IN (:userId)', [
+            $conditions[] = new SqlCondition('u.id IN (:userId)', [
                 'userId' => $criteria->userId,
             ], [
                 'userId' => ArrayParameterType::INTEGER,
@@ -1267,13 +1386,13 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
         }
 
         if ($criteria->username !== null) {
-            $conditions[] = new SqlCondition('u.' . $usernameColumn . ' LIKE :username', [
+            $conditions[] = new SqlCondition('u.username LIKE :username', [
                 'username' => $criteria->username,
             ]);
         }
 
         if ($criteria->filter !== null) {
-            $filterClause = '(u.' . $usernameColumn . ' LIKE :filterLike OR u.' . $emailColumn . ' LIKE :filterLike';
+            $filterClause = '(u.username LIKE :filterLike OR u.mail_address LIKE :filterLike';
             $filterParams = [
                 'filterLike' => '%' . $criteria->filter . '%',
             ];
@@ -1333,7 +1452,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
         }
 
         if ($criteria->exclude !== null) {
-            $conditions[] = new SqlCondition('u.' . $idColumn . ' NOT IN (:exclude)', [
+            $conditions[] = new SqlCondition('u.id NOT IN (:exclude)', [
                 'exclude' => $criteria->exclude,
             ], [
                 'exclude' => ArrayParameterType::INTEGER,
@@ -1359,23 +1478,24 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * $order. FOUND_ROWS() is only fetched when $includeTotalCount.
      * LIMIT/OFFSET are only applied when $limit !== null.
      *
-     * Item 14 DQL audit: stays on DBAL -- joins the never-entity-mapped
-     * `users` table via a caller-supplied dynamic `$idColumn`/
-     * `$usernameColumn`/`$emailColumn`, `$displayColumns` is a dynamic
-     * field-expression => alias map, `$orderBy` concatenates a
-     * caller-validated raw fragment, `SQL_CALC_FOUND_ROWS`/`FOUND_ROWS()`
-     * are MySQL-specific with no DQL equivalent, and the WHERE clause comes
-     * from buildListForWsCondition() above's shared SqlCondition-building
+     * Item 14 DQL audit: stays on DBAL -- `$displayColumns` is a dynamic
+     * field-expression => alias map (the WS method's own client-controlled
+     * `display` param), `$orderBy` concatenates a caller-validated raw
+     * fragment, `SQL_CALC_FOUND_ROWS`/`FOUND_ROWS()` are MySQL-specific
+     * with no DQL equivalent, and the WHERE clause comes from
+     * buildListForWsCondition() above's shared SqlCondition-building
      * machinery (also used standalone by no other method today, but kept
-     * as raw SQL to stay consistent with that helper's own contract).
+     * as raw SQL to stay consistent with that helper's own contract). The
+     * multi-auth column indirection this used to take as `$idColumn`/
+     * `$usernameColumn`/`$emailColumn` parameters is gone though (see this
+     * class's own docblock) -- `users` is now mapped
+     * ({@see UserEntity}), but that alone doesn't unblock the whole
+     * method given the other 3 blockers above.
      *
      * @param  array<string, string>  $displayColumns
      * @return PaginatedResult<array<string, mixed>>
      */
     public function findListForWs(
-        string $idColumn,
-        string $usernameColumn,
-        string $emailColumn,
         array $displayColumns,
         bool $includeLastVisitFromHistory,
         UserListCriteria $criteria,
@@ -1401,7 +1521,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
         $columnsSql = implode(', ', $columnPairs);
         $distinctPrefix = $includeTotalCount ? 'SQL_CALC_FOUND_ROWS ' : '';
 
-        $combined = self::buildListForWsCondition($criteria, $idColumn, $usernameColumn, $emailColumn);
+        $combined = self::buildListForWsCondition($criteria);
         $params = $combined->parameters;
         $types = $combined->types;
 
@@ -1409,9 +1529,9 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             SELECT DISTINCT {$distinctPrefix}{$columnsSql}
             FROM {$usersTable} AS u
                 INNER JOIN {$userInfosTable} AS ui
-                    ON u.{$idColumn} = ui.user_id
+                    ON u.id = ui.user_id
                 LEFT JOIN {$userGroupTable} AS ug
-                    ON u.{$idColumn} = ug.user_id
+                    ON u.id = ug.user_id
             WHERE
                 {$combined->sql}
             ORDER BY {$orderBy}
@@ -1483,66 +1603,103 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
 
     /**
      * user_id/status/language, plus email/username (JOINed from `users`,
-     * matching a dynamic $idColumn/$usernameColumn/$emailColumn mapping)
-     * for $userIds -- Admin\AlbumNotificationPageRenderer's own
-     * "notify these specific users" mail-merge data.
+     * matching column mapping) for $userIds -- Admin\
+     * AlbumNotificationPageRenderer's own "notify these specific users"
+     * mail-merge data.
      *
-     * Item 14 DQL audit: stays on DBAL -- INNER JOINs the never-entity-mapped
-     * `users` table via a caller-supplied dynamic `$idColumn`/
-     * `$usernameColumn`/`$emailColumn`.
+     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
+     * DQL -- `users` is now mapped ({@see UserEntity}); the multi-auth
+     * column indirection this used to take as `$idColumn`/
+     * `$usernameColumn`/`$emailColumn` parameters is gone (see this
+     * class's own docblock). Rows carry `user_id` as a raw int, not a
+     * UserId VO -- unwrapped explicitly after hydration (this audit's own
+     * gotcha #4 territory: array hydration WOULD apply `ui.userId`'s
+     * custom Type, but every real consumer of this row shape expects a
+     * plain scalar there).
      *
      * @param  list<int|string>  $userIds
      * @return list<array<string, mixed>>
      */
-    public function findNotificationRecipientsByIds(array $userIds, string $idColumn, string $usernameColumn, string $emailColumn): array
+    public function findNotificationRecipientsByIds(array $userIds): array
     {
         if ($userIds === []) {
             return [];
         }
 
-        return $this->getEntityManager()
-            ->getConnection()
+        $rows = $this->getEntityManager()
             ->createQueryBuilder()
-            ->select('ui.user_id', 'ui.status', 'ui.language', 'u.' . $emailColumn . ' AS email', 'u.' . $usernameColumn . ' AS username')
-            ->from(Tables::userInfos(), 'ui')
-            ->innerJoin('ui', Tables::users(), 'u', 'u.' . $idColumn . ' = ui.user_id')
-            ->where('ui.user_id IN (:userIds)')
-            ->setParameter('userIds', array_map(strval(...), $userIds), ArrayParameterType::STRING)
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->select('ui.userId AS user_id', 'ui.status AS status', 'ui.language AS language', 'u.mailAddress AS email', 'u.username AS username')
+            ->from(UserInfoEntity::class, 'ui')
+            ->innerJoin(UserEntity::class, 'u', Join::WITH, 'u.id = ui.userId')
+            ->where('ui.userId IN (:userIds)')
+            ->setParameter('userIds', array_map(static fn (int|string $id): int => (int) $id, $userIds), ArrayParameterType::INTEGER)
+            ->getQuery()
+            ->getArrayResult();
+
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $userId = $row['user_id'] ?? null;
+
+            $result[] = [
+                'user_id' => $userId instanceof UserId ? $userId->value : null,
+                'status' => $row['status'] ?? null,
+                'language' => $row['language'] ?? null,
+                'email' => $row['email'] ?? null,
+                'username' => $row['username'] ?? null,
+            ];
+        }
+
+        return $result;
     }
 
     /**
-     * Username + id rows for $userIds, matching a dynamic $userFields
-     * column mapping -- Admin\BatchManagerUnitPageRenderer's own
-     * "who uploaded each of these photos" lookup, same dynamic-column
-     * reasoning as fetchBasicUserRow() above.
+     * Username + id rows for $userIds -- Admin\BatchManagerUnitPageRenderer's
+     * own "who uploaded each of these photos" lookup.
      *
-     * Item 14 DQL audit: stays on DBAL -- `$userFields` carries dynamic
-     * column names against the never-entity-mapped `users` table.
+     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
+     * DQL -- `users` is now mapped ({@see UserEntity}); the multi-auth
+     * column indirection this used to take as a `$userFields` parameter
+     * is gone (see this class's own docblock). Rows carry `id` as a raw
+     * int, not a UserId VO -- same gotcha #4 reasoning as
+     * {@see findNotificationRecipientsByIds()} above.
      *
-     * @param array<string, string> $userFields
      * @param list<string> $userIds
      * @return list<array<string, mixed>>
      */
-    public function findUsernamesByIds(array $userFields, array $userIds): array
+    public function findUsernamesByIds(array $userIds): array
     {
         if ($userIds === []) {
             return [];
         }
 
-        $usernameField = $userFields['username'];
-        $idField = $userFields['id'];
-
-        return $this->getEntityManager()
-            ->getConnection()
+        $rows = $this->getEntityManager()
             ->createQueryBuilder()
-            ->select($usernameField . ' AS username', $idField . ' AS id')
-            ->from(Tables::users())
-            ->where($idField . ' IN (:userIds)')
-            ->setParameter('userIds', array_map(strval(...), $userIds), ArrayParameterType::STRING)
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->select('u.username AS username', 'u.id AS id')
+            ->from(UserEntity::class, 'u')
+            ->where('u.id IN (:userIds)')
+            ->setParameter('userIds', array_map(static fn (string $id): int => (int) $id, $userIds), ArrayParameterType::INTEGER)
+            ->getQuery()
+            ->getArrayResult();
+
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $id = $row['id'] ?? null;
+
+            $result[] = [
+                'username' => $row['username'] ?? null,
+                'id' => $id instanceof UserId ? $id->value : null,
+            ];
+        }
+
+        return $result;
     }
 
     /**
@@ -1595,19 +1752,17 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * Total row count of `users` -- Admin\UserActivityPageRenderer's own
      * "nb_users" summary figure.
      *
-     * Item 14 DQL audit: stays on DBAL -- `users` has no entity anywhere
-     * in this migration (see this class's own docblock).
+     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
+     * DQL -- `users` is now mapped ({@see UserEntity}).
      */
     public function countAllUsers(): int
     {
-        $usersTable = Tables::users();
-
         $value = $this->getEntityManager()
-            ->getConnection()
-            ->fetchOne(<<<SQL
-                SELECT COUNT(*)
-                FROM {$usersTable}
-                SQL);
+            ->createQueryBuilder()
+            ->select('COUNT(u.id)')
+            ->from(UserEntity::class, 'u')
+            ->getQuery()
+            ->getSingleScalarResult();
 
         return is_numeric($value) ? (int) $value : 0;
     }
@@ -1619,37 +1774,42 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * `user_infos` row (the LEFT JOIN's own "no such row" case) still
      * appears here, with a null status.
      *
-     * Item 14 DQL audit: stays on DBAL -- LEFT JOINs the never-entity-mapped
-     * `users` table via a caller-supplied dynamic `$idColumn`.
+     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
+     * DQL -- `users` is now mapped ({@see UserEntity}); the multi-auth
+     * column indirection this used to take as a `$idColumn` parameter is
+     * gone (see this class's own docblock).
      *
      * @param  list<int|string>  $ids
      * @return array<int|string, ?string>
      */
-    public function findStatusByIds(string $idColumn, array $ids): array
+    public function findStatusByIds(array $ids): array
     {
         if ($ids === []) {
             return [];
         }
 
         $rows = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select('u.' . $idColumn . ' AS id', 'ui.status')
-            ->from(Tables::users(), 'u')
-            ->leftJoin('u', Tables::userInfos(), 'ui', 'u.' . $idColumn . ' = ui.user_id')
-            ->where('u.' . $idColumn . ' IN (:ids)')
-            ->setParameter('ids', array_map(strval(...), $ids), ArrayParameterType::STRING)
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->select('u.id AS id', 'ui.status AS status')
+            ->from(UserEntity::class, 'u')
+            ->leftJoin(UserInfoEntity::class, 'ui', Join::WITH, 'u.id = ui.userId')
+            ->where('u.id IN (:ids)')
+            ->setParameter('ids', array_map(static fn (int|string $id): int => (int) $id, $ids), ArrayParameterType::INTEGER)
+            ->getQuery()
+            ->getArrayResult();
 
         $byId = [];
         foreach ($rows as $row) {
-            $id = $row['id'];
-            if (! is_int($id) && ! is_string($id)) {
+            if (! is_array($row)) {
                 continue;
             }
 
-            $byId[$id] = is_string($row['status'] ?? null) ? $row['status'] : null;
+            $id = $row['id'] ?? null;
+            if (! $id instanceof UserId) {
+                continue;
+            }
+
+            $byId[$id->value] = is_string($row['status'] ?? null) ? $row['status'] : null;
         }
 
         return $byId;

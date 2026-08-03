@@ -82,14 +82,14 @@ test('UserActivityLogEntry::toArray unwraps the IpAddress value object back to a
     ]);
 });
 
-test('SystemActivityLogEntry::fromRow narrows a real row, decoding details to a real array', function (): void {
+test('SystemActivityLogEntry::fromRow narrows a real row, keeping the already-decoded details array', function (): void {
     $entry = SystemActivityLogEntry::fromRow([
         'activity_id' => '20',
         'performed_by' => null,
         'object_id' => '1',
         'action' => 'update',
         'occured_on' => '2024-02-01 00:00:00',
-        'details' => json_encode(['from_version' => '16.0', 'to_version' => '17.0']),
+        'details' => ['from_version' => '16.0', 'to_version' => '17.0'],
         'username' => null,
     ]);
 
@@ -118,7 +118,7 @@ test('SystemActivityLogEntry::toArray round-trips the decoded details array as-i
         'object_id' => 1,
         'action' => 'update',
         'occured_on' => '2024-02-01 00:00:00',
-        'details' => json_encode(['from_version' => '16.0', 'to_version' => '17.0']),
+        'details' => ['from_version' => '16.0', 'to_version' => '17.0'],
         'username' => null,
     ]);
 

@@ -56,15 +56,6 @@ test('the recentPostDates custom accessor returns a NotificationConfig VO', func
         ->and($config->nbm->maxCats)->toBe(9);
 });
 
-test('the userFields custom accessor returns the simplified array shape, not a VO', function (): void {
-    expect(CurrentConfig::current()->userFields())->toBe([
-        'id' => 'id',
-        'username' => 'username',
-        'password' => 'password',
-        'email' => 'mail_address',
-    ]);
-});
-
 test('orderBy is a plain raw SQL-fragment string, not a structured {field,dir}[] shape', function (): void {
     expect(CurrentConfig::current()->orderBy())->toBe('ORDER BY date_available DESC, file ASC, id ASC');
 

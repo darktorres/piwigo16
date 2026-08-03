@@ -147,13 +147,9 @@ final class PwgComments
         }
 
         // comments
-        /** @var array<string, string> $user_fields */
-        $user_fields = $this->currentConfig->userFields();
         $list = [];
         foreach ($this->commentService->getListForAdminWs(
             $criteria,
-            $user_fields['id'],
-            $user_fields['username'],
             $params['per_page'] * $params['page'],
             $params['per_page']
         ) as $row) {

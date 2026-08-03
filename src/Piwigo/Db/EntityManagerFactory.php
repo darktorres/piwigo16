@@ -18,6 +18,7 @@ use Piwigo\Db\DqlFunction\GroupConcatFunction;
 use Piwigo\Db\DqlFunction\MonthFunction;
 use Piwigo\Db\DqlFunction\RandFunction;
 use Piwigo\Db\DqlFunction\RegexpFunction;
+use Piwigo\Db\DqlFunction\SubstringIndexFunction;
 use Piwigo\Db\DqlFunction\WeekdayFunction;
 use Piwigo\Db\DqlFunction\WeekFunction;
 use Piwigo\Db\DqlFunction\YearFunction;
@@ -67,6 +68,7 @@ final class EntityManagerFactory
         $config->enableNativeLazyObjects(true);
         $config->addCustomStringFunction('REGEXP', RegexpFunction::class);
         $config->addCustomStringFunction('GROUP_CONCAT', GroupConcatFunction::class);
+        $config->addCustomStringFunction('SUBSTRING_INDEX', SubstringIndexFunction::class);
         $config->addCustomNumericFunction('RAND', RandFunction::class);
         $config->addCustomStringFunction('DATE_FORMAT_YEAR_MONTH', DateFormatYearMonthFunction::class);
         $config->addCustomStringFunction('DATE_FORMAT_MONTH_DAY', DateFormatMonthDayFunction::class);

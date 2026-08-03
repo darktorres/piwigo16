@@ -575,9 +575,13 @@ final readonly class SearchService
      * {@see positionalCondition()} itself stays -- the quicksearch token
      * evaluator's own `getQuickSearchResultsNoCache()` still builds its
      * permission fragment through it, a genuine, permanent DBAL-only
-     * caller (see `SearchRepository`'s class docblock).
+     * caller (see `SearchRepository`'s class docblock). Public: `render()`'s
+     * own `$page['search_details']['forbidden']` (built once per request,
+     * consumed throughout `SearchFilterRenderer`'s filter-sidebar blocks)
+     * needs the exact same combined condition -- reused here instead of
+     * duplicating the same 4-call `PermissionCriteria` combination twice.
      */
-    private function forbiddenCondition(): SqlCondition
+    public function forbiddenCondition(): SqlCondition
     {
         $criteria = $this->permissionService->getPermissionCriteria();
 

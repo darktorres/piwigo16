@@ -191,68 +191,74 @@ final class SearchRepositoryTest extends IntegrationTestCase
         self::assertMatchesRegularExpression('/^\d+\.\d+/', $version);
     }
 
-    public function test_query_rows_returns_every_value_cast_to_string(): void
-    {
-        $rows = $this->repo->queryRows('SELECT id, name FROM ' . Tables::tags() . ' WHERE id = 1');
-
-        self::assertSame([['id' => '1', 'name' => 'nature']], $rows);
-    }
-
-    public function test_query_rows_returns_an_empty_list_for_no_match(): void
-    {
-        self::assertSame([], $this->repo->queryRows('SELECT id, name FROM ' . Tables::tags() . ' WHERE id = 99999'));
-    }
-
-    public function test_query_keyed_column_returns_values_keyed_by_the_key_column(): void
-    {
-        $result = $this->repo->queryKeyedColumn('SELECT id, name FROM ' . Tables::tags() . ' ORDER BY id', 'id', 'name');
-
-        self::assertSame([1 => 'nature', 2 => 'travel', 3 => 'family'], $result);
-    }
-
-    public function test_query_column_returns_a_plain_list_of_values(): void
-    {
-        $names = $this->repo->queryColumn('SELECT name FROM ' . Tables::tags() . ' ORDER BY id', 'name');
-
-        self::assertSame(['nature', 'travel', 'family'], $names);
-    }
-
     /**
-     * Further SQL-modernization audit, Item 7: queryRows()/
-     * queryKeyedColumn()/queryColumn() take a SqlCondition (default empty)
-     * instead of separate $params/$types arrays -- this and the two tests
-     * below are the first direct coverage of that signature.
+     * Further SQL-modernization audit, Item 15H: `queryRows()`/
+     * `queryKeyedColumn()`/`queryColumn()` retired once
+     * `SearchFilterRenderer`'s own filter-sidebar blocks (their only real
+     * callers) converted to the 4 typed DQL methods below.
      */
-    public function test_query_rows_binds_named_parameters(): void
+    public function test_count_images_grouped_by_returns_counts_ordered_desc(): void
     {
-        $rows = $this->repo->queryRows(
-            'SELECT id, name FROM ' . Tables::tags() . ' WHERE id IN (:ids) ORDER BY id',
-            new SqlCondition('', ['ids' => [1, 2]], ['ids' => ArrayParameterType::INTEGER]),
-        );
+        $this->conn->executeStatement('UPDATE ' . Tables::images() . " SET author = 'Ansel Adams' WHERE id IN (1, 2)");
+        $this->conn->executeStatement('UPDATE ' . Tables::images() . " SET author = 'Dorothea Lange' WHERE id = 3");
 
-        self::assertSame([['id' => '1', 'name' => 'nature'], ['id' => '2', 'name' => 'travel']], $rows);
+        try {
+            $rows = $this->repo->countImagesGroupedBy('i.author', 'author', new SqlCondition('i.author IS NOT NULL'), true);
+
+            self::assertSame([
+                ['author' => 'Ansel Adams', 'counter' => 2],
+                ['author' => 'Dorothea Lange', 'counter' => 1],
+            ], $rows);
+        } finally {
+            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET author = NULL WHERE id IN (1, 2, 3)');
+        }
     }
 
-    public function test_query_keyed_column_binds_named_parameters(): void
+    public function test_count_images_grouped_by_returns_empty_for_no_match(): void
     {
-        $result = $this->repo->queryKeyedColumn(
-            'SELECT id, name FROM ' . Tables::tags() . ' WHERE id = :id',
-            'id',
-            'name',
-            new SqlCondition('', ['id' => 3]),
-        );
-
-        self::assertSame([3 => 'family'], $result);
+        self::assertSame([], $this->repo->countImagesGroupedBy('i.author', 'author', new SqlCondition('i.author IS NOT NULL')));
     }
 
-    public function test_query_column_binds_named_parameters(): void
+    public function test_find_distinct_image_rows_returns_the_requested_extra_columns(): void
     {
-        $names = $this->repo->queryColumn(
-            'SELECT name FROM ' . Tables::tags() . ' WHERE id = :id',
-            'name',
-            new SqlCondition('', ['id' => 2]),
+        $rows = $this->repo->findDistinctImageRows(
+            ['i.ratingScore AS rating_score'],
+            new SqlCondition('i.id = :id', ['id' => 1]),
         );
 
-        self::assertSame(['travel'], $names);
+        self::assertSame([['id' => 1, 'rating_score' => 4.5]], $rows);
+    }
+
+    public function test_find_distinct_image_rows_returns_empty_for_no_match(): void
+    {
+        self::assertSame([], $this->repo->findDistinctImageRows(['i.ratingScore AS rating_score'], new SqlCondition('i.id = :id', ['id' => 99999])));
+    }
+
+    public function test_find_distinct_image_column_values_returns_grouped_ordered_values(): void
+    {
+        // every fixture image shares height 150 -- collapses to one row via
+        // this method's own GROUP BY.
+        $values = $this->repo->findDistinctImageColumnValues('i.height', new SqlCondition(''));
+
+        self::assertSame(['150'], $values);
+    }
+
+    public function test_find_category_ids_and_uppercats_returns_matching_rows(): void
+    {
+        $rows = $this->repo->findCategoryIdsAndUppercats(
+            new SqlCondition('c.id IN (:ids)', ['ids' => [1, 2]], ['ids' => ArrayParameterType::INTEGER]),
+        );
+
+        usort($rows, static fn (array $a, array $b): int => $a['id'] <=> $b['id']);
+
+        self::assertSame([
+            ['id' => 1, 'uppercats' => '1'],
+            ['id' => 2, 'uppercats' => '1,2'],
+        ], $rows);
+    }
+
+    public function test_find_category_ids_and_uppercats_returns_empty_for_no_match(): void
+    {
+        self::assertSame([], $this->repo->findCategoryIdsAndUppercats(new SqlCondition('c.id = :id', ['id' => 99999])));
     }
 }

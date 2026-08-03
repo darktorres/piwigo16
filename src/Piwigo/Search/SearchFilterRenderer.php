@@ -11,7 +11,6 @@ use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\Tables;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\Section\SectionContext;
@@ -171,24 +170,15 @@ final readonly class SearchFilterRenderer
         // prefix is needed). Confirmed via direct grep this key is never
         // read outside this file.
         //
-        // SQL-modernization audit, Item 14 Sub-phase C1: converted to a
-        // typed PermissionCriteria -- every real consumer of this
-        // condition throughout this file (author/filetypes/added_by/
-        // ratings/filesize/ratios/height/width filter queries) joins
-        // `images AS i`/`image_category AS ic`, where unqualified
-        // `category_id`/`id` unambiguously resolve to `ic.category_id`/
-        // `i.id` (neither table has the other's column). The old
-        // `visible_images => 'id'` also fell through into `forbidden_images`
-        // with no `break` -- fieldName `'id'` is the images-table's own
-        // level check, so maxLevel applies here too, against `level`.
-        $searchPermissionCriteria = $this->permissionService->getPermissionCriteria();
-        $page['search_details']['forbidden'] = SqlCondition::combine(
-            'AND',
-            $searchPermissionCriteria->forbiddenCategoriesCondition('category_id'),
-            $searchPermissionCriteria->visibleCategoriesCondition('category_id'),
-            $searchPermissionCriteria->visibleImagesCondition('id'),
-            $searchPermissionCriteria->maxLevelCondition('level'),
-        );
+        // Further SQL-modernization audit, Item 15H: every real consumer
+        // of this condition throughout this file (author/filetypes/
+        // added_by/ratings/filesize/ratios/height/width filter queries)
+        // now runs as real DQL against `ImageEntity i INNER JOIN
+        // ImageCategoryEntity ic` -- reuses SearchService::
+        // forbiddenCondition() (that class's own docblock has the full
+        // `PermissionCriteria` rationale) instead of rebuilding the same
+        // 4-call combination here.
+        $page['search_details']['forbidden'] = $this->searchService->forbiddenCondition();
 
         // we want filters to be filled with values related to current items
         // ONLY IF we have some filters filled
@@ -294,31 +284,19 @@ final readonly class SearchFilterRenderer
 
         if (isset($searchFields['author']) and (bool) $displayFilters['author']['access']) {
             $filterCondition = $this->getClauseForFilter('author', $page);
+            $groupCondition = SqlCondition::combine('AND', $filterCondition, new SqlCondition('i.author IS NOT NULL'));
 
-            $imagesTable = Tables::images();
-            $imageCategoryTable = Tables::imageCategory();
-            $query = <<<SQL
-                SELECT
-                    author,
-                    COUNT(DISTINCT(id)) AS counter
-                FROM {$imagesTable} AS i
-                    JOIN {$imageCategoryTable} AS ic ON ic.image_id = i.id
-                WHERE {$filterCondition->sql}
-                    AND author IS NOT NULL
-                GROUP BY author
-                SQL;
-
-            if (! str_starts_with($filterCondition->sql, 'image_id IN')) {
+            if (! str_starts_with($filterCondition->sql, 'ic.imageId IN')) {
                 // we use the cache pool only for fetching lines filtered
                 // only by permissions
                 $cacheKey = 'author_rows_' . $userId;
                 $filterRows = $this->cacheGet($cacheKey);
                 if (! is_array($filterRows)) {
-                    $filterRows = $this->repo->queryRows($query, $filterCondition);
+                    $filterRows = $this->repo->countImagesGroupedBy('i.author', 'author', $groupCondition);
                     $this->cacheSet($cacheKey, $filterRows);
                 }
             } else {
-                $filterRows = $this->repo->queryRows($query, $filterCondition);
+                $filterRows = $this->repo->countImagesGroupedBy('i.author', 'author', $groupCondition);
             }
 
             // the cache pool stores this row set as plain mixed data, so
@@ -363,7 +341,7 @@ final readonly class SearchFilterRenderer
                 $langMonth,
                 $userId,
                 'date_posted',
-                'date_available',
+                'i.dateAvailable',
                 [
                     '24h' => $this->lang->t('last 24 hours'),
                     '7d' => $this->lang->t('last 7 days'),
@@ -385,7 +363,7 @@ final readonly class SearchFilterRenderer
                 $langMonth,
                 $userId,
                 'date_created',
-                'date_creation',
+                'i.dateCreation',
                 [
                     '7d' => $this->lang->t('last 7 days'),
                     '30d' => $this->lang->t('last 30 days'),
@@ -405,30 +383,17 @@ final readonly class SearchFilterRenderer
         if (isset($searchFields['added_by']) and (bool) $displayFilters['added_by']['access']) {
             $filterCondition = $this->getClauseForFilter('added_by', $page);
 
-            $imagesTable = Tables::images();
-            $imageCategoryTable = Tables::imageCategory();
-            $query = <<<SQL
-                SELECT
-                    COUNT(DISTINCT(id)) AS counter,
-                    added_by AS added_by_id
-                FROM {$imagesTable} AS i
-                    JOIN {$imageCategoryTable} AS ic ON ic.image_id = i.id
-                WHERE {$filterCondition->sql}
-                GROUP BY added_by_id
-                ORDER BY counter DESC
-                SQL;
-
-            if (! str_starts_with($filterCondition->sql, 'image_id IN')) {
+            if (! str_starts_with($filterCondition->sql, 'ic.imageId IN')) {
                 // we use the cache pool only for fetching lines filtered
                 // only by permissions
                 $cacheKey = 'added_by_rows_' . $userId;
                 $filterRows = $this->cacheGet($cacheKey);
                 if (! is_array($filterRows)) {
-                    $filterRows = $this->repo->queryRows($query, $filterCondition);
+                    $filterRows = $this->repo->countImagesGroupedBy('i.addedBy', 'added_by_id', $filterCondition, true);
                     $this->cacheSet($cacheKey, $filterRows);
                 }
             } else {
-                $filterRows = $this->repo->queryRows($query, $filterCondition);
+                $filterRows = $this->repo->countImagesGroupedBy('i.addedBy', 'added_by_id', $filterCondition, true);
             }
 
             // the cache pool stores this row set as plain mixed data, so
@@ -443,11 +408,17 @@ final readonly class SearchFilterRenderer
             $userIds = [];
 
             if (count($addedBy) > 0) {
-                // now let's find the usernames of added_by users
+                // now let's find the usernames of added_by users. added_by_id
+                // is a native ?int here (DQL-hydrated, unlike the former
+                // queryRows()'s uniform string-cast) -- is_int()||is_string(),
+                // not is_string() alone, or every id gets silently filtered
+                // out; UserService::getUsernamesByIds()/the $usernameOf
+                // lookup below both accept either (PHP coerces a numeric
+                // array key either way).
                 foreach ($addedBy as $row) {
                     $rowAddedById = $row['added_by_id'] ?? null;
-                    if (is_string($rowAddedById)) {
-                        $userIds[] = $rowAddedById;
+                    if (is_int($rowAddedById) || is_string($rowAddedById)) {
+                        $userIds[] = (string) $rowAddedById;
                     }
                 }
 
@@ -460,7 +431,7 @@ final readonly class SearchFilterRenderer
 
                 foreach (array_keys($addedBy) as $addedByIdx) {
                     $addedById = $addedBy[$addedByIdx]['added_by_id'] ?? null;
-                    if (! is_string($addedById)) {
+                    if (! is_int($addedById) && ! is_string($addedById)) {
                         continue;
                     }
                     $addedBy[$addedByIdx]['added_by_name'] = $usernameOf[$addedById] ?? 'user #' . $addedById . ' (deleted)';
@@ -506,15 +477,14 @@ final readonly class SearchFilterRenderer
                 // same live PermissionService condition every other
                 // visibility check in this class already uses.
                 //
-                // SQL-modernization audit: $permissionCondition used to
-                // be a raw already-prefixed string; $catWordsCsv used to
-                // be spliced via implode() CSV. Both now bound, combined
-                // via SqlCondition::combine().
+                // Further SQL-modernization audit, Item 15H: `categories`
+                // is a single-table DQL query, no image join -- $catWordsCsv
+                // used to be spliced via implode() CSV, now bound.
                 $permissionCondition = $this->permissionService->getPermissionCriteria()
-                    ->visibleCategoriesCondition('id');
+                    ->visibleCategoriesCondition('c.id');
                 $catWordsInts = array_map(static fn (int|string $v): int => (int) $v, $catWords);
                 $idsCondition = new SqlCondition(
-                    'id IN (:catWords)',
+                    'c.id IN (:catWords)',
                     [
                         'catWords' => $catWordsInts,
                     ],
@@ -524,19 +494,7 @@ final readonly class SearchFilterRenderer
                 );
                 $combinedCondition = SqlCondition::combine('AND', $idsCondition, $permissionCondition);
 
-                $categoriesTable = Tables::categories();
-                $query = <<<SQL
-                    SELECT
-                        id,
-                        uppercats
-                    FROM {$categoriesTable}
-                    WHERE {$combinedCondition->sql}
-                    SQL;
-                foreach ($this->repo->queryRows($query, $combinedCondition) as $row) {
-                    if ($row['id'] === null || $row['uppercats'] === null) {
-                        continue;
-                    }
-
+                foreach ($this->repo->findCategoryIdsAndUppercats($combinedCondition) as $row) {
                     // The $url argument here has no observable effect: it
                     // only controls the href of the <a> tag
                     // getCatDisplayNameCache() wraps each name in, and that
@@ -547,9 +505,8 @@ final readonly class SearchFilterRenderer
                         $row['uppercats'],
                         'admin.php?page=album-'
                     );
-                    $row['fullname'] = strip_tags($catDisplayName);
 
-                    $fullnameOf[$row['id']] = $row['fullname'];
+                    $fullnameOf[$row['id']] = strip_tags($catDisplayName);
                 }
 
                 $template->assign('fullname_of', json_encode($fullnameOf));
@@ -581,36 +538,33 @@ final readonly class SearchFilterRenderer
             $searchDetailsForbiddenRaw = is_array($searchDetailsRaw) ? ($searchDetailsRaw['forbidden'] ?? null) : null;
             $searchDetailsForbidden = $searchDetailsForbiddenRaw instanceof SqlCondition ? $searchDetailsForbiddenRaw : new SqlCondition('');
             $allExtsCondition = SqlCondition::combine('AND', new SqlCondition('1=1'), $searchDetailsForbidden);
-            $imagesTable = Tables::images();
-            $imageCategoryTable = Tables::imageCategory();
-            $allExtsQuery = <<<SQL
-                SELECT
-                    SUBSTRING_INDEX(path, ".", -1) AS ext,
-                    COUNT(DISTINCT(id)) AS counter
-                FROM {$imagesTable} AS i
-                    JOIN {$imageCategoryTable} AS ic ON ic.image_id = i.id
-                WHERE {$allExtsCondition->sql}
-                GROUP BY ext
-                ORDER BY counter DESC
-                SQL;
+
+            // Further SQL-modernization audit, Item 15H: SUBSTRING_INDEX has
+            // no DQL/portable-SQL built-in equivalent -- new custom
+            // SubstringIndexFunction (src/Piwigo/Db/DqlFunction/), same
+            // MySQL-verified/others-best-effort convention as every other
+            // function in that directory. extToCounterMap() rebuilds the
+            // former queryKeyedColumn()'s 'ext' => 'counter' shape from
+            // countImagesGroupedBy()'s row list.
+            $extToCounterMap = static function (array $rows): array {
+                $map = [];
+                foreach ($rows as $row) {
+                    if (is_array($row) && is_string($row['ext'] ?? null)) {
+                        $map[$row['ext']] = $row['counter'] ?? 0;
+                    }
+                }
+
+                return $map;
+            };
+
             $allExts = $this->cacheGet($cacheKey);
             if (! is_array($allExts)) {
-                $allExts = $this->repo->queryKeyedColumn($allExtsQuery, 'ext', 'counter', $allExtsCondition);
+                $allExts = $extToCounterMap($this->repo->countImagesGroupedBy("SUBSTRING_INDEX(i.path, '.', -1)", 'ext', $allExtsCondition, true));
                 $this->cacheSet($cacheKey, $allExts);
             }
 
-            if (str_starts_with($filterCondition->sql, 'image_id IN')) {
-                $query = <<<SQL
-                    SELECT
-                        SUBSTRING_INDEX(path, ".", -1) AS ext,
-                        COUNT(DISTINCT(id)) AS counter
-                    FROM {$imagesTable} AS i
-                        JOIN {$imageCategoryTable} AS ic ON ic.image_id = i.id
-                    WHERE {$filterCondition->sql}
-                    GROUP BY ext
-                    ORDER BY counter DESC
-                    SQL;
-                $filteredExts = $this->repo->queryKeyedColumn($query, 'ext', 'counter', $filterCondition);
+            if (str_starts_with($filterCondition->sql, 'ic.imageId IN')) {
+                $filteredExts = $extToCounterMap($this->repo->countImagesGroupedBy("SUBSTRING_INDEX(i.path, '.', -1)", 'ext', $filterCondition, true));
 
                 $exts = [];
                 foreach ($allExts as $ext => $counter) {
@@ -633,22 +587,11 @@ final readonly class SearchFilterRenderer
                 $filterCondition = $this->getClauseForFilter('ratings', $page);
 
                 $cacheKey = 'ratings_' . $userId;
-                $cacheApplicable = ! str_starts_with($filterCondition->sql, 'image_id IN');
+                $cacheApplicable = ! str_starts_with($filterCondition->sql, 'ic.imageId IN');
                 $ratings = $cacheApplicable ? $this->cacheGet($cacheKey) : null;
 
                 if (! is_array($ratings)) {
-                    $imagesTable = Tables::images();
-                    $imageCategoryTable = Tables::imageCategory();
-                    $query = <<<SQL
-                        SELECT
-                            DISTINCT id,
-                            rating_score
-                        FROM {$imagesTable} AS i
-                            JOIN {$imageCategoryTable} AS ic ON ic.image_id = i.id
-                        WHERE {$filterCondition->sql}
-                        SQL;
-
-                    $filterRows = $this->repo->queryRows($query, $filterCondition);
+                    $filterRows = $this->repo->findDistinctImageRows(['i.ratingScore AS rating_score'], $filterCondition);
 
                     $ratings = array_fill(0, 6, 0);
 
@@ -695,17 +638,7 @@ final readonly class SearchFilterRenderer
 
             $filesizes = [];
 
-            $imagesTable = Tables::images();
-            $imageCategoryTable = Tables::imageCategory();
-            $query = <<<SQL
-                SELECT
-                    DISTINCT id,
-                    filesize
-                FROM {$imagesTable} AS i
-                    JOIN {$imageCategoryTable} AS ic ON ic.image_id = i.id
-                WHERE {$filterCondition->sql}
-                SQL;
-            foreach ($this->repo->queryRows($query, $filterCondition) as $row) {
+            foreach ($this->repo->findDistinctImageRows(['i.filesize AS filesize'], $filterCondition) as $row) {
                 if (! is_numeric($row['filesize'])) {
                     continue;
                 }
@@ -756,25 +689,12 @@ final readonly class SearchFilterRenderer
             $filterCondition = $this->getClauseForFilter('ratios', $page);
 
             $cacheKey = 'ratios_' . $userId;
-            $cacheApplicable = ! str_starts_with($filterCondition->sql, 'image_id IN');
+            $cacheApplicable = ! str_starts_with($filterCondition->sql, 'ic.imageId IN');
             $ratios = $cacheApplicable ? $this->cacheGet($cacheKey) : null;
 
             if (! is_array($ratios)) {
-                $imagesTable = Tables::images();
-                $imageCategoryTable = Tables::imageCategory();
-                $query = <<<SQL
-                    SELECT
-                        DISTINCT id,
-                        width,
-                        height
-                    FROM {$imagesTable} as i
-                        JOIN {$imageCategoryTable} AS ic ON ic.image_id = i.id
-                    WHERE {$filterCondition->sql}
-                        AND width IS NOT NULL
-                        AND height IS NOT NULL
-                    SQL;
-
-                $filterRows = $this->repo->queryRows($query, $filterCondition);
+                $notNullCondition = SqlCondition::combine('AND', $filterCondition, new SqlCondition('i.width IS NOT NULL AND i.height IS NOT NULL'));
+                $filterRows = $this->repo->findDistinctImageRows(['i.width AS width', 'i.height AS height'], $notNullCondition);
 
                 $ratios = [
                     'Portrait' => 0,
@@ -823,30 +743,19 @@ final readonly class SearchFilterRenderer
         if (isset($searchFields['height_min']) and isset($searchFields['height_max']) and (bool) $displayFilters['height']['access']) {
             $filterCondition = $this->getClauseForFilter('height', $page);
 
-            $imagesTable = Tables::images();
-            $imageCategoryTable = Tables::imageCategory();
-            $query = <<<SQL
-                SELECT
-                    height
-                FROM {$imagesTable} as i
-                    JOIN {$imageCategoryTable} AS ic ON ic.image_id = i.id
-                WHERE {$filterCondition->sql}
-                    AND height IS NOT NULL
-                GROUP BY height
-                ORDER BY height ASC
-                SQL;
+            $notNullCondition = SqlCondition::combine('AND', $filterCondition, new SqlCondition('i.height IS NOT NULL'));
 
-            if (! str_starts_with($filterCondition->sql, 'image_id IN')) {
+            if (! str_starts_with($filterCondition->sql, 'ic.imageId IN')) {
                 // we use the cache pool only for fetching lines filtered
                 // only by permissions
                 $cacheKey = 'height_rows_' . $userId;
                 $filterRows = $this->cacheGet($cacheKey);
                 if (! is_array($filterRows)) {
-                    $filterRows = $this->repo->queryColumn($query, 'height', $filterCondition);
+                    $filterRows = $this->repo->findDistinctImageColumnValues('i.height', $notNullCondition);
                     $this->cacheSet($cacheKey, $filterRows);
                 }
             } else {
-                $filterRows = $this->repo->queryColumn($query, 'height', $filterCondition);
+                $filterRows = $this->repo->findDistinctImageColumnValues('i.height', $notNullCondition);
             }
 
             // the cache pool stores this row set as plain mixed data, so
@@ -882,30 +791,19 @@ final readonly class SearchFilterRenderer
         if (isset($searchFields['width_min']) and isset($searchFields['width_max']) and (bool) $displayFilters['width']['access']) {
             $filterCondition = $this->getClauseForFilter('width', $page);
 
-            $imagesTable = Tables::images();
-            $imageCategoryTable = Tables::imageCategory();
-            $query = <<<SQL
-                SELECT
-                    width
-                FROM {$imagesTable} as i
-                    JOIN {$imageCategoryTable} AS ic ON ic.image_id = i.id
-                WHERE {$filterCondition->sql}
-                    AND width IS NOT NULL
-                GROUP BY width
-                ORDER BY width ASC
-                SQL;
+            $notNullCondition = SqlCondition::combine('AND', $filterCondition, new SqlCondition('i.width IS NOT NULL'));
 
-            if (! str_starts_with($filterCondition->sql, 'image_id IN')) {
+            if (! str_starts_with($filterCondition->sql, 'ic.imageId IN')) {
                 // we use the cache pool only for fetching lines filtered
                 // only by permissions
                 $cacheKey = 'width_rows_' . $userId;
                 $filterRows = $this->cacheGet($cacheKey);
                 if (! is_array($filterRows)) {
-                    $filterRows = $this->repo->queryColumn($query, 'width', $filterCondition);
+                    $filterRows = $this->repo->findDistinctImageColumnValues('i.width', $notNullCondition);
                     $this->cacheSet($cacheKey, $filterRows);
                 }
             } else {
-                $filterRows = $this->repo->queryColumn($query, 'width', $filterCondition);
+                $filterRows = $this->repo->findDistinctImageColumnValues('i.width', $notNullCondition);
             }
 
             // the cache pool stores this row set as plain mixed data, so
@@ -1100,6 +998,8 @@ final readonly class SearchFilterRenderer
      * variable names they use.
      *
      * @param array<int, string> $langMonth
+     * @param string $dqlField DQL property path (`i.dateAvailable`/
+     *   `i.dateCreation`)
      * @param array<string, string> $labelForThreshold keyed by threshold id
      *   (e.g. '24h', '7d'), in display order
      * @param array<string, mixed> $page see render()'s own docblock
@@ -1108,7 +1008,7 @@ final readonly class SearchFilterRenderer
         array $langMonth,
         string $userId,
         string $filterName,
-        string $dbField,
+        string $dqlField,
         array $labelForThreshold,
         string $listTemplateVar,
         string $counterTemplateVar,
@@ -1119,7 +1019,7 @@ final readonly class SearchFilterRenderer
         $cacheKey = 'filter_' . $filterName . '_' . $userId;
         // we use the cache pool only for fetching lines filtered only by
         // permissions
-        $cacheApplicable = ! str_starts_with($filterCondition->sql, 'image_id IN');
+        $cacheApplicable = ! str_starts_with($filterCondition->sql, 'ic.imageId IN');
         $cached = $cacheApplicable ? $this->cacheGet($cacheKey) : null;
 
         if (is_array($cached)
@@ -1129,37 +1029,29 @@ final readonly class SearchFilterRenderer
             $preCounters = $cached['pre_counters'];
             $listOfDates = $cached['list_of_dates'];
         } else {
-            // SQL-modernization audit: verified, no local defect --
-            // $threshold is always one of a hardcoded literal key set
-            // ('24h'/'7d'/etc.) from this method's own 2 real call sites,
-            // never external/dynamic; intervalForThreshold() is a fixed
-            // match() over that same closed set.
-            $intervalExprs = [];
+            // Further SQL-modernization audit, Item 15H: these thresholds
+            // are genuinely relative to the real wall clock, deliberately
+            // NOT PIWIGO_TEST_NOW-frozen -- same real-time-relative finding
+            // SearchService::dateFilterClause()'s own preset branch needed
+            // (see feedback_verify_dql_grammar_assumptions_empirically),
+            // so this uses a bare `new \DateTime()` (real, unfrozen wall
+            // clock -- an existing, precedented idiom elsewhere in this
+            // codebase, e.g. Admin\StatsPageRenderer), not `Env::now()`.
+            // The former FROM-less `SELECT SUBDATE(NOW(), INTERVAL ...)
+            // AS ...` round-trip retires entirely -- DQL requires a FROM,
+            // no entity to select from for a query with no other purpose
+            // than this pure arithmetic.
+            $thresholds = [];
             foreach (array_keys($labelForThreshold) as $threshold) {
-                $intervalExprs[] = 'SUBDATE(NOW(), ' . $this->intervalForThreshold($threshold) . ') AS `' . $threshold . '`';
+                $thresholds[$threshold] = (new \DateTime())->modify($this->intervalForThreshold($threshold))->format('Y-m-d H:i:s');
             }
-            $intervalExprsSql = implode(",\n    ", $intervalExprs);
-            $query = <<<SQL
-                SELECT
-                    {$intervalExprsSql}
-                SQL;
-            $thresholds = $this->repo->queryRows($query)[0];
 
-            $imagesTable = Tables::images();
-            $imageCategoryTable = Tables::imageCategory();
-            $query = <<<SQL
-                SELECT
-                    DISTINCT id,
-                    {$dbField} as date
-                FROM {$imagesTable} AS i
-                    JOIN {$imageCategoryTable} AS ic ON ic.image_id = i.id
-                WHERE {$filterCondition->sql}
-                SQL;
+            $filterRows = $this->repo->findDistinctImageRows(["{$dqlField} AS date"], $filterCondition);
 
             $listOfDates = [];
             $preCounters = [];
 
-            foreach ($this->repo->queryRows($query, $filterCondition) as $row) {
+            foreach ($filterRows as $row) {
                 $date = $row['date'] ?? null;
                 if (! is_string($date) || $date === '') {
                     continue;
@@ -1256,13 +1148,13 @@ final readonly class SearchFilterRenderer
     private function intervalForThreshold(string $threshold): string
     {
         return match ($threshold) {
-            '24h' => 'INTERVAL 24 HOUR',
-            '7d' => 'INTERVAL 7 DAY',
-            '30d' => 'INTERVAL 30 DAY',
-            '3m' => 'INTERVAL 3 MONTH',
-            '6m' => 'INTERVAL 6 MONTH',
-            '12m' => 'INTERVAL 12 MONTH',
-            default => 'INTERVAL 0 DAY',
+            '24h' => '-24 hours',
+            '7d' => '-7 days',
+            '30d' => '-30 days',
+            '3m' => '-3 months',
+            '6m' => '-6 months',
+            '12m' => '-12 months',
+            default => '-0 days',
         };
     }
 
@@ -1279,11 +1171,11 @@ final readonly class SearchFilterRenderer
      *   correct, just slower (a fresh array_intersect() per filter
      *   instead of a cache hit).
      *
-     * SQL-modernization audit: was string ('1=1' . a raw permission
-     * fragment, or 'image_id IN (id,id,...)' built via implode() CSV
-     * splicing) -- now SqlCondition throughout. Every caller below
-     * checks `str_starts_with($condition->sql, 'image_id IN')` where the
-     * old code checked `preg_match('/^image_id IN/', $filterClause)`.
+     * Further SQL-modernization audit, Item 15H: `image_id IN
+     * (id,id,...)` (CSV-spliced) -> a bound `ic.imageId IN (:x)`
+     * DQL-shaped condition against every real caller's own DQL query --
+     * every caller below now checks `str_starts_with($condition->sql,
+     * 'ic.imageId IN')` instead of the old `'image_id IN'` prefix.
      */
     private function getClauseForFilter(string $filterName, array &$page): SqlCondition
     {
@@ -1311,7 +1203,7 @@ final readonly class SearchFilterRenderer
         );
 
         return new SqlCondition(
-            'image_id IN (:otherFiltersItems)',
+            'ic.imageId IN (:otherFiltersItems)',
             [
                 'otherFiltersItems' => $otherFiltersItemInts,
             ],

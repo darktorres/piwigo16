@@ -40,6 +40,14 @@ use Piwigo\Search\Projection\Search;
  * and `searchAllwords()` -- both genuinely bounded shapes, unlike the
  * quicksearch path -- converted to {@see findImageIdsMatching()} instead,
  * which they no longer share `findIdsByClause()` with.
+ * `SearchFilterRenderer`'s own filter-sidebar blocks (author/added_by/
+ * filetypes/ratings/filesize/ratios/height/width/date_posted/
+ * date_created) converted to {@see countImagesGroupedBy()}/
+ * {@see findDistinctImageRows()}/{@see findDistinctImageColumnValues()}/
+ * {@see findCategoryIdsAndUppercats()} -- the former generic
+ * `queryRows()`/`queryKeyedColumn()`/`queryColumn()` free-form-SQL
+ * executors retired entirely once these were their only real callers
+ * (confirmed via grep).
  *
  * Every `mixed` below stays that way by design: $params mirrors DBAL
  * Connection::executeQuery()'s own untyped bound-parameter contract
@@ -187,6 +195,30 @@ final class SearchRepository
         return $result;
     }
 
+    /**
+     * `Query::getArrayResult()`'s own return type is too loose for PHPStan
+     * to confirm each row is `array<string, mixed>` (a real, always-true
+     * invariant for a scalar-only SELECT list, just not one Doctrine's own
+     * generics express) -- re-keys each row's columns to string here, once,
+     * for every generic row-returning method below.
+     *
+     * @param  array<mixed>  $rows
+     * @return list<array<string, mixed>>
+     */
+    private static function castRows(array $rows): array
+    {
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $result[] = array_combine(array_map(strval(...), array_keys($row)), array_values($row));
+        }
+
+        return $result;
+    }
+
     private static function applyCondition(QueryBuilder $qb, SqlCondition $condition): void
     {
         if ($condition->isEmpty()) {
@@ -223,6 +255,116 @@ final class SearchRepository
             $qb->getQuery()
                 ->getSingleColumnResult()
         ));
+    }
+
+    /**
+     * Shared "GROUP BY <expr>, COUNT(DISTINCT id) AS counter" shape for
+     * `SearchFilterRenderer`'s author/added_by/filetypes filter-sidebar
+     * blocks. $groupByExpr can be a plain path expression (`i.author`) or
+     * a function call (`SUBSTRING_INDEX(i.path, '.', -1)`); DQL's own
+     * `GROUP BY` grammar only accepts a path expression or a SELECT-list
+     * alias (never an arbitrary function-call expression -- see
+     * {@see \Piwigo\Db\DqlFunction}'s own Calendar-redesign precedent), so
+     * this always groups by $groupAlias, never $groupByExpr directly.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function countImagesGroupedBy(string $groupByExpr, string $groupAlias, SqlCondition $condition, bool $orderByCounterDesc = false): array
+    {
+        $qb = $this->em->createQueryBuilder()
+            ->select($groupByExpr . ' AS ' . $groupAlias, 'COUNT(DISTINCT i.id) AS counter')
+            ->from(ImageEntity::class, 'i')
+            ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'ic.imageId = i.id')
+            ->groupBy($groupAlias);
+        self::applyCondition($qb, $condition);
+        if ($orderByCounterDesc) {
+            $qb->orderBy('counter', 'DESC');
+        }
+
+        return self::castRows($qb->getQuery()->getArrayResult());
+    }
+
+    /**
+     * Shared "SELECT DISTINCT i.id, <extra cols> WHERE <condition>" shape
+     * for `SearchFilterRenderer`'s ratings/filesize/ratios filter-sidebar
+     * blocks -- `DISTINCT` matters here because of the `ImageCategoryEntity`
+     * join's own row fan-out (one row per category an image belongs to),
+     * not because of the extra columns. $selectExprs are full `"expr AS
+     * alias"` strings the caller controls directly, so every existing
+     * row-consumer loop (keyed by the original raw-SQL column names) needs
+     * no changes.
+     *
+     * @param  list<string>  $selectExprs
+     * @return list<array<string, mixed>>
+     */
+    public function findDistinctImageRows(array $selectExprs, SqlCondition $condition): array
+    {
+        $qb = $this->em->createQueryBuilder()
+            ->select('DISTINCT i.id', ...$selectExprs)
+            ->from(ImageEntity::class, 'i')
+            ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'ic.imageId = i.id');
+        self::applyCondition($qb, $condition);
+
+        return self::castRows($qb->getQuery()->getArrayResult());
+    }
+
+    /**
+     * Shared "SELECT <col> ... GROUP BY <col> ORDER BY <col> ASC" shape
+     * for `SearchFilterRenderer`'s height/width filter-sidebar blocks --
+     * $dqlPath is always a plain path expression here (`i.height`/
+     * `i.width`), so grouping/ordering by it directly (not an alias) is
+     * safe (unlike {@see countImagesGroupedBy()}'s own function-call
+     * case). Returns strings, matching the former `queryColumn()`-based
+     * contract every real caller here still expects.
+     *
+     * @return list<string>
+     */
+    public function findDistinctImageColumnValues(string $dqlPath, SqlCondition $condition): array
+    {
+        $qb = $this->em->createQueryBuilder()
+            ->select($dqlPath)
+            ->from(ImageEntity::class, 'i')
+            ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'ic.imageId = i.id')
+            ->groupBy($dqlPath)
+            ->orderBy($dqlPath, 'ASC');
+        self::applyCondition($qb, $condition);
+
+        return array_values(array_map(
+            static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
+            $qb->getQuery()
+                ->getSingleColumnResult()
+        ));
+    }
+
+    /**
+     * `SearchFilterRenderer`'s `cat`/album-lookup block: a single-table
+     * `CategoryEntity` query (`id`/`uppercats`), no image join.
+     *
+     * @return list<array{id: int, uppercats: string}>
+     */
+    public function findCategoryIdsAndUppercats(SqlCondition $condition): array
+    {
+        $qb = $this->em->createQueryBuilder()
+            ->select('c.id', 'c.uppercats')
+            ->from(\Piwigo\Category\CategoryEntity::class, 'c');
+        self::applyCondition($qb, $condition);
+
+        $rows = $qb->getQuery()
+            ->getArrayResult();
+
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_array($row) || ! is_numeric($row['id'] ?? null) || ! is_string($row['uppercats'] ?? null)) {
+                continue;
+            }
+
+            $result[] = [
+                'id' => (int) $row['id'],
+                'uppercats' => $row['uppercats'],
+            ];
+        }
+
+        return $result;
     }
 
     /**
@@ -318,85 +460,5 @@ final class SearchRepository
     {
         return $this->em->getConnection()
             ->getServerVersion();
-    }
-
-    /**
-     * Generic free-form-SQL row executor for SearchFilterRenderer's own
-     * dynamically-assembled filter queries (custom SELECT lists, JOINs,
-     * GROUP BY/ORDER BY -- not expressible through findRowsByClause()'s
-     * fixed "SELECT * FROM X WHERE Y" shape). Every value is cast the same
-     * way {@see \Piwigo\Db\MysqliDb::fetchAssoc()} always did, so this is a
-     * behavior-preserving 1:1 API swap -- callers written against the old
-     * MysqliDb::query()+fetchAssoc()/query2Array() string|null contract
-     * need no changes, sidestepping the native-int-vs-string DBAL
-     * regression class this migration has hit before (see
-     * AbstractRepository-based methods elsewhere that intentionally cast to
-     * `int` instead -- those are fresh typed contracts, not a mimicked
-     * legacy shape).
-     *
-     * Further SQL-modernization audit, Item 7: $condition (a SqlCondition,
-     * default empty) replaces the former separate $params/$types pair --
-     * every real caller (SearchFilterRenderer) already builds its bound
-     * values via a SqlCondition (Permission\PermissionService::
-     * getSqlConditionFandFAsCondition()/getClauseForFilter()'s own return),
-     * so this removes the "unpack into two parallel arrays, then repack
-     * elsewhere" step for no real benefit. $condition->sql itself is
-     * unused here -- unlike every other SqlCondition consumer in this
-     * codebase, the WHERE clause text is already embedded directly in
-     * $sql (this method's own long-standing "caller composes trusted
-     * query text" contract, unchanged by this item -- see class docblock);
-     * a caller with no bindable values at all (e.g. the one query with no
-     * FROM/WHERE clause whatsoever) simply omits $condition, matching its
-     * own former zero-argument call shape.
-     *
-     * Further SQL-modernization audit, Item 15H: still needed by
-     * SearchFilterRenderer's own filter-block queries for now -- see that
-     * class's own follow-up conversion, which retires this method once
-     * every real call site converts to a typed DQL method instead.
-     *
-     * @return list<array<string, string|null>>
-     */
-    public function queryRows(string $sql, SqlCondition $condition = new SqlCondition('')): array
-    {
-        return array_map(
-            static fn (array $row): array => array_map(
-                static fn (mixed $value): ?string => is_scalar($value) ? (string) $value : null,
-                $row
-            ),
-            $this->em->getConnection()
-                ->executeQuery($sql, $condition->parameters, $condition->types)
-                ->fetchAllAssociative()
-        );
-    }
-
-    /**
-     * Same shape as {@see \Piwigo\Db\MysqliDb::query2Array()} with both a
-     * key and a value column name.
-     *
-     * @return array<string, string|null>
-     */
-    public function queryKeyedColumn(string $sql, string $keyColumn, string $valueColumn, SqlCondition $condition = new SqlCondition('')): array
-    {
-        $result = [];
-        foreach ($this->queryRows($sql, $condition) as $row) {
-            $key = $row[$keyColumn] ?? '';
-            $result[$key] = $row[$valueColumn] ?? null;
-        }
-
-        return $result;
-    }
-
-    /**
-     * Same shape as {@see \Piwigo\Db\MysqliDb::query2Array()} with only a
-     * value column name.
-     *
-     * @return list<string|null>
-     */
-    public function queryColumn(string $sql, string $column, SqlCondition $condition = new SqlCondition('')): array
-    {
-        return array_map(
-            static fn (array $row): ?string => $row[$column] ?? null,
-            $this->queryRows($sql, $condition)
-        );
     }
 }

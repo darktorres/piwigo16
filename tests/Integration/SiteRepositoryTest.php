@@ -102,6 +102,45 @@ final class SiteRepositoryTest extends IntegrationTestCase
         $this->repo->delete(999_999);
     }
 
+    public function test_find_all_galleries_urls_returns_the_id_to_url_map(): void
+    {
+        // Item 16F: real DQL replacement for CategoryRepository::
+        // findSiteGalleriesUrls() (a real deptrac boundary -- Category is
+        // L2aCoreDomain, Site is L2bExtendedDomain -- deleted the same
+        // commit this method was added).
+        self::assertSame(
+            [1 => \Piwigo\Core\CurrentPaths::get()->root . 'galleries/'],
+            $this->repo->findAllGalleriesUrls()
+        );
+    }
+
+    public function test_find_galleries_url_for_category_returns_null_when_the_category_has_no_linked_site(): void
+    {
+        // Both fixture categories have site_id NULL -- the join predicate
+        // is never satisfied against a NULL, so the query returns no row
+        // and this exercises the false/null branch. Item 16F: real DQL
+        // replacement for CategoryRepository::findGalleriesUrlForCategory().
+        self::assertNull($this->repo->findGalleriesUrlForCategory(1));
+    }
+
+    public function test_find_galleries_url_for_category_returns_the_joined_sites_row(): void
+    {
+        // Fixture has exactly one sites row (id 1); temporarily point
+        // category 1 at it.
+        $db = $this->newMysqli($this->dbName);
+        $db->query(sprintf('UPDATE `%1$scategories` SET site_id = 1 WHERE id = 1', $this->dbPrefix));
+
+        try {
+            self::assertSame(
+                \Piwigo\Core\CurrentPaths::get()->root . 'galleries/',
+                $this->repo->findGalleriesUrlForCategory(1)
+            );
+        } finally {
+            $db->query(sprintf('UPDATE `%1$scategories` SET site_id = NULL WHERE id = 1', $this->dbPrefix));
+            $db->close();
+        }
+    }
+
     public function test_find_all_includes_the_seeded_local_site(): void
     {
         $rows = $this->repo->findAllSites();

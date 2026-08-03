@@ -127,7 +127,7 @@ final class MaintenanceActionDispatcher
 
                 $this->filesystemIntegrityChecker->imagesIntegrity();
                 $this->categoryService
-                    ->updatePath();
+                    ->updatePath(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Site\SiteEntity::class));
                 $this->rateService
                     ->updateRatingScore();
                 PermissionCacheInvalidator::invalidate();

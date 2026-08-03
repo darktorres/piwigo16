@@ -743,9 +743,9 @@ final readonly class AuthService
      * @param bool $saveInUserInfos to store result in user_infos.last_visit
      * @return string|null date & time of last visit
      */
-    public function getUserLastVisitFromHistory(int $userId, bool $saveInUserInfos = false): ?string
+    public function getUserLastVisitFromHistory(int $userId, LastVisitLookupInterface $lastVisitLookup, bool $saveInUserInfos = false): ?string
     {
-        $last_visit = $this->repo->findLastVisitFromHistory($userId);
+        $last_visit = $this->repo->findLastVisitFromHistory($userId, $lastVisitLookup);
 
         if ($saveInUserInfos) {
             $this->repo->saveLastVisitFromHistory($userId, $last_visit);
@@ -759,9 +759,9 @@ final readonly class AuthService
      *
      * @since 15
      */
-    public function hasAlreadyLoggedIn(int $userId): bool
+    public function hasAlreadyLoggedIn(int $userId, LoginActivityLookupInterface $loginActivityLookup): bool
     {
-        return $this->repo->countLoginActivity($userId) === 0;
+        return $this->repo->countLoginActivity($userId, $loginActivityLookup) === 0;
     }
 
     /**

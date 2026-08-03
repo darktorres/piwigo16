@@ -294,7 +294,8 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
 
             // get categort full directories in an array for comparison with file
             // system directory tree
-            $db_fulldirs = $this->categoryService->getFulldirs(array_map(intval(...), array_keys($db_categories)));
+            $siteGalleriesUrlLookup = \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Site\SiteEntity::class);
+            $db_fulldirs = $this->categoryService->getFulldirs(array_map(intval(...), array_keys($db_categories)), $siteGalleriesUrlLookup);
 
             // what is the base directory to search file system sub-directories ?
             if (isset($post['cat']) and is_numeric($post['cat'])) {

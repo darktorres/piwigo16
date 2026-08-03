@@ -10,6 +10,7 @@ use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Query\Expr\Join;
 use Piwigo\Activity\Projection\SystemActivityLogEntry;
 use Piwigo\Activity\Projection\UserActivityLogEntry;
+use Piwigo\Auth\LoginActivityLookupInterface;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Db\Tables;
 use Piwigo\Users\UserEntity;
@@ -23,8 +24,32 @@ use Piwigo\Users\UserEntity;
  *
  * @extends EntityRepository<ActivityEntity>
  */
-final class ActivityRepository extends EntityRepository
+final class ActivityRepository extends EntityRepository implements LoginActivityLookupInterface
 {
+    /**
+     * Item 16F: real DQL replacement for the raw DBAL read
+     * {@see \Piwigo\Auth\AuthRepository::countLoginActivity()} used to do
+     * directly -- `Auth` (`L2aCoreDomain`) can't depend on `Activity`
+     * (`L2bExtendedDomain`), so `AuthRepository` now constructor-injects
+     * {@see \Piwigo\Auth\LoginActivityLookupInterface} instead, wired to
+     * this class at the composition root.
+     */
+    #[\Override]
+    public function countLoginActivity(int $userId): int
+    {
+        $value = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('COUNT(a.activityId)')
+            ->from(ActivityEntity::class, 'a')
+            ->where("a.action = 'login'")
+            ->andWhere('a.performedBy = :userId')
+            ->setParameter('userId', $userId)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
     /**
      * @param list<array{
      *   object: string,

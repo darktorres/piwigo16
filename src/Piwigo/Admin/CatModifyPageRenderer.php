@@ -397,7 +397,8 @@ final class CatModifyPageRenderer
      */
     private function getSiteUrl(int|string $category_id, \Piwigo\Category\CategoryService $categoryService): string
     {
-        $galleries_url = $categoryService->getGalleriesUrlForCategory($category_id);
+        $siteGalleriesUrlLookup = \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Site\SiteEntity::class);
+        $galleries_url = $categoryService->getGalleriesUrlForCategory($category_id, $siteGalleriesUrlLookup);
         if ($galleries_url === null) {
             throw new \Exception(__FUNCTION__ . "(): category #{$category_id} not found");
         }

@@ -8,7 +8,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Auth\Projection\AuthKeyDetails;
 use Piwigo\Auth\Projection\AuthUser;
 use Piwigo\Common\ValueObject\UserId;
-use Piwigo\Db\Tables;
 use Piwigo\Users\UserInfoEntity;
 
 /**
@@ -269,33 +268,16 @@ final readonly class AuthRepository
     }
 
     /**
-     * Most recent 'date time' visit string from the history table, or null
-     * when the user has no history rows. The original looped over every
-     * row returned by its query, but the query itself was already
-     * `ORDER BY id DESC LIMIT 1` -- so at most one iteration ever ran; a
-     * single-row fetch is behaviorally identical.
+     * Item 16F: delegates to $lookup (an explicit per-call parameter, not
+     * constructor-injected -- AuthRepository is freshly constructed from
+     * several call sites, some in domain-service code that itself can't
+     * touch History\HistoryRepository directly, e.g. Users\UserService)
+     * instead of reading `history` directly -- `Auth` (`L2aCoreDomain`)
+     * can't depend on `History` (`L2bExtendedDomain`).
      */
-    public function findLastVisitFromHistory(int $userId): ?string
+    public function findLastVisitFromHistory(int $userId, LastVisitLookupInterface $lookup): ?string
     {
-        $row = $this->em->getConnection()
-            ->createQueryBuilder()
-            ->select('date', 'time')
-            ->from(Tables::history())
-            ->where('user_id = :userId')
-            ->orderBy('id', 'DESC')
-            ->setMaxResults(1)
-            ->setParameter('userId', $userId)
-            ->executeQuery()
-            ->fetchAssociative();
-
-        if ($row === false) {
-            return null;
-        }
-
-        $date = is_scalar($row['date']) ? (string) $row['date'] : '';
-        $time = is_scalar($row['time']) ? (string) $row['time'] : '';
-
-        return $date . ' ' . $time;
+        return $lookup->findLastVisit($userId);
     }
 
     /**
@@ -337,18 +319,14 @@ final readonly class AuthRepository
         $this->em->clear();
     }
 
-    public function countLoginActivity(int $userId): int
+    /**
+     * Item 16F: delegates to $lookup (an explicit per-call parameter,
+     * same reasoning as {@see findLastVisitFromHistory()} above) instead
+     * of reading `activity` directly -- `Auth` (`L2aCoreDomain`) can't
+     * depend on `Activity` (`L2bExtendedDomain`).
+     */
+    public function countLoginActivity(int $userId, LoginActivityLookupInterface $lookup): int
     {
-        $value = $this->em->getConnection()
-            ->createQueryBuilder()
-            ->select('COUNT(*)')
-            ->from(Tables::activity())
-            ->where("action = 'login'")
-            ->andWhere('performed_by = :userId')
-            ->setParameter('userId', $userId)
-            ->executeQuery()
-            ->fetchOne();
-
-        return is_numeric($value) ? (int) $value : 0;
+        return $lookup->countLoginActivity($userId);
     }
 }

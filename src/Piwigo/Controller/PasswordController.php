@@ -145,7 +145,7 @@ final class PasswordController implements ControllerInterface
                 $userdata_username = $userdata['username'] ?? null;
                 $this->username = is_string($userdata_username) ? $userdata_username : '';
                 $template->assign('key', $key);
-                $first_login = $this->authService->hasAlreadyLoggedIn($user_id);
+                $first_login = $this->authService->hasAlreadyLoggedIn($user_id, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class));
 
                 if ($this->action === null) {
                     $this->action = 'reset';

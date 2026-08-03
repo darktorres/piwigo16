@@ -146,7 +146,7 @@ final class AuthRepositoryTest extends IntegrationTestCase
     {
         // Fixture user 4 (power_user) has no history rows -- same fixture
         // shape AuthServiceTest's hasAlreadyLoggedIn() test relies on.
-        self::assertNull($this->repo->findLastVisitFromHistory(4));
+        self::assertNull($this->repo->findLastVisitFromHistory(4, $this->historyLookup()));
     }
 
     public function test_find_last_visit_from_history_returns_the_most_recent_date_and_time(): void
@@ -161,10 +161,15 @@ final class AuthRepositoryTest extends IntegrationTestCase
         );
 
         try {
-            self::assertSame('2026-07-25 14:30:00', $this->repo->findLastVisitFromHistory(4));
+            self::assertSame('2026-07-25 14:30:00', $this->repo->findLastVisitFromHistory(4, $this->historyLookup()));
         } finally {
             $this->conn->executeStatement('DELETE FROM ' . Tables::history() . ' WHERE user_id = 4');
         }
+    }
+
+    private function historyLookup(): \Piwigo\History\HistoryRepository
+    {
+        return \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\History\HistoryEntity::class);
     }
 
     public function test_save_last_visit_from_history_persists_a_non_null_value(): void

@@ -337,7 +337,8 @@ final class PwgUsers
                     $users[$cur_user_id]['last_visit'] = $last_visit;
 
                     if (! SqlDialect::getBoolean($cur_user['last_visit_from_history']) and in_array($last_visit, [null, ''], true)) {
-                        $last_visit = $this->authService->getUserLastVisitFromHistory($cur_user_id, true);
+                        $lastVisitLookup = \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\History\HistoryEntity::class);
+                        $last_visit = $this->authService->getUserLastVisitFromHistory($cur_user_id, $lastVisitLookup, true);
                         $users[$cur_user_id]['last_visit'] = $last_visit;
                     }
 
@@ -857,7 +858,8 @@ final class PwgUsers
             return new PwgError(403, 'You cannot perform this action');
         }
 
-        $first_login = $this->authService->hasAlreadyLoggedIn($params['user_id']);
+        $conn = \Piwigo\Db\DbConnection::build();
+        $first_login = $this->authService->hasAlreadyLoggedIn($params['user_id'], \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class));
         $send_by_mail_response = null;
         $user_lost_language = is_string($user_lost['language']) ? $user_lost['language'] : $this->userService->getDefaultLanguage();
         $lang_to_use = $first_login ? $this->userService->getDefaultLanguage() : $user_lost_language;

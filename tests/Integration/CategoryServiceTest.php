@@ -971,7 +971,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET storage_category_id = 1 WHERE id = 1');
 
         try {
-            $this->service->updatePath();
+            $this->service->updatePath(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Site\SiteEntity::class));
 
             $path = $this->conn->createQueryBuilder()
                 ->select('path')

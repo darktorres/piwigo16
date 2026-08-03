@@ -7,6 +7,7 @@ namespace Piwigo\Site;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Query\Expr\Join;
 use Piwigo\Category\CategoryEntity;
+use Piwigo\Category\SiteGalleriesUrlLookupInterface;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Site\Projection\Site;
 
@@ -15,7 +16,7 @@ use Piwigo\Site\Projection\Site;
  *
  * @extends EntityRepository<SiteEntity>
  */
-final class SiteRepository extends EntityRepository
+final class SiteRepository extends EntityRepository implements SiteGalleriesUrlLookupInterface
 {
     /**
      * Count sites with the given galleries_url.
@@ -73,6 +74,63 @@ final class SiteRepository extends EntityRepository
     public function findGalleriesUrlById(int $id): ?string
     {
         return $this->find($id)?->galleriesUrl;
+    }
+
+    /**
+     * Item 16F: real DQL replacement for the raw DBAL read
+     * {@see \Piwigo\Category\CategoryRepository::findSiteGalleriesUrls()}
+     * used to do directly -- `Category` (`L2aCoreDomain`) can't depend on
+     * `Site` (`L2bExtendedDomain`), so {@see \Piwigo\Category\CategoryService::getFulldirs()}
+     * now takes {@see SiteGalleriesUrlLookupInterface} as an explicit
+     * parameter instead.
+     *
+     * @return array<int|string, string> id => galleries_url
+     */
+    #[\Override]
+    public function findAllGalleriesUrls(): array
+    {
+        $rows = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('s.id', 's.galleriesUrl')
+            ->from(SiteEntity::class, 's')
+            ->getQuery()
+            ->getArrayResult();
+
+        $byId = [];
+        foreach ($rows as $row) {
+            if (is_array($row) && (is_int($row['id']) || is_string($row['id'])) && is_string($row['galleriesUrl'] ?? null)) {
+                $byId[$row['id']] = $row['galleriesUrl'];
+            }
+        }
+
+        return $byId;
+    }
+
+    /**
+     * Item 16F: real DQL replacement for the raw DBAL read
+     * {@see \Piwigo\Category\CategoryRepository::findGalleriesUrlForCategory()}
+     * used to do directly -- same reasoning as {@see findAllGalleriesUrls()}
+     * above. `Site` (`L2bExtendedDomain`) CAN depend downward on
+     * `Category` (`L2aCoreDomain`), same direction
+     * {@see findCategoryAndImageCountsBySite()} below already uses, so
+     * this join is a legal same-repository DQL query, not a boundary
+     * crossing.
+     */
+    #[\Override]
+    public function findGalleriesUrlForCategory(int|string $categoryId): ?string
+    {
+        $galleriesUrl = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('s.galleriesUrl')
+            ->from(SiteEntity::class, 's')
+            ->innerJoin(CategoryEntity::class, 'c', Join::WITH, 's.id = c.siteId')
+            ->where('c.id = :categoryId')
+            ->setParameter('categoryId', $categoryId)
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult(\Doctrine\ORM\Query::HYDRATE_SINGLE_SCALAR);
+
+        return is_string($galleriesUrl) ? $galleriesUrl : null;
     }
 
     /**

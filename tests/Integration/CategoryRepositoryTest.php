@@ -656,43 +656,6 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         self::assertSame([], $this->repo->findDirsByIds([]));
     }
 
-    public function test_find_galleries_url_for_category_returns_null_when_the_category_has_no_linked_site(): void
-    {
-        // Both fixture categories have site_id NULL -- the s.id = c.site_id
-        // join predicate is never satisfied against a NULL, so the query
-        // returns no row and this exercises the false/null branch. The
-        // joined real-value branch isn't among the flagged gap lines, so it
-        // isn't exercised here.
-        self::assertNull($this->repo->findGalleriesUrlForCategory(1));
-    }
-
-    public function test_find_galleries_url_for_category_returns_the_joined_sites_row(): void
-    {
-        // Item 14 DQL audit re-audit (Item 14 Sub-phase B): the JOIN
-        // branch itself had no test coverage. Fixture has exactly one
-        // sites row (id 1); temporarily point category 1 at it.
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET site_id = 1 WHERE id = 1');
-
-        try {
-            self::assertSame(
-                '/home/torres/piwigo17-rewrite-sql/galleries/',
-                $this->repo->findGalleriesUrlForCategory(1)
-            );
-        } finally {
-            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET site_id = NULL WHERE id = 1');
-        }
-    }
-
-    public function test_find_site_galleries_urls_returns_the_id_to_url_map(): void
-    {
-        // Item 14 DQL audit re-audit (Item 14 Sub-phase B): had zero
-        // existing coverage.
-        self::assertSame(
-            [1 => '/home/torres/piwigo17-rewrite-sql/galleries/'],
-            $this->repo->findSiteGalleriesUrls()
-        );
-    }
-
     public function test_find_existing_ids_returns_empty_for_no_ids(): void
     {
         self::assertSame([], $this->repo->findExistingIds([]));

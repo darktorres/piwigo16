@@ -1621,17 +1621,22 @@ final readonly class CategoryService
     /**
      * Returns the fulldir for each given category id.
      *
+     * Item 16F: $siteGalleriesUrlLookup is an explicit parameter, not
+     * constructor-injected -- same "only the methods that actually need
+     * it take it" reasoning as this class's own ActivityLoggerInterface
+     * parameters (see this class's own constructor docblock).
+     *
      * @param int[] $catIds
      * @return string[]
      */
-    public function getFulldirs(array $catIds): array
+    public function getFulldirs(array $catIds, SiteGalleriesUrlLookupInterface $siteGalleriesUrlLookup): array
     {
         if (count($catIds) === 0) {
             return [];
         }
 
         $catDirs = $this->repo->findCategoryDirsById();
-        $galleriesUrl = $this->repo->findSiteGalleriesUrls();
+        $galleriesUrl = $siteGalleriesUrlLookup->findAllGalleriesUrls();
         $categories = $this->repo->findCategoriesForFulldirs(array_map(intval(...), $catIds));
 
         $catDirsCallback = function (array $m) use ($catDirs): string {
@@ -1701,10 +1706,10 @@ final readonly class CategoryService
     /**
      * Update images.path field base on images.file and storage categories fulldirs.
      */
-    public function updatePath(): void
+    public function updatePath(SiteGalleriesUrlLookupInterface $siteGalleriesUrlLookup): void
     {
         $catIds = $this->repo->findDistinctStorageCategoryIds();
-        $fulldirs = $this->getFulldirs($catIds);
+        $fulldirs = $this->getFulldirs($catIds, $siteGalleriesUrlLookup);
 
         foreach ($catIds as $catId) {
             $this->repo->updateImagePathsForCategory($catId, $fulldirs[$catId]);
@@ -2134,9 +2139,9 @@ final readonly class CategoryService
         return $this->repo->findDirsByIds($ids);
     }
 
-    public function getGalleriesUrlForCategory(int|string $categoryId): ?string
+    public function getGalleriesUrlForCategory(int|string $categoryId, SiteGalleriesUrlLookupInterface $siteGalleriesUrlLookup): ?string
     {
-        return $this->repo->findGalleriesUrlForCategory($categoryId);
+        return $siteGalleriesUrlLookup->findGalleriesUrlForCategory($categoryId);
     }
 
     public function getCategoryUppercatsById(int $id): ?string

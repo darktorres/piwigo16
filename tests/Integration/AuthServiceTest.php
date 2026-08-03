@@ -213,7 +213,7 @@ namespace Piwigo\Tests\Integration {
             // Fixture user 4 (power_user) -- see this suite's own
             // fixture-shape memory notes; no login-activity rows exist for
             // it in the fixture, so countLoginActivity() === 0.
-            self::assertTrue($this->service->hasAlreadyLoggedIn(4));
+            self::assertTrue($this->service->hasAlreadyLoggedIn(4, \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)));
         }
 
         public function test_log_user_treats_a_non_string_lang_cookie_as_a_hacking_attempt(): void

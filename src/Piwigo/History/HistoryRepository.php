@@ -6,6 +6,7 @@ namespace Piwigo\History;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityRepository;
+use Piwigo\Auth\LastVisitLookupInterface;
 use Piwigo\Core\Env;
 use Piwigo\Db\Tables;
 use Piwigo\History\Projection\HistorySummaryCount;
@@ -26,11 +27,16 @@ use Piwigo\Image\ImageEntity;
  * and every method against it goes through the ORM/DQL now, including
  * findSummaryRowsForHierarchy()'s own nested-conditional WHERE, a direct
  * 1:1 port of the same fixed-shape branching the original DBAL version
- * already did). A handful of other classes (AuthRepository, Admin\
- * Maintenance\DbMaintenanceRepository, Admin\HistoryPageRenderer) still
- * touch these two tables directly via raw DBAL -- no cross-repository
- * identity-map risk from that, since none of those go through the ORM/
- * entity manager for these tables.
+ * already did). A handful of other classes (Admin\Maintenance\
+ * DbMaintenanceRepository, Admin\HistoryPageRenderer) still touch these
+ * two tables directly via raw DBAL -- no cross-repository identity-map
+ * risk from that, since neither goes through the ORM/entity manager for
+ * these tables (both are `L3Presentation`-layer, an allowed downward
+ * dependency regardless). `Auth\AuthRepository` used to as well, until
+ * Item 16F moved it onto {@see \Piwigo\Auth\LastVisitLookupInterface}
+ * (implemented by this class), a real deptrac boundary fix -- `Auth` is
+ * `L2aCoreDomain`, which cannot depend on `History`'s own
+ * `L2bExtendedDomain` layer.
  * Admin\InstallationStats/Admin\StatsPageRenderer/Ws\PwgCore were all
  * retargeted (during the raw-DBAL-out-of-non-Repository-classes pass)
  * onto this repository's own findLastByType()/findMonthlyRows()/
@@ -41,8 +47,43 @@ use Piwigo\Image\ImageEntity;
  *
  * @extends EntityRepository<HistoryEntity>
  */
-final class HistoryRepository extends EntityRepository
+final class HistoryRepository extends EntityRepository implements LastVisitLookupInterface
 {
+    /**
+     * Item 16F: real DQL replacement for the raw DBAL read
+     * {@see \Piwigo\Auth\AuthRepository::findLastVisitFromHistory()} used
+     * to do directly -- `Auth` (`L2aCoreDomain`) can't depend on
+     * `History` (`L2bExtendedDomain`), so `AuthRepository` now
+     * constructor-injects {@see \Piwigo\Auth\LastVisitLookupInterface}
+     * instead, wired to this class at the composition root. The original
+     * looped over every row its query returned, but the query itself was
+     * already `ORDER BY id DESC LIMIT 1` -- so at most one iteration ever
+     * ran; a single-row fetch is behaviorally identical.
+     */
+    #[\Override]
+    public function findLastVisit(int $userId): ?string
+    {
+        $row = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('h.date', 'h.time')
+            ->from(HistoryEntity::class, 'h')
+            ->where('h.userId = :userId')
+            ->orderBy('h.id', 'DESC')
+            ->setMaxResults(1)
+            ->setParameter('userId', $userId)
+            ->getQuery()
+            ->getOneOrNullResult(\Doctrine\ORM\Query::HYDRATE_ARRAY);
+
+        if (! is_array($row)) {
+            return null;
+        }
+
+        $date = is_scalar($row['date'] ?? null) ? (string) $row['date'] : '';
+        $time = is_scalar($row['time'] ?? null) ? (string) $row['time'] : '';
+
+        return $date . ' ' . $time;
+    }
+
     /**
      * Item 14 DQL audit, re-corrected: `history_summary` is now mapped
      * ({@see HistorySummaryEntity}). Converted to real DQL -- single-table,

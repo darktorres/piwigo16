@@ -1635,29 +1635,6 @@ final class CategoryRepository extends EntityRepository
     }
 
     /**
-     * @return array<int|string, string> id => galleries_url, same
-     *   numeric-string key caveat as {@see findCategoryDirsById()}
-     *
-     * Item 14 DQL audit, re-corrected: `sites` *is* mapped ({@see
-     * \Piwigo\Site\SiteEntity}), but querying it from here would make
-     * `Category` (L2aCoreDomain) depend on `Site` (L2bExtendedDomain) --
-     * a real `deptrac` `DependsOnDisallowedLayer` violation, same
-     * reasoning that moved {@see \Piwigo\Category\CategoryService::deleteSite()}'s
-     * own write half onto {@see \Piwigo\Event\Site\DeleteSite} (Item 16E)
-     * -- this read half is Item 16F's own interface-DI candidate
-     * instead, not yet converted. Stays on DBAL.
-     */
-    public function findSiteGalleriesUrls(): array
-    {
-        $sitesTable = Tables::sites();
-
-        return array_filter($this->getEntityManager()->getConnection()->executeQuery(<<<SQL
-            SELECT id, galleries_url
-            FROM {$sitesTable}
-            SQL)->fetchAllKeyValue(), is_string(...));
-    }
-
-    /**
      * @param  array<int>  $ids  real callers don't guarantee a list
      * @return list<array{id: int, uppercats: string, site_id: ?int}>
      *
@@ -3207,43 +3184,6 @@ final class CategoryRepository extends EntityRepository
         }
 
         return $byId;
-    }
-
-    /**
-     * $categoryId's own site's galleries_url, via the site_id FK join --
-     * Admin\CatModifyPageRenderer's own getSiteUrl().
-     *
-     * Item 14 DQL audit, re-corrected: `sites` *is* mapped ({@see
-     * \Piwigo\Site\SiteEntity}), but joining it from here would make
-     * `Category` (L2aCoreDomain) depend on `Site` (L2bExtendedDomain) --
-     * a real `deptrac` `DependsOnDisallowedLayer` violation, same
-     * reasoning as {@see findSiteGalleriesUrls()} above -- both are Item
-     * 16F's own interface-DI candidates, not yet converted. Stays on DBAL.
-     */
-    public function findGalleriesUrlForCategory(int|string $categoryId): ?string
-    {
-        $sitesTable = Tables::sites();
-        $categoriesTable = Tables::categories();
-
-        $row = $this->getEntityManager()
-            ->getConnection()
-            ->fetchAssociative(<<<SQL
-                SELECT galleries_url
-                FROM {$sitesTable} AS s,{$categoriesTable} AS c
-                WHERE s.id = c.site_id
-                    AND c.id = :categoryId
-                SQL
-                , [
-                    'categoryId' => $categoryId,
-                ]);
-
-        if ($row === false) {
-            return null;
-        }
-
-        $galleriesUrl = $row['galleries_url'];
-
-        return is_string($galleriesUrl) ? $galleriesUrl : '';
     }
 
     /**

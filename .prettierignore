@@ -8,7 +8,7 @@ dist/
 # Piwigo specific directories
 _data/
 
-# Legacy CSS — excluded until P30 (docs/PLAN.md's additive-only rule)
+# Legacy CSS — excluded until P33 (docs/PLAN.md's additive-only rule)
 themes/
 template-extension/
 tools/ws/

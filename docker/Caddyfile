@@ -15,7 +15,7 @@
 }
 
 :80 {
-	# Part II (web-root isolation, docs/PLAN.md P32's pulled-forward
+	# Part II (web-root isolation, docs/PLAN.md P29's pulled-forward
 	# entry-file-relocation slice): DocumentRoot is now /app/public, not
 	# /app itself. config/tools/dev/src/tests/install/vendor/node_modules/
 	# docs/deploy/.git -- and now also upload/galleries/local/language/

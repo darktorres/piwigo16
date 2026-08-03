@@ -29,14 +29,14 @@ export default defineConfig({
     manifest: true,
     rollupOptions: {
       input: {
-        // Placeholder only — 68 real entries land in P24.
+        // Placeholder only — 68 real entries land in P30.
         noop: r("build/noop.ts"),
         // Real entry (docs/PLAN.md P1 gap, remediated post-P22) — web
         // Vitals RUM beacon, loaded on every page via footer.tpl.
         vitals: r("build/vitals.ts"),
       },
       output: {
-        // P24's asset-manifest resolution (reading manifest.json for hashed
+        // P30's asset-manifest resolution (reading manifest.json for hashed
         // filenames) doesn't exist yet — everything else here still uses
         // Piwigo's legacy ScriptLoader/CssLoader combiner. `vitals` is
         // referenced directly from footer.tpl by a fixed path, so it needs a

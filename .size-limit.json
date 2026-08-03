@@ -1,6 +1,6 @@
 [
   {
-    "name": "noop (placeholder — real per-entry budgets land in P25)",
+    "name": "noop (placeholder — real per-entry budgets land in P31)",
     "path": "dist/assets/noop-*.js",
     "limit": "1 KB"
   }

@@ -383,7 +383,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
 
         $count = $this->repo->countAvailableWithConditions([
             new SqlCondition('com.id = :id', ['id' => $id->value], ['id' => ParameterType::INTEGER]),
-            new SqlCondition('validated = 0'),
+            new SqlCondition('com.validated = false'),
         ]);
 
         self::assertSame(0, $count);

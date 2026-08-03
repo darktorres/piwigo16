@@ -75,14 +75,20 @@ final readonly class CommentService
         $currentUser = \Piwigo\Users\CurrentUser::current()->get();
 
         if (! isset($currentUser->rawAttributes['nb_available_comments'])) {
+            // Item 16I: countAvailableWithConditions() converted to real
+            // DQL -- condition fragments now reference DQL property
+            // paths (com.validated/ic.categoryId/ic.imageId), not raw
+            // column names, same convention already established
+            // throughout the codebase (e.g. Tag\TagRepository's own
+            // PermissionCriteria consumers).
             $where = [];
             if (! AccessControl::current()->isAdmin()) {
-                $where[] = new SqlCondition('validated=1');
+                $where[] = new SqlCondition('com.validated = true');
             }
             $permissionCriteria = new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Category\CategoryEntity::class))
                 ->getPermissionCriteria();
-            $where[] = $permissionCriteria->forbiddenCategoriesCondition('category_id');
-            $where[] = $permissionCriteria->imageAccessCondition('ic.image_id');
+            $where[] = $permissionCriteria->forbiddenCategoriesCondition('ic.categoryId');
+            $where[] = $permissionCriteria->imageAccessCondition('ic.imageId');
 
             $nbAvailableComments = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Comment\CommentEntity::class)->countAvailableWithConditions($where);
             $currentUser = $currentUser->withRawAttribute('nb_available_comments', $nbAvailableComments);

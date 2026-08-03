@@ -342,6 +342,48 @@ final class UserRepositoryTest extends IntegrationTestCase
         self::assertSame($before, $after);
     }
 
+    public function test_update_infos_for_users_persists_a_non_boolean_and_a_boolean_field_together(): void
+    {
+        // Item 16I: converted to real DQL against UserInfoEntity --
+        // had zero real behavioral coverage before (both existing
+        // sibling tests only ever probed the no-op early-return
+        // branches), despite nb_image_page/expand exercising genuinely
+        // different code paths (plain scalar bind vs. explicit bool
+        // cast, see UserInfoField::dqlPropertyAndIsBoolean()).
+        $username = 'p18-test-' . bin2hex(random_bytes(4));
+        $id = $this->repo->insertUser($username, 'irrelevant-hash', null);
+        $this->repo->insertUserInfos([$id], ['status' => 'normal']);
+
+        try {
+            $this->repo->updateInfosForUsers([$id], [
+                'nb_image_page' => 27,
+                'expand' => 1,
+            ]);
+
+            $row = $this->conn->createQueryBuilder()
+                ->select('nb_image_page', 'expand')
+                ->from(Tables::userInfos())
+                ->where('user_id = :userId')
+                ->setParameter('userId', $id->value)
+                ->executeQuery()
+                ->fetchAssociative();
+            self::assertIsArray($row);
+            self::assertSame(27, is_numeric($row['nb_image_page']) ? (int) $row['nb_image_page'] : null);
+            self::assertSame(1, is_numeric($row['expand']) ? (int) $row['expand'] : null);
+        } finally {
+            $this->conn->executeStatement('DELETE FROM ' . Tables::userInfos() . ' WHERE user_id = ' . $id->value);
+            $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ' . $id->value);
+        }
+    }
+
+    public function test_update_infos_for_users_rejects_an_unknown_field(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Unknown user_infos field: not_a_real_field');
+
+        $this->repo->updateInfosForUsers([\Piwigo\Common\ValueObject\UserId::from(1)], ['not_a_real_field' => 'x']);
+    }
+
     public function test_find_theme_usage_counts_includes_a_freshly_inserted_user(): void
     {
         $username = 'p18-test-' . bin2hex(random_bytes(4));

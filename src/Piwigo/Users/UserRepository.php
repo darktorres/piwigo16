@@ -1254,8 +1254,11 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      *
      * Item 15 audit: `$updates`'s keys are now validated against
      * {@see UserInfoField}'s bounded enum before reaching the `set()`
-     * calls below -- see that enum's own docblock for why this stays on
-     * DBAL raw SQL rather than DQL despite `user_infos` being mapped.
+     * calls below.
+     *
+     * Item 16I: converted to real DQL -- see that enum's own docblock
+     * for why the earlier boolean-column-coercion reasoning was
+     * reconsidered.
      *
      * @param list<UserId> $userIds
      * @param array<string, mixed> $updates
@@ -1266,24 +1269,27 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             return;
         }
 
-        $qb = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->update(Tables::userInfos())
-            ->where('user_id IN (:userIds)')
+        $em = $this->getEntityManager();
+        $qb = $em->createQueryBuilder()
+            ->update(UserInfoEntity::class, 'ui')
+            ->where('ui.userId IN (:userIds)')
             ->setParameter('userIds', array_map(static fn (UserId $id): int => $id->value, $userIds), ArrayParameterType::INTEGER);
 
         foreach ($updates as $field => $value) {
-            if (UserInfoField::fromToken($field) === null) {
+            $fieldEnum = UserInfoField::fromToken($field);
+            if ($fieldEnum === null) {
                 throw new \InvalidArgumentException("Unknown user_infos field: {$field}");
             }
             assert(is_scalar($value));
+            [$property, $isBoolean] = $fieldEnum->dqlPropertyAndIsBoolean();
             $placeholder = 'v_' . $field;
-            $qb->set($field, ':' . $placeholder)
-                ->setParameter($placeholder, $value);
+            $qb->set('ui.' . $property, ':' . $placeholder)
+                ->setParameter($placeholder, $isBoolean ? (bool) $value : $value);
         }
 
-        $qb->executeStatement();
+        $qb->getQuery()
+            ->execute();
+        $em->clear();
     }
 
     /**

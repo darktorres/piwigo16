@@ -1128,47 +1128,89 @@ final class CategoryRepository extends EntityRepository
      * @return list<string>
      *
      * Item 15 audit: `$table`/`$column` converted from arbitrary runtime
-     * strings to {@see CategoryOrphanTarget}'s bounded enum -- see that
-     * enum's own docblock for why this stays on DBAL raw SQL rather than
-     * going all the way to DQL.
+     * strings to {@see CategoryOrphanTarget}'s bounded enum.
+     *
+     * Item 16I: 3 of the 4 targets now go through real DQL -- see that
+     * enum's own docblock for why `OldPermalinks` alone keeps the
+     * original raw DBAL path (a real deptrac boundary, not a VO-typing
+     * question).
      */
     public function findOrphanedColumnValues(CategoryOrphanTarget $target): array
     {
-        [$table, $column] = $target->tableAndColumn();
-        $categoriesTable = Tables::categories();
+        $entityClassAndProperty = $target->entityClassAndProperty();
 
-        return array_values(array_unique(array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $this->getEntityManager()->getConnection()->executeQuery(<<<SQL
-            SELECT
-                {$column}
-            FROM {$table}
-                LEFT JOIN {$categoriesTable} ON id = {$column}
-            WHERE id IS NULL
-            SQL)->fetchFirstColumn())));
+        if ($entityClassAndProperty === null) {
+            [$table, $column] = $target->tableAndColumn();
+            $categoriesTable = Tables::categories();
+
+            return array_values(array_unique(array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $this->getEntityManager()->getConnection()->executeQuery(<<<SQL
+                SELECT
+                    {$column}
+                FROM {$table}
+                    LEFT JOIN {$categoriesTable} ON id = {$column}
+                WHERE id IS NULL
+                SQL)->fetchFirstColumn())));
+        }
+
+        [$entityClass, $property] = $entityClassAndProperty;
+
+        $values = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select("DISTINCT t.{$property}")
+            ->from($entityClass, 't')
+            ->leftJoin(CategoryEntity::class, 'c', Join::WITH, "c.id = t.{$property}")
+            ->where('c.id IS NULL')
+            ->getQuery()
+            ->getSingleColumnResult();
+
+        return array_values(array_unique(array_map(
+            static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
+            $values
+        )));
     }
 
     /**
      * @param  list<int|string>  $values
      *
      * Item 15 audit: `$table`/`$column` converted from arbitrary runtime
-     * strings to {@see CategoryOrphanTarget}'s bounded enum, same reason
-     * as {@see findOrphanedColumnValues()} above.
+     * strings to {@see CategoryOrphanTarget}'s bounded enum.
+     *
+     * Item 16I: same DQL/DBAL split as {@see findOrphanedColumnValues()}
+     * above, same reasons.
      */
     public function deleteRowsWhereColumnIn(CategoryOrphanTarget $target, array $values): void
     {
-        [$table, $column] = $target->tableAndColumn();
+        $entityClassAndProperty = $target->entityClassAndProperty();
 
-        $this->getEntityManager()
-            ->getConnection()
-            ->executeStatement(<<<SQL
-                DELETE
-                FROM {$table}
-                WHERE {$column} IN (:values)
-                SQL
-                , [
-                    'values' => array_map(static fn (int|string $v): string => (string) $v, $values),
-                ], [
-                    'values' => ArrayParameterType::STRING,
-                ]);
+        if ($entityClassAndProperty === null) {
+            [$table, $column] = $target->tableAndColumn();
+
+            $this->getEntityManager()
+                ->getConnection()
+                ->executeStatement(<<<SQL
+                    DELETE
+                    FROM {$table}
+                    WHERE {$column} IN (:values)
+                    SQL
+                    , [
+                        'values' => array_map(static fn (int|string $v): string => (string) $v, $values),
+                    ], [
+                        'values' => ArrayParameterType::STRING,
+                    ]);
+
+            return;
+        }
+
+        [$entityClass, $property] = $entityClassAndProperty;
+        $em = $this->getEntityManager();
+
+        $em->createQueryBuilder()
+            ->delete($entityClass, 't')
+            ->where("t.{$property} IN (:values)")
+            ->setParameter('values', array_map(static fn (int|string $v): int => is_numeric($v) ? (int) $v : 0, $values), ArrayParameterType::INTEGER)
+            ->getQuery()
+            ->execute();
+        $em->clear();
     }
 
     /**
@@ -1384,29 +1426,24 @@ final class CategoryRepository extends EntityRepository
      * @param  list<int>  $catIds
      *
      * Item 15 audit: `$table`/`$field` converted from arbitrary runtime
-     * strings to {@see CategoryAccessTarget}'s bounded enum -- see that
-     * enum's own docblock for why this stays on DBAL raw SQL rather than
-     * going all the way to DQL.
+     * strings to {@see CategoryAccessTarget}'s bounded enum.
+     *
+     * Item 16I: converted to real DQL -- see that enum's own docblock for
+     * why the earlier custom-Type mismatch reasoning didn't hold up.
      */
     public function deleteInconsistentAccess(CategoryAccessTarget $target, array $keepIds, array $catIds): void
     {
-        [$table, $field] = $target->tableAndField();
+        [$entityClass, $fieldProperty] = $target->entityClassAndFieldProperty();
 
         $em = $this->getEntityManager();
-        $em->getConnection()
-            ->executeStatement(<<<SQL
-                DELETE
-                FROM {$table}
-                WHERE {$field} NOT IN (:keepIds)
-                    AND cat_id IN (:catIds)
-                SQL
-                , [
-                    'keepIds' => $keepIds,
-                    'catIds' => $catIds,
-                ], [
-                    'keepIds' => ArrayParameterType::INTEGER,
-                    'catIds' => ArrayParameterType::INTEGER,
-                ]);
+        $em->createQueryBuilder()
+            ->delete($entityClass, 't')
+            ->where("t.{$fieldProperty} NOT IN (:keepIds)")
+            ->andWhere('t.catId IN (:catIds)')
+            ->setParameter('keepIds', $keepIds, ArrayParameterType::INTEGER)
+            ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER)
+            ->getQuery()
+            ->execute();
         $em->clear();
     }
 
@@ -1493,14 +1530,11 @@ final class CategoryRepository extends EntityRepository
      *
      * Item 15 audit: `$field`/`$minmax` converted from arbitrary runtime
      * strings to {@see CategoryRefDateField}/{@see CategoryRefDateAggregate}'s
-     * bounded enums -- `image_category` is mapped
-     * ({@see \Piwigo\Image\ImageCategoryEntity}), but this stays on DBAL
-     * raw SQL regardless: DQL's aggregate functions (`MIN()`/`MAX()`) take
-     * a fixed property path, not a caller-selected column, and DQL has no
-     * `GROUP BY` shorthand that avoids re-deriving the same "which
-     * property does this enum case mean" match() DQL would also need --
-     * closing the actual gap here (an arbitrary string -> a bounded enum)
-     * doesn't require the extra DQL-rewrite risk on top.
+     * bounded enums.
+     *
+     * Item 16I: converted to real DQL -- see {@see CategoryRefDateField}'s
+     * own docblock for why the earlier "not worth the extra DQL-rewrite
+     * risk" call was reconsidered.
      */
     public function findRefDatesByCategoryIds(array $categoryIds, CategoryRefDateField $field, CategoryRefDateAggregate $minmax): array
     {
@@ -1508,32 +1542,29 @@ final class CategoryRepository extends EntityRepository
             return [];
         }
 
-        $imageCategoryTable = Tables::imageCategory();
-        $imagesTable = Tables::images();
-        $fieldColumn = $field->column();
-        $minmaxFunction = $minmax->sqlFunction();
+        $aggregateExpr = $minmax->sqlFunction() . '(' . $field->dqlProperty() . ')';
 
         $rows = $this->getEntityManager()
-            ->getConnection()
-            ->executeQuery(<<<SQL
-                SELECT
-                    category_id,
-                    {$minmaxFunction}({$fieldColumn}) as ref_date
-                FROM {$imageCategoryTable}
-                    JOIN {$imagesTable} ON image_id = id
-                WHERE category_id IN (:categoryIds)
-                GROUP BY category_id
-                SQL
-                , [
-                    'categoryIds' => $categoryIds,
-                ], [
-                    'categoryIds' => ArrayParameterType::INTEGER,
-                ])->fetchAllKeyValue();
+            ->createQueryBuilder()
+            ->select('ic.categoryId AS category_id', "{$aggregateExpr} AS ref_date")
+            ->from(ImageCategoryEntity::class, 'ic')
+            ->innerJoin(ImageEntity::class, 'i', Join::WITH, 'ic.imageId = i.id')
+            ->where('ic.categoryId IN (:categoryIds)')
+            ->setParameter('categoryIds', $categoryIds, ArrayParameterType::INTEGER)
+            ->groupBy('ic.categoryId')
+            ->getQuery()
+            ->getArrayResult();
 
         $byCategoryId = [];
-        foreach ($rows as $categoryId => $refDate) {
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $categoryId = $row['category_id'] ?? null;
+            $categoryId = $categoryId instanceof CategoryId ? $categoryId->value : $categoryId;
             if (is_numeric($categoryId)) {
-                $byCategoryId[(int) $categoryId] = $refDate;
+                $byCategoryId[(int) $categoryId] = $row['ref_date'] ?? null;
             }
         }
 

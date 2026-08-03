@@ -16,6 +16,7 @@ use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Core\CommentCounterInterface;
 use Piwigo\Core\Env;
 use Piwigo\Db\Tables;
+use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Permission\SqlCondition;
 
 /**
@@ -262,9 +263,17 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * fragments (SqlCondition::isEmpty()) are skipped rather than adding a
      * vacuous `AND ()`.
      *
+     * Item 16I: widened to accept a DQL `Doctrine\ORM\QueryBuilder` too,
+     * for {@see countAvailableWithConditions()}'s own conversion --
+     * `SqlCondition`'s `sql`/`parameters`/`types` shape applies
+     * identically via `andWhere()`/`setParameter()` on both DBAL's and
+     * DQL's query builders (already established elsewhere this
+     * campaign, e.g. {@see \Piwigo\Category\CategoryRepository}'s own
+     * class docblock).
+     *
      * @param array<array-key, SqlCondition> $conditions
      */
-    private static function applyConditions(QueryBuilder $qb, array $conditions): void
+    private static function applyConditions(QueryBuilder|\Doctrine\ORM\QueryBuilder $qb, array $conditions): void
     {
         foreach ($conditions as $condition) {
             if ($condition->isEmpty()) {
@@ -430,37 +439,40 @@ final class CommentRepository extends EntityRepository implements CommentCounter
     /**
      * Distinct comment count for the given permission/validation condition
      * fragments -- CommentService::getNbAvailableComments()'s own
-     * PermissionService::getSqlConditionFandFAsCondition() output plus a
-     * plain literal condition, combined here via applyConditions() and
-     * bound. SQL-modernization audit: $whereClauses elements used to be
-     * raw trusted-SQL strings spliced verbatim; now real SqlCondition
-     * fragments, each with its own bound parameters.
+     * PermissionCriteria::forbiddenCategoriesCondition()/imageAccessCondition()
+     * output plus a plain literal condition, combined here via
+     * applyConditions() and bound. SQL-modernization audit: $whereClauses
+     * elements used to be raw trusted-SQL strings spliced verbatim; now
+     * real SqlCondition fragments, each with its own bound parameters.
      *
      * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see \Piwigo\Image\ImageCategoryEntity}), but stays on DBAL for its
-     * other, still-real blocker: this method's own real caller
+     * ({@see \Piwigo\Image\ImageCategoryEntity}), and the "other, still
+     * real blocker" this docblock used to cite -- a
+     * `PermissionService::getSqlConditionFandFAsCondition()` result fed
+     * in by the real caller -- is now moot: that method was deleted once
+     * every real call site migrated onto {@see \Piwigo\Permission\PermissionCriteria}
+     * (confirmed via a fresh grep, not assumed), whose own `*Condition()`
+     * methods are already DQL-compatible and already used this exact way
+     * throughout the codebase (e.g. {@see \Piwigo\Tag\TagRepository}).
+     * Item 16I: converted to real DQL accordingly -- the caller
      * ({@see \Piwigo\Comment\CommentService::getNbAvailableComments()})
-     * feeds it a `PermissionService::getSqlConditionFandFAsCondition()`
-     * result (see this docblock's own opening line) -- same genuinely
-     * dynamic, cross-cutting permission-condition blocker documented in
-     * {@see \Piwigo\Image\ImageRepository::applyCondition()}'s own
-     * docblock, outside Sub-phase B3/B4's scope.
+     * now passes DQL property paths (`ic.categoryId`/`ic.imageId`)
+     * instead of raw column names.
      *
      * @param  list<SqlCondition>  $whereClauses
      */
     public function countAvailableWithConditions(array $whereClauses): int
     {
         $qb = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
             ->select('COUNT(DISTINCT com.id)')
-            ->from(Tables::imageCategory(), 'ic')
-            ->join('ic', Tables::comments(), 'com', 'ic.image_id = com.image_id');
+            ->from(ImageCategoryEntity::class, 'ic')
+            ->innerJoin(CommentEntity::class, 'com', Join::WITH, 'ic.imageId = com.imageId');
 
         self::applyConditions($qb, $whereClauses);
 
-        $value = $qb->executeQuery()
-            ->fetchOne();
+        $value = $qb->getQuery()
+            ->getSingleScalarResult();
 
         return is_numeric($value) ? (int) $value : 0;
     }

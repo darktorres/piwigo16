@@ -4,15 +4,21 @@ declare(strict_types=1);
 
 namespace Piwigo\Category;
 
-use Piwigo\Db\Tables;
+use Piwigo\Group\GroupAccessEntity;
 
 /**
  * Item 15 Sub-item D: {@see CategoryRepository::deleteInconsistentAccess()}'s
  * `$table`/`$field` pair, enumerated -- {@see CategoryService}'s own fixed
  * `[Tables::userAccess() => 'user_id', Tables::groupAccess() => 'group_id']`
- * map, confirmed via a fresh grep before converting. Stays on DBAL raw SQL
- * for the same custom-Doctrine-Type/plain-int mismatch reasoning as
- * {@see CategoryOrphanTarget}.
+ * map, confirmed via a fresh grep before converting.
+ *
+ * Item 16I: converted to real DQL via {@see entityClassAndFieldProperty()}
+ * -- same "getSingleColumnResult()/IN (:values) with ArrayParameterType::
+ * INTEGER both sidestep the custom-Type mismatch" empirical finding as
+ * {@see CategoryOrphanTarget}'s own re-audit. Both target entities'
+ * category-id column is named `catId` (no per-case dispatch needed for
+ * that half); only the `user_id`/`group_id` "keep" field genuinely
+ * varies per case.
  */
 enum CategoryAccessTarget
 {
@@ -20,13 +26,13 @@ enum CategoryAccessTarget
     case GroupAccess;
 
     /**
-     * @return array{0: string, 1: string} [table, field]
+     * @return array{0: class-string, 1: string} [entity class, DQL property path for the user_id/group_id "keep" column]
      */
-    public function tableAndField(): array
+    public function entityClassAndFieldProperty(): array
     {
         return match ($this) {
-            self::UserAccess => [Tables::userAccess(), 'user_id'],
-            self::GroupAccess => [Tables::groupAccess(), 'group_id'],
+            self::UserAccess => [UserAccessEntity::class, 'userId'],
+            self::GroupAccess => [GroupAccessEntity::class, 'groupId'],
         };
     }
 }

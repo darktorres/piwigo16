@@ -820,6 +820,68 @@ final class CategoryServiceTest extends IntegrationTestCase
         }
     }
 
+    public function test_check_categories_integrity_deletes_orphaned_image_category_user_access_and_group_access_rows(): void
+    {
+        // Item 16I: findOrphanedColumnValues()/deleteRowsWhereColumnIn()
+        // converted 3 of CategoryOrphanTarget's 4 cases to real DQL --
+        // this file's own sibling test only ever exercised the 4th
+        // (OldPermalinks, which stays on raw DBAL, a real deptrac
+        // boundary), leaving these 3 with zero real coverage of their
+        // own orphan-cleanup behavior specifically. All 3 target tables
+        // carry a real ON DELETE CASCADE FK on the category-id column,
+        // so a genuine orphan can never arise through normal writes --
+        // disabling FK checks just for these inserts reproduces the
+        // only real way this state has ever existed in practice, same
+        // pattern FilesystemIntegrityCheckerTest's own orphan tests use.
+        $this->conn->executeStatement('SET FOREIGN_KEY_CHECKS=0');
+        $this->conn->executeStatement('INSERT INTO ' . Tables::imageCategory() . ' (image_id, category_id) VALUES (1, 60000)');
+        $this->conn->executeStatement('INSERT INTO ' . Tables::userAccess() . ' (user_id, cat_id) VALUES (1, 60000)');
+        $this->conn->executeStatement('INSERT INTO ' . Tables::groupAccess() . ' (group_id, cat_id) VALUES (1, 60000)');
+        $this->conn->executeStatement('SET FOREIGN_KEY_CHECKS=1');
+
+        try {
+            $this->service->checkCategoriesIntegrity();
+
+            $orphanedImageCategoryCount = $this->conn->createQueryBuilder()
+                ->select('COUNT(*) AS c')
+                ->from(Tables::imageCategory())
+                ->where('image_id = 1 AND category_id = 60000')
+                ->executeQuery()
+                ->fetchOne();
+            self::assertSame(0, is_numeric($orphanedImageCategoryCount) ? (int) $orphanedImageCategoryCount : null);
+
+            $orphanedUserAccessCount = $this->conn->createQueryBuilder()
+                ->select('COUNT(*) AS c')
+                ->from(Tables::userAccess())
+                ->where('user_id = 1 AND cat_id = 60000')
+                ->executeQuery()
+                ->fetchOne();
+            self::assertSame(0, is_numeric($orphanedUserAccessCount) ? (int) $orphanedUserAccessCount : null);
+
+            $orphanedGroupAccessCount = $this->conn->createQueryBuilder()
+                ->select('COUNT(*) AS c')
+                ->from(Tables::groupAccess())
+                ->where('group_id = 1 AND cat_id = 60000')
+                ->executeQuery()
+                ->fetchOne();
+            self::assertSame(0, is_numeric($orphanedGroupAccessCount) ? (int) $orphanedGroupAccessCount : null);
+
+            // A real, non-orphaned image_category row (fixture image 1 in
+            // fixture category 1) survives untouched.
+            $realImageCategoryCount = $this->conn->createQueryBuilder()
+                ->select('COUNT(*) AS c')
+                ->from(Tables::imageCategory())
+                ->where('image_id = 1 AND category_id = 1')
+                ->executeQuery()
+                ->fetchOne();
+            self::assertSame(1, is_numeric($realImageCategoryCount) ? (int) $realImageCategoryCount : null);
+        } finally {
+            $this->conn->executeStatement('DELETE FROM ' . Tables::imageCategory() . ' WHERE image_id = 1 AND category_id = 60000');
+            $this->conn->executeStatement('DELETE FROM ' . Tables::userAccess() . ' WHERE user_id = 1 AND cat_id = 60000');
+            $this->conn->executeStatement('DELETE FROM ' . Tables::groupAccess() . ' WHERE group_id = 1 AND cat_id = 60000');
+        }
+    }
+
     public function test_check_categories_integrity_deletes_an_orphaned_old_permalinks_row_and_keeps_a_real_one(): void
     {
         // cat_id is smallint unsigned (max 65535) -- 999999 (used
@@ -944,6 +1006,40 @@ final class CategoryServiceTest extends IntegrationTestCase
             self::assertSame(0, is_numeric($remaining) ? (int) $remaining : null);
         } finally {
             $this->conn->executeStatement('DELETE FROM ' . Tables::userAccess() . ' WHERE cat_id IN (1, 2)');
+        }
+    }
+
+    public function test_set_cat_status_private_removes_inconsistent_group_access_too(): void
+    {
+        // Item 16I: deleteInconsistentAccess() converted CategoryAccessTarget::
+        // GroupAccess to real DQL too, alongside UserAccess above -- same
+        // code path, but the sibling test only ever exercised UserAccess
+        // (setCatStatus()'s own foreach(CategoryAccessTarget::cases())
+        // loop runs both every time, just without a group_access-specific
+        // assertion), so this closes that gap directly. A throwaway new
+        // group, not a real fixture one -- the fixture's own groups 1-3
+        // already have real access to category 1 (the "reference"),
+        // which would make it the *consistent* case this test isn't
+        // trying to cover.
+        $this->conn->executeStatement("INSERT INTO " . Tables::groups() . " (name) VALUES ('zzz-16i-probe-group')");
+        $groupId = (int) $this->conn->lastInsertId();
+        $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET status = 'private' WHERE id = 1");
+        $this->conn->executeStatement('INSERT INTO ' . Tables::groupAccess() . ' (group_id, cat_id) VALUES (?, 2)', [$groupId]);
+
+        try {
+            $this->service->setCatStatus([2], 'private');
+
+            $remaining = $this->conn->createQueryBuilder()
+                ->select('COUNT(*) AS c')
+                ->from(Tables::groupAccess())
+                ->where('cat_id = 2 AND group_id = :groupId')
+                ->setParameter('groupId', $groupId)
+                ->executeQuery()
+                ->fetchOne();
+            self::assertSame(0, is_numeric($remaining) ? (int) $remaining : null);
+        } finally {
+            $this->conn->executeStatement('DELETE FROM ' . Tables::groupAccess() . ' WHERE group_id = ?', [$groupId]);
+            $this->conn->executeStatement('DELETE FROM ' . Tables::groups() . ' WHERE id = ?', [$groupId]);
         }
     }
 

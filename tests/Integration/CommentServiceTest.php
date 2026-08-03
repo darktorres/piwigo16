@@ -802,6 +802,35 @@ namespace Piwigo\Tests\Integration {
          * CurrentUser::rawAttributes, never the DB column) and deleted
          * outright, along with CommentRepository::clearNbCommentsCache().
          */
+        public function test_get_nb_available_comments_counts_only_validated_comments_for_a_non_admin_user(): void
+        {
+            // Item 16I: countAvailableWithConditions() converted to real
+            // DQL, and this real caller's own condition fragments
+            // (com.validated/ic.categoryId/ic.imageId, wired up in
+            // CommentService itself) had zero direct test coverage --
+            // CommentRepositoryTest's own countAvailableWithConditions()
+            // tests exercise the same repository mechanism, but never
+            // through this exact caller.
+            $repo = \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Comment\CommentEntity::class);
+            $baseline = CommentService::getNbAvailableComments();
+
+            $validatedId = $repo->insert(['author' => 'nbc-test', 'authorId' => null, 'anonymousId' => '10.40.0.1', 'content' => 'nbc validated', 'validated' => true, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
+            $unvalidatedId = $repo->insert(['author' => 'nbc-test', 'authorId' => null, 'anonymousId' => '10.40.0.2', 'content' => 'nbc unvalidated', 'validated' => false, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
+
+            try {
+                // Busts getNbAvailableComments()'s own per-request cache
+                // (CurrentUser::rawAttributes['nb_available_comments']) so
+                // the second call genuinely recomputes.
+                CurrentUser::set(CurrentUser::get()->withRawAttribute('nb_available_comments', null));
+
+                $afterInsert = CommentService::getNbAvailableComments();
+
+                self::assertSame($baseline + 1, $afterInsert, 'only the validated comment should count');
+            } finally {
+                $this->conn->executeStatement('DELETE FROM ' . Tables::comments() . ' WHERE id IN (?, ?)', [$validatedId->value, $unvalidatedId->value]);
+            }
+        }
+
         public function test_invalidate_nb_comments_cache_unsets_the_global(): void
         {
             CurrentUser::current()->set(CurrentUser::current()->get()->withRawAttribute('nb_available_comments', 5));

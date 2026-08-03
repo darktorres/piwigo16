@@ -14,17 +14,20 @@ namespace Piwigo\Users;
  * columns ({@see UserInfoEntity}), never raw user input as a key (only the
  * corresponding value is caller-supplied).
  *
- * `updateInfosForUsers()` stays on DBAL raw SQL rather than DQL despite
- * `user_infos` being mapped: `expand`/`show_nb_comments`/`show_nb_hits`/
- * `enabled_high` are `UserInfoEntity`-typed as strict `bool`, but their
- * real caller-supplied values are `int`/`string` `'1'`/`'0'`
- * ({@see \Piwigo\Db\SqlDialect::booleanToInt()}/its own
- * `ProfileFormHandler`-side string-coercion) -- forcing those through
- * DQL's `boolean` Doctrine Type conversion is a real, untested behavior
- * change for a permission-adjacent bulk write, not worth taking on just
- * to also close this column-name gap. This enum still closes the actual
- * gap (an arbitrary runtime string -> a bounded, validated set) without
- * that added risk.
+ * Item 16I: converted to real DQL via {@see dqlPropertyAndIsBoolean()} --
+ * the original "`expand`/`show_nb_comments`/`show_nb_hits`/`enabled_high`
+ * are `UserInfoEntity`-typed as strict `bool`, but real caller-supplied
+ * values are `int`/`string` `'1'`/`'0'`, forcing those through DQL's
+ * `boolean` Doctrine Type conversion is a real, untested behavior
+ * change" reasoning didn't hold up under direct empirical verification:
+ * a raw int `1` or numeric string `'1'` bound via DQL against a
+ * `boolean`-typed field writes and reads back correctly (live-probed
+ * against this exact entity/column before converting) -- DBAL's own
+ * `AbstractPlatform::convertBooleans()` passes a non-bool value straight
+ * through unchanged rather than erroring, and MySQL's `tinyint(1)`
+ * column accepts it either way. Explicitly cast to a real PHP `bool`
+ * before binding regardless, matching the column's own declared type
+ * rather than relying on that pass-through behavior.
  */
 enum UserInfoField
 {
@@ -51,6 +54,24 @@ enum UserInfoField
             'show_nb_hits' => self::ShowNbHits,
             'enabled_high' => self::EnabledHigh,
             default => null,
+        };
+    }
+
+    /**
+     * @return array{0: string, 1: bool} [DQL property path against UserInfoEntity, whether the column is boolean-typed]
+     */
+    public function dqlPropertyAndIsBoolean(): array
+    {
+        return match ($this) {
+            self::Level => ['level', false],
+            self::Language => ['language', false],
+            self::Theme => ['theme', false],
+            self::NbImagePage => ['nbImagePage', false],
+            self::RecentPeriod => ['recentPeriod', false],
+            self::Expand => ['expand', true],
+            self::ShowNbComments => ['showNbComments', true],
+            self::ShowNbHits => ['showNbHits', true],
+            self::EnabledHigh => ['enabledHigh', true],
         };
     }
 }

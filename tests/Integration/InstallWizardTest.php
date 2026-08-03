@@ -17,7 +17,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
 use Piwigo\Http\ResponseReadyException;
-use Piwigo\Session\SessionService;
 use Piwigo\Tests\Support\KernelContainerOverride;
 
 /**
@@ -164,6 +163,18 @@ final class InstallWizardTest extends IntegrationTestCase
     protected function setUp(): void
     {
         parent::setUp();
+        // parent::setUp()'s own conditional default boot (real repo root)
+        // would otherwise defeat bootInstallBootstrap()/submit()'s own
+        // Kernel::boot() calls below via Kernel::boot()'s idempotency
+        // guard -- worse than just the wrong Paths (already documented for
+        // InstallBootstrapTest above), here it also leaves any
+        // Connection/EntityManagerInterface PHP-DI resolves before
+        // analyzeForm()'s own DbCredentials::seed() call permanently bound
+        // to the wrong (real, not the test's freshly created) database,
+        // since a live DB connection doesn't retroactively follow a later
+        // credentials change. Reset back to a genuinely unbooted baseline
+        // so each test's own boot sequence is a real first boot.
+        Kernel::reset();
         $this->setUpConnectionFromEnv();
 
         foreach (['PIWIGO_DB_HOST', 'PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD', 'PIWIGO_DB_BASE', 'PIWIGO_DB_PREFIX'] as $key) {
@@ -297,7 +308,7 @@ final class InstallWizardTest extends IntegrationTestCase
         ]);
         \Piwigo\Template\ScriptLoader::setUrlService(new \Piwigo\Url\UrlService(new \Piwigo\Html\HtmlService()));
 
-        $wizard = new InstallWizard($prefix, $this->paths, $dbCredentials, SessionService::get());
+        $wizard = new InstallWizard($prefix, $this->paths, $dbCredentials);
         $wizard->boot();
 
         return $wizard;
@@ -353,7 +364,7 @@ final class InstallWizardTest extends IntegrationTestCase
         // the CurrentPaths::get() shim. KernelContainerOverride::with()
         // rebinds Paths::class for just this test's own scope instead.
         KernelContainerOverride::with([Paths::class => $this->paths], function (): void {
-            $wizard = new InstallWizard('itest_', $this->paths, DbCredentials::current(), SessionService::get());
+            $wizard = new InstallWizard('itest_', $this->paths, DbCredentials::current());
 
             self::assertSame('_data/', $this->reflectPrivate($wizard, 'confDataLocation'));
         });
@@ -367,7 +378,7 @@ final class InstallWizardTest extends IntegrationTestCase
         $this->expectExceptionMessage("Invalid \$conf['data_location'] configuration: expected a string.");
 
         KernelContainerOverride::with([Paths::class => $this->paths], function (): void {
-            new InstallWizard('itest_', $this->paths, DbCredentials::current(), SessionService::get());
+            new InstallWizard('itest_', $this->paths, DbCredentials::current());
         });
     }
 

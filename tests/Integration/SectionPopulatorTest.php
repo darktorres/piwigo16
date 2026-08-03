@@ -18,6 +18,7 @@ use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\FilterState;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
 use Piwigo\Core\PageState;
@@ -138,7 +139,19 @@ final class SectionPopulatorTest extends IntegrationTestCase
         $this->filterState = new FilterState();
         $this->currentLogger = new CurrentLogger();
         $this->currentLogger->set(new Logger(['severity' => Logger::OFF]));
-        $this->sectionContextRegistry = new SectionContextRegistry();
+        // Must be the container-shared instance, not a fresh new
+        // SectionContextRegistry() -- UrlService::duplicateIndexUrl()
+        // (called by the permalink-redirect test below) reads it through
+        // the currentStatic() shim, which resolves the container-shared
+        // instance, not whatever's passed to SectionPopulator directly;
+        // a disconnected instance here left that shim seeing an empty
+        // registry, silently dropping the category from the rebuilt URL
+        // (same fix MenubarRendererTest's own setUp() already established).
+        $sectionContextRegistry = Kernel::container()->get(SectionContextRegistry::class);
+        if (! $sectionContextRegistry instanceof SectionContextRegistry) {
+            throw new \LogicException('Container returned an unexpected type for ' . SectionContextRegistry::class);
+        }
+        $this->sectionContextRegistry = $sectionContextRegistry;
 
         $this->setRegularUser();
         CurrentTemplate::set($this->makeTemplate());

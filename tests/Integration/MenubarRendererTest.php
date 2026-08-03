@@ -127,6 +127,14 @@ final class MenubarRendererTest extends IntegrationTestCase
 
         $this->renderer = new MenubarRenderer();
         $this->filterState = new FilterState();
+        // A directly-constructed FilterState starts genuinely uninitialized
+        // (no constructor default -- see its own assertInitialized() guard)
+        // -- render()'s own getCategoriesMenu() call reads isEnabled()
+        // unconditionally, so every test needs at least this disabled
+        // baseline, matching IntegrationTestCase::setUp()'s own identical
+        // default for the container-shared instance. Tests exercising the
+        // filter-icon branches overwrite this with a real ->set() call.
+        $this->filterState->set(false);
     }
 
     #[\Override]

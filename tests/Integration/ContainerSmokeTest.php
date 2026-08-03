@@ -62,6 +62,12 @@ final class ContainerSmokeTest extends TestCase
         // genuinely unavailable here, same "Kernel booted with no real
         // Paths" reasoning as TemplateInterface above, not a wiring bug.
         \Piwigo\Cache\PersistentCache::class,
+        // Piwigo\Storage\StorageRegistry's own factory binding requires
+        // config/storage.php, whose own top-level `$paths =
+        // CurrentPaths::get();` (config/storage.php:25) is unconditional --
+        // same "Kernel booted with no real Paths" reasoning as
+        // PersistentCache above, not a wiring bug.
+        \Piwigo\Storage\StorageRegistry::class,
     ];
 
     public function test_every_container_entry_resolves(): void

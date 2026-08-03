@@ -137,11 +137,32 @@ final class InstallWizard
 
     private int $step = 1;
 
+    /**
+     * Deliberately does NOT take SessionService via constructor injection
+     * (singleton/service-locator elimination campaign, Phase 4) -- unlike
+     * every other real caller in the codebase, this class discovers its
+     * own real DB credentials mid-request (boot()'s own dbCredentials::
+     * seed() call, from the submitted form) rather than having them
+     * already settled by RequestBootstrap::connect() before any service
+     * gets a chance to resolve. Resolving SessionService eagerly (whether
+     * via the container or the SessionService::get() shim) as a
+     * constructor argument here would build its own SessionRepository's
+     * EntityManagerInterface/Connection chain -- and once PHP-DI's
+     * container.php-bound Connection::class factory runs once, its
+     * result is shared for the rest of this container's lifetime,
+     * permanently bound to whatever (stale, pre-seed) credentials were
+     * current at that moment. Real bug found this exact way: 6
+     * Integration tests failed with "table ... doesn't exist" against the
+     * wrong (default env) database once SessionService became a
+     * constructor param here. Every real use below instead builds a
+     * throwaway SessionService from the already-correct, already-resolved
+     * $conn local variable -- same "no constructor dep, ~50 sites"
+     * reasoning MailService/TagService already use for this exact shim.
+     */
     public function __construct(
         private readonly string $prefixeTable,
         private readonly Paths $paths,
         private readonly DbCredentials $dbCredentials,
-        private readonly \Piwigo\Session\SessionService $sessionService,
     ) {
         $conf_data_location = LegacyFileConf::read()['data_location'] ?? null;
         if (! is_string($conf_data_location)) {
@@ -352,7 +373,7 @@ final class InstallWizard
     private function userService(?Connection $conn = null): UserService
     {
         $conn ??= DbConnection::build();
-        return new UserService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Bootstrap\PresentationAccessor::mailService(), new ActivityService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $conn, $this->sessionService);
+        return new UserService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Bootstrap\PresentationAccessor::mailService(), new ActivityService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $conn, new \Piwigo\Session\SessionService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Session\SessionEntity::class)));
     }
 
     /**
@@ -673,7 +694,7 @@ define(\'DB_COLLATE\', \'\');
             // define()d and this block ran unconditionally in the original,
             // without SessionBootstrap::register()'s
             // session_save_handler === 'db' guard)
-            session_set_save_handler(new PwgSession($this->sessionService));
+            session_set_save_handler(new PwgSession(new \Piwigo\Session\SessionService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Session\SessionEntity::class))));
             if (function_exists('ini_set')) {
                 ini_set('session.use_cookies', CurrentConfig::sessionUseCookies());
                 ini_set('session.use_only_cookies', CurrentConfig::sessionUseOnlyCookies());
@@ -712,7 +733,7 @@ define(\'DB_COLLATE\', \'\');
             // data; this mirrors that method's own two calls verbatim.
             \Piwigo\Users\CurrentUser::set(\Piwigo\Users\User::fromUserArray($user));
             \Piwigo\Users\CurrentUser::markRealUserResolved();
-            new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn)), new \Piwigo\Auth\CookieService(), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class), $this->sessionService)
+            new \Piwigo\Auth\AuthService(new \Piwigo\Auth\AuthRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn)), new \Piwigo\Auth\CookieService(), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class), new \Piwigo\Session\SessionService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Session\SessionEntity::class)))
                 ->logUser($login_user_id, false);
             $_SESSION['connected_with'] = 'pwg_ui';
 

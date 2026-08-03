@@ -26,6 +26,12 @@ final class LegacyFileConfTest extends IntegrationTestCase
     protected function setUp(): void
     {
         parent::setUp();
+        // parent::setUp()'s own conditional default boot (real repo root)
+        // would otherwise defeat every test below's own Kernel::boot($paths)
+        // call via Kernel::boot()'s idempotency guard, leaving CurrentPaths
+        // pointing at the real repo instead of this test's own throwaway
+        // tree -- same fix as InstallBootstrapTest/InstallWizardTest.
+        Kernel::reset();
         $this->tempRoot = sys_get_temp_dir() . '/piwigo-legacyfileconf-' . bin2hex(random_bytes(6)) . '/';
         mkdir($this->tempRoot . 'local/config', 0777, true);
         mkdir($this->tempRoot . 'sitelocal/config', 0777, true);

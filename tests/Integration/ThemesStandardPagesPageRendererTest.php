@@ -241,6 +241,11 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
             }
         }
         $this->fixtureRootsToClean = [];
+        // overrideSiteLocal() (called by 2 of this file's tests) leaves
+        // Kernel booted with a throwaway fixture Paths -- reset so the next
+        // test's parent::setUp() gets a fresh default (real repo root) boot
+        // instead of silently reusing this test's fixture root.
+        Kernel::reset();
         parent::tearDown();
     }
 
@@ -266,6 +271,13 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
     private function overrideSiteLocal(string $siteLocal): void
     {
         $root = dirname(__DIR__, 2) . '/';
+        // parent::setUp()'s own conditional default boot (real repo root)
+        // already booted Kernel by this point -- without this reset,
+        // Kernel::boot()'s own idempotency guard makes the call below a
+        // silent no-op, leaving CurrentPaths pointing at the real repo
+        // instead of this test's own throwaway fixture root (same fix as
+        // InstallBootstrapTest/InstallWizardTest/LegacyFileConfTest).
+        Kernel::reset();
         Kernel::boot(new Paths(
             root: $root,
             plugins: $root . 'plugins/',

@@ -10,6 +10,7 @@ use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyRepository;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Session\SessionEntity;
@@ -34,11 +35,21 @@ function c13yInternalTestSessionService(): SessionService
 // that actually touches it, so it can't rely on some earlier class-based
 // Integration test having already called Kernel::boot() for this process.
 // boot() is idempotent (no-op once already booted), so this is safe
-// regardless of what ran before.
+// regardless of what ran before. A real Paths is required here (not a bare
+// Kernel::boot()) -- without one, CurrentPaths::get()/StorageRegistry's own
+// container factory throw for every later file in the same process that
+// relies on Kernel::isBooted() being true (this file's own boot() call
+// leaks, unreset, into every later file in the same composer test:integration
+// process) -- same "cross-file Kernel-state leak" bug class already found
+// and fixed during the CurrentPaths singleton/DI campaign phase.
 beforeEach(function (): void {
     ConfigLoader::applyDefaults();
     ConfigLoader::applyEnvOverrides();
-    Kernel::boot();
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 4)));
+});
+
+afterEach(function (): void {
+    Kernel::reset();
 });
 
 // c13y_user()/c13y_correction_user() depend on the exact configured guest_id/

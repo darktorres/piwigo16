@@ -43,6 +43,13 @@ final class InstallBootstrapTest extends IntegrationTestCase
     protected function setUp(): void
     {
         parent::setUp();
+        // parent::setUp()'s own conditional default boot (real repo root)
+        // would otherwise defeat every test below's own
+        // InstallBootstrap::boot($paths) call via Kernel::boot()'s
+        // idempotency guard -- reset back to a genuinely unbooted baseline
+        // so each test's own boot() call is a real first boot, not a
+        // silent no-op against an already-live container.
+        Kernel::reset();
         $this->tempRoot = sys_get_temp_dir() . '/piwigo-installbootstrap-' . bin2hex(random_bytes(6)) . '/';
         mkdir($this->tempRoot . 'local/config', 0777, true);
     }

@@ -26,18 +26,25 @@ Commit-message phase tags (`feat(p24): ...`) and the *original* phase
 definitions below diverged starting around P24. This matters for reading
 the table correctly:
 
-- **P24 as originally defined** ("Vite + TypeScript conversion") — not
-  started. What actually landed under 271 `(p24)`-tagged commits is a much
-  larger, separately-motivated effort: retiring the `$GLOBALS`/static-bridge
-  coupling, migrating ~27 domain repositories from DBAL to real Doctrine
-  ORM, retargeting the event-dispatch and `l10n()`/URL free-function
-  bridges onto real classes, and closing gaps a 2026-07-13 audit found in
-  P0–P23's own claims. This was tracked in its own planning docs
-  (`legacy-coupling-retirement.md`, `gap-closure-p0-p23.md`) under the
-  `p24` tag as a matter of sequencing convenience ("whatever comes after
-  P23"), not because it's the P24 this plan originally scoped. See the P24
-  section below for the real work; see "Not started" in the status table
-  for the Vite/TypeScript conversion itself.
+- **P24 is now the real, formal designation for the post-P23 remediation
+  era** — matching the `(p24)` commit-tag convention (405 commits as of
+  2026-08-03) instead of diverging from it, as an earlier pass of this doc
+  did (leaving it an unnumbered `—` status-table row). The *original*
+  plan's P24 ("Vite + TypeScript conversion") is unaffected in scope but
+  renumbered **P30**, moved after every backend phase so all frontend work
+  sequences last — see the Phase detail section below for the current
+  P24–P33 order. What actually landed under the `p24` tag (plus, not
+  `(p24)`-tagged but the same post-P23 remediation effort in substance, a
+  SQL bound-parameter sweep and the still-running singleton/DI elimination
+  campaign): retiring the `$GLOBALS`/static-bridge coupling, migrating ~27
+  domain repositories from DBAL to real Doctrine ORM, retargeting the
+  event-dispatch and `l10n()`/URL free-function bridges onto real classes,
+  closing gaps a 2026-07-13 audit found in P0–P23's own claims, a
+  coverage/mutation-testing hardening sweep, and the ongoing DI campaign.
+  Most of this was tracked in its own planning docs
+  (`legacy-coupling-retirement.md`, `gap-closure-p0-p23.md`) at the time,
+  under the `p24` tag as a matter of sequencing convenience ("whatever
+  comes after P23"). See the P24 section below for the real work.
 - **P25 as originally defined** ("Inline JS extraction + `any` reduction")
   — not started. The 52 `(p25)`-tagged commits are PHP `mixed`-type
   elimination (Phase 1–2, by domain module), continued directly into P27's
@@ -84,7 +91,7 @@ cleanly onto the original scope.
 | P21 | Admin controller migration | Done | 4 |
 | P22 | Frontend controller migration | Done | 7 |
 | P23 | Legacy deletion & cleanup | Done, 2 gaps found in later audit (see below) | 123 |
-| — | Remediation (informally tagged `p24`): globals/event/l10n coupling retirement, DBAL→ORM | Done, 2 gaps found (see below) | 271 |
+| P24 | Post-P23 remediation & hardening (globals/DBAL/event/l10n coupling retirement, coverage + mutation-testing hardening, SQL bound-parameter sweep, singleton/DI elimination) | In progress — remediation sub-tracks done, 2 gaps found (see below); singleton/DI campaign ongoing (Phase 0–4 done, Phase 5 partial) | 405 `(p24)` + 16 `(sql)` + 25 `(di)`/`(lang)` |
 | P24 | *Originally:* Vite + TypeScript conversion | **Not started** | 0 |
 | P25 | *Originally:* Inline JS extraction + `any` reduction | **Not started** (mixed-elimination work landed instead, see above) | 0 |
 | P26 | REST resource layer + OpenAPI (WS API removed) | Not started | 0 |
@@ -588,17 +595,27 @@ consolidation, not copied from the gap-closure doc's own claims:
   wasn't documented anywhere this consolidation found. Flagging
   precisely rather than guessing which it is.
 
-### The `p24`-tagged remediation era (271 commits — not the original P24)
+### P24 — Post-P23 Remediation & Hardening
 
-As flagged above: none of this is the original plan's P24 ("Vite +
-TypeScript conversion," still not started). What actually happened under
-271 `feat(p24)`/`fix(p24)`-tagged commits is the post-P23 remediation work
-several phase sections above already promised — the ORM migration (P14),
-the `$GLOBALS`/static-bridge retirement P23 explicitly deferred, and the
-event-dispatch/`l10n()`/URL free-function bridges P23 batch 8c/8d also
-deferred as "too many call sites." Tracked in its own planning docs
-(`legacy-coupling-retirement.md`, `gap-closure-p0-p23.md`) rather than
-this one at the time; folded in here now so there's one current record.
+**In progress, not done** — see the singleton/DI campaign subsection
+below. Formalizes the informal `(p24)` commit-tag convention (405 commits
+as of 2026-08-03, up from 271 when this doc's status table was last
+written) as this doc's own real P24, rather than leaving it an unnumbered
+status-table row diverging from the commit tags. Not the original plan's
+P24 ("Vite + TypeScript conversion," still not started, renumbered **P30**
+— see "Real status vs. commit-tag labels" above). What actually happened
+under `feat(p24)`/`fix(p24)`/`test(p24)`/`docs(p24)`-tagged commits is the
+post-P23 remediation work several phase sections above already promised —
+the ORM migration (P14), the `$GLOBALS`/static-bridge retirement P23
+explicitly deferred, and the event-dispatch/`l10n()`/URL free-function
+bridges P23 batch 8c/8d also deferred as "too many call sites" — plus,
+since 2026-07-27, a coverage-gap-closing sweep, full-suite stabilization, a
+mutation-testing hardening sweep, and (not `(p24)`-tagged, but the same
+post-P23 remediation effort in substance) a SQL bound-parameter conversion
+sweep and the still-running singleton/DI elimination campaign. The
+`(p24)`-tagged tracks below were tracked in their own planning docs
+(`legacy-coupling-retirement.md`, `gap-closure-p0-p23.md`) rather than this
+one at the time; folded in here so there's one current record.
 
 **Part B — DBAL → ORM migration.** 16 of 31 domain repositories converted
 from `AbstractRepository`+`Tables::` (hand-written DBAL) to real Doctrine
@@ -761,6 +778,85 @@ forward anywhere until now:
   triaged (`DerivativeParams::is_identity()`'s docblock,
   `HtmlService`'s 4 `@todo nice display if $template loaded` markers)
   remain unresolved alongside the other ~46-50, none picked up since.
+
+**Coverage-gap closing, Wave 1** (2026-07-27/28, `test(p24)`/`feat(p24)`).
+Closed the remaining zero-coverage classes across the Admin/Search/Mail/
+Category/Core/Controller/`Ws` domains (`9f5198bfe`'s own 70-class gap
+closed most of this already — Wave 1 is the tail). Real bugs found and
+fixed along the way: a metadata-sync bug (Controller-domain coverage), 4
+real bugs in the `Ws` domain, `PasswordController` silently discarding
+lockout/expiry errors instead of surfacing them.
+
+**Full-suite stabilization** (2026-07-28 to 2026-07-31, `fix(p24)`). Got
+the Browser, Contract, and combined Unit+Integration suites fully green —
+root-caused every real failure from a full re-run rather than re-running
+until it passed. Real bugs found and fixed: a picture-derivative cookie
+test assumed an IPv4-only client, a watermark write-access test leaked
+permanent debris instead of cleaning up, added_by/multi-filter search
+tests were sensitive to ambient config drift, several Browser-suite
+relative-path/fixture bugs.
+
+**Mutation-testing gap-closing sweep** (2026-08-01, batches 20–31+,
+`test(p24)`/`fix(p24)`/`docs(p24)`). A systematic `pest --mutate` sweep,
+closing per-file mutation gaps batch by batch and documenting
+confirmed-equivalent mutants where a surviving mutant is provably
+behavior-preserving (not a test gap), rather than just suppressing the
+finding. Real, previously-undiagnosed bugs found via mutation testing, not
+caught by PHPStan/ECS: `SessionRepository::gc()`/
+`LoungeMaintenance::needsEmptying()` read the real wall clock instead of
+`Env::now()`; `UrlService::getAbsoluteRootUrl()` appended a stray trailing
+colon; `Inflector_fr.php` had corrupted `é` regex literals; `Translator`'s
+day/month reassembly had an untested gap; `SentryBootstrap::resolveOptions()`
+needed extracting to fix a risky-test SDK leak; a deprecated
+`trigger_error(E_USER_ERROR)` call was replaced with
+`ErrorCollector::recordFatal()`; `UploadService` leaked its process umask.
+14 VR baselines, found stale against the fixture's real backing files
+during the sweep, were regenerated separately (`01d3ba401e`, 2026-08-02).
+
+**SQL bound-parameter conversion sweep** (2026-08-01, `refactor(sql)`/
+`fix(sql)`, 16 commits — *not* `(p24)`-tagged, but the same post-P23
+remediation effort in substance, completing "the original SQL-modernization
+initiative" that the separate, later Item-15/16 DBAL→DQL campaign's own
+planning notes cite as an already-complete prerequisite). Converted the
+remaining raw-string SQL splices to bound parameters across the Image,
+Category, Tag, Search, Comment, History, Notification, Group, Activity,
+Config, Calendar domains and the `Db/` infrastructure layer itself (a new
+`SqlCondition` carrier introduced for this). Found and fixed several real,
+live SQL injections along the way, not just style: 3 in `ImageRepository`,
+1 in the Comment domain, a second in the History/Notification domains, and
+a plugin-hook injection in `TagRepository::findIdByWhereFragment()`
+(SEC-19-tagged). `CategoryRepository::countByVisible()`'s own splice was
+found and fixed in a re-audit the same day, after the main sweep.
+
+**Singleton/DI elimination campaign** (2026-08-02 onward, `feat(di)`/
+`feat(lang)`, 25 commits so far — **in progress, not done**). A 10-phase
+campaign converting every static-singleton/service-locator anti-pattern
+(~55 classes across three shapes, plus the entire `Piwigo\Ws\*`
+static-dispatch layer as its own Phase 10) to constructor-injected DI. Real
+motivation beyond style: SEC-60 ("Worker-mode request isolation") needs no
+process-persistent static state, and FrankenPHP worker mode (`ADR-0013`) is
+a committed-to future direction incompatible with it as-is. Mechanism: a
+transitional `@deprecated`-tagged static shim for callers not yet converted
+per class, tracked via a shrinking arch-test allow-list, with a hard
+"zero shims remain" gate at Phase 10's end — not ad-hoc
+`Kernel::container()->get()` calls. **Status as of 2026-08-03**: Phase 0
+(foundation + `CurrentPersistentCache` pilot), Phase 1
+(`ProcessCache`/`InstallationFlag`/`ApiKeyRequestFlag`, plus several more
+converted in the same window — `LoadedPlugins`, `FilterState`,
+`CurrentLogger`, `SectionContextRegistry` — exact phase boundary among
+those not re-verified here), Phase 2 (`StorageRegistry`/`ErrorCollector`/
+`FilesystemIntegrityChecker`), Phase 3 (`CurrentPaths`/`DbCredentials`/
+`CoreTabs`/the pre-boot marker trio/`InputValidator`/`FilesystemHelper`'s
+collaborator/`ServerTiming`, the last found as a real gap in an earlier
+pass and closed later), and Phase 4 (`SessionService`/`Translator`/
+`EventDispatcher`/`DeploymentPolicy`/`ImageStdParams`/`PageState`) are all
+complete. Phase 5 (`CurrentUser`/`CurrentTemplate`/`CurrentConfigService`,
+75–180 sites each) **partially done** — `CurrentUser` and `CurrentTemplate`
+converted, `CurrentConfigService` next. Phases 6–10 not started (Phase 10 =
+the `Piwigo\Ws\*` static-dispatch layer, ~13k lines, deliberately last).
+Full per-class detail (shim design, real bugs found along the way,
+test-suite fallout per class) lives in the campaign's own plan file, not
+reproduced here.
 
 ### Epoch F — Frontend (P24–P25) — not started as originally scoped
 

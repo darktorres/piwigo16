@@ -460,27 +460,38 @@ test('tryAcquireLoungeLock persists a real, JSON-round-trippable value, and clea
     $repo = imageRepositoryTestRepo();
     $conn = DbConnection::build();
     imageRepositoryTestAcquireEmptyLoungeDbLock($conn);
-    $cached = $repo->find(1);
-    expect($cached)->not->toBeNull();
 
-    $conn->createQueryBuilder()->delete('piwigo_config')
-        ->where('param = :p')->setParameter('p', 'empty_lounge_running')
-        ->executeStatement();
-
+    // The lock acquire above must be paired with a release no matter
+    // what happens next -- an outer try/finally wrapping literally
+    // everything (not just the tryAcquireLoungeLock() call itself)
+    // guarantees that, since a stuck lock here doesn't just fail this
+    // test, it blocks every other test using the same lock name
+    // (ImageServiceTest.php's emptyLounge() tests) for a full 10s each,
+    // for the rest of the process.
     try {
-        $repo->tryAcquireLoungeLock('lock-value-1');
+        $cached = $repo->find(1);
+        expect($cached)->not->toBeNull();
 
-        expect($repo->findLoungeLockValue())->toBe('lock-value-1');
-
-        // If $em->clear() didn't run, this find() would return the SAME
-        // PHP object identity as $cached (the pre-clear() cached
-        // instance) rather than a freshly-hydrated one.
-        $refetched = $repo->find(1);
-        expect($refetched)->not->toBe($cached);
-    } finally {
         $conn->createQueryBuilder()->delete('piwigo_config')
             ->where('param = :p')->setParameter('p', 'empty_lounge_running')
             ->executeStatement();
+
+        try {
+            $repo->tryAcquireLoungeLock('lock-value-1');
+
+            expect($repo->findLoungeLockValue())->toBe('lock-value-1');
+
+            // If $em->clear() didn't run, this find() would return the SAME
+            // PHP object identity as $cached (the pre-clear() cached
+            // instance) rather than a freshly-hydrated one.
+            $refetched = $repo->find(1);
+            expect($refetched)->not->toBe($cached);
+        } finally {
+            $conn->createQueryBuilder()->delete('piwigo_config')
+                ->where('param = :p')->setParameter('p', 'empty_lounge_running')
+                ->executeStatement();
+        }
+    } finally {
         imageRepositoryTestReleaseEmptyLoungeDbLock($conn);
     }
 });

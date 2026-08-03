@@ -1200,132 +1200,139 @@ function imageServiceTestSeedCurrentLogger(\Piwigo\Core\Logger $logger): void
 test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end messages exactly, and empties every real lounge row into image_category', function (): void {
     [$conn, $repo] = imageServiceTestConnAndRepo();
     imageServiceTestAcquireEmptyLoungeDbLock($conn);
-    $logDir = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
-    mkdir($logDir, 0o777, true);
-    imageServiceTestSeedCurrentLogger(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::DEBUG, 'directory' => $logDir, 'filename' => 'emptylounge.log']));
-    // Also pre-cleans 'count_orphans' (not just 'empty_lounge_running'),
-    // matching the sibling test right below -- a prior run of this exact
-    // test that failed BEFORE reaching its own try/finally (e.g. between
-    // this point and the INSERT further down) would otherwise leave a
-    // stale row here, making the next run's own INSERT below fail with a
-    // duplicate-key error and never release imageServiceTestAcquireEmptyLoungeDbLock()'s
-    // lock either -- confirmed live: a real interrupted run left exactly
-    // that stale 'count_orphans' row behind, cascading into every later
-    // emptyLounge() test's own lock-acquire timeout.
-    $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
-    // Single hyphen, matching the real "$execId-$startTime" shape
-    // tryAcquireLoungeLock() itself always constructs (SessionService::
-    // generateKey()'s base64 alphabet, minus '+'/'/', never contains a
-    // hyphen) -- explode('-', ...) must split into exactly [execId,
-    // startTime] for the (int) cast below to read the real timestamp,
-    // not an unrelated string.
-    CurrentConfig::current()->setEmptyLoungeRunning('staleexecid-' . (time() - 100));
-    $configRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Config\ConfigEntry::class);
-    expect($configRepo)->toBeInstanceOf(\Piwigo\Config\ConfigRepository::class);
-    \Piwigo\Config\CurrentConfigService::current()->set(new \Piwigo\Config\ConfigService($configRepo, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
-    // invalidateUserCache: false below -- this must survive untouched,
-    // proving line 383's IfNegated does not wrongly invoke
-    // PermissionCacheInvalidator::invalidate() (whose own real,
-    // observable side effect is deleting this exact param).
-    // Encoded as a JSON string ('3'), not a bare JSON number (3) --
-    // findRawValue() (below) only ever returns string|false, matching
-    // insertIgnoreRawValue()'s own string-only contract.
-    $conn->executeStatement(
-        "INSERT INTO " . \Piwigo\Db\Tables::config() . " (param, value) VALUES ('count_orphans', ?)",
-        [json_encode('3')]
-    );
 
-    // Real lounge rows across 2 categories -- exercises the real
-    // foreach()/"category changes" grouping (line 364/374) and gives
-    // deleteLoungeUpTo() (line 381) a genuinely non-zero max image id
-    // to work with, not just $maxImageId's own untouched 0 default.
-    $imageA = imageServiceTestInsertImage($conn, 'upload/2026/07/lounge-a.jpg');
-    $imageB = imageServiceTestInsertImage($conn, 'upload/2026/07/lounge-b.jpg');
-    $conn->createQueryBuilder()->insert(\Piwigo\Db\Tables::lounge())
-        ->values(['image_id' => ':i', 'category_id' => ':c'])->setParameter('i', $imageA)->setParameter('c', 1)
-        ->executeStatement();
-    $conn->createQueryBuilder()->insert(\Piwigo\Db\Tables::lounge())
-        ->values(['image_id' => ':i', 'category_id' => ':c'])->setParameter('i', $imageB)->setParameter('c', 2)
-        ->executeStatement();
-
-    $originalRequest = $_REQUEST;
-    $_REQUEST['method'] = 'pwg.images.upload';
-
-    $capturedEventRows = null;
-    $handler = function (EmptyLounge $event) use (&$capturedEventRows): void {
-        $capturedEventRows = $event->rows;
-    };
-    \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(EmptyLounge::class, $handler);
-
+    // Everything below is wrapped in this outer try/finally -- a stuck
+    // lock here doesn't just fail this test, it blocks every other
+    // emptyLounge()/tryAcquireLoungeLock() test sharing this lock name
+    // for a full 10s each, for the rest of the process. The setup below
+    // does real, fallible I/O (a raw, non-IGNORE INSERT that can hit a
+    // real unique-key conflict against a leftover 'count_orphans' row
+    // from an unrelated earlier test run) before ever reaching the
+    // original inner try/finally, so the release must not depend on
+    // reaching that point.
     try {
-        $service = imageServiceTestNewService($repo, $conn);
+        $logDir = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
+        mkdir($logDir, 0o777, true);
+        imageServiceTestSeedCurrentLogger(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::DEBUG, 'directory' => $logDir, 'filename' => 'emptylounge.log']));
+        // Both params, not just 'empty_lounge_running' -- the raw INSERT
+        // below needs 'count_orphans' gone too, or a leftover row from a
+        // previous run throws a unique-key violation here.
+        $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
+        // Single hyphen, matching the real "$execId-$startTime" shape
+        // tryAcquireLoungeLock() itself always constructs (SessionService::
+        // generateKey()'s base64 alphabet, minus '+'/'/', never contains a
+        // hyphen) -- explode('-', ...) must split into exactly [execId,
+        // startTime] for the (int) cast below to read the real timestamp,
+        // not an unrelated string.
+        CurrentConfig::setEmptyLoungeRunning('staleexecid-' . (time() - 100));
+        $configRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Config\ConfigEntry::class);
+        expect($configRepo)->toBeInstanceOf(\Piwigo\Config\ConfigRepository::class);
+        \Piwigo\Config\CurrentConfigService::current()->set(new \Piwigo\Config\ConfigService($configRepo, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
+        // invalidateUserCache: false below -- this must survive untouched,
+        // proving line 383's IfNegated does not wrongly invoke
+        // PermissionCacheInvalidator::invalidate() (whose own real,
+        // observable side effect is deleting this exact param).
+        // Encoded as a JSON string ('3'), not a bare JSON number (3) --
+        // findRawValue() (below) only ever returns string|false, matching
+        // insertIgnoreRawValue()'s own string-only contract.
+        $conn->executeStatement(
+            "INSERT INTO " . \Piwigo\Db\Tables::config() . " (param, value) VALUES ('count_orphans', ?)",
+            [json_encode('3')]
+        );
 
-        $result = $service->emptyLounge(invalidateUserCache: false);
+        // Real lounge rows across 2 categories -- exercises the real
+        // foreach()/"category changes" grouping (line 364/374) and gives
+        // deleteLoungeUpTo() (line 381) a genuinely non-zero max image id
+        // to work with, not just $maxImageId's own untouched 0 default.
+        $imageA = imageServiceTestInsertImage($conn, 'upload/2026/07/lounge-a.jpg');
+        $imageB = imageServiceTestInsertImage($conn, 'upload/2026/07/lounge-b.jpg');
+        $conn->createQueryBuilder()->insert(\Piwigo\Db\Tables::lounge())
+            ->values(['image_id' => ':i', 'category_id' => ':c'])->setParameter('i', $imageA)->setParameter('c', 1)
+            ->executeStatement();
+        $conn->createQueryBuilder()->insert(\Piwigo\Db\Tables::lounge())
+            ->values(['image_id' => ':i', 'category_id' => ':c'])->setParameter('i', $imageB)->setParameter('c', 2)
+            ->executeStatement();
 
-        // Kills line 391's RemoveMethodCall -- dispatchNotify(new EmptyLounge($rows))
-        // fires with the exact same rows this call itself returns.
-        expect($capturedEventRows)->toBe($result);
-        expect($result)->toBe([
-            ['image_id' => $imageA, 'category_id' => 1],
-            ['image_id' => $imageB, 'category_id' => 2],
-        ]);
+        $originalRequest = $_REQUEST;
+        $_REQUEST['method'] = 'pwg.images.upload';
 
-        // Kills line 235's (unrelated file) sibling pattern here too:
-        // line 235-ish Concat* mutations on the log lines themselves --
-        // an exact match on every message this run produced, in order,
-        // including the real (random) exec id captured from the
-        // "begins" line and cross-checked identically on every other
-        // line, closes line 336 (stale-clear), 344 (begins, with the
-        // real API suffix), 357 (wins the race), and 389 (ends) all at
-        // once: any dropped/reordered/switched-sides fragment would
-        // break at least one of these.
-        $messages = imageServiceTestReadLogMessages($logDir . '/emptylounge.log');
-        expect($messages)->toHaveCount(4);
-        expect($messages[0])->toBe('emptyLounge, exec=staleexecid, timeout stopped by another call to the function');
-        // The {4} quantifier (not a bare +) kills line 341's
-        // DecrementInteger/IncrementInteger on generateKey(4)'s own
-        // size argument -- a real exec id is exactly 4 characters long.
-        if (preg_match('/^emptyLounge \(API:pwg\.images\.upload\), exec=([A-Za-z0-9]{4}), begins$/', $messages[1], $beginMatch) !== 1) {
-            throw new RuntimeException('begins message did not match the expected shape: ' . $messages[1]);
+        $capturedEventRows = null;
+        $handler = function (EmptyLounge $event) use (&$capturedEventRows): void {
+            $capturedEventRows = $event->rows;
+        };
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(EmptyLounge::class, $handler);
+
+        try {
+            $service = imageServiceTestNewService($repo, $conn);
+
+            $result = $service->emptyLounge(invalidateUserCache: false);
+
+            // Kills line 391's RemoveMethodCall -- dispatchNotify(new EmptyLounge($rows))
+            // fires with the exact same rows this call itself returns.
+            expect($capturedEventRows)->toBe($result);
+            expect($result)->toBe([
+                ['image_id' => $imageA, 'category_id' => 1],
+                ['image_id' => $imageB, 'category_id' => 2],
+            ]);
+
+            // Kills line 235's (unrelated file) sibling pattern here too:
+            // line 235-ish Concat* mutations on the log lines themselves --
+            // an exact match on every message this run produced, in order,
+            // including the real (random) exec id captured from the
+            // "begins" line and cross-checked identically on every other
+            // line, closes line 336 (stale-clear), 344 (begins, with the
+            // real API suffix), 357 (wins the race), and 389 (ends) all at
+            // once: any dropped/reordered/switched-sides fragment would
+            // break at least one of these.
+            $messages = imageServiceTestReadLogMessages($logDir . '/emptylounge.log');
+            expect($messages)->toHaveCount(4);
+            expect($messages[0])->toBe('emptyLounge, exec=staleexecid, timeout stopped by another call to the function');
+            // The {4} quantifier (not a bare +) kills line 341's
+            // DecrementInteger/IncrementInteger on generateKey(4)'s own
+            // size argument -- a real exec id is exactly 4 characters long.
+            if (preg_match('/^emptyLounge \(API:pwg\.images\.upload\), exec=([A-Za-z0-9]{4}), begins$/', $messages[1], $beginMatch) !== 1) {
+                throw new RuntimeException('begins message did not match the expected shape: ' . $messages[1]);
+            }
+            $execId = $beginMatch[1];
+            expect($messages[2])->toBe("emptyLounge, exec={$execId} wins the race and gets the token!");
+            expect($messages[3])->toBe("emptyLounge, exec={$execId}, ends");
+
+            $remainingLounge = $conn->fetchOne('SELECT COUNT(*) FROM ' . \Piwigo\Db\Tables::lounge() . ' WHERE image_id IN (' . $imageA . ',' . $imageB . ')');
+            expect(is_numeric($remainingLounge) ? (int) $remainingLounge : -1)->toBe(0);
+            $categoryLinks = $conn->fetchAllAssociative('SELECT image_id, category_id FROM ' . \Piwigo\Db\Tables::imageCategory() . ' WHERE image_id IN (' . $imageA . ',' . $imageB . ') ORDER BY image_id');
+            expect($categoryLinks)->toBe([
+                ['image_id' => $imageA, 'category_id' => 1],
+                ['image_id' => $imageB, 'category_id' => 2],
+            ]);
+            // Kills line 387's RemoveMethodCall -- the lock this run itself
+            // acquired at line 347 is released again once the run
+            // completes, distinct from line 337's own mid-function delete
+            // of the STALE lock this test seeded (already gone well before
+            // this point). pest --mutate's own scanner reports this
+            // specific mutation UNTESTED regardless (the established
+            // blank-line-mutation blind spot -- RemoveMethodCall leaves a
+            // bare blank line its coverage tracking can't attribute back to
+            // this assertion) -- live sed-mutate-and-rerun directly
+            // confirms a real kill: this exact assertion fails
+            // ('"execid-..." is false') the moment the call is removed.
+            expect(\Piwigo\Config\CurrentConfigService::current()->get()->findRawValue('empty_lounge_running'))->toBeFalse();
+            // findRawValue() transparently json_decode()s the stored value
+            // back to the plain string it was originally encoded as.
+            expect(\Piwigo\Config\CurrentConfigService::current()->get()->findRawValue('count_orphans'))->toBe('3');
+        } finally {
+            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(EmptyLounge::class, $handler);
+            $_REQUEST = $originalRequest;
+            $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::imageCategory() . ' WHERE image_id IN (?, ?)', [$imageA, $imageB]);
+            $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::lounge() . ' WHERE image_id IN (?, ?)', [$imageA, $imageB]);
+            $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::images() . ' WHERE id IN (?, ?)', [$imageA, $imageB]);
+            $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
+            \Piwigo\Config\CurrentConfigService::current()->reset();
+            \Piwigo\Core\Kernel::reset();
+            CurrentConfig::reset();
+            imageServiceTestRrmdir($logDir);
         }
-        $execId = $beginMatch[1];
-        expect($messages[2])->toBe("emptyLounge, exec={$execId} wins the race and gets the token!");
-        expect($messages[3])->toBe("emptyLounge, exec={$execId}, ends");
-
-        $remainingLounge = $conn->fetchOne('SELECT COUNT(*) FROM ' . \Piwigo\Db\Tables::lounge() . ' WHERE image_id IN (' . $imageA . ',' . $imageB . ')');
-        expect(is_numeric($remainingLounge) ? (int) $remainingLounge : -1)->toBe(0);
-        $categoryLinks = $conn->fetchAllAssociative('SELECT image_id, category_id FROM ' . \Piwigo\Db\Tables::imageCategory() . ' WHERE image_id IN (' . $imageA . ',' . $imageB . ') ORDER BY image_id');
-        expect($categoryLinks)->toBe([
-            ['image_id' => $imageA, 'category_id' => 1],
-            ['image_id' => $imageB, 'category_id' => 2],
-        ]);
-        // Kills line 387's RemoveMethodCall -- the lock this run itself
-        // acquired at line 347 is released again once the run
-        // completes, distinct from line 337's own mid-function delete
-        // of the STALE lock this test seeded (already gone well before
-        // this point). pest --mutate's own scanner reports this
-        // specific mutation UNTESTED regardless (the established
-        // blank-line-mutation blind spot -- RemoveMethodCall leaves a
-        // bare blank line its coverage tracking can't attribute back to
-        // this assertion) -- live sed-mutate-and-rerun directly
-        // confirms a real kill: this exact assertion fails
-        // ('"execid-..." is false') the moment the call is removed.
-        expect(\Piwigo\Config\CurrentConfigService::current()->get()->findRawValue('empty_lounge_running'))->toBeFalse();
-        // findRawValue() transparently json_decode()s the stored value
-        // back to the plain string it was originally encoded as.
-        expect(\Piwigo\Config\CurrentConfigService::current()->get()->findRawValue('count_orphans'))->toBe('3');
     } finally {
         imageServiceTestReleaseEmptyLoungeDbLock($conn);
-        \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(EmptyLounge::class, $handler);
-        $_REQUEST = $originalRequest;
-        $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::imageCategory() . ' WHERE image_id IN (?, ?)', [$imageA, $imageB]);
-        $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::lounge() . ' WHERE image_id IN (?, ?)', [$imageA, $imageB]);
-        $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::images() . ' WHERE id IN (?, ?)', [$imageA, $imageB]);
-        $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
-        \Piwigo\Config\CurrentConfigService::current()->reset();
-        \Piwigo\Core\Kernel::reset();
-        \Piwigo\Config\CurrentConfig::current()->reset();
-        imageServiceTestRrmdir($logDir);
     }
 });
 
@@ -1341,28 +1348,32 @@ test('emptyLounge() invalidates the permission cache (and its orphan-count cache
     // blank-line-mutation blind spot as line 387's sibling test).
     [$conn, $repo] = imageServiceTestConnAndRepo();
     imageServiceTestAcquireEmptyLoungeDbLock($conn);
-    imageServiceTestSeedCurrentLogger(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::OFF]));
-    $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
-    $configRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Config\ConfigEntry::class);
-    expect($configRepo)->toBeInstanceOf(\Piwigo\Config\ConfigRepository::class);
-    \Piwigo\Config\CurrentConfigService::current()->set(new \Piwigo\Config\ConfigService($configRepo, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
-    $conn->executeStatement(
-        "INSERT INTO " . \Piwigo\Db\Tables::config() . " (param, value) VALUES ('count_orphans', ?)",
-        [json_encode(3)]
-    );
 
     try {
-        $service = imageServiceTestNewService($repo, $conn);
+        imageServiceTestSeedCurrentLogger(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::OFF]));
+        $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
+        $configRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Config\ConfigEntry::class);
+        expect($configRepo)->toBeInstanceOf(\Piwigo\Config\ConfigRepository::class);
+        \Piwigo\Config\CurrentConfigService::current()->set(new \Piwigo\Config\ConfigService($configRepo, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
+        $conn->executeStatement(
+            "INSERT INTO " . \Piwigo\Db\Tables::config() . " (param, value) VALUES ('count_orphans', ?)",
+            [json_encode(3)]
+        );
 
-        $service->emptyLounge(invalidateUserCache: true);
+        try {
+            $service = imageServiceTestNewService($repo, $conn);
 
-        expect(\Piwigo\Config\CurrentConfigService::current()->get()->findRawValue('count_orphans'))->toBeFalse();
+            $service->emptyLounge(invalidateUserCache: true);
+
+            expect(\Piwigo\Config\CurrentConfigService::current()->get()->findRawValue('count_orphans'))->toBeFalse();
+        } finally {
+            $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
+            \Piwigo\Config\CurrentConfigService::current()->reset();
+            \Piwigo\Core\Kernel::reset();
+            CurrentConfig::reset();
+        }
     } finally {
         imageServiceTestReleaseEmptyLoungeDbLock($conn);
-        $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
-        \Piwigo\Config\CurrentConfigService::current()->reset();
-        \Piwigo\Core\Kernel::reset();
-        \Piwigo\Config\CurrentConfig::current()->reset();
     }
 });
 
@@ -1380,30 +1391,34 @@ test('emptyLounge() actually clears a stale lock\'s real database row, letting t
     // array.
     [$conn, $repo] = imageServiceTestConnAndRepo();
     imageServiceTestAcquireEmptyLoungeDbLock($conn);
-    imageServiceTestSeedCurrentLogger(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::OFF]));
-    $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param = 'empty_lounge_running'");
-    $staleValue = 'reallystale-' . (time() - 100);
-    $conn->executeStatement(
-        "INSERT INTO " . \Piwigo\Db\Tables::config() . " (param, value) VALUES ('empty_lounge_running', ?)",
-        [json_encode($staleValue)]
-    );
-    CurrentConfig::current()->setEmptyLoungeRunning($staleValue);
-    $configRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Config\ConfigEntry::class);
-    expect($configRepo)->toBeInstanceOf(\Piwigo\Config\ConfigRepository::class);
-    \Piwigo\Config\CurrentConfigService::current()->set(new \Piwigo\Config\ConfigService($configRepo, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
 
     try {
-        $service = imageServiceTestNewService($repo, $conn);
+        imageServiceTestSeedCurrentLogger(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::OFF]));
+        $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param = 'empty_lounge_running'");
+        $staleValue = 'reallystale-' . (time() - 100);
+        $conn->executeStatement(
+            "INSERT INTO " . \Piwigo\Db\Tables::config() . " (param, value) VALUES ('empty_lounge_running', ?)",
+            [json_encode($staleValue)]
+        );
+        CurrentConfig::setEmptyLoungeRunning($staleValue);
+        $configRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Config\ConfigEntry::class);
+        expect($configRepo)->toBeInstanceOf(\Piwigo\Config\ConfigRepository::class);
+        \Piwigo\Config\CurrentConfigService::current()->set(new \Piwigo\Config\ConfigService($configRepo, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
 
-        $result = $service->emptyLounge(invalidateUserCache: false);
+        try {
+            $service = imageServiceTestNewService($repo, $conn);
 
-        expect($result)->toBeArray();
+            $result = $service->emptyLounge(invalidateUserCache: false);
+
+            expect($result)->toBeArray();
+        } finally {
+            $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param = 'empty_lounge_running'");
+            \Piwigo\Config\CurrentConfigService::current()->reset();
+            \Piwigo\Core\Kernel::reset();
+            CurrentConfig::reset();
+        }
     } finally {
         imageServiceTestReleaseEmptyLoungeDbLock($conn);
-        $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param = 'empty_lounge_running'");
-        \Piwigo\Config\CurrentConfigService::current()->reset();
-        \Piwigo\Core\Kernel::reset();
-        \Piwigo\Config\CurrentConfig::current()->reset();
     }
 });
 
@@ -1425,57 +1440,61 @@ test('emptyLounge() does not touch a lock that is not actually stale, and logs t
     // recreating.
     [$conn, $repo] = imageServiceTestConnAndRepo();
     imageServiceTestAcquireEmptyLoungeDbLock($conn);
-    $logDir = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
-    mkdir($logDir, 0o777, true);
-    imageServiceTestSeedCurrentLogger(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::DEBUG, 'directory' => $logDir, 'filename' => 'emptylounge2.log']));
-    $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param = 'empty_lounge_running'");
-    $freshLockValue = 'freshexecid-' . (time() - 30);
-    // A real row, not just CurrentConfig's static cache below -- this is
-    // what tryAcquireLoungeLock()'s own real INSERT IGNORE actually
-    // contends against.
-    $conn->executeStatement(
-        "INSERT INTO " . \Piwigo\Db\Tables::config() . " (param, value) VALUES ('empty_lounge_running', ?)",
-        [json_encode($freshLockValue)]
-    );
-    CurrentConfig::current()->setEmptyLoungeRunning($freshLockValue);
-    $configRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Config\ConfigEntry::class);
-    expect($configRepo)->toBeInstanceOf(\Piwigo\Config\ConfigRepository::class);
-    \Piwigo\Config\CurrentConfigService::current()->set(new \Piwigo\Config\ConfigService($configRepo, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
-
-    $originalRequest = $_REQUEST;
-    unset($_REQUEST['method']);
 
     try {
-        $service = imageServiceTestNewService($repo, $conn);
+        $logDir = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
+        mkdir($logDir, 0o777, true);
+        imageServiceTestSeedCurrentLogger(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::DEBUG, 'directory' => $logDir, 'filename' => 'emptylounge2.log']));
+        $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param = 'empty_lounge_running'");
+        $freshLockValue = 'freshexecid-' . (time() - 30);
+        // A real row, not just CurrentConfig's static cache below -- this is
+        // what tryAcquireLoungeLock()'s own real INSERT IGNORE actually
+        // contends against.
+        $conn->executeStatement(
+            "INSERT INTO " . \Piwigo\Db\Tables::config() . " (param, value) VALUES ('empty_lounge_running', ?)",
+            [json_encode($freshLockValue)]
+        );
+        CurrentConfig::setEmptyLoungeRunning($freshLockValue);
+        $configRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Config\ConfigEntry::class);
+        expect($configRepo)->toBeInstanceOf(\Piwigo\Config\ConfigRepository::class);
+        \Piwigo\Config\CurrentConfigService::current()->set(new \Piwigo\Config\ConfigService($configRepo, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
 
-        // tryAcquireLoungeLock() is a real INSERT IGNORE -- the fresh
-        // lock this test seeded directly in `config` (not via a prior
-        // tryAcquireLoungeLock() call) still wins the race against it,
-        // so this run itself never becomes the lock holder.
-        $result = $service->emptyLounge(invalidateUserCache: false);
+        $originalRequest = $_REQUEST;
+        unset($_REQUEST['method']);
 
-        expect($result)->toBeNull();
+        try {
+            $service = imageServiceTestNewService($repo, $conn);
 
-        $messages = imageServiceTestReadLogMessages($logDir . '/emptylounge2.log');
-        expect($messages)->toHaveCount(2);
-        if (preg_match('/^emptyLounge, exec=([A-Za-z0-9]+), begins$/', $messages[0], $beginMatch) !== 1) {
-            throw new RuntimeException('begins message did not match the expected (no-API-suffix) shape: ' . $messages[0]);
+            // tryAcquireLoungeLock() is a real INSERT IGNORE -- the fresh
+            // lock this test seeded directly in `config` (not via a prior
+            // tryAcquireLoungeLock() call) still wins the race against it,
+            // so this run itself never becomes the lock holder.
+            $result = $service->emptyLounge(invalidateUserCache: false);
+
+            expect($result)->toBeNull();
+
+            $messages = imageServiceTestReadLogMessages($logDir . '/emptylounge2.log');
+            expect($messages)->toHaveCount(2);
+            if (preg_match('/^emptyLounge, exec=([A-Za-z0-9]+), begins$/', $messages[0], $beginMatch) !== 1) {
+                throw new RuntimeException('begins message did not match the expected (no-API-suffix) shape: ' . $messages[0]);
+            }
+            expect($messages[1])->toBe("emptyLounge, exec={$beginMatch[1]}, skip");
+
+            // The fresh lock this test seeded is still there, untouched.
+            // findRawValue() transparently json_decode()s the stored value
+            // back to the plain string insertIgnoreRawValue() originally
+            // encoded (see ConfigRepository::findRawValue()'s own docblock).
+            expect(\Piwigo\Config\CurrentConfigService::current()->get()->findRawValue('empty_lounge_running'))->toBe($freshLockValue);
+        } finally {
+            $_REQUEST = $originalRequest;
+            $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param = 'empty_lounge_running'");
+            \Piwigo\Config\CurrentConfigService::current()->reset();
+            \Piwigo\Core\Kernel::reset();
+            CurrentConfig::reset();
+            imageServiceTestRrmdir($logDir);
         }
-        expect($messages[1])->toBe("emptyLounge, exec={$beginMatch[1]}, skip");
-
-        // The fresh lock this test seeded is still there, untouched.
-        // findRawValue() transparently json_decode()s the stored value
-        // back to the plain string insertIgnoreRawValue() originally
-        // encoded (see ConfigRepository::findRawValue()'s own docblock).
-        expect(\Piwigo\Config\CurrentConfigService::current()->get()->findRawValue('empty_lounge_running'))->toBe($freshLockValue);
     } finally {
         imageServiceTestReleaseEmptyLoungeDbLock($conn);
-        $_REQUEST = $originalRequest;
-        $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param = 'empty_lounge_running'");
-        \Piwigo\Config\CurrentConfigService::current()->reset();
-        \Piwigo\Core\Kernel::reset();
-        \Piwigo\Config\CurrentConfig::current()->reset();
-        imageServiceTestRrmdir($logDir);
     }
 });
 
@@ -1533,47 +1552,51 @@ test('emptyLounge() treats a lock that is exactly 60 seconds old as still fresh,
     // stale).
     [$conn, $repo] = imageServiceTestConnAndRepo();
     imageServiceTestAcquireEmptyLoungeDbLock($conn);
-    $logDir = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
-    mkdir($logDir, 0o777, true);
-    imageServiceTestSeedCurrentLogger(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::DEBUG, 'directory' => $logDir, 'filename' => 'emptylounge3.log']));
-    $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param = 'empty_lounge_running'");
-    $t0 = time();
-    $lockValue = 'boundaryexecid-' . ($t0 - 60);
-    $conn->executeStatement(
-        "INSERT INTO " . \Piwigo\Db\Tables::config() . " (param, value) VALUES ('empty_lounge_running', ?)",
-        [json_encode($lockValue)]
-    );
-    CurrentConfig::current()->setEmptyLoungeRunning($lockValue);
-    $configRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Config\ConfigEntry::class);
-    expect($configRepo)->toBeInstanceOf(\Piwigo\Config\ConfigRepository::class);
-    \Piwigo\Config\CurrentConfigService::current()->set(new \Piwigo\Config\ConfigService($configRepo, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
 
     try {
-        $service = imageServiceTestNewService($repo, $conn);
+        $logDir = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
+        mkdir($logDir, 0o777, true);
+        imageServiceTestSeedCurrentLogger(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::DEBUG, 'directory' => $logDir, 'filename' => 'emptylounge3.log']));
+        $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param = 'empty_lounge_running'");
+        $t0 = time();
+        $lockValue = 'boundaryexecid-' . ($t0 - 60);
+        $conn->executeStatement(
+            "INSERT INTO " . \Piwigo\Db\Tables::config() . " (param, value) VALUES ('empty_lounge_running', ?)",
+            [json_encode($lockValue)]
+        );
+        CurrentConfig::setEmptyLoungeRunning($lockValue);
+        $configRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Config\ConfigEntry::class);
+        expect($configRepo)->toBeInstanceOf(\Piwigo\Config\ConfigRepository::class);
+        \Piwigo\Config\CurrentConfigService::current()->set(new \Piwigo\Config\ConfigService($configRepo, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
 
-        $result = $service->emptyLounge(invalidateUserCache: false);
+        try {
+            $service = imageServiceTestNewService($repo, $conn);
 
-        expect($result)->toBeNull();
+            $result = $service->emptyLounge(invalidateUserCache: false);
 
-        $messages = imageServiceTestReadLogMessages($logDir . '/emptylounge3.log');
-        // Real code: not stale, so the "timeout stopped..." message
-        // (line 336) is never logged at all -- just begins + skip.
-        expect($messages)->toHaveCount(2);
-        expect($messages[1])->toEndWith(', skip');
+            expect($result)->toBeNull();
 
-        // The boundary lock this test seeded is still there, untouched
-        // (real code never entered the staleness-clear branch at all).
-        // findRawValue() transparently json_decode()s the stored value
-        // back to the plain string insertIgnoreRawValue() originally
-        // encoded (see ConfigRepository::findRawValue()'s own docblock).
-        expect(\Piwigo\Config\CurrentConfigService::current()->get()->findRawValue('empty_lounge_running'))->toBe($lockValue);
+            $messages = imageServiceTestReadLogMessages($logDir . '/emptylounge3.log');
+            // Real code: not stale, so the "timeout stopped..." message
+            // (line 336) is never logged at all -- just begins + skip.
+            expect($messages)->toHaveCount(2);
+            expect($messages[1])->toEndWith(', skip');
+
+            // The boundary lock this test seeded is still there, untouched
+            // (real code never entered the staleness-clear branch at all).
+            // findRawValue() transparently json_decode()s the stored value
+            // back to the plain string insertIgnoreRawValue() originally
+            // encoded (see ConfigRepository::findRawValue()'s own docblock).
+            expect(\Piwigo\Config\CurrentConfigService::current()->get()->findRawValue('empty_lounge_running'))->toBe($lockValue);
+        } finally {
+            $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param = 'empty_lounge_running'");
+            \Piwigo\Config\CurrentConfigService::current()->reset();
+            \Piwigo\Core\Kernel::reset();
+            CurrentConfig::reset();
+            imageServiceTestRrmdir($logDir);
+        }
     } finally {
         imageServiceTestReleaseEmptyLoungeDbLock($conn);
-        $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param = 'empty_lounge_running'");
-        \Piwigo\Config\CurrentConfigService::current()->reset();
-        \Piwigo\Core\Kernel::reset();
-        \Piwigo\Config\CurrentConfig::current()->reset();
-        imageServiceTestRrmdir($logDir);
     }
 });
 
@@ -1590,56 +1613,63 @@ test('emptyLounge() treats a lock that is exactly 61 seconds old as genuinely st
     // was genuinely cleared first.
     [$conn, $repo] = imageServiceTestConnAndRepo();
     imageServiceTestAcquireEmptyLoungeDbLock($conn);
-    imageServiceTestSeedCurrentLogger(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::OFF]));
-    $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param = 'empty_lounge_running'");
-    $staleValue = 'boundary61execid-' . (time() - 61);
-    $conn->executeStatement(
-        "INSERT INTO " . \Piwigo\Db\Tables::config() . " (param, value) VALUES ('empty_lounge_running', ?)",
-        [json_encode($staleValue)]
-    );
-    CurrentConfig::current()->setEmptyLoungeRunning($staleValue);
-    $configRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Config\ConfigEntry::class);
-    expect($configRepo)->toBeInstanceOf(\Piwigo\Config\ConfigRepository::class);
-    \Piwigo\Config\CurrentConfigService::current()->set(new \Piwigo\Config\ConfigService($configRepo, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
 
     try {
-        $service = imageServiceTestNewService($repo, $conn);
+        imageServiceTestSeedCurrentLogger(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::OFF]));
+        $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param = 'empty_lounge_running'");
+        $staleValue = 'boundary61execid-' . (time() - 61);
+        $conn->executeStatement(
+            "INSERT INTO " . \Piwigo\Db\Tables::config() . " (param, value) VALUES ('empty_lounge_running', ?)",
+            [json_encode($staleValue)]
+        );
+        CurrentConfig::setEmptyLoungeRunning($staleValue);
+        $configRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Config\ConfigEntry::class);
+        expect($configRepo)->toBeInstanceOf(\Piwigo\Config\ConfigRepository::class);
+        \Piwigo\Config\CurrentConfigService::current()->set(new \Piwigo\Config\ConfigService($configRepo, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
 
-        $result = $service->emptyLounge(invalidateUserCache: false);
+        try {
+            $service = imageServiceTestNewService($repo, $conn);
 
-        expect($result)->toBeArray();
+            $result = $service->emptyLounge(invalidateUserCache: false);
+
+            expect($result)->toBeArray();
+        } finally {
+            $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param = 'empty_lounge_running'");
+            \Piwigo\Config\CurrentConfigService::current()->reset();
+            \Piwigo\Core\Kernel::reset();
+            CurrentConfig::reset();
+        }
     } finally {
         imageServiceTestReleaseEmptyLoungeDbLock($conn);
-        $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param = 'empty_lounge_running'");
-        \Piwigo\Config\CurrentConfigService::current()->reset();
-        \Piwigo\Core\Kernel::reset();
-        \Piwigo\Config\CurrentConfig::current()->reset();
     }
 });
 
 test('emptyLounge() returns null when a different, still-fresh execution already holds the lock', function (): void {
     [$conn, $repo] = imageServiceTestConnAndRepo();
     imageServiceTestAcquireEmptyLoungeDbLock($conn);
-    imageServiceTestSeedCurrentLogger(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::OFF]));
-    $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param = 'empty_lounge_running'");
-    $conn->executeStatement(
-        "INSERT INTO " . \Piwigo\Db\Tables::config() . " (param, value) VALUES ('empty_lounge_running', ?)",
-        [json_encode('foreignexec-' . time())]
-    );
-    // Not stale (CurrentConfig::emptyLoungeRunning() defaults to null),
-    // so the staleness check is skipped entirely and tryAcquireLoungeLock()
-    // -- a real INSERT IGNORE -- finds the row above already taken.
-    CurrentConfig::current()->setEmptyLoungeRunning(null);
 
     try {
-        $service = imageServiceTestNewService($repo, $conn);
+        imageServiceTestSeedCurrentLogger(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::OFF]));
+        $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param = 'empty_lounge_running'");
+        $conn->executeStatement(
+            "INSERT INTO " . \Piwigo\Db\Tables::config() . " (param, value) VALUES ('empty_lounge_running', ?)",
+            [json_encode('foreignexec-' . time())]
+        );
+        // Not stale (CurrentConfig::emptyLoungeRunning() defaults to null),
+        // so the staleness check is skipped entirely and tryAcquireLoungeLock()
+        // -- a real INSERT IGNORE -- finds the row above already taken.
+        CurrentConfig::setEmptyLoungeRunning(null);
 
-        expect($service->emptyLounge())->toBeNull();
+        try {
+            $service = imageServiceTestNewService($repo, $conn);
+
+            expect($service->emptyLounge())->toBeNull();
+        } finally {
+            $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param = 'empty_lounge_running'");
+            CurrentConfig::reset();
+        }
     } finally {
         imageServiceTestReleaseEmptyLoungeDbLock($conn);
-        $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param = 'empty_lounge_running'");
-        \Piwigo\Core\Kernel::reset();
-        \Piwigo\Config\CurrentConfig::current()->reset();
     }
 });
 

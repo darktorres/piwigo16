@@ -542,7 +542,10 @@ final class RateRepository extends EntityRepository
             $result[] = [
                 'id' => $row['id']->value,
                 'name' => is_string($row['name'] ?? null) ? $row['name'] : '',
-                'status' => is_string($row['status'] ?? null) ? $row['status'] : '',
+                // Phase 5 Item 21: `ui.status` (UserInfoEntity::$status) is
+                // now enumType-mapped -- array hydration returns a real
+                // UserStatus instance for it, not a raw string.
+                'status' => ($row['status'] ?? null) instanceof \Piwigo\Users\UserStatus ? $row['status']->value : '',
             ];
         }
 

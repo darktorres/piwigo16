@@ -54,8 +54,13 @@ final readonly class AuthUser
             email: is_string($row['email'] ?? null) ? $row['email'] : '',
             password: is_string($row['password'] ?? null) ? $row['password'] : '',
             // the user may not exist in user_infos, so default to 'normal'
-            // -- matches the original's `$user['status'] ??= 'normal';`
-            status: is_string($row['status'] ?? null) ? $row['status'] : 'normal',
+            // -- matches the original's `$user['status'] ??= 'normal';`.
+            // Phase 5 Item 21: `ui.status` (UserInfoEntity::$status) is now
+            // enumType-mapped -- DQL array hydration returns a real
+            // UserStatus instance for it, not a raw string (confirmed live;
+            // AbstractHydrator::buildEnum() runs for any scalar select of
+            // an enumType-mapped field, not just full-entity selects).
+            status: ($row['status'] ?? null) instanceof \Piwigo\Users\UserStatus ? $row['status']->value : 'normal',
         );
     }
 

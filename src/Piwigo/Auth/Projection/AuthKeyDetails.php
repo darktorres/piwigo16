@@ -54,7 +54,10 @@ final readonly class AuthKeyDetails
             lastUsedOn: is_scalar($row['last_used_on'] ?? null) ? (string) $row['last_used_on'] : null,
             lastNotifiedOn: is_scalar($row['last_notified_on'] ?? null) ? (string) $row['last_notified_on'] : null,
             apikeySecret: is_scalar($row['apikey_secret'] ?? null) ? (string) $row['apikey_secret'] : null,
-            status: is_string($row['status'] ?? null) ? $row['status'] : '',
+            // Phase 5 Item 21: see \Piwigo\Auth\Projection\AuthUser::fromRow()'s
+            // own comment -- `ui.status` array-hydrates as a UserStatus
+            // instance now, not a raw string.
+            status: ($row['status'] ?? null) instanceof \Piwigo\Users\UserStatus ? $row['status']->value : '',
             username: is_string($row['username'] ?? null) ? $row['username'] : '',
             email: is_string($row['email'] ?? null) ? $row['email'] : '',
         );

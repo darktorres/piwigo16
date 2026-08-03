@@ -105,7 +105,7 @@ final readonly class UserInfo
         return new self(
             userId: $entity->userId,
             nbImagePage: $entity->nbImagePage,
-            status: $entity->status,
+            status: $entity->status->value,
             language: $entity->language,
             expand: $entity->expand,
             showNbComments: $entity->showNbComments,

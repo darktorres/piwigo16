@@ -55,7 +55,10 @@ final readonly class UserMailNotification
             mailAddress: is_string($row['mail_address'] ?? null) ? $row['mail_address'] : '',
             enabled: is_scalar($row['enabled'] ?? null) ? (string) $row['enabled'] : null,
             lastSend: is_string($row['last_send'] ?? null) ? $row['last_send'] : null,
-            status: is_string($row['status'] ?? null) ? $row['status'] : null,
+            // Phase 5 Item 21: see \Piwigo\Auth\Projection\AuthUser::fromRow()'s
+            // own comment -- `ui.status` array-hydrates as a UserStatus
+            // instance now, not a raw string.
+            status: ($row['status'] ?? null) instanceof \Piwigo\Users\UserStatus ? $row['status']->value : null,
         );
     }
 

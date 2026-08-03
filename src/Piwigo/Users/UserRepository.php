@@ -453,7 +453,15 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
         return new UserInfoEntity(
             userId: $userId,
             nbImagePage: is_numeric($row['nb_image_page'] ?? null) ? (int) $row['nb_image_page'] : 15,
-            status: is_string($row['status'] ?? null) ? $row['status'] : 'guest',
+            // Phase 5 Item 21: UserInfoEntity::$status is UserStatus
+            // (enumType-mapped) -- $row is a caller-supplied bag (not
+            // necessarily DB-sourced), so this keeps the same defensive
+            // fallback-to-guest behavior the old is_string() check had,
+            // via tryFrom() rather than Doctrine's own throw-on-mismatch
+            // from() (that throw is safe only for values already read back
+            // from the DB-constrained `enum(...)` column, not arbitrary
+            // caller input).
+            status: is_string($row['status'] ?? null) ? (UserStatus::tryFrom($row['status']) ?? UserStatus::Guest) : UserStatus::Guest,
             language: is_string($row['language'] ?? null) ? $row['language'] : 'en_UK',
             expand: (bool) ($row['expand'] ?? false),
             showNbComments: (bool) ($row['show_nb_comments'] ?? false),
@@ -901,7 +909,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
         return [
             'user_id' => $userInfo->userId->value,
             'nb_image_page' => $userInfo->nbImagePage,
-            'status' => $userInfo->status,
+            'status' => $userInfo->status->value,
             'language' => $userInfo->language,
             'expand' => $userInfo->expand,
             'show_nb_comments' => $userInfo->showNbComments,
@@ -1513,8 +1521,11 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * Admin\UserListPageRenderer's own status-filter counters.
      *
      * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * column/property, plain string `status` (no custom-type hydration
-     * concern).
+     * column/property.
+     *
+     * Phase 5 Item 21: `status` is now `UserStatus` (enumType-mapped) --
+     * array hydration returns a real UserStatus instance per row, unwrapped
+     * to `.value` for the array key (a PHP array key can't be an object).
      *
      * @return array<string, int> keyed by status
      */
@@ -1530,7 +1541,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
 
         $byStatus = [];
         foreach ($rows as $row) {
-            $byStatus[$row['status']] = $row['nbUsersOf'];
+            $byStatus[$row['status']->value] = $row['nbUsersOf'];
         }
 
         return $byStatus;
@@ -1860,7 +1871,10 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
 
             $result[] = [
                 'user_id' => $userId instanceof UserId ? $userId->value : null,
-                'status' => $row['status'] ?? null,
+                // Phase 5 Item 21: `status` is now UserStatus
+                // (enumType-mapped) -- array hydration returns a real
+                // instance, unwrapped to `.value` here.
+                'status' => ($row['status'] ?? null) instanceof UserStatus ? $row['status']->value : null,
                 'language' => $row['language'] ?? null,
                 'email' => $row['email'] ?? null,
                 'username' => $row['username'] ?? null,
@@ -2023,7 +2037,11 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
                 continue;
             }
 
-            $byId[$id->value] = is_string($row['status'] ?? null) ? $row['status'] : null;
+            // Phase 5 Item 21: `status` is now UserStatus (enumType-mapped)
+            // -- array hydration returns a real instance, unwrapped to
+            // `.value` here (was is_string(), a silent-null regression
+            // once the column stopped hydrating as a plain string).
+            $byId[$id->value] = ($row['status'] ?? null) instanceof UserStatus ? $row['status']->value : null;
         }
 
         return $byId;
@@ -2065,7 +2083,12 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
 
             $result[] = new \Piwigo\Users\Projection\ActivationKeyRow(
                 userId: $row['userId'],
-                status: is_string($row['status']) ? $row['status'] : '',
+                // Phase 5 Item 21: `status` is now UserStatus
+                // (enumType-mapped) -- array hydration returns a real
+                // instance, unwrapped to `.value` here (was is_string(), a
+                // silent-empty-string regression once the column stopped
+                // hydrating as a plain string).
+                status: ($row['status'] ?? null) instanceof UserStatus ? $row['status']->value : '',
                 activationKey: is_string($row['activationKey']) ? $row['activationKey'] : '',
             );
         }

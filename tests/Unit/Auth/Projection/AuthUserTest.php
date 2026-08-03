@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Auth\Projection\AuthUser;
+use Piwigo\Users\UserStatus;
 
 /**
  * @return array<string, mixed>
@@ -14,7 +15,10 @@ function fullAuthUserRow(): array
         'username' => 'fixture_admin',
         'email' => 'fixture_admin@example.test',
         'password' => '$2y$04$hash',
-        'status' => 'webmaster',
+        // A real row's `status` is a UserStatus instance (Phase 5 Item 21:
+        // DQL array hydration of an enumType-mapped field), not a raw
+        // string -- matches what fromRow()'s real caller actually passes.
+        'status' => UserStatus::Webmaster,
     ];
 }
 

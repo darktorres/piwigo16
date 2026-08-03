@@ -179,9 +179,16 @@ final readonly class AuthRepository
         $this->em->clear();
     }
 
+    /**
+     * Phase 5 Item 21: `UserInfoEntity::$status` is now `UserStatus`
+     * (enumType-mapped) -- unwrapped to `.value` here so this method's own
+     * `?string` contract (and every real caller downstream, e.g.
+     * `AuthService::createUserAuthKey()`'s `in_array($status, [...], true)`
+     * string comparisons) stays unchanged.
+     */
     public function findUserStatus(UserId $userId): ?string
     {
-        return $this->em->find(UserInfoEntity::class, $userId)?->status;
+        return $this->em->find(UserInfoEntity::class, $userId)?->status?->value;
     }
 
     public function authKeyCandidateExists(string $candidate): bool

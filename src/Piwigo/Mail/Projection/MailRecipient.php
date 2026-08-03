@@ -35,7 +35,10 @@ final readonly class MailRecipient
             userId: is_numeric($row['user_id'] ?? null) ? (int) $row['user_id'] : 0,
             name: is_string($row['name'] ?? null) ? $row['name'] : '',
             email: is_string($row['email'] ?? null) ? $row['email'] : '',
-            status: is_string($row['status'] ?? null) ? $row['status'] : null,
+            // Phase 5 Item 21: see \Piwigo\Auth\Projection\AuthUser::fromRow()'s
+            // own comment -- `ui.status` array-hydrates as a UserStatus
+            // instance now, not a raw string.
+            status: ($row['status'] ?? null) instanceof \Piwigo\Users\UserStatus ? $row['status']->value : null,
         );
     }
 

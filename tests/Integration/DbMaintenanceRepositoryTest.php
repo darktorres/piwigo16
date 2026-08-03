@@ -287,6 +287,19 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
     // narrowing for `$session['data']` (a raw DBAL row typing as
     // `array<string, mixed>`), not a reachable runtime state.
 
+    public function test_repair_optimize_all_tables_completes_without_throwing(): void
+    {
+        // Phase 4 Item 17: had zero prior coverage. Per this method's own
+        // docblock, REPAIR/ALTER .../OPTIMIZE issue no meaningful return
+        // value to assert on -- completing without an exception already
+        // means every introspected table (real Schema-API calls now,
+        // not hand-parsed SHOW TABLES/DESC output) round-tripped
+        // correctly through REPAIR TABLE/(if it has a primary key)
+        // ALTER TABLE ... ORDER BY/OPTIMIZE TABLE.
+        $this->expectNotToPerformAssertions();
+        $this->repo->repairOptimizeAllTables();
+    }
+
     private function countRows(string $table): int
     {
         $value = $this->conn->createQueryBuilder()

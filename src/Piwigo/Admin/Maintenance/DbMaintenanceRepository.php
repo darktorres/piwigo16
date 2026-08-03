@@ -149,21 +149,33 @@ final readonly class DbMaintenanceRepository
      */
     public function repairOptimizeAllTables(): void
     {
-        // SQL-modernization audit: verified, all 5 heredoc blocks below
-        // splice only identifier-shaped values (table names from SHOW
-        // TABLES/the fixed DB prefix, column names from DESC results),
-        // never a real value -- REPAIR/OPTIMIZE/ALTER...ORDER BY have no
-        // bind-able parameter positions in SQL at all (unlike DML, table/
-        // column identifiers in DDL-ish statements can never be
-        // placeholders in any dialect), so there's no QueryBuilder/bound-
-        // parameter form to convert to here regardless.
+        // Phase 4 Item 17: the 2 pure-introspection blocks (table list,
+        // per-table primary key columns) now go through DBAL's real
+        // Schema API instead of hand-parsing SHOW TABLES/DESC output --
+        // introspectTableNames()/introspectTablePrimaryKeyConstraint() are
+        // typed, no raw-row-shape guessing against MySQL's own display
+        // formatting ('Key' === 'PRI' string matching) needed. REPAIR/
+        // ALTER ... ORDER BY/OPTIMIZE themselves have no DBAL Schema-API
+        // or QueryBuilder equivalent (that API defines/diffs schemas for
+        // migrations, not maintenance commands) and no bind-able parameter
+        // position in any dialect (table/column identifiers in DDL-ish
+        // statements can never be placeholders) -- those 3 stay raw SQL,
+        // spliced only from already-introspected identifier-shaped values.
         $conn = $this->em->getConnection();
         $prefix = $this->dbCredentials->prefix;
+        $schemaManager = $conn->createSchemaManager();
+
+        // Identifier::toString() quotes (e.g. `"piwigo_activity"`) --
+        // getValue() is the real unquoted name, matching what SHOW
+        // TABLES/DESC's own output gave the original raw-splice version.
+        $allTableNames = array_values(array_filter(
+            $schemaManager->introspectTableNames(),
+            static fn (\Doctrine\DBAL\Schema\Name\OptionallyQualifiedName $name): bool => str_starts_with($name->getUnqualifiedName()->getValue(), $prefix)
+        ));
         $allTables = array_map(
-            static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
-            $conn->fetchFirstColumn(<<<SQL
-                SHOW TABLES LIKE '{$prefix}%'
-                SQL)
+            static fn (\Doctrine\DBAL\Schema\Name\OptionallyQualifiedName $name): string => $name->getUnqualifiedName()
+                ->getValue(),
+            $allTableNames
         );
 
         $allTablesCsv = implode(', ', $allTables);
@@ -171,22 +183,22 @@ final readonly class DbMaintenanceRepository
             REPAIR TABLE {$allTablesCsv}
             SQL);
 
-        foreach ($allTables as $tableName) {
-            $allPrimaryKey = [];
-            foreach ($conn->fetchAllAssociative(<<<SQL
-                DESC {$tableName};
-                SQL) as $column) {
-                if (($column['Key'] ?? null) === 'PRI' && is_scalar($column['Field'])) {
-                    $allPrimaryKey[] = (string) $column['Field'];
-                }
+        foreach ($allTableNames as $tableName) {
+            $primaryKey = $schemaManager->introspectTablePrimaryKeyConstraint($tableName);
+            if ($primaryKey === null) {
+                continue;
             }
 
-            if ($allPrimaryKey !== []) {
-                $primaryKeyCsv = implode(', ', $allPrimaryKey);
-                $conn->executeStatement(<<<SQL
-                    ALTER TABLE {$tableName} ORDER BY {$primaryKeyCsv};
-                    SQL);
-            }
+            $primaryKeyCsv = implode(', ', array_map(
+                static fn (\Doctrine\DBAL\Schema\Name\UnqualifiedName $column): string => $column->getIdentifier()
+                    ->getValue(),
+                $primaryKey->getColumnNames()
+            ));
+            $tableNameString = $tableName->getUnqualifiedName()
+                ->getValue();
+            $conn->executeStatement(<<<SQL
+                ALTER TABLE {$tableNameString} ORDER BY {$primaryKeyCsv};
+                SQL);
         }
 
         $conn->executeStatement(<<<SQL

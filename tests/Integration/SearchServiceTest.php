@@ -22,8 +22,10 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Permission\PermissionService;
     use Piwigo\Permission\SqlCondition;
     use Piwigo\PluginConfig\EventDispatcher;
+    use Piwigo\Search\Event\QsearchGetImagesSqlScopes;
     use Piwigo\Search\Event\QsearchResults;
     use Piwigo\Search\QExpression;
+    use Piwigo\Search\QsearchClause;
     use Piwigo\Search\QResults;
     use Piwigo\Search\QSearchScope;
     use Piwigo\Search\QSingleToken;
@@ -1118,6 +1120,69 @@ final class SearchServiceTest extends IntegrationTestCase
         $this->service->qsearchGetCategories($expr, $qsr);
 
         self::assertSame([], $qsr->cat_iids[0]);
+    }
+
+    public function test_qsearch_get_images_dispatches_the_hook_for_an_unrecognized_scope_and_applies_the_returned_clause(): void
+    {
+        // No real quick-search scope ever has id 'custom_field' -- reaches
+        // qsearchGetImages()'s own default/plugin-hook branch, same
+        // direct-call rationale as the tag/category tests above.
+        $handler = static fn (QsearchGetImagesSqlScopes $event): QsearchGetImagesSqlScopes => new QsearchGetImagesSqlScopes(
+            [new QsearchClause('i.id = ?', [1])],
+            $event->token,
+            $event->expr
+        );
+        EventDispatcher::get()->addTypedHandler(QsearchGetImagesSqlScopes::class, $handler);
+
+        try {
+            $scopes = [new QSearchScope('custom_field', [], true)];
+            $expr = new QExpression('custom_field:*', $scopes);
+            $qsr = new QResults();
+
+            $this->service->qsearchGetImages($expr, $qsr);
+
+            self::assertSame([1], $qsr->images_iids[0]);
+        } finally {
+            EventDispatcher::get()->removeEventHandler(QsearchGetImagesSqlScopes::class, $handler);
+        }
+    }
+
+    public function test_qsearch_get_images_merges_params_from_multiple_hook_clauses(): void
+    {
+        $handler = static fn (QsearchGetImagesSqlScopes $event): QsearchGetImagesSqlScopes => new QsearchGetImagesSqlScopes(
+            [
+                new QsearchClause('i.id = ?', [1]),
+                new QsearchClause('i.id = ?', [2]),
+            ],
+            $event->token,
+            $event->expr
+        );
+        EventDispatcher::get()->addTypedHandler(QsearchGetImagesSqlScopes::class, $handler);
+
+        try {
+            $scopes = [new QSearchScope('custom_field', [], true)];
+            $expr = new QExpression('custom_field:*', $scopes);
+            $qsr = new QResults();
+
+            $this->service->qsearchGetImages($expr, $qsr);
+
+            $imageIds = $qsr->images_iids[0];
+            sort($imageIds);
+            self::assertSame([1, 2], $imageIds);
+        } finally {
+            EventDispatcher::get()->removeEventHandler(QsearchGetImagesSqlScopes::class, $handler);
+        }
+    }
+
+    public function test_qsearch_get_images_returns_no_matches_for_an_unrecognized_scope_with_no_listener(): void
+    {
+        $scopes = [new QSearchScope('custom_field', [], true)];
+        $expr = new QExpression('custom_field:*', $scopes);
+        $qsr = new QResults();
+
+        $this->service->qsearchGetImages($expr, $qsr);
+
+        self::assertSame([], $qsr->images_iids[0]);
     }
 
     public function test_get_quick_search_results_no_cache_a_lone_not_prefixed_tag_match_produces_no_results(): void

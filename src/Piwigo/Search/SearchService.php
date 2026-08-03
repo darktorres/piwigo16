@@ -42,13 +42,15 @@ use Piwigo\Users\UserService;
  * `Search\SearchFilterRenderer`, instead of onto this class.
  *
  * [SEC-18] The 3 `addslashes()` sites (REGEXP/FULLTEXT/LIKE clause
- * construction in the quick-search token evaluator) are replaced with
- * `SearchRepository::quote()` (the real DBAL driver's own escaping) --
- * these clauses are dynamically OR/AND-joined alongside other,
- * already-safe raw fragments (`QNumericRangeScope`/`QDateRangeScope`'s own
- * `get_sql()`, numeric/date values only) into a single WHERE string, where
- * a `?`-bound parameter can't cleanly compose; `quote()` is the correct,
- * driver-safe way to inline a free-text value into that kind of clause.
+ * construction in the quick-search token evaluator) are replaced with real
+ * `?`-bound parameters -- {@see qsearchGetTextTokenSearchSql()}'s own
+ * docblock confirms this crosses the wire as-is, with no SQL
+ * string-literal escaping step to compensate for, unlike an earlier
+ * `SearchRepository::quote()`-then-splice mechanism this replaced.
+ * `quote()` itself is still real, driver-safe infrastructure for a
+ * caller that genuinely can't compose a `?`-bound parameter (e.g. a
+ * value that must be embedded as a SQL literal, not passed positionally)
+ * -- {@see \Piwigo\Search\QsearchClause}'s own docblock.
  *
  * Every `mixed` below stays that way by design: $search/$field/
  * $allwordsField (and every advanced-search-criterion param derived from
@@ -920,12 +922,12 @@ final readonly class SearchService
     }
 
     /**
-     * [SEC-18] The LIKE clause's free-text term is quoted via
-     * {@see SearchRepository::quote()}, replacing the original's
-     * `addslashes()` + manual `%`/`_` escaping (`quote()` escapes the
-     * whole literal; LIKE wildcards `%`/`_` are still escaped separately
-     * since they're meaningful to LIKE itself, not the SQL string
-     * literal).
+     * [SEC-18] The LIKE clause's free-text term is bound via a `?`
+     * parameter, replacing the original's `addslashes()`-based inline
+     * splicing -- `%`/`_` are still backslash-escaped manually first
+     * (LIKE's own wildcard syntax, meaningful even inside a bound value,
+     * not a SQL string-literal concern a bound parameter would already
+     * handle).
      */
     public function qsearchGetImages(QExpression $expr, QResults $qsr): void
     {
@@ -1016,9 +1018,15 @@ final readonly class SearchService
 
                     break;
                 default:
-                    $clausesAfterHook = $this->eventDispatcher->dispatchChange(new QsearchGetImagesSqlScopes($clauses, $token, $expr))
+                    // $clauses is always [] here (this is the switch's own
+                    // default arm; no other case falls through into it).
+                    $hookClauses = $this->eventDispatcher
+                        ->dispatchChange(new QsearchGetImagesSqlScopes($clauses, $token, $expr))
                         ->clauses;
-                    $clauses = array_values(array_filter($clausesAfterHook, is_string(...)));
+                    foreach ($hookClauses as $hookClause) {
+                        $clauses[] = $hookClause->sql;
+                        $params = array_merge($params, $hookClause->params);
+                    }
 
                     break;
             }

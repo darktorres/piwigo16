@@ -9,8 +9,8 @@ use Piwigo\Common\ValueObject\UserId;
 /**
  * Typed user entity. `rawAttributes` carries the full legacy `$user` array
  * for P17-23 reads during migration -- retirement gates per the plan doc:
- * P18 records a baseline read-count, P27's arch test enforces zero reads
- * outside `Users/`, P32 deletes the property entirely.
+ * P18 records a baseline read-count, P26's arch test enforces zero reads
+ * outside `Users/`, P29 deletes the property entirely.
  *
  * `forbiddenCategories`/`level`/`preferences` were promoted from
  * `rawAttributes` to named properties in Legacy Coupling Retirement Track A

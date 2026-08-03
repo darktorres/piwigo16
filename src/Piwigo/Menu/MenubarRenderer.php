@@ -37,7 +37,7 @@ use Piwigo\Tag\TagService;
  * is preserved unmodified -- the reference doc's own fix for this
  * (replacing the plugin `eval_visible` contract with a Closure-based
  * visibility API) targets `PluginInterface`, which doesn't exist until
- * P31 (SEC-49). Not this phase's job.
+ * P28 (SEC-49). Not this phase's job.
  */
 final class MenubarRenderer
 {

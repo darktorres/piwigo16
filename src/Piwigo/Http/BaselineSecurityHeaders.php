@@ -9,7 +9,7 @@ use Psr\Http\Message\ResponseInterface;
 /**
  * The unconditional baseline set -- headers safe to add regardless of
  * scheme/nonce state. CSP/HSTS/Permissions-Policy need nonce and
- * HTTPS-detection infrastructure that doesn't exist yet (P28/P29).
+ * HTTPS-detection infrastructure that doesn't exist yet (P27/P32).
  */
 final class BaselineSecurityHeaders implements SecurityHeaderContributor
 {

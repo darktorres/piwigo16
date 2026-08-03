@@ -124,7 +124,7 @@ final class UploadService
 
     /**
      * $data is raw, unvalidated $_POST data (see the only real caller,
-     * ConfigurationSubController) -- flagged for Phase 4 (SEC-40/P27
+     * ConfigurationSubController) -- flagged for Phase 4 (SEC-40/P26
      * Request DTOs), not narrowed now.
      *
      * @param array<string, mixed> $data

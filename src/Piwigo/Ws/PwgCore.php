@@ -49,7 +49,7 @@ use Piwigo\Search\SearchRepository;
  *
  * `$params`/`$param` throughout this class (every `mixed[]`/`array<string,
  * mixed>`-typed WS method parameter) is raw, unvalidated WS-protocol
- * request data -- flagged for Phase 4 (SEC-40/P27 Request DTOs), not
+ * request data -- flagged for Phase 4 (SEC-40/P26 Request DTOs), not
  * narrowed in this pass. Every real read already narrows defensively at
  * its own use site.
  */

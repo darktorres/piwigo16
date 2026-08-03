@@ -20,7 +20,7 @@ final class DummyPluginMaintain extends PluginMaintain
     // by a plugin's own maintain.inc.php (include_once'd in
     // plugins::build_maintain_class(), outside this codebase, not
     // statically knowable) — genuinely undecidable until real PluginMaintain
-    // contracts (P31) replace this pre-2.7 procedural fallback entirely.
+    // contracts (P28) replace this pre-2.7 procedural fallback entirely.
     /**
      * @param string $plugin_version
      * @param array<int, string> $errors - not natively typed: PluginMaintain's

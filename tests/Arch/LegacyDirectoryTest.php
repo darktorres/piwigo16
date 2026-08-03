@@ -101,7 +101,7 @@ test('admin/ does not exist -- its only remaining content (themes/) moved to the
 });
 
 test('public/ contains exactly the relocated entry points, robots.txt, and the sanctioned asset symlinks', function (): void {
-    // Part II (web-root isolation, docs/PLAN.md P32's pulled-forward
+    // Part II (web-root isolation, docs/PLAN.md P29's pulled-forward
     // slice): DocumentRoot is public/, not the repo root -- every PHP entry
     // point lives here now, plus symlinks back to the 3 static asset
     // directories real requests need (themes/, dist/, _data/combined/).

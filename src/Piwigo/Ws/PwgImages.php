@@ -2054,7 +2054,7 @@ final class PwgImages
      * Result rows are genuinely polymorphic (status: 'not found'|'multiple'
      * carry no other key, status: 'found' adds image_id/format_exist), and
      * $candidates below is arbitrary client-supplied JSON -- flagged for
-     * Phase 4 (SEC-40/P27 Request DTOs).
+     * Phase 4 (SEC-40/P26 Request DTOs).
      * @return array<int|string, array<string, mixed>>
      */
     public static function formatsSearchImage(array $params, PwgServer $service): array

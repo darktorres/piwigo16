@@ -61,7 +61,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * `array<string, mixed> $bulkFilter`/`$bulk_filter`/`$url_filter`
  * throughout this class are all `$_SESSION['bulk_manager_filter']` (or a
  * sub-array of it), itself built from raw `$_GET`/`$_POST` a few lines
- * above -- same "flagged for Phase 4 (SEC-40/P27 Request DTOs)" call as
+ * above -- same "flagged for Phase 4 (SEC-40/P26 Request DTOs)" call as
  * FilterResolver's own identical param. Every real read below already
  * narrows defensively (`isset()`/`is_array()` + an is_*() check).
  */

@@ -20,7 +20,7 @@ final class DummyThemeMaintain extends ThemeMaintain
     // by a theme's own maintain.inc.php (include_once'd in
     // themes::build_maintain_class(), outside this codebase, not statically
     // knowable) — genuinely undecidable until real ThemeMaintain contracts
-    // (P31) replace this pre-2.7 procedural fallback entirely.
+    // (P28) replace this pre-2.7 procedural fallback entirely.
     /**
      * @param string $theme_version
      * @param array<int, string> $errors - not natively typed: ThemeMaintain's

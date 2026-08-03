@@ -81,7 +81,7 @@ final class AuditRepository extends EntityRepository
 
     /**
      * Every row in insertion order, for chain verification and for the
-     * (future, P29) admin viewer.
+     * (future, P32) admin viewer.
      *
      * @return list<AuditLogEntry>
      */

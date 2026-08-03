@@ -274,7 +274,7 @@ return [
 
     // Non-obvious construction (handler + formatter wiring). Monolog "app"
     // channel only -- the "security" channel (a named $securityLogger
-    // parameter) is deferred until a real consumer exists (P11/P16/P28).
+    // parameter) is deferred until a real consumer exists (P11/P16/P27).
     LoggerInterface::class => factory(static function (): LoggerInterface {
         $handler = new RotatingFileHandler(dirname(__DIR__) . '/_data/logs/piwigo.log', 30);
         $handler->setFormatter(new JsonFormatter());

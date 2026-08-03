@@ -23,7 +23,7 @@ final class DeviceHelper
         if (! is_string($device)) {
             // No UA-sniffing library (removed, no replacement — see
             // docs/REFERENCE.md's ADR-0021): the v17
-            // responsive CSS (P30) removes the need for a separate mobile theme
+            // responsive CSS (P33) removes the need for a separate mobile theme
             // via device detection. mobileTheme() still honors an explicit
             // ?mobile=1/0 override independent of this default.
             $device = 'desktop';

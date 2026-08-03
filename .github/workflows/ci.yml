@@ -282,16 +282,16 @@ jobs:
       - run: bun run size-limit
 
   k6-load:
-    name: k6 load (from P29)
+    name: k6 load (from P32)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     continue-on-error: true
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      # tests/Load/*.js doesn't exist until P29 — non-blocking (warning) per
+      # tests/Load/*.js doesn't exist until P32 — non-blocking (warning) per
       # docs/PLAN.md, no-op until then.
       - if: hashFiles('tests/Load/**') != ''
-        run: echo "k6 load surface not present yet (P29)"
+        run: echo "k6 load surface not present yet (P32)"
 
   commitlint:
     name: commitlint

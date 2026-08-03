@@ -116,7 +116,7 @@ test('every Piwigo\ class under src/Piwigo/ has #[\Override] on every overriding
 // Bootstrap/ reach into the container before injection is possible; every
 // root entry script (index.php included) reaches it only indirectly,
 // through a Bootstrap/ class. docs/PLAN.md: "Gate: arch test
-// enforcing this boundary from P7 onward, not deferred to P32."
+// enforcing this boundary from P7 onward, not deferred to P29."
 
 /**
  * @return list<array{path: string, line: int}>
@@ -1711,7 +1711,7 @@ test('src/Piwigo/ contains no string-keyed EventDispatcher dispatch calls outsid
     // dispatchNotify() -- including the 7 WS-protocol-lifecycle events
     // (get_history, ws_users_getList, ws_invoke_allowed, ws_add_methods,
     // ws_images_uploadCompleted, sendResponse, merge_tags) originally
-    // deferred behind P26 (WS API removal), converted ahead of that on
+    // deferred behind P25 (WS API removal), converted ahead of that on
     // explicit direction rather than waiting.
     //
     // 'trigger' is the one permanent exception: EventDispatcher's own

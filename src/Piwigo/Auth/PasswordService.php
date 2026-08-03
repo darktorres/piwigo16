@@ -40,7 +40,7 @@ final readonly class PasswordService
      * Verifies a password against a stored hash using native
      * password_verify() (bcrypt). Also accepts a legacy phpass
      * ($P$/$H$-prefixed) hash, rehashing it to bcrypt on successful verify
-     * -- the same forward-migration pattern SEC-41/P28 reuses later for
+     * -- the same forward-migration pattern SEC-41/P27 reuses later for
      * bcrypt->Argon2id.
      *
      * @param int|null $userId only useful to update the hash format in database

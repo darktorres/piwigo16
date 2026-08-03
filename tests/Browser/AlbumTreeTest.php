@@ -9,7 +9,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
  * Behavioural regression net for the album tree (admin/themes/default/js/
- * albums.js + cat_list.js, jqTree-based at this point in the replay — P24
+ * albums.js + cat_list.js, jqTree-based at this point in the replay — P30
  * converts it to a native module). Assertions describe what the user sees,
  * not implementation details.
  *

@@ -38,7 +38,7 @@ use Piwigo\Users\UserService;
  * `array<string, mixed> $bulkFilter`/`$dimension`/`$filesize` throughout
  * this class are `$_SESSION['bulk_manager_filter']` (or a sub-array of
  * it), itself built from raw `$_GET`/`$_POST` upstream in
- * BatchManagerSubController -- flagged for Phase 4 (SEC-40/P27 Request
+ * BatchManagerSubController -- flagged for Phase 4 (SEC-40/P26 Request
  * DTOs), not narrowed now. Every real read below already narrows
  * defensively (`isset()` + `is_numeric()`).
  */

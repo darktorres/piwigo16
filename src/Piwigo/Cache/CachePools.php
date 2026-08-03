@@ -26,7 +26,7 @@ use Psr\Cache\CacheItemPoolInterface;
  * calls the relevant method here, the same way `Connection::class`'s entry
  * calls `DbConnection::build()`.
  *
- * `rate_limiter` is deliberately not built -- genuinely P28 scope, no
+ * `rate_limiter` is deliberately not built -- genuinely P27 scope, no
  * consumer exists anywhere in this codebase yet.
  */
 final class CachePools

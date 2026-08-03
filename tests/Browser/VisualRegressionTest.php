@@ -14,7 +14,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * ("N Albums", "N Photos", "N Users") visible on the admin dashboard and
  * several list pages, producing false diffs unrelated to any real change.
  *
- * First-time generation / intentional re-baseline (P29 templates, P30 CSS):
+ * First-time generation / intentional re-baseline (P32 templates, P33 CSS):
  *   vendor/bin/pest tests/Browser/VisualRegressionTest.php --update-snapshots
  *
  * Determinism (fixed in this same commit, not a later cleanup pass — see

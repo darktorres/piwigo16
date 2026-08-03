@@ -865,7 +865,7 @@ final readonly class CategoryService
      * RenderCategoryName handler is ever registered (none are today --
      * PEM extensions are unwired, and RenderCategoryName is currently
      * `readonly` (no core handler mutates it either) -- so this is
-     * currently a no-op difference). Re-verify once P31 wires real event
+     * currently a no-op difference). Re-verify once P28 wires real event
      * handlers.
      *
      * Legacy Coupling Retirement Track A batch A5.2e: $category/

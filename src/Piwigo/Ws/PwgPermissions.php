@@ -54,38 +54,29 @@ final class PwgPermissions
 
         // direct users
         foreach ($this->permissionService->getDirectUserAccessRows($cat_ids_filter) as $row) {
-            if (! isset($row['cat_id']) || ! is_numeric($row['cat_id'])) {
-                continue;
-            }
-            $cat_id = (int) $row['cat_id'];
+            $cat_id = $row['cat_id'];
             if (! isset($perms[$cat_id])) {
                 $perms[$cat_id]['id'] = $cat_id;
             }
-            $perms[$cat_id]['users'][] = is_scalar($row['user_id']) ? intval($row['user_id']) : 0;
+            $perms[$cat_id]['users'][] = $row['user_id'];
         }
 
         // indirect users
         foreach ($this->permissionService->getIndirectUserAccessRows($cat_ids_filter) as $row) {
-            if (! isset($row['cat_id']) || ! is_numeric($row['cat_id'])) {
-                continue;
-            }
-            $cat_id = (int) $row['cat_id'];
+            $cat_id = $row['cat_id'];
             if (! isset($perms[$cat_id])) {
                 $perms[$cat_id]['id'] = $cat_id;
             }
-            $perms[$cat_id]['users_indirect'][] = is_scalar($row['user_id']) ? intval($row['user_id']) : 0;
+            $perms[$cat_id]['users_indirect'][] = $row['user_id'];
         }
 
         // groups
         foreach ($this->permissionService->getGroupAccessRows($cat_ids_filter) as $row) {
-            if (! isset($row['cat_id']) || ! is_numeric($row['cat_id'])) {
-                continue;
-            }
-            $cat_id = (int) $row['cat_id'];
+            $cat_id = $row['cat_id'];
             if (! isset($perms[$cat_id])) {
                 $perms[$cat_id]['id'] = $cat_id;
             }
-            $perms[$cat_id]['groups'][] = is_scalar($row['group_id']) ? intval($row['group_id']) : 0;
+            $perms[$cat_id]['groups'][] = $row['group_id'];
         }
 
         // filter by group and user

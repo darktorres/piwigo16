@@ -6,8 +6,10 @@ namespace Piwigo\Metadata;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Category\CategoryEntity;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
+use Piwigo\Image\ImageEntity;
 use Piwigo\Metadata\Projection\MetadataImage;
 
 /**
@@ -24,6 +26,13 @@ use Piwigo\Metadata\Projection\MetadataImage;
  * (each owned elsewhere, Image\ImageEntity/Category\CategoryEntity), so
  * holds EntityManagerInterface directly rather than being resolved via
  * getRepository(), same shape as Auth\AuthRepository.
+ *
+ * Further SQL-modernization audit, Item 16A: `findImagesByIds()`/
+ * `findCategoryIds()`/`findImagesByStorageCategoryIds()` -- never audited
+ * by Item 14/15 -- converted to real DQL. Every real query here was
+ * already bounded (fixed WHERE shapes against mapped `ImageEntity`/
+ * `CategoryEntity`, `REGEXP()`'s own portable DQL function for the
+ * recursive-uppercats case), no architecture needed.
  */
 final readonly class MetadataRepository
 {
@@ -41,16 +50,15 @@ final readonly class MetadataRepository
             return [];
         }
 
-        $rows = $this->em->getConnection()
-            ->createQueryBuilder()
-            ->select('id', 'path', 'representative_ext')
-            ->from(Tables::images())
-            ->where('id IN (:ids)')
+        $images = $this->em->createQueryBuilder()
+            ->select('i')
+            ->from(ImageEntity::class, 'i')
+            ->where('i.id IN (:ids)')
             ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->getQuery()
+            ->getResult();
 
-        return array_map(MetadataImage::fromRow(...), $rows);
+        return array_map(static fn (ImageEntity $i): MetadataImage => MetadataImage::fromEntity($i), $images);
     }
 
     /**
@@ -58,28 +66,28 @@ final readonly class MetadataRepository
      */
     public function findCategoryIds(int $siteId, int|string $categoryId, bool $recursive): array
     {
-        $qb = $this->em->getConnection()
-            ->createQueryBuilder()
-            ->select('id')
-            ->from(Tables::categories())
-            ->where('site_id = :siteId')
-            ->andWhere('dir IS NOT NULL')
+        $qb = $this->em->createQueryBuilder()
+            ->select('c.id')
+            ->from(CategoryEntity::class, 'c')
+            ->where('c.siteId = :siteId')
+            ->andWhere('c.dir IS NOT NULL')
             ->setParameter('siteId', $siteId);
 
         if (is_numeric($categoryId)) {
             if ($recursive) {
-                $qb->andWhere('uppercats REGEXP :categoryPattern')
+                $qb->andWhere('REGEXP(c.uppercats, :categoryPattern) = true')
                     ->setParameter('categoryPattern', '(^|,)' . (int) $categoryId . '(,|$)');
             } else {
-                $qb->andWhere('id = :categoryId')
+                $qb->andWhere('c.id = :categoryId')
                     ->setParameter('categoryId', (int) $categoryId);
             }
         }
 
-        $ids = $qb->executeQuery()
-            ->fetchFirstColumn();
-
-        return array_values(array_map(intval(...), array_filter($ids, is_numeric(...))));
+        return array_values(array_map(
+            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
+            $qb->getQuery()
+                ->getSingleColumnResult()
+        ));
     }
 
     /**
@@ -95,23 +103,22 @@ final readonly class MetadataRepository
             return [];
         }
 
-        $qb = $this->em->getConnection()
-            ->createQueryBuilder()
-            ->select('id', 'path', 'representative_ext')
-            ->from(Tables::images())
-            ->where('storage_category_id IN (:categoryIds)')
+        $qb = $this->em->createQueryBuilder()
+            ->select('i')
+            ->from(ImageEntity::class, 'i')
+            ->where('i.storageCategoryId IN (:categoryIds)')
             ->setParameter('categoryIds', $categoryIds, ArrayParameterType::INTEGER);
 
         if ($onlyNew) {
-            $qb->andWhere('date_metadata_update IS NULL');
+            $qb->andWhere('i.dateMetadataUpdate IS NULL');
         }
 
-        $rows = $qb->executeQuery()
-            ->fetchAllAssociative();
+        $images = $qb->getQuery()
+            ->getResult();
 
         $result = [];
-        foreach ($rows as $row) {
-            $image = MetadataImage::fromRow($row);
+        foreach ($images as $imageEntity) {
+            $image = MetadataImage::fromEntity($imageEntity);
             $result[$image->id] = $image;
         }
 

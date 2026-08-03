@@ -8,9 +8,18 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Query\Expression\ExpressionBuilder;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Query\Expr\Join;
+use Piwigo\Category\CategoryEntity;
 use Piwigo\Category\UserAccessEntity;
+use Piwigo\Common\ValueObject\CategoryId;
+use Piwigo\Common\ValueObject\GroupId;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
+use Piwigo\Group\GroupAccessEntity;
+use Piwigo\Group\UserGroupEntity;
+use Piwigo\Image\ImageCategoryEntity;
+use Piwigo\Image\ImageEntity;
 
 /**
  * Persistence layer for the permission domain's forbidden-categories
@@ -30,6 +39,20 @@ use Piwigo\Db\Tables;
  * that turned up this same gap inside the repository layer too. (Category\
  * UserAccessEntity's own docblock still describes this class as read-only
  * and needs the same correction.)
+ *
+ * Further SQL-modernization audit, Item 16A: every method except
+ * `expressionBuilder()` (still real -- the quicksearch token evaluator's
+ * own permanent DBAL boundary, see `SearchService::
+ * getQuickSearchResultsNoCache()`) and `massInsertUserAccess()` (`INSERT
+ * IGNORE` via `BatchWriter`, Item 16C's own bucket) converted to real
+ * DQL -- every real query here was already bounded, never audited by
+ * Item 14/15. `findGrantedGroupIdsByCategory()`/`findGroupAccessRows()`/
+ * `findIndirectUserAccessRows()` unwrap `GroupAccessEntity`/
+ * `UserGroupEntity`'s own `CategoryId`/`GroupId`/`UserId` VO-typed columns
+ * -- `getArrayResult()` (unlike `getSingleColumnResult()`'s own
+ * `HYDRATE_SCALAR_COLUMN`, which skips custom-Type conversion entirely)
+ * applies each column's real custom Doctrine Type, so these hydrate as
+ * real VO instances, not raw ints.
  */
 final readonly class PermissionRepository
 {
@@ -58,14 +81,13 @@ final readonly class PermissionRepository
      */
     public function findPrivateCategoryIds(): array
     {
-        $ids = $this->em->getConnection()
-            ->createQueryBuilder()
-            ->select('id')
-            ->from(Tables::categories())
-            ->where('status = :status')
+        $ids = $this->em->createQueryBuilder()
+            ->select('c.id')
+            ->from(CategoryEntity::class, 'c')
+            ->where('c.status = :status')
             ->setParameter('status', 'private')
-            ->executeQuery()
-            ->fetchFirstColumn();
+            ->getQuery()
+            ->getSingleColumnResult();
 
         return self::toIntList($ids);
     }
@@ -75,14 +97,13 @@ final readonly class PermissionRepository
      */
     public function findLockedCategoryIds(): array
     {
-        $ids = $this->em->getConnection()
-            ->createQueryBuilder()
-            ->select('id')
-            ->from(Tables::categories())
-            ->where('visible = :visible')
+        $ids = $this->em->createQueryBuilder()
+            ->select('c.id')
+            ->from(CategoryEntity::class, 'c')
+            ->where('c.visible = :visible')
             ->setParameter('visible', false)
-            ->executeQuery()
-            ->fetchFirstColumn();
+            ->getQuery()
+            ->getSingleColumnResult();
 
         return self::toIntList($ids);
     }
@@ -92,14 +113,13 @@ final readonly class PermissionRepository
      */
     public function findDirectlyAuthorizedCategoryIds(int $userId): array
     {
-        $ids = $this->em->getConnection()
-            ->createQueryBuilder()
-            ->select('cat_id')
-            ->from(Tables::userAccess())
-            ->where('user_id = :userId')
+        $ids = $this->em->createQueryBuilder()
+            ->select('ua.catId')
+            ->from(UserAccessEntity::class, 'ua')
+            ->where('ua.userId = :userId')
             ->setParameter('userId', $userId)
-            ->executeQuery()
-            ->fetchFirstColumn();
+            ->getQuery()
+            ->getSingleColumnResult();
 
         return self::toIntList($ids);
     }
@@ -142,16 +162,15 @@ final readonly class PermissionRepository
             return [];
         }
 
-        $ids = $this->em->getConnection()
-            ->createQueryBuilder()
-            ->select('id')
-            ->from(Tables::categories())
-            ->where('id IN (:catIds)')
-            ->andWhere('status = :status')
+        $ids = $this->em->createQueryBuilder()
+            ->select('c.id')
+            ->from(CategoryEntity::class, 'c')
+            ->where('c.id IN (:catIds)')
+            ->andWhere('c.status = :status')
             ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER)
             ->setParameter('status', 'private')
-            ->executeQuery()
-            ->fetchFirstColumn();
+            ->getQuery()
+            ->getSingleColumnResult();
 
         return self::toIntList($ids);
     }
@@ -196,21 +215,20 @@ final readonly class PermissionRepository
             return [];
         }
 
-        $rows = $this->em->getConnection()
-            ->createQueryBuilder()
-            ->select('cat_id', 'group_id')
-            ->from(Tables::groupAccess())
-            ->where('cat_id IN (:catIds)')
+        $rows = $this->em->createQueryBuilder()
+            ->select('ga.catId', 'ga.groupId')
+            ->from(GroupAccessEntity::class, 'ga')
+            ->where('ga.catId IN (:catIds)')
             ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER)
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->getQuery()
+            ->getArrayResult();
 
         $grouped = [];
         foreach ($rows as $row) {
-            if (! is_numeric($row['cat_id']) || ! is_numeric($row['group_id'])) {
+            if (! is_array($row) || ! $row['catId'] instanceof CategoryId || ! $row['groupId'] instanceof GroupId) {
                 continue;
             }
-            $grouped[(int) $row['cat_id']][] = (int) $row['group_id'];
+            $grouped[$row['catId']->value][] = $row['groupId']->value;
         }
 
         return $grouped;
@@ -230,21 +248,20 @@ final readonly class PermissionRepository
             return [];
         }
 
-        $rows = $this->em->getConnection()
-            ->createQueryBuilder()
-            ->select('cat_id', 'user_id')
-            ->from(Tables::userAccess())
-            ->where('cat_id IN (:catIds)')
+        $rows = $this->em->createQueryBuilder()
+            ->select('ua.catId', 'ua.userId')
+            ->from(UserAccessEntity::class, 'ua')
+            ->where('ua.catId IN (:catIds)')
             ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER)
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->getQuery()
+            ->getArrayResult();
 
         $grouped = [];
         foreach ($rows as $row) {
-            if (! is_numeric($row['cat_id']) || ! is_numeric($row['user_id'])) {
+            if (! is_array($row) || ! is_numeric($row['catId'] ?? null) || ! is_numeric($row['userId'] ?? null)) {
                 continue;
             }
-            $grouped[(int) $row['cat_id']][] = (int) $row['user_id'];
+            $grouped[(int) $row['catId']][] = (int) $row['userId'];
         }
 
         return $grouped;
@@ -267,20 +284,18 @@ final readonly class PermissionRepository
      */
     public function findImageIdsOutsideForbiddenCategories(string $structuralForbidden, int|string $level): array
     {
-        $ids = $this->em->getConnection()
-            ->createQueryBuilder()
-            ->select('i.id')
-            ->distinct()
-            ->from(Tables::images(), 'i')
-            ->innerJoin('i', Tables::imageCategory(), 'ic', 'i.id = ic.image_id')
-            ->where('ic.category_id NOT IN (:forbidden)')
+        $ids = $this->em->createQueryBuilder()
+            ->select('DISTINCT i.id')
+            ->from(ImageEntity::class, 'i')
+            ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'i.id = ic.imageId')
+            ->where('ic.categoryId NOT IN (:forbidden)')
             ->andWhere('i.level > :level')
             ->setParameter('forbidden', self::csvToIntList($structuralForbidden), ArrayParameterType::INTEGER)
             ->setParameter('level', is_numeric($level) ? (int) $level : 0, ParameterType::INTEGER)
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->getQuery()
+            ->getSingleColumnResult();
 
-        return self::toIntList(array_column($ids, 'id'));
+        return self::toIntList($ids);
     }
 
     /**
@@ -302,16 +317,15 @@ final readonly class PermissionRepository
             throw new \UnexpectedValueException('Unexpected image_access_type: ' . $imageAccessType);
         }
 
-        $total = $this->em->getConnection()
-            ->createQueryBuilder()
-            ->select('COUNT(DISTINCT(image_id)) as total')
-            ->from(Tables::imageCategory())
-            ->where('category_id NOT IN (:forbidden)')
-            ->andWhere('image_id ' . $imageAccessType . ' (:accessList)')
+        $total = $this->em->createQueryBuilder()
+            ->select('COUNT(DISTINCT ic.imageId) AS total')
+            ->from(ImageCategoryEntity::class, 'ic')
+            ->where('ic.categoryId NOT IN (:forbidden)')
+            ->andWhere('ic.imageId ' . $imageAccessType . ' (:accessList)')
             ->setParameter('forbidden', self::csvToIntList($structuralForbidden), ArrayParameterType::INTEGER)
             ->setParameter('accessList', self::csvToIntList($imageAccessList), ArrayParameterType::INTEGER)
-            ->executeQuery()
-            ->fetchOne();
+            ->getQuery()
+            ->getSingleScalarResult();
 
         return is_scalar($total) ? (string) $total : '0';
     }
@@ -340,16 +354,15 @@ final readonly class PermissionRepository
      */
     public function isImageOutsideForbiddenCategories(int $imageId, array $forbiddenCategoryIds): bool
     {
-        $nb = $this->em->getConnection()
-            ->createQueryBuilder()
-            ->select('COUNT(*) AS nb')
-            ->from(Tables::imageCategory())
-            ->where('image_id = :imageId')
-            ->andWhere('category_id NOT IN (:forbidden)')
+        $nb = $this->em->createQueryBuilder()
+            ->select('COUNT(ic.imageId) AS nb')
+            ->from(ImageCategoryEntity::class, 'ic')
+            ->where('ic.imageId = :imageId')
+            ->andWhere('ic.categoryId NOT IN (:forbidden)')
             ->setParameter('imageId', $imageId)
             ->setParameter('forbidden', $forbiddenCategoryIds, ArrayParameterType::INTEGER)
-            ->executeQuery()
-            ->fetchOne();
+            ->getQuery()
+            ->getSingleScalarResult();
 
         return is_numeric($nb) && (int) $nb !== 0;
     }
@@ -360,22 +373,34 @@ final readonly class PermissionRepository
      * users" block.
      *
      * @param  list<int>  $catIds
-     * @return list<array<string, mixed>>
+     * @return list<array{user_id: int, cat_id: int}>
      */
     public function findDirectUserAccessRows(array $catIds): array
     {
-        $qb = $this->em->getConnection()
-            ->createQueryBuilder()
-            ->select('user_id', 'cat_id')
-            ->from(Tables::userAccess());
+        $qb = $this->em->createQueryBuilder()
+            ->select('ua.userId', 'ua.catId')
+            ->from(UserAccessEntity::class, 'ua');
 
         if ($catIds !== []) {
-            $qb->where('cat_id IN (:catIds)')
+            $qb->where('ua.catId IN (:catIds)')
                 ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER);
         }
 
-        return $qb->executeQuery()
-            ->fetchAllAssociative();
+        $rows = $qb->getQuery()
+            ->getArrayResult();
+
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_array($row) || ! is_numeric($row['userId'] ?? null) || ! is_numeric($row['catId'] ?? null)) {
+                continue;
+            }
+            $result[] = [
+                'user_id' => (int) $row['userId'],
+                'cat_id' => (int) $row['catId'],
+            ];
+        }
+
+        return $result;
     }
 
     /**
@@ -384,23 +409,35 @@ final readonly class PermissionRepository
      * getList()'s own "indirect users" block.
      *
      * @param  list<int>  $catIds
-     * @return list<array<string, mixed>>
+     * @return list<array{user_id: int, cat_id: int}>
      */
     public function findIndirectUserAccessRows(array $catIds): array
     {
-        $qb = $this->em->getConnection()
-            ->createQueryBuilder()
-            ->select('ug.user_id', 'ga.cat_id')
-            ->from(Tables::userGroup(), 'ug')
-            ->innerJoin('ug', Tables::groupAccess(), 'ga', 'ug.group_id = ga.group_id');
+        $qb = $this->em->createQueryBuilder()
+            ->select('ug.userId', 'ga.catId')
+            ->from(UserGroupEntity::class, 'ug')
+            ->innerJoin(GroupAccessEntity::class, 'ga', Join::WITH, 'ug.groupId = ga.groupId');
 
         if ($catIds !== []) {
-            $qb->where('ga.cat_id IN (:catIds)')
+            $qb->andWhere('ga.catId IN (:catIds)')
                 ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER);
         }
 
-        return $qb->executeQuery()
-            ->fetchAllAssociative();
+        $rows = $qb->getQuery()
+            ->getArrayResult();
+
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_array($row) || ! $row['userId'] instanceof UserId || ! $row['catId'] instanceof CategoryId) {
+                continue;
+            }
+            $result[] = [
+                'user_id' => $row['userId']->value,
+                'cat_id' => $row['catId']->value,
+            ];
+        }
+
+        return $result;
     }
 
     /**
@@ -409,33 +446,45 @@ final readonly class PermissionRepository
      * block.
      *
      * @param  list<int>  $catIds
-     * @return list<array<string, mixed>>
+     * @return list<array{group_id: int, cat_id: int}>
      */
     public function findGroupAccessRows(array $catIds): array
     {
-        $qb = $this->em->getConnection()
-            ->createQueryBuilder()
-            ->select('group_id', 'cat_id')
-            ->from(Tables::groupAccess());
+        $qb = $this->em->createQueryBuilder()
+            ->select('ga.groupId', 'ga.catId')
+            ->from(GroupAccessEntity::class, 'ga');
 
         if ($catIds !== []) {
-            $qb->where('cat_id IN (:catIds)')
+            $qb->where('ga.catId IN (:catIds)')
                 ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER);
         }
 
-        return $qb->executeQuery()
-            ->fetchAllAssociative();
+        $rows = $qb->getQuery()
+            ->getArrayResult();
+
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_array($row) || ! $row['groupId'] instanceof GroupId || ! $row['catId'] instanceof CategoryId) {
+                continue;
+            }
+            $result[] = [
+                'group_id' => $row['groupId']->value,
+                'cat_id' => $row['catId']->value,
+            ];
+        }
+
+        return $result;
     }
 
     /**
-     * @param list<mixed> $values
+     * @param array<mixed> $values
      * @return list<int>
      */
     private static function toIntList(array $values): array
     {
-        return array_map(
+        return array_values(array_map(
             static fn (mixed $value): int => is_numeric($value) ? (int) $value : 0,
             $values
-        );
+        ));
     }
 }

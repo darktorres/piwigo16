@@ -11,8 +11,8 @@ namespace Piwigo\Metadata\Projection;
  * (P17-23 Stage 1b, Metadata domain) -- both select the exact same
  * `id`/`path`/`representative_ext` triple from `piwigo_images`.
  *
- * `toArray()` is the real consumer shape here, not `fromRow()`'s own typed
- * properties: both {@see \Piwigo\Metadata\MetadataService::syncMetadata()}
+ * `toArray()` is the real consumer shape here, not `fromEntity()`'s own
+ * typed properties: both {@see \Piwigo\Metadata\MetadataService::syncMetadata()}
  * and {@see \Piwigo\Metadata\MetadataService::getFilelist()}'s own 2 admin
  * callers (`SiteUpdateSubController`) treat this row as a growable data bag,
  * merging in filesize/exif/iptc-mapped fields before it feeds a
@@ -30,14 +30,18 @@ final readonly class MetadataImage
     ) {}
 
     /**
-     * @param array<string, mixed> $row a `SELECT id, path, representative_ext` row from `piwigo_images`
+     * Further SQL-modernization audit, Item 16A: replaces the former raw-row
+     * `fromRow()` now that {@see \Piwigo\Metadata\MetadataRepository}'s own
+     * 2 real callers both went DQL -- `ImageEntity::$id`/`$path`/
+     * `$representativeExt` are already typed, so no defensive casting is
+     * needed here the way `fromRow()`'s own untyped raw-array input required.
      */
-    public static function fromRow(array $row): self
+    public static function fromEntity(\Piwigo\Image\ImageEntity $entity): self
     {
         return new self(
-            id: is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0,
-            path: is_string($row['path'] ?? null) ? $row['path'] : '',
-            representativeExt: is_string($row['representative_ext'] ?? null) ? $row['representative_ext'] : null,
+            id: $entity->id ?? 0,
+            path: $entity->path,
+            representativeExt: $entity->representativeExt,
         );
     }
 

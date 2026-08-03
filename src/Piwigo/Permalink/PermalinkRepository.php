@@ -20,6 +20,12 @@ use Piwigo\Permalink\Projection\OldPermalink;
  * never entity-mapped anywhere in this migration (see
  * Category\CategoryRepository::touchOldPermalinkHit()'s own docblock).
  * Holds EntityManagerInterface directly, same shape as Auth\AuthRepository.
+ *
+ * Further SQL-modernization audit, Item 16A: `findCategoryIdByPermalink()`
+ * -- the one method here touching only the mapped `categories` table --
+ * converted to real DQL; never audited by Item 14/15. Every other method
+ * touches `old_permalinks` and stays on raw DBAL until Item 16B gives that
+ * table a real entity.
  */
 final readonly class PermalinkRepository
 {
@@ -29,23 +35,33 @@ final readonly class PermalinkRepository
 
     /**
      * Return the category id whose current permalink matches, or null.
+     *
+     * Further SQL-modernization audit, Item 16A: converted to real DQL --
+     * `categories.permalink` is `CategoryEntity`'s own mapped column.
      */
     public function findCategoryIdByPermalink(string $permalink): ?int
     {
-        $value = $this->em->getConnection()
-            ->createQueryBuilder()
-            ->select('id')
-            ->from(Tables::categories())
-            ->where('permalink = :permalink')
+        // `permalink` is `categories`' own real UNIQUE KEY (categories_i3) --
+        // at most one row can ever match, matching this method's own
+        // long-standing no-LIMIT single-value contract.
+        $ids = $this->em->createQueryBuilder()
+            ->select('c.id')
+            ->from(CategoryEntity::class, 'c')
+            ->where('c.permalink = :permalink')
             ->setParameter('permalink', $permalink)
-            ->executeQuery()
-            ->fetchOne();
+            ->getQuery()
+            ->getSingleColumnResult();
 
-        return is_numeric($value) ? (int) $value : null;
+        return isset($ids[0]) && is_numeric($ids[0]) ? (int) $ids[0] : null;
     }
 
     /**
      * Return the category id a permalink was historically used by, or null.
+     *
+     * Further SQL-modernization audit, Item 16A: `old_permalinks` stays
+     * deliberately unmapped (see class docblock) -- Item 16B gives it a
+     * real entity and converts this alongside `findAllOrderedBy()` and
+     * every other `old_permalinks`-only method below.
      */
     public function findOldCategoryId(string $permalink): ?int
     {

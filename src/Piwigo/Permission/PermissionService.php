@@ -303,7 +303,7 @@ final readonly class PermissionService
 
     /**
      * @param  list<int>  $catIds
-     * @return list<array<string, mixed>>
+     * @return list<array{user_id: int, cat_id: int}>
      */
     public function getDirectUserAccessRows(array $catIds): array
     {
@@ -312,7 +312,7 @@ final readonly class PermissionService
 
     /**
      * @param  list<int>  $catIds
-     * @return list<array<string, mixed>>
+     * @return list<array{user_id: int, cat_id: int}>
      */
     public function getIndirectUserAccessRows(array $catIds): array
     {
@@ -321,7 +321,7 @@ final readonly class PermissionService
 
     /**
      * @param  list<int>  $catIds
-     * @return list<array<string, mixed>>
+     * @return list<array{group_id: int, cat_id: int}>
      */
     public function getGroupAccessRows(array $catIds): array
     {

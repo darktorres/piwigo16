@@ -2,57 +2,68 @@
 
 declare(strict_types=1);
 
+use Piwigo\Image\ImageEntity;
 use Piwigo\Metadata\Projection\MetadataImage;
 
 /**
- * @return array<string, mixed>
+ * A transient (never-persisted, real-looking scalar values) ImageEntity
+ * fixture, own-named to avoid colliding with
+ * tests/Unit/Image/Projection/ImageTest.php's own global
+ * transientImageEntity() helper.
  */
-function fullMetadataImageRow(): array
+function metadataImageTestEntity(?string $representativeExt = 'jpg'): ImageEntity
 {
-    return [
-        'id' => '42',
-        'path' => 'upload/2026/08/01/photo.jpg',
-        'representative_ext' => 'jpg',
-    ];
+    $entity = new ImageEntity(
+        file: 'photo.jpg',
+        dateAvailable: null,
+        dateCreation: null,
+        name: null,
+        comment: null,
+        author: null,
+        hit: 0,
+        filesize: null,
+        width: null,
+        height: null,
+        coi: null,
+        representativeExt: $representativeExt,
+        dateMetadataUpdate: null,
+        ratingScore: null,
+        path: 'upload/2026/08/01/photo.jpg',
+        storageCategoryId: null,
+        level: 0,
+        md5sum: null,
+        addedBy: null,
+        rotation: null,
+        latitude: null,
+        longitude: null,
+        lastmodified: '2026-08-01 12:00:00',
+    );
+    $entity->id = 42;
+
+    return $entity;
 }
 
-test('fromRow narrows every column to its real type', function (): void {
-    $image = MetadataImage::fromRow(fullMetadataImageRow());
+test('fromEntity copies id/path/representativeExt straight through', function (): void {
+    $image = MetadataImage::fromEntity(metadataImageTestEntity());
 
     expect($image->id)->toBe(42)
         ->and($image->path)->toBe('upload/2026/08/01/photo.jpg')
         ->and($image->representativeExt)->toBe('jpg');
 });
 
-test('fromRow defaults representative_ext to null when absent', function (): void {
-    $row = fullMetadataImageRow();
-    $row['representative_ext'] = null;
+test('fromEntity defaults id to 0 for a transient (never-persisted) entity', function (): void {
+    $entity = metadataImageTestEntity();
+    $entity->id = null;
 
-    $image = MetadataImage::fromRow($row);
-
-    expect($image->representativeExt)->toBeNull();
-    // The NOT NULL columns (id/path) fall back to their type's zero value
-    // instead -- never actually null for a real fetched row.
+    expect(MetadataImage::fromEntity($entity)->id)->toBe(0);
 });
 
-test('fromRow defaults id to 0 when absent or non-numeric', function (): void {
-    $row = fullMetadataImageRow();
-    unset($row['id']);
-
-    expect(MetadataImage::fromRow($row)->id)->toBe(0)
-        ->and(MetadataImage::fromRow(['id' => 'not-numeric'] + $row)->id)->toBe(0);
+test('fromEntity leaves a null representativeExt as null', function (): void {
+    expect(MetadataImage::fromEntity(metadataImageTestEntity(null))->representativeExt)->toBeNull();
 });
 
-test('fromRow defaults path to an empty string when absent or non-string', function (): void {
-    $row = fullMetadataImageRow();
-    unset($row['path']);
-
-    expect(MetadataImage::fromRow($row)->path)->toBe('')
-        ->and(MetadataImage::fromRow(['path' => 123] + $row)->path)->toBe('');
-});
-
-test('toArray round-trips the exact same DB column shape fromRow narrowed', function (): void {
-    $roundTripped = MetadataImage::fromRow(fullMetadataImageRow())->toArray();
+test('toArray round-trips the exact same shape fromEntity built', function (): void {
+    $roundTripped = MetadataImage::fromEntity(metadataImageTestEntity())->toArray();
 
     expect($roundTripped)->toBe([
         'id' => 42,

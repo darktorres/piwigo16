@@ -677,3 +677,71 @@ test('deleteNonStorageCategoryLinks clears the identity map after a raw write ou
     $refetched = $repo->find(1);
     expect($refetched)->not->toBe($cached);
 });
+
+test('deleteNonStorageCategoryLinks spares the image\'s own storage_category_id link', function (): void {
+    // Item 16D's own real reason to exist: the original raw SQL's
+    // `storage_category_id IS NULL OR storage_category_id != category_id`
+    // half never gets exercised by the identity-map test above (a
+    // freshly-inserted image with no image_category rows at all --
+    // the foreach body in the DQL rewrite never even runs there). This
+    // seeds real image_category rows across both fixture categories
+    // (1 and 2) and a real storage_category_id, so a wrong conversion
+    // that deletes every link (or spares the wrong one) is observable.
+    $conn = DbConnection::build();
+    $conn->createQueryBuilder()
+        ->insert(Tables::images())
+        ->values(['file' => ':file', 'path' => ':path', 'storage_category_id' => ':scid'])
+        ->setParameter('file', 'storagelink.jpg')
+        ->setParameter('path', 'upload/2026/07/storagelink.jpg')
+        ->setParameter('scid', 1)
+        ->executeStatement();
+    $imageId = (int) $conn->lastInsertId();
+
+    $conn->createQueryBuilder()->insert(Tables::imageCategory())
+        ->values(['image_id' => ':i', 'category_id' => ':c'])->setParameter('i', $imageId)->setParameter('c', 1)
+        ->executeStatement();
+    $conn->createQueryBuilder()->insert(Tables::imageCategory())
+        ->values(['image_id' => ':i', 'category_id' => ':c'])->setParameter('i', $imageId)->setParameter('c', 2)
+        ->executeStatement();
+
+    try {
+        imageRepositoryTestRepo()->deleteNonStorageCategoryLinks([$imageId], []);
+
+        $remaining = $conn->fetchFirstColumn('SELECT category_id FROM ' . Tables::imageCategory() . ' WHERE image_id = ' . $imageId);
+        expect($remaining)->toBe([1]);
+    } finally {
+        $conn->executeStatement('DELETE FROM ' . Tables::imageCategory() . ' WHERE image_id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+    }
+});
+
+test('deleteNonStorageCategoryLinks also spares any category explicitly passed in $categories, with a null storage_category_id', function (): void {
+    // Covers the other half: storage_category_id IS NULL (no exclusion
+    // from that side at all) plus the optional $categories keep-list,
+    // which the sibling test above never passes.
+    $conn = DbConnection::build();
+    $conn->createQueryBuilder()
+        ->insert(Tables::images())
+        ->values(['file' => ':file', 'path' => ':path'])
+        ->setParameter('file', 'nostoragelink.jpg')
+        ->setParameter('path', 'upload/2026/07/nostoragelink.jpg')
+        ->executeStatement();
+    $imageId = (int) $conn->lastInsertId();
+
+    $conn->createQueryBuilder()->insert(Tables::imageCategory())
+        ->values(['image_id' => ':i', 'category_id' => ':c'])->setParameter('i', $imageId)->setParameter('c', 1)
+        ->executeStatement();
+    $conn->createQueryBuilder()->insert(Tables::imageCategory())
+        ->values(['image_id' => ':i', 'category_id' => ':c'])->setParameter('i', $imageId)->setParameter('c', 2)
+        ->executeStatement();
+
+    try {
+        imageRepositoryTestRepo()->deleteNonStorageCategoryLinks([$imageId], [2]);
+
+        $remaining = $conn->fetchFirstColumn('SELECT category_id FROM ' . Tables::imageCategory() . ' WHERE image_id = ' . $imageId);
+        expect($remaining)->toBe([2]);
+    } finally {
+        $conn->executeStatement('DELETE FROM ' . Tables::imageCategory() . ' WHERE image_id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+    }
+});

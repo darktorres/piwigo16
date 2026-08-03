@@ -1097,48 +1097,65 @@ final class ImageRepository extends EntityRepository
      * category_id NOT IN (...)` clause).
      *
      * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}), but stays on DBAL regardless -- this
-     * is a `DELETE ... JOIN`, and DQL's DELETE statement doesn't support
-     * joins at all, mapped target or not.
+     * ({@see ImageCategoryEntity}), but stayed on DBAL regardless at the
+     * time -- this was a `DELETE ... JOIN`, and DQL's DELETE statement
+     * doesn't support joins at all, mapped target or not.
+     *
+     * Item 16D: converted to real DQL via a 2-step SELECT-then-DELETE --
+     * the only reason the original needed a JOIN at all was reading each
+     * image's own `storage_category_id` (a column on `images`, not
+     * `image_category`) to know which single link to spare. Step 1 reads
+     * that per $images (a single-table SELECT, `ImageEntity` already
+     * maps `storageCategoryId`); step 2 issues one single-table DQL
+     * DELETE per image with that value bound as a plain scalar
+     * parameter -- no JOIN needed once it's already in hand, same shape
+     * as {@see deleteImageCategoryLinks()} just above. $images is
+     * typically a handful of ids per real call (a single move/associate
+     * action), so N small DELETEs costs nothing meaningful over one
+     * multi-row statement.
      *
      * @param array<int, int|string> $images
      * @param array<int, int|string> $categories
      */
     public function deleteNonStorageCategoryLinks(array $images, array $categories): void
     {
-        $imageCategoryTable = Tables::imageCategory();
-        $imagesTable = Tables::images();
+        $em = $this->getEntityManager();
 
-        $query = <<<SQL
-            DELETE {$imageCategoryTable}.*
-            FROM {$imageCategoryTable}
-                JOIN {$imagesTable} ON image_id=id
-            WHERE id IN (:images)
-            SQL;
-        $params = [
-            'images' => array_map(strval(...), $images),
-        ];
-        $types = [
-            'images' => ArrayParameterType::STRING,
-        ];
+        $rows = $em->createQueryBuilder()
+            ->select('i.id', 'i.storageCategoryId')
+            ->from(ImageEntity::class, 'i')
+            ->where('i.id IN (:images)')
+            ->setParameter('images', array_map(strval(...), $images), ArrayParameterType::STRING)
+            ->getQuery()
+            ->getArrayResult();
 
-        if ($categories !== []) {
-            $query .= <<<SQL
+        foreach ($rows as $row) {
+            if (! is_array($row) || ! is_numeric($row['id'] ?? null)) {
+                continue;
+            }
 
-                AND category_id NOT IN (:categories)
-                SQL;
-            $params['categories'] = array_map(strval(...), $categories);
-            $types['categories'] = ArrayParameterType::STRING;
+            $qb = $em->createQueryBuilder()
+                ->delete(ImageCategoryEntity::class, 'ic')
+                ->where('ic.imageId = :imageId')
+                ->setParameter('imageId', (int) $row['id'], ParameterType::INTEGER);
+
+            if ($categories !== []) {
+                $qb->andWhere('ic.categoryId NOT IN (:categories)')
+                    ->setParameter('categories', array_map(strval(...), $categories), ArrayParameterType::STRING);
+            }
+
+            // storage_category_id IS NULL -- every link for this image is
+            // non-storage, no extra exclusion needed (matches the
+            // original's own `storage_category_id IS NULL OR ...` half).
+            if (is_numeric($row['storageCategoryId'] ?? null)) {
+                $qb->andWhere('ic.categoryId != :storageCategoryId')
+                    ->setParameter('storageCategoryId', (int) $row['storageCategoryId'], ParameterType::INTEGER);
+            }
+
+            $qb->getQuery()
+                ->execute();
         }
 
-        $query .= <<<SQL
-
-            AND (storage_category_id IS NULL OR storage_category_id != category_id)
-            SQL;
-
-        $em = $this->getEntityManager();
-        $em->getConnection()
-            ->executeStatement($query, $params, $types);
         $em->clear();
     }
 

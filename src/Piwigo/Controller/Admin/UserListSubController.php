@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\UserListPageRenderer;
 use Piwigo\Core\UrlServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -19,12 +20,13 @@ final class UserListSubController implements AdminSubControllerInterface
 {
     public function __construct(
         private readonly UrlServiceInterface $urlService,
+        private readonly CoreTabs $coreTabs,
     ) {}
 
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
         new UserListPageRenderer()
-            ->render($this->urlService);
+            ->render($this->urlService, $this->coreTabs);
     }
 }

@@ -40,6 +40,7 @@ final class AlbumSubController implements AdminSubControllerInterface
 
     public function __construct(
         private readonly UrlServiceInterface $urlService,
+        private readonly CoreTabs $coreTabs,
     ) {}
 
     #[\Override]
@@ -52,7 +53,7 @@ final class AlbumSubController implements AdminSubControllerInterface
         $cat_id = is_numeric($cat_id_param) ? (int) $cat_id_param : 0;
 
         $adminAlbumBaseUrl = $this->urlService->getRootUrl() . 'admin.php?page=album-' . $cat_id;
-        CoreTabs::setContext(new CoreTabsContext(adminAlbumBaseUrl: $adminAlbumBaseUrl));
+        $this->coreTabs->setContext(new CoreTabsContext(adminAlbumBaseUrl: $adminAlbumBaseUrl));
 
         $categoryRow = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Category\CategoryEntity::class)
             ->findById($cat_id);

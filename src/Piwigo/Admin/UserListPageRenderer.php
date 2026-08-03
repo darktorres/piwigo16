@@ -31,14 +31,14 @@ final class UserListPageRenderer
         return \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService();
     }
 
-    public function render(UrlServiceInterface $urlService): void
+    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
         $conn = DbConnection::build();
 
         $userListFilter = Request\UserListFilterRequest::fromGlobals();
 
-        CoreTabs::setContext(new CoreTabsContext(myBaseUrl: $urlService->getRootUrl() . 'admin.php?page='));
+        $coreTabs->setContext(new CoreTabsContext(myBaseUrl: $urlService->getRootUrl() . 'admin.php?page='));
 
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('users');

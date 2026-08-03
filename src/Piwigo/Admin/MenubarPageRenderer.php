@@ -26,7 +26,7 @@ use Piwigo\Menu\BlockManager;
  */
 final class MenubarPageRenderer
 {
-    public function render(UrlServiceInterface $urlService): void
+    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -39,7 +39,7 @@ final class MenubarPageRenderer
         // myBaseUrl for this page (same class of gap as
         // ConfigurationSubController's own $conf_link fix), so this page's
         // own tab strip has always rendered a broken relative href.
-        CoreTabs::setContext(new CoreTabsContext(myBaseUrl: $urlService->getRootUrl() . 'admin.php?page='));
+        $coreTabs->setContext(new CoreTabsContext(myBaseUrl: $urlService->getRootUrl() . 'admin.php?page='));
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('menus');
         $tabsheet->select('');

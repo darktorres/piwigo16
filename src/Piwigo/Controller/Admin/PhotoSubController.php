@@ -42,6 +42,7 @@ final class PhotoSubController implements AdminSubControllerInterface
 
     public function __construct(
         private readonly UrlServiceInterface $urlService,
+        private readonly CoreTabs $coreTabs,
     ) {}
 
     #[\Override]
@@ -61,7 +62,7 @@ final class PhotoSubController implements AdminSubControllerInterface
         $get_image_id = $photoDispatch->imageId;
 
         $adminPhotoBaseUrl = $this->urlService->getRootUrl() . 'admin.php?page=photo-' . $get_image_id;
-        CoreTabs::setContext(new CoreTabsContext(adminPhotoBaseUrl: $adminPhotoBaseUrl));
+        $this->coreTabs->setContext(new CoreTabsContext(adminPhotoBaseUrl: $adminPhotoBaseUrl));
 
         // retrieving direct information about picture
         $imageConn = DbConnection::build();

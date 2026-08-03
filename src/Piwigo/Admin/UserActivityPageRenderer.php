@@ -19,7 +19,7 @@ use Piwigo\Template\Template;
  */
 final class UserActivityPageRenderer
 {
-    public function render(UrlServiceInterface $urlService): void
+    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -27,7 +27,7 @@ final class UserActivityPageRenderer
 
         $userActivityRequest = Request\UserActivityRequest::fromGlobals();
 
-        CoreTabs::setContext(new CoreTabsContext(myBaseUrl: $urlService->getRootUrl() . 'admin.php?page='));
+        $coreTabs->setContext(new CoreTabsContext(myBaseUrl: $urlService->getRootUrl() . 'admin.php?page='));
 
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('users');

@@ -58,6 +58,7 @@ final class MaintenanceSubController implements AdminSubControllerInterface
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
+        private readonly CoreTabs $coreTabs,
     ) {}
 
     #[\Override]
@@ -69,7 +70,7 @@ final class MaintenanceSubController implements AdminSubControllerInterface
         // triggered synchronously inside Tabsheet::select() below -- must
         // be set before that call, not dead code (see this class's own
         // docblock).
-        CoreTabs::setContext(new CoreTabsContext(myBaseUrl: $this->urlService->getRootUrl() . 'admin.php?page='));
+        $this->coreTabs->setContext(new CoreTabsContext(myBaseUrl: $this->urlService->getRootUrl() . 'admin.php?page='));
 
         $maintenanceDispatch = Request\MaintenanceDispatchRequest::fromGlobals();
 

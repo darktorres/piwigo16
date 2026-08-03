@@ -70,6 +70,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+        private readonly CoreTabs $coreTabs,
     ) {}
 
     private static function imageService(): ImageService
@@ -143,7 +144,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         // managerLink for this page (same class of gap as
         // ConfigurationSubController's own $conf_link fix), so this page's
         // own tab strip has always rendered broken relative hrefs.
-        CoreTabs::setContext(new CoreTabsContext(managerLink: $this->urlService->getRootUrl() . 'admin.php?page=batch_manager&amp;mode='));
+        $this->coreTabs->setContext(new CoreTabsContext(managerLink: $this->urlService->getRootUrl() . 'admin.php?page=batch_manager&amp;mode='));
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('batch_manager');
         $tabsheet->select($tab);

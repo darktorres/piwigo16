@@ -6,6 +6,7 @@ namespace Piwigo\Bootstrap;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityService;
+use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\PluginLoader;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Auth\AuthRepository;
@@ -962,6 +963,29 @@ final class RequestBootstrap
         }
 
         return $filesystemIntegrityChecker;
+    }
+
+    /**
+     * Public (unlike the resolver helpers above): public/admin.php's own
+     * legacy-style `new AdminShell(...)` manual construction needs a way to
+     * obtain the same container-shared instance every `*SubController`/
+     * `*PageRenderer` writer file will later receive, without calling
+     * Kernel::container() directly itself (arch-tested to Bootstrap/ only)
+     * -- same "public accessor on this class" shape as
+     * filesystemIntegrityChecker() above (singleton/service-locator
+     * elimination campaign, Phase 3). Load-bearing for CoreTabs::
+     * setContext()/addCoreTabs()'s own request-scoped bridge, which only
+     * works if every writer file and the 'tabsheet_before_select' event
+     * registration below share the same instance.
+     */
+    public static function coreTabs(): CoreTabs
+    {
+        $coreTabs = Kernel::container()->get(CoreTabs::class);
+        if (! $coreTabs instanceof CoreTabs) {
+            throw new \LogicException('Container returned an unexpected type for ' . CoreTabs::class);
+        }
+
+        return $coreTabs;
     }
 
     /**

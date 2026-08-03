@@ -14,7 +14,7 @@ use Piwigo\Event\Location\LocEndHelp;
  */
 final class HelpPageRenderer
 {
-    public function render(UrlServiceInterface $urlService): void
+    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -27,7 +27,7 @@ final class HelpPageRenderer
         // helpLink for this page (same class of gap as
         // ConfigurationSubController's own $conf_link fix), so this page's
         // own tab strip has always rendered broken relative hrefs.
-        CoreTabs::setContext(new CoreTabsContext(helpLink: $urlService->getRootUrl() . 'admin.php?page=help&amp;section='));
+        $coreTabs->setContext(new CoreTabsContext(helpLink: $urlService->getRootUrl() . 'admin.php?page=help&amp;section='));
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('help');
         $tabsheet->select($selected);

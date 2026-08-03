@@ -108,6 +108,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
         private readonly StorageRegistry $storageRegistry,
         private readonly \Piwigo\Core\AdminContext $adminContext,
+        private readonly CoreTabs $coreTabs,
     ) {}
 
     /**
@@ -505,7 +506,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         // own "General/Photo sizes/Watermark/Display/Comments/Search" tab
         // strip hrefs have always rendered as bare relative paths instead
         // of `admin.php?page=configuration&section=X`. Fixed here.
-        CoreTabs::setContext(new CoreTabsContext(confLink: $this->urlService->getRootUrl() . 'admin.php?page=configuration&amp;section='));
+        $this->coreTabs->setContext(new CoreTabsContext(confLink: $this->urlService->getRootUrl() . 'admin.php?page=configuration&amp;section='));
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('configuration');
         $tabsheet->select($page_section);

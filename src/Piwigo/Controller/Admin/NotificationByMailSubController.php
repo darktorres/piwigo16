@@ -87,6 +87,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
+        private readonly CoreTabs $coreTabs,
     ) {}
 
     #[\Override]
@@ -110,7 +111,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         // set before that call, not dead code) and by this method's own
         // F_ACTION assignment below.
         $base_url = $this->urlService->getRootUrl() . 'admin.php';
-        CoreTabs::setContext(new CoreTabsContext(baseUrl: $base_url));
+        $this->coreTabs->setContext(new CoreTabsContext(baseUrl: $base_url));
         $must_repost = false;
 
         // +-----------------------------------------------------------------------+

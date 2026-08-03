@@ -34,7 +34,7 @@ final class StatsPageRenderer
      * shared 'history' tabsheet group (see HistoryPageRenderer, its
      * sibling in that same group).
      */
-    public function render(string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService): void
+    public function render(string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, CoreTabs $coreTabs): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -55,7 +55,7 @@ final class StatsPageRenderer
         // linkStart for this page (same class of gap as
         // ConfigurationSubController's own $conf_link fix), so this page's
         // own tab strip has always rendered broken relative hrefs.
-        CoreTabs::setContext(new CoreTabsContext(linkStart: $urlService->getRootUrl() . 'admin.php?page='));
+        $coreTabs->setContext(new CoreTabsContext(linkStart: $urlService->getRootUrl() . 'admin.php?page='));
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('history');
         $tabsheet->select($pageSlug);

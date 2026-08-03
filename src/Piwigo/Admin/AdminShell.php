@@ -54,6 +54,7 @@ final class AdminShell
         private readonly ConfigService $configService,
         private readonly \Piwigo\Core\Paths $paths,
         private readonly FilesystemIntegrityChecker $filesystemIntegrityChecker,
+        private readonly CoreTabs $coreTabs,
     ) {}
 
     /**
@@ -91,8 +92,7 @@ final class AdminShell
         $template = \Piwigo\Template\CurrentTemplate::get();
         $conn = DbConnection::build();
 
-        CoreTabs::setUrlService($this->urlService);
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(TabsheetBeforeSelect::class, CoreTabs::addCoreTabs(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(TabsheetBeforeSelect::class, $this->coreTabs->addCoreTabs(...));
 
         \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginAdmin());
 

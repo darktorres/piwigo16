@@ -52,6 +52,7 @@ final class PluginsSubController implements AdminSubControllerInterface
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+        private readonly CoreTabs $coreTabs,
     ) {}
 
     #[\Override]
@@ -63,7 +64,7 @@ final class PluginsSubController implements AdminSubControllerInterface
         // triggered synchronously inside Tabsheet::select() below -- must
         // be set before that call, not dead code (see this class's own
         // docblock).
-        CoreTabs::setContext(new CoreTabsContext(myBaseUrl: $this->urlService->getRootUrl() . 'admin.php?page=plugins'));
+        $this->coreTabs->setContext(new CoreTabsContext(myBaseUrl: $this->urlService->getRootUrl() . 'admin.php?page=plugins'));
 
         $tab = Request\ExtensionTabRequest::fromGlobals('/^(installed|update|new)$/')->tab;
 

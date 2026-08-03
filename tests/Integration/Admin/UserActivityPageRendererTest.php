@@ -59,6 +59,8 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
 
     private UrlService $urlService;
 
+    private CoreTabs $coreTabs;
+
     /** @var list<array<string, mixed>> */
     private array $deletedActivityRows = [];
 
@@ -81,14 +83,18 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
             'username' => 'fixture_admin',
         ]));
 
-        // Same wiring AdminShell::run() does for every real admin.php
-        // request (Piwigo\Admin\AdminShell::run()) -- without it,
-        // Tabsheet::select('user_activity') finds an empty $sheets array
-        // (CoreTabs::addCoreTabs() never registered) and crashes on
-        // `$keys[0]` of an empty array.
+        // Same wiring AdminShell::runDispatch() does for every real
+        // admin.php request (Piwigo\Admin\AdminShell::runDispatch()) --
+        // without it, Tabsheet::select('user_activity') finds an empty
+        // $sheets array (CoreTabs::addCoreTabs() never registered) and
+        // crashes on `$keys[0]` of an empty array.
         EventDispatcher::reset();
-        CoreTabs::setUrlService($this->urlService);
-        EventDispatcher::get()->addTypedHandler(TabsheetBeforeSelect::class, CoreTabs::addCoreTabs(...));
+        $coreTabs = Kernel::container()->get(CoreTabs::class);
+        if (! $coreTabs instanceof CoreTabs) {
+            throw new \LogicException('Container returned an unexpected type for ' . CoreTabs::class);
+        }
+        $this->coreTabs = $coreTabs;
+        EventDispatcher::get()->addTypedHandler(TabsheetBeforeSelect::class, $this->coreTabs->addCoreTabs(...));
 
         Lang::load('admin.lang');
         // Template::__construct()'s own data_dir_checked first-time-setup
@@ -130,7 +136,7 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
 
         $this->conn->executeStatement('DELETE FROM ' . Tables::activity() . " WHERE object != 'system'");
 
-        new UserActivityPageRenderer()->render($this->urlService);
+        new UserActivityPageRenderer()->render($this->urlService, $this->coreTabs);
 
         $template = CurrentTemplate::get();
         self::assertSame([], $template->get_template_vars('ulist'));

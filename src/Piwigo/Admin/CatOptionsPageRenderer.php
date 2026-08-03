@@ -27,6 +27,7 @@ final class CatOptionsPageRenderer
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
+        private readonly CoreTabs $coreTabs,
     ) {}
 
     private static function activityService(Connection $conn): ActivityService
@@ -83,7 +84,7 @@ final class CatOptionsPageRenderer
         // linkStart for this page (same class of gap as
         // ConfigurationSubController's own $conf_link fix), so this page's
         // own tab strip has always rendered broken relative hrefs.
-        CoreTabs::setContext(new CoreTabsContext(linkStart: $this->urlService->getRootUrl() . 'admin.php?page='));
+        $this->coreTabs->setContext(new CoreTabsContext(linkStart: $this->urlService->getRootUrl() . 'admin.php?page='));
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('cat_options');
         $tabsheet->select($section);

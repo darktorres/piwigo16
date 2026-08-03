@@ -17,6 +17,16 @@ use Piwigo\Event\Admin\TabsheetBeforeSelect;
  * runs, same bootstrap-time-registration shape as P23 batch 7's
  * `Piwigo\Admin\PluginLoader`.
  *
+ * Singleton/service-locator elimination campaign, Phase 3: container-shared
+ * instance now (`UrlServiceInterface` constructor-injected, autowired --
+ * already bound in config/container.php), not a static-setter collaborator.
+ * `context` is ordinary instance state, written once per request by
+ * whichever writer file (`*SubController`/`*PageRenderer`) runs, read by
+ * `addCoreTabs()` on `$this` -- every real writer file and the event
+ * registration itself (`AdminShell::runDispatch()`) resolve this same
+ * shared instance from the container, so no transitional shim is needed at
+ * all (every real caller already has a constructor-injectable path to it).
+ *
  * Every `case` arm reads a different page-specific base-URL global
  * (`$my_base_url`, `$admin_album_base_url`, `$manager_link`, `$link_start`,
  * `$conf_link`, `$help_link`, `$base_url`, `$admin_photo_base_url`), set by
@@ -36,54 +46,32 @@ use Piwigo\Event\Admin\TabsheetBeforeSelect;
  */
 final class CoreTabs
 {
-    private static ?UrlServiceInterface $urlService = null;
+    private ?CoreTabsContext $context = null;
 
-    private static ?CoreTabsContext $context = null;
-
-    /**
-     * Set once by Piwigo\Admin\AdminShell::run(), right before registering
-     * addCoreTabs() as the 'tabsheet_before_select' event handler --
-     * addCoreTabs() is only ever reached via that event (fixed callback
-     * signature, no room for a new method param), so it needs the same
-     * static-setter shape as Image\SrcImage::setUrlService() (Legacy
-     * Coupling Retirement Phase 4c).
-     */
-    public static function setUrlService(UrlServiceInterface $urlService): void
-    {
-        self::$urlService = $urlService;
-    }
-
-    private static function urlService(): UrlServiceInterface
-    {
-        if (! self::$urlService instanceof UrlServiceInterface) {
-            throw new \RuntimeException('CoreTabs: no URL service set (AdminShell::run() not run yet?)');
-        }
-
-        return self::$urlService;
-    }
+    public function __construct(
+        private readonly UrlServiceInterface $urlService,
+    ) {}
 
     /**
      * Called by each real writer file (13 *SubController.php, 12
      * *PageRenderer.php called from a SubController) right before it
      * constructs its own Tabsheet -- see CoreTabsContext's own docblock
-     * for why this can't be a real addCoreTabs() parameter. Worker-mode
-     * safe the same way $urlService already is: exactly one
-     * SubController's flow reaches each context-reading `case` below, and
-     * that SubController always calls setContext() first, so there is
-     * nothing to reset between requests.
+     * for why this can't be a real addCoreTabs() parameter. Every writer
+     * file always calls this before its own Tabsheet::select() reaches
+     * addCoreTabs() below, so there is nothing to reset between requests.
      */
-    public static function setContext(CoreTabsContext $context): void
+    public function setContext(CoreTabsContext $context): void
     {
-        self::$context = $context;
+        $this->context = $context;
     }
 
-    private static function context(): CoreTabsContext
+    private function context(): CoreTabsContext
     {
-        if (! self::$context instanceof CoreTabsContext) {
+        if (! $this->context instanceof CoreTabsContext) {
             throw new \RuntimeException('CoreTabs: no context set (writer file forgot CoreTabs::setContext()?)');
         }
 
-        return self::$context;
+        return $this->context;
     }
 
     /**
@@ -103,7 +91,7 @@ final class CoreTabs
         return $value;
     }
 
-    public static function addCoreTabs(TabsheetBeforeSelect $event): TabsheetBeforeSelect
+    public function addCoreTabs(TabsheetBeforeSelect $event): TabsheetBeforeSelect
     {
         $sheets = $event->sheets;
         switch ($event->tabsheetId) {
@@ -115,7 +103,7 @@ final class CoreTabs
                 break;
 
             case 'tags':
-                $my_base_url = self::contextField(self::context()->myBaseUrl, 'myBaseUrl');
+                $my_base_url = self::contextField($this->context()->myBaseUrl, 'myBaseUrl');
                 $sheets[''] = [
                     'caption' => '<span class="icon-menu"></span>' . Lang::t('List'),
                     'url' => $my_base_url . 'tags',
@@ -123,7 +111,7 @@ final class CoreTabs
                 break;
 
             case 'album':
-                $admin_album_base_url = self::contextField(self::context()->adminAlbumBaseUrl, 'adminAlbumBaseUrl');
+                $admin_album_base_url = self::contextField($this->context()->adminAlbumBaseUrl, 'adminAlbumBaseUrl');
                 $sheets['properties'] = [
                     'caption' => '<span class="icon-pencil"></span>' . Lang::t('Properties'),
                     'url' => $admin_album_base_url . '-properties',
@@ -143,7 +131,7 @@ final class CoreTabs
                 break;
 
             case 'albums':
-                $my_base_url = self::contextField(self::context()->myBaseUrl, 'myBaseUrl');
+                $my_base_url = self::contextField($this->context()->myBaseUrl, 'myBaseUrl');
                 $sheets['list'] = [
                     'caption' => '<span class="icon-menu"></span>' . Lang::t('List'),
                     'url' => $my_base_url . 'albums',
@@ -155,7 +143,7 @@ final class CoreTabs
                 break;
 
             case 'users':
-                $my_base_url = self::contextField(self::context()->myBaseUrl, 'myBaseUrl');
+                $my_base_url = self::contextField($this->context()->myBaseUrl, 'myBaseUrl');
                 $sheets['user_list'] = [
                     'caption' => '<span class="icon-menu"></span>' . Lang::t('List'),
                     'url' => $my_base_url . 'user_list',
@@ -167,7 +155,7 @@ final class CoreTabs
                 break;
 
             case 'batch_manager':
-                $manager_link = self::contextField(self::context()->managerLink, 'managerLink');
+                $manager_link = self::contextField($this->context()->managerLink, 'managerLink');
                 $sheets['global'] = [
                     'caption' => '<span class="icon-th"></span>' . Lang::t('global mode'),
                     'url' => $manager_link . 'global',
@@ -179,7 +167,7 @@ final class CoreTabs
                 break;
 
             case 'cat_options':
-                $link_start = self::contextField(self::context()->linkStart, 'linkStart');
+                $link_start = self::contextField($this->context()->linkStart, 'linkStart');
                 $sheets['status'] = [
                     'caption' => '<span class="icon-lock"></span>' . Lang::t('Public / Private'),
                     'url' => $link_start . 'cat_options&amp;section=status',
@@ -203,7 +191,7 @@ final class CoreTabs
                 break;
 
             case 'comments':
-                $my_base_url = self::contextField(self::context()->myBaseUrl, 'myBaseUrl');
+                $my_base_url = self::contextField($this->context()->myBaseUrl, 'myBaseUrl');
                 $sheets[''] = [
                     'caption' => '<span class="icon-menu"></span>' . Lang::t('List'),
                     'url' => $my_base_url . 'comments',
@@ -211,7 +199,7 @@ final class CoreTabs
                 break;
 
             case 'groups':
-                $my_base_url = self::contextField(self::context()->myBaseUrl, 'myBaseUrl');
+                $my_base_url = self::contextField($this->context()->myBaseUrl, 'myBaseUrl');
                 $sheets[''] = [
                     'caption' => '<span class="icon-menu"> </span>' . Lang::t('List'),
                     'url' => $my_base_url . 'group_list',
@@ -219,7 +207,7 @@ final class CoreTabs
                 break;
 
             case 'configuration':
-                $conf_link = self::contextField(self::context()->confLink, 'confLink');
+                $conf_link = self::contextField($this->context()->confLink, 'confLink');
                 $sheets['main'] = [
                     'caption' => '<span class="icon-cog"></span>' . Lang::t('General'),
                     'url' => $conf_link . 'main',
@@ -248,7 +236,7 @@ final class CoreTabs
                 break;
 
             case 'help':
-                $help_link = self::contextField(self::context()->helpLink, 'helpLink');
+                $help_link = self::contextField($this->context()->helpLink, 'helpLink');
                 $sheets['add_photos'] = [
                     'caption' => Lang::t('Add Photos'),
                     'url' => $help_link . 'add_photos',
@@ -272,7 +260,7 @@ final class CoreTabs
                 break;
 
             case 'history':
-                $link_start = self::contextField(self::context()->linkStart, 'linkStart');
+                $link_start = self::contextField($this->context()->linkStart, 'linkStart');
                 $sheets['stats'] = [
                     'caption' => '<span class="icon-signal"></span>' . Lang::t('Statistics'),
                     'url' => $link_start . 'stats',
@@ -284,7 +272,7 @@ final class CoreTabs
                 break;
 
             case 'languages':
-                $my_base_url = self::contextField(self::context()->myBaseUrl, 'myBaseUrl');
+                $my_base_url = self::contextField($this->context()->myBaseUrl, 'myBaseUrl');
                 $sheets['installed'] = [
                     'caption' => '<span class="icon-menu"></span>' . Lang::t('List'),
                     'url' => $my_base_url . '&amp;tab=installed',
@@ -302,7 +290,7 @@ final class CoreTabs
                 break;
 
             case 'menus':
-                $my_base_url = self::contextField(self::context()->myBaseUrl, 'myBaseUrl');
+                $my_base_url = self::contextField($this->context()->myBaseUrl, 'myBaseUrl');
                 $sheets[''] = [
                     'caption' => '<span class="icon-menu"></span>' . Lang::t('List'),
                     'url' => $my_base_url . 'menubar',
@@ -310,7 +298,7 @@ final class CoreTabs
                 break;
 
             case 'nbm':
-                $base_url = self::contextField(self::context()->baseUrl, 'baseUrl');
+                $base_url = self::contextField($this->context()->baseUrl, 'baseUrl');
                 $sheets['param'] = [
                     'caption' => Lang::t('Parameter'),
                     'url' => $base_url . '?page=notification_by_mail&amp;mode=param',
@@ -326,7 +314,7 @@ final class CoreTabs
                 break;
 
             case 'photo':
-                $admin_photo_base_url = self::contextField(self::context()->adminPhotoBaseUrl, 'adminPhotoBaseUrl');
+                $admin_photo_base_url = self::contextField($this->context()->adminPhotoBaseUrl, 'adminPhotoBaseUrl');
                 $sheets['properties'] = [
                     'caption' => '<span class="icon-file-image"></span>' . Lang::t('Properties'),
                     'url' => $admin_photo_base_url . '-properties',
@@ -346,22 +334,22 @@ final class CoreTabs
             case 'photos_add':
                 $sheets['direct'] = [
                     'caption' => '<span class="icon-upload"></span>' . Lang::t('Web Form'),
-                    'url' => PhotosAddDirectPageRenderer::baseUrl(self::urlService()) . '&amp;section=direct',
+                    'url' => PhotosAddDirectPageRenderer::baseUrl($this->urlService) . '&amp;section=direct',
                 ];
                 $sheets['applications'] = [
                     'caption' => '<span class="icon-network"></span>' . Lang::t('Applications'),
-                    'url' => PhotosAddDirectPageRenderer::baseUrl(self::urlService()) . '&amp;section=applications',
+                    'url' => PhotosAddDirectPageRenderer::baseUrl($this->urlService) . '&amp;section=applications',
                 ];
                 if (\Piwigo\Config\CurrentConfig::enableSynchronization()) {
                     $sheets['ftp'] = [
                         'caption' => '<span class="icon-exchange"></span>' . Lang::t('FTP + Synchronization'),
-                        'url' => PhotosAddDirectPageRenderer::baseUrl(self::urlService()) . '&amp;section=ftp',
+                        'url' => PhotosAddDirectPageRenderer::baseUrl($this->urlService) . '&amp;section=ftp',
                     ];
                 }
                 break;
 
             case 'plugins':
-                $my_base_url = self::contextField(self::context()->myBaseUrl, 'myBaseUrl');
+                $my_base_url = self::contextField($this->context()->myBaseUrl, 'myBaseUrl');
                 $sheets['installed'] = [
                     'caption' => '<span class="icon-menu"></span>' . Lang::t('List'),
                     'url' => $my_base_url . '&amp;tab=installed',
@@ -381,16 +369,16 @@ final class CoreTabs
             case 'rating':
                 $sheets['rating'] = [
                     'caption' => Lang::t('Photos'),
-                    'url' => self::urlService()->getRootUrl() . 'admin.php?page=rating',
+                    'url' => $this->urlService->getRootUrl() . 'admin.php?page=rating',
                 ];
                 $sheets['rating_user'] = [
                     'caption' => Lang::t('Users'),
-                    'url' => self::urlService()->getRootUrl() . 'admin.php?page=rating_user',
+                    'url' => $this->urlService->getRootUrl() . 'admin.php?page=rating_user',
                 ];
                 break;
 
             case 'themes':
-                $my_base_url = self::contextField(self::context()->myBaseUrl, 'myBaseUrl');
+                $my_base_url = self::contextField($this->context()->myBaseUrl, 'myBaseUrl');
                 $sheets['installed'] = [
                     'caption' => '<span class="icon-menu"></span>' . Lang::t('List'),
                     'url' => $my_base_url . '&amp;tab=installed',
@@ -412,7 +400,7 @@ final class CoreTabs
                 break;
 
             case 'updates':
-                $my_base_url = self::contextField(self::context()->myBaseUrl, 'myBaseUrl');
+                $my_base_url = self::contextField($this->context()->myBaseUrl, 'myBaseUrl');
 
                 if (\Piwigo\Config\CurrentConfig::enableCoreUpdate()) {
                     $sheets['pwg'] = [
@@ -429,7 +417,7 @@ final class CoreTabs
                 }
                 break;
             case 'site_update':
-                $my_base_url = self::contextField(self::context()->myBaseUrl, 'myBaseUrl');
+                $my_base_url = self::contextField($this->context()->myBaseUrl, 'myBaseUrl');
                 $sheets['synchronization'] = [
                     'caption' => '<span class="icon-exchange"></span>' . Lang::t('Synchronization'),
                     'url' => $my_base_url . 'site_update&site=1',
@@ -440,7 +428,7 @@ final class CoreTabs
                 ];
                 break;
             case 'maintenance':
-                $my_base_url = self::contextField(self::context()->myBaseUrl, 'myBaseUrl');
+                $my_base_url = self::contextField($this->context()->myBaseUrl, 'myBaseUrl');
                 $sheets['actions'] = [
                     'caption' => '<span class="icon-tools"></span>' . Lang::t('Actions'),
                     'url' => $my_base_url . 'maintenance&tab=actions',

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\StatsPageRenderer;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\UrlServiceInterface;
@@ -24,12 +25,13 @@ final class StatsSubController implements AdminSubControllerInterface
     public function __construct(
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
+        private readonly CoreTabs $coreTabs,
     ) {}
 
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
         new StatsPageRenderer()
-            ->render('stats', $this->urlService, $this->configService);
+            ->render('stats', $this->urlService, $this->configService, $this->coreTabs);
     }
 }

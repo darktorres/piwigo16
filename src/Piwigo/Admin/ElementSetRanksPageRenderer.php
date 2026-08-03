@@ -45,6 +45,7 @@ final class ElementSetRanksPageRenderer
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly ErrorCollector $errorCollector,
+        private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
     ) {}
 
     public function render(): void
@@ -180,7 +181,7 @@ final class ElementSetRanksPageRenderer
         if (count($thumbnail_rows) > 0) {
             // template thumbnail initialization
             $current_rank = 1;
-            $derivativeParams = ImageStdParams::get_by_type(ImageStdParams::SQUARE);
+            $derivativeParams = $this->imageStdParams->get_by_type(ImageStdParams::SQUARE);
             foreach ($thumbnail_rows as $row) {
                 $derivative = new DerivativeImage($derivativeParams, new SrcImage($row));
 

@@ -108,7 +108,7 @@ final class DerivativeParams
     public function will_watermark(array $out_size)
     {
         if ($this->use_watermark) {
-            $min_size = ImageStdParams::get_watermark()->min_size;
+            $min_size = ImageStdParams::current()->get_watermark()->min_size;
             return $min_size[0] <= $out_size[0]
               || $min_size[1] <= $out_size[1];
         }

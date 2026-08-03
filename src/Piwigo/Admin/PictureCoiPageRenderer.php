@@ -20,6 +20,7 @@ final class PictureCoiPageRenderer
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
     ) {}
 
     public function render(): void
@@ -54,7 +55,7 @@ final class PictureCoiPageRenderer
                 $derivative_infos['representative_ext'] = $row['representative_ext'];
             }
 
-            foreach (ImageStdParams::get_defined_type_map() as $params) {
+            foreach ($this->imageStdParams->get_defined_type_map() as $params) {
                 if ($params->sizing->max_crop !== 0.0) {
                     new DerivativeCacheService()
                         ->deleteElementDerivatives($derivative_infos, $params->type);
@@ -89,7 +90,7 @@ final class PictureCoiPageRenderer
             ];
         }
 
-        foreach (ImageStdParams::get_defined_type_map() as $params) {
+        foreach ($this->imageStdParams->get_defined_type_map() as $params) {
             if ($params->sizing->max_crop !== 0.0) {
                 $derivative = new DerivativeImage($params, new SrcImage($row));
                 $template->append('cropped_derivatives', [

@@ -19,12 +19,13 @@ final class RatingUserSubController implements AdminSubControllerInterface
 {
     public function __construct(
         private readonly UrlServiceInterface $urlService,
+        private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
     ) {}
 
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
         new RatingUserPageRenderer()
-            ->render($this->urlService);
+            ->render($this->urlService, $this->imageStdParams);
     }
 }

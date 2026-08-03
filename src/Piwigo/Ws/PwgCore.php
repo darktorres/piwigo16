@@ -131,9 +131,9 @@ final class PwgCore
     public static function getMissingDerivatives(array $params, PwgServer &$service): PwgError|array
     {
         if ($params['types'] === []) {
-            $types = array_keys(ImageStdParams::get_defined_type_map());
+            $types = array_keys(ImageStdParams::current()->get_defined_type_map());
         } else {
-            $types = array_intersect(array_keys(ImageStdParams::get_defined_type_map()), $params['types']);
+            $types = array_intersect(array_keys(ImageStdParams::current()->get_defined_type_map()), $params['types']);
             if (count($types) === 0) {
                 return new PwgError(WsError::INVALID_PARAM, 'Invalid types');
             }
@@ -323,7 +323,7 @@ final class PwgCore
         $path_msizes = $root . $data_location . 'i';
         $msizes = FilesystemHelper::getCacheSizeDerivatives($path_msizes);
 
-        $infos['msizes'] = array_fill_keys(array_keys(ImageStdParams::get_defined_type_map()), 0);
+        $infos['msizes'] = array_fill_keys(array_keys(ImageStdParams::current()->get_defined_type_map()), 0);
         $infos['msizes']['custom'] = 0;
         $all = 0;
 
@@ -514,7 +514,7 @@ final class PwgCore
         // Piwigo Remote Sync does not support receiving the available sizes
         $piwigo_remote_sync_agent = 'Apache-HttpClient/';
         if (! is_string($http_user_agent) or ! str_starts_with($http_user_agent, $piwigo_remote_sync_agent)) {
-            $res['available_sizes'] = array_keys(ImageStdParams::get_defined_type_map());
+            $res['available_sizes'] = array_keys(ImageStdParams::current()->get_defined_type_map());
         }
 
         if (\Piwigo\Auth\AccessControl::isAdmin()) {
@@ -1326,7 +1326,7 @@ final class PwgCore
                 $image_id = $line_image_id;
 
                 $image_string =
-                '<span><img src="' . @DerivativeImage::url(ImageStdParams::get_by_type(ImageStdParams::SQUARE), $element)
+                '<span><img src="' . @DerivativeImage::url(ImageStdParams::current()->get_by_type(ImageStdParams::SQUARE), $element)
                 . '" alt="' . $image_title . '" title="' . $image_title . '">';
             }
 

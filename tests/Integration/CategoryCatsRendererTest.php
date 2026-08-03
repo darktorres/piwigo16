@@ -134,7 +134,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
 
         $configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher());
         $configService->loadConfFromDb();
-        ImageStdParams::load_from_db();
+        ImageStdParams::current()->load_from_db();
 
         // render() builds its own internal CategoryTreeCache from
         // CachePools::categoryTree() (not injectable) -- a stale repr_*/
@@ -185,6 +185,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             $urlService,
             $currentLogger,
             EventDispatcher::get(),
+            ImageStdParams::current(),
         );
     }
 

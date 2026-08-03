@@ -980,7 +980,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
             $type = $params['type'];
             is_string($type) or new HtmlService()
                 ->fatalError('define_derivative type must be a string');
-            $derivative = ImageStdParams::get_by_type($type);
+            $derivative = ImageStdParams::current()->get_by_type($type);
             $smarty->assign($name, $derivative);
             return;
         }
@@ -1033,7 +1033,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
             }
         }
 
-        $smarty->assign($name, ImageStdParams::get_custom($w, $h, $crop, $minw, $minh));
+        $smarty->assign($name, ImageStdParams::current()->get_custom($w, $h, $crop, $minw, $minh));
     }
 
     /**

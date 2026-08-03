@@ -103,7 +103,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
 
         $configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher());
         $configService->loadConfFromDb();
-        ImageStdParams::load_from_db();
+        ImageStdParams::current()->load_from_db();
         DerivativeImage::setUrlService($this->urlService);
     }
 

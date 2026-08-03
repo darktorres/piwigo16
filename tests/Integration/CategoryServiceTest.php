@@ -230,7 +230,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         // NotificationByMailSenderTest's own identical setUp trio.
         // ImageStdParams::load_from_db() itself needs CurrentConfigService.
         CurrentConfigService::set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
-        ImageStdParams::load_from_db();
+        ImageStdParams::current()->load_from_db();
         DerivativeImage::setUrlService(new UrlService(new HtmlService()));
     }
 

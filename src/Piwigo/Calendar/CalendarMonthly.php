@@ -513,7 +513,7 @@ final class CalendarMonthly extends CalendarBase
                 $wday_labels[] = array_shift($wday_labels);
             }
 
-            [$cell_width, $cell_height] = ImageStdParams::get_by_type(ImageStdParams::SQUARE)->sizing->ideal_size;
+            [$cell_width, $cell_height] = ImageStdParams::current()->get_by_type(ImageStdParams::SQUARE)->sizing->ideal_size;
 
             $tpl_weeks = [];
             $tpl_crt_week = [];

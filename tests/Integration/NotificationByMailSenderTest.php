@@ -125,7 +125,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         // real-config-row wiring as CategoryDefaultRendererTest/
         // CalendarMonthlyTest's own identical setUp.
         $configService->loadConfFromDb();
-        \Piwigo\Image\ImageStdParams::load_from_db();
+        \Piwigo\Image\ImageStdParams::current()->load_from_db();
         \Piwigo\Image\DerivativeImage::setUrlService(new \Piwigo\Url\UrlService(new \Piwigo\Html\HtmlService()));
 
         $this->conn = $conn;

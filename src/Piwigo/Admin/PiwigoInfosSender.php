@@ -48,6 +48,7 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
 {
     public function __construct(
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+        private readonly ImageStdParams $imageStdParams,
     ) {}
 
     /**
@@ -418,7 +419,7 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
             }
         }
 
-        $watermark = ImageStdParams::get_watermark();
+        $watermark = $this->imageStdParams->get_watermark();
 
         $piwigoInfos['features'] = [
             'use_watermark' => $watermark->file !== '' ? 'yes' : 'no',

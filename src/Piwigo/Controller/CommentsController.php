@@ -56,6 +56,7 @@ final class CommentsController implements ControllerInterface
         private readonly SessionService $sessionService,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
+        private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
     ) {}
 
     private static function permissionService(): PermissionService
@@ -633,7 +634,7 @@ final class CommentsController implements ControllerInterface
             }
         }
 
-        $derivative_params = $this->eventDispatcher->dispatchChange(new GetCommentsDerivativeParams(ImageStdParams::get_by_type(ImageStdParams::THUMB)))->params;
+        $derivative_params = $this->eventDispatcher->dispatchChange(new GetCommentsDerivativeParams($this->imageStdParams->get_by_type(ImageStdParams::THUMB)))->params;
         $template->assign('comment_derivative_params', $derivative_params);
 
         // include menubar

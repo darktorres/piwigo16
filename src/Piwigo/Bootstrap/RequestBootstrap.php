@@ -47,7 +47,6 @@ use Piwigo\Filter\FilterService;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\Event\GetSrcImageUrl;
 use Piwigo\Image\ImageService;
-use Piwigo\Image\ImageStdParams;
 use Piwigo\Mail\MailService;
 use Piwigo\Menu\Event\BlockManagerRegisterBlocks;
 use Piwigo\Page\NoPhotoYetRenderer;
@@ -418,7 +417,7 @@ final class RequestBootstrap
             'archiveDays' => \Piwigo\Config\CurrentConfig::logArchiveDays(),
         ]));
 
-        ImageStdParams::load_from_db();
+        self::imageStdParams();
 
         session_start();
         PluginLoader::loadPlugins(self::loadedPlugins(), \Piwigo\PluginConfig\EventDispatcher::get());
@@ -914,6 +913,24 @@ final class RequestBootstrap
         }
 
         return $currentLogger;
+    }
+
+    /**
+     * Resolves the container-shared instance -- its factory binding
+     * (config/container.php) already calls load_from_db() at construction,
+     * so simply resolving it here (rather than a bare
+     * ImageStdParams::load_from_db() static call) is enough to preserve
+     * this method's own "called every request, very early" semantics
+     * (singleton/service-locator elimination campaign, Phase 4).
+     */
+    private static function imageStdParams(): \Piwigo\Image\ImageStdParams
+    {
+        $imageStdParams = Kernel::container()->get(\Piwigo\Image\ImageStdParams::class);
+        if (! $imageStdParams instanceof \Piwigo\Image\ImageStdParams) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Image\ImageStdParams::class);
+        }
+
+        return $imageStdParams;
     }
 
     /**

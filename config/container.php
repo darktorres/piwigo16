@@ -54,6 +54,7 @@ use Piwigo\History\HistoryRepository;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\LangRepository;
 use Piwigo\Lang\LanguageEntity;
 use Piwigo\Mail\MailService;
@@ -74,6 +75,7 @@ use Piwigo\Url\UrlService;
 use Piwigo\Users\UserInfoEntity;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
+use Piwigo\Validation\InputValidator;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -235,6 +237,40 @@ return [
     // like every other autowired service, matching the former per-request
     // memo exactly.
     DeploymentPolicy::class => factory(static fn (\Piwigo\Core\Paths $paths): DeploymentPolicy => DeploymentPolicy::load($paths)),
+
+    // Factory binding (singleton/service-locator elimination campaign,
+    // Phase 4) -- replaces ImageStdParams's former self-managed static
+    // memo (get_defined_type_map()/get_by_type()/etc., all `private
+    // static` properties written by load_from_db()). load_from_db() calls
+    // its own repositories via a fresh EntityManagerFactory::build(
+    // DbConnection::build()) internally -- no Paths/Connection param
+    // needed here, same reasoning as its own docblock already gives for
+    // not routing through the container-shared EM.
+    ImageStdParams::class => factory(static function (): ImageStdParams {
+        $imageStdParams = new ImageStdParams();
+        $imageStdParams->load_from_db();
+        return $imageStdParams;
+    }),
+
+    // Non-obvious construction -- confirmed bug fix, found during this
+    // phase's full-suite verification (WsHistoryTest.php's
+    // assertHistorySearchIsAHackingAttempt() cases): PHP-DI's default
+    // autowiring only injects REQUIRED constructor parameters via
+    // reflection; a parameter with a default value (InputValidator's own
+    // `?HtmlRenderingInterface $htmlRenderer = null`, kept optional so
+    // InputValidatorTest.php's `new InputValidator()` sites keep their
+    // "never wired up" behavior) is left at its default even when the
+    // interface itself is bound above and the container is fully booted --
+    // confirmed empirically, not assumed. Without this entry, every
+    // container-resolved InputValidator (i.e. every real WS/admin caller
+    // via createStatic()) silently loses its renderer, so fatalError()
+    // falls through to a bare RuntimeException instead of the intended
+    // ResponseReadyException (HtmlService::fatalError()'s own real "[Hacking
+    // attempt]" error page) -- caught by ExceptionHandlerMiddleware's
+    // generic catch-all and flattened to a content-free 500. This factory
+    // makes the intent (real renderer whenever one exists) explicit instead
+    // of relying on autowiring to do something it never did.
+    InputValidator::class => factory(static fn (HtmlRenderingInterface $htmlRenderer): InputValidator => new InputValidator($htmlRenderer)),
 
     // Non-obvious construction (handler + formatter wiring). Monolog "app"
     // channel only -- the "security" channel (a named $securityLogger

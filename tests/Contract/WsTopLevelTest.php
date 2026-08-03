@@ -151,7 +151,7 @@ final class WsTopLevelTest extends ContractTestCase
         $msizes = $values['msizes'];
         self::assertIsArray($msizes);
 
-        $expectedKeys = [...array_keys(\Piwigo\Image\ImageStdParams::get_defined_type_map()), 'custom', 'all'];
+        $expectedKeys = [...array_keys(\Piwigo\Image\ImageStdParams::current()->get_defined_type_map()), 'custom', 'all'];
         foreach ($expectedKeys as $key) {
             self::assertArrayHasKey($key, $msizes, "msizes must always report a '{$key}' entry");
             self::assertIsInt($msizes[$key]);

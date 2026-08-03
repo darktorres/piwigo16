@@ -6,6 +6,7 @@ use Piwigo\Admin\PiwigoInfosSender;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Logger;
+use Piwigo\Image\ImageStdParams;
 
 // send()'s real body talks to piwigo.org's PEM/telemetry endpoints over the
 // network (via the static, non-injectable Piwigo\Http\HttpClientService::
@@ -33,7 +34,7 @@ test('send returns immediately without touching the DB or network when telemetry
     // proven by simply completing without the DB-reload/network code below
     // it ever running (both would throw or hang in this sandboxed test
     // environment if reached).
-    new PiwigoInfosSender($currentLogger)->send();
+    new PiwigoInfosSender($currentLogger, new ImageStdParams())->send();
 
     expect(true)->toBeTrue();
 });

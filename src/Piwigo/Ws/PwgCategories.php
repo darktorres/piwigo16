@@ -389,7 +389,7 @@ final class PwgCategories
         $categoryConn = DbConnection::build();
         $categoryService = self::categoryService();
 
-        if (! in_array($params['thumbnail_size'], array_keys(ImageStdParams::get_defined_type_map()), true)) {
+        if (! in_array($params['thumbnail_size'], array_keys(ImageStdParams::current()->get_defined_type_map()), true)) {
             return new PwgError(WsError::INVALID_PARAM, 'Invalid thumbnail_size');
         }
 

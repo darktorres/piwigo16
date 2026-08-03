@@ -70,7 +70,7 @@ final class DerivativeImage
         public SrcImage $src_image
     ) {
         if (is_string($type)) {
-            $this->params = ImageStdParams::get_by_type($type);
+            $this->params = ImageStdParams::current()->get_by_type($type);
         } else {
             $this->params = $type;
         }
@@ -98,7 +98,7 @@ final class DerivativeImage
     public static function url($type, $infos): string
     {
         $src_image = is_object($infos) ? $infos : new SrcImage($infos);
-        $params = is_string($type) ? ImageStdParams::get_by_type($type) : $type;
+        $params = is_string($type) ? ImageStdParams::current()->get_by_type($type) : $type;
         $rel_path = '';
         $rel_url = '';
         self::build($src_image, $params, $rel_path, $rel_url);
@@ -134,12 +134,12 @@ final class DerivativeImage
 
         $ret = [];
         // build enabled types
-        foreach (ImageStdParams::get_defined_type_map() as $type => $params) {
+        foreach (ImageStdParams::current()->get_defined_type_map() as $type => $params) {
             $derivative = new self($params, $src_image);
             $ret[$type] = $derivative;
         }
         // disabled types, fallback to enabled types
-        foreach (ImageStdParams::get_undefined_type_map() as $type => $type2) {
+        foreach (ImageStdParams::current()->get_undefined_type_map() as $type => $type2) {
             $ret[$type] = $ret[$type2];
         }
 
@@ -161,12 +161,12 @@ final class DerivativeImage
             $src_image = new SrcImage($src_image);
         }
 
-        $defined = ImageStdParams::get_defined_type_map();
+        $defined = ImageStdParams::current()->get_defined_type_map();
         if (isset($defined[$type])) {
             return new self($defined[$type], $src_image);
         }
 
-        $undefined = ImageStdParams::get_undefined_type_map();
+        $undefined = ImageStdParams::current()->get_undefined_type_map();
         if (isset($undefined[$type])) {
             return new self($defined[$undefined[$type]], $src_image);
         }
@@ -201,11 +201,11 @@ final class DerivativeImage
                     $rel_path = $rel_url = $src->rel_path;
                     return;
                 }
-                $defined_types = array_keys(ImageStdParams::get_defined_type_map());
+                $defined_types = array_keys(ImageStdParams::current()->get_defined_type_map());
                 for ($i = 0; $i < count($defined_types); $i++) {
                     if ($defined_types[$i] === $params->type) {
                         for ($i--; $i >= 0; $i--) {
-                            $smaller = ImageStdParams::get_by_type($defined_types[$i]);
+                            $smaller = ImageStdParams::current()->get_by_type($defined_types[$i]);
                             if ($smaller->sizing->max_crop === $params->sizing->max_crop && $smaller->is_identity($src_size)) {
                                 $params = $smaller;
                                 self::build($src, $params, $rel_path, $rel_url, $is_cached);

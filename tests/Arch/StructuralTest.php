@@ -241,6 +241,7 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
         '/src/Piwigo/Lang/Translator.php',
         '/src/Piwigo/PluginConfig/EventDispatcher.php',
         '/src/Piwigo/Config/DeploymentPolicy.php',
+        '/src/Piwigo/Image/ImageStdParams.php',
     ];
 
     $hits = [
@@ -395,6 +396,37 @@ test('DeploymentPolicy::current() transitional bridge has a shrinking, known all
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'DeploymentPolicy::current(');
+
+    $disallowed = array_values(array_filter(
+        $hits,
+        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
+    ));
+
+    expect(describeCallSites($disallowed))->toBe([]);
+});
+
+test('ImageStdParams::current() transitional bridge has a shrinking, known allow-list', function (): void {
+    // Singleton/service-locator elimination campaign, Phase 4: current()
+    // kept its original name (no `Static` suffix, matching
+    // DeploymentPolicy/DbCredentials's own precedent -- no competing real
+    // instance method to disambiguate from). Every phase that converts
+    // one more of these files to constructor-injected ImageStdParams
+    // should remove it from the allow-list below.
+    $repoRoot = __DIR__ . '/../..';
+
+    $allowedFiles = [
+        '/src/Piwigo/Admin/Upload/UploadService.php',
+        '/src/Piwigo/Calendar/CalendarMonthly.php',
+        '/src/Piwigo/Image/DerivativeImage.php',
+        '/src/Piwigo/Image/DerivativeParams.php',
+        '/src/Piwigo/Template/Template.php',
+        '/src/Piwigo/Ws/PwgCategories.php',
+        '/src/Piwigo/Ws/PwgCore.php',
+        '/src/Piwigo/Ws/PwgImages.php',
+        '/src/Piwigo/Ws/WsDefaultMethods.php',
+    ];
+
+    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'ImageStdParams::current(');
 
     $disallowed = array_values(array_filter(
         $hits,

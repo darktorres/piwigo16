@@ -18,7 +18,7 @@ use Piwigo\Image\ImageStdParams;
  */
 final class RatingUserPageRenderer
 {
-    public function render(UrlServiceInterface $urlService): void
+    public function render(UrlServiceInterface $urlService, ImageStdParams $imageStdParams): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -92,7 +92,7 @@ final class RatingUserPageRenderer
         // get image tn urls
         $image_urls = [];
         if (count($image_ids) > 0) {
-            $params = ImageStdParams::get_by_type(ImageStdParams::SQUARE);
+            $params = $imageStdParams->get_by_type(ImageStdParams::SQUARE);
             foreach ($rate_repository->findImageThumbInfoByIds(array_keys($image_ids)) as $thumb_row) {
                 $image_urls[$thumb_row['id']] = [
                     'tn' => DerivativeImage::url($params, $thumb_row),
@@ -194,7 +194,7 @@ final class RatingUserPageRenderer
             'available_rates' => \Piwigo\Config\CurrentConfig::rateItems(),
             'ratings' => $by_user_ratings,
             'image_urls' => $image_urls,
-            'TN_WIDTH' => ImageStdParams::get_by_type(ImageStdParams::SQUARE)->sizing->ideal_size[0],
+            'TN_WIDTH' => $imageStdParams->get_by_type(ImageStdParams::SQUARE)->sizing->ideal_size[0],
             'NB_ELEMENTS' => $nb_elements,
             'ADMIN_PAGE_TITLE' => Lang::t('Rating'),
         ]);

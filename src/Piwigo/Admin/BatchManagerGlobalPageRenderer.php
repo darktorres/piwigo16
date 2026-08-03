@@ -60,6 +60,7 @@ final class BatchManagerGlobalPageRenderer
         private readonly SessionService $sessionService,
         private readonly Translator $translator,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly ImageStdParams $imageStdParams,
     ) {}
 
     private static function tagService(): TagService
@@ -506,7 +507,7 @@ final class BatchManagerGlobalPageRenderer
 
         // derivatives
         $del_deriv_map = [];
-        foreach (ImageStdParams::get_defined_type_map() as $params) {
+        foreach ($this->imageStdParams->get_defined_type_map() as $params) {
             $del_deriv_map[$params->type] = Lang::t($params->type);
         }
         $gen_deriv_map = $del_deriv_map;
@@ -573,7 +574,7 @@ final class BatchManagerGlobalPageRenderer
                 }
             }
 
-            $thumb_params = ImageStdParams::get_by_type(ImageStdParams::SQUARE);
+            $thumb_params = $this->imageStdParams->get_by_type(ImageStdParams::SQUARE);
             // template thumbnail initialization
             foreach (self::imageService()->getBatchManagerThumbnails($cat_elements_id, $is_category ? $filter_category_id : null, $order_by, $nb_images, $page_start) as $row) {
                 $nb_thumbs_page++;

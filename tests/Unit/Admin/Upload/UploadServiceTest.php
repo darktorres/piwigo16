@@ -1212,38 +1212,40 @@ test('getOptimalDimensionsForRepresentative computes the exact 1.5x margin from 
     // prove the loop's own array_key_exists()/instanceof/(bool)/(float)
     // cast/1.5 multiplication chain actually runs and computes correctly,
     // rather than just returning the untouched safe default.
+    $stdParams = \Piwigo\Image\ImageStdParams::current();
     $typeMapProp = new ReflectionProperty(\Piwigo\Image\ImageStdParams::class, 'type_map');
     $disabledMapProp = new ReflectionProperty(\Piwigo\Image\ImageStdParams::class, 'disabled_type_map');
-    $originalTypeMap = $typeMapProp->getValue();
-    $originalDisabledMap = $disabledMapProp->getValue();
+    $originalTypeMap = $typeMapProp->getValue($stdParams);
+    $originalDisabledMap = $disabledMapProp->getValue($stdParams);
 
     try {
-        $typeMapProp->setValue(null, [
+        $typeMapProp->setValue($stdParams, [
             'xlarge' => new \Piwigo\Image\DerivativeParams(new \Piwigo\Image\SizingParams([1234, 5678])),
         ]);
-        $disabledMapProp->setValue(null, []);
+        $disabledMapProp->setValue($stdParams, []);
 
         [$w, $h] = upload_service_optimal_dimensions();
 
         expect($w)->toBe((int) (1234 * 1.5))
             ->and($h)->toBe((int) (5678 * 1.5));
     } finally {
-        $typeMapProp->setValue(null, $originalTypeMap);
-        $disabledMapProp->setValue(null, $originalDisabledMap);
+        $typeMapProp->setValue($stdParams, $originalTypeMap);
+        $disabledMapProp->setValue($stdParams, $originalDisabledMap);
     }
 });
 
 test('getOptimalDimensionsForRepresentative also reads a disabled-by-default type, not just an enabled one', function (): void {
     // Distinguishes `$disabled[$type] ?? null` from a dropped left side --
     // the type above only ever exercised the *enabled* map.
+    $stdParams = \Piwigo\Image\ImageStdParams::current();
     $typeMapProp = new ReflectionProperty(\Piwigo\Image\ImageStdParams::class, 'type_map');
     $disabledMapProp = new ReflectionProperty(\Piwigo\Image\ImageStdParams::class, 'disabled_type_map');
-    $originalTypeMap = $typeMapProp->getValue();
-    $originalDisabledMap = $disabledMapProp->getValue();
+    $originalTypeMap = $typeMapProp->getValue($stdParams);
+    $originalDisabledMap = $disabledMapProp->getValue($stdParams);
 
     try {
-        $typeMapProp->setValue(null, []);
-        $disabledMapProp->setValue(null, [
+        $typeMapProp->setValue($stdParams, []);
+        $disabledMapProp->setValue($stdParams, [
             'xlarge' => new \Piwigo\Image\DerivativeParams(new \Piwigo\Image\SizingParams([222, 444])),
         ]);
 
@@ -1252,28 +1254,29 @@ test('getOptimalDimensionsForRepresentative also reads a disabled-by-default typ
         expect($w)->toBe((int) (222 * 1.5))
             ->and($h)->toBe((int) (444 * 1.5));
     } finally {
-        $typeMapProp->setValue(null, $originalTypeMap);
-        $disabledMapProp->setValue(null, $originalDisabledMap);
+        $typeMapProp->setValue($stdParams, $originalTypeMap);
+        $disabledMapProp->setValue($stdParams, $originalDisabledMap);
     }
 });
 
 test('getOptimalDimensionsForRepresentative falls back to the exact 2000x2000 safe default when no type is defined at all', function (): void {
+    $stdParams = \Piwigo\Image\ImageStdParams::current();
     $typeMapProp = new ReflectionProperty(\Piwigo\Image\ImageStdParams::class, 'type_map');
     $disabledMapProp = new ReflectionProperty(\Piwigo\Image\ImageStdParams::class, 'disabled_type_map');
-    $originalTypeMap = $typeMapProp->getValue();
-    $originalDisabledMap = $disabledMapProp->getValue();
+    $originalTypeMap = $typeMapProp->getValue($stdParams);
+    $originalDisabledMap = $disabledMapProp->getValue($stdParams);
 
     try {
-        $typeMapProp->setValue(null, []);
-        $disabledMapProp->setValue(null, []);
+        $typeMapProp->setValue($stdParams, []);
+        $disabledMapProp->setValue($stdParams, []);
 
         [$w, $h] = upload_service_optimal_dimensions();
 
         expect($w)->toBe(3000)
             ->and($h)->toBe(3000);
     } finally {
-        $typeMapProp->setValue(null, $originalTypeMap);
-        $disabledMapProp->setValue(null, $originalDisabledMap);
+        $typeMapProp->setValue($stdParams, $originalTypeMap);
+        $disabledMapProp->setValue($stdParams, $originalDisabledMap);
     }
 });
 

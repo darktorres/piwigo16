@@ -43,6 +43,7 @@ final class PhotoSubController implements AdminSubControllerInterface
     public function __construct(
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
+        private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
     ) {}
 
     #[\Override]
@@ -90,7 +91,7 @@ final class PhotoSubController implements AdminSubControllerInterface
                 ->render();
         } elseif (\Piwigo\Config\CurrentConfig::isFormatsEnabled()) {
             new PictureFormatsPageRenderer()
-                ->render($this->urlService);
+                ->render($this->urlService, $this->imageStdParams);
         }
     }
 }

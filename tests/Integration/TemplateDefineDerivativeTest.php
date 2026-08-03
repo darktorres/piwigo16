@@ -45,7 +45,7 @@ final class TemplateDefineDerivativeTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         CurrentConfigService::set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
-        ImageStdParams::load_from_db();
+        ImageStdParams::current()->load_from_db();
         CurrentUser::attachGlobals();
 
         $this->template = new Template();

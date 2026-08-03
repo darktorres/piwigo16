@@ -47,7 +47,7 @@ final class PageTail
         // (L4) is the one place the concrete L4 implementation gets
         // constructed. Legacy Coupling Retirement Phase 4c: UrlServiceInterface
         // is wired the same way, see PageTailRenderer's own docblock.
-        new PageTailRenderer(new PiwigoInfosSender(self::currentLogger()), new UrlService(new HtmlService()), \Piwigo\PluginConfig\EventDispatcher::get())
+        new PageTailRenderer(new PiwigoInfosSender(self::currentLogger(), self::imageStdParams()), new UrlService(new HtmlService()), \Piwigo\PluginConfig\EventDispatcher::get())
             ->render(\Piwigo\Core\PageState::current()->requestStart);
     }
 
@@ -61,7 +61,7 @@ final class PageTail
     {
         self::checkForUpdates();
 
-        return new PageTailRenderer(new PiwigoInfosSender(self::currentLogger()), new UrlService(new HtmlService()), \Piwigo\PluginConfig\EventDispatcher::get())
+        return new PageTailRenderer(new PiwigoInfosSender(self::currentLogger(), self::imageStdParams()), new UrlService(new HtmlService()), \Piwigo\PluginConfig\EventDispatcher::get())
             ->renderToString(\Piwigo\Core\PageState::current()->requestStart);
     }
 
@@ -79,6 +79,22 @@ final class PageTail
         }
 
         return $currentLogger;
+    }
+
+    /**
+     * Same reasoning as currentLogger() above -- PiwigoInfosSender is
+     * constructed manually below, outside `Bootstrap/`, so this is called
+     * from here rather than resolving `Kernel::container()` directly
+     * (singleton/service-locator elimination campaign, Phase 4).
+     */
+    private static function imageStdParams(): \Piwigo\Image\ImageStdParams
+    {
+        $imageStdParams = \Piwigo\Core\Kernel::container()->get(\Piwigo\Image\ImageStdParams::class);
+        if (! $imageStdParams instanceof \Piwigo\Image\ImageStdParams) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Image\ImageStdParams::class);
+        }
+
+        return $imageStdParams;
     }
 
     private static function checkForUpdates(): void

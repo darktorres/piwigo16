@@ -193,7 +193,7 @@ final class UploadServiceTest extends IntegrationTestCase
         // defaults since the fixture's derivative_settings/derivative_size
         // rows are empty here (see this class's own docblock), matching
         // TemplateDefineDerivativeTest's own identical setup.
-        ImageStdParams::load_from_db();
+        ImageStdParams::current()->load_from_db();
 
         // Deliberate baseline, independent of the fixture's own DB-stored
         // 'lounge_active' row (see this class's own docblock) -- every test

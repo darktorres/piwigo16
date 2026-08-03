@@ -53,11 +53,12 @@ function derivativeImageTestSetUrlService(?UrlServiceInterface $service): void
  */
 function derivativeImageTestSnapshotStdParams(): array
 {
-    $typeMap = new ReflectionProperty(ImageStdParams::class, 'type_map')->getValue();
-    $allTypeMap = new ReflectionProperty(ImageStdParams::class, 'all_type_map')->getValue();
-    $undefinedTypeMap = new ReflectionProperty(ImageStdParams::class, 'undefined_type_map')->getValue();
+    $instance = ImageStdParams::current();
+    $typeMap = new ReflectionProperty(ImageStdParams::class, 'type_map')->getValue($instance);
+    $allTypeMap = new ReflectionProperty(ImageStdParams::class, 'all_type_map')->getValue($instance);
+    $undefinedTypeMap = new ReflectionProperty(ImageStdParams::class, 'undefined_type_map')->getValue($instance);
     if (! is_array($typeMap) || ! is_array($allTypeMap) || ! is_array($undefinedTypeMap)) {
-        throw new RuntimeException('ImageStdParams static maps were not arrays');
+        throw new RuntimeException('ImageStdParams instance maps were not arrays');
     }
 
     return [$typeMap, $allTypeMap, $undefinedTypeMap];
@@ -82,9 +83,10 @@ function derivativeImageTestSeedStdParams(array $typeMap, array $undefinedMap = 
         $allTypeMap[$undefinedType] = $typeMap[$target];
     }
 
-    new ReflectionProperty(ImageStdParams::class, 'type_map')->setValue(null, $typeMap);
-    new ReflectionProperty(ImageStdParams::class, 'all_type_map')->setValue(null, $allTypeMap);
-    new ReflectionProperty(ImageStdParams::class, 'undefined_type_map')->setValue(null, $undefinedMap);
+    $instance = ImageStdParams::current();
+    new ReflectionProperty(ImageStdParams::class, 'type_map')->setValue($instance, $typeMap);
+    new ReflectionProperty(ImageStdParams::class, 'all_type_map')->setValue($instance, $allTypeMap);
+    new ReflectionProperty(ImageStdParams::class, 'undefined_type_map')->setValue($instance, $undefinedMap);
 }
 
 /**
@@ -92,9 +94,10 @@ function derivativeImageTestSeedStdParams(array $typeMap, array $undefinedMap = 
  */
 function derivativeImageTestRestoreStdParams(array $snapshot): void
 {
-    new ReflectionProperty(ImageStdParams::class, 'type_map')->setValue(null, $snapshot[0]);
-    new ReflectionProperty(ImageStdParams::class, 'all_type_map')->setValue(null, $snapshot[1]);
-    new ReflectionProperty(ImageStdParams::class, 'undefined_type_map')->setValue(null, $snapshot[2]);
+    $instance = ImageStdParams::current();
+    new ReflectionProperty(ImageStdParams::class, 'type_map')->setValue($instance, $snapshot[0]);
+    new ReflectionProperty(ImageStdParams::class, 'all_type_map')->setValue($instance, $snapshot[1]);
+    new ReflectionProperty(ImageStdParams::class, 'undefined_type_map')->setValue($instance, $snapshot[2]);
 }
 
 beforeEach(function (): void {
@@ -324,7 +327,7 @@ test('build() searches the whole defined-type list without an out-of-bounds read
     // `$defined_types[$i]` read as a real E_WARNING real code never
     // raises.
     $snapshot = derivativeImageTestSnapshotStdParams();
-    $originalWatermark = ImageStdParams::get_watermark();
+    $originalWatermark = ImageStdParams::current()->get_watermark();
 
     try {
         $thumbParams = new DerivativeParams(SizingParams::classic(50, 50));
@@ -339,7 +342,7 @@ test('build() searches the whole defined-type list without an out-of-bounds read
         $watermark = new \Piwigo\Image\WatermarkParams();
         $watermark->file = 'watermark.png';
         $watermark->min_size = [5, 5];
-        ImageStdParams::set_watermark($watermark);
+        ImageStdParams::current()->set_watermark($watermark);
         $mysteryParams->use_watermark = true;
 
         $src = new SrcImage([
@@ -366,7 +369,7 @@ test('build() searches the whole defined-type list without an out-of-bounds read
         expect($warnings)->toBe([]);
     } finally {
         derivativeImageTestRestoreStdParams($snapshot);
-        ImageStdParams::set_watermark($originalWatermark);
+        ImageStdParams::current()->set_watermark($originalWatermark);
     }
 });
 
@@ -490,9 +493,17 @@ test('build() treats a cached file as fresh when its mtime exactly equals last_m
 });
 
 test('build() substitutes a smaller already-defined identity-matching type when watermarking would otherwise apply, recursing until none remains', function (): void {
-    $snapshot = derivativeImageTestSnapshotStdParams();
-    $originalWatermark = ImageStdParams::get_watermark();
+    // Kernel::boot() must run before the snapshot/get_watermark() reads
+    // below -- ImageStdParams::current() resolves a different (fresh,
+    // container-built) instance once Kernel is booted than the pre-boot
+    // memoized fallback it returns beforehand, and build() (inside the
+    // real DerivativeImage construction further down) always reads
+    // whichever instance is current *after* boot. Same ordering pitfall
+    // already found for Translator/EventDispatcher elsewhere in this
+    // campaign.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-substitute-only'));
+    $snapshot = derivativeImageTestSnapshotStdParams();
+    $originalWatermark = ImageStdParams::current()->get_watermark();
 
     try {
         $thumbParams = new DerivativeParams(SizingParams::classic(50, 50));
@@ -508,7 +519,7 @@ test('build() substitutes a smaller already-defined identity-matching type when 
         $watermark = new \Piwigo\Image\WatermarkParams();
         $watermark->file = 'watermark.png';
         $watermark->min_size = [30, 30];
-        ImageStdParams::set_watermark($watermark);
+        ImageStdParams::current()->set_watermark($watermark);
         // apply_global() compares the watermark's min_size against each
         // type's own ideal_size (not the source size) -- both 'thumb'
         // (50x50) and 'medium' (200x200) satisfy 30<=ideal here, so both
@@ -547,7 +558,7 @@ test('build() substitutes a smaller already-defined identity-matching type when 
         expect($derivative->get_path())->toBe(CurrentPaths::get()->root . '_data/i/upload/2026/07/photo-th.jpg');
     } finally {
         derivativeImageTestRestoreStdParams($snapshot);
-        ImageStdParams::set_watermark($originalWatermark);
+        ImageStdParams::current()->set_watermark($originalWatermark);
     }
 });
 
@@ -575,7 +586,7 @@ test('build() never substitutes a same-size candidate whose max_crop does not ma
     // is no safe bounded way to trigger it without risking a hung
     // process) -- accepted as a real, reasoned-through kill instead.
     $snapshot = derivativeImageTestSnapshotStdParams();
-    $originalWatermark = ImageStdParams::get_watermark();
+    $originalWatermark = ImageStdParams::current()->get_watermark();
 
     try {
         $thumbParams = new DerivativeParams(SizingParams::classic(50, 50));
@@ -592,7 +603,7 @@ test('build() never substitutes a same-size candidate whose max_crop does not ma
         $watermark = new \Piwigo\Image\WatermarkParams();
         $watermark->file = 'watermark.png';
         $watermark->min_size = [5, 5];
-        ImageStdParams::set_watermark($watermark);
+        ImageStdParams::current()->set_watermark($watermark);
         $thumbParams->use_watermark = true;
         $mediumParams->use_watermark = true;
 
@@ -610,7 +621,7 @@ test('build() never substitutes a same-size candidate whose max_crop does not ma
         expect($derivative->same_as_source())->toBeFalse();
     } finally {
         derivativeImageTestRestoreStdParams($snapshot);
-        ImageStdParams::set_watermark($originalWatermark);
+        ImageStdParams::current()->set_watermark($originalWatermark);
     }
 });
 

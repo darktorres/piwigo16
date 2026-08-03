@@ -67,6 +67,7 @@ final readonly class CategoryCatsRenderer
         private UrlServiceInterface $urlService,
         private \Piwigo\Core\CurrentLogger $currentLogger,
         private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private \Piwigo\Image\ImageStdParams $imageStdParams,
     ) {}
 
     /**
@@ -415,7 +416,7 @@ final readonly class CategoryCatsRenderer
             // pagination
             $tplThumbnailsVarSelection = $tplThumbnailsVar;
 
-            $derivativeParams = $this->eventDispatcher->dispatchChange(new GetIndexAlbumDerivativeParams(ImageStdParams::get_by_type(ImageStdParams::THUMB)))->params;
+            $derivativeParams = $this->eventDispatcher->dispatchChange(new GetIndexAlbumDerivativeParams($this->imageStdParams->get_by_type(ImageStdParams::THUMB)))->params;
             $tplThumbnailsVarSelection = $this->eventDispatcher->dispatchChange(new LocEndIndexCategoryThumbnails($tplThumbnailsVarSelection))
                 ->tplThumbnailsVar;
             $template->assign([

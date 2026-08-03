@@ -15,7 +15,7 @@ use Piwigo\Image\ImageStdParams;
  */
 final class PictureFormatsPageRenderer
 {
-    public function render(UrlServiceInterface $urlService): void
+    public function render(UrlServiceInterface $urlService, ImageStdParams $imageStdParams): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -52,7 +52,7 @@ final class PictureFormatsPageRenderer
 
         $template->assign([
             'ADD_FORMATS_URL' => $urlService->getRootUrl() . 'admin.php?page=photos_add&formats=' . $image_id,
-            'IMG_SQUARE_SRC' => DerivativeImage::url(ImageStdParams::get_by_type(ImageStdParams::SQUARE), $image),
+            'IMG_SQUARE_SRC' => DerivativeImage::url($imageStdParams->get_by_type(ImageStdParams::SQUARE), $image),
             'FORMATS' => $formats,
             'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
                 ->getToken(),

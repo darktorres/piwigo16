@@ -35,6 +35,7 @@ final readonly class CategoryDefaultRenderer
         private UrlServiceInterface $urlService,
         private SessionService $sessionService,
         private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private \Piwigo\Image\ImageStdParams $imageStdParams,
     ) {}
 
     /**
@@ -202,7 +203,8 @@ final readonly class CategoryDefaultRenderer
         $indexDeriv = is_string($indexDeriv) ? $indexDeriv : ImageStdParams::THUMB;
 
         $template->assign([
-            'derivative_params' => $this->eventDispatcher->dispatchChange(new GetIndexDerivativeParams(ImageStdParams::get_by_type($indexDeriv)))->params,
+            'derivative_params' => $this->eventDispatcher->dispatchChange(new GetIndexDerivativeParams($this->imageStdParams->get_by_type($indexDeriv)))
+                ->params,
             'maxRequests' => \Piwigo\Config\CurrentConfig::maxRequests(),
             'SHOW_THUMBNAIL_CAPTION' => \Piwigo\Config\CurrentConfig::showThumbnailCaption(),
         ]);

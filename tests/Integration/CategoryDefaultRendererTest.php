@@ -82,7 +82,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         // display flag CategoryDefaultRenderer/thumbnails.tpl reads.
         $configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher());
         $configService->loadConfFromDb();
-        ImageStdParams::load_from_db();
+        ImageStdParams::current()->load_from_db();
 
         $this->conn = DbConnection::build();
         $em = EntityManagerFactory::build($this->conn);
@@ -100,7 +100,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         // own DerivativeImage::setUrlService() call.
         DerivativeImage::setUrlService($urlService);
 
-        $this->renderer = new CategoryDefaultRenderer($htmlService, $this->buildTemplate(), $imageRepo, $commentRepo, $urlService, new SessionService($em->getRepository(SessionEntity::class)), EventDispatcher::get());
+        $this->renderer = new CategoryDefaultRenderer($htmlService, $this->buildTemplate(), $imageRepo, $commentRepo, $urlService, new SessionService($em->getRepository(SessionEntity::class)), EventDispatcher::get(), ImageStdParams::current());
     }
 
     #[\Override]

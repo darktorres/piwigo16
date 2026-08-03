@@ -1488,8 +1488,8 @@ final class UploadService
      */
     private static function getOptimalDimensionsForRepresentative(): array
     {
-        $enabled = ImageStdParams::get_defined_type_map();
-        $disabled = ImageStdParams::get_disabled_type_map();
+        $enabled = ImageStdParams::current()->get_defined_type_map();
+        $disabled = ImageStdParams::current()->get_disabled_type_map();
 
         $w = $h = 2000; // safe default values
 

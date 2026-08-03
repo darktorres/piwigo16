@@ -95,6 +95,7 @@ final class PictureController implements ControllerInterface
         private readonly SessionService $sessionService,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
+        private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
     ) {}
 
     private static function permissionService(): PermissionService
@@ -1294,7 +1295,7 @@ final class PictureController implements ControllerInterface
 
         if (isset($_COOKIE['picture_deriv'])) {
             if (is_string($_COOKIE['picture_deriv'])
-                and array_key_exists($_COOKIE['picture_deriv'], ImageStdParams::get_defined_type_map())) {
+                and array_key_exists($_COOKIE['picture_deriv'], $this->imageStdParams->get_defined_type_map())) {
                 $this->sessionService->setSessionVar('picture_deriv', $_COOKIE['picture_deriv']);
             }
             setcookie('picture_deriv', '', [
@@ -1316,7 +1317,7 @@ final class PictureController implements ControllerInterface
             if ($type === ImageStdParams::SQUARE || $type === ImageStdParams::THUMB) {
                 continue;
             }
-            if (! array_key_exists($type, ImageStdParams::get_defined_type_map())) {
+            if (! array_key_exists($type, $this->imageStdParams->get_defined_type_map())) {
                 continue;
             }
             $url = $derivative->get_url();

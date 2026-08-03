@@ -114,6 +114,7 @@ final class ImageDerivativeController implements ControllerInterface
         private readonly Paths $paths,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
     ) {}
 
     #[\Override]
@@ -248,10 +249,10 @@ final class ImageDerivativeController implements ControllerInterface
 
         if (! $this->trySwitchSource($params, $src_mtime) && $params->type === ImageStdParams::CUSTOM) {
             $sharpen = 0.0;
-            foreach (ImageStdParams::get_defined_type_map() as $std_params) {
+            foreach ($this->imageStdParams->get_defined_type_map() as $std_params) {
                 $sharpen += $std_params->sharpen;
             }
-            $params->sharpen = round($sharpen / (float) count(ImageStdParams::get_defined_type_map()));
+            $params->sharpen = round($sharpen / (float) count($this->imageStdParams->get_defined_type_map()));
         }
 
         // Same semantics as the old local mkgetdir(): recursive + index.htm
@@ -309,7 +310,7 @@ final class ImageDerivativeController implements ControllerInterface
         }
 
         if ($params->will_watermark($d_size)) {
-            $wm = ImageStdParams::get_watermark();
+            $wm = $this->imageStdParams->get_watermark();
             $wm_image = new PwgImage($this->paths->root . $wm->file, $this->currentLogger, $this->eventDispatcher);
             $wm_size = [(int) $wm_image->get_width(), (int) $wm_image->get_height()];
             if ($d_size[0] < $wm_size[0] or $d_size[1] < $wm_size[1]) {
@@ -396,11 +397,11 @@ final class ImageDerivativeController implements ControllerInterface
             $image->strip();
         }
 
-        $compression_quality = ImageStdParams::$quality;
+        $compression_quality = $this->imageStdParams->get_quality();
 
         // for big sizing never go beyond 75 quality
         if (in_array($this->derivativeType, [ImageStdParams::FOUR_XLARGE, ImageStdParams::THREE_XLARGE], true)) {
-            $compression_quality = min(ImageStdParams::$quality, 75);
+            $compression_quality = min($this->imageStdParams->get_quality(), 75);
         }
 
         $image->write($this->derivativePath);
@@ -602,7 +603,7 @@ final class ImageDerivativeController implements ControllerInterface
         $req = substr($req, 0, $pos);
 
         $deriv = explode('_', $deriv);
-        foreach (ImageStdParams::get_defined_type_map() as $type => $params) {
+        foreach ($this->imageStdParams->get_defined_type_map() as $type => $params) {
             if (DerivativeUrlCodec::derivativeToUrl($type) === $deriv[0]) {
                 $this->derivativeType = $type;
                 $this->derivativeParams = $params;
@@ -621,7 +622,7 @@ final class ImageDerivativeController implements ControllerInterface
 
         if ($this->derivativeType === ImageStdParams::CUSTOM) {
             $params = $this->derivativeParams = $this->parseCustomParams($deriv);
-            ImageStdParams::apply_global($params);
+            $this->imageStdParams->apply_global($params);
 
             if ($params->sizing->ideal_size[0] < 20 or $params->sizing->ideal_size[1] < 20) {
                 $this->ierror('Invalid size', 400);
@@ -633,7 +634,7 @@ final class ImageDerivativeController implements ControllerInterface
             $key = [];
             $params->add_url_tokens($key);
             $key = implode('_', $key);
-            if (! isset(ImageStdParams::$custom[$key])) {
+            if (! isset($this->imageStdParams->get_custom_timestamps()[$key])) {
                 $this->ierror('Size not allowed', 403);
             }
         }
@@ -706,7 +707,7 @@ final class ImageDerivativeController implements ControllerInterface
         }
 
         $candidates = [];
-        foreach (ImageStdParams::get_defined_type_map() as $candidate) {
+        foreach ($this->imageStdParams->get_defined_type_map() as $candidate) {
             if ($candidate->type === $params->type) {
                 continue;
             }

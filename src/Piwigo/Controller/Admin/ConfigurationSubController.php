@@ -110,6 +110,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Core\AdminContext $adminContext,
         private readonly CoreTabs $coreTabs,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
     ) {}
 
     /**
@@ -472,7 +473,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
-            ImageStdParams::restore_default();
+            $this->imageStdParams->restore_default();
             new DerivativeCacheService()
                 ->clearDerivativeCache();
 
@@ -688,8 +689,8 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     }
 
                     // derivatives = multiple size
-                    $enabled = ImageStdParams::get_defined_type_map();
-                    $disabled = ImageStdParams::get_disabled_type_map();
+                    $enabled = $this->imageStdParams->get_defined_type_map();
+                    $disabled = $this->imageStdParams->get_disabled_type_map();
 
                     $tpl_vars = [];
                     foreach (ImageStdParams::get_all_types() as $type) {
@@ -719,11 +720,11 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                         $tpl_vars[$type] = $tpl_var;
                     }
                     $template->assign('derivatives', $tpl_vars);
-                    $template->assign('resize_quality', ImageStdParams::$quality);
+                    $template->assign('resize_quality', $this->imageStdParams->get_quality());
 
                     $tpl_vars = [];
                     $now = time();
-                    foreach (ImageStdParams::$custom as $custom => $time) {
+                    foreach ($this->imageStdParams->get_custom_timestamps() as $custom => $time) {
                         $tpl_vars[$custom] = ($now - $time <= 24 * 3600) ? Lang::t('today') : \Piwigo\Core\DateHelper::timeSince($time, 'day');
                     }
                     $template->assign('custom_derivatives', $tpl_vars);
@@ -755,7 +756,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 $template->assign('watermark_files', $watermark_filemap);
 
                 if ($template->get_template_vars('watermark') === null) {
-                    $wm = ImageStdParams::get_watermark();
+                    $wm = $this->imageStdParams->get_watermark();
 
                     $position = 'custom';
                     if ($wm->xpos === 0 and $wm->ypos === 0) {
@@ -1083,11 +1084,11 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         if (count($errors) === 0 && count($derivative_errors) === 0) {
             $resize_quality_post = $post['resize_quality'] ?? null;
             $resize_quality = is_numeric($resize_quality_post) ? intval($resize_quality_post) : 0;
-            $quality_changed = ImageStdParams::$quality !== $resize_quality;
-            ImageStdParams::$quality = $resize_quality;
+            $quality_changed = $this->imageStdParams->get_quality() !== $resize_quality;
+            $this->imageStdParams->set_quality($resize_quality);
 
-            $enabled = ImageStdParams::get_defined_type_map();
-            $disabled = ImageStdParams::get_disabled_type_map();
+            $enabled = $this->imageStdParams->get_defined_type_map();
+            $disabled = $this->imageStdParams->get_disabled_type_map();
             $changed_types = [];
 
             foreach (ImageStdParams::get_all_types() as $type) {
@@ -1103,7 +1104,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     );
                     $new_params->sharpen = (float) intval($pderivative['sharpen']);
 
-                    ImageStdParams::apply_global($new_params);
+                    $this->imageStdParams->apply_global($new_params);
 
                     if (isset($enabled[$type])) {
                         $old_params = $enabled[$type];
@@ -1153,15 +1154,15 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 }
             }
 
-            foreach (array_keys(ImageStdParams::$custom) as $custom) {
+            foreach (array_keys($this->imageStdParams->get_custom_timestamps()) as $custom) {
                 if (isset($post['delete_custom_derivative_' . $custom])) {
                     $changed_types[] = $custom;
-                    unset(ImageStdParams::$custom[$custom]);
+                    $this->imageStdParams->unset_custom_timestamp($custom);
                 }
             }
 
-            ImageStdParams::set_and_save($enabled_by);
-            ImageStdParams::set_and_save_disabled($disabled);
+            $this->imageStdParams->set_and_save($enabled_by);
+            $this->imageStdParams->set_and_save_disabled($disabled);
 
             if ((bool) count($changed_types)) {
                 new DerivativeCacheService()
@@ -1377,7 +1378,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             $watermark->opacity = intval($pwatermark['opacity']);
             $watermark->min_size = [intval($pwatermark['minw']), intval($pwatermark['minh'])];
 
-            $old_watermark = ImageStdParams::get_watermark();
+            $old_watermark = $this->imageStdParams->get_watermark();
             $watermark_changed =
               $watermark->file !== $old_watermark->file
               || $watermark->xpos !== $old_watermark->xpos
@@ -1387,14 +1388,14 @@ final class ConfigurationSubController implements AdminSubControllerInterface
               || $watermark->opacity !== $old_watermark->opacity;
 
             // save the new watermark configuration
-            ImageStdParams::set_watermark($watermark);
+            $this->imageStdParams->set_watermark($watermark);
 
             // do we have to regenerate the derivatives (and which types)?
             $changed_types = [];
 
-            foreach (ImageStdParams::get_defined_type_map() as $type => $params) {
+            foreach ($this->imageStdParams->get_defined_type_map() as $type => $params) {
                 $old_use_watermark = $params->use_watermark;
-                ImageStdParams::apply_global($params);
+                $this->imageStdParams->apply_global($params);
 
                 $changed = $params->use_watermark !== $old_use_watermark;
                 if (! $changed and $params->use_watermark) {
@@ -1412,7 +1413,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 }
             }
 
-            ImageStdParams::save();
+            $this->imageStdParams->save();
 
             if ((bool) count($changed_types)) {
                 new DerivativeCacheService()

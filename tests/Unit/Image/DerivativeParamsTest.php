@@ -121,12 +121,12 @@ test('__serialize exposes last_mod_time, sizing, and sharpen -- not type or use_
 });
 
 test('will_watermark is true once the output is at least as large as the watermark\'s min_size on either dimension', function (): void {
-    $originalWatermark = ImageStdParams::get_watermark();
+    $originalWatermark = ImageStdParams::current()->get_watermark();
 
     try {
         $watermark = new WatermarkParams();
         $watermark->min_size = [500, 500];
-        ImageStdParams::set_watermark($watermark);
+        ImageStdParams::current()->set_watermark($watermark);
 
         $params = new DerivativeParams(SizingParams::classic(800, 600));
         $params->use_watermark = true;
@@ -134,7 +134,7 @@ test('will_watermark is true once the output is at least as large as the waterma
         expect($params->will_watermark([600, 400]))->toBeTrue();
         expect($params->will_watermark([400, 400]))->toBeFalse();
     } finally {
-        ImageStdParams::set_watermark($originalWatermark);
+        ImageStdParams::current()->set_watermark($originalWatermark);
     }
 });
 
@@ -145,12 +145,12 @@ test('will_watermark compares each dimension independently, against exactly its 
     // element swap on either comparison changes nothing observable. A
     // non-square min_size, plus boundary (`<=` vs `<`) values, is
     // required to distinguish all 5.
-    $originalWatermark = ImageStdParams::get_watermark();
+    $originalWatermark = ImageStdParams::current()->get_watermark();
 
     try {
         $watermark = new WatermarkParams();
         $watermark->min_size = [100, 300];
-        ImageStdParams::set_watermark($watermark);
+        ImageStdParams::current()->set_watermark($watermark);
 
         $params = new DerivativeParams(SizingParams::classic(800, 600));
         $params->use_watermark = true;
@@ -172,6 +172,6 @@ test('will_watermark compares each dimension independently, against exactly its 
         // 100<=150 (true), wrongly flipping this to true.
         expect($params->will_watermark([50, 150]))->toBeFalse();
     } finally {
-        ImageStdParams::set_watermark($originalWatermark);
+        ImageStdParams::current()->set_watermark($originalWatermark);
     }
 });

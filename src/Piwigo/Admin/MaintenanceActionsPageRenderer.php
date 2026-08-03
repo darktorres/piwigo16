@@ -50,6 +50,7 @@ final class MaintenanceActionsPageRenderer
         private readonly SessionService $sessionService,
         private readonly \Piwigo\Lang\Translator $translator,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
         private readonly ?\Piwigo\Cache\PersistentCache $persistentCache = null,
     ) {}
 
@@ -84,7 +85,7 @@ final class MaintenanceActionsPageRenderer
         /** @var array<string, string> $purge_urls */
         $purge_urls = [];
         $purge_urls[Lang::t('All')] = 'all';
-        foreach (ImageStdParams::get_defined_type_map() as $params) {
+        foreach ($this->imageStdParams->get_defined_type_map() as $params) {
             $purge_urls[Lang::t($params->type)] = $params->type;
         }
         $purge_urls[Lang::t(ImageStdParams::CUSTOM)] = ImageStdParams::CUSTOM;

@@ -302,36 +302,37 @@ final readonly class AuthRepository
      * `lastmodified = lastmodified` is a deliberate self-assignment in the
      * original -- not a no-op leftover, it's how the original avoids
      * bumping an ON UPDATE CURRENT_TIMESTAMP-style column while still
-     * writing the other two columns; a raw SQL fragment (not a bound
-     * parameter) is required to reference the column itself rather than a
-     * value, which a mapped entity property write can't express (a plain
-     * property assignment either changes lastmodified's own value or
-     * leaves it out of the UPDATE entirely, letting the schema's own ON
-     * UPDATE trigger fire regardless) -- stays raw DBAL, clearing the
-     * identity map afterward since this bypasses the ORM for a table
-     * {@see UserInfoEntity} maps. `last_visit_from_history` is a real
-     * tinyint column now (User domain Stage 1a) -- the literal unquoted
-     * `1` below is the numeric equivalent of the old `'true'` string
-     * literal, not a bound value, same reasoning as `lastmodified`.
+     * writing the other two columns.
+     *
+     * Item 15 audit, re-verified: this docblock previously claimed "a
+     * mapped entity property write can't express [the self-assignment]"
+     * -- wrong once actually tried. DQL's `SET` clause accepts an
+     * arbitrary right-hand expression, including the same property path
+     * again (`ui.lastmodified = ui.lastmodified`), same as
+     * {@see \Piwigo\History\HistoryRepository::updateLastVisitNow()}'s own
+     * converted form. `last_visit_from_history` is a real `boolean`
+     * column now ({@see UserInfoEntity}) -- binds the real PHP `true`,
+     * not a numeric-literal proxy for it.
      */
     public function saveLastVisitFromHistory(int $userId, ?string $lastVisit): void
     {
-        $qb = $this->em->getConnection()
-            ->createQueryBuilder()
-            ->update(Tables::userInfos())
-            ->set('last_visit_from_history', '1')
-            ->set('lastmodified', 'lastmodified')
-            ->where('user_id = :userId')
-            ->setParameter('userId', $userId);
+        $qb = $this->em->createQueryBuilder()
+            ->update(UserInfoEntity::class, 'ui')
+            ->set('ui.lastVisitFromHistory', ':true')
+            ->set('ui.lastmodified', 'ui.lastmodified')
+            ->where('ui.userId = :userId')
+            ->setParameter('true', true)
+            ->setParameter('userId', UserId::from($userId));
 
         if ($lastVisit === null) {
-            $qb->set('last_visit', 'NULL');
+            $qb->set('ui.lastVisit', 'NULL');
         } else {
-            $qb->set('last_visit', ':lastVisit')
+            $qb->set('ui.lastVisit', ':lastVisit')
                 ->setParameter('lastVisit', $lastVisit);
         }
 
-        $qb->executeStatement();
+        $qb->getQuery()
+            ->execute();
 
         $this->em->clear();
     }

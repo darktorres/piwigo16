@@ -441,4 +441,31 @@ final class HistoryRepositoryTest extends IntegrationTestCase
     {
         $this->conn->executeStatement('DELETE FROM ' . Tables::historySummary());
     }
+
+    /**
+     * Item 15 audit: had zero existing coverage.
+     */
+    public function test_update_last_visit_now_sets_last_visit_on_the_real_user_infos_row(): void
+    {
+        $before = $this->conn->createQueryBuilder()
+            ->select('last_visit')
+            ->from(Tables::userInfos())
+            ->where('user_id = 4')
+            ->executeQuery()
+            ->fetchOne();
+        self::assertNull($before);
+
+        $this->repo->updateLastVisitNow(4);
+
+        $after = $this->conn->createQueryBuilder()
+            ->select('last_visit')
+            ->from(Tables::userInfos())
+            ->where('user_id = 4')
+            ->executeQuery()
+            ->fetchOne();
+        self::assertIsString($after);
+        self::assertNotSame('', $after);
+
+        $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . ' SET last_visit = NULL WHERE user_id = 4');
+    }
 }

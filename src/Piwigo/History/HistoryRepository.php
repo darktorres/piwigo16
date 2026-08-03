@@ -673,32 +673,25 @@ final class HistoryRepository extends EntityRepository
 
     public function updateLastVisitNow(int $userId): void
     {
-        // Item 14 DQL audit: stays on DBAL -- writes `user_infos`, a
-        // different repository's own table/entity
-        // ({@see \Piwigo\Users\UserInfoEntity}), not this repository's
-        // HistoryEntity; this class has no business declaring a DQL UPDATE
-        // against another domain's entity, and the deliberate
-        // `lastmodified = lastmodified` self-assignment below (an
-        // ORM-identity-map side-channel write, see its own note) is exactly
-        // the kind of caller-specific quirk that belongs on DBAL rather
-        // than baked into a general-purpose DQL statement.
+        // Item 15 audit, re-verified: this plan's own text speculated the
+        // deptrac boundary rules this out -- wrong once actually checked.
+        // `History` is `L2bExtendedDomain`; `Users` is `L2aCoreDomain` --
+        // a downward dependency, the same accepted precedent already used
+        // by `Permission\PermissionRepository`/`UserRepository::
+        // deleteUser()`'s own direct `Users\*Entity` DQL touches, not the
+        // `deleteSiteRow`-class real violation. Converted to real DQL.
         //
-        // Env::now() rather than SQL's NOW() -- matches
+        // Env::now() rather than DQL's CURRENT_TIMESTAMP() -- matches
         // SessionRepository/CommentRepository's own established reasoning
-        // (invisible to PIWIGO_TEST_NOW). `lastmodified = lastmodified` is
-        // a deliberate self-assignment (see Auth\AuthRepository::
-        // saveLastVisitFromHistory()'s own docblock for why). Bypasses the
-        // ORM for a row Users\UserInfoEntity may already have cached.
+        // (invisible to PIWIGO_TEST_NOW). `ui.lastmodified = ui.lastmodified`
+        // is a deliberate self-assignment (see Auth\AuthRepository::
+        // saveLastVisitFromHistory()'s own docblock for why) -- DQL
+        // supports this identically to the original DBAL form.
         $em = $this->getEntityManager();
-        $em->getConnection()
-            ->createQueryBuilder()
-            ->update(Tables::userInfos())
-            ->set('last_visit', ':now')
-            ->set('lastmodified', 'lastmodified')
-            ->where('user_id = :userId')
+        $em->createQuery('UPDATE ' . \Piwigo\Users\UserInfoEntity::class . ' ui SET ui.lastVisit = :now, ui.lastmodified = ui.lastmodified WHERE ui.userId = :userId')
             ->setParameter('now', Env::now()->format('Y-m-d H:i:s'))
-            ->setParameter('userId', $userId)
-            ->executeStatement();
+            ->setParameter('userId', \Piwigo\Common\ValueObject\UserId::from($userId))
+            ->execute();
         $em->clear();
     }
 

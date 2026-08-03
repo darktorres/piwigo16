@@ -5,24 +5,32 @@ declare(strict_types=1);
 namespace Piwigo\Search;
 
 use Doctrine\DBAL\ArrayParameterType;
-use Piwigo\Core\ArrayHelper;
-use Piwigo\Db\AbstractRepository;
-use Piwigo\Db\Tables;
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\Search\Projection\Search;
 
 /**
  * Persistence layer for the search domain: the `search` table (saved
  * search rules) plus generic parameterized id-list/row lookups shared by
- * the many distinct WHERE-clause shapes `SearchService` builds (advanced
- * search's 12 criteria, the quick-search token evaluator).
+ * the many distinct WHERE-clause shapes `SearchService` builds (the
+ * quick-search token evaluator's own genuinely dynamic table/column/
+ * operator combinations -- see {@see findIdsByClause()}'s own docblock
+ * for why that one stays generic).
  *
- * Deliberately NOT QueryBuilder-per-query here -- most of these WHERE
- * clauses are assembled dynamically from a variable number of OR/AND-joined
- * fragments (SearchService's own concern), so this repository exposes a
- * small number of generic, fully parameterized executors instead of one
- * method per query shape, matching this project's documented allowance for
- * hand-written parameterized SQL on complex dynamic queries.
+ * Further SQL-modernization audit, Item 15H: drops `extends
+ * AbstractRepository` for a directly-injected `EntityManagerInterface`
+ * (`Search` is `L2bExtendedDomain`; `Image`/`Category` are
+ * `L2aCoreDomain`, an allowed downward dependency, same shape as
+ * `Calendar\CalendarRepository`/`Notification\NotificationRepository`).
+ * The `search` table's own basic CRUD (`findOneByClause()`/`now()`/
+ * `insertSearch()`/`countByUuid()`/`findRulesByIds()`) converted to real
+ * DQL/`persist()` below -- every real shape was bounded (`getSearchIdPattern()`'s
+ * own 2 literal WHERE patterns, confirmed via reading every real caller).
+ * `findIdsByClause()`/`findRowsByClause()`/`quote()`/`expressionBuilder()`
+ * stay generic -- the quick-search token evaluator's own real, permanent
+ * need for dynamically-varying table/column/operator combinations
+ * (MySQL FULLTEXT search, a plugin extensibility hook accepting raw SQL)
+ * has no DQL representation, confirmed by reading it, not assumed.
  *
  * Every `mixed` below stays that way by design: $params mirrors DBAL
  * Connection::executeQuery()'s own untyped bound-parameter contract
@@ -31,47 +39,170 @@ use Piwigo\Search\Projection\Search;
  * $fromSql; $rules matches Search Projection's own already-documented
  * JSON rules-bag rationale.
  */
-final class SearchRepository extends AbstractRepository
+final class SearchRepository
 {
-    /**
-     * @param  list<mixed>  $params
-     */
-    public function findOneByClause(string $whereSql, array $params = []): ?Search
-    {
-        $searchTable = Tables::search();
-        $row = $this->conn->executeQuery(
-            <<<SQL
-            SELECT * FROM {$searchTable} WHERE {$whereSql}
-            SQL
-            ,
-            $params
-        )->fetchAssociative();
+    public function __construct(
+        private readonly EntityManagerInterface $em,
+    ) {}
 
-        return $row === false ? null : Search::fromRow($row);
+    /**
+     * @return array<string, mixed>|null
+     */
+    private static function filterRulesKeys(mixed $rulesRaw): ?array
+    {
+        if (! is_array($rulesRaw)) {
+            return null;
+        }
+
+        // Doctrine's native `json` Type decodes via json_decode($v, true)
+        // same as ArrayHelper::safeJsonDecode() did -- PHP auto-coerces a
+        // numeric-string JSON object key (e.g. "0") into a PHP int array
+        // key, so this same string-keys-only filter (originally
+        // Search\Projection\Search::decodeRules()'s own) still applies
+        // here.
+        return array_filter($rulesRaw, is_string(...), ARRAY_FILTER_USE_KEY);
+    }
+
+    private static function toProjection(SavedSearchEntity $entity): Search
+    {
+        return new Search(
+            id: $entity->id ?? 0,
+            searchUuid: $entity->searchUuid,
+            createdOn: $entity->createdOn,
+            createdBy: $entity->createdBy,
+            forkedFrom: $entity->forkedFrom,
+            rules: self::filterRulesKeys($entity->rules),
+        );
+    }
+
+    /**
+     * Replaces the former generic `findOneByClause()`'s own 2 real WHERE
+     * shapes (`getSearchIdPattern()`'s own `'id = ?'`/`'search_uuid = ?'`
+     * literals) with 2 typed methods -- confirmed via reading every real
+     * caller (`SearchService::getSearchInfo()`, `Ws\PwgCore::
+     * historySearch()`) no other WHERE shape is ever constructed.
+     */
+    public function findSavedSearchById(int $id): ?Search
+    {
+        $entity = $this->em->find(SavedSearchEntity::class, $id);
+
+        return $entity === null ? null : self::toProjection($entity);
+    }
+
+    public function findSavedSearchByUuid(string $uuid): ?Search
+    {
+        $entity = $this->em->getRepository(SavedSearchEntity::class)
+            ->findOneBy([
+                'searchUuid' => $uuid,
+            ]);
+
+        return $entity === null ? null : self::toProjection($entity);
+    }
+
+    public function countSavedSearchByUuid(string $uuid): int
+    {
+        $value = $this->em->createQueryBuilder()
+            ->select('COUNT(s.id)')
+            ->from(SavedSearchEntity::class, 's')
+            ->where('s.searchUuid = :uuid')
+            ->setParameter('uuid', $uuid)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return is_numeric($value) ? (int) $value : 0;
+    }
+
+    /**
+     * $createdOn/$searchUuid default to null for Ws\PwgCore::historySearch()'s
+     * ephemeral, metadata-less inserts (no user-facing permalink, never
+     * forked) -- SearchService::saveSearch() always passes real values for
+     * both.
+     *
+     * Further SQL-modernization audit, Item 15H: converted to
+     * `persist()`/`flush()` -- DQL has no INSERT statement. The former
+     * `now()`'s own `SELECT NOW()` round-trip retired entirely;
+     * `saveSearch()`'s own `$createdOn` is now `Env::now()`-computed in
+     * PHP, matching the same "PHP-computed timestamp beats a DB round
+     * trip, and stays PIWIGO_TEST_NOW-aware" pattern used throughout this
+     * campaign.
+     *
+     * @param array<string, mixed> $rules
+     * @return int the new row's auto-increment id
+     */
+    public function insertSavedSearch(
+        array $rules,
+        ?string $createdOn = null,
+        ?int $createdBy = null,
+        ?string $searchUuid = null,
+        ?int $forkedFrom = null
+    ): int {
+        $entity = new SavedSearchEntity($searchUuid, $createdOn, $createdBy, $forkedFrom, $rules);
+        $this->em->persist($entity);
+        $this->em->flush();
+
+        return $entity->id ?? 0;
+    }
+
+    /**
+     * Batch lookup of decoded `rules` for a list of search ids, used by
+     * Ws\PwgCore::historySearch()'s history-listing enrichment (one query
+     * for every `search_id` referenced across a page of history rows,
+     * instead of unserialize()-ing a raw per-row string itself).
+     *
+     * @param list<int> $ids
+     * @return array<int, array<string, mixed>|null> keyed by search id
+     */
+    public function findSavedSearchRulesByIds(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+
+        $rows = $this->em->createQueryBuilder()
+            ->select('s.id', 's.rules')
+            ->from(SavedSearchEntity::class, 's')
+            ->where('s.id IN (:ids)')
+            ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
+            ->getQuery()
+            ->getArrayResult();
+
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_array($row) || ! is_numeric($row['id'] ?? null)) {
+                continue;
+            }
+
+            $result[(int) $row['id']] = self::filterRulesKeys($row['rules'] ?? null);
+        }
+
+        return $result;
     }
 
     /**
      * Generic "list of ids matching an arbitrary WHERE clause" executor,
-     * used for both the advanced-search criteria (each one a distinct
-     * `SELECT DISTINCT(id) FROM images ...` shape) and the quick-search
-     * token evaluator's per-token image/tag/category lookups. $whereSql
-     * uses `?` placeholders bound from $params -- callers building a
-     * clause from free-text search terms MUST bind through $params (or
-     * {@see quote()} when the value has to be embedded inline in a larger
-     * OR-joined fragment), never string-concatenate raw user input.
+     * used by the quick-search token evaluator's per-token image/tag/
+     * category lookups -- a real, permanent need for dynamically-varying
+     * table/column/operator combinations (MySQL FULLTEXT `MATCH()...
+     * AGAINST()`, a plugin extensibility hook accepting raw SQL clause
+     * strings), neither expressible in DQL. $whereSql uses `?`
+     * placeholders bound from $params -- callers building a clause from
+     * free-text search terms MUST bind through $params (or {@see quote()}
+     * when the value has to be embedded inline in a larger OR-joined
+     * fragment), never string-concatenate raw user input.
      *
      * @param  list<mixed>  $params
      * @return list<int>
      */
     public function findIdsByClause(string $selectSql, string $fromSql, string $whereSql, array $params = []): array
     {
-        $ids = $this->conn->executeQuery(
-            <<<SQL
-            SELECT {$selectSql} FROM {$fromSql} WHERE {$whereSql}
-            SQL
-            ,
-            $params
-        )->fetchFirstColumn();
+        $ids = $this->em->getConnection()
+            ->executeQuery(
+                <<<SQL
+                SELECT {$selectSql} FROM {$fromSql} WHERE {$whereSql}
+                SQL
+                ,
+                $params
+            )->fetchFirstColumn();
 
         return array_values(array_map(
             static fn (mixed $id): int => (int) $id,
@@ -89,13 +220,14 @@ final class SearchRepository extends AbstractRepository
      */
     public function findRowsByClause(string $fromSql, string $whereSql, array $params = []): array
     {
-        return $this->conn->executeQuery(
-            <<<SQL
-            SELECT * FROM {$fromSql} WHERE {$whereSql}
-            SQL
-            ,
-            $params
-        )->fetchAllAssociative();
+        return $this->em->getConnection()
+            ->executeQuery(
+                <<<SQL
+                SELECT * FROM {$fromSql} WHERE {$whereSql}
+                SQL
+                ,
+                $params
+            )->fetchAllAssociative();
     }
 
     /**
@@ -111,7 +243,8 @@ final class SearchRepository extends AbstractRepository
      */
     public function quote(string $value): string
     {
-        return $this->conn->quote($value);
+        return $this->em->getConnection()
+            ->quote($value);
     }
 
     /**
@@ -124,99 +257,8 @@ final class SearchRepository extends AbstractRepository
      */
     public function expressionBuilder(): \Doctrine\DBAL\Query\Expression\ExpressionBuilder
     {
-        return $this->conn->createExpressionBuilder();
-    }
-
-    public function countByUuid(string $uuid): int
-    {
-        $searchTable = Tables::search();
-        $count = $this->conn->executeQuery(
-            <<<SQL
-            SELECT COUNT(*) FROM {$searchTable} WHERE search_uuid = ?
-            SQL
-            ,
-            [$uuid]
-        )->fetchOne();
-
-        return is_numeric($count) ? (int) $count : 0;
-    }
-
-    /**
-     * $createdOn/$searchUuid default to null for Ws\PwgCore::historySearch()'s
-     * ephemeral, metadata-less inserts (no user-facing permalink, never
-     * forked) -- SearchService::saveSearch() always passes real values for
-     * both.
-     *
-     * @param array<string, mixed> $rules
-     * @return int the new row's auto-increment id
-     */
-    public function insertSearch(
-        array $rules,
-        ?string $createdOn = null,
-        ?int $createdBy = null,
-        ?string $searchUuid = null,
-        ?int $forkedFrom = null
-    ): int {
-        $searchTable = Tables::search();
-        $this->conn->executeStatement(
-            <<<SQL
-            INSERT INTO {$searchTable} (rules, created_on, created_by, search_uuid, forked_from) VALUES (?, ?, ?, ?, ?)
-            SQL
-            ,
-            [json_encode($rules), $createdOn, $createdBy, $searchUuid, $forkedFrom]
-        );
-
-        return (int) $this->conn->lastInsertId();
-    }
-
-    /**
-     * Batch lookup of decoded `rules` for a list of search ids, used by
-     * Ws\PwgCore::historySearch()'s history-listing enrichment (one query
-     * for every `search_id` referenced across a page of history rows,
-     * instead of unserialize()-ing a raw per-row string itself).
-     *
-     * @param list<int> $ids
-     * @return array<int, array<string, mixed>|null> keyed by search id
-     */
-    public function findRulesByIds(array $ids): array
-    {
-        if ($ids === []) {
-            return [];
-        }
-
-        $searchTable = Tables::search();
-        $rows = $this->conn->executeQuery(
-            <<<SQL
-            SELECT id, rules FROM {$searchTable} WHERE id IN (?)
-            SQL
-            ,
-            [$ids],
-            [ArrayParameterType::INTEGER]
-        )->fetchAllAssociative();
-
-        $result = [];
-        foreach ($rows as $row) {
-            if (! is_numeric($row['id'] ?? null)) {
-                continue;
-            }
-
-            $rulesRaw = $row['rules'] ?? null;
-            $result[(int) $row['id']] = is_string($rulesRaw)
-                ? array_filter(ArrayHelper::safeJsonDecode($rulesRaw), is_string(...), ARRAY_FILTER_USE_KEY)
-                : null;
-        }
-
-        return $result;
-    }
-
-    public function now(): string
-    {
-        $row = $this->conn->executeQuery(<<<SQL
-            SELECT NOW()
-            SQL)
-            ->fetchOne();
-
-        return is_string($row) ? $row : '';
+        return $this->em->getConnection()
+            ->createExpressionBuilder();
     }
 
     /**
@@ -227,7 +269,8 @@ final class SearchRepository extends AbstractRepository
      */
     public function getDbVersion(): string
     {
-        return $this->conn->getServerVersion();
+        return $this->em->getConnection()
+            ->getServerVersion();
     }
 
     /**
@@ -259,14 +302,10 @@ final class SearchRepository extends AbstractRepository
      * FROM/WHERE clause whatsoever) simply omits $condition, matching its
      * own former zero-argument call shape.
      *
-     * Kept as a fully generic executor deliberately, not collapsed
-     * further into e.g. one countGroupedBy()-shaped method: the 17 real
-     * call sites this repository serves span images+image_category-joined
-     * grouped counts, images+image_category-joined ungrouped row scans,
-     * a users-table lookup, and one query with no FROM/WHERE at all --
-     * genuinely too varied a set of shapes to fit one narrower signature
-     * without either dropping real cases or smuggling raw SQL back in
-     * through a different parameter.
+     * Further SQL-modernization audit, Item 15H: still needed by
+     * SearchFilterRenderer's own filter-block queries for now -- see that
+     * class's own follow-up conversion, which retires this method once
+     * every real call site converts to a typed DQL method instead.
      *
      * @return list<array<string, string|null>>
      */
@@ -277,7 +316,8 @@ final class SearchRepository extends AbstractRepository
                 static fn (mixed $value): ?string => is_scalar($value) ? (string) $value : null,
                 $row
             ),
-            $this->conn->executeQuery($sql, $condition->parameters, $condition->types)
+            $this->em->getConnection()
+                ->executeQuery($sql, $condition->parameters, $condition->types)
                 ->fetchAllAssociative()
         );
     }

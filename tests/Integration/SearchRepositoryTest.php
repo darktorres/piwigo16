@@ -19,12 +19,11 @@ use Piwigo\Search\SearchRepository;
  * "travel", 3 "family" (image_tag: image 1 has all 3 tags, images 2/3 have
  * tag 1 only). `piwigo_search` starts empty.
  *
- * findRulesByIds()'s own `! is_numeric($row['id'] ?? null)` `continue`
- * branch is NOT chased here: `id` is `piwigo_search`'s NOT NULL
- * AUTO_INCREMENT primary key, always a native int under this project's
- * DBAL driver, so that branch is unreachable through any real fetched row
- * -- purely defensive, same shape as the SKIP LIST's documented
- * HttpClientService-only residuals.
+ * findSavedSearchRulesByIds()'s own `! is_numeric($row['id'] ?? null)`
+ * `continue` branch is NOT chased here: `id` is `piwigo_search`'s NOT
+ * NULL AUTO_INCREMENT primary key, always a native int, so that branch is
+ * unreachable through any real fetched row -- purely defensive, same
+ * shape as the SKIP LIST's documented HttpClientService-only residuals.
  */
 final class SearchRepositoryTest extends IntegrationTestCase
 {
@@ -55,19 +54,19 @@ final class SearchRepositoryTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->repo = new SearchRepository($this->conn);
+        $this->repo = new SearchRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn));
     }
 
-    public function test_find_one_by_clause_returns_null_for_no_match(): void
+    public function test_find_saved_search_by_uuid_returns_null_for_no_match(): void
     {
-        self::assertNull($this->repo->findOneByClause('search_uuid = ?', ['no-such-uuid']));
+        self::assertNull($this->repo->findSavedSearchByUuid('no-such-uuid'));
     }
 
-    public function test_find_one_by_clause_returns_the_matching_row(): void
+    public function test_find_saved_search_by_uuid_returns_the_matching_row(): void
     {
-        $this->repo->insertSearch(['q' => 'nature'], '2026-07-12 00:00:00', 1, 'psk-20260712-abcdefghij', null);
+        $this->repo->insertSavedSearch(['q' => 'nature'], '2026-07-12 00:00:00', 1, 'psk-20260712-abcdefghij', null);
 
-        $row = $this->repo->findOneByClause('search_uuid = ?', ['psk-20260712-abcdefghij']);
+        $row = $this->repo->findSavedSearchByUuid('psk-20260712-abcdefghij');
 
         self::assertNotNull($row);
         self::assertSame('psk-20260712-abcdefghij', $row->searchUuid);
@@ -113,81 +112,74 @@ final class SearchRepositoryTest extends IntegrationTestCase
         self::assertSame("o'brien\" --", $row['val']);
     }
 
-    public function test_count_by_uuid_returns_zero_for_unknown_uuid(): void
+    public function test_count_saved_search_by_uuid_returns_zero_for_unknown_uuid(): void
     {
-        self::assertSame(0, $this->repo->countByUuid('no-such-uuid'));
+        self::assertSame(0, $this->repo->countSavedSearchByUuid('no-such-uuid'));
     }
 
-    public function test_count_by_uuid_returns_one_after_insert(): void
+    public function test_count_saved_search_by_uuid_returns_one_after_insert(): void
     {
-        $this->repo->insertSearch(['q' => 'travel'], '2026-07-12 00:00:00', 1, 'psk-20260712-klmnopqrst', null);
+        $this->repo->insertSavedSearch(['q' => 'travel'], '2026-07-12 00:00:00', 1, 'psk-20260712-klmnopqrst', null);
 
-        self::assertSame(1, $this->repo->countByUuid('psk-20260712-klmnopqrst'));
+        self::assertSame(1, $this->repo->countSavedSearchByUuid('psk-20260712-klmnopqrst'));
     }
 
-    public function test_insert_search_returns_the_new_autoincrement_id(): void
+    public function test_insert_saved_search_returns_the_new_autoincrement_id(): void
     {
-        $id = $this->repo->insertSearch(['q' => 'family'], '2026-07-12 00:00:00', null, 'psk-20260712-uvwxyzabcd', null);
+        $id = $this->repo->insertSavedSearch(['q' => 'family'], '2026-07-12 00:00:00', null, 'psk-20260712-uvwxyzabcd', null);
 
         self::assertGreaterThan(0, $id);
 
-        $row = $this->repo->findOneByClause('id = ?', [$id]);
+        $row = $this->repo->findSavedSearchById($id);
         self::assertNotNull($row);
         self::assertNull($row->createdBy);
         self::assertNull($row->forkedFrom);
     }
 
-    public function test_insert_search_stores_forked_from(): void
+    public function test_insert_saved_search_stores_forked_from(): void
     {
-        $parentId = $this->repo->insertSearch(['q' => 'parent'], '2026-07-12 00:00:00', 1, 'psk-20260712-parentuuid', null);
-        $childId = $this->repo->insertSearch(['q' => 'child'], '2026-07-12 00:00:00', 1, 'psk-20260712-childuuidx', $parentId);
+        $parentId = $this->repo->insertSavedSearch(['q' => 'parent'], '2026-07-12 00:00:00', 1, 'psk-20260712-parentuuid', null);
+        $childId = $this->repo->insertSavedSearch(['q' => 'child'], '2026-07-12 00:00:00', 1, 'psk-20260712-childuuidx', $parentId);
 
-        $row = $this->repo->findOneByClause('id = ?', [$childId]);
+        $row = $this->repo->findSavedSearchById($childId);
         self::assertNotNull($row);
         self::assertSame($parentId, $row->forkedFrom);
     }
 
-    public function test_find_rules_by_ids_returns_decoded_rules_keyed_by_id(): void
+    public function test_find_saved_search_rules_by_ids_returns_decoded_rules_keyed_by_id(): void
     {
-        $firstId = $this->repo->insertSearch(['q' => 'nature'], '2026-07-12 00:00:00', 1, 'psk-20260712-bulklook01', null);
-        $secondId = $this->repo->insertSearch(['q' => 'travel', 'fields' => ['allwords' => ['words' => ['travel']]]], '2026-07-12 00:00:00', 1, 'psk-20260712-bulklook02', null);
+        $firstId = $this->repo->insertSavedSearch(['q' => 'nature'], '2026-07-12 00:00:00', 1, 'psk-20260712-bulklook01', null);
+        $secondId = $this->repo->insertSavedSearch(['q' => 'travel', 'fields' => ['allwords' => ['words' => ['travel']]]], '2026-07-12 00:00:00', 1, 'psk-20260712-bulklook02', null);
 
-        $rules = $this->repo->findRulesByIds([$firstId, $secondId]);
+        $rules = $this->repo->findSavedSearchRulesByIds([$firstId, $secondId]);
 
         self::assertSame(['q' => 'nature'], $rules[$firstId]);
         self::assertSame(['q' => 'travel', 'fields' => ['allwords' => ['words' => ['travel']]]], $rules[$secondId]);
     }
 
-    public function test_find_rules_by_ids_returns_empty_array_for_an_empty_id_list(): void
+    public function test_find_saved_search_rules_by_ids_returns_empty_array_for_an_empty_id_list(): void
     {
-        self::assertSame([], $this->repo->findRulesByIds([]));
+        self::assertSame([], $this->repo->findSavedSearchRulesByIds([]));
     }
 
-    public function test_find_rules_by_ids_omits_ids_with_no_matching_row(): void
+    public function test_find_saved_search_rules_by_ids_omits_ids_with_no_matching_row(): void
     {
-        self::assertSame([], $this->repo->findRulesByIds([999999]));
+        self::assertSame([], $this->repo->findSavedSearchRulesByIds([999999]));
     }
 
-    public function test_now_returns_a_non_empty_datetime_string(): void
+    public function test_find_saved_search_rules_by_ids_decodes_a_null_rules_column_to_null(): void
     {
-        $now = $this->repo->now();
-
-        self::assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $now);
-    }
-
-    public function test_find_rules_by_ids_decodes_a_null_rules_column_to_null(): void
-    {
-        // insertSearch() always json_encode()s $rules (never a literal SQL
-        // NULL) -- the only way to exercise the `rules` column's real
-        // NULLable-JSON shape (schema: `rules json DEFAULT NULL`) is a raw
-        // insert bypassing that method.
+        // insertSavedSearch() always writes a real array via persist()
+        // (never a literal SQL NULL) -- the only way to exercise the
+        // `rules` column's real NULLable-JSON shape (schema: `rules json
+        // DEFAULT NULL`) is a raw insert bypassing that method.
         $this->conn->executeStatement(
             'INSERT INTO ' . Tables::search() . ' (rules, created_on, created_by, search_uuid, forked_from) VALUES (NULL, ?, ?, ?, NULL)',
             ['2026-07-12 00:00:00', 1, 'psk-20260712-nullrules1']
         );
         $id = (int) $this->conn->lastInsertId();
 
-        $rules = $this->repo->findRulesByIds([$id]);
+        $rules = $this->repo->findSavedSearchRulesByIds([$id]);
 
         self::assertNull($rules[$id]);
     }

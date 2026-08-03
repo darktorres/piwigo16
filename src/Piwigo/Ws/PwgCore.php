@@ -929,8 +929,8 @@ final class PwgCore
         // store seach in database
         // register search rules in database, then they will be available on
         // thumbnails page and picture page.
-        $searchRepository = new SearchRepository($conn);
-        $search_id = $searchRepository->insertSearch($search);
+        $searchRepository = new SearchRepository(\Piwigo\Db\EntityManagerFactory::build($conn));
+        $search_id = $searchRepository->insertSavedSearch($search);
 
         // Remove redirect for ajax //
         // redirect(
@@ -938,7 +938,7 @@ final class PwgCore
         //   );
 
         // what are the lines to display in reality ?
-        $storedSearch = $searchRepository->findOneByClause('id = ?', [$search_id]);
+        $storedSearch = $searchRepository->findSavedSearchById($search_id);
         // this row is the one we just INSERTed above (via $search_id =
         // Connection::lastInsertId()) with rules we just encoded ourselves,
         // so it's guaranteed to be found with a non-null, decoded array.
@@ -1017,7 +1017,7 @@ final class PwgCore
         // is empty.
         $search_details = [];
         if (count($search_ids) > 0) {
-            $rules_by_search_id = $searchRepository->findRulesByIds(array_map(intval(...), $search_ids));
+            $rules_by_search_id = $searchRepository->findSavedSearchRulesByIds(array_map(intval(...), $search_ids));
             foreach ($rules_by_search_id as $id_search => $rules_full) {
                 if ($rules_full === null) {
                     continue;

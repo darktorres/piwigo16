@@ -241,7 +241,7 @@ final class SearchServiceTest extends IntegrationTestCase
         \Piwigo\Core\Kernel::boot();
 
         $this->conn = DbConnection::build();
-        $this->repo = new SearchRepository($this->conn);
+        $this->repo = new SearchRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn));
 
         CurrentUser::current()->set(User::fromUserArray(self::realisticUserGlobal()));
         $currentConfig->setDefaultFiltersViews(null);
@@ -380,7 +380,7 @@ final class SearchServiceTest extends IntegrationTestCase
 
     public function test_get_search_info_returns_the_stored_row(): void
     {
-        $this->repo->insertSearch(['q' => 'nature'], '2026-07-12 00:00:00', 1, 'psk-20260712-infotest01', null);
+        $this->repo->insertSavedSearch(['q' => 'nature'], '2026-07-12 00:00:00', 1, 'psk-20260712-infotest01', null);
 
         $info = $this->service->getSearchInfo('psk-20260712-infotest01');
 
@@ -396,7 +396,7 @@ final class SearchServiceTest extends IntegrationTestCase
     public function test_get_search_array_round_trips_the_json_encoded_rules(): void
     {
         $rules = ['q' => 'nature', 'fields' => ['allwords' => ['words' => ['nature']]]];
-        $this->repo->insertSearch($rules, '2026-07-12 00:00:00', 1, 'psk-20260712-arraytest0', null);
+        $this->repo->insertSavedSearch($rules, '2026-07-12 00:00:00', 1, 'psk-20260712-arraytest0', null);
 
         $decoded = $this->service->getSearchArray('psk-20260712-arraytest0');
 
@@ -421,12 +421,12 @@ final class SearchServiceTest extends IntegrationTestCase
     public function test_get_available_search_uuid_skips_a_colliding_uuid(): void
     {
         $uuid = $this->service->getAvailableSearchUuid();
-        $this->repo->insertSearch(['q' => 'x'], '2026-07-12 00:00:00', null, $uuid, null);
+        $this->repo->insertSavedSearch(['q' => 'x'], '2026-07-12 00:00:00', null, $uuid, null);
 
         $next = $this->service->getAvailableSearchUuid();
 
         self::assertNotSame($uuid, $next);
-        self::assertSame(0, $this->repo->countByUuid($next));
+        self::assertSame(0, $this->repo->countSavedSearchByUuid($next));
     }
 
     public function test_split_allwords_splits_on_whitespace(): void
@@ -1351,7 +1351,7 @@ final class SearchServiceTest extends IntegrationTestCase
 
     public function test_get_validated_search_info_calls_fatal_error_when_a_uuid_search_is_looked_up_by_bare_id(): void
     {
-        $id = $this->repo->insertSearch(['q' => 'nature'], '2026-07-12 00:00:00', 1, 'psk-20260712-fatalidtst', null);
+        $id = $this->repo->insertSavedSearch(['q' => 'nature'], '2026-07-12 00:00:00', 1, 'psk-20260712-fatalidtst', null);
 
         $service = $this->makeServiceWithRenderer(new FatalSignalHtmlRenderer());
 
@@ -1389,7 +1389,7 @@ final class SearchServiceTest extends IntegrationTestCase
 
     public function test_get_search_results_resolves_a_saved_quick_search_query(): void
     {
-        $id = $this->repo->insertSearch(['q' => 'family'], '2026-07-12 00:00:00', 1, 'psk-20260712-quicksrch1', null);
+        $id = $this->repo->insertSavedSearch(['q' => 'family'], '2026-07-12 00:00:00', 1, 'psk-20260712-quicksrch1', null);
 
         $results = $this->service->getSearchResults((string) $id, true, '');
 
@@ -1425,7 +1425,7 @@ final class SearchServiceTest extends IntegrationTestCase
 
     // A test forcing getAvailableSearchUuid()'s internal retry-on-collision
     // branch to fire deterministically on the very first candidate would
-    // need to substitute SearchRepository::countByUuid()'s behavior --
+    // need to substitute SearchRepository::countSavedSearchByUuid()'s behavior --
     // SearchRepository is `final` (a real architectural choice, matching
     // this codebase's other repository classes) and SearchService's
     // constructor takes the concrete class directly, not an interface, so

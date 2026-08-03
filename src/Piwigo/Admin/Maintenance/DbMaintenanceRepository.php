@@ -9,7 +9,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\Expr\Join;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Db\DbCredentials;
-use Piwigo\Db\Tables;
 use Piwigo\Feed\FeedEntity;
 use Piwigo\History\HistoryEntity;
 use Piwigo\History\HistorySummaryEntity;
@@ -33,10 +32,10 @@ use Piwigo\Tag\TagEntity;
  *
  * Item 15 audit: `purgeHistoryDetail`/`purgeHistorySummary`/
  * `purgeUnusedFeeds`/`countLoungeItems`/`purgeSessionsForDeletedUsers`/
- * `deleteOrphanTags` converted to DQL against their owning entities.
- * `repairOptimizeAllTables()` stays DBAL permanently (DDL has no DQL
- * grammar); `purgeSearchHistory()` stays DBAL until 15H maps a `search`
- * entity.
+ * `deleteOrphanTags`/`purgeSearchHistory` (Item 15H, once
+ * {@see \Piwigo\Search\SavedSearchEntity} existed) converted to DQL
+ * against their owning entities. `repairOptimizeAllTables()` stays DBAL
+ * permanently (DDL has no DQL grammar).
  */
 final readonly class DbMaintenanceRepository
 {
@@ -70,10 +69,9 @@ final readonly class DbMaintenanceRepository
 
     public function purgeSearchHistory(): void
     {
-        $this->em->getConnection()
-            ->createQueryBuilder()
-            ->delete(Tables::search())
-            ->executeStatement();
+        $this->em->createQuery('DELETE FROM ' . \Piwigo\Search\SavedSearchEntity::class . ' s')
+            ->execute();
+        $this->em->clear();
     }
 
     /**

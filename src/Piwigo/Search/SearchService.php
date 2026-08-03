@@ -115,11 +115,12 @@ final readonly class SearchService
     public function getSearchInfo(int|string $candidate): ?Search
     {
         $clausePattern = self::getSearchIdPattern($candidate);
-        if ($clausePattern === null) {
-            return null;
-        }
 
-        return $this->repo->findOneByClause($clausePattern, [$candidate]);
+        return match ($clausePattern) {
+            'search_uuid = ?' => $this->repo->findSavedSearchByUuid((string) $candidate),
+            'id = ?' => $this->repo->findSavedSearchById((int) $candidate),
+            default => null,
+        };
     }
 
     /**
@@ -1459,7 +1460,7 @@ final readonly class SearchService
     {
         $candidate = 'psk-' . date('Ymd') . '-' . $this->sessionService->generateKey(10);
 
-        if ($this->repo->countByUuid($candidate) === 0) {
+        if ($this->repo->countSavedSearchByUuid($candidate) === 0) {
             return $candidate;
         }
 
@@ -1472,13 +1473,13 @@ final readonly class SearchService
      */
     public function saveSearch(array $rules, UrlServiceInterface $urlService, ?int $forkedFrom = null): array
     {
-        $dbNow = $this->repo->now();
+        $dbNow = \Piwigo\Core\Env::now()->format('Y-m-d H:i:s');
         $searchUuid = $this->getAvailableSearchUuid();
 
         $userId = $this->currentUser->get()
             ->id->value;
 
-        $this->repo->insertSearch($rules, $dbNow, $userId, $searchUuid, $forkedFrom);
+        $this->repo->insertSavedSearch($rules, $dbNow, $userId, $searchUuid, $forkedFrom);
 
         if (! $this->accessControl->isAGuest() && ! $this->accessControl->isGeneric()) {
             $rulesFields = $rules['fields'] ?? [];

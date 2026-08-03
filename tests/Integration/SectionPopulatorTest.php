@@ -133,7 +133,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
         $this->tagService = new TagService(Lang::current(), $em->getRepository(TagEntity::class), $this->permissionService, new ActivityService($em->getRepository(ActivityEntity::class)), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Users\CurrentUser::current(), CurrentConfig::current());
         $this->sessionService = new SessionService($em->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current());
         $this->userService = new UserService(Lang::current(), $em->getRepository(UserInfoEntity::class), $em->getRepository(GroupEntity::class), new MailService(), new ActivityService($em->getRepository(ActivityEntity::class)), new HtmlService(), $this->conn, $this->sessionService, new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Config\CurrentConfig::current());
-        $this->searchService = new SearchService(\Piwigo\Auth\AccessControl::current(), new SearchRepository($this->conn), $this->permissionService, $this->categoryService, new MailService(), new HtmlService(), new RedirectService(Lang::current(), $this->userService), $this->sessionService, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Users\CurrentUser::current(), Lang::current(), \Piwigo\Config\CurrentConfig::current(), $this->tagService);
+        $this->searchService = new SearchService(\Piwigo\Auth\AccessControl::current(), new SearchRepository($em), $this->permissionService, $this->categoryService, new MailService(), new HtmlService(), new RedirectService(Lang::current(), $this->userService), $this->sessionService, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Users\CurrentUser::current(), Lang::current(), \Piwigo\Config\CurrentConfig::current(), $this->tagService);
         $this->sectionRepo = new SectionRepository($this->conn);
         $this->filterState = new FilterState();
         $this->currentLogger = new CurrentLogger();
@@ -366,8 +366,8 @@ final class SectionPopulatorTest extends IntegrationTestCase
 
     public function test_populate_stores_qsearch_details_for_a_quick_search(): void
     {
-        $searchRepo = new SearchRepository($this->conn);
-        $searchId = $searchRepo->insertSearch(['q' => 'nature'], '2026-07-12 00:00:00', 3, 'psk-20260712-abcdefghij', null);
+        $searchRepo = new SearchRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn));
+        $searchId = $searchRepo->insertSavedSearch(['q' => 'nature'], '2026-07-12 00:00:00', 3, 'psk-20260712-abcdefghij', null);
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/index.php';
         $_SERVER['PATH_INFO'] = '/search/' . $searchId;
 

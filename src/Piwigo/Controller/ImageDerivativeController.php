@@ -769,8 +769,20 @@ final class ImageDerivativeController implements ControllerInterface
         }
 
         foreach (array_reverse($candidates) as $candidate) {
-            $candidate_path = $this->derivativePath;
-            $candidate_path = str_replace('-' . DerivativeUrlCodec::derivativeToUrl($params->type), '-' . DerivativeUrlCodec::derivativeToUrl($candidate->type), $candidate_path);
+            // Substituting the type token only within the filename (not
+            // $this->derivativePath's full absolute path) -- a plain
+            // str_replace() against the whole path is unsafe whenever an
+            // unrelated path segment happens to contain "-{token}" as a
+            // substring; found live in this exact sandbox, where the
+            // repository directory itself is "piwigo17-rewrite-sql" and
+            // the 'square' type's own token is "sq" ('-sq' matches inside
+            // "rewrite-sql"), silently corrupting the candidate path to
+            // ".../piwigo17-rewrite-thl/..." when reusing from 'thumb'
+            // ('th') -- filemtime() on the bogus path returned false,
+            // permanently disabling reuse for this exact type pairing.
+            $candidate_dir = dirname($this->derivativePath);
+            $candidate_filename = str_replace('-' . DerivativeUrlCodec::derivativeToUrl($params->type), '-' . DerivativeUrlCodec::derivativeToUrl($candidate->type), basename($this->derivativePath));
+            $candidate_path = $candidate_dir . '/' . $candidate_filename;
             $candidate_mtime = @filemtime($candidate_path);
             if ($candidate_mtime === false
               || $candidate_mtime < $original_mtime
@@ -818,7 +830,20 @@ final class ImageDerivativeController implements ControllerInterface
      */
     private static function derivativeUrlPath(string $urlSuffix, string $fromType, string $toType, CurrentConfig $currentConfig): string
     {
-        $suffix = str_replace('-' . DerivativeUrlCodec::derivativeToUrl($fromType), '-' . DerivativeUrlCodec::derivativeToUrl($toType), $urlSuffix);
+        // Substituting the type token only within the filename (the last
+        // '/'-separated segment) -- same reasoning as trySwitchSource()'s
+        // own candidate-path fix above: $urlSuffix's own directory segments
+        // (upload date paths, admin-chosen album/storage directory names)
+        // are user-influenced and could coincidentally contain "-{token}"
+        // as a substring, corrupting an unrelated path segment instead of
+        // just the trailing derivative-type suffix. dirname()/basename()
+        // aren't used here (unlike trySwitchSource()) -- dirname() returns
+        // '.' for a slash-less $urlSuffix, which would wrongly prefix a
+        // "./" onto callers (e.g. tests) that pass a bare filename.
+        $lastSlash = strrpos($urlSuffix, '/');
+        $dir = $lastSlash === false ? '' : substr($urlSuffix, 0, $lastSlash + 1);
+        $filename = $lastSlash === false ? $urlSuffix : substr($urlSuffix, $lastSlash + 1);
+        $suffix = $dir . str_replace('-' . DerivativeUrlCodec::derivativeToUrl($fromType), '-' . DerivativeUrlCodec::derivativeToUrl($toType), $filename);
         $rel_url = 'i';
         if ($currentConfig->phpExtensionInUrls()) {
             $rel_url .= '.php';

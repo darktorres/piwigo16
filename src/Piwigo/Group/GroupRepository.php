@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Group;
 
 use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\Exception\ConstraintViolationException;
 use Doctrine\ORM\EntityRepository;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\GroupId;
@@ -344,17 +345,33 @@ final class GroupRepository extends EntityRepository
     }
 
     /**
-     * Adds the given users to the group. Re-adding an existing member is a
-     * silent no-op (INSERT IGNORE, matching the original \Piwigo\Db\MysqliDb::massInserts(...,
-     * ['ignore' => true]) semantics) -- (group_id, user_id) is the table's
-     * primary key, and callers (ws_groups_addUser, merge, duplicate) can
-     * legitimately pass an already-member user id. No query-builder/DQL
-     * equivalent for INSERT IGNORE; raw SQL + bindings on the entity
-     * manager's own connection is safe here (no string concatenation of
-     * values) -- plain DBAL, so both ids unwrap to raw ints.
+     * Adds the given users to the group. Re-adding an existing member, or
+     * a nonexistent group_id/user_id (both real FKs --
+     * `fk_user_group_group_id`/`fk_user_group_user_id`), is a silent
+     * no-op (matching MySQL's own `INSERT IGNORE`, which downgrades both
+     * a duplicate-key error and a foreign-key violation to a warning,
+     * same as `Caddie\CaddieRepository::addElements()`'s own identical
+     * fix) -- (group_id, user_id) is the table's primary key, and callers
+     * (ws_groups_addUser, merge, duplicate) can legitimately pass an
+     * already-member user id. Plain DBAL `Connection::insert()` (a
+     * portable, bound `INSERT`, no MySQL-specific `IGNORE` syntax) per
+     * user, with both cases caught as a real
+     * {@see ConstraintViolationException} -- both ids unwrap to raw ints,
+     * matching every other plain-DBAL query in this file.
      *
      * Item 14 DQL audit: not a DQL-vs-DBAL question -- ORM persist()/flush()
-     * writes one row per call, not a bulk INSERT IGNORE statement.
+     * writes one row per call, not a bulk insert-if-absent statement.
+     *
+     * Item 16C: not `persist()`/`flush()` either -- empirically verified
+     * that a caught {@see ConstraintViolationException} from a failed
+     * `flush()` leaves the EntityManager permanently closed
+     * (`Doctrine\ORM\UnitOfWork::commit()`'s own `finally` branch calls
+     * `$em->close()` on any failure, and `clear()` cannot undo that),
+     * which would break every other repository sharing this request's
+     * EntityManager -- a real regression an already-a-member $userId
+     * would trigger in normal operation, not just a theoretical edge
+     * case. Plain DBAL `insert()` never touches the ORM's unit of work,
+     * so a caught failure here has no such blast radius.
      *
      * @param list<UserId> $userIds
      */
@@ -364,14 +381,23 @@ final class GroupRepository extends EntityRepository
             ->getConnection();
         $userGroupTable = \Piwigo\Db\Tables::userGroup();
         foreach ($userIds as $userId) {
-            $conn->executeStatement(
-                <<<SQL
-                INSERT IGNORE INTO {$userGroupTable} (group_id, user_id) VALUES (?, ?)
-                SQL
-                ,
-                [$groupId->value, $userId->value],
-                [\Doctrine\DBAL\ParameterType::INTEGER, \Doctrine\DBAL\ParameterType::INTEGER],
-            );
+            try {
+                $conn->insert(
+                    $userGroupTable,
+                    [
+                        'group_id' => $groupId->value,
+                        'user_id' => $userId->value,
+                    ],
+                    [
+                        'group_id' => \Doctrine\DBAL\ParameterType::INTEGER,
+                        'user_id' => \Doctrine\DBAL\ParameterType::INTEGER,
+                    ],
+                );
+            } catch (ConstraintViolationException) {
+                // Already a member, or group_id/user_id doesn't reference
+                // a real row -- same "IGNORE" semantic the raw INSERT
+                // IGNORE this replaces had.
+            }
         }
 
         // Bypasses the ORM entirely -- any UserGroupEntity this

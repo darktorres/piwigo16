@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Caddie;
 
 use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\Exception\ConstraintViolationException;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\EntityRepository;
 use Piwigo\Common\ValueObject\UserId;
@@ -15,7 +16,11 @@ use Piwigo\Db\Tables;
  * "shopping basket" of image ids, added from fill_caddie()/ws_caddie_add()).
  *
  * Item 15 Sub-item E: converted to real DQL against {@see CaddieEntity} --
- * `addElements()` stays on raw DBAL `INSERT IGNORE` (see its own docblock).
+ * `addElements()` stays on plain DBAL (a bound, portable `INSERT` via
+ * `Connection::insert()`, no MySQL-specific `IGNORE` syntax, duplicate
+ * rows and nonexistent `element_id`s alike caught as
+ * {@see \Doctrine\DBAL\Exception\ConstraintViolationException} per
+ * element -- see its own docblock for why this isn't `persist()`).
  *
  * @extends EntityRepository<CaddieEntity>
  */
@@ -23,8 +28,10 @@ final class CaddieRepository extends EntityRepository
 {
     /**
      * Adds the given elements to a user's caddie. An element already
-     * present is silently skipped (INSERT IGNORE against the table's own
-     * (user_id, element_id) primary key) -- behaviorally the same as the
+     * present, or one whose id doesn't reference a real image at all
+     * (`fk_caddie_element_id`), is silently skipped (matching MySQL's own
+     * `INSERT IGNORE`, which downgrades both a duplicate-key error and a
+     * foreign-key violation to a warning) -- behaviorally the same as the
      * originals' own "diff against what's already there, then insert only
      * the new ones" two-step, without needing the extra SELECT. Returns
      * the number of elements actually newly added.
@@ -40,19 +47,49 @@ final class CaddieRepository extends EntityRepository
      * `INSERT IGNORE` doesn't have. Stays on raw DBAL, matching
      * `addMembers()`'s own settled precedent exactly.
      *
+     * Item 16C: catches {@see ConstraintViolationException}, not just
+     * {@see \Doctrine\DBAL\Exception\UniqueConstraintViolationException}
+     * -- confirmed via a real test (`addElements() silently skips a
+     * nonexistent image id`) that `INSERT IGNORE`'s tolerance here covers
+     * both the duplicate-row case and the foreign-key case, since
+     * `element_id` genuinely references `images.id`.
+     *
      * @param array<int, int> $elementIds
      */
     public function addElements(int $userId, array $elementIds): int
     {
+        $conn = $this->getEntityManager()
+            ->getConnection();
+
         $added = 0;
         foreach ($elementIds as $elementId) {
-            $added += (int) $this->getEntityManager()
-                ->getConnection()
-                ->executeStatement(
-                    'INSERT IGNORE INTO ' . Tables::caddie() . ' (element_id, user_id) VALUES (?, ?)',
-                    [$elementId, $userId],
-                    [ParameterType::INTEGER, ParameterType::INTEGER],
+            try {
+                $conn->insert(
+                    Tables::caddie(),
+                    [
+                        'element_id' => $elementId,
+                        'user_id' => $userId,
+                    ],
+                    [
+                        'element_id' => ParameterType::INTEGER,
+                        'user_id' => ParameterType::INTEGER,
+                    ],
                 );
+                $added++;
+            } catch (ConstraintViolationException) {
+                // Already in the caddie, or element_id doesn't reference a
+                // real image -- same "IGNORE" semantic the raw INSERT
+                // IGNORE this replaces had. Plain DBAL insert(), not
+                // persist()/flush(): a caught ConstraintViolationException
+                // from a failed flush() leaves the owning EntityManager
+                // permanently closed (Doctrine\ORM\UnitOfWork::commit()'s
+                // own finally branch calls $em->close() on any failure,
+                // and clear() cannot undo that -- verified empirically,
+                // not assumed), which would break every other repository
+                // sharing this request's EntityManager. A plain DBAL
+                // insert() never touches the ORM's unit of work at all,
+                // so a caught failure here has no such blast radius.
+            }
         }
 
         return $added;

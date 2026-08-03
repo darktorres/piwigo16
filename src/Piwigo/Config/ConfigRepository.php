@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Config;
 
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\EntityRepository;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
@@ -136,8 +137,16 @@ final class ConfigRepository extends EntityRepository
      * (`upsert()` above is a find-then-persist round trip with no atomic
      * "insert if absent" guarantee, and would either silently overwrite
      * the winning process's row or throw a real primary-key violation
-     * depending on timing) -- raw `INSERT IGNORE`, unchanged from the
-     * original SQL text.
+     * depending on timing) -- a plain, portable `INSERT` via
+     * `Connection::insert()`, not `persist()`/`flush()`: empirically
+     * verified that a caught {@see \Doctrine\DBAL\Exception\UniqueConstraintViolationException}
+     * from a failed `flush()` leaves the EntityManager permanently
+     * closed (`Doctrine\ORM\UnitOfWork::commit()`'s own `finally` branch
+     * calls `$em->close()` on any failure, and `clear()` cannot undo
+     * that), which would break every other repository sharing this
+     * request's EntityManager. Plain DBAL `insert()` never touches the
+     * ORM's unit of work, so a caught duplicate here has no such blast
+     * radius.
      *
      * "Raw" means bypassing ConfigService's typed encode()/hydrate()
      * layer, not bypassing JSON encoding outright: `value` is a real
@@ -151,40 +160,27 @@ final class ConfigRepository extends EntityRepository
      * token straight through, which passed silently when `value` was
      * still a plain `text` column but is genuinely invalid JSON now.
      *
-     * Item 14 DQL audit: stays on DBAL -- MySQL-specific `INSERT IGNORE`
-     * syntax has no DQL equivalent (DQL has no INSERT support at all),
-     * and this method's whole reason to exist is the atomic
+     * Item 14 DQL audit: stays on DBAL -- DQL has no INSERT support at
+     * all, and this method's whole reason to exist is the atomic
      * insert-if-absent guarantee that only bypassing the ORM provides.
      */
     public function insertIgnoreRawValue(string $param, string $value): void
     {
-        // SQL-modernization audit: $param/$value used to be spliced
-        // directly into the query text (manual '"..."' quote-wrapping,
-        // no escaping) -- now bound. INSERT ... SET (rather than
-        // QueryBuilder::insert()->values()) stays: this is the one
-        // place in the codebase MySQL's SET-form INSERT IGNORE syntax
-        // was used, and QueryBuilder has no INSERT IGNORE support at all
-        // (see Db\BatchWriter::singleInsert()'s own docblock on the same
-        // constraint) -- bound placeholders work identically in either
-        // INSERT syntax, so the fix doesn't require picking the
-        // VALUES-form instead.
-        $configTable = \Piwigo\Db\Tables::config();
-        $query = <<<SQL
-            INSERT IGNORE
-            INTO {$configTable}
-            SET param = :param
-                , value = :value
-            SQL;
-
         $encodedValue = json_encode($value);
         assert($encodedValue !== false);
 
-        $this->getEntityManager()
-            ->getConnection()
-            ->executeStatement($query, [
-                'param' => $param,
-                'value' => $encodedValue,
-            ]);
+        try {
+            $this->getEntityManager()
+                ->getConnection()
+                ->insert(Tables::config(), [
+                    'param' => $param,
+                    'value' => $encodedValue,
+                ]);
+        } catch (UniqueConstraintViolationException) {
+            // Another process already won the race for this $param --
+            // same "IGNORE" semantic the raw INSERT IGNORE this replaces
+            // had.
+        }
     }
 
     /**

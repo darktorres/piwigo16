@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Image;
 
 use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\ORM\EntityRepository;
@@ -845,30 +846,44 @@ final class ImageRepository extends EntityRepository
      *
      * Stays raw DBAL rather than delegating to Config\ConfigRepository::
      * upsert() -- that method always finds-then-writes, which can't
-     * reproduce this INSERT IGNORE's real atomicity (two concurrent
-     * emptyLounge() runs could otherwise both believe they'd won the
-     * lock). Clears the identity map afterward since this bypasses the
-     * ORM for a row Config\ConfigEntry may already have cached.
+     * reproduce this atomicity (two concurrent emptyLounge() runs could
+     * otherwise both believe they'd won the lock). Clears the identity
+     * map afterward since this bypasses the ORM for a row
+     * Config\ConfigEntry may already have cached.
      *
-     * Item 14 DQL audit: stays on DBAL -- MySQL-specific `INSERT IGNORE`
-     * has no DQL equivalent, and `config` is a cross-domain table
+     * Item 14 DQL audit: stays on DBAL -- DQL has no INSERT support at
+     * all, and `config` is a cross-domain table
      * {@see \Piwigo\Config\ConfigRepository} owns besides.
+     *
+     * Item 16C: `Connection::insert()` (a plain, portable `INSERT`), not
+     * MySQL-specific `INSERT IGNORE` text, and not `persist()`/`flush()`
+     * either -- empirically verified that a caught
+     * {@see UniqueConstraintViolationException} from a failed `flush()`
+     * leaves the EntityManager permanently closed
+     * (`Doctrine\ORM\UnitOfWork::commit()`'s own `finally` branch calls
+     * `$em->close()` on any failure, and `clear()` cannot undo that),
+     * which would break every other repository sharing this request's
+     * EntityManager -- a real regression a losing race against another
+     * process would trigger in normal operation, not just a theoretical
+     * edge case. Plain DBAL `insert()` never touches the ORM's unit of
+     * work, so a caught failure here has no such blast radius.
      */
     public function tryAcquireLoungeLock(string $lockValue): void
     {
         $encodedLockValue = json_encode($lockValue);
         assert($encodedLockValue !== false);
 
-        $configTable = Tables::config();
         $em = $this->getEntityManager();
-        $em->getConnection()
-            ->executeStatement(
-                <<<SQL
-                INSERT IGNORE INTO {$configTable} SET param = ?, value = ?
-                SQL
-                ,
-                ['empty_lounge_running', $encodedLockValue]
-            );
+        try {
+            $em->getConnection()
+                ->insert(Tables::config(), [
+                    'param' => 'empty_lounge_running',
+                    'value' => $encodedLockValue,
+                ]);
+        } catch (UniqueConstraintViolationException) {
+            // Another process already holds the lock -- same "IGNORE"
+            // semantic the raw INSERT IGNORE this replaces had.
+        }
         $em->clear();
     }
 

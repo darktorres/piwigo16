@@ -3394,42 +3394,55 @@ final class CategoryRepository extends EntityRepository
      * @param  list<SqlCondition>  $conditions
      * @return list<array{id: int, image_order: ?string}>
      *
-     * Stays on DBAL -- $conditions is a list of caller-built SqlCondition
-     * fragments (its one real caller combines a dynamically-sized
-     * per-`cat_id` OR-chain with a
-     * {@see \Piwigo\Permission\PermissionCriteria} fragment; unlike the
-     * `applyCondition()` family, this method splices `{$combined->sql}`
-     * directly into a required `WHERE` clause with no `isEmpty()` guard,
-     * so it falls back to `1 = 1` itself when every condition is empty
-     * (e.g. no `cat_id` filter and no permission restriction for this
-     * user) -- the old caller-side `forceOneCondition: true` was load-
-     * bearing for exactly this case, not a no-op; moved here so the
-     * guarantee lives with the method that actually needs it.
+     * $conditions is a list of caller-built SqlCondition fragments (its
+     * one real caller combines a dynamically-sized per-`cat_id` OR-chain
+     * with a {@see \Piwigo\Permission\PermissionCriteria} fragment);
+     * unlike the `applyCondition()` family, this method splices
+     * `{$combined->sql}` directly into a required `WHERE` clause with no
+     * `isEmpty()` guard, so it falls back to `1 = 1` itself when every
+     * condition is empty (e.g. no `cat_id` filter and no permission
+     * restriction for this user) -- the old caller-side
+     * `forceOneCondition: true` was load-bearing for exactly this case,
+     * not a no-op; moved here so the guarantee lives with the method
+     * that actually needs it.
+     *
+     * Further SQL-modernization audit, Item 15G: converted to real DQL --
+     * single-table, no join, so the only real blocker was the caller's
+     * own hardcoded `RLIKE`/`REGEXP` operator splice, itself already
+     * solved by {@see \Piwigo\Db\DqlFunction\RegexpFunction} (registered,
+     * already used elsewhere in this file); {@see \Piwigo\Ws\PwgCategories}
+     * updated to build `c.`-prefixed DQL property paths and the portable
+     * `REGEXP(...) = true` DQL function instead of a raw SQL fragment.
      */
     public function findIdsAndImageOrderWithConditions(array $conditions): array
     {
-        $categoriesTable = Tables::categories();
         $combined = SqlCondition::combine('AND', ...$conditions);
-        $whereSql = $combined->isEmpty() ? '1 = 1' : $combined->sql;
+        $whereDql = $combined->isEmpty() ? '1 = 1' : $combined->sql;
 
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->fetchAllAssociative(<<<SQL
-                SELECT
-                    id,
-                    image_order
-                FROM {$categoriesTable}
-                WHERE {$whereSql}
-                SQL
-                , $combined->parameters, $combined->types);
+        $qb = $this->createQueryBuilder('c')
+            ->select('c.id', 'c.imageOrder')
+            ->where($whereDql);
 
-        return array_map(
-            static fn (array $row): array => [
+        foreach ($combined->parameters as $name => $value) {
+            $qb->setParameter($name, $value, $combined->types[$name] ?? ParameterType::STRING);
+        }
+
+        $rows = $qb->getQuery()
+            ->getArrayResult();
+
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $result[] = [
                 'id' => is_numeric($row['id']) ? (int) $row['id'] : 0,
-                'image_order' => is_string($row['image_order'] ?? null) ? $row['image_order'] : null,
-            ],
-            $rows
-        );
+                'image_order' => is_string($row['imageOrder'] ?? null) ? $row['imageOrder'] : null,
+            ];
+        }
+
+        return $result;
     }
 
     /**

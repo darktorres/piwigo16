@@ -12,6 +12,7 @@ use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr\Join;
 use Piwigo\Category\CategoryEntity;
 use Piwigo\Common\Dto\PaginatedResult;
+use Piwigo\Config\ConfigEntry;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Core\Env;
 use Piwigo\Db\BatchWriter;
@@ -20,6 +21,8 @@ use Piwigo\Image\Projection\Image;
 use Piwigo\Image\Projection\ImageFormat;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\SqlCondition;
+use Piwigo\Tag\ImageTagEntity;
+use Piwigo\Users\FavoriteEntity;
 
 /**
  * Persistence layer for the image domain's own data-touching function from
@@ -619,24 +622,41 @@ final class ImageRepository extends EntityRepository
      * -- clears the identity map once at the end rather than converting
      * just the one table this repository happens to own.
      *
-     * Item 14 DQL audit: stays on DBAL -- 6 of the 7 tables have no
-     * mapped Entity anywhere in this codebase; grouping `image_format`
-     * with them keeps this bulk cross-table sweep uniform.
+     * Further SQL-modernization audit, Item 15G: found and confirmed a
+     * third instance of the `deleteUser()`-class real deptrac boundary
+     * (checked each of the 7 target tables individually, not assumed) --
+     * `image_category`/`image_format`/`image_tag`/`favorites` are all
+     * `L2aCoreDomain`-or-same-domain ({@see ImageCategoryEntity},
+     * {@see ImageFormatEntity}, {@see \Piwigo\Tag\ImageTagEntity},
+     * {@see \Piwigo\Users\FavoriteEntity}), converted to DQL bulk deletes
+     * below; `comments`/`rate`/`caddie` are all `L2bExtendedDomain` --
+     * `Image` (`L2aCoreDomain`) cannot import their entities via DQL, so
+     * those 3 stay on the original raw-table-name DBAL loop permanently.
      *
      * @param array<int, int|string> $ids
      */
     public function deleteElementReferences(array $ids): void
     {
-        $conn = $this->getEntityManager()
-            ->getConnection();
+        $em = $this->getEntityManager();
+        $conn = $em->getConnection();
         $idsForSql = array_map(strval(...), $ids);
+        $idsForDql = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $ids);
 
-        foreach ([Tables::comments(), Tables::imageCategory(), Tables::imageFormat(), Tables::imageTag(), Tables::favorites()] as $table) {
+        foreach ([Tables::comments()] as $table) {
             $conn->createQueryBuilder()
                 ->delete($table)
                 ->where('image_id IN (:ids)')
                 ->setParameter('ids', $idsForSql, ArrayParameterType::STRING)
                 ->executeStatement();
+        }
+
+        foreach ([ImageCategoryEntity::class, ImageFormatEntity::class, ImageTagEntity::class, FavoriteEntity::class] as $entityClass) {
+            $em->createQueryBuilder()
+                ->delete($entityClass, 'e')
+                ->where('e.imageId IN (:ids)')
+                ->setParameter('ids', $idsForDql, ArrayParameterType::INTEGER)
+                ->getQuery()
+                ->execute();
         }
 
         foreach ([Tables::rate(), Tables::caddie()] as $table) {
@@ -647,8 +667,7 @@ final class ImageRepository extends EntityRepository
                 ->executeStatement();
         }
 
-        $this->getEntityManager()
-            ->clear();
+        $em->clear();
     }
 
     /**
@@ -673,28 +692,30 @@ final class ImageRepository extends EntityRepository
     /**
      * Category ids for which one of $ids is the representative picture.
      *
-     * Item 14 DQL audit: stays on DBAL -- `categories` is a table
-     * {@see \Piwigo\Category\CategoryRepository} owns, not this
-     * repository's own entity; same "cross-domain table stays plain
-     * DBAL" boundary this class's own header docblock documents.
+     * Further SQL-modernization audit, Item 15G: converted to real DQL --
+     * `categories` is a cross-repository-owned table, but `Category` and
+     * `Image` are the same `L2aCoreDomain` deptrac layer, so this was
+     * never a real boundary, only a repository-ownership convention
+     * (checked deptrac.yaml's actual ruleset, not assumed).
      *
      * @param array<int, int|string> $ids
      * @return list<int>
      */
     public function findRepresentedCategoryIds(array $ids): array
     {
-        return array_map(
+        $idsForDql = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $ids);
+
+        return array_values(array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             $this->getEntityManager()
-                ->getConnection()
                 ->createQueryBuilder()
-                ->select('id')
-                ->from(Tables::categories())
-                ->where('representative_picture_id IN (:ids)')
-                ->setParameter('ids', array_map(strval(...), $ids), ArrayParameterType::STRING)
-                ->executeQuery()
-                ->fetchFirstColumn()
-        );
+                ->select('c.id')
+                ->from(CategoryEntity::class, 'c')
+                ->where('c.representativePictureId IN (:ids)')
+                ->setParameter('ids', $idsForDql, ArrayParameterType::INTEGER)
+                ->getQuery()
+                ->getSingleColumnResult()
+        ));
     }
 
     /**
@@ -852,21 +873,33 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * Item 14 DQL audit: stays on DBAL -- `config` is a cross-domain
-     * table {@see \Piwigo\Config\ConfigRepository} owns, not this
-     * repository's own entity.
+     * Further SQL-modernization audit, Item 15G: converted to real DQL --
+     * `config` is a cross-repository-owned table ({@see \Piwigo\Config\
+     * ConfigEntry}), but `Config` is `L1Infrastructure` and `Image` is
+     * `L2aCoreDomain`, an explicitly allowed downward dependency
+     * (`L2aCoreDomain: [L1Infrastructure, L0Data]`), so this was never a
+     * real boundary, only a repository-ownership convention (checked
+     * deptrac.yaml's actual ruleset, not assumed) -- same correction as
+     * {@see findRepresentedCategoryIds()} above.
+     * {@see tryAcquireLoungeLock()} itself stays on DBAL regardless
+     * (`INSERT IGNORE`, no DQL equivalent).
      */
     public function findLoungeLockValue(): ?string
     {
-        $configTable = Tables::config();
-        $value = $this->getEntityManager()
-            ->getConnection()
-            ->executeQuery(
-                <<<SQL
-                SELECT value FROM {$configTable} WHERE param = "empty_lounge_running"
-                SQL
-            )->fetchOne();
+        $row = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('c.value')
+            ->from(ConfigEntry::class, 'c')
+            ->where('c.param = :param')
+            ->setParameter('param', 'empty_lounge_running')
+            ->getQuery()
+            ->getOneOrNullResult(Query::HYDRATE_ARRAY);
 
+        if (! is_array($row)) {
+            return null;
+        }
+
+        $value = $row['value'] ?? null;
         $decoded = is_string($value) ? json_decode($value, true) : null;
 
         return is_string($decoded) ? $decoded : null;

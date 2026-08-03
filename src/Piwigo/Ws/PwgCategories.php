@@ -172,16 +172,20 @@ final class PwgCategories
         // ------------------------------------------------- get the related categories
         $catClauses = [];
         $catParams = [];
-        // Item 16 (AbstractPlatform adoption): the real per-platform
-        // operator (MySQL/MariaDB: RLIKE) rather than a hardcoded
-        // 'REGEXP' dialect constant.
-        $regexOperator = DbConnection::build()->getDatabasePlatform()->getRegexpExpression();
+        // Further SQL-modernization audit, Item 15G:
+        // CategoryRepository::findIdsAndImageOrderWithConditions() is now
+        // real DQL, so these clauses are DQL property paths (`c.`-
+        // prefixed) instead of raw SQL column names, and the regex match
+        // uses the portable REGEXP() DQL function ({@see
+        // \Piwigo\Db\DqlFunction\RegexpFunction}, already registered and
+        // used elsewhere) instead of a hand-resolved per-platform
+        // operator string.
         foreach ($params['cat_id'] as $i => $cat_id) {
             if ($params['recursive']) {
-                $catClauses[] = 'uppercats ' . $regexOperator . ' :catUppercatsLike' . $i;
+                $catClauses[] = 'REGEXP(c.uppercats, :catUppercatsLike' . $i . ') = true';
                 $catParams['catUppercatsLike' . $i] = '(^|,)' . $cat_id . '(,|$)';
             } else {
-                $catClauses[] = 'id = :catId' . $i;
+                $catClauses[] = 'c.id = :catId' . $i;
                 $catParams['catId' . $i] = $cat_id;
             }
         }
@@ -189,7 +193,7 @@ final class PwgCategories
         if ($catClauses !== []) {
             $catConditions[] = new SqlCondition('(' . implode("\n    OR ", $catClauses) . ')', $catParams);
         }
-        $catConditions[] = self::permissionService()->getPermissionCriteria()->forbiddenCategoriesCondition('id');
+        $catConditions[] = self::permissionService()->getPermissionCriteria()->forbiddenCategoriesCondition('c.id');
 
         $cats = [];
         foreach ($this->categoryService->getIdsAndImageOrderWithConditions($catConditions) as $row) {

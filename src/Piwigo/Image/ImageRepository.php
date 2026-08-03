@@ -95,29 +95,32 @@ final class ImageRepository extends EntityRepository
     /**
      * Deliberately avoids bumping `lastmodified` (the original's own SQL
      * comment, preserved) -- an image's "last modified" timestamp should
-     * reflect real edits, not visit counting. A raw SQL fragment (not a
-     * bound parameter) is required for the self-assignment, which a mapped
-     * entity property write can't express -- stays raw DBAL, same
+     * reflect real edits, not visit counting. Bypasses the ORM's own
+     * change-tracking (a per-entity `persist()`/`flush()` would only emit
+     * an `UPDATE` for the columns it detects as dirty, i.e. just `hit` --
+     * MySQL's own `ON UPDATE CURRENT_TIMESTAMP` on `lastmodified` would
+     * then fire anyway since the row itself is being updated, silently
+     * bumping it) via a DQL bulk `UPDATE`, which -- unlike a mapped entity
+     * property write -- can express the self-assignment
+     * `i.lastmodified = i.lastmodified` directly to suppress that, same
      * reasoning as Auth\AuthRepository::saveLastVisitFromHistory(). Clears
      * the identity map afterward since this bypasses the ORM for a row
      * {@see ImageEntity} may already have cached.
      *
-     * Item 14 DQL audit: stays on DBAL -- the raw `lastmodified =
-     * lastmodified` self-assignment fragment above is exactly the
-     * blocker; no other part of this query would prevent conversion.
+     * Item 15 audit: converted to a DQL bulk `UPDATE` -- DQL supports both
+     * the arithmetic (`i.hit = i.hit + 1`) and the self-assignment.
      */
     public function incrementVisitCounter(int $imageId): void
     {
-        $imagesTable = Tables::images();
         $em = $this->getEntityManager();
-        $em->getConnection()
-            ->executeStatement(
-                <<<SQL
-                UPDATE {$imagesTable} SET hit = hit + 1, lastmodified = lastmodified WHERE id = ?
-                SQL
-                ,
-                [$imageId]
-            );
+        $em->createQueryBuilder()
+            ->update(ImageEntity::class, 'i')
+            ->set('i.hit', 'i.hit + 1')
+            ->set('i.lastmodified', 'i.lastmodified')
+            ->where('i.id = :id')
+            ->setParameter('id', $imageId)
+            ->getQuery()
+            ->execute();
         $em->clear();
     }
 

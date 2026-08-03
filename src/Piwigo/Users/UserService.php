@@ -106,7 +106,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      */
     private function passwordService(): PasswordService
     {
-        return new PasswordService(new PasswordRepository($this->conn), $this->deploymentPolicy);
+        return new PasswordService(new PasswordRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), $this->deploymentPolicy);
     }
 
     /**
@@ -318,7 +318,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         $userId = $this->repo->insertUser(
             $login,
-            new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($this->conn), $this->deploymentPolicy)
+            new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), $this->deploymentPolicy)
                 ->hash($password),
             $mailAddress,
         );

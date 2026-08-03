@@ -577,7 +577,7 @@ final class InstallWizardTest extends IntegrationTestCase
         self::assertSame('webmaster@example.test', $webmaster['mail_address']);
         self::assertIsString($webmaster['password']);
         self::assertTrue(
-            new PasswordService(new PasswordRepository(DbConnection::build()), new \Piwigo\Config\DeploymentPolicy())->verify('Sup3r-Secret-99!', $webmaster['password']),
+            new PasswordService(new PasswordRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), new \Piwigo\Config\DeploymentPolicy())->verify('Sup3r-Secret-99!', $webmaster['password']),
             'the stored hash must verify against the exact submitted password'
         );
 

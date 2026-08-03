@@ -8,6 +8,7 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\Query\Expr\Join;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Core\Env;
 use Piwigo\Db\BatchWriter;
@@ -349,36 +350,53 @@ final class TagRepository extends EntityRepository
      * Item 14 DQL audit, corrected: the original note claimed
      * `SUBDATE(NOW(), INTERVAL 1 DAY)` had no native DQL function -- wrong,
      * see {@see \Piwigo\Comment\CommentRepository::countRecentComments()}'s
-     * own corrected note for the real `DATE_SUB()` equivalent. Stays on
-     * DBAL regardless for the real remaining reason: the `LEFT JOIN
-     * image_tag ... WHERE tag_id IS NULL` anti-join has no formal ORM
-     * association between `ImageTagEntity`/`TagEntity` (same "not worth
-     * the added complexity this pass" call already made for
-     * {@see findTagsForImage()} above).
+     * own corrected note for the real `DATE_SUB()` equivalent. The anti-join
+     * (`LEFT JOIN image_tag ... WHERE tag_id IS NULL`) has no formal ORM
+     * association between `ImageTagEntity`/`TagEntity`, but DQL supports
+     * arbitrary joins without one via `Join::WITH`.
+     *
+     * The cutoff uses DQL's own `CURRENT_TIMESTAMP()` (compiles to the DB
+     * server's real `NOW()`) rather than a PHP-computed `Env::now()`
+     * parameter -- deliberately, not an oversight: this method's caller
+     * ({@see \Piwigo\Tests\Browser\TagsPageRendererTest}) backdates a tag
+     * via raw SQL against the real MySQL clock
+     * (`DATE_SUB(NOW(), INTERVAL 2 DAY)`), not a fixture date pinned to
+     * `PIWIGO_TEST_NOW`. Using `Env::now()` here would compare the real-
+     * clock-backdated row against a frozen-clock cutoff, drifting apart as
+     * real time passes without `PIWIGO_TEST_NOW` being updated -- confirmed
+     * as a real, reproducible bug during this conversion (2 Browser test
+     * failures) before switching to this server-side form. Contrast with
+     * {@see \Piwigo\Comment\CommentRepository::countRecentComments()},
+     * which deliberately uses `Env::now()` because it compares against
+     * static, hardcoded fixture dates that need a pinned anchor for
+     * determinism -- the opposite situation.
      *
      * @return list<TagBrief>
      */
     public function findOrphanTags(): array
     {
-        $tagsTable = Tables::tags();
-        $imageTagTable = Tables::imageTag();
+        $rows = $this->createQueryBuilder('t')
+            ->select('t.id', 't.name')
+            ->leftJoin(ImageTagEntity::class, 'it', Join::WITH, 't.id = it.tagId')
+            ->where('it.tagId IS NULL')
+            ->andWhere("t.lastmodified < DATE_SUB(CURRENT_TIMESTAMP(), 1, 'day')")
+            ->getQuery()
+            ->getArrayResult();
 
-        $query = <<<SQL
-            SELECT
-                id,
-                name
-            FROM {$tagsTable}
-                LEFT JOIN {$imageTagTable} ON id = tag_id
-            WHERE tag_id IS NULL
-                AND lastmodified < SUBDATE(NOW(), INTERVAL 1 DAY)
-            SQL;
-        return array_map(
-            TagBrief::fromRow(...),
-            $this->getEntityManager()
-                ->getConnection()
-                ->executeQuery($query)
-                ->fetchAllAssociative()
-        );
+        $briefs = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $id = $row['id'] ?? null;
+            $briefs[] = TagBrief::fromRow([
+                'id' => $id instanceof TagId ? $id->value : $id,
+                'name' => $row['name'] ?? null,
+            ]);
+        }
+
+        return $briefs;
     }
 
     /**
@@ -696,35 +714,42 @@ final class TagRepository extends EntityRepository
      * image_tag-JOIN-tags-by-image_id shape) replaced with this typed
      * method.
      *
-     * Item 14 DQL audit: stays on DBAL -- no ORM association exists
-     * between ImageTagEntity and TagEntity (ImageTagEntity's own docblock:
-     * "TagRepository ... queries it directly via DQL/QueryBuilder rather
-     * than through a dedicated repository class"), so this JOIN would need
-     * DQL's class-level `JOIN Entity WITH condition` form against two
-     * otherwise-unrelated entities -- real but meaningfully more complex
-     * than every other conversion this pass, for a method this
-     * repository's own Item 10 pass already gave a clean typed shape and
-     * test coverage; not worth the added complexity this pass.
+     * Item 15 audit: converted to real DQL -- no formal ORM association
+     * exists between `ImageTagEntity`/`TagEntity`, but DQL doesn't need one
+     * for an explicit `JOIN Entity WITH condition` (`Join::WITH`, already
+     * used elsewhere in this codebase for the identical "no association"
+     * shape). `t.id` hydrates as a `TagId` VO under DQL array hydration
+     * (same gotcha `findIdsByNameLike()` above already documents), unwrapped
+     * back to a raw int before `toIdNameRow()` -- that helper's own
+     * `is_numeric()` check would otherwise silently default a `TagId`
+     * object to 0 rather than using its real value.
      *
      * @return list<array{id: int, name: string}>
      */
     public function findTagsForImage(int $imageId): array
     {
-        $imageTagTable = Tables::imageTag();
-        $tagsTable = Tables::tags();
+        $rows = $this->createQueryBuilder('t')
+            ->select('t.id', 't.name')
+            ->innerJoin(ImageTagEntity::class, 'it', Join::WITH, 't.id = it.tagId')
+            ->where('it.imageId = :imageId')
+            ->setParameter('imageId', $imageId)
+            ->getQuery()
+            ->getArrayResult();
 
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->executeQuery(<<<SQL
-                SELECT id, name
-                FROM {$imageTagTable} AS it
-                    JOIN {$tagsTable} AS t ON t.id = it.tag_id
-                WHERE image_id = ?
-                SQL
-                , [$imageId], [ParameterType::INTEGER])
-            ->fetchAllAssociative();
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
 
-        return array_map(self::toIdNameRow(...), $rows);
+            $id = $row['id'] ?? null;
+            $result[] = self::toIdNameRow([
+                'id' => $id instanceof TagId ? $id->value : $id,
+                'name' => $row['name'] ?? null,
+            ]);
+        }
+
+        return $result;
     }
 
     /**

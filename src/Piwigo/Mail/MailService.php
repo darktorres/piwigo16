@@ -118,7 +118,7 @@ final class MailService implements MailerInterface
     private function recipientRepo(): MailRecipientRepositoryInterface
     {
         return $this->mailRecipientRepo
-            ?? new MailRecipientRepository(\Piwigo\Db\DbConnection::build());
+            ?? new MailRecipientRepository(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build()));
     }
 
     /**
@@ -137,7 +137,7 @@ final class MailService implements MailerInterface
                 new \Piwigo\Auth\AuthRepository(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())),
                 new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)),
                 new HtmlService(),
-                new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build()), \Piwigo\Config\DeploymentPolicy::current()),
+                new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())), \Piwigo\Config\DeploymentPolicy::current()),
                 new \Piwigo\Auth\CookieService(),
                 \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class),
                 \Piwigo\Session\SessionService::get(),

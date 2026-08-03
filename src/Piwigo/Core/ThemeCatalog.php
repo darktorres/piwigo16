@@ -31,7 +31,8 @@ final class ThemeCatalog
 
         $themes = [];
 
-        $rows = new ThemeRepository(\Piwigo\Db\DbConnection::build())->findAllIdsAndNames();
+        $conn = \Piwigo\Db\DbConnection::build();
+        $rows = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(ThemeEntity::class)->findAllIdsAndNames();
         foreach ($rows as $row) {
             $id = $row['id'];
             $name = $row['name'];

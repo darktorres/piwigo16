@@ -391,7 +391,7 @@ final class InstallWizard
      */
     private function passwordService(Connection $conn): \Piwigo\Auth\PasswordService
     {
-        return new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn), \Piwigo\Config\DeploymentPolicy::current());
+        return new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), \Piwigo\Config\DeploymentPolicy::current());
     }
 
     /**

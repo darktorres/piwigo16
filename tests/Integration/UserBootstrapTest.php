@@ -209,7 +209,7 @@ final class UserBootstrapTest extends IntegrationTestCase
     public function test_initialize_logs_in_via_ws_uploadAsync_and_marks_the_session_connected_with(): void
     {
         $plainPassword = 'upload-async-pass-' . bin2hex(random_bytes(4));
-        $hash = (new PasswordService(new PasswordRepository($this->conn), new DeploymentPolicy()))->hash($plainPassword);
+        $hash = (new PasswordService(new PasswordRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), new DeploymentPolicy()))->hash($plainPassword);
         $username = 'upload_async_user_' . bin2hex(random_bytes(4));
         $this->conn->executeStatement(
             'INSERT INTO piwigo_users (username, password, mail_address) VALUES (?, ?, NULL)',
@@ -225,7 +225,7 @@ final class UserBootstrapTest extends IntegrationTestCase
             new AuthRepository(EntityManagerFactory::build($this->conn)),
             new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)),
             new HtmlService(),
-            new PasswordService(new PasswordRepository($this->conn), new DeploymentPolicy()),
+            new PasswordService(new PasswordRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), new DeploymentPolicy()),
             new CookieService(),
             EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class),
             new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current()),

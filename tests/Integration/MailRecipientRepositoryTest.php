@@ -57,7 +57,7 @@ final class MailRecipientRepositoryTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->repo = new MailRecipientRepository($this->conn);
+        $this->repo = new MailRecipientRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn));
     }
 
     #[\Override]

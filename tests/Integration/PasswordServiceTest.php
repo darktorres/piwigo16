@@ -70,7 +70,7 @@ final class PasswordServiceTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         // A fresh, all-defaults DeploymentPolicy (externalAuthentification
         // false) -- no test in this file needs a non-default policy.
-        $this->service = new PasswordService(new PasswordRepository($this->conn), new DeploymentPolicy());
+        $this->service = new PasswordService(new PasswordRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), new DeploymentPolicy());
     }
 
     public function test_hash_produces_a_bcrypt_hash(): void

@@ -4,48 +4,42 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
-use Piwigo\Db\AbstractRepository;
-use Piwigo\Db\Tables;
+use Doctrine\ORM\EntityRepository;
 
 /**
  * Persistence layer for the `themes` table's own id/name listing below.
- * Stays plain DBAL via {@see AbstractRepository} rather than an ORM
- * `EntityRepository`, same shape as Notification\NotificationByMailRepository
- * -- this query's own `ORDER BY name` shape has no other real caller to
- * share an entity-based repository with. `themes` itself is entity-mapped
- * ({@see ThemeEntity}, added in Item 14 Sub-phase B1 for
- * `Users\UserRepository`'s own DQL conversions -- this class's original
- * docblock claim that "no real caller ever needed one" predates that).
- * Lives alongside ThemeCatalog in `Piwigo\Core` (L1Infrastructure) rather
- * than a new `Piwigo\Theme` namespace -- deptrac.yaml's own
- * L1Infrastructure collector is a fixed namespace enumeration, and
- * ThemeCatalog itself already established this namespace as the correct
- * L1 home for "no natural existing class home, but a real L2aCoreDomain
- * caller (Users\UserService) exists" theme concerns (see ThemeCatalog's
- * own docblock).
+ *
+ * Item 15 audit: converted to real DQL against {@see ThemeEntity} --
+ * `themes` itself is entity-mapped (added in Item 14 Sub-phase B1 for
+ * `Users\UserRepository`'s own DQL conversions), and this class's own
+ * former docblock claim that it had "no other real caller to share an
+ * entity-based repository with" was about needing a *shared* repository,
+ * not about DQL itself being unreachable -- `EntityRepository<ThemeEntity>`
+ * needs no other caller to be worth using here.
+ *
+ * @extends EntityRepository<ThemeEntity>
  */
-final class ThemeRepository extends AbstractRepository
+final class ThemeRepository extends EntityRepository
 {
     /**
      * id/name for every installed theme row, ordered by name --
-     * ThemeCatalog::getPwgThemes()'s own catalog listing.
+     * ThemeCatalog::getPwgThemes()'s own catalog listing. `name` is
+     * nullable in the schema; rows with a null name are dropped, matching
+     * the original raw query's own `is_string()` filter.
      *
      * @return list<array{id: string, name: string}>
      */
     public function findAllIdsAndNames(): array
     {
-        $themesTable = Tables::themes();
-        $rows = $this->conn->fetchAllAssociative(<<<SQL
-            SELECT
-                id,
-                name
-            FROM {$themesTable}
-            ORDER BY name ASC
-            SQL);
+        $rows = $this->createQueryBuilder('t')
+            ->select('t.id', 't.name')
+            ->orderBy('t.name', 'ASC')
+            ->getQuery()
+            ->getArrayResult();
 
         $themes = [];
         foreach ($rows as $row) {
-            if (! is_string($row['id']) || ! is_string($row['name'])) {
+            if (! is_array($row) || ! is_string($row['id'] ?? null) || ! is_string($row['name'] ?? null)) {
                 continue;
             }
 

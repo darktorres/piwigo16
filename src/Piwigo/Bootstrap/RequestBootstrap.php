@@ -504,7 +504,7 @@ final class RequestBootstrap
             new AuthRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
             self::activityService($conn),
             new HtmlService(),
-            new PasswordService(new PasswordRepository($conn), self::deploymentPolicy()),
+            new PasswordService(new PasswordRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), self::deploymentPolicy()),
             new CookieService(),
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class),
             self::sessionService(),
@@ -612,7 +612,7 @@ final class RequestBootstrap
             $notify_username = self::currentUser()->get()->username;
             $notify_email = self::currentUser()->get()->email;
             $apiKeyRepo = new \Piwigo\Auth\ApiKeyRepository(\Piwigo\Db\EntityManagerFactory::build($conn));
-            $is_mail_send = new \Piwigo\Auth\ApiKeyService(self::lang(), self::mailService(), $apiKeyRepo, new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn), self::deploymentPolicy()), self::urlService(), self::sessionService(), self::currentConfig())
+            $is_mail_send = new \Piwigo\Auth\ApiKeyService(self::lang(), self::mailService(), $apiKeyRepo, new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), self::deploymentPolicy()), self::urlService(), self::sessionService(), self::currentConfig())
                 ->notifyExpiration($notify_username, $notify_email, $notify_api_key_expiration['days_left']);
 
             if ($is_mail_send) {

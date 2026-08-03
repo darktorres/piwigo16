@@ -17,18 +17,20 @@ use Doctrine\ORM\Mapping as ORM;
  * listing below)" -- re-audited: `Users\UserRepository::
  * countUserInfosRows()`/`fetchUserInfosWithThemeName()` LEFT JOIN
  * `themes`, a real DQL-conversion use `ThemeRepository`'s own raw
- * id/name listing didn't need to anticipate. No `repositoryClass` --
- * `ThemeRepository` stays plain DBAL for its own existing use, this
- * entity is queried directly by whichever domain needs it, same shape
- * as {@see \Piwigo\Tag\ImageTagEntity}. Lives in `Piwigo\Core`
- * (L1Infrastructure), alongside `ThemeRepository`/`ThemeCatalog`, not a
- * new `Piwigo\Theme` namespace -- `deptrac.yaml`'s own L1Infrastructure
- * collector is a fixed namespace enumeration, same reasoning
- * `ThemeCatalog`'s own docblock already documents. `Users\UserRepository`
- * (L2aCoreDomain) depending on this is an allowed direction
- * (L2aCoreDomain -> L1Infrastructure).
+ * id/name listing didn't need to anticipate. This entity is also queried
+ * directly by other domains that don't need `ThemeRepository`'s own
+ * `findAllIdsAndNames()`, same shape as {@see \Piwigo\Tag\ImageTagEntity}.
+ * `repositoryClass: ThemeRepository::class` (Item 15): `ThemeRepository`
+ * itself converted to real DQL, so `getRepository(ThemeEntity::class)` now
+ * needs to resolve to it, not a generic `EntityRepository`. Lives in
+ * `Piwigo\Core` (L1Infrastructure), alongside `ThemeRepository`/
+ * `ThemeCatalog`, not a new `Piwigo\Theme` namespace --
+ * `deptrac.yaml`'s own L1Infrastructure collector is a fixed namespace
+ * enumeration, same reasoning `ThemeCatalog`'s own docblock already
+ * documents. `Users\UserRepository` (L2aCoreDomain) depending on this is
+ * an allowed direction (L2aCoreDomain -> L1Infrastructure).
  */
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: ThemeRepository::class)]
 #[ORM\Table(name: 'themes')]
 final class ThemeEntity
 {

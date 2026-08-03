@@ -487,7 +487,7 @@ final class MailServiceTest extends IntegrationTestCase
         // is final, so the substitute wraps a real instance (composition)
         // and delegates every method it doesn't need to override to it,
         // rather than extending the final class directly.
-        $realRepo = new MailRecipientRepository($this->conn);
+        $realRepo = new MailRecipientRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn));
         $repo = new class ($realRepo) implements MailRecipientRepositoryInterface {
             public function __construct(private readonly MailRecipientRepositoryInterface $real) {}
 
@@ -531,7 +531,7 @@ final class MailServiceTest extends IntegrationTestCase
         // findByGroupAndLanguage() to come back empty is the only
         // deterministic way to exercise it, same reasoning/seam as the
         // empty-string-language test above.
-        $realRepo = new MailRecipientRepository($this->conn);
+        $realRepo = new MailRecipientRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn));
         $repo = new class ($realRepo) implements MailRecipientRepositoryInterface {
             public function __construct(private readonly MailRecipientRepositoryInterface $real) {}
 

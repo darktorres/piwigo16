@@ -109,7 +109,7 @@ afterEach(function (): void {
     CurrentUser::reset();
     CurrentConfig::reset();
     Lang::reset();
-    Translator::reset();
+    Translator::get()->reset();
     Kernel::reset();
 });
 

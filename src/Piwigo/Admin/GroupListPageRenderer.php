@@ -20,6 +20,7 @@ final class GroupListPageRenderer
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
+        private readonly Translator $translator,
     ) {}
 
     public function render(): void
@@ -86,7 +87,7 @@ final class GroupListPageRenderer
                     'IS_DEFAULT' => ($row->isDefault ? ' [' . Lang::t('default') . ']' : ''),
                     'NB_MEMBERS' => count($members),
                     'L_MEMBERS' => implode(' <span class="userSeparator">&middot;</span> ', $members),
-                    'MEMBERS' => Translator::get()->plural('%d member', '%d members', count($members)),
+                    'MEMBERS' => $this->translator->plural('%d member', '%d members', count($members)),
                     'U_DELETE' => $del_url . $row->id->value . '&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken(),
                     'U_PERM' => $perm_url . $row->id->value,
                     'U_USERS' => $users_url . $row->id->value,

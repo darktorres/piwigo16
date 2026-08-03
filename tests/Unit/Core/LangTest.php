@@ -209,7 +209,7 @@ function langTestMakeProvider(?string $defaultLanguage = null, ?string $currentL
 
 beforeEach(function (): void {
     Lang::reset();
-    Translator::reset();
+    Translator::get()->reset();
     // Lang::load() unconditionally reads InstallationFlag::isActiveStatic()
     // (singleton/service-locator elimination campaign, Phase 1 -- Lang
     // itself isn't converted to constructor injection until Phase 8), which
@@ -226,7 +226,7 @@ beforeEach(function (): void {
 
 afterEach(function (): void {
     Lang::reset();
-    Translator::reset();
+    Translator::get()->reset();
     \Piwigo\Core\Kernel::reset();
     langTestRrmdir(is_string($this->langRoot) ? $this->langRoot : '');
 });

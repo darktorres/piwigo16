@@ -41,6 +41,7 @@ final readonly class LangService
 {
     public function __construct(
         private Paths $paths,
+        private Translator $translator,
     ) {}
 
     public function t(?string $key, mixed ...$args): string
@@ -95,7 +96,7 @@ final readonly class LangService
             return false;
         }
 
-        Translator::get()->load($locale, $poFile);
+        $this->translator->load($locale, $poFile);
 
         return true;
     }

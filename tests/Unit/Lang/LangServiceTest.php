@@ -9,14 +9,14 @@ use Piwigo\Lang\Translator;
 
 beforeEach(function (): void {
     Lang::reset();
-    Translator::reset();
+    Translator::get()->reset();
     $this->paths = Paths::fromRoot(dirname(__DIR__, 3));
-    $this->service = new LangService($this->paths);
+    $this->service = new LangService($this->paths, Translator::get());
 });
 
 afterEach(function (): void {
     Lang::reset();
-    Translator::reset();
+    Translator::get()->reset();
 });
 
 test('t delegates to Lang::t', function (): void {
@@ -96,7 +96,7 @@ test('loadLanguageForPlugin rejects a locale that fails the installed-locale for
     // check itself distinguishes real code from either mutant here.
     $root = sys_get_temp_dir() . '/piwigo-lang-service-test-format-' . bin2hex(random_bytes(8));
     mkdir($root . '/language/12x', 0o777, true);
-    $service = new LangService(Paths::fromRoot($root));
+    $service = new LangService(Paths::fromRoot($root), Translator::get());
 
     $pluginDir = sys_get_temp_dir() . '/piwigo-lang-service-test-format-plugin';
     @mkdir($pluginDir . '/language/12x', 0o777, true);
@@ -123,7 +123,7 @@ test('loadLanguageForPlugin checks the installed-locale directory under this ser
     // resolves as installed if the root prefix is genuinely applied.
     $root = sys_get_temp_dir() . '/piwigo-lang-service-test-root-' . bin2hex(random_bytes(8));
     mkdir($root . '/language/xx_YY', 0o777, true);
-    $service = new LangService(Paths::fromRoot($root));
+    $service = new LangService(Paths::fromRoot($root), Translator::get());
 
     $pluginDir = sys_get_temp_dir() . '/piwigo-lang-service-test-root-plugin';
     @mkdir($pluginDir . '/language/xx_YY', 0o777, true);
@@ -151,7 +151,7 @@ test('loadLanguageForPlugin checks the exact locale subdirectory, not just wheth
     // and wrongly treat ww_ZZ as installed.
     $root = sys_get_temp_dir() . '/piwigo-lang-service-test-subdir-' . bin2hex(random_bytes(8));
     mkdir($root . '/language', 0o777, true);
-    $service = new LangService(Paths::fromRoot($root));
+    $service = new LangService(Paths::fromRoot($root), Translator::get());
 
     $pluginDir = sys_get_temp_dir() . '/piwigo-lang-service-test-subdir-plugin';
     @mkdir($pluginDir . '/language/ww_ZZ', 0o777, true);

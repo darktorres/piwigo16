@@ -84,7 +84,7 @@ final class CalendarWeeklyTest extends IntegrationTestCase
         CurrentConfig::setDataLocation('data/');
         CurrentConfig::setDataDirChecked('1');
         Lang::reset();
-        Translator::reset();
+        Translator::get()->reset();
 
         $this->conn = DbConnection::build();
 
@@ -112,7 +112,7 @@ final class CalendarWeeklyTest extends IntegrationTestCase
         // untracked repo debris after a coverage run).
         calendar_weekly_test_rrmdir(CurrentPaths::get()->root . 'data');
         Lang::reset();
-        Translator::reset();
+        Translator::get()->reset();
         parent::tearDown();
     }
 

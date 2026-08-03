@@ -13,6 +13,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Lang\Translator;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
 
@@ -21,7 +22,7 @@ function c13yInternalTestCheckIntegrity(): CheckIntegrity
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(IntegrityIgnoredAnomalyEntity::class);
     expect($repo)->toBeInstanceOf(IntegrityIgnoredAnomalyRepository::class);
 
-    return new CheckIntegrity($repo);
+    return new CheckIntegrity($repo, new Translator());
 }
 
 function c13yInternalTestSessionService(): SessionService

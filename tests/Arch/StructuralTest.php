@@ -238,6 +238,7 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
         '/src/Piwigo/Core/CurrentPaths.php',
         '/src/Piwigo/Db/DbCredentials.php',
         '/src/Piwigo/Session/SessionService.php',
+        '/src/Piwigo/Lang/Translator.php',
     ];
 
     $hits = [
@@ -921,16 +922,56 @@ test('InputValidator::createStatic() transitional shim has a shrinking, known al
     expect(describeCallSites($disallowed))->toBe([]);
 });
 
-test('Translator::reset() is only called from tests/', function (): void {
+test('Translator::get() transitional bridge has a shrinking, known allow-list', function (): void {
+    // Singleton/service-locator elimination campaign, Phase 4: same shape
+    // as SessionService::get() above (no Static suffix -- there is no
+    // competing real instance method to disambiguate from). Lang.php is a
+    // not-yet-converted (Phase 8) static facade consumer -- the textbook
+    // transitional-shim case the campaign plan documents. DateHelper.php
+    // is a stateless static utility (no instance context to receive
+    // constructor injection through). HtmlService.php/MailService.php
+    // deliberately avoid a required constructor dependency (59/29 real
+    // `new` construction sites each), matching FilesystemHelper's own "no
+    // wrapper needed" precedent -- MailService.php also still needs the
+    // bare shim read (not just ->plural()) to snapshot/clone the current
+    // instance for its own switchLangTo()/switchLangBack() stack.
+    // Ws/PwgCore.php and Ws/PwgUsers.php are Phase-10-locked static
+    // dispatch code. CategoryService.php's 2 sites are both unreachable
+    // any other way: getDisplayImagesCount() is a genuinely static method
+    // (no $this to inject through), and moveCategories()'s only real
+    // caller is the same Phase-10-locked Ws/PwgCategories.php. Menu/
+    // MenubarRenderer.php takes no constructor deps by design (every
+    // dependency an explicit render() parameter instead, see FilterState's
+    // own precedent) and only needs Translator for one internal, throwaway
+    // `new FilterService(...)` -- not worth a 12th render() parameter for.
+    // Template/PwgTemplateAdapter.php's one call site is a `#[\Deprecated]`
+    // method reached from Template.php, itself still manually `new`'d at
+    // dozens of sites (Phase 6, not yet converted). NotificationByMail
+    // SubController.php's one remaining site is inside its own private
+    // static doTimeoutTreatment() helper (no $this there either).
     $repoRoot = __DIR__ . '/../..';
 
-    $hits = [
-        ...findCallSites($repoRoot . '/src/Piwigo', 'Translator::reset('),
-        ...findCallSitesInRootPhpFiles($repoRoot, 'Translator::reset('),
-        ...findCallSitesInBinFiles($repoRoot, 'Translator::reset('),
+    $allowedFiles = [
+        '/src/Piwigo/Category/CategoryService.php',
+        '/src/Piwigo/Controller/Admin/NotificationByMailSubController.php',
+        '/src/Piwigo/Core/DateHelper.php',
+        '/src/Piwigo/Core/Lang.php',
+        '/src/Piwigo/Html/HtmlService.php',
+        '/src/Piwigo/Mail/MailService.php',
+        '/src/Piwigo/Menu/MenubarRenderer.php',
+        '/src/Piwigo/Template/PwgTemplateAdapter.php',
+        '/src/Piwigo/Ws/PwgCore.php',
+        '/src/Piwigo/Ws/PwgUsers.php',
     ];
 
-    expect(describeCallSites($hits))->toBe([]);
+    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'Translator::get(');
+
+    $disallowed = array_values(array_filter(
+        $hits,
+        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
+    ));
+
+    expect(describeCallSites($disallowed))->toBe([]);
 });
 
 test('MailService::reset() is only called from tests/', function (): void {

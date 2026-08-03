@@ -8,12 +8,16 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Lang\Translator;
 
 beforeEach(function (): void {
-    Translator::reset();
+    // Each test constructs its own fresh instance directly -- no more
+    // reset()-between-tests machinery needed for this whole category
+    // (singleton/service-locator elimination campaign, Phase 4; same
+    // "category 1" test-isolation shape as CoreTabsTest/
+    // SectionContextRegistryTest's own precedent).
+    $this->translator = new Translator();
     $this->poFile = sys_get_temp_dir() . '/piwigo-po-test-' . bin2hex(random_bytes(8)) . '.po';
 });
 
 afterEach(function (): void {
-    Translator::reset();
     CurrentConfig::reset();
     if (file_exists((is_string($this->poFile) ? $this->poFile : ''))) {
         unlink((is_string($this->poFile) ? $this->poFile : ''));
@@ -21,7 +25,7 @@ afterEach(function (): void {
 });
 
 test('translate returns the original key when no PO file is loaded', function (): void {
-    expect(Translator::get()->translate('Hello'))->toBe('Hello');
+    expect($this->translator->translate('Hello'))->toBe('Hello');
 });
 
 test('load parses a PO file and translate resolves the matching string', function (): void {
@@ -34,15 +38,15 @@ test('load parses a PO file and translate resolves the matching string', functio
         msgstr "Bonjour"
         PO);
 
-    Translator::get()->load('fr', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('fr', (is_string($this->poFile) ? $this->poFile : ''));
 
-    expect(Translator::get()->translate('Hello'))->toBe('Bonjour');
+    expect($this->translator->translate('Hello'))->toBe('Bonjour');
 });
 
 test('translate falls back to the mirrored string map for keys with no PO entry', function (): void {
-    Translator::get()->loadArray(['plugin_key' => 'plugin value']);
+    $this->translator->loadArray(['plugin_key' => 'plugin value']);
 
-    expect(Translator::get()->translate('plugin_key'))->toBe('plugin value');
+    expect($this->translator->translate('plugin_key'))->toBe('plugin value');
 });
 
 test('translate applies sprintf-style args', function (): void {
@@ -55,9 +59,9 @@ test('translate applies sprintf-style args', function (): void {
         msgstr "Bonjour %s"
         PO);
 
-    Translator::get()->load('fr', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('fr', (is_string($this->poFile) ? $this->poFile : ''));
 
-    expect(Translator::get()->translate('Hello %s', 'World'))->toBe('Bonjour World');
+    expect($this->translator->translate('Hello %s', 'World'))->toBe('Bonjour World');
 });
 
 // Confirmed-equivalent: RemoveEarlyReturn on plural()'s `return sprintf(
@@ -83,10 +87,10 @@ test('plural picks the correct form for a 2-form language', function (): void {
         msgstr[1] "%d photos"
         PO);
 
-    Translator::get()->load('en', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('en', (is_string($this->poFile) ? $this->poFile : ''));
 
-    expect(Translator::get()->plural('%d photo', '%d photos', 1))->toBe('1 photo')
-        ->and(Translator::get()->plural('%d photo', '%d photos', 5))->toBe('5 photos');
+    expect($this->translator->plural('%d photo', '%d photos', 1))->toBe('1 photo')
+        ->and($this->translator->plural('%d photo', '%d photos', 5))->toBe('5 photos');
 });
 
 // Confirmed-equivalent: toDictionaryEntry()'s `$forms` array (built at
@@ -123,11 +127,11 @@ test('plural picks the correct form for a 3-form language (Russian-style rule)',
         msgstr[2] "%d photo-many"
         PO);
 
-    Translator::get()->load('ru', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('ru', (is_string($this->poFile) ? $this->poFile : ''));
 
-    expect(Translator::get()->plural('%d photo', '%d photos', 1))->toBe('1 photo-one')
-        ->and(Translator::get()->plural('%d photo', '%d photos', 2))->toBe('2 photo-few')
-        ->and(Translator::get()->plural('%d photo', '%d photos', 11))->toBe('11 photo-many');
+    expect($this->translator->plural('%d photo', '%d photos', 1))->toBe('1 photo-one')
+        ->and($this->translator->plural('%d photo', '%d photos', 2))->toBe('2 photo-few')
+        ->and($this->translator->plural('%d photo', '%d photos', 11))->toBe('11 photo-many');
 });
 
 test('load mirrors translations into mirroredStrings(), translate()\'s own fallback', function (): void {
@@ -145,18 +149,18 @@ test('load mirrors translations into mirroredStrings(), translate()\'s own fallb
         msgstr[1] "%d photos"
         PO);
 
-    Translator::get()->load('fr', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('fr', (is_string($this->poFile) ? $this->poFile : ''));
 
-    $mirror = Translator::get()->mirroredStrings();
+    $mirror = $this->translator->mirroredStrings();
     expect($mirror['Hello'])->toBe('Bonjour')
         ->and($mirror['%d photo'])->toBe('%d photo')
         ->and($mirror['%d photos'])->toBe('%d photos');
 });
 
 test('load on an unreadable file is a silent no-op', function (): void {
-    Translator::get()->load('fr', '/nonexistent/path.po');
+    $this->translator->load('fr', '/nonexistent/path.po');
 
-    expect(Translator::get()->translate('Hello'))->toBe('Hello');
+    expect($this->translator->translate('Hello'))->toBe('Hello');
 });
 
 test('translate warns about a missing key when debug_l10n is enabled', function (): void {
@@ -168,7 +172,7 @@ test('translate warns about a missing key when debug_l10n is enabled', function 
         return true;
     }, E_USER_WARNING);
 
-    Translator::get()->translate('missing_key');
+    $this->translator->translate('missing_key');
 
     restore_error_handler();
 
@@ -184,7 +188,7 @@ test('translate does not warn about a missing key when debug_l10n is disabled', 
         return true;
     }, E_USER_WARNING);
 
-    Translator::get()->translate('missing_key');
+    $this->translator->translate('missing_key');
 
     restore_error_handler();
 
@@ -193,7 +197,7 @@ test('translate does not warn about a missing key when debug_l10n is disabled', 
 
 test('translate does not warn about a resolved key even when debug_l10n is enabled', function (): void {
     CurrentConfig::setDebugL10n(true);
-    Translator::get()->loadArray(['known_key' => 'known value']);
+    $this->translator->loadArray(['known_key' => 'known value']);
 
     $triggered = false;
     set_error_handler(function () use (&$triggered): bool {
@@ -201,7 +205,7 @@ test('translate does not warn about a resolved key even when debug_l10n is enabl
         return true;
     }, E_USER_WARNING);
 
-    $result = Translator::get()->translate('known_key');
+    $result = $this->translator->translate('known_key');
 
     restore_error_handler();
 
@@ -209,14 +213,20 @@ test('translate does not warn about a resolved key even when debug_l10n is enabl
         ->and($triggered)->toBeFalse();
 });
 
-test('set() replaces the singleton instance returned by get()', function (): void {
-    $replacement = new Translator();
-    $replacement->loadArray(['swapped_key' => 'swapped value']);
+test('restoreFrom() copies a snapshot instance\'s translation state onto this instance, in place', function (): void {
+    $this->translator->loadArray(['original_key' => 'original value']);
+    $snapshot = clone $this->translator;
 
-    Translator::set($replacement);
+    // Mutate the live instance further after taking the snapshot -- proves
+    // restoreFrom() below reverts to the snapshot's own state, not just
+    // whatever the live instance already happened to hold.
+    $this->translator->loadArray(['later_key' => 'later value']);
 
-    expect(Translator::get())->toBe($replacement)
-        ->and(Translator::get()->translate('swapped_key'))->toBe('swapped value');
+    $restored = new Translator();
+    $restored->restoreFrom($snapshot);
+
+    expect($restored->translate('original_key'))->toBe('original value')
+        ->and($restored->mirroredStrings())->not->toHaveKey('later_key');
 });
 
 test('plural applies sprintf-style args after the count', function (): void {
@@ -231,10 +241,10 @@ test('plural applies sprintf-style args after the count', function (): void {
         msgstr[1] "%d photos by %s"
         PO);
 
-    Translator::get()->load('en', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('en', (is_string($this->poFile) ? $this->poFile : ''));
 
-    expect(Translator::get()->plural('%d photo by %s', '%d photos by %s', 1, 'Alice'))->toBe('1 photo by Alice')
-        ->and(Translator::get()->plural('%d photo by %s', '%d photos by %s', 3, 'Bob'))->toBe('3 photos by Bob');
+    expect($this->translator->plural('%d photo by %s', '%d photos by %s', 1, 'Alice'))->toBe('1 photo by Alice')
+        ->and($this->translator->plural('%d photo by %s', '%d photos by %s', 3, 'Bob'))->toBe('3 photos by Bob');
 });
 
 // A msgctxt-tagged entry with an empty msgid is a real, loadable PO shape
@@ -277,12 +287,12 @@ test('load skips a context-tagged entry whose msgid is empty', function (): void
         msgstr "Bonjour"
         PO);
 
-    Translator::get()->load('fr', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('fr', (is_string($this->poFile) ? $this->poFile : ''));
 
-    $mirror = Translator::get()->mirroredStrings();
+    $mirror = $this->translator->mirroredStrings();
     expect($mirror)->not->toHaveKey('')
         ->and($mirror['Hello'])->toBe('Bonjour')
-        ->and(Translator::get()->translate('Hello'))->toBe('Bonjour');
+        ->and($this->translator->translate('Hello'))->toBe('Bonjour');
 });
 
 test('translate does not warn about a missing key when the key itself is empty', function (): void {
@@ -294,7 +304,7 @@ test('translate does not warn about a missing key when the key itself is empty',
         return true;
     }, E_USER_WARNING);
 
-    Translator::get()->translate('');
+    $this->translator->translate('');
 
     restore_error_handler();
 
@@ -321,9 +331,9 @@ test('translate maps a non-scalar arg to an empty string instead of leaking it i
         msgstr "Bonjour %s"
         PO);
 
-    Translator::get()->load('fr', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('fr', (is_string($this->poFile) ? $this->poFile : ''));
 
-    expect(Translator::get()->translate('Hello %s', ['nested']))->toBe('Bonjour ');
+    expect($this->translator->translate('Hello %s', ['nested']))->toBe('Bonjour ');
 });
 
 // Same mapping, same reasoning, for plural()'s own copy of the closure.
@@ -339,9 +349,9 @@ test('plural maps a non-scalar arg to an empty string instead of leaking it into
         msgstr[1] "%d photos by %s"
         PO);
 
-    Translator::get()->load('en', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('en', (is_string($this->poFile) ? $this->poFile : ''));
 
-    expect(Translator::get()->plural('%d photo by %s', '%d photos by %s', 3, ['nested']))->toBe('3 photos by ');
+    expect($this->translator->plural('%d photo by %s', '%d photos by %s', 3, ['nested']))->toBe('3 photos by ');
 });
 
 // The closure that builds $scalarArgs is declared `: string` inside this
@@ -362,9 +372,9 @@ test('plural casts a non-string scalar arg to string instead of returning it raw
         msgstr[1] "%d items of size %s"
         PO);
 
-    Translator::get()->load('en', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('en', (is_string($this->poFile) ? $this->poFile : ''));
 
-    expect(Translator::get()->plural('%d item(s) of size %s', '%d items of size %s', 3, 42))->toBe('3 items of size 42');
+    expect($this->translator->plural('%d item(s) of size %s', '%d items of size %s', 3, 42))->toBe('3 items of size 42');
 });
 
 // A context-less empty-original Translation is not producible through a
@@ -431,9 +441,9 @@ test('load keeps a context-tagged translation out of the context-less bucket tra
         msgstr "WithContext"
         PO);
 
-    Translator::get()->load('fr', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('fr', (is_string($this->poFile) ? $this->poFile : ''));
 
-    expect(Translator::get()->translate('Duplicate'))->toBe('NoContext');
+    expect($this->translator->translate('Duplicate'))->toBe('NoContext');
 });
 
 // A PO entry with no msgstr line at all (malformed but tolerated by
@@ -452,10 +462,10 @@ test('load treats a PO entry with no msgstr line as untranslated, in both the di
         msgid "NoMsgstr"
         PO);
 
-    Translator::get()->load('en', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('en', (is_string($this->poFile) ? $this->poFile : ''));
 
-    expect(Translator::get()->translate('NoMsgstr'))->toBe('NoMsgstr')
-        ->and(Translator::get()->mirroredStrings())->not->toHaveKey('NoMsgstr');
+    expect($this->translator->translate('NoMsgstr'))->toBe('NoMsgstr')
+        ->and($this->translator->mirroredStrings())->not->toHaveKey('NoMsgstr');
 });
 
 // mirror()'s `$str !== null && $str !== ''` (line 252) has two guards: this
@@ -472,9 +482,9 @@ test('load does not mirror an explicitly empty translation', function (): void {
         msgstr ""
         PO);
 
-    Translator::get()->load('en', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('en', (is_string($this->poFile) ? $this->poFile : ''));
 
-    expect(Translator::get()->mirroredStrings())->not->toHaveKey('EmptyTranslation');
+    expect($this->translator->mirroredStrings())->not->toHaveKey('EmptyTranslation');
 });
 
 // A msgstr[1] present without a matching msgid_plural is a real (if
@@ -496,9 +506,9 @@ test('plural ignores a msgstr[1] translation when no msgid_plural was declared',
         msgstr[1] "ShouldNotAppear"
         PO);
 
-    Translator::get()->load('en', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('en', (is_string($this->poFile) ? $this->poFile : ''));
 
-    expect(Translator::get()->plural('OddOne', 'fallback text', 2))->toBe('fallback text');
+    expect($this->translator->plural('OddOne', 'fallback text', 2))->toBe('fallback text');
 });
 
 // Same shape, but with msgid_plural explicitly declared empty ("") rather
@@ -516,9 +526,9 @@ test('plural ignores a msgstr[1] translation when msgid_plural is explicitly emp
         msgstr[1] "ShouldNotAppearEither"
         PO);
 
-    Translator::get()->load('en', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('en', (is_string($this->poFile) ? $this->poFile : ''));
 
-    expect(Translator::get()->plural('EmptyPluralOne', 'fallback text2', 2))->toBe('fallback text2');
+    expect($this->translator->plural('EmptyPluralOne', 'fallback text2', 2))->toBe('fallback text2');
 });
 
 // plural() never consults $mirror (only translate() does), so unlike a
@@ -538,9 +548,9 @@ test('plural resolves a singular-only translation directly from the dictionary (
         msgstr "SoloTranslated"
         PO);
 
-    Translator::get()->load('en', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('en', (is_string($this->poFile) ? $this->poFile : ''));
 
-    expect(Translator::get()->plural('Solo', 'unused-plural-fallback', 1))->toBe('SoloTranslated');
+    expect($this->translator->plural('Solo', 'unused-plural-fallback', 1))->toBe('SoloTranslated');
 });
 
 // Same mirror-bypass reasoning as the Solo test above, applied to
@@ -576,10 +586,10 @@ test("load keeps a second PO file's explicit X-Domain out of the default lookup 
         msgstr "SecondVal"
         PO);
 
-    Translator::get()->load('en', (is_string($this->poFile) ? $this->poFile : ''));
-    Translator::get()->load('en', $secondPoFile);
+    $this->translator->load('en', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('en', $secondPoFile);
 
-    expect(Translator::get()->plural('SecondKey', 'fallback-text', 1))->toBe('SecondKey');
+    expect($this->translator->plural('SecondKey', 'fallback-text', 1))->toBe('SecondKey');
 
     unlink($secondPoFile);
 });
@@ -616,9 +626,9 @@ test("load reassembles piwigo_day_N/piwigo_month_N entries into mirroredStrings(
         msgstr "June"
         PO);
 
-    Translator::get()->load('en', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('en', (is_string($this->poFile) ? $this->poFile : ''));
 
-    $mirror = Translator::get()->mirroredStrings();
+    $mirror = $this->translator->mirroredStrings();
     expect($mirror['day'])->toBe([0 => 'Sunday', 1 => 'Monday'])
         ->and($mirror['month'])->toBe([5 => 'June']);
 });
@@ -651,9 +661,9 @@ test('load does not mirror a plural translation when no msgid_plural was declare
         msgstr[1] "AlphaPluralForm"
         PO);
 
-    Translator::get()->load('en', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('en', (is_string($this->poFile) ? $this->poFile : ''));
 
-    expect(Translator::get()->mirroredStrings())->not->toHaveKey('');
+    expect($this->translator->mirroredStrings())->not->toHaveKey('');
 });
 
 // Same line-275 guard, isolating the `$pluralOriginal !== ''` half (an
@@ -671,9 +681,9 @@ test('load does not mirror a plural translation when msgid_plural is explicitly 
         msgstr[1] "BetaPluralForm"
         PO);
 
-    Translator::get()->load('en', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('en', (is_string($this->poFile) ? $this->poFile : ''));
 
-    expect(Translator::get()->mirroredStrings())->not->toHaveKey('');
+    expect($this->translator->mirroredStrings())->not->toHaveKey('');
 });
 
 // Same line-275 guard, this time with a real msgid_plural but no msgstr[1]
@@ -694,9 +704,9 @@ test('load does not mirror a plural original when no msgstr[1] was declared', fu
         msgstr "GammaTranslated"
         PO);
 
-    Translator::get()->load('en', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('en', (is_string($this->poFile) ? $this->poFile : ''));
 
-    expect(Translator::get()->mirroredStrings())->not->toHaveKey('GammaPlural');
+    expect($this->translator->mirroredStrings())->not->toHaveKey('GammaPlural');
 });
 
 // Same line-275 guard, isolating the trailing `$pluralForm0 !== ''` half
@@ -714,7 +724,7 @@ test('load does not mirror a plural original when msgstr[1] is explicitly empty'
         msgstr[1] ""
         PO);
 
-    Translator::get()->load('en', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('en', (is_string($this->poFile) ? $this->poFile : ''));
 
-    expect(Translator::get()->mirroredStrings())->not->toHaveKey('DeltaPlural');
+    expect($this->translator->mirroredStrings())->not->toHaveKey('DeltaPlural');
 });

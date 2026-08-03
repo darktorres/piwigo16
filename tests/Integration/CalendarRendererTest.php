@@ -75,7 +75,7 @@ final class CalendarRendererTest extends IntegrationTestCase
         CurrentConfig::setDataLocation('data/');
         CurrentConfig::setDataDirChecked('1');
         Lang::reset();
-        Translator::reset();
+        Translator::get()->reset();
 
         $this->conn = DbConnection::build();
 
@@ -115,7 +115,7 @@ final class CalendarRendererTest extends IntegrationTestCase
         // showed up as untracked repo debris after a coverage run).
         calendar_renderer_test_rrmdir(CurrentPaths::get()->root . 'data');
         Lang::reset();
-        Translator::reset();
+        Translator::get()->reset();
         parent::tearDown();
     }
 

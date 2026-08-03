@@ -26,6 +26,7 @@ final class FilterService implements FilterUpdaterInterface
     public function __construct(
         private readonly \Piwigo\Core\FilterState $filterState,
         private readonly SessionService $sessionService,
+        private readonly Translator $translator,
         private ?Connection $conn = null,
     ) {}
 
@@ -203,7 +204,7 @@ final class FilterService implements FilterUpdaterInterface
             }
             unset($filter_key);
             if ((bool) \Piwigo\Core\PageFilterHelper::getFilterPageValue('add_notes')) {
-                \Piwigo\Core\PageState::current()->addHeaderNote(Translator::get()->plural(
+                \Piwigo\Core\PageState::current()->addHeaderNote($this->translator->plural(
                     'Photos posted within the last %d day.',
                     'Photos posted within the last %d days.',
                     $filter_recent_period

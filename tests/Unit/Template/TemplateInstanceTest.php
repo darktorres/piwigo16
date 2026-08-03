@@ -321,7 +321,7 @@ test('constructor loads admin.lang before rendering the data-dir-not-writable er
     } finally {
         restore_error_handler();
         chmod(CurrentPaths::get()->root, 0o755);
-        \Piwigo\Lang\Translator::reset();
+        \Piwigo\Lang\Translator::get()->reset();
         Lang::reset();
     }
 

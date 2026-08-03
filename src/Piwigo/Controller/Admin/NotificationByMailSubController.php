@@ -90,6 +90,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         private readonly ConfigService $configService,
         private readonly CoreTabs $coreTabs,
         private readonly SessionService $sessionService,
+        private readonly Translator $translator,
     ) {}
 
     #[\Override]
@@ -174,7 +175,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
 
                     $template->assign(
                         [
-                            'save_success' => Translator::get()->plural(
+                            'save_success' => $this->translator->plural(
                                 '%d parameter was updated.',
                                 '%d parameters were updated.',
                                 $updated_param_count

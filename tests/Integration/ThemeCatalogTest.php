@@ -49,14 +49,14 @@ final class ThemeCatalogTest extends IntegrationTestCase
         // deterministic regardless of what an earlier Integration test in
         // this shared process may have loaded into Translator's mirror.
         Lang::reset();
-        Translator::reset();
+        Translator::get()->reset();
     }
 
     #[\Override]
     protected function tearDown(): void
     {
         Lang::reset();
-        Translator::reset();
+        Translator::get()->reset();
         CurrentConfig::reset();
         parent::tearDown();
     }

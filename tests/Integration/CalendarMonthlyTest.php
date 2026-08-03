@@ -86,7 +86,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         Lang::reset();
-        Translator::reset();
+        Translator::get()->reset();
 
         $this->conn = DbConnection::build();
 
@@ -111,7 +111,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         Lang::reset();
-        Translator::reset();
+        Translator::get()->reset();
         parent::tearDown();
     }
 

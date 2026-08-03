@@ -29,6 +29,7 @@ final readonly class NotificationService
         private PermissionService $permissionService,
         private HtmlRenderingInterface $htmlRenderer,
         private UrlServiceInterface $urlService,
+        private Translator $translator,
     ) {}
 
     /**
@@ -214,7 +215,7 @@ final readonly class NotificationService
     public function addNewsLine(array &$news, int $count, string $singularKey, string $pluralKey, string $url = '', bool $addUrl = false): void
     {
         if ($count > 0) {
-            $line = Translator::get()->plural($singularKey, $pluralKey, $count);
+            $line = $this->translator->plural($singularKey, $pluralKey, $count);
             if ($addUrl and $url !== '') {
                 $line = '<a href="' . $url . '">' . $line . '</a>';
             }
@@ -316,7 +317,7 @@ final readonly class NotificationService
 
         $description .=
               '<li>'
-              . Translator::get()->plural('%d new photo', '%d new photos', $nbElements)
+              . $this->translator->plural('%d new photo', '%d new photos', $nbElements)
               . ' ('
               . '<a href="' . $this->urlService->addUrlParams($this->urlService->makeIndexUrl([
                   'section' => 'recent_pics',
@@ -346,7 +347,7 @@ final readonly class NotificationService
 
         $description .=
               '<li>'
-              . Translator::get()->plural('%d album updated', '%d albums updated', $nbCats)
+              . $this->translator->plural('%d album updated', '%d albums updated', $nbCats)
               . '</li>';
 
         $description .= '<ul>';
@@ -358,7 +359,7 @@ final readonly class NotificationService
                   '<li>'
                   . $this->htmlRenderer->getCatDisplayNameCache($uppercats, '', false, null, $authKey)
                   . ' (' .
-                  Translator::get()->plural('%d new photo', '%d new photos', $imgCount) . ')'
+                  $this->translator->plural('%d new photo', '%d new photos', $imgCount) . ')'
                   . '</li>';
         }
         $description .= '</ul>';
@@ -376,7 +377,7 @@ final readonly class NotificationService
     public function getTitleRecentPostDate(array $dateDetail): string
     {
         $nbElements = $dateDetail['nb_elements'];
-        $title = Translator::get()->plural('%d new photo', '%d new photos', $nbElements);
+        $title = $this->translator->plural('%d new photo', '%d new photos', $nbElements);
 
         $dateAvailable = $dateDetail['date_available'] ?? '';
         if ((bool) preg_match('/^\d+-(\d+)-(\d+) /', $dateAvailable, $matches)) {

@@ -183,7 +183,7 @@ afterEach(function (): void {
     // PermissionServiceTest's own English-fallback assertions whenever it
     // ran later in the same process (composer test's own default,
     // non---parallel mode).
-    \Piwigo\Lang\Translator::reset();
+    \Piwigo\Lang\Translator::get()->reset();
     // Every Kernel::boot() call in this file (mail_service_capture_send()'s
     // own, plus several tests' direct calls) was never matched by a reset
     // -- Kernel stayed booted (with whichever root the last call used) for

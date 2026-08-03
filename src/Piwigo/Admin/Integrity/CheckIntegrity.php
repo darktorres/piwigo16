@@ -58,6 +58,7 @@ final class CheckIntegrity
      */
     public function __construct(
         private readonly IntegrityIgnoredAnomalyRepository $repo,
+        private readonly Translator $translator,
     ) {
         $this->ignore_list = [];
         $this->retrieve_list = [];
@@ -83,7 +84,7 @@ final class CheckIntegrity
 
         // Information
         if (count($this->retrieve_list) > 0) {
-            \Piwigo\Core\PageState::current()->addHeaderNote(Translator::get()->plural(
+            \Piwigo\Core\PageState::current()->addHeaderNote($this->translator->plural(
                 '%d anomaly has been detected.',
                 '%d anomalies have been detected.',
                 count($this->retrieve_list)
@@ -116,14 +117,14 @@ final class CheckIntegrity
             }
 
             if ($corrected_count > 0) {
-                \Piwigo\Core\PageState::current()->addInfo(Translator::get()->plural(
+                \Piwigo\Core\PageState::current()->addInfo($this->translator->plural(
                     '%d anomaly has been corrected.',
                     '%d anomalies have been detected corrected.',
                     $corrected_count
                 ));
             }
             if ($not_corrected_count > 0) {
-                \Piwigo\Core\PageState::current()->addError(Translator::get()->plural(
+                \Piwigo\Core\PageState::current()->addError($this->translator->plural(
                     '%d anomaly has not been corrected.',
                     '%d anomalies have not been corrected.',
                     $not_corrected_count
@@ -143,7 +144,7 @@ final class CheckIntegrity
                 }
 
                 if ($ignored_count > 0) {
-                    \Piwigo\Core\PageState::current()->addInfo(Translator::get()->plural(
+                    \Piwigo\Core\PageState::current()->addInfo($this->translator->plural(
                         '%d anomaly has been ignored.',
                         '%d anomalies have been ignored.',
                         $ignored_count

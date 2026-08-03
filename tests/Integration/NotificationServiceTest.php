@@ -17,6 +17,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\Tables;
     use Piwigo\Group\GroupRepository;
     use Piwigo\Html\HtmlService;
+    use Piwigo\Lang\Translator;
     use Piwigo\Notification\NotificationRepository;
     use Piwigo\Notification\NotificationService;
     use Piwigo\Permission\PermissionRepository;
@@ -84,7 +85,8 @@ final class NotificationServiceTest extends IntegrationTestCase
             new NotificationRepository($this->conn),
             new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class)),
             new HtmlService(),
-            new UrlService(new HtmlService())
+            new UrlService(new HtmlService()),
+            new Translator(),
         );
     }
 

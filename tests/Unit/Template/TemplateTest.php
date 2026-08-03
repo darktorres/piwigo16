@@ -23,7 +23,7 @@ use Piwigo\Template\Template;
 
 afterEach(function (): void {
     Lang::reset();
-    Translator::reset();
+    Translator::get()->reset();
     CurrentConfig::reset();
 });
 

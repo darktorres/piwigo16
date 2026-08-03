@@ -483,7 +483,7 @@ final class MailService implements MailerInterface
             $entry = self::$switchLangLanguages[$language];
             Lang::setLangInfo($entry['lang_info']);
             Lang::restore($entry['lang']);
-            \Piwigo\Lang\Translator::set(clone $entry['translator']);
+            \Piwigo\Lang\Translator::get()->restoreFrom($entry['translator']);
         }
     }
 
@@ -503,7 +503,7 @@ final class MailService implements MailerInterface
             $entry = self::$switchLangLanguages[$language];
             Lang::setLangInfo($entry['lang_info']);
             Lang::restore($entry['lang']);
-            \Piwigo\Lang\Translator::set(clone $entry['translator']);
+            \Piwigo\Lang\Translator::get()->restoreFrom($entry['translator']);
         }
         CurrentUser::updateLanguage($language);
     }

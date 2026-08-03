@@ -73,6 +73,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
         private readonly CoreTabs $coreTabs,
         private readonly SessionService $sessionService,
+        private readonly Translator $translator,
     ) {}
 
     private static function imageService(): ImageService
@@ -172,7 +173,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
             \Piwigo\Bootstrap\AdminAccessor::batchManagerUnitPageRenderer()
                 ->render($cat_elements_id, $start);
         } else {
-            new BatchManagerGlobalPageRenderer($this->redirectService, $this->urlService, $this->currentLogger, $this->sessionService)
+            new BatchManagerGlobalPageRenderer($this->redirectService, $this->urlService, $this->currentLogger, $this->sessionService, $this->translator)
                 ->render($cat_elements_id, $start, $duplicates_on_fields);
         }
     }
@@ -205,7 +206,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
                 if (! isset($_SESSION['page_infos']) || ! is_array($_SESSION['page_infos'])) {
                     $_SESSION['page_infos'] = [];
                 }
-                $_SESSION['page_infos'][] = Translator::get()->plural(
+                $_SESSION['page_infos'][] = $this->translator->plural(
                     '%d photo was deleted',
                     '%d photos were deleted',
                     $nb_orphans_deleted
@@ -222,7 +223,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
                 if (! isset($_SESSION['page_infos']) || ! is_array($_SESSION['page_infos'])) {
                     $_SESSION['page_infos'] = [];
                 }
-                $_SESSION['page_infos'][] = Translator::get()->plural(
+                $_SESSION['page_infos'][] = $this->translator->plural(
                     '%d checksums were added',
                     '%d checksums were added',
                     $nb_md5sum_added

@@ -13,6 +13,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
 use Piwigo\Core\PageState;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
@@ -189,7 +190,22 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
     {
         CurrentConfig::setNbmTreatmentTimeoutDefault(-1);
         Kernel::reset();
-        Kernel::boot();
+        // Kernel::reset() discards the real Paths setUp()'s own bare
+        // Kernel::boot() call had silently reused from parent::setUp()'s
+        // own default (idempotency-guarded) boot -- the fresh boot below
+        // must supply Paths explicitly itself, or CurrentPaths::get()
+        // (reached via Lang::load()'s own file lookup right below) throws
+        // "not initialised" against this now-Paths-less container.
+        Kernel::boot(Paths::fromRoot(dirname(__DIR__, 2)));
+        // Kernel::reset() also discards the container-shared Translator
+        // instance setUp()'s own Lang::load('admin.lang') call populated
+        // (singleton/service-locator elimination campaign, Phase 4 --
+        // Translator is now rebuilt fresh per container, not a true
+        // process-global survivor) -- without reloading it here, Lang::t()
+        // calls against the fresh, empty Translator fall back to their raw
+        // untranslated literal instead of the real po wording every
+        // assertion in this file expects.
+        Lang::load('admin.lang');
 
         return PresentationAccessor::notificationByMailSender();
     }

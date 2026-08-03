@@ -39,9 +39,15 @@ use Gettext\Translator as GettextTranslator;
  */
 final class Translator
 {
-    private static ?self $instance = null;
+    /**
+     * Fallback instance for callers reached before/without Kernel::boot()
+     * -- see get()'s own docblock for why this is memoized (unlike most
+     * of this campaign's other shims) rather than a fresh instance per
+     * call.
+     */
+    private static ?self $fallback = null;
 
-    private readonly GettextTranslator $inner;
+    private GettextTranslator $inner;
 
     /**
      * Flat string map, kept in sync by mirror() -- see this class's own
@@ -71,19 +77,66 @@ final class Translator
         $this->inner = clone $this->inner;
     }
 
+    /**
+     * @deprecated transitional bridge for callers not yet converted to
+     * constructor injection -- singleton/service-locator elimination
+     * campaign, Phase 4. Resolves the container-shared instance once
+     * Kernel::boot() has run, same shape as DbCredentials::current()/
+     * SessionService::get(). Unlike those, the Kernel-not-booted fallback
+     * is memoized (not fresh per call): Translator is a "load once, read
+     * many times" class (load() populates $inner/$mirror, translate()/
+     * plural() read them back) -- a fresh instance per call would silently
+     * lose every loaded PO file between calls, exactly the "compute-then-
+     * blind-read-back" corruption shape this campaign's own ProcessCache
+     * execution note already found and fixed once. TranslatorTest.php's
+     * ~30 tests all rely on this memoization (load() then translate() in
+     * the same test, no Kernel::boot() anywhere in the file).
+     */
     public static function get(): self
     {
-        return self::$instance ??= new self();
+        if (\Piwigo\Core\Kernel::isBooted()) {
+            $translator = \Piwigo\Core\Kernel::container()->get(self::class);
+            if (! $translator instanceof self) {
+                throw new \LogicException('Container returned an unexpected type for ' . self::class);
+            }
+
+            return $translator;
+        }
+
+        return self::$fallback ??= new self();
     }
 
-    public static function set(self $translator): void
+    /**
+     * Restores this container-shared instance's translation state from a
+     * snapshot taken via `clone` -- mutates $this in place rather than
+     * replacing which object every other constructor-injected holder's
+     * reference points at (same "mutate the shared instance" reasoning as
+     * DbCredentials::reload()/CurrentUser::updateLanguage()). Replaces the
+     * former `Translator::set(clone $snapshot)` call MailService::
+     * switchLangTo()/switchLangBack() used under the static-singleton
+     * design.
+     */
+    public function restoreFrom(self $snapshot): void
     {
-        self::$instance = $translator;
+        $this->inner = clone $snapshot->inner;
+        $this->mirror = $snapshot->mirror;
     }
 
-    public static function reset(): void
+    /**
+     * Test-only. Clears all loaded translations back to a pristine state --
+     * same observable end state as a fresh `new self()`, but mutates the
+     * shared instance in place instead of replacing which object every
+     * other constructor-injected holder's reference points at (real
+     * callers -- Kernel::container()->get(self::class)->reset() -- need
+     * this so a booted container's shared instance can be reset between
+     * tests, matching FilterState/CoreTabs's own instance reset() precedent;
+     * the get() shim's own Kernel-not-booted fallback branch is covered too
+     * since it returns the same kind of object).
+     */
+    public function reset(): void
     {
-        self::$instance = null;
+        $this->inner = new GettextTranslator();
+        $this->mirror = [];
     }
 
     /**

@@ -58,6 +58,7 @@ final class BatchManagerGlobalPageRenderer
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
         private readonly SessionService $sessionService,
+        private readonly Translator $translator,
     ) {}
 
     private static function tagService(): TagService
@@ -392,7 +393,7 @@ final class BatchManagerGlobalPageRenderer
                         if (! isset($_SESSION['page_infos']) || ! is_array($_SESSION['page_infos'])) {
                             $_SESSION['page_infos'] = [];
                         }
-                        $_SESSION['page_infos'][] = Translator::get()->plural(
+                        $_SESSION['page_infos'][] = $this->translator->plural(
                             '%d photo was deleted',
                             '%d photos were deleted',
                             count($collection)

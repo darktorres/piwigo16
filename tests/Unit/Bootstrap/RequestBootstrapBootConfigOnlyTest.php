@@ -40,7 +40,7 @@ beforeEach(function (): void {
     // entirely and silently pass/fail on stale state.
     CurrentConfigService::reset();
     Lang::reset();
-    Translator::reset();
+    Translator::get()->reset();
     SentrySdk::init();
     putenv('SENTRY_DSN');
 });
@@ -52,7 +52,7 @@ afterEach(function (): void {
     CurrentUser::reset();
     CurrentConfigService::reset();
     Lang::reset();
-    Translator::reset();
+    Translator::get()->reset();
     SentrySdk::init();
     putenv('SENTRY_DSN');
 });
@@ -133,9 +133,23 @@ test('bootConfigOnly attaches Lang globals from whatever the Translator has load
     // genuinely unobservable and not chased here). loadArray() seeds a
     // known string directly, matching Translator's own documented
     // test-helper shape.
-    Translator::get()->loadArray(['bootconfigonly_probe' => 'probe-value']);
+    //
+    // Kernel is booted here, BEFORE bootConfigOnly(), specifically so the
+    // Translator instance seeded below is the SAME one bootConfigOnly()'s
+    // own internal Kernel::boot() call resolves (a no-op against the
+    // idempotency guard once already booted) -- seeding the pre-boot
+    // get() fallback instead would be invisible to Lang::attachGlobals()'s
+    // later read, which always sees the real container-shared instance
+    // once a container exists.
+    $paths = Paths::fromRoot(sys_get_temp_dir());
+    Kernel::boot($paths);
+    $translator = Kernel::container()->get(Translator::class);
+    if (! $translator instanceof Translator) {
+        throw new \LogicException('Container returned an unexpected type for ' . Translator::class);
+    }
+    $translator->loadArray(['bootconfigonly_probe' => 'probe-value']);
 
-    RequestBootstrap::bootConfigOnly(Paths::fromRoot(sys_get_temp_dir()));
+    RequestBootstrap::bootConfigOnly($paths);
 
     expect(Lang::has('bootconfigonly_probe'))->toBeTrue()
         ->and(Lang::snapshot()['bootconfigonly_probe'])->toBe('probe-value');

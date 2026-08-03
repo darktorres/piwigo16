@@ -72,6 +72,7 @@ final class IntroSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
         private readonly FilesystemIntegrityChecker $filesystemIntegrityChecker,
         private readonly SessionService $sessionService,
+        private readonly \Piwigo\Lang\Translator $translator,
     ) {}
 
     #[\Override]
@@ -540,7 +541,7 @@ final class IntroSubController implements AdminSubControllerInterface
 
         // Check integrity
         $integrityRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity::class);
-        $c13y = new CheckIntegrity($integrityRepo);
+        $c13y = new CheckIntegrity($integrityRepo, $this->translator);
         // add internal checks
         new C13yInternal($this->sessionService)
             ->registerHandlers();

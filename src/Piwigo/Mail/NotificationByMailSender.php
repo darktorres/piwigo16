@@ -99,6 +99,7 @@ final class NotificationByMailSender
         private readonly \Piwigo\Users\UserService $userService,
         private readonly \Piwigo\Auth\AuthService $authService,
         private readonly UrlServiceInterface $urlService,
+        private readonly Translator $translator,
     ) {
         $nbmMaxTreatmentTimeoutPercent = \Piwigo\Config\CurrentConfig::nbmMaxTreatmentTimeoutPercent();
 
@@ -251,14 +252,14 @@ final class NotificationByMailSender
     public function displayCounterInfo(): void
     {
         if ($this->errorOnMailCount !== 0) {
-            \Piwigo\Core\PageState::current()->addError(Translator::get()->plural(
+            \Piwigo\Core\PageState::current()->addError($this->translator->plural(
                 '%d mail was not sent.',
                 '%d mails were not sent.',
                 $this->errorOnMailCount
             ));
 
             if ($this->sentMailCount !== 0) {
-                \Piwigo\Core\PageState::current()->addInfo(Translator::get()->plural(
+                \Piwigo\Core\PageState::current()->addInfo($this->translator->plural(
                     '%d mail was sent.',
                     '%d mails were sent.',
                     $this->sentMailCount
@@ -268,7 +269,7 @@ final class NotificationByMailSender
             if ($this->sentMailCount === 0) {
                 \Piwigo\Core\PageState::current()->addInfo(Lang::t('No mail to send.'));
             } else {
-                \Piwigo\Core\PageState::current()->addInfo(Translator::get()->plural(
+                \Piwigo\Core\PageState::current()->addInfo($this->translator->plural(
                     '%d mail was sent.',
                     '%d mails were sent.',
                     $this->sentMailCount
@@ -430,14 +431,14 @@ final class NotificationByMailSender
             );
         }
 
-        \Piwigo\Core\PageState::current()->addInfo(Translator::get()->plural(
+        \Piwigo\Core\PageState::current()->addInfo($this->translator->plural(
             '%d user was updated.',
             '%d users were updated.',
             $updatedDataCount
         ));
 
         if ($errorOnUpdatedDataCount !== 0) {
-            \Piwigo\Core\PageState::current()->addError(Translator::get()->plural(
+            \Piwigo\Core\PageState::current()->addError($this->translator->plural(
                 '%d user was not updated.',
                 '%d users were not updated.',
                 $errorOnUpdatedDataCount

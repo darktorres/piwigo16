@@ -27,6 +27,7 @@ final class AlbumNotificationPageRenderer
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
+        private readonly Translator $translator,
     ) {}
 
     /**
@@ -184,7 +185,7 @@ final class AlbumNotificationPageRenderer
                         ->switchLangBack();
                 }
 
-                $message = Translator::get()->plural('%d mail was sent.', '%d mails were sent.', count($users));
+                $message = $this->translator->plural('%d mail was sent.', '%d mails were sent.', count($users));
                 $message .= ' (' . implode(', ', $usernames) . ')';
 
                 $template->assign(

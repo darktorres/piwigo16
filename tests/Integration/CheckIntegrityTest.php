@@ -20,6 +20,7 @@ use Piwigo\Core\PageState;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\Tables;
+use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Template;
@@ -129,7 +130,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
     private function newCheckIntegrity(): CheckIntegrity
     {
-        return new CheckIntegrity($this->buildIntegrityRepo());
+        return new CheckIntegrity($this->buildIntegrityRepo(), new Translator());
     }
 
     public function test_check_reports_no_header_note_when_zero_anomalies_are_found(): void

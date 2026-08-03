@@ -681,7 +681,7 @@ final class RequestBootstrap
         if (\Piwigo\Config\CurrentConfig::filterPages() !== [] and (bool) \Piwigo\Core\PageFilterHelper::getFilterPageValue('used')) {
             // Formerly a conditional `include PHPWG_ROOT_PATH .
             // 'include/filter.inc.php';` (deleted, P23 sub-batch 8f-5).
-            new FilterService(self::filterState(), self::sessionService(), $conn)
+            new FilterService(self::filterState(), self::sessionService(), self::translator(), $conn)
                 ->initializeFromRequest();
         } else {
             self::filterState()->set(false);
@@ -879,6 +879,21 @@ final class RequestBootstrap
         }
 
         return $filterState;
+    }
+
+    /**
+     * Resolves the container-shared instance for this method's own local
+     * `new FilterService(...)` construction (singleton/service-locator
+     * elimination campaign, Phase 4).
+     */
+    private static function translator(): \Piwigo\Lang\Translator
+    {
+        $translator = Kernel::container()->get(\Piwigo\Lang\Translator::class);
+        if (! $translator instanceof \Piwigo\Lang\Translator) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Lang\Translator::class);
+        }
+
+        return $translator;
     }
 
     /**

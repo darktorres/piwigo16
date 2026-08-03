@@ -7,6 +7,7 @@ use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity;
 use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyRepository;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Lang\Translator;
 
 // add_anomaly()/get_htlm_links_more_info() are CheckIntegrity's own pure
 // data-structure logic -- no event/template dependency at all -- but since
@@ -24,7 +25,7 @@ function checkIntegrityAddAnomalyNew(): CheckIntegrity
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(IntegrityIgnoredAnomalyEntity::class);
     expect($repo)->toBeInstanceOf(IntegrityIgnoredAnomalyRepository::class);
 
-    return new CheckIntegrity($repo);
+    return new CheckIntegrity($repo, new Translator());
 }
 
 test('add_anomaly records a new anomaly with is_callable computed from a real function name', function (): void {

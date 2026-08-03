@@ -60,6 +60,7 @@ final class MaintenanceActionDispatcher
         private readonly ConfigService $configService,
         private readonly FilesystemIntegrityChecker $filesystemIntegrityChecker,
         private readonly SessionService $sessionService,
+        private readonly \Piwigo\Lang\Translator $translator,
         private readonly ?\Piwigo\Cache\PersistentCache $persistentCache = null,
     ) {}
 
@@ -182,7 +183,7 @@ final class MaintenanceActionDispatcher
             case 'c13y':
 
                 $integrityRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity::class);
-                $c13y = new CheckIntegrity($integrityRepo);
+                $c13y = new CheckIntegrity($integrityRepo, $this->translator);
                 $c13y->maintenance();
                 \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', Lang::t('Reinitialize check integrity'), Lang::t('action successfully performed.')));
                 break;

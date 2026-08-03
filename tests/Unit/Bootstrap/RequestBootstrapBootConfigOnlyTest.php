@@ -30,7 +30,6 @@ use Sentry\SentrySdk;
  */
 beforeEach(function (): void {
     Kernel::reset();
-    ServerTiming::reset();
     CurrentConfig::reset();
     CurrentUser::reset();
     // Legacy Coupling Retirement Phase 8, 8d: bootConfigOnly() now reuses
@@ -47,7 +46,6 @@ beforeEach(function (): void {
 
 afterEach(function (): void {
     Kernel::reset();
-    ServerTiming::reset();
     CurrentConfig::reset();
     CurrentUser::reset();
     CurrentConfigService::reset();
@@ -65,8 +63,13 @@ test('bootConfigOnly boots the Kernel', function (): void {
 test('bootConfigOnly records a boot timing', function (): void {
     RequestBootstrap::bootConfigOnly(Paths::fromRoot(sys_get_temp_dir()));
 
-    expect(ServerTiming::all())->toHaveKey('boot');
-    expect(ServerTiming::all()['boot'])->toBeGreaterThanOrEqual(0.0);
+    $timing = Kernel::container()->get(ServerTiming::class);
+    if (! $timing instanceof ServerTiming) {
+        throw new \LogicException('Container returned an unexpected type for ' . ServerTiming::class);
+    }
+
+    expect($timing->all())->toHaveKey('boot');
+    expect($timing->all()['boot'])->toBeGreaterThanOrEqual(0.0);
 });
 
 test('bootConfigOnly seeds CurrentConfig from its own property defaults (P13)', function (): void {

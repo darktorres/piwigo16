@@ -4,30 +4,30 @@ declare(strict_types=1);
 
 use Piwigo\Core\ServerTiming;
 
-beforeEach(function (): void {
-    ServerTiming::reset();
-});
-
-afterEach(function (): void {
-    ServerTiming::reset();
-});
+// Container-shared instance (singleton/service-locator elimination
+// campaign, Phase 3) -- each test constructs its own fresh instance
+// directly; no reset() needed.
 
 test('all is empty before anything starts', function (): void {
-    expect(ServerTiming::all())->toBe([]);
+    $timing = new ServerTiming();
+
+    expect($timing->all())->toBe([]);
 });
 
 test('a started-but-not-stopped timing does not appear in all()', function (): void {
-    ServerTiming::start('db');
+    $timing = new ServerTiming();
+    $timing->start('db');
 
-    expect(ServerTiming::all())->toBe([]);
+    expect($timing->all())->toBe([]);
 });
 
 test('stop records a non-negative duration under the started name', function (): void {
-    ServerTiming::start('db');
-    ServerTiming::stop('db');
+    $timing = new ServerTiming();
+    $timing->start('db');
+    $timing->stop('db');
 
-    expect(ServerTiming::all())->toHaveKey('db');
-    expect(ServerTiming::all()['db'])->toBeGreaterThanOrEqual(0.0);
+    expect($timing->all())->toHaveKey('db');
+    expect($timing->all()['db'])->toBeGreaterThanOrEqual(0.0);
 });
 
 test('stop records a duration in milliseconds close to the real elapsed wall-clock time', function (): void {
@@ -41,11 +41,12 @@ test('stop records a duration in milliseconds close to the real elapsed wall-clo
     // still many-orders-of-magnitude-tighter range than either mutant
     // could ever land in proves the arithmetic shape itself, not just
     // "non-negative".
-    ServerTiming::start('db');
+    $timing = new ServerTiming();
+    $timing->start('db');
     usleep(50_000);
-    ServerTiming::stop('db');
+    $timing->stop('db');
 
-    expect(ServerTiming::all()['db'] ?? null)->toBeGreaterThan(10.0)
+    expect($timing->all()['db'] ?? null)->toBeGreaterThan(10.0)
         ->toBeLessThan(1000.0);
 });
 
@@ -64,25 +65,43 @@ test('stop records a duration in milliseconds close to the real elapsed wall-clo
  */
 
 test('stop on a name that was never started is a no-op', function (): void {
-    ServerTiming::stop('never-started');
+    $timing = new ServerTiming();
+    $timing->stop('never-started');
 
-    expect(ServerTiming::all())->toBe([]);
+    expect($timing->all())->toBe([]);
 });
 
 test('multiple names are tracked independently', function (): void {
-    ServerTiming::start('db');
-    ServerTiming::start('render');
-    ServerTiming::stop('db');
-    ServerTiming::stop('render');
+    $timing = new ServerTiming();
+    $timing->start('db');
+    $timing->start('render');
+    $timing->stop('db');
+    $timing->stop('render');
 
-    expect(array_keys(ServerTiming::all()))->toBe(['db', 'render']);
+    expect(array_keys($timing->all()))->toBe(['db', 'render']);
 });
 
 test('reset clears all recorded timings', function (): void {
-    ServerTiming::start('db');
-    ServerTiming::stop('db');
+    $timing = new ServerTiming();
+    $timing->start('db');
+    $timing->stop('db');
 
-    ServerTiming::reset();
+    $timing->reset();
 
-    expect(ServerTiming::all())->toBe([]);
+    expect($timing->all())->toBe([]);
+});
+
+test('start accepts an already-captured timestamp instead of capturing its own', function (): void {
+    // The one real production caller (RequestBootstrap::configure(),
+    // seeding the 'boot' timer from $requestStart -- captured before
+    // Kernel::boot() runs, before a container-shared instance exists to
+    // write into) needs this: an explicit $at must be used verbatim,
+    // not overridden by a fresh microtime(true) read.
+    $timing = new ServerTiming();
+    $capturedEarlier = microtime(true) - 1.0;
+
+    $timing->start('boot', $capturedEarlier);
+    $timing->stop('boot');
+
+    expect($timing->all()['boot'])->toBeGreaterThanOrEqual(1000.0);
 });

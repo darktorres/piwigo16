@@ -911,18 +911,6 @@ test('RequestMountDepth::currentStatic() transitional shim has a shrinking, know
     expect(describeCallSites($disallowed))->toBe([]);
 });
 
-test('ServerTiming::reset() is only called from tests/', function (): void {
-    $repoRoot = __DIR__ . '/../..';
-
-    $hits = [
-        ...findCallSites($repoRoot . '/src/Piwigo', 'ServerTiming::reset('),
-        ...findCallSitesInRootPhpFiles($repoRoot, 'ServerTiming::reset('),
-        ...findCallSitesInBinFiles($repoRoot, 'ServerTiming::reset('),
-    ];
-
-    expect(describeCallSites($hits))->toBe([]);
-});
-
 test('WsContext::isActiveStatic() transitional shim has a shrinking, known allow-list', function (): void {
     // Singleton/service-locator elimination campaign, Phase 3:
     // Piwigo\Admin\PluginMaintain (a base class extended by every

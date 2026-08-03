@@ -22,20 +22,19 @@ function serverTimingPassthroughHandler(): RequestHandlerInterface
 }
 
 beforeEach(function (): void {
-    ServerTiming::reset();
     putenv('SERVER_TIMING_ENABLED');
 });
 
 afterEach(function (): void {
-    ServerTiming::reset();
     putenv('SERVER_TIMING_ENABLED');
 });
 
 test('no header when disabled', function (): void {
-    ServerTiming::start('boot');
-    ServerTiming::stop('boot');
+    $timing = new ServerTiming();
+    $timing->start('boot');
+    $timing->stop('boot');
 
-    $response = new ServerTimingMiddleware()->process(new ServerRequest('GET', '/'), serverTimingPassthroughHandler());
+    $response = new ServerTimingMiddleware($timing)->process(new ServerRequest('GET', '/'), serverTimingPassthroughHandler());
 
     expect($response->hasHeader('Server-Timing'))->toBeFalse();
 });
@@ -46,10 +45,11 @@ test('no header when explicitly set to an empty string, not just when unset', fu
     // branch (a genuinely unset env var) -- an explicitly empty (but
     // set) value is a different code path through the same guard.
     putenv('SERVER_TIMING_ENABLED=');
-    ServerTiming::start('boot');
-    ServerTiming::stop('boot');
+    $timing = new ServerTiming();
+    $timing->start('boot');
+    $timing->stop('boot');
 
-    $response = new ServerTimingMiddleware()->process(new ServerRequest('GET', '/'), serverTimingPassthroughHandler());
+    $response = new ServerTimingMiddleware($timing)->process(new ServerRequest('GET', '/'), serverTimingPassthroughHandler());
 
     expect($response->hasHeader('Server-Timing'))->toBeFalse();
 });
@@ -57,17 +57,18 @@ test('no header when explicitly set to an empty string, not just when unset', fu
 test('no header when enabled but nothing was recorded', function (): void {
     putenv('SERVER_TIMING_ENABLED=1');
 
-    $response = new ServerTimingMiddleware()->process(new ServerRequest('GET', '/'), serverTimingPassthroughHandler());
+    $response = new ServerTimingMiddleware(new ServerTiming())->process(new ServerRequest('GET', '/'), serverTimingPassthroughHandler());
 
     expect($response->hasHeader('Server-Timing'))->toBeFalse();
 });
 
 test('header lists recorded timings when enabled', function (): void {
     putenv('SERVER_TIMING_ENABLED=1');
-    ServerTiming::start('boot');
-    ServerTiming::stop('boot');
+    $timing = new ServerTiming();
+    $timing->start('boot');
+    $timing->stop('boot');
 
-    $response = new ServerTimingMiddleware()->process(new ServerRequest('GET', '/'), serverTimingPassthroughHandler());
+    $response = new ServerTimingMiddleware($timing)->process(new ServerRequest('GET', '/'), serverTimingPassthroughHandler());
 
     expect($response->getHeaderLine('Server-Timing'))->toStartWith('boot;dur=');
 });

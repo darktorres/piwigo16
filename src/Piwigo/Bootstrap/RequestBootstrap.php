@@ -131,7 +131,9 @@ final class RequestBootstrap
      *
      * Boot sequence consolidation (Config generic-accessor removal
      * follow-up): SentryBootstrap::init()/ServerTiming's own 'boot' timer
-     * now bracket this method's entire body -- formerly they only
+     * (seeded from `$t2`, captured right here, and stopped at both this
+     * method's own exit points below) now bracket this method's entire
+     * body -- formerly they only
      * bracketed the former Piwigo\Bootstrap\CommonBootstrap::run() (a
      * second call every `public/*.php` root file made right after this
      * one), which on the real HTTP path only ever repeated
@@ -156,12 +158,22 @@ final class RequestBootstrap
      * own build() method, replacing those 3 classes' former pre-boot
      * `X::mark()`/`X::set()`
      * calls (there is no container yet at the point those used to run).
+     *
+     * `ServerTiming` (also converted in Phase 3, moved from Phase 1 for the
+     * identical pre-boot entanglement, but only actually converted once the
+     * above trio's own work landed) needed a different mechanism, not the
+     * container-build-time binding the trio uses: its 'boot' timer must
+     * start ticking at the exact instant this method begins, before
+     * `configure()`'s own `Kernel::boot()` call runs -- `$t2` below captures
+     * that instant as a plain local variable (same idea as
+     * `PageState::requestStart`'s own pre-autoload capture), and
+     * `configure()` seeds the container-shared `ServerTiming` instance with
+     * it immediately after `Kernel::boot()` returns.
      */
     public static function bootEntryPoint(Paths $paths, int $mountDepth = 0, bool $isWs = false, bool $isAdmin = false): void
     {
         CoverageCollector::registerIfActive($paths);
         SentryBootstrap::init();
-        ServerTiming::start('boot');
 
         $t2 = microtime(true);
 
@@ -171,13 +183,13 @@ final class RequestBootstrap
             self::connect();
             self::finalize();
         } catch (\Piwigo\Http\ResponseReadyException $e) {
-            ServerTiming::stop('boot');
+            self::serverTiming()->stop('boot');
             new \Piwigo\Http\ResponseEmitter()
                 ->emit($e->response());
             exit;
         }
 
-        ServerTiming::stop('boot');
+        self::serverTiming()->stop('boot');
     }
 
     /**
@@ -200,11 +212,12 @@ final class RequestBootstrap
     public static function bootConfigOnly(Paths $paths): void
     {
         SentryBootstrap::init();
-        ServerTiming::start('boot');
+        $bootStart = microtime(true);
 
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         Kernel::boot($paths);
+        self::serverTiming()->start('boot', $bootStart);
         if (\Piwigo\Config\CurrentConfigService::isSet()) {
             $configService = \Piwigo\Config\CurrentConfigService::get();
         } else {
@@ -219,7 +232,7 @@ final class RequestBootstrap
         self::pageState();
         Lang::attachGlobals();
 
-        ServerTiming::stop('boot');
+        self::serverTiming()->stop('boot');
     }
 
     /**
@@ -250,6 +263,13 @@ final class RequestBootstrap
     public static function configure(Paths $paths, float $requestStart, int $mountDepth = 0, bool $isWs = false, bool $isAdmin = false): void
     {
         Kernel::boot($paths, $mountDepth, $isWs, $isAdmin);
+
+        // Seeds the 'boot' timer with the same instant $requestStart itself
+        // captures (both taken back-to-back, before this method's own
+        // Kernel::boot() call above -- see bootEntryPoint()'s own docblock)
+        // -- there is no container-shared ServerTiming instance to write
+        // into any earlier than this.
+        self::serverTiming()->start('boot', $requestStart);
 
         // Legacy Coupling Retirement Phase 8, 8h: the true start of each
         // request -- resets ActivityService::record()'s "was a real user
@@ -970,6 +990,22 @@ final class RequestBootstrap
         }
 
         return $errorCollector;
+    }
+
+    /**
+     * Resolves the container-shared instance so that this method's own
+     * `start()`/`stop()` writes are visible to every other consumer holding
+     * the same shared instance (singleton/service-locator elimination
+     * campaign, Phase 3).
+     */
+    private static function serverTiming(): ServerTiming
+    {
+        $serverTiming = Kernel::container()->get(ServerTiming::class);
+        if (! $serverTiming instanceof ServerTiming) {
+            throw new \LogicException('Container returned an unexpected type for ' . ServerTiming::class);
+        }
+
+        return $serverTiming;
     }
 
     /**

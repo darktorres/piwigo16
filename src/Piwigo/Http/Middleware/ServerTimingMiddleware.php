@@ -19,6 +19,10 @@ use Psr\Http\Server\RequestHandlerInterface;
  */
 final class ServerTimingMiddleware implements MiddlewareInterface
 {
+    public function __construct(
+        private readonly ServerTiming $serverTiming
+    ) {}
+
     #[\Override]
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
@@ -30,7 +34,7 @@ final class ServerTimingMiddleware implements MiddlewareInterface
         }
 
         $entries = [];
-        foreach (ServerTiming::all() as $name => $durationMs) {
+        foreach ($this->serverTiming->all() as $name => $durationMs) {
             $entries[] = sprintf('%s;dur=%.2f', $name, $durationMs);
         }
 

@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Piwigo\Db\DbCredentials;
 use Piwigo\Db\Tables;
 
 // tests/bootstrap.php loads real PIWIGO_DB_* vars for the whole Pest
@@ -16,12 +15,10 @@ beforeEach(function () use (&$originalPrefix): void {
     $value = getenv('PIWIGO_DB_PREFIX');
     $originalPrefix = $value === false ? null : $value;
     putenv('PIWIGO_DB_PREFIX');
-    DbCredentials::reset();
 });
 
 afterEach(function () use (&$originalPrefix): void {
     putenv($originalPrefix === null ? 'PIWIGO_DB_PREFIX' : 'PIWIGO_DB_PREFIX=' . $originalPrefix);
-    DbCredentials::reset();
 });
 
 test('every static method returns the db prefix plus its snake_case table name', function (): void {
@@ -44,7 +41,6 @@ test('every static method returns the db prefix plus its snake_case table name',
 
 test('table names respect a custom db prefix', function (): void {
     putenv('PIWIGO_DB_PREFIX=custom_');
-    DbCredentials::reset();
 
     expect(Tables::images())->toBe('custom_images')
         ->and(Tables::userInfos())->toBe('custom_user_infos');

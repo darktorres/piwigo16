@@ -82,7 +82,7 @@ final class RequestBootstrapBootEntryPointTest extends IntegrationTestCase
         // Defensive: force a fresh derive from the current (correct)
         // process env, immune to any bad credential another Integration
         // test in this shared process seeded and failed to restore.
-        DbCredentials::reset();
+        DbCredentials::current()->reload();
 
         unset($_SERVER['PATH_INFO']);
     }
@@ -90,8 +90,7 @@ final class RequestBootstrapBootEntryPointTest extends IntegrationTestCase
     #[\Override]
     protected function tearDown(): void
     {
-        DbCredentials::seed($this->originalDbEnv);
-        DbCredentials::reset();
+        DbCredentials::current()->seed($this->originalDbEnv);
 
         // configure() -> connect()'s own ErrorCollector::installIfConfigured()
         // runs unconditionally before the \LogicException fires -- restore

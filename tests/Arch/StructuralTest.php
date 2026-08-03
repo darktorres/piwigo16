@@ -236,6 +236,7 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
         '/src/Piwigo/Validation/InputValidator.php',
         '/src/Piwigo/Core/FilesystemHelper.php',
         '/src/Piwigo/Core/CurrentPaths.php',
+        '/src/Piwigo/Db/DbCredentials.php',
     ];
 
     $hits = [
@@ -395,11 +396,10 @@ test('DeploymentPolicy::set()/reset() are only called from tests/', function ():
  * exceptions" claim, which predates 2 of these classes entirely) --
  * DbCredentials::reset() turned out to have a real production caller
  * (Admin\Install\InstallWizard::performInstall(), reloading credentials
- * right after writing a fresh .env) and is deliberately excluded here,
- * its own docblock corrected instead of arch-tested. CurrentPaths no
- * longer has a reset() at all (singleton/service-locator elimination
- * campaign, Phase 3 -- see its own, differently-shaped
- * 'CurrentPaths::get()/isSet() transitional bridge' allow-list test
+ * right after writing a fresh .env) -- both DbCredentials and CurrentPaths
+ * no longer have a reset() at all (singleton/service-locator elimination
+ * campaign, Phase 3 -- see their own, differently-shaped
+ * 'X::get()/isSet()'/'X::current()' transitional bridge allow-list tests
  * further below instead).
  */
 test('AdminContext::isActiveStatic() transitional shim has a shrinking, known allow-list', function (): void {
@@ -559,6 +559,38 @@ test('CurrentPaths::get()/isSet() transitional bridge has a shrinking, known all
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'CurrentPaths::');
+
+    $disallowed = array_values(array_filter(
+        $hits,
+        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
+    ));
+
+    expect(describeCallSites($disallowed))->toBe([]);
+});
+
+test('DbCredentials::current() transitional bridge has a shrinking, known allow-list', function (): void {
+    // Singleton/service-locator elimination campaign, Phase 3: same shape
+    // as CurrentPaths above (no Static suffix -- there is no competing
+    // real instance method to disambiguate from, set()/reset() are gone
+    // entirely). Tables.php's own 39 static methods are the dominant real
+    // caller (one file, not 39 allow-list entries -- this test checks file
+    // paths), a pure static-utility class with no instance context to
+    // receive constructor injection through, matching FilesystemHelper's
+    // own "no wrapper needed" precedent. DbConnection.php/
+    // EntityManagerFactory.php are the same shape. RequestBootstrap.php is
+    // inside Bootstrap/ (already allowed direct Kernel::container() access)
+    // but uses this shim for style consistency with its own neighboring
+    // DbConnection::build() call.
+    $repoRoot = __DIR__ . '/../..';
+
+    $allowedFiles = [
+        '/src/Piwigo/Bootstrap/RequestBootstrap.php',
+        '/src/Piwigo/Db/DbConnection.php',
+        '/src/Piwigo/Db/EntityManagerFactory.php',
+        '/src/Piwigo/Db/Tables.php',
+    ];
+
+    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'DbCredentials::current(');
 
     $disallowed = array_values(array_filter(
         $hits,

@@ -46,7 +46,7 @@ final class MaintenancePurgeSessionsCommandTest extends IntegrationTestCase
             ->executeStatement();
 
         try {
-            $command = new MaintenancePurgeSessionsCommand(new DbMaintenanceRepository(\Piwigo\Db\EntityManagerFactory::build($conn)));
+            $command = new MaintenancePurgeSessionsCommand(new DbMaintenanceRepository(\Piwigo\Db\EntityManagerFactory::build($conn), \Piwigo\Db\DbCredentials::current()));
             $tester = new CommandTester($command);
 
             $exitCode = $tester->execute([]);

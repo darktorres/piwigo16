@@ -18,6 +18,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Session\SessionService;
+use Piwigo\Tests\Support\KernelContainerOverride;
 
 /**
  * InstallWizard is install.php's whole orchestration, ported verbatim from
@@ -39,7 +40,7 @@ use Piwigo\Session\SessionService;
  *    never the shared PIWIGO_DB_BASE Integration-test database every other
  *    Integration test file assumes is already fixture-loaded.
  *
- * DbCredentials::seed()/reset() and $_GET/$_POST/$_SERVER mutations are
+ * DbCredentials::seed() and $_GET/$_POST/$_SERVER mutations are
  * real process-wide/superglobal state -- every test snapshots and restores
  * them, the same reasoning as InstallServiceTest's own $originalDbEnv.
  * Likewise, this whole test *process* runs with $_SERVER['HTTP_X_PIWIGO_ENV']
@@ -196,8 +197,7 @@ final class InstallWizardTest extends IntegrationTestCase
         $_GET = $this->originalGet;
         $_POST = $this->originalPost;
         $_SERVER = $this->originalServer;
-        DbCredentials::seed($this->originalDbEnv);
-        DbCredentials::reset();
+        DbCredentials::current()->seed($this->originalDbEnv);
         if ($this->installBootstrapBooted) {
             restore_error_handler();
             $errorCollector = Kernel::container()->get(ErrorCollector::class);
@@ -300,12 +300,13 @@ final class InstallWizardTest extends IntegrationTestCase
         $_SERVER['SCRIPT_NAME'] = '/install.php';
         unset($_SERVER['HTTPS']);
 
-        DbCredentials::seed([
+        $dbCredentials = DbCredentials::current();
+        $dbCredentials->seed([
             'PIWIGO_DB_PREFIX' => $prefix,
         ]);
         \Piwigo\Template\ScriptLoader::setUrlService(new \Piwigo\Url\UrlService(new \Piwigo\Html\HtmlService()));
 
-        $wizard = new InstallWizard($prefix, $this->paths);
+        $wizard = new InstallWizard($prefix, $this->paths, $dbCredentials);
         $wizard->boot();
 
         return $wizard;
@@ -352,22 +353,31 @@ final class InstallWizardTest extends IntegrationTestCase
 
     public function test_constructor_reads_the_default_data_location_when_the_local_override_sets_nothing(): void
     {
-        Kernel::boot($this->paths);
+        // Kernel is already booted (parent::setUp()'s own default real-repo
+        // root) by this point -- a bare Kernel::boot($this->paths) would
+        // silently no-op against its own idempotency guard, and the
+        // constructor's own LegacyFileConf::read() (a static utility with
+        // no Paths of its own to receive, unlike InstallWizard's own
+        // constructor-injected $this->paths) would read the wrong root via
+        // the CurrentPaths::get() shim. KernelContainerOverride::with()
+        // rebinds Paths::class for just this test's own scope instead.
+        KernelContainerOverride::with([Paths::class => $this->paths], function (): void {
+            $wizard = new InstallWizard('itest_', $this->paths, DbCredentials::current());
 
-        $wizard = new InstallWizard('itest_', $this->paths);
-
-        self::assertSame('_data/', $this->reflectPrivate($wizard, 'confDataLocation'));
+            self::assertSame('_data/', $this->reflectPrivate($wizard, 'confDataLocation'));
+        });
     }
 
     public function test_constructor_throws_when_a_local_override_sets_a_non_string_data_location(): void
     {
-        Kernel::boot($this->paths);
         file_put_contents($this->paths->local . 'config/config.inc.php', "<?php\n\$conf['data_location'] = 12345;\n");
 
         $this->expectException(\LogicException::class);
         $this->expectExceptionMessage("Invalid \$conf['data_location'] configuration: expected a string.");
 
-        new InstallWizard('itest_', $this->paths);
+        KernelContainerOverride::with([Paths::class => $this->paths], function (): void {
+            new InstallWizard('itest_', $this->paths, DbCredentials::current());
+        });
     }
 
     // --------------------------------------------------------- analyzeForm()

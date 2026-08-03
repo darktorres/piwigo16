@@ -57,7 +57,7 @@ final class EntityManagerFactory
 
         $em = new EntityManager($conn ?? DbConnection::build(), $config);
         $em->getEventManager()
-            ->addEventListener(Events::loadClassMetadata, new TablePrefixListener());
+            ->addEventListener(Events::loadClassMetadata, new TablePrefixListener(DbCredentials::current()));
 
         return $em;
     }

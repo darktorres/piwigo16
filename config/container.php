@@ -41,6 +41,7 @@ use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WebmasterMailProviderInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\DbCredentials;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Feed\FeedEntity;
 use Piwigo\Feed\FeedRepository;
@@ -215,6 +216,15 @@ return [
     // hold in a shared mutable instance, same "delete the facade, use a
     // plain factory" outcome as the Phase 0 pilot (CurrentPersistentCache).
     StorageRegistry::class => factory(static fn (): StorageRegistry => StorageRegistry::fromConfig(dirname(__DIR__) . '/config/storage.php')),
+
+    // Factory binding (singleton/service-locator elimination campaign,
+    // Phase 3) -- replaces Piwigo\Db\DbCredentials's former self-managed
+    // static memo (current()/reset()/seed()). Unlike StorageRegistry
+    // above, this value genuinely can change mid-request (InstallWizard's
+    // own seed() call, see that class's own docblock), so the shared
+    // instance is mutable (reload()/seed() mutate it in place) rather than
+    // deleted outright.
+    DbCredentials::class => factory(static fn (): DbCredentials => DbCredentials::fromEnv()),
 
     // Non-obvious construction (handler + formatter wiring). Monolog "app"
     // channel only -- the "security" channel (a named $securityLogger

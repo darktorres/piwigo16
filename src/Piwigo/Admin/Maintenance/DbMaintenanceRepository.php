@@ -27,6 +27,7 @@ final readonly class DbMaintenanceRepository
 {
     public function __construct(
         private EntityManagerInterface $em,
+        private DbCredentials $dbCredentials,
     ) {}
 
     public function purgeHistoryDetail(): void
@@ -135,7 +136,7 @@ final readonly class DbMaintenanceRepository
         // placeholders in any dialect), so there's no QueryBuilder/bound-
         // parameter form to convert to here regardless.
         $conn = $this->em->getConnection();
-        $prefix = DbCredentials::current()->prefix;
+        $prefix = $this->dbCredentials->prefix;
         $allTables = array_map(
             static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
             $conn->fetchFirstColumn(<<<SQL

@@ -50,7 +50,7 @@ final class MaintenanceOrphanTagsCommandTest extends IntegrationTestCase
             ->executeStatement();
 
         try {
-            $command = new MaintenanceOrphanTagsCommand(new DbMaintenanceRepository(\Piwigo\Db\EntityManagerFactory::build($conn)));
+            $command = new MaintenanceOrphanTagsCommand(new DbMaintenanceRepository(\Piwigo\Db\EntityManagerFactory::build($conn), \Piwigo\Db\DbCredentials::current()));
             $tester = new CommandTester($command);
 
             $exitCode = $tester->execute([]);

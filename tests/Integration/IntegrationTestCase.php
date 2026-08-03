@@ -13,6 +13,7 @@ use Piwigo\Config\ConfigRepository;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\DbCredentials;
 use Piwigo\Db\Tables;
 use Piwigo\Db\TablePrefixListener;
 
@@ -252,7 +253,7 @@ abstract class IntegrationTestCase extends TestCase
         $ormConfig = ORMSetup::createAttributeMetadataConfig([dirname(__DIR__, 2) . '/src/Piwigo'], isDevMode: true);
         $ormConfig->enableNativeLazyObjects(true);
         $em = new EntityManager($conn, $ormConfig);
-        $em->getEventManager()->addEventListener(Events::loadClassMetadata, new TablePrefixListener());
+        $em->getEventManager()->addEventListener(Events::loadClassMetadata, new TablePrefixListener(DbCredentials::current()));
         $this->configEntityManager = $em;
 
         $repo = $em->getRepository(ConfigEntry::class);

@@ -56,7 +56,8 @@ if (isset($_POST['install'])) {
 // directly here, or every Tables::*() call downstream would fall back to
 // whatever's already there (a coincidental PIWIGO_DB_PREFIX env var, or
 // the 'piwigo_' default) instead of the real chosen prefix.
-DbCredentials::seed([
+$dbCredentials = DbCredentials::current();
+$dbCredentials->seed([
     'PIWIGO_DB_PREFIX' => $prefixeTable,
 ]);
 
@@ -75,7 +76,7 @@ DbCredentials::seed([
 \Piwigo\Template\ScriptLoader::setUrlService(new \Piwigo\Url\UrlService(new \Piwigo\Html\HtmlService()));
 
 // ---------------------------------------------------------------- orchestration
-$wizard = new InstallWizard($prefixeTable, $paths);
+$wizard = new InstallWizard($prefixeTable, $paths, $dbCredentials);
 
 // Found live while verifying Part II's public/ relocation, unrelated to the
 // move itself: InstallWizard::boot()'s own "PHP extension mysqli is not

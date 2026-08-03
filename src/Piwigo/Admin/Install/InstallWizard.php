@@ -31,6 +31,7 @@ use Piwigo\Core\Logger;
 use Piwigo\Core\Paths;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\DbCredentials;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
@@ -139,6 +140,7 @@ final class InstallWizard
     public function __construct(
         private readonly string $prefixeTable,
         private readonly Paths $paths,
+        private readonly DbCredentials $dbCredentials,
     ) {
         $conf_data_location = LegacyFileConf::read()['data_location'] ?? null;
         if (! is_string($conf_data_location)) {
@@ -210,7 +212,7 @@ final class InstallWizard
         // from InstallService::activateCoreThemes() during step-2 theme
         // activation, fatals with "Access denied for user ''@'localhost'"
         // without this.
-        \Piwigo\Db\DbCredentials::seed([
+        $this->dbCredentials->seed([
             'PIWIGO_DB_HOST' => $this->dbhost,
             'PIWIGO_DB_USER' => $this->dbuser,
             'PIWIGO_DB_PASSWORD' => $this->dbpasswd,
@@ -257,7 +259,7 @@ final class InstallWizard
         \Piwigo\Bootstrap\InstallBootstrap::currentLogger()->set(new Logger([
             'directory' => $this->paths->root . CurrentConfig::dataLocation() . CurrentConfig::logDir(),
             'severity' => CurrentConfig::logLevel(),
-            'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . \Piwigo\Db\DbCredentials::current()->password) . '.txt',
+            'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . $this->dbCredentials->password) . '.txt',
             'globPattern' => 'log_*.txt',
             'archiveDays' => CurrentConfig::logArchiveDays(),
         ]));
@@ -445,7 +447,7 @@ final class InstallWizard
         if (! Env::mergeIntoEnvFile($env_file, $env_values)) {
             $this->errors[] = 'Could not write ' . $env_file . ' — check filesystem permissions.';
         }
-        \Piwigo\Db\DbCredentials::reset();
+        $this->dbCredentials->reload();
 
         // Also write legacy database.inc.php in prod mode so upgrade.php and other
         // not-yet-migrated scripts keep working (see docs/PLAN.md P13).

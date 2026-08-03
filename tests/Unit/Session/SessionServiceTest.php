@@ -6,7 +6,6 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\Kernel;
-use Piwigo\Db\DbCredentials;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionRepository;
@@ -24,7 +23,6 @@ function makeSessionService(): SessionService
     CurrentConfig::reset();
     ConfigLoader::applyDefaults();
     putenv('PIWIGO_DB_HOST=unit-test-should-never-connect.invalid');
-    DbCredentials::reset();
 
     return new SessionService(EntityManagerFactory::build()->getRepository(SessionEntity::class));
 }
@@ -32,9 +30,11 @@ function makeSessionService(): SessionService
 // tests/bootstrap.php loads real PIWIGO_DB_* vars for the whole Pest
 // process -- save + restore PIWIGO_DB_HOST specifically, since
 // makeSessionService() above overwrites the real one with a deliberately
-// unreachable host and DbCredentials::current() (unlike the old
-// CurrentConfig::override(), which only touched an in-memory bag) has no other
-// mechanism to un-poison it for tests running later in the same process.
+// unreachable host and DbCredentials::current() (a pure shim now, Phase 3,
+// with no independent state of its own to un-poison -- it re-derives from
+// the process env fresh every call in this file, since Kernel never boots
+// here) has no other mechanism to un-poison it for tests running later in
+// the same process.
 $originalDbHost = null;
 
 beforeEach(function () use (&$originalDbHost): void {
@@ -45,7 +45,6 @@ beforeEach(function () use (&$originalDbHost): void {
 
 afterEach(function () use (&$originalDbHost): void {
     putenv($originalDbHost === null ? 'PIWIGO_DB_HOST' : 'PIWIGO_DB_HOST=' . $originalDbHost);
-    DbCredentials::reset();
     // Harmless for every other test in this file, which never calls
     // Kernel::boot() at all -- Kernel::reset() is a safe no-op regardless.
     Kernel::reset();

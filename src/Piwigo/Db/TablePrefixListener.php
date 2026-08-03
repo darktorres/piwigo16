@@ -7,8 +7,9 @@ namespace Piwigo\Db;
 use Doctrine\ORM\Event\LoadClassMetadataEventArgs;
 
 /**
- * Prepends DbCredentials::current()->prefix to every ORM entity's table name at metadata
- * load time, since PHP attributes can't embed a runtime config value
+ * Prepends the configured DbCredentials prefix to every ORM entity's table
+ * name at metadata load time, since PHP attributes can't embed a runtime
+ * config value
  * directly (#[ORM\Table(name: ...)] must be a compile-time literal).
  * Entities declare their bare table name (e.g. 'config'); this listener
  * makes the actual SQL target 'piwigo_config' (or whatever db_prefix is
@@ -20,10 +21,14 @@ use Doctrine\ORM\Event\LoadClassMetadataEventArgs;
  */
 final class TablePrefixListener
 {
+    public function __construct(
+        private readonly DbCredentials $dbCredentials,
+    ) {}
+
     public function loadClassMetadata(LoadClassMetadataEventArgs $args): void
     {
         $metadata = $args->getClassMetadata();
-        $prefix = DbCredentials::current()->prefix;
+        $prefix = $this->dbCredentials->prefix;
         $tableName = $metadata->getTableName();
 
         if ($prefix === '' || str_starts_with($tableName, $prefix)) {

@@ -63,7 +63,7 @@ final class RequestBootstrapConnectTest extends IntegrationTestCase
 
     /**
      * @var array<string, string> original PIWIGO_DB_* env values, restored
-     *   in tearDown() -- DbCredentials::seed()/reset() mutate real process
+     *   in tearDown() -- DbCredentials::seed() mutates real process
      *   env vars via putenv(), which would otherwise leak a bad/throwaway
      *   credential into every later test in this shared process (same
      *   reasoning as InstallServiceTest's own $originalDbEnv).
@@ -105,8 +105,7 @@ final class RequestBootstrapConnectTest extends IntegrationTestCase
     #[\Override]
     protected function tearDown(): void
     {
-        DbCredentials::seed($this->originalDbEnv);
-        DbCredentials::reset();
+        DbCredentials::current()->seed($this->originalDbEnv);
 
         // connect()'s own first statement is ErrorCollector::installIfConfigured()
         // -- every test below reaches it regardless of what happens
@@ -145,7 +144,7 @@ final class RequestBootstrapConnectTest extends IntegrationTestCase
         // instead of blocking on a real ~60s connect-timeout the way an
         // unreachable host/IP would -- same reasoning as
         // InstallServiceTest::test_installDbConnect_returns_null_and_records_an_error_for_a_wrong_password.
-        DbCredentials::seed([
+        DbCredentials::current()->seed([
             'PIWIGO_DB_HOST' => $this->dbHost,
             'PIWIGO_DB_USER' => $this->dbUser,
             'PIWIGO_DB_PASSWORD' => $this->dbPass . '-definitely-wrong',

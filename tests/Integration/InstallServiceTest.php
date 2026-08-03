@@ -35,8 +35,8 @@ final class InstallServiceTest extends IntegrationTestCase
 
     /**
      * @var array<string, string> original PIWIGO_DB_* env values, restored
-     *   in tearDown() -- DbCredentials::seed()/reset() mutate real process
-     *   env vars via putenv(), which would otherwise leak a bad/throwaway
+     *   in tearDown() -- DbCredentials::seed() mutates real process env
+     *   vars via putenv(), which would otherwise leak a bad/throwaway
      *   credential into every later test in this shared process.
      */
     private array $originalDbEnv = [];
@@ -58,7 +58,7 @@ final class InstallServiceTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        DbCredentials::seed([
+        DbCredentials::current()->seed([
             'PIWIGO_DB_HOST' => $this->dbHost,
             'PIWIGO_DB_USER' => $this->dbUser,
             'PIWIGO_DB_PASSWORD' => $this->dbPass,
@@ -71,8 +71,7 @@ final class InstallServiceTest extends IntegrationTestCase
     #[\Override]
     protected function tearDown(): void
     {
-        DbCredentials::seed($this->originalDbEnv);
-        DbCredentials::reset();
+        DbCredentials::current()->seed($this->originalDbEnv);
         Kernel::reset();
         CurrentConfig::reset();
         parent::tearDown();
@@ -163,7 +162,7 @@ final class InstallServiceTest extends IntegrationTestCase
 
     public function test_installDbConnect_returns_null_and_records_an_error_for_a_wrong_password(): void
     {
-        DbCredentials::seed([
+        DbCredentials::current()->seed([
             'PIWIGO_DB_HOST' => $this->dbHost,
             'PIWIGO_DB_USER' => $this->dbUser,
             'PIWIGO_DB_PASSWORD' => $this->dbPass . '-definitely-wrong',
@@ -192,7 +191,7 @@ final class InstallServiceTest extends IntegrationTestCase
         // MySQL replies "Unknown database" immediately once the TCP
         // connection itself succeeds, unlike an unreachable host, which
         // would otherwise block on a real ~60s connect-timeout here.
-        DbCredentials::seed([
+        DbCredentials::current()->seed([
             'PIWIGO_DB_HOST' => $this->dbHost,
             'PIWIGO_DB_USER' => $this->dbUser,
             'PIWIGO_DB_PASSWORD' => $this->dbPass,

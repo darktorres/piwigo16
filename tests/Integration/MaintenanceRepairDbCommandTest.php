@@ -37,7 +37,7 @@ final class MaintenanceRepairDbCommandTest extends IntegrationTestCase
     {
         $conn = DbConnection::build();
 
-        $command = new MaintenanceRepairDbCommand(new DbMaintenanceRepository(\Piwigo\Db\EntityManagerFactory::build($conn)));
+        $command = new MaintenanceRepairDbCommand(new DbMaintenanceRepository(\Piwigo\Db\EntityManagerFactory::build($conn), \Piwigo\Db\DbCredentials::current()));
         $tester  = new CommandTester($command);
 
         $exitCode = $tester->execute([]);

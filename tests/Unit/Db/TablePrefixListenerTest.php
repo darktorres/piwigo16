@@ -18,44 +18,23 @@ use Piwigo\Db\TablePrefixListener;
  * EntityManagerInterface since loadClassMetadata() never calls
  * getObjectManager().
  */
-$envVars = ['PIWIGO_DB_PREFIX'];
-$originalEnvVars = [];
-
-beforeEach(function () use ($envVars, &$originalEnvVars): void {
-    foreach ($envVars as $var) {
-        $value = getenv($var);
-        $originalEnvVars[$var] = $value === false ? null : $value;
-        putenv($var);
-    }
-    DbCredentials::reset();
-});
-
-afterEach(function () use ($envVars, &$originalEnvVars): void {
-    foreach ($envVars as $var) {
-        putenv($originalEnvVars[$var] === null ? $var : $var . '=' . $originalEnvVars[$var]);
-    }
-    DbCredentials::reset();
-});
-
 test('loadClassMetadata prefixes a bare table name', function (): void {
-    putenv('PIWIGO_DB_PREFIX=piwigo_');
-    DbCredentials::reset();
+    $credentials = new DbCredentials(host: 'localhost', user: '', password: '', database: '', prefix: 'piwigo_');
 
     $metadata = new ClassMetadata('Piwigo\\Tests\\Fixtures\\FakeEntity');
     $metadata->setPrimaryTable(['name' => 'sessions']);
     $args = new LoadClassMetadataEventArgs($metadata, $this->createStub(\Doctrine\ORM\EntityManagerInterface::class));
 
-    (new TablePrefixListener())->loadClassMetadata($args);
+    new TablePrefixListener($credentials)->loadClassMetadata($args);
 
     expect($metadata->getTableName())->toBe('piwigo_sessions');
 });
 
 test('loadClassMetadata leaves the table name untouched when the configured prefix is empty', function (): void {
-    // DbCredentials::env()'s own fallback treats an empty-string env var
-    // the same as unset (falls back to the 'piwigo_' default) -- confirmed
-    // live, so putenv('PIWIGO_DB_PREFIX=') alone can never produce a
-    // genuinely empty prefix. Constructing DbCredentials directly and
-    // injecting it via reflection is the real way to reach this branch.
+    // singleton/service-locator elimination campaign, Phase 3:
+    // TablePrefixListener takes DbCredentials via real constructor
+    // injection now -- constructing one directly with an empty prefix is
+    // the real way to reach this branch, no reflection needed anymore.
     $credentials = new DbCredentials(
         host: 'localhost',
         user: '',
@@ -63,39 +42,36 @@ test('loadClassMetadata leaves the table name untouched when the configured pref
         database: '',
         prefix: '',
     );
-    new ReflectionProperty(DbCredentials::class, 'current')->setValue(null, $credentials);
 
     $metadata = new ClassMetadata('Piwigo\\Tests\\Fixtures\\FakeEntity');
     $metadata->setPrimaryTable(['name' => 'sessions']);
     $args = new LoadClassMetadataEventArgs($metadata, $this->createStub(\Doctrine\ORM\EntityManagerInterface::class));
 
-    (new TablePrefixListener())->loadClassMetadata($args);
+    new TablePrefixListener($credentials)->loadClassMetadata($args);
 
     expect($metadata->getTableName())->toBe('sessions');
 });
 
 test('loadClassMetadata leaves an already-prefixed table name untouched (idempotent re-processing)', function (): void {
-    putenv('PIWIGO_DB_PREFIX=piwigo_');
-    DbCredentials::reset();
+    $credentials = new DbCredentials(host: 'localhost', user: '', password: '', database: '', prefix: 'piwigo_');
 
     $metadata = new ClassMetadata('Piwigo\\Tests\\Fixtures\\FakeEntity');
     $metadata->setPrimaryTable(['name' => 'piwigo_sessions']);
     $args = new LoadClassMetadataEventArgs($metadata, $this->createStub(\Doctrine\ORM\EntityManagerInterface::class));
 
-    (new TablePrefixListener())->loadClassMetadata($args);
+    new TablePrefixListener($credentials)->loadClassMetadata($args);
 
     expect($metadata->getTableName())->toBe('piwigo_sessions');
 });
 
 test('loadClassMetadata applies a custom, non-default prefix', function (): void {
-    putenv('PIWIGO_DB_PREFIX=demo17_');
-    DbCredentials::reset();
+    $credentials = new DbCredentials(host: 'localhost', user: '', password: '', database: '', prefix: 'demo17_');
 
     $metadata = new ClassMetadata('Piwigo\\Tests\\Fixtures\\FakeEntity');
     $metadata->setPrimaryTable(['name' => 'sessions']);
     $args = new LoadClassMetadataEventArgs($metadata, $this->createStub(\Doctrine\ORM\EntityManagerInterface::class));
 
-    (new TablePrefixListener())->loadClassMetadata($args);
+    new TablePrefixListener($credentials)->loadClassMetadata($args);
 
     expect($metadata->getTableName())->toBe('demo17_sessions');
 });

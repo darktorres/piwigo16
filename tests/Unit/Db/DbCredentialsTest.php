@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbCredentials;
 
 // putenv($var) with no '=value' unsets the var process-wide -- since Pest
@@ -19,14 +20,13 @@ beforeEach(function () use ($envVars, &$originalEnvVars): void {
         $originalEnvVars[$var] = $value === false ? null : $value;
         putenv($var);
     }
-    DbCredentials::reset();
 });
 
 afterEach(function () use ($envVars, &$originalEnvVars): void {
     foreach ($envVars as $var) {
         putenv($originalEnvVars[$var] === null ? $var : $var . '=' . $originalEnvVars[$var]);
     }
-    DbCredentials::reset();
+    Kernel::reset();
 });
 
 test('fromEnv() falls back to defaults when no env vars are set', function (): void {
@@ -48,7 +48,6 @@ test('fromEnv() falls back to the default host when PIWIGO_DB_HOST is explicitly
     // different code path through the same guard, for every one of
     // the host/user/password/database/prefix fields this helper backs.
     putenv('PIWIGO_DB_HOST=');
-    DbCredentials::reset();
 
     expect(DbCredentials::fromEnv()->host)->toBe('localhost');
 });
@@ -84,11 +83,9 @@ test('fromEnv() treats an empty or non-numeric PIWIGO_DB_PORT the same as unset,
     // "every var set" test (a genuinely numeric port) can't reach this
     // divergence point -- only a non-numeric string does.
     putenv('PIWIGO_DB_PORT=');
-    DbCredentials::reset();
     expect(DbCredentials::fromEnv()->port)->toBeNull();
 
     putenv('PIWIGO_DB_PORT=abc');
-    DbCredentials::reset();
     expect(DbCredentials::fromEnv()->port)->toBeNull();
 });
 
@@ -98,7 +95,6 @@ test('fromEnv() falls back to the default driver when PIWIGO_DB_DRIVER is explic
     // explicitly empty (but set) driver env var is a different code
     // path through the same guard.
     putenv('PIWIGO_DB_DRIVER=');
-    DbCredentials::reset();
 
     expect(DbCredentials::fromEnv()->driver)->toBe('mysqli');
 });
@@ -133,27 +129,77 @@ test('fromEnv() falls back to the default driver when PIWIGO_DB_DRIVER is explic
  * generates (not the differently-precedenced version this docblock's
  * sibling test was originally verified against by mistake).
  */
-test('current() memoizes across calls until reset()', function (): void {
+test('current() returns a fresh read on every call when Kernel is not booted', function (): void {
+    // Singleton/service-locator elimination campaign, Phase 3: current()
+    // is a pure shim now, with no independent memo of its own -- when
+    // there's no container to resolve a shared instance from, it falls
+    // back to a bare fromEnv() read every time (same reasoning as every
+    // other Unit test in this codebase that never boots Kernel at all).
     putenv('PIWIGO_DB_HOST=first.example.test');
-
     $first = DbCredentials::current();
+
     putenv('PIWIGO_DB_HOST=second.example.test');
-    $stillFirst = DbCredentials::current();
+    $second = DbCredentials::current();
 
-    expect($stillFirst)->toBe($first)
-        ->and($stillFirst->host)->toBe('first.example.test');
-
-    DbCredentials::reset();
-
-    expect(DbCredentials::current()->host)->toBe('second.example.test');
+    expect($second)->not->toBe($first)
+        ->and($first->host)->toBe('first.example.test')
+        ->and($second->host)->toBe('second.example.test');
 });
 
-test('seed() putenvs each non-null value and resets the memo', function (): void {
-    DbCredentials::current();
+test('current() returns the same container-shared instance across calls once Kernel is booted', function (): void {
+    putenv('PIWIGO_DB_HOST=booted.example.test');
+    Kernel::boot();
 
-    DbCredentials::seed(['PIWIGO_DB_HOST' => 'seeded.example.test', 'PIWIGO_DB_USER' => null]);
+    $first = DbCredentials::current();
+    $second = DbCredentials::current();
 
-    expect(DbCredentials::current()->host)->toBe('seeded.example.test');
+    expect($second)->toBe($first)
+        ->and($first->host)->toBe('booted.example.test');
+});
+
+test('reload() re-derives every property from the current environment, mutating this instance in place', function (): void {
+    $credentials = DbCredentials::fromEnv();
+
+    putenv('PIWIGO_DB_HOST=reloaded.example.test');
+    putenv('PIWIGO_DB_USER=reloaded_user');
+    putenv('PIWIGO_DB_PASSWORD=reloaded_pass');
+    putenv('PIWIGO_DB_BASE=reloaded_db');
+    putenv('PIWIGO_DB_PREFIX=reloaded_');
+    putenv('PIWIGO_DB_PORT=5432');
+    putenv('PIWIGO_DB_DRIVER=pgsql');
+
+    $before = $credentials;
+    $credentials->reload();
+
+    // Same object identity -- reload() mutates in place, it doesn't
+    // replace the instance (the whole point: every other consumer
+    // holding this same reference sees the update too).
+    expect($credentials)->toBe($before)
+        ->and($credentials->host)->toBe('reloaded.example.test')
+        ->and($credentials->user)->toBe('reloaded_user')
+        ->and($credentials->password)->toBe('reloaded_pass')
+        ->and($credentials->database)->toBe('reloaded_db')
+        ->and($credentials->prefix)->toBe('reloaded_')
+        ->and($credentials->port)->toBe(5432)
+        ->and($credentials->driver)->toBe('pgsql');
+});
+
+test('seed() putenvs each non-null value and reload()s this same instance in place', function (): void {
+    $credentials = DbCredentials::fromEnv();
+
+    $credentials->seed(['PIWIGO_DB_HOST' => 'seeded.example.test', 'PIWIGO_DB_USER' => null]);
+
+    expect($credentials->host)->toBe('seeded.example.test');
+});
+
+test('seed() on the container-shared instance is visible to every other consumer holding it', function (): void {
+    Kernel::boot();
+    $before = DbCredentials::current();
+
+    $before->seed(['PIWIGO_DB_HOST' => 'seeded-shared.example.test']);
+
+    expect(DbCredentials::current())->toBe($before)
+        ->and(DbCredentials::current()->host)->toBe('seeded-shared.example.test');
 });
 
 test('toMysqlArgs() includes -p only when a password is set', function (): void {

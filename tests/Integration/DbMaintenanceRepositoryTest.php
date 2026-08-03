@@ -296,7 +296,8 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
         // not hand-parsed SHOW TABLES/DESC output) round-tripped
         // correctly through REPAIR TABLE/(if it has a primary key)
         // ALTER TABLE ... ORDER BY/OPTIMIZE TABLE.
-        $this->expectNotToPerformAssertions();
+        self::expectNotToPerformAssertions();
+
         $this->repo->repairOptimizeAllTables();
     }
 

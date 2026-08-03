@@ -19,6 +19,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
 use Piwigo\Event\Location\LocEndIntro;
 use Piwigo\Http\HttpClientService;
+use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -70,6 +71,7 @@ final class IntroSubController implements AdminSubControllerInterface
         private readonly LoadedPlugins $loadedPlugins,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
         private readonly FilesystemIntegrityChecker $filesystemIntegrityChecker,
+        private readonly SessionService $sessionService,
     ) {}
 
     #[\Override]
@@ -540,7 +542,7 @@ final class IntroSubController implements AdminSubControllerInterface
         $integrityRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity::class);
         $c13y = new CheckIntegrity($integrityRepo);
         // add internal checks
-        new C13yInternal()
+        new C13yInternal($this->sessionService)
             ->registerHandlers();
         // check and display
         $c13y->check();

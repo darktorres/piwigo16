@@ -26,6 +26,8 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
     use Piwigo\PluginConfig\EventDispatcher;
+    use Piwigo\Session\SessionEntity;
+    use Piwigo\Session\SessionService;
     use Piwigo\Url\UrlService;
     use Piwigo\Users\CurrentUser;
     use Piwigo\Users\User;
@@ -753,7 +755,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         // image.
         $this->conn->executeStatement("INSERT INTO " . Tables::imageCategory() . " (image_id, category_id) VALUES (1, {$tempId})");
 
-        $this->service->deleteCategories([$tempId], $activityLogger, $urlService, 'delete_orphans');
+        $this->service->deleteCategories([$tempId], $activityLogger, $urlService, new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)), 'delete_orphans');
 
         self::assertNull($this->repo->findById($tempId));
         $stillLinked = $this->conn->createQueryBuilder()

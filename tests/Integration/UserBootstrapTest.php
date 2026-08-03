@@ -27,6 +27,8 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\User\TryLogUser;
 use Piwigo\Html\HtmlService;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Session\SessionEntity;
+use Piwigo\Session\SessionService;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 
@@ -216,6 +218,7 @@ final class UserBootstrapTest extends IntegrationTestCase
             new PasswordService(new PasswordRepository($this->conn)),
             new CookieService(),
             EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class),
+            new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)),
         )->pwgLogin(...));
 
         $_SERVER = [];

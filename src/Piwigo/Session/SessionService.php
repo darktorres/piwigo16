@@ -11,45 +11,38 @@ use Piwigo\Db\EntityManagerFactory;
 
 final class SessionService
 {
-    private static ?self $instance = null;
-
     public function __construct(
         private readonly SessionRepository $repo,
     ) {}
 
     /**
-     * Self-managed singleton, same bridging pattern as Piwigo\Lang\
-     * Translator::get() -- procedural call sites (functions_session.inc.php's
-     * free-function delegates, PwgSession's own default) share one
-     * SessionRepository/Connection per request instead of opening a fresh
-     * DB connection on every session-var access.
-     *
-     * Part B: SessionRepository is now ORM-backed (EntityRepository can't
-     * be `new`'d), so this fallback resolves it via
-     * EntityManagerFactory::build() directly rather than the DI container
-     * -- same reasoning as DbConnection::build() being callable from
-     * anywhere, no DI ceremony.
+     * @deprecated transitional bridge for callers not yet converted to
+     * constructor injection -- singleton/service-locator elimination
+     * campaign, Phase 4. No independent state of its own (same shape as
+     * DbCredentials::current()/CurrentPaths::get()): resolves the
+     * container-shared instance once Kernel::boot() has run, so every
+     * caller sees the same SessionRepository/Connection other
+     * constructor-injected consumers already hold. Falls back to a fresh,
+     * unmemoized instance (SessionRepository is ORM-backed --
+     * EntityRepository can't be `new`'d, so this resolves it via
+     * EntityManagerFactory::build() directly rather than the DI container,
+     * same reasoning as DbConnection::build() being callable from
+     * anywhere) when Kernel isn't booted -- real production code always
+     * has a booted Kernel by the time this runs, but a pure-Unit test
+     * exercising a caller standalone shouldn't have to bootstrap one.
      */
     public static function get(): self
     {
-        if (self::$instance instanceof self) {
-            return self::$instance;
+        if (\Piwigo\Core\Kernel::isBooted()) {
+            $sessionService = \Piwigo\Core\Kernel::container()->get(self::class);
+            if (! $sessionService instanceof self) {
+                throw new \LogicException('Container returned an unexpected type for ' . self::class);
+            }
+
+            return $sessionService;
         }
 
-        return self::$instance = new self(EntityManagerFactory::build()->getRepository(SessionEntity::class));
-    }
-
-    public static function set(self $service): void
-    {
-        self::$instance = $service;
-    }
-
-    /**
-     * Test-only -- restricted to tests/ by an arch test.
-     */
-    public static function reset(): void
-    {
-        self::$instance = null;
+        return new self(EntityManagerFactory::build()->getRepository(SessionEntity::class));
     }
 
     /**

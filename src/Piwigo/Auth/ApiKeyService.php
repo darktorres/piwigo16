@@ -30,6 +30,7 @@ final readonly class ApiKeyService
         private ApiKeyRepository $repo,
         private PasswordService $passwordService,
         private UrlServiceInterface $urlService,
+        private SessionService $sessionService,
     ) {}
 
     /**
@@ -38,8 +39,8 @@ final readonly class ApiKeyService
      */
     public function create(int $userId, int $duration, string $keyName): array
     {
-        $key_id = 'pkid-' . date('Ymd') . '-' . SessionService::get()->generateKey(20);
-        $key_secret = SessionService::get()->generateKey(40);
+        $key_id = 'pkid-' . date('Ymd') . '-' . $this->sessionService->generateKey(20);
+        $key_secret = $this->sessionService->generateKey(40);
 
         $now = Env::now();
         $expiration = (clone $now)->modify('+' . ($duration * 60 * 60 * 24) . ' seconds')->format('Y-m-d H:i:s');

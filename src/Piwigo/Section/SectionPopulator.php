@@ -71,6 +71,7 @@ final readonly class SectionPopulator
         private \Piwigo\Core\CurrentLogger $currentLogger,
         private SectionContextRegistry $sectionContextRegistry,
         private \Piwigo\Core\RequestMountDepth $requestMountDepth,
+        private SessionService $sessionService,
     ) {}
 
     public function populate(): void
@@ -187,8 +188,8 @@ final readonly class SectionPopulator
             $order_by = \Piwigo\Config\CurrentConfig::orderByInsideCategory();
         }
 
-        if (SessionService::get()->getSessionVar('image_order', 0) > 0) {
-            $image_order_id = SessionService::get()->getSessionVar('image_order');
+        if ($this->sessionService->getSessionVar('image_order', 0) > 0) {
+            $image_order_id = $this->sessionService->getSessionVar('image_order');
             // getSessionVar() is declared to return mixed; index.php is the
             // only writer of the 'image_order' session var and always stores an
             // int, but that isn't visible through the session accessor's signature
@@ -209,7 +210,7 @@ final readonly class SectionPopulator
                 );
                 $page['super_order_by'] = true;
             } else {
-                SessionService::get()->unsetSessionVar('image_order');
+                $this->sessionService->unsetSessionVar('image_order');
                 $page['super_order_by'] = false;
             }
         }

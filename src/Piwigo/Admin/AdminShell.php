@@ -55,6 +55,7 @@ final class AdminShell
         private readonly \Piwigo\Core\Paths $paths,
         private readonly FilesystemIntegrityChecker $filesystemIntegrityChecker,
         private readonly CoreTabs $coreTabs,
+        private readonly SessionService $sessionService,
     ) {}
 
     /**
@@ -138,7 +139,7 @@ final class AdminShell
 
         // save plugins_new display order (AJAX action)
         if ($adminShellRequest->pluginsNewOrderPresent) {
-            SessionService::get()->setSessionVar('plugins_new_order', $adminShellRequest->pluginsNewOrder);
+            $this->sessionService->setSessionVar('plugins_new_order', $adminShellRequest->pluginsNewOrder);
             exit;
         }
 

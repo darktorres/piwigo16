@@ -47,6 +47,7 @@ final readonly class ImageService
     public function __construct(
         private ImageRepository $repo,
         private ActivityLoggerInterface $activityLogger,
+        private SessionService $sessionService,
     ) {}
 
     /**
@@ -342,7 +343,7 @@ final readonly class ImageService
             }
         }
 
-        $execId = SessionService::get()->generateKey(4);
+        $execId = $this->sessionService->generateKey(4);
         $requestMethod = Request\EmptyLoungeRequest::fromGlobals()->requestMethod;
         $apiSuffix = $requestMethod !== null ? ' (API:' . $requestMethod . ')' : '';
         $logger->debug(__FUNCTION__ . $apiSuffix . ', exec=' . $execId . ', begins');

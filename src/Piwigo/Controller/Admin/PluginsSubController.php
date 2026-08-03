@@ -13,6 +13,7 @@ use Piwigo\Admin\UpdatesExtPageRenderer;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -53,6 +54,7 @@ final class PluginsSubController implements AdminSubControllerInterface
         private readonly ConfigService $configService,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
         private readonly CoreTabs $coreTabs,
+        private readonly SessionService $sessionService,
     ) {}
 
     #[\Override]
@@ -82,7 +84,7 @@ final class PluginsSubController implements AdminSubControllerInterface
                 ->render('plugins', $tab);
         } else {
             new PluginsInstalledPageRenderer()
-                ->render('plugins', $this->urlService, $this->currentLogger);
+                ->render('plugins', $this->urlService, $this->currentLogger, $this->sessionService);
         }
     }
 }

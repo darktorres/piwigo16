@@ -19,6 +19,8 @@ use Piwigo\Image\ImageService;
 use Piwigo\Mail\MailService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
+use Piwigo\Session\SessionEntity;
+use Piwigo\Session\SessionService;
 use Piwigo\Users\UserService;
 
 /**
@@ -56,9 +58,11 @@ final class FilterResolverTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
 
         $em = EntityManagerFactory::build($this->conn);
+        $sessionService = new SessionService($em->getRepository(SessionEntity::class));
         $imageService = new ImageService(
             $em->getRepository(\Piwigo\Image\ImageEntity::class),
             new ActivityService($em->getRepository(\Piwigo\Activity\ActivityEntity::class)),
+            $sessionService,
         );
         $categoryService = new CategoryService(
             $em->getRepository(\Piwigo\Category\CategoryEntity::class),
@@ -76,6 +80,7 @@ final class FilterResolverTest extends IntegrationTestCase
             new ActivityService($em->getRepository(\Piwigo\Activity\ActivityEntity::class)),
             new HtmlService(),
             $this->conn,
+            $sessionService,
         );
 
         $this->resolver = new FilterResolver($imageService, $categoryService, $caddieRepo, $userService);

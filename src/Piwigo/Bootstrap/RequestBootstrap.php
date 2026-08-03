@@ -364,7 +364,7 @@ final class RequestBootstrap
 
         SessionBootstrap::register();
 
-        \Piwigo\Core\PageState::current()->executionUuid = SessionService::get()->generateKey(10);
+        \Piwigo\Core\PageState::current()->executionUuid = self::sessionService()->generateKey(10);
 
         // Database connection. DbConnection::build() itself deliberately
         // never touches the session-level ONLY_FULL_GROUP_BY server mode
@@ -456,7 +456,7 @@ final class RequestBootstrap
         }
 
         if (\Piwigo\Image\LoungeMaintenance::needsEmptying()) {
-            new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), self::activityService($conn))
+            new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), self::activityService($conn), self::sessionService())
                 ->emptyLounge();
         }
 
@@ -497,6 +497,7 @@ final class RequestBootstrap
             new PasswordService(new PasswordRepository($conn)),
             new CookieService(),
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class),
+            self::sessionService(),
         )->pwgLogin(...));
         new UserBootstrap(
             new RedirectService(),
@@ -547,6 +548,7 @@ final class RequestBootstrap
             self::activityService($conn),
             new HtmlService(),
             $conn,
+            self::sessionService(),
         ));
         Lang::load('common.lang');
         if (\Piwigo\Auth\AccessControl::isAdmin() || self::adminContext()->isActive()) {
@@ -589,7 +591,7 @@ final class RequestBootstrap
             $notify_username = CurrentUser::get()->username;
             $notify_email = CurrentUser::get()->email;
             $apiKeyRepo = new \Piwigo\Auth\ApiKeyRepository(\Piwigo\Db\EntityManagerFactory::build($conn));
-            $is_mail_send = new \Piwigo\Auth\ApiKeyService(new MailService(), $apiKeyRepo, new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn)), new UrlService(new HtmlService()))
+            $is_mail_send = new \Piwigo\Auth\ApiKeyService(new MailService(), $apiKeyRepo, new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn)), new UrlService(new HtmlService()), self::sessionService())
                 ->notifyExpiration($notify_username, $notify_email, $notify_api_key_expiration['days_left']);
 
             if ($is_mail_send) {
@@ -644,7 +646,7 @@ final class RequestBootstrap
             // when it decides to take over the page. CurrentConfigService::get()
             // reuses the instance connect() already resolved earlier in the
             // same request (Legacy Coupling Retirement Phase 8, 8d).
-            new NoPhotoYetRenderer(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), \Piwigo\Config\CurrentConfigService::get(), new RedirectService(), new UrlService(new HtmlService()), CurrentPaths::get(), self::adminContext())
+            new NoPhotoYetRenderer(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), \Piwigo\Config\CurrentConfigService::get(), new RedirectService(), new UrlService(new HtmlService()), CurrentPaths::get(), self::adminContext(), self::sessionService())
                 ->render();
         }
 
@@ -679,7 +681,7 @@ final class RequestBootstrap
         if (\Piwigo\Config\CurrentConfig::filterPages() !== [] and (bool) \Piwigo\Core\PageFilterHelper::getFilterPageValue('used')) {
             // Formerly a conditional `include PHPWG_ROOT_PATH .
             // 'include/filter.inc.php';` (deleted, P23 sub-batch 8f-5).
-            new FilterService(self::filterState(), $conn)
+            new FilterService(self::filterState(), self::sessionService(), $conn)
                 ->initializeFromRequest();
         } else {
             self::filterState()->set(false);
@@ -986,6 +988,26 @@ final class RequestBootstrap
         }
 
         return $coreTabs;
+    }
+
+    /**
+     * Public (unlike the private resolver helpers above): public/admin.php's
+     * own legacy-style `new AdminShell(...)` manual construction needs a way
+     * to obtain the same container-shared instance every other
+     * SessionService consumer receives via constructor injection, without
+     * calling Kernel::container() directly itself (arch-tested to
+     * Bootstrap/ only) -- same "public accessor on this class" shape as
+     * coreTabs()/filesystemIntegrityChecker() above (singleton/service-
+     * locator elimination campaign, Phase 4).
+     */
+    public static function sessionService(): SessionService
+    {
+        $sessionService = Kernel::container()->get(SessionService::class);
+        if (! $sessionService instanceof SessionService) {
+            throw new \LogicException('Container returned an unexpected type for ' . SessionService::class);
+        }
+
+        return $sessionService;
     }
 
     /**

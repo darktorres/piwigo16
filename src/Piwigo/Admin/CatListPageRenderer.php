@@ -11,6 +11,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Event\Location\LocBeginCatList;
 use Piwigo\Event\Location\LocEndCatList;
 use Piwigo\Event\Template\RenderCategoryName;
+use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
 
 /**
@@ -38,6 +39,7 @@ final class CatListPageRenderer
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
+        private readonly SessionService $sessionService,
     ) {}
 
     public function render(): void
@@ -104,6 +106,7 @@ final class CatListPageRenderer
                 [$catListRequest->deleteId],
                 \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(),
                 $this->urlService,
+                $this->sessionService,
                 $catListRequest->photoDeletionMode
             );
 

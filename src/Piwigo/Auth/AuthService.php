@@ -60,6 +60,7 @@ final readonly class AuthService
         private PasswordService $passwordService,
         private CookieService $cookieService,
         private UserFailedLoginRepository $failedLoginRepo,
+        private SessionService $sessionService,
     ) {}
 
     /**
@@ -332,7 +333,7 @@ final readonly class AuthService
         $rememberMe = $event->rememberMe;
 
         // we force the session table to be clean
-        SessionService::get()->sessionGc();
+        $this->sessionService->sessionGc();
 
         // see IpAddress's own docblock for why this is a plain -> (not
         // ?->) before the ?? -- the null-coalescing already handles a null
@@ -675,7 +676,7 @@ final readonly class AuthService
             return false;
         }
 
-        $candidate = SessionService::get()->generateKey(30);
+        $candidate = $this->sessionService->generateKey(30);
 
         if (! $this->repo->authKeyCandidateExists($candidate)) {
             $now = Env::now();
@@ -725,7 +726,7 @@ final readonly class AuthService
     public function generatePasswordLink(int $userId, UrlServiceInterface $urlService, bool $firstLogin = false): array
     {
 
-        $activation_key = SessionService::get()->generateKey(20);
+        $activation_key = $this->sessionService->generateKey(20);
 
         $duration = $firstLogin
         ? \Piwigo\Config\CurrentConfig::passwordActivationDuration()

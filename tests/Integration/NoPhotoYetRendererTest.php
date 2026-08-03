@@ -23,6 +23,8 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Page\NoPhotoYetRenderer;
+use Piwigo\Session\SessionEntity;
+use Piwigo\Session\SessionService;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
@@ -102,7 +104,7 @@ final class NoPhotoYetRendererTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         CurrentConfigService::set(new ConfigService($this->buildConfigRepository()));
-        $this->renderer = new NoPhotoYetRenderer(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Image\ImageEntity::class), new ConfigService($this->buildConfigRepository()), new RedirectService(), new UrlService(new HtmlService()), Paths::fromRoot(dirname(__DIR__, 2)), new AdminContext());
+        $this->renderer = new NoPhotoYetRenderer(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Image\ImageEntity::class), new ConfigService($this->buildConfigRepository()), new RedirectService(), new UrlService(new HtmlService()), Paths::fromRoot(dirname(__DIR__, 2)), new AdminContext(), new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)));
 
         // NoPhotoYetRenderer calls Piwigo\Auth\AccessControl::isAGuest()/
         // isAdmin() directly (real class methods), which read

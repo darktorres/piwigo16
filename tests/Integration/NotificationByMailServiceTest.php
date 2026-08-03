@@ -10,6 +10,8 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\DbConnection;
     use Piwigo\Notification\NotificationByMailRepository;
     use Piwigo\Notification\NotificationByMailService;
+    use Piwigo\Session\SessionEntity;
+    use Piwigo\Session\SessionService;
 
 /**
  * Same fixture shape as NotificationByMailRepositoryTest.
@@ -39,7 +41,7 @@ final class NotificationByMailServiceTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->service = new NotificationByMailService(new NotificationByMailRepository($this->conn));
+        $this->service = new NotificationByMailService(new NotificationByMailRepository($this->conn), new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)));
 
         CurrentConfig::setUserFields(['username' => 'username', 'email' => 'mail_address', 'id' => 'id']);
     }

@@ -20,6 +20,7 @@ use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Permission\PermissionService;
+use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\Template;
 
@@ -68,6 +69,7 @@ final class BatchManagerUnitPageRenderer
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\ProcessCache $processCache,
         private readonly LoadedPlugins $loadedPlugins,
+        private readonly SessionService $sessionService,
     ) {}
 
     private static function tagService(): TagService
@@ -323,7 +325,7 @@ final class BatchManagerUnitPageRenderer
             }
 
             $tagService = self::tagService();
-            $imageService = new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService());
+            $imageService = new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), $this->sessionService);
 
             foreach ($images as $row) {
                 // Tables::images().id is a NOT NULL auto_increment primary key; this

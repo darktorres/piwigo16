@@ -34,6 +34,7 @@ final class PluginsNewPageRenderer
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+        private readonly SessionService $sessionService,
     ) {}
 
     /**
@@ -163,7 +164,7 @@ final class PluginsNewPageRenderer
 
         if ($server_plugins !== null) {
             /* order plugins */
-            $session_order = SessionService::get()->getSessionVar('plugins_new_order');
+            $session_order = $this->sessionService->getSessionVar('plugins_new_order');
             $order_selected = is_string($session_order) && $session_order !== '' ? $session_order : 'date';
             $template->assign('order_selected', $order_selected);
 

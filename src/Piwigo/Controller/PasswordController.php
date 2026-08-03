@@ -17,6 +17,7 @@ use Piwigo\Event\Location\LocEndPassword;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
+use Piwigo\Session\SessionService;
 use Piwigo\Users\UserService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -45,6 +46,7 @@ final class PasswordController implements ControllerInterface
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\FilterState $filterState,
         private readonly \Piwigo\Section\SectionContextRegistry $sectionContextRegistry,
+        private readonly SessionService $sessionService,
     ) {}
 
     /**
@@ -241,7 +243,7 @@ final class PasswordController implements ControllerInterface
         $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
         if (! is_array($hide_menu_on) or ! in_array('thePasswordPage', $hide_menu_on, true)) {
             new MenubarRenderer()
-                ->render($urlService, $this->filterState, $this->sectionContextRegistry);
+                ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService);
         }
 
         // Load language if cookie is set from login/register/password

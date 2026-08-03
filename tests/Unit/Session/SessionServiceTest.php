@@ -269,15 +269,19 @@ test('sessionWrite short-circuits to true without touching the repository when t
     expect($service->sessionWrite('some-session-id', 'some-data'))->toBeTrue();
 });
 
-test('get/set/reset manage the shared singleton', function (): void {
-    $original = SessionService::get();
-    $replacement = makeSessionService();
+test('get() returns a fresh read on every call when Kernel is not booted', function (): void {
+    $first = SessionService::get();
+    $second = SessionService::get();
 
-    SessionService::set($replacement);
-    expect(SessionService::get())->toBe($replacement);
+    expect($first)->not->toBe($second);
+});
 
-    SessionService::reset();
-    expect(SessionService::get())->not->toBe($replacement);
+test('get() returns the same container-shared instance across calls once Kernel is booted', function (): void {
+    makeSessionService();
+    Kernel::boot();
 
-    SessionService::set($original);
+    $first = SessionService::get();
+    $second = SessionService::get();
+
+    expect($first)->toBe($second);
 });

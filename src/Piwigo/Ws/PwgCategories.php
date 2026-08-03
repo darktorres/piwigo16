@@ -1274,6 +1274,7 @@ final class PwgCategories
             $category_ids,
             \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(),
             \Piwigo\Bootstrap\PresentationAccessor::urlService(),
+            \Piwigo\Session\SessionService::get(),
             $params['photo_deletion_mode']
         );
         $categoryService->updateGlobalRank();

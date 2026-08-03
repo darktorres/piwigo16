@@ -25,6 +25,7 @@ final class FilterService implements FilterUpdaterInterface
 {
     public function __construct(
         private readonly \Piwigo\Core\FilterState $filterState,
+        private readonly SessionService $sessionService,
         private ?Connection $conn = null,
     ) {}
 
@@ -75,14 +76,14 @@ final class FilterService implements FilterUpdaterInterface
                   $filter_get_param !== null
                   && preg_match('/^start-recent-(\d+)$/', $filter_get_param, $filter['matches']) === 1;
             } else {
-                $filter['enabled'] = SessionService::get()->getSessionVar('filter_enabled', false);
+                $filter['enabled'] = $this->sessionService->getSessionVar('filter_enabled', false);
             }
         } else {
             $filter['enabled'] = false;
         }
 
         if ((bool) $filter['enabled']) {
-            $filter_key = SessionService::get()->getSessionVar('filter_check_key', [
+            $filter_key = $this->sessionService->getSessionVar('filter_check_key', [
                 'user' => 0,
                 'recent_period' => -1,
                 'time' => 0,
@@ -125,7 +126,7 @@ final class FilterService implements FilterUpdaterInterface
 
             if (
                 // New filter
-                ! (bool) SessionService::get()->getSessionVar('filter_enabled', false) or
+                ! (bool) $this->sessionService->getSessionVar('filter_enabled', false) or
                 // Gap-closure Stage 4a (docs/plan/gap-closure-p0-p23.md):
                 // replaces the deleted `user_cache.cache_update_time`-keyed
                 // immediate-invalidation check with the same 30s staleness
@@ -188,17 +189,17 @@ final class FilterService implements FilterUpdaterInterface
                 }
 
                 // Save filter data on session
-                SessionService::get()->setSessionVar('filter_enabled', $filter['enabled']);
-                SessionService::get()->setSessionVar('filter_check_key', $filter_key);
-                SessionService::get()->setSessionVar('filter_categories', serialize($filter['categories']));
-                SessionService::get()->setSessionVar('filter_visible_categories', $filter['visible_categories']);
-                SessionService::get()->setSessionVar('filter_visible_images', $filter['visible_images']);
+                $this->sessionService->setSessionVar('filter_enabled', $filter['enabled']);
+                $this->sessionService->setSessionVar('filter_check_key', $filter_key);
+                $this->sessionService->setSessionVar('filter_categories', serialize($filter['categories']));
+                $this->sessionService->setSessionVar('filter_visible_categories', $filter['visible_categories']);
+                $this->sessionService->setSessionVar('filter_visible_images', $filter['visible_images']);
             } else {
                 // Read only data
-                $serialized_categories = SessionService::get()->getSessionVar('filter_categories', serialize([]));
+                $serialized_categories = $this->sessionService->getSessionVar('filter_categories', serialize([]));
                 $filter['categories'] = is_string($serialized_categories) ? unserialize($serialized_categories) : [];
-                $filter['visible_categories'] = SessionService::get()->getSessionVar('filter_visible_categories', '');
-                $filter['visible_images'] = SessionService::get()->getSessionVar('filter_visible_images', '');
+                $filter['visible_categories'] = $this->sessionService->getSessionVar('filter_visible_categories', '');
+                $filter['visible_images'] = $this->sessionService->getSessionVar('filter_visible_images', '');
             }
             unset($filter_key);
             if ((bool) \Piwigo\Core\PageFilterHelper::getFilterPageValue('add_notes')) {
@@ -223,12 +224,12 @@ final class FilterService implements FilterUpdaterInterface
                 $filter_categories
             );
         } else {
-            if ((bool) SessionService::get()->getSessionVar('filter_enabled', false)) {
-                SessionService::get()->unsetSessionVar('filter_enabled');
-                SessionService::get()->unsetSessionVar('filter_check_key');
-                SessionService::get()->unsetSessionVar('filter_categories');
-                SessionService::get()->unsetSessionVar('filter_visible_categories');
-                SessionService::get()->unsetSessionVar('filter_visible_images');
+            if ((bool) $this->sessionService->getSessionVar('filter_enabled', false)) {
+                $this->sessionService->unsetSessionVar('filter_enabled');
+                $this->sessionService->unsetSessionVar('filter_check_key');
+                $this->sessionService->unsetSessionVar('filter_categories');
+                $this->sessionService->unsetSessionVar('filter_visible_categories');
+                $this->sessionService->unsetSessionVar('filter_visible_images');
             }
 
             $this->filterState->set(false);

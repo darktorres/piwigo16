@@ -28,6 +28,8 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Search\QSingleToken;
     use Piwigo\Search\SearchRepository;
     use Piwigo\Search\SearchService;
+    use Piwigo\Session\SessionEntity;
+    use Piwigo\Session\SessionService;
     use Piwigo\Users\CurrentUser;
     use Piwigo\Users\User;
 
@@ -269,7 +271,8 @@ final class SearchServiceTest extends IntegrationTestCase
             ),
             new MailService(),
             new HtmlService(),
-            new RedirectService()
+            new RedirectService(),
+            new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)),
         );
     }
 
@@ -299,7 +302,8 @@ final class SearchServiceTest extends IntegrationTestCase
             ),
             new MailService(),
             $htmlRenderer,
-            new RedirectService()
+            new RedirectService(),
+            new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)),
         );
     }
 

@@ -17,6 +17,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
 use Piwigo\Event\Admin\GetAdminAdvancedFeaturesLinks;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
 
 /**
@@ -47,6 +48,7 @@ final class MaintenanceEnvPageRenderer
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
         private readonly FilesystemIntegrityChecker $filesystemIntegrityChecker,
+        private readonly SessionService $sessionService,
         private readonly ?\Piwigo\Cache\PersistentCache $persistentCache = null,
     ) {}
 
@@ -55,7 +57,7 @@ final class MaintenanceEnvPageRenderer
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $action = MaintenanceActionRequest::fromGlobals()->action;
-        new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->filesystemIntegrityChecker, $this->persistentCache)
+        new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->filesystemIntegrityChecker, $this->sessionService, $this->persistentCache)
             ->dispatch($action);
 
         // +-------------------------------------------------------------------+

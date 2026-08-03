@@ -26,6 +26,7 @@ use Piwigo\Image\ImageService;
 use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
+use Piwigo\Session\SessionService;
 use Piwigo\Users\UserRepository;
 
 /**
@@ -75,9 +76,9 @@ final readonly class CategoryService
      * {@see moveCategories()}, {@see createVirtualCategory()}) take it as
      * an explicit parameter, matching this method's own shape.
      */
-    private function imageService(ActivityLoggerInterface $activityLogger): ImageService
+    private function imageService(ActivityLoggerInterface $activityLogger, SessionService $sessionService): ImageService
     {
-        return new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), $activityLogger);
+        return new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), $activityLogger, $sessionService);
     }
 
     private function userRepository(): UserRepository
@@ -914,10 +915,10 @@ final readonly class CategoryService
     /**
      * Deletes a site and its primary categories.
      */
-    public function deleteSite(int $id, ActivityLoggerInterface $activityLogger, UrlServiceInterface $urlService): void
+    public function deleteSite(int $id, ActivityLoggerInterface $activityLogger, UrlServiceInterface $urlService, SessionService $sessionService): void
     {
         $categoryIds = $this->repo->findCategoryIdsBySite($id);
-        $this->deleteCategories($categoryIds, $activityLogger, $urlService);
+        $this->deleteCategories($categoryIds, $activityLogger, $urlService, $sessionService);
 
         $this->repo->deleteSiteRow($id);
     }
@@ -935,7 +936,7 @@ final readonly class CategoryService
      *    - delete_orphans: delete photos that are no longer linked to any category
      *    - force_delete: delete photos even if they are linked to another category
      */
-    public function deleteCategories(array $ids, ActivityLoggerInterface $activityLogger, UrlServiceInterface $urlService, string $photoDeletionMode = 'no_delete'): void
+    public function deleteCategories(array $ids, ActivityLoggerInterface $activityLogger, UrlServiceInterface $urlService, SessionService $sessionService, string $photoDeletionMode = 'no_delete'): void
     {
         if (count($ids) === 0) {
             return;
@@ -945,7 +946,7 @@ final readonly class CategoryService
         // sub-categories must be so
         $ids = $this->getSubcatIds($ids);
 
-        $imageService = $this->imageService($activityLogger);
+        $imageService = $this->imageService($activityLogger, $sessionService);
 
         // destruction of all photos physically linked to the category
         $elementIds = $this->repo->findStorageLinkedImageIds($ids);

@@ -14,6 +14,7 @@ use Piwigo\Event\Location\LocEndRegister;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
+use Piwigo\Session\SessionService;
 use Piwigo\Users\UserService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -34,6 +35,7 @@ final class RegisterController implements ControllerInterface
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\FilterState $filterState,
         private readonly \Piwigo\Section\SectionContextRegistry $sectionContextRegistry,
+        private readonly SessionService $sessionService,
     ) {}
 
     #[\Override]
@@ -210,7 +212,7 @@ final class RegisterController implements ControllerInterface
         $hide_menu_on = is_array($themeconf) ? ($themeconf['hide_menu_on'] ?? null) : null;
         if (! is_array($hide_menu_on) or ! in_array('theRegisterPage', $hide_menu_on, true)) {
             new MenubarRenderer()
-                ->render($urlService, $this->filterState, $this->sectionContextRegistry);
+                ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService);
         }
 
         // Load language if cookie is set from login/register/password

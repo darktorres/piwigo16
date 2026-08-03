@@ -21,6 +21,8 @@ use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Session\SessionEntity;
+use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
@@ -98,7 +100,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         // own DerivativeImage::setUrlService() call.
         DerivativeImage::setUrlService($urlService);
 
-        $this->renderer = new CategoryDefaultRenderer($htmlService, $this->buildTemplate(), $imageRepo, $commentRepo, $urlService);
+        $this->renderer = new CategoryDefaultRenderer($htmlService, $this->buildTemplate(), $imageRepo, $commentRepo, $urlService, new SessionService($em->getRepository(SessionEntity::class)));
     }
 
     #[\Override]

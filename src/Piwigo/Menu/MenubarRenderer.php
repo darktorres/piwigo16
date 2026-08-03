@@ -12,6 +12,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Filter\FilterService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
+use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
 
 /**
@@ -57,7 +58,7 @@ final class MenubarRenderer
      * write to, this method returns that value instead; every caller but
      * GalleryController ignores it.
      */
-    public function render(UrlServiceInterface $urlService, \Piwigo\Core\FilterState $filterState, \Piwigo\Section\SectionContextRegistry $sectionContextRegistry): ?int
+    public function render(UrlServiceInterface $urlService, \Piwigo\Core\FilterState $filterState, \Piwigo\Section\SectionContextRegistry $sectionContextRegistry, SessionService $sessionService): ?int
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
         $section_context = $sectionContextRegistry->current();
@@ -143,7 +144,7 @@ final class MenubarRenderer
 
         $categoryCountCategories = null;
         if ($block !== null) {
-            $categoriesMenu = $categoryService->getCategoriesMenu($section_context?->category, new FilterService($filterState), $urlService, $filterState);
+            $categoriesMenu = $categoryService->getCategoriesMenu($section_context?->category, new FilterService($filterState, $sessionService), $urlService, $filterState);
             $categoryCountCategories = $categoriesMenu['categoryCountCategories'];
             $block->data = [
                 'NB_PICTURE' => \Piwigo\Users\CurrentUser::get()->rawAttributes['nb_total_images'] ?? null,

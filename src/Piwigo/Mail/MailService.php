@@ -132,6 +132,7 @@ final class MailService implements MailerInterface
                 new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository(\Piwigo\Db\DbConnection::build())),
                 new \Piwigo\Auth\CookieService(),
                 \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class),
+                \Piwigo\Session\SessionService::get(),
             );
     }
 
@@ -172,6 +173,7 @@ final class MailService implements MailerInterface
             new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)),
             new HtmlService(),
             \Piwigo\Db\DbConnection::build(),
+            \Piwigo\Session\SessionService::get(),
         );
     }
 

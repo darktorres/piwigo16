@@ -12,6 +12,7 @@ use Piwigo\Event\Location\LocBeginAbout;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
+use Piwigo\Session\SessionService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -42,6 +43,7 @@ final class AboutController implements ControllerInterface
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\FilterState $filterState,
         private readonly \Piwigo\Section\SectionContextRegistry $sectionContextRegistry,
+        private readonly SessionService $sessionService,
     ) {}
 
     #[\Override]
@@ -80,7 +82,7 @@ final class AboutController implements ControllerInterface
         $themeconf = is_array($themeconf) ? $themeconf : [];
         if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theAboutPage', $themeconf['hide_menu_on'], true)) {
             new MenubarRenderer()
-                ->render($urlService, $this->filterState, $this->sectionContextRegistry);
+                ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService);
         }
 
         new \Piwigo\Page\PageHeaderRenderer()

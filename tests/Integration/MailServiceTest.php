@@ -25,6 +25,8 @@ use Piwigo\Mail\MailRecipientRepository;
 use Piwigo\Mail\MailRecipientRepositoryInterface;
 use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Session\SessionEntity;
+use Piwigo\Session\SessionService;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserInfoEntity;
@@ -146,6 +148,7 @@ final class MailServiceTest extends IntegrationTestCase
             new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)),
             new HtmlService(),
             $this->conn,
+            new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)),
         );
     }
 

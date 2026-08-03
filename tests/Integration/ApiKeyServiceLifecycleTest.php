@@ -16,6 +16,8 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
+use Piwigo\Session\SessionEntity;
+use Piwigo\Session\SessionService;
 use Piwigo\Url\UrlService;
 
 /**
@@ -105,6 +107,7 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
             new ApiKeyRepository($this->em),
             new PasswordService(new PasswordRepository($this->conn)),
             new UrlService(new HtmlService()),
+            new SessionService($this->em->getRepository(SessionEntity::class)),
         );
 
         $this->conn->executeStatement('DELETE FROM ' . Tables::userAuthKeys() . " WHERE user_id = ? AND key_type = 'api_key'", [$this->userId]);
@@ -203,6 +206,7 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
             new ApiKeyRepository($this->em),
             new PasswordService(new PasswordRepository($this->conn)),
             new UrlService(new HtmlService()),
+            new SessionService($this->em->getRepository(SessionEntity::class)),
         );
 
         $result = $service->notifyExpiration('fixture_admin', 'fixture_admin@example.test', 5);
@@ -224,6 +228,7 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
             new ApiKeyRepository($this->em),
             new PasswordService(new PasswordRepository($this->conn)),
             new UrlService(new HtmlService()),
+            new SessionService($this->em->getRepository(SessionEntity::class)),
         );
 
         $result = $service->notifyExpiration('fixture_admin', 'fixture_admin@example.test', 1);

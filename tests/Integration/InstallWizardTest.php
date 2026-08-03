@@ -207,15 +207,6 @@ final class InstallWizardTest extends IntegrationTestCase
         }
         Kernel::reset();
         CurrentConfig::reset();
-        // render()'s step-2 body (via AuthService::logUser()'s
-        // session_start()/session_regenerate_id()) is the only thing in
-        // this file that ever touches SessionService -- its self-managed
-        // singleton (see SessionService::get()'s own docblock) otherwise
-        // survives into the next test still bound to this test's own
-        // throwaway database connection, dropped a few lines below. Reset
-        // before the drop so a later test starts from a clean, un-memoized
-        // state instead of resolving a stale connection.
-        SessionService::reset();
         foreach ($this->createdDatabases as $dbName) {
             $db = $this->newMysqli('');
             $db->query(sprintf('DROP DATABASE IF EXISTS `%s`', $dbName));
@@ -306,7 +297,7 @@ final class InstallWizardTest extends IntegrationTestCase
         ]);
         \Piwigo\Template\ScriptLoader::setUrlService(new \Piwigo\Url\UrlService(new \Piwigo\Html\HtmlService()));
 
-        $wizard = new InstallWizard($prefix, $this->paths, $dbCredentials);
+        $wizard = new InstallWizard($prefix, $this->paths, $dbCredentials, SessionService::get());
         $wizard->boot();
 
         return $wizard;
@@ -362,7 +353,7 @@ final class InstallWizardTest extends IntegrationTestCase
         // the CurrentPaths::get() shim. KernelContainerOverride::with()
         // rebinds Paths::class for just this test's own scope instead.
         KernelContainerOverride::with([Paths::class => $this->paths], function (): void {
-            $wizard = new InstallWizard('itest_', $this->paths, DbCredentials::current());
+            $wizard = new InstallWizard('itest_', $this->paths, DbCredentials::current(), SessionService::get());
 
             self::assertSame('_data/', $this->reflectPrivate($wizard, 'confDataLocation'));
         });
@@ -376,7 +367,7 @@ final class InstallWizardTest extends IntegrationTestCase
         $this->expectExceptionMessage("Invalid \$conf['data_location'] configuration: expected a string.");
 
         KernelContainerOverride::with([Paths::class => $this->paths], function (): void {
-            new InstallWizard('itest_', $this->paths, DbCredentials::current());
+            new InstallWizard('itest_', $this->paths, DbCredentials::current(), SessionService::get());
         });
     }
 

@@ -22,6 +22,7 @@ use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Image\ImageService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
+use Piwigo\Session\SessionService;
 use Piwigo\Site\LocalSiteReader;
 use Piwigo\Template\Template;
 use Psr\Http\Message\ServerRequestInterface;
@@ -101,6 +102,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
         private readonly CoreTabs $coreTabs,
+        private readonly SessionService $sessionService,
     ) {}
 
     private static function permissionService(): PermissionService
@@ -118,9 +120,9 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         return \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService();
     }
 
-    private static function imageService(Connection $conn): ImageService
+    private function imageService(Connection $conn): ImageService
     {
-        return new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), self::activityService());
+        return new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), self::activityService(), $this->sessionService);
     }
 
     #[\Override]
@@ -532,7 +534,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
 
             if (count($to_delete) > 0) {
                 if (! $simulate) {
-                    self::categoryService()->deleteCategories($to_delete, self::activityService(), $this->urlService);
+                    self::categoryService()->deleteCategories($to_delete, self::activityService(), $this->urlService, $this->sessionService);
                     foreach ($to_delete_derivative_dirs as $to_delete_dir) {
                         if (is_dir($to_delete_dir)) {
                             new DerivativeCacheService()
@@ -566,11 +568,13 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             $db_elements = [];
 
             if (count($cat_ids) > 0) {
-                $db_elements = self::imageService($conn)->getIdsAndPathsByStorageCategoryIds($cat_ids);
+                $db_elements = $this->imageService($conn)
+                    ->getIdsAndPathsByStorageCategoryIds($cat_ids);
             }
 
             // next element id available
-            $next_element_id = self::imageService($conn)->getNextId();
+            $next_element_id = $this->imageService($conn)
+                ->getNextId();
 
             $start = \Piwigo\Core\TimingHelper::getMoment();
 
@@ -718,10 +722,12 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             if (! $simulate) {
                 // inserts all new elements
                 if (count($inserts) > 0) {
-                    self::imageService($conn)->massInsertImages($inserts);
+                    $this->imageService($conn)
+                        ->massInsertImages($inserts);
 
                     // inserts all links between new elements and their storage category
-                    self::imageService($conn)->insertImageCategoryLinks($insert_links);
+                    $this->imageService($conn)
+                        ->insertImageCategoryLinks($insert_links);
                     \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
 
                     self::activityService()->record('photo', $caddiables, 'add', [
@@ -736,11 +742,13 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
 
                 // inserts all formats
                 if (count($insert_formats) > 0) {
-                    self::imageService($conn)->massInsertFormats($insert_formats);
+                    $this->imageService($conn)
+                        ->massInsertFormats($insert_formats);
                 }
 
                 if (count($formats_to_delete) > 0) {
-                    self::imageService($conn)->deleteFormatsByIds($formats_to_delete);
+                    $this->imageService($conn)
+                        ->deleteFormatsByIds($formats_to_delete);
                 }
             }
 
@@ -761,7 +769,8 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             }
             if (count($to_delete_elements) > 0) {
                 if (! $simulate) {
-                    self::imageService($conn)->deleteElements($to_delete_elements, $this->urlService);
+                    $this->imageService($conn)
+                        ->deleteElements($to_delete_elements, $this->urlService);
                 }
                 $counts['del_elements'] = count($to_delete_elements);
             }
@@ -826,13 +835,14 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
 
                 $counts['upd_elements'] = count($datas);
                 if (! $simulate and count($datas) > 0) {
-                    self::imageService($conn)->massUpdateFields(
-                        [
-                            'primary' => ['id'],
-                            'update' => $site_reader->get_update_attributes(),
-                        ],
-                        $datas
-                    );
+                    $this->imageService($conn)
+                        ->massUpdateFields(
+                            [
+                                'primary' => ['id'],
+                                'update' => $site_reader->get_update_attributes(),
+                            ],
+                            $datas
+                        );
                     \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
                 }
                 $template->append('footer_elements', '<!-- update files : '
@@ -927,23 +937,24 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
 
             if (! $simulate) {
                 if (count($datas) > 0) {
-                    self::imageService($conn)->massUpdateFields(
-                        [
-                            'primary' => ['id'],
-                            'update' => array_values(array_unique(
-                                array_merge(
-                                    array_diff(
-                                        $site_reader->get_metadata_attributes(),
-                                        // keywords and tags fields are managed separately
-                                        ['keywords', 'tags']
-                                    ),
-                                    ['date_metadata_update']
-                                )
-                            )),
-                        ],
-                        $datas,
-                        isset($post['meta_empty_overrides']) ? 0 : BatchWriter::SKIP_EMPTY
-                    );
+                    $this->imageService($conn)
+                        ->massUpdateFields(
+                            [
+                                'primary' => ['id'],
+                                'update' => array_values(array_unique(
+                                    array_merge(
+                                        array_diff(
+                                            $site_reader->get_metadata_attributes(),
+                                            // keywords and tags fields are managed separately
+                                            ['keywords', 'tags']
+                                        ),
+                                        ['date_metadata_update']
+                                    )
+                                )),
+                            ],
+                            $datas,
+                            isset($post['meta_empty_overrides']) ? 0 : BatchWriter::SKIP_EMPTY
+                        );
                     \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
                 }
                 $tagService->setTagsOf($tags_of);

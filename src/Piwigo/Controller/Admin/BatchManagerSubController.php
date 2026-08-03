@@ -23,6 +23,7 @@ use Piwigo\Event\Admin\BatchManagerUrlFilter;
 use Piwigo\Event\Admin\PerformBatchManagerPrefilters;
 use Piwigo\Image\ImageService;
 use Piwigo\Lang\Translator;
+use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -71,6 +72,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
         private readonly CoreTabs $coreTabs,
+        private readonly SessionService $sessionService,
     ) {}
 
     private static function imageService(): ImageService
@@ -170,7 +172,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
             \Piwigo\Bootstrap\AdminAccessor::batchManagerUnitPageRenderer()
                 ->render($cat_elements_id, $start);
         } else {
-            new BatchManagerGlobalPageRenderer($this->redirectService, $this->urlService, $this->currentLogger)
+            new BatchManagerGlobalPageRenderer($this->redirectService, $this->urlService, $this->currentLogger, $this->sessionService)
                 ->render($cat_elements_id, $start, $duplicates_on_fields);
         }
     }

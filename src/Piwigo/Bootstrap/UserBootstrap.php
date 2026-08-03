@@ -10,6 +10,7 @@ use Piwigo\Auth\CookieService;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Core\ApiKeyRequestFlag;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
@@ -17,6 +18,7 @@ use Piwigo\Core\WsContext;
 use Piwigo\Db\DbConnection;
 use Piwigo\Event\User\UserInit;
 use Piwigo\Html\HtmlService;
+use Piwigo\Session\SessionService;
 use Piwigo\Url\UrlService;
 use Piwigo\Ws\PwgCore;
 use Piwigo\Ws\PwgError;
@@ -58,6 +60,10 @@ final class UserBootstrap
         $userBootstrapRequest = Request\UserBootstrapRequest::fromGlobals();
 
         $conn = DbConnection::build();
+        $sessionService = Kernel::container()->get(SessionService::class);
+        if (! $sessionService instanceof SessionService) {
+            throw new \LogicException('Container returned an unexpected type for ' . SessionService::class);
+        }
         $authService = new AuthService(
             new AuthRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
             new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)),
@@ -65,6 +71,7 @@ final class UserBootstrap
             new PasswordService(new PasswordRepository($conn)),
             new CookieService(),
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class),
+            $sessionService,
         );
         $userService = new \Piwigo\Users\UserService(
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class),
@@ -73,6 +80,7 @@ final class UserBootstrap
             new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)),
             new HtmlService(),
             $conn,
+            $sessionService,
         );
 
         $guest_id_int = \Piwigo\Config\CurrentConfig::guestId();

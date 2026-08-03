@@ -18,6 +18,8 @@ use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
+use Piwigo\Session\SessionEntity;
+use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Template;
 use Piwigo\Url\UrlService;
@@ -80,7 +82,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         CurrentConfigService::set(new ConfigService($this->buildConfigRepository()));
-        $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService(), new UrlService(new HtmlService()), new ConfigService($this->buildConfigRepository()), new FilesystemIntegrityChecker());
+        $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService(), new UrlService(new HtmlService()), new ConfigService($this->buildConfigRepository()), new FilesystemIntegrityChecker(), new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class)));
     }
 
     #[\Override]
@@ -461,6 +463,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             new UrlService(new HtmlService()),
             new ConfigService($this->buildConfigRepository()),
             new FilesystemIntegrityChecker(),
+            new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class)),
             new \Piwigo\Cache\PersistentFileCache(),
         );
 

@@ -20,6 +20,7 @@ use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Permission\PermissionService;
+use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\Template;
 use Piwigo\Users\UserService;
@@ -42,6 +43,7 @@ final class PictureModifyPageRenderer
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\ProcessCache $processCache,
+        private readonly SessionService $sessionService,
     ) {}
 
     private static function userService(): UserService
@@ -89,7 +91,7 @@ final class PictureModifyPageRenderer
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $conn = DbConnection::build();
-        $imageService = new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService());
+        $imageService = new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), $this->sessionService);
         $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);

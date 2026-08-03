@@ -37,6 +37,7 @@ final class NotificationController implements ControllerInterface
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\FilterState $filterState,
         private readonly \Piwigo\Section\SectionContextRegistry $sectionContextRegistry,
+        private readonly SessionService $sessionService,
     ) {}
 
     #[\Override]
@@ -90,7 +91,7 @@ final class NotificationController implements ControllerInterface
         $themeconf = is_array($themeconf) ? $themeconf : [];
         if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theNotificationPage', $themeconf['hide_menu_on'], true)) {
             new MenubarRenderer()
-                ->render($urlService, $this->filterState, $this->sectionContextRegistry);
+                ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService);
         }
 
         new \Piwigo\Page\PageHeaderRenderer()
@@ -107,7 +108,7 @@ final class NotificationController implements ControllerInterface
     private function findAvailableFeedId(FeedRepository $feedRepo): string
     {
         while (true) {
-            $key = SessionService::get()->generateKey(50);
+            $key = $this->sessionService->generateKey(50);
             if (! $feedRepo->existsById($key)) {
                 return $key;
             }

@@ -67,6 +67,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         private ActivityLoggerInterface $activityLogger,
         private HtmlRenderingInterface $htmlRenderer,
         private Connection $conn,
+        private SessionService $sessionService,
     ) {}
 
     /**
@@ -248,7 +249,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     public function deleteUser(UserId $userId): void
     {
         $this->repo->deleteUser($userId);
-        SessionService::get()->deleteUserSessions($userId->value);
+        $this->sessionService->deleteUserSessions($userId->value);
         \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new DeleteUser($userId->value));
         $this->activityLogger->record('user', $userId->value, 'delete');
     }
@@ -1430,6 +1431,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             $this->passwordService(),
             new CookieService(),
             \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class),
+            $this->sessionService,
         );
 
         if (isset($updates[$user_fields['password']])) {
@@ -1450,7 +1452,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             // It's like deactivating the user.
             if ($update_status === 'guest') {
                 foreach ($user_ids_for_status as $user_id_for_status) {
-                    SessionService::get()->deleteUserSessions($user_id_for_status);
+                    $this->sessionService->deleteUserSessions($user_id_for_status);
                 }
             }
         }

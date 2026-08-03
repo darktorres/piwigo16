@@ -33,6 +33,7 @@ final readonly class CategoryDefaultRenderer
         private ImageRepository $imageRepo,
         private CommentCounterInterface $commentCounter,
         private UrlServiceInterface $urlService,
+        private SessionService $sessionService,
     ) {}
 
     /**
@@ -195,7 +196,7 @@ final readonly class CategoryDefaultRenderer
             $tplThumbnailsVar[] = $tplVar;
         }
 
-        $indexDeriv = SessionService::get()->getSessionVar('index_deriv', ImageStdParams::THUMB);
+        $indexDeriv = $this->sessionService->getSessionVar('index_deriv', ImageStdParams::THUMB);
         $indexDeriv = is_string($indexDeriv) ? $indexDeriv : ImageStdParams::THUMB;
 
         $template->assign([

@@ -63,6 +63,7 @@ final class GalleryController implements ControllerInterface
         private readonly ConfigService $configService,
         private readonly \Piwigo\Core\FilterState $filterState,
         private readonly SectionContextRegistry $sectionContextRegistry,
+        private readonly SessionService $sessionService,
     ) {}
 
     private static function categoryService(): CategoryService
@@ -132,9 +133,9 @@ final class GalleryController implements ControllerInterface
         // ---------------------------------------- change of image display order
         if ($galleryDisplay->hasImageOrder) {
             if ($galleryDisplay->validImageOrder !== null) {
-                SessionService::get()->setSessionVar('image_order', $galleryDisplay->validImageOrder);
+                $this->sessionService->setSessionVar('image_order', $galleryDisplay->validImageOrder);
             } else {
-                SessionService::get()->unsetSessionVar('image_order');
+                $this->sessionService->unsetSessionVar('image_order');
             }
             $redirectService->redirect(
                 $urlService->duplicateIndexUrl(
@@ -146,7 +147,7 @@ final class GalleryController implements ControllerInterface
         if ($galleryDisplay->hasDisplayParam) {
             \Piwigo\Core\PageState::current()->setMetaRobotsFlag('noindex');
             if ($galleryDisplay->display !== null && array_key_exists($galleryDisplay->display, ImageStdParams::get_defined_type_map())) {
-                SessionService::get()->setSessionVar('index_deriv', $galleryDisplay->display);
+                $this->sessionService->setSessionVar('index_deriv', $galleryDisplay->display);
             }
         }
 
@@ -193,7 +194,7 @@ final class GalleryController implements ControllerInterface
 
         // -------------------------------------------------- menubar
         $categoryCountCategories = new MenubarRenderer()
-            ->render($urlService, $this->filterState, $this->sectionContextRegistry);
+            ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService);
 
         $template->set_filename('index', 'index.tpl');
 
@@ -445,7 +446,7 @@ final class GalleryController implements ControllerInterface
             and $section_context->section !== 'most_visited'
             and $section_context->section !== 'best_rated') {
             $preferred_image_orders = $categoryService->getPreferredImageOrders();
-            $order_idx = SessionService::get()->getSessionVar('image_order', 0);
+            $order_idx = $this->sessionService->getSessionVar('image_order', 0);
 
             // get first order field and direction
             $order_by = \Piwigo\Config\CurrentConfig::orderBy();

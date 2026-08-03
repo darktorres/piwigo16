@@ -22,6 +22,10 @@ use Piwigo\Users\UserService;
 
 final class C13yInternal
 {
+    public function __construct(
+        private readonly SessionService $sessionService,
+    ) {}
+
     /**
      * Legacy Coupling Retirement Phase 8, 8k: registration used to be a
      * constructor side effect -- every `new C13yInternal()` silently
@@ -202,7 +206,7 @@ final class C13yInternal
                         $name = 'guest';
                     } elseif ($id === $webmaster_id) {
                         $name = 'webmaster';
-                        $password = SessionService::get()->generateKey(6);
+                        $password = $this->sessionService->generateKey(6);
                     }
 
                     if (isset($name)) {
@@ -210,7 +214,7 @@ final class C13yInternal
                         while (! $name_ok) {
                             $name_ok = (self::userService()->getUserId(\Piwigo\Common\ValueObject\Username::from($name)) === null);
                             if (! $name_ok) {
-                                $name .= SessionService::get()->generateKey(1);
+                                $name .= $this->sessionService->generateKey(1);
                             }
                         }
 

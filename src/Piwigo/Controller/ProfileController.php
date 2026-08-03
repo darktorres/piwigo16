@@ -14,6 +14,7 @@ use Piwigo\Event\Location\LocEndProfile;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Menu\MenubarRenderer;
+use Piwigo\Session\SessionService;
 use Piwigo\Users\UserService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -47,6 +48,7 @@ final class ProfileController implements ControllerInterface
         private readonly \Piwigo\Core\FilterState $filterState,
         private readonly \Piwigo\Section\SectionContextRegistry $sectionContextRegistry,
         private readonly \Piwigo\Core\AdminContext $adminContext,
+        private readonly SessionService $sessionService,
     ) {}
 
     private static function userService(): UserService
@@ -174,7 +176,7 @@ final class ProfileController implements ControllerInterface
         if (! is_array($hide_menu_on) or ! in_array('theProfilePage', $hide_menu_on, true)) {
             if (($themeconf['id'] ?? null) !== 'standard_pages') {
                 new MenubarRenderer()
-                    ->render($urlService, $this->filterState, $this->sectionContextRegistry);
+                    ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService);
             }
         }
 

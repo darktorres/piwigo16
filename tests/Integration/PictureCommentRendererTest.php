@@ -17,6 +17,8 @@ use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Picture\PictureCommentRenderer;
+use Piwigo\Session\SessionEntity;
+use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Template;
 use Piwigo\Url\UrlService;
@@ -115,7 +117,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $this->seedUser($ownerId, UserStatus::Normal);
         CurrentConfig::setUserCanEditComment(true);
 
-        $this->renderer()->render($commentIdB, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php');
+        $this->renderer()->render($commentIdB, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService());
 
         $rows = $this->renderedComments();
         $rowA = $this->findRenderedRow($rows, $commentIdA);
@@ -160,7 +162,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $_POST['content'] = 'A guest comment attempt.';
 
         try {
-            $this->renderer()->render(null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php');
+            $this->renderer()->render(null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService());
             self::fail('Expected a ResponseReadyException');
         } catch (ResponseReadyException $e) {
             self::assertSame(200, $e->response()->getStatusCode());
@@ -176,7 +178,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $_POST['content'] = 'Spam attempt on a non-commentable picture.';
 
         try {
-            $this->renderer()->render(null, $imageId, 0, $this->urlService(), [['commentable' => false]], '/picture.php');
+            $this->renderer()->render(null, $imageId, 0, $this->urlService(), [['commentable' => false]], '/picture.php', $this->sessionService());
             self::fail('Expected a ResponseReadyException');
         } catch (ResponseReadyException $e) {
             self::assertSame(403, $e->response()->getStatusCode());
@@ -201,7 +203,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $_POST['key'] = new EphemeralKeyService()->generate(0, (string) $imageId);
 
         try {
-            $this->renderer()->render(null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php');
+            $this->renderer()->render(null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService());
 
             self::assertSame(
                 [
@@ -230,7 +232,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $_POST['key'] = new EphemeralKeyService()->generate(0, (string) $imageId);
 
         try {
-            $this->renderer()->render(null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php');
+            $this->renderer()->render(null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService());
 
             self::assertSame(['Your comment has been registered'], PageState::current()->infos);
         } finally {
@@ -255,7 +257,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $_POST['key'] = 'totally-invalid-key';
 
         try {
-            $this->renderer()->render(null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php');
+            $this->renderer()->render(null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService());
 
             self::assertSame(
                 ['Your comment has NOT been registered because it did not pass the validation rules'],
@@ -284,7 +286,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $_GET['comments_order'] = 'desc';
 
         try {
-            $this->renderer()->render(null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php');
+            $this->renderer()->render(null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService());
 
             self::assertSame('desc', \Piwigo\Session\SessionService::get()->getSessionVar('comments_order'));
             // The nav link toggles to the opposite of whatever order is now
@@ -363,7 +365,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
      */
     private function renderComments(int $imageId): array
     {
-        $this->renderer()->render(null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php');
+        $this->renderer()->render(null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService());
 
         return $this->renderedComments();
     }
@@ -376,6 +378,11 @@ final class PictureCommentRendererTest extends IntegrationTestCase
     private function urlService(): UrlService
     {
         return new UrlService(new HtmlService());
+    }
+
+    private function sessionService(): SessionService
+    {
+        return new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class));
     }
 
     /**

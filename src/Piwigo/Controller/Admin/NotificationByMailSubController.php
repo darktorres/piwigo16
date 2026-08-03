@@ -18,6 +18,7 @@ use Piwigo\Event\Lifecycle\NbmEventHandlerAdded;
 use Piwigo\Event\Mail\NbmRenderGlobalCustomizeMailContent;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\NotificationByMailSender;
+use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -88,6 +89,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
         private readonly CoreTabs $coreTabs,
+        private readonly SessionService $sessionService,
     ) {}
 
     #[\Override]
@@ -130,7 +132,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         // +-----------------------------------------------------------------------+
         if (count($post) === 0) {
             // No insert data in post mode
-            self::insertNewDataUserMailNotification($nbmSender, $this->redirectService, $this->urlService);
+            self::insertNewDataUserMailNotification($nbmSender, $this->redirectService, $this->urlService, $this->sessionService);
         }
 
         // +-----------------------------------------------------------------------+
@@ -421,7 +423,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
     /**
      * Inserting News users
      */
-    private static function insertNewDataUserMailNotification(NotificationByMailSender $nbmSender, RedirectServiceInterface $redirectService, UrlServiceInterface $urlService): void
+    private static function insertNewDataUserMailNotification(NotificationByMailSender $nbmSender, RedirectServiceInterface $redirectService, UrlServiceInterface $urlService, SessionService $sessionService): void
     {
         // Recomputed rather than threaded from handle()'s own CoreTabs
         // value: this is the method's only real call site, and it already
@@ -430,7 +432,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         $base_url = $urlService->getRootUrl() . 'admin.php';
 
         $conn = DbConnection::build();
-        $notificationByMailService = new \Piwigo\Notification\NotificationByMailService(new \Piwigo\Notification\NotificationByMailRepository($conn));
+        $notificationByMailService = new \Piwigo\Notification\NotificationByMailService(new \Piwigo\Notification\NotificationByMailRepository($conn), $sessionService);
 
         // user_fields maps generic field names to table-specific column names
         // (see include/config_default.inc.php); every value is a plain string.

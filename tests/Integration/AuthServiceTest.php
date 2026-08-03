@@ -26,6 +26,8 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Html\HtmlService;
     use Piwigo\Http\ResponseReadyException;
     use Piwigo\PluginConfig\EventDispatcher;
+    use Piwigo\Session\SessionEntity;
+    use Piwigo\Session\SessionService;
     use Piwigo\Url\UrlService;
     use Piwigo\Users\CurrentUser;
     use Piwigo\Users\User;
@@ -121,6 +123,7 @@ namespace Piwigo\Tests\Integration {
                 new PasswordService(new PasswordRepository(DbConnection::build())),
                 new CookieService(),
                 $this->failedLoginRepo,
+                new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class)),
             );
         }
 
@@ -670,6 +673,7 @@ namespace Piwigo\Tests\Integration {
                 new ApiKeyRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)),
                 new PasswordService(new PasswordRepository($this->conn)),
                 new UrlService(new HtmlService()),
+                new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)),
             );
             $created = $apiKeyService->create(4, 30, 'Wrong Secret Test Key');
 
@@ -692,6 +696,7 @@ namespace Piwigo\Tests\Integration {
                 new ApiKeyRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)),
                 new PasswordService(new PasswordRepository($this->conn)),
                 new UrlService(new HtmlService()),
+                new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)),
             );
             $created = $apiKeyService->create(4, 30, 'Revoked Test Key');
             $revoked = $apiKeyService->revoke(4, $created['auth_key']);

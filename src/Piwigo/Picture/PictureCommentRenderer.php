@@ -75,7 +75,7 @@ final class PictureCommentRenderer
      *   native DBAL int -- only `uppercats`/`status`/`global_rank` are
      *   genuinely string|null.
      */
-    public function render(?CommentId $editCommentId, int $imageId, int $start, UrlServiceInterface $urlService, array $related_categories, string $url_self): void
+    public function render(?CommentId $editCommentId, int $imageId, int $start, UrlServiceInterface $urlService, array $related_categories, string $url_self, SessionService $sessionService): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -185,9 +185,9 @@ final class PictureCommentRenderer
             // comments order (get, session, conf)
             $getCommentsOrder = $pictureCommentSubmitRequest->commentsOrderRaw;
             if ($getCommentsOrder !== null && $getCommentsOrder !== '' && $getCommentsOrder !== '0' && in_array(strtoupper($getCommentsOrder), ['ASC', 'DESC'], true)) {
-                SessionService::get()->setSessionVar('comments_order', $getCommentsOrder);
+                $sessionService->setSessionVar('comments_order', $getCommentsOrder);
             }
-            $commentsOrder = SessionService::get()->getSessionVar('comments_order', \Piwigo\Config\CurrentConfig::commentsOrder());
+            $commentsOrder = $sessionService->getSessionVar('comments_order', \Piwigo\Config\CurrentConfig::commentsOrder());
             $commentsOrder = is_string($commentsOrder) ? $commentsOrder : 'ASC';
 
             $template->assign([

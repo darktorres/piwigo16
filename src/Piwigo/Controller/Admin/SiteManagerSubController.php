@@ -13,6 +13,7 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Event\Album\GetAdminsSiteLinks;
+use Piwigo\Session\SessionService;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -54,6 +55,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
+        private readonly SessionService $sessionService,
     ) {}
 
     #[\Override]
@@ -142,7 +144,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
             switch ($siteManagerRequest->action) {
                 case 'delete':
 
-                    \Piwigo\Bootstrap\CoreDomainAccessor::categoryService()->deleteSite($site_id, \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), $this->urlService);
+                    \Piwigo\Bootstrap\CoreDomainAccessor::categoryService()->deleteSite($site_id, \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), $this->urlService, $this->sessionService);
                     \Piwigo\Core\PageState::current()->addInfo($galleries_url . ' ' . Lang::t('deleted'));
                     break;
 

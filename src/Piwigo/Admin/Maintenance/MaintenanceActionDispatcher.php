@@ -59,6 +59,7 @@ final class MaintenanceActionDispatcher
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
         private readonly FilesystemIntegrityChecker $filesystemIntegrityChecker,
+        private readonly SessionService $sessionService,
         private readonly ?\Piwigo\Cache\PersistentCache $persistentCache = null,
     ) {}
 
@@ -157,7 +158,7 @@ final class MaintenanceActionDispatcher
 
             case 'sessions':
 
-                SessionService::get()->sessionGc();
+                $this->sessionService->sessionGc();
 
                 $user_fields = \Piwigo\Config\CurrentConfig::userFields();
                 $id_field = $user_fields['id'];
@@ -188,7 +189,7 @@ final class MaintenanceActionDispatcher
 
             case 'empty_lounge':
 
-                $rows = new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService())
+                $rows = new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), $this->sessionService)
                     ->emptyLounge();
                 \Piwigo\Core\PageState::current()->addInfo(sprintf('%d photos were moved from the upload lounge to their albums', count($rows ?? [])));
                 break;

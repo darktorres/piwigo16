@@ -21,6 +21,8 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Group\GroupRepository;
     use Piwigo\Html\HtmlService;
     use Piwigo\Mail\MailService;
+    use Piwigo\Session\SessionEntity;
+    use Piwigo\Session\SessionService;
     use Piwigo\Url\UrlService;
     use Piwigo\Users\CurrentUser;
     use Piwigo\Users\UserRepository;
@@ -86,7 +88,7 @@ namespace Piwigo\Tests\Integration {
             CurrentConfig::setAvailablePermissionLevels([0, 1, 2, 4, 8]);
 
             $this->conn = DbConnection::build();
-            $this->service = new UserService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new MailService(), new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), new HtmlService(), $this->conn);
+            $this->service = new UserService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new MailService(), new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), new HtmlService(), $this->conn, new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)));
 
             // checkAndSaveUserInfos()'s own success path (any call that
             // doesn't return an early 'error') reaches

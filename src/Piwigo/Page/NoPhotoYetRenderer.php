@@ -13,6 +13,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Event\Location\LocEndNoPhotoYet;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
 
 /**
@@ -42,6 +43,7 @@ final readonly class NoPhotoYetRenderer
         private readonly UrlServiceInterface $urlService,
         private readonly Paths $paths,
         private readonly AdminContext $adminContext,
+        private readonly SessionService $sessionService,
     ) {}
 
     public function render(): void
@@ -61,7 +63,7 @@ final readonly class NoPhotoYetRenderer
                 // make sure we don't use the mobile theme, which is not compatible with
                 // the "no photo yet" feature
                 $user_theme = \Piwigo\Users\CurrentUser::get()->theme;
-                $user_theme = $user_theme !== '' ? $user_theme : new \Piwigo\Users\UserService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), new HtmlService(), \Piwigo\Db\DbConnection::build())->getDefaultTheme();
+                $user_theme = $user_theme !== '' ? $user_theme : new \Piwigo\Users\UserService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), new HtmlService(), \Piwigo\Db\DbConnection::build(), $this->sessionService)->getDefaultTheme();
                 $template = new Template($this->paths->root . 'themes', $user_theme);
                 \Piwigo\Template\CurrentTemplate::set($template);
 

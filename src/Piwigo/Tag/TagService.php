@@ -77,7 +77,7 @@ final readonly class TagService
      */
     private function newImageService(): ImageService
     {
-        return new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityLogger);
+        return new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityLogger, \Piwigo\Session\SessionService::get());
     }
 
     /**

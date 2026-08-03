@@ -22,12 +22,13 @@ final readonly class NotificationByMailService
 {
     public function __construct(
         private NotificationByMailRepository $repo,
+        private SessionService $sessionService,
     ) {}
 
     public function findAvailableCheckKey(): string
     {
         while (true) {
-            $key = SessionService::get()->generateKey(16);
+            $key = $this->sessionService->generateKey(16);
             if ($this->repo->countByCheckKey($key) === 0) {
                 return $key;
             }

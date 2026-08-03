@@ -50,7 +50,7 @@ final class PluginsInstalledPageRenderer
      * slug statically (it's the only class registered for the 'plugins'
      * slug in config/admin_pages.php).
      */
-    public function render(string $pageSlug, UrlServiceInterface $urlService, \Piwigo\Core\CurrentLogger $currentLogger): void
+    public function render(string $pageSlug, UrlServiceInterface $urlService, \Piwigo\Core\CurrentLogger $currentLogger, SessionService $sessionService): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -64,9 +64,9 @@ final class PluginsInstalledPageRenderer
         if ($pluginsDisplay->showDetails !== null) {
             $show_details = $pluginsDisplay->showDetails;
 
-            SessionService::get()->setSessionVar('plugins_show_details', $show_details);
-        } elseif (SessionService::get()->getSessionVar('plugins_show_details') !== null) {
-            $show_details = SessionService::get()->getSessionVar('plugins_show_details');
+            $sessionService->setSessionVar('plugins_show_details', $show_details);
+        } elseif ($sessionService->getSessionVar('plugins_show_details') !== null) {
+            $show_details = $sessionService->getSessionVar('plugins_show_details');
         } else {
             $show_details = false;
         }

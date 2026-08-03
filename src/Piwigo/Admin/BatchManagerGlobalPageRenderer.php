@@ -21,6 +21,7 @@ use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
+use Piwigo\Session\SessionService;
 use Piwigo\Site\LocalSiteReader;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\Template;
@@ -56,6 +57,7 @@ final class BatchManagerGlobalPageRenderer
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+        private readonly SessionService $sessionService,
     ) {}
 
     private static function tagService(): TagService
@@ -178,7 +180,7 @@ final class BatchManagerGlobalPageRenderer
             $redirect = false;
 
             $tagService = self::tagService();
-            $imageService = new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService());
+            $imageService = new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), $this->sessionService);
 
             if ($action === 'remove_from_caddie') {
                 $current_user_id = \Piwigo\Users\CurrentUser::get()->id->value;

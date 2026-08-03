@@ -92,6 +92,7 @@ final class PictureController implements ControllerInterface
         private readonly \Piwigo\Core\FilterState $filterState,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
         private readonly SectionContextRegistry $sectionContextRegistry,
+        private readonly SessionService $sessionService,
     ) {}
 
     private static function permissionService(): PermissionService
@@ -291,10 +292,10 @@ final class PictureController implements ControllerInterface
 
         // There is cookie, so we must handle it at the beginning
         if ($pictureRequest->metadataPresent) {
-            if (SessionService::get()->getSessionVar('show_metadata') === null) {
-                SessionService::get()->setSessionVar('show_metadata', 1);
+            if ($this->sessionService->getSessionVar('show_metadata') === null) {
+                $this->sessionService->setSessionVar('show_metadata', 1);
             } else {
-                SessionService::get()->unsetSessionVar('show_metadata');
+                $this->sessionService->unsetSessionVar('show_metadata');
             }
         }
 
@@ -566,11 +567,11 @@ final class PictureController implements ControllerInterface
         } else {
             // don't increment counter if comming from the same picture
             // (actions)
-            $referer_image_id = SessionService::get()->getSessionVar('referer_image_id', 0);
+            $referer_image_id = $this->sessionService->getSessionVar('referer_image_id', 0);
             if (is_numeric($referer_image_id) and (int) $referer_image_id === $image_id) {
                 $inc_hit_count = false;
             }
-            SessionService::get()->setSessionVar('referer_image_id', $image_id);
+            $this->sessionService->setSessionVar('referer_image_id', $image_id);
         }
 
         // don't increment if adding a comment
@@ -1188,7 +1189,7 @@ final class PictureController implements ControllerInterface
             and $picture['next']['src_image']->is_original()
             and $template->get_template_vars('U_PREFETCH') === null
             and ! str_contains($http_user_agent, 'Chrome/')) {
-            $prefetch_deriv_type = SessionService::get()->getSessionVar('picture_deriv', \Piwigo\Config\CurrentConfig::derivativeDefaultSize());
+            $prefetch_deriv_type = $this->sessionService->getSessionVar('picture_deriv', \Piwigo\Config\CurrentConfig::derivativeDefaultSize());
             if (! is_string($prefetch_deriv_type)) {
                 $prefetch_deriv_type = ImageStdParams::MEDIUM;
             }
@@ -1216,9 +1217,9 @@ final class PictureController implements ControllerInterface
             ->render($image_id, $urlService, $picture, $url_self);
         if (\Piwigo\Config\CurrentConfig::activateComments()) {
             new PictureCommentRenderer()
-                ->render($edit_comment, $image_id, $section_context->start, $urlService, $related_categories, $url_self);
+                ->render($edit_comment, $image_id, $section_context->start, $urlService, $related_categories, $url_self, $this->sessionService);
         }
-        if ($metadata_showable and SessionService::get()->getSessionVar('show_metadata') !== null) {
+        if ($metadata_showable and $this->sessionService->getSessionVar('show_metadata') !== null) {
             new PictureMetadataRenderer()
                 ->render($picture, $this->currentLogger);
         }
@@ -1228,7 +1229,7 @@ final class PictureController implements ControllerInterface
         $themeconf = is_array($themeconf) ? $themeconf : [];
         if (\Piwigo\Config\CurrentConfig::pictureMenu() and (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('thePicturePage', $themeconf['hide_menu_on'], true))) {
             new MenubarRenderer()
-                ->render($urlService, $this->filterState, $this->sectionContextRegistry);
+                ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService);
         }
 
         // The slideshow branch above may have set $refresh/$url_link
@@ -1291,7 +1292,7 @@ final class PictureController implements ControllerInterface
         if (isset($_COOKIE['picture_deriv'])) {
             if (is_string($_COOKIE['picture_deriv'])
                 and array_key_exists($_COOKIE['picture_deriv'], ImageStdParams::get_defined_type_map())) {
-                SessionService::get()->setSessionVar('picture_deriv', $_COOKIE['picture_deriv']);
+                $this->sessionService->setSessionVar('picture_deriv', $_COOKIE['picture_deriv']);
             }
             setcookie('picture_deriv', '', [
                 'expires' => 0,
@@ -1299,7 +1300,7 @@ final class PictureController implements ControllerInterface
                     ->cookiePath(),
             ]);
         }
-        $deriv_type = SessionService::get()->getSessionVar('picture_deriv', \Piwigo\Config\CurrentConfig::derivativeDefaultSize());
+        $deriv_type = $this->sessionService->getSessionVar('picture_deriv', \Piwigo\Config\CurrentConfig::derivativeDefaultSize());
         if (! is_string($deriv_type)) {
             $deriv_type = ImageStdParams::MEDIUM;
         }

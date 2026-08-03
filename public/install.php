@@ -26,6 +26,7 @@ use Piwigo\Bootstrap\InstallBootstrap;
 use Piwigo\Core\Env;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbCredentials;
+use Piwigo\Session\SessionService;
 
 // vendor/autoload.php must be required directly here -- Paths::fromRoot()
 // below is a Piwigo\ class, so the autoloader must already be active
@@ -76,7 +77,7 @@ $dbCredentials->seed([
 \Piwigo\Template\ScriptLoader::setUrlService(new \Piwigo\Url\UrlService(new \Piwigo\Html\HtmlService()));
 
 // ---------------------------------------------------------------- orchestration
-$wizard = new InstallWizard($prefixeTable, $paths, $dbCredentials);
+$wizard = new InstallWizard($prefixeTable, $paths, $dbCredentials, SessionService::get());
 
 // Found live while verifying Part II's public/ relocation, unrelated to the
 // move itself: InstallWizard::boot()'s own "PHP extension mysqli is not

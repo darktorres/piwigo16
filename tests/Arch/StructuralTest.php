@@ -237,6 +237,7 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
         '/src/Piwigo/Core/FilesystemHelper.php',
         '/src/Piwigo/Core/CurrentPaths.php',
         '/src/Piwigo/Db/DbCredentials.php',
+        '/src/Piwigo/Session/SessionService.php',
     ];
 
     $hits = [
@@ -591,6 +592,38 @@ test('DbCredentials::current() transitional bridge has a shrinking, known allow-
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'DbCredentials::current(');
+
+    $disallowed = array_values(array_filter(
+        $hits,
+        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
+    ));
+
+    expect(describeCallSites($disallowed))->toBe([]);
+});
+
+test('SessionService::get() transitional bridge has a shrinking, known allow-list', function (): void {
+    // Singleton/service-locator elimination campaign, Phase 4: same shape
+    // as DbCredentials::current() above (no Static suffix -- there is no
+    // competing real instance method to disambiguate from). DeviceHelper
+    // is a stateless static utility outside this campaign's own scope (no
+    // instance context to receive constructor injection through). Ws/
+    // PwgUsers.php and Ws/PwgCategories.php are Phase-10-locked static
+    // dispatch code. Tag/TagService.php's newImageService()/MailService.php's
+    // authService()/userService() are private lazy-default helpers on
+    // classes that deliberately avoid a required constructor dependency
+    // (~50 `new MailService()`/~45 `new TagService()` construction sites
+    // each), matching FilesystemHelper's own "no wrapper needed" precedent.
+    $repoRoot = __DIR__ . '/../..';
+
+    $allowedFiles = [
+        '/src/Piwigo/Core/DeviceHelper.php',
+        '/src/Piwigo/Mail/MailService.php',
+        '/src/Piwigo/Tag/TagService.php',
+        '/src/Piwigo/Ws/PwgCategories.php',
+        '/src/Piwigo/Ws/PwgUsers.php',
+    ];
+
+    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'SessionService::get(');
 
     $disallowed = array_values(array_filter(
         $hits,

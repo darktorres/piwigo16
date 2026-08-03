@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Bootstrap;
 
 use Piwigo\Auth\CookieService;
+use Piwigo\Core\Kernel;
 use Piwigo\Session\PwgSession;
+use Piwigo\Session\SessionService;
 
 /**
  * Installs Piwigo's DB-backed session save handler before session_start()
@@ -35,7 +37,11 @@ final class SessionBootstrap
 
         if (\Piwigo\Config\CurrentConfig::sessionSaveHandler() === 'db'
           and \Piwigo\Core\InstallationFlag::isActiveStatic()) {
-            session_set_save_handler(new PwgSession());
+            $sessionService = Kernel::container()->get(SessionService::class);
+            if (! $sessionService instanceof SessionService) {
+                throw new \LogicException('Container returned an unexpected type for ' . SessionService::class);
+            }
+            session_set_save_handler(new PwgSession($sessionService));
 
             if (function_exists('ini_set')) {
                 $session_use_cookies = \Piwigo\Config\CurrentConfig::sessionUseCookies();

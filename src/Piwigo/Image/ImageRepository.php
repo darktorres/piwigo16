@@ -3202,19 +3202,23 @@ final class ImageRepository extends EntityRepository
      * {@see \Piwigo\Comment\CommentRepository::findForImage()}'s own
      * $order.
      *
-     * `SQL_CALC_FOUND_ROWS` has no `QueryBuilder` fluent equivalent, so
-     * this stays hand-built SQL, same as
-     * {@see \Piwigo\Comment\CommentRepository::findAllWithConditions()}.
+     * Phase 5 Item 19: `SQL_CALC_FOUND_ROWS`/`FOUND_ROWS()` replaced with
+     * `COUNT(*) OVER() AS total_count`, computed in the same query as the
+     * row data instead of a second round-trip coupled to connection
+     * state -- `GROUP BY i.id` here (not `DISTINCT`), so the window
+     * function (evaluated after GROUP BY, before LIMIT/OFFSET) reports
+     * the exact same total the old mechanism did. `total_count` is
+     * stripped back out of each row before returning -- `i.*` never
+     * included it before this change.
      *
      * Item 14 DQL audit, re-corrected: `image_category` is now mapped
      * ({@see ImageCategoryEntity}), but stays on DBAL regardless --
-     * MySQL-specific `SQL_CALC_FOUND_ROWS`/`FOUND_ROWS()` have no DQL
-     * equivalent. SQL-modernization audit, Item 14 Sub-phase C3:
      * $criteria->filterCriteria is now a typed
      * {@see \Piwigo\Image\ImageFilterCriteria} -- translated to a raw
      * fragment here via its own `toSqlCondition()`, since this method
-     * itself can't become DQL regardless (the `SQL_CALC_FOUND_ROWS`
-     * blocker above).
+     * itself can't become DQL: `i.*` is a whole-row selection DQL can't
+     * express (no fixed property list), and `$orderByClause` is a
+     * caller-composed trusted SQL fragment.
      *
      * @return PaginatedResult<array<string, mixed>>
      */
@@ -3238,7 +3242,7 @@ final class ImageRepository extends EntityRepository
         $imageCategoryTable = Tables::imageCategory();
 
         $sql = <<<SQL
-            SELECT SQL_CALC_FOUND_ROWS i.*
+            SELECT i.*, COUNT(*) OVER() AS total_count
             FROM {$imagesTable} i
                 INNER JOIN {$imageCategoryTable} ON i.id=image_id
             WHERE {$combined->sql}
@@ -3256,11 +3260,14 @@ final class ImageRepository extends EntityRepository
 
         $rows = $conn->fetchAllAssociative($sql, $params, $types);
 
-        $totalRaw = $conn->fetchOne(<<<SQL
-            SELECT FOUND_ROWS()
-            SQL);
+        $total = $rows !== [] && is_numeric($rows[0]['total_count'] ?? null) ? (int) $rows[0]['total_count'] : 0;
+        $rows = array_map(static function (array $row): array {
+            unset($row['total_count']);
 
-        return new PaginatedResult($rows, is_numeric($totalRaw) ? (int) $totalRaw : 0);
+            return $row;
+        }, $rows);
+
+        return new PaginatedResult($rows, $total);
     }
 
     /**

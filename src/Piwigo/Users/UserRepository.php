@@ -1689,6 +1689,23 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * ({@see UserEntity}), but that alone doesn't unblock the whole
      * method given the other 3 blockers above.
      *
+     * Phase 5 Item 19: deliberately kept on `SQL_CALC_FOUND_ROWS`/
+     * `FOUND_ROWS()`, unlike its 4 siblings
+     * ({@see \Piwigo\Category\CategoryRepository::findListForWs()},
+     * {@see \Piwigo\Category\CategoryRepository::findAdminListForWs()},
+     * {@see \Piwigo\Image\ImageRepository::findWithConditionsPaginated()},
+     * {@see \Piwigo\Comment\CommentRepository::findAllWithConditions()}) --
+     * this query is `SELECT DISTINCT`, not `GROUP BY`. Live-verified: SQL
+     * window functions execute logically *before* `DISTINCT`, so
+     * `COUNT(*) OVER()` reports the pre-deduplication row count, not the
+     * actual distinct total (confirmed with 5 rows collapsing to 2
+     * distinct groups: `SQL_CALC_FOUND_ROWS`/`FOUND_ROWS()` correctly
+     * reports 2, `COUNT(*) OVER()` on the same query wrongly reports 5).
+     * MySQL has no `COUNT(DISTINCT x) OVER()` (unlike PostgreSQL), so
+     * there's no equivalent single-query window-function fix here without
+     * restructuring the query itself (e.g. to `GROUP BY`) -- out of scope
+     * for this pass.
+     *
      * @param  array<string, string>  $displayColumns
      * @return PaginatedResult<array<string, mixed>>
      */

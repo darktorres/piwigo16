@@ -3543,14 +3543,18 @@ final class CategoryRepository extends EntityRepository
      * original's own conditional LIMIT logic verbatim: a search term gets
      * its own LIMIT only when no explicit $limit is requested; $limit
      * itself gets +1 when $limitPlusOne (single-category scope), to detect
-     * "more remain" without a second query. FOUND_ROWS() is only fetched
+     * "more remain" without a second query. The total is only computed
      * when $limit !== null, matching the original's own guard.
      *
      * @return PaginatedResult<array<string, mixed>>
      *
-     * Item 14 DQL audit: stays on DBAL -- `SQL_CALC_FOUND_ROWS`/
-     * `FOUND_ROWS()` are MySQL-specific with no DQL equivalent, plus a
-     * caller-conditioned SqlCondition combination.
+     * Phase 5 Item 19: `SQL_CALC_FOUND_ROWS`/`FOUND_ROWS()` replaced with
+     * `COUNT(*) OVER() AS total_count` -- no `DISTINCT`/`GROUP BY` on this
+     * query, so a window function reports the exact same total the old
+     * mechanism did, computed in the same query as the row data instead
+     * of a second round-trip coupled to connection state. `total_count`
+     * is stripped back out of each row before returning -- it was never
+     * part of this method's own row shape, only `PaginatedResult::$total`.
      */
     public function findListForWs(
         CategoryListCriteria $criteria,
@@ -3581,9 +3585,10 @@ final class CategoryRepository extends EntityRepository
         $types = $combined->types;
 
         $categoriesTable = Tables::categories();
+        $totalColumn = $limit !== null ? 'COUNT(*) OVER() AS total_count,' : '';
 
         $sql = <<<SQL
-            SELECT SQL_CALC_FOUND_ROWS
+            SELECT {$totalColumn}
                 id, name, comment, permalink, status,
                 uppercats, global_rank, id_uppercat,
                 representative_picture_id,
@@ -3619,10 +3624,12 @@ final class CategoryRepository extends EntityRepository
 
         $total = null;
         if ($limit !== null) {
-            $totalRaw = $conn->fetchOne(<<<SQL
-                SELECT FOUND_ROWS()
-                SQL);
-            $total = is_numeric($totalRaw) ? (int) $totalRaw : 0;
+            $total = $rows !== [] && is_numeric($rows[0]['total_count'] ?? null) ? (int) $rows[0]['total_count'] : 0;
+            $rows = array_map(static function (array $row): array {
+                unset($row['total_count']);
+
+                return $row;
+            }, $rows);
         }
 
         return new PaginatedResult($rows, $total);
@@ -3633,13 +3640,13 @@ final class CategoryRepository extends EntityRepository
      * getAdminList()'s own paginated category rollup -- same conversion as
      * {@see findListForWs()} above, but via CategoryAdminListCriteria (no
      * forbidden-categories/public-only fields at all -- this WS method is
-     * admin-only). Always fetches FOUND_ROWS() (unconditional in the
+     * admin-only). Always computes the total (unconditional in the
      * original, unlike findListForWs()'s own $limit-gated fetch).
      *
      * @return PaginatedResult<array<string, mixed>>
      *
-     * Item 14 DQL audit: stays on DBAL -- same `SQL_CALC_FOUND_ROWS`/
-     * `FOUND_ROWS()` reasoning as {@see findListForWs()} above.
+     * Phase 5 Item 19: same `COUNT(*) OVER() AS total_count` conversion as
+     * {@see findListForWs()} above -- no `DISTINCT`/`GROUP BY` here either.
      */
     public function findAdminListForWs(CategoryAdminListCriteria $criteria, ?string $searchTerm, int $searchLimit): PaginatedResult
     {
@@ -3653,7 +3660,7 @@ final class CategoryRepository extends EntityRepository
         $categoriesTable = Tables::categories();
 
         $sql = <<<SQL
-            SELECT SQL_CALC_FOUND_ROWS id, name, comment, uppercats, global_rank, dir, status, image_order
+            SELECT COUNT(*) OVER() AS total_count, id, name, comment, uppercats, global_rank, dir, status, image_order
             FROM {$categoriesTable}
             WHERE {$combined->sql}
             SQL;
@@ -3670,11 +3677,14 @@ final class CategoryRepository extends EntityRepository
         }
 
         $rows = $conn->fetchAllAssociative($sql, $params, $types);
-        $totalRaw = $conn->fetchOne(<<<SQL
-            SELECT FOUND_ROWS()
-            SQL);
+        $total = $rows !== [] && is_numeric($rows[0]['total_count'] ?? null) ? (int) $rows[0]['total_count'] : 0;
+        $rows = array_map(static function (array $row): array {
+            unset($row['total_count']);
 
-        return new PaginatedResult($rows, is_numeric($totalRaw) ? (int) $totalRaw : 0);
+            return $row;
+        }, $rows);
+
+        return new PaginatedResult($rows, $total);
     }
 
     /**

@@ -701,9 +701,20 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * `users` is now mapped ({@see \Piwigo\Users\UserEntity}), always
      * `id`/`mail_address`. Item 14 DQL audit: still stays on DBAL -- joins
      * the never-entity-mapped `image_category`, MySQL-specific
-     * `SQL_CALC_FOUND_ROWS`/`ANY_VALUE()` (neither has a DQL equivalent),
-     * and dynamic caller-supplied SqlCondition fragments -- several
-     * independent, genuine DQL blockers remain on this query.
+     * `ANY_VALUE()` (has no DQL equivalent), and dynamic caller-supplied
+     * SqlCondition fragments -- several independent, genuine DQL blockers
+     * remain on this query.
+     *
+     * Phase 5 Item 19: `SQL_CALC_FOUND_ROWS`/`FOUND_ROWS()` replaced with
+     * `COUNT(*) OVER() AS total_count`, computed in the same query as the
+     * row data instead of a second round-trip coupled to connection
+     * state -- `GROUP BY comment_id` here (not `DISTINCT`), so the window
+     * function (evaluated after GROUP BY, before LIMIT/OFFSET) reports
+     * the exact same total the old mechanism did (live-verified: MySQL
+     * `COUNT(*) OVER()` on a GROUP BY query reports the post-grouping row
+     * count, unlike its confirmed-wrong behavior on `SELECT DISTINCT`
+     * queries -- see {@see \Piwigo\Users\UserRepository::findListForWs()}'s
+     * own docblock).
      *
      * @param list<SqlCondition> $whereClauses
      * @return PaginatedResult<array<string, mixed>>
@@ -719,7 +730,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
             ->getConnection()
             ->createQueryBuilder()
             ->select(
-                'SQL_CALC_FOUND_ROWS com.id AS comment_id',
+                'com.id AS comment_id',
                 'com.image_id',
                 'ANY_VALUE(ic.category_id) AS category_id',
                 'com.author',
@@ -730,6 +741,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
                 'com.website_url',
                 'com.content',
                 'com.validated',
+                'COUNT(*) OVER() AS total_count',
             )
             ->from(Tables::imageCategory(), 'ic')
             ->innerJoin('ic', Tables::comments(), 'com', 'ic.image_id = com.image_id')
@@ -748,17 +760,14 @@ final class CommentRepository extends EntityRepository implements CommentCounter
         $rows = $qb->executeQuery()
             ->fetchAllAssociative();
 
-        // FOUND_ROWS() reflects the immediately-preceding query on the
-        // same connection/session -- must run right after, no query
-        // in between.
-        $total_raw = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('FOUND_ROWS()')
-            ->executeQuery()
-            ->fetchOne();
+        $total = $rows !== [] && is_numeric($rows[0]['total_count'] ?? null) ? (int) $rows[0]['total_count'] : 0;
+        $rows = array_map(static function (array $row): array {
+            unset($row['total_count']);
 
-        return new PaginatedResult($rows, is_numeric($total_raw) ? (int) $total_raw : null);
+            return $row;
+        }, $rows);
+
+        return new PaginatedResult($rows, $total);
     }
 
     /**

@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use Doctrine\DBAL\Connection;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\DbCredentials;
+
 /**
  * P23 batch 8d: DB-row-backed "only one execution at a time" lock,
  * relocated from include/functions.inc.php -- no natural existing class
@@ -11,85 +15,123 @@ namespace Piwigo\Core;
  *
  * Legacy Coupling Retirement: DI+DBAL migration Phase 1e -- retargeted
  * onto `DbConnection` (same L1Infrastructure layer, constructed inline
- * per static method, no instance state). The `INSERT IGNORE` race --
- * concurrent callers racing to insert the same unique `param` key, only
- * one winning, both re-`SELECT`ing to see whose `exec_id` persisted --
- * is the real mechanism this class exists for; every query keeps its
- * exact original SQL text (a pure execution-API swap), not rewritten
- * through QueryBuilder or newly parameterized.
+ * per static method, no instance state).
  *
- * Query-extraction pass (raw-DBAL-out-of-non-Repository-classes): the raw
- * `INSERT IGNORE`/`SELECT value`/`SELECT COUNT(*)` calls now live on
- * ConfigRepository ({@see \Piwigo\Config\ConfigRepository::insertIgnoreRawValue()}/
- * {@see \Piwigo\Config\ConfigRepository::findRawValue()}/
- * {@see \Piwigo\Config\ConfigRepository::countByParam()}), reached through
- * `CurrentConfigService::get()` -- same L1Infrastructure layer (Core ->
- * Config), same exact SQL text, still deliberately bypassing the ORM
- * entity for the reasons those 3 methods document.
+ * Phase 4 Item 18: replaced the hand-rolled `INSERT IGNORE` + re-`SELECT`
+ * race-resolution dance + manual `time() - $running_exec_start_time >
+ * $timeout` staleness check with MySQL's own native advisory lock
+ * primitive -- `GET_LOCK(name, timeout)`/`RELEASE_LOCK(name)`/
+ * `IS_USED_LOCK(name)`, one atomic server-side call each, no re-read
+ * needed to find out who won (`GET_LOCK()` itself returns whether *this*
+ * call acquired it). A real behavioral improvement, not just a different
+ * syntax for the same thing: `GET_LOCK()` locks are scoped to the
+ * database *connection* and MySQL releases them automatically the instant
+ * that connection closes -- including an abnormal PHP process death, not
+ * just a clean `ends()` call. This codebase's connections are per-request
+ * (`DbConnection::build()`, no persistent connection pooling across
+ * requests), so "released when the connection closes" maps exactly onto
+ * "released when this request ends" -- the exact semantic this class
+ * wants, with no stale-lock cleanup logic needed at all: a crashed
+ * process between acquiring and its own `ends()` call can no longer leave
+ * a stale row sitting around for a later caller's timeout check to
+ * (maybe) notice.
  *
- * Phase 5 (ConfigDb retarget sweep) found ends()'s confDeleteParam() call
- * reachable (the hard way, via a live 500) through
- * `Bootstrap\RequestBootstrap::connect()` ->
- * `Bootstrap\UserBootstrap::initialize()` ->
- * `Users\UserService::getUserData()` -> `begins()`'s own timeout branch
- * calling `ends()` -- pre-`Kernel::boot()` at the time, on every single
- * request. Legacy Coupling Retirement Phase 8, 8d: that's no longer true
- * -- `RequestBootstrap::configure()` now calls `Kernel::boot()` as its own
- * first statement (Phase 8a), well before `connect()` (and everything it
- * calls, including this chain) ever runs, and `connect()` itself now
- * resolves and `CurrentConfigService::set()`s a real `ConfigService`
- * early, before `UserBootstrap::initialize()` -- so `ends()` now goes
- * through `CurrentConfigService::get()` (Tier 2) like every other
- * retargeted call in this batch.
+ * `$timeout` changes meaning accordingly -- no longer "how old can an
+ * existing marker get before being force-cleared," now `GET_LOCK()`'s own
+ * "how long to wait for a lock currently held by another connection
+ * before giving up." Defaults to 0 (return immediately, never block), not
+ * `GET_LOCK()`'s own default-suggestive 60: the original `INSERT IGNORE`
+ * check both real callers relied on was always instant/non-blocking --
+ * "someone else is already running this" was meant to make the *current*
+ * request skip immediately, not sit blocked for up to a minute waiting
+ * for the other one to finish (caught live: a first attempt defaulting to
+ * 60 made a contended `PageTailTest` case take over 60 real seconds).
+ * Both real callers (`Admin\PiwigoInfosSender`'s `'send_piwigo_infos'`,
+ * `Bootstrap\PageTail`'s `'check_for_updates'`) only ever check
+ * `begins()`'s return for truthiness, never consumed the old `string`
+ * exec-id value for anything else -- return type simplifies
+ * to a plain `bool`.
+ *
+ * `GET_LOCK()` names are capped at 64 characters by MySQL (a real
+ * `mysqli_sql_exception`, not silent truncation -- found live in Item 1's
+ * own image-upload uniqueness-check fix). $tokenName isn't a fixed,
+ * known-short constant structurally (both real callers happen to pass a
+ * short literal today, but the parameter itself is a generic string), so
+ * {@see lockName()} hashes it rather than concatenating -- folding in the
+ * DB table prefix as part of the hashed input, not just a literal string
+ * prefix, for the same shared-MySQL-server collision-avoidance reasoning
+ * the class-wide lock scoping already needs (`GET_LOCK()` names are global
+ * to the whole MySQL *server*, not scoped to one database/schema).
+ *
+ * `GET_LOCK()`/`RELEASE_LOCK()` are scoped to the physical connection that
+ * issued them -- confirmed empirically that `DbConnection::build()` opens
+ * a genuinely new one on every call (a pure factory, no pooling), so
+ * `begins()` and a later `ends()` call must share one connection or
+ * `RELEASE_LOCK()` silently no-ops against a connection that never held
+ * the lock (returns `NULL`, confirmed live) and the lock would only ever
+ * clear via that first, otherwise-unreferenced connection getting
+ * garbage-collected -- unpredictably soon, not "for the duration of this
+ * operation." {@see connection()} lazily opens and caches one connection
+ * per request instead, matching this class's own "released when the
+ * request ends" contract precisely.
  */
 final class UniqueExecLock
 {
-    public static function begins(string $tokenName, int $timeout = 60): false|string
+    private static ?Connection $conn = null;
+
+    public static function begins(string $tokenName, int $timeout = 0): bool
     {
         $logger = \Piwigo\Core\CurrentLogger::getStatic();
-        $configService = \Piwigo\Config\CurrentConfigService::current()->get();
 
-        $exec_id = substr(sha1(random_bytes(1000)), 0, 8);
-        $logger->info('[' . $tokenName . '][exec=' . $exec_id . '] starts now');
+        $acquired = self::connection()
+            ->fetchOne('SELECT GET_LOCK(?, ?)', [self::lockName($tokenName), $timeout]);
+        if ($acquired !== 1) {
+            $logger->info('[' . $tokenName . '] another execution is running, abort');
 
-        // Row keyed by $tokenName (one per lock name, including per-user-ID
-        // dynamic tokens like UserService's 'generate_user_cache-u{id}') --
-        // an unbounded key space, read straight from the config table
-        // rather than through a CurrentConfig property.
-        $running_token = $configService->findRawValue($tokenName . '_running');
-        if ($running_token !== false) {
-            [$running_exec_id, $running_exec_start_time] = explode('-', $running_token);
-            if (time() - (int) $running_exec_start_time > $timeout) {
-                $logger->info('[' . $tokenName . '][exec=' . $exec_id . '] exec=' . $running_exec_id . ', timeout stopped by another call to the function');
-                self::ends($tokenName);
-            }
-        }
-
-        $configService->insertIgnoreRawValue($tokenName . '_running', $exec_id . '-' . time());
-
-        $running_exec = $configService->findRawValue($tokenName . '_running');
-        assert(is_string($running_exec));
-        [$running_exec_id] = explode('-', $running_exec);
-
-        if ($running_exec_id !== $exec_id) {
-            $logger->info('[' . $tokenName . '][exec=' . $exec_id . '] skip');
             return false;
         }
-        $logger->info('[' . $tokenName . '][exec=' . $exec_id . '] wins the race and gets the token!');
 
-        return $exec_id;
+        $logger->info('[' . $tokenName . '] acquired the lock');
+
+        return true;
     }
 
     public static function isRunning(string $tokenName): bool
     {
-        return \Piwigo\Config\CurrentConfigService::current()->get()->countByParam($tokenName . '_running') > 0;
+        return self::connection()
+            ->fetchOne('SELECT IS_USED_LOCK(?)', [self::lockName($tokenName)]) !== null;
     }
 
     public static function ends(string $tokenName): void
     {
         $logger = \Piwigo\Core\CurrentLogger::getStatic();
 
-        \Piwigo\Config\CurrentConfigService::current()->get()->confDeleteParam($tokenName . '_running');
+        self::connection()
+            ->fetchOne('SELECT RELEASE_LOCK(?)', [self::lockName($tokenName)]);
         $logger->info('[' . $tokenName . '] ends now');
+    }
+
+    /**
+     * Test isolation only -- clears the cached connection between test
+     * cases, same convention as every other static-state class's own
+     * `reset()` (see StructuralTest's own "only called from tests/"
+     * checks). No real production caller should ever need this: one
+     * connection per request is exactly what this class wants.
+     */
+    public static function reset(): void
+    {
+        self::$conn = null;
+    }
+
+    private static function connection(): Connection
+    {
+        return self::$conn ??= DbConnection::build();
+    }
+
+    private static function lockName(string $tokenName): string
+    {
+        $prefix = DbCredentials::current()->prefix;
+
+        return 'piwigo_exec_' . sha1($prefix . ':unique_exec:' . $tokenName);
     }
 }

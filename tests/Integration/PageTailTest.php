@@ -33,11 +33,16 @@ use Piwigo\Url\UrlService;
  * Piwigo\Admin\Extensions\CoreUpdateService (this project's own documented
  * skip-list class -- static HttpClientService::fetch() to piwigo.org, no
  * fake-able seam) -- avoided here the same way
- * UniqueExecLockTest::test_begins_loses_the_race_when_another_exec_already_holds_a_fresh_lock()
+ * UniqueExecLockTest::test_begins_fails_when_a_different_connection_already_holds_the_lock()
  * already proves the mechanism works: winning the real 'check_for_updates'
- * lock *before* calling PageTail::renderToString() makes checkForUpdates()'s
- * own UniqueExecLock::begins() call lose the race and return early,
- * never reaching CoreUpdateService at all.
+ * `GET_LOCK()` on a *separate* connection before calling
+ * PageTail::renderToString() makes checkForUpdates()'s own
+ * UniqueExecLock::begins() call (its own cached, request-scoped
+ * connection) lose the race and return early, never reaching
+ * CoreUpdateService at all. Must be a genuinely separate connection. not
+ * a 2nd begins() call through UniqueExecLock itself -- GET_LOCK()
+ * re-acquiring an already-held name on the SAME connection just succeeds
+ * again (reentrant), it wouldn't simulate contention at all.
  *
  * The renderer's own telemetry send (Piwigo\Admin\PiwigoInfosSender,
  * also skip-listed) is avoided the same way a real "send_piwigo_infos"-
@@ -84,6 +89,7 @@ final class PageTailTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         UniqueExecLock::ends('check_for_updates');
+        UniqueExecLock::reset();
         CurrentTemplate::current()->reset();
         $currentConfig = \Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class);
         if (! $currentConfig instanceof \Piwigo\Config\CurrentConfig) {
@@ -106,26 +112,34 @@ final class PageTailTest extends IntegrationTestCase
         // reaches the `$check_for_updates = true;` line under test.
         $currentConfig->setUpdateNotifyLastCheck('2020-01-01 00:00:00');
 
-        // Win the real lock first, under a *different* random exec id than
-        // whatever checkForUpdates() will generate internally -- its own
-        // begins() call then loses the race.
-        $execId = UniqueExecLock::begins('check_for_updates');
-        self::assertIsString($execId);
+        // Win the real lock first, on a genuinely separate connection --
+        // GET_LOCK() re-acquiring an already-held name on the SAME
+        // connection just succeeds again (reentrant), so calling
+        // UniqueExecLock::begins() a 2nd time here wouldn't simulate real
+        // contention at all. checkForUpdates()'s own begins() call (its
+        // own cached, request-scoped connection) then loses the race.
+        $otherConn = \Piwigo\Db\DbConnection::build();
+        $lockName = 'piwigo_exec_' . sha1(\Piwigo\Db\DbCredentials::current()->prefix . ':unique_exec:check_for_updates');
+        self::assertSame(1, $otherConn->fetchOne('SELECT GET_LOCK(?, ?)', [$lockName, 1]));
         self::assertTrue(UniqueExecLock::isRunning('check_for_updates'));
 
-        $output = PageTail::renderToString();
+        try {
+            $output = PageTail::renderToString();
 
-        // Proves renderToString() completed the whole real render (not
-        // just the update-check branch) without ever touching the network:
-        // AppInfo::URL is the footer.tpl "Powered by" link href, only
-        // present once Smarty has actually compiled and rendered the real
-        // theme template end to end.
-        self::assertStringContainsString('href="' . AppInfo::URL . '"', $output);
-        self::assertStringContainsString(AppInfo::VERSION, $output);
+            // Proves renderToString() completed the whole real render (not
+            // just the update-check branch) without ever touching the
+            // network: AppInfo::URL is the footer.tpl "Powered by" link
+            // href, only present once Smarty has actually compiled and
+            // rendered the real theme template end to end.
+            self::assertStringContainsString('href="' . AppInfo::URL . '"', $output);
+            self::assertStringContainsString(AppInfo::VERSION, $output);
 
-        // The lock this test itself won is still the one present --
-        // checkForUpdates()'s own begins() call really did lose the race
-        // rather than clearing and replacing it.
-        self::assertTrue(UniqueExecLock::isRunning('check_for_updates'));
+            // The lock this test itself won is still the one present --
+            // checkForUpdates()'s own begins() call really did lose the
+            // race rather than clearing and replacing it.
+            self::assertTrue(UniqueExecLock::isRunning('check_for_updates'));
+        } finally {
+            $otherConn->fetchOne('SELECT RELEASE_LOCK(?)', [$lockName]);
+        }
     }
 }

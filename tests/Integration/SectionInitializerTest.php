@@ -82,6 +82,7 @@ final class SectionInitializerTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         unset($_SERVER['PATH_INFO'], $_SERVER['SCRIPT_NAME']);
+        UniqueExecLock::reset();
         CurrentTemplate::current()->reset();
         Lang::current()->reset();
         Kernel::reset();
@@ -198,7 +199,7 @@ final class SectionInitializerTest extends IntegrationTestCase
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/picture.php';
         $_SERVER['PATH_INFO'] = '/0';
         $execId = UniqueExecLock::begins('check_for_updates');
-        self::assertIsString($execId);
+        self::assertTrue($execId);
 
         $body = null;
         $status = null;
@@ -228,7 +229,7 @@ final class SectionInitializerTest extends IntegrationTestCase
         // identifier case.
         $_SERVER['PATH_INFO'] = '/';
         $execId = UniqueExecLock::begins('check_for_updates');
-        self::assertIsString($execId);
+        self::assertTrue($execId);
 
         $body = null;
         $status = null;

@@ -445,6 +445,19 @@ test('SessionService::reset() is only called from tests/', function (): void {
     expect(describeCallSites($hits))->toBe([]);
 });
 
+test('UniqueExecLock::reset() is only called from tests/', function (): void {
+    // Same test-isolation rationale as CurrentConfig::reset() above.
+    $repoRoot = __DIR__ . '/../..';
+
+    $hits = [
+        ...findCallSites($repoRoot . '/src/Piwigo', 'UniqueExecLock::reset('),
+        ...findCallSitesInRootPhpFiles($repoRoot, 'UniqueExecLock::reset('),
+        ...findCallSitesInBinFiles($repoRoot, 'UniqueExecLock::reset('),
+    ];
+
+    expect(describeCallSites($hits))->toBe([]);
+});
+
 test('CurrentConfigService::reset() is only called from tests/', function (): void {
     // Same test-isolation rationale as CurrentConfig::reset() above.
     $repoRoot = __DIR__ . '/../..';

@@ -85,6 +85,7 @@ final class RedirectServiceTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         UniqueExecLock::ends('check_for_updates');
+        UniqueExecLock::reset();
         CurrentTemplate::current()->reset();
         Lang::current()->reset();
         $this->currentConfig()->reset();
@@ -134,7 +135,7 @@ final class RedirectServiceTest extends IntegrationTestCase
         self::assertFalse(Lang::current()->isLangInfoInitialized());
 
         $execId = UniqueExecLock::begins('check_for_updates');
-        self::assertIsString($execId);
+        self::assertTrue($execId);
 
         $body = null;
         $status = null;
@@ -172,7 +173,7 @@ final class RedirectServiceTest extends IntegrationTestCase
         CurrentTemplate::current()->set(new Template(CurrentPaths::get()->root . 'themes', 'default'));
 
         $execId = UniqueExecLock::begins('check_for_updates');
-        self::assertIsString($execId);
+        self::assertTrue($execId);
 
         $body = null;
         try {
@@ -198,7 +199,7 @@ final class RedirectServiceTest extends IntegrationTestCase
         $this->currentConfig()->setDefaultRedirectMethod('http');
 
         $execId = UniqueExecLock::begins('check_for_updates');
-        self::assertIsString($execId);
+        self::assertTrue($execId);
 
         $status = null;
         $body = null;

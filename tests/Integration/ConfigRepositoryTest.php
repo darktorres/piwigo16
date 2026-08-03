@@ -167,10 +167,10 @@ final class ConfigRepositoryTest extends IntegrationTestCase
         self::assertSame('first-value', $this->repo->findRawValue($param));
 
         // INSERT IGNORE: (param) is the primary key, so a second call for
-        // the same $param is a silent no-op, not an overwrite -- the real
-        // reason Core\UniqueExecLock uses this method at all (see its own
-        // docblock: only the process that wins the race gets its value
-        // stored).
+        // the same $param is a silent no-op, not an overwrite -- the
+        // race-resolution mechanism Core\UniqueExecLock's own begins()
+        // relied on before Phase 4 Item 18 retargeted it onto MySQL's
+        // native GET_LOCK() instead.
         $this->repo->insertIgnoreRawValue($param, 'second-value-should-be-ignored');
         self::assertSame('first-value', $this->repo->findRawValue($param));
 

@@ -4,26 +4,24 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Doctrine\DBAL\Connection;
-use Piwigo\Config\ConfigLoader;
-use Piwigo\Config\ConfigService;
-use Piwigo\Config\CurrentConfigService;
-use Piwigo\Core\Kernel;
 use Piwigo\Core\UniqueExecLock;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 
 /**
- * Piwigo\Core\UniqueExecLock -- isRunning() had zero coverage and begins()
- * only partial (see /home/torres/.claude/plans/piped-enchanting-spark.md,
- * Wave 1): the race-losing branch (another exec already holds the token)
- * and the stale-lock timeout-recovery branch were both untested.
+ * Phase 4 Item 18: rewritten for the GET_LOCK()/RELEASE_LOCK()/
+ * IS_USED_LOCK()-based redesign -- the old config-table-row-backed
+ * mechanism (INSERT IGNORE + re-SELECT race resolution, a manual
+ * time()-based staleness timeout) no longer exists, so its own dedicated
+ * "stale lock recovery" test no longer applies (a GET_LOCK() lock has no
+ * staleness concept: it clears automatically the instant its owning
+ * connection closes). "another exec already holds the lock" now needs a
+ * genuinely separate physical connection to simulate real cross-process
+ * contention -- a single connection can hold any number of distinct named
+ * locks simultaneously without contending with itself.
  */
 final class UniqueExecLockTest extends IntegrationTestCase
 {
     private static bool $fixtureReady = false;
-
-    private Connection $conn;
 
     private string $token;
 
@@ -39,83 +37,58 @@ final class UniqueExecLockTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        ConfigLoader::applyDefaults();
-        ConfigLoader::applyEnvOverrides();
-        Kernel::boot();
-        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Config\CurrentConfig::current()));
-
-        $this->conn = DbConnection::build();
         $this->token = 'test_lock_' . bin2hex(random_bytes(4));
     }
 
     #[\Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement(
-            'DELETE FROM ' . Tables::config() . ' WHERE param = ?',
-            [$this->token . '_running']
-        );
-        Kernel::reset();
+        UniqueExecLock::ends($this->token);
+        UniqueExecLock::reset();
         parent::tearDown();
     }
 
-    public function test_isRunning_is_false_when_no_lock_row_exists(): void
+    public function test_is_running_is_false_when_no_lock_is_held(): void
     {
         self::assertFalse(UniqueExecLock::isRunning($this->token));
     }
 
-    public function test_begins_wins_the_race_and_creates_a_lock_row(): void
+    public function test_begins_acquires_the_lock(): void
     {
-        $execId = UniqueExecLock::begins($this->token);
-
-        self::assertIsString($execId);
-        self::assertSame(8, strlen($execId));
+        self::assertTrue(UniqueExecLock::begins($this->token));
         self::assertTrue(UniqueExecLock::isRunning($this->token));
     }
 
-    public function test_begins_loses_the_race_when_another_exec_already_holds_a_fresh_lock(): void
+    public function test_begins_on_the_same_connection_succeeds_again_for_the_same_token(): void
     {
-        $firstExecId = UniqueExecLock::begins($this->token);
-        self::assertIsString($firstExecId);
-
-        $secondExecId = UniqueExecLock::begins($this->token, 60);
-
-        self::assertFalse($secondExecId);
-        // the first exec's row is still the one present -- the second
-        // call's own INSERT IGNORE was a no-op against the existing row.
-        self::assertTrue(UniqueExecLock::isRunning($this->token));
+        // MySQL's GET_LOCK() re-acquiring an already-held name on the SAME
+        // connection succeeds (it's reentrant per-connection, not a
+        // separate contended acquisition) -- real behavior, not a gap in
+        // this class's own design.
+        self::assertTrue(UniqueExecLock::begins($this->token));
+        self::assertTrue(UniqueExecLock::begins($this->token));
     }
 
-    public function test_begins_recovers_a_stale_lock_past_the_timeout_and_wins(): void
+    public function test_begins_fails_immediately_when_a_different_connection_already_holds_the_lock(): void
     {
-        // `value` is a real JSON column (ConfigEntry's own docblock),
-        // matching UniqueExecLock::begins()'s own insertIgnoreRawValue()
-        // write -- a raw un-encoded string is genuinely invalid for it.
-        $staleValue = json_encode('stale-exec-' . (time() - 120));
-        self::assertIsString($staleValue);
-        $this->conn->executeStatement(
-            "INSERT INTO " . Tables::config() . " (param, value) VALUES (?, ?)",
-            [$this->token . '_running', $staleValue]
-        );
-        self::assertTrue(UniqueExecLock::isRunning($this->token));
+        // Default $timeout = 0 -- must return false right away, not block
+        // waiting for the other connection to release it.
+        $otherConn = DbConnection::build();
 
-        $execId = UniqueExecLock::begins($this->token, 60);
+        try {
+            $acquiredByOther = $otherConn->fetchOne(
+                'SELECT GET_LOCK(?, ?)',
+                [$this->lockNameFor($this->token), 1]
+            );
+            self::assertSame(1, $acquiredByOther);
 
-        self::assertIsString($execId);
-        $row = $this->conn->fetchOne(
-            'SELECT value FROM ' . Tables::config() . ' WHERE param = ?',
-            [$this->token . '_running']
-        );
-        self::assertIsString($row);
-        // insertIgnoreRawValue() stores json_encode()'d, matching the real
-        // JSON column type -- decode back to the plain token before
-        // comparing.
-        $decodedRow = json_decode($row, true);
-        self::assertIsString($decodedRow);
-        self::assertStringStartsWith($execId . '-', $decodedRow);
+            self::assertFalse(UniqueExecLock::begins($this->token));
+        } finally {
+            $otherConn->fetchOne('SELECT RELEASE_LOCK(?)', [$this->lockNameFor($this->token)]);
+        }
     }
 
-    public function test_ends_removes_the_lock_row(): void
+    public function test_ends_releases_the_lock(): void
     {
         UniqueExecLock::begins($this->token);
         self::assertTrue(UniqueExecLock::isRunning($this->token));
@@ -123,5 +96,23 @@ final class UniqueExecLockTest extends IntegrationTestCase
         UniqueExecLock::ends($this->token);
 
         self::assertFalse(UniqueExecLock::isRunning($this->token));
+    }
+
+    public function test_ends_is_a_noop_when_the_lock_was_never_held(): void
+    {
+        UniqueExecLock::ends($this->token);
+
+        self::assertFalse(UniqueExecLock::isRunning($this->token));
+    }
+
+    /**
+     * Mirrors UniqueExecLock's own private lockName() exactly, so this
+     * test's separate connection contends for the real same lock name.
+     */
+    private function lockNameFor(string $tokenName): string
+    {
+        $prefix = \Piwigo\Db\DbCredentials::current()->prefix;
+
+        return 'piwigo_exec_' . sha1($prefix . ':unique_exec:' . $tokenName);
     }
 }

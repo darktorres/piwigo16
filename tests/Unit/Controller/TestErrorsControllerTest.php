@@ -32,7 +32,7 @@ test('returns an empty 404 response when test mode is not active', function (): 
     unset($_SERVER['HTTP_X_PIWIGO_ENV']);
 
     try {
-        $controller = new TestErrorsController(new ErrorCollector());
+        $controller = new TestErrorsController(new ErrorCollector(new \Piwigo\Config\DeploymentPolicy()));
         $response = $controller(new ServerRequest('GET', '/__test/errors'));
     } finally {
         if ($original !== null) {

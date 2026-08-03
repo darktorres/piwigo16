@@ -48,7 +48,6 @@ beforeEach(function (): void {
 
 afterEach(function (): void {
     CurrentConfig::reset();
-    DeploymentPolicy::reset();
     RootPathOverride::reset();
     Kernel::reset();
 });
@@ -293,30 +292,36 @@ test('getAbsoluteRootUrl keeps gallery_url\'s configured port', function (): voi
 
 test('getAbsoluteRootUrl accepts a Host that matches the allowed_hosts list', function (): void {
     CurrentConfig::setUrlPort('none');
-    DeploymentPolicy::set(new DeploymentPolicy(allowedHosts: ['gallery.example.test']));
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
-    $service = new UrlService(new HtmlService());
 
-    expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test/piwigo/');
+    KernelContainerOverride::with([DeploymentPolicy::class => new DeploymentPolicy(allowedHosts: ['gallery.example.test'])], function (): void {
+        $service = new UrlService(new HtmlService());
+
+        expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test/piwigo/');
+    });
 });
 
 test('getAbsoluteRootUrl [SEC-29] falls back to the first allowed host when Host is forged', function (): void {
     CurrentConfig::setUrlPort('none');
-    DeploymentPolicy::set(new DeploymentPolicy(allowedHosts: ['gallery.example.test', 'gallery-alt.example.test']));
     $_SERVER['HTTP_HOST'] = 'evil.test';
-    $service = new UrlService(new HtmlService());
 
-    expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test/piwigo/');
+    KernelContainerOverride::with([DeploymentPolicy::class => new DeploymentPolicy(allowedHosts: ['gallery.example.test', 'gallery-alt.example.test'])], function (): void {
+        $service = new UrlService(new HtmlService());
+
+        expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test/piwigo/');
+    });
 });
 
 test('getAbsoluteRootUrl [SEC-29] falls back for a forged X-Forwarded-Host too', function (): void {
     CurrentConfig::setUrlPort('none');
-    DeploymentPolicy::set(new DeploymentPolicy(allowedHosts: ['gallery.example.test']));
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
     $_SERVER['HTTP_X_FORWARDED_HOST'] = 'evil.test';
-    $service = new UrlService(new HtmlService());
 
-    expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test/piwigo/');
+    KernelContainerOverride::with([DeploymentPolicy::class => new DeploymentPolicy(allowedHosts: ['gallery.example.test'])], function (): void {
+        $service = new UrlService(new HtmlService());
+
+        expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test/piwigo/');
+    });
 });
 
 test('getAbsoluteRootUrl [SEC-29] reflects a real DB-persisted gallery_url the way load_conf_from_db() would set it', function (): void {

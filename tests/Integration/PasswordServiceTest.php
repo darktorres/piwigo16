@@ -63,13 +63,10 @@ final class PasswordServiceTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        // externalAuthentification defaults to false; reset() clears any
-        // memo an earlier test in this process left behind (DeploymentPolicy
-        // generic-accessor removal moved this off CurrentConfig:: entirely).
-        DeploymentPolicy::reset();
-
         $this->conn = DbConnection::build();
-        $this->service = new PasswordService(new PasswordRepository($this->conn));
+        // A fresh, all-defaults DeploymentPolicy (externalAuthentification
+        // false) -- no test in this file needs a non-default policy.
+        $this->service = new PasswordService(new PasswordRepository($this->conn), new DeploymentPolicy());
     }
 
     public function test_hash_produces_a_bcrypt_hash(): void

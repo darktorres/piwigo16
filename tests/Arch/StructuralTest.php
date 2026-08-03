@@ -240,6 +240,7 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
         '/src/Piwigo/Session/SessionService.php',
         '/src/Piwigo/Lang/Translator.php',
         '/src/Piwigo/PluginConfig/EventDispatcher.php',
+        '/src/Piwigo/Config/DeploymentPolicy.php',
     ];
 
     $hits = [
@@ -373,22 +374,34 @@ test('CurrentConfigService::reset() is only called from tests/', function (): vo
     expect(describeCallSites($hits))->toBe([]);
 });
 
-test('DeploymentPolicy::set()/reset() are only called from tests/', function (): void {
-    // Same test-isolation rationale as CurrentConfig::reset() above -- unlike
-    // current()/load() (real production APIs), both exist purely so a test
-    // can inject a specific policy or force re-resolution between cases.
+test('DeploymentPolicy::current() transitional bridge has a shrinking, known allow-list', function (): void {
+    // Singleton/service-locator elimination campaign, Phase 4: current()
+    // kept its original name (no `Static` suffix, matching DbCredentials's
+    // own precedent -- no competing real instance method to disambiguate
+    // from). `set()`/`reset()` no longer exist at all (no independent
+    // state left to set/reset), so this replaces the old, now-inapplicable
+    // 'DeploymentPolicy::set()/reset() are only called from tests/' arch
+    // test. Every phase that converts one more of these files to
+    // constructor-injected DeploymentPolicy should remove it from the
+    // allow-list below.
     $repoRoot = __DIR__ . '/../..';
 
-    $hits = [
-        ...findCallSites($repoRoot . '/src/Piwigo', 'DeploymentPolicy::set('),
-        ...findCallSitesInRootPhpFiles($repoRoot, 'DeploymentPolicy::set('),
-        ...findCallSitesInBinFiles($repoRoot, 'DeploymentPolicy::set('),
-        ...findCallSites($repoRoot . '/src/Piwigo', 'DeploymentPolicy::reset('),
-        ...findCallSitesInRootPhpFiles($repoRoot, 'DeploymentPolicy::reset('),
-        ...findCallSitesInBinFiles($repoRoot, 'DeploymentPolicy::reset('),
+    $allowedFiles = [
+        '/src/Piwigo/Admin/Install/InstallWizard.php',
+        '/src/Piwigo/Mail/MailService.php',
+        '/src/Piwigo/Search/SearchService.php',
+        '/src/Piwigo/Url/UrlService.php',
+        '/src/Piwigo/Ws/PwgUsers.php',
     ];
 
-    expect(describeCallSites($hits))->toBe([]);
+    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'DeploymentPolicy::current(');
+
+    $disallowed = array_values(array_filter(
+        $hits,
+        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
+    ));
+
+    expect(describeCallSites($disallowed))->toBe([]);
 });
 
 /**
@@ -532,7 +545,6 @@ test('CurrentPaths::get()/isSet() transitional bridge has a shrinking, known all
         '/src/Piwigo/Bootstrap/RequestBootstrap.php',
         '/src/Piwigo/Cache/PersistentFileCache.php',
         '/src/Piwigo/Config/CurrentConfig.php',
-        '/src/Piwigo/Config/DeploymentPolicy.php',
         '/src/Piwigo/Controller/Admin/ConfigurationSubController.php',
         '/src/Piwigo/Controller/Admin/IntroSubController.php',
         '/src/Piwigo/Controller/Admin/SiteManagerSubController.php',

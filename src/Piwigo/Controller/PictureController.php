@@ -94,6 +94,7 @@ final class PictureController implements ControllerInterface
         private readonly SectionContextRegistry $sectionContextRegistry,
         private readonly SessionService $sessionService,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
     ) {}
 
     private static function permissionService(): PermissionService
@@ -1231,7 +1232,7 @@ final class PictureController implements ControllerInterface
         $themeconf = is_array($themeconf) ? $themeconf : [];
         if (\Piwigo\Config\CurrentConfig::pictureMenu() and (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('thePicturePage', $themeconf['hide_menu_on'], true))) {
             new MenubarRenderer()
-                ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService);
+                ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy);
         }
 
         // The slideshow branch above may have set $refresh/$url_link

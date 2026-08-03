@@ -1015,8 +1015,10 @@ test('compute_script_topological_order fatal-errors exactly one level past the r
     // (singleton/service-locator elimination campaign, Phase 2) -- booted
     // and reset locally, scoped to this one test (other tests in this file
     // boot their own Kernel too, each independently, via CurrentPaths::
-    // get()'s own container read -- Phase 3).
-    \Piwigo\Core\Kernel::boot();
+    // get()'s own container read -- Phase 3). A real Paths is required
+    // too: ErrorCollector's container factory now needs a DeploymentPolicy,
+    // whose own factory needs Paths to autowire (Phase 4).
+    \Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot(sys_get_temp_dir()));
     $errorCollector = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\ErrorCollector::class);
     if (! $errorCollector instanceof \Piwigo\Core\ErrorCollector) {
         throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\ErrorCollector::class);

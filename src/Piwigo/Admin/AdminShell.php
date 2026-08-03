@@ -57,6 +57,7 @@ final class AdminShell
         private readonly CoreTabs $coreTabs,
         private readonly SessionService $sessionService,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
     ) {}
 
     /**
@@ -180,7 +181,7 @@ final class AdminShell
         // +-------------------------------------------------------------------+
 
         // sync_user() is only useful when external authentication is activated
-        if (\Piwigo\Config\DeploymentPolicy::current()->externalAuthentification) {
+        if ($this->deploymentPolicy->externalAuthentification) {
             \Piwigo\Bootstrap\CoreDomainAccessor::userService()->syncUsers();
         }
 

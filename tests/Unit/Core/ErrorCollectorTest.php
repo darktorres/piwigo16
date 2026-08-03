@@ -33,7 +33,7 @@ function seedCollected(ErrorCollector $errorCollector, array $entries): void
 test('reset actually clears isActive back to false, not leaving it true', function (): void {
     // install() is deliberately never called in this file (see the top
     // docblock), so isActive is set directly via reflection instead.
-    $errorCollector = new ErrorCollector();
+    $errorCollector = new ErrorCollector(new \Piwigo\Config\DeploymentPolicy());
     $prop = new ReflectionProperty(ErrorCollector::class, 'active');
     $prop->setValue($errorCollector, true);
     expect($errorCollector->isActive())->toBeTrue();
@@ -44,18 +44,18 @@ test('reset actually clears isActive back to false, not leaving it true', functi
 });
 
 test('drain returns an empty array when nothing was collected', function (): void {
-    expect(new ErrorCollector()->drain())->toBe([]);
+    expect(new ErrorCollector(new \Piwigo\Config\DeploymentPolicy())->drain())->toBe([]);
 });
 
 test('drain returns exactly what was collected', function (): void {
-    $errorCollector = new ErrorCollector();
+    $errorCollector = new ErrorCollector(new \Piwigo\Config\DeploymentPolicy());
     seedCollected($errorCollector, ['[WARNING] foo in bar.php:1', '[NOTICE] baz in qux.php:2']);
 
     expect($errorCollector->drain())->toBe(['[WARNING] foo in bar.php:1', '[NOTICE] baz in qux.php:2']);
 });
 
 test('drain clears the buffer, unlike collected()', function (): void {
-    $errorCollector = new ErrorCollector();
+    $errorCollector = new ErrorCollector(new \Piwigo\Config\DeploymentPolicy());
     seedCollected($errorCollector, ['[WARNING] foo in bar.php:1']);
 
     $errorCollector->drain();
@@ -64,7 +64,7 @@ test('drain clears the buffer, unlike collected()', function (): void {
 });
 
 test('a second drain after a first returns empty', function (): void {
-    $errorCollector = new ErrorCollector();
+    $errorCollector = new ErrorCollector(new \Piwigo\Config\DeploymentPolicy());
     seedCollected($errorCollector, ['[WARNING] foo in bar.php:1']);
 
     $errorCollector->drain();
@@ -222,7 +222,7 @@ test('flush does not record a non-fatal error_get_last() type as if it were fata
     $script = '<?php' . "\n"
         . 'require ' . var_export($autoloadPath, true) . ";\n"
         . "@trigger_error('non-fatal warning for mutation coverage', E_USER_WARNING);\n"
-        . "\$errorCollector = new \\Piwigo\\Core\\ErrorCollector();\n"
+        . "\$errorCollector = new \\Piwigo\\Core\\ErrorCollector(new \\Piwigo\\Config\\DeploymentPolicy());\n"
         . "\$method = new ReflectionMethod(\\Piwigo\\Core\\ErrorCollector::class, 'flush');\n"
         . "\$method->invoke(\$errorCollector);\n"
         . 'file_put_contents(' . var_export($marker, true) . ", json_encode(\$errorCollector->collected()));\n";
@@ -285,7 +285,7 @@ test('flush records a synthetic entry for a genuine E_PARSE fatal (malformed req
 
     $script = '<?php' . "\n"
         . 'require ' . var_export($autoloadPath, true) . ";\n"
-        . "\$errorCollector = new \\Piwigo\\Core\\ErrorCollector();\n"
+        . "\$errorCollector = new \\Piwigo\\Core\\ErrorCollector(new \\Piwigo\\Config\\DeploymentPolicy());\n"
         . "\$errorCollector->install();\n"
         . "register_shutdown_function(function () use (\$errorCollector) {\n"
         . '    file_put_contents(' . var_export($marker, true) . ", json_encode(\$errorCollector->collected()));\n"
@@ -331,7 +331,7 @@ test('flush records a synthetic entry for a genuine E_PARSE fatal (malformed req
 });
 
 test('flush returns immediately when nothing was collected', function (): void {
-    $errorCollector = new ErrorCollector();
+    $errorCollector = new ErrorCollector(new \Piwigo\Config\DeploymentPolicy());
     seedCollected($errorCollector, []);
 
     $method = new ReflectionMethod(ErrorCollector::class, 'flush');
@@ -358,7 +358,7 @@ test('flush records a synthetic entry for a genuine E_ERROR fatal (memory-limit 
     $script = '<?php' . "\n"
         . "ini_set('memory_limit', '32M');\n"
         . 'require ' . var_export($autoloadPath, true) . ";\n"
-        . "\$errorCollector = new \\Piwigo\\Core\\ErrorCollector();\n"
+        . "\$errorCollector = new \\Piwigo\\Core\\ErrorCollector(new \\Piwigo\\Config\\DeploymentPolicy());\n"
         . "\$errorCollector->install();\n"
         . "register_shutdown_function(function () use (\$errorCollector) {\n"
         . '    file_put_contents(' . var_export($marker, true) . ", json_encode(\$errorCollector->collected()));\n"
@@ -502,7 +502,7 @@ test('label falls back to the PHP code for a type matching none of the known cat
  * dead for the identical reason -- not chased further.
  */
 test('flush leaves a non-empty buffer untouched when headers are already sent', function (): void {
-    $errorCollector = new ErrorCollector();
+    $errorCollector = new ErrorCollector(new \Piwigo\Config\DeploymentPolicy());
     $seeded = ['[WARNING] foo in bar.php:1', '[NOTICE] baz in qux.php:2'];
     seedCollected($errorCollector, $seeded);
 

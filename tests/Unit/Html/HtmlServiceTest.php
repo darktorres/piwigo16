@@ -30,8 +30,12 @@ beforeEach(function (): void {
     // HtmlService's own ProcessCache usage now goes through a transitional
     // static shim (singleton/service-locator elimination campaign, Phase 1
     // -- HtmlService isn't converted to constructor injection here, see
-    // that shim's own docblock), which needs a real container.
-    Kernel::boot();
+    // that shim's own docblock), which needs a real container. A real
+    // Paths is required too, not just any booted Kernel: fatalError()'s
+    // own ErrorCollector::recordFatalStatic() shim (Phase 4) now resolves
+    // a DeploymentPolicy-dependent ErrorCollector, whose container factory
+    // itself needs Paths bound to autowire.
+    Kernel::boot(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3)));
     $processCache = Kernel::container()->get(ProcessCache::class);
     if ($processCache instanceof ProcessCache) {
         $processCache->reset();

@@ -59,7 +59,7 @@ final class MenubarRenderer
      * write to, this method returns that value instead; every caller but
      * GalleryController ignores it.
      */
-    public function render(UrlServiceInterface $urlService, \Piwigo\Core\FilterState $filterState, \Piwigo\Section\SectionContextRegistry $sectionContextRegistry, SessionService $sessionService): ?int
+    public function render(UrlServiceInterface $urlService, \Piwigo\Core\FilterState $filterState, \Piwigo\Section\SectionContextRegistry $sectionContextRegistry, SessionService $sessionService, \Piwigo\Config\DeploymentPolicy $deploymentPolicy): ?int
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
         $section_context = $sectionContextRegistry->current();
@@ -373,7 +373,7 @@ final class MenubarRenderer
 
             // the logout link has no meaning with Apache authentication : it is not
             // possible to logout with this kind of authentication.
-            if (! \Piwigo\Config\DeploymentPolicy::current()->apacheAuthentication) {
+            if (! $deploymentPolicy->apacheAuthentication) {
                 $template->assign('U_LOGOUT', $urlService->getRootUrl() . '?act=logout');
             }
             if (\Piwigo\Auth\AccessControl::isAdmin()) {

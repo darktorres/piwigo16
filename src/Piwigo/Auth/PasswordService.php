@@ -19,6 +19,7 @@ final readonly class PasswordService
 {
     public function __construct(
         private PasswordRepository $repo,
+        private \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
     ) {}
 
     /**
@@ -57,7 +58,7 @@ final readonly class PasswordService
                 return false;
             }
 
-            if ($userId === null || \Piwigo\Config\DeploymentPolicy::current()->externalAuthentification) {
+            if ($userId === null || $this->deploymentPolicy->externalAuthentification) {
                 return true;
             }
 

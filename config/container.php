@@ -29,6 +29,7 @@ use Piwigo\Comment\CommentEntity;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigRepository;
+use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\CommentCounterInterface;
 use Piwigo\Core\DefaultLanguageProviderInterface;
@@ -225,6 +226,15 @@ return [
     // instance is mutable (reload()/seed() mutate it in place) rather than
     // deleted outright.
     DbCredentials::class => factory(static fn (): DbCredentials => DbCredentials::fromEnv()),
+
+    // Factory binding (singleton/service-locator elimination campaign,
+    // Phase 4) -- replaces DeploymentPolicy's former self-managed static
+    // memo (current()/set()/reset()). $paths is autowired from the
+    // container's own Paths::class binding (set by Kernel::boot() when a
+    // real Paths is passed); shared/memoized for the container's lifetime
+    // like every other autowired service, matching the former per-request
+    // memo exactly.
+    DeploymentPolicy::class => factory(static fn (\Piwigo\Core\Paths $paths): DeploymentPolicy => DeploymentPolicy::load($paths)),
 
     // Non-obvious construction (handler + formatter wiring). Monolog "app"
     // channel only -- the "security" channel (a named $securityLogger

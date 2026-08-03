@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Config;
 
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Paths;
 
 /**
@@ -43,8 +42,6 @@ use Piwigo\Core\Paths;
  */
 final class DeploymentPolicy
 {
-    private static ?self $current = null;
-
     public function __construct(
         public readonly int $showPhpErrors = 30719,
         public readonly bool $showPhpErrorsOnFrontend = true,
@@ -57,44 +54,39 @@ final class DeploymentPolicy
     ) {}
 
     /**
-     * Memoized per request, matching DbCredentials's own current() --
-     * every real caller (ErrorCollector, PasswordService, UserService,
-     * AdminShell, UserBootstrap, MenubarRenderer, UrlService) is reachable
-     * many times per request, well after Kernel::boot() has set
-     * CurrentPaths. Falls back to a fresh, unmemoized all-defaults
-     * instance when CurrentPaths itself isn't set yet -- real production
-     * code never hits this branch (every entry point resolves a Paths
-     * before Kernel::boot() runs), but a pure-Unit test exercising, say,
-     * UrlService standalone shouldn't have to bootstrap one just to reach
-     * a config check this deep in its call graph.
+     * @deprecated transitional bridge for callers not yet converted to
+     * constructor injection -- singleton/service-locator elimination
+     * campaign, Phase 4. `DeploymentPolicy::class` is bound in
+     * container.php as a `factory()` reading `Paths $paths` (autowired) --
+     * shared/memoized for the container's lifetime like every other
+     * autowired service, matching this method's former per-request memo
+     * exactly. Falls back to a fresh, unmemoized all-defaults instance
+     * when Kernel isn't booted, or when it's booted without a `Paths`
+     * bound (the factory's own `Paths` autowiring attempt throws PHP-DI's
+     * `InvalidDefinition` in that case, same as CurrentPaths::get()'s own
+     * documented `has()`-is-unreliable-for-concrete-classes finding) --
+     * real production code never hits either branch (every entry point
+     * resolves a Paths before Kernel::boot() runs), but a pure-Unit test
+     * exercising, say, UrlService standalone shouldn't have to bootstrap
+     * one just to reach a config check this deep in its call graph.
      */
     public static function current(): self
     {
-        if (self::$current !== null) {
-            return self::$current;
+        if (! \Piwigo\Core\Kernel::isBooted()) {
+            return new self();
         }
 
-        return CurrentPaths::isSet() ? self::$current = self::load(CurrentPaths::get()) : new self();
-    }
+        try {
+            $policy = \Piwigo\Core\Kernel::container()->get(self::class);
+        } catch (\Psr\Container\ContainerExceptionInterface) {
+            return new self();
+        }
 
-    /**
-     * Test-only -- lets a test exercise a specific policy (e.g. a
-     * non-default allowedHosts list) without writing a real
-     * local/config/config.php file. Mirrors CurrentConfigService's own
-     * set().
-     */
-    public static function set(self $policy): void
-    {
-        self::$current = $policy;
-    }
+        if (! $policy instanceof self) {
+            throw new \LogicException('Container returned an unexpected type for ' . self::class);
+        }
 
-    /**
-     * Test-only, for test-isolation between requests -- mirrors
-     * DbCredentials's/CurrentConfigService's own reset() methods.
-     */
-    public static function reset(): void
-    {
-        self::$current = null;
+        return $policy;
     }
 
     public static function load(Paths $paths): self

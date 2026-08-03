@@ -120,25 +120,23 @@ final class UserBootstrapTest extends IntegrationTestCase
         $_REQUEST = $this->requestSnapshot;
         unset($_SESSION['connected_with'], $_SESSION['pwg_uid']);
 
-        DeploymentPolicy::reset();
         EventDispatcher::get()->reset();
         CurrentUser::reset();
         Kernel::reset();
         parent::tearDown();
     }
 
-    private function bootstrap(?WsContext $wsContext = null): UserBootstrap
+    private function bootstrap(?WsContext $wsContext = null, ?DeploymentPolicy $deploymentPolicy = null): UserBootstrap
     {
         // The api_key branch that reads CurrentLogger ends in a bare
         // exit() and is deliberately left uncovered here (see this class's
         // own docblock) -- never actually read, so a fresh, never-set()
         // instance is fine.
-        return new UserBootstrap(new RedirectService(), new UrlService(new HtmlService()), new ApiKeyRequestFlag(), new CurrentLogger(), $wsContext ?? new WsContext());
+        return new UserBootstrap(new RedirectService(), new UrlService(new HtmlService()), new ApiKeyRequestFlag(), new CurrentLogger(), $wsContext ?? new WsContext(), $deploymentPolicy ?? new DeploymentPolicy());
     }
 
     public function test_initialize_auto_registers_a_new_local_account_for_an_unknown_apache_remote_user(): void
     {
-        DeploymentPolicy::set(new DeploymentPolicy(apacheAuthentication: true));
         $remoteUser = 'apache_new_user_' . bin2hex(random_bytes(4));
         $_SERVER['REMOTE_USER'] = $remoteUser;
         $_GET = [];
@@ -146,7 +144,7 @@ final class UserBootstrapTest extends IntegrationTestCase
         $_REQUEST = [];
 
         try {
-            $this->bootstrap()->initialize();
+            $this->bootstrap(deploymentPolicy: new DeploymentPolicy(apacheAuthentication: true))->initialize();
 
             self::assertSame($remoteUser, CurrentUser::get()->username);
             $row = $this->conn->fetchAssociative(
@@ -162,13 +160,12 @@ final class UserBootstrapTest extends IntegrationTestCase
 
     public function test_initialize_reuses_the_existing_account_for_a_known_apache_remote_user(): void
     {
-        DeploymentPolicy::set(new DeploymentPolicy(apacheAuthentication: true));
         $_SERVER['REMOTE_USER'] = 'regular_user';
         $_GET = [];
         $_POST = [];
         $_REQUEST = [];
 
-        $this->bootstrap()->initialize();
+        $this->bootstrap(deploymentPolicy: new DeploymentPolicy(apacheAuthentication: true))->initialize();
 
         self::assertSame('regular_user', CurrentUser::get()->username);
         // No 2nd row was created for an account that already exists.
@@ -181,7 +178,6 @@ final class UserBootstrapTest extends IntegrationTestCase
 
     public function test_initialize_calls_authKeyLogin_when_the_auth_query_parameter_is_present(): void
     {
-        DeploymentPolicy::set(new DeploymentPolicy(apacheAuthentication: false));
         $_GET['auth'] = 'not-a-real-auth-key';
         $_POST = [];
         $_REQUEST = [];
@@ -199,7 +195,7 @@ final class UserBootstrapTest extends IntegrationTestCase
     public function test_initialize_logs_in_via_ws_uploadAsync_and_marks_the_session_connected_with(): void
     {
         $plainPassword = 'upload-async-pass-' . bin2hex(random_bytes(4));
-        $hash = (new PasswordService(new PasswordRepository($this->conn)))->hash($plainPassword);
+        $hash = (new PasswordService(new PasswordRepository($this->conn), new DeploymentPolicy()))->hash($plainPassword);
         $username = 'upload_async_user_' . bin2hex(random_bytes(4));
         $this->conn->executeStatement(
             'INSERT INTO piwigo_users (username, password, mail_address) VALUES (?, ?, NULL)',
@@ -215,7 +211,7 @@ final class UserBootstrapTest extends IntegrationTestCase
             new AuthRepository(EntityManagerFactory::build($this->conn)),
             new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)),
             new HtmlService(),
-            new PasswordService(new PasswordRepository($this->conn)),
+            new PasswordService(new PasswordRepository($this->conn), new DeploymentPolicy()),
             new CookieService(),
             EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class),
             new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)),

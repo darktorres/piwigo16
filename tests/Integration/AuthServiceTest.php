@@ -120,7 +120,7 @@ namespace Piwigo\Tests\Integration {
                 new AuthRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())),
                 new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)),
                 new HtmlService(),
-                new PasswordService(new PasswordRepository(DbConnection::build())),
+                new PasswordService(new PasswordRepository(DbConnection::build()), new \Piwigo\Config\DeploymentPolicy()),
                 new CookieService(),
                 $this->failedLoginRepo,
                 new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class)),
@@ -672,7 +672,7 @@ namespace Piwigo\Tests\Integration {
             $apiKeyService = new ApiKeyService(
                 new \Piwigo\Mail\MailService(),
                 new ApiKeyRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)),
-                new PasswordService(new PasswordRepository($this->conn)),
+                new PasswordService(new PasswordRepository($this->conn), new \Piwigo\Config\DeploymentPolicy()),
                 new UrlService(new HtmlService()),
                 new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)),
             );
@@ -695,7 +695,7 @@ namespace Piwigo\Tests\Integration {
             $apiKeyService = new ApiKeyService(
                 new \Piwigo\Mail\MailService(),
                 new ApiKeyRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)),
-                new PasswordService(new PasswordRepository($this->conn)),
+                new PasswordService(new PasswordRepository($this->conn), new \Piwigo\Config\DeploymentPolicy()),
                 new UrlService(new HtmlService()),
                 new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)),
             );

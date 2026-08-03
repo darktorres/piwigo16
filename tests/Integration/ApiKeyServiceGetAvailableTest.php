@@ -61,7 +61,7 @@ final class ApiKeyServiceGetAvailableTest extends IntegrationTestCase
         $this->service = new ApiKeyService(
             new MailService(),
             new ApiKeyRepository($this->em),
-            new PasswordService(new PasswordRepository($this->conn)),
+            new PasswordService(new PasswordRepository($this->conn), new \Piwigo\Config\DeploymentPolicy()),
             new UrlService(new HtmlService()),
             new SessionService($this->em->getRepository(SessionEntity::class)),
         );

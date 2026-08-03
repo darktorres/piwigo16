@@ -494,7 +494,7 @@ final class RequestBootstrap
             new AuthRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
             self::activityService($conn),
             new HtmlService(),
-            new PasswordService(new PasswordRepository($conn)),
+            new PasswordService(new PasswordRepository($conn), self::deploymentPolicy()),
             new CookieService(),
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class),
             self::sessionService(),
@@ -506,6 +506,7 @@ final class RequestBootstrap
             self::apiKeyRequestFlag(),
             self::currentLogger(),
             self::wsContext(),
+            self::deploymentPolicy(),
         )->initialize();
     }
 
@@ -551,6 +552,7 @@ final class RequestBootstrap
             $conn,
             self::sessionService(),
             \Piwigo\PluginConfig\EventDispatcher::get(),
+            self::deploymentPolicy(),
         ));
         Lang::load('common.lang');
         if (\Piwigo\Auth\AccessControl::isAdmin() || self::adminContext()->isActive()) {
@@ -593,7 +595,7 @@ final class RequestBootstrap
             $notify_username = CurrentUser::get()->username;
             $notify_email = CurrentUser::get()->email;
             $apiKeyRepo = new \Piwigo\Auth\ApiKeyRepository(\Piwigo\Db\EntityManagerFactory::build($conn));
-            $is_mail_send = new \Piwigo\Auth\ApiKeyService(new MailService(), $apiKeyRepo, new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn)), new UrlService(new HtmlService()), self::sessionService())
+            $is_mail_send = new \Piwigo\Auth\ApiKeyService(new MailService(), $apiKeyRepo, new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn), self::deploymentPolicy()), new UrlService(new HtmlService()), self::sessionService())
                 ->notifyExpiration($notify_username, $notify_email, $notify_api_key_expiration['days_left']);
 
             if ($is_mail_send) {
@@ -648,7 +650,7 @@ final class RequestBootstrap
             // when it decides to take over the page. CurrentConfigService::get()
             // reuses the instance connect() already resolved earlier in the
             // same request (Legacy Coupling Retirement Phase 8, 8d).
-            new NoPhotoYetRenderer(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), \Piwigo\Config\CurrentConfigService::get(), new RedirectService(), new UrlService(new HtmlService()), CurrentPaths::get(), self::adminContext(), self::sessionService(), \Piwigo\PluginConfig\EventDispatcher::get())
+            new NoPhotoYetRenderer(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), \Piwigo\Config\CurrentConfigService::get(), new RedirectService(), new UrlService(new HtmlService()), CurrentPaths::get(), self::adminContext(), self::sessionService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::deploymentPolicy())
                 ->render();
         }
 
@@ -1045,6 +1047,26 @@ final class RequestBootstrap
         }
 
         return $eventDispatcher;
+    }
+
+    /**
+     * Public (unlike the private resolver helpers above): public/admin.php's
+     * own legacy-style `new AdminShell(...)` manual construction needs a way
+     * to obtain the same container-shared instance every other
+     * DeploymentPolicy consumer receives via constructor injection, without
+     * calling Kernel::container() directly itself (arch-tested to
+     * Bootstrap/ only) -- same "public accessor on this class" shape as
+     * coreTabs()/filesystemIntegrityChecker()/sessionService()/eventDispatcher()
+     * above (singleton/service-locator elimination campaign, Phase 4).
+     */
+    public static function deploymentPolicy(): \Piwigo\Config\DeploymentPolicy
+    {
+        $deploymentPolicy = Kernel::container()->get(\Piwigo\Config\DeploymentPolicy::class);
+        if (! $deploymentPolicy instanceof \Piwigo\Config\DeploymentPolicy) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\DeploymentPolicy::class);
+        }
+
+        return $deploymentPolicy;
     }
 
     /**

@@ -7,7 +7,6 @@ namespace Piwigo\Tests\Integration;
 use Piwigo\Bootstrap\InstallBootstrap;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfigService;
-use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Kernel;
@@ -68,7 +67,6 @@ final class InstallBootstrapTest extends IntegrationTestCase
             }
         }
         Kernel::reset();
-        DeploymentPolicy::reset();
         $this->removeDirectory($this->tempRoot);
         parent::tearDown();
     }

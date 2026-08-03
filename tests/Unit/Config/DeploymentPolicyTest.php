@@ -3,16 +3,10 @@
 declare(strict_types=1);
 
 use Piwigo\Config\DeploymentPolicy;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 
-beforeEach(function (): void {
-    DeploymentPolicy::reset();
-});
-
 afterEach(function (): void {
-    DeploymentPolicy::reset();
     Kernel::reset();
 });
 
@@ -78,7 +72,7 @@ test('load() throws with the exact message naming the real file path and get_deb
     deployment_policy_test_rrmdir($root);
 });
 
-test('current() memoizes across calls until reset()', function (): void {
+test('current() memoizes across calls when Kernel is booted (container-shared instance)', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-deployment-policy-test-' . bin2hex(random_bytes(4));
     mkdir($root . '/local/config', 0o777, true);
     Kernel::boot(Paths::fromRoot($root));
@@ -88,19 +82,34 @@ test('current() memoizes across calls until reset()', function (): void {
 
     expect($second)->toBe($first);
 
-    DeploymentPolicy::reset();
-
-    expect(DeploymentPolicy::current())->not->toBe($first);
-
     deployment_policy_test_rrmdir($root);
 });
 
-test('set() lets a test inject a specific policy', function (): void {
-    $policy = new DeploymentPolicy(apacheAuthentication: true);
+test('current() returns a fresh, unmemoized all-defaults instance on every call when Kernel is not booted', function (): void {
+    $first = DeploymentPolicy::current();
+    $second = DeploymentPolicy::current();
 
-    DeploymentPolicy::set($policy);
+    expect($second)->not->toBe($first)
+        ->and($first->showPhpErrors)->toBe(30719)
+        ->and($second->showPhpErrors)->toBe(30719);
+});
 
-    expect(DeploymentPolicy::current())->toBe($policy);
+test('current() falls back to a fresh all-defaults instance when Kernel is booted without a real Paths', function (): void {
+    // Unlike CurrentPaths::get() (no sensible default, so it throws), a
+    // missing Paths here just means the factory's own Paths autowiring
+    // attempt fails -- caught and treated the same as Kernel-not-booted,
+    // since an all-defaults DeploymentPolicy is always a safe fallback.
+    Kernel::boot();
+
+    try {
+        $first = DeploymentPolicy::current();
+        $second = DeploymentPolicy::current();
+
+        expect($second)->not->toBe($first)
+            ->and($first->showPhpErrors)->toBe(30719);
+    } finally {
+        Kernel::reset();
+    }
 });
 
 function deployment_policy_test_rrmdir(string $dir): void

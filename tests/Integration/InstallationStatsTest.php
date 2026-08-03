@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Admin\InstallationStats;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 
@@ -20,7 +21,11 @@ function installationStatsDbPrefix(): string
 // test in this file needs a booted container -- same convention as the
 // other Integration tests that touch container-backed services.
 beforeEach(function (): void {
-    Kernel::boot();
+    // A real Paths is required too, not just any booted Kernel:
+    // CoreDomainAccessor::userService() resolves UserService, which now
+    // constructor-injects DeploymentPolicy (Phase 4), whose own container
+    // factory needs Paths bound to autowire.
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 2)));
 });
 
 afterEach(function (): void {

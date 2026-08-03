@@ -88,7 +88,7 @@ namespace Piwigo\Tests\Integration {
             CurrentConfig::setAvailablePermissionLevels([0, 1, 2, 4, 8]);
 
             $this->conn = DbConnection::build();
-            $this->service = new UserService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new MailService(), new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), new HtmlService(), $this->conn, new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)), new \Piwigo\PluginConfig\EventDispatcher());
+            $this->service = new UserService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new MailService(), new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), new HtmlService(), $this->conn, new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy());
 
             // checkAndSaveUserInfos()'s own success path (any call that
             // doesn't return an early 'error') reaches
@@ -1035,7 +1035,12 @@ namespace Piwigo\Tests\Integration {
                 "INSERT INTO " . Tables::users() . " (username, password, mail_address) VALUES ('sync-target-getdata', NULL, NULL)"
             );
             $tempId = (int) $this->conn->lastInsertId();
-            \Piwigo\Config\DeploymentPolicy::set(new \Piwigo\Config\DeploymentPolicy(externalAuthentification: true));
+            // A one-off instance with a non-default DeploymentPolicy --
+            // $this->service is shared across every test in this file and
+            // DeploymentPolicy is now a real constructor dependency, not a
+            // mutable static, so this test can no longer flip it on the
+            // shared instance.
+            $service = new UserService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new MailService(), new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), new HtmlService(), $this->conn, new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(externalAuthentification: true));
 
             try {
                 self::assertSame(0, $this->fetchOneInt(
@@ -1043,7 +1048,7 @@ namespace Piwigo\Tests\Integration {
                     [$tempId]
                 ));
 
-                $data = $this->service->getUserData(UserId::from($tempId));
+                $data = $service->getUserData(UserId::from($tempId));
 
                 self::assertArrayHasKey('status', $data);
                 self::assertSame(1, $this->fetchOneInt(
@@ -1051,7 +1056,6 @@ namespace Piwigo\Tests\Integration {
                     [$tempId]
                 ));
             } finally {
-                \Piwigo\Config\DeploymentPolicy::reset();
                 $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ?', [$tempId]);
             }
         }

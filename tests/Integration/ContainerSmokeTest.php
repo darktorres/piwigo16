@@ -68,6 +68,17 @@ final class ContainerSmokeTest extends TestCase
         // same "Kernel booted with no real Paths" reasoning as
         // PersistentCache above, not a wiring bug.
         \Piwigo\Storage\StorageRegistry::class,
+        // Piwigo\Config\DeploymentPolicy's own factory binding (singleton/
+        // service-locator elimination campaign, Phase 4) takes Paths $paths
+        // as an autowired param -- same "Kernel booted with no real Paths"
+        // reasoning as PersistentCache/StorageRegistry above, not a wiring
+        // bug.
+        \Piwigo\Config\DeploymentPolicy::class,
+        // Piwigo\Core\DefaultLanguageProviderInterface resolves to
+        // Piwigo\Users\UserService, which now constructor-injects
+        // DeploymentPolicy (Phase 4) -- fails to resolve for the identical
+        // reason, one level removed.
+        \Piwigo\Core\DefaultLanguageProviderInterface::class,
     ];
 
     public function test_every_container_entry_resolves(): void

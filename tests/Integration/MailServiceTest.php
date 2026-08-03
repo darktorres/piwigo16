@@ -150,6 +150,7 @@ final class MailServiceTest extends IntegrationTestCase
             $this->conn,
             new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)),
             new \Piwigo\PluginConfig\EventDispatcher(),
+            new \Piwigo\Config\DeploymentPolicy(),
         );
     }
 

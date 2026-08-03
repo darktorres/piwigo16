@@ -44,6 +44,10 @@ final class ErrorCollector
      */
     private array $collected = [];
 
+    public function __construct(
+        private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
+    ) {}
+
     public function install(): void
     {
         if ($this->active) {
@@ -75,11 +79,7 @@ final class ErrorCollector
      */
     public function installIfConfigured(): void
     {
-        // DeploymentPolicy hasn't converted yet (Phase 4) -- ordinary
-        // still-static call, not scaffolding; revisited once that phase
-        // lands and this can take DeploymentPolicy via constructor
-        // injection instead.
-        $policy = \Piwigo\Config\DeploymentPolicy::current();
+        $policy = $this->deploymentPolicy;
         if ($policy->showPhpErrors !== 0) {
             @ini_set('error_reporting', $policy->showPhpErrors);
             if ($policy->showPhpErrorsOnFrontend) {

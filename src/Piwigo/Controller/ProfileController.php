@@ -50,6 +50,7 @@ final class ProfileController implements ControllerInterface
         private readonly \Piwigo\Core\AdminContext $adminContext,
         private readonly SessionService $sessionService,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
     ) {}
 
     private static function userService(): UserService
@@ -177,7 +178,7 @@ final class ProfileController implements ControllerInterface
         if (! is_array($hide_menu_on) or ! in_array('theProfilePage', $hide_menu_on, true)) {
             if (($themeconf['id'] ?? null) !== 'standard_pages') {
                 new MenubarRenderer()
-                    ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService);
+                    ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy);
             }
         }
 

@@ -65,6 +65,7 @@ final class GalleryController implements ControllerInterface
         private readonly SectionContextRegistry $sectionContextRegistry,
         private readonly SessionService $sessionService,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
     ) {}
 
     private static function categoryService(): CategoryService
@@ -195,7 +196,7 @@ final class GalleryController implements ControllerInterface
 
         // -------------------------------------------------- menubar
         $categoryCountCategories = new MenubarRenderer()
-            ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService);
+            ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy);
 
         $template->set_filename('index', 'index.tpl');
 

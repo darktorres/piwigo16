@@ -69,6 +69,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         private Connection $conn,
         private SessionService $sessionService,
         private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
     ) {}
 
     /**
@@ -100,7 +101,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      */
     private function passwordService(): PasswordService
     {
-        return new PasswordService(new PasswordRepository($this->conn));
+        return new PasswordService(new PasswordRepository($this->conn), $this->deploymentPolicy);
     }
 
     /**
@@ -339,7 +340,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         $user_fields = \Piwigo\Config\CurrentConfig::userFields();
         $userId = $this->repo->insertUser([
             $user_fields['username'] => $login,
-            $user_fields['password'] => new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($this->conn))->hash($password),
+            $user_fields['password'] => new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($this->conn), $this->deploymentPolicy)->hash($password),
             $user_fields['email'] => $mailAddress,
         ]);
 
@@ -682,7 +683,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         }
 
         // retrieve additional user data ?
-        if (\Piwigo\Config\DeploymentPolicy::current()->externalAuthentification) {
+        if ($this->deploymentPolicy->externalAuthentification) {
             // Gap-closure Stage 4g: dropped the LEFT JOIN onto user_cache --
             // it never affected this COUNT(1) (a LEFT JOIN can only ever
             // add exactly 0 or 1 matching row per ui row, and GROUP BY

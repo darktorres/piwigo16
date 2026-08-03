@@ -53,6 +53,7 @@ final class UserBootstrap
         private readonly ApiKeyRequestFlag $apiKeyRequestFlag,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
         private readonly WsContext $wsContext,
+        private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
     ) {}
 
     public function initialize(): void
@@ -72,7 +73,7 @@ final class UserBootstrap
             new AuthRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
             new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)),
             new HtmlService(),
-            new PasswordService(new PasswordRepository($conn)),
+            new PasswordService(new PasswordRepository($conn), $this->deploymentPolicy),
             new CookieService(),
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class),
             $sessionService,
@@ -87,6 +88,7 @@ final class UserBootstrap
             $conn,
             $sessionService,
             $eventDispatcher,
+            $this->deploymentPolicy,
         );
 
         $guest_id_int = \Piwigo\Config\CurrentConfig::guestId();
@@ -117,7 +119,7 @@ final class UserBootstrap
         }
 
         // using Apache authentication override the above user search
-        if (\Piwigo\Config\DeploymentPolicy::current()->apacheAuthentication) {
+        if ($this->deploymentPolicy->apacheAuthentication) {
             $remote_user = self::resolveApacheRemoteUser($_SERVER);
 
             if ($remote_user !== null) {

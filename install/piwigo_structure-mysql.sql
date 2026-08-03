@@ -2,6 +2,23 @@
 -- Hand-maintained -- there is no Doctrine Migrations layer between "what
 -- the schema should be" and what a fresh install creates.
 
+-- Item 22: MySQL bakes a FULLTEXT index's effective stopword-filtering
+-- behavior in at CREATE TABLE time, for the lifetime of that index --
+-- confirmed live that a later per-connection SET SESSION at INSERT time
+-- has zero effect on an already-existing index, while an index created
+-- under this setting correctly indexes every future row regardless of
+-- the writing connection's own later setting. The ngram FULLTEXT parser
+-- (categories/images/tags below) has a severe, real interaction with the
+-- default INNODB stopword list otherwise: if *any* 2-character fragment
+-- of a word matches a stopword (ngram_token_size is 2; MySQL's own
+-- default stopword list includes short, common fragments like
+-- at/in/on), MySQL drops every fragment of that *whole* word from the
+-- index, not just the matching fragment -- e.g. "cat" (contains "at")
+-- becomes entirely unsearchable, hitting any word containing at/in/on/
+-- etc. anywhere in it (cat, chat, combat, station, water, later...), not
+-- a rare edge case.
+SET SESSION innodb_ft_enable_stopword = 0;
+
 --
 -- Table structure for table `piwigo_activity`
 --
@@ -58,7 +75,7 @@ CREATE TABLE `piwigo_categories` (
   UNIQUE KEY `categories_i3` (`permalink`),
   KEY `categories_i2` (`id_uppercat`),
   KEY `lastmodified` (`lastmodified`),
-  FULLTEXT KEY `categories_ft_name_comment` (`name`,`comment`)
+  FULLTEXT KEY `categories_ft_name_comment` (`name`,`comment`) WITH PARSER ngram
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='photo albums, both physical filesystem-synced and virtual';
 
 --
@@ -253,8 +270,8 @@ CREATE TABLE `piwigo_images` (
   KEY `images_i9` (`file`),
   KEY `lastmodified` (`lastmodified`),
   KEY `idx_images_date_desc` (`date_available` DESC, `id` DESC),
-  FULLTEXT KEY `images_ft_name_comment` (`name`,`comment`),
-  FULLTEXT KEY `images_ft_author` (`author`)
+  FULLTEXT KEY `images_ft_name_comment` (`name`,`comment`) WITH PARSER ngram,
+  FULLTEXT KEY `images_ft_author` (`author`) WITH PARSER ngram
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='photo/media metadata and file location, one row per uploaded image';
 
 --
@@ -372,7 +389,7 @@ CREATE TABLE `piwigo_tags` (
   PRIMARY KEY  (`id`),
   KEY `tags_i1` (`url_name`),
   KEY `lastmodified` (`lastmodified`),
-  FULLTEXT KEY `tags_ft_name` (`name`)
+  FULLTEXT KEY `tags_ft_name` (`name`) WITH PARSER ngram
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='photo tags/keywords';
 
 --

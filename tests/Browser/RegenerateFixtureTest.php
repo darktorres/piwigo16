@@ -368,6 +368,17 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         self::assertSame(0, $exit, 'mysqldump failed: ' . $stderr);
         self::assertIsString($dump, 'mysqldump produced no output');
 
+        // Item 22: mysqldump's own output never includes this -- MySQL
+        // bakes a FULLTEXT index's effective stopword-filtering behavior
+        // in at CREATE TABLE time (confirmed live: a later per-connection
+        // setting has zero effect on an already-existing index), so the
+        // categories/images/tags ngram FULLTEXT indexes below need this
+        // active before their own CREATE TABLE runs when this dump is
+        // reloaded via IntegrationTestCase::loadFixture() -- same
+        // rationale as install/piwigo_structure-mysql.sql's own identical
+        // line, kept in sync with it.
+        $dump = "SET SESSION innodb_ft_enable_stopword = 0;\n" . $dump;
+
         file_put_contents($fixturePath, $dump);
         $fixtureSize = filesize($fixturePath);
         self::assertNotFalse($fixtureSize, 'could not stat the written fixture file');

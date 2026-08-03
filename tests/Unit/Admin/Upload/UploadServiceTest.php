@@ -73,7 +73,13 @@ function upload_service_test_make(): UploadService
 
 beforeEach(function (): void {
     mkdir(upload_service_test_marker(), 0o777, true);
-    Kernel::boot();
+    // A real Paths is required, not a bare boot: upload_service_test_make()
+    // resolves StorageRegistry::class from the container, whose own factory
+    // (config/container.php) always calls fromConfig(), which requires()
+    // config/storage.php -- that file unconditionally calls
+    // CurrentPaths::get(), so a bare Kernel::boot() (no Paths bound) throws
+    // "CurrentPaths not initialised" for every test using that helper.
+    Kernel::boot(Paths::fromRoot(upload_service_test_marker()));
     // needResize() reads Piwigo\Core\CurrentLogger directly (an info-level
     // log line on its own "too big" branch) -- OFF severity is a real,
     // side-effect-free logger, never touching the filesystem.
@@ -690,7 +696,7 @@ test('saveUploadFormConfig collects a range error and a field-keyed form_errors 
 
 test('saveUploadFormConfig keeps processing later fields after skipping an unknown one, not stopping the whole loop', function (): void {
     Kernel::reset();
-    Kernel::boot();
+    Kernel::boot(Paths::fromRoot(upload_service_test_marker()));
     try {
         $service = upload_service_test_make();
         $errors = [];
@@ -725,7 +731,7 @@ test('saveUploadFormConfig rejects a value that only satisfies the pattern check
     // loose string/int comparison still finds it >=min and <=max, which a
     // subtly-wrong `or` would incorrectly accept.
     Kernel::reset();
-    Kernel::boot();
+    Kernel::boot(Paths::fromRoot(upload_service_test_marker()));
     try {
         $service = upload_service_test_make();
         $errors = [];
@@ -745,7 +751,7 @@ test('saveUploadFormConfig rejects a below-minimum value that only satisfies the
     // <=max` would wrongly accept any small, pattern-matching value just
     // because it's trivially under the max.
     Kernel::reset();
-    Kernel::boot();
+    Kernel::boot(Paths::fromRoot(upload_service_test_marker()));
     try {
         $service = upload_service_test_make();
         $errors = [];
@@ -762,7 +768,7 @@ test('saveUploadFormConfig rejects a below-minimum value that only satisfies the
 
 test('saveUploadFormConfig accepts a value exactly at the min or max boundary', function (): void {
     Kernel::reset();
-    Kernel::boot();
+    Kernel::boot(Paths::fromRoot(upload_service_test_marker()));
     try {
         $service = upload_service_test_make();
 
@@ -791,7 +797,7 @@ test('saveUploadFormConfig accepts a real int value without a TypeError, not jus
     // literal int posted value would throw a TypeError at preg_match()'s
     // own strict `string $subject` parameter without the (string) cast.
     Kernel::reset();
-    Kernel::boot();
+    Kernel::boot(Paths::fromRoot(upload_service_test_marker()));
     try {
         $service = upload_service_test_make();
         $errors = [];
@@ -816,7 +822,7 @@ test('saveUploadFormConfig silently skips a field name absent from getUploadForm
     // or not -- needs a booted container even for this "nothing to
     // persist" case.
     Kernel::reset();
-    Kernel::boot();
+    Kernel::boot(Paths::fromRoot(upload_service_test_marker()));
     try {
         $service = upload_service_test_make();
         $errors = [];
@@ -837,7 +843,7 @@ test('saveUploadFormConfig silently skips a field name absent from getUploadForm
 
 test('saveUploadFormConfig skips a numeric field whose posted value is non-scalar (PHPStan-narrowing guard)', function (): void {
     Kernel::reset();
-    Kernel::boot();
+    Kernel::boot(Paths::fromRoot(upload_service_test_marker()));
     try {
         $service = upload_service_test_make();
         $errors = [];
@@ -858,7 +864,7 @@ test('saveUploadFormConfig skips a numeric field whose posted value is non-scala
 
 test('saveUploadFormConfig sets the boolean field true whenever it is present, even with a falsy-looking value', function (): void {
     Kernel::reset();
-    Kernel::boot();
+    Kernel::boot(Paths::fromRoot(upload_service_test_marker()));
     try {
         $service = upload_service_test_make();
         $errors = [];
@@ -886,7 +892,7 @@ test('saveUploadFormConfig sets the boolean field true whenever it is present, e
 
 test('saveUploadFormConfig persists a valid in-range numeric field', function (): void {
     Kernel::reset();
-    Kernel::boot();
+    Kernel::boot(Paths::fromRoot(upload_service_test_marker()));
     try {
         $service = upload_service_test_make();
         $errors = [];

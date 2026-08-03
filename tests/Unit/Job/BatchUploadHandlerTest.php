@@ -6,6 +6,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
+use Piwigo\Core\Paths;
 use Piwigo\Html\HtmlService;
 use Piwigo\Job\BatchUploadJob;
 use Piwigo\Job\Handler\BatchUploadHandler;
@@ -57,7 +58,12 @@ function batch_upload_handler_test_storage_registry(): StorageRegistry
 }
 
 beforeEach(function (): void {
-    Kernel::boot();
+    // A real Paths is required, not a bare boot: batch_upload_handler_test_
+    // storage_registry() resolves StorageRegistry::class from the
+    // container, whose own factory always calls fromConfig(), which
+    // requires() config/storage.php -- that file unconditionally calls
+    // CurrentPaths::get().
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
     batch_upload_handler_test_current_logger()->set(new Logger(['severity' => Logger::OFF]));
     CurrentConfig::setLoungeActive(true);
 });
@@ -73,7 +79,7 @@ test('__invoke returns the existing image id and deletes the newly uploaded file
     // same "boot right before, reset right after" convention as
     // UploadServiceTest's own container-touching cases.
     Kernel::reset();
-    Kernel::boot();
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
     batch_upload_handler_test_current_logger()->set(new Logger(['severity' => Logger::OFF]));
     try {
         $sourceFilepath = sys_get_temp_dir() . '/piwigo-batch-upload-handler-test-' . bin2hex(random_bytes(8)) . '.jpg';

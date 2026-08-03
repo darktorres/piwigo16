@@ -12,7 +12,6 @@ use Piwigo\Activity\Projection\SystemActivityLogEntry;
 use Piwigo\Activity\Projection\UserActivityLogEntry;
 use Piwigo\Auth\LoginActivityLookupInterface;
 use Piwigo\Common\ValueObject\IpAddress;
-use Piwigo\Db\Tables;
 use Piwigo\Users\UserEntity;
 
 /**
@@ -190,37 +189,65 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
      * user's own username -- used only by the CSV export
      * (admin/user_activity.php's `type=download_logs`).
      *
-     * `details` stays the raw JSON text here, not decoded to `?array` --
-     * the CSV export writes it out as one opaque column value, unlike
-     * {@see findSystemObjectLogWithUsernames()}'s own consumer, which does
-     * structured `$details['key']` access and needs the real array.
-     *
-     * SQL-modernization audit, Item 14 Sub-phase C4: `users` is now
-     * mapped ({@see \Piwigo\Users\UserEntity}), so the multi-auth column
-     * indirection this used to take as `$usernameColumn`/`$idColumn`
-     * parameters is gone -- but this still stays on DBAL: `details`'s own
-     * consumer here wants the raw JSON text (this method's own docblock,
-     * above), and `ActivityEntity::$details`'s custom `json` Doctrine
-     * Type means DQL array hydration would always decode it to a real
-     * array instead, a real behavior change for the CSV export this
-     * feeds, not just a column-name question.
+     * Item 16G: converted to real DQL. `details` is re-encoded via
+     * `json_encode()` after DQL array hydration -- `ActivityEntity::
+     * $details`'s custom `json` Doctrine Type always decodes it to a real
+     * array on the way in, unlike the raw DBAL text this used to pass
+     * straight through. Verified the CSV export
+     * ({@see \Piwigo\Admin\UserActivityPageRenderer}) doesn't depend on
+     * exact original byte-for-byte JSON formatting -- it writes the
+     * string out as one opaque CSV cell, and its own defensive
+     * `str_replace(['`groups`', '`rank`'], ...)` cleanup (a legacy
+     * backtick-escaping artifact never found in any real fixture/DB row,
+     * confirmed via a direct query) becomes a harmless no-op against a
+     * freshly re-encoded, always-valid JSON string.
      *
      * @return list<UserActivityLogEntry>
      */
     public function findUserObjectLogWithUsernames(): array
     {
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('activity_id', 'performed_by', 'object', 'object_id', 'action', 'ip_address', 'occured_on', 'details', 'u.username AS username')
-            ->from(Tables::activity(), 'a')
-            ->innerJoin('a', Tables::users(), 'u', 'a.performed_by = u.id')
+        $rows = $this->createQueryBuilder('a')
+            ->select(
+                'a.activityId AS activity_id',
+                'a.performedBy AS performed_by',
+                'a.object AS object',
+                'a.objectId AS object_id',
+                'a.action AS action',
+                'a.ipAddress AS ip_address',
+                'a.occuredOn AS occured_on',
+                'a.details AS details',
+                'u.username AS username',
+            )
+            ->innerJoin(UserEntity::class, 'u', Join::WITH, 'u.id = a.performedBy')
             ->where("a.object = 'user'")
-            ->orderBy('a.activity_id', 'DESC')
-            ->executeQuery()
-            ->fetchAllAssociative();
+            ->orderBy('a.activityId', 'DESC')
+            ->getQuery()
+            ->getArrayResult();
 
-        return array_map(UserActivityLogEntry::fromRow(...), $rows);
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $ipAddress = $row['ip_address'] ?? null;
+            $details = $row['details'] ?? null;
+            $encodedDetails = is_array($details) ? json_encode($details) : null;
+
+            $result[] = UserActivityLogEntry::fromRow([
+                'activity_id' => $row['activity_id'] ?? null,
+                'performed_by' => $row['performed_by'] ?? null,
+                'object' => $row['object'] ?? null,
+                'object_id' => $row['object_id'] ?? null,
+                'action' => $row['action'] ?? null,
+                'ip_address' => $ipAddress instanceof IpAddress ? $ipAddress->value : null,
+                'occured_on' => $row['occured_on'] ?? null,
+                'details' => $encodedDetails !== false ? $encodedDetails : null,
+                'username' => $row['username'] ?? null,
+            ]);
+        }
+
+        return $result;
     }
 
     /**

@@ -239,6 +239,23 @@ final class ActivityRepositoryTest extends IntegrationTestCase
 
         // newest first
         self::assertGreaterThan($rows[count($rows) - 1]->activityId, $rows[0]->activityId);
+
+        // Item 16G: activity_id 4's own fixture row has a real details
+        // JSON payload and a real ip_address -- both go through
+        // Doctrine's own custom Type hydration (json/ip_address) that a
+        // bare object/username assertion above would never observe if a
+        // conversion bug silently dropped either back to null.
+        $loginRow = null;
+        foreach ($rows as $row) {
+            if ($row->activityId === 4) {
+                $loginRow = $row;
+            }
+        }
+        self::assertNotNull($loginRow);
+        self::assertNotNull($loginRow->ipAddress);
+        self::assertSame('::1', $loginRow->ipAddress->value);
+        self::assertIsString($loginRow->details);
+        self::assertSame(['method' => 'pwg.session.login'], json_decode($loginRow->details, true));
     }
 
     public function test_find_system_object_log_with_usernames_uses_the_real_username_when_performed_by_is_a_real_user(): void

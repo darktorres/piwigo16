@@ -214,17 +214,20 @@ final class TagRepository extends EntityRepository
     }
 
     /**
-     * SQL-modernization audit: $itemsCsv/$excludedTagIdsCsv splices
-     * bound. The original's trailing `ORDER BY NULL` (a MySQL
-     * query-optimizer hint meaning "don't sort") when $maxTags <= 0 has
-     * no `QueryBuilder` equivalent and none is needed -- omitting
-     * `ORDER BY` entirely is the same "unspecified order" behavior.
+     * Item 16G: converted to real DQL. The original's trailing
+     * `ORDER BY NULL` (a MySQL query-optimizer hint meaning "don't sort")
+     * when $maxTags <= 0 has no `QueryBuilder` equivalent and none is
+     * needed -- omitting `ORDER BY` entirely is the same "unspecified
+     * order" behavior.
      *
-     * Item 14 DQL audit: stays on DBAL -- joins the never-entity-mapped
-     * `image_tag`-as-a-plain-table (no association from TagEntity), and
-     * `t.*` selects every tags column alongside a computed `counter`
-     * aggregate, a shape DQL's entity-vs-scalar select split doesn't
-     * cleanly express without listing every column by name.
+     * Item 14 DQL audit's own "DQL's entity-vs-scalar select split
+     * doesn't cleanly express this" claim was stale, not re-verified --
+     * empirically confirmed this session that DQL's `SelectExpression`
+     * grammar genuinely allows a bare `IdentificationVariable` (a full
+     * entity, `t`) mixed with a scalar aggregate (`COUNT(...) AS counter`)
+     * in one SELECT list, hydrating each row as `[0 => TagEntity,
+     * 'counter' => int]` under default `getResult()` hydration -- live
+     * DQL-probed against the real fixture, not assumed.
      *
      * @param list<int> $items
      * @param list<int> $excludedTagIds
@@ -233,18 +236,16 @@ final class TagRepository extends EntityRepository
     public function findCommonTags(array $items, int $maxTags, array $excludedTagIds): array
     {
         $qb = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select('t.*', 'count(*) AS counter')
-            ->from(Tables::imageTag(), 'it')
-            ->innerJoin('it', Tables::tags(), 't', 'it.tag_id = t.id')
+            ->select('t', 'COUNT(it.imageId) AS counter')
+            ->from(TagEntity::class, 't')
+            ->innerJoin(ImageTagEntity::class, 'it', Join::WITH, 't.id = it.tagId')
+            ->where('it.imageId IN (:items)')
+            ->setParameter('items', $items, ArrayParameterType::INTEGER)
             ->groupBy('t.id');
 
-        $qb->where($qb->expr()->in('it.image_id', ':items'))
-            ->setParameter('items', $items, ArrayParameterType::INTEGER);
-
         if ($excludedTagIds !== []) {
-            $qb->andWhere($qb->expr()->notIn('it.tag_id', ':excludedTagIds'))
+            $qb->andWhere('it.tagId NOT IN (:excludedTagIds)')
                 ->setParameter('excludedTagIds', $excludedTagIds, ArrayParameterType::INTEGER);
         }
 
@@ -253,19 +254,22 @@ final class TagRepository extends EntityRepository
                 ->setMaxResults($maxTags);
         }
 
-        $rows = $qb->executeQuery()
-            ->fetchAllAssociative();
+        $rows = $qb->getQuery()
+            ->getResult();
 
-        return array_map(
-            static fn (array $row): array => [
-                'id' => is_numeric($row['id']) ? (int) $row['id'] : 0,
-                'name' => is_string($row['name']) ? $row['name'] : '',
-                'url_name' => is_string($row['url_name']) ? $row['url_name'] : '',
-                'lastmodified' => is_string($row['lastmodified']) ? $row['lastmodified'] : '',
-                'counter' => is_numeric($row['counter']) ? (int) $row['counter'] : 0,
-            ],
-            $rows
-        );
+        $result = [];
+        foreach ($rows as $row) {
+            $tag = $row[0];
+            $result[] = [
+                'id' => $tag->id instanceof TagId ? $tag->id->value : 0,
+                'name' => $tag->name,
+                'url_name' => $tag->urlName,
+                'lastmodified' => $tag->lastmodified,
+                'counter' => $row['counter'],
+            ];
+        }
+
+        return $result;
     }
 
     /**

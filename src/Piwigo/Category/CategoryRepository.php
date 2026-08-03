@@ -481,9 +481,18 @@ final class CategoryRepository extends EntityRepository
      * `level <= x` check, so maxLevel applies here too, against `i.level`.
      *
      * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see \Piwigo\Image\ImageCategoryEntity}), but stays on DBAL for its
+     * ({@see \Piwigo\Image\ImageCategoryEntity}), but stayed on DBAL for its
      * other, still-real blocker: a raw `CurrentConfig::orderBy()` ORDER BY
      * fragment.
+     *
+     * Item 16J: that blocker is now conditional, not absolute --
+     * {@see \Piwigo\Image\PhotoSortField::parseOrderByFragment()} parses
+     * the stored fragment against the bounded `$sort_fields` vocabulary
+     * (see that method's own docblock for why this doesn't repeat the
+     * reverted `CurrentConfig`-typing attempt), and this method runs real
+     * DQL whenever that parse succeeds, falling back to the original raw
+     * DBAL query -- unchanged below -- whenever `orderByCustom()` is active
+     * or the text doesn't parse.
      */
     public function findImageIdsForCategories(
         array $catIds,
@@ -492,6 +501,18 @@ final class CategoryRepository extends EntityRepository
     ): array {
         if ($catIds === []) {
             return [];
+        }
+
+        // `` `rank` `` only ever gets an `ic` alias to resolve against when
+        // exactly one category is requested: a multi-category result set
+        // has no single well-defined rank per image (each membership row
+        // has its own), and even for one category, MySQL's
+        // ONLY_FULL_GROUP_BY needs `ic.rank` explicitly in the GROUP BY
+        // list too (added below) since it can't infer the functional
+        // dependency on `i.id` from the WHERE clause's IN-list cardinality.
+        $dqlOrderBy = self::resolveDqlOrderBy('i', count($catIds) === 1 ? 'ic' : null);
+        if ($dqlOrderBy !== null) {
+            return $this->findImageIdsForCategoriesViaDql($catIds, $mode, $criteria, $dqlOrderBy);
         }
 
         $qb = $this->getEntityManager()
@@ -528,6 +549,99 @@ final class CategoryRepository extends EntityRepository
 
         $ids = $qb->executeQuery()
             ->fetchFirstColumn();
+
+        return array_values(array_map(
+            static fn (mixed $id): int => (int) $id,
+            array_filter($ids, is_numeric(...))
+        ));
+    }
+
+    /**
+     * Shared Item 16J helper: resolves `CurrentConfig::orderBy()`'s stored
+     * fragment into a list of DQL property paths for a query aliasing
+     * `ImageEntity` as $imageAlias and `ImageCategoryEntity` as
+     * $imageCategoryAlias (or null, for a query with no such join -- any
+     * parsed `Rank` entry then makes this return null too, since
+     * `` `rank` `` has no property path without that join). Null means
+     * "fall back to raw DBAL for this call," never "no order."
+     *
+     * @return list<array{property: string, dir: 'ASC'|'DESC'}>|null
+     */
+    private static function resolveDqlOrderBy(string $imageAlias, ?string $imageCategoryAlias): ?array
+    {
+        if (\Piwigo\Config\CurrentConfig::orderByCustom() !== null) {
+            return null;
+        }
+
+        $parsed = \Piwigo\Image\PhotoSortField::parseOrderByFragment(\Piwigo\Config\CurrentConfig::orderBy());
+        if ($parsed === null) {
+            return null;
+        }
+
+        $entries = [];
+        foreach ($parsed as $entry) {
+            $property = $entry['field']->dqlOrderProperty($imageAlias, $imageCategoryAlias);
+            if ($property === null) {
+                return null;
+            }
+
+            $entries[] = [
+                'property' => $property,
+                'dir' => $entry['dir'],
+            ];
+        }
+
+        return $entries;
+    }
+
+    /**
+     * @param  list<int>  $catIds
+     * @param  list<array{property: string, dir: 'ASC'|'DESC'}>  $dqlOrderBy
+     * @return list<int>
+     */
+    private function findImageIdsForCategoriesViaDql(
+        array $catIds,
+        string $mode,
+        PermissionCriteria $criteria,
+        array $dqlOrderBy
+    ): array {
+        $qb = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('i.id')
+            ->from(ImageEntity::class, 'i')
+            ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'i.id = ic.imageId')
+            ->where('ic.categoryId IN (:catIds)')
+            ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER)
+            ->groupBy('i.id');
+        self::applyCondition($qb, SqlCondition::combine(
+            'AND',
+            $criteria->forbiddenCategoriesCondition('ic.categoryId'),
+            $criteria->visibleCategoriesCondition('ic.categoryId'),
+            $criteria->visibleImagesCondition('i.id'),
+            $criteria->maxLevelCondition('i.level'),
+        ));
+
+        if ($mode === 'AND' && count($catIds) > 1) {
+            $qb->having('COUNT(DISTINCT ic.categoryId) = :catCount')
+                ->setParameter('catCount', count($catIds));
+        }
+
+        foreach ($dqlOrderBy as $entry) {
+            if ($entry['property'] === 'ic.rank') {
+                // Needed alongside `i.id` for MySQL's ONLY_FULL_GROUP_BY --
+                // sound only because resolveDqlOrderBy() above never offers
+                // this property when count($catIds) > 1, so `ic.rank` is
+                // already 1:1 with `i.id` here (the join's composite PK is
+                // (imageId, categoryId), and categoryId is pinned to one
+                // value by the WHERE clause).
+                $qb->addGroupBy('ic.rank');
+            }
+
+            $qb->addOrderBy($entry['property'], $entry['dir']);
+        }
+
+        $ids = $qb->getQuery()
+            ->getSingleColumnResult();
 
         return array_values(array_map(
             static fn (mixed $id): int => (int) $id,

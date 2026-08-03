@@ -68,6 +68,9 @@ final class CategoryRepositoryTest extends IntegrationTestCase
     {
         $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'public'");
         $this->conn->executeStatement('UPDATE ' . Tables::oldPermalinks() . " SET hit = 42, last_hit = '2026-07-07 05:02:38'");
+        $this->conn->executeStatement(
+            'UPDATE ' . Tables::imageCategory() . ' SET `rank` = CASE image_id WHEN 1 THEN 1 WHEN 2 THEN 2 WHEN 3 THEN 3 END WHERE category_id = 1'
+        );
         parent::tearDown();
     }
 
@@ -253,6 +256,60 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         $ids = $this->repo->findImageIdsForCategories([1, 2], 'AND', self::noPermissionRestriction());
 
         self::assertSame([], $ids);
+    }
+
+    public function test_find_image_ids_for_categories_orders_by_current_config_order_by(): void
+    {
+        // Item 16J: the real DQL path -- a single bounded-vocabulary field,
+        // not sorted before comparing, to prove the parsed order is what
+        // actually reaches the query rather than incidental id order.
+        CurrentConfig::setOrderBy('ORDER BY id DESC');
+
+        $ids = $this->repo->findImageIdsForCategories([1], 'AND', self::noPermissionRestriction());
+
+        self::assertSame([3, 2, 1], $ids);
+    }
+
+    public function test_find_image_ids_for_categories_orders_by_rank(): void
+    {
+        // `` `rank` `` lives on the image_category join row, not on images
+        // itself -- deliberately set to the reverse of id order so a stale
+        // fallback to id-order would fail this assertion.
+        $this->conn->executeStatement(
+            'UPDATE ' . Tables::imageCategory() . ' SET `rank` = CASE image_id WHEN 1 THEN 3 WHEN 2 THEN 2 WHEN 3 THEN 1 END WHERE category_id = 1'
+        );
+        CurrentConfig::setOrderBy('ORDER BY `rank` ASC');
+
+        $ids = $this->repo->findImageIdsForCategories([1], 'AND', self::noPermissionRestriction());
+
+        self::assertSame([3, 2, 1], $ids);
+    }
+
+    public function test_find_image_ids_for_categories_falls_back_to_raw_dbal_when_order_by_custom_is_set(): void
+    {
+        // A sysadmin-local-config override -- RequestBootstrap.php's own
+        // real bootstrap-time behavior copies its value into orderBy() too;
+        // mirrored here since this test bypasses that bootstrap step.
+        CurrentConfig::setOrderByCustom('ORDER BY RAND()');
+        CurrentConfig::setOrderBy('ORDER BY RAND()');
+
+        $ids = $this->repo->findImageIdsForCategories([1], 'AND', self::noPermissionRestriction());
+        sort($ids);
+
+        self::assertSame([1, 2, 3], $ids);
+    }
+
+    public function test_find_image_ids_for_categories_falls_back_to_raw_dbal_for_unparseable_order_by(): void
+    {
+        // Not one of $sort_fields's own bounded tokens -- the parser must
+        // reject it and this must still return the right members via the
+        // original raw-DBAL path, not throw.
+        CurrentConfig::setOrderBy('ORDER BY comment ASC');
+
+        $ids = $this->repo->findImageIdsForCategories([1], 'AND', self::noPermissionRestriction());
+        sort($ids);
+
+        self::assertSame([1, 2, 3], $ids);
     }
 
     public function test_find_common_categories_counts_matching_images(): void

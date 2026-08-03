@@ -9,6 +9,7 @@ use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Query;
+use Doctrine\ORM\Query\Expr\Join;
 use Piwigo\Category\CategoryEntity;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\CategoryId;
@@ -79,7 +80,16 @@ final class ImageRepository extends EntityRepository
      * converting them to DQL is a separate, unrelated concern from the
      * permission-condition typing this sub-phase targets.
      */
-    private static function applyCondition(QueryBuilder $qb, SqlCondition $condition): void
+    /**
+     * Accepts either query-builder flavor -- {@see SqlCondition}'s own
+     * `sql`/`parameters`/`types` shape applies identically via
+     * `andWhere()`/`setParameter()` on both DBAL's and DQL's query
+     * builders, confirmed empirically (Item 15 audit): a DQL consumer
+     * just passes a DQL property path (e.g. `i.id`) into the same
+     * {@see PermissionCriteria} `*Condition()` methods a DBAL consumer
+     * already uses with a raw column name.
+     */
+    private static function applyCondition(QueryBuilder|\Doctrine\ORM\QueryBuilder $qb, SqlCondition $condition): void
     {
         if ($condition->isEmpty()) {
             return;
@@ -2709,27 +2719,30 @@ final class ImageRepository extends EntityRepository
      * already-true fact for that caller (a harmless redundant check, not a
      * behavior change) while correctly gating Ws\PwgImages::rate()'s own
      * caller, which never performed that check itself.
+     *
+     * Item 15 audit: converted to real DQL -- both `images`/`image_category`
+     * are mapped, and {@see PermissionCriteria}'s fragments needed no
+     * changes (see {@see applyCondition()}'s own docblock).
      */
     public function isImageAccessibleWithCondition(int $imageId, PermissionCriteria $criteria): bool
     {
         $qb = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
             ->select('i.id')
-            ->from(Tables::images(), 'i')
-            ->innerJoin('i', Tables::imageCategory(), 'ic', 'i.id = ic.image_id')
+            ->from(ImageEntity::class, 'i')
+            ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'i.id = ic.imageId')
             ->where('i.id = :imageId')
             ->setMaxResults(1)
             ->setParameter('imageId', $imageId, ParameterType::INTEGER);
 
         self::applyCondition($qb, SqlCondition::combine(
             'AND',
-            $criteria->forbiddenCategoriesCondition('ic.category_id'),
+            $criteria->forbiddenCategoriesCondition('ic.categoryId'),
             $criteria->maxLevelCondition('i.level'),
         ));
 
-        return $qb->executeQuery()
-            ->fetchOne() !== false;
+        return $qb->getQuery()
+            ->getSingleColumnResult() !== [];
     }
 
     /**
@@ -2744,6 +2757,19 @@ final class ImageRepository extends EntityRepository
      * method's body) -- with fieldName `'id'`, this also applies the
      * images-table's own `level <= x` check, so both visibleImageIds and
      * maxLevel apply here, not visibleImageIds alone.
+     *
+     * Item 15 audit: stays on DBAL despite {@see PermissionCriteria} no
+     * longer being a blocker (see {@see applyCondition()}'s own
+     * docblock) -- the real remaining blocker is `SELECT *` itself: this
+     * row is {@see \Piwigo\Ws\PwgImages::getInfo()}'s own public WS
+     * response shape, read/re-emitted with its raw snake_case column
+     * names (`$image_row['rating_score']`, etc.) as real external API
+     * contract. DQL always hydrates through the entity's own (camelCase)
+     * property names, never the raw column name -- reproducing the exact
+     * original row shape would mean hand-mapping every one of
+     * `ImageEntity`'s ~25 properties back to its raw column name, real
+     * effort for no real gain on a query that's already fully bound,
+     * injection-safe DBAL.
      *
      * @return ?array<string, mixed>
      */
@@ -2780,23 +2806,47 @@ final class ImageRepository extends EntityRepository
      * {@see PermissionCriteria} -- the one real caller only ever applies
      * $criteria->forbiddenCategoryIds, against `ic.category_id`.
      *
+     * Item 15 audit: converted to real DQL -- unlike
+     * {@see findRowWithCondition()}, this selects a fixed, hand-picked
+     * column set (not `SELECT *`), so mapping each one back to its raw
+     * row key is a small, bounded rename rather than an open-ended
+     * `ImageEntity`-wide serializer. `commentable` hydrates as a real
+     * `bool` now (was a raw DBAL int before) -- confirmed safe: the one
+     * real caller ({@see \Piwigo\Ws\PwgImages::getInfo()}) already
+     * `(bool)`-casts it and `unset()`s the key immediately after, before
+     * the row ever reaches its own JSON response.
+     *
      * @return list<array<string, mixed>>
      */
     public function findRelatedCategoriesForImage(int $imageId, PermissionCriteria $criteria): array
     {
         $qb = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select('id', 'name', 'permalink', 'uppercats', 'global_rank', 'commentable')
-            ->from(Tables::imageCategory(), 'ic')
-            ->innerJoin('ic', Tables::categories(), 'c', 'category_id = id')
-            ->where('image_id = :imageId')
+            ->select('c.id', 'c.name', 'c.permalink', 'c.uppercats', 'c.globalRank AS global_rank', 'c.commentable')
+            ->from(ImageCategoryEntity::class, 'ic')
+            ->innerJoin(CategoryEntity::class, 'c', Join::WITH, 'ic.categoryId = c.id')
+            ->where('ic.imageId = :imageId')
             ->setParameter('imageId', $imageId, ParameterType::INTEGER);
 
-        self::applyCondition($qb, $criteria->forbiddenCategoriesCondition('ic.category_id'));
+        self::applyCondition($qb, $criteria->forbiddenCategoriesCondition('ic.categoryId'));
 
-        return $qb->executeQuery()
-            ->fetchAllAssociative();
+        $result = [];
+        foreach ($qb->getQuery()->getArrayResult() as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $result[] = [
+                'id' => $row['id'] ?? null,
+                'name' => $row['name'] ?? null,
+                'permalink' => $row['permalink'] ?? null,
+                'uppercats' => $row['uppercats'] ?? null,
+                'global_rank' => $row['global_rank'] ?? null,
+                'commentable' => $row['commentable'] ?? null,
+            ];
+        }
+
+        return $result;
     }
 
     /**
@@ -2813,29 +2863,33 @@ final class ImageRepository extends EntityRepository
      * fieldName `'image_id'` (not `'id'`/`'i.id'`), that's the
      * `image_access_list` branch, not the level check, so
      * visibleImageIds/imageAccessIds both apply against `ic.image_id`.
+     *
+     * Item 15 audit: converted to real DQL -- {@see PermissionCriteria}'s
+     * fragments needed no changes (see {@see applyCondition()}'s own
+     * docblock).
      */
     public function isImageCommentableWithCondition(int $imageId, PermissionCriteria $criteria): bool
     {
         $qb = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select('DISTINCT image_id')
-            ->from(Tables::imageCategory(), 'ic')
-            ->innerJoin('ic', Tables::categories(), 'c', 'category_id = id')
-            ->where('commentable = 1')
-            ->andWhere('image_id = :imageId')
+            ->select('DISTINCT ic.imageId')
+            ->from(ImageCategoryEntity::class, 'ic')
+            ->innerJoin(CategoryEntity::class, 'c', Join::WITH, 'ic.categoryId = c.id')
+            ->where('c.commentable = :true')
+            ->andWhere('ic.imageId = :imageId')
+            ->setParameter('true', true)
             ->setParameter('imageId', $imageId, ParameterType::INTEGER);
 
         self::applyCondition($qb, SqlCondition::combine(
             'AND',
             $criteria->forbiddenCategoriesCondition('c.id'),
             $criteria->visibleCategoriesCondition('c.id'),
-            $criteria->visibleImagesCondition('ic.image_id'),
-            $criteria->imageAccessCondition('ic.image_id'),
+            $criteria->visibleImagesCondition('ic.imageId'),
+            $criteria->imageAccessCondition('ic.imageId'),
         ));
 
-        return $qb->executeQuery()
-            ->fetchOne() !== false;
+        return $qb->getQuery()
+            ->getSingleColumnResult() !== [];
     }
 
     /**
@@ -2848,17 +2902,24 @@ final class ImageRepository extends EntityRepository
      * {@see PermissionCriteria} -- the one real caller applies
      * forbiddenCategoryIds/visibleCategoryIds against `c.id`.
      *
+     * Item 15 audit: converted to real DQL. `commentable`/`visible`
+     * hydrate as real `bool` now (were raw DBAL ints before) -- confirmed
+     * safe: {@see \Piwigo\Picture\PictureCommentRenderer::render()}'s own
+     * `commentable` read already `(bool)`-casts it, and `visible` has no
+     * strict-typed reader in either real consumer
+     * ({@see \Piwigo\Controller\PictureController}/
+     * `PictureCommentRenderer`).
+     *
      * @return list<array<string, mixed>>
      */
     public function findVisibleCategoriesForImage(int $imageId, PermissionCriteria $criteria): array
     {
         $qb = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select('id', 'uppercats', 'commentable', 'visible', 'status', 'global_rank')
-            ->from(Tables::imageCategory(), 'ic')
-            ->innerJoin('ic', Tables::categories(), 'c', 'category_id = id')
-            ->where('image_id = :imageId')
+            ->select('c.id', 'c.uppercats', 'c.commentable', 'c.visible', 'c.status', 'c.globalRank AS global_rank')
+            ->from(ImageCategoryEntity::class, 'ic')
+            ->innerJoin(CategoryEntity::class, 'c', Join::WITH, 'ic.categoryId = c.id')
+            ->where('ic.imageId = :imageId')
             ->setParameter('imageId', $imageId, ParameterType::INTEGER);
 
         self::applyCondition($qb, SqlCondition::combine(
@@ -2867,8 +2928,23 @@ final class ImageRepository extends EntityRepository
             $criteria->visibleCategoriesCondition('c.id'),
         ));
 
-        return $qb->executeQuery()
-            ->fetchAllAssociative();
+        $result = [];
+        foreach ($qb->getQuery()->getArrayResult() as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $result[] = [
+                'id' => $row['id'] ?? null,
+                'uppercats' => $row['uppercats'] ?? null,
+                'commentable' => $row['commentable'] ?? null,
+                'visible' => $row['visible'] ?? null,
+                'status' => $row['status'] ?? null,
+                'global_rank' => $row['global_rank'] ?? null,
+            ];
+        }
+
+        return $result;
     }
 
     /**
@@ -3044,28 +3120,31 @@ final class ImageRepository extends EntityRepository
      * `visible_images` case falls through into `forbidden_images` with no
      * `break` -- with fieldName `'id'`, that's the images-table's own
      * `level <= x` check, so maxLevel applies here too, against `i.level`.
+     *
+     * Item 15 audit: converted to real DQL -- {@see PermissionCriteria}'s
+     * fragments needed no changes (see {@see applyCondition()}'s own
+     * docblock).
      */
     public function hasAccessibleImageWithAuthor(PermissionCriteria $criteria): bool
     {
         $qb = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
             ->select('i.id')
-            ->from(Tables::images(), 'i')
-            ->innerJoin('i', Tables::imageCategory(), 'ic', 'ic.image_id = i.id')
-            ->andWhere('author IS NOT NULL')
+            ->from(ImageEntity::class, 'i')
+            ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'ic.imageId = i.id')
+            ->andWhere('i.author IS NOT NULL')
             ->setMaxResults(1);
 
         self::applyCondition($qb, SqlCondition::combine(
             'AND',
-            $criteria->forbiddenCategoriesCondition('ic.category_id'),
-            $criteria->visibleCategoriesCondition('ic.category_id'),
+            $criteria->forbiddenCategoriesCondition('ic.categoryId'),
+            $criteria->visibleCategoriesCondition('ic.categoryId'),
             $criteria->visibleImagesCondition('i.id'),
             $criteria->maxLevelCondition('i.level'),
         ));
 
-        return $qb->executeQuery()
-            ->fetchAllAssociative() !== [];
+        return $qb->getQuery()
+            ->getSingleColumnResult() !== [];
     }
 
     /**
@@ -3082,27 +3161,30 @@ final class ImageRepository extends EntityRepository
      * passed was `image_id`, a foreign-key column, never the images
      * table's own `id`) imageAccessIds against `ic.image_id`, not
      * maxLevel.
+     *
+     * Item 15 audit: converted to real DQL -- {@see PermissionCriteria}'s
+     * fragments needed no changes (see {@see applyCondition()}'s own
+     * docblock).
      */
     public function isImageAccessibleViaCategoryWithCondition(int $imageId, PermissionCriteria $criteria): bool
     {
         $qb = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
             ->select('c.id')
-            ->from(Tables::categories(), 'c')
-            ->innerJoin('c', Tables::imageCategory(), 'ic', 'ic.category_id = c.id')
-            ->where('ic.image_id = :imageId')
+            ->from(CategoryEntity::class, 'c')
+            ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'ic.categoryId = c.id')
+            ->where('ic.imageId = :imageId')
             ->setMaxResults(1)
             ->setParameter('imageId', $imageId, ParameterType::INTEGER);
 
         self::applyCondition($qb, SqlCondition::combine(
             'AND',
-            $criteria->forbiddenCategoriesCondition('ic.category_id'),
-            $criteria->imageAccessCondition('ic.image_id'),
+            $criteria->forbiddenCategoriesCondition('ic.categoryId'),
+            $criteria->imageAccessCondition('ic.imageId'),
         ));
 
-        return $qb->executeQuery()
-            ->fetchOne() !== false;
+        return $qb->getQuery()
+            ->getSingleColumnResult() !== [];
     }
 
     /**
@@ -3241,6 +3323,13 @@ final class ImageRepository extends EntityRepository
      * applyCondition() silently skips, the same net effect as adding a
      * harmless `1 = 1`. $imageIds' own CSV splice also bound.
      *
+     * Further SQL-modernization audit, Item 15G: converted to real DQL --
+     * {@see ImageCategoryEntity} is mapped and {@see PermissionCriteria}
+     * needs no API changes, same finding as every other consumer in this
+     * file. `categoryId` hydrates as a {@see CategoryId} VO (the entity's
+     * own custom Doctrine type), unwrapped below same as every other
+     * `category_id` read in this codebase.
+     *
      * @param  list<int>  $imageIds
      * @return list<array{image_id: int, category_id: int}>
      */
@@ -3251,25 +3340,27 @@ final class ImageRepository extends EntityRepository
         }
 
         $qb = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select('image_id', 'category_id')
-            ->from(Tables::imageCategory())
-            ->where('image_id IN (:imageIds)')
+            ->select('ic.imageId', 'ic.categoryId')
+            ->from(ImageCategoryEntity::class, 'ic')
+            ->where('ic.imageId IN (:imageIds)')
             ->setParameter('imageIds', $imageIds, ArrayParameterType::INTEGER);
 
-        self::applyCondition($qb, $criteria->forbiddenCategoriesCondition('category_id'));
+        self::applyCondition($qb, $criteria->forbiddenCategoriesCondition('ic.categoryId'));
 
-        $rows = $qb->executeQuery()
-            ->fetchAllAssociative();
+        $result = [];
+        foreach ($qb->getQuery()->getArrayResult() as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
 
-        return array_map(
-            static fn (array $row): array => [
-                'image_id' => is_numeric($row['image_id']) ? (int) $row['image_id'] : 0,
-                'category_id' => is_numeric($row['category_id']) ? (int) $row['category_id'] : 0,
-            ],
-            $rows
-        );
+            $result[] = [
+                'image_id' => is_numeric($row['imageId']) ? (int) $row['imageId'] : 0,
+                'category_id' => $row['categoryId'] instanceof CategoryId ? $row['categoryId']->value : (is_numeric($row['categoryId']) ? (int) $row['categoryId'] : 0),
+            ];
+        }
+
+        return $result;
     }
 
     /**

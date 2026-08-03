@@ -962,7 +962,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
         self::assertCount(1, $rows);
         self::assertSame(1, $rows[0]['id']);
-        self::assertSame(1, $rows[0]['commentable']);
+        self::assertTrue($rows[0]['commentable']);
     }
 
     public function test_find_related_categories_for_image_applies_the_given_condition(): void

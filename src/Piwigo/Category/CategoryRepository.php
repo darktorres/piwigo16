@@ -8,6 +8,7 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\Query\Expr\Join;
 use Piwigo\Category\Projection\Category;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\CategoryId;
@@ -51,7 +52,16 @@ use Piwigo\Permission\SqlCondition;
  */
 final class CategoryRepository extends EntityRepository
 {
-    private static function applyCondition(QueryBuilder $qb, SqlCondition $condition): void
+    /**
+     * Accepts either query-builder flavor -- {@see SqlCondition}'s own
+     * `sql`/`parameters`/`types` shape applies identically via
+     * `andWhere()`/`setParameter()` on both DBAL's and DQL's query
+     * builders, confirmed empirically (Item 15 audit): a DQL consumer
+     * just passes a DQL property path (e.g. `c.id`) into the same
+     * {@see PermissionCriteria} `*Condition()` methods a DBAL consumer
+     * already uses with a raw column name.
+     */
+    private static function applyCondition(QueryBuilder|\Doctrine\ORM\QueryBuilder $qb, SqlCondition $condition): void
     {
         if ($condition->isEmpty()) {
             return;
@@ -341,19 +351,26 @@ final class CategoryRepository extends EntityRepository
      * ({@see \Piwigo\Db\DqlFunction\RandFunction}), but this method stays
      * on DBAL -- $criteria's own fragments are built for a plain DBAL
      * QueryBuilder, not DQL.
+     *
+     * Item 15 audit, re-verified: the claim above ("$criteria's own
+     * fragments are built for a plain DBAL QueryBuilder, not DQL") is
+     * wrong once actually tried -- {@see PermissionCriteria}'s
+     * `*Condition()` methods work identically against a DQL query
+     * builder, see {@see applyCondition()}'s own docblock. Converted to
+     * real DQL, `RAND()` unchanged (same portable custom function already
+     * used by {@see findRandomImageIdInCategory()}).
      */
     public function findRandomImageId(int $catId, string $uppercats, bool $recursive, PermissionCriteria $criteria): ?int
     {
         $scope = $recursive
-            ? '(c.id = :catId OR uppercats LIKE :uppercatsLike)'
+            ? '(c.id = :catId OR c.uppercats LIKE :uppercatsLike)'
             : 'c.id = :catId';
 
         $qb = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select('image_id')
-            ->from(Tables::categories(), 'c')
-            ->innerJoin('c', Tables::imageCategory(), 'ic', 'ic.category_id = c.id')
+            ->select('ic.imageId')
+            ->from(CategoryEntity::class, 'c')
+            ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'ic.categoryId = c.id')
             ->where($scope)
             ->orderBy('RAND()')
             ->setMaxResults(1)
@@ -362,16 +379,17 @@ final class CategoryRepository extends EntityRepository
             'AND',
             $criteria->forbiddenCategoriesCondition('c.id'),
             $criteria->visibleCategoriesCondition('c.id'),
-            $criteria->visibleImagesCondition('ic.image_id'),
-            $criteria->imageAccessCondition('ic.image_id'),
+            $criteria->visibleImagesCondition('ic.imageId'),
+            $criteria->imageAccessCondition('ic.imageId'),
         ));
 
         if ($recursive) {
             $qb->setParameter('uppercatsLike', $uppercats . ',%');
         }
 
-        $value = $qb->executeQuery()
-            ->fetchOne();
+        $values = $qb->getQuery()
+            ->getSingleColumnResult();
+        $value = $values[0] ?? null;
 
         return is_numeric($value) ? (int) $value : null;
     }
@@ -531,6 +549,11 @@ final class CategoryRepository extends EntityRepository
      * ({@see \Piwigo\Image\ImageCategoryEntity}), but stays on DBAL --
      * $criteria's own fragments are built for a plain DBAL QueryBuilder,
      * not DQL.
+     *
+     * Item 15 audit, re-verified: the claim above is wrong once actually
+     * tried -- {@see PermissionCriteria}'s `*Condition()` methods work
+     * identically against a DQL query builder, see
+     * {@see applyCondition()}'s own docblock. Converted to real DQL.
      */
     public function findCommonCategories(array $itemIds, ?int $max, array $excludedCatIds, PermissionCriteria $criteria): array
     {
@@ -539,22 +562,21 @@ final class CategoryRepository extends EntityRepository
         }
 
         $qb = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select('c.id', 'c.uppercats', 'COUNT(*) AS counter')
-            ->from(Tables::imageCategory())
-            ->innerJoin(Tables::imageCategory(), Tables::categories(), 'c', 'category_id = c.id')
-            ->where('image_id IN (:itemIds)')
+            ->select('c.id', 'c.uppercats', 'COUNT(ic.imageId) AS counter')
+            ->from(ImageCategoryEntity::class, 'ic')
+            ->innerJoin(CategoryEntity::class, 'c', Join::WITH, 'ic.categoryId = c.id')
+            ->where('ic.imageId IN (:itemIds)')
             ->setParameter('itemIds', $itemIds, ArrayParameterType::INTEGER)
             ->groupBy('c.id');
         self::applyCondition($qb, SqlCondition::combine(
             'AND',
-            $criteria->forbiddenCategoriesCondition('category_id'),
-            $criteria->visibleCategoriesCondition('category_id'),
+            $criteria->forbiddenCategoriesCondition('ic.categoryId'),
+            $criteria->visibleCategoriesCondition('ic.categoryId'),
         ));
 
         if ($excludedCatIds !== []) {
-            $qb->andWhere('category_id NOT IN (:excludedCatIds)')
+            $qb->andWhere('ic.categoryId NOT IN (:excludedCatIds)')
                 ->setParameter('excludedCatIds', $excludedCatIds, ArrayParameterType::INTEGER);
         }
 
@@ -563,13 +585,21 @@ final class CategoryRepository extends EntityRepository
                 ->setMaxResults($max);
         }
 
-        $rows = $qb->executeQuery()
-            ->fetchAllAssociative();
+        $rows = $qb->getQuery()
+            ->getArrayResult();
 
         $byId = [];
         foreach ($rows as $row) {
-            /** @var array{id: int, uppercats: string, counter: int} $row */
-            $byId[$row['id']] = $row;
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $id = is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0;
+            $byId[$id] = [
+                'id' => $id,
+                'uppercats' => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
+                'counter' => is_numeric($row['counter'] ?? null) ? (int) $row['counter'] : 0,
+            ];
         }
 
         return $byId;
@@ -2128,23 +2158,26 @@ final class CategoryRepository extends EntityRepository
      * SQL-modernization audit, Item 14 Sub-phase C1: converted to a typed
      * {@see PermissionCriteria}. Stays on DBAL -- $criteria's own
      * fragments are built for a plain DBAL QueryBuilder, not DQL.
+     *
+     * Item 15 audit, re-verified: the claim above is wrong once actually
+     * tried -- see {@see applyCondition()}'s own docblock. Converted to
+     * real DQL, reusing {@see narrowIdNameUppercatsRankRows()} for the
+     * same narrowing its own sibling method
+     * ({@see findPrivateCategoriesExcluding()}) already applies to the
+     * identical 4-column shape.
      */
     public function findIdNameUppercatsRank(PermissionCriteria $criteria): array
     {
-        $qb = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->select('id', 'name', 'uppercats', 'global_rank')
-            ->from(Tables::categories());
+        $qb = $this->createQueryBuilder('c')
+            ->select('c.id', 'c.name', 'c.uppercats', 'c.globalRank AS global_rank');
 
         self::applyCondition($qb, SqlCondition::combine(
             'AND',
-            $criteria->forbiddenCategoriesCondition('id'),
-            $criteria->visibleCategoriesCondition('id'),
+            $criteria->forbiddenCategoriesCondition('c.id'),
+            $criteria->visibleCategoriesCondition('c.id'),
         ));
 
-        return $qb->executeQuery()
-            ->fetchAllAssociative();
+        return self::narrowIdNameUppercatsRankRows($qb->getQuery()->getArrayResult());
     }
 
     /**
@@ -2449,38 +2482,33 @@ final class CategoryRepository extends EntityRepository
      * site's own `SqlDialect::DB_RANDOM_FUNCTION` stays as-is
      * for now -- a broader `SqlDialect` portability rewrite is Item 16's
      * own scope, not this one (see this plan's Context section).
+     *
+     * Item 15 audit, re-verified: converted to a DQL `QueryBuilder` --
+     * {@see PermissionCriteria}'s fragment needed no changes (see
+     * {@see applyCondition()}'s own docblock), and `RAND()` uses the same
+     * portable custom DQL function {@see findRandomImageIdInCategory()}
+     * already established, dropping the `SqlDialect::DB_RANDOM_FUNCTION`
+     * indirection for this one call site.
      */
     public function findRandomRepresentativeIdAmongSubcategories(string $uppercats, PermissionCriteria $criteria): ?string
     {
-        $categoriesTable = Tables::categories();
-        $dbRandomFunction = SqlDialect::DB_RANDOM_FUNCTION;
         $uppercatsLike = $uppercats . ',%';
 
-        $condition = $criteria->visibleCategoriesCondition('id');
-        $conditionSql = $condition->isEmpty() ? '' : ' AND ' . $condition->sql;
-        $params = array_merge([
-            'uppercatsLike' => $uppercatsLike,
-        ], $condition->parameters);
-        $types = $condition->types;
+        $qb = $this->createQueryBuilder('c')
+            ->select('c.representativePictureId')
+            ->where('c.uppercats LIKE :uppercatsLike')
+            ->andWhere('c.representativePictureId IS NOT NULL')
+            ->setParameter('uppercatsLike', $uppercatsLike)
+            ->orderBy('RAND()')
+            ->setMaxResults(1);
 
-        $value = $this->getEntityManager()
-            ->getConnection()
-            ->executeQuery(<<<SQL
-                SELECT representative_picture_id
-                FROM {$categoriesTable}
-                WHERE uppercats LIKE :uppercatsLike
-                    AND representative_picture_id IS NOT NULL
-                {$conditionSql}
-                ORDER BY {$dbRandomFunction}()
-                LIMIT 1
-                SQL
-                , $params, $types)->fetchOne();
+        self::applyCondition($qb, $criteria->visibleCategoriesCondition('c.id'));
 
-        // fetchOne() returns false (also a real is_scalar() value) to
-        // signal "no rows matched" -- is_scalar() alone can't tell that
-        // apart from a genuine representative_picture_id, so it must be
-        // excluded explicitly first.
-        return $value !== false && is_scalar($value) ? (string) $value : null;
+        $values = $qb->getQuery()
+            ->getSingleColumnResult();
+        $value = $values[0] ?? null;
+
+        return is_scalar($value) ? (string) $value : null;
     }
 
     /**
@@ -2500,12 +2528,25 @@ final class CategoryRepository extends EntityRepository
      * (only `images` has that column in this join).
      *
      * @param  list<int>  $categoryIds
-     * @return array<string, array{from: ?string, to: ?string}> keyed by category id
+     * @return array<int, array{from: ?string, to: ?string}> keyed by category id
+     *   -- PHP auto-coerces a numeric string array key to int regardless
+     *   of how it's written, so this was always the real runtime shape
+     *   (Item 15 audit: DQL's stricter type inference is what finally
+     *   surfaced the previously-inaccurate `array<string, ...>` annotation).
      *
      * Item 14 DQL audit, re-corrected: `image_category` is now mapped
      * ({@see \Piwigo\Image\ImageCategoryEntity}), but stays on DBAL --
      * $criteria's own fragment is a raw SQL string spliced via heredoc,
      * same blocker as {@see findRandomRepresentativeIdAmongSubcategories()}.
+     *
+     * Item 15 audit, re-verified: converted to a DQL `QueryBuilder` --
+     * {@see PermissionCriteria}'s fragments needed no changes (see
+     * {@see applyCondition()}'s own docblock). Aliased `MIN(...)`/`MAX(...)`
+     * as `from_date`/`to_date` rather than the original's own backtick-
+     * quoted `` `from` ``/`` `to` `` -- `FROM` is a DQL keyword, and DQL
+     * has no backtick-escaping syntax; this row shape is internal to this
+     * method (rebuilt into the `from`/`to`-keyed return array below), not
+     * a public contract.
      */
     public function findDateRangeByCategory(array $categoryIds, PermissionCriteria $criteria): array
     {
@@ -2513,45 +2554,37 @@ final class CategoryRepository extends EntityRepository
             return [];
         }
 
-        $imageCategoryTable = Tables::imageCategory();
-        $imagesTable = Tables::images();
+        $qb = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('ic.categoryId', 'MIN(i.dateCreation) AS from_date', 'MAX(i.dateCreation) AS to_date')
+            ->from(ImageCategoryEntity::class, 'ic')
+            ->innerJoin(ImageEntity::class, 'i', Join::WITH, 'ic.imageId = i.id')
+            ->where('ic.categoryId IN (:categoryIds)')
+            ->setParameter('categoryIds', $categoryIds, ArrayParameterType::INTEGER)
+            ->groupBy('ic.categoryId');
 
-        $condition = SqlCondition::combine(
+        self::applyCondition($qb, SqlCondition::combine(
             'AND',
-            $criteria->visibleCategoriesCondition('category_id'),
-            $criteria->visibleImagesCondition('id'),
-            $criteria->maxLevelCondition('level'),
-        );
-        $conditionSql = $condition->isEmpty() ? '' : ' AND ' . $condition->sql;
-        $params = array_merge([
-            'categoryIds' => $categoryIds,
-        ], $condition->parameters);
-        $types = array_merge([
-            'categoryIds' => ArrayParameterType::INTEGER,
-        ], $condition->types);
+            $criteria->visibleCategoriesCondition('ic.categoryId'),
+            $criteria->visibleImagesCondition('i.id'),
+            $criteria->maxLevelCondition('i.level'),
+        ));
 
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->executeQuery(<<<SQL
-                SELECT
-                    category_id,
-                    MIN(date_creation) AS `from`,
-                    MAX(date_creation) AS `to`
-                FROM {$imageCategoryTable}
-                    INNER JOIN {$imagesTable} ON image_id = id
-                WHERE category_id IN (:categoryIds)
-                {$conditionSql}
-                GROUP BY category_id
-                SQL
-                , $params, $types)->fetchAllAssociative();
+        $rows = $qb->getQuery()
+            ->getArrayResult();
 
         $byId = [];
         foreach ($rows as $row) {
-            $categoryId = $row['category_id'] ?? null;
-            if (is_scalar($categoryId)) {
-                $byId[(string) $categoryId] = [
-                    'from' => isset($row['from']) && is_scalar($row['from']) ? (string) $row['from'] : null,
-                    'to' => isset($row['to']) && is_scalar($row['to']) ? (string) $row['to'] : null,
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $categoryId = $row['categoryId'] ?? null;
+            $categoryIdInt = $categoryId instanceof CategoryId ? $categoryId->value : (is_numeric($categoryId) ? (int) $categoryId : null);
+            if ($categoryIdInt !== null) {
+                $byId[$categoryIdInt] = [
+                    'from' => is_scalar($row['from_date'] ?? null) ? (string) $row['from_date'] : null,
+                    'to' => is_scalar($row['to_date'] ?? null) ? (string) $row['to_date'] : null,
                 ];
             }
         }

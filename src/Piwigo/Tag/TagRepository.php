@@ -13,6 +13,7 @@ use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Core\Env;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
+use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageFilterCriteria;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\SqlCondition;
@@ -96,7 +97,17 @@ final class TagRepository extends EntityRepository
      * (`Comment\CommentRepository::applyConditions()`'s plural sibling,
      * for the single-condition case).
      */
-    private static function applyCondition(QueryBuilder $qb, SqlCondition $condition): void
+    /**
+     * Accepts either query-builder flavor -- {@see SqlCondition}'s own
+     * `sql`/`parameters`/`types` shape (a raw fragment string + named
+     * bound parameters) applies identically via `andWhere()`/
+     * `setParameter()` on both, confirmed empirically (Item 15 audit):
+     * neither {@see PermissionCriteria} nor `SqlCondition` needed any new
+     * DQL-specific contract -- a DQL consumer just passes a DQL property
+     * path (e.g. `ic.categoryId`) instead of a raw SQL column
+     * (`ic.category_id`) into the same `*Condition()` methods.
+     */
+    private static function applyCondition(QueryBuilder|\Doctrine\ORM\QueryBuilder $qb, SqlCondition $condition): void
     {
         if ($condition->isEmpty()) {
             return;
@@ -132,35 +143,48 @@ final class TagRepository extends EntityRepository
      * `visible_images`-fallthrough hit the `image_access_list` branch, not
      * the level check). $tagIds' own CSV splice also bound.
      *
+     * Item 15 audit: converted to real DQL -- both `image_category`
+     * ({@see \Piwigo\Image\ImageCategoryEntity}) and `image_tag`
+     * ({@see ImageTagEntity}) are mapped, `Join::WITH` covers the join
+     * (no formal association), and `PermissionCriteria`'s own methods
+     * needed no changes (see {@see applyCondition()}'s own docblock).
+     * `it.tagId` hydrates as a `TagId` VO under `getArrayResult()`, same
+     * gotcha already documented on {@see findTagsForImage()}.
+     *
      * @param array<int, int|string> $tagIds empty means "no tag_id filter" (every tag counted)
      * @return array<int, int> [tag_id => counter]
      */
     public function countImagesPerTag(array $tagIds, PermissionCriteria $criteria): array
     {
         $qb = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select('tag_id', 'COUNT(DISTINCT(it.image_id)) AS counter')
-            ->from(Tables::imageCategory(), 'ic')
-            ->innerJoin('ic', Tables::imageTag(), 'it', 'ic.image_id = it.image_id')
-            ->groupBy('tag_id');
+            ->select('it.tagId', 'COUNT(DISTINCT it.imageId) AS counter')
+            ->from(ImageCategoryEntity::class, 'ic')
+            ->innerJoin(ImageTagEntity::class, 'it', Join::WITH, 'ic.imageId = it.imageId')
+            ->groupBy('it.tagId');
 
         self::applyCondition($qb, SqlCondition::combine(
             'AND',
-            $criteria->forbiddenCategoriesCondition('ic.category_id'),
-            $criteria->visibleCategoriesCondition('ic.category_id'),
-            $criteria->visibleImagesCondition('ic.image_id'),
-            $criteria->imageAccessCondition('ic.image_id'),
+            $criteria->forbiddenCategoriesCondition('ic.categoryId'),
+            $criteria->visibleCategoriesCondition('ic.categoryId'),
+            $criteria->visibleImagesCondition('ic.imageId'),
+            $criteria->imageAccessCondition('ic.imageId'),
         ));
 
         if ($tagIds !== []) {
-            $qb->andWhere($qb->expr()->in('tag_id', ':tagIds'))
+            $qb->andWhere('it.tagId IN (:tagIds)')
                 ->setParameter('tagIds', array_map(intval(...), $tagIds), ArrayParameterType::INTEGER);
         }
 
         $counters = [];
-        foreach ($qb->executeQuery()->fetchAllAssociative() as $row) {
-            $counters[is_numeric($row['tag_id']) ? (int) $row['tag_id'] : 0] = is_numeric($row['counter']) ? (int) $row['counter'] : 0;
+        foreach ($qb->getQuery()->getArrayResult() as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $tagId = $row['tagId'] ?? null;
+            $tagIdInt = $tagId instanceof TagId ? $tagId->value : (is_numeric($tagId) ? (int) $tagId : 0);
+            $counters[$tagIdInt] = is_numeric($row['counter'] ?? null) ? (int) $row['counter'] : 0;
         }
 
         return $counters;
@@ -274,6 +298,24 @@ final class TagRepository extends EntityRepository
      * Item 14 DQL audit: stays on DBAL -- conditionally joins the
      * never-entity-mapped `image_category`, plus the caller-supplied raw
      * $orderBySql fragment.
+     *
+     * Item 15 audit, re-verified and corrected: `image_category` IS now
+     * mapped ({@see \Piwigo\Image\ImageCategoryEntity}) -- the above claim
+     * is stale. The real, still-valid blocker is `$orderBySql`: traced to
+     * its one real caller ({@see \Piwigo\Tag\TagService::
+     * getImageIdsForTags()}), which falls back to `CurrentConfig::
+     * orderBy()` (free-form admin-configurable text) whenever the
+     * caller-supplied `$orderBy` is null/empty -- the same "caller
+     * composes trusted ORDER BY text" architecture already confirmed
+     * non-enumerable 3 times this item ({@see \Piwigo\Image\PhotoSortField}'s
+     * own documented exception, {@see \Piwigo\Group\GroupRepository::
+     * findWithMemberCounts()}, {@see \Piwigo\Image\ImageRepository::
+     * findBatchManagerThumbnails()}). `ImageFilterCriteria::
+     * toSqlCondition()` also hardcodes raw snake_case column names
+     * internally (not parameterized per DQL property path the way
+     * {@see PermissionCriteria} is), a second real blocker -- moot here
+     * since $orderBySql alone already rules out DQL, not worth fixing for
+     * this one caller.
      *
      * @param list<int> $tagIds already-unwrapped TagId values
      * @return list<int>

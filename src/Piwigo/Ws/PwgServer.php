@@ -253,7 +253,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
     }
 
     /**
-     * P27/SEC-40: a minimal, single-fact by-design reader (the current
+     * P26/SEC-40: a minimal, single-fact by-design reader (the current
      * request's HTTP method), same shape as
      * Piwigo\Http\RequestFactory::fromGlobals()'s own sole legitimate
      * superglobal read -- reused by 2 real call sites
@@ -542,7 +542,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
     }
 
     /**
-     * P27/SEC-40: $methodName used to be re-derived from $_REQUEST['method']
+     * P26/SEC-40: $methodName used to be re-derived from $_REQUEST['method']
      * instead of taking invoke()'s own already-known $methodName parameter
      * -- a real bug for recursive invoke() calls (e.g.
      * PwgPermissions::add()/remove() calling

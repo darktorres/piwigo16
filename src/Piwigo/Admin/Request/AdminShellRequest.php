@@ -9,7 +9,7 @@ use Piwigo\Validation\InputValidator;
 /**
  * Validated `$_GET`/`$_POST` shape for the parts of AdminShell::runDispatch()
  * that don't participate in its own page-slug alias rewriting --
- * P27/SEC-40 Request DTO.
+ * P26/SEC-40 Request DTO.
  *
  * This deliberately does NOT cover `page`/`section`/`tab`'s own later
  * reads: `runDispatch()` rewrites `$_GET['page']`/`$_GET['section']`/

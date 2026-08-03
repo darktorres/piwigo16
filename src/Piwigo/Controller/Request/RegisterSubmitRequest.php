@@ -6,7 +6,7 @@ namespace Piwigo\Controller\Request;
 
 /**
  * Validated `$_POST` shape for RegisterController::__invoke() (the
- * self-registration form/handler, replacing register.php) -- P27/SEC-40
+ * self-registration form/handler, replacing register.php) -- P26/SEC-40
  * Request DTO.
  *
  * `password`/`passwordConf`/`login` normalize a non-string raw value to

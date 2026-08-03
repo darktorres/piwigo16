@@ -9,7 +9,7 @@ use Piwigo\Validation\InputValidator;
 
 /**
  * Validated `$_GET['image_id']` for PictureFormatsPageRenderer::render()
- * (page slug "picture_formats") -- P27/SEC-40 Request DTO. Not mandatory:
+ * (page slug "picture_formats") -- P26/SEC-40 Request DTO. Not mandatory:
  * an absent/invalid value already safely resolves to a nonexistent image
  * id 0 downstream, which the caller's own findById()-then-fatalError()
  * check handles correctly.

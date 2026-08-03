@@ -139,7 +139,7 @@ final class PwgPermissions
      *   key -- mandatory, always present.
      * @return mixed PwgError, or the result of the pwg.permissions.getList invocation
      *
-     * P27/SEC-40: previously passed `recursive` to
+     * P26/SEC-40: previously passed `recursive` to
      * PermissionService::addPermissionOnCategory() by mutating
      * `$_POST['apply_on_sub']` (that method used to read it as ambient
      * request state) -- addPermissionOnCategory() now takes `$applyOnSub`

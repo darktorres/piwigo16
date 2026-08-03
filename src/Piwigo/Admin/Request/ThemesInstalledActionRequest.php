@@ -7,7 +7,7 @@ namespace Piwigo\Admin\Request;
 /**
  * Validated `$_GET['action']`/`$_GET['theme']` for
  * ThemesInstalledPageRenderer::render() (the "installed" tab of page slug
- * "themes") -- P27/SEC-40 Request DTO. No pattern validation needed:
+ * "themes") -- P26/SEC-40 Request DTO. No pattern validation needed:
  * `ExtensionLifecycle::performAction()`'s own `switch ($action)` already
  * no-ops on any unrecognized action, and the theme id is only ever used
  * for a repository lookup/array-key access (an unknown id just yields a

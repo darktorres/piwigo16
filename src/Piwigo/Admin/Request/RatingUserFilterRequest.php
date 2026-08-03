@@ -6,7 +6,7 @@ namespace Piwigo\Admin\Request;
 
 /**
  * Validated `$_GET` filter/sort shape for RatingUserPageRenderer::render()
- * (page slug "rating_user") -- P27/SEC-40 Request DTO. `orderBy` is left
+ * (page slug "rating_user") -- P26/SEC-40 Request DTO. `orderBy` is left
  * as a raw nullable int here (not clamped to a valid index) since the
  * valid range depends on the renderer's own `$available_order_by` array
  * size, a concern local to that method, not this DTO.

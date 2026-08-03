@@ -6,7 +6,7 @@ namespace Piwigo\Admin\Request;
 
 /**
  * Validated request shape for GroupListPageRenderer::render() (page slug
- * "group_list") -- P27/SEC-40 Request DTO. No values are ever read out of
+ * "group_list") -- P26/SEC-40 Request DTO. No values are ever read out of
  * `$_POST`/`$_GET` here (confirmed via GroupListSubController's own
  * docblock: `delete`/`toggle_is_default` are dead validation, nothing in
  * this page acts on them -- group create/delete/rename all go through the

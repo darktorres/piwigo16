@@ -184,7 +184,7 @@ final class PageState
     public ?array $notifyApiKeyExpiration = null;
 
     /**
-     * Comment domain's own anti-spam rejection reasons (P27/SEC-40:
+     * Comment domain's own anti-spam rejection reasons (P26/SEC-40:
      * CommentService::pushCrReason() used to accumulate these into
      * `$_POST['cr']`, an undocumented debugging side-channel with no real
      * reader anywhere in the app -- "rvelices: I use this outside to see

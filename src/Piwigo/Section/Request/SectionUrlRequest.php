@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Section\Request;
 
 /**
- * Validated `$_GET` shape for SectionInitializer::parse() -- P27/SEC-40
+ * Validated `$_GET` shape for SectionInitializer::parse() -- P26/SEC-40
  * Request DTO.
  *
  * `firstGetKey` is the legacy query-string-as-path convention this

@@ -6,7 +6,7 @@ namespace Piwigo\Admin\Request;
 
 /**
  * Validated `$_GET` shape for ThemesNewPageRenderer::render() (the "new"
- * tab of page slug "themes") -- P27/SEC-40 Request DTO. `installStatus`
+ * tab of page slug "themes") -- P26/SEC-40 Request DTO. `installStatus`
  * distinguishes "absent" (`null`, skip the whole result block) from
  * "present but not a string" (coerced to `''`, same as the original's own
  * `default:` branch coercion) -- collapsing both to `null` would skip the

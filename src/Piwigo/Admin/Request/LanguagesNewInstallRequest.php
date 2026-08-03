@@ -7,7 +7,7 @@ namespace Piwigo\Admin\Request;
 /**
  * Validated `$_GET['revision']`/`$_GET['installstatus']` for
  * LanguagesNewPageRenderer::render() (the "new" tab of page slug
- * "languages") -- P27/SEC-40 Request DTO. Neither needs pattern
+ * "languages") -- P26/SEC-40 Request DTO. Neither needs pattern
  * validation: `revision` is only ever built from this page's own template
  * link (a numeric string) and is handed to PemCatalog::extractArchive()
  * with no further trust placed in its shape; `installstatus` is matched

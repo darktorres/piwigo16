@@ -8,7 +8,7 @@ use Piwigo\Validation\InputValidator;
 
 /**
  * Validated `$_GET`/`$_POST` shape for UpdatesPwgPageRenderer::render()
- * (the "pwg" tab of page slug "updates") -- P27/SEC-40 Request DTO. `to`'s
+ * (the "pwg" tab of page slug "updates") -- P26/SEC-40 Request DTO. `to`'s
  * pattern differs by container environment (a trailing letter suffix
  * allowed only for `'Official'`), passed in by the caller since
  * `ContainerDetector::detect()` must run before this DTO is built.

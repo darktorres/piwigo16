@@ -7,7 +7,7 @@ namespace Piwigo\Admin\Request;
 /**
  * Validated `$_GET` display-toggle shape for
  * PluginsInstalledPageRenderer::render() (the "installed" tab of page
- * slug "plugins") -- P27/SEC-40 Request DTO. `show_details` is a
+ * slug "plugins") -- P26/SEC-40 Request DTO. `show_details` is a
  * tri-state (absent/`'1'`/anything else) that persists into the session
  * when explicitly given; `incompatible_plugins`/`show_inactive` are
  * presence-only flags. No pattern validation needed for any of these.

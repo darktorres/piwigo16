@@ -10,7 +10,7 @@ use Piwigo\Validation\InputValidator;
 /**
  * Validated `$_GET['group']`/`$_GET['user_id']`/`$_GET['show_add_user']`
  * for UserListPageRenderer::render() (page slug "user_list") --
- * P27/SEC-40 Request DTO. `group`/`user_id` are digits-only
+ * P26/SEC-40 Request DTO. `group`/`user_id` are digits-only
  * (`ValidationPattern::ID`), not mandatory. `userSearchInput` precomputes
  * the `'id:' . user_id` search string this page's own template variable
  * needs, matching the original inline expression exactly. `showAddUser`

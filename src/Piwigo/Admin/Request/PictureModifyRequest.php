@@ -9,7 +9,7 @@ use Piwigo\Validation\InputValidator;
 
 /**
  * Validated `$_GET`/`$_POST` shape for PictureModifyPageRenderer::render()
- * (the "properties" tab of the "photo" page slug) -- P27/SEC-40 Request
+ * (the "properties" tab of the "photo" page slug) -- P26/SEC-40 Request
  * DTO.
  *
  * `postLevel`/`nameField`/`authorField`/`commentField` are each read once

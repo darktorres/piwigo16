@@ -6,7 +6,7 @@ namespace Piwigo\Picture\Request;
 
 /**
  * Validated `$_GET`/`$_POST` shape for PictureCommentRenderer::render()
- * -- P27/SEC-40 Request DTO.
+ * -- P26/SEC-40 Request DTO.
  *
  * `contentPresent` stays separate from `content`: the original gates
  * both the submit branch and its own "ugly spammer" reject branch on

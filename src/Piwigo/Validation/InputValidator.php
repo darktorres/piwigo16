@@ -21,7 +21,7 @@ use Piwigo\Core\ValidationPattern;
  * originally because constructor-/parameter-injecting it would ripple
  * across every one of its ~90 real construction sites for zero benefit --
  * but every one of those sites turned out to be a `Request\*Request::
- * fromGlobals()` static factory (P27/SEC-40), with no instance context to
+ * fromGlobals()` static factory (P26/SEC-40), with no instance context to
  * receive constructor injection through at all. `HtmlRenderingInterface`
  * is already bound in container.php, so this class needs no explicit
  * wiring any more (RequestBootstrap::configure()'s former
@@ -76,7 +76,7 @@ final class InputValidator
 
     /**
      * Public entry point to the same safe-fallback fatal-error mechanism
-     * validate() itself uses, for Request DTOs (P27/SEC-40 --
+     * validate() itself uses, for Request DTOs (P26/SEC-40 --
      * `{Module}/Request/{Name}`) whose own rejection reason doesn't fit
      * validate()'s single-parameter-pattern model (a structural/cardinality
      * check, e.g. "at least 2 path segments", rather than one value against

@@ -456,7 +456,7 @@ final readonly class CommentService
      * $comment is still only known as array<string, mixed> here even
      * though both real callers (CommentsController/PictureController) now
      * build it from their own validated Request\CommentsRequest/
-     * Request\PictureRequest DTO fields (P27/SEC-40) rather than raw
+     * Request\PictureRequest DTO fields (P26/SEC-40) rather than raw
      * $_GET/$_POST -- kept a generic array (matching insertComment()'s
      * own $comm shape) since this method's own defensive is_scalar()/
      * is_string() narrowing below already treats every field as

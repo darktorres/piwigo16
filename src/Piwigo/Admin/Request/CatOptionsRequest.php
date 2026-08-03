@@ -9,7 +9,7 @@ use Piwigo\Validation\InputValidator;
 
 /**
  * Validated `$_GET`/`$_POST` shape for CatOptionsPageRenderer::render()
- * (page slug "cat_options") -- P27/SEC-40 Request DTO.
+ * (page slug "cat_options") -- P26/SEC-40 Request DTO.
  *
  * `cat_true`/`cat_false`/`section`'s own `InputValidator::validate()`
  * calls only run when `$_POST` is non-empty, matching the original

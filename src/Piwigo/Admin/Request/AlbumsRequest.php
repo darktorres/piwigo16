@@ -9,7 +9,7 @@ use Piwigo\Validation\InputValidator;
 
 /**
  * Validated `$_GET`/`$_POST` shape for AlbumsPageRenderer::render() (page
- * slug "albums") -- P27/SEC-40 Request DTO. `order`'s own
+ * slug "albums") -- P26/SEC-40 Request DTO. `order`'s own
  * `is_string(...) && in_array(..., $sort_orders, true) ?: fatalError(...)`
  * hard rejection stays at the call site (goes through
  * `PresentationAccessor::htmlService()` directly, an L3Presentation

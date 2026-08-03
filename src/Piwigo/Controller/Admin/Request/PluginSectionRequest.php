@@ -9,7 +9,7 @@ use Piwigo\Validation\InputValidator;
 /**
  * Validated `$_GET['section']` for PluginSubController::handle() (page slug
  * "plugin") -- the first Request DTO of this rewrite's own
- * `{Module}/Request/{Name}` convention (P27/SEC-40), mirroring the
+ * `{Module}/Request/{Name}` convention (P26/SEC-40), mirroring the
  * `Projection` convention's `fromRow()`/`fromEntity()`/`toArray()` shape
  * with `fromGlobals()`/`fromArray()` instead: validates at construction,
  * built on `InputValidator::validate()`/`InputValidator::fail()` (per-item
@@ -22,7 +22,7 @@ use Piwigo\Validation\InputValidator;
  * "[Hacking attempt] ..." wording instead of this page's 3 original
  * bespoke messages ("invalid section token [...]" / "Invalid plugin URL" /
  * "Invalid plugin identifier") -- a deliberate, in-scope behavior change
- * for P27/SEC-40: no existing test asserted on the old wording (confirmed
+ * for P26/SEC-40: no existing test asserted on the old wording (confirmed
  * via grep), and a uniform rejection message across every Request DTO is
  * the whole point of building on the shared validator instead of ad hoc
  * per-site fatalError() calls.

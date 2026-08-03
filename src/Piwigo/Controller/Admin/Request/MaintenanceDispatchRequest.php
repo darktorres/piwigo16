@@ -8,7 +8,7 @@ use Piwigo\Validation\InputValidator;
 
 /**
  * Validated `$_GET` shape for MaintenanceSubController::handle() (page
- * slug "maintenance") -- P27/SEC-40 Request DTO. `action`'s presence
+ * slug "maintenance") -- P26/SEC-40 Request DTO. `action`'s presence
  * gates the (real, load-bearing) CSRF check; `tab` is pattern-validated
  * against the 3 real tabs, defaulting to `actions`.
  */

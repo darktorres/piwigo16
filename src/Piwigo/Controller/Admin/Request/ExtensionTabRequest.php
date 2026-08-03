@@ -9,7 +9,7 @@ use Piwigo\Validation\InputValidator;
 /**
  * Validated `$_GET['tab']` shared by `LanguagesSubController`/
  * `PluginsSubController`/`ThemesSubController` (page slugs "languages"/
- * "plugins"/"themes") -- P27/SEC-40 Request DTO. The 3 controllers had the
+ * "plugins"/"themes") -- P26/SEC-40 Request DTO. The 3 controllers had the
  * exact same inline read/validate/default logic duplicated verbatim,
  * differing only in the tab-name allowlist pattern (each still validates
  * against its own pattern, passed in by the caller) -- same rationale as

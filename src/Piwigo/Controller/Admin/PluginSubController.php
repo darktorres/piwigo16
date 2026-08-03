@@ -23,7 +23,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * own (redundant) copy of that check is dropped here, same precedent as
  * every prior sub-batch's shell fold.
  *
- * P27/SEC-40: $_GET['section'] parsing/validation extracted into
+ * P26/SEC-40: $_GET['section'] parsing/validation extracted into
  * Request\PluginSectionRequest -- see that class's own docblock for the
  * real denial-of-service bug found and fixed during the original port
  * (an unreindexed unset() during empty-segment filtering).

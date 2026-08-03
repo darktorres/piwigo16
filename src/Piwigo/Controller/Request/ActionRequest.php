@@ -9,7 +9,7 @@ use Piwigo\Validation\InputValidator;
 
 /**
  * Validated `$_GET` shape for ActionController::__invoke() (replaces
- * action.php) -- P27/SEC-40 Request DTO.
+ * action.php) -- P26/SEC-40 Request DTO.
  *
  * `fromGlobals()`/`fromArray()` take `$isFormatsEnabled` as an explicit
  * parameter (from `CurrentConfig::isFormatsEnabled()`) -- the original's

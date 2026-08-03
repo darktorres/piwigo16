@@ -6,7 +6,7 @@ namespace Piwigo\Ws\Request;
 
 /**
  * Validated `$_REQUEST['name']`/`['chunk']`/`['chunks']` shape for
- * PwgImages::upload() -- P27/SEC-40 Request DTO. `requestNamePresent` is
+ * PwgImages::upload() -- P26/SEC-40 Request DTO. `requestNamePresent` is
  * kept separate from `requestName`: the original's own fallback chain
  * (`isset($_REQUEST['name']) ? $_REQUEST['name'] : (... $_FILES fallback
  * ... : uniqid(...))`) short-circuits on mere PRESENCE, even for a

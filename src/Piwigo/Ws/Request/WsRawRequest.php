@@ -6,7 +6,7 @@ namespace Piwigo\Ws\Request;
 
 /**
  * Validated request shape for `PwgRestRequestHandler::handleRequest()` --
- * P27/SEC-40 Request DTO. This is the sole real site where the REST WS
+ * P26/SEC-40 Request DTO. This is the sole real site where the REST WS
  * transport converts raw `$_POST`/`$_GET` into the `method` name +
  * `$params` bag every `Ws\*` method receives -- analogous to
  * `Piwigo\Http\RequestFactory::fromGlobals()`'s own sole legitimate

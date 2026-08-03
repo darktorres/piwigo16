@@ -9,7 +9,7 @@ use Piwigo\Validation\InputValidator;
 
 /**
  * Validated `$_GET`/`$_POST` shape for CatListPageRenderer::render()
- * (page slug "cat_list") -- P27/SEC-40 Request DTO. `parent_id`'s own
+ * (page slug "cat_list") -- P26/SEC-40 Request DTO. `parent_id`'s own
  * `InputValidator::validate()` call runs unconditionally, matching the
  * original exactly. `photoDeletionMode` defaults to `'no_delete'`,
  * overridden only when `photo_deletion_mode` is present and a string --

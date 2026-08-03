@@ -8,7 +8,7 @@ use Piwigo\Validation\InputValidator;
 
 /**
  * Validated `$_GET['type']` for MaintenanceActionDispatcher's `derivatives`
- * action -- P27/SEC-40 Request DTO. `all` or a `_`-joined list of
+ * action -- P26/SEC-40 Request DTO. `all` or a `_`-joined list of
  * `Piwigo\Image\ImageStdParams` size-type constants (all lowercase
  * alphanumeric, see that class's own constants); an absent/empty value
  * preserves the dispatcher's own pre-existing behavior of clearing nothing

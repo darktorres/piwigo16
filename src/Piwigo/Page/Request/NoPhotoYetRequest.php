@@ -6,7 +6,7 @@ namespace Piwigo\Page\Request;
 
 /**
  * Validated `$_GET['no_photo_yet']` shape for NoPhotoYetRenderer::render()
- * -- P27/SEC-40 Request DTO.
+ * -- P26/SEC-40 Request DTO.
  */
 final readonly class NoPhotoYetRequest
 {

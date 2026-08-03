@@ -6,7 +6,7 @@ namespace Piwigo\Section\Request;
 
 /**
  * Validated `$_GET['action']` shape for SectionPopulator::populate()'s
- * own "favorites" section branch -- P27/SEC-40 Request DTO.
+ * own "favorites" section branch -- P26/SEC-40 Request DTO.
  */
 final readonly class FavoritesActionRequest
 {

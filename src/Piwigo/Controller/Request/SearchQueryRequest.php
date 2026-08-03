@@ -9,7 +9,7 @@ use Piwigo\Validation\InputValidator;
 
 /**
  * Validated `$_GET` shape for SearchController::__invoke() (replaces
- * search.php) -- P27/SEC-40 Request DTO. `cat_id`/`tag_id` are
+ * search.php) -- P26/SEC-40 Request DTO. `cat_id`/`tag_id` are
  * pattern-validated (`InputValidator::validate()`) here, but the
  * original's own stricter `is_string(...) ?: fatalError('[Hacking
  * attempt] ...')` hard rejection stays at the call site rather than being

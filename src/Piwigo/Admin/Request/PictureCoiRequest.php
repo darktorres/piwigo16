@@ -10,7 +10,7 @@ use Piwigo\Validation\InputValidator;
 
 /**
  * Validated `$_GET`/`$_POST` shape for PictureCoiPageRenderer::render()
- * (page slug "picture_coi") -- P27/SEC-40 Request DTO. `coi` precomputes
+ * (page slug "picture_coi") -- P26/SEC-40 Request DTO. `coi` precomputes
  * the original's 4-char center-of-interest code (or `null` when `l` is
  * absent/empty) -- a self-contained, side-effect-free transform of
  * `l`/`t`/`r`/`b` via the pure `DerivativeUrlCodec::fractionToChar()`

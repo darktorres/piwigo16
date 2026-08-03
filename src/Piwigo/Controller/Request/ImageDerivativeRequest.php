@@ -6,7 +6,7 @@ namespace Piwigo\Controller\Request;
 
 /**
  * Validated request shape for ImageDerivativeController (replaces i.php)
- * -- P27/SEC-40 Request DTO. `b` is a plain cache-busting presence flag
+ * -- P26/SEC-40 Request DTO. `b` is a plain cache-busting presence flag
  * (its value, if any, is never read); `ajaxload` is checked for the exact
  * literal `true`. Neither needs InputValidator pattern validation.
  */

@@ -8,7 +8,7 @@ use Piwigo\Validation\InputValidator;
 
 /**
  * Validated `$_GET`/`$_POST` shape for PasswordController's `__invoke()`
- * and its private handler methods (replaces password.php) -- P27/SEC-40
+ * and its private handler methods (replaces password.php) -- P26/SEC-40
  * Request DTO.
  *
  * `keyPresent`/`key` expose the raw `$_GET['key']` state -- the original

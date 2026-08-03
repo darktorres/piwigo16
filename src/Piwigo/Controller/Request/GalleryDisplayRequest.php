@@ -6,7 +6,7 @@ namespace Piwigo\Controller\Request;
 
 /**
  * Validated `$_GET` display-toggle shape for GalleryController::__invoke()
- * (replaces index.php) -- P27/SEC-40 Request DTO. `hasImageOrder`/
+ * (replaces index.php) -- P26/SEC-40 Request DTO. `hasImageOrder`/
  * `hasDisplayParam` are kept separate from their own parsed
  * `validImageOrder`/`display` values since the original acts on presence
  * alone in one branch (the noindex meta flag / the unconditional redirect)

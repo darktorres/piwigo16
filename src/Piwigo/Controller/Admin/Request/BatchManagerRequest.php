@@ -10,7 +10,7 @@ use Piwigo\Validation\InputValidator;
 /**
  * Validated `$_GET`/`$_POST`/`$_REQUEST` shape for
  * BatchManagerSubController::handle()/handleGetActions()/
- * resolveSessionFilter() (page slug "batch_manager") -- P27/SEC-40
+ * resolveSessionFilter() (page slug "batch_manager") -- P26/SEC-40
  * Request DTO.
  *
  * `start`/`tab` resolve directly to their final, default-applied value:

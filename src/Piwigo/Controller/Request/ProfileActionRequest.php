@@ -6,7 +6,7 @@ namespace Piwigo\Controller\Request;
 
 /**
  * Validated request shape for ProfileController::__invoke() (replaces
- * profile.php) -- P27/SEC-40 Request DTO. Both raw superglobal reads here
+ * profile.php) -- P26/SEC-40 Request DTO. Both raw superglobal reads here
  * are presence-only checks (no value is ever read out): `$_POST !== []`
  * gates the CSRF check, `isset($_POST['reset_to_default'])` is a plain
  * checkbox-present toggle -- nothing to pattern-validate with

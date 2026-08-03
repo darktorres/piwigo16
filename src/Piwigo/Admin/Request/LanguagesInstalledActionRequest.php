@@ -9,7 +9,7 @@ use Piwigo\Validation\InputValidator;
 /**
  * Validated `$_GET['action']`/`$_GET['language']` for
  * LanguagesInstalledPageRenderer::render() (the "installed" tab of page
- * slug "languages") -- P27/SEC-40 Request DTO. `language` is validated
+ * slug "languages") -- P26/SEC-40 Request DTO. `language` is validated
  * against a per-request pattern built from the real filesystem-scanned
  * language ids (`$fs_languages`'s own keys), passed in by the caller --
  * so this DTO can never report a language id that isn't a real, currently

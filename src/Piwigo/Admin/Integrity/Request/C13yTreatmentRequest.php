@@ -6,7 +6,7 @@ namespace Piwigo\Admin\Integrity\Request;
 
 /**
  * Validated `$_POST` shape for CheckIntegrity::check()'s treatment form
- * (page slug "maintenance", "c13y" tab) -- P27/SEC-40 Request DTO.
+ * (page slug "maintenance", "c13y" tab) -- P26/SEC-40 Request DTO.
  * Faithfully preserves the original nested if/else priority: `correction`
  * mode requires both `c13y_submit_correction` and a real array
  * `c13y_selection`; `ignore` mode is only considered as a fallback (same

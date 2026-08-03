@@ -6,7 +6,7 @@ namespace Piwigo\Admin\Request;
 
 /**
  * Validated `$_GET['action']` for TagsPageRenderer::render() (page slug
- * "tags") -- P27/SEC-40 Request DTO. The only real value this page acts on
+ * "tags") -- P26/SEC-40 Request DTO. The only real value this page acts on
  * is the exact literal `delete_orphans` (an equality check, not a
  * pattern) -- anything else is treated identically to an absent action, so
  * there's nothing for InputValidator's pattern validation to add here; this

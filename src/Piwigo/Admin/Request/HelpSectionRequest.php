@@ -6,7 +6,7 @@ namespace Piwigo\Admin\Request;
 
 /**
  * Validated `$_GET['section']` for HelpPageRenderer::render() (page slug
- * "help") -- P27/SEC-40 Request DTO. No pattern validation needed:
+ * "help") -- P26/SEC-40 Request DTO. No pattern validation needed:
  * `Tabsheet::select()` (called immediately with this value) already
  * allowlists unconditionally -- any name not matching a real, pre-
  * registered help sheet silently falls back to the first registered

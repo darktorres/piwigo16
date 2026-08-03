@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Request;
 
 /**
- * Validated `$_GET['start']` for `PwgCore::historySearch()` -- P27/SEC-40
+ * Validated `$_GET['start']` for `PwgCore::historySearch()` -- P26/SEC-40
  * Request DTO. This is a raw pagination offset independent of that
  * method's own WS-registered `$param` array (which has its own,
  * differently-named `start`/`end` date-range search fields) -- a known

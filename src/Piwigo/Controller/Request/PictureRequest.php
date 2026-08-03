@@ -9,7 +9,7 @@ use Piwigo\Validation\InputValidator;
 
 /**
  * Validated `$_GET`/`$_POST` shape for PictureController::__invoke()
- * (replaces picture.php) -- P27/SEC-40 Request DTO.
+ * (replaces picture.php) -- P26/SEC-40 Request DTO.
  *
  * `commentToEdit`/`commentToDelete`/`commentToValidate`'s own
  * `InputValidator::validate()` calls each only run when `action` matches

@@ -6,7 +6,7 @@ namespace Piwigo\Filter\Request;
 
 /**
  * Validated `$_GET['filter']` shape for FilterService::initializeFromRequest()
- * -- P27/SEC-40 Request DTO. `filterPresent` stays separate from
+ * -- P26/SEC-40 Request DTO. `filterPresent` stays separate from
  * `filterValue`: the original branches on mere presence of
  * `$_GET['filter']` (falling back to the session-stored filter state
  * when absent), independent of whether the value is actually a string.

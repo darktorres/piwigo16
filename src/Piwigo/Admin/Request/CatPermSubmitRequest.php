@@ -7,7 +7,7 @@ namespace Piwigo\Admin\Request;
 /**
  * Validated `$_POST` shape for CatPermPageRenderer::render()'s permissions
  * save form (the "permissions" tab of the "album" page slug) --
- * P27/SEC-40 Request DTO. `status` falls back to an empty string on
+ * P26/SEC-40 Request DTO. `status` falls back to an empty string on
  * malformed input (never matches 'public'/'private', same as the
  * original comment); `groups`/`users` are the real int ids only,
  * matching the original's own defensive per-element `is_numeric()` cast.

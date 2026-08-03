@@ -945,7 +945,7 @@ test('WsContext::isActiveStatic() transitional shim has a shrinking, known allow
 test('InputValidator::createStatic() transitional shim has a shrinking, known allow-list', function (): void {
     // Singleton/service-locator elimination campaign, Phase 3: every one
     // of InputValidator's real construction sites turned out to be a
-    // `Request\*Request::fromGlobals()` static factory (P27/SEC-40, ~40
+    // `Request\*Request::fromGlobals()` static factory (P26/SEC-40, ~40
     // files) or another still-static caller (Piwigo\Admin\AdminShell,
     // Piwigo\Controller\Admin\{BatchManagerSubController,
     // ConfigurationSubController,NotificationByMailSubController},
@@ -1430,7 +1430,7 @@ test('src/Piwigo/ contains no PHPWG_ROOT_PATH/PWG_LOCAL_DIR reads', function ():
 });
 
 test('src/Piwigo/ reads $_POST/$_GET/$_REQUEST/$_FILES only inside a Request DTO or a documented exception', function (): void {
-    // P27/SEC-40 completion: every page controller/WS method/domain
+    // P26/SEC-40 completion: every page controller/WS method/domain
     // service that used to read $_GET/$_POST/$_REQUEST/$_FILES directly
     // now does so through a validating `{Module}/Request/{Name}` DTO's
     // own `fromGlobals()` (the sole legitimate raw read a DTO class makes

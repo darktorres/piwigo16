@@ -8,7 +8,7 @@ use Piwigo\Validation\InputValidator;
 
 /**
  * Validated `$_GET` filter shape for HistoryPageRenderer::render() (page
- * slug "history") -- P27/SEC-40 Request DTO. `ip`/`imageId` are only ever
+ * slug "history") -- P26/SEC-40 Request DTO. `ip`/`imageId` are only ever
  * pattern-validated then passed straight through to the template (never
  * computed on), so they stay `mixed` here -- both already pattern-checked
  * (digits/dots for ip, digits for image id, not mandatory) before this

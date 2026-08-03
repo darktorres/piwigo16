@@ -8,7 +8,7 @@ use Piwigo\Validation\InputValidator;
 
 /**
  * Validated `$_GET`/`$_POST` shape for BatchManagerUnitPageRenderer::render()
- * (the "unit" mode tab of the "batch_manager" page slug) -- P27/SEC-40
+ * (the "unit" mode tab of the "batch_manager" page slug) -- P26/SEC-40
  * Request DTO.
  *
  * `post` retains the raw `$_POST` array -- the per-image form fields

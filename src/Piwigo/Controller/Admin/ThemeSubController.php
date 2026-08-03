@@ -21,7 +21,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * before dispatch, so the shell's own (redundant) copy of that check is
  * dropped here, same precedent as every prior sub-batch's shell fold.
  *
- * P27/SEC-40: $_GET['theme'] parsing/validation extracted into
+ * P26/SEC-40: $_GET['theme'] parsing/validation extracted into
  * Request\ThemeIdRequest -- see that class's own docblock.
  */
 final class ThemeSubController implements AdminSubControllerInterface

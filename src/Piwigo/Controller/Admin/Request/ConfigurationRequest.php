@@ -9,7 +9,7 @@ use Piwigo\Validation\InputValidator;
 /**
  * Validated `$_GET`/`$_POST`/`$_FILES` shape for
  * ConfigurationSubController::handle()/processSizes()/processWatermark()
- * (page slug "configuration") -- P27/SEC-40 Request DTO.
+ * (page slug "configuration") -- P26/SEC-40 Request DTO.
  *
  * `post`/`files` retain the raw `$_POST`/`$_FILES` arrays -- this page's
  * per-tab submit handling (`main`/`comments`/`display`/`search`) mutates

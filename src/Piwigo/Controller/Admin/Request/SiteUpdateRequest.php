@@ -9,7 +9,7 @@ use Piwigo\Validation\InputValidator;
 
 /**
  * Validated `$_GET`/`$_POST` shape for SiteUpdateSubController::handle()
- * (page slug "site_update") -- P27/SEC-40 Request DTO.
+ * (page slug "site_update") -- P26/SEC-40 Request DTO.
  *
  * `post` retains the raw `$_POST` array -- the "Synchronize" form posts
  * ~15 individually-named fields (`sync`/`cat`/`subcats-included`/

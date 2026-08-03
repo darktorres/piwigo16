@@ -132,8 +132,12 @@ final readonly class BatchWriter
         $protectedTable = $this->protectColumnName($table);
         $columnsSql = implode(',', $columns);
 
-        $this->conn->beginTransaction();
-        try {
+        // Phase 5 Item 23: Connection::transactional() replaces the manual
+        // beginTransaction()/commit()/catch/rollBack()-and-rethrow
+        // boilerplate -- same all-or-nothing behavior, less code, and
+        // removes any chance of a future edit forgetting the
+        // rollBack()-and-rethrow half of the pattern.
+        $this->conn->transactional(function (Connection $conn) use ($datas, $dbfields, $ignore, $protectedTable, $columnsSql): void {
             foreach ($datas as $insert) {
                 $placeholders = [];
                 $params = [];
@@ -149,13 +153,9 @@ final readonly class BatchWriter
                     INSERT {$ignore} INTO {$protectedTable} ({$columnsSql}) VALUES ({$placeholdersSql})
                     SQL;
 
-                $this->conn->executeStatement($query, $params);
+                $conn->executeStatement($query, $params);
             }
-            $this->conn->commit();
-        } catch (\Throwable $e) {
-            $this->conn->rollBack();
-            throw $e;
-        }
+        });
     }
 
     /**
@@ -177,8 +177,9 @@ final readonly class BatchWriter
             return;
         }
 
-        $this->conn->beginTransaction();
-        try {
+        // Phase 5 Item 23: see massInsert()'s own comment -- same
+        // Connection::transactional() replacement.
+        $this->conn->transactional(function () use ($table, $dbfields, $datas, $flags): void {
             foreach ($datas as $data) {
                 $updateData = [];
                 foreach ($dbfields['update'] as $key) {
@@ -192,11 +193,7 @@ final readonly class BatchWriter
 
                 $this->updateRow($table, $updateData, $where, $flags);
             }
-            $this->conn->commit();
-        } catch (\Throwable $e) {
-            $this->conn->rollBack();
-            throw $e;
-        }
+        });
     }
 
     /**

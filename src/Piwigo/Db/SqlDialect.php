@@ -33,8 +33,29 @@ use Piwigo\Core\Env;
  * `getDayOfWeek`/`getDateYYYYMM`/`getDateMMDD`/`concatWs`/`castToText`)
  * moved to `Piwigo\Db\DqlFunction\*` (real DQL functions, same per-
  * platform-`instanceof`-branch shape as `RegexpFunction`/`RandFunction`/
- * `GroupConcatFunction`) once the Calendar subsystem -- their only real
+ * `GroupConcatFunction`) once the Calendar subsystem -- their own real
  * caller -- became real DQL.
+ *
+ * Phase 4 Item 16: `protectColumnName()`/`concat()`/`DB_REGEX_OPERATOR`
+ * removed -- confirmed direct duplicates of `Doctrine\DBAL\Platforms\
+ * AbstractMySQLPlatform::quoteSingleIdentifier()`/`getConcatExpression()`/
+ * `getRegexpExpression()`, real per-vendor framework primitives accessible
+ * via `$connection->getDatabasePlatform()` rather than hand-rolled,
+ * permanently-MySQL-only string builders. `protectColumnName()`'s only
+ * real callers ({@see \Piwigo\Db\BatchWriter}) now call
+ * `quoteSingleIdentifier()` directly (also a real correctness fix: it
+ * escapes an embedded backtick character, which the hand-rolled version
+ * never did). `concat()`/`DB_REGEX_OPERATOR` had zero real callers left to
+ * migrate -- `CategoryRepository::updateImagePathsForCategory()`'s own DQL
+ * conversion and {@see \Piwigo\Db\DqlFunction\RegexpFunction} had already
+ * independently arrived at calling the framework's own equivalents during
+ * earlier DQL-modernization items. `getBoolean()`/`booleanToString()`/
+ * `booleanToInt()`, `concatWs()`, the 9 date-part-extraction methods (moved
+ * to `DqlFunction\*` per Item 15G above), and `DB_RANDOM_FUNCTION` were all
+ * checked against `AbstractPlatform` too and confirmed to have no
+ * equivalent there, or to solve a genuinely different, MySQL-schema-
+ * internal problem (`getBoolean()`'s family) -- they stay exactly as this
+ * codebase's own domain-specific additions, not framework reinvention.
  */
 final class SqlDialect
 {
@@ -42,28 +63,7 @@ final class SqlDialect
 
     public const string REQUIRED_MYSQL_VERSION = '5.0.0';
 
-    public const string DB_REGEX_OPERATOR = 'REGEXP';
-
     public const string DB_RANDOM_FUNCTION = 'RAND';
-
-    public static function protectColumnName(string $column_name): string
-    {
-        if ($column_name[0] !== '`') {
-            $column_name = '`' . $column_name . '`';
-        }
-
-        return $column_name;
-    }
-
-    /**
-     * @param string[] $array
-     */
-    public static function concat(array $array): string
-    {
-        $string = implode(',', $array);
-
-        return 'CONCAT(' . $string . ')';
-    }
 
     /**
      * Checks if a variable is equivalent to true or false.

@@ -6,33 +6,22 @@ use Piwigo\Db\SqlDialect;
 
 /**
  * Piwigo\Db\SqlDialect -- pure SQL-fragment string builders, no connection
- * dependency. concat()/getHour()/dateToTs() had zero coverage and
- * booleanToInt() only its bool branch (see
+ * dependency. getHour()/dateToTs() had zero coverage and booleanToInt()
+ * only its bool branch (see
  * /home/torres/.claude/plans/piped-enchanting-spark.md, Wave 1); every
  * other method here is already indirectly exercised (Calendar/C13yInternal
  * tests), but a full, direct pass is cheap and removes any doubt.
+ *
+ * Phase 4 Item 16: protectColumnName()/concat()/DB_REGEX_OPERATOR removed
+ * -- confirmed-duplicate hand-rolling of
+ * `Doctrine\DBAL\Platforms\AbstractMySQLPlatform::quoteSingleIdentifier()`/
+ * `getConcatExpression()`/`getRegexpExpression()`. protectColumnName()'s
+ * only real callers (Db\BatchWriter) now call the real platform method
+ * directly; concat()/DB_REGEX_OPERATOR had zero real callers left --
+ * CategoryRepository's own DQL conversion (Item 14/15) and
+ * Db\DqlFunction\RegexpFunction had already independently arrived at
+ * calling the framework's own equivalents.
  */
-test('protectColumnName backtick-quotes a bare column name, and leaves an already-quoted one alone', function (): void {
-    expect(SqlDialect::protectColumnName('username'))->toBe('`username`');
-    expect(SqlDialect::protectColumnName('`already_quoted`'))->toBe('`already_quoted`');
-});
-
-test('protectColumnName checks the FIRST character, not the last', function (): void {
-    // Kills line 41's DecrementInteger ($column_name[-1] instead of
-    // [0]). The existing test above always uses inputs where the first
-    // and last characters agree (both backtick, or both a regular
-    // letter), which can't distinguish which index the real check uses.
-    // A string that starts with a backtick but doesn't end with one (or
-    // vice versa) can: confirmed live that the two indices produce
-    // opposite wrap/no-wrap decisions for these inputs.
-    expect(SqlDialect::protectColumnName('`x'))->toBe('`x');
-    expect(SqlDialect::protectColumnName('x`'))->toBe('`x``');
-});
-
-test('concat wraps a comma-joined column list in CONCAT()', function (): void {
-    expect(SqlDialect::concat(['a', 'b', 'c']))->toBe('CONCAT(a,b,c)');
-});
-
 test('getBoolean treats the string "false" as false, everything else by normal truthiness', function (): void {
     expect(SqlDialect::getBoolean('false'))->toBeFalse();
     expect(SqlDialect::getBoolean('FALSE'))->toBeFalse();

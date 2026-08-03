@@ -51,6 +51,23 @@ final readonly class BatchWriter
     ) {}
 
     /**
+     * Phase 4 Item 16: routes through the real DBAL platform's own
+     * identifier-quoting -- `AbstractMySQLPlatform::quoteSingleIdentifier()`
+     * escapes an embedded backtick character
+     * (`` '`' . str_replace('`', '``', $str) . '`' ``), which the
+     * hand-rolled `SqlDialect::protectColumnName()` this replaced never
+     * did. Not a live vulnerability either way (every real caller here
+     * passes a fixed, code-controlled column/table name), but a real
+     * correctness gap closed for free by using the framework's own,
+     * already-correct, per-platform implementation instead.
+     */
+    private function protectColumnName(string $name): string
+    {
+        return $this->conn->getDatabasePlatform()
+            ->quoteSingleIdentifier($name);
+    }
+
+    /**
      * @param array<string, mixed> $data
      * @param array{ignore?: bool} $options
      */
@@ -72,10 +89,10 @@ final readonly class BatchWriter
         // Permission\PermissionRepository::massInsertUserAccess()'s own
         // docblock on the same constraint).
         $ignore = ($options['ignore'] ?? false) ? 'IGNORE' : '';
-        $columns = array_map(SqlDialect::protectColumnName(...), array_keys($data));
+        $columns = array_map($this->protectColumnName(...), array_keys($data));
         $placeholders = array_map(static fn (string $key): string => ':' . $key, array_keys($data));
 
-        $protectedTable = SqlDialect::protectColumnName($table);
+        $protectedTable = $this->protectColumnName($table);
         $columnsSql = implode(',', $columns);
         $placeholdersSql = implode(',', $placeholders);
         $query = <<<SQL
@@ -111,8 +128,8 @@ final readonly class BatchWriter
         // SQL-modernization audit: same verified-safe, stays-raw shape as
         // singleInsert() above -- see its own comment.
         $ignore = ($options['ignore'] ?? false) ? 'IGNORE' : '';
-        $columns = array_map(SqlDialect::protectColumnName(...), $dbfields);
-        $protectedTable = SqlDialect::protectColumnName($table);
+        $columns = array_map($this->protectColumnName(...), $dbfields);
+        $protectedTable = $this->protectColumnName($table);
         $columnsSql = implode(',', $columns);
 
         $this->conn->beginTransaction();
@@ -193,7 +210,7 @@ final readonly class BatchWriter
         }
 
         $qb = $this->conn->createQueryBuilder()
-            ->update(SqlDialect::protectColumnName($table));
+            ->update($this->protectColumnName($table));
 
         $hasSetPart = false;
         $i = 0;
@@ -204,13 +221,13 @@ final readonly class BatchWriter
                 if ((bool) ($flags & self::SKIP_EMPTY)) {
                     continue;
                 }
-                $qb->set(SqlDialect::protectColumnName($key), 'NULL');
+                $qb->set($this->protectColumnName($key), 'NULL');
                 $hasSetPart = true;
                 continue;
             }
 
             $placeholder = 'set' . $i++;
-            $qb->set(SqlDialect::protectColumnName($key), ':' . $placeholder);
+            $qb->set($this->protectColumnName($key), ':' . $placeholder);
             $qb->setParameter($placeholder, $value);
             $hasSetPart = true;
         }
@@ -224,10 +241,10 @@ final readonly class BatchWriter
             $value = SqlDialect::booleanToInt($value);
             if (isset($value) && is_scalar($value)) {
                 $placeholder = 'where' . $j++;
-                $qb->andWhere(SqlDialect::protectColumnName($key) . ' = :' . $placeholder);
+                $qb->andWhere($this->protectColumnName($key) . ' = :' . $placeholder);
                 $qb->setParameter($placeholder, $value);
             } else {
-                $qb->andWhere(SqlDialect::protectColumnName($key) . ' IS NULL');
+                $qb->andWhere($this->protectColumnName($key) . ' IS NULL');
             }
         }
 

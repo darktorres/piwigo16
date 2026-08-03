@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Activity\ActivityListCriteria;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\Projection\SystemActivityLogEntry;
 use Piwigo\Common\ValueObject\IpAddress;
@@ -499,6 +500,83 @@ final class ActivityRepositoryTest extends IntegrationTestCase
             self::assertSame('2026-07-11 00:00:00', $matching[0]['last_encounter']);
         } finally {
             $this->conn->executeStatement("DELETE FROM " . Tables::activity() . " WHERE object = 'disposable'");
+        }
+    }
+
+    /**
+     * Phase 5 Item 15: findPaginated() had zero prior coverage -- added
+     * while converting its WHERE-building from hand-typed DQL condition
+     * strings to Doctrine\Common\Collections\Criteria, per this campaign's
+     * own "verified, not just runs" standard. Covers a plain optional-eq
+     * filter, a min/max date range, and both connectionsMode branches
+     * (the trickiest part of the conversion -- 'admins_only' compiles to
+     * a nested NOT(x AND y) DQL expression via Criteria::expr()->not()/
+     * andX()).
+     */
+    public function test_find_paginated_filters_by_object(): void
+    {
+        $rows = $this->repo->findPaginated(new ActivityListCriteria(object: 'tag'), 100, 0);
+
+        self::assertCount(3, $rows);
+        foreach ($rows as $row) {
+            self::assertSame('tag', $row['object']);
+        }
+    }
+
+    public function test_find_paginated_excludes_system_object_unconditionally(): void
+    {
+        $rows = $this->repo->findPaginated(new ActivityListCriteria(), 100, 0);
+
+        self::assertCount(17, $rows);
+        foreach ($rows as $row) {
+            self::assertNotSame('system', $row['object']);
+        }
+    }
+
+    public function test_find_paginated_filters_by_date_range(): void
+    {
+        // Every fixture row shares the same 2026-08-01 03:00:00 timestamp
+        // (see this class's own docblock) -- a range excluding it must
+        // return nothing, one including it must return every non-system row.
+        $excluding = $this->repo->findPaginated(new ActivityListCriteria(maxDate: '2026-07-31 00:00:00'), 100, 0);
+        $including = $this->repo->findPaginated(new ActivityListCriteria(minDate: '2026-08-01 00:00:00', maxDate: '2026-08-01 23:59:59'), 100, 0);
+
+        self::assertSame([], $excluding);
+        self::assertCount(17, $including);
+    }
+
+    public function test_find_paginated_connections_mode_none_excludes_every_login(): void
+    {
+        $rows = $this->repo->findPaginated(new ActivityListCriteria(connectionsMode: 'none'), 100, 0);
+
+        self::assertCount(15, $rows);
+        foreach ($rows as $row) {
+            self::assertNotSame('login', $row['action']);
+        }
+    }
+
+    public function test_find_paginated_connections_mode_admins_only_keeps_an_admin_login(): void
+    {
+        // activity_id 3/4 are 'login' rows with object_id=1 (fixture_admin's
+        // own id) -- adminIds: [1] must keep them, unlike 'none'.
+        $rows = $this->repo->findPaginated(new ActivityListCriteria(connectionsMode: 'admins_only', adminIds: [1]), 100, 0);
+
+        self::assertCount(17, $rows);
+        $logins = array_values(array_filter($rows, static fn (array $row): bool => $row['action'] === 'login'));
+        self::assertCount(2, $logins);
+    }
+
+    public function test_find_paginated_connections_mode_admins_only_excludes_a_non_admin_login(): void
+    {
+        // Same 2 login rows (object_id=1), but adminIds: [999] doesn't
+        // match -- NOT (action IN (login,logout) AND objectId NOT IN
+        // (999)) must exclude them here, unlike the adminIds: [1] case
+        // above.
+        $rows = $this->repo->findPaginated(new ActivityListCriteria(connectionsMode: 'admins_only', adminIds: [999]), 100, 0);
+
+        self::assertCount(15, $rows);
+        foreach ($rows as $row) {
+            self::assertNotSame('login', $row['action']);
         }
     }
 }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Activity;
 
-use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Query\Expr\Join;
@@ -332,6 +332,19 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
      * conversion, not a raw JSON string) -- the caller was updated to
      * match instead of re-flattening these back to strings.
      *
+     * Phase 5 Item 15: WHERE built via Doctrine's `Criteria`/
+     * `Criteria::expr()` and applied through `QueryBuilder::addCriteria()`
+     * -- single mapped entity (`ActivityEntity`, alias `a`), no JOIN, so
+     * genuinely eligible (see {@see \Piwigo\Comment\CommentRepository::applyApiConditions()}'s
+     * own docblock for why most other Criteria-consuming methods in this
+     * codebase aren't). The `admins_only` branch's `NOT (x AND y)` proves
+     * out `expr()->not()`/`andX()` translate to real DQL `NOT (...)` too
+     * (confirmed via `QueryExpressionVisitor::walkCompositeExpression()`'s
+     * own `CompositeExpression::TYPE_NOT` case), not just simple
+     * comparisons -- `addCriteria()` only touches WHERE/ORDER/LIMIT, so
+     * this method's own `->select()`/`->orderBy()`/`->setMaxResults()`/
+     * `->setFirstResult()` calls are untouched.
+     *
      * @return list<array<string, mixed>>
      */
     public function findPaginated(ActivityListCriteria $criteria, int $limit, int $offset): array
@@ -353,42 +366,43 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
             ->setMaxResults($limit)
             ->setFirstResult($offset);
 
+        $expr = Criteria::expr();
+        $criteriaObj = Criteria::create();
+
         if ($criteria->performedBy !== null) {
-            $qb->andWhere('a.performedBy = :performedBy')
-                ->setParameter('performedBy', $criteria->performedBy);
+            $criteriaObj->andWhere($expr->eq('performedBy', $criteria->performedBy));
         }
 
         if ($criteria->action !== null) {
-            $qb->andWhere('a.action = :action')
-                ->setParameter('action', $criteria->action);
+            $criteriaObj->andWhere($expr->eq('action', $criteria->action));
         }
 
         if ($criteria->object !== null) {
-            $qb->andWhere('a.object = :object')
-                ->setParameter('object', $criteria->object);
+            $criteriaObj->andWhere($expr->eq('object', $criteria->object));
         }
 
         if ($criteria->minDate !== null) {
-            $qb->andWhere('a.occuredOn >= :minDate')
-                ->setParameter('minDate', $criteria->minDate);
+            $criteriaObj->andWhere($expr->gte('occuredOn', $criteria->minDate));
         }
 
         if ($criteria->maxDate !== null) {
-            $qb->andWhere('a.occuredOn <= :maxDate')
-                ->setParameter('maxDate', $criteria->maxDate);
+            $criteriaObj->andWhere($expr->lte('occuredOn', $criteria->maxDate));
         }
 
         if ($criteria->objectId !== null) {
-            $qb->andWhere('a.objectId = :objectId')
-                ->setParameter('objectId', $criteria->objectId);
+            $criteriaObj->andWhere($expr->eq('objectId', $criteria->objectId));
         }
 
         if ($criteria->connectionsMode === 'none') {
-            $qb->andWhere("a.action NOT IN ('login', 'logout')");
+            $criteriaObj->andWhere($expr->notIn('action', ['login', 'logout']));
         } elseif ($criteria->connectionsMode === 'admins_only') {
-            $qb->andWhere("NOT (a.action IN ('login', 'logout') AND a.objectId NOT IN (:adminIds))")
-                ->setParameter('adminIds', $criteria->adminIds, ArrayParameterType::INTEGER);
+            $criteriaObj->andWhere($expr->not($expr->andX(
+                $expr->in('action', ['login', 'logout']),
+                $expr->notIn('objectId', $criteria->adminIds),
+            )));
         }
+
+        $qb->addCriteria($criteriaObj);
 
         $rows = $qb->getQuery()
             ->getArrayResult();

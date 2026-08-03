@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Comment;
 
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Query\QueryBuilder;
@@ -388,35 +389,50 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * doing, per the older docblock this replaces) is the honest design
      * here: 3 methods genuinely have no other blocker left, one never
      * will regardless of what this helper does.
+     *
+     * Phase 5 Item 15: built via Doctrine's `Criteria`/`Criteria::expr()`
+     * (the ORM-level counterpart to Item 2's DBAL-level
+     * `ExpressionBuilder`) and applied through
+     * `QueryBuilder::addCriteria()` -- genuinely eligible here (unlike
+     * every other Criteria-value-object-consuming method in this
+     * codebase, all blocked by a JOIN/dynamic-column/`SELECT DISTINCT`
+     * concern `Criteria` can't express): single mapped entity
+     * (`CommentEntity`, alias `c`), no JOIN, and `addCriteria()` only
+     * touches WHERE/ORDER/LIMIT, so the callers' own aggregate
+     * `->select()`/`->groupBy()` calls are untouched. `contains()`
+     * translates to the exact same `LIKE '%value%'` this replaced
+     * (confirmed via `QueryExpressionVisitor::walkComparison()`'s own
+     * `Comparison::CONTAINS` case).
      */
     private static function applyApiConditions(\Doctrine\ORM\QueryBuilder $qb, CommentApiCriteria $criteria, bool $includeAuthorId): void
     {
+        $expr = Criteria::expr();
+
         if ($criteria->search !== null && $criteria->search !== '') {
-            $qb->andWhere('c.content LIKE :search')
-                ->setParameter('search', '%' . $criteria->search . '%');
+            $qb->addCriteria(Criteria::create()->andWhere($expr->contains('content', $criteria->search)));
 
             return;
         }
 
+        $criteriaObj = Criteria::create();
+
         if ($includeAuthorId && $criteria->authorId !== null && $criteria->authorId !== 0) {
-            $qb->andWhere('c.authorId = :authorId')
-                ->setParameter('authorId', $criteria->authorId);
+            $criteriaObj->andWhere($expr->eq('authorId', $criteria->authorId));
         }
 
         if ($criteria->imageId !== null && $criteria->imageId !== 0) {
-            $qb->andWhere('c.imageId = :imageId')
-                ->setParameter('imageId', $criteria->imageId);
+            $criteriaObj->andWhere($expr->eq('imageId', $criteria->imageId));
         }
 
         if ($criteria->minDate !== null) {
-            $qb->andWhere('c.date >= :minDate')
-                ->setParameter('minDate', $criteria->minDate);
+            $criteriaObj->andWhere($expr->gte('date', $criteria->minDate));
         }
 
         if ($criteria->maxDate !== null) {
-            $qb->andWhere('c.date <= :maxDate')
-                ->setParameter('maxDate', $criteria->maxDate);
+            $criteriaObj->andWhere($expr->lte('date', $criteria->maxDate));
         }
+
+        $qb->addCriteria($criteriaObj);
     }
 
     /**
@@ -427,13 +443,15 @@ final class CommentRepository extends EntityRepository implements CommentCounter
     {
         self::applyApiConditions($qb, $criteria, $includeAuthorId);
 
-        match ($criteria->status) {
-            'pending' => $qb->andWhere('c.validated = :validated')
-                ->setParameter('validated', false),
-            'validated' => $qb->andWhere('c.validated = :validated')
-                ->setParameter('validated', true),
+        $validated = match ($criteria->status) {
+            'pending' => false,
+            'validated' => true,
             default => null,
         };
+
+        if ($validated !== null) {
+            $qb->addCriteria(Criteria::create()->andWhere(Criteria::expr()->eq('validated', $validated)));
+        }
     }
 
     /**

@@ -11,8 +11,9 @@ this file's status table replaces its role, independently re-derived from
 `git log`/live code rather than copied from the manifest, which had drifted
 badly (P24 marked `planned` despite 271 landed commits).
 
-`17.x-rewrite` replays `16.x-rewrite`'s modernization in 33 strictly-sequential
-backbone phases (P0–P32, grouped into 9 epochs A–I), rebuilt from
+`17.x-rewrite` replays `16.x-rewrite`'s modernization in 34 strictly-sequential
+backbone phases (P0–P33, grouped into 10 epochs A–J — every backend phase
+sequenced before every frontend phase), rebuilt from
 `origin/16.x` rather than upgraded in place. Dual-purpose: a *replay* of
 work with a reference implementation on `16.x-rewrite`, plus *greenfield*
 net-new capabilities with no counterpart there. Full conventions (REPLAY
@@ -45,19 +46,21 @@ the table correctly:
   (`legacy-coupling-retirement.md`, `gap-closure-p0-p23.md`) at the time,
   under the `p24` tag as a matter of sequencing convenience ("whatever
   comes after P23"). See the P24 section below for the real work.
-- **P25 as originally defined** ("Inline JS extraction + `any` reduction")
-  — not started. The 52 `(p25)`-tagged commits are PHP `mixed`-type
-  elimination (Phase 1–2, by domain module), continued directly into P27's
-  tag. Unrelated to the original P25 scope.
-- **P27 as originally defined** ("Type correctness + mixed elimination") —
-  this one actually matches: the 89 `(p27)`-tagged commits continue the
-  same mixed-elimination effort (Phase 4: replacing ambient `$_POST`/`$_GET`
-  superglobal reads with typed Request DTOs) plus real security fixes
-  found along the way (SQL injection, request-array scope). Counts as
-  real, substantial progress against its own original definition.
-- **P32** — 1 commit landed (`chore(p32): delete doc/`), not the phase's
-  full "layer decoupling + repository restructure" scope. A narrow,
-  unrelated cleanup borrowed the tag.
+- **P25, renumbered P31, as originally defined** ("Inline JS extraction +
+  `any` reduction") — not started. The 52 `(p25)`-tagged commits are PHP
+  `mixed`-type elimination (Phase 1–2, by domain module), continued
+  directly into the `(p27)`-tagged work covered next. Unrelated to the
+  original P25 (now P31) scope.
+- **P27, renumbered P26, as originally defined** ("Type correctness +
+  mixed elimination") — this one actually matches: the 89 `(p27)`-tagged
+  commits continue the same mixed-elimination effort (Phase 4: replacing
+  ambient `$_POST`/`$_GET` superglobal reads with typed Request DTOs) plus
+  real security fixes found along the way (SQL injection, request-array
+  scope). Counts as real, substantial progress against its own original
+  definition (now P26).
+- **P32, renumbered P29** — 1 commit landed (`chore(p32): delete doc/`),
+  not the phase's full "layer decoupling + repository restructure" scope.
+  A narrow, unrelated cleanup borrowed the tag.
 
 Where the table below says "diverged," this is what it means: re-verify
 against the phase's own section, don't assume the commit count maps
@@ -92,15 +95,15 @@ cleanly onto the original scope.
 | P22 | Frontend controller migration | Done | 7 |
 | P23 | Legacy deletion & cleanup | Done, 2 gaps found in later audit (see below) | 123 |
 | P24 | Post-P23 remediation & hardening (globals/DBAL/event/l10n coupling retirement, coverage + mutation-testing hardening, SQL bound-parameter sweep, singleton/DI elimination) | In progress — remediation sub-tracks done, 2 gaps found (see below); singleton/DI campaign ongoing (Phase 0–4 done, Phase 5 partial) | 405 `(p24)` + 16 `(sql)` + 25 `(di)`/`(lang)` |
-| P24 | *Originally:* Vite + TypeScript conversion | **Not started** | 0 |
-| P25 | *Originally:* Inline JS extraction + `any` reduction | **Not started** (mixed-elimination work landed instead, see above) | 0 |
-| P26 | REST resource layer + OpenAPI (WS API removed) | Not started | 0 |
-| P27 | Type correctness + mixed elimination | Real progress (Request DTO migration, Phase 4) | 89 |
-| P28 | Security hardening | Not started | 0 |
-| P29 | Template migration (Smarty → Latte) + asset pipeline | Not started | 0 |
-| P30 | CSS modernization + Tailwind | Not started | 0 |
-| P31 | Plugin / Theme contracts + bundled extensions | Not started | 0 |
-| P32 | Layer decoupling + repository restructure | Not started (1 unrelated commit borrowed the tag — `doc/` cleanup) | 1 |
+| P25 | REST resource layer + OpenAPI (WS API removed) | Not started | 0 |
+| P26 | Type correctness + mixed elimination | Real progress (Request DTO migration, Phase 4) | 89 |
+| P27 | Security hardening | Not started | 0 |
+| P28 | Plugin / Theme contracts + bundled extensions | Not started | 0 |
+| P29 | Layer decoupling + repository restructure | Not started (1 unrelated commit borrowed the tag — `doc/` cleanup) | 1 |
+| P30 | Vite + TypeScript conversion | **Not started** | 0 |
+| P31 | Inline JS extraction + `any` reduction | **Not started** (mixed-elimination work landed instead, see above) | 0 |
+| P32 | Template migration (Smarty → Latte) + asset pipeline | Not started | 0 |
+| P33 | CSS modernization + Tailwind | Not started | 0 |
 
 Two adjacent, non-phase-numbered tracks, both confirmed **not started**
 directly against the codebase:
@@ -258,7 +261,7 @@ TTL) was never built — `CacheFactory` produced one generic pool, zero real
 consumers besides `CacheClearCommand`. Load-bearing for P23's own
 cache-table-rationalization gate. **Fixed** in the pre-P23 remediation
 pass — `CachePools` built on top of `CacheFactory`; `rate_limiter`
-specifically stays unbuilt (genuinely P28 scope, no consumer exists yet).
+specifically stays unbuilt (genuinely P27 scope, no consumer exists yet).
 Messenger itself is now real and wired (`config/messenger.php`, 5
 `Piwigo\Job\*` classes + handlers) — see `docs/REFERENCE.md`.
 
@@ -454,9 +457,9 @@ deletion of the entire `DbPatch`/`VersionUpgrade` chain (see P23's
 gap-closure list below) — there's no upgrade mechanism left to drive an
 `Upgrade`/`UpgradeFeed` controller, so their absence is a real, consistent
 consequence of that design decision, not an oversight. Render via Smarty,
-collecting an engine-agnostic `$vars` array (P29's future Latte swap is
+collecting an engine-agnostic `$vars` array (P32's future Latte swap is
 meant to be a one-line render-call change per controller, not a rewrite —
-P29 hasn't started). **Real gap found** (2026-07-13 audit): `GalleryController` only
+P32 hasn't started). **Real gap found** (2026-07-13 audit): `GalleryController` only
 relocated `include/section_init.inc.php`'s `include()` call site into the
 controller — the ~450 lines of raw SQL logic P20's own docblock said
 belonged here (`$page['items']`, favorites, next/prev navigation) was
@@ -487,7 +490,7 @@ documented ways**, not silently:
 - Root entry points (`admin.php`, `picture.php`, etc.) were kept as thin
   shells rather than collapsed into one front controller — this fork
   keeps Piwigo's original URL surface. Since relocated into `public/` as
-  part of web-root isolation (originally P32 scope, pulled forward).
+  part of web-root isolation (originally P29 scope, pulled forward).
 - The `$GLOBALS`/static-bridge retirement bullets in the original P23
   plan were audited and **deliberately not executed in P23 itself** — the
   plan's premise ("zero callers remain after `include/` deletion") didn't
@@ -595,7 +598,7 @@ consolidation, not copied from the gap-closure doc's own claims:
   wasn't documented anywhere this consolidation found. Flagging
   precisely rather than guessing which it is.
 
-### P24 — Post-P23 Remediation & Hardening
+### Epoch F — Post-P23 Remediation & Hardening (P24)
 
 **In progress, not done** — see the singleton/DI campaign subsection
 below. Formalizes the informal `(p24)` commit-tag convention (405 commits
@@ -689,7 +692,7 @@ re-counted at 240) retargeted onto `EventDispatcher::get()->addEventHandler()`/
 typed event objects (`SomeEvent` classes, `dispatchNotify()`/
 `dispatchChange()`) replacing the bare-string-keyed dispatch — then
 shipped across 12 domain batches (all 155 real events, including the
-7-event WS-protocol-lifecycle group originally deferred behind P26).
+7-event WS-protocol-lifecycle group originally deferred behind P25).
 `EventDispatcher.php` now exposes `addTypedHandler()`/`dispatchChange()`/
 `dispatchNotify()` alongside the original string-keyed methods (kept only
 for `'trigger'`, its own permanent internal meta-notification channel). A
@@ -858,23 +861,9 @@ Full per-class detail (shim design, real bugs found along the way,
 test-suite fallout per class) lives in the campaign's own plan file, not
 reproduced here.
 
-### Epoch F — Frontend (P24–P25) — not started as originally scoped
+### Epoch G — REST/OpenAPI + Types (P25–P26)
 
-**P24 — Vite + TypeScript conversion** (real Vite entries beyond the
-`noop`/`vitals` placeholders, JS → TS, jQuery removed entirely, a Lit
-component catalog). **Not started.** `vite.config.ts` still has only 2
-entries.
-
-**P25 — Inline JS extraction + `any` reduction** (`{footer_script}` inline
-blocks → real `.ts` modules, `getPageData<T>()`, TypeScript `any` driven to
-zero, real bundle budgets). **Not started** as originally scoped — the 52
-commits tagged `p25` are the PHP-side mixed-elimination work covered under
-"The `p24`-tagged remediation era" above, unrelated to this phase's actual
-frontend scope.
-
-### Epoch G — REST/OpenAPI + types (P26–P27)
-
-**P26 — REST resource layer + OpenAPI, legacy WS API removed** (`/api/v1`
+**P25 — REST resource layer + OpenAPI, legacy WS API removed** (`/api/v1`
 as the sole API, ETag/304, `Link` pagination, a generated typed TS client;
 removes the 94-method legacy RPC WS API this whole codebase's Contract
 test suite currently locks in). **Not started.** The 21 `Ws*Test` Contract
@@ -882,7 +871,7 @@ tests, the whole `Ws/` namespace, and every `l10n()`/URL-retarget note
 above that explicitly deferred a WS-specific event/function pending this
 phase are all still waiting on it.
 
-**P27 — Type correctness + mixed elimination.** **Real, substantial
+**P26 — Type correctness + mixed elimination.** **Real, substantial
 progress** — this is the one post-P23 phase where the commit-tag label
 matches its original definition. 89 commits: continuing the mixed-elimination
 sweep from the `p25`-tagged work (Phase 4), replacing ambient `$_POST`/
@@ -896,50 +885,68 @@ SEC-40 arch-test gate locking in "no raw superglobal reads outside a
 Request DTO" going forward). Not complete — no claim of "0 remaining" has
 been verified — but real, ongoing, and aligned with its own stated goal.
 
-### Epoch H — Security + templates/CSS (P28–P30) — not started
+### Epoch H — Security (P27) — not started
 
-**P28 — Security hardening** (WebAuthn/passkeys, OIDC SSO, nonce-based
-CSP, COOP/COEP, CSP reporting). Depends on P27. Not started — `rate_limiter`
-(the one P11 cache pool deliberately left unbuilt, "genuinely P28 scope")
+**P27 — Security hardening** (WebAuthn/passkeys, OIDC SSO, nonce-based
+CSP, COOP/COEP, CSP reporting). Depends on P26. Not started — `rate_limiter`
+(the one P11 cache pool deliberately left unbuilt, "genuinely P27 scope")
 is the clearest concrete marker that this phase hasn't begun.
 
-**P29 — Template migration + asset pipeline** (Smarty → Latte →
-`ViteManifest`, `<picture>` AVIF/WebP, ThumbHash placeholders). Not
-started — every controller still renders through Smarty; the one-line
-Latte render-call swap P22 set up for is still just potential energy.
+### Epoch I — Plugins/Layering/Repo-restructure (P28–P29) — not started
 
-**P30 — CSS modernization + Tailwind** (dark mode, `@container` queries,
-`@layer` cascade). Not started — depends on P29's Latte templates existing
-for Tailwind's `@source` scanning.
-
-### Epoch I — Plugins/layering/repo-restructure (P31–P32) — not started
-
-**P31 — Plugin / Theme contracts + bundled extensions + decomposition**
+**P28 — Plugin / Theme contracts + bundled extensions + decomposition**
 (`PluginInterface`/`ThemeInterface`, JSON-schema manifests, 16
 Listener/Subscriber classes, migrating 7 bundled extensions, OpenAPI spec
 generation, outbound webhooks). **Not started** — but its typed-event-object
 piece shipped early, independent of the rest: Track B (above) already
 built all 155 typed event classes and the `dispatchChange()`/
 `dispatchNotify()`/`addTypedHandler()` dispatch mechanism, ahead of and
-outside P31. What's left here is wiring those classes to a real plugin
-registration surface — P31's own documented design ties them to
+outside P28. What's left here is wiring those classes to a real plugin
+registration surface — P28's own documented design ties them to
 `PluginInterface::subscribedEvents()`, which doesn't exist yet.
 
-**P32 — Layer decoupling + repository restructure** (drive the Deptrac
+**P29 — Layer decoupling + repository restructure** (drive the Deptrac
 ratchet to zero cross-cutting residue, then the repository restructure —
 web-root isolation, `public/` entry point, formerly its own phase). The
 web-root-isolation half was pulled forward and is done (see
 `docs/REFERENCE.md`'s Deployment section — `public/` is the real document
 root today). The 1 commit actually tagged `p32` (`chore(p32): delete doc/`)
-is an unrelated, narrow cleanup that borrowed the tag, not phase work.
-Layer decoupling itself: not started (though Deptrac already reports 0
-violations today — whether that's "P32's ratchet reaching zero" or just
+is an unrelated, narrow cleanup that borrowed the (old P32) tag, not phase
+work. Layer decoupling itself: not started (though Deptrac already reports
+0 violations today — whether that's "P29's ratchet reaching zero" or just
 "no violations have accumulated yet" hasn't been separately verified).
 
-## Greenfield tracks (T3, cuttable — outside the P0–P32 backbone)
+### Epoch J — Frontend (P30–P33) — not started as originally scoped
+
+Sequenced after every backend phase above (Epochs G–I) so all frontend work
+lands last — see "Real status vs. commit-tag labels" for why these carry
+higher numbers than the backend phases that logically precede them.
+
+**P30 — Vite + TypeScript conversion** (real Vite entries beyond the
+`noop`/`vitals` placeholders, JS → TS, jQuery removed entirely, a Lit
+component catalog). **Not started.** `vite.config.ts` still has only 2
+entries.
+
+**P31 — Inline JS extraction + `any` reduction** (`{footer_script}` inline
+blocks → real `.ts` modules, `getPageData<T>()`, TypeScript `any` driven to
+zero, real bundle budgets). **Not started** as originally scoped — the 52
+commits tagged `p25` are the PHP-side mixed-elimination work covered under
+Epoch F's P24 above, unrelated to this phase's actual frontend scope.
+
+**P32 — Template migration + asset pipeline** (Smarty → Latte →
+`ViteManifest`, `<picture>` AVIF/WebP, ThumbHash placeholders). Not
+started — every controller still renders through Smarty; the one-line
+Latte render-call swap P22 set up for is still just potential energy.
+Depends on P30 for the Vite manifest its asset pipeline reads.
+
+**P33 — CSS modernization + Tailwind** (dark mode, `@container` queries,
+`@layer` cascade). Not started — depends on P32's Latte templates existing
+for Tailwind's `@source` scanning.
+
+## Greenfield tracks (T3, cuttable — outside the P0–P33 backbone)
 
 T3·WEB (PWA, View Transitions, Speculation Rules, JSON-LD, SRI, resource
-hints — depends on P24/P29/P30), T3·AI (depends on P19/P26), and T3·RIDERS
+hints — depends on P30/P32/P33), T3·AI (depends on P19/P25), and T3·RIDERS
 (CQRS, libvips/HEIC, vector/CLIP search, tus uploads, webhooks, Fibers,
 Mercure, passkeys, OIDC, soft delete — each hosted on its own backbone
 phase) are all entirely cuttable, never gate a backbone commit, and are
@@ -961,7 +968,7 @@ phase sections. If a specific comparison from that table is needed, it's
 recoverable from git history (`docs/PLAN-REPLAY.md` as it existed before
 this consolidation).
 
-## Execution approach for remaining phases (P24–P32)
+## Execution approach for remaining phases (P24–P33)
 
 Still the governing process for whoever picks up P24+:
 
@@ -977,18 +984,18 @@ Still the governing process for whoever picks up P24+:
 6. **Documentation: extend `docs/REFERENCE.md`/`docs/PLAN.md`'s existing
    sections, don't create a new per-phase doc file.** The original plan
    (recovered from git history) had each remaining phase spinning up its
-   own doc (`docs/FRONTEND.md` at P24, `docs/API.md` at P26,
-   `docs/SECURITY.md` at P28, `docs/PLUGINS.md`/`docs/EVENTS.md`/JSON
-   schemas at P31, `docs/STRUCTURE.md` at P32, `docs/AI.md` for T3·AI) —
+   own doc (`docs/FRONTEND.md` at P30, `docs/API.md` at P25,
+   `docs/SECURITY.md` at P27, `docs/PLUGINS.md`/`docs/EVENTS.md`/JSON
+   schemas at P28, `docs/STRUCTURE.md` at P29, `docs/AI.md` for T3·AI) —
    that plan predates this consolidation and is superseded by its whole
    premise (18 drifting files reduced to 2). A future P24+ contributor
    should add a Development/Deployment subsection or a new phase entry,
    not reintroduce the fragmentation this consolidation just closed.
 
-**Risk register** (highest blast-radius remaining phases): P29 (Smarty →
+**Risk register** (highest blast-radius remaining phases): P32 (Smarty →
 Latte across ~140 templates) risks visual regressions — mitigated by the
 committed VR baselines + a11y gate + per-template review, same mechanism
-already in daily use. P31 (plugin/theme contracts, god-class decomposition)
+already in daily use. P28 (plugin/theme contracts, god-class decomposition)
 breaks external extensions by design — an accepted product decision, not
 an oversight; in-tree callers migrate in the same phase. Cross-cutting:
 MySQL 9.x is a non-LTS line — pin the exact server version, hedge via the
@@ -1071,7 +1078,7 @@ k6 run tests/Load/*.js                      # non-blocking, tests/Load/ doesn't 
 **Not in this list anymore**: `vendor/bin/psalm` (gating paused, `ADR-0026`
 — its resume condition has been met but gating hasn't been reconsidered,
 see `docs/REFERENCE.md`), `composer lint:latte`/`precompile:templates`
-(P29 hasn't started, Smarty is still the template engine), `tools/plan-lint`
+(P32 hasn't started, Smarty is still the template engine), `tools/plan-lint`
 (deleted along with `docs/plan/manifest.yaml` in this consolidation).
 
 **Real consequence of that last deletion, not just a doc note**: the
@@ -1121,7 +1128,7 @@ which means this consolidation directly verified it in code.
 | SEC-22 | P21 | Replace `phpinfo()` with curated server info | Done |
 | SEC-23 | P17 | SSRF hardening for the HTTP client | Done |
 | SEC-24 | P17 | Remove local-file read fallback in the HTTP client | Done |
-| SEC-25 | P18 | Session fixation: regenerate on privilege escalation | Done (P28 was meant to verify further; P28 not started, so only the P18 half is confirmed) |
+| SEC-25 | P18 | Session fixation: regenerate on privilege escalation | Done (P27 was meant to verify further; P27 not started, so only the P18 half is confirmed) |
 | SEC-26 | P16 | Validate locale before `include` in `LangService` | Done (confirmed — see Epoch D) |
 | SEC-27 | P18 | Auto-login key HMAC sha1→sha256 + `hash_equals()` | Done |
 | SEC-28 | P18 | `EphemeralKeyService` HMAC md5→sha256 + `hash_equals()` | Done |
@@ -1132,36 +1139,36 @@ which means this consolidation directly verified it in code.
 | SEC-33 | P19 | Derivative serving leaks file existence | Partial — see `docs/REFERENCE.md`'s "not built yet": the permission-check half is real, but it runs through the full request pipeline, not the originally-designed fast path, so this item's *scope* shifted under it |
 | SEC-34 | P22 | Install sentinel DB-flag secondary check | Done |
 | SEC-35 | P19 | Remove non-standard headers from derivative pipeline | Done |
-| SEC-36 | P26 | REST error responses never leak internals | **Not started** (P26) |
-| SEC-37 | P26 | No object dumps in the REST error path | **Not started** (P26) |
-| SEC-38 | P26 | REST route authorization middleware | **Not started** (P26) |
-| SEC-39 | P26 | Validate `Content-Type: application/json` on REST bodies | **Not started** (P26) |
-| SEC-40 | P27 | Request DTOs as a hard input-validation gate | Real progress — see P27 above (not "0 remaining" verified) |
-| SEC-41 | P28 | Password hashing → Argon2id | **Not started** (P28) |
-| SEC-42 | P28 | CSRF middleware: remove `/admin*` exemption | **Not started** (P28) |
-| SEC-43 | P28 | No `Access-Control-Allow-Origin: *` on the OpenAPI spec endpoint | **Not started** (P28, depends on P26) |
-| SEC-44 | P28 | API rate limiting + rate-limit headers | **Not started** (P28; the `rate_limiter` cache pool is deliberately unbuilt pending this) |
-| SEC-45 | P28 | CSP violation reporting | **Not started** (P28) |
-| SEC-46 | P28 | Cross-Origin Isolation (COOP/COEP) | **Not started** (P28) |
-| SEC-47 | P28 | `Vary: Cookie` on permission-dependent responses | **Not started** (P28) |
-| SEC-48 | P29 | Default `allow_html_descriptions` to `false` | **Not started** (P29) |
-| SEC-49 | P31 | Remove `eval_visible` (plugin-facing half of SEC-15) | **Not started** (P31) |
+| SEC-36 | P25 | REST error responses never leak internals | **Not started** (P25) |
+| SEC-37 | P25 | No object dumps in the REST error path | **Not started** (P25) |
+| SEC-38 | P25 | REST route authorization middleware | **Not started** (P25) |
+| SEC-39 | P25 | Validate `Content-Type: application/json` on REST bodies | **Not started** (P25) |
+| SEC-40 | P26 | Request DTOs as a hard input-validation gate | Real progress — see P26 above (not "0 remaining" verified) |
+| SEC-41 | P27 | Password hashing → Argon2id | **Not started** (P27) |
+| SEC-42 | P27 | CSRF middleware: remove `/admin*` exemption | **Not started** (P27) |
+| SEC-43 | P27 | No `Access-Control-Allow-Origin: *` on the OpenAPI spec endpoint | **Not started** (P27, depends on P25) |
+| SEC-44 | P27 | API rate limiting + rate-limit headers | **Not started** (P27; the `rate_limiter` cache pool is deliberately unbuilt pending this) |
+| SEC-45 | P27 | CSP violation reporting | **Not started** (P27) |
+| SEC-46 | P27 | Cross-Origin Isolation (COOP/COEP) | **Not started** (P27) |
+| SEC-47 | P27 | `Vary: Cookie` on permission-dependent responses | **Not started** (P27) |
+| SEC-48 | P32 | Default `allow_html_descriptions` to `false` | **Not started** (P32) |
+| SEC-49 | P28 | Remove `eval_visible` (plugin-facing half of SEC-15) | **Not started** (P28) |
 | SEC-50 | P3 | CycloneDX SBOM generated as a CI artifact | Done (confirmed — `sbom` job in current CI list) |
 | SEC-51 | P3 | Pin GitHub Actions to commit SHAs | Done |
 | SEC-52 | P3 | OSV-Scanner over lockfiles in CI | Done |
 | SEC-53 | P3 | SLSA build provenance + attestations | Done |
 | SEC-54 | P4 | Sign container images + release artifacts (cosign/sigstore) | Done (confirmed — see `docs/REFERENCE.md`'s Deployment section) |
-| SEC-55 | P28 | OIDC SSO: PKCE + state/nonce + ID-token validation | **Not started** (P28) |
-| SEC-56 | P18 | GDPR data-subject endpoints behind re-auth + rate limit | **Not started** — `PrivacyService` doesn't exist (its REST exposure is P26/P29 scope, but the backend itself was P18 scope and isn't built either) |
+| SEC-55 | P27 | OIDC SSO: PKCE + state/nonce + ID-token validation | **Not started** (P27) |
+| SEC-56 | P18 | GDPR data-subject endpoints behind re-auth + rate limit | **Not started** — `PrivacyService` doesn't exist (its REST exposure is P25/P32 scope, but the backend itself was P18 scope and isn't built either) |
 | SEC-57 | P15 | Append-only / tamper-evident audit log | Done — `Piwigo\Audit\*` is real (see Epoch D) |
 | SEC-58 | P11 | Feature-flag changes authz-gated + audited | Partial — `FeatureFlag` is read-only by design, no mutation path exists yet to protect (a deliberate, documented non-gap, not an oversight) |
 | SEC-59 | T3·AI | MCP server: scoped read-only tokens | **Not started** (T3·AI, cuttable) |
 | SEC-60 | P7 | Worker-mode request isolation | **Not started** — see `docs/REFERENCE.md`'s "not built yet"; this is the FrankenPHP worker mode gap |
 | SEC-61 | P11 | Mercure topic authorization | **Not started** (T3 rider, hosted on P11) |
-| SEC-62 | P28 | Trusted Types | **Not started** (P28) |
-| SEC-63 | P28 | Fetch Metadata isolation | **Not started** (P28) |
+| SEC-62 | P27 | Trusted Types | **Not started** (P27) |
+| SEC-63 | P27 | Fetch Metadata isolation | **Not started** (P27) |
 | SEC-64 | P3 | OpenSSF Scorecard | Done |
-| SEC-65 | P26 | API `Idempotency-Key` replay store | **Not started** (P26) |
+| SEC-65 | P25 | API `Idempotency-Key` replay store | **Not started** (P25) |
 
 **Threat model** (attacker goal → mitigating `SEC-NN` items) is a
 different cross-section of the same 65 items — kept brief since the table
@@ -1171,7 +1178,7 @@ above already carries per-item status: every threat maps to at least one
 not mitigations, and intentionally don't appear in any threat row.
 Mitigations that aren't numbered items at all (nonce-based CSP, the PSR-18
 SSRF guard, DB-level account locking, dual passwords) belong to
-not-yet-started phases (P28) the same as their numbered siblings.
+not-yet-started phases (P27) the same as their numbered siblings.
 
 **Secrets & key management** (still accurate, not phase-dependent): DB
 credentials and the application `secret_key` live in `.env`, never
@@ -1180,6 +1187,6 @@ web-served. A single `secret_key` derives the HMACs for CSRF tokens
 **rotating it invalidates all three at once**, forcing re-login
 repo-wide; see `docs/REFERENCE.md`'s Secret rotation section. DB password
 rotation via MySQL dual passwords (`ALTER USER ... RETAIN CURRENT
-PASSWORD`) is P28 scope, not yet built — today's rotation path is the
+PASSWORD`) is P27 scope, not yet built — today's rotation path is the
 simpler "update env, roll deployment" sequence `docs/REFERENCE.md`
 documents.

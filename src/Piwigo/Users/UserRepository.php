@@ -77,10 +77,19 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * tracing back to `WsHelper::stdImageSqlOrder()`/`CurrentConfig::
      * orderBy()`, a second, independent cross-cutting blocker (see
      * {@see \Piwigo\Image\ImageRepository::findIdsWithConditions()}'s own
-     * docblock). Both are well outside this sub-phase's scope, so this
-     * whole cluster stays on DBAL.
+     * docblock).
+     *
+     * Item 15G: `$orderBySql` still blocks findVisibleFavoriteImageIds()/
+     * findVisibleFavoriteImages() from converting, so those 2 stay on DBAL.
+     * findAuthorizedFavoriteImageIds() has no such blocker -- its own
+     * "image_category has no entity" exclusion reason is now stale
+     * ({@see \Piwigo\Image\ImageCategoryEntity} exists), so it converts to
+     * DQL below. Widened to accept either builder type for that one
+     * remaining DQL caller, same empirical finding as every other
+     * `applyCondition()` in this migration: `SqlCondition`'s `andWhere()`/
+     * `setParameter()` calls work identically on both.
      */
-    private static function applyCondition(QueryBuilder $qb, SqlCondition $condition): void
+    private static function applyCondition(QueryBuilder|\Doctrine\ORM\QueryBuilder $qb, SqlCondition $condition): void
     {
         if ($condition->isEmpty()) {
             return;
@@ -887,26 +896,27 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * {@see PermissionCriteria} -- the one real caller only ever applies
      * forbiddenCategoryIds, against `ic.category_id`.
      *
-     * Item 14 DQL audit: stays on DBAL -- joins `image_category`, which has
-     * no entity anywhere in this migration (see Category\
-     * CategoryRepository's own class docblock).
+     * Further SQL-modernization audit, Item 15G: converted to real DQL --
+     * {@see \Piwigo\Image\ImageCategoryEntity} is mapped (the earlier "no
+     * entity anywhere in this migration" exclusion reason is stale), and
+     * `PermissionCriteria` needs no API changes, same finding as every
+     * other consumer across this campaign.
      *
      * @return list<int>
      */
     public function findAuthorizedFavoriteImageIds(UserId $userId, PermissionCriteria $criteria): array
     {
         $qb = $this->getEntityManager()
-            ->getConnection()
             ->createQueryBuilder()
-            ->select('DISTINCT f.image_id')
-            ->from(Tables::favorites(), 'f')
-            ->innerJoin('f', Tables::imageCategory(), 'ic', 'f.image_id = ic.image_id')
-            ->where('f.user_id = :userId')
-            ->setParameter('userId', $userId->value);
+            ->select('DISTINCT f.imageId')
+            ->from(FavoriteEntity::class, 'f')
+            ->innerJoin(\Piwigo\Image\ImageCategoryEntity::class, 'ic', Join::WITH, 'f.imageId = ic.imageId')
+            ->where('f.userId = :userId')
+            ->setParameter('userId', $userId);
 
-        self::applyCondition($qb, $criteria->forbiddenCategoriesCondition('ic.category_id'));
+        self::applyCondition($qb, $criteria->forbiddenCategoriesCondition('ic.categoryId'));
 
-        return self::toIntList(array_column($qb->executeQuery()->fetchAllAssociative(), 'image_id'));
+        return self::toIntList(array_values($qb->getQuery()->getSingleColumnResult()));
     }
 
     /**

@@ -51,6 +51,12 @@ final readonly class NotificationService
      * `applyCondition()`'s own `isEmpty()`-skip (never an unguarded
      * splice), so dropping the old `$forceOneCondition` parameter (no real
      * caller ever passed `true` for this specific field) changes nothing.
+     *
+     * Further SQL-modernization audit, Item 15G: every real consumer is
+     * now DQL, so the field names below are DQL property paths
+     * (`ic.categoryId`/`ic.imageId`), not raw SQL column names
+     * (`ic.category_id`/`ic.image_id`) -- {@see NotificationRepository}'s
+     * own `ic` alias still refers to the same `image_category` join.
      */
     public function getCommentsRestrictCondition(): SqlCondition
     {
@@ -58,10 +64,10 @@ final readonly class NotificationService
 
         return SqlCondition::combine(
             'AND',
-            $criteria->forbiddenCategoriesCondition('ic.category_id'),
-            $criteria->visibleCategoriesCondition('ic.category_id'),
-            $criteria->visibleImagesCondition('ic.image_id'),
-            $criteria->imageAccessCondition('ic.image_id'),
+            $criteria->forbiddenCategoriesCondition('ic.categoryId'),
+            $criteria->visibleCategoriesCondition('ic.categoryId'),
+            $criteria->visibleImagesCondition('ic.imageId'),
+            $criteria->imageAccessCondition('ic.imageId'),
         );
     }
 
@@ -83,6 +89,16 @@ final readonly class NotificationService
      * `isEmpty()`-skip, so dropping the old `$forceOneCondition` parameter
      * (only ever passed `true` by getRecentPostDates(), and a no-op for
      * that consumer too) changes nothing.
+     *
+     * Further SQL-modernization audit, Item 15G: every real consumer
+     * except findRecentElementsForDate() (which stays on DBAL, see that
+     * method's own docblock) is now DQL, so `ic.category_id`/`ic.image_id`
+     * become the DQL property paths `ic.categoryId`/`ic.imageId`;
+     * `i.id`/`i.level` are unchanged (ImageEntity's own property names
+     * already match). findRecentElementsForDate()'s own raw-SQL query
+     * still applies this same condition fine -- `SqlCondition`'s `sql`
+     * text is caller-composed either way, and that one query's `i`/`ic`
+     * aliases are still the same tables.
      */
     public function getElementsRestrictCondition(): SqlCondition
     {
@@ -90,8 +106,8 @@ final readonly class NotificationService
 
         return SqlCondition::combine(
             'AND',
-            $criteria->forbiddenCategoriesCondition('ic.category_id'),
-            $criteria->visibleCategoriesCondition('ic.category_id'),
+            $criteria->forbiddenCategoriesCondition('ic.categoryId'),
+            $criteria->visibleCategoriesCondition('ic.categoryId'),
             $criteria->visibleImagesCondition('i.id'),
             $criteria->maxLevelCondition('i.level'),
         );

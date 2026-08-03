@@ -52,7 +52,7 @@ final class NotificationRepositoryTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->repo = new NotificationRepository($this->conn);
+        $this->repo = new NotificationRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn));
 
         if ($freshFixture) {
             // The committed fixture seeds every comment/image/user at one
@@ -153,8 +153,10 @@ final class NotificationRepositoryTest extends IntegrationTestCase
     public function test_count_by_type_applies_the_restrict_sql_fragment(): void
     {
         // A restrict fragment that excludes every image_category row --
-        // proves it's actually appended to the query, not ignored.
-        $count = $this->repo->countByType('new_elements', null, null, new SqlCondition('ic.category_id = -1'));
+        // proves it's actually appended to the query, not ignored. DQL
+        // property path (ic.categoryId), not the raw SQL column name --
+        // see NotificationRepository's own Item 15G docblock.
+        $count = $this->repo->countByType('new_elements', null, null, new SqlCondition('ic.categoryId = -1'));
 
         self::assertSame(0, $count);
     }

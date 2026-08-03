@@ -39,6 +39,7 @@ export default {
         "p30",
         "p31",
         "p32",
+        "p33",
       ],
     ],
     "scope-empty": [2, "never"],

@@ -19,6 +19,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Event\Album\CreateVirtualCategory;
 use Piwigo\Event\Album\DeleteCategories;
 use Piwigo\Event\Album\GetCategoryPreferredImageOrders;
+use Piwigo\Event\Site\DeleteSite;
 use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageService;
@@ -997,13 +998,21 @@ final readonly class CategoryService
 
     /**
      * Deletes a site and its primary categories.
+     *
+     * Item 16E: the site's own `sites` row is deleted by a real listener
+     * on {@see DeleteSite}, registered in {@see \Piwigo\Bootstrap\RequestBootstrap}
+     * -- `Category` (`L2aCoreDomain`) can't depend on `Site`
+     * (`L2bExtendedDomain`) directly (`deptrac.yaml` only allows downward
+     * dependencies), and the site's own categories must already be gone
+     * first regardless, so this stays synchronous rather than a fire-
+     * and-forget notification.
      */
     public function deleteSite(int $id, ActivityLoggerInterface $activityLogger, UrlServiceInterface $urlService, SessionService $sessionService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher): void
     {
         $categoryIds = $this->repo->findCategoryIdsBySite($id);
         $this->deleteCategories($categoryIds, $activityLogger, $urlService, $sessionService, $eventDispatcher);
 
-        $this->repo->deleteSiteRow($id);
+        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new DeleteSite($id));
     }
 
     /**

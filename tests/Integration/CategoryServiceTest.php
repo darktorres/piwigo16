@@ -19,6 +19,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\Tables;
     use Piwigo\Event\Album\GetCategoryPreferredImageOrders;
+    use Piwigo\Event\Site\DeleteSite;
     use Piwigo\Group\GroupRepository;
     use Piwigo\Html\HtmlService;
     use Piwigo\Image\DerivativeImage;
@@ -772,6 +773,51 @@ final class CategoryServiceTest extends IntegrationTestCase
             ->executeQuery()
             ->fetchOne();
         self::assertSame(1, is_numeric($stillLinked) ? (int) $stillLinked : null);
+    }
+
+    public function test_delete_site_deletes_the_sites_categories_and_dispatches_delete_site_for_the_row_itself(): void
+    {
+        // Item 16E: deleteSite() had zero existing coverage. Category
+        // can't depend on Site directly (a real deptrac boundary), so
+        // the site's own `sites` row is now deleted by a real listener
+        // on DeleteSite instead of a direct CategoryRepository call --
+        // this registers the SAME listener shape RequestBootstrap.php
+        // itself registers in production, to prove the wiring (not just
+        // the individual pieces) actually works end to end.
+        $siteRepo = \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Site\SiteEntity::class);
+        $siteUrl = 'p17-test-delete-site-' . bin2hex(random_bytes(4));
+        $siteRepo->insert($siteUrl);
+        // lastInsertId() isn't reliable straight after an ORM persist()+
+        // flush() -- every other real caller in this codebase reads the
+        // id back with a plain SELECT instead (see SiteRepositoryTest's
+        // own identical pattern).
+        $rawSiteId = $this->conn->createQueryBuilder()
+            ->select('id')
+            ->from(Tables::sites())
+            ->where('galleries_url = :url')
+            ->setParameter('url', $siteUrl)
+            ->executeQuery()
+            ->fetchOne();
+        self::assertTrue(is_numeric($rawSiteId));
+        $siteId = (int) $rawSiteId;
+
+        $categoryId = $this->service->createVirtualCategory('Site Delete Temp', new CategoryServiceFakeActivityLogger(), \Piwigo\Users\CurrentUser::current())['id'] ?? null;
+        self::assertTrue(is_numeric($categoryId));
+        $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET site_id = ? WHERE id = ?', [$siteId, $categoryId]);
+
+        $handler = static function (DeleteSite $e) use ($siteRepo): void {
+            $siteRepo->delete($e->siteId);
+        };
+        EventDispatcher::get()->addTypedHandler(DeleteSite::class, $handler);
+
+        try {
+            $this->service->deleteSite($siteId, new CategoryServiceFakeActivityLogger(), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)), EventDispatcher::get());
+
+            self::assertNull($this->repo->findById((int) $categoryId));
+            self::assertNull($siteRepo->findGalleriesUrlById($siteId));
+        } finally {
+            EventDispatcher::get()->removeEventHandler(DeleteSite::class, $handler);
+        }
     }
 
     public function test_check_categories_integrity_deletes_an_orphaned_old_permalinks_row_and_keeps_a_real_one(): void

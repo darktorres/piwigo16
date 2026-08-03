@@ -41,10 +41,9 @@ final class SiteRepositoryTest extends IntegrationTestCase
     #[\Override]
     protected function tearDown(): void
     {
-        // SiteRepository has no delete method (out of P17's scope --
-        // admin/site_manager.php's delete action stays on delete_site(),
-        // a raw-query function not migrated this phase), so tests that
-        // insert() clean up directly against the DB.
+        // delete()'s own test cleans up its own row directly (it IS the
+        // thing under test) -- every other test here still inserts and
+        // never deletes, so this catch-all stays for them.
         $db = $this->newMysqli($this->dbName);
         $db->query(sprintf("DELETE FROM `%ssites` WHERE galleries_url LIKE 'p17-test-%%'", $this->dbPrefix));
         $db->close();
@@ -79,6 +78,28 @@ final class SiteRepositoryTest extends IntegrationTestCase
     public function test_find_galleries_url_by_id_returns_null_when_unused(): void
     {
         self::assertNull($this->repo->findGalleriesUrlById(999_999));
+    }
+
+    public function test_delete_removes_the_row(): void
+    {
+        // Item 16E: real DQL replacement for CategoryRepository::
+        // deleteSiteRow() (a real deptrac boundary -- Category is
+        // L2aCoreDomain, Site is L2bExtendedDomain -- deleted the same
+        // commit this method was added), had zero existing coverage.
+        $url = 'p17-test-' . bin2hex(random_bytes(4));
+        $this->repo->insert($url);
+        $id = (int) $this->queryScalar(sprintf("SELECT id FROM `%ssites` WHERE galleries_url = '%s'", $this->dbPrefix, $url));
+
+        $this->repo->delete($id);
+
+        self::assertNull($this->repo->findGalleriesUrlById($id));
+    }
+
+    public function test_delete_on_an_unknown_id_is_a_silent_noop(): void
+    {
+        $this->expectNotToPerformAssertions();
+
+        $this->repo->delete(999_999);
     }
 
     public function test_find_all_includes_the_seeded_local_site(): void

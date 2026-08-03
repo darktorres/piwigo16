@@ -40,6 +40,34 @@ final class SiteRepository extends EntityRepository
     }
 
     /**
+     * Item 16E: real DQL replacement for {@see \Piwigo\Category\
+     * CategoryRepository::deleteSiteRow()} (removed the same commit) --
+     * that method existed only because `Category` (`L2aCoreDomain`)
+     * can't depend on `Site` (`L2bExtendedDomain`) directly; the delete
+     * itself is trivial once it lives in the domain that actually owns
+     * the table. {@see \Piwigo\Category\CategoryService::deleteSite()}
+     * dispatches {@see \Piwigo\Event\Site\DeleteSite} instead of calling
+     * this directly -- the listener is registered in
+     * {@see \Piwigo\Bootstrap\RequestBootstrap}.
+     */
+    public function delete(int $id): void
+    {
+        $em = $this->getEntityManager();
+        $em->createQueryBuilder()
+            ->delete(SiteEntity::class, 's')
+            ->where('s.id = :id')
+            ->setParameter('id', $id)
+            ->getQuery()
+            ->execute();
+
+        // A DQL bulk DELETE bypasses the UnitOfWork's own remove()
+        // tracking -- any SiteEntity this EntityManager already had
+        // cached for $id (e.g. insert()'s own persist() earlier in the
+        // same request) would otherwise read back stale.
+        $em->clear();
+    }
+
+    /**
      * Returns a site's galleries_url, or null if the id doesn't exist.
      */
     public function findGalleriesUrlById(int $id): ?string

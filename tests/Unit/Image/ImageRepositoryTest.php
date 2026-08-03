@@ -211,23 +211,28 @@ test('deleteLoungeUpTo removes only rows at or below the given image id', functi
     }
 });
 
-test('deleteElementReferences removes rows from every real referencing table, and clears the identity map', function (): void {
-    // Kills line 540/547's ForeachEmptyIterable and every RemoveArrayItem
-    // (one per table in either loop's array literal -- dropping any ONE
-    // leaves that specific table's row behind) and line 541/548's
-    // RemoveMethodCall (the executeStatement() call itself, inside
-    // either loop). One real row is seeded in EVERY table the method
-    // touches, so a per-table survival check after the call pinpoints
-    // exactly which array entry or loop a mutation would have dropped.
+test('deleteImages cascades away rows from every real referencing table, and clears the identity map', function (): void {
+    // Item 16E: deleteElementReferences() (which used to run before
+    // deleteImages() in ImageService::deleteElements(), explicitly
+    // clearing these same 7 tables) was removed entirely -- every one
+    // of them carries a real ON DELETE CASCADE FK straight to
+    // images.id (tests/Fixtures/piwigo-17.0.sql), so deleteImages()
+    // alone already does the same cleanup, via the database itself.
+    // One real row is seeded in every table to prove that live, not
+    // just cite the schema.
     $repo = imageRepositoryTestRepo();
     $cached = $repo->find(1);
     expect($cached)->not->toBeNull();
 
     $imageId = imageRepositoryTestInsertImage('upload/2026/07/references-test.jpg');
+    $bystanderId = imageRepositoryTestInsertImage('upload/2026/07/references-bystander.jpg');
     $conn = DbConnection::build();
     $conn->createQueryBuilder()->insert(Tables::comments())
         ->values(['image_id' => ':i', 'anonymous_id' => ':a'])
         ->setParameter('i', $imageId)->setParameter('a', 'refs-test')->executeStatement();
+    $conn->createQueryBuilder()->insert(Tables::comments())
+        ->values(['image_id' => ':i', 'anonymous_id' => ':a'])
+        ->setParameter('i', $bystanderId)->setParameter('a', 'refs-bystander')->executeStatement();
     $conn->createQueryBuilder()->insert(Tables::imageCategory())
         ->values(['image_id' => ':i', 'category_id' => ':c'])
         ->setParameter('i', $imageId)->setParameter('c', 1)->executeStatement();
@@ -248,7 +253,7 @@ test('deleteElementReferences removes rows from every real referencing table, an
         ->setParameter('u', 1)->setParameter('i', $imageId)->executeStatement();
 
     try {
-        $repo->deleteElementReferences([$imageId]);
+        $repo->deleteImages([$imageId]);
 
         foreach ([Tables::comments(), Tables::imageCategory(), Tables::imageFormat(), Tables::imageTag(), Tables::favorites()] as $table) {
             $count = $conn->fetchOne("SELECT COUNT(*) FROM {$table} WHERE image_id = {$imageId}");
@@ -259,55 +264,18 @@ test('deleteElementReferences removes rows from every real referencing table, an
             expect(is_numeric($count) ? (int) $count : -1)->toBe(0);
         }
 
-        // Kills line 554's RemoveMethodCall ($em->clear()).
+        // The cascade is scoped to the deleted image's own id -- a
+        // bystander image's own comment row survives untouched.
+        $bystanderCount = $conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::comments() . " WHERE image_id = {$bystanderId}");
+        expect(is_numeric($bystanderCount) ? (int) $bystanderCount : -1)->toBe(1);
+
         $refetched = $repo->find(1);
         expect($refetched)->not->toBe($cached);
     } finally {
-        // The image row itself isn't this method's job -- deleting it
-        // here cascades away any row the method under test failed to
-        // remove, so a genuine bug doesn't leak into later tests.
+        // The image row is already gone via deleteImages() itself above
+        // -- a harmless no-op delete if a genuine bug left it behind.
         imageRepositoryTestDeleteImage($imageId);
-    }
-});
-
-/**
- * Confirmed-equivalent: line 536's and line 585's DecrementInteger/
- * IncrementInteger/UnwrapWordwrap (wordwrap($idsStr, 80, "\n")'s own
- * width argument, and wordwrap() itself). wordwrap() here exists purely
- * to keep the generated SQL readable in logs/profilers -- it only ever
- * inserts extra newline characters into the numeric CSV id list at
- * word (i.e. comma-separated number) boundaries, never splits a number
- * or drops a character. MySQL's own tokenizer treats any run of
- * whitespace inside a numeric IN(...) list identically regardless of
- * where line breaks fall, so the wrap width (or its absence entirely)
- * cannot change which ids the resulting query matches, for any id list.
- * Live sed-verified (both the width literal and the wordwrap() call
- * itself, removed independently) against the full suite too.
- */
-test('deleteElementReferences deletes only the rows for the given ids, not every row in each table', function (): void {
-    // Also closes deleteElementReferences()'s own ForeachEmptyIterable/
-    // RemoveArrayItem mutations from the other direction: a table with
-    // BOTH a targeted and an untouched row proves the DELETE is scoped
-    // by id, not a blanket TRUNCATE-equivalent.
-    $repo = imageRepositoryTestRepo();
-    $targetId = imageRepositoryTestInsertImage('upload/2026/07/refs-target.jpg');
-    $bystanderId = imageRepositoryTestInsertImage('upload/2026/07/refs-bystander.jpg');
-    $conn = DbConnection::build();
-    foreach ([$targetId, $bystanderId] as $id) {
-        $conn->createQueryBuilder()->insert(Tables::comments())
-            ->values(['image_id' => ':i', 'anonymous_id' => ':a'])
-            ->setParameter('i', $id)->setParameter('a', 'refs-scope')->executeStatement();
-    }
-
-    try {
-        $repo->deleteElementReferences([$targetId]);
-
-        $targetCount = $conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::comments() . " WHERE image_id = {$targetId}");
-        expect(is_numeric($targetCount) ? (int) $targetCount : -1)->toBe(0);
-        $bystanderCount = $conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::comments() . " WHERE image_id = {$bystanderId}");
-        expect(is_numeric($bystanderCount) ? (int) $bystanderCount : -1)->toBe(1);
-    } finally {
-        imageRepositoryTestDeleteImage($targetId);
+        $conn->createQueryBuilder()->delete(Tables::comments())->where('image_id = :i')->setParameter('i', $bystanderId)->executeStatement();
         imageRepositoryTestDeleteImage($bystanderId);
     }
 });

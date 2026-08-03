@@ -36,6 +36,7 @@ use Piwigo\Event\Picture\GetElementUrl;
 use Piwigo\Event\Picture\UploadFile;
 use Piwigo\Event\Picture\UploadImageResize;
 use Piwigo\Event\Picture\UploadThumbnailResize;
+use Piwigo\Event\Site\DeleteSite;
 use Piwigo\Event\Tag\RenderTagUrl;
 use Piwigo\Event\Template\RenderCategoryDescription;
 use Piwigo\Event\Template\RenderCategoryLiteralDescription;
@@ -776,6 +777,19 @@ final class RequestBootstrap
         // bound first-class-callable form rather than a bare [Class::class, 'method']
         // array.
         \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(UserCommentCheck::class, new CommentService(self::lang(), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(self::currentConfig()), self::mailService(), new HtmlService(), self::urlService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::pageState(), self::currentUser(), self::currentConfig())->checkForSpam(...));
+        // Item 16E: real listener for a previously-unregistered event --
+        // Category\CategoryService::deleteSite() dispatches this instead
+        // of reaching into Site\SiteRepository directly (a real deptrac
+        // boundary, Category is L2aCoreDomain, Site is L2bExtendedDomain).
+        // A thin adapter closure -- SiteRepository::delete()'s own
+        // (int $id): void signature doesn't match addTypedHandler()'s
+        // own callable(T): (T|void) contract.
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(
+            DeleteSite::class,
+            static function (DeleteSite $e) use ($conn): void {
+                \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Site\SiteEntity::class)->delete($e->siteId);
+            },
+        );
         // try_log_user's own handler is registered in connect() instead,
         // before UserBootstrap::initialize() -- see that registration's
         // own comment for why.

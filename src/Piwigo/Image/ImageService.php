@@ -291,7 +291,14 @@ final readonly class ImageService
             }
         }
 
-        $this->repo->deleteElementReferences($ids);
+        // Item 16E: deleteElementReferences() (formerly called here first)
+        // was removed entirely -- every one of the 7 tables it touched
+        // carries a real ON DELETE CASCADE FK straight to images.id
+        // (tests/Fixtures/piwigo-17.0.sql), confirmed equivalent via live
+        // sed-mutation testing in an earlier item (see the mutation note
+        // this replaced, in this method's own test coverage) and
+        // reconfirmed here: deleteImages() below already removes every
+        // one of those rows itself, via cascade.
         $this->repo->deleteImages($ids);
 
         // are the photos used as category representant?

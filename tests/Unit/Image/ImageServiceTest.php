@@ -821,17 +821,17 @@ test('deleteElements() with an empty id list never fires begin_delete_elements a
 // always [], so both the real `!==` and the mutant `===`/negated forms
 // agree on never entering the branch.
 //
-// Confirmed-equivalent: line 283's RemoveMethodCall
-// (deleteElementReferences($ids) entirely removed). Every table it
-// touches (comments, image_category, image_format, image_tag,
-// favorites, rate, caddie) carries its own real `ON DELETE CASCADE`
-// FK straight to `images.id` (tests/Fixtures/piwigo-17.0.sql) -- the
-// very next line's deleteImages($ids) already removes every one of
-// those rows itself, via cascade, regardless of whether this call ran
-// first. Live sed-verified: removed the call entirely, seeded a
-// comments + image_format row for a throwaway image, called
-// deleteElements(), and confirmed both were gone afterward exactly the
-// same as with the call present.
+// Item 16E: repo->deleteElementReferences($ids) (formerly called here,
+// right before deleteImages($ids)) was removed entirely -- an
+// earlier item had already confirmed it was equivalent-to-absent (see
+// git history) via live sed-mutation testing, for the same reason
+// re-confirmed and acted on here: every table it touched (comments,
+// image_category, image_format, image_tag, favorites, rate, caddie)
+// carries its own real `ON DELETE CASCADE` FK straight to `images.id`
+// (tests/Fixtures/piwigo-17.0.sql), so deleteImages($ids) below already
+// removes every one of those rows itself, via cascade. See
+// ImageRepositoryTest.php's own "deleteImages cascades away rows from
+// every real referencing table" test for direct coverage of this.
 
 test('associateImagesToCategories() returns false and does nothing when either list is empty', function (): void {
     [$conn, $repo] = imageServiceTestConnAndRepo();

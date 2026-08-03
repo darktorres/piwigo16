@@ -22,8 +22,6 @@ use Piwigo\Image\Projection\Image;
 use Piwigo\Image\Projection\ImageFormat;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\SqlCondition;
-use Piwigo\Tag\ImageTagEntity;
-use Piwigo\Users\FavoriteEntity;
 
 /**
  * Persistence layer for the image domain's own data-touching function from
@@ -608,67 +606,6 @@ final class ImageRepository extends EntityRepository
 
         new BatchWriter($this->getEntityManager()->getConnection())
             ->massInsert(Tables::images(), array_keys($inserts[0]), $inserts);
-    }
-
-    /**
-     * Deletes every row referencing $ids across the 7 dependent tables
-     * `delete_elements()` originally cleaned one at a time (comments,
-     * image_category, image_format, image_tag, favorites keyed on
-     * image_id; rate, caddie keyed on element_id) -- grouped by column
-     * name here since the delete order between them has no FK dependency
-     * (only the `images` row itself, deleted separately by
-     * {@see deleteImages()}, must come last). `image_format` is one of
-     * this repository's own entity-mapped tables ({@see ImageFormatEntity})
-     * but this bulk cross-table sweep stays raw DBAL for all 7 uniformly
-     * -- clears the identity map once at the end rather than converting
-     * just the one table this repository happens to own.
-     *
-     * Further SQL-modernization audit, Item 15G: found and confirmed a
-     * third instance of the `deleteUser()`-class real deptrac boundary
-     * (checked each of the 7 target tables individually, not assumed) --
-     * `image_category`/`image_format`/`image_tag`/`favorites` are all
-     * `L2aCoreDomain`-or-same-domain ({@see ImageCategoryEntity},
-     * {@see ImageFormatEntity}, {@see \Piwigo\Tag\ImageTagEntity},
-     * {@see \Piwigo\Users\FavoriteEntity}), converted to DQL bulk deletes
-     * below; `comments`/`rate`/`caddie` are all `L2bExtendedDomain` --
-     * `Image` (`L2aCoreDomain`) cannot import their entities via DQL, so
-     * those 3 stay on the original raw-table-name DBAL loop permanently.
-     *
-     * @param array<int, int|string> $ids
-     */
-    public function deleteElementReferences(array $ids): void
-    {
-        $em = $this->getEntityManager();
-        $conn = $em->getConnection();
-        $idsForSql = array_map(strval(...), $ids);
-        $idsForDql = array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $ids);
-
-        foreach ([Tables::comments()] as $table) {
-            $conn->createQueryBuilder()
-                ->delete($table)
-                ->where('image_id IN (:ids)')
-                ->setParameter('ids', $idsForSql, ArrayParameterType::STRING)
-                ->executeStatement();
-        }
-
-        foreach ([ImageCategoryEntity::class, ImageFormatEntity::class, ImageTagEntity::class, FavoriteEntity::class] as $entityClass) {
-            $em->createQueryBuilder()
-                ->delete($entityClass, 'e')
-                ->where('e.imageId IN (:ids)')
-                ->setParameter('ids', $idsForDql, ArrayParameterType::INTEGER)
-                ->getQuery()
-                ->execute();
-        }
-
-        foreach ([Tables::rate(), Tables::caddie()] as $table) {
-            $conn->createQueryBuilder()
-                ->delete($table)
-                ->where('element_id IN (:ids)')
-                ->setParameter('ids', $idsForSql, ArrayParameterType::STRING)
-                ->executeStatement();
-        }
-
-        $em->clear();
     }
 
     /**

@@ -553,7 +553,6 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
     public function deleteUser(UserId $userId): void
     {
         $em = $this->getEntityManager();
-        $conn = $em->getConnection();
 
         $em->createQueryBuilder()
             ->delete(UserAccessEntity::class, 'ua')
@@ -598,23 +597,27 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             ->execute();
 
         // Item 15 audit: `favorites` (Users\FavoriteEntity, same domain)
-        // converted to DQL above. `user_mail_notification`/`user_feed`/
-        // `caddie` stay on raw DBAL permanently -- a real deptrac
-        // `DependsOnDisallowedLayer` boundary, not a missing-entity gap:
-        // `Users` is `L2aCoreDomain`; `Feed`/`Caddie`/`Notification` (the
-        // domains owning those 3 tables) are all `L2bExtendedDomain`, and
-        // the ruleset only allows downward dependencies. Confirmed against
-        // deptrac.yaml's actual ruleset table, not inferred.
-        foreach ([Tables::userMailNotification(), Tables::userFeed(), Tables::caddie()] as $table) {
-            $conn->createQueryBuilder()
-                ->delete($table)
-                ->where('user_id = :userId')
-                ->setParameter('userId', $userId->value)
-                ->executeStatement();
-        }
-
-        // Bypassed the ORM for user_mail_notification/user_feed/caddie
-        // above -- any entity this EntityManager already loaded for this
+        // converted to DQL above.
+        //
+        // Item 16E: the `user_mail_notification`/`user_feed`/`caddie` raw
+        // DBAL loop that used to sit here (a real deptrac
+        // `DependsOnDisallowedLayer` boundary -- `Users` is
+        // `L2aCoreDomain`; `Feed`/`Caddie`/`Notification`, the domains
+        // owning those 3 tables, are all `L2bExtendedDomain`) turned out
+        // to be dead code, not something needing event-based
+        // decoupling: every one of those tables' own `user_id` column
+        // carries a real `ON DELETE CASCADE` FK straight to `users.id`
+        // (tests/Fixtures/piwigo-17.0.sql), and it ran AFTER the `users`
+        // row delete just above -- MySQL had already cascaded every one
+        // of those rows away by the time this loop's own `DELETE ...
+        // WHERE user_id = ...` executed, so it always deleted exactly
+        // zero rows. Confirmed via the existing
+        // `test_delete_user_removes_every_row_across_every_related_table`
+        // Integration test, which seeds real rows in all 3 tables and
+        // still passes with the loop removed entirely.
+        //
+        // Bypassed the ORM for `favorites` and the entity deletes above
+        // it -- any entity this EntityManager already loaded for this
         // user (UserEntity, UserInfoEntity, UserAccessEntity,
         // UserAuthKeyEntity, UserGroupEntity, FavoriteEntity) would
         // otherwise stay stale (same identity-map reasoning as

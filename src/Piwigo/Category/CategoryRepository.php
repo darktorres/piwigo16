@@ -698,28 +698,6 @@ final class CategoryRepository extends EntityRepository
     }
 
     /**
-     * Item 14 DQL audit, re-corrected: `sites` *is* mapped ({@see
-     * \Piwigo\Site\SiteEntity}), but converting this to DQL against it
-     * would make `Category` (L2aCoreDomain) depend on `Site`
-     * (L2bExtendedDomain) -- confirmed a real `deptrac` violation
-     * (`DependsOnDisallowedLayer`), not a false positive: `deptrac.yaml`'s
-     * ruleset only lets `L2aCoreDomain` depend downward on
-     * `L1Infrastructure`/`L0Data`, never upward into `L2bExtendedDomain`.
-     * Stays on DBAL for this real architectural-boundary reason, not a
-     * missing-entity one.
-     */
-    public function deleteSiteRow(int $id): void
-    {
-        $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
-            ->delete(Tables::sites())
-            ->where('id = :id')
-            ->setParameter('id', $id)
-            ->executeStatement();
-    }
-
-    /**
      * @param  list<int>  $ids
      * @return list<int>
      *
@@ -1664,7 +1642,10 @@ final class CategoryRepository extends EntityRepository
      * \Piwigo\Site\SiteEntity}), but querying it from here would make
      * `Category` (L2aCoreDomain) depend on `Site` (L2bExtendedDomain) --
      * a real `deptrac` `DependsOnDisallowedLayer` violation, same
-     * reasoning as {@see deleteSiteRow()} above. Stays on DBAL.
+     * reasoning that moved {@see \Piwigo\Category\CategoryService::deleteSite()}'s
+     * own write half onto {@see \Piwigo\Event\Site\DeleteSite} (Item 16E)
+     * -- this read half is Item 16F's own interface-DI candidate
+     * instead, not yet converted. Stays on DBAL.
      */
     public function findSiteGalleriesUrls(): array
     {
@@ -3236,7 +3217,8 @@ final class CategoryRepository extends EntityRepository
      * \Piwigo\Site\SiteEntity}), but joining it from here would make
      * `Category` (L2aCoreDomain) depend on `Site` (L2bExtendedDomain) --
      * a real `deptrac` `DependsOnDisallowedLayer` violation, same
-     * reasoning as {@see deleteSiteRow()} above. Stays on DBAL.
+     * reasoning as {@see findSiteGalleriesUrls()} above -- both are Item
+     * 16F's own interface-DI candidates, not yet converted. Stays on DBAL.
      */
     public function findGalleriesUrlForCategory(int|string $categoryId): ?string
     {

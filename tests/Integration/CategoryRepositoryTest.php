@@ -693,23 +693,6 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         );
     }
 
-    public function test_delete_site_row_removes_the_row(): void
-    {
-        // Item 14 DQL audit re-audit (Item 14 Sub-phase B): had zero
-        // existing coverage. Inserts a throwaway site rather than
-        // deleting the fixture's own row 1 (other tests in this file rely
-        // on it existing).
-        $newId = $this->conn->insert(Tables::sites(), ['galleries_url' => '/tmp/throwaway/']);
-        self::assertSame(1, $newId);
-        $insertedId = (int) $this->conn->lastInsertId();
-
-        self::assertArrayHasKey($insertedId, $this->repo->findSiteGalleriesUrls());
-
-        $this->repo->deleteSiteRow($insertedId);
-
-        self::assertArrayNotHasKey($insertedId, $this->repo->findSiteGalleriesUrls());
-    }
-
     public function test_find_existing_ids_returns_empty_for_no_ids(): void
     {
         self::assertSame([], $this->repo->findExistingIds([]));

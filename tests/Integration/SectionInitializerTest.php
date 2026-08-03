@@ -75,7 +75,7 @@ final class SectionInitializerTest extends IntegrationTestCase
 
         unset($_SERVER['SCRIPT_NAME'], $_SERVER['SCRIPT_FILENAME'], $_SERVER['PHP_SELF']);
 
-        $this->repo = new SectionRepository(DbConnection::build());
+        $this->repo = new SectionRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build()));
     }
 
     #[\Override]

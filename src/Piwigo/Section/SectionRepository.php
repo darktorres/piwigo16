@@ -6,7 +6,13 @@ namespace Piwigo\Section;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
-use Piwigo\Db\AbstractRepository;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Query\Expr\Join;
+use Doctrine\ORM\QueryBuilder;
+use Piwigo\Category\CategoryEntity;
+use Piwigo\Image\ImageCategoryEntity;
+use Piwigo\Image\ImageEntity;
+use Piwigo\Permission\SqlCondition;
 
 /**
  * Persistence layer for SectionPopulator/SectionInitializer's own
@@ -24,11 +30,33 @@ use Piwigo\Db\AbstractRepository;
  * src/ (SectionInitializer's own direct use, described by this class's
  * former docblock, was already migrated away by the time this was
  * checked). queryColumn() stays, but as a private implementation detail
- * of the 6 typed-ish methods below, not a generic executor meant to be
- * called from outside this class.
+ * of the raw-SQL methods below, not a generic executor meant to be called
+ * from outside this class.
+ *
+ * Further SQL-modernization audit, Item 15H: drops `extends
+ * AbstractRepository` for a directly-injected `EntityManagerInterface`
+ * (`Section` is `L2bExtendedDomain`; `Image`/`Category` are
+ * `L2aCoreDomain`, an allowed downward dependency, same shape as
+ * `Calendar\CalendarRepository`/`Notification\NotificationRepository`).
+ * 3 of the 6 methods below (`findVisibleSubcategoryIds()`/
+ * `findTopByHitsImageIds()`/`findTopRatedImageIds()`) converted to real
+ * DQL -- each of their own `$orderBySql` arguments traced to a hardcoded
+ * literal in `SectionPopulator.php`'s own real call sites (or, for
+ * `findVisibleSubcategoryIds()`, no `$orderBySql` at all), not the
+ * genuinely open-ended `CurrentConfig::orderBy()`/`orderByInsideCategory()`
+ * every other method here still depends on -- confirmed by reading every
+ * real call site, not assumed. `findSectionImageIds()`/
+ * `findRecentImageIds()`/`findImageIdsAmongList()` stay on raw DBAL (via
+ * `$this->em->getConnection()`) for that same reason, a real
+ * Item-16-scoped blocker matching every other `CurrentConfig::orderBy()`
+ * consumer excluded across this campaign.
  */
-final class SectionRepository extends AbstractRepository
+final class SectionRepository
 {
+    public function __construct(
+        private readonly EntityManagerInterface $em,
+    ) {}
+
     /**
      * Same shape as the since-deleted \Piwigo\Db\MysqliDb::query2Array()
      * called with only a value column name (`query2Array($sql, null,
@@ -45,33 +73,48 @@ final class SectionRepository extends AbstractRepository
     {
         return array_map(
             static fn (mixed $value): ?string => is_scalar($value) ? (string) $value : null,
-            $this->conn->executeQuery($sql, $params, $types)
+            $this->em->getConnection()
+                ->executeQuery($sql, $params, $types)
                 ->fetchFirstColumn()
         );
+    }
+
+    private static function applyCondition(QueryBuilder $qb, SqlCondition $condition): void
+    {
+        if ($condition->isEmpty()) {
+            return;
+        }
+
+        $qb->andWhere($condition->sql);
+        foreach ($condition->parameters as $name => $value) {
+            $qb->setParameter($name, $value, $condition->types[$name] ?? ParameterType::STRING);
+        }
     }
 
     /**
      * Visible subcategory ids directly under $uppercatsPattern (a category's
      * own `uppercats` value, matched as `uppercats LIKE '$uppercatsPattern,%'`)
      * -- SectionPopulator's own "flat categories" mode subcategory expansion.
-     * $permissionCondition is an already-built, trusted SQL fragment
-     * (leading "\n  AND"); any real value it references is bound via
-     * $params/$types rather than spliced.
+     * Returns strings -- the real caller feeds these straight into
+     * findSectionImageIds()'s own still-raw-SQL, string-typed `category_id
+     * IN (:x)` bind.
      *
-     * @param array<string, mixed> $params
-     * @param array<string, ArrayParameterType|ParameterType> $types
-     * @return list<string|null>
+     * @return list<string>
      */
-    public function findVisibleSubcategoryIds(string $uppercatsPattern, string $permissionCondition, array $params = [], array $types = []): array
+    public function findVisibleSubcategoryIds(string $uppercatsPattern, SqlCondition $permissionCondition): array
     {
-        $params['uppercatsPattern'] = $uppercatsPattern . ',%';
+        $qb = $this->em->createQueryBuilder()
+            ->select('c.id')
+            ->from(CategoryEntity::class, 'c')
+            ->andWhere('c.uppercats LIKE :uppercatsPattern')
+            ->setParameter('uppercatsPattern', $uppercatsPattern . ',%');
+        self::applyCondition($qb, $permissionCondition);
 
-        return $this->queryColumn('
-SELECT id
-  FROM ' . \Piwigo\Db\Tables::categories() . '
-  WHERE
-    uppercats LIKE :uppercatsPattern '
-    . $permissionCondition, $params, $types);
+        return array_values(array_map(
+            static fn (mixed $id): string => is_numeric($id) ? (string) $id : '',
+            $qb->getQuery()
+                ->getSingleColumnResult()
+        ));
     }
 
     /**
@@ -125,51 +168,59 @@ SELECT id
     }
 
     /**
-     * Image ids for the "most_visited" section, capped at $limit.
+     * Image ids for the "most_visited" section, capped at $limit -- the
+     * caller's own `ORDER BY hit DESC, id DESC` is a hardcoded literal
+     * (confirmed via reading SectionPopulator.php's own real call site),
+     * not CurrentConfig::orderBy()'s genuinely open-ended admin-typed
+     * text, so this is real DQL.
      *
-     * @param array<string, mixed> $params
-     * @param array<string, ArrayParameterType|ParameterType> $types
-     * @return list<string|null>
+     * @return list<string>
      */
-    public function findTopByHitsImageIds(string $forbiddenSql, string $orderBySql, int $limit, array $params = [], array $types = []): array
+    public function findTopByHitsImageIds(SqlCondition $forbiddenCondition, int $limit): array
     {
-        $params['limit'] = $limit;
-        $types['limit'] = ParameterType::INTEGER;
+        $qb = $this->em->createQueryBuilder()
+            ->select('i.id')
+            ->from(ImageEntity::class, 'i')
+            ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'i.id = ic.imageId')
+            ->andWhere('i.hit > 0')
+            ->groupBy('i.id')
+            ->orderBy('i.hit', 'DESC')
+            ->addOrderBy('i.id', 'DESC')
+            ->setMaxResults($limit);
+        self::applyCondition($qb, $forbiddenCondition);
 
-        return $this->queryColumn('
-SELECT id
-  FROM ' . \Piwigo\Db\Tables::images() . '
-    INNER JOIN ' . \Piwigo\Db\Tables::imageCategory() . ' AS ic ON id = ic.image_id
-  WHERE hit > 0
-    ' . $forbiddenSql . '
-    GROUP BY id
-    ' . $orderBySql . '
-  LIMIT :limit
-;', $params, $types);
+        return array_values(array_map(
+            static fn (mixed $id): string => is_numeric($id) ? (string) $id : '',
+            $qb->getQuery()
+                ->getSingleColumnResult()
+        ));
     }
 
     /**
-     * Image ids for the "best_rated" section, capped at $limit.
+     * Image ids for the "best_rated" section, capped at $limit -- same
+     * "hardcoded ORDER BY literal, real DQL" reasoning as
+     * {@see findTopByHitsImageIds()}.
      *
-     * @param array<string, mixed> $params
-     * @param array<string, ArrayParameterType|ParameterType> $types
-     * @return list<string|null>
+     * @return list<string>
      */
-    public function findTopRatedImageIds(string $forbiddenSql, string $orderBySql, int $limit, array $params = [], array $types = []): array
+    public function findTopRatedImageIds(SqlCondition $forbiddenCondition, int $limit): array
     {
-        $params['limit'] = $limit;
-        $types['limit'] = ParameterType::INTEGER;
+        $qb = $this->em->createQueryBuilder()
+            ->select('i.id')
+            ->from(ImageEntity::class, 'i')
+            ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'i.id = ic.imageId')
+            ->andWhere('i.ratingScore IS NOT NULL')
+            ->groupBy('i.id')
+            ->orderBy('i.ratingScore', 'DESC')
+            ->addOrderBy('i.id', 'DESC')
+            ->setMaxResults($limit);
+        self::applyCondition($qb, $forbiddenCondition);
 
-        return $this->queryColumn('
-SELECT id
-  FROM ' . \Piwigo\Db\Tables::images() . '
-    INNER JOIN ' . \Piwigo\Db\Tables::imageCategory() . ' AS ic ON id = ic.image_id
-  WHERE rating_score IS NOT NULL
-    ' . $forbiddenSql . '
-    GROUP BY id
-    ' . $orderBySql . '
-  LIMIT :limit
-;', $params, $types);
+        return array_values(array_map(
+            static fn (mixed $id): string => is_numeric($id) ? (string) $id : '',
+            $qb->getQuery()
+                ->getSingleColumnResult()
+        ));
     }
 
     /**
@@ -208,6 +259,6 @@ SELECT id
      */
     public function escapeToken(string $value): string
     {
-        return substr($this->conn->quote($value), 1, -1);
+        return substr($this->em->getConnection()->quote($value), 1, -1);
     }
 }

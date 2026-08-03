@@ -238,6 +238,22 @@ final readonly class SectionPopulator
         $forbidden_params = $forbiddenCondition->parameters;
         $forbidden_types = $forbiddenCondition->types;
 
+        // Further SQL-modernization audit, Item 15H: most_visited/
+        // best_rated's own findTopByHitsImageIds()/findTopRatedImageIds()
+        // run as real DQL (their own $order_by is a hardcoded literal
+        // below, not CurrentConfig::orderBy()'s genuinely open-ended
+        // admin-typed text like every other section here) -- needs the
+        // same condition with DQL property paths instead of raw column
+        // names. Computed unconditionally alongside $forbidden, same
+        // convention this file's own $forbidden already follows.
+        $forbiddenConditionDql = SqlCondition::combine(
+            'AND',
+            $permissionCriteria->forbiddenCategoriesCondition('ic.categoryId'),
+            $permissionCriteria->visibleCategoriesCondition('ic.categoryId'),
+            $permissionCriteria->visibleImagesCondition('i.id'),
+            $permissionCriteria->maxLevelCondition('i.level'),
+        );
+
         // parse_section_url()'s own return type is the generic array<string, mixed>
         // (functions_url.inc.php), so $page['category'] loses the more precise
         // shape that CategoryService::getCategoryInfo() actually returns;
@@ -325,15 +341,10 @@ final readonly class SectionPopulator
                         $subcatsCriteria = $this->permissionService->getPermissionCriteria();
                         $subcatsCondition = SqlCondition::combine(
                             'AND',
-                            $subcatsCriteria->forbiddenCategoriesCondition('id'),
-                            $subcatsCriteria->visibleCategoriesCondition('id'),
+                            $subcatsCriteria->forbiddenCategoriesCondition('c.id'),
+                            $subcatsCriteria->visibleCategoriesCondition('c.id'),
                         );
-                        $subcat_ids_raw = $this->repo->findVisibleSubcategoryIds(
-                            $uppercats,
-                            $subcatsCondition->isEmpty() ? '' : ' AND ' . $subcatsCondition->sql,
-                            $subcatsCondition->parameters,
-                            $subcatsCondition->types
-                        );
+                        $subcat_ids_raw = $this->repo->findVisibleSubcategoryIds($uppercats, $subcatsCondition);
                         $subcat_ids = array_values(array_filter($subcat_ids_raw, is_string(...)));
                         $subcat_ids[] = (string) $page_category['id'];
                         $where_sql = 'category_id IN (:subcatIds)';
@@ -590,12 +601,9 @@ final readonly class SectionPopulator
             // +-----------------------------------------------------------------------+
             elseif ($section === 'most_visited') {
                 $page['super_order_by'] = true;
-                $order_by = ' ORDER BY hit DESC, id DESC';
 
                 $top_number = $this->currentConfig->topNumber();
 
-                // GROUP BY id, same ONLY_FULL_GROUP_BY fix as above --
-                // $order_by orders by hit/id, both images' own columns.
                 $page = array_merge(
                     $page,
                     [
@@ -603,7 +611,7 @@ final readonly class SectionPopulator
                             'start' => 0,
                         ]) . '">'
                                     . $top_number . ' ' . $this->lang->t('Most visited') . '</a>',
-                        'items' => $this->repo->findTopByHitsImageIds($forbidden, $order_by, $top_number, $forbidden_params, $forbidden_types),
+                        'items' => $this->repo->findTopByHitsImageIds($forbiddenConditionDql, $top_number),
                     ]
                 );
             }
@@ -612,13 +620,9 @@ final readonly class SectionPopulator
             // +-----------------------------------------------------------------------+
             elseif ($section === 'best_rated') {
                 $page['super_order_by'] = true;
-                $order_by = ' ORDER BY rating_score DESC, id DESC';
 
                 $top_number = $this->currentConfig->topNumber();
 
-                // GROUP BY id, same ONLY_FULL_GROUP_BY fix as above --
-                // $order_by orders by rating_score/id, both images' own
-                // columns.
                 $page = array_merge(
                     $page,
                     [
@@ -626,7 +630,7 @@ final readonly class SectionPopulator
                             'start' => 0,
                         ]) . '">'
                                     . $top_number . ' ' . $this->lang->t('Best rated') . '</a>',
-                        'items' => $this->repo->findTopRatedImageIds($forbidden, $order_by, $top_number, $forbidden_params, $forbidden_types),
+                        'items' => $this->repo->findTopRatedImageIds($forbiddenConditionDql, $top_number),
                     ]
                 );
             }

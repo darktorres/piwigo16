@@ -134,7 +134,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
         $this->sessionService = new SessionService($em->getRepository(SessionEntity::class),\Piwigo\Config\CurrentConfig::current());
         $this->userService = new UserService(Lang::current(), $em->getRepository(UserInfoEntity::class), $em->getRepository(GroupEntity::class), new MailService(), new ActivityService($em->getRepository(ActivityEntity::class)), new HtmlService(), $this->conn, $this->sessionService, new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Config\CurrentConfig::current());
         $this->searchService = new SearchService(\Piwigo\Auth\AccessControl::current(), new SearchRepository($em), $this->permissionService, $this->categoryService, new MailService(), new HtmlService(), new RedirectService(Lang::current(), $this->userService), $this->sessionService, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Users\CurrentUser::current(), Lang::current(), \Piwigo\Config\CurrentConfig::current(), $this->tagService);
-        $this->sectionRepo = new SectionRepository($this->conn);
+        $this->sectionRepo = new SectionRepository($em);
         $this->filterState = new FilterState();
         $this->currentLogger = new CurrentLogger();
         $this->currentLogger->set(new Logger(['severity' => Logger::OFF]));

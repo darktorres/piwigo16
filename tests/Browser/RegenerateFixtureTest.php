@@ -6,6 +6,7 @@ namespace Piwigo\Tests\Browser;
 
 use PHPUnit\Framework\Attributes\Group;
 use Piwigo\Core\Env;
+use Piwigo\Tests\Browser\Helpers\FixturePhotoGenerator;
 use Piwigo\Tests\Integration\IntegrationTestCase;
 
 /**
@@ -128,22 +129,9 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         mkdir($tmpDir);
         $photoIds = [];
         try {
-            $colors = [[220, 50, 50], [50, 180, 80], [50, 100, 220], [230, 200, 50], [150, 60, 200]];
             for ($i = 1; $i <= 5; $i++) {
-                [$r, $g, $b] = $colors[$i - 1];
-                $img = imagecreatetruecolor(200, 150);
-                self::assertNotFalse($img);
-
-                $bgColor = imagecolorallocate($img, $r, $g, $b);
-                self::assertNotFalse($bgColor);
-                imagefill($img, 0, 0, $bgColor);
-
-                $textColor = imagecolorallocate($img, 255, 255, 255);
-                self::assertNotFalse($textColor);
-                imagestring($img, 5, 60, 70, 'Photo ' . $i, $textColor);
-
                 $filePath = $tmpDir . '/fixture-photo-' . $i . '.jpg';
-                imagejpeg($img, $filePath, 80);
+                FixturePhotoGenerator::write($i, $filePath);
 
                 $albumId  = $i <= 3 ? $rootAlbumId : $subAlbumId;
                 $photoIds[] = $this->uploadPhoto($filePath, $albumId, 'Photo ' . $i);

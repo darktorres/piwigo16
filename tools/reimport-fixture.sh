@@ -26,6 +26,18 @@
 # silent "Permission denied" warning on every request needing that bundle,
 # confirmed live via _data/logs/test_errors.log.
 #
+# Also clears _data/i/ (cached derivative thumbnails) and regenerates the 5
+# core fixture photos' own physical JPEG bytes via
+# tools/regenerate-fixture-photos.php -- unlike every table above, upload/
+# is gitignored, so a plain SQL reimport leaves whatever file a *previous*
+# manual run happened to write at each row's own `path` untouched. Found
+# live: VisualRegressionTest's committed .snap baselines silently drifted
+# out of sync with the real, current FixturePhotoGenerator content because
+# nothing ever refreshed upload/'s own bytes to match. Regenerating them
+# here, deterministically, on every reimport closes that gap the same way
+# the cache-pool/combined-bundle clears above already do for their own
+# stale-state class.
+#
 # Reads DB credentials from .env.test, same variables IntegrationTestCase.php
 # uses (PIWIGO_DB_HOST/USER/PASSWORD/BASE/PREFIX) — no PIWIGO_DB_PORT support,
 # matching that class, which doesn't read one either.
@@ -78,3 +90,6 @@ mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" -e "UPDATE ${PIWIGO_DB_PREFIX}sites
 
 sudo rm -rf _data/cache/piwigo.*/
 sudo rm -rf _data/combined/*
+sudo rm -rf _data/i/*
+
+php tools/regenerate-fixture-photos.php

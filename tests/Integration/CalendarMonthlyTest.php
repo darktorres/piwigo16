@@ -832,6 +832,43 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         self::assertCount(7, $lastWeek);
         self::assertArrayNotHasKey('DAY', $this->digArray($lastWeek, [count($lastWeek) - 1]));
     }
+
+    public function test_build_month_calendar_populates_a_real_thumbnail_for_a_day_with_images(): void
+    {
+        // Item 16H: findRandomImageForDay()'s own by-id row feeds
+        // new SrcImage($row) directly (CalendarMonthly.php:428) -- a
+        // wrong key name there wouldn't crash (SrcImage's own
+        // constructor defensively narrows every field to 0/''/null),
+        // just silently produce a broken thumbnail, which neither
+        // sibling test above observes (both only check the day-grid
+        // layout). image 3 is fixture-dated 2024-07-04, the same
+        // fixture row and month this file's own setUp() already
+        // establishes.
+        $calendar = new CalendarMonthly(new CalendarRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), $this->urlService);
+        $calendar->chronology_field = 'posted';
+        $calendar->initialize($this->makeScope('id = 3'));
+        $calendar->chronology_view = CalendarBase::CAL_VIEW_CALENDAR;
+        $calendar->chronology_date = [2024, 7];
+        $template = new Template();
+
+        $calendar->generate_category_content($template);
+
+        $weeks = $this->digArray($template->get_template_vars('chronology_calendar'), ['month_view', 'weeks']);
+        $dayCell = null;
+        foreach ($weeks as $week) {
+            foreach ((array) $week as $cell) {
+                if (($this->dig($cell, ['DAY'])) === 4) {
+                    $dayCell = $cell;
+                }
+            }
+        }
+
+        self::assertIsArray($dayCell);
+        self::assertSame('fixture-photo-3.jpg', $this->dig($dayCell, ['IMAGE_ALT']));
+        $image = $this->dig($dayCell, ['IMAGE']);
+        self::assertIsString($image);
+        self::assertNotSame('', $image);
+    }
 }
 
 /**

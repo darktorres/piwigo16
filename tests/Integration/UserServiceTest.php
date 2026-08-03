@@ -1065,6 +1065,15 @@ namespace Piwigo\Tests\Integration {
                     'SELECT COUNT(*) FROM ' . Tables::userInfos() . ' WHERE user_id = ?',
                     [$tempId]
                 ));
+                // Item 16H: fetchUserInfosWithThemeName()'s own DQL
+                // conversion hydrates these 5 columns as real PHP bools
+                // straight from UserInfoEntity's mapped `boolean` type --
+                // the explicit re-cast loop this used to need is gone,
+                // so this is the only real assertion left proving that
+                // still holds.
+                foreach (['enabled_high', 'expand', 'last_visit_from_history', 'show_nb_comments', 'show_nb_hits'] as $key) {
+                    self::assertIsBool($data[$key], "{$key} should be a real bool");
+                }
             } finally {
                 $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ?', [$tempId]);
             }

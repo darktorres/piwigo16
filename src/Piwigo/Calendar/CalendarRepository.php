@@ -9,7 +9,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
-use Piwigo\Db\Tables;
 use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Permission\SqlCondition;
@@ -376,18 +375,16 @@ final class CalendarRepository
      *
      * Further SQL-modernization audit, Item 15G: the *selection* (which
      * image id, and its `dow` value, respecting $scope/$dateWhere, in
-     * random order) now runs as its own DQL query -- every table/
-     * condition it touches is mapped. The final row -- `id, file,
-     * representative_ext, path, width, height, rotation` -- stays raw
-     * DBAL by id: it feeds `new SrcImage($row)` directly
-     * ({@see \Piwigo\Calendar\CalendarMonthly::build_month_calendar()}),
-     * and `SrcImage`'s constructor reads those exact raw snake_case keys
-     * (confirmed by reading it), the same public/internal-contract reason
-     * {@see \Piwigo\Image\ImageRepository::findRowWithCondition()} stays
-     * excluded -- reproducing that shape via DQL's camelCase entity
-     * hydration would mean hand-mapping every one of those columns for no
-     * safety/correctness gain (the id itself is already fully bound
-     * either way).
+     * random order) runs as its own DQL query -- every table/condition it
+     * touches is mapped.
+     *
+     * Item 16H: the final by-id row also converted, via explicit `AS`
+     * aliases matching `SrcImage`'s own raw snake_case constructor
+     * contract exactly (`representative_ext`, confirmed by reading it) --
+     * a mapping shim at this call site, not a `SrcImage` redesign. All 7
+     * selected columns (id/file/representative_ext/path/width/height/
+     * rotation) are plain scalar-typed on `ImageEntity`, no custom
+     * Doctrine Type to unwrap.
      *
      * @return array<string, mixed>|null
      */
@@ -408,29 +405,27 @@ final class CalendarRepository
 
         $imageId = is_numeric($picked['id'] ?? null) ? (int) $picked['id'] : 0;
 
-        $imagesTable = Tables::images();
-        $row = $this->em->getConnection()
-            ->executeQuery(
-                <<<SQL
-                SELECT id, file, representative_ext, path, width, height, rotation
-                FROM {$imagesTable}
-                WHERE id = :id
-                SQL
-                ,
-                [
-                    'id' => $imageId,
-                ],
-                [
-                    'id' => ParameterType::INTEGER,
-                ]
-            )->fetchAssociative();
+        $row = $this->em->createQueryBuilder()
+            ->select('i.id', 'i.file', 'i.representativeExt AS representative_ext', 'i.path', 'i.width', 'i.height', 'i.rotation')
+            ->from(ImageEntity::class, 'i')
+            ->where('i.id = :id')
+            ->setParameter('id', $imageId)
+            ->getQuery()
+            ->getOneOrNullResult(Query::HYDRATE_ARRAY);
 
-        if ($row === false) {
+        if (! is_array($row)) {
             return null;
         }
 
-        $row['dow'] = $picked['dow'] ?? null;
-
-        return $row;
+        return [
+            'id' => $row['id'] ?? null,
+            'file' => $row['file'] ?? null,
+            'representative_ext' => $row['representative_ext'] ?? null,
+            'path' => $row['path'] ?? null,
+            'width' => $row['width'] ?? null,
+            'height' => $row['height'] ?? null,
+            'rotation' => $row['rotation'] ?? null,
+            'dow' => $picked['dow'] ?? null,
+        ];
     }
 }

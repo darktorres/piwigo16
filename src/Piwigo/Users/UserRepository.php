@@ -863,31 +863,61 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * Full `user_infos` row plus the joined theme's display name --
      * UserService::getUserData()'s own merge-with-basic-row step.
      *
-     * Item 14 DQL audit, re-corrected: `themes` is now mapped ({@see
-     * ThemeEntity}), but the real remaining blocker survives that fix --
-     * this selects `ui.*` (every `user_infos` column keyed by its raw
-     * snake_case column name, e.g. `nb_image_page`/`show_nb_comments`),
-     * which UserService::getUserData() then array_merge()s straight into
-     * its own `$userdata`. DQL has no whole-row-as-raw-column-names select;
-     * selecting the full UserInfoEntity instead would key the array by its
-     * camelCase property names (`nbImagePage`/`showNbComments`), silently
-     * breaking that merge and every downstream `$userdata['...']` read.
-     * Stays on DBAL.
+     * Item 16H: converted to real DQL against the full {@see UserInfoEntity}
+     * -- a mapping shim right here translates its camelCase-hydrated
+     * properties back into the exact snake_case-keyed array shape
+     * `UserService::getUserData()`'s own `array_merge()` and every
+     * downstream `$userdata['...']` read already expect, so the DQL
+     * conversion needs zero changes to that consumer. A real bonus, not
+     * just parity: `expand`/`show_nb_comments`/`show_nb_hits`/
+     * `enabled_high`/`last_visit_from_history` come back as genuine PHP
+     * bools straight from the entity (mapped `boolean` columns), where
+     * the raw DBAL row gave a native tinyint `getUserData()` had to
+     * explicitly re-cast.
      *
      * @return array<string, mixed>|false
      */
     public function fetchUserInfosWithThemeName(UserId $userId): array|false
     {
-        return $this->getEntityManager()
-            ->getConnection()
+        $row = $this->getEntityManager()
             ->createQueryBuilder()
-            ->select('ui.*', 't.name AS theme_name')
-            ->from(Tables::userInfos(), 'ui')
-            ->leftJoin('ui', Tables::themes(), 't', 't.id = ui.theme')
-            ->where('ui.user_id = :userId')
-            ->setParameter('userId', $userId->value)
-            ->executeQuery()
-            ->fetchAssociative();
+            ->select('ui', 't.name AS theme_name')
+            ->from(UserInfoEntity::class, 'ui')
+            ->leftJoin(ThemeEntity::class, 't', Join::WITH, 't.id = ui.theme')
+            ->where('ui.userId = :userId')
+            ->setParameter('userId', $userId)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        if (! is_array($row) || ! $row[0] instanceof UserInfoEntity) {
+            return false;
+        }
+
+        $userInfo = $row[0];
+        $themeName = $row['theme_name'] ?? null;
+        $themeName = is_string($themeName) ? $themeName : null;
+
+        return [
+            'user_id' => $userInfo->userId->value,
+            'nb_image_page' => $userInfo->nbImagePage,
+            'status' => $userInfo->status,
+            'language' => $userInfo->language,
+            'expand' => $userInfo->expand,
+            'show_nb_comments' => $userInfo->showNbComments,
+            'show_nb_hits' => $userInfo->showNbHits,
+            'recent_period' => $userInfo->recentPeriod,
+            'theme' => $userInfo->theme,
+            'registration_date' => $userInfo->registrationDate,
+            'enabled_high' => $userInfo->enabledHigh,
+            'level' => $userInfo->level,
+            'activation_key' => $userInfo->activationKey,
+            'activation_key_expire' => $userInfo->activationKeyExpire,
+            'last_visit' => $userInfo->lastVisit,
+            'last_visit_from_history' => $userInfo->lastVisitFromHistory,
+            'lastmodified' => $userInfo->lastmodified,
+            'preferences' => $userInfo->preferences,
+            'theme_name' => $themeName,
+        ];
     }
 
     /**

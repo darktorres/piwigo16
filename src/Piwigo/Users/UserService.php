@@ -688,23 +688,14 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         }
         unset($value);
 
-        // Docs/PLAN.md gap-closure, User domain Stage 1a:
         // enabled_high/expand/last_visit_from_history/show_nb_comments/
-        // show_nb_hits (user_infos) are all real tinyint columns now -- the
-        // generic true/false-string scan above only ever matched the
-        // *old* enum('true','false') representation, so it silently
-        // stops converting these to bool (DBAL/mysqli returns a native
-        // int for a tinyint column). Named explicitly instead of
-        // pattern-matched by value, same fix as
-        // CategoryService::getCategoryInfo(). (need_update, the sibling
-        // user_cache column this list also carried, was dropped in
-        // gap-closure Stage 4g alongside the lock/wait/503 mechanism it
-        // gated -- nothing reads it any more.)
-        foreach (['enabled_high', 'expand', 'last_visit_from_history', 'show_nb_comments', 'show_nb_hits'] as $k) {
-            if (isset($userdata[$k])) {
-                $userdata[$k] = (bool) $userdata[$k];
-            }
-        }
+        // show_nb_hits (user_infos) no longer need the explicit re-cast
+        // Docs/PLAN.md's own gap-closure Stage 1a added here -- Item 16H
+        // retyped UserRepository::fetchUserInfosWithThemeName() to select
+        // the full UserInfoEntity via DQL, whose mapped `boolean` columns
+        // already hydrate as real PHP bools, not the raw tinyint a DBAL
+        // row gave. Retired the cast loop in the same commit as that
+        // retype, matching this campaign's own established convention.
 
         // Kept out of $userdata: ArrayHelper::safeJsonDecode()'s own return
         // type is array<int|string, mixed>, and merging that into

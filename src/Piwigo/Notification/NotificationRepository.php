@@ -12,9 +12,9 @@ use Doctrine\ORM\QueryBuilder;
 use Piwigo\Category\CategoryEntity;
 use Piwigo\Comment\CommentEntity;
 use Piwigo\Common\ValueObject\NumericId;
-use Piwigo\Db\Tables;
 use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
+use Piwigo\Image\Projection\Image;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\Users\UserInfoEntity;
 
@@ -213,14 +213,17 @@ final class NotificationRepository
      * order, capped at $maxElements) now runs as its own DQL query --
      * every table/condition it touches is mapped and `PermissionCriteria`
      * needs no API changes, same finding as every other consumer in this
-     * campaign. The final full-row fetch stays raw DBAL by id, same
-     * "the real consumer reads raw snake_case column names directly"
-     * reasoning as {@see \Piwigo\Image\ImageRepository::
-     * findRowWithCondition()}'s own exclusion -- {@see \Piwigo\Image\
-     * SrcImage}'s constructor reads `$infos['path']`/`['representative_ext']`/
-     * etc. directly, and DQL's camelCase entity hydration would mean
-     * hand-mapping every one of those columns for no safety/correctness
-     * gain (the id list itself is already fully bound either way).
+     * campaign.
+     *
+     * Item 16H: the final full-row-by-id fetch also converted, via
+     * {@see \Piwigo\Image\Projection\Image::fromEntity()}/`toArray()` --
+     * a ready-made mapping shim (already existed, no new code needed)
+     * translating the DQL-hydrated `ImageEntity` back into the exact
+     * raw snake_case row shape {@see \Piwigo\Image\SrcImage}'s own
+     * constructor and `DerivativeImage::thumb_url()` already expect, same
+     * reasoning {@see \Piwigo\Image\ImageRepository::findRowWithCondition()}'s
+     * own exclusion cites for staying array-shaped rather than switching
+     * every consumer to the typed projection object outright.
      *
      * @return list<array<string, mixed>>
      */
@@ -246,28 +249,18 @@ final class NotificationRepository
             return [];
         }
 
-        $imagesTable = Tables::images();
-        $rows = $this->em->getConnection()
-            ->fetchAllAssociative(
-                <<<SQL
-                SELECT *
-                FROM {$imagesTable}
-                WHERE id IN (:ids)
-                SQL
-                ,
-                [
-                    'ids' => $ids,
-                ],
-                [
-                    'ids' => ArrayParameterType::INTEGER,
-                ]
-            );
+        $entities = $this->em->createQueryBuilder()
+            ->select('i')
+            ->from(ImageEntity::class, 'i')
+            ->where('i.id IN (:ids)')
+            ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
+            ->getQuery()
+            ->getResult();
 
         $byId = [];
-        foreach ($rows as $row) {
-            $rowId = $row['id'] ?? null;
-            if (is_numeric($rowId)) {
-                $byId[(int) $rowId] = $row;
+        foreach ($entities as $entity) {
+            if ($entity->id !== null) {
+                $byId[$entity->id] = Image::fromEntity($entity)->toArray();
             }
         }
 

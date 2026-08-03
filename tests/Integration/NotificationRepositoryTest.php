@@ -192,6 +192,23 @@ final class NotificationRepositoryTest extends IntegrationTestCase
         $ids = array_column($rows, 'id');
         sort($ids);
         self::assertSame([1, 2], $ids);
+
+        // Item 16H: the full-row-by-id fetch converted from a raw
+        // SELECT * to a DQL ImageEntity fetch mapped back through
+        // Image\Projection\Image::fromEntity()->toArray() -- confirms
+        // the real snake_case keys DerivativeImage::thumb_url()/
+        // SrcImage's own constructor read are actually present, not
+        // just 'id'.
+        $byId = [];
+        foreach ($rows as $row) {
+            if (is_numeric($row['id'])) {
+                $byId[(int) $row['id']] = $row;
+            }
+        }
+        self::assertSame('fixture-photo-1.jpg', $byId[1]['file']);
+        self::assertSame('upload/2026/08/01/20260801000000-2e7e9c93.jpg', $byId[1]['path']);
+        self::assertSame('fixture-photo-2.jpg', $byId[2]['file']);
+        self::assertSame('upload/2026/08/01/20260801000000-4a019d76.jpg', $byId[2]['path']);
     }
 
     public function test_find_recent_categories_for_date_returns_matching_rows(): void

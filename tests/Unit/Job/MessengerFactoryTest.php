@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Doctrine\DBAL\DriverManager;
 use Doctrine\Persistence\ConnectionRegistry;
 use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Job\MessengerFactory;
 use Psr\Container\ContainerInterface;
@@ -46,11 +47,11 @@ use Symfony\Component\Messenger\Envelope;
  * $this->connection]`, which embeds a variable and is never folded.
  */
 beforeEach(function (): void {
-    CurrentPaths::set(Paths::fromRoot(dirname(__DIR__, 3)));
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3)));
 });
 
 afterEach(function (): void {
-    CurrentPaths::reset();
+    Kernel::reset();
 });
 
 test('transport()\'s anonymous ConnectionRegistry answers "default" for getDefaultConnectionName and keys getConnections off the passed-in connection', function (): void {
@@ -135,7 +136,12 @@ test('config() reads config/messenger.php relative to CurrentPaths::get()->root,
         $root . '/config/messenger.php',
         '<?php return ["transport_table" => "mutation_sweep_messages", "transport_queue" => "mutation_sweep_queue", "routing" => [], "handlers" => []];'
     );
-    CurrentPaths::set(Paths::fromRoot($root));
+    // Kernel is already booted (beforeEach()'s own default real-repo-root
+    // boot) -- reset first, or this bare boot() would silently no-op
+    // against its own idempotency guard and Paths::class would keep
+    // pointing at the wrong (real repo) root.
+    Kernel::reset();
+    Kernel::boot(Paths::fromRoot($root));
 
     try {
         expect(MessengerFactory::config())->toBe([

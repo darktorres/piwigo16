@@ -152,8 +152,9 @@ final class RequestBootstrap
      * (RequestMountDepth/WsContext/AdminContext), threaded through from
      * whichever entry-shell file called this (`public/admin/popuphelp.php`,
      * `public/ws.php`, `public/admin.php` -- the only 3 that pass anything
-     * other than the defaults) all the way down to `Container::build()`,
-     * replacing those 3 classes' former pre-boot `X::mark()`/`X::set()`
+     * other than the defaults) all the way down to `Piwigo\Core\Container`'s
+     * own build() method, replacing those 3 classes' former pre-boot
+     * `X::mark()`/`X::set()`
      * calls (there is no container yet at the point those used to run).
      */
     public static function bootEntryPoint(Paths $paths, int $mountDepth = 0, bool $isWs = false, bool $isAdmin = false): void

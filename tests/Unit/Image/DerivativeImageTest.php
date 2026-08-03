@@ -6,6 +6,7 @@ namespace Piwigo\Tests\Unit\Image;
 
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Image\DerivativeImage;
@@ -103,7 +104,7 @@ beforeEach(function (): void {
 
 afterEach(function (): void {
     CurrentConfig::reset();
-    CurrentPaths::reset();
+    Kernel::reset();
     derivativeImageTestSetUrlService(null);
 });
 
@@ -138,7 +139,7 @@ test('url() computes the derivative url via a real build() call, prefixed by the
     // distinguish a dropped or reordered getRootUrl() call from a kept,
     // correctly-ordered one.
     derivativeImageTestSetUrlService(new DerivativeImageTestFakeUrlService('/gallery/'));
-    CurrentPaths::set(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-url-only'));
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-url-only'));
 
     $src = new SrcImage([
         'id' => 1,
@@ -161,7 +162,7 @@ test('url() throws when a get_derivative_url handler returns something other tha
             'path' => 'gallery/photo.jpg',
             'file' => 'photo.jpg',
         ]);
-        CurrentPaths::set(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-url-filter-only'));
+        Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-url-filter-only'));
 
         expect(fn () => DerivativeImage::url(new DerivativeParams(SizingParams::classic(80, 60)), $src))
             ->toThrow(\Error::class, 'must return an instance of');
@@ -267,7 +268,7 @@ test('build() throws when the source path has no extension', function (): void {
 test('build() strips a leading "./" from the source location and appends the custom-type url tokens', function (): void {
     // get_path() reads CurrentPaths::get() -- set explicitly since this
     // is the first test in the file to call it.
-    CurrentPaths::set(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-path-only'));
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-path-only'));
 
     $src = new SrcImage([
         'id' => 1,
@@ -290,7 +291,7 @@ test('build() strips a leading "./" from the source location and appends the cus
 });
 
 test('build() strips a leading "../" from the source location', function (): void {
-    CurrentPaths::set(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-path-only'));
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-path-only'));
 
     $src = new SrcImage([
         'id' => 1,
@@ -395,7 +396,7 @@ test('build() uses the source image as-is, unrotated and unwatermarked, when it 
     // configured (a real ImageStdParams::get_watermark() default has a
     // large min_size, so will_watermark() is false for these small
     // dimensions) and rotation=0 (the SrcImage default).
-    CurrentPaths::set(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-as-is-only'));
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-as-is-only'));
 
     $src = new SrcImage([
         'id' => 5,
@@ -418,7 +419,7 @@ test('build() does not strip a leading "../" look-alike that is not actually fol
     // "..") comparison also happens to match, hiding the difference.
     // A path starting with '..' but NOT followed by '/' must be left
     // untouched by real code.
-    CurrentPaths::set(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-path-only'));
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-path-only'));
 
     $src = new SrcImage([
         'id' => 1,
@@ -456,7 +457,7 @@ test('build() treats a cached file as fresh when its mtime exactly equals last_m
     $root = sys_get_temp_dir() . '/piwigo-derivative-image-test-' . bin2hex(random_bytes(8));
     mkdir($root . '/_data/i/gallery', 0o777, true);
     file_put_contents($root . '/_data/i/gallery/photo-cu_80x60_a.jpg', 'cached-bytes');
-    CurrentPaths::set(Paths::fromRoot($root));
+    Kernel::boot(Paths::fromRoot($root));
     CurrentConfig::setDerivativeUrlStyle(0);
 
     try {
@@ -486,7 +487,7 @@ test('build() treats a cached file as fresh when its mtime exactly equals last_m
 test('build() substitutes a smaller already-defined identity-matching type when watermarking would otherwise apply, recursing until none remains', function (): void {
     $snapshot = derivativeImageTestSnapshotStdParams();
     $originalWatermark = ImageStdParams::get_watermark();
-    CurrentPaths::set(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-substitute-only'));
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-substitute-only'));
 
     try {
         $thumbParams = new DerivativeParams(SizingParams::classic(50, 50));
@@ -611,7 +612,7 @@ test('build() never substitutes a same-size candidate whose max_crop does not ma
 test('build() routes through i.php and marks itself not cached when derivative_url_style is auto and no cached file exists yet', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-derivative-image-test-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
-    CurrentPaths::set(Paths::fromRoot($root));
+    Kernel::boot(Paths::fromRoot($root));
     CurrentConfig::setDerivativeUrlStyle(0);
 
     try {
@@ -634,7 +635,7 @@ test('build() routes through i.php and marks itself not cached when derivative_u
 test('build() links directly to a static file when derivative_url_style is auto and a fresh cached file already exists', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-derivative-image-test-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
-    CurrentPaths::set(Paths::fromRoot($root));
+    Kernel::boot(Paths::fromRoot($root));
     CurrentConfig::setDerivativeUrlStyle(0);
 
     try {
@@ -663,7 +664,7 @@ test('get_url() prefixes the computed rel_url with the real root url', function 
     // fake's default '' root url, which can't distinguish a dropped or
     // reordered getRootUrl() call from a kept, correctly-ordered one.
     derivativeImageTestSetUrlService(new DerivativeImageTestFakeUrlService('/gallery/'));
-    CurrentPaths::set(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-get-url-only'));
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-get-url-only'));
 
     $src = new SrcImage([
         'id' => 1,
@@ -686,7 +687,7 @@ test('get_url() throws when a get_derivative_url handler returns something other
             'path' => 'gallery/photo.jpg',
             'file' => 'photo.jpg',
         ]);
-        CurrentPaths::set(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-filter-only'));
+        Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-filter-only'));
 
         $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(80, 60)), $src);
 
@@ -742,7 +743,7 @@ test('get_size_css()/get_size_htm()/get_size_hr() render the computed size, or a
 
     $root = sys_get_temp_dir() . '/piwigo-derivative-image-test-' . bin2hex(random_bytes(8));
     mkdir($root . '/upload/2026/07', 0o777, true);
-    CurrentPaths::set(Paths::fromRoot($root));
+    Kernel::boot(Paths::fromRoot($root));
     file_put_contents($root . '/upload/2026/07/broken.jpg', 'not-a-real-image-payload');
 
     try {

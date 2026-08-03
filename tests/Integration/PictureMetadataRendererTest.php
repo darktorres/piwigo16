@@ -12,6 +12,7 @@ use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Image\SrcImage;
 use Piwigo\Picture\PictureMetadataRenderer;
@@ -46,7 +47,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        CurrentPaths::set(Paths::fromRoot(dirname(__DIR__, 2)));
+        Kernel::boot(Paths::fromRoot(dirname(__DIR__, 2)));
         CurrentConfigService::set(new ConfigService($this->buildConfigRepository()));
         CurrentTemplate::set(new Template());
 

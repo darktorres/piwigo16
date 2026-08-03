@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Controller\Admin\IntroSubController;
 use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 
 /**
@@ -40,7 +41,7 @@ beforeEach(function (): void {
     // CurrentPaths is a shared, process-wide static -- explicitly (re-)set
     // it here rather than relying on some earlier-run Integration test
     // file (e.g. IntegrationTestCase::setUp()) to have already done so.
-    CurrentPaths::set(Paths::fromRoot(dirname(__DIR__, 3)));
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3)));
 });
 
 afterEach(function (): void {
@@ -53,6 +54,10 @@ afterEach(function (): void {
     } finally {
         restore_error_handler();
     }
+    // Without this, Kernel stays booted (with this file's own root) for
+    // every later test in this shared process -- a real cross-file leak
+    // found via composer test's own full-suite run.
+    Kernel::reset();
 });
 
 test('getLatestNews reads a fresh cache file without hitting the network', function (): void {

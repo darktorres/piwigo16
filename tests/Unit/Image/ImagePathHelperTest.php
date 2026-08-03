@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImagePathHelper;
@@ -14,7 +15,14 @@ use Piwigo\Url\UrlService;
  * spark.md, Wave 1) despite being reachable from several real callers.
  */
 beforeEach(function (): void {
-    CurrentPaths::set(Paths::fromRoot('/var/www/piwigo'));
+    Kernel::boot(Paths::fromRoot('/var/www/piwigo'));
+});
+
+afterEach(function (): void {
+    // Without this, Kernel stays booted (with this file's own fake root)
+    // for every later test in this shared process -- a real cross-file
+    // leak found via composer test's own full-suite run.
+    Kernel::reset();
 });
 
 test('originalToRepresentative inserts a pwg_representative/ segment and swaps the extension', function (): void {

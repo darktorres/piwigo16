@@ -6,17 +6,18 @@ use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\Tables;
 
 beforeEach(function (): void {
     CurrentConfig::reset();
-    CurrentPaths::set(Paths::fromRoot('/tmp/piwigo-extension-type-test'));
+    Kernel::boot(Paths::fromRoot('/tmp/piwigo-extension-type-test'));
 });
 
 afterEach(function (): void {
     CurrentConfig::reset();
-    CurrentPaths::reset();
+    Kernel::reset();
 });
 
 test('table returns each type\'s own table', function (): void {

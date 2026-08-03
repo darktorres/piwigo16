@@ -10,7 +10,6 @@ use Doctrine\ORM\ORMSetup;
 use PHPUnit\Framework\TestCase;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigRepository;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
@@ -134,16 +133,27 @@ abstract class IntegrationTestCase extends TestCase
                 $filterState->set(false);
             }
         }
-        // Piwigo\Core\CurrentPaths (Legacy Coupling Retirement gap-closure,
-        // entry-shell define()/include round) is the same shape of
-        // per-request singleton -- tests that construct a domain service
-        // directly (not through a real HTTP request, so no root index.php
-        // ever calls Kernel::boot($paths)) need a real Paths available too,
-        // or the first CurrentPaths::get() call throws. dirname(__DIR__, 2)
+        // Piwigo\Core\CurrentPaths is a pure transitional shim now
+        // (singleton/service-locator elimination campaign, Phase 3) reading
+        // Paths::class straight out of the live container -- tests that
+        // construct a domain service directly (not through a real HTTP
+        // request, so no root index.php ever calls Kernel::boot($paths))
+        // need a real Paths bound too, or the first CurrentPaths::get() call
+        // throws. Only boot here when nothing has booted the Kernel yet: a
+        // subclass whose own setUp() calls Kernel::boot() *after*
+        // parent::setUp() (several do, for its mountDepth/isWs/isAdmin
+        // params or to layer its own container wiring on top) would have
+        // that later call silently no-op against Kernel::boot()'s own
+        // idempotency guard if this ran unconditionally. dirname(__DIR__, 2)
         // from tests/Integration/ is this project's own repo root, matching
         // every fixture path (e.g. MetadataServiceTest's 'path' => '_data/...')
-        // already written relative to it.
-        CurrentPaths::set(Paths::fromRoot(dirname(__DIR__, 2)));
+        // already written relative to it. A subclass needing a different
+        // root re-binds Paths::class via
+        // Piwigo\Tests\Support\KernelContainerOverride::with() instead of
+        // fighting this default.
+        if (! \Piwigo\Core\Kernel::isBooted()) {
+            \Piwigo\Core\Kernel::boot(Paths::fromRoot(dirname(__DIR__, 2)));
+        }
         // Truncate rather than delete -- Piwigo\Core\ErrorCollector appends
         // to this file while test-mode is active regardless of which test
         // wrote it last; starting each test from an empty file is what lets
@@ -192,7 +202,6 @@ abstract class IntegrationTestCase extends TestCase
                 $filterState->reset();
             }
         }
-        CurrentPaths::reset();
         // InstallationFlag is a container-shared instance now (singleton/
         // service-locator elimination campaign, Phase 1), not a static
         // facade -- most subclasses never call Kernel::boot() at all, so
@@ -203,6 +212,13 @@ abstract class IntegrationTestCase extends TestCase
                 $installationFlag->reset();
             }
         }
+        // CurrentPaths has no state of its own to reset (Phase 3) -- it
+        // reads Paths::class from whatever container is live. Reset the
+        // Kernel itself instead: setUp() above only boots when nothing else
+        // has, so this is what returns the next test to a clean, unbooted
+        // baseline -- safe even when a subclass's own tearDown() already
+        // called Kernel::reset() itself (idempotent).
+        \Piwigo\Core\Kernel::reset();
         // A test that exercises a real login/install-completion flow (e.g.
         // AuthService's own session_start()) leaves PHP's native session
         // machinery genuinely active -- PHPUnit/Pest run every Integration

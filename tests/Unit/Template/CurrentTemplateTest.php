@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Template;
@@ -37,7 +38,7 @@ function current_template_test_rrmdir(string $dir): void
 beforeEach(function (): void {
     $root = sys_get_temp_dir() . '/piwigo-current-template-test-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
-    CurrentPaths::set(Paths::fromRoot($root));
+    Kernel::boot(Paths::fromRoot($root));
     CurrentConfig::setDataLocation('data/');
     CurrentConfig::setDataDirChecked('1');
 });
@@ -46,7 +47,7 @@ afterEach(function (): void {
     current_template_test_rrmdir(CurrentPaths::get()->root);
     CurrentTemplate::reset();
     CurrentConfig::reset();
-    CurrentPaths::reset();
+    Kernel::reset();
 });
 
 test('get throws when no Template has ever been set', function (): void {

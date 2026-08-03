@@ -7,6 +7,7 @@ use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Logger;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 
 // PemCatalog's own methods that actually talk to the remote PEM server
@@ -32,11 +33,11 @@ function pem_catalog_test_marker(): string
 
 beforeEach(function (): void {
     mkdir(pem_catalog_test_marker(), 0o777, true);
-    CurrentPaths::set(Paths::fromRoot(dirname(__DIR__, 4)));
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 4)));
 });
 
 afterEach(function (): void {
-    CurrentPaths::reset();
+    Kernel::reset();
     $dir = pem_catalog_test_marker();
     if (is_dir($dir)) {
         $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::CHILD_FIRST);

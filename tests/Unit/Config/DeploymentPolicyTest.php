@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 
 beforeEach(function (): void {
@@ -12,7 +13,7 @@ beforeEach(function (): void {
 
 afterEach(function (): void {
     DeploymentPolicy::reset();
-    CurrentPaths::reset();
+    Kernel::reset();
 });
 
 test('load() returns all-default values when local/config/config.php does not exist', function (): void {
@@ -80,7 +81,7 @@ test('load() throws with the exact message naming the real file path and get_deb
 test('current() memoizes across calls until reset()', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-deployment-policy-test-' . bin2hex(random_bytes(4));
     mkdir($root . '/local/config', 0o777, true);
-    CurrentPaths::set(Paths::fromRoot($root));
+    Kernel::boot(Paths::fromRoot($root));
 
     $first = DeploymentPolicy::current();
     $second = DeploymentPolicy::current();

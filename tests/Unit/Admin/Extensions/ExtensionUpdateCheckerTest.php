@@ -13,6 +13,7 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\FilesystemHelper;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
@@ -137,7 +138,7 @@ beforeEach(function () use (&$fixtureRoot): void {
 
     $fixtureRoot = sys_get_temp_dir() . '/piwigo-extension-update-checker-test-' . bin2hex(random_bytes(4)) . '/';
     mkdir($fixtureRoot, 0o777, true);
-    CurrentPaths::set(Paths::fromRoot($fixtureRoot));
+    Kernel::boot(Paths::fromRoot($fixtureRoot));
 
     // Empty, disposable plugins/themes/language dirs, pre-created even
     // when a given test's fixture helpers don't populate them --
@@ -157,7 +158,7 @@ beforeEach(function () use (&$fixtureRoot): void {
 
 afterEach(function () use (&$fixtureRoot): void {
     CurrentConfig::reset();
-    CurrentPaths::reset();
+    Kernel::reset();
     unset($_SESSION['extensions_need_update']);
     if (is_string($fixtureRoot) && is_dir($fixtureRoot)) {
         FilesystemHelper::deltree($fixtureRoot);

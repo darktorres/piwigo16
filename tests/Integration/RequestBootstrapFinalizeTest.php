@@ -10,11 +10,8 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
-use Piwigo\Core\CurrentPaths;
-use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
-use Piwigo\Core\Paths;
 use Piwigo\Event\Picture\GetElementUrl;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseReadyException;
@@ -66,10 +63,10 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        CurrentPaths::set(Paths::fromRoot(dirname(__DIR__, 2)));
+        // Kernel is already booted by parent::setUp() with this exact same
+        // dirname(__DIR__, 2) root -- no need to boot (or bind Paths) again.
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
-        Kernel::boot();
         CurrentConfigService::set(new ConfigService($this->buildConfigRepository()));
         // footer.tpl (reached via CurrentTemplate's parse()) needs this --
         // same as PageTailTest/RedirectServiceTest's own identical setup.
@@ -94,7 +91,6 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         EventDispatcher::reset();
         PageState::reset();
         CurrentConfig::reset();
-        Kernel::reset();
         parent::tearDown();
     }
 

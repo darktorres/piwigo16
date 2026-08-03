@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -40,7 +41,7 @@ beforeEach(function (): void {
     $root = sys_get_temp_dir() . '/piwigo-tabsheet-test-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
     file_put_contents($root . '/tabsheet.tpl', '');
-    CurrentPaths::set(Paths::fromRoot($root));
+    Kernel::boot(Paths::fromRoot($root));
     CurrentConfig::setDataLocation('data/');
     CurrentConfig::setDataDirChecked('1');
     CurrentTemplate::set(new Template($root));
@@ -49,7 +50,7 @@ beforeEach(function (): void {
 afterEach(function (): void {
     tabsheetTestRrmdir(CurrentPaths::get()->root);
     CurrentTemplate::reset();
-    CurrentPaths::reset();
+    Kernel::reset();
     CurrentConfig::reset();
 });
 

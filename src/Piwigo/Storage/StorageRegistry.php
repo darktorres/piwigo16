@@ -39,9 +39,15 @@ final class StorageRegistry
     ) {}
 
     /**
-     * Load factories from config/storage.php (returns an array of closures)
-     * -- the container's own factory(...) entry in config/container.php
-     * calls this with CurrentPaths::get()->root . 'config/storage.php'.
+     * Load factories from a plain array-returning PHP file at $configPath
+     * (whatever it's given, verbatim -- generic, not project-root-relative
+     * itself) -- the container's own factory(...) entry in
+     * config/container.php calls this with a fixed
+     * dirname(__DIR__) . '/config/storage.php' path, same "value never
+     * varies per request" reasoning as Router::class's own routes.php
+     * binding. config/storage.php's own disk closures read Paths::class
+     * (via CurrentPaths::get()) internally to compute each disk's root, but
+     * that's independent of which storage.php file gets loaded here.
      */
     public static function fromConfig(string $configPath): self
     {

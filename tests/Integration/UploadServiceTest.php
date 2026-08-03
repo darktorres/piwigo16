@@ -13,7 +13,6 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\CurrentLogger;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
 use Piwigo\Core\Paths;
@@ -158,12 +157,22 @@ final class UploadServiceTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
+        $this->marker = sys_get_temp_dir() . '/piwigo-upload-service-integration-test-' . bin2hex(random_bytes(8));
+        mkdir($this->marker, 0o777, true);
+
         // addUploadedFile() reaches Bootstrap\CoreDomainAccessor::
         // imageService()/Bootstrap\ExtendedDomainAccessor::activityService()/
         // metadataService()/Bootstrap\InfrastructureAccessor::entityManager()
         // -- all container-resolved, same rationale as
-        // CategoryAdminServiceTest's own Kernel::boot() call.
-        Kernel::boot();
+        // CategoryAdminServiceTest's own Kernel::boot() call. Re-boot Kernel
+        // (parent::setUp() already booted it against the real repo root)
+        // against this test's own throwaway marker root instead: the
+        // StorageRegistry resolution below is a container factory that
+        // reads Paths::class at first resolution, and CurrentPaths
+        // (singleton/service-locator elimination campaign, Phase 3) is a
+        // pure shim with no state of its own left to rebind after the fact.
+        Kernel::reset();
+        Kernel::boot(Paths::fromRoot($this->marker));
 
         $currentLogger = Kernel::container()->get(CurrentLogger::class);
         if (! $currentLogger instanceof CurrentLogger) {
@@ -210,17 +219,13 @@ final class UploadServiceTest extends IntegrationTestCase
         // picture extension and has no representative_ext.
         SrcImage::setThemeConfProvider(new UploadServiceTestThemeConfProvider());
 
-        $this->marker = sys_get_temp_dir() . '/piwigo-upload-service-integration-test-' . bin2hex(random_bytes(8));
-        mkdir($this->marker, 0o777, true);
-        CurrentPaths::set(Paths::fromRoot($this->marker));
         // StorageRegistry is a container factory binding (singleton/
         // service-locator elimination campaign, Phase 2) that reads
-        // CurrentPaths::get() at first resolution -- resolved here, after
-        // CurrentPaths::set() above (not before, and not once at
-        // Kernel::boot() time), so every disk (uploads, derivatives, ...)
-        // correctly resolves under the marker root rather than the real
-        // project root. Nothing else resolves StorageRegistry::class from
-        // this container before this point.
+        // CurrentPaths::get() at first resolution -- resolved here, against
+        // the marker-rooted container booted above, so every disk (uploads,
+        // derivatives, ...) correctly resolves under the marker root rather
+        // than the real project root. Nothing else resolves
+        // StorageRegistry::class from this container before this point.
         $storageRegistry = Kernel::container()->get(StorageRegistry::class);
         if (! $storageRegistry instanceof StorageRegistry) {
             throw new \LogicException('Container returned an unexpected type for ' . StorageRegistry::class);
@@ -254,7 +259,6 @@ final class UploadServiceTest extends IntegrationTestCase
 
         self::rrmdir($this->marker);
 
-        Kernel::reset();
         parent::tearDown();
     }
 

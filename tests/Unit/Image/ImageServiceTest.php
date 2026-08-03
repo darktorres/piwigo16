@@ -350,7 +350,7 @@ function imageServiceTestInsertImage(\Doctrine\DBAL\Connection $conn, string $pa
 test('deleteElementFiles deletes the original, its representative, and its formats for local rows; skips remote rows without touching disk', function (): void {
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
-    \Piwigo\Core\CurrentPaths::set(\Piwigo\Core\Paths::fromRoot($root));
+    \Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot($root));
     CurrentConfig::setNeverDeleteOriginals(false);
 
     mkdir($root . '/upload/2026/07/pwg_representative', 0o777, true);
@@ -405,7 +405,7 @@ test('deleteElementFiles deletes the original, its representative, and its forma
         $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::images() . ' WHERE id IN (?, ?, ?, ?)', [$plainId, $repId, $formatId, $remoteId]);
         $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::imageFormat() . ' WHERE image_id = ?', [$formatId]);
         imageServiceTestRrmdir($root);
-        \Piwigo\Core\CurrentPaths::reset();
+        \Piwigo\Core\Kernel::reset();
         CurrentConfig::reset();
     }
 });
@@ -420,7 +420,7 @@ test('deleteElementFiles accumulates every registered format for an id, not just
     // the first format back to [] under the mutant, losing it.
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
-    \Piwigo\Core\CurrentPaths::set(\Piwigo\Core\Paths::fromRoot($root));
+    \Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot($root));
     CurrentConfig::setNeverDeleteOriginals(false);
 
     mkdir($root . '/upload/2026/07/pwg_format', 0o777, true);
@@ -448,7 +448,7 @@ test('deleteElementFiles accumulates every registered format for an id, not just
         $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::images() . ' WHERE id = ?', [$imageId]);
         $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::imageFormat() . ' WHERE image_id = ?', [$imageId]);
         imageServiceTestRrmdir($root);
-        \Piwigo\Core\CurrentPaths::reset();
+        \Piwigo\Core\Kernel::reset();
         CurrentConfig::reset();
     }
 });
@@ -463,7 +463,7 @@ test('deleteElementFiles skips a remote row with `continue`, not `break` -- a lo
     // whether the local row after it still gets processed.
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
-    \Piwigo\Core\CurrentPaths::set(\Piwigo\Core\Paths::fromRoot($root));
+    \Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot($root));
     CurrentConfig::setNeverDeleteOriginals(false);
 
     mkdir($root . '/upload/2026/07', 0o777, true);
@@ -484,7 +484,7 @@ test('deleteElementFiles skips a remote row with `continue`, not `break` -- a lo
     } finally {
         $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::images() . ' WHERE id IN (760001, 760002)');
         imageServiceTestRrmdir($root);
-        \Piwigo\Core\CurrentPaths::reset();
+        \Piwigo\Core\Kernel::reset();
         CurrentConfig::reset();
     }
 });
@@ -499,7 +499,7 @@ test('deleteElementFiles treats an explicitly-empty-string representative_ext th
     // files[]-entry / unlink attempt genuinely happened.
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
-    \Piwigo\Core\CurrentPaths::set(\Piwigo\Core\Paths::fromRoot($root));
+    \Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot($root));
     CurrentConfig::setNeverDeleteOriginals(false);
 
     mkdir($root . '/upload/2026/07/pwg_representative', 0o777, true);
@@ -523,7 +523,7 @@ test('deleteElementFiles treats an explicitly-empty-string representative_ext th
     } finally {
         $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::images() . ' WHERE id = ?', [$imageId]);
         imageServiceTestRrmdir($root);
-        \Piwigo\Core\CurrentPaths::reset();
+        \Piwigo\Core\Kernel::reset();
         CurrentConfig::reset();
     }
 });
@@ -535,7 +535,7 @@ test('deleteElementFiles stops removing a row\'s remaining files (`break`, not `
     // row's own $files list is left untouched, not also removed).
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
-    \Piwigo\Core\CurrentPaths::set(\Piwigo\Core\Paths::fromRoot($root));
+    \Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot($root));
     CurrentConfig::setNeverDeleteOriginals(false);
 
     mkdir($root . '/upload/2026/07/lockedwithrep/pwg_representative', 0o777, true);
@@ -574,7 +574,7 @@ test('deleteElementFiles stops removing a row\'s remaining files (`break`, not `
         chmod($root . '/upload/2026/07/lockedwithrep', 0o755);
         $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::images() . ' WHERE id = ?', [$imageId]);
         imageServiceTestRrmdir($root);
-        \Piwigo\Core\CurrentPaths::reset();
+        \Piwigo\Core\Kernel::reset();
         CurrentConfig::reset();
     }
 });
@@ -591,7 +591,7 @@ test('deleteElementFiles adds representative_ext to the derivative-cache lookup 
     // second untouched.
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
-    \Piwigo\Core\CurrentPaths::set(\Piwigo\Core\Paths::fromRoot($root));
+    \Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot($root));
     CurrentConfig::setDataLocation('data/');
     // Skips the real original/representative file unlink block
     // entirely, keeping this test focused purely on the derivative
@@ -618,7 +618,7 @@ test('deleteElementFiles adds representative_ext to the derivative-cache lookup 
     } finally {
         $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::images() . ' WHERE id = ?', [$imageId]);
         imageServiceTestRrmdir($root);
-        \Piwigo\Core\CurrentPaths::reset();
+        \Piwigo\Core\Kernel::reset();
         CurrentConfig::reset();
     }
 });
@@ -626,7 +626,7 @@ test('deleteElementFiles adds representative_ext to the derivative-cache lookup 
 test('deleteElementFiles stops at the first file it cannot remove and does not report that id or any id after it', function (): void {
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
-    \Piwigo\Core\CurrentPaths::set(\Piwigo\Core\Paths::fromRoot($root));
+    \Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot($root));
     CurrentConfig::setNeverDeleteOriginals(false);
 
     mkdir($root . '/upload/2026/07/locked', 0o777, true);
@@ -664,7 +664,7 @@ test('deleteElementFiles stops at the first file it cannot remove and does not r
         chmod($root . '/upload/2026/07/locked', 0o755);
         $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::images() . ' WHERE id IN (?, ?)', [$blockedId, $afterId]);
         imageServiceTestRrmdir($root);
-        \Piwigo\Core\CurrentPaths::reset();
+        \Piwigo\Core\Kernel::reset();
         CurrentConfig::reset();
     }
 });
@@ -672,7 +672,7 @@ test('deleteElementFiles stops at the first file it cannot remove and does not r
 test('deleteElements() returns 0 without touching the database when physical deletion removes zero files', function (): void {
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
-    \Piwigo\Core\CurrentPaths::set(\Piwigo\Core\Paths::fromRoot($root));
+    \Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot($root));
     CurrentConfig::setNeverDeleteOriginals(false);
 
     mkdir($root . '/upload/2026/07/locked', 0o777, true);
@@ -698,7 +698,7 @@ test('deleteElements() returns 0 without touching the database when physical del
         chmod($root . '/upload/2026/07/locked', 0o755);
         $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::images() . ' WHERE id = ?', [$blockedId]);
         imageServiceTestRrmdir($root);
-        \Piwigo\Core\CurrentPaths::reset();
+        \Piwigo\Core\Kernel::reset();
         CurrentConfig::reset();
     }
 });
@@ -948,7 +948,7 @@ test('addMd5sum() computes and persists a real md5sum for a readable file, prefi
     // only real, correct code produces the real hash on the real row.
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
-    \Piwigo\Core\CurrentPaths::set(\Piwigo\Core\Paths::fromRoot($root));
+    \Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot($root));
     mkdir($root . '/upload/2026/07', 0o777, true);
     file_put_contents($root . '/upload/2026/07/hashme.jpg', 'real content to hash');
 
@@ -965,7 +965,7 @@ test('addMd5sum() computes and persists a real md5sum for a readable file, prefi
     } finally {
         $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::images() . ' WHERE id = ?', [$imageId]);
         imageServiceTestRrmdir($root);
-        \Piwigo\Core\CurrentPaths::reset();
+        \Piwigo\Core\Kernel::reset();
     }
 });
 
@@ -976,7 +976,7 @@ test('addMd5sum() does not stop at the first unhashable id -- a later id in the 
     // order -- visits the unhashable row first.
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
-    \Piwigo\Core\CurrentPaths::set(\Piwigo\Core\Paths::fromRoot($root));
+    \Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot($root));
     mkdir($root . '/upload/2026/07', 0o777, true);
     file_put_contents($root . '/upload/2026/07/readable.jpg', 'hashable content');
 
@@ -994,14 +994,14 @@ test('addMd5sum() does not stop at the first unhashable id -- a later id in the 
     } finally {
         $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::images() . ' WHERE id IN (750001, 750002)');
         imageServiceTestRrmdir($root);
-        \Piwigo\Core\CurrentPaths::reset();
+        \Piwigo\Core\Kernel::reset();
     }
 });
 
 test('addMd5sum() skips ids whose file cannot be hashed and still counts them among the ids it considered', function (): void {
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
-    \Piwigo\Core\CurrentPaths::set(\Piwigo\Core\Paths::fromRoot($root));
+    \Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot($root));
     mkdir($root, 0o777, true);
 
     // md5sum defaults to NULL for a freshly-inserted row, and its path
@@ -1028,7 +1028,7 @@ test('addMd5sum() skips ids whose file cannot be hashed and still counts them am
     } finally {
         $conn->executeStatement('DELETE FROM ' . \Piwigo\Db\Tables::images() . ' WHERE id = ?', [$missingId]);
         imageServiceTestRrmdir($root);
-        \Piwigo\Core\CurrentPaths::reset();
+        \Piwigo\Core\Kernel::reset();
     }
 });
 

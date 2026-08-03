@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Core\WebmasterMailProviderInterface;
 use Piwigo\Event\Lifecycle\LoadingLang;
@@ -52,7 +53,7 @@ function mail_service_with_fake_webmaster(): MailService
  */
 function mail_service_capture_send(MailService $service, string|array $to, array $args = [], array $tpl = []): array
 {
-    CurrentPaths::set(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentConfig::setDataDirChecked('1');
 
     $capturedTo = null;
@@ -183,6 +184,13 @@ afterEach(function (): void {
     // ran later in the same process (composer test's own default,
     // non---parallel mode).
     \Piwigo\Lang\Translator::reset();
+    // Every Kernel::boot() call in this file (mail_service_capture_send()'s
+    // own, plus several tests' direct calls) was never matched by a reset
+    // -- Kernel stayed booted (with whichever root the last call used) for
+    // every later test in this shared process. Real cross-file leak found
+    // via composer test's own full-suite run (e.g. TemplateInstanceTest's
+    // func_get_combined_scripts tests picking up this file's root url).
+    Kernel::reset();
 });
 
 test('formatEmail wraps a name and email into "name <email>"', function (): void {
@@ -474,7 +482,7 @@ test('getMailTemplate resolves the real, absolute theme root and the given email
     // fake, cwd-mismatched root removes that coincidence: only the real
     // concatenation can make the resolved dir start with it.
     $fakeRoot = Paths::fromRoot('/tmp/piwigo-mailservice-test-fake-root-' . getmypid() . '/');
-    CurrentPaths::set($fakeRoot);
+    Kernel::boot($fakeRoot);
     CurrentConfig::setDataDirChecked('1');
     $service = new MailService();
 
@@ -1255,7 +1263,7 @@ test('mail Bcc\'s the webmaster with an explicitly empty name, not a null/missin
 });
 
 test('mail defaults the smtp port to 25 when smtp_host has no explicit ":port" suffix', function (): void {
-    CurrentPaths::set(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentConfig::setDataDirChecked('1');
     CurrentConfig::setMailSenderEmail('sender@example.test');
     CurrentConfig::setMailAllowHtml(false);
@@ -1287,7 +1295,7 @@ test('mail defaults the smtp port to 25 when smtp_host has no explicit ":port" s
 test('mail actually reaches a real Transport and sends when no before_send_mail listener intercepts it', function (): void {
     CurrentConfig::setMailSenderEmail('sender@example.test');
     CurrentConfig::setMailAllowHtml(false);
-    CurrentPaths::set(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentConfig::setDataDirChecked('1');
 
     $port = random_int(20_000, 60_000);
@@ -1313,7 +1321,7 @@ test('mail actually reaches a real Transport and sends when no before_send_mail 
 test('mail returns false and logs a Mailer Error when the real Transport rejects the message', function (): void {
     CurrentConfig::setMailSenderEmail('sender@example.test');
     CurrentConfig::setMailAllowHtml(false);
-    CurrentPaths::set(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentConfig::setDataDirChecked('1');
 
     $port = random_int(20_000, 60_000);
@@ -1351,7 +1359,7 @@ test('mail returns false and logs a Mailer Error when the real Transport rejects
 });
 
 test('switchLangTo pushes the current language and translations, switchLangBack fully restores them (not just CurrentUser::language)', function (): void {
-    CurrentPaths::set(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentUser::set(User::fromUserArray(['id' => 1, 'username' => 'tester', 'status' => 'normal', 'language' => 'en_UK']));
     Lang::setLangInfo(['code' => 'en_UK_marker']);
     $service = new MailService();
@@ -1372,7 +1380,7 @@ test('switchLangTo pushes the current language and translations, switchLangBack 
 });
 
 test('switchLangTo resets lang_info/the translation dictionary before reloading, rather than merging fresh data on top of stale state', function (): void {
-    CurrentPaths::set(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentUser::set(User::fromUserArray(['id' => 1, 'username' => 'tester', 'status' => 'normal', 'language' => 'en_UK']));
     // Neither key below is ever set by a real language file -- if they
     // survive switchLangTo('fr_FR'), the reset (not the reload itself)
@@ -1389,7 +1397,7 @@ test('switchLangTo resets lang_info/the translation dictionary before reloading,
 });
 
 test('switchLangTo fires the loading_lang event while reloading a language for the first time', function (): void {
-    CurrentPaths::set(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentUser::set(User::fromUserArray(['id' => 1, 'username' => 'tester', 'status' => 'normal', 'language' => 'en_UK']));
     $service = new MailService();
 
@@ -1411,7 +1419,7 @@ test('switchLangTo/switchLangBack nest in real LIFO order across more than one p
     // Kills switchLangBack()'s own ArrayPopToArrayShift: a single-push
     // round trip can't distinguish pop (LIFO) from shift (FIFO) since
     // there's only one element either way -- this needs two nested pushes.
-    CurrentPaths::set(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentUser::set(User::fromUserArray(['id' => 1, 'username' => 'tester', 'status' => 'normal', 'language' => 'en_UK']));
     $service = new MailService();
 
@@ -1427,7 +1435,7 @@ test('switchLangTo/switchLangBack nest in real LIFO order across more than one p
 });
 
 test('switchLangTo reuses its own cache for a language already switched to once, without reloading language files again', function (): void {
-    CurrentPaths::set(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentUser::set(User::fromUserArray(['id' => 1, 'username' => 'tester', 'status' => 'normal', 'language' => 'en_UK']));
     $service = new MailService();
     $service->switchLangTo('fr_FR');
@@ -1458,7 +1466,7 @@ test('switchLangTo only ever snapshots the ORIGINAL starting language once per r
     // behavior, not a bug -- this test pins it down so a mutation that
     // widened the guard (re-snapshotting on every distinct language)
     // can't slip through unnoticed.
-    CurrentPaths::set(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentUser::set(User::fromUserArray(['id' => 1, 'username' => 'tester', 'status' => 'normal', 'language' => 'en_UK']));
     $service = new MailService();
 
@@ -1476,7 +1484,7 @@ test('switchLangTo only ever snapshots the ORIGINAL starting language once per r
 });
 
 test('switchLangTo replays every plugin language file already loaded this request, in the newly-switched-to language', function (): void {
-    CurrentPaths::set(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentUser::set(User::fromUserArray(['id' => 1, 'username' => 'tester', 'status' => 'normal', 'language' => 'en_UK']));
     $dir = sys_get_temp_dir() . '/piwigo-mailservice-plugin-test-' . getmypid() . '/';
 

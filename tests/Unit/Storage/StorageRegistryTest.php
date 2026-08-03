@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Storage\StorageRegistry;
@@ -17,12 +16,7 @@ use Piwigo\Storage\StorageRegistry;
  * behavior (it has no safe default, so it throws via Kernel::container()
  * itself when not booted) is covered separately below.
  */
-beforeEach(function (): void {
-    CurrentPaths::set(Paths::fromRoot(dirname(__DIR__, 3)));
-});
-
 afterEach(function (): void {
-    CurrentPaths::reset();
     if (Kernel::isBooted()) {
         Kernel::reset();
     }
@@ -91,7 +85,11 @@ test('disk throws when Kernel has not booted', function (): void {
 });
 
 test('disk delegates to the container-shared instance once Kernel has booted', function (): void {
-    Kernel::boot();
+    // StorageRegistry::class's own container factory (config/container.php)
+    // always calls fromConfig(), which requires() config/storage.php --
+    // that file unconditionally calls CurrentPaths::get(), so a real Paths
+    // must be given here, not a bare Kernel::boot().
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3)));
     $storageRegistry = Kernel::container()->get(StorageRegistry::class);
     if (! $storageRegistry instanceof StorageRegistry) {
         throw new \LogicException('Container returned an unexpected type for ' . StorageRegistry::class);
@@ -100,17 +98,16 @@ test('disk delegates to the container-shared instance once Kernel has booted', f
     expect(StorageRegistry::disk('temp'))->toBe($storageRegistry->get('temp'));
 });
 
-test('container-resolved StorageRegistry requires config/storage.php from beneath CurrentPaths::get()->root, not a bare relative path', function (): void {
-    // Distinctive, non-project root: config/storage.php below it declares a
-    // disk name ('mutation-canary') that the real project config/storage.php
-    // does not have. If config/container.php's own `CurrentPaths::get()->root .`
-    // concatenation were dropped, StorageRegistry::fromConfig() would
-    // receive the bare literal 'config/storage.php' -- resolved relative to
-    // cwd/include_path, not this root -- and would never see this disk, so
-    // get() would throw instead of resolving it.
+test('fromConfig loads factories from the exact given path, not a hardcoded one', function (): void {
+    // Unlike the container's own StorageRegistry::class factory binding
+    // (config/container.php, a fixed dirname(__DIR__) . '/config/storage.php'
+    // path -- same "value never varies per request" reasoning as
+    // Router::class's own routes.php binding, see that binding's own
+    // comment), fromConfig() itself is a plain, generic loader: whatever
+    // path it's given is what it requires(), verbatim.
     $dir = sys_get_temp_dir() . '/piwigo-storage-registry-fromconfig-' . bin2hex(random_bytes(4));
-    mkdir($dir . '/config', 0o777, true);
-    file_put_contents($dir . '/config/storage.php', <<<'PHP'
+    mkdir($dir, 0o777, true);
+    file_put_contents($dir . '/storage.php', <<<'PHP'
         <?php
 
         declare(strict_types=1);
@@ -122,13 +119,11 @@ test('container-resolved StorageRegistry requires config/storage.php from beneat
         ];
         PHP);
 
-    CurrentPaths::set(Paths::fromRoot($dir));
-    Kernel::boot();
+    $registry = StorageRegistry::fromConfig($dir . '/storage.php');
 
-    expect(StorageRegistry::disk('mutation-canary'))->toBeInstanceOf(Filesystem::class);
+    expect($registry->get('mutation-canary'))->toBeInstanceOf(Filesystem::class);
 
-    unlink($dir . '/config/storage.php');
-    rmdir($dir . '/config');
+    unlink($dir . '/storage.php');
     rmdir($dir);
 });
 

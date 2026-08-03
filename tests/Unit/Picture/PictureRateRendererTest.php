@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Html\HtmlService;
@@ -40,7 +41,7 @@ function picture_rate_test_rrmdir(string $dir): void
 beforeEach(function (): void {
     $root = sys_get_temp_dir() . '/piwigo-picture-rate-test-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
-    CurrentPaths::set(Paths::fromRoot($root));
+    Kernel::boot(Paths::fromRoot($root));
     CurrentConfig::setDataLocation('data/');
     CurrentConfig::setDataDirChecked('1');
     CurrentTemplate::set(new Template());
@@ -49,7 +50,7 @@ beforeEach(function (): void {
 afterEach(function (): void {
     picture_rate_test_rrmdir(CurrentPaths::get()->root);
     CurrentTemplate::reset();
-    CurrentPaths::reset();
+    Kernel::reset();
     CurrentConfig::reset();
 });
 

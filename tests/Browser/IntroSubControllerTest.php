@@ -336,7 +336,7 @@ it('shows the latest Piwigo news message from a pre-seeded, still-fresh on-disk 
 
     // Browser tests run as plain HTTP-driving PHP-CLI processes with no
     // app bootstrap of their own (unlike Integration tests, which
-    // explicitly call CurrentPaths::set()) -- CurrentPaths::get()/
+    // explicitly call Kernel::boot()) -- CurrentPaths::get()/
     // Lang::langInfo() would either throw or return an empty default
     // here, so the app root is computed manually instead. It's the repo
     // root, one level *above* public/ -- public/*.php's own

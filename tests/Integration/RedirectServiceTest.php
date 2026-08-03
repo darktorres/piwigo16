@@ -10,7 +10,6 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\CurrentPaths;
-use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UniqueExecLock;
@@ -69,10 +68,10 @@ final class RedirectServiceTest extends IntegrationTestCase
 
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
-        Kernel::boot();
+        // Kernel is already booted by parent::setUp() with this exact same
+        // dirname(__DIR__, 2) root -- no need to boot (or bind Paths) again.
         CurrentConfigService::set(new ConfigService($this->buildConfigRepository()));
 
-        CurrentPaths::set(Paths::fromRoot(dirname(__DIR__, 2)));
         // footer.tpl's {get_combined_scripts load='footer'} tag reaches
         // ScriptLoader::urlService() -- unset by default, real
         // RequestBootstrap-only wiring this test never boots.
@@ -94,7 +93,6 @@ final class RedirectServiceTest extends IntegrationTestCase
         CurrentTemplate::reset();
         Lang::reset();
         CurrentConfig::reset();
-        Kernel::reset();
         parent::tearDown();
     }
 
@@ -103,14 +101,17 @@ final class RedirectServiceTest extends IntegrationTestCase
         $this->expectException(\LogicException::class);
         $this->expectExceptionMessage('Container returned an unexpected type for ' . UserService::class);
 
-        KernelContainerOverride::withWrongTypeFor(
-            UserService::class,
+        // KernelContainerOverride::with() rebuilds the container from
+        // scratch, so Paths::class needs re-binding alongside the
+        // deliberately-wrong UserService::class override -- CurrentPaths is
+        // a pure shim now (Phase 3) with no state of its own to survive the
+        // rebuild.
+        KernelContainerOverride::with(
+            [
+                UserService::class => new \stdClass(),
+                Paths::class => Paths::fromRoot(dirname(__DIR__, 2)),
+            ],
             function (): void {
-                // KernelContainerOverride::with() calls Kernel::reset()
-                // first, which cascades into CurrentPaths::reset() -- must
-                // be re-set inside the callback (see AdminDispatcherTest's
-                // identical comment).
-                CurrentPaths::set(Paths::fromRoot(dirname(__DIR__, 2)));
                 new RedirectService()->redirectHtml('http://example.test/x');
             }
         );

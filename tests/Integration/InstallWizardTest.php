@@ -352,7 +352,7 @@ final class InstallWizardTest extends IntegrationTestCase
 
     public function test_constructor_reads_the_default_data_location_when_the_local_override_sets_nothing(): void
     {
-        CurrentPaths::set($this->paths);
+        Kernel::boot($this->paths);
 
         $wizard = new InstallWizard('itest_', $this->paths);
 
@@ -361,7 +361,7 @@ final class InstallWizardTest extends IntegrationTestCase
 
     public function test_constructor_throws_when_a_local_override_sets_a_non_string_data_location(): void
     {
-        CurrentPaths::set($this->paths);
+        Kernel::boot($this->paths);
         file_put_contents($this->paths->local . 'config/config.inc.php', "<?php\n\$conf['data_location'] = 12345;\n");
 
         $this->expectException(\LogicException::class);

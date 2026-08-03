@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Piwigo\Admin\AdminUiHelper;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 
 beforeEach(function (): void {
@@ -13,11 +14,11 @@ beforeEach(function (): void {
     // the process, not this project's root, so a `./`-relative default
     // silently resolved to nothing in production -- fixed at the source,
     // see AdminUiHelper's own docblock).
-    CurrentPaths::set(Paths::fromRoot(dirname(__DIR__, 3)));
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3)));
 });
 
 afterEach(function (): void {
-    CurrentPaths::reset();
+    Kernel::reset();
 });
 
 test('getExtents finds every .tpl file under the real template-extension directory, stripping the resolved root prefix', function (): void {

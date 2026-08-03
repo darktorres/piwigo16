@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseReadyException;
@@ -54,7 +55,7 @@ function makePictureCommentTestTemplate(): Template
 {
     $root = sys_get_temp_dir() . '/piwigo-picture-comment-test-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
-    CurrentPaths::set(Paths::fromRoot($root));
+    Kernel::boot(Paths::fromRoot($root));
     CurrentConfig::setDataLocation('data/');
     CurrentConfig::setDataDirChecked('1');
 
@@ -78,7 +79,7 @@ beforeEach(function (): void {
 afterEach(function (): void {
     picture_comment_test_rrmdir(CurrentPaths::get()->root);
     CurrentTemplate::reset();
-    CurrentPaths::reset();
+    Kernel::reset();
     CurrentUser::reset();
     CurrentConfig::reset();
     unset($_POST['content'], $_POST['author'], $_POST['website_url'], $_POST['email'], $_POST['key']);

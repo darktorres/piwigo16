@@ -6,7 +6,6 @@ namespace Piwigo\Tests\Integration;
 
 use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Config\ConfigService;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Kernel;
@@ -132,17 +131,19 @@ final class RequestBootstrapBootEntryPointTest extends IntegrationTestCase
 
         // KernelContainerOverride::with()'s own finally already guarantees
         // Kernel::reset() regardless of the exception below, so no
-        // additional cleanup is needed here.
-        KernelContainerOverride::withWrongTypeFor(
-            ConfigService::class,
+        // additional cleanup is needed here. Paths::class must be bound
+        // alongside the deliberately-wrong ConfigService::class override --
+        // with() rebuilds the container from scratch with no Paths given by
+        // default, and CurrentPaths (Phase 3) is a pure shim with no state
+        // of its own to survive that rebuild; bootEntryPoint()'s own
+        // internal Kernel::boot($paths) call is a genuine no-op here since
+        // booted is already forced true by the override.
+        KernelContainerOverride::with(
+            [
+                ConfigService::class => new \stdClass(),
+                Paths::class => $paths,
+            ],
             function () use ($paths): void {
-                // with() calls Kernel::reset() internally, which also
-                // clears CurrentPaths -- restore it before bootEntryPoint()
-                // runs anything that needs it (Kernel::boot($paths) itself
-                // is a no-op here since booted is already forced true by
-                // the override).
-                CurrentPaths::set($paths);
-
                 // Captured now, while the override's own container is still
                 // alive, so tearDown() can still check/undo install()'s real
                 // set_error_handler() registration after this callback's

@@ -33,11 +33,13 @@ use Psr\Container\ContainerInterface;
  * not re-wire or corrupt state.
  *
  * Legacy Coupling Retirement gap-closure (entry-shell define()/include
- * round): also publishes $paths to CurrentPaths::set() here -- the one
- * point every real bootstrap path (HTTP, CLI, install) already converges
- * on a real Paths, for the handful of static-utility classes that can't
- * take constructor-injected Paths at all. See CurrentPaths's own
- * docblock.
+ * round): $paths, once given, is bound as `Paths::class` inside
+ * Container::build() -- the one point every real bootstrap path (HTTP,
+ * CLI, install) already converges on a real Paths. Singleton/service-
+ * locator elimination campaign, Phase 3: `CurrentPaths` used to keep its
+ * own separate static copy via a `set()` call here; now it's a pure
+ * transitional shim reading straight from this same container binding
+ * (see its own docblock), so no separate publish step is needed.
  */
 final class Kernel
 {
@@ -51,10 +53,6 @@ final class Kernel
             return;
         }
         self::$booted = true;
-
-        if ($paths instanceof Paths) {
-            CurrentPaths::set($paths);
-        }
 
         self::$container = Container::build(paths: $paths, mountDepth: $mountDepth, isWs: $isWs, isAdmin: $isAdmin);
     }
@@ -84,6 +82,5 @@ final class Kernel
     {
         self::$booted = false;
         self::$container = null;
-        CurrentPaths::reset();
     }
 }

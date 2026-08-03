@@ -3,11 +3,11 @@
 declare(strict_types=1);
 
 use Gettext\Headers;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Lang\Translator;
+use Piwigo\Tests\Support\KernelContainerOverride;
 
 function langTestRrmdir(string $dir): void
 {
@@ -227,7 +227,6 @@ beforeEach(function (): void {
 afterEach(function (): void {
     Lang::reset();
     Translator::reset();
-    CurrentPaths::reset();
     \Piwigo\Core\Kernel::reset();
     langTestRrmdir(is_string($this->langRoot) ? $this->langRoot : '');
 });
@@ -488,13 +487,14 @@ test('load treats an empty dirname as "use the site root", both for the file loo
     // by a real fixture only findable through that substituted root).
     $root = $this->langRoot . '/site-root-empty-dirname/';
     langTestWritePo($root . 'language/en_UK/greeting.po', 'en_UK', 'Hi (site root)');
-    CurrentPaths::set(Paths::fromRoot($root));
 
-    $result = Lang::load('greeting.lang', '', ['language' => 'en_UK', 'no_fallback' => true]);
+    KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function (): void {
+        $result = Lang::load('greeting.lang', '', ['language' => 'en_UK', 'no_fallback' => true]);
 
-    expect($result)->toBeTrue()
-        ->and(Translator::get()->translate('Hello'))->toBe('Hi (site root)')
-        ->and(Lang::languageFiles())->toBe([]);
+        expect($result)->toBeTrue()
+            ->and(Translator::get()->translate('Hello'))->toBe('Hi (site root)')
+            ->and(Lang::languageFiles())->toBe([]);
+    });
 });
 
 test('load never tracks a call with an empty filename', function (): void {
@@ -790,23 +790,25 @@ test('reset clears isLangInfoInitialized back to false, not leaving it true', fu
 test('getParentLanguage(with an explicit lang_id) reads the X-Piwigo-Parent header from that language\'s own common.po', function (): void {
     $root = $this->langRoot . '/site-root-with-parent/';
     langTestWritePo($root . 'language/de_DE/common.po', 'de_DE', 'Hallo Welt', parent: 'fr_FR');
-    CurrentPaths::set(Paths::fromRoot($root));
 
-    $method = new ReflectionMethod(Lang::class, 'getParentLanguage');
-    $result = $method->invoke(null, 'de_DE');
+    KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function (): void {
+        $method = new ReflectionMethod(Lang::class, 'getParentLanguage');
+        $result = $method->invoke(null, 'de_DE');
 
-    expect($result)->toBe('fr_FR');
+        expect($result)->toBe('fr_FR');
+    });
 });
 
 test('getParentLanguage(with an explicit lang_id) returns null when that language has no common.po at all', function (): void {
     $root = $this->langRoot . '/site-root-without-file/';
     mkdir($root, 0o777, true);
-    CurrentPaths::set(Paths::fromRoot($root));
 
-    $method = new ReflectionMethod(Lang::class, 'getParentLanguage');
-    $result = $method->invoke(null, 'xx_XX');
+    KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function (): void {
+        $method = new ReflectionMethod(Lang::class, 'getParentLanguage');
+        $result = $method->invoke(null, 'xx_XX');
 
-    expect($result)->toBeNull();
+        expect($result)->toBeNull();
+    });
 });
 
 test('getParentLanguage(with an explicit empty string) reads from langInfo, same as the null default', function (): void {
@@ -850,12 +852,13 @@ test('getParentLanguage(with an explicit lang_id) returns null when the common.p
     // still resolve to null, not the empty string itself.
     $root = $this->langRoot . '/site-root-empty-parent-header/';
     langTestWritePo($root . 'language/de_DE/common.po', 'de_DE', 'Hallo Welt', parent: '');
-    CurrentPaths::set(Paths::fromRoot($root));
 
-    $method = new ReflectionMethod(Lang::class, 'getParentLanguage');
-    $result = $method->invoke(null, 'de_DE');
+    KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function (): void {
+        $method = new ReflectionMethod(Lang::class, 'getParentLanguage');
+        $result = $method->invoke(null, 'de_DE');
 
-    expect($result)->toBeNull();
+        expect($result)->toBeNull();
+    });
 });
 
 /**

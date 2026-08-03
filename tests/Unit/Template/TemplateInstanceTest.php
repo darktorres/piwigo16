@@ -193,8 +193,12 @@ function template_instance_test_restore_server_keys(array $saved): void
 
 beforeEach(function (): void {
     $root = sys_get_temp_dir() . '/piwigo-template-instance-test-' . bin2hex(random_bytes(8));
+    // Captured on $this, not re-read via CurrentPaths::get() in afterEach()
+    // below -- a test using KernelContainerOverride::with() (e.g. the
+    // admin-context one further down) leaves Kernel reset by the time
+    // afterEach() runs, so CurrentPaths::get() would throw there.
+    $this->root = $root;
     mkdir($root, 0o777, true);
-    CurrentPaths::set(Paths::fromRoot($root));
     CurrentConfig::setDataLocation('data/');
     CurrentConfig::setDataDirChecked('1');
     CurrentUser::attachGlobals();
@@ -202,15 +206,16 @@ beforeEach(function (): void {
     // Template's own ProcessCache usage now goes through a transitional
     // static shim (singleton/service-locator elimination campaign, Phase 1
     // -- Template isn't converted to constructor injection, see that
-    // shim's own docblock), which needs a real container.
-    Kernel::boot();
+    // shim's own docblock), which needs a real container. CurrentPaths
+    // (Phase 3) is itself a pure shim reading Paths::class straight out of
+    // that same container, so this one Kernel::boot() call establishes both.
+    Kernel::boot(Paths::fromRoot($root));
 });
 
 afterEach(function (): void {
-    template_instance_test_rrmdir(CurrentPaths::get()->root);
+    template_instance_test_rrmdir(is_string($this->root) ? $this->root : '');
     CurrentUser::reset();
     CurrentConfig::reset();
-    CurrentPaths::reset();
     EventDispatcher::reset();
     Kernel::reset();
 });
@@ -461,8 +466,17 @@ test('constructor registers the local-css header prefilter for a themed template
 });
 
 test('constructor does not register the local-css header prefilter for a themed template while in admin context', function (): void {
+    // KernelContainerOverride::with() rebuilds the container from scratch,
+    // so Paths::class needs re-supplying alongside the deliberate
+    // AdminContext override -- captured from the live container
+    // beforeEach() already booted, before with()'s own Kernel::reset()
+    // discards it.
+    $paths = CurrentPaths::get();
     \Piwigo\Tests\Support\KernelContainerOverride::with(
-        [\Piwigo\Core\AdminContext::class => new \Piwigo\Core\AdminContext(true)],
+        [
+            \Piwigo\Core\AdminContext::class => new \Piwigo\Core\AdminContext(true),
+            Paths::class => $paths,
+        ],
         function (): void {
             $t = new Template('.', 'template-instance-test-theme-b');
 

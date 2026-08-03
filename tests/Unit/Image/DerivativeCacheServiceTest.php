@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Image\DerivativeCacheService;
 
@@ -13,7 +14,7 @@ use Piwigo\Image\DerivativeCacheService;
 // uniquely-named temp directory per test (rather than a shared constant)
 // means the recursive-delete helper below can never touch anything outside
 // this run's own sandbox, regardless of test ordering or other suites'
-// own CurrentPaths::set() calls.
+// own Kernel::boot() calls.
 function derivative_cache_test_rrmdir(string $dir): void
 {
     if (! is_dir($dir)) {
@@ -34,7 +35,7 @@ beforeEach(function (): void {
     CurrentConfig::reset();
     $root = sys_get_temp_dir() . '/piwigo-derivative-cache-test-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
-    CurrentPaths::set(Paths::fromRoot($root));
+    Kernel::boot(Paths::fromRoot($root));
     CurrentConfig::setDataLocation('data/');
     mkdir(CurrentPaths::get()->root . CurrentConfig::derivativeDir(), 0o777, true);
 });
@@ -42,7 +43,7 @@ beforeEach(function (): void {
 afterEach(function (): void {
     derivative_cache_test_rrmdir(CurrentPaths::get()->root);
     CurrentConfig::reset();
-    CurrentPaths::reset();
+    Kernel::reset();
 });
 
 test('clearDerivativeCacheRecursive deletes only files matching the pattern', function (): void {

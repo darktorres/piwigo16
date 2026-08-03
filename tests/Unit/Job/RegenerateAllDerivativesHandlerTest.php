@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Job\Handler\RegenerateAllDerivativesHandler;
 use Piwigo\Job\RegenerateAllDerivativesJob;
 
 // See tests/Unit/Image/DerivativeCacheServiceTest.php's own comment on why
-// a fresh, uniquely-named temp root per test (via CurrentPaths::set()) is
+// a fresh, uniquely-named temp root per test (via Kernel::boot()) is
 // used instead of a single shared constant.
 function regen_handler_test_rrmdir(string $dir): void
 {
@@ -32,7 +33,7 @@ beforeEach(function (): void {
     CurrentConfig::reset();
     $root = sys_get_temp_dir() . '/piwigo-regen-handler-test-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
-    CurrentPaths::set(Paths::fromRoot($root));
+    Kernel::boot(Paths::fromRoot($root));
     CurrentConfig::setDataLocation('data/');
     mkdir(CurrentPaths::get()->root . CurrentConfig::derivativeDir(), 0o777, true);
 });
@@ -40,7 +41,7 @@ beforeEach(function (): void {
 afterEach(function (): void {
     regen_handler_test_rrmdir(CurrentPaths::get()->root);
     CurrentConfig::reset();
-    CurrentPaths::reset();
+    Kernel::reset();
 });
 
 test('__invoke delegates to DerivativeCacheService::clearDerivativeCache with the job types', function (): void {

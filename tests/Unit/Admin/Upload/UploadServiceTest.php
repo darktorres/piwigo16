@@ -6,7 +6,6 @@ use Piwigo\Admin\Image\ImageProcessingException;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
@@ -16,6 +15,7 @@ use Piwigo\Db\Tables;
 use Piwigo\Event\Picture\UploadFile;
 use Piwigo\Html\HtmlService;
 use Piwigo\Storage\StorageRegistry;
+use Piwigo\Tests\Support\KernelContainerOverride;
 use Piwigo\Url\UrlService;
 
 // Marker-based filesystem safety: this suite writes real files to verify
@@ -54,11 +54,12 @@ function upload_service_test_current_logger(): CurrentLogger
 
 /**
  * StorageRegistry is resolved fresh from the container on every call (not
- * memoized) since a handful of tests call CurrentPaths::set() before
- * calling this helper -- StorageRegistry's own factory captures
- * CurrentPaths::get() once, at first resolution, so resolving here (after
- * any such CurrentPaths::set()) rather than once in beforeEach keeps every
- * disk correctly scoped to that test's own marker root.
+ * memoized) since a handful of tests rebind Paths::class via
+ * KernelContainerOverride::with() before calling this helper --
+ * StorageRegistry's own factory captures CurrentPaths::get() once, at
+ * first resolution, so resolving here (inside any such override) rather
+ * than once in beforeEach keeps every disk correctly scoped to that test's
+ * own marker root.
  */
 function upload_service_test_make(): UploadService
 {
@@ -938,26 +939,29 @@ test('addUploadedFile throws when md5_file() fails to read the source file', fun
 test('readyForUploadMessage returns null when the real upload directory exists and is writable', function (): void {
     $root = upload_service_test_marker() . '/root/';
     mkdir($root . 'upload', 0o777, true);
-    CurrentPaths::set(Paths::fromRoot($root));
     CurrentConfig::setUploadDir('upload/');
 
-    expect(upload_service_test_make()->readyForUploadMessage())->toBeNull();
-
-    CurrentPaths::reset();
+    // KernelContainerOverride::with() rebinds Paths::class for this test's
+    // own scope -- CurrentPaths (singleton/service-locator elimination
+    // campaign, Phase 3) is a pure shim now, reading whatever the live
+    // container has, not an independently-settable static.
+    KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function (): void {
+        expect(upload_service_test_make()->readyForUploadMessage())->toBeNull();
+    });
 });
 
 test('readyForUploadMessage reports a missing-directory message when the parent is not writable', function (): void {
     $root = upload_service_test_marker() . '/root2/';
     mkdir($root, 0o555, true);
-    CurrentPaths::set(Paths::fromRoot($root));
     CurrentConfig::setUploadDir('upload/');
 
     try {
-        expect(upload_service_test_make()->readyForUploadMessage())
-            ->toBe('Create the "upload/" directory at the root of your Piwigo installation');
+        KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function (): void {
+            expect(upload_service_test_make()->readyForUploadMessage())
+                ->toBe('Create the "upload/" directory at the root of your Piwigo installation');
+        });
     } finally {
         chmod($root, 0o777);
-        CurrentPaths::reset();
     }
 });
 
@@ -965,19 +969,18 @@ test('readyForUploadMessage reports a chmod message and fixes an unwritable exis
     $root = upload_service_test_marker() . '/root3/';
     mkdir($root . 'upload', 0o777, true);
     chmod($root . 'upload', 0o555);
-    CurrentPaths::set(Paths::fromRoot($root));
     CurrentConfig::setUploadDir('upload/');
 
-    $message = upload_service_test_make()->readyForUploadMessage();
+    KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function () use ($root): void {
+        $message = upload_service_test_make()->readyForUploadMessage();
 
-    // @chmod(0777) inside the method itself is expected to succeed for a
-    // directory this test process owns, so the real branch exercised here
-    // is the re-check passing -- confirmed by the directory actually
-    // ending up writable, not by asserting a specific returned message.
-    expect(is_writable($root . 'upload'))->toBeTrue();
-    expect($message)->toBeNull();
-
-    CurrentPaths::reset();
+        // @chmod(0777) inside the method itself is expected to succeed for a
+        // directory this test process owns, so the real branch exercised here
+        // is the re-check passing -- confirmed by the directory actually
+        // ending up writable, not by asserting a specific returned message.
+        expect(is_writable($root . 'upload'))->toBeTrue();
+        expect($message)->toBeNull();
+    });
 });
 
 function upload_service_prepare_directory(string $directory): void

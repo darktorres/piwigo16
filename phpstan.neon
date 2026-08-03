@@ -105,6 +105,7 @@ parameters:
                 - tests/Unit/Search/Inflector/Inflector_frTest.php
                 - tests/Unit/Session/SessionServiceTest.php
                 - tests/Unit/Site/LocalSiteReaderTest.php
+                - tests/Unit/Template/TemplateInstanceTest.php
         # Same root cause one level further downstream than property.notFound
         # above: once $this->root/$this->langRoot's type is unresolvable
         # (Pest's dynamic closure-bound state), every string concatenation

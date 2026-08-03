@@ -14,6 +14,7 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\FilesystemHelper;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
@@ -259,13 +260,13 @@ beforeEach(function () use (&$themesInstalledFixtureRoot): void {
     CurrentConfig::reset();
     $themesInstalledFixtureRoot = sys_get_temp_dir() . '/piwigo-themes-installed-page-renderer-test-' . bin2hex(random_bytes(4)) . '/';
     mkdir($themesInstalledFixtureRoot . 'themes', 0o777, true);
-    CurrentPaths::set(Paths::fromRoot($themesInstalledFixtureRoot));
+    Kernel::boot(Paths::fromRoot($themesInstalledFixtureRoot));
     CurrentConfig::setThemesDir(rtrim($themesInstalledFixtureRoot, '/') . '/themes');
 });
 
 afterEach(function () use (&$themesInstalledFixtureRoot): void {
     CurrentConfig::reset();
-    CurrentPaths::reset();
+    Kernel::reset();
     if (is_string($themesInstalledFixtureRoot) && is_dir($themesInstalledFixtureRoot)) {
         FilesystemHelper::deltree($themesInstalledFixtureRoot);
     }

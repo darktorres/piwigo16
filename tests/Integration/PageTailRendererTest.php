@@ -10,6 +10,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\PageState;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Core\TelemetrySenderInterface;
 use Piwigo\Html\HtmlService;
@@ -55,7 +56,7 @@ final class PageTailRendererTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        CurrentPaths::set(Paths::fromRoot(dirname(__DIR__, 2)));
+        Kernel::boot(Paths::fromRoot(dirname(__DIR__, 2)));
         CurrentConfigService::set(new ConfigService($this->buildConfigRepository()));
         // footer.tpl's own {get_combined_scripts load='footer'} tag reaches
         // ScriptLoader::urlService() -- unset by default, real

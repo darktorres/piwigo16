@@ -12,7 +12,6 @@ use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Kernel;
-use Piwigo\Core\Paths;
 use Piwigo\Core\UniqueExecLock;
 use Piwigo\Html\HtmlService;
 use Piwigo\Template\CurrentTemplate;
@@ -64,10 +63,10 @@ final class PageTailTest extends IntegrationTestCase
 
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
-        Kernel::boot();
+        // Kernel is already booted by parent::setUp() with this exact same
+        // dirname(__DIR__, 2) root -- no need to boot (or bind Paths) again.
         CurrentConfigService::set(new ConfigService($this->buildConfigRepository()));
 
-        CurrentPaths::set(Paths::fromRoot(dirname(__DIR__, 2)));
         // footer.tpl's own {get_combined_scripts load='footer'} tag reaches
         // ScriptLoader::urlService() -- unset by default, real
         // RequestBootstrap-only wiring this test never boots.

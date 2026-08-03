@@ -100,7 +100,7 @@ test('writeTestErrorsLog is a no-op when test mode is not active, never touching
     // testModeIsActive() guard were ever removed, the very next line
     // (CurrentPaths::get()->logs) would throw LogicException instead of
     // silently returning -- that would-be exception is the real assertion.
-    \Piwigo\Core\CurrentPaths::reset();
+    \Piwigo\Core\Kernel::reset();
     $original = $_SERVER['HTTP_X_PIWIGO_ENV'] ?? null;
     unset($_SERVER['HTTP_X_PIWIGO_ENV']);
 
@@ -126,7 +126,7 @@ test('writeTestErrorsLog creates _data/logs/ when it does not exist yet, instead
     mkdir($root);
 
     try {
-        \Piwigo\Core\CurrentPaths::set(\Piwigo\Core\Paths::fromRoot($root));
+        \Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot($root));
 
         $method = new ReflectionMethod(ErrorCollector::class, 'writeTestErrorsLog');
         // @ suppression alone doesn't stop PHPUnit's own ErrorHandler from
@@ -149,7 +149,7 @@ test('writeTestErrorsLog creates _data/logs/ when it does not exist yet, instead
             // ConcatSwitchSides (would reorder to "\n" . $entry).
             ->and(file_get_contents($logPath))->toBe("[WARNING] irrelevant in file.php:1\n");
     } finally {
-        \Piwigo\Core\CurrentPaths::reset();
+        \Piwigo\Core\Kernel::reset();
         exec('rm -rf ' . escapeshellarg($root));
     }
 });
@@ -164,7 +164,7 @@ test('writeTestErrorsLog appends the entry directly when _data/logs/ already exi
     mkdir($root . '_data/logs', 0o777, true);
 
     try {
-        \Piwigo\Core\CurrentPaths::set(\Piwigo\Core\Paths::fromRoot($root));
+        \Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot($root));
 
         $method = new ReflectionMethod(ErrorCollector::class, 'writeTestErrorsLog');
         $method->invoke(null, '[WARNING] first in file.php:1');
@@ -173,7 +173,7 @@ test('writeTestErrorsLog appends the entry directly when _data/logs/ already exi
         $logPath = $root . '_data/logs/test_errors.log';
         expect(file_get_contents($logPath))->toBe("[WARNING] first in file.php:1\n[NOTICE] second in file.php:2\n");
     } finally {
-        \Piwigo\Core\CurrentPaths::reset();
+        \Piwigo\Core\Kernel::reset();
         exec('rm -rf ' . escapeshellarg($root));
     }
 });

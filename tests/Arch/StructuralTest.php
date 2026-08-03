@@ -235,6 +235,7 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
         '/src/Piwigo/Core/AdminContext.php',
         '/src/Piwigo/Validation/InputValidator.php',
         '/src/Piwigo/Core/FilesystemHelper.php',
+        '/src/Piwigo/Core/CurrentPaths.php',
     ];
 
     $hits = [
@@ -395,11 +396,11 @@ test('DeploymentPolicy::set()/reset() are only called from tests/', function ():
  * DbCredentials::reset() turned out to have a real production caller
  * (Admin\Install\InstallWizard::performInstall(), reloading credentials
  * right after writing a fresh .env) and is deliberately excluded here,
- * its own docblock corrected instead of arch-tested. CurrentPaths::reset()
- * has exactly one real caller too, but a legitimate one: Kernel::reset()
- * itself cascades into it, and Kernel::reset() is already test-only-
- * verified above -- filtered out below by name rather than left
- * unguarded, so any *other* new direct caller still fails this test.
+ * its own docblock corrected instead of arch-tested. CurrentPaths no
+ * longer has a reset() at all (singleton/service-locator elimination
+ * campaign, Phase 3 -- see its own, differently-shaped
+ * 'CurrentPaths::get()/isSet() transitional bridge' allow-list test
+ * further below instead).
  */
 test('AdminContext::isActiveStatic() transitional shim has a shrinking, known allow-list', function (): void {
     // Singleton/service-locator elimination campaign, Phase 3:
@@ -491,22 +492,80 @@ test('CurrentLogger::getStatic() transitional shim has a shrinking, known allow-
     expect(describeCallSites($disallowed))->toBe([]);
 });
 
-test('CurrentPaths::reset() is only called from tests/ or the Kernel::reset() cascade', function (): void {
-    // Kernel::reset() (already verified test-only above) cascades into
-    // CurrentPaths::reset() itself -- the one legitimate non-tests/ call
-    // site, filtered out by path so any *other* direct caller still fails.
+test('CurrentPaths::get()/isSet() transitional bridge has a shrinking, known allow-list', function (): void {
+    // Singleton/service-locator elimination campaign, Phase 3: unlike
+    // every other shimmed class in this campaign, get()/isSet() kept their
+    // original names (no `Static` suffix -- see CurrentPaths's own
+    // docblock: it was never converted to an instance itself, `Paths` is
+    // the real DI target), so every single caller below is, by definition,
+    // still on the transitional bridge -- there is no separate "real,
+    // converted" call shape to distinguish from. `set()`/`reset()` no
+    // longer exist at all (no independent state left to set/reset), so
+    // this replaces the old, now-inapplicable 'CurrentPaths::reset() is
+    // only called from tests/' arch test. Every phase that converts one
+    // more of these files to constructor-injected Paths should remove it
+    // from the allow-list below; once empty, delete CurrentPaths entirely
+    // (see its own docblock's deletion criterion).
     $repoRoot = __DIR__ . '/../..';
 
-    $hits = array_values(array_filter(
-        [
-            ...findCallSites($repoRoot . '/src/Piwigo', 'CurrentPaths::reset('),
-            ...findCallSitesInRootPhpFiles($repoRoot, 'CurrentPaths::reset('),
-            ...findCallSitesInBinFiles($repoRoot, 'CurrentPaths::reset('),
-        ],
-        static fn (array $hit): bool => ! str_ends_with($hit['path'], '/Core/Kernel.php')
+    $allowedFiles = [
+        '/src/Piwigo/Admin/AdminUiHelper.php',
+        '/src/Piwigo/Admin/ExtendForTemplatesPageRenderer.php',
+        '/src/Piwigo/Admin/Extensions/ExtensionLifecycle.php',
+        '/src/Piwigo/Admin/Extensions/ExtensionScanner.php',
+        '/src/Piwigo/Admin/Extensions/ExtensionType.php',
+        '/src/Piwigo/Admin/Extensions/PemCatalog.php',
+        '/src/Piwigo/Admin/Install/LegacyFileConf.php',
+        '/src/Piwigo/Admin/LanguagesNewPageRenderer.php',
+        '/src/Piwigo/Admin/Maintenance/FilesystemIntegrityChecker.php',
+        '/src/Piwigo/Admin/PluginLoader.php',
+        '/src/Piwigo/Admin/ThemesNewPageRenderer.php',
+        '/src/Piwigo/Admin/ThemesStandardPagesPageRenderer.php',
+        '/src/Piwigo/Admin/Upload/UploadService.php',
+        '/src/Piwigo/Admin/UserListPageRenderer.php',
+        '/src/Piwigo/Bootstrap/AdminDispatcher.php',
+        '/src/Piwigo/Bootstrap/PageTail.php',
+        '/src/Piwigo/Bootstrap/RedirectService.php',
+        '/src/Piwigo/Bootstrap/RequestBootstrap.php',
+        '/src/Piwigo/Cache/PersistentFileCache.php',
+        '/src/Piwigo/Config/CurrentConfig.php',
+        '/src/Piwigo/Config/DeploymentPolicy.php',
+        '/src/Piwigo/Controller/Admin/ConfigurationSubController.php',
+        '/src/Piwigo/Controller/Admin/IntroSubController.php',
+        '/src/Piwigo/Controller/Admin/SiteManagerSubController.php',
+        '/src/Piwigo/Controller/Admin/SiteUpdateSubController.php',
+        '/src/Piwigo/Controller/FeedController.php',
+        '/src/Piwigo/Controller/NbmController.php',
+        '/src/Piwigo/Controller/PictureController.php',
+        '/src/Piwigo/Core/ErrorCollector.php',
+        '/src/Piwigo/Core/Lang.php',
+        '/src/Piwigo/Core/ThemeCatalog.php',
+        '/src/Piwigo/Image/DerivativeCacheService.php',
+        '/src/Piwigo/Image/DerivativeImage.php',
+        '/src/Piwigo/Image/ImagePathHelper.php',
+        '/src/Piwigo/Image/ImageService.php',
+        '/src/Piwigo/Image/SrcImage.php',
+        '/src/Piwigo/Job/MessengerFactory.php',
+        '/src/Piwigo/Lang/LangService.php',
+        '/src/Piwigo/Mail/MailService.php',
+        '/src/Piwigo/Metadata/MetadataService.php',
+        '/src/Piwigo/Storage/StorageRegistry.php',
+        '/src/Piwigo/Template/CssLoader.php',
+        '/src/Piwigo/Template/FileCombiner.php',
+        '/src/Piwigo/Template/ScriptLoader.php',
+        '/src/Piwigo/Template/Template.php',
+        '/src/Piwigo/Ws/PwgCore.php',
+        '/src/Piwigo/Ws/PwgImages.php',
+    ];
+
+    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'CurrentPaths::');
+
+    $disallowed = array_values(array_filter(
+        $hits,
+        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
     ));
 
-    expect(describeCallSites($hits))->toBe([]);
+    expect(describeCallSites($disallowed))->toBe([]);
 });
 
 test('ErrorCollector::recordFatalStatic() transitional shim has a shrinking, known allow-list', function (): void {

@@ -64,7 +64,7 @@ test('__invoke actually reaches MailService::mail() with the job\'s exact to/arg
     // rather than this handler's delegation. Same real-root pattern
     // already used by ErrorCollectorTest/ShutdownHandlerTest/
     // MessengerFactoryTest/ContainerDetectorTest.
-    \Piwigo\Core\CurrentPaths::set(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3) . '/'));
+    \Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3) . '/'));
 
     $capturedTo = null;
     $capturedArgs = null;
@@ -89,6 +89,6 @@ test('__invoke actually reaches MailService::mail() with the job\'s exact to/arg
     } finally {
         EventDispatcher::get()->removeEventHandler(BeforeSendMail::class, $eventHandler);
         CurrentConfig::reset();
-        \Piwigo\Core\CurrentPaths::reset();
+        \Piwigo\Core\Kernel::reset();
     }
 });

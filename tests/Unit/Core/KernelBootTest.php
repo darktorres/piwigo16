@@ -54,9 +54,11 @@ test('reset makes container throw again', function (): void {
 })->throws(LogicException::class);
 
 test('reset also resets CurrentPaths, not just its own booted/container state', function (): void {
-    // Kills the RemoveMethodCall mutation on Kernel::reset()'s own
-    // CurrentPaths::reset() call: without it, CurrentPaths::get() would
-    // keep returning the Paths from the last boot() instead of throwing.
+    // CurrentPaths (singleton/service-locator elimination campaign, Phase
+    // 3) is a pure shim reading Paths::class straight out of the live
+    // container -- proves Kernel::reset() nulling the container is enough
+    // on its own to make CurrentPaths::get() throw again too, with no
+    // separate cascade call needed.
     Kernel::boot(Paths::fromRoot('/home/torres/piwigo17-rewrite'));
     expect(CurrentPaths::get())->toBeInstanceOf(Paths::class);
 

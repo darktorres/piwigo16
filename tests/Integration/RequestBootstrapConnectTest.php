@@ -13,11 +13,9 @@ use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Env;
-use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Kernel;
-use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
 use Piwigo\Db\Tables;
@@ -89,10 +87,10 @@ final class RequestBootstrapConnectTest extends IntegrationTestCase
             $this->originalDbEnv[$key] = $value === false ? '' : $value;
         }
 
-        CurrentPaths::set(Paths::fromRoot(dirname(__DIR__, 2)));
+        // Kernel is already booted by parent::setUp() with this exact same
+        // dirname(__DIR__, 2) root -- no need to boot (or bind Paths) again.
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
-        Kernel::boot();
 
         $this->conn = DbConnection::build();
         // A private, throwaway ConfigService used only to arrange DB-level

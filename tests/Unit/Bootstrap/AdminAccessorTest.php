@@ -45,7 +45,6 @@ use Piwigo\Tests\Support\KernelContainerOverride;
  */
 afterEach(function (): void {
     \Piwigo\Core\Kernel::reset();
-    \Piwigo\Core\CurrentPaths::reset();
 });
 
 test('every accessor returns its real, correctly-typed instance from a real container, without throwing', function (): void {

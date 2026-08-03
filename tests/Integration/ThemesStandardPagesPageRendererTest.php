@@ -13,6 +13,7 @@ use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
@@ -247,7 +248,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
     {
         // StorageRegistry is built fresh here (not container-resolved
         // once for the whole test) specifically so overrideSiteLocal()'s
-        // own CurrentPaths::set() below is reflected in the 'local' disk
+        // own Kernel::boot() below is reflected in the 'local' disk
         // it builds -- config/storage.php's own 'local' factory reads
         // CurrentPaths::get() at fromConfig()-call time, same "must be
         // rebuilt after CurrentPaths changes" requirement a real request
@@ -265,7 +266,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
     private function overrideSiteLocal(string $siteLocal): void
     {
         $root = dirname(__DIR__, 2) . '/';
-        CurrentPaths::set(new Paths(
+        Kernel::boot(new Paths(
             root: $root,
             plugins: $root . 'plugins/',
             themes: $root . 'themes/',

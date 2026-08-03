@@ -7,6 +7,7 @@ namespace Piwigo\Tests\Unit\Image;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ThemeConfProviderInterface;
 use Piwigo\Core\UrlServiceInterface;
@@ -90,7 +91,7 @@ beforeEach(function (): void {
 
 afterEach(function (): void {
     CurrentConfig::reset();
-    CurrentPaths::reset();
+    Kernel::reset();
     srcImageTestSetHtmlRenderer(null);
     srcImageTestSetThemeConfProvider(null);
     srcImageTestSetUrlService(null);
@@ -222,7 +223,7 @@ test('constructor swaps width/height for an odd rotation code but not for an eve
 });
 
 test('get_path() joins the current root with the resolved rel_path', function (): void {
-    CurrentPaths::set(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-srcimage-test-path-only'));
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-srcimage-test-path-only'));
 
     $src = new SrcImage([
         'id' => 1,
@@ -235,7 +236,7 @@ test('get_path() joins the current root with the resolved rel_path', function ()
 
 test('constructor finds a real per-extension mimetype icon, and get_url() embellishes the root-relative icon url', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-srcimage-test-' . bin2hex(random_bytes(8));
-    CurrentPaths::set(Paths::fromRoot($root));
+    Kernel::boot(Paths::fromRoot($root));
     srcImageTestSetThemeConfProvider(new SrcImageTestFakeThemeConfProvider('themes/default/icon/mimetypes/'));
     srcImageTestSetUrlService(new SrcImageTestFakeUrlService());
     srcImageTestMakePng($root . '/themes/default/icon/mimetypes/zzz.png', 16, 12);
@@ -260,7 +261,7 @@ test('constructor finds a real per-extension mimetype icon, and get_url() embell
 
 test('constructor falls back to the shared unknown.png icon when no icon exists for the extension', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-srcimage-test-' . bin2hex(random_bytes(8));
-    CurrentPaths::set(Paths::fromRoot($root));
+    Kernel::boot(Paths::fromRoot($root));
     srcImageTestSetThemeConfProvider(new SrcImageTestFakeThemeConfProvider('themes/default/icon/mimetypes/'));
     srcImageTestMakePng($root . '/themes/default/icon/mimetypes/unknown.png', 20, 10);
 
@@ -281,7 +282,7 @@ test('constructor falls back to the shared unknown.png icon when no icon exists 
 
 test('constructor falls back to the original path for a .svg with no icon, then throws when that path is not a real image either', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-srcimage-test-' . bin2hex(random_bytes(8));
-    CurrentPaths::set(Paths::fromRoot($root));
+    Kernel::boot(Paths::fromRoot($root));
     srcImageTestSetThemeConfProvider(new SrcImageTestFakeThemeConfProvider('themes/default/icon/mimetypes/'));
     mkdir($root . '/upload/2026/07', 0o777, true);
     file_put_contents($root . '/upload/2026/07/vector.svg', 'not-a-real-image-payload');
@@ -299,7 +300,7 @@ test('constructor falls back to the original path for a .svg with no icon, then 
 
 test('get_size() re-reads real dimensions from disk when width/height columns are present but null (not yet metadata-synced)', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-srcimage-test-' . bin2hex(random_bytes(8));
-    CurrentPaths::set(Paths::fromRoot($root));
+    Kernel::boot(Paths::fromRoot($root));
     srcImageTestMakePng($root . '/upload/2026/07/synced-later.png', 33, 22);
 
     try {
@@ -358,7 +359,7 @@ test('constructor treats a missing path as an empty string, not null, when build
 
 test('constructor throws when a get_mimetype_location handler returns something other than a GetMimetypeLocation instance', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-srcimage-test-' . bin2hex(random_bytes(8));
-    CurrentPaths::set(Paths::fromRoot($root));
+    Kernel::boot(Paths::fromRoot($root));
     srcImageTestSetThemeConfProvider(new SrcImageTestFakeThemeConfProvider('themes/default/icon/mimetypes/'));
     srcImageTestMakePng($root . '/themes/default/icon/mimetypes/zzz.png', 16, 12);
 
@@ -385,7 +386,7 @@ test('constructor throws when neither the per-extension icon nor the shared unkn
     // no unknown.png on disk at all is what actually reaches line 205's
     // own file_exists() with a genuinely false result.
     $root = sys_get_temp_dir() . '/piwigo-srcimage-test-' . bin2hex(random_bytes(8));
-    CurrentPaths::set(Paths::fromRoot($root));
+    Kernel::boot(Paths::fromRoot($root));
     srcImageTestSetThemeConfProvider(new SrcImageTestFakeThemeConfProvider('themes/default/icon/mimetypes/'));
 
     try {
@@ -407,7 +408,7 @@ test('constructor never reads $infos[\'height\'] when only width is present, lea
     // of correctly leaving $this->size null for get_size()'s own lazy
     // disk re-read.
     $root = sys_get_temp_dir() . '/piwigo-srcimage-test-' . bin2hex(random_bytes(8));
-    CurrentPaths::set(Paths::fromRoot($root));
+    Kernel::boot(Paths::fromRoot($root));
     srcImageTestMakePng($root . '/upload/2026/07/width-only.png', 55, 44);
 
     try {
@@ -559,7 +560,7 @@ test('get_size() persists the real, correctly-ordered width/height back onto the
     $imageId = (int) $conn->lastInsertId();
 
     $root = sys_get_temp_dir() . '/piwigo-srcimage-test-' . bin2hex(random_bytes(8));
-    CurrentPaths::set(Paths::fromRoot($root));
+    Kernel::boot(Paths::fromRoot($root));
     srcImageTestMakePng($root . '/upload/2026/07/update-dimensions.jpg', 77, 55);
 
     try {

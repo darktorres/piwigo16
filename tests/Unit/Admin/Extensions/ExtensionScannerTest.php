@@ -9,6 +9,7 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Html\HtmlService;
 use Piwigo\Url\UrlService;
@@ -31,12 +32,12 @@ use Piwigo\Users\User;
 beforeEach(function (): void {
     CurrentConfig::reset();
     ConfigLoader::applyDefaults();
-    CurrentPaths::set(Paths::fromRoot(dirname(__DIR__, 4)));
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 4)));
 });
 
 afterEach(function (): void {
     CurrentConfig::reset();
-    CurrentPaths::reset();
+    Kernel::reset();
     CurrentUser::reset();
     Lang::reset();
 });
@@ -84,7 +85,14 @@ function extensionScannerFixtureRoot(): string
     mkdir($root . 'plugins', 0o777, true);
     mkdir($root . 'themes', 0o777, true);
     mkdir($root . 'language', 0o777, true);
-    CurrentPaths::set(Paths::fromRoot($root));
+    // Kernel is already booted (beforeEach()'s own default real-repo-root
+    // boot) by the time any test calls this -- a bare Kernel::boot() here
+    // would silently no-op against its own idempotency guard, leaving
+    // Paths::class pointed at the wrong (real repo) root instead of this
+    // fixture's own throwaway one. Reset first so the new root actually
+    // takes.
+    Kernel::reset();
+    Kernel::boot(Paths::fromRoot($root));
     CurrentConfig::setThemesDir(rtrim($root, '/') . '/themes');
 
     return $root;

@@ -106,8 +106,8 @@ final class InstallBootstrapTest extends IntegrationTestCase
 
         self::assertTrue(Kernel::isBooted());
         // Same instance, not merely an equal one -- proves Kernel::boot()
-        // really did forward this exact Paths through to CurrentPaths::set(),
-        // not some other default it built itself.
+        // really did bind this exact Paths into the container, not some
+        // other default it built itself.
         self::assertSame($paths, CurrentPaths::get());
 
         // No local/config/config.php -> default policy -> boot() really did

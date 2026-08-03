@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Html\HtmlService;
 use Piwigo\Template\Script;
@@ -36,7 +36,7 @@ beforeEach(function (): void {
 afterEach(function (): void {
     scriptLoaderResetUrlService();
     CurrentUser::reset();
-    CurrentPaths::reset();
+    Kernel::reset();
 });
 
 /**
@@ -411,7 +411,7 @@ test('get_head_scripts warns and excludes a script whose path was explicitly set
     // path was assigned directly (bypassing set_path()), covering the
     // second element of the [null, ''] in_array() check on its own.
     ScriptLoader::setUrlService(new UrlService(new HtmlService()));
-    CurrentPaths::set(Paths::fromRoot(sys_get_temp_dir()));
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
 
     $loader = new ScriptLoader();
     $loader->add('empty-path-script', 0, [], 'themes/default/js/foo.js');
@@ -452,7 +452,7 @@ test('get_footer_scripts runs check_load_dep when the head has not been written 
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/a.js', 'var a=1;');
     file_put_contents($root . '/themes/default/js/b.js', 'var b=1;');
-    CurrentPaths::set(Paths::fromRoot($root));
+    Kernel::boot(Paths::fromRoot($root));
     CurrentConfig::setDataLocation('_data/');
     CurrentConfig::setDataDirChecked('1');
     CurrentConfig::setTemplateCombineFiles(false);
@@ -477,7 +477,7 @@ test('get_footer_scripts skips check_load_dep when the head was already written 
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/a.js', 'var a=1;');
     file_put_contents($root . '/themes/default/js/b.js', 'var b=1;');
-    CurrentPaths::set(Paths::fromRoot($root));
+    Kernel::boot(Paths::fromRoot($root));
     CurrentConfig::setDataLocation('_data/');
     CurrentConfig::setDataDirChecked('1');
     CurrentConfig::setTemplateCombineFiles(false);
@@ -504,7 +504,7 @@ test('get_footer_scripts marks did_footer, which then makes add_inline warn', fu
     ScriptLoader::setUrlService(new UrlService(new HtmlService()));
     $root = sys_get_temp_dir() . '/piwigo-scriptloader-didfooter-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
-    CurrentPaths::set(Paths::fromRoot($root));
+    Kernel::boot(Paths::fromRoot($root));
     CurrentConfig::setDataLocation('_data/');
     CurrentConfig::setDataDirChecked('1');
 
@@ -529,7 +529,7 @@ test('get_footer_scripts marks did_footer, which then makes add_inline warn', fu
     } finally {
         rmdir($root);
         CurrentConfig::reset();
-        CurrentPaths::reset();
+        Kernel::reset();
     }
 });
 
@@ -539,7 +539,7 @@ test('get_footer_scripts separates sync (load_mode=1) and async (load_mode=2) sc
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/sync.js', 'var s=1;');
     file_put_contents($root . '/themes/default/js/async.js', 'var a=1;');
-    CurrentPaths::set(Paths::fromRoot($root));
+    Kernel::boot(Paths::fromRoot($root));
     CurrentConfig::setDataLocation('_data/');
     CurrentConfig::setDataDirChecked('1');
     CurrentConfig::setTemplateCombineFiles(false);
@@ -567,7 +567,7 @@ test('get_footer_scripts excludes scripts already claimed by get_head_scripts', 
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/head.js', 'var h=1;');
     file_put_contents($root . '/themes/default/js/footer.js', 'var f=1;');
-    CurrentPaths::set(Paths::fromRoot($root));
+    Kernel::boot(Paths::fromRoot($root));
     CurrentConfig::setDataLocation('_data/');
     CurrentConfig::setDataDirChecked('1');
     CurrentConfig::setTemplateCombineFiles(false);
@@ -593,7 +593,7 @@ test('get_head_scripts runs check_load_dep before sorting, downgrading an async 
     CurrentConfig::setTemplateCombineFiles(false);
     // Both scripts are load_mode=2, so head_done_scripts stays empty --
     // do_combine([]) still needs a valid CurrentPaths regardless.
-    CurrentPaths::set(Paths::fromRoot(sys_get_temp_dir()));
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
 
     $loader = new ScriptLoader();
     $loader->add('precedent', 2, [], 'themes/default/js/a.js');
@@ -614,7 +614,7 @@ test('get_head_scripts computes and uses each script\'s topological order to sor
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/base.js', 'var base=1;');
     file_put_contents($root . '/themes/default/js/dep.js', 'var dep=1;');
-    CurrentPaths::set(Paths::fromRoot($root));
+    Kernel::boot(Paths::fromRoot($root));
     CurrentConfig::setDataLocation('_data/');
     CurrentConfig::setDataDirChecked('1');
     CurrentConfig::setTemplateCombineFiles(false);
@@ -654,7 +654,7 @@ test('cmp_by_mode_and_order sorts a remote script before a same-mode, same-order
     $root = sys_get_temp_dir() . '/piwigo-scriptloader-remote-tiebreak-' . bin2hex(random_bytes(8));
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/local.js', 'var a=1;');
-    CurrentPaths::set(Paths::fromRoot($root));
+    Kernel::boot(Paths::fromRoot($root));
     CurrentConfig::setDataLocation('_data/');
     CurrentConfig::setDataDirChecked('1');
     CurrentConfig::setTemplateCombineFiles(false);
@@ -684,7 +684,7 @@ test('get_head_scripts collects every mode=0 script up to (not including) the fi
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/head.js', 'var h=1;');
     file_put_contents($root . '/themes/default/js/footer.js', 'var f=1;');
-    CurrentPaths::set(Paths::fromRoot($root));
+    Kernel::boot(Paths::fromRoot($root));
     CurrentConfig::setDataLocation('_data/');
     CurrentConfig::setDataDirChecked('1');
     CurrentConfig::setTemplateCombineFiles(false);
@@ -712,7 +712,7 @@ test('get_head_scripts warns and excludes a head-mode script whose path was neve
     // TypeError inside FileCombiner::combine() (is_remote() calling
     // urlIsRemote(null)) instead of hitting this warning at all.
     ScriptLoader::setUrlService(new UrlService(new HtmlService()));
-    CurrentPaths::set(Paths::fromRoot(sys_get_temp_dir()));
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
 
     $loader = new ScriptLoader();
     $loader->add('no-path-script', 0, [], null);
@@ -735,7 +735,7 @@ test('get_head_scripts warns and excludes a head-mode script whose path was neve
 
 test('get_head_scripts marks did_head, which then makes a subsequent head-mode add() warn', function (): void {
     ScriptLoader::setUrlService(new UrlService(new HtmlService()));
-    CurrentPaths::set(Paths::fromRoot(sys_get_temp_dir()));
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
 
     $loader = new ScriptLoader();
 
@@ -762,7 +762,7 @@ test('get_footer_scripts sorts within the same load_mode by topological order to
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/base.js', 'var base=1;');
     file_put_contents($root . '/themes/default/js/dep.js', 'var dep=1;');
-    CurrentPaths::set(Paths::fromRoot($root));
+    Kernel::boot(Paths::fromRoot($root));
     CurrentConfig::setDataLocation('_data/');
     CurrentConfig::setDataDirChecked('1');
     CurrentConfig::setTemplateCombineFiles(false);
@@ -789,7 +789,7 @@ test('get_footer_scripts excludes mode=0 scripts even when get_head_scripts was 
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/head.js', 'var h=1;');
     file_put_contents($root . '/themes/default/js/footer.js', 'var f=1;');
-    CurrentPaths::set(Paths::fromRoot($root));
+    Kernel::boot(Paths::fromRoot($root));
     CurrentConfig::setDataLocation('_data/');
     CurrentConfig::setDataDirChecked('1');
     CurrentConfig::setTemplateCombineFiles(false);
@@ -1013,8 +1013,9 @@ test('compute_script_topological_order fatal-errors exactly one level past the r
     // fatalError()'s own docblock for the real replacement).
     // recordFatalStatic() resolves the container-shared instance
     // (singleton/service-locator elimination campaign, Phase 2) -- booted
-    // and reset locally, scoped to this one test, since no other test in
-    // this file needs a container.
+    // and reset locally, scoped to this one test (other tests in this file
+    // boot their own Kernel too, each independently, via CurrentPaths::
+    // get()'s own container read -- Phase 3).
     \Piwigo\Core\Kernel::boot();
     $errorCollector = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\ErrorCollector::class);
     if (! $errorCollector instanceof \Piwigo\Core\ErrorCollector) {

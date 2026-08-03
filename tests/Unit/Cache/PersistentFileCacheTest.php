@@ -6,6 +6,7 @@ use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 
 /**
@@ -16,7 +17,7 @@ use Piwigo\Core\Paths;
  * contract PersistentFileCache implements it against, through a real
  * temp-directory-backed filesystem, not a fake. Same isolated-temp-root
  * pattern as tests/Unit/Image/DerivativeCacheServiceTest.php: a unique
- * sys_get_temp_dir() root per test via CurrentPaths::set() means the
+ * sys_get_temp_dir() root per test via Kernel::boot() means the
  * recursive-delete helper below can never touch anything outside this
  * run's own sandbox.
  */
@@ -40,7 +41,7 @@ beforeEach(function (): void {
     CurrentConfig::reset();
     $root = sys_get_temp_dir() . '/piwigo-persistent-file-cache-test-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
-    CurrentPaths::set(Paths::fromRoot($root));
+    Kernel::boot(Paths::fromRoot($root));
     CurrentConfig::setDataLocation('data/');
     // Pre-create the cache dir set() itself writes into: without this, its
     // first @file_put_contents() attempt against the not-yet-existing dir
@@ -55,7 +56,7 @@ beforeEach(function (): void {
 afterEach(function (): void {
     persistentFileCacheTestRrmdir(CurrentPaths::get()->root);
     CurrentConfig::reset();
-    CurrentPaths::reset();
+    Kernel::reset();
 });
 
 test('make_key hashes a scalar array key joined by & plus the instance key', function (): void {
@@ -387,7 +388,7 @@ test('purge is a no-op when glob() itself fails (an overlong pattern returns fal
     // about foreach()-ing a non-iterable -- a handler that recognizes
     // and swallows only the expected glob() warning surfaces that.
     $originalRoot = CurrentPaths::get()->root;
-    CurrentPaths::set(Paths::fromRoot(sys_get_temp_dir() . '/' . str_repeat('a', 4100)));
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/' . str_repeat('a', 4100)));
     $cache = new PersistentFileCache();
 
     $unexpectedWarning = null;
@@ -402,7 +403,7 @@ test('purge is a no-op when glob() itself fails (an overlong pattern returns fal
         $cache->purge(false);
     } finally {
         restore_error_handler();
-        CurrentPaths::set(Paths::fromRoot($originalRoot));
+        Kernel::boot(Paths::fromRoot($originalRoot));
     }
 
     expect($unexpectedWarning)->toBeNull();

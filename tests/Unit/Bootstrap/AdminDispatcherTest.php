@@ -25,7 +25,6 @@ use Psr\Http\Message\ServerRequestInterface;
  * method.
  */
 afterEach(function (): void {
-    CurrentPaths::reset();
     Kernel::reset();
 });
 
@@ -34,7 +33,7 @@ test('dispatch throws for a page slug not registered in config/admin_pages.php',
     // CurrentPaths::get()->root -- a shared, process-wide static -- set
     // explicitly rather than relying on some earlier-run test file to
     // have already done so.
-    CurrentPaths::set(Paths::fromRoot(dirname(__DIR__, 3)));
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3)));
 
     expect(fn () => AdminDispatcher::dispatch('not-a-real-registered-slug', new ServerRequest('GET', '/admin.php')))
         ->toThrow(LogicException::class, "Admin page 'not-a-real-registered-slug' is not registered in config/admin_pages.php.");
@@ -48,15 +47,17 @@ test('dispatch throws when a mapped page resolves to a class that does not imple
     // `instanceof AdminSubControllerInterface` check, the same shape as
     // AdminAccessorTest.php's own "unexpected type" cases.
     //
-    // CurrentPaths::set() must run *inside* the callback:
-    // KernelContainerOverride::with() itself calls Kernel::reset() first,
-    // which cascades into CurrentPaths::reset() (see Kernel::reset()'s own
-    // docblock) -- setting it beforehand would just get wiped again
-    // before map() ever reads it.
-    KernelContainerOverride::withWrongTypeFor(
-        PhotosAddSubController::class,
+    // Paths::class must be bound alongside the deliberately-wrong
+    // PhotosAddSubController::class override -- KernelContainerOverride::
+    // with() rebuilds the container from scratch with no Paths given by
+    // default, and CurrentPaths (Phase 3) is a pure shim with no state of
+    // its own to survive that rebuild.
+    KernelContainerOverride::with(
+        [
+            PhotosAddSubController::class => new \stdClass(),
+            Paths::class => Paths::fromRoot(dirname(__DIR__, 3)),
+        ],
         static function (): void {
-            CurrentPaths::set(Paths::fromRoot(dirname(__DIR__, 3)));
             AdminDispatcher::dispatch('photos_add', new ServerRequest('GET', '/admin.php'));
         }
     );
@@ -102,9 +103,11 @@ test('dispatch resolves the map relative to CurrentPaths root and calls handle()
         $request = new ServerRequest('GET', '/admin.php');
 
         KernelContainerOverride::with(
-            [stdClass::class => $stub],
-            function () use ($decoyRoot, $request): void {
-                CurrentPaths::set(Paths::fromRoot($decoyRoot));
+            [
+                stdClass::class => $stub,
+                Paths::class => Paths::fromRoot($decoyRoot),
+            ],
+            function () use ($request): void {
                 AdminDispatcher::dispatch('decoy_slug', $request);
             }
         );

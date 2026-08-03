@@ -13,8 +13,9 @@ namespace Piwigo\Core;
  *
  * Container-shared, immutable value (singleton/service-locator elimination
  * campaign, Phase 3): the value is fixed once, at container-build time
- * (`Piwigo\Core\Container::build()`, threaded from `public/ws.php`, the one
- * entry-shell file that knows it's really being dispatched through ws.php),
+ * (`Piwigo\Core\Container`'s own build() method, threaded from
+ * `public/ws.php`, the one entry-shell file that knows it's really being
+ * dispatched through ws.php),
  * never mutated afterward during a request -- no "current instance"
  * concept needed at all (same lesson as the Phase 0 `CurrentPersistentCache`
  * pilot). isActiveStatic() is a `@deprecated` transitional bridge for

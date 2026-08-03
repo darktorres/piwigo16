@@ -22,6 +22,7 @@ use Piwigo\Menu\BlockManager;
 use Piwigo\Menu\Event\BlockManagerRegisterBlocks;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Tests\Support\KernelContainerOverride;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 
@@ -989,58 +990,63 @@ test('getCombinedCategoriesContentTitle uses the current template\'s real icon_d
     // fresh temp root" Template setup as PictureRateRendererTest.php.
     $root = sys_get_temp_dir() . '/pwg-html-service-test-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
-    \Piwigo\Core\CurrentPaths::set(\Piwigo\Core\Paths::fromRoot($root));
     CurrentConfig::setDataLocation('data/');
     CurrentConfig::setDataDirChecked('1');
-    $template = new \Piwigo\Template\Template();
-    $template->assign('themeconf', ['icon_dir' => '/my-theme/icons']);
-    CurrentTemplate::set($template);
-    // A non-empty root url is required to kill line 576's
-    // ConcatRemoveRight (drops getRootUrl() from the src entirely) and
-    // ConcatSwitchSides (moves getRootUrl() to prefix the whole `$title
-    // .=` expression instead of just the src) -- both are unobservable
-    // via toContain() alone when getRootUrl() defaults to ''.
-    \Piwigo\Url\RootPathOverride::push('/gallery/');
 
-    try {
-        $service = new HtmlService();
-        $catA = ['id' => 3, 'name' => 'Nature', 'permalink' => null];
-        $catB = ['id' => 7, 'name' => 'Portraits', 'permalink' => null];
+    // KernelContainerOverride::with() rebinds Paths::class for this test's
+    // own scope -- CurrentPaths (singleton/service-locator elimination
+    // campaign, Phase 3) is a pure shim now, reading whatever the live
+    // container has, not an independently-settable static.
+    KernelContainerOverride::with([\Piwigo\Core\Paths::class => \Piwigo\Core\Paths::fromRoot($root)], function () use ($root): void {
+        $template = new \Piwigo\Template\Template();
+        $template->assign('themeconf', ['icon_dir' => '/my-theme/icons']);
+        CurrentTemplate::set($template);
+        // A non-empty root url is required to kill line 576's
+        // ConcatRemoveRight (drops getRootUrl() from the src entirely) and
+        // ConcatSwitchSides (moves getRootUrl() to prefix the whole `$title
+        // .=` expression instead of just the src) -- both are unobservable
+        // via toContain() alone when getRootUrl() defaults to ''.
+        \Piwigo\Url\RootPathOverride::push('/gallery/');
 
-        $urlService = new UrlService($service);
-        $linkA = $urlService->makeIndexUrl(['category' => $catA]);
-        $linkB = $urlService->makeIndexUrl(['category' => $catB]);
-        $removeLinkTemplate = static fn (string $removeUrl): string => '<a id="TagsGroupRemoveTag" href="' . $removeUrl . '" style="border:none;" title="remove this tag from the list">'
-            . '<img src="/gallery//my-theme/icons/remove_s.png" alt="x" style="vertical-align:bottom;" >'
-            . '<span class="pwg-icon pwg-icon-close" ></span></a>';
+        try {
+            $service = new HtmlService();
+            $catA = ['id' => 3, 'name' => 'Nature', 'permalink' => null];
+            $catB = ['id' => 7, 'name' => 'Portraits', 'permalink' => null];
 
-        $title = $service->getCombinedCategoriesContentTitle($catA, [$catB]);
+            $urlService = new UrlService($service);
+            $linkA = $urlService->makeIndexUrl(['category' => $catA]);
+            $linkB = $urlService->makeIndexUrl(['category' => $catB]);
+            $removeLinkTemplate = static fn (string $removeUrl): string => '<a id="TagsGroupRemoveTag" href="' . $removeUrl . '" style="border:none;" title="remove this tag from the list">'
+                . '<img src="/gallery//my-theme/icons/remove_s.png" alt="x" style="vertical-align:bottom;" >'
+                . '<span class="pwg-icon pwg-icon-close" ></span></a>';
 
-        // Exact match, not toContain(): pins the icon_dir fragment's
-        // getRootUrl() prefix to exactly the src attribute (kills
-        // ConcatRemoveRight, which drops it entirely) and to exactly
-        // that position (kills ConcatSwitchSides, which would instead
-        // splice it in as "...</a>/gallery/<a id=..." between the two
-        // links).
-        expect($title)->toBe(
-            'Albums <a href="' . $linkA . '">Nature</a>' . $removeLinkTemplate($linkB)
-            . ' + '
-            . '<a href="' . $linkB . '">Portraits</a>' . $removeLinkTemplate($linkA),
-        );
-    } finally {
-        \Piwigo\Url\RootPathOverride::reset();
-        \Piwigo\Core\CurrentPaths::reset();
-        CurrentTemplate::reset();
-        $iterator = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS),
-            \RecursiveIteratorIterator::CHILD_FIRST,
-        );
-        foreach ($iterator as $node) {
-            assert($node instanceof \SplFileInfo);
-            $node->isDir() ? rmdir($node->getPathname()) : unlink($node->getPathname());
+            $title = $service->getCombinedCategoriesContentTitle($catA, [$catB]);
+
+            // Exact match, not toContain(): pins the icon_dir fragment's
+            // getRootUrl() prefix to exactly the src attribute (kills
+            // ConcatRemoveRight, which drops it entirely) and to exactly
+            // that position (kills ConcatSwitchSides, which would instead
+            // splice it in as "...</a>/gallery/<a id=..." between the two
+            // links).
+            expect($title)->toBe(
+                'Albums <a href="' . $linkA . '">Nature</a>' . $removeLinkTemplate($linkB)
+                . ' + '
+                . '<a href="' . $linkB . '">Portraits</a>' . $removeLinkTemplate($linkA),
+            );
+        } finally {
+            \Piwigo\Url\RootPathOverride::reset();
+            CurrentTemplate::reset();
+            $iterator = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS),
+                \RecursiveIteratorIterator::CHILD_FIRST,
+            );
+            foreach ($iterator as $node) {
+                assert($node instanceof \SplFileInfo);
+                $node->isDir() ? rmdir($node->getPathname()) : unlink($node->getPathname());
+            }
+            rmdir($root);
         }
-        rmdir($root);
-    }
+    });
 });
 
 test('getCombinedCategoriesContentTitle folds every other category into combined_categories on the remove-link when combining 3 or more', function (): void {

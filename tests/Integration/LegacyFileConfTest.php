@@ -6,6 +6,7 @@ namespace Piwigo\Tests\Integration;
 
 use Piwigo\Admin\Install\LegacyFileConf;
 use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 
 /**
@@ -91,7 +92,7 @@ final class LegacyFileConfTest extends IntegrationTestCase
     public function test_read_returns_exactly_the_config_defaults_when_the_override_file_sets_nothing(): void
     {
         $paths = $this->pathsWithSameLocalAndSiteLocal();
-        CurrentPaths::set($paths);
+        Kernel::boot($paths);
         // A present-but-empty config.inc.php (not a fully absent one) --
         // read()'s own `@include` is by design tolerant of a genuinely
         // missing file too (the real "fresh install" case this class's own
@@ -126,7 +127,7 @@ final class LegacyFileConfTest extends IntegrationTestCase
     public function test_read_applies_a_local_config_override_onto_the_defaults(): void
     {
         $paths = $this->pathsWithSameLocalAndSiteLocal();
-        CurrentPaths::set($paths);
+        Kernel::boot($paths);
         file_put_contents(
             $paths->local . 'config/config.inc.php',
             "<?php\n\$conf['data_location'] = 'custom_data_dir/';\n\$conf['webmaster_id'] = 7;\n"
@@ -154,7 +155,7 @@ final class LegacyFileConfTest extends IntegrationTestCase
     public function test_read_does_not_load_the_site_local_file_when_local_dir_site_is_not_set(): void
     {
         $paths = $this->pathsWithDistinctSiteLocal();
-        CurrentPaths::set($paths);
+        Kernel::boot($paths);
         // No 'local_dir_site' key set here -- the site-local include must
         // never fire, even though a config.inc.php file genuinely exists
         // at that second location.
@@ -176,7 +177,7 @@ final class LegacyFileConfTest extends IntegrationTestCase
     public function test_read_lets_a_site_local_override_win_when_local_dir_site_is_set(): void
     {
         $paths = $this->pathsWithDistinctSiteLocal();
-        CurrentPaths::set($paths);
+        Kernel::boot($paths);
         file_put_contents(
             $paths->local . 'config/config.inc.php',
             "<?php\n\$conf['local_dir_site'] = true;\n\$conf['data_location'] = 'from_local/';\n"

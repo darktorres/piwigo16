@@ -3,17 +3,17 @@
 declare(strict_types=1);
 
 use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 
-beforeEach(function (): void {
-    CurrentPaths::reset();
-});
-
-afterEach(function (): void {
-    CurrentPaths::reset();
-});
-
-test('get throws when no Paths has been set yet', function (): void {
+/**
+ * Pure transitional shim now (singleton/service-locator elimination
+ * campaign, Phase 3) -- no more independent static state of its own, so
+ * "not initialised" now means "Kernel hasn't booted (with a real Paths)",
+ * not "CurrentPaths::set() was never called".
+ */
+test('get throws when Kernel has not booted at all', function (): void {
+    expect(Kernel::isBooted())->toBeFalse();
     expect(CurrentPaths::isSet())->toBeFalse();
 
     expect(fn () => CurrentPaths::get())->toThrow(
@@ -22,20 +22,38 @@ test('get throws when no Paths has been set yet', function (): void {
     );
 });
 
-test('set installs the Paths instance that get returns, and isSet reflects it', function (): void {
-    $paths = Paths::fromRoot('/tmp/piwigo-current-paths-test');
+test('get throws when Kernel has booted without a real Paths', function (): void {
+    Kernel::boot();
 
-    CurrentPaths::set($paths);
+    try {
+        expect(CurrentPaths::isSet())->toBeFalse();
 
-    expect(CurrentPaths::isSet())->toBeTrue()
-        ->and(CurrentPaths::get())->toBe($paths);
+        expect(fn () => CurrentPaths::get())->toThrow(
+            \LogicException::class,
+            'CurrentPaths not initialised -- call Piwigo\Core\Kernel::boot() first.',
+        );
+    } finally {
+        Kernel::reset();
+    }
 });
 
-test('reset clears the instance back to unset', function (): void {
-    CurrentPaths::set(Paths::fromRoot('/tmp/piwigo-current-paths-test'));
+test('get returns the Paths bound in the container, and isSet reflects it', function (): void {
+    $paths = Paths::fromRoot('/tmp/piwigo-current-paths-test');
+    Kernel::boot($paths);
+
+    try {
+        expect(CurrentPaths::isSet())->toBeTrue()
+            ->and(CurrentPaths::get())->toBe($paths);
+    } finally {
+        Kernel::reset();
+    }
+});
+
+test('isSet/get go back to the unbooted behavior after Kernel::reset()', function (): void {
+    Kernel::boot(Paths::fromRoot('/tmp/piwigo-current-paths-test'));
     expect(CurrentPaths::isSet())->toBeTrue();
 
-    CurrentPaths::reset();
+    Kernel::reset();
 
     expect(CurrentPaths::isSet())->toBeFalse();
     expect(fn () => CurrentPaths::get())->toThrow(\LogicException::class);

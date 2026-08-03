@@ -18,11 +18,9 @@ use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\FilterState;
-use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
 use Piwigo\Core\PageState;
-use Piwigo\Core\Paths;
 use Piwigo\Core\RequestMountDepth;
 use Piwigo\Db\DbConnection;
 use Piwigo\Group\GroupEntity;
@@ -113,10 +111,10 @@ final class SectionPopulatorTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        CurrentPaths::set(Paths::fromRoot(dirname(__DIR__, 2)));
+        // Kernel is already booted by parent::setUp() with this exact same
+        // dirname(__DIR__, 2) root -- no need to boot (or bind Paths) again.
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
-        Kernel::boot();
         CurrentConfigService::set(new ConfigService($this->buildConfigRepository()));
         ScriptLoader::setUrlService(new UrlService(new HtmlService()));
         Lang::setLangInfo(['code' => 'en_UK', 'direction' => 'ltr']);
@@ -150,7 +148,6 @@ final class SectionPopulatorTest extends IntegrationTestCase
         CurrentTemplate::reset();
         PageState::reset();
         CurrentConfig::reset();
-        Kernel::reset();
         parent::tearDown();
     }
 

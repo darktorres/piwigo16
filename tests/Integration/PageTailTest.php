@@ -71,7 +71,7 @@ final class PageTailTest extends IntegrationTestCase
         // ScriptLoader::urlService() -- unset by default, real
         // RequestBootstrap-only wiring this test never boots.
         ScriptLoader::setUrlService(new UrlService(new HtmlService()));
-        CurrentTemplate::set(new Template(CurrentPaths::get()->root . 'themes', 'default'));
+        CurrentTemplate::current()->set(new Template(CurrentPaths::get()->root . 'themes', 'default'));
 
         CurrentConfig::setSendPiwigoInfos(false);
         CurrentConfig::setShowVersion(true);
@@ -81,7 +81,7 @@ final class PageTailTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         UniqueExecLock::ends('check_for_updates');
-        CurrentTemplate::reset();
+        CurrentTemplate::current()->reset();
         CurrentConfig::reset();
         Kernel::reset();
         parent::tearDown();

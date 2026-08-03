@@ -14,9 +14,9 @@ use Piwigo\Event\Location\LocEndHelp;
  */
 final class HelpPageRenderer
 {
-    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser): void
+    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $currentTemplate->get();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
@@ -31,7 +31,7 @@ final class HelpPageRenderer
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('help');
         $tabsheet->select($selected);
-        $tabsheet->assign();
+        $tabsheet->assign($currentTemplate);
 
         $eventDispatcher->dispatchNotify(new LocEndHelp());
 

@@ -12,9 +12,9 @@ use Piwigo\Core\Lang;
  */
 final class PhotosAddFtpPageRenderer
 {
-    public function render(): void
+    public function render(\Piwigo\Template\CurrentTemplate $currentTemplate): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $currentTemplate->get();
 
         $template->assign(
             'FTP_HELP_CONTENT',

@@ -20,12 +20,13 @@ final class UserActivitySubController implements AdminSubControllerInterface
     public function __construct(
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
         new UserActivityPageRenderer()
-            ->render($this->urlService, $this->coreTabs);
+            ->render($this->urlService, $this->coreTabs, $this->currentTemplate);
     }
 }

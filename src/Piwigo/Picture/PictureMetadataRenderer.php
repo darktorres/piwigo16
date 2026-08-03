@@ -26,9 +26,9 @@ final class PictureMetadataRenderer
     /**
      * @param array<string, array{src_image: SrcImage, ...}> $picture
      */
-    public function render(array $picture, \Piwigo\Core\CurrentLogger $currentLogger, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher): void
+    public function render(array $picture, \Piwigo\Core\CurrentLogger $currentLogger, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Template\CurrentTemplate $currentTemplate): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $currentTemplate->get();
 
         $metadataService = new MetadataService(new MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), $currentLogger, $eventDispatcher);
 

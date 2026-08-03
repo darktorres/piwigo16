@@ -41,9 +41,9 @@ final class UpdatesExtPageRenderer
      * slug statically (config/admin_pages.php registers each of those 4
      * controllers for exactly one slug), so each passes its own literal.
      */
-    public function render(string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, \Piwigo\Core\PageState $pageState): void
+    public function render(string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $currentTemplate->get();
 
         if (! \Piwigo\Config\CurrentConfig::enableExtensionsInstall()) {
             \Piwigo\Bootstrap\PresentationAccessor::htmlService()

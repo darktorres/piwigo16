@@ -73,6 +73,7 @@ final class BatchManagerUnitPageRenderer
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     private static function tagService(): TagService
@@ -107,7 +108,7 @@ final class BatchManagerUnitPageRenderer
      */
     public function render(array $catElementsId, int $pageStart): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
         $conn = DbConnection::build();

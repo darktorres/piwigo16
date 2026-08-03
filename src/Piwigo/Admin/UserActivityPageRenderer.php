@@ -19,9 +19,9 @@ use Piwigo\Template\Template;
  */
 final class UserActivityPageRenderer
 {
-    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs): void
+    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\Template\CurrentTemplate $currentTemplate): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $currentTemplate->get();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
@@ -32,7 +32,7 @@ final class UserActivityPageRenderer
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('users');
         $tabsheet->select('user_activity');
-        $tabsheet->assign();
+        $tabsheet->assign($currentTemplate);
 
         // \Piwigo\Config\CurrentConfig::userFields() maps generic field names to table-specific column
         // names; narrow once here and reuse below.

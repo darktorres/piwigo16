@@ -45,6 +45,7 @@ final class AdminPopuphelpController implements ControllerInterface
     public function __construct(
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Core\PageState $pageState,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     #[\Override]
@@ -59,7 +60,7 @@ final class AdminPopuphelpController implements ControllerInterface
         // $title is set and read entirely within this method (passed
         // straight into PageHeaderRenderer::render() below) -- no
         // other file reads $GLOBALS['title']. Plain local, not global.
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         if ($output !== 'content_only') {
             $this->pageState->setBodyId('thePopuphelpPage');
@@ -82,7 +83,7 @@ final class AdminPopuphelpController implements ControllerInterface
             );
 
             new \Piwigo\Page\PageHeaderRenderer()
-                ->render($title, $this->eventDispatcher, $this->pageState);
+                ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate);
         }
 
         if (! is_string($rawPage) || ! (bool) preg_match('/^[a-z_]*$/', $rawPage)) {

@@ -41,14 +41,14 @@ beforeEach(function (): void {
         $processCache->reset();
     }
     CurrentUser::current()->reset();
-    CurrentTemplate::reset();
+    CurrentTemplate::current()->reset();
     CurrentConfig::reset();
 });
 
 afterEach(function (): void {
     Kernel::reset();
     CurrentUser::current()->reset();
-    CurrentTemplate::reset();
+    CurrentTemplate::current()->reset();
     CurrentConfig::reset();
 });
 
@@ -1004,7 +1004,7 @@ test('getCombinedCategoriesContentTitle uses the current template\'s real icon_d
     KernelContainerOverride::with([\Piwigo\Core\Paths::class => \Piwigo\Core\Paths::fromRoot($root)], function () use ($root): void {
         $template = new \Piwigo\Template\Template();
         $template->assign('themeconf', ['icon_dir' => '/my-theme/icons']);
-        CurrentTemplate::set($template);
+        CurrentTemplate::current()->set($template);
         // A non-empty root url is required to kill line 576's
         // ConcatRemoveRight (drops getRootUrl() from the src entirely) and
         // ConcatSwitchSides (moves getRootUrl() to prefix the whole `$title
@@ -1039,7 +1039,7 @@ test('getCombinedCategoriesContentTitle uses the current template\'s real icon_d
             );
         } finally {
             \Piwigo\Url\RootPathOverride::reset();
-            CurrentTemplate::reset();
+            CurrentTemplate::current()->reset();
             $iterator = new \RecursiveIteratorIterator(
                 new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS),
                 \RecursiveIteratorIterator::CHILD_FIRST,
@@ -1167,7 +1167,7 @@ test('setStatusHeader keeps the given text unchanged when it is genuinely non-em
 
 test('registerDefaultMenubarBlocks does nothing for a BlockManager whose id is not "menubar"', function (): void {
     $service = new HtmlService();
-    $menu = new BlockManager('sidebar', new \Piwigo\PluginConfig\EventDispatcher());
+    $menu = new BlockManager('sidebar', new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current());
 
     $service->registerDefaultMenubarBlocks(new BlockManagerRegisterBlocks($menu));
 

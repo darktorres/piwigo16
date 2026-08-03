@@ -75,9 +75,9 @@ final class PictureCommentRenderer
      *   native DBAL int -- only `uppercats`/`status`/`global_rank` are
      *   genuinely string|null.
      */
-    public function render(?CommentId $editCommentId, int $imageId, int $start, UrlServiceInterface $urlService, array $related_categories, string $url_self, SessionService $sessionService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser): void
+    public function render(?CommentId $editCommentId, int $imageId, int $start, UrlServiceInterface $urlService, array $related_categories, string $url_self, SessionService $sessionService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $currentTemplate->get();
 
         $commentRepository = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Comment\CommentEntity::class);
         $commentService = new CommentService($commentRepository, new EphemeralKeyService(), new MailService(), new HtmlService(), $urlService, $eventDispatcher, $pageState, $currentUser);

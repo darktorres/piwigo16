@@ -78,6 +78,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     private static function imageService(): ImageService
@@ -98,7 +99,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         $batchManagerRequest = Request\BatchManagerRequest::fromGlobals();
 
@@ -156,7 +157,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('batch_manager');
         $tabsheet->select($tab);
-        $tabsheet->assign();
+        $tabsheet->assign($this->currentTemplate);
 
         // +-------------------------------------------------------------------+
         // |                              dimensions                               |
@@ -178,7 +179,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
             \Piwigo\Bootstrap\AdminAccessor::batchManagerUnitPageRenderer()
                 ->render($cat_elements_id, $start);
         } else {
-            new BatchManagerGlobalPageRenderer($this->redirectService, $this->urlService, $this->currentLogger, $this->sessionService, $this->translator, $this->eventDispatcher, $this->imageStdParams, $this->pageState, $this->currentUser)
+            new BatchManagerGlobalPageRenderer($this->redirectService, $this->urlService, $this->currentLogger, $this->sessionService, $this->translator, $this->eventDispatcher, $this->imageStdParams, $this->pageState, $this->currentUser, $this->currentTemplate)
                 ->render($cat_elements_id, $start, $duplicates_on_fields);
         }
     }
@@ -534,7 +535,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         string $confOrderBy,
         ?array &$duplicatesOnFields = null,
     ): array {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         $filter_sets = [];
         if (isset($bulkFilter['prefilter']) && is_string($bulkFilter['prefilter'])) {

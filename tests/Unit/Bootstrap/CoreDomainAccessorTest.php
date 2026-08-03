@@ -29,7 +29,7 @@ use Piwigo\Users\UserService;
  */
 afterEach(function (): void {
     \Piwigo\Core\Kernel::reset();
-    \Piwigo\Template\CurrentTemplate::reset();
+    \Piwigo\Template\CurrentTemplate::current()->reset();
     \Piwigo\Config\CurrentConfig::reset();
 });
 
@@ -46,7 +46,7 @@ test('every accessor returns its real, correctly-typed instance from a real cont
     \Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot(sys_get_temp_dir()));
     \Piwigo\Config\CurrentConfig::setDataLocation('data/');
     \Piwigo\Config\CurrentConfig::setDataDirChecked('1');
-    \Piwigo\Template\CurrentTemplate::set(new \Piwigo\Template\Template(sys_get_temp_dir()));
+    \Piwigo\Template\CurrentTemplate::current()->set(new \Piwigo\Template\Template(sys_get_temp_dir()));
 
     expect(CoreDomainAccessor::permissionService())->toBeInstanceOf(PermissionService::class);
     expect(CoreDomainAccessor::categoryService())->toBeInstanceOf(CategoryService::class);

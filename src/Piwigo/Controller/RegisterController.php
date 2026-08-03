@@ -40,6 +40,7 @@ final class RegisterController implements ControllerInterface
         private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     #[\Override]
@@ -195,7 +196,7 @@ final class RegisterController implements ControllerInterface
         // $title is set and read entirely within this method (passed
         // straight into PageHeaderRenderer::render() below) -- no other
         // file reads $GLOBALS['title']. Plain local, not global.
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         $title = Lang::t('Registration');
         $this->pageState->setBodyId('theRegisterPage');
@@ -216,7 +217,7 @@ final class RegisterController implements ControllerInterface
         $hide_menu_on = is_array($themeconf) ? ($themeconf['hide_menu_on'] ?? null) : null;
         if (! is_array($hide_menu_on) or ! in_array('theRegisterPage', $hide_menu_on, true)) {
             new MenubarRenderer()
-                ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser);
+                ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
         }
 
         // Load language if cookie is set from login/register/password
@@ -258,7 +259,7 @@ final class RegisterController implements ControllerInterface
         $template->assign('HELP_LINK', $help_link);
 
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->pageState);
+            ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate);
         $this->eventDispatcher->dispatchNotify(new LocEndRegister());
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();

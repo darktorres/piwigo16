@@ -47,12 +47,12 @@ beforeEach(function (): void {
     // TabsheetTest.php's own Template construction uses.
     \Piwigo\Config\CurrentConfig::setDataLocation('data/');
     \Piwigo\Config\CurrentConfig::setDataDirChecked('1');
-    \Piwigo\Template\CurrentTemplate::set(new \Piwigo\Template\Template(sys_get_temp_dir()));
+    \Piwigo\Template\CurrentTemplate::current()->set(new \Piwigo\Template\Template(sys_get_temp_dir()));
 });
 
 afterEach(function (): void {
     Kernel::reset();
-    \Piwigo\Template\CurrentTemplate::reset();
+    \Piwigo\Template\CurrentTemplate::current()->reset();
     \Piwigo\Config\CurrentConfig::reset();
 });
 

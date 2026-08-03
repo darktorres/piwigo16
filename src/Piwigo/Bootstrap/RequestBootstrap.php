@@ -655,7 +655,7 @@ final class RequestBootstrap
         // `global $template;` dual-write bridge was retired once a
         // repo-wide scan confirmed every other consumer had already been
         // retargeted onto CurrentTemplate::get() (this was the last site).
-        \Piwigo\Template\CurrentTemplate::set($template);
+        self::currentTemplate()->set($template);
 
         // P23 batch 8f-4: SrcImage (L2aCoreDomain) reads theme conf through
         // Piwigo\Core\ThemeConfProviderInterface (implemented by Template)
@@ -672,7 +672,7 @@ final class RequestBootstrap
             // when it decides to take over the page. CurrentConfigService::get()
             // reuses the instance connect() already resolved earlier in the
             // same request (Legacy Coupling Retirement Phase 8, 8d).
-            new NoPhotoYetRenderer(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), \Piwigo\Config\CurrentConfigService::get(), new RedirectService(), new UrlService(new HtmlService()), CurrentPaths::get(), self::adminContext(), self::sessionService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::deploymentPolicy(), self::currentUser())
+            new NoPhotoYetRenderer(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), \Piwigo\Config\CurrentConfigService::get(), new RedirectService(), new UrlService(new HtmlService()), CurrentPaths::get(), self::adminContext(), self::sessionService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::deploymentPolicy(), self::currentUser(), self::currentTemplate())
                 ->render();
         }
 
@@ -1012,6 +1012,26 @@ final class RequestBootstrap
         }
 
         return $currentUser;
+    }
+
+    /**
+     * Public (unlike most resolver helpers here): public/admin.php's own
+     * legacy-style `new AdminShell(...)` manual construction needs a way to
+     * obtain the same container-shared instance every other CurrentTemplate
+     * consumer receives via constructor injection, without calling
+     * Kernel::container() directly itself (arch-tested to Bootstrap/ only)
+     * -- same "public accessor on this class" shape as coreTabs()/
+     * currentUser()/pageState() above (singleton/service-locator
+     * elimination campaign, Phase 5).
+     */
+    public static function currentTemplate(): \Piwigo\Template\CurrentTemplate
+    {
+        $currentTemplate = Kernel::container()->get(\Piwigo\Template\CurrentTemplate::class);
+        if (! $currentTemplate instanceof \Piwigo\Template\CurrentTemplate) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Template\CurrentTemplate::class);
+        }
+
+        return $currentTemplate;
     }
 
     /**

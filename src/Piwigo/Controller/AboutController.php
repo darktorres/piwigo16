@@ -48,6 +48,7 @@ final class AboutController implements ControllerInterface
         private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     #[\Override]
@@ -60,7 +61,7 @@ final class AboutController implements ControllerInterface
         // $title is set and read entirely within this method (passed
         // straight into PageHeaderRenderer::render() below) -- no other
         // file reads $GLOBALS['title']. Plain local, not global.
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         $title = Lang::t('About Piwigo');
         $this->pageState->setBodyId('theAboutPage');
@@ -87,11 +88,11 @@ final class AboutController implements ControllerInterface
         $themeconf = is_array($themeconf) ? $themeconf : [];
         if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theAboutPage', $themeconf['hide_menu_on'], true)) {
             new MenubarRenderer()
-                ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser);
+                ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
         }
 
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->pageState);
+            ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate);
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();
         $template->parse('about', false);

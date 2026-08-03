@@ -62,6 +62,7 @@ final class UpdatesSubController implements AdminSubControllerInterface
         private readonly ConfigService $configService,
         private readonly CoreTabs $coreTabs,
         private readonly \Piwigo\Core\PageState $pageState,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     #[\Override]
@@ -83,11 +84,11 @@ final class UpdatesSubController implements AdminSubControllerInterface
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('updates');
         $tabsheet->select($tab);
-        $tabsheet->assign();
+        $tabsheet->assign($this->currentTemplate);
 
         if ($tab === 'ext') {
             new UpdatesExtPageRenderer()
-                ->render('updates', $this->urlService, $this->configService, $this->pageState);
+                ->render('updates', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate);
         } else {
             \Piwigo\Bootstrap\AdminAccessor::updatesPwgPageRenderer()
                 ->render();

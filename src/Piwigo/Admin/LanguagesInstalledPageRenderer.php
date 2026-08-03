@@ -45,6 +45,7 @@ final class LanguagesInstalledPageRenderer
         private readonly ConfigService $configService,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
         private readonly \Piwigo\Core\PageState $pageState,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     private static function userService(): UserService
@@ -63,7 +64,7 @@ final class LanguagesInstalledPageRenderer
      */
     public function render(string $pageSlug): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
             $this->pageState->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));

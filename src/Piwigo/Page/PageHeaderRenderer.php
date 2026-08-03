@@ -41,9 +41,9 @@ final class PageHeaderRenderer
      *   $refresh/$url_link top-level-scope contract -- Bootstrap\RedirectService::redirectHtml()
      *   is the one real caller that sets both today.
      */
-    public function render(string $title, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, ?string $refresh = null, ?string $urlLink = null): void
+    public function render(string $title, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate, ?string $refresh = null, ?string $urlLink = null): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $currentTemplate->get();
 
         $template->set_filenames([
             'header' => 'header.tpl',

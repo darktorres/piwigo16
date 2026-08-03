@@ -62,7 +62,7 @@ final class PageTailRendererTest extends IntegrationTestCase
         // ScriptLoader::urlService() -- unset by default, real
         // RequestBootstrap-only wiring this test never boots.
         ScriptLoader::setUrlService(new UrlService(new HtmlService()));
-        CurrentTemplate::set(new Template(CurrentPaths::get()->root . 'themes', 'default'));
+        CurrentTemplate::current()->set(new Template(CurrentPaths::get()->root . 'themes', 'default'));
 
         CurrentUser::current()->set(User::fromUserArray(['id' => 2, 'status' => 'guest', 'username' => 'fixture_guest']));
 
@@ -79,14 +79,15 @@ final class PageTailRendererTest extends IntegrationTestCase
             },
             new UrlService(new HtmlService()),
             new \Piwigo\PluginConfig\EventDispatcher(),
-            \Piwigo\Core\PageState::current()
+            \Piwigo\Core\PageState::current(),
+            CurrentTemplate::current()
         );
     }
 
     #[\Override]
     protected function tearDown(): void
     {
-        CurrentTemplate::reset();
+        CurrentTemplate::current()->reset();
         PageState::current()->reset();
         CurrentUser::current()->reset();
         $_SESSION = [];

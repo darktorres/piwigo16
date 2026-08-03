@@ -52,6 +52,7 @@ final class MaintenanceActionsPageRenderer
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
         private readonly \Piwigo\Core\PageState $pageState,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly ?\Piwigo\Cache\PersistentCache $persistentCache = null,
     ) {}
 
@@ -60,12 +61,12 @@ final class MaintenanceActionsPageRenderer
      */
     public function render(array $maintActions): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         $this->filesystemIntegrityChecker->fsQuickCheck();
 
         $action = MaintenanceActionRequest::fromGlobals()->action;
-        new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->filesystemIntegrityChecker, $this->sessionService, $this->translator, $this->eventDispatcher, $this->pageState, $this->persistentCache)
+        new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->filesystemIntegrityChecker, $this->sessionService, $this->translator, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->persistentCache)
             ->dispatch($action);
 
         // +-------------------------------------------------------------------+

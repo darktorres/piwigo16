@@ -590,7 +590,7 @@ final class HtmlService implements HtmlRenderingInterface
                 // any request that renders this markup, but this stays
                 // defensive (Phase 2 global-residual sweep: retargeted from
                 // $GLOBALS['template'] ?? null, same defensive shape).
-                $request_template = \Piwigo\Template\CurrentTemplate::isInitialized() ? \Piwigo\Template\CurrentTemplate::get() : null;
+                $request_template = \Piwigo\Template\CurrentTemplate::current()->isInitialized() ? \Piwigo\Template\CurrentTemplate::current()->get() : null;
                 $icon_dir = $request_template instanceof Template ? $request_template->themeConf('icon_dir') : '';
 
                 $title .=
@@ -806,7 +806,7 @@ final class HtmlService implements HtmlRenderingInterface
      */
     public function flushPageMessages(): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = \Piwigo\Template\CurrentTemplate::current()->get();
         if ($template->get_template_vars('page_refresh') === null) {
             $pageState = \Piwigo\Core\PageState::current();
             $this->flushMessageMode('errors', $pageState->errors, $template);
@@ -834,7 +834,7 @@ final class HtmlService implements HtmlRenderingInterface
      */
     public function flushKeyedErrors(array $keyedErrors): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = \Piwigo\Template\CurrentTemplate::current()->get();
         if ($template->get_template_vars('page_refresh') === null) {
             $this->flushMessageMode('errors', $keyedErrors, $template);
         }

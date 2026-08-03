@@ -100,7 +100,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
         unset($_POST['c13y_submit_correction'], $_POST['c13y_submit_ignore'], $_POST['c13y_selection']);
 
-        CurrentTemplate::set(new Template(CurrentPaths::get()->root . 'themes/admin', 'default'));
+        CurrentTemplate::current()->set(new Template(CurrentPaths::get()->root . 'themes/admin', 'default'));
     }
 
     #[\Override]
@@ -109,7 +109,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
         EventDispatcher::get()->removeEventHandler(ListCheckIntegrity::class, [self::class, 'pushQueuedAnomalies']);
         unset($_POST['c13y_submit_correction'], $_POST['c13y_submit_ignore'], $_POST['c13y_selection']);
         DbConnection::build()->executeStatement('DELETE FROM ' . Tables::integrityIgnoredAnomalies());
-        CurrentTemplate::reset();
+        CurrentTemplate::current()->reset();
         Kernel::reset();
         parent::tearDown();
     }
@@ -130,7 +130,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
     private function newCheckIntegrity(): CheckIntegrity
     {
-        return new CheckIntegrity($this->buildIntegrityRepo(), new Translator(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current());
+        return new CheckIntegrity($this->buildIntegrityRepo(), new Translator(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current(), \Piwigo\Template\CurrentTemplate::current());
     }
 
     public function test_check_reports_no_header_note_when_zero_anomalies_are_found(): void
@@ -277,7 +277,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
         $c13y->display();
 
-        $template = CurrentTemplate::get();
+        $template = CurrentTemplate::current()->get();
         $list = $template->get_template_vars('c13y_list');
         self::assertIsArray($list);
         self::assertIsArray($list[0]);
@@ -325,7 +325,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
         $c13y->display();
 
-        $list = CurrentTemplate::get()->get_template_vars('c13y_list');
+        $list = CurrentTemplate::current()->get()->get_template_vars('c13y_list');
         self::assertIsArray($list);
         self::assertIsArray($list[0]);
         self::assertTrue($list[0]['show_correction_success_fct']);
@@ -349,7 +349,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
         $c13y->display();
 
-        $list = CurrentTemplate::get()->get_template_vars('c13y_list');
+        $list = CurrentTemplate::current()->get()->get_template_vars('c13y_list');
         self::assertIsArray($list);
         self::assertIsArray($list[0]);
         self::assertFalse($list[0]['show_correction_success_fct']);
@@ -375,7 +375,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
         $c13y->display();
 
-        $template = CurrentTemplate::get();
+        $template = CurrentTemplate::current()->get();
         $list = $template->get_template_vars('c13y_list');
         self::assertIsArray($list);
         self::assertIsArray($list[0]);
@@ -404,7 +404,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
         $c13y->display();
 
-        $list = CurrentTemplate::get()->get_template_vars('c13y_list');
+        $list = CurrentTemplate::current()->get()->get_template_vars('c13y_list');
         self::assertIsArray($list);
         self::assertIsArray($list[0]);
         self::assertTrue($list[0]['show_correction_bad_fct']);
@@ -427,7 +427,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
         $c13y->display();
 
-        $list = CurrentTemplate::get()->get_template_vars('c13y_list');
+        $list = CurrentTemplate::current()->get()->get_template_vars('c13y_list');
         self::assertIsArray($list);
         self::assertIsArray($list[0]);
         self::assertTrue($list[0]['can_select']);
@@ -443,6 +443,6 @@ final class CheckIntegrityTest extends IntegrationTestCase
         // No 'check_integrity' filename ever gets set_filenames()'d, so
         // parse() never runs -- get_template_vars() for a var nothing ever
         // assigned stays null.
-        self::assertNull(CurrentTemplate::get()->get_template_vars('c13y_show_submit_ignore'));
+        self::assertNull(CurrentTemplate::current()->get()->get_template_vars('c13y_show_submit_ignore'));
     }
 }

@@ -12,9 +12,9 @@ use Piwigo\Core\Lang;
  */
 final class PhotosAddApplicationsPageRenderer
 {
-    public function render(): void
+    public function render(\Piwigo\Template\CurrentTemplate $currentTemplate): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $currentTemplate->get();
 
         $template->assign('ADMIN_PAGE_TITLE', Lang::t('Upload Photos'));
 

@@ -347,7 +347,7 @@ final class InstallWizard
 
         // --------------------------------------------- template initialization
         $template = new Template($this->paths->root . 'themes/admin', 'clear');
-        \Piwigo\Template\CurrentTemplate::set($template);
+        \Piwigo\Template\CurrentTemplate::current()->set($template);
         $template->set_filenames([
             'install' => 'install.tpl',
         ]);

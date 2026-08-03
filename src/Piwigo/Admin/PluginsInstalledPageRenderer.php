@@ -50,9 +50,9 @@ final class PluginsInstalledPageRenderer
      * slug statically (it's the only class registered for the 'plugins'
      * slug in config/admin_pages.php).
      */
-    public function render(string $pageSlug, UrlServiceInterface $urlService, \Piwigo\Core\CurrentLogger $currentLogger, SessionService $sessionService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher): void
+    public function render(string $pageSlug, UrlServiceInterface $urlService, \Piwigo\Core\CurrentLogger $currentLogger, SessionService $sessionService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Template\CurrentTemplate $currentTemplate): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $currentTemplate->get();
 
         $template->set_filenames([
             'plugins' => 'plugins_installed.tpl',

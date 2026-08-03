@@ -34,9 +34,9 @@ final class StatsPageRenderer
      * shared 'history' tabsheet group (see HistoryPageRenderer, its
      * sibling in that same group).
      */
-    public function render(string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, CoreTabs $coreTabs, \Piwigo\Users\CurrentUser $currentUser): void
+    public function render(string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, CoreTabs $coreTabs, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $currentTemplate->get();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
@@ -59,7 +59,7 @@ final class StatsPageRenderer
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('history');
         $tabsheet->select($pageSlug);
-        $tabsheet->assign();
+        $tabsheet->assign($currentTemplate);
 
         $base_url = $urlService->getRootUrl() . 'admin.php?page=history';
 

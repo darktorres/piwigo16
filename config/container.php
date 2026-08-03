@@ -190,7 +190,7 @@ return [
     // per-request (runtime theme/path parameters) -- see
     // src/Piwigo/Core/TemplateInterface.php's own docblock and
     // Piwigo\Template\CurrentTemplate.
-    TemplateInterface::class => factory(static fn (): Template => \Piwigo\Template\CurrentTemplate::get()),
+    TemplateInterface::class => factory(static fn (): Template => \Piwigo\Template\CurrentTemplate::current()->get()),
 
     // Interface binding (P23 batch 8f-4) -- Piwigo\Users\UserRepository
     // provides the webmaster mail address; Piwigo\Mail\MailService takes

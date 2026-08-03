@@ -58,12 +58,13 @@ final class ThemesSubController implements AdminSubControllerInterface
         private readonly ConfigService $configService,
         private readonly CoreTabs $coreTabs,
         private readonly \Piwigo\Core\PageState $pageState,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         // Consumed by CoreTabs::addCoreTabs()'s own 'themes' case,
         // triggered synchronously inside Tabsheet::select() below -- must
@@ -76,11 +77,11 @@ final class ThemesSubController implements AdminSubControllerInterface
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('themes');
         $tabsheet->select($tab);
-        $tabsheet->assign();
+        $tabsheet->assign($this->currentTemplate);
 
         if ($tab === 'update') {
             new UpdatesExtPageRenderer()
-                ->render('themes', $this->urlService, $this->configService, $this->pageState);
+                ->render('themes', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate);
             $template->assign('ADMIN_PAGE_TITLE', Lang::t('Themes'));
         } elseif ($tab === 'new') {
             \Piwigo\Bootstrap\AdminAccessor::themesNewPageRenderer()

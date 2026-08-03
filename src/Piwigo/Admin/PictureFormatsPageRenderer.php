@@ -15,9 +15,9 @@ use Piwigo\Image\ImageStdParams;
  */
 final class PictureFormatsPageRenderer
 {
-    public function render(UrlServiceInterface $urlService, ImageStdParams $imageStdParams): void
+    public function render(UrlServiceInterface $urlService, ImageStdParams $imageStdParams, \Piwigo\Template\CurrentTemplate $currentTemplate): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $currentTemplate->get();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 

@@ -18,14 +18,14 @@ use Piwigo\Image\ImageStdParams;
  */
 final class RatingUserPageRenderer
 {
-    public function render(UrlServiceInterface $urlService, ImageStdParams $imageStdParams): void
+    public function render(UrlServiceInterface $urlService, ImageStdParams $imageStdParams, \Piwigo\Template\CurrentTemplate $currentTemplate): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $currentTemplate->get();
 
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('rating');
         $tabsheet->select('rating_user');
-        $tabsheet->assign();
+        $tabsheet->assign($currentTemplate);
 
         $ratingFilter = Request\RatingUserFilterRequest::fromGlobals(\Piwigo\Config\CurrentConfig::topNumber());
         $filter_min_rates = $ratingFilter->minRates;

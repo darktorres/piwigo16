@@ -92,12 +92,13 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         private readonly SessionService $sessionService,
         private readonly Translator $translator,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
 
@@ -238,7 +239,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
             $tabsheet = new Tabsheet();
             $tabsheet->set_id('nbm');
             $tabsheet->select($page_mode);
-            $tabsheet->assign();
+            $tabsheet->assign($this->currentTemplate);
         }
 
         if ($must_repost) {

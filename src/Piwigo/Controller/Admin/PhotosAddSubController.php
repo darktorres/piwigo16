@@ -34,12 +34,13 @@ final class PhotosAddSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
         private readonly StorageRegistry $storageRegistry,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         // upload form config is loaded here to match the original page's
         // own behavior (validated/used by the tab templates), even though
@@ -70,7 +71,7 @@ final class PhotosAddSubController implements AdminSubControllerInterface
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('photos_add');
         $tabsheet->select($tab);
-        $tabsheet->assign();
+        $tabsheet->assign($this->currentTemplate);
 
         $template->set_filenames([
             'photos_add' => 'photos_add_' . $tab . '.tpl',
@@ -81,10 +82,10 @@ final class PhotosAddSubController implements AdminSubControllerInterface
                 ->render();
         } elseif ($tab === 'applications') {
             new PhotosAddApplicationsPageRenderer()
-                ->render();
+                ->render($this->currentTemplate);
         } else {
             new PhotosAddFtpPageRenderer()
-                ->render();
+                ->render($this->currentTemplate);
         }
     }
 }

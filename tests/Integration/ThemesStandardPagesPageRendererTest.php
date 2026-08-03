@@ -216,7 +216,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         // sets it: real RequestBootstrap-only wiring this isolated test
         // never boots otherwise.
         ScriptLoader::setUrlService(new UrlService(new HtmlService()));
-        CurrentTemplate::set(new Template(CurrentPaths::get()->root . 'themes/admin', 'default'));
+        CurrentTemplate::current()->set(new Template(CurrentPaths::get()->root . 'themes/admin', 'default'));
 
         $this->renderer = $this->makeRenderer();
 
@@ -229,7 +229,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
     {
         $_POST = [];
         $_FILES = [];
-        CurrentTemplate::reset();
+        CurrentTemplate::current()->reset();
         foreach ($this->fixtureRootsToClean as $root) {
             if (is_dir($root)) {
                 // Fixture roots below are deliberately chmod'd unwritable by
@@ -266,6 +266,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
             $this->configService,
             StorageRegistry::fromConfig(dirname(__DIR__, 2) . '/config/storage.php'),
             \Piwigo\Core\PageState::current(),
+            CurrentTemplate::current(),
         );
     }
 
@@ -299,6 +300,12 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         // by this renderer) throws "not initialised" against this fresh,
         // unseeded container.
         \Piwigo\Users\CurrentUser::current()->attachGlobals();
+        // Same reasoning as the CurrentUser reseed above -- Kernel::reset()
+        // also discards the container-shared CurrentTemplate instance
+        // setUp()'s own set() call populated; without reseeding here,
+        // this renderer's own $this->currentTemplate->get() throws "not
+        // initialised" against this fresh, unseeded container.
+        CurrentTemplate::current()->set(new Template(CurrentPaths::get()->root . 'themes/admin', 'default'));
         $this->renderer = $this->makeRenderer();
     }
 
@@ -342,7 +349,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
             $uploadDir = $fixtureRoot . 'logo';
             self::assertSame(
                 sprintf(Lang::t('Add write access to the "%s" directory'), $uploadDir),
-                CurrentTemplate::get()->get_template_vars('save_error')
+                CurrentTemplate::current()->get()->get_template_vars('save_error')
             );
         } finally {
             @unlink($realPng);
@@ -390,7 +397,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
             $uploadDir = $fixtureRoot . 'logo';
             self::assertSame(
                 "{$uploadDir}/stdpageslogo.png " . Lang::t('no write access'),
-                CurrentTemplate::get()->get_template_vars('save_error')
+                CurrentTemplate::current()->get()->get_template_vars('save_error')
             );
 
             // Regression guard for a real bug found and fixed alongside
@@ -438,7 +445,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
 
         $this->renderer->render();
 
-        $template = CurrentTemplate::get();
+        $template = CurrentTemplate::current()->get();
         self::assertTrue($template->get_template_vars('is_standard_pages_used'));
         self::assertSame(['Uses Standard Pages Theme'], $template->get_template_vars('standard_pages_used_by'));
     }

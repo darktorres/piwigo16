@@ -154,9 +154,9 @@ final class Tabsheet
      * Fill $this->$name {default value = TABSHEET} with HTML code for tabsheet
      * Fill $this->titlename {default value = TABSHEET_TITLE} with formated caption of the selected tab
      */
-    public function assign(): void
+    public function assign(\Piwigo\Template\CurrentTemplate $currentTemplate): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $currentTemplate->get();
 
         $template->set_filename('tabsheet', 'tabsheet.tpl');
         $template->assign('tabsheet', $this->sheets);

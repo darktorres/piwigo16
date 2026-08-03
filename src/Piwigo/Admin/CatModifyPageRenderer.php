@@ -43,9 +43,9 @@ final class CatModifyPageRenderer
      *
      * @param array<string, mixed> $category
      */
-    public function render(UrlServiceInterface $urlService, array $category, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser): void
+    public function render(UrlServiceInterface $urlService, array $category, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $currentTemplate->get();
 
         $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
 

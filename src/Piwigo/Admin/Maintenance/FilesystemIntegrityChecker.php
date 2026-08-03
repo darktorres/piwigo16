@@ -21,12 +21,17 @@ use Piwigo\Core\Lang;
  * AdminShell, Admin\Maintenance\MaintenanceActionDispatcher) is already
  * container-autowired or takes this via constructor injection -- no shim
  * needed. `CoreDomainAccessor::imageService()`/`CurrentConfig`/
- * `CurrentConfigService`/`CurrentTemplate`/`Lang` inside fsQuickCheck()/
- * imagesIntegrity() stay plain (unconverted) static calls, revisited once
- * each of those targets' own phase lands.
+ * `CurrentConfigService`/`Lang` inside fsQuickCheck()/imagesIntegrity()
+ * stay plain (unconverted) static calls, revisited once each of those
+ * targets' own phase lands; `CurrentTemplate` itself took real
+ * constructor injection once its own phase (5) landed.
  */
 final class FilesystemIntegrityChecker
 {
+    public function __construct(
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+    ) {}
+
     /**
      * Per-request run-once guard for fsQuickCheck() -- replaces the
      * former `$page[__FUNCTION__ . '_already_called']` global (Phase 2
@@ -96,7 +101,7 @@ final class FilesystemIntegrityChecker
             // spurious "some photos are missing" banner on every admin
             // dashboard load).
             if (! file_exists(CurrentPaths::get()->root . $path)) {
-                $template = \Piwigo\Template\CurrentTemplate::get();
+                $template = $this->currentTemplate->get();
 
                 $template->assign(
                     'header_msgs',
@@ -113,7 +118,7 @@ final class FilesystemIntegrityChecker
         $duplicate_paths = $imageService->getDuplicatePaths();
 
         if (count($duplicate_paths) > 0) {
-            $template = \Piwigo\Template\CurrentTemplate::get();
+            $template = $this->currentTemplate->get();
 
             $template->assign(
                 'header_msgs',

@@ -64,7 +64,15 @@ function makePictureCommentTestTemplate(): Template
 }
 
 beforeEach(function (): void {
-    CurrentTemplate::set(makePictureCommentTestTemplate());
+    // makePictureCommentTestTemplate() itself calls Kernel::boot() -- must
+    // finish (and its return value captured) before CurrentTemplate::
+    // current() resolves, or current() resolves the pre-boot memoized
+    // fallback instead of the now-booted container's own instance, and
+    // this set() call is invisible to every later current()->get() read
+    // in this file (Phase 5 execution finding, same pitfall Translator/
+    // EventDispatcher/CurrentUser already hit).
+    $template = makePictureCommentTestTemplate();
+    CurrentTemplate::current()->set($template);
     CurrentUser::current()->set(new User(
         id: \Piwigo\Common\ValueObject\UserId::from(1),
         username: 'torres',
@@ -79,7 +87,7 @@ beforeEach(function (): void {
 
 afterEach(function (): void {
     picture_comment_test_rrmdir(CurrentPaths::get()->root);
-    CurrentTemplate::reset();
+    CurrentTemplate::current()->reset();
     Kernel::reset();
     CurrentUser::current()->reset();
     CurrentConfig::reset();
@@ -102,10 +110,10 @@ test('render does nothing when no related category is commentable', function ():
     $renderer->render(null, 42, 0, makePictureCommentUrlService(), [
         ['commentable' => false],
         ['commentable' => 0],
-    ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
+    ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current());
 
-    expect(CurrentTemplate::get()->get_template_vars('comments'))->toBeNull()
-        ->and(CurrentTemplate::get()->get_template_vars('comment_add'))->toBeNull();
+    expect(CurrentTemplate::current()->get()->get_template_vars('comments'))->toBeNull()
+        ->and(CurrentTemplate::current()->get()->get_template_vars('comment_add'))->toBeNull();
 });
 
 // A mutation-testing sweep found `(bool) $category['commentable']` inside
@@ -174,7 +182,7 @@ test('render only counts the first commentable related category then stops (`bre
         $renderer->render(null, 42, 0, makePictureCommentUrlService(), [
             ['commentable' => true],
             ['id' => 999], // no 'commentable' key -- only reached by `continue`
-        ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
+        ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current());
     } catch (ResponseReadyException $e) {
         $exception = $e;
     } finally {
@@ -199,7 +207,7 @@ test('render rejects a posted comment as "ugly spammer" when no related category
     try {
         $renderer->render(null, 42, 0, makePictureCommentUrlService(), [
             ['commentable' => false],
-        ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
+        ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current());
     } catch (ResponseReadyException $e) {
         $exception = $e;
     }
@@ -231,7 +239,7 @@ test('render rejects a posted comment as "Session expired" for a guest when comm
     try {
         $renderer->render(null, 42, 0, makePictureCommentUrlService(), [
             ['commentable' => true],
-        ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
+        ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current());
     } catch (ResponseReadyException $e) {
         $exception = $e;
     }
@@ -264,9 +272,9 @@ test('render lets a guest post a comment when comments_forall is on', function (
     $renderer = new PictureCommentRenderer();
     $renderer->render(null, 42, 0, makePictureCommentUrlService(), [
         ['commentable' => false],
-    ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
+    ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current());
 
-    expect(CurrentTemplate::get()->get_template_vars('comments'))->toBeNull();
+    expect(CurrentTemplate::current()->get()->get_template_vars('comments'))->toBeNull();
 });
 
 test('render does not reject a logged-in (non-guest) user\'s posted comment even when comments_forall is off (`and`, not `or`)', function (): void {
@@ -298,7 +306,7 @@ test('render does not reject a logged-in (non-guest) user\'s posted comment even
     CurrentConfig::setCommentsForall(false);
     $_POST['content'] = 'nice photo!';
     file_put_contents(CurrentPaths::get()->root . '/comment_list.tpl', 'STATIC-COMMENT-LIST-CONTENT');
-    CurrentTemplate::get()->set_template_dir(CurrentPaths::get()->root);
+    CurrentTemplate::current()->get()->set_template_dir(CurrentPaths::get()->root);
 
     $renderer = new PictureCommentRenderer();
     // A nonexistent image id keeps countForImage()'s real COUNT(*) query
@@ -307,8 +315,8 @@ test('render does not reject a logged-in (non-guest) user\'s posted comment even
     // is never entered either.
     $renderer->render(null, 999999999, 0, makePictureCommentUrlService(), [
         ['commentable' => true],
-    ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
+    ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current());
 
-    expect(CurrentTemplate::get()->get_template_vars('COMMENT_LIST'))->toBe('STATIC-COMMENT-LIST-CONTENT')
-        ->and(CurrentTemplate::get()->get_template_vars('comments'))->toBe([]);
+    expect(CurrentTemplate::current()->get()->get_template_vars('COMMENT_LIST'))->toBe('STATIC-COMMENT-LIST-CONTENT')
+        ->and(CurrentTemplate::current()->get()->get_template_vars('comments'))->toBe([]);
 });

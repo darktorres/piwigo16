@@ -52,12 +52,13 @@ final class LanguagesSubController implements AdminSubControllerInterface
         private readonly ConfigService $configService,
         private readonly CoreTabs $coreTabs,
         private readonly \Piwigo\Core\PageState $pageState,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         // Consumed by CoreTabs::addCoreTabs()'s own 'languages' case,
         // triggered synchronously inside Tabsheet::select() below -- must
@@ -70,11 +71,11 @@ final class LanguagesSubController implements AdminSubControllerInterface
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('languages');
         $tabsheet->select($tab);
-        $tabsheet->assign();
+        $tabsheet->assign($this->currentTemplate);
 
         if ($tab === 'update') {
             new UpdatesExtPageRenderer()
-                ->render('languages', $this->urlService, $this->configService, $this->pageState);
+                ->render('languages', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate);
             $template->assign('ADMIN_PAGE_TITLE', Lang::t('Languages'));
         } elseif ($tab === 'new') {
             \Piwigo\Bootstrap\AdminAccessor::languagesNewPageRenderer()

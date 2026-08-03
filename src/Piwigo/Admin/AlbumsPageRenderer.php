@@ -34,9 +34,9 @@ use Piwigo\Template\Template;
  */
 final class AlbumsPageRenderer
 {
-    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Users\CurrentUser $currentUser): void
+    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $currentTemplate->get();
 
         $categoryService = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
 
@@ -53,7 +53,7 @@ final class AlbumsPageRenderer
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('albums');
         $tabsheet->select('list');
-        $tabsheet->assign();
+        $tabsheet->assign($currentTemplate);
 
         $nb_cats = $categoryService->countAllCategories();
         $template->assign(

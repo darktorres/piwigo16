@@ -59,6 +59,7 @@ final class CommentsController implements ControllerInterface
         private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     private static function permissionService(): PermissionService
@@ -74,7 +75,7 @@ final class CommentsController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         // A single connection for the whole request -- mirrors the
         // legacy single-global-mysqli-connection model this migration
@@ -644,14 +645,14 @@ final class CommentsController implements ControllerInterface
         $themeconf = is_array($themeconf) ? $themeconf : [];
         if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theCommentsPage', $themeconf['hide_menu_on'], true)) {
             new MenubarRenderer()
-                ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser);
+                ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
         }
 
         // +---------------------------------------------------------------+
         // |                      html code display                        |
         // +---------------------------------------------------------------+
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->pageState);
+            ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate);
         $this->eventDispatcher->dispatchNotify(new LocEndComments());
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();

@@ -106,6 +106,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     private static function permissionService(): PermissionService
@@ -132,7 +133,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
     public function handle(ServerRequestInterface $request): void
     {
         $logger = $this->currentLogger->get();
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         // +-----------------------------------------------------------------------+
         // | Check Access and exit when user status is not ok                      |
@@ -231,7 +232,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('site_update');
         $tabsheet->select('synchronization');
-        $tabsheet->assign();
+        $tabsheet->assign($this->currentTemplate);
 
         // +-----------------------------------------------------------------------+
         // | Quick sync                                                            |

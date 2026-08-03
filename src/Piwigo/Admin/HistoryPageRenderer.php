@@ -50,9 +50,9 @@ final class HistoryPageRenderer
      * regardless, so there was never a real bridge here even in
      * principle.
      */
-    public function render(string $pageSlug, UrlServiceInterface $urlService, CoreTabs $coreTabs): void
+    public function render(string $pageSlug, UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\Template\CurrentTemplate $currentTemplate): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $currentTemplate->get();
         $conn = DbConnection::build();
 
         $types = array_merge(['none'], new DbInfo($conn)->getEnums(Tables::history(), 'image_type'));
@@ -78,7 +78,7 @@ final class HistoryPageRenderer
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('history');
         $tabsheet->select($pageSlug);
-        $tabsheet->assign();
+        $tabsheet->assign($currentTemplate);
 
         $template->assign(
             [

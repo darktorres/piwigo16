@@ -113,6 +113,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     /**
@@ -138,7 +139,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         // Phase 2 global-residual sweep: $page is a local scratch array
         // for this method's own body only (no longer `global $page;`),
@@ -514,7 +515,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('configuration');
         $tabsheet->select($page_section);
-        $tabsheet->assign();
+        $tabsheet->assign($this->currentTemplate);
 
         $action = $this->urlService->getRootUrl() . 'admin.php?page=configuration';
         $action .= '&amp;section=' . $page_section;
@@ -624,7 +625,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 // P22: profile.php's own save_profile_from_post()/
                 // load_profile_in_template() ported to Piwigo\Controller\
                 // ProfileFormHandler in P23 batch 8c.
-                $profileFormHandler = new ProfileFormHandler($this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser);
+                $profileFormHandler = new ProfileFormHandler($this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate);
 
                 $errors = [];
                 if ($profileFormHandler->saveFromPost($edit_user, $errors)) {
@@ -945,7 +946,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
      */
     private function processSizes(array $post): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
             return;
@@ -1212,7 +1213,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
      */
     private function processWatermark(array $post, array $files): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
             return;

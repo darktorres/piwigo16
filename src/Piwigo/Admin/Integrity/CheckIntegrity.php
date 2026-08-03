@@ -61,6 +61,7 @@ final class CheckIntegrity
         private readonly Translator $translator,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Core\PageState $pageState,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {
         $this->ignore_list = [];
         $this->retrieve_list = [];
@@ -188,7 +189,7 @@ final class CheckIntegrity
      */
     public function display(): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         $check_automatic_correction = false;
         $submit_automatic_correction = false;

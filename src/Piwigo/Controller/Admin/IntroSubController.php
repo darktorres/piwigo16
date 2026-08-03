@@ -76,6 +76,7 @@ final class IntroSubController implements AdminSubControllerInterface
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     #[\Override]
@@ -92,7 +93,7 @@ final class IntroSubController implements AdminSubControllerInterface
         // AdminShell's own exact value.
         $link_start = $this->urlService->getRootUrl() . 'admin.php?page=';
         $logger = $this->currentLogger->get();
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         // A single connection for the whole request -- mirrors the
         // legacy single-global-mysqli-connection model this migration
@@ -113,7 +114,7 @@ final class IntroSubController implements AdminSubControllerInterface
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('admin_home');
         $tabsheet->select('');
-        $tabsheet->assign();
+        $tabsheet->assign($this->currentTemplate);
 
         // +-----------------------------------------------------------------------+
         // |                                actions                                |
@@ -544,7 +545,7 @@ final class IntroSubController implements AdminSubControllerInterface
 
         // Check integrity
         $integrityRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity::class);
-        $c13y = new CheckIntegrity($integrityRepo, $this->translator, $this->eventDispatcher, $this->pageState);
+        $c13y = new CheckIntegrity($integrityRepo, $this->translator, $this->eventDispatcher, $this->pageState, $this->currentTemplate);
         // add internal checks
         new C13yInternal($this->sessionService, $this->eventDispatcher, $this->pageState)
             ->registerHandlers();

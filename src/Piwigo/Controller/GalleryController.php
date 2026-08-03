@@ -69,6 +69,7 @@ final class GalleryController implements ControllerInterface
         private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     private static function categoryService(): CategoryService
@@ -84,7 +85,7 @@ final class GalleryController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         \Piwigo\Bootstrap\ExtendedDomainAccessor::sectionPopulator()
             ->populate();
@@ -199,7 +200,7 @@ final class GalleryController implements ControllerInterface
 
         // -------------------------------------------------- menubar
         $categoryCountCategories = new MenubarRenderer()
-            ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser);
+            ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
 
         $template->set_filename('index', 'index.tpl');
 
@@ -585,7 +586,7 @@ final class GalleryController implements ControllerInterface
 
         // ---------------------------------------------------------- end
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->pageState);
+            ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate);
         $this->eventDispatcher->dispatchNotify(new LocEndIndex());
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();

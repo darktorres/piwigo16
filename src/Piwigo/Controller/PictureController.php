@@ -98,6 +98,7 @@ final class PictureController implements ControllerInterface
         private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     private static function permissionService(): PermissionService
@@ -141,7 +142,7 @@ final class PictureController implements ControllerInterface
         \Piwigo\Bootstrap\ExtendedDomainAccessor::sectionPopulator()
             ->populate();
 
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         // Legacy Coupling Retirement Track A batch A5.2e: populate() always
         // calls SectionContextRegistry::set() as the very last thing it
@@ -561,7 +562,7 @@ final class PictureController implements ControllerInterface
         // Phase 8, 8g), formerly `global`.
         $refresh = null;
         $url_link = null;
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         // ---------- incrementation of the number of hits
         $inc_hit_count = ! $content_present;
@@ -1223,11 +1224,11 @@ final class PictureController implements ControllerInterface
             ->render($image_id, $urlService, $picture, $url_self);
         if (\Piwigo\Config\CurrentConfig::activateComments()) {
             new PictureCommentRenderer()
-                ->render($edit_comment, $image_id, $section_context->start, $urlService, $related_categories, $url_self, $this->sessionService, $this->eventDispatcher, $this->pageState, $this->currentUser);
+                ->render($edit_comment, $image_id, $section_context->start, $urlService, $related_categories, $url_self, $this->sessionService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate);
         }
         if ($metadata_showable and $this->sessionService->getSessionVar('show_metadata') !== null) {
             new PictureMetadataRenderer()
-                ->render($picture, $this->currentLogger, $this->eventDispatcher);
+                ->render($picture, $this->currentLogger, $this->eventDispatcher, $this->currentTemplate);
         }
 
         // include menubar
@@ -1235,7 +1236,7 @@ final class PictureController implements ControllerInterface
         $themeconf = is_array($themeconf) ? $themeconf : [];
         if (\Piwigo\Config\CurrentConfig::pictureMenu() and (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('thePicturePage', $themeconf['hide_menu_on'], true))) {
             new MenubarRenderer()
-                ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser);
+                ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
         }
 
         // The slideshow branch above may have set $refresh/$url_link
@@ -1244,7 +1245,7 @@ final class PictureController implements ControllerInterface
         $refresh_str = isset($refresh) && is_numeric($refresh) ? (string) $refresh : null;
         /** @var string|null $url_link */
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->pageState, $refresh_str, $url_link ?? null);
+            ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $refresh_str, $url_link ?? null);
         $this->eventDispatcher->dispatchNotify(new LocEndPicture());
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();
@@ -1336,7 +1337,7 @@ final class PictureController implements ControllerInterface
             }
         }
 
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         if ($show_original and isset($element_info['element_url'])) {
             $template->assign('U_ORIGINAL', $element_info['element_url']);

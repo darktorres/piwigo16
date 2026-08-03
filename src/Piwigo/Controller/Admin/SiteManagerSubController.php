@@ -58,12 +58,13 @@ final class SiteManagerSubController implements AdminSubControllerInterface
         private readonly SessionService $sessionService,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Core\PageState $pageState,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         if (! \Piwigo\Config\CurrentConfig::enableSynchronization()) {
             \Piwigo\Bootstrap\PresentationAccessor::htmlService()
@@ -90,7 +91,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
         // Matches CoreTabs::addCoreTabs()'s own 'site_maager' key -- see
         // this class's own docblock.
         $tabsheet->select('site_maager');
-        $tabsheet->assign();
+        $tabsheet->assign($this->currentTemplate);
 
         // +-----------------------------------------------------------------------+
         // |                        new site creation form                         |

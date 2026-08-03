@@ -87,7 +87,7 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
         // other Integration test constructing a real Template directly
         // does (e.g. ThemesStandardPagesPageRendererTest's own setUp()).
         CurrentConfigService::set($this->configService);
-        CurrentTemplate::set(new Template(CurrentPaths::get()->root . 'themes/admin', 'default'));
+        CurrentTemplate::current()->set(new Template(CurrentPaths::get()->root . 'themes/admin', 'default'));
 
         $urlService = new UrlService(new HtmlService());
         $currentLogger = Kernel::container()->get(CurrentLogger::class);
@@ -95,7 +95,7 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
             throw new \LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
         }
         $currentLogger->set(new Logger(['severity' => Logger::OFF]));
-        $this->renderer = new ThemesInstalledPageRenderer(new RedirectService(), $urlService, $this->configService, $currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current());
+        $this->renderer = new ThemesInstalledPageRenderer(new RedirectService(), $urlService, $this->configService, $currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), CurrentTemplate::current());
 
         $this->fixtureRoot = sys_get_temp_dir() . '/piwigo-themes-installed-integration-' . bin2hex(random_bytes(6)) . '/';
         mkdir($this->fixtureRoot . 'themes', 0o777, true);
@@ -109,7 +109,7 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
     {
         $_GET = [];
         CurrentConfig::reset();
-        CurrentTemplate::reset();
+        CurrentTemplate::current()->reset();
         EventDispatcher::get()->reset();
         Kernel::reset();
         if (is_dir($this->fixtureRoot)) {
@@ -137,7 +137,7 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
 
         $this->renderer->render('themes');
 
-        $tplThemes = CurrentTemplate::get()->get_template_vars('tpl_themes');
+        $tplThemes = CurrentTemplate::current()->get()->get_template_vars('tpl_themes');
         self::assertIsArray($tplThemes);
 
         $ids = array_map(

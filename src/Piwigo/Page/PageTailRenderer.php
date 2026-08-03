@@ -49,12 +49,13 @@ final readonly class PageTailRenderer
         private UrlServiceInterface $urlService,
         private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private \Piwigo\Core\PageState $pageState,
+        private \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     public function render(float $startTime): void
     {
         $this->prepareTail($startTime);
-        \Piwigo\Template\CurrentTemplate::get()
+        $this->currentTemplate->get()
             ->p();
     }
 
@@ -69,13 +70,13 @@ final readonly class PageTailRenderer
     public function renderToString(float $startTime): string
     {
         $this->prepareTail($startTime);
-        return \Piwigo\Template\CurrentTemplate::get()
+        return $this->currentTemplate->get()
             ->fetchOutput();
     }
 
     private function prepareTail(float $startTime): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         $template->set_filenames([
             'tail' => 'footer.tpl',

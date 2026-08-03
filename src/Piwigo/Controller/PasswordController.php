@@ -51,6 +51,7 @@ final class PasswordController implements ControllerInterface
         private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     /**
@@ -101,7 +102,7 @@ final class PasswordController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Free);
 
@@ -248,7 +249,7 @@ final class PasswordController implements ControllerInterface
         $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
         if (! is_array($hide_menu_on) or ! in_array('thePasswordPage', $hide_menu_on, true)) {
             new MenubarRenderer()
-                ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser);
+                ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
         }
 
         // Load language if cookie is set from login/register/password
@@ -286,7 +287,7 @@ final class PasswordController implements ControllerInterface
         $template->assign('HELP_LINK', $help_link);
 
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->pageState);
+            ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate);
         $this->eventDispatcher->dispatchNotify(new LocEndPassword());
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();

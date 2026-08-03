@@ -28,9 +28,9 @@ final class MaintenanceSysPageRenderer
     /**
      * @param array<string, array{icon: string, label: string}> $maintActions
      */
-    public function render(array $maintActions, \Piwigo\Core\PageState $pageState): void
+    public function render(array $maintActions, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $currentTemplate->get();
 
         // +-------------------------------------------------------------------+
         // |                    Only Webmaster can see this tab                    |

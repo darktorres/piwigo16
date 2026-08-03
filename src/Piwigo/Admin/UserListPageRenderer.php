@@ -31,9 +31,9 @@ final class UserListPageRenderer
         return \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService();
     }
 
-    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser): void
+    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $currentTemplate->get();
         $conn = DbConnection::build();
 
         $userListFilter = Request\UserListFilterRequest::fromGlobals();
@@ -43,7 +43,7 @@ final class UserListPageRenderer
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('users');
         $tabsheet->select('user_list');
-        $tabsheet->assign();
+        $tabsheet->assign($currentTemplate);
 
         $groups = [];
         $groups_for_filter = [];

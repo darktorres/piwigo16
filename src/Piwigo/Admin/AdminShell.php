@@ -60,6 +60,7 @@ final class AdminShell
         private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     /**
@@ -94,7 +95,7 @@ final class AdminShell
 
     private function runDispatch(): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
         $conn = DbConnection::build();
 
         $this->eventDispatcher->addTypedHandler(TabsheetBeforeSelect::class, $this->coreTabs->addCoreTabs(...));
@@ -485,7 +486,7 @@ final class AdminShell
         $template->assign('pwgmenu', AdminUiHelper::pwgUrl());
 
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->pageState);
+            ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate);
 
         $this->eventDispatcher->dispatchNotify(new LocEndAdmin());
 

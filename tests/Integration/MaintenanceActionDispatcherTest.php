@@ -83,7 +83,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         CurrentConfigService::set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
-        $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService(), new UrlService(new HtmlService()), new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()), new FilesystemIntegrityChecker(), new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class)), new Translator(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current());
+        $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService(), new UrlService(new HtmlService()), new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()), new FilesystemIntegrityChecker(CurrentTemplate::current()), new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class)), new Translator(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), CurrentTemplate::current());
     }
 
     #[\Override]
@@ -92,7 +92,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         // Harmless for every other test in this file, which never sets it
         // -- same nullable-safe reset() shape as CurrentConfigService's own
         // base-class reset (see IntegrationTestCase's own docblock).
-        CurrentTemplate::reset();
+        CurrentTemplate::current()->reset();
         Kernel::reset();
         parent::tearDown();
     }
@@ -389,7 +389,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         // delete_compiled_templates() runs before the persistent-cache
         // guard -- needs a real Template instance, unset by default since
         // this test never boots a full RequestBootstrap.
-        CurrentTemplate::set(new Template(CurrentPaths::get()->root . 'themes/admin', 'default'));
+        CurrentTemplate::current()->set(new Template(CurrentPaths::get()->root . 'themes/admin', 'default'));
 
         // HtmlService::fatalError() always throws ResponseReadyException
         // regardless of ErrorCollector::isActive() (see its own docblock)
@@ -453,7 +453,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
 
     public function test_compiled_templates_purges_a_real_initialized_persistent_cache(): void
     {
-        CurrentTemplate::set(new Template(CurrentPaths::get()->root . 'themes/admin', 'default'));
+        CurrentTemplate::current()->set(new Template(CurrentPaths::get()->root . 'themes/admin', 'default'));
 
         // A dedicated local instance, not $this->dispatcher (built in
         // setUp() with no persistent cache) -- constructor injection means
@@ -463,11 +463,12 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             new RedirectService(),
             new UrlService(new HtmlService()),
             new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()),
-            new FilesystemIntegrityChecker(),
+            new FilesystemIntegrityChecker(CurrentTemplate::current()),
             new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class)),
             new Translator(),
             new \Piwigo\PluginConfig\EventDispatcher(),
             \Piwigo\Core\PageState::current(),
+            CurrentTemplate::current(),
             new \Piwigo\Cache\PersistentFileCache(),
         );
 

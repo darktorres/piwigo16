@@ -59,9 +59,9 @@ final class MenubarRenderer
      * write to, this method returns that value instead; every caller but
      * GalleryController ignores it.
      */
-    public function render(UrlServiceInterface $urlService, \Piwigo\Core\FilterState $filterState, \Piwigo\Section\SectionContextRegistry $sectionContextRegistry, SessionService $sessionService, \Piwigo\Config\DeploymentPolicy $deploymentPolicy, \Piwigo\Users\CurrentUser $currentUser): ?int
+    public function render(UrlServiceInterface $urlService, \Piwigo\Core\FilterState $filterState, \Piwigo\Section\SectionContextRegistry $sectionContextRegistry, SessionService $sessionService, \Piwigo\Config\DeploymentPolicy $deploymentPolicy, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate): ?int
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $currentTemplate->get();
         $section_context = $sectionContextRegistry->current();
 
         $conn = DbConnection::build();
@@ -71,7 +71,7 @@ final class MenubarRenderer
         $tagService = new TagService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Tag\TagEntity::class), $permissionService, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\PluginConfig\EventDispatcher::get(), $currentUser);
         $categoryService = new CategoryService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class), $permissionService);
 
-        $menu = new BlockManager('menubar', \Piwigo\PluginConfig\EventDispatcher::get());
+        $menu = new BlockManager('menubar', \Piwigo\PluginConfig\EventDispatcher::get(), $currentTemplate);
 
         // if guest_access is disabled, we only display the menus if the user is identified
         if (\Piwigo\Config\CurrentConfig::guestAccess() or ! \Piwigo\Auth\AccessControl::isAGuest()) {

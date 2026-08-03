@@ -83,7 +83,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         // Smarty's template_dir at the real themes/default/template/
         // directory that file lives in (same root shape every real
         // Template() call site uses, e.g. RequestBootstrap.php:568).
-        CurrentTemplate::set(new Template(\Piwigo\Core\CurrentPaths::get()->root . 'themes', 'default'));
+        CurrentTemplate::current()->set(new Template(\Piwigo\Core\CurrentPaths::get()->root . 'themes', 'default'));
         session_id('fixed-test-session-id'); // CsrfService::getToken() needs a session id, not a running session.
         unset($_POST['content']);
     }
@@ -91,7 +91,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
     #[\Override]
     protected function tearDown(): void
     {
-        CurrentTemplate::reset();
+        CurrentTemplate::current()->reset();
         CurrentUser::current()->reset();
         CurrentConfig::reset();
         unset($_POST['content']);
@@ -117,7 +117,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $this->seedUser($ownerId, UserStatus::Normal);
         CurrentConfig::setUserCanEditComment(true);
 
-        $this->renderer()->render($commentIdB, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
+        $this->renderer()->render($commentIdB, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current());
 
         $rows = $this->renderedComments();
         $rowA = $this->findRenderedRow($rows, $commentIdA);
@@ -162,7 +162,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $_POST['content'] = 'A guest comment attempt.';
 
         try {
-            $this->renderer()->render(null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
+            $this->renderer()->render(null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current());
             self::fail('Expected a ResponseReadyException');
         } catch (ResponseReadyException $e) {
             self::assertSame(200, $e->response()->getStatusCode());
@@ -178,7 +178,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $_POST['content'] = 'Spam attempt on a non-commentable picture.';
 
         try {
-            $this->renderer()->render(null, $imageId, 0, $this->urlService(), [['commentable' => false]], '/picture.php', $this->sessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
+            $this->renderer()->render(null, $imageId, 0, $this->urlService(), [['commentable' => false]], '/picture.php', $this->sessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current());
             self::fail('Expected a ResponseReadyException');
         } catch (ResponseReadyException $e) {
             self::assertSame(403, $e->response()->getStatusCode());
@@ -203,7 +203,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $_POST['key'] = new EphemeralKeyService()->generate(0, (string) $imageId);
 
         try {
-            $this->renderer()->render(null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
+            $this->renderer()->render(null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current());
 
             self::assertSame(
                 [
@@ -232,7 +232,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $_POST['key'] = new EphemeralKeyService()->generate(0, (string) $imageId);
 
         try {
-            $this->renderer()->render(null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
+            $this->renderer()->render(null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current());
 
             self::assertSame(['Your comment has been registered'], PageState::current()->infos);
         } finally {
@@ -257,14 +257,14 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $_POST['key'] = 'totally-invalid-key';
 
         try {
-            $this->renderer()->render(null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
+            $this->renderer()->render(null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current());
 
             self::assertSame(
                 ['Your comment has NOT been registered because it did not pass the validation rules'],
                 PageState::current()->errors
             );
 
-            $commentAdd = CurrentTemplate::get()->get_template_vars('comment_add');
+            $commentAdd = CurrentTemplate::current()->get()->get_template_vars('comment_add');
             self::assertIsArray($commentAdd);
             self::assertSame('Some Author', $commentAdd['AUTHOR']);
             // stripslashes() is a no-op here (no backslashes); htmlspecialchars()
@@ -286,12 +286,12 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $_GET['comments_order'] = 'desc';
 
         try {
-            $this->renderer()->render(null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
+            $this->renderer()->render(null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current());
 
             self::assertSame('desc', \Piwigo\Session\SessionService::get()->getSessionVar('comments_order'));
             // The nav link toggles to the opposite of whatever order is now
             // active ('desc' -> offers 'ASC').
-            $orderUrl = CurrentTemplate::get()->get_template_vars('COMMENTS_ORDER_URL');
+            $orderUrl = CurrentTemplate::current()->get()->get_template_vars('COMMENTS_ORDER_URL');
             self::assertIsString($orderUrl);
             self::assertStringContainsString('comments_order=ASC', $orderUrl);
         } finally {
@@ -365,7 +365,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
      */
     private function renderComments(int $imageId): array
     {
-        $this->renderer()->render(null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
+        $this->renderer()->render(null, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current());
 
         return $this->renderedComments();
     }
@@ -425,7 +425,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
      */
     private function renderedComments(): array
     {
-        $vars = CurrentTemplate::get()->get_template_vars('comments');
+        $vars = CurrentTemplate::current()->get()->get_template_vars('comments');
 
         return is_array($vars) ? array_values($vars) : [];
     }

@@ -42,6 +42,7 @@ final class ProfileFormHandler
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     private static function activityService(Connection $conn): \Piwigo\Activity\ActivityService
@@ -333,7 +334,7 @@ final class ProfileFormHandler
      */
     public function loadIntoTemplate($url_action, $url_redirect, array $userdata, ?string $template_prefixe = null): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         $template->assign(
             'radio_options',

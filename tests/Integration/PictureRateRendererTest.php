@@ -59,7 +59,7 @@ final class PictureRateRendererTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         $this->repo = \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(RateEntity::class);
         CurrentConfigService::set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
-        CurrentTemplate::set(new Template());
+        CurrentTemplate::current()->set(new Template());
 
         // The fixture itself seeds rate rows for element_id=1 (real
         // sample data) -- each test inserts its own rows for the exact
@@ -70,13 +70,13 @@ final class PictureRateRendererTest extends IntegrationTestCase
         // regardless of run order.
         $this->conn->executeStatement('DELETE FROM ' . Tables::rate() . ' WHERE element_id = 1');
 
-        $this->renderer = new PictureRateRenderer($this->repo, \Piwigo\Users\CurrentUser::current());
+        $this->renderer = new PictureRateRenderer($this->repo, \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current());
     }
 
     #[\Override]
     protected function tearDown(): void
     {
-        CurrentTemplate::reset();
+        CurrentTemplate::current()->reset();
         CurrentUser::current()->reset();
         $this->conn->executeStatement('DELETE FROM ' . Tables::rate() . ' WHERE element_id = 1');
         parent::tearDown();
@@ -117,10 +117,10 @@ final class PictureRateRendererTest extends IntegrationTestCase
 
         $this->renderer->render(1, $this->urlService(), $this->picture(1, 87.5), '/picture.php?/1');
 
-        $rateSummary = CurrentTemplate::get()->get_template_vars('rate_summary');
+        $rateSummary = CurrentTemplate::current()->get()->get_template_vars('rate_summary');
         self::assertSame(['count' => 3, 'score' => 87.5, 'average' => 4.0], $rateSummary);
 
-        $rating = CurrentTemplate::get()->get_template_vars('rating');
+        $rating = CurrentTemplate::current()->get()->get_template_vars('rating');
         self::assertIsArray($rating);
         // Classic user (not anonymous) -- user_id=3's own vote (3), matched
         // with a null anonymous_id (isAuthorizeStatus(Classic) skips the
@@ -151,7 +151,7 @@ final class PictureRateRendererTest extends IntegrationTestCase
         try {
             $this->renderer->render(1, $this->urlService(), $this->picture(1, 90.0), '/picture.php?/1');
 
-            $rating = CurrentTemplate::get()->get_template_vars('rating');
+            $rating = CurrentTemplate::current()->get()->get_template_vars('rating');
             self::assertIsArray($rating);
             self::assertSame(5, $rating['USER_RATE']);
         } finally {
@@ -170,10 +170,10 @@ final class PictureRateRendererTest extends IntegrationTestCase
         // SQL semantics, not the method's own `$row === false` fallback.
         $this->renderer->render(1, $this->urlService(), $this->picture(1, 0.0), '/picture.php?/1');
 
-        $rateSummary = CurrentTemplate::get()->get_template_vars('rate_summary');
+        $rateSummary = CurrentTemplate::current()->get()->get_template_vars('rate_summary');
         self::assertSame(['count' => 0, 'score' => 0.0, 'average' => null], $rateSummary);
 
-        $rating = CurrentTemplate::get()->get_template_vars('rating');
+        $rating = CurrentTemplate::current()->get()->get_template_vars('rating');
         self::assertIsArray($rating);
         // count === 0 -- findUserRate() is never even called.
         self::assertNull($rating['USER_RATE']);

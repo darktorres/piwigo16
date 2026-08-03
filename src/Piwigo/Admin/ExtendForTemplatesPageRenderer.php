@@ -29,9 +29,9 @@ use Piwigo\Template\Template;
  */
 final class ExtendForTemplatesPageRenderer
 {
-    public function render(UrlServiceInterface $urlService, ConfigService $configService, \Piwigo\Core\PageState $pageState): void
+    public function render(UrlServiceInterface $urlService, ConfigService $configService, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $currentTemplate->get();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 

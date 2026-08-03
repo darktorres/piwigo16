@@ -10,10 +10,12 @@ use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Template;
 
 /**
- * Piwigo\Template\CurrentTemplate -- had zero dedicated coverage.
- * get()'s own "not initialised" \LogicException guard (only reachable
- * before any real request has run RequestBootstrap::finalize(), or in a
- * test that never calls set()) is the only red line.
+ * Piwigo\Template\CurrentTemplate -- container-shared instance (singleton/
+ * service-locator elimination campaign, Phase 5); each test constructs its
+ * own fresh instance directly, no reset() needed. get()'s own
+ * "not initialised" \LogicException guard (only reachable before any real
+ * request has run RequestBootstrap::finalize(), or in a test that never
+ * calls set()) is the only red line.
  *
  * Same "point CurrentPaths at a fresh temp root" Template construction
  * setup as PictureRateRendererTest.php's own docblock -- a real
@@ -45,32 +47,68 @@ beforeEach(function (): void {
 
 afterEach(function (): void {
     current_template_test_rrmdir(CurrentPaths::get()->root);
-    CurrentTemplate::reset();
     CurrentConfig::reset();
     Kernel::reset();
 });
 
 test('get throws when no Template has ever been set', function (): void {
-    expect(CurrentTemplate::isInitialized())->toBeFalse();
+    $currentTemplate = new CurrentTemplate();
 
-    CurrentTemplate::get();
+    expect($currentTemplate->isInitialized())->toBeFalse();
+
+    $currentTemplate->get();
 })->throws(LogicException::class, 'CurrentTemplate not initialised -- call Piwigo\Bootstrap\RequestBootstrap::finalize() first.');
 
 test('set publishes a Template instance that get returns and isInitialized reports true', function (): void {
+    $currentTemplate = new CurrentTemplate();
     $template = new Template();
 
-    CurrentTemplate::set($template);
+    $currentTemplate->set($template);
 
-    expect(CurrentTemplate::isInitialized())->toBeTrue()
-        ->and(CurrentTemplate::get())->toBe($template);
+    expect($currentTemplate->isInitialized())->toBeTrue()
+        ->and($currentTemplate->get())->toBe($template);
 });
 
 test('reset clears the published instance so get throws again', function (): void {
-    CurrentTemplate::set(new Template());
-    expect(CurrentTemplate::isInitialized())->toBeTrue();
+    $currentTemplate = new CurrentTemplate();
+    $currentTemplate->set(new Template());
+    expect($currentTemplate->isInitialized())->toBeTrue();
 
-    CurrentTemplate::reset();
+    $currentTemplate->reset();
 
-    expect(CurrentTemplate::isInitialized())->toBeFalse();
-    CurrentTemplate::get();
+    expect($currentTemplate->isInitialized())->toBeFalse();
+    $currentTemplate->get();
 })->throws(LogicException::class);
+
+test('current() falls back to a memoized instance when Kernel is not booted', function (): void {
+    // Memoized (not fresh-per-call), same reasoning as Translator::get()/
+    // EventDispatcher::get()/CurrentUser::current(): a caller that writes
+    // via current() in one call and reads via current() in a later call
+    // must see the same instance, or the write would be lost. Kernel is
+    // already booted by this file's own beforeEach() (real Template
+    // construction needs a writable data dir) -- build the Template
+    // *before* resetting Kernel (its constructor reaches CurrentPaths::
+    // get(), which throws once Kernel is reset), then capture the root
+    // and reset to reach the genuinely not-booted branch.
+    $template = new Template();
+    $root = CurrentPaths::get()->root;
+    Kernel::reset();
+
+    $first = CurrentTemplate::current();
+    $first->set($template);
+
+    $second = CurrentTemplate::current();
+
+    expect($second)->toBe($first)
+        ->and($second->isInitialized())->toBeTrue();
+
+    // Restore for this test's own afterEach() (CurrentPaths::get() would
+    // otherwise throw against the now-reset container).
+    Kernel::boot(Paths::fromRoot($root));
+});
+
+test('current() resolves the container-shared instance once Kernel is booted', function (): void {
+    $instance = Kernel::container()->get(CurrentTemplate::class);
+
+    expect(CurrentTemplate::current())->toBe($instance);
+});

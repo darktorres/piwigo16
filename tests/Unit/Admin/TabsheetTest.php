@@ -44,12 +44,12 @@ beforeEach(function (): void {
     Kernel::boot(Paths::fromRoot($root));
     CurrentConfig::setDataLocation('data/');
     CurrentConfig::setDataDirChecked('1');
-    CurrentTemplate::set(new Template($root));
+    CurrentTemplate::current()->set(new Template($root));
 });
 
 afterEach(function (): void {
     tabsheetTestRrmdir(CurrentPaths::get()->root);
-    CurrentTemplate::reset();
+    CurrentTemplate::current()->reset();
     Kernel::reset();
     CurrentConfig::reset();
 });
@@ -249,9 +249,9 @@ test('assign makes the sheets array available to the tabsheet.tpl template befor
     $tabsheet = new Tabsheet('MY_TABSHEET', 'MY_TITLE');
     $tabsheet->add('general', 'General Settings', '/general');
 
-    $tabsheet->assign();
+    $tabsheet->assign(CurrentTemplate::current());
 
-    $template = CurrentTemplate::get();
+    $template = CurrentTemplate::current()->get();
     expect($template->get_template_vars('MY_TABSHEET'))->toBe('CAPTION:General Settings');
 });
 
@@ -259,9 +259,9 @@ test('assign clears the temporary tabsheet template var after compiling it', fun
     $tabsheet = new Tabsheet('MY_TABSHEET', 'MY_TITLE');
     $tabsheet->add('general', 'General', '/general');
 
-    $tabsheet->assign();
+    $tabsheet->assign(CurrentTemplate::current());
 
-    $template = CurrentTemplate::get();
+    $template = CurrentTemplate::current()->get();
     expect($template->get_template_vars('tabsheet'))->toBeNull();
 });
 
@@ -278,9 +278,9 @@ test('assign writes the sheets, the selected key, and the bracketed selected cap
     $tabsheet->add('general', 'General Settings', '/general', true);
     $tabsheet->add('advanced', 'Advanced', '/advanced');
 
-    $tabsheet->assign();
+    $tabsheet->assign(CurrentTemplate::current());
 
-    $template = CurrentTemplate::get();
+    $template = CurrentTemplate::current()->get();
     expect($template->get_template_vars('tabsheet_selected'))->toBe('general');
     expect($template->get_template_vars('MY_TITLE'))->toBe('[General Settings]');
 });
@@ -289,9 +289,9 @@ test('assign does not set the titlename var when nothing is selected', function 
     $tabsheet = new Tabsheet('MY_TABSHEET', 'MY_TITLE');
     $tabsheet->add('general', 'General', '/general');
 
-    $tabsheet->assign();
+    $tabsheet->assign(CurrentTemplate::current());
 
-    $template = CurrentTemplate::get();
+    $template = CurrentTemplate::current()->get();
     expect($template->get_template_vars('tabsheet_selected'))->toBe('');
     expect($template->get_template_vars('MY_TITLE'))->toBeNull();
 });

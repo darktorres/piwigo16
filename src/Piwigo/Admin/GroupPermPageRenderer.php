@@ -27,6 +27,7 @@ final class GroupPermPageRenderer
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     private static function auditService(): AuditService
@@ -36,7 +37,7 @@ final class GroupPermPageRenderer
 
     public function render(): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         $conn = DbConnection::build();
         $categoryService = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();

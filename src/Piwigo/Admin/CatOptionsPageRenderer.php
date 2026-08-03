@@ -28,6 +28,7 @@ final class CatOptionsPageRenderer
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     private static function activityService(Connection $conn): ActivityService
@@ -43,7 +44,7 @@ final class CatOptionsPageRenderer
     public function render(): void
     {
         $conn = DbConnection::build();
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
@@ -88,7 +89,7 @@ final class CatOptionsPageRenderer
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('cat_options');
         $tabsheet->select($section);
-        $tabsheet->assign();
+        $tabsheet->assign($this->currentTemplate);
 
         // for each section, categories in the multiselect field can be :
         //

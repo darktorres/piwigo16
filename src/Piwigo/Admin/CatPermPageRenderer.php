@@ -25,6 +25,7 @@ final class CatPermPageRenderer
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     /**
@@ -49,7 +50,7 @@ final class CatPermPageRenderer
         // equivalent fix (Track A5.2e).
         /** @var array<string, mixed> $page */
         $page = [];
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
         $conn = DbConnection::build();
 
         // +-------------------------------------------------------------------+

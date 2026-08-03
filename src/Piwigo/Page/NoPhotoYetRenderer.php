@@ -47,6 +47,7 @@ final readonly class NoPhotoYetRenderer
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     public function render(): void
@@ -69,7 +70,7 @@ final readonly class NoPhotoYetRenderer
                     ->theme;
                 $user_theme = $user_theme !== '' ? $user_theme : new \Piwigo\Users\UserService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), new HtmlService(), \Piwigo\Db\DbConnection::build(), $this->sessionService, $this->eventDispatcher, $this->deploymentPolicy, $this->currentUser)->getDefaultTheme();
                 $template = new Template($this->paths->root . 'themes', $user_theme);
-                \Piwigo\Template\CurrentTemplate::set($template);
+                $this->currentTemplate->set($template);
 
                 $noPhotoYetAction = Request\NoPhotoYetRequest::fromGlobals()->action;
                 if ($noPhotoYetAction === 'browse') {

@@ -22,7 +22,7 @@ function c13yInternalTestCheckIntegrity(): CheckIntegrity
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(IntegrityIgnoredAnomalyEntity::class);
     expect($repo)->toBeInstanceOf(IntegrityIgnoredAnomalyRepository::class);
 
-    return new CheckIntegrity($repo, new Translator(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current());
+    return new CheckIntegrity($repo, new Translator(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current(), \Piwigo\Template\CurrentTemplate::current());
 }
 
 function c13yInternalTestSessionService(): SessionService

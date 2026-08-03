@@ -36,11 +36,12 @@ final class UpdatesPwgPageRenderer
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
         private readonly \Piwigo\Core\PageState $pageState,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     public function render(): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         if (! \Piwigo\Config\CurrentConfig::enableCoreUpdate()) {
             \Piwigo\Bootstrap\PresentationAccessor::htmlService()

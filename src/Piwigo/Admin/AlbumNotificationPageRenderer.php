@@ -29,6 +29,7 @@ final class AlbumNotificationPageRenderer
         private readonly UrlServiceInterface $urlService,
         private readonly Translator $translator,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     /**
@@ -50,7 +51,7 @@ final class AlbumNotificationPageRenderer
         // equivalent fix (Track A5.2e).
         /** @var array<string, mixed> $page */
         $page = [];
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         // +-------------------------------------------------------------------+
         // |                       variable initialization                     |

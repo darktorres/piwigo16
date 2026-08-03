@@ -60,12 +60,13 @@ final class MaintenanceSubController implements AdminSubControllerInterface
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
         private readonly \Piwigo\Core\PageState $pageState,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         // Consumed by CoreTabs::addCoreTabs()'s own 'maintenance' case,
         // triggered synchronously inside Tabsheet::select() below -- must
@@ -160,14 +161,14 @@ final class MaintenanceSubController implements AdminSubControllerInterface
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('maintenance');
         $tabsheet->select($tab);
-        $tabsheet->assign();
+        $tabsheet->assign($this->currentTemplate);
 
         if ($tab === 'env') {
             \Piwigo\Bootstrap\AdminAccessor::maintenanceEnvPageRenderer()
                 ->render();
         } elseif ($tab === 'sys') {
             new MaintenanceSysPageRenderer()
-                ->render($maintActions, $this->pageState);
+                ->render($maintActions, $this->pageState, $this->currentTemplate);
         } else {
             \Piwigo\Bootstrap\AdminAccessor::maintenanceActionsPageRenderer()
                 ->render($maintActions);

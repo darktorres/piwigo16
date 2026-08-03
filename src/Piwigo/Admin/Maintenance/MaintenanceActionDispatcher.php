@@ -63,6 +63,7 @@ final class MaintenanceActionDispatcher
         private readonly \Piwigo\Lang\Translator $translator,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Core\PageState $pageState,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly ?\Piwigo\Cache\PersistentCache $persistentCache = null,
     ) {}
 
@@ -185,7 +186,7 @@ final class MaintenanceActionDispatcher
             case 'c13y':
 
                 $integrityRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity::class);
-                $c13y = new CheckIntegrity($integrityRepo, $this->translator, $this->eventDispatcher, $this->pageState);
+                $c13y = new CheckIntegrity($integrityRepo, $this->translator, $this->eventDispatcher, $this->pageState, $this->currentTemplate);
                 $c13y->maintenance();
                 $this->pageState->addInfo(sprintf('%s : %s', Lang::t('Reinitialize check integrity'), Lang::t('action successfully performed.')));
                 break;
@@ -205,7 +206,8 @@ final class MaintenanceActionDispatcher
 
             case 'compiled-templates':
 
-                \Piwigo\Template\CurrentTemplate::get()->delete_compiled_templates();
+                $this->currentTemplate->get()
+                    ->delete_compiled_templates();
                 FileCombiner::clear_combined_files();
                 if (! $this->persistentCache instanceof \Piwigo\Cache\PersistentCache) {
                     \Piwigo\Bootstrap\PresentationAccessor::htmlService()

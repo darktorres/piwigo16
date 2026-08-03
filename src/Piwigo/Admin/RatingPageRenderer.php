@@ -15,9 +15,9 @@ use Piwigo\Image\DerivativeImage;
  */
 final class RatingPageRenderer
 {
-    public function render(UrlServiceInterface $urlService): void
+    public function render(UrlServiceInterface $urlService, \Piwigo\Template\CurrentTemplate $currentTemplate): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $currentTemplate->get();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
@@ -26,7 +26,7 @@ final class RatingPageRenderer
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('rating');
         $tabsheet->select('rating');
-        $tabsheet->assign();
+        $tabsheet->assign($currentTemplate);
 
         $start = $ratingRequest->start;
         $elements_per_page = $ratingRequest->elementsPerPage;

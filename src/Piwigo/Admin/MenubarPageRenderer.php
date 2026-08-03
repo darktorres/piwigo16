@@ -26,9 +26,9 @@ use Piwigo\Menu\BlockManager;
  */
 final class MenubarPageRenderer
 {
-    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState): void
+    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $currentTemplate->get();
 
         if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
             $pageState->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
@@ -43,9 +43,9 @@ final class MenubarPageRenderer
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('menus');
         $tabsheet->select('');
-        $tabsheet->assign();
+        $tabsheet->assign($currentTemplate);
 
-        $menu = new BlockManager('menubar', $eventDispatcher);
+        $menu = new BlockManager('menubar', $eventDispatcher, $currentTemplate);
         $menu->load_registered_blocks();
         $reg_blocks = $menu->get_registered_blocks();
 

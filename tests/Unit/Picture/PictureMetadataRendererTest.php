@@ -44,12 +44,12 @@ beforeEach(function (): void {
     Kernel::boot(Paths::fromRoot($root));
     CurrentConfig::setDataLocation('data/');
     CurrentConfig::setDataDirChecked('1');
-    CurrentTemplate::set(new Template());
+    CurrentTemplate::current()->set(new Template());
 });
 
 afterEach(function (): void {
     picture_metadata_test_rrmdir(CurrentPaths::get()->root);
-    CurrentTemplate::reset();
+    CurrentTemplate::current()->reset();
     Kernel::reset();
     CurrentConfig::reset();
 });
@@ -59,7 +59,7 @@ test('render appends nothing when both show_exif and show_iptc are disabled', fu
     CurrentConfig::setShowIptc(false);
     $renderer = new PictureMetadataRenderer();
 
-    $renderer->render([], new CurrentLogger(), new \Piwigo\PluginConfig\EventDispatcher());
+    $renderer->render([], new CurrentLogger(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current());
 
-    expect(CurrentTemplate::get()->get_template_vars('metadata'))->toBeNull();
+    expect(CurrentTemplate::current()->get()->get_template_vars('metadata'))->toBeNull();
 });

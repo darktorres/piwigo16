@@ -65,7 +65,7 @@ final class PageHeaderRendererTest extends IntegrationTestCase
         // wiring this test never boots (same reasoning as SectionInitializerTest/
         // RedirectServiceTest/SectionPopulatorTest's own identical setUp).
         Lang::setLangInfo(['code' => 'en_UK', 'direction' => 'ltr']);
-        CurrentTemplate::set(new Template(CurrentPaths::get()->root . 'themes', 'default'));
+        CurrentTemplate::current()->set(new Template(CurrentPaths::get()->root . 'themes', 'default'));
 
         $this->renderer = new PageHeaderRenderer();
     }
@@ -73,7 +73,7 @@ final class PageHeaderRendererTest extends IntegrationTestCase
     #[\Override]
     protected function tearDown(): void
     {
-        CurrentTemplate::reset();
+        CurrentTemplate::current()->reset();
         PageState::current()->reset();
         parent::tearDown();
     }
@@ -82,17 +82,17 @@ final class PageHeaderRendererTest extends IntegrationTestCase
     {
         PageState::current()->addHeaderNote('Photos posted within the last 3 days.');
 
-        $this->renderer->render('Header Notes Test', new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current());
+        $this->renderer->render('Header Notes Test', new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), CurrentTemplate::current());
 
-        $output = CurrentTemplate::get()->fetchOutput();
+        $output = CurrentTemplate::current()->get()->fetchOutput();
         self::assertStringContainsString('Photos posted within the last 3 days.', $output);
     }
 
     public function test_render_omits_the_header_notes_container_when_page_state_has_none(): void
     {
-        $this->renderer->render('No Header Notes Test', new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current());
+        $this->renderer->render('No Header Notes Test', new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), CurrentTemplate::current());
 
-        $output = CurrentTemplate::get()->fetchOutput();
+        $output = CurrentTemplate::current()->get()->fetchOutput();
         self::assertStringNotContainsString('Photos posted within the last', $output);
     }
 
@@ -100,11 +100,11 @@ final class PageHeaderRendererTest extends IntegrationTestCase
     {
         CurrentConfig::setMetaRef(false);
 
-        $this->renderer->render('Meta Robots Test', new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current());
+        $this->renderer->render('Meta Robots Test', new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), CurrentTemplate::current());
 
         self::assertSame(['noindex' => 1, 'nofollow' => 1], PageState::current()->metaRobots);
 
-        $output = CurrentTemplate::get()->fetchOutput();
+        $output = CurrentTemplate::current()->get()->fetchOutput();
         self::assertStringContainsString('<meta name="robots" content="noindex,nofollow">', $output);
     }
 
@@ -112,7 +112,7 @@ final class PageHeaderRendererTest extends IntegrationTestCase
     {
         CurrentConfig::setMetaRef(true);
 
-        $this->renderer->render('Meta Ref Enabled Test', new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current());
+        $this->renderer->render('Meta Ref Enabled Test', new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), CurrentTemplate::current());
 
         self::assertSame([], PageState::current()->metaRobots);
     }

@@ -41,7 +41,7 @@ final class CssLoader
      */
     public function get_css(UrlServiceInterface $urlService): array
     {
-        $combiner = new FileCombiner('css', $urlService, \Piwigo\Core\CurrentPaths::get(), \Piwigo\PluginConfig\EventDispatcher::get(), $this->sortedRegisteredCss());
+        $combiner = new FileCombiner('css', $urlService, \Piwigo\Core\CurrentPaths::get(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Template\CurrentTemplate::current(), $this->sortedRegisteredCss());
         return $combiner->combine();
     }
 

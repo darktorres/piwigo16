@@ -80,6 +80,15 @@ final class RedirectService implements RedirectServiceInterface
         return $currentUser;
     }
 
+    private static function currentTemplate(): CurrentTemplate
+    {
+        $currentTemplate = Kernel::container()->get(CurrentTemplate::class);
+        if (! $currentTemplate instanceof CurrentTemplate) {
+            throw new \LogicException('Container returned an unexpected type for ' . CurrentTemplate::class);
+        }
+        return $currentTemplate;
+    }
+
     #[\Override]
     public function redirectHttp(string $url, int $status = 302): never
     {
@@ -103,7 +112,7 @@ final class RedirectService implements RedirectServiceInterface
         // local -- written once, immediately consumed by the adjacent
         // CurrentUser::set(), never read again (Legacy Coupling Retirement
         // Phase 8, 8h).
-        $template = CurrentTemplate::isInitialized() ? CurrentTemplate::get() : null;
+        $template = self::currentTemplate()->isInitialized() ? self::currentTemplate()->get() : null;
 
         if (! Lang::isLangInfoInitialized() || ! isset($template)) {
             $paths = CurrentPaths::get();
@@ -117,10 +126,10 @@ final class RedirectService implements RedirectServiceInterface
                 'local' => true,
             ]);
             $template = new Template($paths->root . 'themes', self::userService()->getDefaultTheme());
-            CurrentTemplate::set($template);
+            self::currentTemplate()->set($template);
         } elseif (\Piwigo\Core\AdminContext::isActiveStatic()) {
             $template = new Template(CurrentPaths::get()->root . 'themes', self::userService()->getDefaultTheme());
-            CurrentTemplate::set($template);
+            self::currentTemplate()->set($template);
         }
 
         // Neither branch above runs when $template was already set and
@@ -145,7 +154,7 @@ final class RedirectService implements RedirectServiceInterface
 
         $refresh_str = (string) $refresh_time;
         new PageHeaderRenderer()
-            ->render($title, \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current(), $refresh_str, $url_link);
+            ->render($title, \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current(), self::currentTemplate(), $refresh_str, $url_link);
 
         $template->set_filenames([
             'redirect' => 'redirect.tpl',

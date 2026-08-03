@@ -21,6 +21,7 @@ final class PictureRateRenderer
     public function __construct(
         private readonly RateRepository $repo,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     /**
@@ -43,7 +44,7 @@ final class PictureRateRenderer
      */
     public function render(int $imageId, UrlServiceInterface $urlService, array $picture, string $url_self): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         if (! \Piwigo\Config\CurrentConfig::rateEnabled()) {
             return;

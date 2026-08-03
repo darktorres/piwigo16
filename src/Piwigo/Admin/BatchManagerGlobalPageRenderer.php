@@ -63,6 +63,7 @@ final class BatchManagerGlobalPageRenderer
         private readonly ImageStdParams $imageStdParams,
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     private static function tagService(): TagService
@@ -88,7 +89,7 @@ final class BatchManagerGlobalPageRenderer
      */
     public function render(array $catElementsId, int $pageStart, ?array $duplicatesOnFields = null): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
         $conn = DbConnection::build();
 
         // Runs before Request\BatchManagerGlobalRequest::fromGlobals() below

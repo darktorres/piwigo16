@@ -87,7 +87,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         CurrentUser::current()->reset();
-        CurrentTemplate::reset();
+        CurrentTemplate::current()->reset();
         EventDispatcher::get()->reset();
         PageState::current()->reset();
         CurrentConfig::reset();
@@ -118,10 +118,10 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         try {
             RequestBootstrap::finalize();
 
-            self::assertTrue(CurrentTemplate::isInitialized());
+            self::assertTrue(CurrentTemplate::current()->isInitialized());
             self::assertStringContainsString(
                 dirname(__DIR__, 2) . '/themes/mobile-theme-name/template',
-                CurrentTemplate::get()->get_template_dir()
+                CurrentTemplate::current()->get()->get_template_dir()
             );
         } finally {
             unset($_SESSION['pwg_mobile_theme']);
@@ -171,7 +171,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         // template var is the only place left to observe it afterwards.
         self::assertSame(
             [Lang::t('Bad status for user "guest", default status will be used. Please notify the webmaster.')],
-            CurrentTemplate::get()->get_template_vars('header_msgs')
+            CurrentTemplate::current()->get()->get_template_vars('header_msgs')
         );
     }
 

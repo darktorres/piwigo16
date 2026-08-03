@@ -16,9 +16,9 @@ use Piwigo\Template\Template;
  */
 final class CommentsPageRenderer
 {
-    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs): void
+    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\Template\CurrentTemplate $currentTemplate): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $currentTemplate->get();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
@@ -43,7 +43,7 @@ final class CommentsPageRenderer
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('comments');
         $tabsheet->select('');
-        $tabsheet->assign();
+        $tabsheet->assign($currentTemplate);
 
         $template->assign('ADMIN_PAGE_TITLE', Lang::t('User comments'));
 

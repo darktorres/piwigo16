@@ -8,6 +8,7 @@ use Piwigo\Menu\BlockManager;
 use Piwigo\Menu\DisplayBlock;
 use Piwigo\Menu\RegisteredBlock;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
 
 /**
  * Piwigo\Menu\BlockManager/DisplayBlock/RegisteredBlock -- had zero
@@ -57,7 +58,7 @@ test('DisplayBlock get_block returns the exact registered block it was construct
 });
 
 test('register_block accepts the first registration and rejects a duplicate id', function (): void {
-    $manager = new BlockManager('menubar', EventDispatcher::get());
+    $manager = new BlockManager('menubar', EventDispatcher::get(), CurrentTemplate::current());
     $block = new RegisteredBlock('cat', 'Categories', 'core');
 
     expect($manager->register_block($block))->toBeTrue();
@@ -66,7 +67,7 @@ test('register_block accepts the first registration and rejects a duplicate id',
 });
 
 test('prepare_display assigns positions in registration order (idx*50) with no config override', function (): void {
-    $manager = new BlockManager('menubar', EventDispatcher::get());
+    $manager = new BlockManager('menubar', EventDispatcher::get(), CurrentTemplate::current());
     $manager->register_block(new RegisteredBlock('first', 'First', 'core'));
     $manager->register_block(new RegisteredBlock('second', 'Second', 'core'));
 
@@ -85,7 +86,7 @@ test('prepare_display assigns positions in registration order (idx*50) with no c
 test('prepare_display honors an explicit position from blk_menubar config', function (): void {
     CurrentConfig::setBlkMenubar(['cat' => 5]);
 
-    $manager = new BlockManager('menubar', EventDispatcher::get());
+    $manager = new BlockManager('menubar', EventDispatcher::get(), CurrentTemplate::current());
     $manager->register_block(new RegisteredBlock('cat', 'Categories', 'core'));
     $manager->prepare_display();
 
@@ -99,7 +100,7 @@ test('prepare_display honors an explicit position from blk_menubar config', func
 test('prepare_display hides a block whose configured position is 0 or negative', function (): void {
     CurrentConfig::setBlkMenubar(['cat' => 0, 'tags' => -10]);
 
-    $manager = new BlockManager('menubar', EventDispatcher::get());
+    $manager = new BlockManager('menubar', EventDispatcher::get(), CurrentTemplate::current());
     $manager->register_block(new RegisteredBlock('cat', 'Categories', 'core'));
     $manager->register_block(new RegisteredBlock('tags', 'Tags', 'core'));
     $manager->prepare_display();
@@ -112,7 +113,7 @@ test('prepare_display hides a block whose configured position is 0 or negative',
 test('prepare_display sorts display blocks by resolved position, independent of registration order', function (): void {
     CurrentConfig::setBlkMenubar(['second' => 10, 'first' => 20]);
 
-    $manager = new BlockManager('menubar', EventDispatcher::get());
+    $manager = new BlockManager('menubar', EventDispatcher::get(), CurrentTemplate::current());
     $manager->register_block(new RegisteredBlock('first', 'First', 'core'));
     $manager->register_block(new RegisteredBlock('second', 'Second', 'core'));
     $manager->prepare_display();
@@ -137,7 +138,7 @@ test('prepare_display falls back to idx*50 positioning when a block\'s config va
     // only fires when the key is entirely absent from $mb_conf).
     CurrentConfig::setBlkMenubar(['first' => 'not-a-number']);
 
-    $manager = new BlockManager('menubar', EventDispatcher::get());
+    $manager = new BlockManager('menubar', EventDispatcher::get(), CurrentTemplate::current());
     $manager->register_block(new RegisteredBlock('first', 'First', 'core'));
     $manager->register_block(new RegisteredBlock('second', 'Second', 'core'));
 
@@ -159,7 +160,7 @@ test('prepare_display casts a numeric-string config position to a real int', fun
     // int 5, which the strict toBe(5) below would catch.
     CurrentConfig::setBlkMenubar(['cat' => '5']);
 
-    $manager = new BlockManager('menubar', EventDispatcher::get());
+    $manager = new BlockManager('menubar', EventDispatcher::get(), CurrentTemplate::current());
     $manager->register_block(new RegisteredBlock('cat', 'Categories', 'core'));
     $manager->prepare_display();
 
@@ -177,7 +178,7 @@ test('prepare_display treats a resolved position of exactly 1 as visible', funct
     // visible under "> 0" while a "> 1" mutant would wrongly hide it.
     CurrentConfig::setBlkMenubar(['cat' => 1]);
 
-    $manager = new BlockManager('menubar', EventDispatcher::get());
+    $manager = new BlockManager('menubar', EventDispatcher::get(), CurrentTemplate::current());
     $manager->register_block(new RegisteredBlock('cat', 'Categories', 'core'));
     $manager->prepare_display();
 
@@ -192,7 +193,7 @@ test('prepare_display treats a resolved position of exactly 1 as visible', funct
 test('prepare_display sorts display blocks before firing blockmanager_prepare_display, so handlers observe already-sorted order', function (): void {
     CurrentConfig::setBlkMenubar(['second' => 10, 'first' => 20]);
 
-    $manager = new BlockManager('menubar', EventDispatcher::get());
+    $manager = new BlockManager('menubar', EventDispatcher::get(), CurrentTemplate::current());
     $manager->register_block(new RegisteredBlock('first', 'First', 'core'));
     $manager->register_block(new RegisteredBlock('second', 'Second', 'core'));
 
@@ -230,7 +231,7 @@ test('prepare_display sorts display blocks before firing blockmanager_prepare_di
 });
 
 test('prepare_display re-sorts after blockmanager_prepare_display handlers change block positions', function (): void {
-    $manager = new BlockManager('menubar', EventDispatcher::get());
+    $manager = new BlockManager('menubar', EventDispatcher::get(), CurrentTemplate::current());
     $manager->register_block(new RegisteredBlock('first', 'First', 'core'));
     $manager->register_block(new RegisteredBlock('second', 'Second', 'core'));
 
@@ -270,7 +271,7 @@ test('prepare_display re-sorts after blockmanager_prepare_display handlers chang
 });
 
 test('hide_block removes a previously visible block', function (): void {
-    $manager = new BlockManager('menubar', EventDispatcher::get());
+    $manager = new BlockManager('menubar', EventDispatcher::get(), CurrentTemplate::current());
     $manager->register_block(new RegisteredBlock('cat', 'Categories', 'core'));
     $manager->prepare_display();
 
@@ -280,7 +281,7 @@ test('hide_block removes a previously visible block', function (): void {
 });
 
 test('set_block_position updates the position of a visible block, and is a no-op for an unknown/hidden one', function (): void {
-    $manager = new BlockManager('menubar', EventDispatcher::get());
+    $manager = new BlockManager('menubar', EventDispatcher::get(), CurrentTemplate::current());
     $manager->register_block(new RegisteredBlock('cat', 'Categories', 'core'));
     $manager->prepare_display();
 
@@ -296,7 +297,7 @@ test('set_block_position updates the position of a visible block, and is a no-op
 });
 
 test('get_id returns the manager\'s own id', function (): void {
-    $manager = new BlockManager('menubar', EventDispatcher::get());
+    $manager = new BlockManager('menubar', EventDispatcher::get(), CurrentTemplate::current());
 
     expect($manager->get_id())->toBe('menubar');
 });

@@ -55,12 +55,13 @@ final class PermalinksSubController implements AdminSubControllerInterface
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
         $conn = DbConnection::build();
@@ -98,7 +99,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('albums');
         $tabsheet->select('permalinks');
-        $tabsheet->assign();
+        $tabsheet->assign($this->currentTemplate);
 
         $nb_cats = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService()->countAllCategories();
         $template->assign(
@@ -203,7 +204,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
         ?string $sort_param_value,
         string $anchor = ''
     ): array {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         $request_uri = $_SERVER['REQUEST_URI'] ?? '';
         $request_uri = is_string($request_uri) ? $request_uri : '';

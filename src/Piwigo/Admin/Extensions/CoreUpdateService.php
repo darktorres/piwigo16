@@ -41,6 +41,7 @@ final readonly class CoreUpdateService
         private readonly ConfigService $configService,
         private readonly Paths $paths,
         private readonly \Piwigo\Core\PageState $pageState,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     public function checkPiwigoUpgrade(): void
@@ -243,7 +244,7 @@ final readonly class CoreUpdateService
 
     public function upgradeTo(string $upgradeTo, int|string &$step, bool $checkCurrentVersion = true): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         $dataLocationRaw = \Piwigo\Config\CurrentConfig::dataLocation();
         $dataLocation = $dataLocationRaw;

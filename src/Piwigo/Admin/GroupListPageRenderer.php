@@ -21,11 +21,12 @@ final class GroupListPageRenderer
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
         private readonly Translator $translator,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     public function render(): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         // Legacy Coupling Retirement Phase 8, 8g: real, previously-unfixed
         // bug -- nothing had ever called CoreTabs::setContext() with
@@ -36,7 +37,7 @@ final class GroupListPageRenderer
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('groups');
         $tabsheet->select('group_list');
-        $tabsheet->assign();
+        $tabsheet->assign($this->currentTemplate);
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 

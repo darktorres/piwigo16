@@ -21,11 +21,12 @@ final class TagsPageRenderer
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     public function render(): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
@@ -38,7 +39,7 @@ final class TagsPageRenderer
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('tags');
         $tabsheet->select('');
-        $tabsheet->assign();
+        $tabsheet->assign($this->currentTemplate);
 
         $tagService = \Piwigo\Bootstrap\CoreDomainAccessor::tagService();
 

@@ -44,6 +44,7 @@ final class PhotosAddDirectPageRenderer
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     /**
@@ -63,7 +64,7 @@ final class PhotosAddDirectPageRenderer
 
     public function render(): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
         $conn = DbConnection::build();
@@ -202,7 +203,7 @@ final class PhotosAddDirectPageRenderer
      */
     private function prepareUploadForm(Connection $conn, Request\PhotosAddDirectRequest $photosAddDirectRequest): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
 

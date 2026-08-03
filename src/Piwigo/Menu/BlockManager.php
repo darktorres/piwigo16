@@ -38,6 +38,7 @@ final class BlockManager
     public function __construct(
         private $id,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     /**
@@ -175,7 +176,7 @@ final class BlockManager
      */
     public function apply($var, $file): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         $template->set_filename('menubar', $file);
         $this->eventDispatcher->dispatchNotify(new BlockManagerApply($this));

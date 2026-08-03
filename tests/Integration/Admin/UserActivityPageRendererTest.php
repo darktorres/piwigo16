@@ -102,7 +102,7 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
         // other Integration test constructing a real Template directly
         // does (e.g. ThemesStandardPagesPageRendererTest's own setUp()).
         CurrentConfigService::set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
-        CurrentTemplate::set(new Template(CurrentPaths::get()->root . 'themes/admin', 'default'));
+        CurrentTemplate::current()->set(new Template(CurrentPaths::get()->root . 'themes/admin', 'default'));
 
         $_GET = [];
     }
@@ -117,7 +117,7 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
             $this->deletedActivityRows = [];
         }
         $_GET = [];
-        CurrentTemplate::reset();
+        CurrentTemplate::current()->reset();
         // CoreTabs itself has no reset() (its $context/$urlService statics
         // are overwritten by whichever real request runs next -- same
         // "no reset needed" shape as every other CoreTabs-touching
@@ -136,9 +136,9 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
 
         $this->conn->executeStatement('DELETE FROM ' . Tables::activity() . " WHERE object != 'system'");
 
-        new UserActivityPageRenderer()->render($this->urlService, $this->coreTabs);
+        new UserActivityPageRenderer()->render($this->urlService, $this->coreTabs, CurrentTemplate::current());
 
-        $template = CurrentTemplate::get();
+        $template = CurrentTemplate::current()->get();
         self::assertSame([], $template->get_template_vars('ulist'));
     }
 }

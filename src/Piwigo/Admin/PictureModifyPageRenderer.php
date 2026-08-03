@@ -47,6 +47,7 @@ final class PictureModifyPageRenderer
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     private static function userService(): UserService
@@ -91,7 +92,7 @@ final class PictureModifyPageRenderer
         // its own use site (is_scalar()/is_numeric() + a default).
         /** @var array<string, mixed> $page */
         $page = [];
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         $conn = DbConnection::build();
         $imageService = new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), $this->sessionService, $this->eventDispatcher);

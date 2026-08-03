@@ -21,11 +21,12 @@ final class PictureCoiPageRenderer
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
         private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     public function render(): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
         $conn = DbConnection::build();

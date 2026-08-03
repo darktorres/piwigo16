@@ -154,7 +154,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
         $this->sectionContextRegistry = $sectionContextRegistry;
 
         $this->setRegularUser();
-        CurrentTemplate::set($this->makeTemplate());
+        CurrentTemplate::current()->set($this->makeTemplate());
     }
 
     #[\Override]
@@ -163,7 +163,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
         unset($_SERVER['PATH_INFO'], $_SERVER['SCRIPT_NAME'], $_SERVER['SCRIPT_FILENAME'], $_SERVER['PHP_SELF']);
         unset($_SESSION['pwg_image_order'], $_GET['action']);
         CurrentUser::current()->reset();
-        CurrentTemplate::reset();
+        CurrentTemplate::current()->reset();
         PageState::current()->reset();
         CurrentConfig::reset();
         parent::tearDown();
@@ -178,7 +178,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
     {
         return new SectionPopulator(
             new HtmlService(),
-            CurrentTemplate::get(),
+            CurrentTemplate::current()->get(),
             $this->sectionRepo,
             $this->categoryService,
             $this->permissionService,
@@ -399,7 +399,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
         self::assertSame('favorites', $ctx->section);
         // user 1's own 3 favorited images (1, 3, 5).
         self::assertCount(3, $ctx->items);
-        $favoriteVar = CurrentTemplate::get()->get_template_vars('favorite');
+        $favoriteVar = CurrentTemplate::current()->get()->get_template_vars('favorite');
         self::assertIsArray($favoriteVar);
         self::assertArrayHasKey('U_FAVORITE', $favoriteVar);
     }

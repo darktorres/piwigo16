@@ -244,6 +244,7 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
         '/src/Piwigo/Image/ImageStdParams.php',
         '/src/Piwigo/Core/PageState.php',
         '/src/Piwigo/Users/CurrentUser.php',
+        '/src/Piwigo/Template/CurrentTemplate.php',
     ];
 
     $hits = [
@@ -1183,6 +1184,46 @@ test('CurrentTemplate::reset() is only called from tests/', function (): void {
     ];
 
     expect(describeCallSites($hits))->toBe([]);
+});
+
+test('CurrentTemplate::current() transitional bridge has a shrinking, known allow-list', function (): void {
+    // Singleton/service-locator elimination campaign, Phase 5: current()
+    // kept its original name (no `Static` suffix, matching CurrentUser/
+    // PageState/ImageStdParams/DeploymentPolicy/DbCredentials's own
+    // precedent -- no competing real instance method to disambiguate
+    // from). Every phase that converts one more of these files to
+    // constructor-injected CurrentTemplate should remove it from the
+    // allow-list below.
+    // HtmlService.php/CssLoader.php/ScriptLoader.php are Phase-6-entangled
+    // (dozens of manual construction sites each, or -- for CssLoader/
+    // ScriptLoader -- the same UrlService-bridge static-context group
+    // this campaign's own Context section already flagged for Phase 6).
+    // Ws/PwgExtensions.php is Phase-10-locked static dispatch.
+    // InstallWizard.php matches DeploymentPolicy::current()'s own
+    // identical allow-list reasoning: a one-off manual construction site
+    // (public/install.php, a raw entry-shell root file that never boots
+    // Kernel) not worth forcing real injection this late.
+    $repoRoot = __DIR__ . '/../..';
+
+    $allowedFiles = [
+        '/src/Piwigo/Admin/Install/InstallWizard.php',
+        '/src/Piwigo/Html/HtmlService.php',
+        '/src/Piwigo/Template/CssLoader.php',
+        '/src/Piwigo/Template/ScriptLoader.php',
+        '/src/Piwigo/Ws/PwgExtensions.php',
+    ];
+
+    $hits = [
+        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'CurrentTemplate::current('),
+        ...findCallSitesOutsideComments($repoRoot . '/public', 'CurrentTemplate::current('),
+    ];
+
+    $disallowed = array_values(array_filter(
+        $hits,
+        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
+    ));
+
+    expect(describeCallSites($disallowed))->toBe([]);
 });
 
 test('RootPathOverride::reset() is only called from tests/', function (): void {

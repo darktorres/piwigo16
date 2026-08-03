@@ -78,7 +78,7 @@ final class SectionInitializerTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         unset($_SERVER['PATH_INFO'], $_SERVER['SCRIPT_NAME']);
-        CurrentTemplate::reset();
+        CurrentTemplate::current()->reset();
         Lang::reset();
         Kernel::reset();
         parent::tearDown();
@@ -99,7 +99,7 @@ final class SectionInitializerTest extends IntegrationTestCase
         CurrentConfigService::set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
         ScriptLoader::setUrlService(new UrlService(new HtmlService()));
         Lang::setLangInfo(['code' => 'en_UK', 'direction' => 'ltr']);
-        CurrentTemplate::set(new Template(\Piwigo\Core\CurrentPaths::get()->root . 'themes', 'default'));
+        CurrentTemplate::current()->set(new Template(\Piwigo\Core\CurrentPaths::get()->root . 'themes', 'default'));
         CurrentConfig::setSendPiwigoInfos(false);
     }
 

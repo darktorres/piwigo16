@@ -44,6 +44,7 @@ final class PhotoSubController implements AdminSubControllerInterface
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
         private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     #[\Override]
@@ -55,7 +56,7 @@ final class PhotoSubController implements AdminSubControllerInterface
         // equivalent fix (Track A5.2e).
         /** @var array<string, mixed> $page */
         $page = [];
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
@@ -75,7 +76,7 @@ final class PhotoSubController implements AdminSubControllerInterface
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('photo');
         $tabsheet->select($tab);
-        $tabsheet->assign();
+        $tabsheet->assign($this->currentTemplate);
 
         $template->assign(
             [
@@ -91,7 +92,7 @@ final class PhotoSubController implements AdminSubControllerInterface
                 ->render();
         } elseif (\Piwigo\Config\CurrentConfig::isFormatsEnabled()) {
             new PictureFormatsPageRenderer()
-                ->render($this->urlService, $this->imageStdParams);
+                ->render($this->urlService, $this->imageStdParams, $this->currentTemplate);
         }
     }
 }

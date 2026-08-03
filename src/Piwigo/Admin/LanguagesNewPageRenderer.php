@@ -35,6 +35,7 @@ final class LanguagesNewPageRenderer
         private readonly ConfigService $configService,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
         private readonly \Piwigo\Core\PageState $pageState,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     /**
@@ -50,7 +51,7 @@ final class LanguagesNewPageRenderer
      */
     public function render(string $pageSlug, string $tab): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         if (! \Piwigo\Config\CurrentConfig::enableExtensionsInstall()) {
             \Piwigo\Bootstrap\PresentationAccessor::htmlService()

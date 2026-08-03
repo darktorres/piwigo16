@@ -57,12 +57,13 @@ final class PluginsSubController implements AdminSubControllerInterface
         private readonly SessionService $sessionService,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Core\PageState $pageState,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         // Consumed by CoreTabs::addCoreTabs()'s own 'plugins' case,
         // triggered synchronously inside Tabsheet::select() below -- must
@@ -75,18 +76,18 @@ final class PluginsSubController implements AdminSubControllerInterface
         $tabsheet = new Tabsheet();
         $tabsheet->set_id('plugins');
         $tabsheet->select($tab);
-        $tabsheet->assign();
+        $tabsheet->assign($this->currentTemplate);
 
         if ($tab === 'update') {
             new UpdatesExtPageRenderer()
-                ->render('plugins', $this->urlService, $this->configService, $this->pageState);
+                ->render('plugins', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate);
             $template->assign('ADMIN_PAGE_TITLE', Lang::t('Plugins'));
         } elseif ($tab === 'new') {
             \Piwigo\Bootstrap\AdminAccessor::pluginsNewPageRenderer()
                 ->render('plugins', $tab);
         } else {
             new PluginsInstalledPageRenderer()
-                ->render('plugins', $this->urlService, $this->currentLogger, $this->sessionService, $this->eventDispatcher);
+                ->render('plugins', $this->urlService, $this->currentLogger, $this->sessionService, $this->eventDispatcher, $this->currentTemplate);
         }
     }
 }

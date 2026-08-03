@@ -91,7 +91,7 @@ final class PwgExtensions
      */
     public static function pluginsPerformAction(array $params, PwgServer &$service): PwgError|true
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = \Piwigo\Template\CurrentTemplate::current()->get();
 
         /** @var Template $template */
         if (new CsrfService()->getToken() !== $params['pwg_token']) {
@@ -148,7 +148,7 @@ final class PwgExtensions
      */
     public static function themesPerformAction(array $params, PwgServer &$service): PwgError|true
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = \Piwigo\Template\CurrentTemplate::current()->get();
 
         /** @var Template $template */
         if (new CsrfService()->getToken() !== $params['pwg_token']) {
@@ -300,7 +300,7 @@ final class PwgExtensions
             throw new LogicException('Invalid extension type');
         }
 
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = \Piwigo\Template\CurrentTemplate::current()->get();
 
         /** @var Template $template */
         $template->delete_compiled_templates();

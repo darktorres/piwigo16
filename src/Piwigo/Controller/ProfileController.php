@@ -53,6 +53,7 @@ final class ProfileController implements ControllerInterface
         private readonly \Piwigo\Config\DeploymentPolicy $deploymentPolicy,
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
     ) {}
 
     private static function userService(): UserService
@@ -63,7 +64,7 @@ final class ProfileController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        $template = \Piwigo\Template\CurrentTemplate::get();
+        $template = $this->currentTemplate->get();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Classic);
 
@@ -150,7 +151,7 @@ final class ProfileController implements ControllerInterface
             $userdata = array_merge($userdata, $default_user);
         }
 
-        $profileFormHandler = new ProfileFormHandler($this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser);
+        $profileFormHandler = new ProfileFormHandler($this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate);
 
         $page_errors = $this->pageState->errors;
         $profileFormHandler->saveFromPost($userdata, $page_errors);
@@ -181,12 +182,12 @@ final class ProfileController implements ControllerInterface
         if (! is_array($hide_menu_on) or ! in_array('theProfilePage', $hide_menu_on, true)) {
             if (($themeconf['id'] ?? null) !== 'standard_pages') {
                 new MenubarRenderer()
-                    ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser);
+                    ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
             }
         }
 
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->pageState);
+            ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate);
 
         // Get list of languages
         $language_options = [];

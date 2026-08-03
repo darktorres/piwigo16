@@ -12,17 +12,18 @@ declare(strict_types=1);
 namespace Piwigo\Template;
 
 /**
- * Static accessor for the current request's page-rendering `Template`
- * instance -- Legacy Coupling Retirement Track A, replacing the legacy
- * `global $template;` bridge. Same shape as this codebase's other
- * per-request singleton facades (`Piwigo\Session\SessionService`,
- * `Piwigo\Users\CurrentUser`): a self-managed static instance with
- * `get()`/`set()`/`reset()`, not constructor-injected DI. Deliberately
- * consistent with those rather than a different pattern -- in this
- * request-per-process (pre-worker-mode) execution model a static facade
- * and a per-request DI-injected instance are equally safe, and consistency
- * with the established pattern for "the current request's X" beats
- * introducing a second competing shape for the same problem.
+ * Container-shared instance holding the current request's page-rendering
+ * `Template` instance -- Legacy Coupling Retirement Track A, replacing the
+ * legacy `global $template;` bridge (singleton/service-locator elimination
+ * campaign, Phase 5).
+ *
+ * `current()` is a memoized `@deprecated` transitional bridge for callers
+ * not yet converted to constructor injection -- same "load once, read/write
+ * many times per request" reasoning as `Translator`/`EventDispatcher`/
+ * `ImageStdParams`/`PageState`/`CurrentUser`: the not-booted fallback is
+ * memoized (`self::$fallback ??= new self()`), not fresh-per-call, so a
+ * caller that writes via `current()` in one call and reads via `current()`
+ * in a later call sees the same instance.
  *
  * Not every `Template` instance in the app goes through this registry --
  * e.g. `MailService`'s email-rendering `Template` instances are genuinely
@@ -34,25 +35,41 @@ namespace Piwigo\Template;
  */
 final class CurrentTemplate
 {
-    private static ?Template $instance = null;
+    private static ?self $fallback = null;
 
-    public static function get(): Template
+    private ?Template $template = null;
+
+    public static function current(): self
     {
-        if (! self::$instance instanceof \Piwigo\Template\Template) {
+        if (\Piwigo\Core\Kernel::isBooted()) {
+            $instance = \Piwigo\Core\Kernel::container()->get(self::class);
+            if (! $instance instanceof self) {
+                throw new \LogicException('Container returned an unexpected type for ' . self::class);
+            }
+
+            return $instance;
+        }
+
+        return self::$fallback ??= new self();
+    }
+
+    public function get(): Template
+    {
+        if (! $this->template instanceof Template) {
             throw new \LogicException('CurrentTemplate not initialised -- call Piwigo\Bootstrap\RequestBootstrap::finalize() first.');
         }
 
-        return self::$instance;
+        return $this->template;
     }
 
-    public static function set(Template $template): void
+    public function set(Template $template): void
     {
-        self::$instance = $template;
+        $this->template = $template;
     }
 
-    public static function isInitialized(): bool
+    public function isInitialized(): bool
     {
-        return self::$instance instanceof \Piwigo\Template\Template;
+        return $this->template instanceof Template;
     }
 
     /**
@@ -60,8 +77,8 @@ final class CurrentTemplate
      * equivalent guard on SessionService's/CurrentUser's own reset()
      * methods.
      */
-    public static function reset(): void
+    public function reset(): void
     {
-        self::$instance = null;
+        $this->template = null;
     }
 }

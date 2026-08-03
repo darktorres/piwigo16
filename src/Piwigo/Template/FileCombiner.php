@@ -31,6 +31,7 @@ final class FileCombiner
         private readonly UrlServiceInterface $urlService,
         private readonly Paths $paths,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private $combinables = [],
     ) {
         $this->is_css = $this->type === 'css';
@@ -185,7 +186,7 @@ final class FileCombiner
                 }
             }
 
-            $template = \Piwigo\Template\CurrentTemplate::get();
+            $template = $this->currentTemplate->get();
             $handle = $this->type . '.' . $combinable->id;
             $real_path = realpath($this->paths->root . $combinable->path);
             if ($real_path === false) {

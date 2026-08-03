@@ -581,7 +581,22 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             ->getQuery()
             ->execute();
 
-        foreach ([Tables::userMailNotification(), Tables::userFeed(), Tables::favorites(), Tables::caddie()] as $table) {
+        $em->createQueryBuilder()
+            ->delete(FavoriteEntity::class, 'f')
+            ->where('f.userId = :userId')
+            ->setParameter('userId', $userId)
+            ->getQuery()
+            ->execute();
+
+        // Item 15 audit: `favorites` (Users\FavoriteEntity, same domain)
+        // converted to DQL above. `user_mail_notification`/`user_feed`/
+        // `caddie` stay on raw DBAL permanently -- a real deptrac
+        // `DependsOnDisallowedLayer` boundary, not a missing-entity gap:
+        // `Users` is `L2aCoreDomain`; `Feed`/`Caddie`/`Notification` (the
+        // domains owning those 3 tables) are all `L2bExtendedDomain`, and
+        // the ruleset only allows downward dependencies. Confirmed against
+        // deptrac.yaml's actual ruleset table, not inferred.
+        foreach ([Tables::userMailNotification(), Tables::userFeed(), Tables::caddie()] as $table) {
             $conn->createQueryBuilder()
                 ->delete($table)
                 ->where('user_id = :userId')
@@ -589,12 +604,12 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
                 ->executeStatement();
         }
 
-        // Bypassed the ORM for user_mail_notification/user_feed/favorites/
-        // caddie above -- any entity this EntityManager already loaded for
-        // this user (UserEntity, UserInfoEntity, UserAccessEntity,
-        // UserAuthKeyEntity, UserGroupEntity) would otherwise stay stale
-        // (same identity-map reasoning as GroupRepository::delete()'s own
-        // comment).
+        // Bypassed the ORM for user_mail_notification/user_feed/caddie
+        // above -- any entity this EntityManager already loaded for this
+        // user (UserEntity, UserInfoEntity, UserAccessEntity,
+        // UserAuthKeyEntity, UserGroupEntity, FavoriteEntity) would
+        // otherwise stay stale (same identity-map reasoning as
+        // GroupRepository::delete()'s own comment).
         $em->clear();
     }
 

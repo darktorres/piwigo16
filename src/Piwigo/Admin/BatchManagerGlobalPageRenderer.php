@@ -187,7 +187,7 @@ final class BatchManagerGlobalPageRenderer
             if ($action === 'remove_from_caddie') {
                 $current_user_id = $this->currentUser->get()
                     ->id->value;
-                new \Piwigo\Caddie\CaddieRepository($conn)
+                \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Caddie\CaddieEntity::class)
                     ->removeElementsForUser($current_user_id, $collection);
 
                 // remove from caddie action available only in caddie so reload content

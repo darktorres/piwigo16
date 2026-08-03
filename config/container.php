@@ -23,6 +23,8 @@ use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Cache\CacheFactory;
 use Piwigo\Cache\PersistentCache;
 use Piwigo\Cache\PersistentFileCache;
+use Piwigo\Caddie\CaddieEntity;
+use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Category\CategoryEntity;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Comment\CommentEntity;
@@ -58,6 +60,8 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\LangRepository;
 use Piwigo\Lang\LanguageEntity;
 use Piwigo\Mail\MailService;
+use Piwigo\Notification\NotificationByMailRepository;
+use Piwigo\Notification\UserMailNotificationEntity;
 use Piwigo\PluginConfig\PluginEntity;
 use Piwigo\PluginConfig\PluginRepository;
 use Piwigo\Rate\RateEntity;
@@ -339,6 +343,10 @@ return [
     ImageRepository::class => factory(static fn (EntityManagerInterface $em): ImageRepository => $em->getRepository(ImageEntity::class)),
 
     CategoryRepository::class => factory(static fn (EntityManagerInterface $em): CategoryRepository => $em->getRepository(CategoryEntity::class)),
+
+    CaddieRepository::class => factory(static fn (EntityManagerInterface $em): CaddieRepository => $em->getRepository(CaddieEntity::class)),
+
+    NotificationByMailRepository::class => factory(static fn (EntityManagerInterface $em): NotificationByMailRepository => $em->getRepository(UserMailNotificationEntity::class)),
 
     SiteRepository::class => factory(static fn (EntityManagerInterface $em): SiteRepository => $em->getRepository(SiteEntity::class)),
 

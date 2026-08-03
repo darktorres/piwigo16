@@ -8,8 +8,8 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Config\CurrentConfig;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
-    use Piwigo\Notification\NotificationByMailRepository;
     use Piwigo\Notification\NotificationByMailService;
+    use Piwigo\Notification\UserMailNotificationEntity;
     use Piwigo\Session\SessionEntity;
     use Piwigo\Session\SessionService;
 
@@ -59,7 +59,7 @@ final class NotificationByMailServiceTest extends IntegrationTestCase
     {
         $key = $this->service->findAvailableCheckKey();
 
-        self::assertSame(0, new NotificationByMailRepository($this->conn)->countByCheckKey($key));
+        self::assertSame(0, \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(UserMailNotificationEntity::class)->countByCheckKey($key));
     }
 
     public function test_get_user_notifications_returns_empty_for_an_unknown_action(): void

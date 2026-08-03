@@ -309,7 +309,8 @@ final class ImageStdParams
 
     /**
      * Fresh, throwaway EntityManager per call (like Piwigo\Caddie\CaddieService's
-     * own `new CaddieRepository(DbConnection::build())`) rather than
+     * own `EntityManagerFactory::build(DbConnection::build())->getRepository(CaddieEntity::class)`)
+     * rather than
      * Bootstrap\InfrastructureAccessor's container-shared one -- unlike a
      * raw bulk-write onto a table other repositories concurrently read in
      * the same request (InfrastructureAccessor's own stated reason to

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Caddie\CaddieEntity;
 use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
@@ -47,7 +48,7 @@ final class CaddieRepositoryTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->repo = new CaddieRepository($this->conn);
+        $this->repo = \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(CaddieEntity::class);
     }
 
     public function test_add_elements_inserts_new_rows_and_returns_the_count(): void
@@ -127,6 +128,51 @@ final class CaddieRepositoryTest extends IntegrationTestCase
             // for an empty list -- the real rows just inserted above must
             // survive untouched.
             self::assertSame([1, 2], $this->fetchElementIds(1));
+        } finally {
+            $this->clearCaddie(1);
+        }
+    }
+
+    public function test_find_element_ids_for_user_returns_only_that_users_own_elements(): void
+    {
+        try {
+            $this->repo->addElements(1, [1, 2]);
+            $this->repo->addElements(3, [3]);
+
+            self::assertSame([1, 2], $this->repo->findElementIdsForUser(1));
+            self::assertSame([3], $this->repo->findElementIdsForUser(3));
+        } finally {
+            $this->clearCaddie(1);
+            $this->clearCaddie(3);
+        }
+    }
+
+    public function test_find_element_ids_for_user_returns_empty_for_a_user_with_no_caddie(): void
+    {
+        self::assertSame([], $this->repo->findElementIdsForUser(4));
+    }
+
+    public function test_replace_for_user_empties_the_existing_caddie_then_inserts_the_new_elements(): void
+    {
+        try {
+            $this->repo->addElements(1, [1, 2, 3]);
+
+            $this->repo->replaceForUser(1, [4, 5]);
+
+            self::assertSame([4, 5], $this->fetchElementIds(1));
+        } finally {
+            $this->clearCaddie(1);
+        }
+    }
+
+    public function test_replace_for_user_empties_the_caddie_for_an_empty_replacement_list(): void
+    {
+        try {
+            $this->repo->addElements(1, [1, 2]);
+
+            $this->repo->replaceForUser(1, []);
+
+            self::assertSame([], $this->fetchElementIds(1));
         } finally {
             $this->clearCaddie(1);
         }

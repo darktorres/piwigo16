@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Notification;
 
-use Piwigo\Db\AbstractRepository;
+use Doctrine\ORM\EntityRepository;
+use Doctrine\ORM\Query\Expr\Join;
 use Piwigo\Db\Tables;
 use Piwigo\Notification\Projection\UserMailNotification;
+use Piwigo\Users\UserEntity;
+use Piwigo\Users\UserInfoEntity;
 
 /**
  * Persistence layer for the 2 genuinely data-touching functions in
@@ -15,19 +18,24 @@ use Piwigo\Notification\Projection\UserMailNotification;
  * begin/set/unset/end, counters, message pushing) has no DB access of its
  * own and stays procedural, same "$page/$template glue stays in the
  * free-function delegate" split as every other P19 domain.
+ *
+ * Item 15 Sub-item E: converted to real DQL against
+ * {@see UserMailNotificationEntity}. `Notification` is `L2bExtendedDomain`;
+ * `Users` is `L2aCoreDomain` -- a downward dependency, not a
+ * `deleteSiteRow`-class layer violation.
+ *
+ * @extends EntityRepository<UserMailNotificationEntity>
  */
-final class NotificationByMailRepository extends AbstractRepository
+final class NotificationByMailRepository extends EntityRepository
 {
     public function countByCheckKey(string $checkKey): int
     {
-        $userMailNotificationTable = Tables::userMailNotification();
-        $count = $this->conn->executeQuery(
-            <<<SQL
-            SELECT COUNT(*) FROM {$userMailNotificationTable} WHERE check_key = ?
-            SQL
-            ,
-            [$checkKey]
-        )->fetchOne();
+        $count = $this->createQueryBuilder('n')
+            ->select('COUNT(n.userId)')
+            ->where('n.checkKey = :checkKey')
+            ->setParameter('checkKey', $checkKey)
+            ->getQuery()
+            ->getSingleScalarResult();
 
         return is_numeric($count) ? (int) $count : 0;
     }
@@ -44,10 +52,15 @@ final class NotificationByMailRepository extends AbstractRepository
      * `$usernameField`/`$emailField`/`$idField` multi-auth column-name
      * params -- `users`'s columns are now fixed
      * ({@see \Piwigo\Users\UserEntity}), see this repository's own class
-     * docblock note. Stays on DBAL -- this repository has no `EntityManager`
-     * access (extends `AbstractRepository`, not `EntityRepository`), and
-     * the `N`/`UI` joins plus conditional `WHERE`/`ORDER BY` shape aren't
-     * this item's own blocker to redesign.
+     * docblock note.
+     *
+     * Item 15 audit: converted to real DQL -- `$enabledFilterValue`'s one
+     * real caller ({@see \Piwigo\Notification\NotificationByMailService::
+     * getUserNotifications()}) only ever passes `''`, `'0'`, or `'1'`
+     * (already normalized via `SqlDialect::booleanToInt()`), so binding it
+     * against `n.enabled`'s DQL `boolean` type is safe (`(bool) '0'` is
+     * `false`, `(bool) '1'` is `true` -- PHP's own string-to-bool
+     * coercion for these 2 specific literals).
      *
      * @param  list<string>  $checkKeyList
      * @return list<UserMailNotification>
@@ -57,43 +70,56 @@ final class NotificationByMailRepository extends AbstractRepository
         array $checkKeyList,
         string $enabledFilterValue,
     ): array {
-        $userMailNotificationTable = Tables::userMailNotification();
-        $usersTable = Tables::users();
-        $userInfosTable = Tables::userInfos();
-
-        $sql = <<<SQL
-            SELECT N.user_id, N.check_key, U.username AS username, U.mail_address AS mail_address, N.enabled, N.last_send, UI.status FROM {$userMailNotificationTable} AS N JOIN {$usersTable} AS U ON N.user_id = U.id JOIN {$userInfosTable} AS UI ON UI.user_id = N.user_id WHERE 1=1
-            SQL;
-        $params = [];
+        $qb = $this->createQueryBuilder('n')
+            ->select('n.userId AS user_id', 'n.checkKey AS check_key', 'u.username AS username', 'u.mailAddress AS mail_address', 'n.enabled', 'n.lastSend AS last_send', 'ui.status')
+            ->innerJoin(UserEntity::class, 'u', Join::WITH, 'n.userId = u.id')
+            ->innerJoin(UserInfoEntity::class, 'ui', Join::WITH, 'ui.userId = n.userId');
 
         if ($action === 'send') {
-            $sql .= <<<SQL
-                 AND N.enabled = ? AND U.mail_address IS NOT NULL
-                SQL;
-            $params[] = 1;
+            $qb->andWhere('n.enabled = :enabledSend')
+                ->andWhere('u.mailAddress IS NOT NULL')
+                ->setParameter('enabledSend', true);
         }
 
         if ($checkKeyList !== []) {
-            $placeholders = implode(',', array_fill(0, count($checkKeyList), '?'));
-            $sql .= <<<SQL
-                 AND N.check_key IN ({$placeholders})
-                SQL;
-            array_push($params, ...$checkKeyList);
+            $qb->andWhere('n.checkKey IN (:checkKeys)')
+                ->setParameter('checkKeys', $checkKeyList);
         }
 
         if ($enabledFilterValue !== '') {
-            $sql .= <<<SQL
-                 AND N.enabled = ?
-                SQL;
-            $params[] = $enabledFilterValue;
+            $qb->andWhere('n.enabled = :enabledFilter')
+                ->setParameter('enabledFilter', (bool) $enabledFilterValue);
         }
 
-        $sql .= $action === 'send' ? ' ORDER BY N.last_send, username' : ' ORDER BY username';
+        if ($action === 'send') {
+            $qb->orderBy('n.lastSend')
+                ->addOrderBy('u.username');
+        } else {
+            $qb->orderBy('u.username');
+        }
 
-        $rows = $this->conn->executeQuery($sql, $params)
-            ->fetchAllAssociative();
+        $rows = $qb->getQuery()
+            ->getArrayResult();
 
-        return array_map(UserMailNotification::fromRow(...), $rows);
+        $notifications = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $userId = $row['user_id'] ?? null;
+            $notifications[] = UserMailNotification::fromRow([
+                'user_id' => $userId instanceof \Piwigo\Common\ValueObject\UserId ? $userId->value : $userId,
+                'check_key' => $row['check_key'] ?? null,
+                'username' => $row['username'] ?? null,
+                'mail_address' => $row['mail_address'] ?? null,
+                'enabled' => $row['enabled'] ?? null,
+                'last_send' => $row['last_send'] ?? null,
+                'status' => $row['status'] ?? null,
+            ]);
+        }
+
+        return $notifications;
     }
 
     /**
@@ -107,17 +133,22 @@ final class NotificationByMailRepository extends AbstractRepository
      * `$emailColumn` multi-auth column-name param -- see
      * {@see findUserNotifications()}'s own docblock.
      */
+    /**
+     * Item 15 audit: converted to real DQL -- `users` is mapped
+     * ({@see UserEntity}), and DQL's built-in `TRIM()` function is
+     * portable, same default both-sides-whitespace semantics as the
+     * original raw SQL's bare `TRIM(mail_address)`.
+     */
     public function nullifyBlankEmails(): void
     {
-        $usersTable = Tables::users();
-        $this->conn->executeStatement(<<<SQL
-            UPDATE
-              {$usersTable}
-            SET
-              mail_address = NULL
-            WHERE
-              TRIM(mail_address) = ''
-            SQL);
+        $em = $this->getEntityManager();
+        $em->createQueryBuilder()
+            ->update(UserEntity::class, 'u')
+            ->set('u.mailAddress', 'NULL')
+            ->where("TRIM(u.mailAddress) = ''")
+            ->getQuery()
+            ->execute();
+        $em->clear();
     }
 
     /**
@@ -130,26 +161,41 @@ final class NotificationByMailRepository extends AbstractRepository
      * `$idColumn`/`$usernameColumn`/`$emailColumn` multi-auth column-name
      * params -- see {@see findUserNotifications()}'s own docblock.
      *
+     * Item 15 audit: converted to real DQL -- the anti-join uses
+     * `Join::WITH` (no formal ORM association between `UserEntity`/
+     * `UserMailNotificationEntity`), same established pattern as
+     * {@see \Piwigo\Tag\TagRepository::findOrphanTags()}.
+     *
      * @return list<array<string, mixed>>
      */
     public function findUsersWithoutNotificationRow(): array
     {
-        $usersTable = Tables::users();
-        $userMailNotificationTable = Tables::userMailNotification();
+        $rows = $this->getEntityManager()
+            ->createQueryBuilder()
+            ->select('u.id AS user_id', 'u.username AS username', 'u.mailAddress AS mail_address')
+            ->from(UserEntity::class, 'u')
+            ->leftJoin(UserMailNotificationEntity::class, 'm', Join::WITH, 'u.id = m.userId')
+            ->where('u.mailAddress IS NOT NULL')
+            ->andWhere('m.userId IS NULL')
+            ->orderBy('u.id')
+            ->getQuery()
+            ->getArrayResult();
 
-        return $this->conn->fetchAllAssociative(<<<SQL
-            SELECT
-              u.id AS user_id,
-              u.username AS username,
-              u.mail_address AS mail_address
-            FROM
-              {$usersTable} AS u LEFT JOIN {$userMailNotificationTable} AS m ON u.id = m.user_id
-            WHERE
-              u.mail_address IS NOT NULL AND
-              m.user_id IS NULL
-            ORDER BY
-              user_id
-            SQL);
+        $result = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $userId = $row['user_id'] ?? null;
+            $result[] = [
+                'user_id' => $userId instanceof \Piwigo\Common\ValueObject\UserId ? $userId->value : $userId,
+                'username' => $row['username'] ?? null,
+                'mail_address' => $row['mail_address'] ?? null,
+            ];
+        }
+
+        return $result;
     }
 
     /**
@@ -170,6 +216,8 @@ final class NotificationByMailRepository extends AbstractRepository
      * entirely rather than left as unused dead code, and this method now
      * takes plain, unquoted check keys and binds them.
      *
+     * Item 15 audit: converted to real DQL.
+     *
      * @param  list<string>  $checkKeyList
      */
     public function deleteByCheckKeys(array $checkKeyList): void
@@ -178,11 +226,14 @@ final class NotificationByMailRepository extends AbstractRepository
             return;
         }
 
-        $this->conn->createQueryBuilder()
-            ->delete(Tables::userMailNotification())
-            ->where('check_key IN (:checkKeys)')
+        $em = $this->getEntityManager();
+        $em->createQueryBuilder()
+            ->delete(UserMailNotificationEntity::class, 'n')
+            ->where('n.checkKey IN (:checkKeys)')
             ->setParameter('checkKeys', $checkKeyList, \Doctrine\DBAL\ArrayParameterType::STRING)
-            ->executeStatement();
+            ->getQuery()
+            ->execute();
+        $em->clear();
     }
 
     /**
@@ -198,7 +249,7 @@ final class NotificationByMailRepository extends AbstractRepository
             return;
         }
 
-        $this->batchWriter()
+        new \Piwigo\Db\BatchWriter($this->getEntityManager()->getConnection())
             ->massInsert(Tables::userMailNotification(), ['user_id', 'check_key', 'enabled'], $inserts);
     }
 }

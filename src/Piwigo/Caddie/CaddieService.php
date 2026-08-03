@@ -24,7 +24,7 @@ final class CaddieService
     {
         $userId = \Piwigo\Users\CurrentUser::current()->get()->id->value;
 
-        new CaddieRepository(DbConnection::build())
+        \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(CaddieEntity::class)
             ->addElements($userId, $elementsId);
     }
 }

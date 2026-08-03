@@ -92,7 +92,7 @@ final class PhotosAddDirectPageRenderer
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
-            new \Piwigo\Caddie\CaddieRepository($conn)
+            \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Caddie\CaddieEntity::class)
                 ->replaceForUser(
                     $user_id,
                     array_values(array_map(intval(...), array_unique(explode(',', $photosAddDirectRequest->batch))))

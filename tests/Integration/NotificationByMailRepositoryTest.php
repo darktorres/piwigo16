@@ -10,6 +10,7 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Notification\NotificationByMailRepository;
+use Piwigo\Notification\UserMailNotificationEntity;
 
 /**
  * Fixture shape: user_mail_notification has 2 rows -- user 1
@@ -46,7 +47,7 @@ final class NotificationByMailRepositoryTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->repo = new NotificationByMailRepository($this->conn);
+        $this->repo = \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(UserMailNotificationEntity::class);
     }
 
     public function test_count_by_check_key_finds_an_existing_key(): void

@@ -679,4 +679,75 @@ final class UserRepositoryTest extends IntegrationTestCase
             $this->conn->rollBack();
         }
     }
+
+    /**
+     * Item 15 audit: had zero existing coverage -- covers every one of
+     * deleteUser()'s 9 target tables (user_access/user_auth_keys/
+     * user_group/user_infos/users all converted to DQL; favorites newly
+     * converted this item; user_mail_notification/user_feed/caddie stay
+     * on raw DBAL, a real deptrac boundary, see UserRelatedTable's own
+     * docblock) on a real throwaway user, never touching the shared
+     * fixture users other tests in this class depend on.
+     */
+    public function test_delete_user_removes_every_row_across_every_related_table(): void
+    {
+        $this->conn->executeStatement(
+            'INSERT INTO ' . Tables::users() . " (username, password, mail_address) VALUES ('delete_user_test', NULL, NULL)"
+        );
+        $newUserId = (int) $this->conn->lastInsertId();
+        $userId = \Piwigo\Common\ValueObject\UserId::from($newUserId);
+
+        $this->conn->executeStatement(
+            'INSERT INTO ' . Tables::userInfos() . ' (user_id, status, language, theme) VALUES (?, ?, ?, ?)',
+            [$newUserId, 'normal', 'en_UK', 'default']
+        );
+        $this->conn->executeStatement(
+            'INSERT INTO ' . Tables::userAccess() . ' (user_id, cat_id) VALUES (?, 1)',
+            [$newUserId]
+        );
+        $this->conn->executeStatement(
+            'INSERT INTO ' . Tables::userGroup() . ' (user_id, group_id) VALUES (?, 1)',
+            [$newUserId]
+        );
+        $this->conn->executeStatement(
+            'INSERT INTO ' . Tables::favorites() . ' (user_id, image_id) VALUES (?, 1)',
+            [$newUserId]
+        );
+        $this->conn->executeStatement(
+            'INSERT INTO ' . Tables::userMailNotification() . " (user_id, check_key, enabled) VALUES (?, 'delusrtestkey01', 0)",
+            [$newUserId]
+        );
+        $this->conn->executeStatement(
+            'INSERT INTO ' . Tables::userFeed() . " (id, user_id) VALUES ('delusrtestfeed01', ?)",
+            [$newUserId]
+        );
+        $this->conn->executeStatement(
+            'INSERT INTO ' . Tables::caddie() . ' (user_id, element_id) VALUES (?, 1)',
+            [$newUserId]
+        );
+
+        $this->repo->deleteUser($userId);
+
+        self::assertSame(0, $this->countRows(Tables::users(), 'id', $newUserId));
+        self::assertSame(0, $this->countRows(Tables::userInfos(), 'user_id', $newUserId));
+        self::assertSame(0, $this->countRows(Tables::userAccess(), 'user_id', $newUserId));
+        self::assertSame(0, $this->countRows(Tables::userGroup(), 'user_id', $newUserId));
+        self::assertSame(0, $this->countRows(Tables::favorites(), 'user_id', $newUserId));
+        self::assertSame(0, $this->countRows(Tables::userMailNotification(), 'user_id', $newUserId));
+        self::assertSame(0, $this->countRows(Tables::userFeed(), 'user_id', $newUserId));
+        self::assertSame(0, $this->countRows(Tables::caddie(), 'user_id', $newUserId));
+    }
+
+    private function countRows(string $table, string $column, int $userId): int
+    {
+        $count = $this->conn->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from($table)
+            ->where($column . ' = :userId')
+            ->setParameter('userId', $userId)
+            ->executeQuery()
+            ->fetchOne();
+
+        return is_numeric($count) ? (int) $count : -1;
+    }
 }

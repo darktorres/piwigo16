@@ -17,7 +17,6 @@ use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\CookieService;
-use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentService;
 use Piwigo\Config\ConfigService;
@@ -374,7 +373,7 @@ final class PwgCore
         $user_id = $this->currentUser->get()
             ->id->value;
 
-        return new CaddieRepository($this->connection)
+        return $this->entityManager->getRepository(\Piwigo\Caddie\CaddieEntity::class)
             ->addElements($user_id, $params['image_id']);
     }
 

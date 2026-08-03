@@ -193,7 +193,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
-            new \Piwigo\Caddie\CaddieRepository(DbConnection::build())
+            \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Caddie\CaddieEntity::class)
                 ->replaceForUser($userId, []);
 
             $_SESSION['page_infos'] = [

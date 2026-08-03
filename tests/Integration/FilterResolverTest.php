@@ -7,7 +7,6 @@ namespace Piwigo\Tests\Integration;
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\BatchManager\FilterResolver;
-use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
@@ -82,7 +81,7 @@ final class FilterResolverTest extends IntegrationTestCase
             ),
             \Piwigo\Config\CurrentConfig::current(),
         );
-        $caddieRepo = new CaddieRepository($this->conn);
+        $caddieRepo = $em->getRepository(\Piwigo\Caddie\CaddieEntity::class);
         $userService = new UserService(
             \Piwigo\Core\Lang::current(),
             $em->getRepository(\Piwigo\Users\UserInfoEntity::class),

@@ -332,7 +332,7 @@ final class AdminShell
         // any photo in the caddie?
         $user_id = $this->currentUser->get()
             ->id->value;
-        $nb_photos_in_caddie = count(new \Piwigo\Caddie\CaddieRepository($conn)->findElementIdsForUser($user_id));
+        $nb_photos_in_caddie = count(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Caddie\CaddieEntity::class)->findElementIdsForUser($user_id));
 
         if ($nb_photos_in_caddie > 0) {
             $template->assign(

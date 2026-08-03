@@ -7,6 +7,7 @@ namespace Piwigo\Tests\Integration;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
+use Piwigo\Permalink\OldPermalinkSortField;
 use Piwigo\Permalink\PermalinkRepository;
 
 final class PermalinkRepositoryTest extends IntegrationTestCase
@@ -152,7 +153,7 @@ final class PermalinkRepositoryTest extends IntegrationTestCase
         $this->repo->insertOldPermalinkDeleted(1, $highSlug);
 
         try {
-            $rows = $this->repo->findAllOrderedBy('permalink');
+            $rows = $this->repo->findAllOrderedBy(OldPermalinkSortField::Permalink);
             $permalinks = array_map(static fn ($row) => $row->permalink, $rows);
 
             $lowIndex = array_search($lowSlug, $permalinks, true);

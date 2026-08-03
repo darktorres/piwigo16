@@ -157,9 +157,9 @@ final class PermalinksSubController implements AdminSubControllerInterface
         );
 
         $url_del_base = $this->urlService->getRootUrl() . 'admin.php?page=permalinks';
-        $orderByColumn = count($sort_by) > 0 ? $sort_by[0] : null;
+        $sortField = count($sort_by) > 0 ? \Piwigo\Permalink\OldPermalinkSortField::fromToken($sort_by[0]) : null;
         $deleted_permalinks = [];
-        foreach (new PermalinkRepository(\Piwigo\Db\EntityManagerFactory::build($conn))->findAllOrderedBy($orderByColumn) as $permalinkRow) {
+        foreach (new PermalinkRepository(\Piwigo\Db\EntityManagerFactory::build($conn))->findAllOrderedBy($sortField) as $permalinkRow) {
             $row = $permalinkRow->toArray();
             $row['name'] = $htmlRenderer->getCatDisplayNameCache((string) $permalinkRow->catId);
             $row['U_DELETE'] =

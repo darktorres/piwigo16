@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Piwigo\Admin\Category\CreateCategoryResult;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\Dto\UserGroupPair;
+use Piwigo\Permalink\OldPermalinkEntity;
 use Piwigo\Permalink\Projection\OldPermalink;
 
 /**
@@ -49,14 +50,14 @@ test('CreateCategoryResult::success carries the info message and the new categor
     expect($result->categoryId)->toBe(42);
 });
 
-test('OldPermalink::fromRow narrows a full real row', function (): void {
-    $permalink = OldPermalink::fromRow([
-        'cat_id' => '4',
-        'permalink' => 'old-album-name',
-        'date_deleted' => '2026-07-01 00:00:00',
-        'last_hit' => '2026-07-15 12:00:00',
-        'hit' => '12',
-    ]);
+test('OldPermalink::fromEntity copies every field straight through', function (): void {
+    $permalink = OldPermalink::fromEntity(new OldPermalinkEntity(
+        permalink: 'old-album-name',
+        catId: 4,
+        dateDeleted: '2026-07-01 00:00:00',
+        lastHit: '2026-07-15 12:00:00',
+        hit: 12,
+    ));
 
     expect($permalink->catId)->toBe(4);
     expect($permalink->permalink)->toBe('old-album-name');
@@ -65,14 +66,17 @@ test('OldPermalink::fromRow narrows a full real row', function (): void {
     expect($permalink->hit)->toBe(12);
 });
 
-test('OldPermalink::fromRow falls back to defaults for a missing/malformed row', function (): void {
-    $permalink = OldPermalink::fromRow([]);
+test('OldPermalink::fromEntity leaves null dateDeleted/lastHit as null', function (): void {
+    $permalink = OldPermalink::fromEntity(new OldPermalinkEntity(
+        permalink: 'my-album',
+        catId: 1,
+        dateDeleted: null,
+        lastHit: null,
+        hit: 0,
+    ));
 
-    expect($permalink->catId)->toBe(0);
-    expect($permalink->permalink)->toBe('');
     expect($permalink->dateDeleted)->toBeNull();
     expect($permalink->lastHit)->toBeNull();
-    expect($permalink->hit)->toBe(0);
 });
 
 test('OldPermalink::toArray round-trips every field', function (): void {

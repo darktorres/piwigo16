@@ -6,29 +6,39 @@ namespace Piwigo\Tests\Integration;
 
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\DBAL\Schema\Name\UnqualifiedName;
-use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\Events;
-use Doctrine\ORM\ORMSetup;
 use Doctrine\ORM\Tools\SchemaValidator;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\TablePrefixListener;
+use Piwigo\Db\EntityManagerFactory;
 
 /**
  * `orm:validate-schema`-equivalent check: does the mapped entity metadata
  * actually match the live database, on whichever provider this test
- * process is connected to. This test's own $ormConfig scans all of
- * src/Piwigo (not just ConfigEntry) for attribute-mapped entities -- 22
- * entities are mapped as of this writing, with the remaining origin
- * tables still unmapped; ConfigEntry is simply the one this file's 2nd
- * test targets directly. CI's own `integration` job
+ * process is connected to. Scans all of src/Piwigo (not just ConfigEntry)
+ * for attribute-mapped entities; ConfigEntry is simply the one this
+ * file's 2nd test targets directly. CI's own `integration` job
  * (.github/workflows/ci.yml) currently exercises only a single MySQL 9.7
  * service container -- there is no matrix job and no MariaDB/PostgreSQL
  * coverage yet, matching every other Integration test's
  * single-connection-from-env design.
+ *
+ * Real bug found and fixed here, not just a retarget: this used to
+ * hand-build its own `EntityManager` via a bare `ORMSetup::
+ * createAttributeMetadataConfig()` + `new EntityManager(...)`, bypassing
+ * {@see EntityManagerFactory::build()}'s own custom-DBAL-type
+ * registration (`group_id`/`user_id`/`category_id`/`comment_id`/
+ * `tag_id`/`ip_address`) entirely -- since `Doctrine\DBAL\Types\Type`'s
+ * own registry is process-global, not per-`EntityManager`, this test only
+ * ever passed by accident, when some other test file already called
+ * `EntityManagerFactory::build()` earlier in the same PHP process and
+ * registered those types as a side effect; run in isolation (or first in
+ * a fresh process), `validateMapping()` failed with a wall of "uses a
+ * non-existent type 'user_id'" errors across every VO-typed entity. Now
+ * builds through the real factory instead of a parallel, drifted-from
+ * copy of its own config.
  *
  * Deliberately does NOT use SchemaValidator::schemaInSyncWithMetadata()
  * for a whole-database comparison -- verified empirically that it treats
@@ -67,12 +77,7 @@ final class SchemaParityTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        $conn = DbConnection::build();
-        $ormConfig = ORMSetup::createAttributeMetadataConfig([dirname(__DIR__, 2) . '/src/Piwigo'], isDevMode: true);
-        $ormConfig->enableNativeLazyObjects(true);
-        $em = new EntityManager($conn, $ormConfig);
-        $em->getEventManager()->addEventListener(Events::loadClassMetadata, new TablePrefixListener(\Piwigo\Db\DbCredentials::current()));
-        $this->em = $em;
+        $this->em = EntityManagerFactory::build(DbConnection::build());
     }
 
     public function test_mapped_entity_metadata_has_no_validation_errors(): void

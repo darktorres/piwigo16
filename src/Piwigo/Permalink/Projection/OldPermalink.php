@@ -7,9 +7,7 @@ namespace Piwigo\Permalink\Projection;
 /**
  * Typed row shape for `piwigo_old_permalinks` (P17-23 Stage 1b, Permalink
  * domain -- `docs/PLAN.md`'s own "7 Entity types, 73 projection
- * shapes" reference). `fromRow()` centralises the narrowing
- * {@see \Piwigo\Controller\Admin\PermalinksSubController}'s own caller used
- * to do inline, same shape as {@see \Piwigo\Category\Projection\Category}.
+ * shapes" reference), built from {@see \Piwigo\Permalink\OldPermalinkEntity}.
  *
  * `dateDeleted` stays `?string` -- Permalink domain Stage 1a already
  * dropped its 1970-01-01 sentinel default (every real write already sets
@@ -26,16 +24,21 @@ final readonly class OldPermalink
     ) {}
 
     /**
-     * @param array<string, mixed> $row a `SELECT *` (or equivalent) row from `piwigo_old_permalinks`
+     * Further SQL-modernization audit, Item 16B: replaces the former
+     * raw-row `fromRow()` now that {@see \Piwigo\Permalink\
+     * PermalinkRepository}'s own one real caller
+     * (`findAllOrderedBy()`) went DQL -- `OldPermalinkEntity`'s own
+     * properties are already typed, so no defensive casting is needed
+     * the way `fromRow()`'s own untyped raw-array input required.
      */
-    public static function fromRow(array $row): self
+    public static function fromEntity(\Piwigo\Permalink\OldPermalinkEntity $entity): self
     {
         return new self(
-            catId: is_numeric($row['cat_id'] ?? null) ? (int) $row['cat_id'] : 0,
-            permalink: is_string($row['permalink'] ?? null) ? $row['permalink'] : '',
-            dateDeleted: is_string($row['date_deleted'] ?? null) ? $row['date_deleted'] : null,
-            lastHit: is_string($row['last_hit'] ?? null) ? $row['last_hit'] : null,
-            hit: is_numeric($row['hit'] ?? null) ? (int) $row['hit'] : 0,
+            catId: $entity->catId,
+            permalink: $entity->permalink,
+            dateDeleted: $entity->dateDeleted,
+            lastHit: $entity->lastHit,
+            hit: $entity->hit,
         );
     }
 

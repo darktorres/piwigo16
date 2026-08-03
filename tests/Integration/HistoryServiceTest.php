@@ -77,7 +77,7 @@ final class HistoryServiceTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         $currentLogger = new CurrentLogger();
         $currentLogger->set(new Logger(['severity' => Logger::OFF]));
-        $this->service = new HistoryService(EntityManagerFactory::build($this->conn)->getRepository(HistoryEntity::class), new ConfigService($this->buildConfigRepository()), $currentLogger);
+        $this->service = new HistoryService(EntityManagerFactory::build($this->conn)->getRepository(HistoryEntity::class), new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()), $currentLogger, new \Piwigo\PluginConfig\EventDispatcher());
     }
 
     #[\Override]
@@ -352,7 +352,7 @@ final class HistoryServiceTest extends IntegrationTestCase
                 'DELETE FROM ' . Tables::history() . " WHERE section = 'my_custom_section'"
             );
             $repo->alterSectionEnum($originalOptions);
-            $configService = new ConfigService($this->buildConfigRepository());
+            $configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher());
             $configService->confDeleteParam('history_sections_cache');
             CurrentConfig::setHistorySectionsCache(null);
         }

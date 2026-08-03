@@ -53,6 +53,7 @@ final readonly class CommentService
         private MailerInterface $mailer,
         private HtmlRenderingInterface $htmlRenderer,
         private UrlServiceInterface $urlService,
+        private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     /**
@@ -345,7 +346,8 @@ final readonly class CommentService
         }
 
         // perform more spam check
-        $commentAction = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new UserCommentCheck($commentAction, $comm))->commentAction;
+        $commentAction = $this->eventDispatcher->dispatchChange(new UserCommentCheck($commentAction, $comm))
+            ->commentAction;
 
         if ($commentAction !== 'reject') {
             $author = $comm['author'];
@@ -431,7 +433,7 @@ final readonly class CommentService
             'comment_id' => $rawCommentId,
         ]);
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new UserCommentDeletion($rawCommentId));
+        $this->eventDispatcher->dispatchNotify(new UserCommentDeletion($rawCommentId));
 
         return true;
     }
@@ -473,7 +475,7 @@ final readonly class CommentService
         }
 
         // perform more spam check
-        $commentAction = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new UserCommentCheck(
+        $commentAction = $this->eventDispatcher->dispatchChange(new UserCommentCheck(
             $commentAction,
             array_merge($comment, [
                 'author' => $username,
@@ -631,7 +633,7 @@ final readonly class CommentService
         $rawCommentId = is_array($commentId)
             ? array_map(static fn (CommentId $id): int => $id->value, $commentId)
             : $commentId->value;
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new UserCommentValidation($rawCommentId));
+        $this->eventDispatcher->dispatchNotify(new UserCommentValidation($rawCommentId));
     }
 
     /**

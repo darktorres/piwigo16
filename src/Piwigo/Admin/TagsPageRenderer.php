@@ -20,6 +20,7 @@ final class TagsPageRenderer
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     public function render(): void
@@ -69,7 +70,7 @@ final class TagsPageRenderer
         $orphan_tag_names_array = '[]';
         $orphan_tag_names = [];
         foreach ($orphan_tags as $tag) {
-            $orphanNameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderTagName($tag->name, $tag->toArray()));
+            $orphanNameEvent = $this->eventDispatcher->dispatchChange(new RenderTagName($tag->name, $tag->toArray()));
             $orphan_tag_names[] = $orphanNameEvent->tagName;
         }
 
@@ -124,7 +125,7 @@ final class TagsPageRenderer
             ];
             $raw_name = $tag_obj->name;
             $tag['raw_name'] = $raw_name;
-            $tagNameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderTagName($raw_name, $tag));
+            $tagNameEvent = $this->eventDispatcher->dispatchChange(new RenderTagName($raw_name, $tag));
             $rendered_name = $tagNameEvent->tagName;
             $tag['name'] = $rendered_name;
 
@@ -134,7 +135,7 @@ final class TagsPageRenderer
                 $tag['counter'] = $counter;
             }
 
-            $altNamesEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetTagAltNames([], $raw_name));
+            $altNamesEvent = $this->eventDispatcher->dispatchChange(new GetTagAltNames([], $raw_name));
             $alt_names = array_filter($altNamesEvent->value, is_string(...));
             $alt_names = array_diff(array_unique($alt_names), [$rendered_name]);
             if (count($alt_names) > 0) {

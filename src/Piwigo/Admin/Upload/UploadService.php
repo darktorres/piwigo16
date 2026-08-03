@@ -75,6 +75,7 @@ final class UploadService
     public function __construct(
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
         private readonly StorageRegistry $storageRegistry,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     /**
@@ -446,7 +447,8 @@ final class UploadService
 
         // handle the uploaded file type by potentially making a
         // pwg_representative file.
-        $representative_ext = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new UploadFile(null, $file_path))->representativeExt;
+        $representative_ext = $this->eventDispatcher->dispatchChange(new UploadFile(null, $file_path))
+            ->representativeExt;
 
         $logger->info(__METHOD__ . ' : force cache generation, representative_ext = ' . ($representative_ext ?? ''));
 
@@ -459,7 +461,7 @@ final class UploadService
                 $need_resize = $this->needResize($file_path, $original_resize_maxwidth, $original_resize_maxheight);
 
                 if ($need_resize) {
-                    $img = new PwgImage($file_path, $this->currentLogger);
+                    $img = new PwgImage($file_path, $this->currentLogger, $this->eventDispatcher);
 
                     $original_resize_quality = \Piwigo\Config\CurrentConfig::originalResizeQuality();
 
@@ -577,7 +579,7 @@ final class UploadService
         // matters.
         HttpClientService::fetch($derivative_url);
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndAddUploadedFile($image_infos));
+        $this->eventDispatcher->dispatchNotify(new LocEndAddUploadedFile($image_infos));
 
         return $image_id;
     }
@@ -780,7 +782,7 @@ final class UploadService
         $format_infos = $insert;
         $format_infos['format_id'] = $format_id;
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndAddFormat($format_infos));
+        $this->eventDispatcher->dispatchNotify(new LocEndAddFormat($format_infos));
 
         return $add_status;
     }

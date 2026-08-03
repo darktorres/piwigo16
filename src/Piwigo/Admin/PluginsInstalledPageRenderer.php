@@ -50,7 +50,7 @@ final class PluginsInstalledPageRenderer
      * slug statically (it's the only class registered for the 'plugins'
      * slug in config/admin_pages.php).
      */
-    public function render(string $pageSlug, UrlServiceInterface $urlService, \Piwigo\Core\CurrentLogger $currentLogger, SessionService $sessionService): void
+    public function render(string $pageSlug, UrlServiceInterface $urlService, \Piwigo\Core\CurrentLogger $currentLogger, SessionService $sessionService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -112,7 +112,7 @@ final class PluginsInstalledPageRenderer
 
         // --------------------------------------------------------Get the menu with the depreciated version
 
-        $plugin_menu_links_deprec_event = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetAdminPluginMenuLinks([]));
+        $plugin_menu_links_deprec_event = $eventDispatcher->dispatchChange(new GetAdminPluginMenuLinks([]));
 
         $settings_url_for_plugin_deprec = [];
 

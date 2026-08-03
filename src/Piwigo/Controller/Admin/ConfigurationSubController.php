@@ -109,6 +109,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         private readonly StorageRegistry $storageRegistry,
         private readonly \Piwigo\Core\AdminContext $adminContext,
         private readonly CoreTabs $coreTabs,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     /**
@@ -620,7 +621,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 // P22: profile.php's own save_profile_from_post()/
                 // load_profile_in_template() ported to Piwigo\Controller\
                 // ProfileFormHandler in P23 batch 8c.
-                $profileFormHandler = new ProfileFormHandler($this->redirectService, $this->adminContext);
+                $profileFormHandler = new ProfileFormHandler($this->redirectService, $this->adminContext, $this->eventDispatcher);
 
                 $errors = [];
                 if ($profileFormHandler->saveFromPost($edit_user, $errors)) {
@@ -970,7 +971,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         // PluginLoader::autoupdatePlugin()).
         $page_errors = \Piwigo\Core\PageState::current()->errors;
 
-        new UploadService($this->currentLogger, $this->storageRegistry)
+        new UploadService($this->currentLogger, $this->storageRegistry, $this->eventDispatcher)
             ->saveUploadFormConfig($updates, $page_errors, $errors);
 
         \Piwigo\Core\PageState::current()->errors = array_values($page_errors);

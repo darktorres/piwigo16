@@ -113,7 +113,7 @@ final class MailServiceTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         $repo = EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class);
         self::assertInstanceOf(\Piwigo\Config\ConfigRepository::class, $repo);
-        $configService = new ConfigService($repo);
+        $configService = new ConfigService($repo, new \Piwigo\PluginConfig\EventDispatcher());
         CurrentConfigService::set($configService);
         $configService->loadConfFromDb();
 
@@ -149,6 +149,7 @@ final class MailServiceTest extends IntegrationTestCase
             new HtmlService(),
             $this->conn,
             new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)),
+            new \Piwigo\PluginConfig\EventDispatcher(),
         );
     }
 

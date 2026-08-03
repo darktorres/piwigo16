@@ -216,7 +216,7 @@ afterEach(function (): void {
     template_instance_test_rrmdir(is_string($this->root) ? $this->root : '');
     CurrentUser::reset();
     CurrentConfig::reset();
-    EventDispatcher::reset();
+    EventDispatcher::get()->reset();
     Kernel::reset();
 });
 
@@ -1624,7 +1624,7 @@ test('make_script_src (via func_get_combined_scripts) throws when a combined_scr
     try {
         $t->func_get_combined_scripts(['load' => 'footer']);
     } finally {
-        EventDispatcher::reset();
+        EventDispatcher::get()->reset();
     }
 })->throws(\Error::class, 'must return an instance of');
 

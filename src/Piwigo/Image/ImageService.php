@@ -48,6 +48,7 @@ final readonly class ImageService
         private ImageRepository $repo,
         private ActivityLoggerInterface $activityLogger,
         private SessionService $sessionService,
+        private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     /**
@@ -276,7 +277,7 @@ final readonly class ImageService
         if ($ids === []) {
             return 0;
         }
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new BeginDeleteElements($ids));
+        $this->eventDispatcher->dispatchNotify(new BeginDeleteElements($ids));
 
         if ($physicalDeletion) {
             $ids = $this->deleteElementFiles($ids, $urlService);
@@ -295,7 +296,7 @@ final readonly class ImageService
                 ->updateCategory($categoryIds);
         }
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new DeleteElements($ids));
+        $this->eventDispatcher->dispatchNotify(new DeleteElements($ids));
         $this->activityLogger->record('photo', $ids, 'delete');
         return count($ids);
     }
@@ -393,7 +394,7 @@ final readonly class ImageService
 
         $logger->debug(__FUNCTION__ . ', exec=' . $execId . ', ends');
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new EmptyLounge($rows));
+        $this->eventDispatcher->dispatchNotify(new EmptyLounge($rows));
 
         return $rows;
     }

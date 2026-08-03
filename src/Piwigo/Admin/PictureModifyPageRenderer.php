@@ -44,6 +44,7 @@ final class PictureModifyPageRenderer
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\ProcessCache $processCache,
         private readonly SessionService $sessionService,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     private static function userService(): UserService
@@ -91,7 +92,7 @@ final class PictureModifyPageRenderer
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $conn = DbConnection::build();
-        $imageService = new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), $this->sessionService);
+        $imageService = new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), $this->sessionService, $this->eventDispatcher);
         $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
@@ -173,7 +174,8 @@ final class PictureModifyPageRenderer
 
             $data['date_creation'] = $pictureModifyRequest->dateCreation;
 
-            $data = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new PictureModifyBeforeUpdate($data))->data;
+            $data = $this->eventDispatcher->dispatchChange(new PictureModifyBeforeUpdate($data))
+                ->data;
 
             unset($data['id']);
             $imageService->updateFields($image_id, $data);
@@ -497,7 +499,7 @@ final class PictureModifyPageRenderer
                 ->getToken(),
         ]);
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndPictureModify());
+        $this->eventDispatcher->dispatchNotify(new LocEndPictureModify());
 
         // ----------------------------------------------------------- sending html code
         $template->assign_var_from_handle('ADMIN_CONTENT', 'picture_modify');

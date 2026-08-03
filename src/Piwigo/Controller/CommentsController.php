@@ -54,6 +54,7 @@ final class CommentsController implements ControllerInterface
         private readonly \Piwigo\Core\FilterState $filterState,
         private readonly \Piwigo\Section\SectionContextRegistry $sectionContextRegistry,
         private readonly SessionService $sessionService,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     private static function permissionService(): PermissionService
@@ -150,7 +151,7 @@ final class CommentsController implements ControllerInterface
             ], // stupid but generic
         ];
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginComments());
+        $this->eventDispatcher->dispatchNotify(new LocBeginComments());
 
         $commentsRequest = Request\CommentsRequest::fromGlobals($comments_page_nb_comments);
 
@@ -292,7 +293,7 @@ final class CommentsController implements ControllerInterface
         $comment_id = $commentsRequest->actionCommentId;
         $edit_comment = null;
 
-        $commentService = new CommentService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->urlService);
+        $commentService = new CommentService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->urlService, $this->eventDispatcher);
 
         if (isset($action) and $comment_id !== null) {
             $commentIdVo = CommentId::from($comment_id);
@@ -564,9 +565,9 @@ final class CommentsController implements ControllerInterface
                 // unowned rather than casting blindly.
                 $author_id = is_numeric($author_id) ? (int) $author_id : -1;
 
-                $authorEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCommentAuthor(is_string($comment['author']) ? $comment['author'] : ''));
+                $authorEvent = $this->eventDispatcher->dispatchChange(new RenderCommentAuthor(is_string($comment['author']) ? $comment['author'] : ''));
 
-                $contentEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCommentContent(is_string($comment['content']) ? $comment['content'] : ''));
+                $contentEvent = $this->eventDispatcher->dispatchChange(new RenderCommentContent(is_string($comment['content']) ? $comment['content'] : ''));
 
                 $tpl_comment = [
                     'ID' => $comment['comment_id'],
@@ -631,7 +632,7 @@ final class CommentsController implements ControllerInterface
             }
         }
 
-        $derivative_params = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetCommentsDerivativeParams(ImageStdParams::get_by_type(ImageStdParams::THUMB)))->params;
+        $derivative_params = $this->eventDispatcher->dispatchChange(new GetCommentsDerivativeParams(ImageStdParams::get_by_type(ImageStdParams::THUMB)))->params;
         $template->assign('comment_derivative_params', $derivative_params);
 
         // include menubar
@@ -646,8 +647,8 @@ final class CommentsController implements ControllerInterface
         // |                      html code display                        |
         // +---------------------------------------------------------------+
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title);
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndComments());
+            ->render($title, $this->eventDispatcher);
+        $this->eventDispatcher->dispatchNotify(new LocEndComments());
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();
         if (count($comments) > 0) {

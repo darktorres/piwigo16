@@ -27,6 +27,7 @@ final class SearchController implements ControllerInterface
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     private static function permissionService(): PermissionService
@@ -41,7 +42,7 @@ final class SearchController implements ControllerInterface
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginSearch());
+        $this->eventDispatcher->dispatchNotify(new LocBeginSearch());
 
         // +---------------------------------------------------------------+
         // | Create a default search                                      |

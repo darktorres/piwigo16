@@ -88,7 +88,7 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
         // without it, Tabsheet::select('user_activity') finds an empty
         // $sheets array (CoreTabs::addCoreTabs() never registered) and
         // crashes on `$keys[0]` of an empty array.
-        EventDispatcher::reset();
+        EventDispatcher::get()->reset();
         $coreTabs = Kernel::container()->get(CoreTabs::class);
         if (! $coreTabs instanceof CoreTabs) {
             throw new \LogicException('Container returned an unexpected type for ' . CoreTabs::class);
@@ -101,7 +101,7 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
         // flow reaches CurrentConfigService::get() -- same wiring every
         // other Integration test constructing a real Template directly
         // does (e.g. ThemesStandardPagesPageRendererTest's own setUp()).
-        CurrentConfigService::set(new ConfigService($this->buildConfigRepository()));
+        CurrentConfigService::set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
         CurrentTemplate::set(new Template(CurrentPaths::get()->root . 'themes/admin', 'default'));
 
         $_GET = [];
@@ -122,7 +122,7 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
         // are overwritten by whichever real request runs next -- same
         // "no reset needed" shape as every other CoreTabs-touching
         // Integration test in this suite).
-        EventDispatcher::reset();
+        EventDispatcher::get()->reset();
         Kernel::reset();
         parent::tearDown();
     }

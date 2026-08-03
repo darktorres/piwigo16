@@ -206,7 +206,7 @@ namespace Piwigo\Tests\Integration {
             \Piwigo\Core\PageState::reset();
 
             $this->conn = DbConnection::build();
-            $this->service = new CommentService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), new MailService(), new HtmlService(), new UrlService(new HtmlService()));
+            $this->service = new CommentService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), new MailService(), new HtmlService(), new UrlService(new HtmlService()), new \Piwigo\PluginConfig\EventDispatcher());
         }
 
         // --- checkForSpam() -------------------------------------------------
@@ -825,6 +825,7 @@ namespace Piwigo\Tests\Integration {
                 $mailer,
                 new HtmlService(),
                 new UrlService(new HtmlService()),
+                new \Piwigo\PluginConfig\EventDispatcher(),
             );
         }
 
@@ -842,6 +843,7 @@ namespace Piwigo\Tests\Integration {
                 new MailService(),
                 $htmlRenderer,
                 new UrlService(new HtmlService()),
+                new \Piwigo\PluginConfig\EventDispatcher(),
             );
         }
 

@@ -79,9 +79,9 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
             'username' => 'fixture_admin',
         ]));
 
-        EventDispatcher::reset();
+        EventDispatcher::get()->reset();
 
-        $this->configService = new ConfigService($this->buildConfigRepository());
+        $this->configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher());
         // Template::__construct()'s own data_dir_checked first-time-setup
         // flow reaches CurrentConfigService::get() -- same wiring every
         // other Integration test constructing a real Template directly
@@ -95,7 +95,7 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
             throw new \LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
         }
         $currentLogger->set(new Logger(['severity' => Logger::OFF]));
-        $this->renderer = new ThemesInstalledPageRenderer(new RedirectService(), $urlService, $this->configService, $currentLogger);
+        $this->renderer = new ThemesInstalledPageRenderer(new RedirectService(), $urlService, $this->configService, $currentLogger, new \Piwigo\PluginConfig\EventDispatcher());
 
         $this->fixtureRoot = sys_get_temp_dir() . '/piwigo-themes-installed-integration-' . bin2hex(random_bytes(6)) . '/';
         mkdir($this->fixtureRoot . 'themes', 0o777, true);
@@ -110,7 +110,7 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
         $_GET = [];
         CurrentConfig::reset();
         CurrentTemplate::reset();
-        EventDispatcher::reset();
+        EventDispatcher::get()->reset();
         Kernel::reset();
         if (is_dir($this->fixtureRoot)) {
             FilesystemHelper::deltree($this->fixtureRoot);

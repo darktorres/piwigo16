@@ -27,6 +27,7 @@ final readonly class RateService
     public function __construct(
         private RateRepository $repo,
         private CookieService $cookies,
+        private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     /**
@@ -115,7 +116,8 @@ final readonly class RateService
      */
     public function updateRatingScore(int|false $elementId = false): array
     {
-        $altResult = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new UpdateRatingScore(false, $elementId))->result;
+        $altResult = $this->eventDispatcher->dispatchChange(new UpdateRatingScore(false, $elementId))
+            ->result;
         if (is_array($altResult)) {
             return $altResult;
         }

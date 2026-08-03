@@ -123,7 +123,7 @@ final class WsServerTest extends ContractTestCase
         \Piwigo\Core\Kernel::boot();
         $body = false;
         try {
-            $server = new PwgServer();
+            $server = new PwgServer(\Piwigo\PluginConfig\EventDispatcher::get());
             $encoder = new PwgJsonEncoder();
             $server->setEncoder('json', $encoder);
 

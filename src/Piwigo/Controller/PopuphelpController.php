@@ -38,6 +38,10 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class PopuphelpController implements ControllerInterface
 {
+    public function __construct(
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+    ) {}
+
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
@@ -67,7 +71,7 @@ final class PopuphelpController implements ControllerInterface
             'nofollow' => 1,
         ]);
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title);
+            ->render($title, $this->eventDispatcher);
 
         if (! is_string($rawPage) || ! (bool) preg_match('/^[a-z_]*$/', $rawPage)) {
             throw new ResponseReadyException(ResponseFactory::text('Hacking attempt!', 400));
@@ -80,7 +84,8 @@ final class PopuphelpController implements ControllerInterface
             $help_content = '';
         }
 
-        $help_content = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetPopupHelpContent($help_content, $rawPage))->content;
+        $help_content = $this->eventDispatcher->dispatchChange(new GetPopupHelpContent($help_content, $rawPage))
+            ->content;
 
         $template->set_filename('popuphelp', 'popuphelp.tpl');
         $template->assign([

@@ -1123,6 +1123,14 @@ test('mail fires the before_parse_mail_template event with the real cache key an
     CurrentConfig::setMailAllowHtml(false);
     $service = new MailService();
 
+    // Kernel must boot before the handler is registered -- mail_service_capture_send()
+    // itself calls Kernel::boot() first thing, and EventDispatcher::get()
+    // resolves the pre-boot memoized fallback instance until Kernel::boot()
+    // builds the container's own (different) shared instance; registering
+    // before that boot would silently register on an instance MailService's
+    // own get()-shim call never sees once the container exists.
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
+
     $capturedCacheKey = null;
     $capturedContentType = null;
     $handler = function (BeforeParseMailTemplate $event) use (&$capturedCacheKey, &$capturedContentType): void {

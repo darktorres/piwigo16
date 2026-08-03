@@ -161,7 +161,7 @@ test('bootConfigOnly reuses an already-set CurrentConfigService instead of resol
     $ormConfig->enableNativeLazyObjects(true);
     $em = new \Doctrine\ORM\EntityManager($conn, $ormConfig);
     $em->getEventManager()->addEventListener(\Doctrine\ORM\Events::loadClassMetadata, new \Piwigo\Db\TablePrefixListener(\Piwigo\Db\DbCredentials::current()));
-    $preSetService = new \Piwigo\Config\ConfigService($em->getRepository(\Piwigo\Config\ConfigEntry::class));
+    $preSetService = new \Piwigo\Config\ConfigService($em->getRepository(\Piwigo\Config\ConfigEntry::class), new \Piwigo\PluginConfig\EventDispatcher());
     CurrentConfigService::set($preSetService);
 
     RequestBootstrap::bootConfigOnly(Paths::fromRoot(sys_get_temp_dir()));

@@ -345,6 +345,7 @@ final readonly class ConfigService
 
     public function __construct(
         private ConfigRepository $repo,
+        private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     /**
@@ -417,7 +418,7 @@ final readonly class ConfigService
             self::hydrate($entry->param, $entry->value);
         }
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LoadConf($param));
+        $this->eventDispatcher->dispatchNotify(new LoadConf($param));
     }
 
     /**

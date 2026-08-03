@@ -24,6 +24,7 @@ final class C13yInternal
 {
     public function __construct(
         private readonly SessionService $sessionService,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     /**
@@ -39,9 +40,9 @@ final class C13yInternal
      */
     public function registerHandlers(): void
     {
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(ListCheckIntegrity::class, $this->c13y_version(...));
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(ListCheckIntegrity::class, $this->c13y_exif(...));
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(ListCheckIntegrity::class, $this->c13y_user(...));
+        $this->eventDispatcher->addTypedHandler(ListCheckIntegrity::class, $this->c13y_version(...));
+        $this->eventDispatcher->addTypedHandler(ListCheckIntegrity::class, $this->c13y_exif(...));
+        $this->eventDispatcher->addTypedHandler(ListCheckIntegrity::class, $this->c13y_user(...));
     }
 
     private static function userService(): UserService

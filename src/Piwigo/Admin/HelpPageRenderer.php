@@ -14,7 +14,7 @@ use Piwigo\Event\Location\LocEndHelp;
  */
 final class HelpPageRenderer
 {
-    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs): void
+    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -33,7 +33,7 @@ final class HelpPageRenderer
         $tabsheet->select($selected);
         $tabsheet->assign();
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndHelp());
+        $eventDispatcher->dispatchNotify(new LocEndHelp());
 
         $template->set_filenames([
             'help' => 'help.tpl',

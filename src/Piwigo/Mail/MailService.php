@@ -133,6 +133,7 @@ final class MailService implements MailerInterface
                 new \Piwigo\Auth\CookieService(),
                 \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class),
                 \Piwigo\Session\SessionService::get(),
+                \Piwigo\PluginConfig\EventDispatcher::get(),
             );
     }
 
@@ -174,6 +175,7 @@ final class MailService implements MailerInterface
             new HtmlService(),
             \Piwigo\Db\DbConnection::build(),
             \Piwigo\Session\SessionService::get(),
+            \Piwigo\PluginConfig\EventDispatcher::get(),
         );
     }
 

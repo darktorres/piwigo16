@@ -21,12 +21,13 @@ final class MenubarSubController implements AdminSubControllerInterface
     public function __construct(
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
         new MenubarPageRenderer()
-            ->render($this->urlService, $this->coreTabs);
+            ->render($this->urlService, $this->coreTabs, $this->eventDispatcher);
     }
 }

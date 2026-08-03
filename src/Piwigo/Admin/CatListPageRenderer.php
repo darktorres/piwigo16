@@ -40,6 +40,7 @@ final class CatListPageRenderer
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
         private readonly SessionService $sessionService,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     public function render(): void
@@ -48,7 +49,7 @@ final class CatListPageRenderer
 
         $categoryService = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginCatList());
+        $this->eventDispatcher->dispatchNotify(new LocBeginCatList());
 
         $catListRequest = Request\CatListRequest::fromGlobals();
 
@@ -107,6 +108,7 @@ final class CatListPageRenderer
                 \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(),
                 $this->urlService,
                 $this->sessionService,
+                $this->eventDispatcher,
                 $catListRequest->photoDeletionMode
             );
 
@@ -239,7 +241,7 @@ final class CatListPageRenderer
                 $self_url .= '&amp;parent_id=' . $parent_id;
             }
 
-            $nameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryName($category['name'], 'admin_cat_list'));
+            $nameEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryName($category['name'], 'admin_cat_list'));
             $tpl_cat =
               [
                   'NAME' => $nameEvent->categoryName,
@@ -276,7 +278,7 @@ final class CatListPageRenderer
             $template->append('categories', $tpl_cat);
         }
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndCatList());
+        $this->eventDispatcher->dispatchNotify(new LocEndCatList());
 
         // +-------------------------------------------------------------------+
         // |                          sending html code                        |

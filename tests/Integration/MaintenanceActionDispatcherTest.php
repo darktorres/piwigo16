@@ -82,8 +82,8 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         Lang::load('admin.lang');
 
         $this->conn = DbConnection::build();
-        CurrentConfigService::set(new ConfigService($this->buildConfigRepository()));
-        $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService(), new UrlService(new HtmlService()), new ConfigService($this->buildConfigRepository()), new FilesystemIntegrityChecker(), new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class)), new Translator());
+        CurrentConfigService::set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
+        $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService(), new UrlService(new HtmlService()), new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()), new FilesystemIntegrityChecker(), new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class)), new Translator(), new \Piwigo\PluginConfig\EventDispatcher());
     }
 
     #[\Override]
@@ -462,10 +462,11 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         $dispatcher = new MaintenanceActionDispatcher(
             new RedirectService(),
             new UrlService(new HtmlService()),
-            new ConfigService($this->buildConfigRepository()),
+            new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()),
             new FilesystemIntegrityChecker(),
             new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class)),
             new Translator(),
+            new \Piwigo\PluginConfig\EventDispatcher(),
             new \Piwigo\Cache\PersistentFileCache(),
         );
 

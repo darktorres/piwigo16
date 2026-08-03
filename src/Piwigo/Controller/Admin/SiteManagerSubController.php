@@ -56,6 +56,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
         private readonly SessionService $sessionService,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     #[\Override]
@@ -144,7 +145,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
             switch ($siteManagerRequest->action) {
                 case 'delete':
 
-                    \Piwigo\Bootstrap\CoreDomainAccessor::categoryService()->deleteSite($site_id, \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), $this->urlService, $this->sessionService);
+                    \Piwigo\Bootstrap\CoreDomainAccessor::categoryService()->deleteSite($site_id, \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), $this->urlService, $this->sessionService, $this->eventDispatcher);
                     \Piwigo\Core\PageState::current()->addInfo($galleries_url . ' ' . Lang::t('deleted'));
                     break;
 
@@ -192,7 +193,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
             }
 
             // $plugin_links is array of array composed of U_HREF, U_HINT & U_CAPTION
-            $tpl_var['plugin_links'] = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetAdminsSiteLinks([], $id, $is_remote))->pluginLinks;
+            $tpl_var['plugin_links'] = $this->eventDispatcher->dispatchChange(new GetAdminsSiteLinks([], $id, $is_remote))->pluginLinks;
 
             $template->append('sites', $tpl_var);
         }

@@ -272,7 +272,7 @@ final class SearchServiceTest extends IntegrationTestCase
             new MailService(),
             new HtmlService(),
             new RedirectService(),
-            new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)),
+            new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)), \Piwigo\PluginConfig\EventDispatcher::get(),
         );
     }
 
@@ -303,7 +303,7 @@ final class SearchServiceTest extends IntegrationTestCase
             new MailService(),
             $htmlRenderer,
             new RedirectService(),
-            new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)),
+            new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)), \Piwigo\PluginConfig\EventDispatcher::get(),
         );
     }
 

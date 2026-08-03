@@ -59,6 +59,7 @@ final class BatchManagerGlobalPageRenderer
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
         private readonly SessionService $sessionService,
         private readonly Translator $translator,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     private static function tagService(): TagService
@@ -97,7 +98,7 @@ final class BatchManagerGlobalPageRenderer
                 ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
         }
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginElementSetGlobal());
+        $this->eventDispatcher->dispatchNotify(new LocBeginElementSetGlobal());
 
         $batchManagerGlobalRequest = Request\BatchManagerGlobalRequest::fromGlobals();
 
@@ -181,7 +182,7 @@ final class BatchManagerGlobalPageRenderer
             $redirect = false;
 
             $tagService = self::tagService();
-            $imageService = new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), $this->sessionService);
+            $imageService = new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), $this->sessionService, $this->eventDispatcher);
 
             if ($action === 'remove_from_caddie') {
                 $current_user_id = \Piwigo\Users\CurrentUser::get()->id->value;
@@ -440,7 +441,7 @@ final class BatchManagerGlobalPageRenderer
                 PermissionCacheInvalidator::invalidate();
             }
 
-            \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new ElementSetGlobalAction($action, $collection));
+            $this->eventDispatcher->dispatchNotify(new ElementSetGlobalAction($action, $collection));
 
             if ($redirect) {
                 $this->redirectService->redirect($redirect_url);
@@ -462,7 +463,7 @@ final class BatchManagerGlobalPageRenderer
         $page_start = $pageStart;
 
         new FilterPanelRenderer()
-            ->render($template, $base_url, $collection, $cat_elements_id, $page_start, $this->urlService);
+            ->render($template, $base_url, $collection, $cat_elements_id, $page_start, $this->urlService, $this->eventDispatcher);
 
         // +-------------------------------------------------------------------+
         // |                            caddie options                             |
@@ -494,7 +495,7 @@ final class BatchManagerGlobalPageRenderer
         );
 
         // metadata
-        $site_reader = new LocalSiteReader('./', new \Piwigo\Metadata\MetadataService(new \Piwigo\Metadata\MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())), $this->currentLogger));
+        $site_reader = new LocalSiteReader('./', new \Piwigo\Metadata\MetadataService(new \Piwigo\Metadata\MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())), $this->currentLogger, $this->eventDispatcher));
         $used_metadata = implode(', ', $site_reader->get_metadata_attributes());
 
         $template->assign(
@@ -613,7 +614,7 @@ final class BatchManagerGlobalPageRenderer
             'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['tags', 'categories']),
         ]);
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndElementSetGlobal());
+        $this->eventDispatcher->dispatchNotify(new LocEndElementSetGlobal());
 
         // ----------------------------------------------------------- sending html code
         $template->assign_var_from_handle('ADMIN_CONTENT', 'batch_manager_global');

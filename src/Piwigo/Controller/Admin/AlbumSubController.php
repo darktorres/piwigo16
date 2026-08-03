@@ -41,6 +41,7 @@ final class AlbumSubController implements AdminSubControllerInterface
     public function __construct(
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     #[\Override]
@@ -71,7 +72,7 @@ final class AlbumSubController implements AdminSubControllerInterface
         $tabsheet->select($tab);
         $tabsheet->assign();
 
-        $nameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryName($category['name'], 'get_cat_display_name_cache'));
+        $nameEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryName($category['name'], 'get_cat_display_name_cache'));
         $category_name = $nameEvent->categoryName;
         $category_id_display = (string) $category['id'];
         $template->assign([
@@ -81,7 +82,7 @@ final class AlbumSubController implements AdminSubControllerInterface
 
         if ($tab === 'properties') {
             new CatModifyPageRenderer()
-                ->render($this->urlService, $category);
+                ->render($this->urlService, $category, $this->eventDispatcher);
         } elseif ($tab === 'sort_order') {
             \Piwigo\Bootstrap\AdminAccessor::elementSetRanksPageRenderer()
                 ->render();

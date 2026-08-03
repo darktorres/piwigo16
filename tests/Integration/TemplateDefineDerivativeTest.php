@@ -44,7 +44,7 @@ final class TemplateDefineDerivativeTest extends IntegrationTestCase
         // dirname(__DIR__, 2) root -- no need to boot (or bind Paths) again.
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
-        CurrentConfigService::set(new ConfigService($this->buildConfigRepository()));
+        CurrentConfigService::set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
         ImageStdParams::load_from_db();
         CurrentUser::attachGlobals();
 

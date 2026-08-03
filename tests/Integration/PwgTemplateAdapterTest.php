@@ -50,7 +50,7 @@ final class PwgTemplateAdapterTest extends IntegrationTestCase
 
         $conn = DbConnection::build();
         $repo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
-        $configService = new ConfigService($repo);
+        $configService = new ConfigService($repo, new \Piwigo\PluginConfig\EventDispatcher());
         CurrentConfigService::set($configService);
         $configService->loadConfFromDb();
         \Piwigo\Image\ImageStdParams::load_from_db();

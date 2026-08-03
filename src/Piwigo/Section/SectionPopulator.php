@@ -72,6 +72,7 @@ final readonly class SectionPopulator
         private SectionContextRegistry $sectionContextRegistry,
         private \Piwigo\Core\RequestMountDepth $requestMountDepth,
         private SessionService $sessionService,
+        private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     public function populate(): void
@@ -254,7 +255,7 @@ final readonly class SectionPopulator
             } elseif ($page_category !== null) {
                 $upper_names = $page_category['upper_names'];
 
-                $descriptionEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryDescription($page_category['comment'], 'main_page_category_description'));
+                $descriptionEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryDescription($page_category['comment'], 'main_page_category_description'));
 
                 $page = array_merge(
                     $page,
@@ -775,7 +776,7 @@ final readonly class SectionPopulator
 
         $this->sectionContextRegistry->set(self::buildSectionContext($page));
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndSectionInit());
+        $this->eventDispatcher->dispatchNotify(new LocEndSectionInit());
     }
 
     /**

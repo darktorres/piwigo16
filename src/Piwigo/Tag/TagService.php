@@ -33,9 +33,8 @@ use Piwigo\Tag\Projection\TagBrief;
  * this exact layering constraint (see ActivityLoggerInterface's own
  * docblock).
  *
- * Calls EventDispatcher::get()->triggerChange()/->triggerNotify() directly
- * -- a static singleton accessor, no constructor dependency, no deptrac
- * concern. Former bare MysqliDb::singleUpdate()/::massInserts() calls now
+ * Also constructor-injects EventDispatcher (singleton/service-locator
+ * elimination campaign, Phase 4). Former bare MysqliDb::singleUpdate()/::massInserts() calls now
  * go through TagRepository (Legacy Coupling Retirement: DI+DBAL migration,
  * Phase 1b).
  *
@@ -58,6 +57,7 @@ final readonly class TagService
         private TagRepository $repo,
         private PermissionService $permissionService,
         private ActivityLoggerInterface $activityLogger,
+        private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {
         $this->tagIdFromTagNameCache = new TagIdCache();
     }
@@ -77,7 +77,7 @@ final readonly class TagService
      */
     private function newImageService(): ImageService
     {
-        return new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityLogger, \Piwigo\Session\SessionService::get());
+        return new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityLogger, \Piwigo\Session\SessionService::get(), $this->eventDispatcher);
     }
 
     /**
@@ -93,7 +93,7 @@ final readonly class TagService
         foreach ($this->repo->findAllTags() as $tag) {
             $row = $tag->toArray();
             $row['name_raw'] = $tag->name;
-            $nameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderTagName($tag->name, $row));
+            $nameEvent = $this->eventDispatcher->dispatchChange(new RenderTagName($tag->name, $row));
             $row['name'] = $nameEvent->tagName;
             $tags[] = $row;
         }
@@ -270,7 +270,7 @@ final readonly class TagService
             $row = $tag->toArray();
             $row['counter'] = $tagCounters[$tag->id->value];
             $row['name_raw'] = $tag->name;
-            $nameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderTagName($tag->name, $row));
+            $nameEvent = $this->eventDispatcher->dispatchChange(new RenderTagName($tag->name, $row));
             $row['name'] = $nameEvent->tagName;
             $tags[] = $row;
         }
@@ -392,7 +392,7 @@ final readonly class TagService
 
         $tags = [];
         foreach ($this->repo->findCommonTags(array_values($items), $maxTags, array_values($excludedTagIds)) as $row) {
-            $nameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderTagName($row['name'], $row));
+            $nameEvent = $this->eventDispatcher->dispatchChange(new RenderTagName($row['name'], $row));
             $row['name'] = $nameEvent->tagName;
             $tags[] = $row;
         }
@@ -510,7 +510,7 @@ final readonly class TagService
         // -- unwrap ->value explicitly, same rule as every other
         // unconverted-domain sink in this codebase.
         $rawTagIds = array_map(static fn (TagId $id): int => $id->value, $tagIds);
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new DeleteTags($rawTagIds));
+        $this->eventDispatcher->dispatchNotify(new DeleteTags($rawTagIds));
         $this->activityLogger->record('tag', $rawTagIds, 'delete');
 
         $this->newImageService()
@@ -558,7 +558,7 @@ final readonly class TagService
         $existingId = $this->repo->findIdByName($tagName);
 
         if ($existingId === null) {
-            $urlNameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderTagUrl($tagName));
+            $urlNameEvent = $this->eventDispatcher->dispatchChange(new RenderTagUrl($tagName));
             $urlName = $urlNameEvent->tagName;
 
             // search existing by url name
@@ -570,7 +570,7 @@ final readonly class TagService
                 // pattern VALUES (bound as parameters), not raw SQL
                 // fragments -- see TagRepository::
                 // findIdByNameLikeAnyPattern()'s own docblock for why.
-                $likeWhereEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetTagNameLikeWhere([], $tagName));
+                $likeWhereEvent = $this->eventDispatcher->dispatchChange(new GetTagNameLikeWhere([], $tagName));
                 $namePatterns = array_values(array_filter($likeWhereEvent->value, is_string(...)));
                 if ($namePatterns !== []) {
                     $existingId = $this->repo->findIdByNameLikeAnyPattern($namePatterns);
@@ -709,7 +709,7 @@ final readonly class TagService
 
         // does the tag already exist?
         if ($this->repo->findIdByName($tagName) === null) {
-            $insertUrlNameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderTagUrl($tagName));
+            $insertUrlNameEvent = $this->eventDispatcher->dispatchChange(new RenderTagUrl($tagName));
             $urlName = $insertUrlNameEvent->tagName;
 
             $insertedId = $this->repo->insert($tagName, $urlName);
@@ -745,7 +745,7 @@ final readonly class TagService
 
         foreach ($this->repo->fetchTagListRows($query, $params, $types) as $row) {
             $rawName = $row['name'];
-            $listNameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderTagName(is_string($rawName) ? $rawName : '', $row));
+            $listNameEvent = $this->eventDispatcher->dispatchChange(new RenderTagName(is_string($rawName) ? $rawName : '', $row));
             $name = $listNameEvent->tagName;
             $rowId = is_scalar($row['id']) ? (string) $row['id'] : '';
 
@@ -755,7 +755,7 @@ final readonly class TagService
             ];
 
             if (! $onlyUserLanguage) {
-                $altNamesEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetTagAltNames([], is_string($rawName) ? $rawName : ''));
+                $altNamesEvent = $this->eventDispatcher->dispatchChange(new GetTagAltNames([], is_string($rawName) ? $rawName : ''));
                 $altNames = array_filter($altNamesEvent->value, is_string(...));
                 $nameForDiff = $name;
 

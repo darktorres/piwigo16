@@ -103,6 +103,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
         private readonly CoreTabs $coreTabs,
         private readonly SessionService $sessionService,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     private static function permissionService(): PermissionService
@@ -122,7 +123,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
 
     private function imageService(Connection $conn): ImageService
     {
-        return new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), self::activityService(), $this->sessionService);
+        return new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), self::activityService(), $this->sessionService, $this->eventDispatcher);
     }
 
     #[\Override]
@@ -203,7 +204,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->fatalError('remote sites not supported');
         } else {
-            $site_reader = new LocalSiteReader($site_url, new \Piwigo\Metadata\MetadataService(new \Piwigo\Metadata\MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), $this->currentLogger));
+            $site_reader = new LocalSiteReader($site_url, new \Piwigo\Metadata\MetadataService(new \Piwigo\Metadata\MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), $this->currentLogger, $this->eventDispatcher));
         }
 
         if (\Piwigo\Core\PageState::current()->noMd5sumNumber !== null) {
@@ -534,7 +535,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
 
             if (count($to_delete) > 0) {
                 if (! $simulate) {
-                    self::categoryService()->deleteCategories($to_delete, self::activityService(), $this->urlService, $this->sessionService);
+                    self::categoryService()->deleteCategories($to_delete, self::activityService(), $this->urlService, $this->sessionService, $this->eventDispatcher);
                     foreach ($to_delete_derivative_dirs as $to_delete_dir) {
                         if (is_dir($to_delete_dir)) {
                             new DerivativeCacheService()

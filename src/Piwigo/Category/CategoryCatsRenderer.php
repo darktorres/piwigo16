@@ -66,6 +66,7 @@ final readonly class CategoryCatsRenderer
         private ImageRepository $imageRepo,
         private UrlServiceInterface $urlService,
         private \Piwigo\Core\CurrentLogger $currentLogger,
+        private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     /**
@@ -324,7 +325,7 @@ final readonly class CategoryCatsRenderer
 
             $template->set_filename('index_category_thumbnails', 'mainpage_categories.tpl');
 
-            \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginIndexCategoryThumbnails($categories));
+            $this->eventDispatcher->dispatchNotify(new LocBeginIndexCategoryThumbnails($categories));
 
             $tplThumbnailsVar = [];
 
@@ -334,7 +335,7 @@ final readonly class CategoryCatsRenderer
                     continue;
                 }
 
-                $nameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryName(is_string($category['name']) ? $category['name'] : '', 'subcatify_category_name'));
+                $nameEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryName(is_string($category['name']) ? $category['name'] : '', 'subcatify_category_name'));
                 $category['name'] = $nameEvent->categoryName;
 
                 if ($isRecentCats) {
@@ -362,8 +363,8 @@ final readonly class CategoryCatsRenderer
                 $catCountCategories = is_numeric($catCountCategories) ? (int) $catCountCategories : 0;
 
                 $categoryComment = $category['comment'] ?? null;
-                $descriptionEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryDescription(is_string($categoryComment) ? $categoryComment : null, 'subcatify_category_description'));
-                $literalDescriptionEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryLiteralDescription($descriptionEvent->categoryDescription));
+                $descriptionEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryDescription(is_string($categoryComment) ? $categoryComment : null, 'subcatify_category_description'));
+                $literalDescriptionEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryLiteralDescription($descriptionEvent->categoryDescription));
 
                 $tplVar = array_merge($category, [
                     'ID' => $category['id'] /* obsolete */,
@@ -414,8 +415,9 @@ final readonly class CategoryCatsRenderer
             // pagination
             $tplThumbnailsVarSelection = $tplThumbnailsVar;
 
-            $derivativeParams = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetIndexAlbumDerivativeParams(ImageStdParams::get_by_type(ImageStdParams::THUMB)))->params;
-            $tplThumbnailsVarSelection = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new LocEndIndexCategoryThumbnails($tplThumbnailsVarSelection))->tplThumbnailsVar;
+            $derivativeParams = $this->eventDispatcher->dispatchChange(new GetIndexAlbumDerivativeParams(ImageStdParams::get_by_type(ImageStdParams::THUMB)))->params;
+            $tplThumbnailsVarSelection = $this->eventDispatcher->dispatchChange(new LocEndIndexCategoryThumbnails($tplThumbnailsVarSelection))
+                ->tplThumbnailsVar;
             $template->assign([
                 'maxRequests' => \Piwigo\Config\CurrentConfig::maxRequests(),
                 'category_thumbnails' => $tplThumbnailsVarSelection,

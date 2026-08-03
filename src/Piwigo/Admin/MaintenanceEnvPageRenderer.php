@@ -50,6 +50,7 @@ final class MaintenanceEnvPageRenderer
         private readonly FilesystemIntegrityChecker $filesystemIntegrityChecker,
         private readonly SessionService $sessionService,
         private readonly \Piwigo\Lang\Translator $translator,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly ?\Piwigo\Cache\PersistentCache $persistentCache = null,
     ) {}
 
@@ -58,7 +59,7 @@ final class MaintenanceEnvPageRenderer
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $action = MaintenanceActionRequest::fromGlobals()->action;
-        new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->filesystemIntegrityChecker, $this->sessionService, $this->translator, $this->persistentCache)
+        new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->filesystemIntegrityChecker, $this->sessionService, $this->translator, $this->eventDispatcher, $this->persistentCache)
             ->dispatch($action);
 
         // +-------------------------------------------------------------------+
@@ -166,7 +167,7 @@ final class MaintenanceEnvPageRenderer
         // +-------------------------------------------------------------------+
 
         // $advanced_features is array of array composed of CAPTION & URL
-        $advanced_features_event = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetAdminAdvancedFeaturesLinks([]));
+        $advanced_features_event = $this->eventDispatcher->dispatchChange(new GetAdminAdvancedFeaturesLinks([]));
 
         $template->assign('advanced_features', $advanced_features_event->advancedFeatures);
 

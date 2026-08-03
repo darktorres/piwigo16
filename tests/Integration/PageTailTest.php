@@ -65,7 +65,7 @@ final class PageTailTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
         // Kernel is already booted by parent::setUp() with this exact same
         // dirname(__DIR__, 2) root -- no need to boot (or bind Paths) again.
-        CurrentConfigService::set(new ConfigService($this->buildConfigRepository()));
+        CurrentConfigService::set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
 
         // footer.tpl's own {get_combined_scripts load='footer'} tag reaches
         // ScriptLoader::urlService() -- unset by default, real

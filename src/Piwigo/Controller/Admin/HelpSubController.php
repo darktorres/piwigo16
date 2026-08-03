@@ -23,12 +23,13 @@ final class HelpSubController implements AdminSubControllerInterface
     public function __construct(
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
         new HelpPageRenderer()
-            ->render($this->urlService, $this->coreTabs);
+            ->render($this->urlService, $this->coreTabs, $this->eventDispatcher);
     }
 }

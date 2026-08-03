@@ -59,6 +59,7 @@ final class CheckIntegrity
     public function __construct(
         private readonly IntegrityIgnoredAnomalyRepository $repo,
         private readonly Translator $translator,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {
         $this->ignore_list = [];
         $this->retrieve_list = [];
@@ -178,7 +179,7 @@ final class CheckIntegrity
      */
     private function dispatchListCheckIntegrity(): void
     {
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new ListCheckIntegrity($this));
+        $this->eventDispatcher->dispatchNotify(new ListCheckIntegrity($this));
     }
 
     /**

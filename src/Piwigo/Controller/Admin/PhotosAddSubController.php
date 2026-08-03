@@ -33,6 +33,7 @@ final class PhotosAddSubController implements AdminSubControllerInterface
     public function __construct(
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
         private readonly StorageRegistry $storageRegistry,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     #[\Override]
@@ -43,7 +44,7 @@ final class PhotosAddSubController implements AdminSubControllerInterface
         // upload form config is loaded here to match the original page's
         // own behavior (validated/used by the tab templates), even though
         // this sub-controller doesn't read it directly itself.
-        new UploadService($this->currentLogger, $this->storageRegistry)
+        new UploadService($this->currentLogger, $this->storageRegistry, $this->eventDispatcher)
             ->getUploadFormConfig();
 
         // admin.php's own shared check_input_parameter('section', ...,

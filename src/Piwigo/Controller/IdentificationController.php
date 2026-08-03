@@ -45,6 +45,7 @@ final class IdentificationController implements ControllerInterface
         private readonly \Piwigo\Core\FilterState $filterState,
         private readonly \Piwigo\Section\SectionContextRegistry $sectionContextRegistry,
         private readonly SessionService $sessionService,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     #[\Override]
@@ -63,7 +64,7 @@ final class IdentificationController implements ControllerInterface
             $this->redirectService->redirect($this->urlService->getGalleryHomeUrl());
         }
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginIdentification());
+        $this->eventDispatcher->dispatchNotify(new LocBeginIdentification());
 
         unset($_SESSION['reset_password_code']);
 
@@ -207,8 +208,8 @@ final class IdentificationController implements ControllerInterface
         $template->assign('HELP_LINK', $help_link);
 
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title);
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndIdentification());
+            ->render($title, $this->eventDispatcher);
+        $this->eventDispatcher->dispatchNotify(new LocEndIdentification());
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()

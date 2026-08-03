@@ -51,10 +51,11 @@ final class PwgImage
     public function __construct(
         public string $source_filepath,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+        \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         ?string $library = null
     ) {
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LoadImageLibrary($this));
+        $eventDispatcher->dispatchNotify(new LoadImageLibrary($this));
 
         if (is_object($this->image)) {
             return; // A plugin may have load its own library

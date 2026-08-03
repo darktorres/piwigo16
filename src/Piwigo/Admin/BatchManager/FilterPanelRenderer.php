@@ -53,6 +53,7 @@ final class FilterPanelRenderer
         array $catElementsId,
         int $pageStart,
         UrlServiceInterface $urlService,
+        \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ): void {
         $conn = DbConnection::build();
 
@@ -101,7 +102,7 @@ final class FilterPanelRenderer
             ];
         }
 
-        $prefiltersEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetBatchManagerPrefilters($prefilters));
+        $prefiltersEvent = $eventDispatcher->dispatchChange(new GetBatchManagerPrefilters($prefilters));
 
         // A misbehaving third-party handler could still populate this with
         // non-array elements PHP's own type system can't catch at runtime

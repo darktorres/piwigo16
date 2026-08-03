@@ -49,7 +49,7 @@ final class LocalSiteReader
     private function metadataService(): MetadataService
     {
         return $this->metadataService
-            ?? new MetadataService(new MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), new \Piwigo\Core\CurrentLogger());
+            ?? new MetadataService(new MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), new \Piwigo\Core\CurrentLogger(), \Piwigo\PluginConfig\EventDispatcher::get());
     }
 
     /**

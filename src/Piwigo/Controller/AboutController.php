@@ -44,6 +44,7 @@ final class AboutController implements ControllerInterface
         private readonly \Piwigo\Core\FilterState $filterState,
         private readonly \Piwigo\Section\SectionContextRegistry $sectionContextRegistry,
         private readonly SessionService $sessionService,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     #[\Override]
@@ -61,7 +62,7 @@ final class AboutController implements ControllerInterface
         $title = Lang::t('About Piwigo');
         \Piwigo\Core\PageState::current()->setBodyId('theAboutPage');
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginAbout());
+        $this->eventDispatcher->dispatchNotify(new LocBeginAbout());
 
         $template->set_filename('about', 'about.tpl');
 
@@ -86,7 +87,7 @@ final class AboutController implements ControllerInterface
         }
 
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title);
+            ->render($title, $this->eventDispatcher);
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();
         $template->parse('about', false);

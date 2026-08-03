@@ -204,7 +204,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         // setUp().
         Lang::load('admin.lang');
 
-        $this->configService = new ConfigService($this->buildConfigRepository());
+        $this->configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher());
         CurrentConfigService::set($this->configService);
 
         // themes_standard_pages.tpl's own {combine_script}/{footer_script}

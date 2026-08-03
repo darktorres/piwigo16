@@ -74,6 +74,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         private readonly CoreTabs $coreTabs,
         private readonly SessionService $sessionService,
         private readonly Translator $translator,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     private static function imageService(): ImageService
@@ -173,7 +174,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
             \Piwigo\Bootstrap\AdminAccessor::batchManagerUnitPageRenderer()
                 ->render($cat_elements_id, $start);
         } else {
-            new BatchManagerGlobalPageRenderer($this->redirectService, $this->urlService, $this->currentLogger, $this->sessionService, $this->translator)
+            new BatchManagerGlobalPageRenderer($this->redirectService, $this->urlService, $this->currentLogger, $this->sessionService, $this->translator, $this->eventDispatcher)
                 ->render($cat_elements_id, $start, $duplicates_on_fields);
         }
     }
@@ -358,7 +359,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
                 $_SESSION['bulk_manager_filter']['search']['q'] = $post['q'];
             }
 
-            $registerFiltersEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new BatchManagerRegisterFilters($_SESSION['bulk_manager_filter']));
+            $registerFiltersEvent = $this->eventDispatcher->dispatchChange(new BatchManagerRegisterFilters($_SESSION['bulk_manager_filter']));
             $_SESSION['bulk_manager_filter'] = $registerFiltersEvent->bulkManagerFilter;
         }
         // filters from url
@@ -476,7 +477,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
                         break;
 
                     default:
-                        $urlFilterEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new BatchManagerUrlFilter($url_filter, $filter));
+                        $urlFilterEvent = $this->eventDispatcher->dispatchChange(new BatchManagerUrlFilter($url_filter, $filter));
                         $url_filter = $urlFilterEvent->bulkManagerFilter;
                         break;
                 }
@@ -550,7 +551,8 @@ final class BatchManagerSubController implements AdminSubControllerInterface
             if ($prefilter_result !== null) {
                 $filter_sets[] = $prefilter_result;
             } else {
-                $filter_sets = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new PerformBatchManagerPrefilters($filter_sets, $prefilter))->filterSets;
+                $filter_sets = $this->eventDispatcher->dispatchChange(new PerformBatchManagerPrefilters($filter_sets, $prefilter))
+                    ->filterSets;
             }
         }
 
@@ -648,7 +650,8 @@ final class BatchManagerSubController implements AdminSubControllerInterface
             $filter_sets[] = $res_items;
         }
 
-        $filter_sets = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new BatchManagerPerformFilters($filter_sets, $bulkFilter))->filterSets;
+        $filter_sets = $this->eventDispatcher->dispatchChange(new BatchManagerPerformFilters($filter_sets, $bulkFilter))
+            ->filterSets;
 
         $current_set = array_shift($filter_sets);
         // filter sets are always image id lists (either this method's own search

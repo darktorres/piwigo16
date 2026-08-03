@@ -56,6 +56,7 @@ final class ActionController implements ControllerInterface
 {
     public function __construct(
         private readonly UrlServiceInterface $urlService,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     private function historyService(): HistoryService
@@ -185,7 +186,7 @@ final class ActionController implements ControllerInterface
                 ->logVisit($image_id_val, 'high', $format_row->formatId);
         }
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocActionBeforeHttpHeaders());
+        $this->eventDispatcher->dispatchNotify(new LocActionBeforeHttpHeaders());
 
         $http_headers = [];
 

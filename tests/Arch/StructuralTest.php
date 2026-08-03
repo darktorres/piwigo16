@@ -239,6 +239,7 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
         '/src/Piwigo/Db/DbCredentials.php',
         '/src/Piwigo/Session/SessionService.php',
         '/src/Piwigo/Lang/Translator.php',
+        '/src/Piwigo/PluginConfig/EventDispatcher.php',
     ];
 
     $hits = [
@@ -986,16 +987,73 @@ test('MailService::reset() is only called from tests/', function (): void {
     expect(describeCallSites($hits))->toBe([]);
 });
 
-test('EventDispatcher::reset() is only called from tests/', function (): void {
+test('EventDispatcher::get() transitional bridge has a shrinking, known allow-list', function (): void {
+    // Singleton/service-locator elimination campaign, Phase 4: same shape
+    // as Translator::get() above (no Static suffix -- there is no
+    // competing real instance method to disambiguate from). EventDispatcher
+    // is the widest single-class ripple in the campaign so far (~80 real
+    // production files touched) -- the vast majority took real constructor
+    // injection or an explicit method/render() parameter; only these stay
+    // on the shim, each for one of the same 3 reasons already established
+    // by earlier phases: **too many manual construction sites to justify a
+    // required param** (HtmlService.php 59 sites, MailService.php 29 sites,
+    // Tabsheet.php 29 sites, matching MailService's own precedent from the
+    // SessionService/Translator phases); **Phase-6-entangled, still
+    // manually `new`'d at dozens of sites** (SrcImage.php/DerivativeImage.php/
+    // Template.php/CssLoader.php/ScriptLoader.php/UrlService.php/
+    // RedirectService.php/MenubarRenderer.php -- the same UrlService-bridge
+    // trio plus its own known-entangled callers); **genuinely static-context
+    // or structurally locked, no `$this` to inject through** (CategoryService.php --
+    // several read-only menu-rendering methods never threaded with the
+    // explicit-param treatment `deleteCategories()`/`deleteSite()` got, since
+    // they never construct anything requiring EventDispatcher themselves;
+    // UserRepository.php -- a Doctrine repository, whose constructor is
+    // fixed by the ORM and can't take extra application params at all;
+    // Ws/PwgCategories.php/PwgComments.php/PwgCore.php/PwgImages.php/
+    // PwgTags.php/PwgUsers.php/WsInitializer.php -- Phase-10-locked static
+    // dispatch code). RequestBootstrap.php/InstallWizard.php are
+    // Bootstrap/-only wiring code that already has direct container access
+    // (RequestBootstrap also gained a new public eventDispatcher() resolver,
+    // matching coreTabs()/sessionService()/translator()'s own precedent, for
+    // public/admin.php's own legacy-style `new AdminShell(...)` manual
+    // construction).
     $repoRoot = __DIR__ . '/../..';
 
-    $hits = [
-        ...findCallSites($repoRoot . '/src/Piwigo', 'EventDispatcher::reset('),
-        ...findCallSitesInRootPhpFiles($repoRoot, 'EventDispatcher::reset('),
-        ...findCallSitesInBinFiles($repoRoot, 'EventDispatcher::reset('),
+    $allowedFiles = [
+        '/src/Piwigo/Admin/Install/InstallWizard.php',
+        '/src/Piwigo/Admin/Tabsheet.php',
+        '/src/Piwigo/Bootstrap/PageTail.php',
+        '/src/Piwigo/Bootstrap/RedirectService.php',
+        '/src/Piwigo/Bootstrap/RequestBootstrap.php',
+        '/src/Piwigo/Category/CategoryService.php',
+        '/src/Piwigo/Html/HtmlService.php',
+        '/src/Piwigo/Image/DerivativeImage.php',
+        '/src/Piwigo/Image/SrcImage.php',
+        '/src/Piwigo/Mail/MailService.php',
+        '/src/Piwigo/Menu/MenubarRenderer.php',
+        '/src/Piwigo/Site/LocalSiteReader.php',
+        '/src/Piwigo/Template/CssLoader.php',
+        '/src/Piwigo/Template/ScriptLoader.php',
+        '/src/Piwigo/Template/Template.php',
+        '/src/Piwigo/Url/UrlService.php',
+        '/src/Piwigo/Users/UserRepository.php',
+        '/src/Piwigo/Ws/PwgCategories.php',
+        '/src/Piwigo/Ws/PwgComments.php',
+        '/src/Piwigo/Ws/PwgCore.php',
+        '/src/Piwigo/Ws/PwgImages.php',
+        '/src/Piwigo/Ws/PwgTags.php',
+        '/src/Piwigo/Ws/PwgUsers.php',
+        '/src/Piwigo/Ws/WsInitializer.php',
     ];
 
-    expect(describeCallSites($hits))->toBe([]);
+    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'EventDispatcher::get(');
+
+    $disallowed = array_values(array_filter(
+        $hits,
+        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
+    ));
+
+    expect(describeCallSites($disallowed))->toBe([]);
 });
 
 test('SectionContextRegistry::currentStatic() transitional shim has a shrinking, known allow-list', function (): void {

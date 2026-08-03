@@ -91,6 +91,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         private readonly CoreTabs $coreTabs,
         private readonly SessionService $sessionService,
         private readonly Translator $translator,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     #[\Override]
@@ -125,8 +126,8 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         // +-----------------------------------------------------------------------+
         // | Add event handler                                                     |
         // +-----------------------------------------------------------------------+
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(NbmRenderGlobalCustomizeMailContent::class, self::renderGlobalCustomizeMailContent(...));
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new NbmEventHandlerAdded());
+        $this->eventDispatcher->addTypedHandler(NbmRenderGlobalCustomizeMailContent::class, self::renderGlobalCustomizeMailContent(...));
+        $this->eventDispatcher->dispatchNotify(new NbmEventHandlerAdded());
 
         // +-----------------------------------------------------------------------+
         // | Insert new users with mails                                           |

@@ -229,7 +229,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         // boots a full RequestBootstrap, same reasoning as
         // NotificationByMailSenderTest's own identical setUp trio.
         // ImageStdParams::load_from_db() itself needs CurrentConfigService.
-        CurrentConfigService::set(new ConfigService($this->buildConfigRepository()));
+        CurrentConfigService::set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
         ImageStdParams::load_from_db();
         DerivativeImage::setUrlService(new UrlService(new HtmlService()));
     }
@@ -532,7 +532,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         try {
             $this->service->getPreferredImageOrders();
         } finally {
-            EventDispatcher::reset();
+            EventDispatcher::get()->reset();
         }
     }
 
@@ -551,7 +551,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         try {
             $orders = $this->service->getPreferredImageOrders();
         } finally {
-            EventDispatcher::reset();
+            EventDispatcher::get()->reset();
         }
 
         self::assertSame([['Real Order', 'hit DESC', true]], $orders);
@@ -755,7 +755,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         // image.
         $this->conn->executeStatement("INSERT INTO " . Tables::imageCategory() . " (image_id, category_id) VALUES (1, {$tempId})");
 
-        $this->service->deleteCategories([$tempId], $activityLogger, $urlService, new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)), 'delete_orphans');
+        $this->service->deleteCategories([$tempId], $activityLogger, $urlService, new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)), EventDispatcher::get(), 'delete_orphans');
 
         self::assertNull($this->repo->findById($tempId));
         $stillLinked = $this->conn->createQueryBuilder()

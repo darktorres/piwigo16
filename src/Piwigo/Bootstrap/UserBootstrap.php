@@ -64,6 +64,10 @@ final class UserBootstrap
         if (! $sessionService instanceof SessionService) {
             throw new \LogicException('Container returned an unexpected type for ' . SessionService::class);
         }
+        $eventDispatcher = Kernel::container()->get(\Piwigo\PluginConfig\EventDispatcher::class);
+        if (! $eventDispatcher instanceof \Piwigo\PluginConfig\EventDispatcher) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\PluginConfig\EventDispatcher::class);
+        }
         $authService = new AuthService(
             new AuthRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
             new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)),
@@ -72,6 +76,7 @@ final class UserBootstrap
             new CookieService(),
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class),
             $sessionService,
+            $eventDispatcher,
         );
         $userService = new \Piwigo\Users\UserService(
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class),
@@ -81,6 +86,7 @@ final class UserBootstrap
             new HtmlService(),
             $conn,
             $sessionService,
+            $eventDispatcher,
         );
 
         $guest_id_int = \Piwigo\Config\CurrentConfig::guestId();
@@ -225,7 +231,7 @@ final class UserBootstrap
             $user['language'] = $language;
             \Piwigo\Users\CurrentUser::updateLanguage($language);
         }
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new UserInit($user));
+        $eventDispatcher->dispatchNotify(new UserInit($user));
     }
 
     /**

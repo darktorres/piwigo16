@@ -25,7 +25,7 @@ afterEach(function (): void {
 });
 
 test('getDefaultSlideshowParams reads conf', function (): void {
-    $params = new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Session\SessionService::get())->getDefaultSlideshowParams();
+    $params = new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Session\SessionService::get(), \Piwigo\PluginConfig\EventDispatcher::get())->getDefaultSlideshowParams();
 
     expect($params['period'])->toBe(4)
         ->and($params['repeat'])->toBeTrue()
@@ -33,38 +33,38 @@ test('getDefaultSlideshowParams reads conf', function (): void {
 });
 
 test('correctSlideshowParams clamps below the minimum', function (): void {
-    $corrected = new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Session\SessionService::get())->correctSlideshowParams(['period' => 0]);
+    $corrected = new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Session\SessionService::get(), \Piwigo\PluginConfig\EventDispatcher::get())->correctSlideshowParams(['period' => 0]);
 
     expect($corrected['period'])->toBe(1);
 });
 
 test('correctSlideshowParams clamps above the maximum', function (): void {
-    $corrected = new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Session\SessionService::get())->correctSlideshowParams(['period' => 99]);
+    $corrected = new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Session\SessionService::get(), \Piwigo\PluginConfig\EventDispatcher::get())->correctSlideshowParams(['period' => 99]);
 
     expect($corrected['period'])->toBe(10);
 });
 
 test('correctSlideshowParams leaves an in-range value untouched', function (): void {
-    $corrected = new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Session\SessionService::get())->correctSlideshowParams(['period' => 5]);
+    $corrected = new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Session\SessionService::get(), \Piwigo\PluginConfig\EventDispatcher::get())->correctSlideshowParams(['period' => 5]);
 
     expect($corrected['period'])->toBe(5);
 });
 
 test('decodeSlideshowParams with a numeric string sets period', function (): void {
-    $decoded = new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Session\SessionService::get())->decodeSlideshowParams('7');
+    $decoded = new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Session\SessionService::get(), \Piwigo\PluginConfig\EventDispatcher::get())->decodeSlideshowParams('7');
 
     expect($decoded['period'])->toBe('7');
 });
 
 test('decodeSlideshowParams parses key-value tokens', function (): void {
-    $decoded = new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Session\SessionService::get())->decodeSlideshowParams('period-6+repeat-false');
+    $decoded = new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Session\SessionService::get(), \Piwigo\PluginConfig\EventDispatcher::get())->decodeSlideshowParams('period-6+repeat-false');
 
     expect($decoded['period'])->toBe('6')
         ->and($decoded['repeat'])->toBeFalse();
 });
 
 test('decodeSlideshowParams with null input returns the defaults', function (): void {
-    $decoded = new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Session\SessionService::get())->decodeSlideshowParams(null);
+    $decoded = new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Session\SessionService::get(), \Piwigo\PluginConfig\EventDispatcher::get())->decodeSlideshowParams(null);
 
     expect($decoded['period'])->toBe(4)
         ->and($decoded['repeat'])->toBeTrue()
@@ -72,13 +72,13 @@ test('decodeSlideshowParams with null input returns the defaults', function (): 
 });
 
 test('decodeSlideshowParams clamps an out-of-range period', function (): void {
-    $decoded = new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Session\SessionService::get())->decodeSlideshowParams('period-99');
+    $decoded = new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Session\SessionService::get(), \Piwigo\PluginConfig\EventDispatcher::get())->decodeSlideshowParams('period-99');
 
     expect($decoded['period'])->toBe(10);
 });
 
 test('encodeSlideshowParams round-trips a non-default period', function (): void {
-    $service = new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Session\SessionService::get());
+    $service = new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Session\SessionService::get(), \Piwigo\PluginConfig\EventDispatcher::get());
     $encoded = $service->encodeSlideshowParams(['period' => 6, 'repeat' => true, 'play' => true]);
 
     expect($encoded)->toBe('+period-6');
@@ -88,13 +88,13 @@ test('encodeSlideshowParams round-trips a non-default period', function (): void
 });
 
 test('encodeSlideshowParams omits default values', function (): void {
-    $service = new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Session\SessionService::get());
+    $service = new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Session\SessionService::get(), \Piwigo\PluginConfig\EventDispatcher::get());
 
     expect($service->encodeSlideshowParams($service->getDefaultSlideshowParams()))->toBe('');
 });
 
 test('encodeSlideshowParams encodes a changed boolean', function (): void {
-    $encoded = new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Session\SessionService::get())->encodeSlideshowParams(['period' => 4, 'repeat' => false, 'play' => true]);
+    $encoded = new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Session\SessionService::get(), \Piwigo\PluginConfig\EventDispatcher::get())->encodeSlideshowParams(['period' => 4, 'repeat' => false, 'play' => true]);
 
     expect($encoded)->toBe('+repeat-false');
 });
@@ -179,7 +179,7 @@ test('correctSlideshowParams treats a period exactly equal to the maximum as alr
  * against the full suite too.
  */
 test('decodeSlideshowParams parses more than one key-value token from the same string', function (): void {
-    $decoded = new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Session\SessionService::get())->decodeSlideshowParams('period-6+repeat-false+play-false');
+    $decoded = new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Session\SessionService::get(), \Piwigo\PluginConfig\EventDispatcher::get())->decodeSlideshowParams('period-6+repeat-false+play-false');
 
     expect($decoded['period'])->toBe('6')
         ->and($decoded['repeat'])->toBeFalse()
@@ -258,13 +258,13 @@ test('countPdfPages counts page markers', function (): void {
     }
     file_put_contents($tmp, "%PDF-1.4\n1 0 obj\n<< /Type /Page >>\nendobj\n2 0 obj\n<< /Type /Page >>\nendobj\n");
 
-    expect(new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Session\SessionService::get())->countPdfPages($tmp))->toBe(2);
+    expect(new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Session\SessionService::get(), \Piwigo\PluginConfig\EventDispatcher::get())->countPdfPages($tmp))->toBe(2);
 
     unlink($tmp);
 });
 
 test('countPdfPages returns false for a missing file', function (): void {
-    expect(new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Session\SessionService::get())->countPdfPages('/no/such/file.pdf'))->toBeFalse();
+    expect(new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Session\SessionService::get(), \Piwigo\PluginConfig\EventDispatcher::get())->countPdfPages('/no/such/file.pdf'))->toBeFalse();
 });
 
 test('countPdfPages returns false when the path is readable but reading it produces no content (not a regular file)', function (): void {
@@ -282,7 +282,7 @@ test('countPdfPages returns false when the path is readable but reading it produ
     }
     socket_bind($socket, $sockPath);
 
-    $service = new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Session\SessionService::get());
+    $service = new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Session\SessionService::get(), \Piwigo\PluginConfig\EventDispatcher::get());
 
     try {
         expect($service->countPdfPages($sockPath))->toBeFalse();
@@ -322,7 +322,7 @@ function imageServiceTestConnAndRepo(): array
 
 function imageServiceTestNewService(ImageRepository $repo, \Doctrine\DBAL\Connection $conn): ImageService
 {
-    return new ImageService($repo, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Session\SessionService::get());
+    return new ImageService($repo, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Session\SessionService::get(), \Piwigo\PluginConfig\EventDispatcher::get());
 }
 
 /**
@@ -729,7 +729,7 @@ test('deleteElements() fires begin_delete_elements and delete_elements with the 
     \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(DeleteElements::class, $deleteHandler);
 
     try {
-        $service = new ImageService($repo, $activityService, \Piwigo\Session\SessionService::get());
+        $service = new ImageService($repo, $activityService, \Piwigo\Session\SessionService::get(), \Piwigo\PluginConfig\EventDispatcher::get());
 
         $count = $service->deleteElements([$imageId], $urlService, physicalDeletion: false);
 
@@ -1178,7 +1178,7 @@ test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end mes
     CurrentConfig::setEmptyLoungeRunning('staleexecid-' . (time() - 100));
     $configRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Config\ConfigEntry::class);
     expect($configRepo)->toBeInstanceOf(\Piwigo\Config\ConfigRepository::class);
-    \Piwigo\Config\CurrentConfigService::set(new \Piwigo\Config\ConfigService($configRepo));
+    \Piwigo\Config\CurrentConfigService::set(new \Piwigo\Config\ConfigService($configRepo, new \Piwigo\PluginConfig\EventDispatcher()));
     // invalidateUserCache: false below -- this must survive untouched,
     // proving line 383's IfNegated does not wrongly invoke
     // PermissionCacheInvalidator::invalidate() (whose own real,
@@ -1296,7 +1296,7 @@ test('emptyLounge() invalidates the permission cache (and its orphan-count cache
     $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
     $configRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Config\ConfigEntry::class);
     expect($configRepo)->toBeInstanceOf(\Piwigo\Config\ConfigRepository::class);
-    \Piwigo\Config\CurrentConfigService::set(new \Piwigo\Config\ConfigService($configRepo));
+    \Piwigo\Config\CurrentConfigService::set(new \Piwigo\Config\ConfigService($configRepo, new \Piwigo\PluginConfig\EventDispatcher()));
     $conn->executeStatement(
         "INSERT INTO " . \Piwigo\Db\Tables::config() . " (param, value) VALUES ('count_orphans', ?)",
         [json_encode(3)]
@@ -1341,7 +1341,7 @@ test('emptyLounge() actually clears a stale lock\'s real database row, letting t
     CurrentConfig::setEmptyLoungeRunning($staleValue);
     $configRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Config\ConfigEntry::class);
     expect($configRepo)->toBeInstanceOf(\Piwigo\Config\ConfigRepository::class);
-    \Piwigo\Config\CurrentConfigService::set(new \Piwigo\Config\ConfigService($configRepo));
+    \Piwigo\Config\CurrentConfigService::set(new \Piwigo\Config\ConfigService($configRepo, new \Piwigo\PluginConfig\EventDispatcher()));
 
     try {
         $service = imageServiceTestNewService($repo, $conn);
@@ -1391,7 +1391,7 @@ test('emptyLounge() does not touch a lock that is not actually stale, and logs t
     CurrentConfig::setEmptyLoungeRunning($freshLockValue);
     $configRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Config\ConfigEntry::class);
     expect($configRepo)->toBeInstanceOf(\Piwigo\Config\ConfigRepository::class);
-    \Piwigo\Config\CurrentConfigService::set(new \Piwigo\Config\ConfigService($configRepo));
+    \Piwigo\Config\CurrentConfigService::set(new \Piwigo\Config\ConfigService($configRepo, new \Piwigo\PluginConfig\EventDispatcher()));
 
     $originalRequest = $_REQUEST;
     unset($_REQUEST['method']);
@@ -1494,7 +1494,7 @@ test('emptyLounge() treats a lock that is exactly 60 seconds old as still fresh,
     CurrentConfig::setEmptyLoungeRunning($lockValue);
     $configRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Config\ConfigEntry::class);
     expect($configRepo)->toBeInstanceOf(\Piwigo\Config\ConfigRepository::class);
-    \Piwigo\Config\CurrentConfigService::set(new \Piwigo\Config\ConfigService($configRepo));
+    \Piwigo\Config\CurrentConfigService::set(new \Piwigo\Config\ConfigService($configRepo, new \Piwigo\PluginConfig\EventDispatcher()));
 
     try {
         $service = imageServiceTestNewService($repo, $conn);
@@ -1545,7 +1545,7 @@ test('emptyLounge() treats a lock that is exactly 61 seconds old as genuinely st
     CurrentConfig::setEmptyLoungeRunning($staleValue);
     $configRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Config\ConfigEntry::class);
     expect($configRepo)->toBeInstanceOf(\Piwigo\Config\ConfigRepository::class);
-    \Piwigo\Config\CurrentConfigService::set(new \Piwigo\Config\ConfigService($configRepo));
+    \Piwigo\Config\CurrentConfigService::set(new \Piwigo\Config\ConfigService($configRepo, new \Piwigo\PluginConfig\EventDispatcher()));
 
     try {
         $service = imageServiceTestNewService($repo, $conn);
@@ -1610,7 +1610,7 @@ test('countPdfPages() returns false when the path passes is_file()/is_readable()
     try {
         set_error_handler(static fn (): bool => true);
         try {
-            $result = new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Session\SessionService::get())->countPdfPages($scheme . '://fake.pdf');
+            $result = new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Session\SessionService::get(), \Piwigo\PluginConfig\EventDispatcher::get())->countPdfPages($scheme . '://fake.pdf');
         } finally {
             restore_error_handler();
         }

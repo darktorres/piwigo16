@@ -101,7 +101,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
 
         $this->urlService = new CalendarMonthlyTestFakeUrlService();
 
-        $configService = new ConfigService($this->buildConfigRepository());
+        $configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher());
         $configService->loadConfFromDb();
         ImageStdParams::load_from_db();
         DerivativeImage::setUrlService($this->urlService);

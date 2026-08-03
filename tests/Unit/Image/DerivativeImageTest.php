@@ -153,6 +153,12 @@ test('url() computes the derivative url via a real build() call, prefixed by the
 });
 
 test('url() throws when a get_derivative_url handler returns something other than a GetDerivativeUrl instance', function (): void {
+    // Kernel must boot before the handler is registered -- EventDispatcher::get()
+    // resolves the pre-boot memoized fallback instance until Kernel::boot()
+    // builds the container's own (different) shared instance; registering
+    // before boot would silently register on an instance DerivativeImage's
+    // own get()-shim call never sees once the container exists.
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-url-filter-only'));
     $handler = static fn (): int => 42;
     \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler(GetDerivativeUrl::class, $handler);
 
@@ -162,7 +168,6 @@ test('url() throws when a get_derivative_url handler returns something other tha
             'path' => 'gallery/photo.jpg',
             'file' => 'photo.jpg',
         ]);
-        Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-url-filter-only'));
 
         expect(fn () => DerivativeImage::url(new DerivativeParams(SizingParams::classic(80, 60)), $src))
             ->toThrow(\Error::class, 'must return an instance of');
@@ -678,6 +683,9 @@ test('get_url() prefixes the computed rel_url with the real root url', function 
 });
 
 test('get_url() throws when a get_derivative_url handler returns something other than a GetDerivativeUrl instance', function (): void {
+    // Kernel must boot before the handler is registered -- see the sibling
+    // url() test's own comment above for why.
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-filter-only'));
     $handler = static fn (): int => 42;
     \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler(GetDerivativeUrl::class, $handler);
 
@@ -687,7 +695,6 @@ test('get_url() throws when a get_derivative_url handler returns something other
             'path' => 'gallery/photo.jpg',
             'file' => 'photo.jpg',
         ]);
-        Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-filter-only'));
 
         $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(80, 60)), $src);
 

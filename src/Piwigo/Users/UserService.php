@@ -68,6 +68,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         private HtmlRenderingInterface $htmlRenderer,
         private Connection $conn,
         private SessionService $sessionService,
+        private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     /**
@@ -250,7 +251,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     {
         $this->repo->deleteUser($userId);
         $this->sessionService->deleteUserSessions($userId->value);
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new DeleteUser($userId->value));
+        $this->eventDispatcher->dispatchNotify(new DeleteUser($userId->value));
         $this->activityLogger->record('user', $userId->value, 'delete');
     }
 
@@ -312,7 +313,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             }
         }
 
-        $errorsAfterTrigger = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RegisterUserCheck(
+        $errorsAfterTrigger = $this->eventDispatcher->dispatchChange(new RegisterUserCheck(
             $errors,
             [
                 'username' => $login,
@@ -378,7 +379,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             $this->sendWelcomeEmail($login, $mailAddress, $urlService);
         }
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new RegisterUser([
+        $this->eventDispatcher->dispatchNotify(new RegisterUser([
             'id' => $userId->value,
             'username' => $login,
             'email' => $mailAddress,
@@ -930,7 +931,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         }
 
         // let's find the first available theme
-        $active_themes = array_keys(\Piwigo\Core\ThemeCatalog::getPwgThemes());
+        $active_themes = array_keys(\Piwigo\Core\ThemeCatalog::getPwgThemes($this->eventDispatcher));
         return isset($active_themes[0]) ? (string) $active_themes[0] : 'default';
     }
 
@@ -1386,7 +1387,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         if (! self::emptyValue($params['theme'] ?? null)) {
             $theme_param = $params['theme'] ?? null;
-            if (! in_array($theme_param, array_keys(\Piwigo\Core\ThemeCatalog::getPwgThemes()), true)) {
+            if (! in_array($theme_param, array_keys(\Piwigo\Core\ThemeCatalog::getPwgThemes($this->eventDispatcher)), true)) {
                 return [
                     'error' => [
                         'code' => WsError::INVALID_PARAM,
@@ -1432,6 +1433,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             new CookieService(),
             \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class),
             $this->sessionService,
+            $this->eventDispatcher,
         );
 
         if (isset($updates[$user_fields['password']])) {

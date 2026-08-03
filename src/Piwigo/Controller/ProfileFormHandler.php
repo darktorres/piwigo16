@@ -39,6 +39,7 @@ final class ProfileFormHandler
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
         private readonly AdminContext $adminContext,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     private static function activityService(Connection $conn): \Piwigo\Activity\ActivityService
@@ -144,7 +145,7 @@ final class ProfileFormHandler
                     ->fatalError('Hacking attempt, incorrect language value');
             }
 
-            if (! in_array($post['theme'] ?? null, array_keys(\Piwigo\Core\ThemeCatalog::getPwgThemes()), true)) {
+            if (! in_array($post['theme'] ?? null, array_keys(\Piwigo\Core\ThemeCatalog::getPwgThemes($this->eventDispatcher)), true)) {
                 \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                     ->fatalError('Hacking attempt, incorrect theme value');
             }
@@ -306,7 +307,7 @@ final class ProfileFormHandler
 
                 $activity_details_tables[] = 'user_infos';
             }
-            \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new SaveProfileFromPost($user_id));
+            $this->eventDispatcher->dispatchNotify(new SaveProfileFromPost($user_id));
             self::activityService($conn)->record('user', $user_id, 'edit', [
                 'function' => __METHOD__,
                 'tables' => implode(',', $activity_details_tables),
@@ -357,7 +358,7 @@ final class ProfileFormHandler
         );
 
         $template->assign('template_selection', $userdata['theme']);
-        $template->assign('template_options', \Piwigo\Core\ThemeCatalog::getPwgThemes());
+        $template->assign('template_options', \Piwigo\Core\ThemeCatalog::getPwgThemes($this->eventDispatcher));
 
         $profileFormSubmitRequest = Request\ProfileFormSubmitRequest::fromGlobals();
 
@@ -413,7 +414,7 @@ final class ProfileFormHandler
         $template->assign('API_EMAIL_INFOS', $email_notifications_infos);
 
         // allow plugins to add their own form data to content
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LoadProfileInTemplate($userdata));
+        $this->eventDispatcher->dispatchNotify(new LoadProfileInTemplate($userdata));
 
         $template->assign('PWG_TOKEN', new \Piwigo\Csrf\CsrfService()->getToken());
     }

@@ -91,7 +91,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         Kernel::boot();
-        CurrentConfigService::set(new ConfigService($this->buildConfigRepository()));
+        CurrentConfigService::set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
 
         DbConnection::build()->executeStatement('DELETE FROM ' . Tables::integrityIgnoredAnomalies());
 
@@ -130,7 +130,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
 
     private function newCheckIntegrity(): CheckIntegrity
     {
-        return new CheckIntegrity($this->buildIntegrityRepo(), new Translator());
+        return new CheckIntegrity($this->buildIntegrityRepo(), new Translator(), \Piwigo\PluginConfig\EventDispatcher::get());
     }
 
     public function test_check_reports_no_header_note_when_zero_anomalies_are_found(): void

@@ -266,7 +266,7 @@ final class WsTopLevelTest extends ContractTestCase
             try {
                 $conn->executeStatement('DELETE FROM ' . Tables::images());
 
-                $service = new \Piwigo\Ws\PwgServer();
+                $service = new \Piwigo\Ws\PwgServer(\Piwigo\PluginConfig\EventDispatcher::get());
                 $params = [
                     'types' => [],
                     'ids' => [],

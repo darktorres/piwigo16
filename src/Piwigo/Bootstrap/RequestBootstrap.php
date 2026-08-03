@@ -421,7 +421,7 @@ final class RequestBootstrap
         ImageStdParams::load_from_db();
 
         session_start();
-        PluginLoader::loadPlugins(self::loadedPlugins());
+        PluginLoader::loadPlugins(self::loadedPlugins(), \Piwigo\PluginConfig\EventDispatcher::get());
 
         if (\Piwigo\Config\CurrentConfig::piwigoInstalledVersion() === null) {
             $configService->confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
@@ -456,7 +456,7 @@ final class RequestBootstrap
         }
 
         if (\Piwigo\Image\LoungeMaintenance::needsEmptying()) {
-            new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), self::activityService($conn), self::sessionService())
+            new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), self::activityService($conn), self::sessionService(), \Piwigo\PluginConfig\EventDispatcher::get())
                 ->emptyLounge();
         }
 
@@ -498,6 +498,7 @@ final class RequestBootstrap
             new CookieService(),
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class),
             self::sessionService(),
+            \Piwigo\PluginConfig\EventDispatcher::get(),
         )->pwgLogin(...));
         new UserBootstrap(
             new RedirectService(),
@@ -549,6 +550,7 @@ final class RequestBootstrap
             new HtmlService(),
             $conn,
             self::sessionService(),
+            \Piwigo\PluginConfig\EventDispatcher::get(),
         ));
         Lang::load('common.lang');
         if (\Piwigo\Auth\AccessControl::isAdmin() || self::adminContext()->isActive()) {
@@ -646,7 +648,7 @@ final class RequestBootstrap
             // when it decides to take over the page. CurrentConfigService::get()
             // reuses the instance connect() already resolved earlier in the
             // same request (Legacy Coupling Retirement Phase 8, 8d).
-            new NoPhotoYetRenderer(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), \Piwigo\Config\CurrentConfigService::get(), new RedirectService(), new UrlService(new HtmlService()), CurrentPaths::get(), self::adminContext(), self::sessionService())
+            new NoPhotoYetRenderer(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), \Piwigo\Config\CurrentConfigService::get(), new RedirectService(), new UrlService(new HtmlService()), CurrentPaths::get(), self::adminContext(), self::sessionService(), \Piwigo\PluginConfig\EventDispatcher::get())
                 ->render();
         }
 
@@ -748,7 +750,7 @@ final class RequestBootstrap
         // (unlike UploadService's static upload_file handlers below), hence the
         // bound first-class-callable form rather than a bare [Class::class, 'method']
         // array.
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(UserCommentCheck::class, new CommentService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), new MailService(), new HtmlService(), new UrlService(new HtmlService()))->checkForSpam(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(UserCommentCheck::class, new CommentService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), new MailService(), new HtmlService(), new UrlService(new HtmlService()), \Piwigo\PluginConfig\EventDispatcher::get())->checkForSpam(...));
         // try_log_user's own handler is registered in connect() instead,
         // before UserBootstrap::initialize() -- see that registration's
         // own comment for why.
@@ -1023,6 +1025,26 @@ final class RequestBootstrap
         }
 
         return $sessionService;
+    }
+
+    /**
+     * Public (unlike the private resolver helpers above): public/admin.php's
+     * own legacy-style `new AdminShell(...)` manual construction needs a way
+     * to obtain the same container-shared instance every other
+     * EventDispatcher consumer receives via constructor injection, without
+     * calling Kernel::container() directly itself (arch-tested to
+     * Bootstrap/ only) -- same "public accessor on this class" shape as
+     * coreTabs()/filesystemIntegrityChecker()/sessionService() above
+     * (singleton/service-locator elimination campaign, Phase 4).
+     */
+    public static function eventDispatcher(): \Piwigo\PluginConfig\EventDispatcher
+    {
+        $eventDispatcher = Kernel::container()->get(\Piwigo\PluginConfig\EventDispatcher::class);
+        if (! $eventDispatcher instanceof \Piwigo\PluginConfig\EventDispatcher) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\PluginConfig\EventDispatcher::class);
+        }
+
+        return $eventDispatcher;
     }
 
     /**

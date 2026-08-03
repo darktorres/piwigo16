@@ -56,6 +56,7 @@ final class AdminShell
         private readonly FilesystemIntegrityChecker $filesystemIntegrityChecker,
         private readonly CoreTabs $coreTabs,
         private readonly SessionService $sessionService,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     /**
@@ -93,9 +94,9 @@ final class AdminShell
         $template = \Piwigo\Template\CurrentTemplate::get();
         $conn = DbConnection::build();
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(TabsheetBeforeSelect::class, $this->coreTabs->addCoreTabs(...));
+        $this->eventDispatcher->addTypedHandler(TabsheetBeforeSelect::class, $this->coreTabs->addCoreTabs(...));
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginAdmin());
+        $this->eventDispatcher->dispatchNotify(new LocBeginAdmin());
 
         // +-------------------------------------------------------------------+
         // | Check Access and exit when user status is not ok                  |
@@ -462,7 +463,7 @@ final class AdminShell
         // | Include specific page                                             |
         // +-------------------------------------------------------------------+
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginAdminPage());
+        $this->eventDispatcher->dispatchNotify(new LocBeginAdminPage());
 
         // SEC-19: sub-controllers read input from this PSR-7 request
         // (getQueryParams()/getParsedBody()), not $_GET/$_POST directly.
@@ -478,9 +479,9 @@ final class AdminShell
         $template->assign('pwgmenu', AdminUiHelper::pwgUrl());
 
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title);
+            ->render($title, $this->eventDispatcher);
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndAdmin());
+        $this->eventDispatcher->dispatchNotify(new LocEndAdmin());
 
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();

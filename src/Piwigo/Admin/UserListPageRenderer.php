@@ -31,7 +31,7 @@ final class UserListPageRenderer
         return \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService();
     }
 
-    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs): void
+    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
         $conn = DbConnection::build();
@@ -127,7 +127,7 @@ final class UserListPageRenderer
                     ->getToken(),
                 'NB_IMAGE_PAGE' => $default_user['nb_image_page'],
                 'RECENT_PERIOD' => $default_user['recent_period'],
-                'theme_options' => \Piwigo\Core\ThemeCatalog::getPwgThemes(),
+                'theme_options' => \Piwigo\Core\ThemeCatalog::getPwgThemes($eventDispatcher),
                 'theme_selected' => self::userService()->getDefaultTheme(),
                 'language_options' => \Piwigo\Lang\LangService::getLanguages(),
                 'language_selected' => self::userService()->getDefaultLanguage(),

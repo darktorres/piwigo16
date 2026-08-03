@@ -72,6 +72,7 @@ final readonly class SearchService
         private HtmlRenderingInterface $htmlRenderer,
         private RedirectServiceInterface $redirectService,
         private SessionService $sessionService,
+        private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private ?TagService $tagService = null,
         private ?UserService $userService = null,
         private ?\Piwigo\Users\PreferencesService $preferencesService = null,
@@ -418,7 +419,7 @@ final readonly class SearchService
         $tagsMode = is_array($tagsField) && is_string($tagsField['mode'] ?? null) ? $tagsField['mode'] : 'AND';
         if (isset($searchFields['tags']) && $tagsWords !== [] && (bool) ($displayFilters['tags']['access'] ?? false)) {
             $hasFiltersFilled = true;
-            $tagService = $this->tagService ?? new TagService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Tag\TagEntity::class), $this->permissionService, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)));
+            $tagService = $this->tagService ?? new TagService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Tag\TagEntity::class), $this->permissionService, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), $this->eventDispatcher);
             $imageIdsForFilter['tags'] = array_values(array_map(intval(...), array_filter($tagService->getImageIdsForTags(array_map(TagId::from(...), $tagsWords), $tagsMode), is_numeric(...))));
         }
 
@@ -873,7 +874,8 @@ final readonly class SearchService
 
                     break;
                 default:
-                    $clausesAfterHook = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new QsearchGetImagesSqlScopes($clauses, $token, $expr))->clauses;
+                    $clausesAfterHook = $this->eventDispatcher->dispatchChange(new QsearchGetImagesSqlScopes($clauses, $token, $expr))
+                        ->clauses;
                     $clauses = array_values(array_filter($clausesAfterHook, is_string(...)));
 
                     break;
@@ -957,7 +959,7 @@ final readonly class SearchService
         $allTags = array_intersect_key($allTags, array_flip(array_diff($positiveIds, $notIds)));
         usort($allTags, $this->htmlRenderer->tagAlphaCompare(...));
         foreach ($allTags as &$tag) {
-            $nameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderTagName(is_string($tag['name']) ? $tag['name'] : '', $tag));
+            $nameEvent = $this->eventDispatcher->dispatchChange(new RenderTagName(is_string($tag['name']) ? $tag['name'] : '', $tag));
             $tag['name'] = $nameEvent->tagName;
         }
 
@@ -1072,7 +1074,7 @@ final readonly class SearchService
         $allCats = array_intersect_key($allCats, array_flip(array_diff($positiveIds, $notIds)));
         usort($allCats, $this->htmlRenderer->tagAlphaCompare(...));
         foreach ($allCats as &$cat) {
-            $nameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryName(is_string($cat['name']) ? $cat['name'] : '', $cat));
+            $nameEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryName(is_string($cat['name']) ? $cat['name'] : '', $cat));
             $cat['name'] = $nameEvent->categoryName;
         }
 
@@ -1196,7 +1198,8 @@ final readonly class SearchService
         /** @var list<string> $debug */
         $debug = [];
 
-        $q = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new QsearchPre($q))->q;
+        $q = $this->eventDispatcher->dispatchChange(new QsearchPre($q))
+            ->q;
 
         $scopes = [];
         $scopes[] = new QSearchScope('tag', ['tags']);
@@ -1223,12 +1226,13 @@ final readonly class SearchService
         $scopes[] = new QDateRangeScope('created', $createdDateAliases, true);
         $scopes[] = new QDateRangeScope('posted', $postedDateAliases);
 
-        $scopesAfterHook = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new QsearchGetScopes($scopes))->scopes;
+        $scopesAfterHook = $this->eventDispatcher->dispatchChange(new QsearchGetScopes($scopes))
+            ->scopes;
         $scopes = array_values(array_filter($scopesAfterHook, static fn (mixed $s): bool => $s instanceof QSearchScope));
         $expression = new QExpression($q, $scopes);
 
         $inflector = null;
-        $userService = $this->userService ?? new UserService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), $this->mailer, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), $this->htmlRenderer, DbConnection::build(), $this->sessionService);
+        $userService = $this->userService ?? new UserService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), $this->mailer, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), $this->htmlRenderer, DbConnection::build(), $this->sessionService, $this->eventDispatcher);
         $langCode = substr($userService->getDefaultLanguage(), 0, 2);
         $className = '\\Piwigo\\Search\\Inflector\\Inflector_' . $langCode;
         if (class_exists($className)) {
@@ -1250,7 +1254,7 @@ final readonly class SearchService
             }
         }
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new QsearchExpressionParsed($expression));
+        $this->eventDispatcher->dispatchNotify(new QsearchExpressionParsed($expression));
 
         if (count($expression->stokens) === 0) {
             $searchResults['debug'] = $debug;
@@ -1263,7 +1267,7 @@ final readonly class SearchService
         $this->qsearchGetCategories($expression, $qsr);
         $this->qsearchGetImages($expression, $qsr);
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new QsearchBeforeEval($expression, $qsr));
+        $this->eventDispatcher->dispatchNotify(new QsearchBeforeEval($expression, $qsr));
 
         $tmp = false;
         $unmatchedTerms = [];
@@ -1282,7 +1286,8 @@ final readonly class SearchService
 
         $searchResults['qs']['matching_tags'] = $qsr->all_tags;
         $searchResults['qs']['matching_cats'] = $qsr->all_cats;
-        $searchResultsAfterHook = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new QsearchResults($searchResults, $expression, $qsr))->searchResults;
+        $searchResultsAfterHook = $this->eventDispatcher->dispatchChange(new QsearchResults($searchResults, $expression, $qsr))
+            ->searchResults;
         foreach ($searchResultsAfterHook as $hookKey => $hookValue) {
             if (is_string($hookKey)) {
                 $searchResults[$hookKey] = $hookValue;

@@ -33,6 +33,7 @@ final class TagsController implements ControllerInterface
         private readonly \Piwigo\Core\FilterState $filterState,
         private readonly \Piwigo\Section\SectionContextRegistry $sectionContextRegistry,
         private readonly SessionService $sessionService,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     #[\Override]
@@ -40,7 +41,7 @@ final class TagsController implements ControllerInterface
     {
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginTags());
+        $this->eventDispatcher->dispatchNotify(new LocBeginTags());
 
         $displayModeParam = $request->getQueryParams()['display_mode'] ?? null;
         $urlService = $this->urlService;
@@ -189,8 +190,8 @@ final class TagsController implements ControllerInterface
         }
 
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title);
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndTags());
+            ->render($title, $this->eventDispatcher);
+        $this->eventDispatcher->dispatchNotify(new LocEndTags());
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();
         $template->parse('tags', false);

@@ -95,7 +95,7 @@ final class UserBootstrapTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         Kernel::boot();
-        CurrentConfigService::set(new ConfigService($this->buildConfigRepository()));
+        CurrentConfigService::set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
 
         $this->conn = DbConnection::build();
 
@@ -121,7 +121,7 @@ final class UserBootstrapTest extends IntegrationTestCase
         unset($_SESSION['connected_with'], $_SESSION['pwg_uid']);
 
         DeploymentPolicy::reset();
-        EventDispatcher::reset();
+        EventDispatcher::get()->reset();
         CurrentUser::reset();
         Kernel::reset();
         parent::tearDown();
@@ -219,6 +219,7 @@ final class UserBootstrapTest extends IntegrationTestCase
             new CookieService(),
             EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Auth\UserFailedLoginEntity::class),
             new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)),
+            EventDispatcher::get(),
         )->pwgLogin(...));
 
         $_SERVER = [];

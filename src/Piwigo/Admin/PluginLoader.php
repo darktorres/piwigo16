@@ -49,7 +49,7 @@ final class PluginLoader
     /**
      * Loads all the registered plugins.
      */
-    public static function loadPlugins(LoadedPlugins $loadedPlugins): void
+    public static function loadPlugins(LoadedPlugins $loadedPlugins, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher): void
     {
         $loadedPlugins->set([]);
         if (\Piwigo\Config\CurrentConfig::enablePlugins()) {
@@ -62,7 +62,7 @@ final class PluginLoader
                 // CategoryCatsRenderer's own unboxing).
                 self::loadPlugin($plugin->toArray(), $loadedPlugins);
             }
-            \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new PluginsLoaded());
+            $eventDispatcher->dispatchNotify(new PluginsLoaded());
         }
     }
 

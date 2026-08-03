@@ -100,6 +100,7 @@ final class NotificationByMailSender
         private readonly \Piwigo\Auth\AuthService $authService,
         private readonly UrlServiceInterface $urlService,
         private readonly Translator $translator,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {
         $nbmMaxTreatmentTimeoutPercent = \Piwigo\Config\CurrentConfig::nbmMaxTreatmentTimeoutPercent();
 
@@ -488,7 +489,8 @@ final class NotificationByMailSender
                     }
 
                     $customizeMailContent =
-                      \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new NbmRenderGlobalCustomizeMailContent($customizeMailContent))->customizeMailContent;
+                      $this->eventDispatcher->dispatchChange(new NbmRenderGlobalCustomizeMailContent($customizeMailContent))
+                          ->customizeMailContent;
 
                     // Prepare message after change language
                     if ($isActionSend) {
@@ -581,7 +583,7 @@ final class NotificationByMailSender
                                 }
 
                                 $nbmUserCustomizeMailContent =
-                                  \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(
+                                  $this->eventDispatcher->dispatchChange(
                                       new NbmRenderUserCustomizeMailContent($customizeMailContent, $nbmUser)
                                   )->customizeMailContent;
                                 if (! in_array($nbmUserCustomizeMailContent, ['0', ''], true)) {

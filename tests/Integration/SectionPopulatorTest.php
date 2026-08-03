@@ -120,7 +120,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
         // dirname(__DIR__, 2) root -- no need to boot (or bind Paths) again.
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
-        CurrentConfigService::set(new ConfigService($this->buildConfigRepository()));
+        CurrentConfigService::set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
         ScriptLoader::setUrlService(new UrlService(new HtmlService()));
         Lang::setLangInfo(['code' => 'en_UK', 'direction' => 'ltr']);
         CurrentConfig::setSendPiwigoInfos(false);
@@ -131,10 +131,10 @@ final class SectionPopulatorTest extends IntegrationTestCase
         $categoryRepo = $em->getRepository(CategoryEntity::class);
         $this->permissionService = new PermissionService(new PermissionRepository($em), $em->getRepository(GroupEntity::class), $categoryRepo);
         $this->categoryService = new CategoryService($categoryRepo, $this->permissionService);
-        $this->tagService = new TagService($em->getRepository(TagEntity::class), $this->permissionService, new ActivityService($em->getRepository(ActivityEntity::class)));
+        $this->tagService = new TagService($em->getRepository(TagEntity::class), $this->permissionService, new ActivityService($em->getRepository(ActivityEntity::class)), new \Piwigo\PluginConfig\EventDispatcher());
         $this->sessionService = new SessionService($em->getRepository(SessionEntity::class));
-        $this->searchService = new SearchService(new SearchRepository($this->conn), $this->permissionService, $this->categoryService, new MailService(), new HtmlService(), new RedirectService(), $this->sessionService, $this->tagService);
-        $this->userService = new UserService($em->getRepository(UserInfoEntity::class), $em->getRepository(GroupEntity::class), new MailService(), new ActivityService($em->getRepository(ActivityEntity::class)), new HtmlService(), $this->conn, $this->sessionService);
+        $this->searchService = new SearchService(new SearchRepository($this->conn), $this->permissionService, $this->categoryService, new MailService(), new HtmlService(), new RedirectService(), $this->sessionService, new \Piwigo\PluginConfig\EventDispatcher(), $this->tagService);
+        $this->userService = new UserService($em->getRepository(UserInfoEntity::class), $em->getRepository(GroupEntity::class), new MailService(), new ActivityService($em->getRepository(ActivityEntity::class)), new HtmlService(), $this->conn, $this->sessionService, new \Piwigo\PluginConfig\EventDispatcher());
         $this->sectionRepo = new SectionRepository($this->conn);
         $this->filterState = new FilterState();
         $this->currentLogger = new CurrentLogger();
@@ -192,6 +192,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
             $this->sectionContextRegistry,
             new RequestMountDepth(),
             $this->sessionService,
+            new \Piwigo\PluginConfig\EventDispatcher(),
         );
     }
 

@@ -26,11 +26,11 @@ final class PictureMetadataRenderer
     /**
      * @param array<string, array{src_image: SrcImage, ...}> $picture
      */
-    public function render(array $picture, \Piwigo\Core\CurrentLogger $currentLogger): void
+    public function render(array $picture, \Piwigo\Core\CurrentLogger $currentLogger, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
-        $metadataService = new MetadataService(new MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), $currentLogger);
+        $metadataService = new MetadataService(new MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), $currentLogger, $eventDispatcher);
 
         if ((\Piwigo\Config\CurrentConfig::showExif()) and function_exists('exif_read_data')) {
             $showExifFields = \Piwigo\Config\CurrentConfig::showExifFields();

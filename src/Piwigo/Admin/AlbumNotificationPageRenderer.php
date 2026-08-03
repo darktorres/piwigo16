@@ -28,6 +28,7 @@ final class AlbumNotificationPageRenderer
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly Translator $translator,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     /**
@@ -101,7 +102,7 @@ final class AlbumNotificationPageRenderer
                 }
             }
 
-            $nameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryName($category['name'], 'admin_cat_list'));
+            $nameEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryName($category['name'], 'admin_cat_list'));
             $renderedCategoryName = $nameEvent->categoryName;
 
             $args = [

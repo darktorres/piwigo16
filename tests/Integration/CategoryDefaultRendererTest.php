@@ -80,7 +80,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         // loadConfFromDb() below is unrelated to ImageStdParams -- it's
         // this test's own way of seeding every other real config-backed
         // display flag CategoryDefaultRenderer/thumbnails.tpl reads.
-        $configService = new ConfigService($this->buildConfigRepository());
+        $configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher());
         $configService->loadConfFromDb();
         ImageStdParams::load_from_db();
 
@@ -100,7 +100,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         // own DerivativeImage::setUrlService() call.
         DerivativeImage::setUrlService($urlService);
 
-        $this->renderer = new CategoryDefaultRenderer($htmlService, $this->buildTemplate(), $imageRepo, $commentRepo, $urlService, new SessionService($em->getRepository(SessionEntity::class)));
+        $this->renderer = new CategoryDefaultRenderer($htmlService, $this->buildTemplate(), $imageRepo, $commentRepo, $urlService, new SessionService($em->getRepository(SessionEntity::class)), EventDispatcher::get());
     }
 
     #[\Override]
@@ -269,7 +269,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
             $this->seedUser(showNbHits: false, showNbComments: false);
             $this->renderer->render([3, 1, 2], 0, 3, '');
         } finally {
-            EventDispatcher::reset();
+            EventDispatcher::get()->reset();
         }
     }
 

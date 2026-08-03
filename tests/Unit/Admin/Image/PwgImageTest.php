@@ -82,7 +82,7 @@ function pwgImageTestMarker(): string
  */
 function pwgImageTestMake(string $sourceFilepath, ?string $library = null): PwgImage
 {
-    return new PwgImage($sourceFilepath, new CurrentLogger(), $library);
+    return new PwgImage($sourceFilepath, new CurrentLogger(), \Piwigo\PluginConfig\EventDispatcher::get(), $library);
 }
 
 /**

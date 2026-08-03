@@ -1163,7 +1163,7 @@ test('setStatusHeader keeps the given text unchanged when it is genuinely non-em
 
 test('registerDefaultMenubarBlocks does nothing for a BlockManager whose id is not "menubar"', function (): void {
     $service = new HtmlService();
-    $menu = new BlockManager('sidebar');
+    $menu = new BlockManager('sidebar', new \Piwigo\PluginConfig\EventDispatcher());
 
     $service->registerDefaultMenubarBlocks(new BlockManagerRegisterBlocks($menu));
 

@@ -41,7 +41,7 @@ final class PageHeaderRenderer
      *   $refresh/$url_link top-level-scope contract -- Bootstrap\RedirectService::redirectHtml()
      *   is the one real caller that sets both today.
      */
-    public function render(string $title, ?string $refresh = null, ?string $urlLink = null): void
+    public function render(string $title, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, ?string $refresh = null, ?string $urlLink = null): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -49,7 +49,7 @@ final class PageHeaderRenderer
             'header' => 'header.tpl',
         ]);
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginPageHeader());
+        $eventDispatcher->dispatchNotify(new LocBeginPageHeader());
 
         $show_mobile_app_banner = \Piwigo\Config\CurrentConfig::showMobileAppBannerInGallery();
         if (\Piwigo\Core\AdminContext::isActiveStatic()) {
@@ -64,7 +64,7 @@ final class PageHeaderRenderer
             [
                 'GALLERY_TITLE' => $conf_gallery_title,
 
-                'PAGE_BANNER' => \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderPageBanner(
+                'PAGE_BANNER' => $eventDispatcher->dispatchChange(new RenderPageBanner(
                     str_replace(
                         '%gallery_title%',
                         $conf_gallery_title,
@@ -127,12 +127,12 @@ final class PageHeaderRenderer
             );
         }
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndPageHeader());
+        $eventDispatcher->dispatchNotify(new LocEndPageHeader());
 
         header('Content-Type: text/html; charset=' . \Piwigo\Core\CharsetHelper::getPwgCharset());
         $template->parse('header');
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocAfterPageHeader());
+        $eventDispatcher->dispatchNotify(new LocAfterPageHeader());
     }
 
     /**

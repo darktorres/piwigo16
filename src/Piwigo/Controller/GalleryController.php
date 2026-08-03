@@ -64,6 +64,7 @@ final class GalleryController implements ControllerInterface
         private readonly \Piwigo\Core\FilterState $filterState,
         private readonly SectionContextRegistry $sectionContextRegistry,
         private readonly SessionService $sessionService,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     private static function categoryService(): CategoryService
@@ -126,7 +127,7 @@ final class GalleryController implements ControllerInterface
         $tagService = self::tagService();
         $categoryService = self::categoryService();
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginIndex());
+        $this->eventDispatcher->dispatchNotify(new LocBeginIndex());
 
         $galleryDisplay = Request\GalleryDisplayRequest::fromGlobals();
 
@@ -343,7 +344,7 @@ final class GalleryController implements ControllerInterface
                 $otherSelectedTags = $selectedTags;
                 unset($otherSelectedTags[$selectedTagKey]);
 
-                $selectedTagNameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderTagName(is_string($selectedTag['name']) ? $selectedTag['name'] : '', $selectedTag));
+                $selectedTagNameEvent = $this->eventDispatcher->dispatchChange(new RenderTagName(is_string($selectedTag['name']) ? $selectedTag['name'] : '', $selectedTag));
                 $selected_related_tags_info[$selectedTagKey] =
                 [
                     'tag_name' => $selectedTagNameEvent->tagName,
@@ -580,8 +581,8 @@ final class GalleryController implements ControllerInterface
 
         // ---------------------------------------------------------- end
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title);
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndIndex());
+            ->render($title, $this->eventDispatcher);
+        $this->eventDispatcher->dispatchNotify(new LocEndIndex());
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();
         $template->parse_index_buttons();

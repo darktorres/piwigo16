@@ -63,6 +63,7 @@ final class FilterResolverTest extends IntegrationTestCase
             $em->getRepository(\Piwigo\Image\ImageEntity::class),
             new ActivityService($em->getRepository(\Piwigo\Activity\ActivityEntity::class)),
             $sessionService,
+            new \Piwigo\PluginConfig\EventDispatcher(),
         );
         $categoryService = new CategoryService(
             $em->getRepository(\Piwigo\Category\CategoryEntity::class),
@@ -81,6 +82,7 @@ final class FilterResolverTest extends IntegrationTestCase
             new HtmlService(),
             $this->conn,
             $sessionService,
+            new \Piwigo\PluginConfig\EventDispatcher(),
         );
 
         $this->resolver = new FilterResolver($imageService, $categoryService, $caddieRepo, $userService);

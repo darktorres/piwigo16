@@ -41,6 +41,7 @@ final class PhotosAddDirectPageRenderer
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
         private readonly StorageRegistry $storageRegistry,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     /**
@@ -171,7 +172,7 @@ final class PhotosAddDirectPageRenderer
         // |                           sending html code                       |
         // +-------------------------------------------------------------------+
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndPhotoAddDirect());
+        $this->eventDispatcher->dispatchNotify(new LocEndPhotoAddDirect());
 
         $conf_format_ext = \Piwigo\Config\CurrentConfig::formatExtensions();
 
@@ -202,7 +203,7 @@ final class PhotosAddDirectPageRenderer
 
         $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
 
-        $uploadService = new UploadService($this->currentLogger, $this->storageRegistry);
+        $uploadService = new UploadService($this->currentLogger, $this->storageRegistry, $this->eventDispatcher);
 
         // +-------------------------------------------------------------------+
         // | Photo selection                                                    |

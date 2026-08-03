@@ -61,6 +61,7 @@ final class MaintenanceActionDispatcher
         private readonly FilesystemIntegrityChecker $filesystemIntegrityChecker,
         private readonly SessionService $sessionService,
         private readonly \Piwigo\Lang\Translator $translator,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly ?\Piwigo\Cache\PersistentCache $persistentCache = null,
     ) {}
 
@@ -183,14 +184,14 @@ final class MaintenanceActionDispatcher
             case 'c13y':
 
                 $integrityRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity::class);
-                $c13y = new CheckIntegrity($integrityRepo, $this->translator);
+                $c13y = new CheckIntegrity($integrityRepo, $this->translator, $this->eventDispatcher);
                 $c13y->maintenance();
                 \Piwigo\Core\PageState::current()->addInfo(sprintf('%s : %s', Lang::t('Reinitialize check integrity'), Lang::t('action successfully performed.')));
                 break;
 
             case 'empty_lounge':
 
-                $rows = new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), $this->sessionService)
+                $rows = new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), $this->sessionService, $this->eventDispatcher)
                     ->emptyLounge();
                 \Piwigo\Core\PageState::current()->addInfo(sprintf('%d photos were moved from the upload lounge to their albums', count($rows ?? [])));
                 break;

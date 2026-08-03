@@ -51,6 +51,7 @@ final readonly class HistoryService
         private HistoryRepository $repo,
         private ConfigService $configService,
         private \Piwigo\Core\CurrentLogger $currentLogger,
+        private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     /**
@@ -69,7 +70,8 @@ final readonly class HistoryService
             $doLog = \Piwigo\Config\CurrentConfig::historyGuest();
         }
 
-        return \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new PwgLogAllowed($doLog, $imageId, $imageType))->doLog;
+        return $this->eventDispatcher->dispatchChange(new PwgLogAllowed($doLog, $imageId, $imageType))
+            ->doLog;
     }
 
     /**
@@ -114,7 +116,8 @@ final readonly class HistoryService
         if (in_array($lastVisit, [null, false, 0, '0', '', []], true) or strtotime($lastVisitStr) < time() - $sessionLength) {
             $updateLastVisit = true;
         }
-        $updateLastVisit = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new PwgLogUpdateLastVisit($updateLastVisit))->update;
+        $updateLastVisit = $this->eventDispatcher->dispatchChange(new PwgLogUpdateLastVisit($updateLastVisit))
+            ->update;
 
         $userId = $currentUser->id->value;
 

@@ -80,7 +80,7 @@ final class MenubarRendererTest extends IntegrationTestCase
         // RequestBootstrap::finalize(), never booted here) -- without it
         // every $menu->get_block(...) call in render() returns null and
         // the whole method is a no-op.
-        EventDispatcher::reset();
+        EventDispatcher::get()->reset();
         EventDispatcher::get()->addTypedHandler(BlockManagerRegisterBlocks::class, (new HtmlService())->registerDefaultMenubarBlocks(...));
 
         $htmlService = new HtmlService();

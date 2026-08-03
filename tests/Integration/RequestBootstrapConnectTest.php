@@ -97,7 +97,7 @@ final class RequestBootstrapConnectTest extends IntegrationTestCase
         // config state before each real connect() call -- connect() itself
         // always resolves its own ConfigService from the container (see
         // its own body), never this instance.
-        $this->configService = new ConfigService($this->buildConfigRepository());
+        $this->configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher());
 
         unset($_REQUEST['method']);
     }
@@ -122,7 +122,7 @@ final class RequestBootstrapConnectTest extends IntegrationTestCase
             $errorCollector->reset();
         }
 
-        EventDispatcher::reset();
+        EventDispatcher::get()->reset();
         $installationFlag = Kernel::container()->get(InstallationFlag::class);
         if ($installationFlag instanceof InstallationFlag) {
             $installationFlag->reset();

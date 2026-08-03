@@ -132,7 +132,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
 
-        $configService = new ConfigService($this->buildConfigRepository());
+        $configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher());
         $configService->loadConfFromDb();
         ImageStdParams::load_from_db();
 
@@ -184,6 +184,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             $imageRepo,
             $urlService,
             $currentLogger,
+            EventDispatcher::get(),
         );
     }
 
@@ -461,7 +462,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         try {
             $this->renderer->render('', null, 0);
         } finally {
-            EventDispatcher::reset();
+            EventDispatcher::get()->reset();
         }
     }
 }

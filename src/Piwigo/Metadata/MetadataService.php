@@ -32,6 +32,7 @@ final readonly class MetadataService
     public function __construct(
         private MetadataRepository $repo,
         private \Piwigo\Core\CurrentLogger $currentLogger,
+        private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     /**
@@ -93,7 +94,8 @@ final readonly class MetadataService
         if ((bool) preg_match('/[\x80-\xff]/', $value)) {
             // apparently mac uses some MacRoman crap encoding -- no
             // reliable way to detect it, a plugin should do the trick.
-            $value = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new CleanIptcValue($value))->value;
+            $value = $this->eventDispatcher->dispatchChange(new CleanIptcValue($value))
+                ->value;
 
             $qual = \Piwigo\Core\StringHelper::qualifyUtf8($value);
             if ($qual !== 0) { // has non-ascii chars
@@ -150,13 +152,15 @@ final readonly class MetadataService
         $exif = in_array($extension, ['jpg', 'jpeg', 'tif', 'tiff'], true)
             ? exif_read_data($filename)
             : false;
-        $exif2 = (bool) $exif ? null : \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new FormatExifData(null, $filename, $map))->exif;
+        $exif2 = (bool) $exif ? null : $this->eventDispatcher->dispatchChange(new FormatExifData(null, $filename, $map))
+            ->exif;
 
         if ((bool) $exif || (bool) $exif2) {
             if ((bool) $exif2) {
                 $exif = $exif2;
             } else {
-                $exif = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new FormatExifData($exif, $filename, $map))->exif;
+                $exif = $this->eventDispatcher->dispatchChange(new FormatExifData($exif, $filename, $map))
+                    ->exif;
             }
 
             if (! is_array($exif)) {
@@ -542,7 +546,7 @@ final readonly class MetadataService
         // one-method-only TagService dependency, avoiding touching every
         // existing `new MetadataService(...)` call site for zero benefit.
         $tagConn = DbConnection::build();
-        $tagService = new TagService(\Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Tag\TagEntity::class), new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($tagConn)), \Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Category\CategoryEntity::class)), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)));
+        $tagService = new TagService(\Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Tag\TagEntity::class), new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($tagConn)), \Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Category\CategoryEntity::class)), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), $this->eventDispatcher);
 
         foreach ($this->repo->findImagesByIds($ids) as $row) {
             $data = $this->getSyncMetadata($row->toArray());

@@ -34,6 +34,7 @@ final readonly class CategoryDefaultRenderer
         private CommentCounterInterface $commentCounter,
         private UrlServiceInterface $urlService,
         private SessionService $sessionService,
+        private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     /**
@@ -64,7 +65,8 @@ final readonly class CategoryDefaultRenderer
 
         $selection = array_slice($items, $start, $nbImagePage);
 
-        $selection = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new LocIndexThumbnailsSelection($selection))->selection;
+        $selection = $this->eventDispatcher->dispatchChange(new LocIndexThumbnailsSelection($selection))
+            ->selection;
         /** @var list<int|string> $selection */
         $selection = array_values(array_filter(
             $selection,
@@ -119,7 +121,7 @@ final readonly class CategoryDefaultRenderer
             'index_thumbnails' => 'thumbnails.tpl',
         ]);
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginIndexThumbnails($pictures));
+        $this->eventDispatcher->dispatchNotify(new LocBeginIndexThumbnails($pictures));
         $tplThumbnailsVar = [];
 
         foreach ($pictures as $row) {
@@ -200,11 +202,12 @@ final readonly class CategoryDefaultRenderer
         $indexDeriv = is_string($indexDeriv) ? $indexDeriv : ImageStdParams::THUMB;
 
         $template->assign([
-            'derivative_params' => \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetIndexDerivativeParams(ImageStdParams::get_by_type($indexDeriv)))->params,
+            'derivative_params' => $this->eventDispatcher->dispatchChange(new GetIndexDerivativeParams(ImageStdParams::get_by_type($indexDeriv)))->params,
             'maxRequests' => \Piwigo\Config\CurrentConfig::maxRequests(),
             'SHOW_THUMBNAIL_CAPTION' => \Piwigo\Config\CurrentConfig::showThumbnailCaption(),
         ]);
-        $tplThumbnailsVar = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new LocEndIndexThumbnails($tplThumbnailsVar, $pictures))->tplThumbnailsVar;
+        $tplThumbnailsVar = $this->eventDispatcher->dispatchChange(new LocEndIndexThumbnails($tplThumbnailsVar, $pictures))
+            ->tplThumbnailsVar;
         $template->assign('thumbnails', $tplThumbnailsVar);
 
         $template->assign_var_from_handle('THUMBNAILS', 'index_thumbnails');

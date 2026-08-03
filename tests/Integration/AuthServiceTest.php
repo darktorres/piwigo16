@@ -124,6 +124,7 @@ namespace Piwigo\Tests\Integration {
                 new CookieService(),
                 $this->failedLoginRepo,
                 new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class)),
+                EventDispatcher::get(),
             );
         }
 

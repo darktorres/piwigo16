@@ -55,7 +55,7 @@ namespace Piwigo\Tests\Integration {
             CurrentConfig::setTagsLevels(5);
 
             $this->conn = DbConnection::build();
-            $this->service = new TagService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Tag\TagEntity::class), new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class)), new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)));
+            $this->service = new TagService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Tag\TagEntity::class), new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class)), new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), EventDispatcher::get());
         }
 
         #[\Override]
@@ -490,7 +490,7 @@ namespace Piwigo\Tests\Integration {
             try {
                 $this->service->tagIdFromTagName($name);
             } finally {
-                EventDispatcher::reset();
+                EventDispatcher::get()->reset();
                 $this->conn->executeStatement('DELETE FROM ' . Tables::tags() . ' WHERE name = ?', [$name]);
             }
         }
@@ -517,7 +517,7 @@ namespace Piwigo\Tests\Integration {
             try {
                 self::assertEquals(TagId::from(1), $this->service->tagIdFromTagName('totally-unrelated-name-' . uniqid()));
             } finally {
-                EventDispatcher::reset();
+                EventDispatcher::get()->reset();
             }
         }
 
@@ -553,7 +553,7 @@ namespace Piwigo\Tests\Integration {
                         ->fetchOne()
                 );
             } finally {
-                EventDispatcher::reset();
+                EventDispatcher::get()->reset();
                 $this->conn->executeStatement('DELETE FROM ' . Tables::tags() . ' WHERE name = ?', [$tagName]);
             }
         }
@@ -600,7 +600,7 @@ namespace Piwigo\Tests\Integration {
                     self::assertSame('~~1~~', $row['id']);
                 }
             } finally {
-                EventDispatcher::reset();
+                EventDispatcher::get()->reset();
             }
         }
 

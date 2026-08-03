@@ -93,6 +93,7 @@ final class PictureController implements ControllerInterface
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
         private readonly SectionContextRegistry $sectionContextRegistry,
         private readonly SessionService $sessionService,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     private static function permissionService(): PermissionService
@@ -120,9 +121,9 @@ final class PictureController implements ControllerInterface
         return \Piwigo\Bootstrap\CoreDomainAccessor::imageService();
     }
 
-    private static function commentService(Connection $conn, UrlServiceInterface $urlService): CommentService
+    private function commentService(Connection $conn, UrlServiceInterface $urlService): CommentService
     {
-        return new CommentService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $urlService);
+        return new CommentService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $urlService, $this->eventDispatcher);
     }
 
     #[\Override]
@@ -300,12 +301,12 @@ final class PictureController implements ControllerInterface
         }
 
         // add default event handler for rendering element content
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(RenderElementContent::class, $this->defaultPictureContent(...));
+        $this->eventDispatcher->addTypedHandler(RenderElementContent::class, $this->defaultPictureContent(...));
         // add default event handler for rendering element description --
         // pwgNl2br() is reused across two different events (this one and
         // RenderCategoryDescription in RequestBootstrap.php), so this is a
         // thin adapter closure, leaving pwgNl2br() itself untouched.
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(
+        $this->eventDispatcher->addTypedHandler(
             RenderElementDescription::class,
             static function (RenderElementDescription $e): RenderElementDescription {
                 $result = \Piwigo\Bootstrap\PresentationAccessor::htmlService()->pwgNl2br($e->elementDescription);
@@ -315,7 +316,7 @@ final class PictureController implements ControllerInterface
             },
         );
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginPicture());
+        $this->eventDispatcher->dispatchNotify(new LocBeginPicture());
 
         // +-----------------------------------------------------------------+
         // |                            initialization                        |
@@ -428,7 +429,7 @@ final class PictureController implements ControllerInterface
                     // no break
                 case 'edit_comment':
 
-                    $commentService = self::commentService($conn, $this->urlService);
+                    $commentService = $this->commentService($conn, $this->urlService);
                     // check_input_parameter()-equivalent validation already ran
                     // inside PictureRequest::fromArrays() (gated on action ===
                     // 'edit_comment') -- it would have thrown otherwise.
@@ -498,7 +499,7 @@ final class PictureController implements ControllerInterface
                     new \Piwigo\Csrf\CsrfService()
                         ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
-                    $commentService = self::commentService($conn, $this->urlService);
+                    $commentService = $this->commentService($conn, $this->urlService);
 
                     // check_input_parameter()-equivalent validation already ran
                     // inside PictureRequest::fromArrays() (gated on action ===
@@ -522,7 +523,7 @@ final class PictureController implements ControllerInterface
                     new \Piwigo\Csrf\CsrfService()
                         ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
-                    $commentService = self::commentService($conn, $this->urlService);
+                    $commentService = $this->commentService($conn, $this->urlService);
 
                     // check_input_parameter()-equivalent validation already ran
                     // inside PictureRequest::fromArrays() (gated on action ===
@@ -575,7 +576,7 @@ final class PictureController implements ControllerInterface
         }
 
         // don't increment if adding a comment
-        if (\Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new AllowIncrementElementHitCount($inc_hit_count, $image_id))->incHitCount) {
+        if ($this->eventDispatcher->dispatchChange(new AllowIncrementElementHitCount($inc_hit_count, $image_id))->incHitCount) {
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
                 ->incrementVisitCounter($image_id);
         }
@@ -730,7 +731,7 @@ final class PictureController implements ControllerInterface
 
         // do we have a plugin that can show metadata for something
         // else than images?
-        $metadata_showable = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetElementMetadataAvailable(
+        $metadata_showable = $this->eventDispatcher->dispatchChange(new GetElementMetadataAvailable(
             (
                 (\Piwigo\Config\CurrentConfig::showExif() or \Piwigo\Config\CurrentConfig::showIptc())
                 and ! $picture['current']['src_image']->is_mimetype()
@@ -777,7 +778,8 @@ final class PictureController implements ControllerInterface
          *     ...
          * }> $picture
          */
-        $picture = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new PicturePicturesData($picture))->picture;
+        $picture = $this->eventDispatcher->dispatchChange(new PicturePicturesData($picture))
+            ->picture;
 
         // ---------------------------------------------------- navigation management
         foreach (['first', 'previous', 'next', 'last', 'current'] as $which_image) {
@@ -1011,7 +1013,7 @@ final class PictureController implements ControllerInterface
         // legend
         $current_comment = $picture['current']['comment'] ?? null;
         if (is_string($current_comment) && $current_comment !== '' && $current_comment !== '0') {
-            $descriptionEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderElementDescription($current_comment, 'picture_page_element_description'));
+            $descriptionEvent = $this->eventDispatcher->dispatchChange(new RenderElementDescription($current_comment, 'picture_page_element_description'));
             $template->assign('COMMENT_IMG', $descriptionEvent->elementDescription);
         }
 
@@ -1180,7 +1182,7 @@ final class PictureController implements ControllerInterface
 
         // maybe someone wants a special display (call it before
         // page_header so that they can add stylesheets)
-        $contentEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderElementContent('', $picture['current']));
+        $contentEvent = $this->eventDispatcher->dispatchChange(new RenderElementContent('', $picture['current']));
         $template->assign('ELEMENT_CONTENT', $contentEvent->content);
 
         $http_user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
@@ -1217,11 +1219,11 @@ final class PictureController implements ControllerInterface
             ->render($image_id, $urlService, $picture, $url_self);
         if (\Piwigo\Config\CurrentConfig::activateComments()) {
             new PictureCommentRenderer()
-                ->render($edit_comment, $image_id, $section_context->start, $urlService, $related_categories, $url_self, $this->sessionService);
+                ->render($edit_comment, $image_id, $section_context->start, $urlService, $related_categories, $url_self, $this->sessionService, $this->eventDispatcher);
         }
         if ($metadata_showable and $this->sessionService->getSessionVar('show_metadata') !== null) {
             new PictureMetadataRenderer()
-                ->render($picture, $this->currentLogger);
+                ->render($picture, $this->currentLogger, $this->eventDispatcher);
         }
 
         // include menubar
@@ -1238,8 +1240,8 @@ final class PictureController implements ControllerInterface
         $refresh_str = isset($refresh) && is_numeric($refresh) ? (string) $refresh : null;
         /** @var string|null $url_link */
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title, $refresh_str, $url_link ?? null);
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndPicture());
+            ->render($title, $this->eventDispatcher, $refresh_str, $url_link ?? null);
+        $this->eventDispatcher->dispatchNotify(new LocEndPicture());
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();
         if ($slideshow and \Piwigo\Config\CurrentConfig::lightSlideshow()) {

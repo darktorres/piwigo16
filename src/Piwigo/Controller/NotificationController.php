@@ -38,6 +38,7 @@ final class NotificationController implements ControllerInterface
         private readonly \Piwigo\Core\FilterState $filterState,
         private readonly \Piwigo\Section\SectionContextRegistry $sectionContextRegistry,
         private readonly SessionService $sessionService,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     #[\Override]
@@ -45,7 +46,7 @@ final class NotificationController implements ControllerInterface
     {
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginNotification());
+        $this->eventDispatcher->dispatchNotify(new LocBeginNotification());
 
         $feedRepo = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Feed\FeedEntity::class);
         $feedId = $this->findAvailableFeedId($feedRepo);
@@ -95,8 +96,8 @@ final class NotificationController implements ControllerInterface
         }
 
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title);
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndNotification());
+            ->render($title, $this->eventDispatcher);
+        $this->eventDispatcher->dispatchNotify(new LocEndNotification());
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();
         $template->parse('notification', false);

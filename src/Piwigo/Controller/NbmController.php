@@ -33,6 +33,7 @@ final class NbmController implements ControllerInterface
         private readonly \Piwigo\Core\FilterState $filterState,
         private readonly \Piwigo\Section\SectionContextRegistry $sectionContextRegistry,
         private readonly SessionService $sessionService,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     #[\Override]
@@ -43,7 +44,7 @@ final class NbmController implements ControllerInterface
         // Translations are in the admin file too.
         Lang::load('admin.lang');
         // Need to update a second time.
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LoadingLang());
+        $this->eventDispatcher->dispatchNotify(new LoadingLang());
         Lang::load('lang', \Piwigo\Core\CurrentPaths::get()->siteLocal, [
             'no_fallback' => true,
             'local' => true,
@@ -88,7 +89,7 @@ final class NbmController implements ControllerInterface
         }
 
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title);
+            ->render($title, $this->eventDispatcher);
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();
         $template->parse('nbm');

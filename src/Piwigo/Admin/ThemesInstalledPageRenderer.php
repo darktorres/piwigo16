@@ -45,6 +45,7 @@ final class ThemesInstalledPageRenderer
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     /**
@@ -135,7 +136,7 @@ final class ThemesInstalledPageRenderer
             ]
         );
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndThemesInstalled());
+        $this->eventDispatcher->dispatchNotify(new LocEndThemesInstalled());
 
         $template->assign('isWebmaster', (\Piwigo\Auth\AccessControl::isWebmaster()) ? 1 : 0);
         $template->assign('ADMIN_PAGE_TITLE', Lang::t('Themes'));

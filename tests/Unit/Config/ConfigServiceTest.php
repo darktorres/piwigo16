@@ -49,7 +49,7 @@ function unconnectedConfigService(): ConfigService
     ]);
     $repo = EntityManagerFactory::build($connection)->getRepository(ConfigEntry::class);
 
-    return new ConfigService($repo);
+    return new ConfigService($repo, new \Piwigo\PluginConfig\EventDispatcher());
 }
 
 beforeEach(function (): void {

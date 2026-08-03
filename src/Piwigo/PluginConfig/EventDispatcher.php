@@ -13,7 +13,13 @@ namespace Piwigo\PluginConfig;
  */
 final class EventDispatcher
 {
-    private static ?self $instance = null;
+    /**
+     * Fallback instance for callers reached before/without Kernel::boot()
+     * -- see get()'s own docblock for why this is memoized (same reasoning
+     * as Piwigo\Lang\Translator::get()) rather than a fresh instance per
+     * call.
+     */
+    private static ?self $fallback = null;
 
     // 'function' is declared string|array|object rather than PHPStan's
     // usual `callable` -- PHP's native `callable` type hint validates
@@ -33,22 +39,48 @@ final class EventDispatcher
      */
     private array $handlers = [];
 
+    /**
+     * @deprecated transitional bridge for callers not yet converted to
+     * constructor injection -- singleton/service-locator elimination
+     * campaign, Phase 4. Resolves the container-shared instance once
+     * Kernel::boot() has run, same shape as SessionService::get()/
+     * Translator::get(). Unlike SessionService's shim, the Kernel-not-booted
+     * fallback is memoized (not fresh per call): EventDispatcher accumulates
+     * handler registrations across many separate addEventHandler() calls,
+     * then dispatches to them from other call sites entirely -- a fresh
+     * instance per call would silently lose every handler registered since
+     * the last call, exactly the "compute-then-blind-read-back" corruption
+     * shape this campaign's own ProcessCache execution note already found
+     * and fixed once. EventDispatcherTest.php's own tests rely on this
+     * memoization (register then dispatch in the same test, no
+     * Kernel::boot() anywhere in the file).
+     */
     public static function get(): self
     {
-        return self::$instance ??= new self();
-    }
+        if (\Piwigo\Core\Kernel::isBooted()) {
+            $dispatcher = \Piwigo\Core\Kernel::container()->get(self::class);
+            if (! $dispatcher instanceof self) {
+                throw new \LogicException('Container returned an unexpected type for ' . self::class);
+            }
 
-    public static function set(self $dispatcher): void
-    {
-        self::$instance = $dispatcher;
+            return $dispatcher;
+        }
+
+        return self::$fallback ??= new self();
     }
 
     /**
-     * Test-only -- production code never needs to clear this mid-request.
+     * Test-only. Clears every registered handler back to a pristine state
+     * -- same observable end state as a fresh `new self()`, but mutates the
+     * shared instance in place instead of replacing which object every
+     * other constructor-injected holder's reference points at (real
+     * callers -- Kernel::container()->get(self::class)->reset() -- need
+     * this so a booted container's shared instance can be reset between
+     * tests, matching Translator's own reset() precedent).
      */
-    public static function reset(): void
+    public function reset(): void
     {
-        self::$instance = null;
+        $this->handlers = [];
     }
 
     /**

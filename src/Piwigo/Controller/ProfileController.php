@@ -49,6 +49,7 @@ final class ProfileController implements ControllerInterface
         private readonly \Piwigo\Section\SectionContextRegistry $sectionContextRegistry,
         private readonly \Piwigo\Core\AdminContext $adminContext,
         private readonly SessionService $sessionService,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     private static function userService(): UserService
@@ -107,7 +108,7 @@ final class ProfileController implements ControllerInterface
 
         $userdata = \Piwigo\Users\CurrentUser::get()->toUserArray();
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginProfile());
+        $this->eventDispatcher->dispatchNotify(new LocBeginProfile());
 
         $fields = [
             'nb_image_page', 'expand',
@@ -145,7 +146,7 @@ final class ProfileController implements ControllerInterface
             $userdata = array_merge($userdata, $default_user);
         }
 
-        $profileFormHandler = new ProfileFormHandler($this->redirectService, $this->adminContext);
+        $profileFormHandler = new ProfileFormHandler($this->redirectService, $this->adminContext, $this->eventDispatcher);
 
         $page_errors = \Piwigo\Core\PageState::current()->errors;
         $profileFormHandler->saveFromPost($userdata, $page_errors);
@@ -181,7 +182,7 @@ final class ProfileController implements ControllerInterface
         }
 
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title);
+            ->render($title, $this->eventDispatcher);
 
         // Get list of languages
         $language_options = [];
@@ -203,7 +204,7 @@ final class ProfileController implements ControllerInterface
 
         $template->assign('HELP_LINK', $help_link);
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndProfile());
+        $this->eventDispatcher->dispatchNotify(new LocEndProfile());
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();
         $template->parse('profile', false);

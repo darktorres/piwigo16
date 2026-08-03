@@ -36,6 +36,7 @@ final class RegisterController implements ControllerInterface
         private readonly \Piwigo\Core\FilterState $filterState,
         private readonly \Piwigo\Section\SectionContextRegistry $sectionContextRegistry,
         private readonly SessionService $sessionService,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     #[\Override]
@@ -67,7 +68,7 @@ final class RegisterController implements ControllerInterface
                 ->pageForbidden($this->redirectService, 'User registration closed');
         }
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginRegister());
+        $this->eventDispatcher->dispatchNotify(new LocBeginRegister());
 
         $registerSubmit = Request\RegisterSubmitRequest::fromGlobals();
 
@@ -253,8 +254,8 @@ final class RegisterController implements ControllerInterface
         $template->assign('HELP_LINK', $help_link);
 
         new \Piwigo\Page\PageHeaderRenderer()
-            ->render($title);
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndRegister());
+            ->render($title, $this->eventDispatcher);
+        $this->eventDispatcher->dispatchNotify(new LocEndRegister());
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()
             ->flushPageMessages();
         \Piwigo\Bootstrap\PresentationAccessor::htmlService()

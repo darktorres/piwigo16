@@ -75,12 +75,12 @@ final class PictureCommentRenderer
      *   native DBAL int -- only `uppercats`/`status`/`global_rank` are
      *   genuinely string|null.
      */
-    public function render(?CommentId $editCommentId, int $imageId, int $start, UrlServiceInterface $urlService, array $related_categories, string $url_self, SessionService $sessionService): void
+    public function render(?CommentId $editCommentId, int $imageId, int $start, UrlServiceInterface $urlService, array $related_categories, string $url_self, SessionService $sessionService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
         $commentRepository = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Comment\CommentEntity::class);
-        $commentService = new CommentService($commentRepository, new EphemeralKeyService(), new MailService(), new HtmlService(), $urlService);
+        $commentService = new CommentService($commentRepository, new EphemeralKeyService(), new MailService(), new HtmlService(), $urlService, $eventDispatcher);
 
         $commentAction = null;
 
@@ -149,7 +149,7 @@ final class PictureCommentRenderer
             \Piwigo\Core\PageState::current()->errors = $commentErrors;
 
             // allow plugins to notify what's going on
-            \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new UserCommentInsertion(
+            $eventDispatcher->dispatchNotify(new UserCommentInsertion(
                 array_merge($comm, [
                     'action' => $commentAction,
                 ])
@@ -230,9 +230,9 @@ final class PictureCommentRenderer
                 // for this same column.
                 $rowDate = $row->date ?? false;
 
-                $authorEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCommentAuthor($author ?? ''));
+                $authorEvent = $eventDispatcher->dispatchChange(new RenderCommentAuthor($author ?? ''));
 
-                $contentEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCommentContent($row->content ?? ''));
+                $contentEvent = $eventDispatcher->dispatchChange(new RenderCommentContent($row->content ?? ''));
 
                 $tplComment =
                   [

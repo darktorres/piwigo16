@@ -70,6 +70,7 @@ final class BatchManagerUnitPageRenderer
         private readonly \Piwigo\Core\ProcessCache $processCache,
         private readonly LoadedPlugins $loadedPlugins,
         private readonly SessionService $sessionService,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     private static function tagService(): TagService
@@ -109,7 +110,7 @@ final class BatchManagerUnitPageRenderer
         $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
         $conn = DbConnection::build();
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginElementSetUnit());
+        $this->eventDispatcher->dispatchNotify(new LocBeginElementSetUnit());
 
         // +-------------------------------------------------------------------+
         // |                        unit mode form submission                      |
@@ -243,7 +244,7 @@ final class BatchManagerUnitPageRenderer
         $page_start = $pageStart;
 
         new FilterPanelRenderer()
-            ->render($template, $base_url, $collection, $cat_elements_id, $page_start, $this->urlService);
+            ->render($template, $base_url, $collection, $cat_elements_id, $page_start, $this->urlService, $this->eventDispatcher);
         // +-------------------------------------------------------------------+
         // |                        global mode thumbnails                         |
         // +-------------------------------------------------------------------+
@@ -325,7 +326,7 @@ final class BatchManagerUnitPageRenderer
             }
 
             $tagService = self::tagService();
-            $imageService = new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), $this->sessionService);
+            $imageService = new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), $this->sessionService, $this->eventDispatcher);
 
             foreach ($images as $row) {
                 // Tables::images().id is a NOT NULL auto_increment primary key; this
@@ -537,7 +538,7 @@ final class BatchManagerUnitPageRenderer
             'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['tags', 'categories']),
         ]);
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndElementSetUnit());
+        $this->eventDispatcher->dispatchNotify(new LocEndElementSetUnit());
 
         // +-------------------------------------------------------------------+
         // |                           sending html code                           |

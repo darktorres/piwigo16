@@ -68,7 +68,7 @@ function upload_service_test_make(): UploadService
         throw new \LogicException('Container returned an unexpected type for ' . StorageRegistry::class);
     }
 
-    return new UploadService(upload_service_test_current_logger(), $storageRegistry);
+    return new UploadService(upload_service_test_current_logger(), $storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get());
 }
 
 beforeEach(function (): void {

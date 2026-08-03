@@ -26,7 +26,7 @@ use Piwigo\Menu\BlockManager;
  */
 final class MenubarPageRenderer
 {
-    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs): void
+    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -45,7 +45,7 @@ final class MenubarPageRenderer
         $tabsheet->select('');
         $tabsheet->assign();
 
-        $menu = new BlockManager('menubar');
+        $menu = new BlockManager('menubar', $eventDispatcher);
         $menu->load_registered_blocks();
         $reg_blocks = $menu->get_registered_blocks();
 

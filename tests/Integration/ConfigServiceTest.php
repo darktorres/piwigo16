@@ -41,7 +41,7 @@ final class ConfigServiceTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        $this->service = new ConfigService($this->buildConfigRepository());
+        $this->service = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher());
     }
 
     public function test_loadConfFromDb_merges_every_row_with_json_decoding(): void

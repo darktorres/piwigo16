@@ -26,7 +26,7 @@ final class ThemeCatalog
      *
      * @return array<int|string, string>
      */
-    public static function getPwgThemes(bool $showMobile = false): array
+    public static function getPwgThemes(\Piwigo\PluginConfig\EventDispatcher $eventDispatcher, bool $showMobile = false): array
     {
 
         $themes = [];
@@ -49,7 +49,8 @@ final class ThemeCatalog
         }
 
         // plugins want remove some themes based on user status maybe?
-        $themes = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetPwgThemes($themes))->themes;
+        $themes = $eventDispatcher->dispatchChange(new GetPwgThemes($themes))
+            ->themes;
 
         $filtered_themes = [];
         foreach ($themes as $key => $value) {

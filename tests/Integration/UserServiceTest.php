@@ -88,7 +88,7 @@ namespace Piwigo\Tests\Integration {
             CurrentConfig::setAvailablePermissionLevels([0, 1, 2, 4, 8]);
 
             $this->conn = DbConnection::build();
-            $this->service = new UserService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new MailService(), new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), new HtmlService(), $this->conn, new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)));
+            $this->service = new UserService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new MailService(), new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), new HtmlService(), $this->conn, new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)), new \Piwigo\PluginConfig\EventDispatcher());
 
             // checkAndSaveUserInfos()'s own success path (any call that
             // doesn't return an early 'error') reaches
@@ -98,7 +98,7 @@ namespace Piwigo\Tests\Integration {
             // initialised" LogicException is the real failure mode
             // without this, since no other test in this file previously
             // reached that call chain.
-            CurrentConfigService::set(new ConfigService(EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class)));
+            CurrentConfigService::set(new ConfigService(EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class), new \Piwigo\PluginConfig\EventDispatcher()));
         }
 
         /** @param array<int<0, max>|string, mixed> $params */

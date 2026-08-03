@@ -48,7 +48,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         Kernel::boot(Paths::fromRoot(dirname(__DIR__, 2)));
-        CurrentConfigService::set(new ConfigService($this->buildConfigRepository()));
+        CurrentConfigService::set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
         CurrentTemplate::set(new Template());
 
         $this->scratchDir = dirname(__DIR__, 2) . '/_data/picture-metadata-renderer-test-scratch';
@@ -185,7 +185,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
             $this->makeJpegWithSegments($this->buildApp1ExifSegment(['Artist' => 'Jane Photographer', 'ImageDescription' => 'A test photo']))
         );
 
-        $this->renderer->render($this->makePicture($relativePath), $this->currentLogger);
+        $this->renderer->render($this->makePicture($relativePath), $this->currentLogger, new \Piwigo\PluginConfig\EventDispatcher());
 
         $metadata = CurrentTemplate::get()->get_template_vars('metadata');
         self::assertIsArray($metadata);
@@ -225,7 +225,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
             $this->makeJpegWithSegments($this->buildApp1ExifSegment([]))
         );
 
-        $this->renderer->render($this->makePicture($relativePath), $this->currentLogger);
+        $this->renderer->render($this->makePicture($relativePath), $this->currentLogger, new \Piwigo\PluginConfig\EventDispatcher());
 
         $metadata = CurrentTemplate::get()->get_template_vars('metadata');
         self::assertIsArray($metadata);
@@ -244,7 +244,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
         $relativePath = '_data/picture-metadata-renderer-test-scratch/exif-empty.jpg';
         file_put_contents(dirname(__DIR__, 2) . '/' . $relativePath, $this->makeJpegWithSegments($this->buildApp1ExifSegment(['Artist' => 'Jane'])));
 
-        $this->renderer->render($this->makePicture($relativePath), $this->currentLogger);
+        $this->renderer->render($this->makePicture($relativePath), $this->currentLogger, new \Piwigo\PluginConfig\EventDispatcher());
 
         self::assertNull(CurrentTemplate::get()->get_template_vars('metadata'));
     }
@@ -272,7 +272,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
             $this->makeJpegWithSegments($this->buildApp13IptcSegment([[5, 'Sunset Over The Bay'], [80, 'Jane Photographer']]))
         );
 
-        $this->renderer->render($this->makePicture($relativePath), $this->currentLogger);
+        $this->renderer->render($this->makePicture($relativePath), $this->currentLogger, new \Piwigo\PluginConfig\EventDispatcher());
 
         $metadata = CurrentTemplate::get()->get_template_vars('metadata');
         self::assertIsArray($metadata);
@@ -301,7 +301,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
         );
         file_put_contents(dirname(__DIR__, 2) . '/' . $relativePath, $combined);
 
-        $this->renderer->render($this->makePicture($relativePath), $this->currentLogger);
+        $this->renderer->render($this->makePicture($relativePath), $this->currentLogger, new \Piwigo\PluginConfig\EventDispatcher());
 
         $metadata = CurrentTemplate::get()->get_template_vars('metadata');
         self::assertIsArray($metadata);

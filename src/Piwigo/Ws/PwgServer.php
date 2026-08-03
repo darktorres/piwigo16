@@ -47,7 +47,9 @@ final class PwgServer
      */
     public $_methods = [];
 
-    public function __construct() {}
+    public function __construct(
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+    ) {}
 
     /**
      * $_requestHandler is only read after run()'s own null-check, but
@@ -120,7 +122,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
             ['methodName']
         );
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new WsAddMethods($this));
+        $this->eventDispatcher->dispatchNotify(new WsAddMethods($this));
         uksort($this->_methods, strnatcmp(...));
         $this->requestHandler()
             ->handleRequest($this);
@@ -138,7 +140,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
 
         @header('Content-Type: ' . $contentType . '; charset=' . \Piwigo\Core\CharsetHelper::getPwgCharset());
         print_r($encodedResponse);
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new SendResponse($encodedResponse));
+        $this->eventDispatcher->dispatchNotify(new SendResponse($encodedResponse));
     }
 
     /**
@@ -434,7 +436,8 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
             return new PwgError(WsError::MISSING_PARAM, 'Missing parameters: ' . implode(',', $missing_params));
         }
 
-        $result = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new WsInvokeAllowed(true, $methodName, $params))->value;
+        $result = $this->eventDispatcher->dispatchChange(new WsInvokeAllowed(true, $methodName, $params))
+            ->value;
 
         $is_error = false;
         if ($result instanceof PwgError) {

@@ -61,6 +61,7 @@ final readonly class AuthService
         private CookieService $cookieService,
         private UserFailedLoginRepository $failedLoginRepo,
         private SessionService $sessionService,
+        private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     /**
@@ -213,7 +214,7 @@ final readonly class AuthService
         }
         $_SESSION['pwg_uid'] = (int) $userId;
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new UserLogin($_SESSION['pwg_uid']));
+        $this->eventDispatcher->dispatchNotify(new UserLogin($_SESSION['pwg_uid']));
         $this->activityLogger->record('user', $_SESSION['pwg_uid'], 'login');
     }
 
@@ -249,7 +250,7 @@ final readonly class AuthService
                             $_SESSION['connected_with'] = 'pwg_ui';
                         }
                         $this->logUser($cookie[0], true);
-                        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LoginSuccess(stripslashes($calculated['username'])));
+                        $this->eventDispatcher->dispatchNotify(new LoginSuccess(stripslashes($calculated['username'])));
 
                         return true;
                     }
@@ -275,7 +276,7 @@ final readonly class AuthService
      */
     public function tryLogUser(string $username, ?string $password, bool $rememberMe): bool
     {
-        $event = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new TryLogUser(false, $username, $password, $rememberMe));
+        $event = $this->eventDispatcher->dispatchChange(new TryLogUser(false, $username, $password, $rememberMe));
 
         return $event->success;
     }
@@ -287,7 +288,7 @@ final readonly class AuthService
     {
 
         $pwg_uid = $_SESSION['pwg_uid'] ?? null;
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new UserLogout(is_int($pwg_uid) ? $pwg_uid : null));
+        $this->eventDispatcher->dispatchNotify(new UserLogout(is_int($pwg_uid) ? $pwg_uid : null));
         if (is_int($pwg_uid) || is_string($pwg_uid)) {
             $this->activityLogger->record('user', $pwg_uid, 'logout');
         }
@@ -349,7 +350,7 @@ final readonly class AuthService
         // exists -- it doesn't depend on the lookup at all.
         if ($ip !== '' && $this->failedLoginRepo->countRecentByIp($ip, $windowStart) >= $maxAttempts) {
             $this->failedLoginRepo->recordFailure(null, $ip, $nowFormatted);
-            \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LoginFailure(stripslashes($username)));
+            $this->eventDispatcher->dispatchNotify(new LoginFailure(stripslashes($username)));
             return $event;
         }
 
@@ -366,7 +367,7 @@ final readonly class AuthService
         // still provides for every not-yet-locked-out attempt.
         if ($userId !== null && $this->failedLoginRepo->countRecentByUserId($userId, $windowStart) >= $maxAttempts) {
             $this->failedLoginRepo->recordFailure($userId, $ip, $nowFormatted);
-            \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LoginFailure(stripslashes($username)));
+            $this->eventDispatcher->dispatchNotify(new LoginFailure(stripslashes($username)));
             return $event;
         }
 
@@ -397,7 +398,7 @@ final readonly class AuthService
                 $this->activityLogger->record('user', $user_found->id, 'login_failure_wrong_password');
             }
             $this->failedLoginRepo->recordFailure($userId, $ip, $nowFormatted);
-            \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LoginFailure(stripslashes($username)));
+            $this->eventDispatcher->dispatchNotify(new LoginFailure(stripslashes($username)));
             return $event;
         }
 
@@ -429,7 +430,7 @@ final readonly class AuthService
             $user_found,
             $rememberMe,
         );
-        $finalizeLoginEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange($finalizeLoginEvent);
+        $finalizeLoginEvent = $this->eventDispatcher->dispatchChange($finalizeLoginEvent);
 
         $can_login = $finalizeLoginEvent->state['can_login'];
         $reason = $finalizeLoginEvent->state['reason'];
@@ -438,7 +439,7 @@ final readonly class AuthService
         if (! $can_login) {
             $this->failedLoginRepo->recordFailure($userId, $ip, $nowFormatted);
             $this->activityLogger->record('user', $user_found->id, $reason ?? 'login_failure_before_log_user');
-            \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LoginFailureBeforeLogUser(stripslashes($username)));
+            $this->eventDispatcher->dispatchNotify(new LoginFailureBeforeLogUser(stripslashes($username)));
             return $event;
         }
 
@@ -449,7 +450,7 @@ final readonly class AuthService
         }
 
         $this->clearFakeUserCache();
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LoginSuccess(stripslashes($username)));
+        $this->eventDispatcher->dispatchNotify(new LoginSuccess(stripslashes($username)));
         $event->success = true;
 
         return $event;
@@ -638,7 +639,7 @@ final readonly class AuthService
         }
 
         $this->logUser($key_user_id, false);
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LoginSuccess($key->username));
+        $this->eventDispatcher->dispatchNotify(new LoginSuccess($key->username));
 
         // to be registered in history table by HistoryService::logVisit()
         \Piwigo\Core\PageState::current()->setAuthKeyId((int) $key->authKeyId);

@@ -55,6 +55,7 @@ final class PluginsSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
         private readonly CoreTabs $coreTabs,
         private readonly SessionService $sessionService,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     #[\Override]
@@ -84,7 +85,7 @@ final class PluginsSubController implements AdminSubControllerInterface
                 ->render('plugins', $tab);
         } else {
             new PluginsInstalledPageRenderer()
-                ->render('plugins', $this->urlService, $this->currentLogger, $this->sessionService);
+                ->render('plugins', $this->urlService, $this->currentLogger, $this->sessionService, $this->eventDispatcher);
         }
     }
 }

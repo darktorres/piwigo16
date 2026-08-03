@@ -43,7 +43,7 @@ final class CatModifyPageRenderer
      *
      * @param array<string, mixed> $category
      */
-    public function render(UrlServiceInterface $urlService, array $category): void
+    public function render(UrlServiceInterface $urlService, array $category, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -51,7 +51,7 @@ final class CatModifyPageRenderer
 
         $categoryService = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginCatModify());
+        $eventDispatcher->dispatchNotify(new LocBeginCatModify());
 
         // 'id' is the categories table primary key (NOT NULL); AlbumSubController's
         // own fetchAssociative() call (one file over the include boundary PHPStan
@@ -348,7 +348,7 @@ final class CatModifyPageRenderer
 
         $template->assign('PWG_TOKEN', new \Piwigo\Csrf\CsrfService()->getToken());
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndCatModify());
+        $eventDispatcher->dispatchNotify(new LocEndCatModify());
 
         // ----------------------------------------------------------- sending html code
         $template->assign_var_from_handle('ADMIN_CONTENT', 'album_properties');

@@ -39,6 +39,7 @@ final readonly class GroupService
         private ActivityLoggerInterface $activityLogger,
         private AuditService $auditService,
         private ConfigService $configService,
+        private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     /**
@@ -323,7 +324,7 @@ final readonly class GroupService
         }
 
         $ids = array_keys($deleted);
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new DeleteGroup($ids));
+        $this->eventDispatcher->dispatchNotify(new DeleteGroup($ids));
         $this->activityLogger->record('group', $ids, 'delete');
 
         // [SEC-57] one row per group actually deleted

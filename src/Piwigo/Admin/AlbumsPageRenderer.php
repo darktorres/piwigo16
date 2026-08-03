@@ -34,7 +34,7 @@ use Piwigo\Template\Template;
  */
 final class AlbumsPageRenderer
 {
-    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs): void
+    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher): void
     {
         $template = \Piwigo\Template\CurrentTemplate::get();
 
@@ -116,7 +116,7 @@ final class AlbumsPageRenderer
             }
 
             foreach ($categoryService->getIdsNamesUppercatsForIds($category_ids) as $cat_row) {
-                $nameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryName(is_string($cat_row['name']) ? $cat_row['name'] : '', 'admin_cat_list'));
+                $nameEvent = $eventDispatcher->dispatchChange(new RenderCategoryName(is_string($cat_row['name']) ? $cat_row['name'] : '', 'admin_cat_list'));
                 $cat_row['name'] = $nameEvent->categoryName;
 
                 if ($order_by_date) {
@@ -217,7 +217,7 @@ final class AlbumsPageRenderer
                 /** @var array<string, mixed> $the_place */
             }
 
-            $nameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryName(is_string($album['name']) ? $album['name'] : '', 'admin_cat_list'));
+            $nameEvent = $eventDispatcher->dispatchChange(new RenderCategoryName(is_string($album['name']) ? $album['name'] : '', 'admin_cat_list'));
             $album['name'] = $nameEvent->categoryName;
             $album_lastmodified = $album['lastmodified'];
             $album['lastmodified'] = \Piwigo\Core\DateHelper::timeSince(is_scalar($album_lastmodified) ? (string) $album_lastmodified : '', 'year');

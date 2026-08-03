@@ -30,6 +30,7 @@ final class FileCombiner
         private $type,
         private readonly UrlServiceInterface $urlService,
         private readonly Paths $paths,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private $combinables = [],
     ) {
         $this->is_css = $this->type === 'css';
@@ -191,14 +192,14 @@ final class FileCombiner
                 throw new \Exception("process_combinable(): file not found for {$combinable->path}");
             }
             $template->set_filename($handle, $real_path);
-            \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new CombinablePreparse($template, $combinable, $this)); // allow themes and plugins to set their own vars to template ...
+            $this->eventDispatcher->dispatchNotify(new CombinablePreparse($template, $combinable, $this)); // allow themes and plugins to set their own vars to template ...
             // parse($handle, true) is always string (never null) since we
             // always pass true here (see Template::parse()'s conditional
             // return type).
             $content = $template->parse($handle, true);
 
             if ($this->is_css) {
-                $content = self::process_css($content, $combinable->path, $header, $this->urlService, $this->paths);
+                $content = self::process_css($content, $combinable->path, $header, $this->urlService, $this->paths, $this->eventDispatcher);
             } else {
                 $content = self::process_js($content);
             }
@@ -229,7 +230,7 @@ final class FileCombiner
                 throw new \Exception('do_combine(): unable to read ' . $combinable->path);
             }
             if ($this->is_css) {
-                $content = self::process_css($content, $combinable->path, $header, $this->urlService, $this->paths);
+                $content = self::process_css($content, $combinable->path, $header, $this->urlService, $this->paths, $this->eventDispatcher);
             } else {
                 $content = self::process_js($content);
             }
@@ -256,10 +257,10 @@ final class FileCombiner
      * @param string $header CSS directives that must appear first in
      *                       the minified file.
      */
-    private static function process_css(string $css, $file, string &$header, UrlServiceInterface $urlService, Paths $paths): string
+    private static function process_css(string $css, $file, string &$header, UrlServiceInterface $urlService, Paths $paths, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher): string
     {
         $css = self::process_css_rec($css, dirname($file), $header, $urlService, $paths);
-        $postfilterEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new CombinedCssPostfilter($css));
+        $postfilterEvent = $eventDispatcher->dispatchChange(new CombinedCssPostfilter($css));
 
         return $postfilterEvent->css;
     }

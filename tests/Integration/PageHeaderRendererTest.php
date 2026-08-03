@@ -55,7 +55,7 @@ final class PageHeaderRendererTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         Kernel::boot(Paths::fromRoot(dirname(__DIR__, 2)));
-        CurrentConfigService::set(new ConfigService($this->buildConfigRepository()));
+        CurrentConfigService::set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
         // header.tpl's own {get_combined_css}/{get_combined_scripts
         // load='header'} tags reach ScriptLoader::urlService() -- unset by
         // default, real RequestBootstrap-only wiring this test never boots.
@@ -82,7 +82,7 @@ final class PageHeaderRendererTest extends IntegrationTestCase
     {
         PageState::current()->addHeaderNote('Photos posted within the last 3 days.');
 
-        $this->renderer->render('Header Notes Test');
+        $this->renderer->render('Header Notes Test', new \Piwigo\PluginConfig\EventDispatcher());
 
         $output = CurrentTemplate::get()->fetchOutput();
         self::assertStringContainsString('Photos posted within the last 3 days.', $output);
@@ -90,7 +90,7 @@ final class PageHeaderRendererTest extends IntegrationTestCase
 
     public function test_render_omits_the_header_notes_container_when_page_state_has_none(): void
     {
-        $this->renderer->render('No Header Notes Test');
+        $this->renderer->render('No Header Notes Test', new \Piwigo\PluginConfig\EventDispatcher());
 
         $output = CurrentTemplate::get()->fetchOutput();
         self::assertStringNotContainsString('Photos posted within the last', $output);
@@ -100,7 +100,7 @@ final class PageHeaderRendererTest extends IntegrationTestCase
     {
         CurrentConfig::setMetaRef(false);
 
-        $this->renderer->render('Meta Robots Test');
+        $this->renderer->render('Meta Robots Test', new \Piwigo\PluginConfig\EventDispatcher());
 
         self::assertSame(['noindex' => 1, 'nofollow' => 1], PageState::current()->metaRobots);
 
@@ -112,7 +112,7 @@ final class PageHeaderRendererTest extends IntegrationTestCase
     {
         CurrentConfig::setMetaRef(true);
 
-        $this->renderer->render('Meta Ref Enabled Test');
+        $this->renderer->render('Meta Ref Enabled Test', new \Piwigo\PluginConfig\EventDispatcher());
 
         self::assertSame([], PageState::current()->metaRobots);
     }

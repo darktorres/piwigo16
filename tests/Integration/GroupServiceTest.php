@@ -75,14 +75,14 @@ final class GroupServiceTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         $this->repo = \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class);
         $auditRepo = EntityManagerFactory::build()->getRepository(AuditLogEntity::class);
-        $this->configService = new ConfigService($this->buildConfigRepository());
-        $this->service = new GroupService($this->repo, new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), new AuditService($auditRepo), $this->configService);
+        $this->configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher());
+        $this->service = new GroupService($this->repo, new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), new AuditService($auditRepo), $this->configService, new \Piwigo\PluginConfig\EventDispatcher());
 
         // Only addAccess()/duplicate()/merge() need this (see class docblock)
         // -- PermissionCacheInvalidator::invalidate() -> CurrentConfigService::get()
         // would otherwise throw "not initialised" the moment any of their
         // real success paths run.
-        CurrentConfigService::set(new ConfigService(EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class)));
+        CurrentConfigService::set(new ConfigService(EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class), new \Piwigo\PluginConfig\EventDispatcher()));
     }
 
     public function test_create_rejects_an_already_used_name(): void

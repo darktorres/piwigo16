@@ -66,7 +66,7 @@ final class WsInitializer
         $requestFormat = 'rest';
         $responseFormat = Request\WsFormatRequest::fromGlobals()->responseFormat;
 
-        $service = new PwgServer();
+        $service = new PwgServer(\Piwigo\PluginConfig\EventDispatcher::get());
 
         // $requestFormat is hardcoded to 'rest' above; the format-selection
         // switch stays for parity with $responseFormat's structure and in case

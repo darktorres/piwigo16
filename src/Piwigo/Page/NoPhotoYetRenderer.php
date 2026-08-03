@@ -44,6 +44,7 @@ final readonly class NoPhotoYetRenderer
         private readonly Paths $paths,
         private readonly AdminContext $adminContext,
         private readonly SessionService $sessionService,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     public function render(): void
@@ -63,7 +64,7 @@ final readonly class NoPhotoYetRenderer
                 // make sure we don't use the mobile theme, which is not compatible with
                 // the "no photo yet" feature
                 $user_theme = \Piwigo\Users\CurrentUser::get()->theme;
-                $user_theme = $user_theme !== '' ? $user_theme : new \Piwigo\Users\UserService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), new HtmlService(), \Piwigo\Db\DbConnection::build(), $this->sessionService)->getDefaultTheme();
+                $user_theme = $user_theme !== '' ? $user_theme : new \Piwigo\Users\UserService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), new \Piwigo\Mail\MailService(), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), new HtmlService(), \Piwigo\Db\DbConnection::build(), $this->sessionService, $this->eventDispatcher)->getDefaultTheme();
                 $template = new Template($this->paths->root . 'themes', $user_theme);
                 \Piwigo\Template\CurrentTemplate::set($template);
 
@@ -110,7 +111,7 @@ final readonly class NoPhotoYetRenderer
                     );
                 }
 
-                \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndNoPhotoYet());
+                $this->eventDispatcher->dispatchNotify(new LocEndNoPhotoYet());
 
                 $template->pparse('no_photo_yet');
                 exit();

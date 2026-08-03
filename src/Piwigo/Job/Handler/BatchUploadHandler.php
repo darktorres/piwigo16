@@ -33,11 +33,12 @@ final class BatchUploadHandler
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
         private readonly StorageRegistry $storageRegistry,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     public function __invoke(BatchUploadJob $job): int
     {
-        return new UploadService($this->currentLogger, $this->storageRegistry)
+        return new UploadService($this->currentLogger, $this->storageRegistry, $this->eventDispatcher)
             ->addUploadedFile(
                 $job->sourceFilepath,
                 $this->urlService,

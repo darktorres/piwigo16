@@ -47,6 +47,7 @@ final readonly class PageTailRenderer
     public function __construct(
         private TelemetrySenderInterface $telemetrySender,
         private UrlServiceInterface $urlService,
+        private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     public function render(float $startTime): void
@@ -79,7 +80,7 @@ final readonly class PageTailRenderer
             'tail' => 'footer.tpl',
         ]);
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocBeginPageTail());
+        $this->eventDispatcher->dispatchNotify(new LocBeginPageTail());
 
         $template->assign(
             [
@@ -144,7 +145,7 @@ final readonly class PageTailRenderer
             );
         }
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndPageTail());
+        $this->eventDispatcher->dispatchNotify(new LocEndPageTail());
         //
         // Generate the page
         //

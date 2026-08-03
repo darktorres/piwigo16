@@ -73,6 +73,7 @@ final class IntroSubController implements AdminSubControllerInterface
         private readonly FilesystemIntegrityChecker $filesystemIntegrityChecker,
         private readonly SessionService $sessionService,
         private readonly \Piwigo\Lang\Translator $translator,
+        private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
     ) {}
 
     #[\Override]
@@ -257,7 +258,7 @@ final class IntroSubController implements AdminSubControllerInterface
             }
         }
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LocEndIntro());
+        $this->eventDispatcher->dispatchNotify(new LocEndIntro());
 
         // +-----------------------------------------------------------------------+
         // |                           get activity data                           |
@@ -541,9 +542,9 @@ final class IntroSubController implements AdminSubControllerInterface
 
         // Check integrity
         $integrityRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity::class);
-        $c13y = new CheckIntegrity($integrityRepo, $this->translator);
+        $c13y = new CheckIntegrity($integrityRepo, $this->translator, $this->eventDispatcher);
         // add internal checks
-        new C13yInternal($this->sessionService)
+        new C13yInternal($this->sessionService, $this->eventDispatcher)
             ->registerHandlers();
         // check and display
         $c13y->check();

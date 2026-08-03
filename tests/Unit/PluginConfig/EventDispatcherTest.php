@@ -66,14 +66,6 @@ final class TestChangeEvent
  */
 function testNotifyHandler(TestNotifyEvent $e): void {}
 
-beforeEach(function (): void {
-    EventDispatcher::reset();
-});
-
-afterEach(function (): void {
-    EventDispatcher::reset();
-});
-
 test('get() lazily builds and reuses the same instance', function (): void {
     $first = EventDispatcher::get();
     $second = EventDispatcher::get();
@@ -236,14 +228,6 @@ test('removeEventHandler returns false when the priority bucket has handlers but
     expect($dispatcher->removeEventHandler('e', 'strtolower'))->toBeFalse();
     // the non-matching handler must still be registered and callable
     expect($dispatcher->triggerChange('e', 'hello'))->toBe('HELLO');
-});
-
-test('set publishes a specific instance that get then returns', function (): void {
-    $dispatcher = new EventDispatcher();
-
-    EventDispatcher::set($dispatcher);
-
-    expect(EventDispatcher::get())->toBe($dispatcher);
 });
 
 test('triggerChange notifies a registered "trigger" meta-handler before and after the real event fires', function (): void {

@@ -71,7 +71,7 @@ final class ThemeCatalogTest extends IntegrationTestCase
         );
 
         try {
-            $themes = ThemeCatalog::getPwgThemes();
+            $themes = ThemeCatalog::getPwgThemes(EventDispatcher::get());
         } finally {
             $this->conn->executeStatement('DELETE FROM ' . Tables::themes() . " WHERE id = 'broken-theme'");
         }
@@ -90,7 +90,7 @@ final class ThemeCatalogTest extends IntegrationTestCase
         CurrentConfig::setMobilTheme('mobile-candidate');
 
         try {
-            $themes = ThemeCatalog::getPwgThemes(showMobile: false);
+            $themes = ThemeCatalog::getPwgThemes(EventDispatcher::get(), showMobile: false);
         } finally {
             $this->conn->executeStatement("DELETE FROM " . Tables::themes() . " WHERE id = 'mobile-candidate'");
         }
@@ -106,7 +106,7 @@ final class ThemeCatalogTest extends IntegrationTestCase
         CurrentConfig::setMobilTheme('default');
 
         try {
-            $themes = ThemeCatalog::getPwgThemes(showMobile: true);
+            $themes = ThemeCatalog::getPwgThemes(EventDispatcher::get(), showMobile: true);
         } finally {
             $this->conn->executeStatement("DELETE FROM " . Tables::themes() . " WHERE id = 'default'");
         }
@@ -129,13 +129,13 @@ final class ThemeCatalogTest extends IntegrationTestCase
         $this->expectExceptionMessage('must return an instance of');
 
         try {
-            ThemeCatalog::getPwgThemes();
+            ThemeCatalog::getPwgThemes(EventDispatcher::get());
         } finally {
             // EventDispatcher is a shared process-wide singleton -- a real
             // reset (not just removing this one handler, no such API
             // exists) so this fake filter can never intercept a later
             // Integration test's own getPwgThemes()/EventDispatcher call.
-            EventDispatcher::reset();
+            EventDispatcher::get()->reset();
         }
     }
 }

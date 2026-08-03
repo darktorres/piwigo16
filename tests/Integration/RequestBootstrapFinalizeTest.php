@@ -67,7 +67,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         // dirname(__DIR__, 2) root -- no need to boot (or bind Paths) again.
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
-        CurrentConfigService::set(new ConfigService($this->buildConfigRepository()));
+        CurrentConfigService::set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
         // footer.tpl (reached via CurrentTemplate's parse()) needs this --
         // same as PageTailTest/RedirectServiceTest's own identical setup.
         ScriptLoader::setUrlService(new UrlService(new HtmlService()));
@@ -88,7 +88,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
     {
         CurrentUser::reset();
         CurrentTemplate::reset();
-        EventDispatcher::reset();
+        EventDispatcher::get()->reset();
         PageState::reset();
         CurrentConfig::reset();
         parent::tearDown();

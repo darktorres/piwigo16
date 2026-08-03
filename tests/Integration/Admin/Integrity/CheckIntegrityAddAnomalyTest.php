@@ -25,7 +25,7 @@ function checkIntegrityAddAnomalyNew(): CheckIntegrity
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(IntegrityIgnoredAnomalyEntity::class);
     expect($repo)->toBeInstanceOf(IntegrityIgnoredAnomalyRepository::class);
 
-    return new CheckIntegrity($repo, new Translator());
+    return new CheckIntegrity($repo, new Translator(), \Piwigo\PluginConfig\EventDispatcher::get());
 }
 
 test('add_anomaly records a new anomaly with is_callable computed from a real function name', function (): void {

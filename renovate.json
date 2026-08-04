@@ -3,6 +3,7 @@
   "extends": ["config:recommended"],
   "timezone": "UTC",
   "schedule": ["before 6am on monday"],
+  "dependencyDashboardApproval": true,
   "packageRules": [
     {
       "matchUpdateTypes": ["minor", "patch"],

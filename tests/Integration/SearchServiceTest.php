@@ -340,6 +340,21 @@ final class SearchServiceTest extends IntegrationTestCase
         );
     }
 
+    /**
+     * `NOW() - INTERVAL n UNIT` -- MySQL's own bare-token interval syntax,
+     * not portable: PostgreSQL requires the interval as a quoted string
+     * (`INTERVAL 'n unit'`), rejecting the bare-token form outright with a
+     * syntax error. Used by the date_posted/date_created preset tests
+     * below to backdate fixture rows relative to the DB server's real
+     * wall clock.
+     */
+    private function nowMinusInterval(int $amount, string $unit): string
+    {
+        return $this->dbDriver === 'pgsql'
+            ? "NOW() - INTERVAL '{$amount} {$unit}'"
+            : "NOW() - INTERVAL {$amount} {$unit}";
+    }
+
     private function makeServiceWithRenderer(HtmlRenderingInterface $htmlRenderer): SearchService
     {
         return $this->makeService($this->repo, $htmlRenderer);
@@ -620,10 +635,10 @@ final class SearchServiceTest extends IntegrationTestCase
         // NOW()-relative rather than a hardcoded literal, so this stays
         // correct regardless of the real wall-clock date the suite runs on.
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::images() . ' SET date_available = NOW() - INTERVAL 1 HOUR WHERE id IN (1, 2)'
+            'UPDATE ' . Tables::images() . ' SET date_available = ' . $this->nowMinusInterval(1, 'HOUR') . ' WHERE id IN (1, 2)'
         );
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::images() . ' SET date_available = NOW() - INTERVAL 30 HOUR WHERE id IN (3, 4, 5)'
+            'UPDATE ' . Tables::images() . ' SET date_available = ' . $this->nowMinusInterval(30, 'HOUR') . ' WHERE id IN (3, 4, 5)'
         );
 
         try {
@@ -644,10 +659,10 @@ final class SearchServiceTest extends IntegrationTestCase
     public function test_get_regular_search_results_filters_by_date_created_preset(): void
     {
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::images() . ' SET date_creation = NOW() - INTERVAL 1 DAY WHERE id IN (1, 2, 3)'
+            'UPDATE ' . Tables::images() . ' SET date_creation = ' . $this->nowMinusInterval(1, 'DAY') . ' WHERE id IN (1, 2, 3)'
         );
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::images() . ' SET date_creation = NOW() - INTERVAL 60 DAY WHERE id IN (4, 5)'
+            'UPDATE ' . Tables::images() . ' SET date_creation = ' . $this->nowMinusInterval(60, 'DAY') . ' WHERE id IN (4, 5)'
         );
 
         try {
@@ -886,8 +901,13 @@ final class SearchServiceTest extends IntegrationTestCase
 
         [$clauses, $values] = $this->service->qsearchGetTextTokenSearchSql($token, ['name', 'comment']);
 
-        self::assertSame(['MATCH(name, comment) AGAINST(? IN BOOLEAN MODE)'], $clauses);
-        self::assertSame(['"nature"'], $values);
+        if ($this->dbDriver === 'pgsql') {
+            self::assertSame(["tsv_search @@ to_tsquery('simple', ?)"], $clauses);
+            self::assertSame(['nature'], $values);
+        } else {
+            self::assertSame(['MATCH(name, comment) AGAINST(? IN BOOLEAN MODE)'], $clauses);
+            self::assertSame(['"nature"'], $values);
+        }
     }
 
     public function test_qsearch_get_text_token_search_sql_appends_a_star_for_a_trailing_wildcard_fulltext_term(): void
@@ -896,8 +916,13 @@ final class SearchServiceTest extends IntegrationTestCase
 
         [$clauses, $values] = $this->service->qsearchGetTextTokenSearchSql($token, ['name', 'comment']);
 
-        self::assertSame(['MATCH(name, comment) AGAINST(? IN BOOLEAN MODE)'], $clauses);
-        self::assertSame(['travel*'], $values);
+        if ($this->dbDriver === 'pgsql') {
+            self::assertSame(["tsv_search @@ to_tsquery('simple', ?)"], $clauses);
+            self::assertSame(['travel:*'], $values);
+        } else {
+            self::assertSame(['MATCH(name, comment) AGAINST(? IN BOOLEAN MODE)'], $clauses);
+            self::assertSame(['travel*'], $values);
+        }
     }
 
     public function test_qsearch_get_text_token_search_sql_throws_when_preg_split_hits_the_backtrack_limit(): void

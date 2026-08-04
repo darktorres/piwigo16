@@ -384,8 +384,21 @@ final readonly class SearchService
         $ratios = is_array($ratiosField) ? array_values(array_filter($ratiosField, is_string(...))) : [];
         if ($ratios !== [] && (bool) ($displayFilters['ratio']['access'] ?? false)) {
             $hasFiltersFilled = true;
+            // pgsql support pass: real bug found live -- `i.width`/
+            // `i.height` are both plain integer columns, and MySQL's `/`
+            // operator always computes in DECIMAL/floating context
+            // regardless of operand types (confirmed: MySQL's own docs),
+            // but PostgreSQL's `/` on two `integer` operands TRUNCATES to
+            // an integer (confirmed live against this project's own
+            // fixture data: `200/150` is `1` on Postgres, `1.333...` on
+            // MySQL) -- every real fixture image with a genuine 1.33
+            // (Landscape) ratio was misclassified as `square` (`1 >= 0.95
+            // AND 1 <= 1.05`). `i.width * 1.0` forces decimal-context
+            // arithmetic on both platforms (a DECIMAL/numeric literal
+            // operand promotes the whole expression) without needing a
+            // DQL CAST -- DQL has none built in.
             $clauseForRatio = [
-                'Portrait' => 'i.width / i.height < 0.95',
+                'Portrait' => 'i.width * 1.0 / i.height < 0.95',
                 // Not `BETWEEN` -- a real DQL grammar limitation found
                 // empirically: SimpleConditionalExpression()'s own
                 // lookahead dispatch only walks past a *simple* path
@@ -399,9 +412,9 @@ final readonly class SearchService
                 // LHS parse fine (proven by the 3 buckets below), so this
                 // expresses the identical inclusive range via two ANDed
                 // comparisons instead (BETWEEN's own definition).
-                'square' => '(i.width / i.height >= 0.95 AND i.width / i.height <= 1.05)',
-                'Landscape' => '(i.width / i.height > 1.05 AND i.width / i.height < 2)',
-                'Panorama' => 'i.width / i.height >= 2',
+                'square' => '(i.width * 1.0 / i.height >= 0.95 AND i.width * 1.0 / i.height <= 1.05)',
+                'Landscape' => '(i.width * 1.0 / i.height > 1.05 AND i.width * 1.0 / i.height < 2)',
+                'Panorama' => 'i.width * 1.0 / i.height >= 2',
             ];
             $clauses = [];
             foreach ($ratios as $r) {
@@ -1100,7 +1113,11 @@ final readonly class SearchService
                     break;
                 case 'ratio':
                     assert($scope !== null);
-                    $clauses[] = $scope->get_sql('width/height', $token);
+                    // Same real Postgres integer-division-truncation bug
+                    // as getRegularSearchResults()'s own ratio buckets --
+                    // see that call site's docblock. `width*1.0` forces
+                    // decimal-context arithmetic on both platforms.
+                    $clauses[] = $scope->get_sql('width*1.0/height', $token);
 
                     break;
                 case 'size':

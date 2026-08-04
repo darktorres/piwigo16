@@ -115,6 +115,16 @@ final class RegenerateFixtureTest extends IntegrationTestCase
             ));
         }
 
+        // comments.validated/user_mail_notification.enabled are genuine
+        // `boolean` columns on Postgres (not the `smallint`-with-a-real-
+        // integer-range convention this codebase uses elsewhere) -- a bare
+        // `1`/`0` literal is valid MySQL `tinyint(1)` input but Postgres
+        // rejects it outright ("column ... is of type boolean but
+        // expression is of type integer"), so the two raw INSERTs below
+        // that populate them need real driver-aware literals.
+        $sqlTrue = $this->dbDriver === 'pgsql' ? 'true' : '1';
+        $sqlFalse = $this->dbDriver === 'pgsql' ? 'false' : '0';
+
         // 1. Wipe the test DB so the installer sees a blank slate, and clear
         // the install sentinel so common.inc.php/install.php show the form.
         $this->resetDatabase();
@@ -244,11 +254,11 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         $now = Env::now()->format('Y-m-d H:i:s');
         $this->dbQuery($db, sprintf(
             "INSERT INTO %scomments (image_id, date, author, anonymous_id, author_id, content, validated, validation_date) VALUES "
-            . "(%d, '%s', 'fixture_admin', '127.0.0.1', 1, 'Fixture comment for integration tests.', 1, '%s'), "
-            . "(%d, '%s', 'regular_user', '127.0.0.2', %d, 'Another perspective on this photo.', 1, '%s'), "
-            . "(%d, '%s', 'power_user', '127.0.0.3', %d, 'Great composition and colors!', 1, '%s'), "
-            . "(%d, '%s', 'power_user', '127.0.0.3', %d, 'I keep coming back to this one.', 1, '%s'), "
-            . "(%d, '%s', 'fixture_admin', '127.0.0.1', 1, 'Pending comment for moderation.', 0, NULL)",
+            . "(%d, '%s', 'fixture_admin', '127.0.0.1', 1, 'Fixture comment for integration tests.', {$sqlTrue}, '%s'), "
+            . "(%d, '%s', 'regular_user', '127.0.0.2', %d, 'Another perspective on this photo.', {$sqlTrue}, '%s'), "
+            . "(%d, '%s', 'power_user', '127.0.0.3', %d, 'Great composition and colors!', {$sqlTrue}, '%s'), "
+            . "(%d, '%s', 'power_user', '127.0.0.3', %d, 'I keep coming back to this one.', {$sqlTrue}, '%s'), "
+            . "(%d, '%s', 'fixture_admin', '127.0.0.1', 1, 'Pending comment for moderation.', {$sqlFalse}, NULL)",
             $this->dbPrefix,
             $photoIds[0], $now, $now,
             $photoIds[1], $now, $userIds['regular_user'], $now,
@@ -333,7 +343,7 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         // 12. Two mail notification entries.
         $this->dbQuery($db, sprintf(
             "INSERT INTO %suser_mail_notification (user_id, check_key, enabled, last_send) VALUES "
-            . "(1, 'abcdef1234567890', 1, '%s'), (%d, 'ghijkl9876543210', 0, NULL)",
+            . "(1, 'abcdef1234567890', {$sqlTrue}, '%s'), (%d, 'ghijkl9876543210', {$sqlFalse}, NULL)",
             $this->dbPrefix,
             $now,
             $userIds['regular_user']
@@ -446,6 +456,21 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         self::assertIsString($stderr);
         self::assertSame(0, $exit, $cmd[0] . ' failed: ' . $stderr);
         self::assertIsString($dump, $cmd[0] . ' produced no output');
+
+        if ($this->dbDriver === 'pgsql') {
+            // \restrict/\unrestrict (pg_dump 18+, a psql meta-command pair
+            // guarding this file against execution unless the matching
+            // random token is echoed back) carry a freshly-random token on
+            // every single dump -- same non-determinism
+            // Piwigo\Db\SchemaDumpService::normalize() already strips for
+            // its own pg_dump output, confirmed live here too by diffing
+            // two consecutive dumps. Stripped so regenerating this fixture
+            // doesn't produce a spurious two-line diff every time.
+            $lines = explode("\n", $dump);
+            $lines = array_filter($lines, static fn (string $line): bool => ! str_starts_with(ltrim($line), '\\restrict ')
+                && ! str_starts_with(ltrim($line), '\\unrestrict '));
+            $dump = implode("\n", $lines);
+        }
 
         if ($this->dbDriver !== 'pgsql') {
             // Item 22: mysqldump's own output never includes this -- MySQL

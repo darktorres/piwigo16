@@ -69,16 +69,11 @@ final class FixturePhotoGenerator
         // clears), so remove it first rather than trying to truncate a
         // file this process may not own.
         if (is_file($destPath) && ! @unlink($destPath)) {
-            imagedestroy($img);
-
             throw new \RuntimeException("Failed to remove the existing file before regenerating it: {$destPath}");
         }
 
         if (! imagejpeg($img, $destPath, 80)) {
-            imagedestroy($img);
-
             throw new \RuntimeException("Failed to write JPEG to: {$destPath}");
         }
-        imagedestroy($img);
     }
 }

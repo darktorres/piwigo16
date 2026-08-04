@@ -414,7 +414,26 @@ final class AdminShell
         $whats_new_major_version = \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION);
 
         if ((bool) $this->preferencesService->getParam('show_whats_new_' . $whats_new_major_version, true) and $this->configService->pwgIsDbconfWriteable()) {
-            if ($this->currentUser->get()->rawAttributes['registration_date'] > $this->currentConfig->lastMajorUpdate()) {
+            // >=, not > -- confirmed live (VR suite regression, 2026-08-04)
+            // that a fresh install/fixture-regen genuinely produces the
+            // exact same timestamp for both sides: registration_date
+            // (UserService::createUserInfos()) and last_major_update
+            // (RequestBootstrap, "if not set, set it now") are both stamped
+            // via Env::now(), which resolves to the identical frozen
+            // PIWIGO_TEST_NOW instant in test mode regardless of real
+            // elapsed time between the two writes. A strict `>` can never
+            // be true for two genuinely-equal values, so a brand-new
+            // account created at (or immediately after) install always
+            // wrongly saw the popin, every time, on every fresh install --
+            // and would keep failing this same way even if last_major_update
+            // used the real DB clock instead, since that only "worked" by
+            // coincidence for as long as regens happened to run before the
+            // frozen reference date; production timing has since caught up
+            // to and passed it. `>=` is also the correct semantic for this
+            // exact-equal case on its own terms: an account created at the
+            // same moment as the major-update stamp has no earlier state to
+            // be notified about.
+            if ($this->currentUser->get()->rawAttributes['registration_date'] >= $this->currentConfig->lastMajorUpdate()) {
                 $this->preferencesService
                     ->updateParam('show_whats_new_' . $whats_new_major_version, false);
             } else {

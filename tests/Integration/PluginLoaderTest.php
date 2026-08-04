@@ -330,9 +330,15 @@ PHP);
             );
             expect($storedVersion)->toBe('auto');
 
+            // activity.details is a genuine json/jsonb column on both
+            // platforms -- LIKE against it directly errors on Postgres
+            // ("operator does not exist: jsonb ~~ unknown"), needs an
+            // explicit ::text cast first (same real gap already fixed in
+            // RequestBootstrapConnectTest/GroupServiceTest).
+            $detailsColumn = $this->dbDriver === 'pgsql' ? 'details::text' : 'details';
             $activityCount = DbConnection::build()->fetchOne(
                 'SELECT COUNT(*) FROM ' . Tables::activity()
-                . " WHERE object = 'system' AND action = 'autoupdate' AND details LIKE ?",
+                . " WHERE object = 'system' AND action = 'autoupdate' AND {$detailsColumn} LIKE ?",
                 ['%' . $id . '%']
             );
             expect(is_numeric($activityCount) ? (int) $activityCount : -1)->toBe(0);

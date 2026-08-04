@@ -366,18 +366,27 @@ final class GroupServiceTest extends IntegrationTestCase
 
     private function fetchUserEditActivityAssociatedWith(int $userId, int $associatedGroupId): ?string
     {
+        // activity.details is a genuine json/jsonb column on both
+        // platforms -- LIKE against it directly errors on Postgres
+        // ("operator does not exist: jsonb ~~ unknown"), needs an
+        // explicit ::text cast first (same real gap already fixed in
+        // RequestBootstrapConnectTest).
+        $detailsColumn = $this->dbDriver === 'pgsql' ? 'details::text' : 'details';
         $value = $this->conn->createQueryBuilder()
             ->select('details')
             ->from(Tables::activity())
             ->where('object = \'user\'')
             ->andWhere('object_id = :userId')
             ->andWhere('action = \'edit\'')
-            ->andWhere('details LIKE :assoc')
+            ->andWhere($detailsColumn . ' LIKE :assoc')
             ->setParameter('userId', $userId)
             // MySQL's JSON column type canonicalizes its stored value on
             // read-back with a space after each colon ('"associated": 6',
             // not json_encode()'s compact '"associated":6') -- confirmed
             // live, without this the LIKE pattern never matches a real row.
+            // PostgreSQL's own jsonb::text canonical output format uses
+            // the same "colon space" convention, so the pattern itself
+            // needs no further change.
             ->setParameter('assoc', '%"associated": ' . $associatedGroupId . '%')
             ->executeQuery()
             ->fetchOne();
@@ -387,8 +396,9 @@ final class GroupServiceTest extends IntegrationTestCase
 
     private function deleteUserEditActivityAssociatedWith(int $associatedGroupId): void
     {
+        $detailsColumn = $this->dbDriver === 'pgsql' ? 'details::text' : 'details';
         $this->conn->executeStatement(
-            'DELETE FROM ' . Tables::activity() . " WHERE object = 'user' AND action = 'edit' AND details LIKE :assoc",
+            'DELETE FROM ' . Tables::activity() . " WHERE object = 'user' AND action = 'edit' AND {$detailsColumn} LIKE :assoc",
             ['assoc' => '%"associated": ' . $associatedGroupId . '%']
         );
     }

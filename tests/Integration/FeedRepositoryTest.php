@@ -41,9 +41,9 @@ final class FeedRepositoryTest extends IntegrationTestCase
     #[\Override]
     protected function tearDown(): void
     {
-        $db = $this->newMysqli($this->dbName);
-        $db->query(sprintf("DELETE FROM `%suser_feed` WHERE id LIKE 'p17-test-%%'", $this->dbPrefix));
-        $db->close();
+        DbConnection::build()->executeStatement(
+            sprintf("DELETE FROM %suser_feed WHERE id LIKE 'p17-test-%%'", $this->dbPrefix)
+        );
 
         parent::tearDown();
     }

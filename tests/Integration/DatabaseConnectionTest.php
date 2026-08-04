@@ -32,6 +32,15 @@ final class DatabaseConnectionTest extends IntegrationTestCase
     {
         self::assertNotSame('', $this->dbName, 'PIWIGO_DB_BASE must be set in .env.test');
 
+        if ($this->dbDriver === 'pgsql') {
+            // newPgsqlConnection() itself already asserts a successful
+            // connect (its own return type has no false/failure state to
+            // check here, unlike mysqli's own connect_errno).
+            pg_close($this->newPgsqlConnection($this->dbName));
+
+            return;
+        }
+
         $db = $this->newMysqli($this->dbName);
         self::assertSame(0, $db->connect_errno, $db->connect_error ?? '');
         $db->close();
@@ -39,7 +48,7 @@ final class DatabaseConnectionTest extends IntegrationTestCase
 
     public function test_it_reads_the_loaded_fixture(): void
     {
-        $count = $this->queryScalar(sprintf('SELECT COUNT(*) FROM `%simages`', $this->dbPrefix));
+        $count = $this->queryScalar(sprintf('SELECT COUNT(*) FROM %simages', $this->dbPrefix));
         self::assertGreaterThan(0, (int) $count, 'Expected the committed fixture to seed at least one image row');
     }
 

@@ -447,17 +447,15 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
 
     private function rawConfigValue(string $param): ?string
     {
-        $db = $this->newMysqli($this->dbName);
-        $result = $db->query('SELECT value FROM ' . Tables::config() . " WHERE param = '{$param}'");
-        self::assertInstanceOf(\mysqli_result::class, $result);
-        $row = $result->fetch_row();
-        $db->close();
-        if (! is_array($row)) {
+        $value = \Piwigo\Db\DbConnection::build()->fetchOne(
+            'SELECT value FROM ' . Tables::config() . " WHERE param = '{$param}'"
+        );
+        if ($value === false) {
             return null;
         }
-        self::assertIsString($row[0]);
+        self::assertIsString($value);
 
-        return $row[0];
+        return $value;
     }
 
     public function test_standard_pages_used_by_accumulates_only_the_real_theme_that_declares_the_flag(): void

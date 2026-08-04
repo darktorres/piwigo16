@@ -44,9 +44,9 @@ final class SiteRepositoryTest extends IntegrationTestCase
         // delete()'s own test cleans up its own row directly (it IS the
         // thing under test) -- every other test here still inserts and
         // never deletes, so this catch-all stays for them.
-        $db = $this->newMysqli($this->dbName);
-        $db->query(sprintf("DELETE FROM `%ssites` WHERE galleries_url LIKE 'p17-test-%%'", $this->dbPrefix));
-        $db->close();
+        DbConnection::build()->executeStatement(
+            sprintf("DELETE FROM %ssites WHERE galleries_url LIKE 'p17-test-%%'", $this->dbPrefix)
+        );
 
         parent::tearDown();
     }
@@ -70,14 +70,21 @@ final class SiteRepositoryTest extends IntegrationTestCase
         $url = 'p17-test-' . bin2hex(random_bytes(4));
         $this->repo->insert($url);
 
-        $id = $this->queryScalar(sprintf("SELECT id FROM `%ssites` WHERE galleries_url = '%s'", $this->dbPrefix, $url));
+        $id = $this->queryScalar(sprintf("SELECT id FROM %ssites WHERE galleries_url = '%s'", $this->dbPrefix, $url));
 
         self::assertSame($url, $this->repo->findGalleriesUrlById((int) $id));
     }
 
     public function test_find_galleries_url_by_id_returns_null_when_unused(): void
     {
-        self::assertNull($this->repo->findGalleriesUrlById(999_999));
+        // sites.id is a real tinyint unsigned column (MySQL) / smallint
+        // (Postgres) -- 999_999 overflows both, but only Postgres errors
+        // on an out-of-range comparison literal ("value ... is out of
+        // range for type smallint"); MySQL tolerates it via lenient
+        // comparison (just matches nothing). 254 fits either column's
+        // real range and the fixture only ever seeds site id 1, so it's
+        // still a genuinely unused id.
+        self::assertNull($this->repo->findGalleriesUrlById(254));
     }
 
     public function test_delete_removes_the_row(): void
@@ -88,7 +95,7 @@ final class SiteRepositoryTest extends IntegrationTestCase
         // commit this method was added), had zero existing coverage.
         $url = 'p17-test-' . bin2hex(random_bytes(4));
         $this->repo->insert($url);
-        $id = (int) $this->queryScalar(sprintf("SELECT id FROM `%ssites` WHERE galleries_url = '%s'", $this->dbPrefix, $url));
+        $id = (int) $this->queryScalar(sprintf("SELECT id FROM %ssites WHERE galleries_url = '%s'", $this->dbPrefix, $url));
 
         $this->repo->delete($id);
 
@@ -99,7 +106,9 @@ final class SiteRepositoryTest extends IntegrationTestCase
     {
         $this->expectNotToPerformAssertions();
 
-        $this->repo->delete(999_999);
+        // See test_find_galleries_url_by_id_returns_null_when_unused()'s
+        // own comment for why 254, not 999_999.
+        $this->repo->delete(254);
     }
 
     public function test_find_all_galleries_urls_returns_the_id_to_url_map(): void
@@ -127,8 +136,8 @@ final class SiteRepositoryTest extends IntegrationTestCase
     {
         // Fixture has exactly one sites row (id 1); temporarily point
         // category 1 at it.
-        $db = $this->newMysqli($this->dbName);
-        $db->query(sprintf('UPDATE `%1$scategories` SET site_id = 1 WHERE id = 1', $this->dbPrefix));
+        $conn = DbConnection::build();
+        $conn->executeStatement(sprintf('UPDATE %1$scategories SET site_id = 1 WHERE id = 1', $this->dbPrefix));
 
         try {
             self::assertSame(
@@ -136,8 +145,7 @@ final class SiteRepositoryTest extends IntegrationTestCase
                 $this->repo->findGalleriesUrlForCategory(1)
             );
         } finally {
-            $db->query(sprintf('UPDATE `%1$scategories` SET site_id = NULL WHERE id = 1', $this->dbPrefix));
-            $db->close();
+            $conn->executeStatement(sprintf('UPDATE %1$scategories SET site_id = NULL WHERE id = 1', $this->dbPrefix));
         }
     }
 
@@ -175,27 +183,27 @@ final class SiteRepositoryTest extends IntegrationTestCase
         // genuinely non-zero, not just structurally present.
         $url = 'p17-test-' . bin2hex(random_bytes(4));
         $this->repo->insert($url);
-        $siteId = (int) $this->queryScalar(sprintf("SELECT id FROM `%ssites` WHERE galleries_url = '%s'", $this->dbPrefix, $url));
+        $siteId = (int) $this->queryScalar(sprintf("SELECT id FROM %ssites WHERE galleries_url = '%s'", $this->dbPrefix, $url));
 
-        $db = $this->newMysqli($this->dbName);
-        $db->query(sprintf(
-            "INSERT INTO `%1\$scategories` (name, site_id, uppercats) VALUES ('p17-test-site-cat-with-image', %2\$d, '999901')",
+        $conn = DbConnection::build();
+        $conn->executeStatement(sprintf(
+            "INSERT INTO %1\$scategories (name, site_id, uppercats) VALUES ('p17-test-site-cat-with-image', %2\$d, '999901')",
             $this->dbPrefix,
             $siteId
         ));
-        $catWithImageId = (int) $db->insert_id;
-        $db->query(sprintf(
-            "INSERT INTO `%1\$scategories` (name, site_id, uppercats) VALUES ('p17-test-site-cat-without-image', %2\$d, '999902')",
+        $catWithImageId = (int) $conn->lastInsertId();
+        $conn->executeStatement(sprintf(
+            "INSERT INTO %1\$scategories (name, site_id, uppercats) VALUES ('p17-test-site-cat-without-image', %2\$d, '999902')",
             $this->dbPrefix,
             $siteId
         ));
-        $catWithoutImageId = (int) $db->insert_id;
-        $db->query(sprintf(
-            "INSERT INTO `%1\$simages` (file, path, storage_category_id) VALUES ('p17-test-site.jpg', 'p17-test-site.jpg', %2\$d)",
+        $catWithoutImageId = (int) $conn->lastInsertId();
+        $conn->executeStatement(sprintf(
+            "INSERT INTO %1\$simages (file, path, storage_category_id) VALUES ('p17-test-site.jpg', 'p17-test-site.jpg', %2\$d)",
             $this->dbPrefix,
             $catWithImageId
         ));
-        $imageId = (int) $db->insert_id;
+        $imageId = (int) $conn->lastInsertId();
 
         try {
             $counts = $this->repo->findCategoryAndImageCountsBySite();
@@ -203,9 +211,8 @@ final class SiteRepositoryTest extends IntegrationTestCase
             self::assertArrayHasKey($siteId, $counts);
             self::assertSame(['nb_categories' => 2, 'nb_images' => 1], $counts[$siteId]);
         } finally {
-            $db->query(sprintf('DELETE FROM `%1$simages` WHERE id = %2$d', $this->dbPrefix, $imageId));
-            $db->query(sprintf('DELETE FROM `%1$scategories` WHERE id IN (%2$d, %3$d)', $this->dbPrefix, $catWithImageId, $catWithoutImageId));
-            $db->close();
+            $conn->executeStatement(sprintf('DELETE FROM %1$simages WHERE id = %2$d', $this->dbPrefix, $imageId));
+            $conn->executeStatement(sprintf('DELETE FROM %1$scategories WHERE id IN (%2$d, %3$d)', $this->dbPrefix, $catWithImageId, $catWithoutImageId));
         }
     }
 }

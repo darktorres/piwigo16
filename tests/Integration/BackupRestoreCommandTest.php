@@ -46,9 +46,7 @@ final class BackupRestoreCommandTest extends IntegrationTestCase
     #[\Override]
     protected function tearDown(): void
     {
-        $db = $this->newMysqli('');
-        $db->query(sprintf('DROP DATABASE IF EXISTS `%s`', $this->scratchDb));
-        $db->close();
+        $this->dropDatabase($this->scratchDb);
 
         if ($this->archivePath !== '' && is_file($this->archivePath)) {
             unlink($this->archivePath);
@@ -62,17 +60,11 @@ final class BackupRestoreCommandTest extends IntegrationTestCase
         $this->archivePath = new BackupService()->create();
         self::assertFileExists($this->archivePath);
 
-        // BackupService::restore()'s own mysql import needs the target
-        // database to already exist -- `mysql dbname < dump.sql` can't
-        // create it, matching BackupServiceTest's own identical
-        // create-the-scratch-db-first setup.
-        $db = $this->newMysqli('');
-        $db->query(sprintf('DROP DATABASE IF EXISTS `%s`', $this->scratchDb));
-        $db->query(sprintf(
-            'CREATE DATABASE `%s` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci',
-            $this->scratchDb
-        ));
-        $db->close();
+        // BackupService::restore()'s own mysql/psql import needs the
+        // target database to already exist -- neither client can create
+        // it as part of the import itself, matching BackupServiceTest's
+        // own identical create-the-scratch-db-first setup.
+        $this->dropAndCreateDatabase($this->scratchDb);
 
         $command = new BackupRestoreCommand(new BackupService());
         $tester = new CommandTester($command);
@@ -89,13 +81,11 @@ final class BackupRestoreCommandTest extends IntegrationTestCase
             $tester->getDisplay()
         );
 
-        $scratch = $this->newMysqli($this->scratchDb);
-        $imagesResult = $scratch->query(sprintf('SELECT COUNT(*) FROM `%simages`', $this->dbPrefix));
-        self::assertInstanceOf(\mysqli_result::class, $imagesResult);
-        $imageRow = $imagesResult->fetch_row();
-        self::assertIsArray($imageRow);
-        self::assertGreaterThanOrEqual(1, is_numeric($imageRow[0]) ? (int) $imageRow[0] : 0);
-        $scratch->close();
+        $imageCount = (int) $this->queryScalarFromDatabase(
+            $this->scratchDb,
+            sprintf('SELECT COUNT(*) FROM %simages', $this->dbPrefix)
+        );
+        self::assertGreaterThanOrEqual(1, $imageCount);
     }
 
     public function test_execute_restores_into_piwigo_db_base_when_no_database_option_is_given(): void
@@ -108,14 +98,8 @@ final class BackupRestoreCommandTest extends IntegrationTestCase
         $this->archivePath = new BackupService()->create();
 
         // See the previous test's own comment: the target database must
-        // already exist before BackupService::restore()'s mysql import.
-        $db = $this->newMysqli('');
-        $db->query(sprintf('DROP DATABASE IF EXISTS `%s`', $this->scratchDb));
-        $db->query(sprintf(
-            'CREATE DATABASE `%s` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci',
-            $this->scratchDb
-        ));
-        $db->close();
+        // already exist before BackupService::restore()'s import.
+        $this->dropAndCreateDatabase($this->scratchDb);
 
         $originalBase = getenv('PIWIGO_DB_BASE');
         putenv('PIWIGO_DB_BASE=' . $this->scratchDb);

@@ -160,6 +160,19 @@ final readonly class BackupService
 
     private function dumpDatabase(DbCredentials $credentials, string $outputPath): void
     {
+        if ($credentials->driver === 'pgsql') {
+            $this->runProcess([
+                'pg_dump',
+                ...$credentials->toPsqlArgs(),
+                '--no-owner',
+                '--no-privileges',
+                '--file=' . $outputPath,
+                $credentials->database,
+            ], 'pg_dump', $this->pgsqlEnv($credentials));
+
+            return;
+        }
+
         $this->runProcess([
             'mysqldump',
             ...$credentials->toMysqlArgs(),
@@ -171,6 +184,32 @@ final readonly class BackupService
 
     private function restoreDatabase(DbCredentials $credentials, string $targetDatabase, string $dumpPath): void
     {
+        // Checked up front, before either real client ever runs, so both
+        // platforms fail with the same clean, specific error instead of
+        // whatever generic/misleading failure the client itself produces
+        // for an unreadable file (`psql -f` given a permission-000 file
+        // still tries to connect to the target database first, surfacing
+        // a connection error that has nothing to do with the real cause).
+        if (! is_readable($dumpPath)) {
+            throw new \RuntimeException("Unable to open dump file for reading: {$dumpPath}");
+        }
+
+        if ($credentials->driver === 'pgsql') {
+            $this->runProcess([
+                'psql',
+                ...$credentials->toPsqlArgs(),
+                '-v',
+                'ON_ERROR_STOP=1',
+                '-q',
+                '-d',
+                $targetDatabase,
+                '-f',
+                $dumpPath,
+            ], 'psql restore', $this->pgsqlEnv($credentials));
+
+            return;
+        }
+
         $stream = fopen($dumpPath, 'r');
         if ($stream === false) {
             throw new \RuntimeException("Unable to open dump file for reading: {$dumpPath}");
@@ -187,11 +226,28 @@ final readonly class BackupService
     }
 
     /**
-     * @param list<string> $command
+     * psql/pg_dump have no password CLI flag (PGPASSWORD env var or
+     * ~/.pgpass only) -- same convention every real psql-shelling call
+     * site in this codebase already uses (IntegrationTestCase::
+     * loadFixtureViaPsql(), RegenerateFixtureTest's own pg_dump call,
+     * UserListCommand).
+     *
+     * @return array<string, string>|null
      */
-    private function runProcess(array $command, string $description): void
+    private function pgsqlEnv(DbCredentials $credentials): ?array
     {
-        $process = new Process($command);
+        return $credentials->password !== '' ? array_merge(getenv(), [
+            'PGPASSWORD' => $credentials->password,
+        ]) : null;
+    }
+
+    /**
+     * @param list<string> $command
+     * @param array<string, string>|null $env
+     */
+    private function runProcess(array $command, string $description, ?array $env = null): void
+    {
+        $process = new Process($command, null, $env);
         $process->setTimeout(300);
         $process->run();
 

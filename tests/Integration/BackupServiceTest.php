@@ -60,9 +60,7 @@ final class BackupServiceTest extends IntegrationTestCase
         // that happens to share this worker process.
         ShutdownHandler::reset();
 
-        $db = $this->newMysqli('');
-        $db->query(sprintf('DROP DATABASE IF EXISTS `%s`', $this->scratchDb));
-        $db->close();
+        $this->dropDatabase($this->scratchDb);
 
         if ($this->archivePath !== '' && is_file($this->archivePath)) {
             unlink($this->archivePath);
@@ -78,43 +76,32 @@ final class BackupServiceTest extends IntegrationTestCase
         $this->archivePath = $service->create();
         self::assertFileExists($this->archivePath);
 
-        $db = $this->newMysqli('');
-        $db->query(sprintf('DROP DATABASE IF EXISTS `%s`', $this->scratchDb));
-        $db->query(sprintf(
-            'CREATE DATABASE `%s` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci',
-            $this->scratchDb
-        ));
-        $db->close();
+        $this->dropAndCreateDatabase($this->scratchDb);
 
         $service->restore($this->archivePath, $this->scratchDb);
 
-        $scratch = $this->newMysqli($this->scratchDb);
-
-        $imagesResult = $scratch->query(sprintf('SELECT COUNT(*) FROM `%simages`', $this->dbPrefix));
-        self::assertInstanceOf(\mysqli_result::class, $imagesResult);
-        $imageRow = $imagesResult->fetch_row();
-        self::assertIsArray($imageRow);
-        $imageCount = is_numeric($imageRow[0]) ? (int) $imageRow[0] : 0;
-
-        $usersResult = $scratch->query(sprintf('SELECT COUNT(*) FROM `%susers`', $this->dbPrefix));
-        self::assertInstanceOf(\mysqli_result::class, $usersResult);
-        $userRow = $usersResult->fetch_row();
-        self::assertIsArray($userRow);
-        $userCount = is_numeric($userRow[0]) ? (int) $userRow[0] : 0;
+        $imageCount = (int) $this->queryScalarFromDatabase(
+            $this->scratchDb,
+            sprintf('SELECT COUNT(*) FROM %simages', $this->dbPrefix)
+        );
+        $userCount = (int) $this->queryScalarFromDatabase(
+            $this->scratchDb,
+            sprintf('SELECT COUNT(*) FROM %susers', $this->dbPrefix)
+        );
 
         self::assertGreaterThanOrEqual(1, $imageCount, 'Restored DB should have at least one image');
         self::assertGreaterThanOrEqual(1, $userCount, 'Restored DB should have at least one user');
 
         // Schema smoke query: a join across tables proves the schema itself
         // (not just raw row presence) survived the restore intact -- same
-        // assertion tools/restore-drill.sh makes.
-        $joinResult = $scratch->query(sprintf(
-            'SELECT i.id FROM `%1$simages` i JOIN `%1$simage_category` ic ON ic.image_id = i.id LIMIT 1',
+        // assertion tools/restore-drill.sh makes. Only the query executing
+        // without error matters here (queryScalarFromDatabase() itself
+        // asserts a successful query internally); the returned value isn't
+        // otherwise checked.
+        $this->queryScalarFromDatabase($this->scratchDb, sprintf(
+            'SELECT i.id FROM %1$simages i JOIN %1$simage_category ic ON ic.image_id = i.id LIMIT 1',
             $this->dbPrefix
         ));
-        self::assertInstanceOf(\mysqli_result::class, $joinResult);
-
-        $scratch->close();
     }
 
     public function test_restore_rejects_a_corrupt_archive(): void
@@ -398,9 +385,10 @@ final class BackupServiceTest extends IntegrationTestCase
     public function test_restore_database_throws_when_the_mysql_process_itself_fails(): void
     {
         // Distinct from the fopen() failure above -- here the dump file
-        // opens fine, but the real `mysql` CLI process fails (confirmed
+        // opens fine, but the real mysql/psql CLI process fails (confirmed
         // empirically: targeting a database that was never created exits
-        // non-zero with "Unknown database"), exercising the
+        // non-zero -- MySQL says "Unknown database", Postgres says
+        // "database ... does not exist"), exercising the
         // `! $process->isSuccessful()` branch instead.
         $dumpPath = tempnam(sys_get_temp_dir(), 'piwigo-bad-target-dump-');
         self::assertIsString($dumpPath);
@@ -421,8 +409,14 @@ final class BackupServiceTest extends IntegrationTestCase
         }
 
         self::assertNotNull($threw);
-        self::assertStringStartsWith('mysql restore failed: ', $threw->getMessage());
-        self::assertStringContainsString('Unknown database', $threw->getMessage());
+        self::assertStringStartsWith(
+            $this->dbDriver === 'pgsql' ? 'psql restore failed: ' : 'mysql restore failed: ',
+            $threw->getMessage()
+        );
+        self::assertStringContainsString(
+            $this->dbDriver === 'pgsql' ? 'does not exist' : 'Unknown database',
+            $threw->getMessage()
+        );
     }
 
     public function test_remove_dir_recurses_into_subdirectories(): void

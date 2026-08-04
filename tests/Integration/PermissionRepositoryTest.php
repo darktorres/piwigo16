@@ -61,7 +61,11 @@ final class PermissionRepositoryTest extends IntegrationTestCase
     {
         // Both fixture categories default to status='public', visible=1
         // -- restore that baseline regardless of which mutation test ran.
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'public', visible = 1");
+        // visible is a genuine boolean column -- a bare `1` literal in the
+        // SQL text (unlike a bound parameter, which the driver coerces
+        // implicitly) is rejected outright by Postgres.
+        $visibleLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
+        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'public', visible = {$visibleLiteral}");
         $this->conn->executeStatement('DELETE FROM ' . Tables::userAccess());
         $this->conn->executeStatement('DELETE FROM ' . Tables::groupAccess());
         parent::tearDown();
@@ -86,7 +90,8 @@ final class PermissionRepositoryTest extends IntegrationTestCase
 
     public function test_find_locked_category_ids_reflects_an_invisible_category(): void
     {
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET visible = 0 WHERE id = 2');
+        $visibleLiteral = $this->dbDriver === 'pgsql' ? 'false' : '0';
+        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET visible = {$visibleLiteral} WHERE id = 2");
 
         self::assertSame([2], $this->repo->findLockedCategoryIds());
     }

@@ -131,7 +131,25 @@ final class InstallService
 
             $version = new \Piwigo\Db\DbInfo($conn)
                 ->version();
-            if (version_compare($version, \Piwigo\Db\SqlDialect::REQUIRED_MYSQL_VERSION, '<')) {
+
+            // pgsql support pass: real bug found live -- this ran
+            // unconditionally against every driver, so a genuine
+            // PostgreSQL 18.4 server failed here with "your MySQL version
+            // is too old, you have "PostgreSQL 18.4 (...)..." (version_compare()
+            // can't parse Postgres's own full descriptive version() string
+            // against a bare MySQL-shaped floor at all). PostgreSQL's
+            // version() output isn't a bare X.Y.Z the way MySQL's is
+            // either, so its own check needs the leading numeric version
+            // extracted first.
+            if ($conn->getDatabasePlatform() instanceof \Doctrine\DBAL\Platforms\PostgreSQLPlatform) {
+                if (preg_match('/PostgreSQL (\d+(?:\.\d+)*)/', $version, $matches) !== 1) {
+                    throw new Exception('could not determine your PostgreSQL version from "' . $version . '"');
+                }
+
+                if (version_compare($matches[1], \Piwigo\Db\SqlDialect::REQUIRED_POSTGRES_VERSION, '<')) {
+                    throw new Exception(sprintf('your PostgreSQL version is too old, you have "%s" and you need at least "%s"', $matches[1], \Piwigo\Db\SqlDialect::REQUIRED_POSTGRES_VERSION));
+                }
+            } elseif (version_compare($version, \Piwigo\Db\SqlDialect::REQUIRED_MYSQL_VERSION, '<')) {
                 throw new Exception(sprintf('your MySQL version is too old, you have "%s" and you need at least "%s"', $version, \Piwigo\Db\SqlDialect::REQUIRED_MYSQL_VERSION));
             }
 

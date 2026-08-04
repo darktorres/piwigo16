@@ -35,7 +35,7 @@ final class DerivativeSizeRepository extends EntityRepository
     public function findAllEnabled(): array
     {
         return $this->findBy([
-            'enabled' => true,
+            'enabled' => 1,
         ]);
     }
 
@@ -45,37 +45,37 @@ final class DerivativeSizeRepository extends EntityRepository
     public function findAllDisabled(): array
     {
         return $this->findBy([
-            'enabled' => false,
+            'enabled' => 0,
         ]);
     }
 
     /**
-     * @param list<DerivativeSizeEntity> $sizes every one must have enabled=true
+     * @param list<DerivativeSizeEntity> $sizes every one must have enabled=1
      */
     public function syncEnabled(array $sizes): void
     {
-        $this->syncPartition($sizes, true);
+        $this->syncPartition($sizes, 1);
     }
 
     /**
-     * @param list<DerivativeSizeEntity> $sizes every one must have enabled=false
+     * @param list<DerivativeSizeEntity> $sizes every one must have enabled=0
      */
     public function syncDisabled(array $sizes): void
     {
-        $this->syncPartition($sizes, false);
+        $this->syncPartition($sizes, 0);
     }
 
     /**
      * @param list<DerivativeSizeEntity> $sizes
      */
-    private function syncPartition(array $sizes, bool $enabled): void
+    private function syncPartition(array $sizes, int $enabled): void
     {
         $em = $this->getEntityManager();
 
         $wantedNames = [];
         foreach ($sizes as $size) {
             if ($size->enabled !== $enabled) {
-                throw new \LogicException('syncPartition(): every entity must already have enabled=' . ($enabled ? 'true' : 'false'));
+                throw new \LogicException('syncPartition(): every entity must already have enabled=' . $enabled);
             }
 
             $wantedNames[] = $size->name;

@@ -72,7 +72,7 @@ final class DerivativeSizeRepositoryTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    private function newSize(string $name, bool $enabled): DerivativeSizeEntity
+    private function newSize(string $name, int $enabled): DerivativeSizeEntity
     {
         return new DerivativeSizeEntity(
             name: $name,
@@ -90,17 +90,17 @@ final class DerivativeSizeRepositoryTest extends IntegrationTestCase
     public function test_sync_enabled_throws_when_given_an_entity_that_is_not_actually_enabled(): void
     {
         $this->expectException(\LogicException::class);
-        $this->expectExceptionMessage('syncPartition(): every entity must already have enabled=true');
+        $this->expectExceptionMessage('syncPartition(): every entity must already have enabled=1');
 
-        $this->repo->syncEnabled([$this->newSize('p17-test-mismatch', enabled: false)]);
+        $this->repo->syncEnabled([$this->newSize('p17-test-mismatch', enabled: 0)]);
     }
 
     public function test_sync_disabled_throws_when_given_an_entity_that_is_actually_enabled(): void
     {
         $this->expectException(\LogicException::class);
-        $this->expectExceptionMessage('syncPartition(): every entity must already have enabled=false');
+        $this->expectExceptionMessage('syncPartition(): every entity must already have enabled=0');
 
-        $this->repo->syncDisabled([$this->newSize('p17-test-mismatch', enabled: true)]);
+        $this->repo->syncDisabled([$this->newSize('p17-test-mismatch', enabled: 1)]);
     }
 
     public function test_sync_enabled_removes_a_previously_enabled_row_that_is_absent_from_the_new_set(): void
@@ -108,8 +108,8 @@ final class DerivativeSizeRepositoryTest extends IntegrationTestCase
         $this->conn->executeStatement('DELETE FROM ' . Tables::derivativeSize());
 
         $this->repo->syncEnabled([
-            $this->newSize('p17-test-keep', enabled: true),
-            $this->newSize('p17-test-drop', enabled: true),
+            $this->newSize('p17-test-keep', enabled: 1),
+            $this->newSize('p17-test-drop', enabled: 1),
         ]);
         $namesAfterFirstSync = array_map(static fn (DerivativeSizeEntity $e): string => $e->name, $this->repo->findAllEnabled());
         sort($namesAfterFirstSync);
@@ -117,10 +117,10 @@ final class DerivativeSizeRepositoryTest extends IntegrationTestCase
 
         // Second call omits 'p17-test-drop' -- syncPartition()'s own
         // cleanup loop must remove that now-unwanted row (its own
-        // `enabled = true` partition only) while leaving 'p17-test-keep'
+        // `enabled = 1` partition only) while leaving 'p17-test-keep'
         // alone.
         $this->repo->syncEnabled([
-            $this->newSize('p17-test-keep', enabled: true),
+            $this->newSize('p17-test-keep', enabled: 1),
         ]);
 
         $namesAfterSecondSync = array_map(static fn (DerivativeSizeEntity $e): string => $e->name, $this->repo->findAllEnabled());
@@ -131,14 +131,14 @@ final class DerivativeSizeRepositoryTest extends IntegrationTestCase
     {
         $this->conn->executeStatement('DELETE FROM ' . Tables::derivativeSize());
 
-        $this->repo->syncEnabled([$this->newSize('p17-test-enabled-untouched', enabled: true)]);
+        $this->repo->syncEnabled([$this->newSize('p17-test-enabled-untouched', enabled: 1)]);
         $this->repo->syncDisabled([
-            $this->newSize('p17-test-disabled-keep', enabled: false),
-            $this->newSize('p17-test-disabled-drop', enabled: false),
+            $this->newSize('p17-test-disabled-keep', enabled: 0),
+            $this->newSize('p17-test-disabled-drop', enabled: 0),
         ]);
 
         $this->repo->syncDisabled([
-            $this->newSize('p17-test-disabled-keep', enabled: false),
+            $this->newSize('p17-test-disabled-keep', enabled: 0),
         ]);
 
         $disabledNames = array_map(static fn (DerivativeSizeEntity $e): string => $e->name, $this->repo->findAllDisabled());

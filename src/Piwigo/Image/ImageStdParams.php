@@ -451,7 +451,7 @@ final class ImageStdParams
         return $ordered;
     }
 
-    private static function sizeEntityFromParams(string $name, bool $enabled, DerivativeParams $params): DerivativeSizeEntity
+    private static function sizeEntityFromParams(string $name, int $enabled, DerivativeParams $params): DerivativeSizeEntity
     {
         $minSize = $params->sizing->min_size;
 
@@ -513,7 +513,7 @@ final class ImageStdParams
 
         $rows = [];
         foreach ($this->type_map as $type => $params) {
-            $rows[] = self::sizeEntityFromParams($type, true, $params);
+            $rows[] = self::sizeEntityFromParams($type, 1, $params);
         }
         self::sizeRepository()->syncEnabled($rows);
 
@@ -529,7 +529,7 @@ final class ImageStdParams
     {
         $rows = [];
         foreach ($this->disabled_type_map as $type => $params) {
-            $rows[] = self::sizeEntityFromParams($type, false, $params);
+            $rows[] = self::sizeEntityFromParams($type, 0, $params);
         }
         self::sizeRepository()->syncDisabled($rows);
     }

@@ -653,11 +653,21 @@ final class RateRepository extends EntityRepository
      */
     public function findTopRatedImageIds(int $limit): array
     {
+        // pgsql support pass: real bug found live -- MySQL's ORDER BY
+        // always treats NULL as the smallest value regardless of ASC/DESC
+        // (so a bare DESC sort naturally puts NULL ratingScore rows
+        // last), but PostgreSQL's default is the opposite for DESC
+        // (NULLS FIRST), putting an unrated image ahead of every real
+        // ranked one. Neither engine's own NULLS LAST syntax is portable
+        // (MySQL has none at all), so this sorts on an explicit
+        // null-last discriminant first, matching MySQL's real behavior
+        // on both platforms.
         $ids = $this->getEntityManager()
             ->createQueryBuilder()
             ->select('i.id')
             ->from(ImageEntity::class, 'i')
-            ->orderBy('i.ratingScore', 'DESC')
+            ->orderBy('CASE WHEN i.ratingScore IS NULL THEN 1 ELSE 0 END', 'ASC')
+            ->addOrderBy('i.ratingScore', 'DESC')
             ->setMaxResults($limit)
             ->getQuery()
             ->getSingleColumnResult();

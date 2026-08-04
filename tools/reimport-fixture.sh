@@ -52,6 +52,28 @@
 # one-off patch. IntegrationTestCase::loadFixture() applies the identical
 # correction for its own separate (non-shell-script) import path, since
 # PHPUnit's Integration/Contract suites never invoke this script.
+#
+# `piwigo_categories.lastmodified` is `TIMESTAMP ... ON UPDATE
+# CURRENT_TIMESTAMP` -- a MySQL-server-enforced column, invisible to and
+# unfixable by any PHP-level Env::now()/PIWIGO_TEST_NOW freeze, since MySQL
+# stamps it with the real server clock the instant *any* real INSERT (a
+# real fixture regen re-runs the full install flow) creates the row.
+# Confirmed live (VR suite regression, 2026-08-04): every real
+# `composer test:fixture-regen` bakes in whatever real wall-clock moment
+# that regen happened to run at, so admin-album's own committed VR
+# baseline (its page displays this column raw, via
+# CatModifyPageRenderer's own INFO_LAST_MODIFIED) silently drifts by
+# however many real days have passed since the fixture was last
+# regenerated -- the exact same class of drift the "CREATED" card
+# (piwigo_activity.occured_on, a real INSERT column) was already fixed
+# for by routing pwg_activity() through pwg_now() instead. lastmodified
+# has no PHP-level equivalent (MySQL applies it after any statement
+# completes, with no INSERT-time override available for a fresh row),
+# so it's normalized here instead, the same "correct known-nondeterministic
+# fixture state at import time" pattern as galleries_url above -- matches
+# whatever value admin-album's own current .snap baseline was captured
+# against, so this needs to change in lockstep with that baseline, not
+# independently.
 
 set -euo pipefail
 
@@ -87,6 +109,8 @@ mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" -e "INSERT INTO ${PIWIGO_DB_PREFIX}
 # from there) -- $(pwd)/ is this checkout's real Paths::$root value.
 real_root="$(pwd)/"
 mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" -e "UPDATE ${PIWIGO_DB_PREFIX}sites SET galleries_url = '${real_root}galleries/' WHERE id = 1;"
+
+mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" -e "UPDATE ${PIWIGO_DB_PREFIX}categories SET lastmodified = '2026-08-02 00:00:00';"
 
 sudo rm -rf _data/cache/piwigo.*/
 sudo rm -rf _data/combined/*

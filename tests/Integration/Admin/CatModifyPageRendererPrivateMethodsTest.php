@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Admin\CatModifyPageRenderer;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\Paths;
 
 /**
  * Piwigo\Admin\CatModifyPageRenderer::getLocalDir()/getSiteUrl() -- both
@@ -24,9 +25,13 @@ use Piwigo\Core\Kernel;
  * CoreDomainAccessor::userService(), which needs the DI container, so
  * Kernel::boot() is called explicitly here too -- idempotent, safe
  * regardless of what ran before it in this shared process).
+ *
+ * A real Paths is required, not a bare boot: CategoryService's own
+ * constructor now takes Lang (Phase 8), whose Paths param the container
+ * can't guess without one.
  */
 beforeEach(function (): void {
-    Kernel::boot();
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3)));
 });
 
 afterEach(function (): void {

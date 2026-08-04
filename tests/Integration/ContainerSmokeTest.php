@@ -94,6 +94,13 @@ final class ContainerSmokeTest extends TestCase
         // "Kernel booted with no real Paths" reasoning as
         // DefaultLanguageProviderInterface above, two levels removed.
         \Piwigo\Core\TelemetrySenderInterface::class,
+        // Piwigo\Core\FilterUpdaterInterface resolves to
+        // Piwigo\Filter\FilterService, which now constructor-injects
+        // Piwigo\Core\Lang (singleton/service-locator elimination
+        // campaign, Phase 8), whose own Paths param the container can't
+        // guess without a real one -- same "Kernel booted with no real
+        // Paths" reasoning as TemplateInterface above, one level removed.
+        \Piwigo\Core\FilterUpdaterInterface::class,
     ];
 
     public function test_every_container_entry_resolves(): void

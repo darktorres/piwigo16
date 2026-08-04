@@ -5,8 +5,12 @@ declare(strict_types=1);
 use Piwigo\Admin\Integrity\CheckIntegrity;
 use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity;
 use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyRepository;
+use Piwigo\Core\InstallationFlag;
+use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Html\HtmlService;
 use Piwigo\Lang\Translator;
 
 // add_anomaly()/get_htlm_links_more_info() are CheckIntegrity's own pure
@@ -20,12 +24,22 @@ use Piwigo\Lang\Translator;
 // -- check()/display() (tests/Integration/CheckIntegrityTest.php) already
 // established the DB-backed Integration precedent for this class.
 
+// This file never boots Kernel (no DB-backed collaborator under test
+// actually needs it), so Lang::current() (no memoized pre-boot fallback,
+// Phase 8) isn't an option -- a throwaway instance is built directly
+// instead, matching the same "real, cheap, DB-free collaborators" recipe
+// used throughout the campaign's own test fallout fixes.
+function checkIntegrityAddAnomalyTestLang(): Lang
+{
+    return new Lang(new Translator(), new HtmlService(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
+}
+
 function checkIntegrityAddAnomalyNew(): CheckIntegrity
 {
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(IntegrityIgnoredAnomalyEntity::class);
     expect($repo)->toBeInstanceOf(IntegrityIgnoredAnomalyRepository::class);
 
-    return new CheckIntegrity(\Piwigo\Core\Lang::current(), $repo, new Translator(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current(), \Piwigo\Template\CurrentTemplate::current());
+    return new CheckIntegrity(checkIntegrityAddAnomalyTestLang(), $repo, new Translator(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current(), \Piwigo\Template\CurrentTemplate::current());
 }
 
 test('add_anomaly records a new anomaly with is_callable computed from a real function name', function (): void {

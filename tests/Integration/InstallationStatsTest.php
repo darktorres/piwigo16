@@ -15,14 +15,15 @@ function installationStatsDbPrefix(): string
     return $prefix !== false ? $prefix : 'piwigo_';
 }
 
-// InstallationStats reads several of its counts through Bootstrap\
-// CoreDomainAccessor/ExtendedDomainAccessor (TagRepository/GroupRepository/
-// HistoryRepository/ImageRepository/UserRepository/RateService), so every
-// test in this file needs a booted container -- same convention as the
-// other Integration tests that touch container-backed services.
+// InstallationStats is a container-shared, constructor-injected instance
+// (RateService/HistoryService/ImageService/CategoryService/TagService/
+// UserService/GroupService -- singleton/service-locator elimination
+// campaign, Phase 6's own ExtendedDomainAccessor sub-batch), so every test
+// in this file needs a booted container -- same convention as the other
+// Integration tests that touch container-backed services.
 beforeEach(function (): void {
     // A real Paths is required too, not just any booted Kernel:
-    // CoreDomainAccessor::userService() resolves UserService, which now
+    // UserService (one of InstallationStats' own constructor deps) itself
     // constructor-injects DeploymentPolicy (Phase 4), whose own container
     // factory needs Paths bound to autowire.
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 2)));
@@ -32,8 +33,18 @@ afterEach(function (): void {
     Kernel::reset();
 });
 
+function installation_stats_test_make(): InstallationStats
+{
+    $installationStats = Kernel::container()->get(InstallationStats::class);
+    if (! $installationStats instanceof InstallationStats) {
+        throw new \LogicException('Container returned an unexpected type for ' . InstallationStats::class);
+    }
+
+    return $installationStats;
+}
+
 test('getGeneralStatistics returns the full known shape with non-negative integer values', function (): void {
-    $stats = InstallationStats::getGeneralStatistics();
+    $stats = installation_stats_test_make()->getGeneralStatistics();
 
     expect(array_keys($stats))->toBe([
         'nb_photos', 'nb_categories', 'nb_tags', 'nb_image_tag', 'nb_users',
@@ -50,7 +61,7 @@ test('getGeneralStatistics returns the full known shape with non-negative intege
 });
 
 test('getGeneralStatistics reflects a real, freshly-inserted category and tag as an exact +1 delta', function (): void {
-    $before = InstallationStats::getGeneralStatistics();
+    $before = installation_stats_test_make()->getGeneralStatistics();
 
     $conn = DbConnection::build();
     $conn->executeStatement(sprintf(
@@ -65,7 +76,7 @@ test('getGeneralStatistics reflects a real, freshly-inserted category and tag as
     $tagId = (int) $conn->lastInsertId();
 
     try {
-        $after = InstallationStats::getGeneralStatistics();
+        $after = installation_stats_test_make()->getGeneralStatistics();
 
         expect($after['nb_categories'])->toBe($before['nb_categories'] + 1);
         expect($after['nb_tags'])->toBe($before['nb_tags'] + 1);
@@ -76,7 +87,7 @@ test('getGeneralStatistics reflects a real, freshly-inserted category and tag as
 });
 
 test('getGeneralStatistics sums image filesize plus format filesize into disk_usage', function (): void {
-    $before = InstallationStats::getGeneralStatistics();
+    $before = installation_stats_test_make()->getGeneralStatistics();
 
     $conn = DbConnection::build();
     $prefix = installationStatsDbPrefix();
@@ -93,7 +104,7 @@ test('getGeneralStatistics sums image filesize plus format filesize into disk_us
     ));
 
     try {
-        $after = InstallationStats::getGeneralStatistics();
+        $after = installation_stats_test_make()->getGeneralStatistics();
 
         expect($after['nb_photos'])->toBe($before['nb_photos'] + 1);
         expect($after['nb_formats'])->toBe($before['nb_formats'] + 1);
@@ -113,7 +124,7 @@ test('getInstallationDate returns user 2\'s own registration_date when it is a r
     try {
         $conn->executeStatement("UPDATE " . Tables::userInfos() . " SET registration_date = '2020-05-15 10:00:00' WHERE user_id = 2");
 
-        expect(InstallationStats::getInstallationDate())->toBe('2020-05-15 10:00:00');
+        expect(installation_stats_test_make()->getInstallationDate())->toBe('2020-05-15 10:00:00');
     } finally {
         $conn->executeStatement(sprintf(
             "UPDATE %s SET registration_date = %s WHERE user_id = 2",
@@ -144,7 +155,7 @@ test('getInstallationDate falls back to the MIN registration_date across all use
             $newUserId
         ));
 
-        expect(InstallationStats::getInstallationDate())->toBe('2023-03-10 08:00:00');
+        expect(installation_stats_test_make()->getInstallationDate())->toBe('2023-03-10 08:00:00');
 
         $conn->executeStatement(sprintf('DELETE FROM %s WHERE user_id = %d', Tables::userInfos(), $newUserId));
         $conn->executeStatement(sprintf('DELETE FROM %susers WHERE id = %d', $prefix, $newUserId));
@@ -176,9 +187,9 @@ test('getInstallationDate falls back to the earliest image\'s date_available whe
         if ($earliestDateAvailable === false) {
             // No fixture photos at all -- both DB-backed candidates are
             // exhausted, so the method has nothing left to return.
-            expect(InstallationStats::getInstallationDate())->toBeNull();
+            expect(installation_stats_test_make()->getInstallationDate())->toBeNull();
         } else {
-            expect(InstallationStats::getInstallationDate())->toBe($earliestDateAvailable);
+            expect(installation_stats_test_make()->getInstallationDate())->toBe($earliestDateAvailable);
         }
     } finally {
         foreach ($originalRows as $row) {

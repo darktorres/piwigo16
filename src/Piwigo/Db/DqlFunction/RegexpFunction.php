@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Db\DqlFunction;
 
+use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\ORM\Query\AST\Functions\FunctionNode;
 use Doctrine\ORM\Query\AST\Node;
 use Doctrine\ORM\Query\Parser;
@@ -15,21 +16,22 @@ use Doctrine\ORM\Query\TokenType;
  * compiling to an infix `left <op> right` regex-match predicate.
  *
  * Further SQL-modernization audit, Item 14 Sub-phase B5 Tier 1: genuinely
- * portable, unlike a hardcoded `REGEXP` splice -- `getSql()` reads the
- * operator via `AbstractPlatform::getRegexpExpression()`, which resolves
- * to `RLIKE` on MySQL/MariaDB ({@see
- * \Doctrine\DBAL\Platforms\AbstractMySQLPlatform}), `REGEXP` on SQLite,
- * and `SIMILAR TO` on PostgreSQL -- the same primitive Item 16's own
- * `SqlDialect::DB_REGEX_OPERATOR` fix targets. Caveat, not yet verified
- * against a real non-MySQL-family database: PostgreSQL's `SIMILAR TO`
- * uses a different pattern-matching dialect than POSIX `REGEXP`
- * (implicit whole-string anchoring, no `^`/`$` needed the same way) --
- * real callers passing a POSIX-style pattern (e.g. `(^|,)123(,|$)`)
- * would need a Postgres-specific pattern rewrite too, not just the
- * operator swap this function provides. That's a real remaining gap
- * for genuine Postgres support, left for whenever a real Postgres
- * environment exists to verify against (no `install/schema/pgsql.sql`
- * exists yet in this repo -- see this plan's own Context section).
+ * portable, unlike a hardcoded `REGEXP` splice -- resolves to `RLIKE` on
+ * MySQL/MariaDB ({@see \Doctrine\DBAL\Platforms\AbstractMySQLPlatform}).
+ *
+ * pgsql support pass: the previous version delegated to
+ * `AbstractPlatform::getRegexpExpression()`, which resolves to `SIMILAR
+ * TO` on PostgreSQL -- a genuinely different pattern-matching dialect
+ * than POSIX `REGEXP`, not just a syntax rename (`SIMILAR TO` implicitly
+ * anchors the *whole* string, so a substring-search POSIX pattern like
+ * `(^|,)123(,|$)` never matches -- confirmed live: `'1,2' SIMILAR TO
+ * '(^|,)2(,|$)'` is `false`). The class's own prior docblock flagged this
+ * exact gap as unverified pending a real Postgres environment ("no
+ * install/schema/pgsql.sql exists yet"); now that one does, the fix is
+ * a real platform branch onto Postgres's own POSIX-regex operator (`~`,
+ * case-sensitive match -- confirmed live the same `'1,2' ~ '(^|,)2(,|$)'`
+ * pattern is `true`), not the framework's own generic
+ * `getRegexpExpression()`.
  */
 final class RegexpFunction extends FunctionNode
 {
@@ -40,9 +42,9 @@ final class RegexpFunction extends FunctionNode
     #[\Override]
     public function getSql(SqlWalker $sqlWalker): string
     {
-        $operator = $sqlWalker->getConnection()
-            ->getDatabasePlatform()
-            ->getRegexpExpression();
+        $platform = $sqlWalker->getConnection()
+            ->getDatabasePlatform();
+        $operator = $platform instanceof PostgreSQLPlatform ? '~' : $platform->getRegexpExpression();
 
         return $sqlWalker->walkStringPrimary($this->column) . ' ' . $operator . ' ' . $sqlWalker->walkStringPrimary($this->pattern);
     }

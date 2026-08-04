@@ -471,7 +471,7 @@ final class PwgCore
             return new PwgError(401, 'Cannot use this method with an api key');
         }
 
-        if (! \Piwigo\Auth\AccessControl::isAGuest()) {
+        if (! \Piwigo\Auth\AccessControl::current()->isAGuest()) {
             self::authService()->logoutUser();
         }
         return true;
@@ -488,7 +488,7 @@ final class PwgCore
 
         $currentUser = \Piwigo\Users\CurrentUser::current()->get();
         $res = [];
-        $res['username'] = \Piwigo\Auth\AccessControl::isAGuest() ? 'guest' : stripslashes($currentUser->username);
+        $res['username'] = \Piwigo\Auth\AccessControl::current()->isAGuest() ? 'guest' : stripslashes($currentUser->username);
         $res['status'] = $currentUser->status->value;
         $res['theme'] = $currentUser->theme;
         $res['language'] = $currentUser->language;
@@ -517,7 +517,7 @@ final class PwgCore
             $res['available_sizes'] = array_keys(ImageStdParams::current()->get_defined_type_map());
         }
 
-        if (\Piwigo\Auth\AccessControl::isAdmin()) {
+        if (\Piwigo\Auth\AccessControl::current()->isAdmin()) {
             $upload_ext_list = (\Piwigo\Config\CurrentConfig::uploadFormAllTypes()) ? \Piwigo\Config\CurrentConfig::fileExtensions() : \Piwigo\Config\CurrentConfig::pictureExtensions();
 
             $res['upload_file_types'] = implode(

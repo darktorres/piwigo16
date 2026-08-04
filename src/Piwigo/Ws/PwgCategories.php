@@ -465,7 +465,7 @@ final class PwgCategories
             $bound_params['guestForbiddenCategories'] = self::csvToIntList($guest_forbidden_categories);
             $bound_types['guestForbiddenCategories'] = ArrayParameterType::INTEGER;
             $rollupByCatId = self::categoryTreeCache($categoryConn)->getForUser($guest_userdata);
-        } elseif (\Piwigo\Auth\AccessControl::isAdmin()) {
+        } elseif (\Piwigo\Auth\AccessControl::current()->isAdmin()) {
             // in this very specific case, we don't want to hide empty
             // categories. Function calculate_permissions will only return
             // categories that are either locked or private and not permitted

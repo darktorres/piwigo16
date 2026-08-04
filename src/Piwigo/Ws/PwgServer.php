@@ -368,7 +368,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
             return new PwgError(405, 'This method requires HTTP POST');
         }
 
-        if (isset($method['options']['admin_only']) and (bool) $method['options']['admin_only'] and ! \Piwigo\Auth\AccessControl::isAdmin()) {
+        if (isset($method['options']['admin_only']) and (bool) $method['options']['admin_only'] and ! \Piwigo\Auth\AccessControl::current()->isAdmin()) {
             return new PwgError(401, 'Access denied');
         }
 

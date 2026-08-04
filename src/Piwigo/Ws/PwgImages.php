@@ -457,7 +457,7 @@ final class PwgImages
         }
         usort($related_categories, CategoryService::compareByGlobalRank(...));
 
-        if ($related_categories === [] and ! \Piwigo\Auth\AccessControl::isAdmin()) {
+        if ($related_categories === [] and ! \Piwigo\Auth\AccessControl::current()->isAdmin()) {
             // photo might be in the lounge? or simply orphan. A standard user should not get
             // info. An admin should still be able to get info.
             return new PwgError(401, 'Access denied');
@@ -503,7 +503,7 @@ final class PwgImages
         // ---------------------------------------------------------- related comments
         $related_comments = [];
 
-        $only_validated_comments = ! \Piwigo\Auth\AccessControl::isAdmin();
+        $only_validated_comments = ! \Piwigo\Auth\AccessControl::current()->isAdmin();
         $commentService = \Piwigo\Bootstrap\ExtendedDomainAccessor::commentService();
 
         $nb_comments = $commentService->countForImage($image_id, $only_validated_comments);
@@ -523,7 +523,7 @@ final class PwgImages
         $comment_post_data = null;
         if (\Piwigo\Config\CurrentConfig::activateComments() and
             $is_commentable and
-            (! \Piwigo\Auth\AccessControl::isAGuest()
+            (! \Piwigo\Auth\AccessControl::current()->isAGuest()
               or \Piwigo\Config\CurrentConfig::commentsForall()
             )
         ) {

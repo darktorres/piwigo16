@@ -98,7 +98,7 @@ final class PwgExtensions
             return new PwgError(403, 'Invalid security token');
         }
 
-        if (! AccessControl::isWebmaster()) {
+        if (! AccessControl::current()->isWebmaster()) {
             return new PwgError(403, Lang::t('Webmaster status is required.'));
         }
 
@@ -209,7 +209,7 @@ final class PwgExtensions
             return new PwgError(401, 'Piwigo extensions install/update system is disabled');
         }
 
-        if (! AccessControl::isWebmaster()) {
+        if (! AccessControl::current()->isWebmaster()) {
             return new PwgError(401, Lang::t('Webmaster status is required.'));
         }
 
@@ -340,7 +340,7 @@ final class PwgExtensions
         // which deleted include/functions.inc.php entirely; Phase 5
         // Legacy Coupling Retirement retargeted it onto CurrentConfigService).
 
-        if (! AccessControl::isWebmaster()) {
+        if (! AccessControl::current()->isWebmaster()) {
             return new PwgError(401, 'Access denied');
         }
 

@@ -638,7 +638,7 @@ final class PwgUsers
             return new PwgError(403, 'Invalid security token');
         }
 
-        if (AccessControl::isAGuest()) {
+        if (AccessControl::current()->isAGuest()) {
             return new PwgError(401, 'Access Denied');
         }
 
@@ -766,7 +766,7 @@ final class PwgUsers
      */
     public static function favoritesAdd(array $params, PwgServer &$service): PwgError|true
     {
-        if (AccessControl::isAGuest()) {
+        if (AccessControl::current()->isAGuest()) {
             return new PwgError(403, 'User must be logged in.');
         }
 
@@ -789,7 +789,7 @@ final class PwgUsers
      */
     public static function favoritesRemove(array $params, PwgServer &$service): PwgError|true
     {
-        if (AccessControl::isAGuest()) {
+        if (AccessControl::current()->isAGuest()) {
             return new PwgError(403, 'User must be logged in.');
         }
 
@@ -816,7 +816,7 @@ final class PwgUsers
     public static function favoritesGetList(array $params, PwgServer &$service): false|array
     {
 
-        if (AccessControl::isAGuest()) {
+        if (AccessControl::current()->isAGuest()) {
             return false;
         }
 
@@ -896,7 +896,7 @@ final class PwgUsers
         $user_lost_status = is_string($user_lost['status']) ? $user_lost['status'] : '';
 
         // Cannot perform this action for a guest or generic user
-        if (AccessControl::isAGuest($user_lost_status) or AccessControl::isGeneric($user_lost_status)) {
+        if (AccessControl::current()->isAGuest($user_lost_status) or AccessControl::current()->isGeneric($user_lost_status)) {
             return new PwgError(403, 'Password reset is not allowed for this user');
         }
 
@@ -960,7 +960,7 @@ final class PwgUsers
     public static function setMainUser(array $params, PwgServer &$service): PwgError|string
     {
         // check if not webmaster
-        if (! AccessControl::isWebmaster()) {
+        if (! AccessControl::current()->isWebmaster()) {
             return new PwgError(403, 'You cannot perform this action');
         }
 
@@ -1001,7 +1001,7 @@ final class PwgUsers
     {
         $logger = \Piwigo\Core\CurrentLogger::getStatic();
 
-        if (AccessControl::isAGuest() or ! self::apiKeyService()->connectedWithPwgUi()) {
+        if (AccessControl::current()->isAGuest() or ! self::apiKeyService()->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
         }
 
@@ -1046,7 +1046,7 @@ final class PwgUsers
     {
         $logger = \Piwigo\Core\CurrentLogger::getStatic();
 
-        if (AccessControl::isAGuest() or ! self::apiKeyService()->connectedWithPwgUi()) {
+        if (AccessControl::current()->isAGuest() or ! self::apiKeyService()->connectedWithPwgUi()) {
             return new PwgError(401, 'Acces Denied');
         }
 
@@ -1084,7 +1084,7 @@ final class PwgUsers
     {
         $logger = \Piwigo\Core\CurrentLogger::getStatic();
 
-        if (AccessControl::isAGuest()) {
+        if (AccessControl::current()->isAGuest()) {
             return new PwgError(401, 'Acces Denied');
         }
 
@@ -1127,7 +1127,7 @@ final class PwgUsers
      */
     public static function getApiKey(array $params, PwgServer &$service): PwgError|array|string
     {
-        if (AccessControl::isAGuest()) {
+        if (AccessControl::current()->isAGuest()) {
             return new PwgError(401, 'Acces Denied');
         }
 

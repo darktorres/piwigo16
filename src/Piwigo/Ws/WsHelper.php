@@ -39,7 +39,7 @@ final class WsHelper
             return $event;
         }
 
-        if (! \Piwigo\Auth\AccessControl::isAuthorizeStatus(AccessLevel::Guest) and
+        if (! \Piwigo\Auth\AccessControl::current()->isAuthorizeStatus(AccessLevel::Guest) and
             ! str_starts_with($event->methodName, 'pwg.session.')) {
             $event->value = new PwgError(401, 'Access denied');
             return $event;

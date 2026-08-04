@@ -812,14 +812,24 @@ test('DbCredentials::current() transitional bridge has a shrinking, known allow-
     // EntityManagerFactory.php are the same shape. RequestBootstrap.php is
     // inside Bootstrap/ (already allowed direct Kernel::container() access)
     // but uses this shim for style consistency with its own neighboring
-    // DbConnection::build() call.
+    // DbConnection::build() call. UniqueExecLock.php is the same
+    // pure-static-utility shape as Tables.php (no instance/constructor at
+    // all -- every method is `public static`). UploadService.php/
+    // Ws/PwgImages.php read the prefix only inside a GET_LOCK() name-hashing
+    // helper, immediately alongside their own `DbConnection::build()` call
+    // -- same style-consistency reasoning as RequestBootstrap.php;
+    // PwgImages.php is additionally still-static Ws\Pwg* dispatch (Phase
+    // 10), not yet DI-converted at all.
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
+        '/src/Piwigo/Admin/Upload/UploadService.php',
         '/src/Piwigo/Bootstrap/RequestBootstrap.php',
+        '/src/Piwigo/Core/UniqueExecLock.php',
         '/src/Piwigo/Db/DbConnection.php',
         '/src/Piwigo/Db/EntityManagerFactory.php',
         '/src/Piwigo/Db/Tables.php',
+        '/src/Piwigo/Ws/PwgImages.php',
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'DbCredentials::current(');

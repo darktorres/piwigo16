@@ -821,7 +821,7 @@ namespace Piwigo\Tests\Integration {
                 // Busts getNbAvailableComments()'s own per-request cache
                 // (CurrentUser::rawAttributes['nb_available_comments']) so
                 // the second call genuinely recomputes.
-                CurrentUser::set(CurrentUser::get()->withRawAttribute('nb_available_comments', null));
+                CurrentUser::current()->set(CurrentUser::current()->get()->withRawAttribute('nb_available_comments', null));
 
                 $afterInsert = CommentService::getNbAvailableComments();
 

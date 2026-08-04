@@ -55,6 +55,18 @@ final class FulltextNgramSearchTest extends IntegrationTestCase
         parent::setUp();
         $this->setUpConnectionFromEnv();
 
+        // pgsql support pass: this whole class exercises MySQL/InnoDB's
+        // own `WITH PARSER ngram` FULLTEXT mechanism directly (raw
+        // MATCH()/AGAINST() queries) -- a MySQL-specific tokenizer/
+        // stopword-index-creation-time behavior with no Postgres
+        // equivalent at all, not a portability gap. PostgreSQL's own
+        // FULLTEXT parity (tsvector/to_tsquery via the `simple`
+        // dictionary) is a genuinely different mechanism, already
+        // covered separately by SearchFulltextPortabilityTest.
+        if ($this->dbDriver === 'pgsql') {
+            self::markTestSkipped('This class exercises MySQL/InnoDB\'s own ngram FULLTEXT parser directly -- no Postgres equivalent; see SearchFulltextPortabilityTest for the Postgres tsquery/tsvector coverage instead.');
+        }
+
         if (! self::$fixtureReady) {
             $this->resetDatabase();
             $this->loadFixture(dirname(__DIR__, 2) . '/tests/Fixtures/piwigo-17.0.sql');

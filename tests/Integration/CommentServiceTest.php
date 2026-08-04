@@ -998,7 +998,7 @@ namespace Piwigo\Tests\Integration {
                 ->executeQuery()
                 ->fetchOne();
 
-            return is_numeric($value) ? (int) $value : null;
+            return is_bool($value) || is_numeric($value) ? (int) (bool) $value : null;
         }
     }
 }

@@ -106,6 +106,14 @@ final class CalendarRepository
             }
         }
 
+        // pgsql support pass: real bug found live -- $orderBySql traces
+        // back to CurrentConfig::orderBy(), admin-settable raw SQL text
+        // that can legitimately be `ORDER BY RAND()`. Same real gap
+        // already fixed for CategoryRepository's own raw-DBAL fallback
+        // ("function rand() does not exist" against a real Postgres
+        // server otherwise).
+        $orderBySql = str_ireplace('RAND()', \Piwigo\Db\SqlDialect::randomFunction() . '()', $orderBySql);
+
         $ids = $this->em->getConnection()
             ->executeQuery(
                 'SELECT id ' . $fromWhere->sql . ' ' . $dateWhere->sql . ' GROUP BY id ' . $orderBySql,
@@ -192,10 +200,18 @@ final class CalendarRepository
      */
     public function countGroupedByLevel(string $levelDql, CalendarQueryScope $scope, SqlCondition $dateWhere): array
     {
+        // pgsql support pass: real bug found live -- no ORDER BY, so row
+        // order was never guaranteed; MySQL and PostgreSQL disagreed on
+        // it (nav bar items appearing out of chronological order).
+        // $levelDql is always one of YEAR()/WEEK()/WEEKDAY()'s own
+        // numeric DQL functions, so a plain numeric ASC sort is always
+        // correct here, matching countByMonthDay()/countByDayOfMonth()'s
+        // own established "period alone is group+sort key" precedent.
         $qb = $this->baseQueryBuilder($scope)
             ->select($levelDql . ' AS period', 'COUNT(DISTINCT i.id) AS nb_images')
             ->distinct()
-            ->groupBy('period');
+            ->groupBy('period')
+            ->orderBy('period', 'ASC');
         self::applyCondition($qb, $dateWhere);
 
         $result = [];

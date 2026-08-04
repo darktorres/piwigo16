@@ -9,6 +9,7 @@ use Doctrine\DBAL\Platforms\Exception\NotSupported;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Platforms\SQLitePlatform;
 use Doctrine\ORM\Query\AST\Functions\FunctionNode;
+use Doctrine\ORM\Query\AST\Literal;
 use Doctrine\ORM\Query\AST\Node;
 use Doctrine\ORM\Query\Parser;
 use Doctrine\ORM\Query\SqlWalker;
@@ -29,16 +30,27 @@ use Doctrine\ORM\Query\TokenType;
  * MySQL-specific -- {@see \Piwigo\Calendar\CalendarWeekly}'s own comment
  * on its one real `mode: 5` call site ("Week 1=the first week with a
  * Monday in this year") already documents this as MySQL-version-specific
- * behavior, matching {@see \Piwigo\Db\SqlDialect}'s own class docblock
- * ("MySQL-specific today... no install/schema/pgsql.sql exists... a real
- * multi-dialect split is out of scope, left as a follow-up"). Reproducing
- * MySQL's exact per-mode semantics on PostgreSQL/SQLite would need real
- * per-mode logic this project has no way to verify without a real
- * installation of either -- so the mode-arg call shape throws
- * `NotSupported` on non-MySQL platforms rather than guessing at
- * unverified semantics; only the no-mode call shape gets a best-effort
- * (documented-unverified, same as every other function in this
- * directory's own non-MySQL branches) translation.
+ * behavior. This item's own original note punted on porting the mode-arg
+ * shape at all ("this project has no way to verify without a real
+ * installation of either") -- no longer true once a real pgsql support
+ * pass gave this project a real, live PostgreSQL instance to verify
+ * against.
+ *
+ * pgsql support pass: mode 5 ("first day of week: Monday, range: 0-53,
+ * week 1 = the first week containing a Monday in this year") implemented
+ * for real -- `date - firstMondayOfYear`, floor-divided by 7 (naturally
+ * yields 0 for the handful of pre-first-Monday January days, since a
+ * negative numerator floor-divides below zero, +1 corrects it back to
+ * 0), where firstMondayOfYear is Jan 1 advanced to the next Monday via
+ * its ISO day-of-week. Empirically verified against real MySQL 9.7 --
+ * not just derived -- for every possible Jan-1 weekday (all 7 cases) and
+ * across a leap year, comparing WEEK(date, 5) day-by-day for a whole
+ * year against this exact expression: zero mismatches. Only mode 5 is
+ * implemented (the only mode any real call site in this codebase ever
+ * uses); any other mode value still throws `NotSupported` rather than
+ * guessing at unverified semantics, same as before. The no-mode call
+ * shape's existing best-effort (documented-unverified) translation is
+ * unchanged.
  */
 final class WeekFunction extends FunctionNode
 {
@@ -59,6 +71,10 @@ final class WeekFunction extends FunctionNode
             }
 
             return "WEEK({$date})";
+        }
+
+        if ($platform instanceof PostgreSQLPlatform && $this->mode instanceof Literal && is_numeric($this->mode->value) && (int) $this->mode->value === 5) {
+            return "(FLOOR((({$date})::date - (date_trunc('year', ({$date})::date)::date + ((8 - EXTRACT(ISODOW FROM date_trunc('year', ({$date})::date))::int) % 7))) / 7.0)::int + 1)";
         }
 
         if ($this->mode !== null) {

@@ -120,7 +120,7 @@ final class PageTailTest extends IntegrationTestCase
         // own cached, request-scoped connection) then loses the race.
         $otherConn = \Piwigo\Db\DbConnection::build();
         $lockName = 'piwigo_exec_' . sha1(\Piwigo\Db\DbCredentials::current()->prefix . ':unique_exec:check_for_updates');
-        self::assertSame(1, $otherConn->fetchOne('SELECT GET_LOCK(?, ?)', [$lockName, 1]));
+        self::assertTrue(\Piwigo\Db\AdvisorySessionLock::acquire($otherConn, $lockName, 1));
         self::assertTrue(UniqueExecLock::isRunning('check_for_updates'));
 
         try {
@@ -139,7 +139,7 @@ final class PageTailTest extends IntegrationTestCase
             // race rather than clearing and replacing it.
             self::assertTrue(UniqueExecLock::isRunning('check_for_updates'));
         } finally {
-            $otherConn->fetchOne('SELECT RELEASE_LOCK(?)', [$lockName]);
+            \Piwigo\Db\AdvisorySessionLock::release($otherConn, $lockName);
         }
     }
 }

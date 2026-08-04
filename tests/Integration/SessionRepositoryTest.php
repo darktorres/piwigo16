@@ -90,8 +90,17 @@ final class SessionRepositoryTest extends IntegrationTestCase
 
         // Backdate one row's expiration well past any real session_length,
         // insert the other with a fresh (now) expiration.
+        //
+        // pgsql support pass: real bug found live -- REPLACE INTO is
+        // MySQL-only syntax ("syntax error at or near 'REPLACE'").
+        // Postgres's portable equivalent is INSERT ... ON CONFLICT (id)
+        // DO UPDATE SET ... (id is sessions' own primary key), matching
+        // REPLACE INTO's own upsert semantics exactly.
+        $onConflict = $this->dbDriver === 'pgsql'
+            ? 'ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data, expiration = EXCLUDED.expiration'
+            : 'ON DUPLICATE KEY UPDATE data = VALUES(data), expiration = VALUES(expiration)';
         $conn->executeStatement(
-            'REPLACE INTO ' . Tables::sessions() . ' (id, data, expiration) VALUES (?, ?, ?)',
+            'INSERT INTO ' . Tables::sessions() . " (id, data, expiration) VALUES (?, ?, ?) {$onConflict}",
             [$oldId, 'stale', new \DateTimeImmutable('-1 year')],
             [ParameterType::STRING, ParameterType::STRING, Types::DATETIME_IMMUTABLE],
         );

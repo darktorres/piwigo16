@@ -123,7 +123,7 @@ enum PhotoSortField
             self::RatingScore => 'rating_score',
             self::DateCreation => 'date_creation',
             self::DateAvailable => 'date_available',
-            self::Random => SqlDialect::DB_RANDOM_FUNCTION . '()',
+            self::Random => SqlDialect::randomFunction() . '()',
             self::Rank => '`rank`',
         };
     }

@@ -545,7 +545,19 @@ final class CategoryRepository extends EntityRepository
         // own "ORDER BY " keyword, so the prefix must be stripped here or
         // the query becomes "ORDER BY ORDER BY ..." (a real syntax error,
         // caught live via CategoryServiceTest).
-        $qb->orderBy(str_replace('ORDER BY ', '', \Piwigo\Config\CurrentConfig::orderBy()));
+        // pgsql support pass: real bug found live -- CurrentConfig::orderBy()
+        // is raw, sysadmin-settable SQL text (order_by/order_by_custom),
+        // commonly containing the well-known "RAND()" random-order value
+        // (Image\PhotoSortField::Random's own token). Unlike the DQL path
+        // above (routes through the portable DqlFunction\RandFunction
+        // automatically), this raw-DBAL fallback needs the literal
+        // translated by hand -- confirmed live: "function rand() does not
+        // exist" against a real Postgres server otherwise.
+        $qb->orderBy(str_ireplace(
+            'RAND()',
+            SqlDialect::randomFunction() . '()',
+            str_replace('ORDER BY ', '', \Piwigo\Config\CurrentConfig::orderBy())
+        ));
 
         $ids = $qb->executeQuery()
             ->fetchFirstColumn();

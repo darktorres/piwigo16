@@ -77,7 +77,26 @@ final class SqlDialect
      */
     public const string REQUIRED_POSTGRES_VERSION = '13.0';
 
-    public const string DB_RANDOM_FUNCTION = 'RAND';
+    /**
+     * pgsql support pass: real bug found live -- callers building a raw
+     * SQL fragment from this (not DQL, which already has its own portable
+     * {@see \Piwigo\Db\DqlFunction\RandFunction}) always got the literal
+     * MySQL name, so a real WS "sort by random" request (via
+     * Ws\WsHelper::stdImageSqlOrder() -> Image\PhotoSortField::column())
+     * and CategoryRepository::findImageIdsForCategories()'s own raw-DBAL
+     * fallback for a `RAND()`-valued `order_by`/`order_by_custom` config
+     * both failed against a real Postgres server with "function rand()
+     * does not exist" -- Postgres's own random-ordering function is
+     * `RANDOM()`, a different name entirely, not just a dialect quirk of
+     * the same function. Was a bare `const string` (no way to branch)
+     * before this pass; converted to a method, matching this class's own
+     * established `DbCredentials::fromEnv()->driver`-branch pattern
+     * ({@see getRecentPeriodExpression()}/{@see getHour()}/{@see dateToTs()}).
+     */
+    public static function randomFunction(): string
+    {
+        return DbCredentials::fromEnv()->driver === 'pgsql' ? 'RANDOM' : 'RAND';
+    }
 
     /**
      * Checks if a variable is equivalent to true or false.

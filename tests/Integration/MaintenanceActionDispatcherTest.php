@@ -88,6 +88,11 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
     private function maintenanceActionDispatcherTestRateService(): \Piwigo\Rate\RateService
     {
         return new \Piwigo\Rate\RateService(
+            new \Piwigo\Auth\AccessControl(
+                new \Piwigo\Tests\Unit\Auth\AccessControlTestFakeHtmlRendererDeniesAccess(),
+                new \Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled(),
+                new \Piwigo\Users\CurrentUser(),
+            ),
             \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Rate\RateEntity::class),
             new \Piwigo\Auth\CookieService(),
             new \Piwigo\PluginConfig\EventDispatcher(),

@@ -58,7 +58,7 @@ namespace Piwigo\Tests\Integration {
             unset($_COOKIE['pwg_anonymous_rater']);
 
             $this->conn = DbConnection::build();
-            $this->service = new RateService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Rate\RateEntity::class), new CookieService(), EventDispatcher::get(), \Piwigo\Users\CurrentUser::current());
+            $this->service = new RateService(\Piwigo\Auth\AccessControl::current(), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Rate\RateEntity::class), new CookieService(), EventDispatcher::get(), \Piwigo\Users\CurrentUser::current());
         }
 
         public function test_rate_returns_false_for_a_null_rate(): void

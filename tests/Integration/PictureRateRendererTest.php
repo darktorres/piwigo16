@@ -70,7 +70,7 @@ final class PictureRateRendererTest extends IntegrationTestCase
         // regardless of run order.
         $this->conn->executeStatement('DELETE FROM ' . Tables::rate() . ' WHERE element_id = 1');
 
-        $this->renderer = new PictureRateRenderer($this->repo, \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current());
+        $this->renderer = new PictureRateRenderer(\Piwigo\Auth\AccessControl::current(), $this->repo, \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current());
     }
 
     #[\Override]

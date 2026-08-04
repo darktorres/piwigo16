@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Admin\StatsPageRenderer;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 
@@ -64,7 +65,12 @@ function statsGetMonthOfLastYearsInvoke(): array
 }
 
 beforeEach(function (): void {
-    Kernel::boot();
+    // AccessControl::current() (singleton/service-locator elimination
+    // campaign, Phase 7) is now part of HistoryService's own constructor
+    // chain (AccessControl -> RedirectService -> UserService -> Paths) --
+    // a bare Kernel::boot() with no Paths, which this file never needed
+    // before, no longer resolves.
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 2)));
     // getMonthlyRows(null) (no $limit) reads every month-level row in the
     // WHOLE table -- this method's own count($allRows) > 1 vs <= 1
     // branching can only be pinned deterministically by starting from a

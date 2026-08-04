@@ -250,8 +250,18 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
         $this->smarty->registerPlugin('modifier', 'is_null', 'is_null');
         $this->smarty->registerPlugin('modifier', 'l10n', Lang::t(...));
         $this->smarty->registerPlugin('modifier', 'str_replace', 'str_replace');
-        $this->smarty->registerPlugin('modifier', 'is_admin', AccessControl::current()->isAdmin(...));
-        $this->smarty->registerPlugin('modifier', 'is_classic_user', AccessControl::current()->isClassicUser(...));
+        // Deliberately lazy (unlike the other AccessControl::current()-free
+        // modifiers above) -- AccessControl::current()'s dependency chain
+        // (RedirectService -> UserService -> a real DB connection) can
+        // throw before any template ever actually pipes a value through
+        // `is_admin`/`is_classic_user`; the old static
+        // AccessControl::isAdmin() never had this problem since a static
+        // first-class callable needs no instance to resolve at
+        // registration time. Found live: InstallWizard::render() builds a
+        // Template before the submitted DB credentials are known to be
+        // valid, which must not fail merely because the constructor ran.
+        $this->smarty->registerPlugin('modifier', 'is_admin', static fn (string $userStatus = ''): bool => AccessControl::current()->isAdmin($userStatus));
+        $this->smarty->registerPlugin('modifier', 'is_classic_user', static fn (string $userStatus = ''): bool => AccessControl::current()->isClassicUser($userStatus));
         $this->smarty->registerPlugin('modifier', 'get_device', DeviceHelper::getDevice(...));
         $this->smarty->registerPlugin('modifier', 'is_file', 'is_file');
         $this->smarty->registerPlugin('modifier', 'strpos', 'strpos');

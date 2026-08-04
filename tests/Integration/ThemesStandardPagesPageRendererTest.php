@@ -276,6 +276,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         // resolves anything, singleton/service-locator elimination
         // campaign, Phase 2).
         return new ThemesStandardPagesPageRenderer(
+            \Piwigo\Auth\AccessControl::current(),
             new RedirectService($this->userService()),
             new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()),
             $this->configService,

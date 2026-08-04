@@ -68,6 +68,7 @@ final class PageTailRendererTest extends IntegrationTestCase
         $_SESSION = [];
 
         $this->renderer = new PageTailRenderer(
+            \Piwigo\Auth\AccessControl::current(),
             new class implements TelemetrySenderInterface {
                 public function send(): void
                 {

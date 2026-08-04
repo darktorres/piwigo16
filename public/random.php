@@ -31,7 +31,7 @@ $paths = Paths::fromRoot(dirname(__DIR__));
 // +-----------------------------------------------------------------------+
 // | Check Access and exit when user status is not ok                      |
 // +-----------------------------------------------------------------------+
-\Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
+\Piwigo\Auth\AccessControl::current()->checkStatus(AccessLevel::Guest);
 
 // +-----------------------------------------------------------------------+
 // |                     generate random element list                      |

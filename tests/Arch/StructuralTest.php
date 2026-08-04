@@ -1389,21 +1389,31 @@ test('AccessControl::current() transitional bridge has a shrinking, known allow-
     // allow-list too). PermissionService.php/CategoryService.php/
     // CommentService.php/UserService.php have real Ws/Pwg*.php-locked
     // callers (Phase-10-locked static dispatch). CssLoader.php/
-    // ScriptLoader.php construct FileCombiner, itself entangled with the
-    // same UrlService-bridge group Phase 6 already flagged. PluginMaintain.php
+    // ScriptLoader.php are NOT in this allow-list -- found live during
+    // this phase's own close-out: constructing a Doctrine repository for
+    // the first time in a process makes Doctrine eagerly connect to
+    // auto-detect the DB platform, so current()'s new dependency chain
+    // (-> RedirectService -> UserService -> a repository) could turn a
+    // transient DB outage into an uncaught fatal on every single page
+    // render (Template::parse() calls CssLoader::get_css()
+    // unconditionally). Both files call the never-throwing
+    // AccessControl::currentForCaching() instead -- see that method's own
+    // docblock -- which doesn't match this test's `current(` search
+    // pattern, so they simply never appear as a hit here. PluginMaintain.php
     // is a plugin-extensible base class whose own constructor contract
     // can't gain a new required param. Bootstrap/PageTail.php/
     // Bootstrap/RequestBootstrap.php resolve it the same way every other
     // Bootstrap/-internal file resolves a not-yet-constructor-injected
     // collaborator. Ws/Pwg*.php + WsDefaultMethods.php/WsHelper.php are
-    // Phase-10-locked static dispatch. public/admin.php is a raw
-    // entry-shell root file, no constructor to inject through. Every
-    // phase that converts one more of these files to constructor-injected
-    // AccessControl should remove it from the allow-list below.
+    // Phase-10-locked static dispatch. public/admin.php/public/random.php
+    // are raw entry-shell root files, no constructor to inject through.
+    // Every phase that converts one more of these files to constructor-
+    // injected AccessControl should remove it from the allow-list below.
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
         '/public/admin.php',
+        '/public/random.php',
         '/src/Piwigo/Admin/PluginMaintain.php',
         '/src/Piwigo/Bootstrap/PageTail.php',
         '/src/Piwigo/Bootstrap/RequestBootstrap.php',
@@ -1412,8 +1422,6 @@ test('AccessControl::current() transitional bridge has a shrinking, known allow-
         '/src/Piwigo/Html/HtmlService.php',
         '/src/Piwigo/Mail/MailService.php',
         '/src/Piwigo/Permission/PermissionService.php',
-        '/src/Piwigo/Template/CssLoader.php',
-        '/src/Piwigo/Template/ScriptLoader.php',
         '/src/Piwigo/Template/Template.php',
         '/src/Piwigo/Url/UrlService.php',
         '/src/Piwigo/Users/UserService.php',

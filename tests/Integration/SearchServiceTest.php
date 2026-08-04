@@ -263,6 +263,7 @@ final class SearchServiceTest extends IntegrationTestCase
         CurrentConfig::setRateEnabled(true);
 
         $this->service = new SearchService(
+            \Piwigo\Auth\AccessControl::current(),
             $this->repo,
             new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class)),
             new CategoryService(
@@ -309,6 +310,7 @@ final class SearchServiceTest extends IntegrationTestCase
     private function makeService(SearchRepository $repo, HtmlRenderingInterface $htmlRenderer): SearchService
     {
         return new SearchService(
+            \Piwigo\Auth\AccessControl::current(),
             $repo,
             new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class)),
             new CategoryService(

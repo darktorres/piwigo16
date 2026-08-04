@@ -177,7 +177,11 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
     #[\Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET commentable = 1, visible = 1, status = 'public', representative_picture_id = NULL, image_order = NULL");
+        // commentable/visible are genuine boolean columns -- bare `1`
+        // literals in the SQL text (unlike a bound parameter, which the
+        // driver coerces implicitly) are rejected outright by Postgres.
+        $boolLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
+        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET commentable = {$boolLiteral}, visible = {$boolLiteral}, status = 'public', representative_picture_id = NULL, image_order = NULL");
         $this->conn->executeStatement('DELETE FROM ' . Tables::userAccess());
         $this->conn->executeStatement('DELETE FROM ' . Tables::groupAccess());
         $this->conn->executeStatement('INSERT INTO ' . Tables::groupAccess() . ' (group_id, cat_id) VALUES (1, 1), (1, 2), (2, 1), (3, 1)');
@@ -237,7 +241,9 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
 
         $category = $this->fetchCategory(1);
         self::assertNotNull($category);
-        self::assertSame(0, $category['commentable']);
+        // commentable is a genuine boolean column -- SELECT * returns a
+        // native PHP bool for it on Postgres, but a numeric 1/0 on MySQL.
+        self::assertSame(0, (int) (bool) $category['commentable']);
 
         self::assertCount(1, $logger->calls);
         self::assertSame('album', $logger->calls[0]['object']);
@@ -252,7 +258,9 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
 
         $category = $this->fetchCategory(2);
         self::assertNotNull($category);
-        self::assertSame(1, $category['visible']);
+        // visible is a genuine boolean column -- SELECT * returns a
+        // native PHP bool for it on Postgres, but a numeric 1/0 on MySQL.
+        self::assertSame(1, (int) (bool) $category['visible']);
     }
 
     public function test_set_category_option_status_false_sets_private(): void

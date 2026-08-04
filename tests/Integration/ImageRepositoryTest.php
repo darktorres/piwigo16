@@ -1435,9 +1435,9 @@ final class ImageRepositoryTest extends IntegrationTestCase
         $this->conn->beginTransaction();
 
         try {
-            $this->conn->executeStatement('SET FOREIGN_KEY_CHECKS = 0');
+            $this->disableForeignKeyChecks($this->conn);
             $this->conn->insert(Tables::imageCategory(), ['image_id' => 999999, 'category_id' => 1]);
-            $this->conn->executeStatement('SET FOREIGN_KEY_CHECKS = 1');
+            $this->enableForeignKeyChecks($this->conn);
 
             self::assertSame([999999], $this->repo->findOrphanImageCategoryLinkIds());
         } finally {

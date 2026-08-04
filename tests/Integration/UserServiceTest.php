@@ -735,10 +735,10 @@ namespace Piwigo\Tests\Integration {
             // insert reproduces the only real way this state has ever
             // existed in practice: a bulk import/migration that ran with
             // checks off.
-            $this->conn->executeStatement('SET FOREIGN_KEY_CHECKS=0');
+            $this->disableForeignKeyChecks($this->conn);
             $this->conn->executeStatement('INSERT INTO ' . Tables::userGroup() . ' (user_id, group_id) VALUES (777777, 1)');
             $this->conn->executeStatement('INSERT INTO ' . Tables::userInfos() . ' (user_id) VALUES (777777)');
-            $this->conn->executeStatement('SET FOREIGN_KEY_CHECKS=1');
+            $this->enableForeignKeyChecks($this->conn);
 
             self::assertSame(1, $this->fetchOneInt('SELECT COUNT(*) FROM ' . Tables::userGroup() . ' WHERE user_id = 777777'));
             self::assertSame(1, $this->fetchOneInt('SELECT COUNT(*) FROM ' . Tables::userInfos() . ' WHERE user_id = 777777'));

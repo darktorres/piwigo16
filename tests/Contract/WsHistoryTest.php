@@ -1132,11 +1132,24 @@ final class WsHistoryTest extends ContractTestCase
         $this->enableHistoryForAdmin();
         $this->wsAdmin('pwg.history.log', ['image_id' => 1]);
 
-        $this->conn->executeStatement('SET FOREIGN_KEY_CHECKS=0');
+        $this->disableForeignKeyChecks($this->conn);
+        // `UPDATE ... ORDER BY ... LIMIT` is a MySQL-only extension --
+        // Postgres has no ORDER BY/LIMIT clause on UPDATE at all. The
+        // portable form targets the exact row via a subquery instead
+        // (evaluated once against the pre-mutation table state on both
+        // platforms, same as the MySQL form's own single-statement
+        // atomicity). The extra derived-table wrapper (`SELECT id FROM
+        // (SELECT id FROM ... ) AS t`) is load-bearing on MySQL
+        // specifically -- MySQL rejects a subquery that references the
+        // very table being updated ("You can't specify target table ...
+        // for update in FROM clause") unless it's first materialized as
+        // a derived table; Postgres has no such restriction but accepts
+        // this form identically.
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::history() . ' SET image_id = 999999, category_id = NULL, section = NULL WHERE image_id = 1 ORDER BY id DESC LIMIT 1'
+            'UPDATE ' . Tables::history() . ' SET image_id = 999999, category_id = NULL, section = NULL '
+            . 'WHERE id = (SELECT id FROM (SELECT id FROM ' . Tables::history() . ' WHERE image_id = 1 ORDER BY id DESC LIMIT 1) AS t)'
         );
-        $this->conn->executeStatement('SET FOREIGN_KEY_CHECKS=1');
+        $this->enableForeignKeyChecks($this->conn);
 
         $response = $this->wsAdmin('pwg.history.search', ['image_id' => 999999]);
 
@@ -1224,11 +1237,16 @@ final class WsHistoryTest extends ContractTestCase
         $this->enableHistoryForAdmin();
         $this->wsAdmin('pwg.history.log', ['image_id' => 1]);
 
-        $this->conn->executeStatement('SET FOREIGN_KEY_CHECKS=0');
+        $this->disableForeignKeyChecks($this->conn);
+        // Portable derived-table subquery form -- see the dangling-image-id
+        // test above for why `UPDATE ... ORDER BY ... LIMIT` itself isn't,
+        // and why the extra derived-table wrapper is needed on MySQL
+        // specifically.
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::history() . ' SET user_id = 999999 WHERE image_id = 1 ORDER BY id DESC LIMIT 1'
+            'UPDATE ' . Tables::history() . ' SET user_id = 999999 '
+            . 'WHERE id = (SELECT id FROM (SELECT id FROM ' . Tables::history() . ' WHERE image_id = 1 ORDER BY id DESC LIMIT 1) AS t)'
         );
-        $this->conn->executeStatement('SET FOREIGN_KEY_CHECKS=1');
+        $this->enableForeignKeyChecks($this->conn);
 
         try {
             $response = $this->wsAdmin('pwg.history.search', ['image_id' => 1]);
@@ -1252,11 +1270,11 @@ final class WsHistoryTest extends ContractTestCase
             // row behind for a test that runs after this one. fixture_admin
             // (id 1, seeded by every Contract test's own shared fixture) is
             // always present -- no assertion needed in a `finally` cleanup.
-            $this->conn->executeStatement('SET FOREIGN_KEY_CHECKS=0');
+            $this->disableForeignKeyChecks($this->conn);
             $this->conn->executeStatement(
                 "UPDATE " . Tables::history() . " SET user_id = (SELECT id FROM " . Tables::users() . " WHERE username = 'fixture_admin') WHERE user_id = 999999"
             );
-            $this->conn->executeStatement('SET FOREIGN_KEY_CHECKS=1');
+            $this->enableForeignKeyChecks($this->conn);
         }
     }
 

@@ -833,11 +833,11 @@ final class CategoryServiceTest extends IntegrationTestCase
         // disabling FK checks just for these inserts reproduces the
         // only real way this state has ever existed in practice, same
         // pattern FilesystemIntegrityCheckerTest's own orphan tests use.
-        $this->conn->executeStatement('SET FOREIGN_KEY_CHECKS=0');
+        $this->disableForeignKeyChecks($this->conn);
         $this->conn->executeStatement('INSERT INTO ' . Tables::imageCategory() . ' (image_id, category_id) VALUES (1, 60000)');
         $this->conn->executeStatement('INSERT INTO ' . Tables::userAccess() . ' (user_id, cat_id) VALUES (1, 60000)');
         $this->conn->executeStatement('INSERT INTO ' . Tables::groupAccess() . ' (group_id, cat_id) VALUES (1, 60000)');
-        $this->conn->executeStatement('SET FOREIGN_KEY_CHECKS=1');
+        $this->enableForeignKeyChecks($this->conn);
 
         try {
             $this->service->checkCategoriesIntegrity();
@@ -1186,9 +1186,9 @@ final class CategoryServiceTest extends IntegrationTestCase
         // UserServiceTest's own FK-disabled inserts), so that's
         // reproduced here rather than a plain UPDATE, which the live FK
         // would reject outright.
-        $this->conn->executeStatement('SET FOREIGN_KEY_CHECKS=0');
+        $this->disableForeignKeyChecks($this->conn);
         $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = 999999 WHERE id = 1');
-        $this->conn->executeStatement('SET FOREIGN_KEY_CHECKS=1');
+        $this->enableForeignKeyChecks($this->conn);
 
         try {
             $result = $this->service->updateCategory(1);

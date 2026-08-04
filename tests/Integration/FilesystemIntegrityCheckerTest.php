@@ -288,11 +288,11 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
         // checks just for this insert reproduces the only real way this
         // state has ever existed in practice, the same pattern
         // UserServiceTest's own orphan-user-group test uses.
-        $this->conn->executeStatement('SET FOREIGN_KEY_CHECKS=0');
+        $this->disableForeignKeyChecks($this->conn);
         $this->conn->executeStatement(
             'INSERT INTO ' . Tables::imageCategory() . ' (image_id, category_id) VALUES (777777, 1)'
         );
-        $this->conn->executeStatement('SET FOREIGN_KEY_CHECKS=1');
+        $this->enableForeignKeyChecks($this->conn);
 
         try {
             self::assertSame(

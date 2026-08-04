@@ -771,6 +771,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         $effective_level = is_int($effective_level_raw) || is_string($effective_level_raw) ? $effective_level_raw : '0';
 
         $effective = new EffectiveForbiddenCategoriesCache(
+            \Piwigo\Auth\AccessControl::current(),
             $this->permissionService(),
             $this->categoryService(),
             new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)),
@@ -1121,7 +1122,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      */
     public function saveEditContext(?string $sectionUrl, int|string|null $imageId): void
     {
-        if (! AccessControl::isAdmin() or $sectionUrl === null or $imageId === null) {
+        if (! AccessControl::current()->isAdmin() or $sectionUrl === null or $imageId === null) {
             return;
         }
 
@@ -1283,7 +1284,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             }
 
             if (! self::emptyValue($params['password'] ?? null)) {
-                if (! AccessControl::isWebmaster()) {
+                if (! AccessControl::current()->isWebmaster()) {
                     $password_protected_users = [\Piwigo\Config\CurrentConfig::guestId()];
 
                     $admin_ids = array_map(
@@ -1316,7 +1317,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         if (! self::emptyValue($params['status'] ?? null)) {
             $status_param = $params['status'] ?? null;
-            if (in_array($status_param, ['webmaster', 'admin'], true) and ! AccessControl::isWebmaster()) {
+            if (in_array($status_param, ['webmaster', 'admin'], true) and ! AccessControl::current()->isWebmaster()) {
                 return [
                     'error' => [
                         'code ' => 403,

@@ -250,8 +250,8 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
         $this->smarty->registerPlugin('modifier', 'is_null', 'is_null');
         $this->smarty->registerPlugin('modifier', 'l10n', Lang::t(...));
         $this->smarty->registerPlugin('modifier', 'str_replace', 'str_replace');
-        $this->smarty->registerPlugin('modifier', 'is_admin', AccessControl::isAdmin(...));
-        $this->smarty->registerPlugin('modifier', 'is_classic_user', AccessControl::isClassicUser(...));
+        $this->smarty->registerPlugin('modifier', 'is_admin', AccessControl::current()->isAdmin(...));
+        $this->smarty->registerPlugin('modifier', 'is_classic_user', AccessControl::current()->isClassicUser(...));
         $this->smarty->registerPlugin('modifier', 'get_device', DeviceHelper::getDevice(...));
         $this->smarty->registerPlugin('modifier', 'is_file', 'is_file');
         $this->smarty->registerPlugin('modifier', 'strpos', 'strpos');

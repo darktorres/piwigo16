@@ -44,7 +44,7 @@ final class PageTail
         // (L4) is the one place the concrete L4 implementation gets
         // constructed. Legacy Coupling Retirement Phase 4c: UrlServiceInterface
         // is wired the same way, see PageTailRenderer's own docblock.
-        new PageTailRenderer(new PiwigoInfosSender(self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService()), self::urlService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::pageState(), self::currentTemplate())
+        new PageTailRenderer(\Piwigo\Auth\AccessControl::current(), new PiwigoInfosSender(self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService()), self::urlService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::pageState(), self::currentTemplate())
             ->render(self::pageState()->requestStart);
     }
 
@@ -58,7 +58,7 @@ final class PageTail
     {
         self::checkForUpdates();
 
-        return new PageTailRenderer(new PiwigoInfosSender(self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService()), self::urlService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::pageState(), self::currentTemplate())
+        return new PageTailRenderer(\Piwigo\Auth\AccessControl::current(), new PiwigoInfosSender(self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService(), self::urlService()), self::urlService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::pageState(), self::currentTemplate())
             ->renderToString(self::pageState()->requestStart);
     }
 

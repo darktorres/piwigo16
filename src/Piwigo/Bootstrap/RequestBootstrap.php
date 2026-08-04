@@ -513,6 +513,7 @@ final class RequestBootstrap
             self::currentUser(),
         )->pwgLogin(...));
         new UserBootstrap(
+            \Piwigo\Auth\AccessControl::current(),
             new RedirectService(self::userService()),
             self::urlService(),
             self::apiKeyRequestFlag(),
@@ -669,7 +670,7 @@ final class RequestBootstrap
             // when it decides to take over the page. CurrentConfigService::get()
             // reuses the instance connect() already resolved earlier in the
             // same request (Legacy Coupling Retirement Phase 8, 8d).
-            new NoPhotoYetRenderer(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), self::currentConfigService()->get(), new RedirectService(self::userService()), self::urlService(), CurrentPaths::get(), self::adminContext(), self::sessionService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::deploymentPolicy(), self::currentUser(), self::currentTemplate(), self::mailService())
+            new NoPhotoYetRenderer(\Piwigo\Auth\AccessControl::current(), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), self::currentConfigService()->get(), new RedirectService(self::userService()), self::urlService(), CurrentPaths::get(), self::adminContext(), self::sessionService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::deploymentPolicy(), self::currentUser(), self::currentTemplate(), self::mailService())
                 ->render();
         }
 

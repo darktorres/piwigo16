@@ -373,7 +373,7 @@ final class HtmlService implements HtmlRenderingInterface
     #[\Override]
     public function accessDenied(RedirectServiceInterface $redirectService): never
     {
-        if (\Piwigo\Users\CurrentUser::current()->isInitialized() and ! \Piwigo\Auth\AccessControl::isAGuest()) {
+        if (\Piwigo\Users\CurrentUser::current()->isInitialized() and ! \Piwigo\Auth\AccessControl::current()->isAGuest()) {
             $html = '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <link rel="shortcut icon" type="image/x-icon" href="themes/default/icon/favicon.ico">
 <div style="display: flex; justify-content: center;align-items: center;height: 100vh;margin: 0;color: #3C3C3C;font-family: \'Open Sans\', sans-serif;font-size: 20px;font-style: normal;font-weight: 600;line-height: normal;">

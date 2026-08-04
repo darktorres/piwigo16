@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Menu;
 
+use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
@@ -59,7 +60,7 @@ final class MenubarRenderer
      * write to, this method returns that value instead; every caller but
      * GalleryController ignores it.
      */
-    public function render(UrlServiceInterface $urlService, \Piwigo\Core\FilterState $filterState, \Piwigo\Section\SectionContextRegistry $sectionContextRegistry, SessionService $sessionService, \Piwigo\Config\DeploymentPolicy $deploymentPolicy, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate): ?int
+    public function render(AccessControl $accessControl, UrlServiceInterface $urlService, \Piwigo\Core\FilterState $filterState, \Piwigo\Section\SectionContextRegistry $sectionContextRegistry, SessionService $sessionService, \Piwigo\Config\DeploymentPolicy $deploymentPolicy, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate): ?int
     {
         $template = $currentTemplate->get();
         $section_context = $sectionContextRegistry->current();
@@ -74,7 +75,7 @@ final class MenubarRenderer
         $menu = new BlockManager('menubar', \Piwigo\PluginConfig\EventDispatcher::get(), $currentTemplate);
 
         // if guest_access is disabled, we only display the menus if the user is identified
-        if (\Piwigo\Config\CurrentConfig::guestAccess() or ! \Piwigo\Auth\AccessControl::isAGuest()) {
+        if (\Piwigo\Config\CurrentConfig::guestAccess() or ! $accessControl->isAGuest()) {
             $menu->load_registered_blocks();
         }
         $menu->prepare_display();
@@ -225,7 +226,7 @@ final class MenubarRenderer
         // ----------------------------------------------------------- special categories
         if (($block = $menu->get_block('mbSpecials')) !== null) {
             $block->data = [];
-            if (! \Piwigo\Auth\AccessControl::isAGuest()) {// favorites
+            if (! $accessControl->isAGuest()) {// favorites
                 $block->data['favorites'] =
                   [
                       'URL' => $urlService->makeIndexUrl([
@@ -355,7 +356,7 @@ final class MenubarRenderer
         }
 
         // --------------------------------------------------------------- identification
-        if (\Piwigo\Auth\AccessControl::isAGuest()) {
+        if ($accessControl->isAGuest()) {
             $template->assign(
                 [
                     'U_LOGIN' => $urlService->getRootUrl() . 'identification.php',
@@ -370,7 +371,7 @@ final class MenubarRenderer
             $username = $currentUser->get()
                 ->username;
             $template->assign('USERNAME', stripslashes($username));
-            if (\Piwigo\Auth\AccessControl::isAuthorizeStatus(AccessLevel::Classic)) {
+            if ($accessControl->isAuthorizeStatus(AccessLevel::Classic)) {
                 $template->assign('U_PROFILE', $urlService->getRootUrl() . 'profile.php');
             }
 
@@ -379,7 +380,7 @@ final class MenubarRenderer
             if (! $deploymentPolicy->apacheAuthentication) {
                 $template->assign('U_LOGOUT', $urlService->getRootUrl() . '?act=logout');
             }
-            if (\Piwigo\Auth\AccessControl::isAdmin()) {
+            if ($accessControl->isAdmin()) {
                 $template->assign('U_ADMIN', $urlService->getRootUrl() . 'admin.php');
             }
         }

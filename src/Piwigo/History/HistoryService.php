@@ -48,6 +48,7 @@ use Piwigo\Event\Picture\PwgLogUpdateLastVisit;
 final readonly class HistoryService
 {
     public function __construct(
+        private AccessControl $accessControl,
         private HistoryRepository $repo,
         private ConfigService $configService,
         private \Piwigo\Core\CurrentLogger $currentLogger,
@@ -65,10 +66,10 @@ final readonly class HistoryService
     {
 
         $doLog = \Piwigo\Config\CurrentConfig::logConf();
-        if (AccessControl::isAdmin()) {
+        if ($this->accessControl->isAdmin()) {
             $doLog = \Piwigo\Config\CurrentConfig::historyAdmin();
         }
-        if (AccessControl::isAGuest()) {
+        if ($this->accessControl->isAGuest()) {
             $doLog = \Piwigo\Config\CurrentConfig::historyGuest();
         }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Rate;
 
+use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\CookieService;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Core\AccessLevel;
@@ -25,6 +26,7 @@ use Piwigo\Event\Picture\UpdateRatingScore;
 final readonly class RateService
 {
     public function __construct(
+        private AccessControl $accessControl,
         private RateRepository $repo,
         private CookieService $cookies,
         private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
@@ -62,7 +64,7 @@ final readonly class RateService
             return false;
         }
 
-        $userAnonymous = ! \Piwigo\Auth\AccessControl::isAuthorizeStatus(AccessLevel::Classic);
+        $userAnonymous = ! $this->accessControl->isAuthorizeStatus(AccessLevel::Classic);
 
         if ($userAnonymous && ! \Piwigo\Config\CurrentConfig::rateAnonymous()) {
             return false;

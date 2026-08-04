@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Search;
 
 use Doctrine\DBAL\ArrayParameterType;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -42,6 +43,7 @@ use Piwigo\Tag\TagService;
 final readonly class SearchFilterRenderer
 {
     public function __construct(
+        private AccessControl $accessControl,
         private HtmlRenderingInterface $htmlRenderer,
         private TemplateInterface $template,
         private SearchRepository $repo,
@@ -127,7 +129,7 @@ final readonly class SearchFilterRenderer
 
         foreach ($filtersViews as $filtName => $filtConf) {
             if (isset($filtConf['access'])) {
-                if ($filtConf['access'] === 'everybody' or ($filtConf['access'] === 'admins-only' and \Piwigo\Auth\AccessControl::isAdmin()) or ($filtConf['access'] === 'registered-users' and \Piwigo\Auth\AccessControl::isClassicUser())) {
+                if ($filtConf['access'] === 'everybody' or ($filtConf['access'] === 'admins-only' and $this->accessControl->isAdmin()) or ($filtConf['access'] === 'registered-users' and $this->accessControl->isClassicUser())) {
                     $displayFilters[$filtName]['access'] = true;
                 } else {
                     $displayFilters[$filtName]['access'] = false;

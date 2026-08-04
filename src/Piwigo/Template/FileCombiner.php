@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Template;
 
+use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Paths;
@@ -27,6 +28,7 @@ final class FileCombiner
      * @param Combinable[] $combinables
      */
     public function __construct(
+        private readonly AccessControl $accessControl,
         private $type,
         private readonly UrlServiceInterface $urlService,
         private readonly Paths $paths,
@@ -113,7 +115,7 @@ final class FileCombiner
 
     private function computeForce(): bool
     {
-        if (\Piwigo\Auth\AccessControl::isAdmin() && ($this->is_css || ! \Piwigo\Config\CurrentConfig::templateCompileCheck())) {
+        if ($this->accessControl->isAdmin() && ($this->is_css || ! \Piwigo\Config\CurrentConfig::templateCompileCheck())) {
             return (isset($_SERVER['HTTP_CACHE_CONTROL']) && is_string($_SERVER['HTTP_CACHE_CONTROL']) && str_contains($_SERVER['HTTP_CACHE_CONTROL'], 'max-age=0'))
               || (isset($_SERVER['HTTP_PRAGMA']) && is_string($_SERVER['HTTP_PRAGMA']) && (bool) strpos($_SERVER['HTTP_PRAGMA'], 'no-cache'));
         }

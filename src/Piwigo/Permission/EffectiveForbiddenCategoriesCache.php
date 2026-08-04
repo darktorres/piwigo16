@@ -57,6 +57,7 @@ use Psr\Cache\CacheItemPoolInterface;
 final readonly class EffectiveForbiddenCategoriesCache
 {
     public function __construct(
+        private AccessControl $accessControl,
         private PermissionService $permissionService,
         private CategoryService $categoryService,
         private PermissionRepository $permissionRepository,
@@ -134,7 +135,7 @@ final readonly class EffectiveForbiddenCategoriesCache
         ], null);
 
         $effectiveForbidden = $structuralForbidden;
-        if (! AccessControl::isAdmin($userStatus)) { // for non admins we forbid categories with no image (feature 1053)
+        if (! $this->accessControl->isAdmin($userStatus)) { // for non admins we forbid categories with no image (feature 1053)
             $zeroImageIds = [];
             foreach ($computedCategories['categories'] as $cat) {
                 if ($cat['count_images'] === 0) {

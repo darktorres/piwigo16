@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Bootstrap;
 
+use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AuthRepository;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\CookieService;
@@ -47,6 +48,7 @@ use Piwigo\Ws\PwgError;
 final class UserBootstrap
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly ApiKeyRequestFlag $apiKeyRequestFlag,
@@ -247,7 +249,7 @@ final class UserBootstrap
         // docblock for why isInitialized() can't substitute.
         $currentUser->markRealUserResolved();
 
-        if (\Piwigo\Config\CurrentConfig::browserLanguage() and (\Piwigo\Auth\AccessControl::isAGuest() or \Piwigo\Auth\AccessControl::isGeneric()) and (bool) ($language = $userService->getBrowserLanguage())) {
+        if (\Piwigo\Config\CurrentConfig::browserLanguage() and ($this->accessControl->isAGuest() or $this->accessControl->isGeneric()) and (bool) ($language = $userService->getBrowserLanguage())) {
             $user['language'] = $language;
             $currentUser->updateLanguage($language);
         }

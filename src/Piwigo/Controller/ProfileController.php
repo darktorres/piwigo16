@@ -187,7 +187,7 @@ final class ProfileController implements ControllerInterface
         if (! is_array($hide_menu_on) or ! in_array('theProfilePage', $hide_menu_on, true)) {
             if (($themeconf['id'] ?? null) !== 'standard_pages') {
                 new MenubarRenderer()
-                    ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
+                    ->render($this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
             }
         }
 

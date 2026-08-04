@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Search;
 
+use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -65,6 +66,7 @@ final readonly class SearchService
      * default-language/saveSearch paths.
      */
     public function __construct(
+        private AccessControl $accessControl,
         private SearchRepository $repo,
         private PermissionService $permissionService,
         private CategoryService $categoryService,
@@ -218,8 +220,8 @@ final readonly class SearchService
         foreach ($displayFilters as $filtName => $filtConf) {
             if (isset($filtConf['access'])) {
                 $filtConf['access'] = $filtConf['access'] === 'everybody'
-                    || ($filtConf['access'] === 'admins-only' && \Piwigo\Auth\AccessControl::isAdmin())
-                    || ($filtConf['access'] === 'registered-users' && \Piwigo\Auth\AccessControl::isClassicUser());
+                    || ($filtConf['access'] === 'admins-only' && $this->accessControl->isAdmin())
+                    || ($filtConf['access'] === 'registered-users' && $this->accessControl->isClassicUser());
                 $displayFilters[$filtName] = $filtConf;
             }
         }
@@ -1423,7 +1425,7 @@ final readonly class SearchService
 
         $this->repo->insertSearch($rules, $dbNow, $userId, $searchUuid, $forkedFrom);
 
-        if (! \Piwigo\Auth\AccessControl::isAGuest() && ! \Piwigo\Auth\AccessControl::isGeneric()) {
+        if (! $this->accessControl->isAGuest() && ! $this->accessControl->isGeneric()) {
             $rulesFields = $rules['fields'] ?? [];
             $preferencesService = $this->preferencesService ?? new \Piwigo\Users\PreferencesService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class), $this->currentUser);
             $preferencesService->updateParam('gallery_search_filters', array_keys(is_array($rulesFields) ? $rulesFields : []));

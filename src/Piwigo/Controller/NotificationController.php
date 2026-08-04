@@ -100,7 +100,7 @@ final class NotificationController implements ControllerInterface
         $themeconf = is_array($themeconf) ? $themeconf : [];
         if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theNotificationPage', $themeconf['hide_menu_on'], true)) {
             new MenubarRenderer()
-                ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
+                ->render($this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
         }
 
         new \Piwigo\Page\PageHeaderRenderer()

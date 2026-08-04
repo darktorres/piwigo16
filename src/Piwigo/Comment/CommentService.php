@@ -38,7 +38,7 @@ use Piwigo\Permission\SqlCondition;
  * routed through the same-shaped HtmlRenderingInterface (Piwigo\Core)
  * instead of staying a bare free-function call.
  *
- * AccessControl::isAdmin()/isAGuest()/isClassicUser() and the
+ * AccessControl::current()->isAdmin()/isAGuest()/isClassicUser() and the
  * CurrentUser::get()/CurrentConfig:: accessors they and this class use
  * replace the original functions_comment.inc.php's bare is_admin()/
  * is_a_guest()/is_classic_user() calls and `$user`/`$conf` globals -- the
@@ -74,7 +74,7 @@ final readonly class CommentService
 
         if (! isset($currentUser->rawAttributes['nb_available_comments'])) {
             $where = [];
-            if (! AccessControl::isAdmin()) {
+            if (! AccessControl::current()->isAdmin()) {
                 $where[] = new SqlCondition('validated=1');
             }
             $where[] = new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Category\CategoryEntity::class))
@@ -194,7 +194,7 @@ final readonly class CommentService
             return $event;
         }
 
-        if (! \Piwigo\Auth\AccessControl::isAGuest()) {
+        if (! \Piwigo\Auth\AccessControl::current()->isAGuest()) {
             return $event;
         }
 
@@ -236,9 +236,9 @@ final readonly class CommentService
         $comm['agent'] = is_string($http_user_agent) ? $http_user_agent : '';
 
         $infos = [];
-        $commentAction = (! \Piwigo\Config\CurrentConfig::commentsValidation() || \Piwigo\Auth\AccessControl::isAdmin()) ? 'validate' : 'moderate';
+        $commentAction = (! \Piwigo\Config\CurrentConfig::commentsValidation() || \Piwigo\Auth\AccessControl::current()->isAdmin()) ? 'validate' : 'moderate';
 
-        if (! \Piwigo\Auth\AccessControl::isClassicUser()) {
+        if (! \Piwigo\Auth\AccessControl::current()->isClassicUser()) {
             if (self::emptyValue($comm['author'])) {
                 if (\Piwigo\Config\CurrentConfig::commentsAuthorMandatory()) {
                     $infos[] = Lang::t('Username is mandatory');
@@ -338,8 +338,8 @@ final readonly class CommentService
 
         $antiFloodTime = \Piwigo\Config\CurrentConfig::antiFloodTime();
 
-        if ($commentAction !== 'reject' && $antiFloodTime > 0 && ! \Piwigo\Auth\AccessControl::isAdmin()) { // anti-flood system
-            $anonymousIdPrefix = \Piwigo\Auth\AccessControl::isClassicUser() ? null : $trimmedIp;
+        if ($commentAction !== 'reject' && $antiFloodTime > 0 && ! \Piwigo\Auth\AccessControl::current()->isAdmin()) { // anti-flood system
+            $anonymousIdPrefix = \Piwigo\Auth\AccessControl::current()->isClassicUser() ? null : $trimmedIp;
             $counter = $this->repo->countRecentComments($authorId, $anonymousIdPrefix, $antiFloodTime);
             if ($counter > 0) {
                 $infos[] = Lang::t('Anti-flood system : please wait for a moment before trying to post another comment');
@@ -412,7 +412,7 @@ final readonly class CommentService
         $ids = is_array($commentId) ? $commentId : [$commentId];
 
         $authorId = null;
-        if (! \Piwigo\Auth\AccessControl::isAdmin()) {
+        if (! \Piwigo\Auth\AccessControl::current()->isAdmin()) {
             $authorId = $this->currentUser->get()
                 ->id->value;
         }
@@ -474,7 +474,7 @@ final readonly class CommentService
 
         if (! $this->ephemeralKeys->verify($postKey, $imageIdRaw)) {
             $commentAction = 'reject';
-        } elseif (! \Piwigo\Config\CurrentConfig::commentsValidation() || \Piwigo\Auth\AccessControl::isAdmin()) { // should the updated comment be validated
+        } elseif (! \Piwigo\Config\CurrentConfig::commentsValidation() || \Piwigo\Auth\AccessControl::current()->isAdmin()) { // should the updated comment be validated
             $commentAction = 'validate';
         } else {
             $commentAction = 'moderate';
@@ -505,7 +505,7 @@ final readonly class CommentService
 
         if ($commentAction !== 'reject') {
             $authorId = null;
-            if (! \Piwigo\Auth\AccessControl::isAdmin()) {
+            if (! \Piwigo\Auth\AccessControl::current()->isAdmin()) {
                 $authorId = $this->currentUser->get()
                     ->id->value;
             }

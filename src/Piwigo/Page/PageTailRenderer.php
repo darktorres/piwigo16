@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Page;
 
+use Piwigo\Auth\AccessControl;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\TelemetrySenderInterface;
 use Piwigo\Core\UrlServiceInterface;
@@ -45,6 +46,7 @@ use Piwigo\Event\Location\LocEndPageTail;
 final readonly class PageTailRenderer
 {
     public function __construct(
+        private AccessControl $accessControl,
         private TelemetrySenderInterface $telemetrySender,
         private UrlServiceInterface $urlService,
         private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
@@ -97,7 +99,7 @@ final readonly class PageTailRenderer
 
         // --------------------------------------------------------------------- contact
 
-        if (! \Piwigo\Auth\AccessControl::isAGuest()) {
+        if (! $this->accessControl->isAGuest()) {
             $template->assign(
                 'CONTACT_MAIL',
                 \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class)->getWebmasterMailAddress()

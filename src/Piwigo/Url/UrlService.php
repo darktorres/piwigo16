@@ -979,7 +979,7 @@ final class UrlService implements UrlServiceInterface
     #[\Override]
     public function getUserFavorites(): array
     {
-        if (\Piwigo\Auth\AccessControl::isAGuest()) {
+        if (\Piwigo\Auth\AccessControl::current()->isAGuest()) {
             return [];
         }
 

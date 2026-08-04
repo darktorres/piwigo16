@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Page;
 
+use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\Lang;
@@ -37,6 +38,7 @@ use Piwigo\Template\Template;
 final readonly class NoPhotoYetRenderer
 {
     public function __construct(
+        private AccessControl $accessControl,
         private ImageRepository $imageRepository,
         private ConfigService $configService,
         private readonly RedirectServiceInterface $redirectService,
@@ -59,7 +61,7 @@ final readonly class NoPhotoYetRenderer
             and \Piwigo\Core\PageFilterHelper::scriptBasename() !== 'password'       // keep the ability to reset password
             and \Piwigo\Core\PageFilterHelper::scriptBasename() !== 'ws'             // keep the ability to discuss with web API
             and \Piwigo\Core\PageFilterHelper::scriptBasename() !== 'popuphelp'      // keep the ability to display help popups
-            and (\Piwigo\Auth\AccessControl::isAGuest() or \Piwigo\Auth\AccessControl::isAdmin())          // normal users are not concerned by no_photo_yet
+            and ($this->accessControl->isAGuest() or $this->accessControl->isAdmin())          // normal users are not concerned by no_photo_yet
             and ! isset($_SESSION['no_photo_yet'])     // temporary hide
         ) {
             $nb_photos = $this->imageRepository->countAllImages();
@@ -89,7 +91,7 @@ final readonly class NoPhotoYetRenderer
                     'no_photo_yet' => 'no_photo_yet.tpl',
                 ]);
 
-                if (\Piwigo\Auth\AccessControl::isAdmin()) {
+                if ($this->accessControl->isAdmin()) {
                     $url = \Piwigo\Config\CurrentConfig::noPhotoYetUrl();
                     if (! str_starts_with($url, 'http')) {
                         $url = $this->urlService->getRootUrl() . $url;

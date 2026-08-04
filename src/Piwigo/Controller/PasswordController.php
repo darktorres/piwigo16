@@ -238,7 +238,7 @@ final class PasswordController implements ControllerInterface
         $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
         if (! is_array($hide_menu_on) or ! in_array('thePasswordPage', $hide_menu_on, true)) {
             new MenubarRenderer()
-                ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
+                ->render($this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
         }
 
         // Load language if cookie is set from login/register/password

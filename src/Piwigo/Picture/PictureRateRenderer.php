@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Picture;
 
+use Piwigo\Auth\AccessControl;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\UrlServiceInterface;
@@ -19,6 +20,7 @@ use Piwigo\Rate\RateRepository;
 final class PictureRateRenderer
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly RateRepository $repo,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
@@ -68,14 +70,14 @@ final class PictureRateRenderer
         $template->assign('rate_summary', $rate_summary);
 
         $user_rate = null;
-        if (\Piwigo\Config\CurrentConfig::rateAnonymous() or \Piwigo\Auth\AccessControl::isAuthorizeStatus(AccessLevel::Classic)) {
+        if (\Piwigo\Config\CurrentConfig::rateAnonymous() or $this->accessControl->isAuthorizeStatus(AccessLevel::Classic)) {
             if ($rate_summary['count'] > 0) {
                 $rate_image_id = $imageId;
                 $rate_user_id = $this->currentUser->get()
                     ->id->value;
 
                 $anonymous_id = null;
-                if (! \Piwigo\Auth\AccessControl::isAuthorizeStatus(AccessLevel::Classic)) {
+                if (! $this->accessControl->isAuthorizeStatus(AccessLevel::Classic)) {
                     $remote_addr = IpAddress::fromRemoteAddr()->value ?? '';
                     $ip_components = explode('.', $remote_addr);
                     if (count($ip_components) > 3) {

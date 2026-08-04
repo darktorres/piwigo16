@@ -1019,7 +1019,7 @@ final class MailService implements MailerInterface
                 $errorMessage = $e->getMessage();
             }
 
-            if (! $ret && (! (bool) ini_get('display_errors') || \Piwigo\Auth\AccessControl::isAdmin())) {
+            if (! $ret && (! (bool) ini_get('display_errors') || \Piwigo\Auth\AccessControl::current()->isAdmin())) {
                 trigger_error('Mailer Error: ' . $errorMessage, \E_USER_WARNING);
             }
             if (\Piwigo\Config\CurrentConfig::debugMail()) {

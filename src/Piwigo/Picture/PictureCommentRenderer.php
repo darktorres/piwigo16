@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Picture;
 
+use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Comment\CommentService;
@@ -74,7 +75,7 @@ final class PictureCommentRenderer
      *   native DBAL int -- only `uppercats`/`status`/`global_rank` are
      *   genuinely string|null.
      */
-    public function render(?CommentId $editCommentId, int $imageId, int $start, UrlServiceInterface $urlService, array $related_categories, string $url_self, SessionService $sessionService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Core\MailerInterface $mailer): void
+    public function render(AccessControl $accessControl, ?CommentId $editCommentId, int $imageId, int $start, UrlServiceInterface $urlService, array $related_categories, string $url_self, SessionService $sessionService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Core\MailerInterface $mailer): void
     {
         $template = $currentTemplate->get();
 
@@ -96,7 +97,7 @@ final class PictureCommentRenderer
         }
 
         if ($showComments and $pictureCommentSubmitRequest->contentPresent) {
-            if (\Piwigo\Auth\AccessControl::isAGuest() and ! \Piwigo\Config\CurrentConfig::commentsForall()) {
+            if ($accessControl->isAGuest() and ! \Piwigo\Config\CurrentConfig::commentsForall()) {
                 throw new ResponseReadyException(ResponseFactory::text('Session expired'));
             }
 
@@ -161,7 +162,7 @@ final class PictureCommentRenderer
             return;
         }
 
-        $onlyValidated = ! \Piwigo\Auth\AccessControl::isAdmin();
+        $onlyValidated = ! $accessControl->isAdmin();
 
         // number of comments for this picture
         $nbComments = $commentRepository->countForImage($imageId, $onlyValidated);
@@ -247,7 +248,7 @@ final class PictureCommentRenderer
                 // "never matches" sentinel.
                 $commentAuthorId = $row->authorId ?? -1;
 
-                if (\Piwigo\Auth\AccessControl::canManageComment('delete', $commentAuthorId)) {
+                if ($accessControl->canManageComment('delete', $commentAuthorId)) {
                     $tplComment['U_DELETE'] = $urlService->addUrlParams(
                         $url_self,
                         [
@@ -258,7 +259,7 @@ final class PictureCommentRenderer
                         ]
                     );
                 }
-                if (\Piwigo\Auth\AccessControl::canManageComment('edit', $commentAuthorId)) {
+                if ($accessControl->canManageComment('edit', $commentAuthorId)) {
                     $tplComment['U_EDIT'] = $urlService->addUrlParams(
                         $url_self,
                         [
@@ -276,7 +277,7 @@ final class PictureCommentRenderer
                         $tplComment['U_CANCEL'] = $url_self;
                     }
                 }
-                if (\Piwigo\Auth\AccessControl::isAdmin()) {
+                if ($accessControl->isAdmin()) {
                     $tplComment['EMAIL'] = $email;
 
                     if (! $row->validated) {
@@ -299,7 +300,7 @@ final class PictureCommentRenderer
         if ($editCommentId !== null) {
             $showAddCommentForm = false;
         }
-        if (\Piwigo\Auth\AccessControl::isAGuest() and ! \Piwigo\Config\CurrentConfig::commentsForall()) {
+        if ($accessControl->isAGuest() and ! \Piwigo\Config\CurrentConfig::commentsForall()) {
             $showAddCommentForm = false;
         }
 
@@ -315,11 +316,11 @@ final class PictureCommentRenderer
                 'F_ACTION' => $url_self,
                 'KEY' => $key,
                 'CONTENT' => '',
-                'SHOW_AUTHOR' => ! \Piwigo\Auth\AccessControl::isClassicUser(),
+                'SHOW_AUTHOR' => ! $accessControl->isClassicUser(),
                 'AUTHOR_MANDATORY' => \Piwigo\Config\CurrentConfig::commentsAuthorMandatory(),
                 'AUTHOR' => '',
                 'WEBSITE_URL' => '',
-                'SHOW_EMAIL' => ! \Piwigo\Auth\AccessControl::isClassicUser() or $userEmailEmpty,
+                'SHOW_EMAIL' => ! $accessControl->isClassicUser() or $userEmailEmpty,
                 'EMAIL_MANDATORY' => \Piwigo\Config\CurrentConfig::commentsEmailMandatory(),
                 'EMAIL' => '',
                 'SHOW_WEBSITE' => \Piwigo\Config\CurrentConfig::commentsEnableWebsite(),

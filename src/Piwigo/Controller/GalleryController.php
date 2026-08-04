@@ -200,7 +200,7 @@ final class GalleryController implements ControllerInterface
 
         // -------------------------------------------------- menubar
         $categoryCountCategories = new MenubarRenderer()
-            ->render($urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
+            ->render($this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
 
         $template->set_filename('index', 'index.tpl');
 

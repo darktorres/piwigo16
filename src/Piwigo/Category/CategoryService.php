@@ -268,7 +268,7 @@ final readonly class CategoryService
             [Lang::t('Rating score, low &rarr; high'), 'rating_score ASC', \Piwigo\Config\CurrentConfig::rateEnabled()],
             [Lang::t('Visits, high &rarr; low'), 'hit DESC', true],
             [Lang::t('Visits, low &rarr; high'), 'hit ASC', true],
-            [Lang::t('Permissions'), 'level DESC', \Piwigo\Auth\AccessControl::isAdmin()],
+            [Lang::t('Permissions'), 'level DESC', \Piwigo\Auth\AccessControl::current()->isAdmin()],
         ]))->orders;
 
         $result = [];

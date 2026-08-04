@@ -348,6 +348,21 @@ abstract class IntegrationTestCase extends TestCase
      */
     protected function dropAndCreateDatabase(string $dbName): void
     {
+        // Real bug found live: `WITH (FORCE)` terminates every other
+        // backend attached to $dbName, including a still-open PHP native
+        // session left active by an earlier test's real login flow (this
+        // class's own tearDown() only closes it *after* the test method
+        // returns -- too late once a later test's resetDatabase() has
+        // already force-killed the connection PwgSession/SessionService
+        // was going to write through). Closing it here first flushes that
+        // write against the connection while it's still alive, instead of
+        // deferring to a tearDown() that will find it already severed
+        // ("terminating connection due to administrator command",
+        // confirmed live via a real cross-test-file reproduction).
+        if ($this->dbDriver === 'pgsql' && session_status() === \PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
+
         if ($this->dbDriver === 'pgsql') {
             $conn = $this->newPgsqlConnection('postgres');
             pg_query($conn, sprintf('DROP DATABASE IF EXISTS "%s" WITH (FORCE)', $dbName));

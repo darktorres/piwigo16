@@ -32,11 +32,34 @@ final class PwgSession implements \SessionHandlerInterface
             ->sessionRead($id);
     }
 
+    /**
+     * PHP calls this method directly from its own internal session
+     * module, both for an explicit session_write_close() call and for
+     * PHP's own automatic end-of-script session close -- the latter runs
+     * during the engine's own internal shutdown sequence, a code path no
+     * caller-side try/catch (e.g. around an explicit session_write_close()
+     * call) can ever reach, since PHP's own session module has no try/
+     * catch around its call into this method either. A real DriverException
+     * escaping uncaught from here becomes an unrecoverable PHP fatal
+     * error regardless of which of those two paths triggered it -- caught
+     * here instead, at the one method both paths funnel through, and
+     * reported via SessionHandlerInterface's own well-defined "write
+     * failed" contract (a false return) rather than a crash. A failed
+     * final session persist is recoverable (the user just re-authenticates
+     * on their next request); a fatal error escaping the engine's own
+     * shutdown sequence isn't.
+     */
     #[\Override]
     public function write(string $id, string $data): bool
     {
-        return $this->service
-            ->sessionWrite($id, $data);
+        try {
+            return $this->service
+                ->sessionWrite($id, $data);
+        } catch (\Throwable $e) {
+            \Piwigo\Core\CurrentLogger::getStatic()->warn('PwgSession::write() failed: ' . $e->getMessage());
+
+            return false;
+        }
     }
 
     #[\Override]

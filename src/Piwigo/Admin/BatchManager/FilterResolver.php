@@ -253,13 +253,25 @@ final readonly class FilterResolver
             $where[] = 'height <= :max_height';
             $params['max_height'] = (int) $dimension['max_height'];
         }
+        // pgsql support pass: real bug found live -- width/height are
+        // both plain integer columns. MySQL's `/` always computes in
+        // DECIMAL/floating context regardless of operand types, but
+        // PostgreSQL's `/` on two integer operands truncates to an
+        // integer (same real bug already fixed in SearchService's own
+        // ratio filters -- see that call site's docblock for the
+        // live-confirmed 200/150 example). Beyond the wrong ratio
+        // value, a truncated-to-integer left side also makes Postgres
+        // infer the bound :min_ratio/:max_ratio parameter's type as
+        // integer too, rejecting a genuinely fractional ratio outright.
+        // `width * 1.0` forces decimal-context arithmetic on both
+        // platforms without needing a DQL/SQL CAST.
         if (isset($dimension['min_ratio']) && is_numeric($dimension['min_ratio'])) {
-            $where[] = 'width/height >= :min_ratio';
+            $where[] = 'width * 1.0 / height >= :min_ratio';
             $params['min_ratio'] = (float) $dimension['min_ratio'];
         }
         if (isset($dimension['max_ratio']) && is_numeric($dimension['max_ratio'])) {
             // max_ratio is a floor value, so must be a bit increased.
-            $where[] = 'width/height < :max_ratio';
+            $where[] = 'width * 1.0 / height < :max_ratio';
             $params['max_ratio'] = (float) $dimension['max_ratio'] + 0.01;
         }
 
@@ -282,14 +294,28 @@ final readonly class FilterResolver
         if (isset($filesize['min']) && is_numeric($filesize['min'])) {
             // to counter the effect of converting kB to mB and rounding, go
             // slightly lower for the minimum value.
+            //
+            // pgsql support pass: real bug found live -- `filesize` is a
+            // genuine integer column (mediumint), and this fractional
+            // threshold used to bind as an untyped parameter. MySQL
+            // tolerates comparing an integer column against a fractional
+            // value (compares numerically, no cast error); PostgreSQL
+            // infers an unbound parameter's type from how it's used --
+            // compared against an integer column via `>=` -- and rejects
+            // a non-integer value outright ("invalid input syntax for
+            // type integer: '-102.4'"). floor() only ever WIDENS this
+            // already-deliberate safety margin (never narrows it), so
+            // this changes no real match outcome for a whole-number
+            // filesize value.
             $where[] = 'filesize >= :min_filesize';
-            $params['min_filesize'] = ((float) $filesize['min'] - 0.1) * 1024.0;
+            $params['min_filesize'] = (int) floor(((float) $filesize['min'] - 0.1) * 1024.0);
         }
         if (isset($filesize['max']) && is_numeric($filesize['max'])) {
             // to counter the effect of converting kB to mB and rounding, go
-            // slightly higher for the maximum value.
+            // slightly higher for the maximum value. Same real pgsql bug
+            // as min_filesize above -- ceil() only ever widens the margin.
             $where[] = 'filesize <= :max_filesize';
-            $params['max_filesize'] = ((float) $filesize['max'] + 0.1) * 1024.0;
+            $params['max_filesize'] = (int) ceil(((float) $filesize['max'] + 0.1) * 1024.0);
         }
 
         if ($where === []) {

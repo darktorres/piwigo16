@@ -3573,12 +3573,15 @@ final class ImageRepository extends EntityRepository
         $imagesTable = Tables::images();
         $imageTagTable = Tables::imageTag();
 
+        // pgsql support pass: real bug found live -- no ORDER BY, so row
+        // order was never guaranteed; MySQL and PostgreSQL return this
+        // exact join's row order differently with none specified.
         return array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             $this->getEntityManager()
                 ->getConnection()
                 ->fetchFirstColumn(<<<SQL
-                    SELECT id FROM {$imagesTable} LEFT JOIN {$imageTagTable} ON id = image_id WHERE tag_id IS NULL
+                    SELECT id FROM {$imagesTable} LEFT JOIN {$imageTagTable} ON id = image_id WHERE tag_id IS NULL ORDER BY id
                     SQL)
         );
     }
@@ -3681,6 +3684,21 @@ final class ImageRepository extends EntityRepository
     {
         $imagesTable = Tables::images();
         $whereSql = $whereClauses === [] ? '' : 'WHERE ' . implode(' AND ', $whereClauses);
+
+        // pgsql support pass: real bugs found live -- (a) an empty
+        // $orderBySql applied no ordering at all, so row order was never
+        // guaranteed (MySQL and PostgreSQL disagreed on it); defaults to
+        // `ORDER BY id` for a deterministic result. (b) $orderBySql
+        // traces back to CurrentConfig::orderBy(), admin-settable raw SQL
+        // text that can legitimately be `ORDER BY RAND()` -- same real
+        // gap already fixed for CategoryRepository's own raw-DBAL
+        // fallback ("function rand() does not exist" against a real
+        // Postgres server otherwise).
+        $orderBySql = $orderBySql === '' ? 'ORDER BY id' : str_ireplace(
+            'RAND()',
+            \Piwigo\Db\SqlDialect::randomFunction() . '()',
+            $orderBySql
+        );
 
         return array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,

@@ -12,6 +12,7 @@ use Doctrine\ORM\Events;
 use Doctrine\ORM\ORMSetup;
 use Piwigo\Db\DqlFunction\DateFormatMonthDayFunction;
 use Piwigo\Db\DqlFunction\DateFormatYearMonthFunction;
+use Piwigo\Db\DqlFunction\DateSubFunction;
 use Piwigo\Db\DqlFunction\DayOfMonthFunction;
 use Piwigo\Db\DqlFunction\DayOfWeekFunction;
 use Piwigo\Db\DqlFunction\GroupConcatFunction;
@@ -70,6 +71,11 @@ final class EntityManagerFactory
         $config->addCustomStringFunction('GROUP_CONCAT', GroupConcatFunction::class);
         $config->addCustomStringFunction('SUBSTRING_INDEX', SubstringIndexFunction::class);
         $config->addCustomNumericFunction('RAND', RandFunction::class);
+        // Overrides Doctrine ORM's own built-in DATE_SUB -- see
+        // DateSubFunction's own docblock for the real Postgres bug this
+        // fixes (custom function lookup runs before the built-in one in
+        // Doctrine's own parser, confirmed by reading its source).
+        $config->addCustomDatetimeFunction('DATE_SUB', DateSubFunction::class);
         $config->addCustomStringFunction('DATE_FORMAT_YEAR_MONTH', DateFormatYearMonthFunction::class);
         $config->addCustomStringFunction('DATE_FORMAT_MONTH_DAY', DateFormatMonthDayFunction::class);
         $config->addCustomNumericFunction('DAYOFMONTH', DayOfMonthFunction::class);

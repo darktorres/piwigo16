@@ -46,11 +46,19 @@ final class PluginRepositoryTest extends IntegrationTestCase
         // getDbPlugins()'s filters have something real to select against;
         // a plugin id containing a quote proves the bound-parameter fix
         // (the original built `id="' . $id . '"` via raw concatenation).
+        // pgsql support pass: real bug found live -- backslash-escaping a
+        // literal quote (\') is MySQL's own dialect extension, not
+        // portable. PostgreSQL's default standard_conforming_strings=on
+        // has no backslash-escape handling in a plain string literal at
+        // all, so `'o\'brien'` parses as the complete string `o\`
+        // immediately followed by the bareword `brien` -- "syntax error
+        // at or near 'brien'". SQL-standard doubled-quote escaping ('')
+        // works identically on both platforms.
         $this->conn->executeStatement(
             "INSERT INTO " . Tables::plugins() . " (id, state, version) VALUES
              ('c13y', 'active', '2.1'),
              ('nut2', 'inactive', '1.0'),
-             ('o\\'brien', 'active', '3.0')"
+             ('o''brien', 'active', '3.0')"
         );
     }
 

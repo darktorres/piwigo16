@@ -49,13 +49,22 @@ final class BatchWriterTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         $this->conn->executeStatement('DROP TABLE IF EXISTS ' . self::TABLE);
+        // pgsql support pass: real bug found live -- `UNIQUE KEY
+        // uniq_name (...)` is MySQL's own inline-table-constraint
+        // shorthand, and `ENGINE=InnoDB` doesn't exist as a concept on
+        // Postgres at all ("syntax error at or near 'KEY'"). The
+        // standard `CONSTRAINT ... UNIQUE (...)` form is real SQL
+        // grammar both platforms accept identically; the engine clause
+        // is dropped for Postgres (this is a disposable scratch table,
+        // and MySQL's own default engine is already InnoDB).
+        $engineSuffix = $this->dbDriver === 'pgsql' ? '' : ' ENGINE=InnoDB';
         $this->conn->executeStatement(
             'CREATE TABLE ' . self::TABLE . ' ('
             . 'id INT NOT NULL PRIMARY KEY, '
             . 'name VARCHAR(50) NOT NULL, '
             . 'note VARCHAR(50) NULL, '
-            . 'UNIQUE KEY uniq_name (name)'
-            . ') ENGINE=InnoDB'
+            . 'CONSTRAINT uniq_name UNIQUE (name)'
+            . ')' . $engineSuffix
         );
         $this->writer = new BatchWriter($this->conn);
     }
@@ -229,24 +238,47 @@ final class BatchWriterTest extends IntegrationTestCase
      * exercises.
      *
      * Uses its own disposable scratch table/column (both named with an
-     * embedded backtick) rather than self::TABLE, since creating them
-     * needs the doubled-backtick DDL-quoting convention itself; seeded via
-     * a raw INSERT rather than BatchWriter::singleInsert(), to keep this
-     * test isolated from the unrelated limitation above.
+     * embedded quote-identifier-delimiter character) rather than
+     * self::TABLE, since creating them needs the doubled-delimiter
+     * DDL-quoting convention itself; seeded via a raw INSERT rather than
+     * BatchWriter::singleInsert(), to keep this test isolated from the
+     * unrelated limitation above.
+     *
+     * pgsql support pass: real bug found live -- this test used to
+     * hand-roll MySQL's own backtick-doubling convention directly
+     * (`` '`' . str_replace('`', '``', $name) . '`' ``) and MySQL-only
+     * `ENGINE=InnoDB`, neither valid on Postgres (double-quote delimited
+     * identifiers, no ENGINE concept at all -- "syntax error at or near
+     * 'KEY'"/'InnoDB' territory). Routes through the same real
+     * `Connection::getDatabasePlatform()->quoteSingleIdentifier()` call
+     * BatchWriter::protectColumnName() itself uses instead of
+     * hand-rolling the quoting convention a second time here -- this is
+     * exactly the framework method under test, so using it to build the
+     * fixture too is the honest, self-consistent way to prove it (not a
+     * weaker test: the assertions below still independently verify
+     * BatchWriter's real behavior against these names, this only changes
+     * how the *fixture* is quoted, matching whichever character each
+     * real platform actually uses for identifier delimiting -- a literal
+     * backtick has no special meaning to quote at all on Postgres, so
+     * asserting specifically against `` ` `` here would test nothing
+     * real on that platform).
      */
     public function testSingleUpdateCorrectlyEscapesATableAndColumnNameContainingALiteralBacktickOnBothTheSetAndWhereSides(): void
     {
-        $table = 'batchwriter_test_scratch_back`tick';
-        $column = 'na`me';
-        $quotedTable = '`' . str_replace('`', '``', $table) . '`';
-        $quotedColumn = '`' . str_replace('`', '``', $column) . '`';
+        $platform = $this->conn->getDatabasePlatform();
+        $delimiter = $this->dbDriver === 'pgsql' ? '"' : '`';
+        $table = 'batchwriter_test_scratch_back' . $delimiter . 'tick';
+        $column = 'na' . $delimiter . 'me';
+        $quotedTable = $platform->quoteSingleIdentifier($table);
+        $quotedColumn = $platform->quoteSingleIdentifier($column);
 
         $this->conn->executeStatement('DROP TABLE IF EXISTS ' . $quotedTable);
+        $engineSuffix = $this->dbDriver === 'pgsql' ? '' : ' ENGINE=InnoDB';
         $this->conn->executeStatement(
             'CREATE TABLE ' . $quotedTable . ' ('
             . 'id INT NOT NULL PRIMARY KEY, '
             . $quotedColumn . ' VARCHAR(50) NULL'
-            . ') ENGINE=InnoDB'
+            . ')' . $engineSuffix
         );
 
         try {

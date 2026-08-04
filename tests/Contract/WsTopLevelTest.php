@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Contract;
 
 use Doctrine\DBAL\Connection;
+use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 
@@ -254,10 +255,16 @@ final class WsTopLevelTest extends ContractTestCase
      * `Kernel::reset()` is explicitly test-only) -- same pattern already
      * used by tests/Integration/CategoryAdminServiceTest.php to reach a
      * container-resolved service without a full RequestBootstrap.
+     *
+     * A real Paths is required, not a bare boot: self::imageService() is
+     * called unconditionally before the $image_count === 0 check below (see
+     * PwgCore::getMissingDerivatives()'s own body), so it always resolves
+     * ImageService -> Lang (Phase 8) -> Paths, whose value the container
+     * can't guess without one.
      */
     public function test_getMissingDerivatives_with_an_empty_gallery_returns_an_empty_array_early(): void
     {
-        \Piwigo\Core\Kernel::boot();
+        \Piwigo\Core\Kernel::boot(Paths::fromRoot(dirname(__DIR__, 2)));
 
         try {
             $conn = \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->getConnection();

@@ -153,9 +153,16 @@ final class NoPhotoYetRendererTest extends IntegrationTestCase
 
     private function seedFlag(string $value): void
     {
+        // pgsql support pass: real bug found live -- `ON DUPLICATE KEY
+        // UPDATE` is MySQL-only syntax ("syntax error at or near
+        // 'DUPLICATE'"). Postgres's portable equivalent is `ON CONFLICT
+        // (<unique/PK column>) DO UPDATE SET ... = EXCLUDED. ...` --
+        // `param` is config's own primary key.
+        $onConflict = $this->dbDriver === 'pgsql'
+            ? 'ON CONFLICT (param) DO UPDATE SET value = EXCLUDED.value'
+            : 'ON DUPLICATE KEY UPDATE value = VALUES(value)';
         $this->conn->executeStatement(
-            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('no_photo_yet', ?)
-             ON DUPLICATE KEY UPDATE value = VALUES(value)",
+            'INSERT INTO ' . Tables::config() . " (param, value) VALUES ('no_photo_yet', ?) {$onConflict}",
             [$value]
         );
     }

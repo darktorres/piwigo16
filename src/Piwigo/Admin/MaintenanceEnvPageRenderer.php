@@ -56,6 +56,9 @@ final class MaintenanceEnvPageRenderer
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly DbMaintenanceRepository $dbMaintenanceRepository,
+        private readonly \Piwigo\Activity\ActivityService $activityService,
+        private readonly \Piwigo\Rate\RateService $rateService,
+        private readonly InstallationStats $installationStats,
         private readonly ?\Piwigo\Cache\PersistentCache $persistentCache = null,
     ) {}
 
@@ -64,7 +67,7 @@ final class MaintenanceEnvPageRenderer
         $template = $this->currentTemplate->get();
 
         $action = MaintenanceActionRequest::fromGlobals()->action;
-        new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->filesystemIntegrityChecker, $this->sessionService, $this->translator, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->dbMaintenanceRepository, $this->persistentCache)
+        new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->filesystemIntegrityChecker, $this->sessionService, $this->translator, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->dbMaintenanceRepository, $this->activityService, $this->rateService, $this->persistentCache)
             ->dispatch($action);
 
         // +-------------------------------------------------------------------+
@@ -157,7 +160,7 @@ final class MaintenanceEnvPageRenderer
             );
         }
 
-        $installed_on = InstallationStats::getInstallationDate();
+        $installed_on = $this->installationStats->getInstallationDate();
         if (is_string($installed_on) && $installed_on !== '') {
             $template->assign(
                 [

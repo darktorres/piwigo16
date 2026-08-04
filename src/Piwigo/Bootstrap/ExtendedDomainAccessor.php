@@ -9,13 +9,8 @@ use Piwigo\Comment\CommentService;
 use Piwigo\Core\Kernel;
 use Piwigo\History\HistoryService;
 use Piwigo\Metadata\MetadataService;
-use Piwigo\Notification\NotificationByMailService;
-use Piwigo\Notification\NotificationService;
-use Piwigo\Permalink\PermalinkService;
 use Piwigo\Rate\RateService;
-use Piwigo\Search\SearchFilterRenderer;
 use Piwigo\Search\SearchService;
-use Piwigo\Section\SectionPopulator;
 
 /**
  * DI-migration follow-on to gap-closure Stage 4: typed accessors to
@@ -53,15 +48,6 @@ final class ExtendedDomainAccessor
         return $service;
     }
 
-    public static function searchFilterRenderer(): SearchFilterRenderer
-    {
-        $service = Kernel::container()->get(SearchFilterRenderer::class);
-        if (! $service instanceof SearchFilterRenderer) {
-            throw new \LogicException('Container returned an unexpected type for ' . SearchFilterRenderer::class);
-        }
-        return $service;
-    }
-
     public static function metadataService(): MetadataService
     {
         $service = Kernel::container()->get(MetadataService::class);
@@ -85,42 +71,6 @@ final class ExtendedDomainAccessor
         $service = Kernel::container()->get(RateService::class);
         if (! $service instanceof RateService) {
             throw new \LogicException('Container returned an unexpected type for ' . RateService::class);
-        }
-        return $service;
-    }
-
-    public static function notificationService(): NotificationService
-    {
-        $service = Kernel::container()->get(NotificationService::class);
-        if (! $service instanceof NotificationService) {
-            throw new \LogicException('Container returned an unexpected type for ' . NotificationService::class);
-        }
-        return $service;
-    }
-
-    public static function notificationByMailService(): NotificationByMailService
-    {
-        $service = Kernel::container()->get(NotificationByMailService::class);
-        if (! $service instanceof NotificationByMailService) {
-            throw new \LogicException('Container returned an unexpected type for ' . NotificationByMailService::class);
-        }
-        return $service;
-    }
-
-    public static function permalinkService(): PermalinkService
-    {
-        $service = Kernel::container()->get(PermalinkService::class);
-        if (! $service instanceof PermalinkService) {
-            throw new \LogicException('Container returned an unexpected type for ' . PermalinkService::class);
-        }
-        return $service;
-    }
-
-    public static function sectionPopulator(): SectionPopulator
-    {
-        $service = Kernel::container()->get(SectionPopulator::class);
-        if (! $service instanceof SectionPopulator) {
-            throw new \LogicException('Container returned an unexpected type for ' . SectionPopulator::class);
         }
         return $service;
     }

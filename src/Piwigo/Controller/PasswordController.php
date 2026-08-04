@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Core\AccessLevel;
@@ -52,6 +51,7 @@ final class PasswordController implements ControllerInterface
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly \Piwigo\Activity\ActivityService $activityService,
     ) {}
 
     /**
@@ -78,11 +78,6 @@ final class PasswordController implements ControllerInterface
     private ?string $username = null;
 
     private Request\PasswordRequest $request;
-
-    private static function activityService(Connection $conn): \Piwigo\Activity\ActivityService
-    {
-        return \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService();
-    }
 
     private static function userService(): UserService
     {
@@ -464,7 +459,7 @@ final class PasswordController implements ControllerInterface
                         ->updateParam('reset_password_forbidden_until', time() + 60 * 60);
                     $this->currentUser->set($saveCurrentUser);
 
-                    self::activityService($conn)->record('user', (int) $user_id_raw, 'reset_password_failure_too_many');
+                    $this->activityService->record('user', (int) $user_id_raw, 'reset_password_failure_too_many');
                 }
                 // Not $this->errors: this branch redirects to
                 // identification.php (see __invoke()'s own
@@ -485,7 +480,7 @@ final class PasswordController implements ControllerInterface
             }
 
             if ($has_valid_user_id) {
-                self::activityService($conn)->record('user', (int) $user_id_raw, 'reset_password_failure_code');
+                $this->activityService->record('user', (int) $user_id_raw, 'reset_password_failure_code');
             }
             $this->errors['password_form_error'] = Lang::t('Invalid verification code');
             return false;
@@ -640,7 +635,7 @@ final class PasswordController implements ControllerInterface
         }
         unset($_SESSION['valid_reset_password_code']);
 
-        self::activityService($conn)->record('user', $user_id, 'reset_password_success');
+        $this->activityService->record('user', $user_id, 'reset_password_success');
 
         $this->pageState->addInfo(Lang::t('Your password has been reset'));
         $this->pageState->addInfo('<a href="' . $this->urlService->getRootUrl() . 'identification.php">' . Lang::t('Login') . '</a>');

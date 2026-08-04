@@ -37,16 +37,19 @@ use Piwigo\Tests\Support\KernelContainerOverride;
  * writePluginMaintainFile()/buildPluginMaintain() tests already established
  * for the sibling ExtensionLifecycle::buildPluginMaintain() -- PluginLoader
  * ships an independent copy of that same dynamic-class-load-and-check
- * pattern, not a delegation to it. Those tests reach
- * Bootstrap\ExtendedDomainAccessor::activityService(), which is
- * container-resolved -- harmless for the plugins-disabled/missing-file/
- * no-version-header tests below, which never reach that call.
+ * pattern, not a delegation to it. Those tests reach $this->activityService
+ * (constructor-injected into loadPlugins() since the singleton/service-
+ * locator elimination campaign, Phase 6) -- harmless for the
+ * plugins-disabled/missing-file/no-version-header tests below, which never
+ * reach that call.
  */
 final class PluginLoaderTest extends IntegrationTestCase
 {
     private static bool $fixtureReady = false;
 
     private LoadedPlugins $loadedPlugins;
+
+    private \Piwigo\Activity\ActivityService $activityService;
 
     #[\Override]
     protected function setUp(): void
@@ -73,6 +76,13 @@ final class PluginLoaderTest extends IntegrationTestCase
         }
 
         $this->loadedPlugins = $loadedPlugins;
+
+        $activityService = Kernel::container()->get(\Piwigo\Activity\ActivityService::class);
+        if (! $activityService instanceof \Piwigo\Activity\ActivityService) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Activity\ActivityService::class);
+        }
+
+        $this->activityService = $activityService;
     }
 
     #[\Override]
@@ -132,7 +142,7 @@ final class PluginLoaderTest extends IntegrationTestCase
     {
         CurrentConfig::setEnablePlugins(false);
 
-        PluginLoader::loadPlugins($this->loadedPlugins, new \Piwigo\PluginConfig\EventDispatcher());
+        PluginLoader::loadPlugins($this->loadedPlugins, new \Piwigo\PluginConfig\EventDispatcher(), $this->activityService);
 
         expect($this->loadedPlugins->get())->toBe([]);
     }
@@ -148,7 +158,7 @@ final class PluginLoaderTest extends IntegrationTestCase
         );
 
         KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function (): void {
-            PluginLoader::loadPlugins($this->loadedPlugins, new \Piwigo\PluginConfig\EventDispatcher());
+            PluginLoader::loadPlugins($this->loadedPlugins, new \Piwigo\PluginConfig\EventDispatcher(), $this->activityService);
 
             expect($this->loadedPlugins->get())->toBe([]);
         });
@@ -171,7 +181,7 @@ final class PluginLoaderTest extends IntegrationTestCase
         );
 
         KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function () use ($marker): void {
-            PluginLoader::loadPlugins($this->loadedPlugins, new \Piwigo\PluginConfig\EventDispatcher());
+            PluginLoader::loadPlugins($this->loadedPlugins, new \Piwigo\PluginConfig\EventDispatcher(), $this->activityService);
 
             expect($this->loadedPlugins->get())->toHaveKey('loadable-plugin');
             expect($this->loadedPlugins->get()['loadable-plugin']['version'])->toBe('1.0');
@@ -192,7 +202,7 @@ final class PluginLoaderTest extends IntegrationTestCase
         );
 
         KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function (): void {
-            PluginLoader::loadPlugins($this->loadedPlugins, new \Piwigo\PluginConfig\EventDispatcher());
+            PluginLoader::loadPlugins($this->loadedPlugins, new \Piwigo\PluginConfig\EventDispatcher(), $this->activityService);
 
             expect($this->loadedPlugins->get())->toBe([]);
         });
@@ -223,7 +233,7 @@ PHP);
         );
 
         KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function () use ($id): void {
-            PluginLoader::loadPlugins($this->loadedPlugins, new \Piwigo\PluginConfig\EventDispatcher());
+            PluginLoader::loadPlugins($this->loadedPlugins, new \Piwigo\PluginConfig\EventDispatcher(), $this->activityService);
 
             expect(PageState::current()->errors)->toBe(['updated from 1.0 to 2.0']);
             expect($this->loadedPlugins->get()[$id]['version'])->toBe('2.0');
@@ -283,7 +293,7 @@ PHP);
         $this->expectExceptionMessage("PluginLoader::autoupdatePlugin(): {$classname} does not extend PluginMaintain");
 
         KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function (): void {
-            PluginLoader::loadPlugins($this->loadedPlugins, new \Piwigo\PluginConfig\EventDispatcher());
+            PluginLoader::loadPlugins($this->loadedPlugins, new \Piwigo\PluginConfig\EventDispatcher(), $this->activityService);
         });
     }
 
@@ -308,7 +318,7 @@ PHP);
         );
 
         KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function () use ($id): void {
-            PluginLoader::loadPlugins($this->loadedPlugins, new \Piwigo\PluginConfig\EventDispatcher());
+            PluginLoader::loadPlugins($this->loadedPlugins, new \Piwigo\PluginConfig\EventDispatcher(), $this->activityService);
 
             $storedVersion = DbConnection::build()->fetchOne(
                 'SELECT version FROM ' . Tables::plugins() . ' WHERE id = ?',

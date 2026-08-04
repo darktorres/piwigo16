@@ -42,7 +42,27 @@ test('send returns immediately without touching the DB or network when telemetry
         \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Config\ConfigEntry::class),
         new \Piwigo\PluginConfig\EventDispatcher(),
     );
-    new PiwigoInfosSender($currentLogger, new ImageStdParams(), $configService)->send();
+    // Never actually read either -- same "send() returns before touching
+    // anything past the guard" reasoning as $configService above.
+    $rateService = new \Piwigo\Rate\RateService(
+        \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Rate\RateEntity::class),
+        new \Piwigo\Auth\CookieService(),
+        new \Piwigo\PluginConfig\EventDispatcher(),
+        new \Piwigo\Users\CurrentUser(),
+    );
+    $historyService = new \Piwigo\History\HistoryService(
+        \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\History\HistoryEntity::class),
+        $configService,
+        $currentLogger,
+        new \Piwigo\PluginConfig\EventDispatcher(),
+        new \Piwigo\Core\PageState(),
+        new \Piwigo\Users\CurrentUser(),
+    );
+    $installationStats = new \Piwigo\Admin\InstallationStats($rateService, $historyService);
+    $activityService = new \Piwigo\Activity\ActivityService(
+        \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Activity\ActivityEntity::class),
+    );
+    new PiwigoInfosSender($currentLogger, new ImageStdParams(), $configService, $installationStats, $activityService)->send();
 
     expect(true)->toBeTrue();
 });

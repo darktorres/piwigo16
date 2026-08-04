@@ -50,6 +50,9 @@ final class PictureModifyPageRenderer
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly EntityManagerInterface $entityManager,
+        private readonly \Piwigo\Activity\ActivityService $activityService,
+        private readonly \Piwigo\Metadata\MetadataService $metadataService,
+        private readonly \Piwigo\Rate\RateService $rateService,
     ) {}
 
     private static function userService(): UserService
@@ -97,7 +100,7 @@ final class PictureModifyPageRenderer
         $template = $this->currentTemplate->get();
 
         $conn = DbConnection::build();
-        $imageService = new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), $this->sessionService, $this->eventDispatcher);
+        $imageService = new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher);
         $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
@@ -152,7 +155,7 @@ final class PictureModifyPageRenderer
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
-            \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService()
+            $this->metadataService
                 ->syncMetadata([$image_id]);
             $this->pageState->addInfo(Lang::t('Metadata synchronized from file'));
         }
@@ -240,7 +243,7 @@ final class PictureModifyPageRenderer
                 ]
             );
 
-            \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
+            $this->activityService
                 ->record('photo', $image_id, 'edit');
 
             // refresh page cache
@@ -377,7 +380,7 @@ final class PictureModifyPageRenderer
         ];
 
         if (\Piwigo\Config\CurrentConfig::rateEnabled() && ! in_array($row['rating_score'], [null, false, 0, 0.0, '0', '', []], true)) {
-            $row['nb_rates'] = \Piwigo\Bootstrap\ExtendedDomainAccessor::rateService()->countRatesForElement($image_id);
+            $row['nb_rates'] = $this->rateService->countRatesForElement($image_id);
 
             $intro_vars['stats'] .= ', ' . sprintf(Lang::t('Rated %d times, score : %.2f'), $row['nb_rates'], is_numeric($row['rating_score']) ? (float) $row['rating_score'] : 0.0);
         }

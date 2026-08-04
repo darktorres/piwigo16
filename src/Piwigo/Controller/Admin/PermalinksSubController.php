@@ -56,6 +56,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly \Piwigo\Permalink\PermalinkService $permalinkService,
     ) {}
 
     #[\Override]
@@ -74,7 +75,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail($htmlRenderer, $this->redirectService);
             $permalink = $permalinksRequest->permalink;
-            $permalink_service = \Piwigo\Bootstrap\ExtendedDomainAccessor::permalinkService();
+            $permalink_service = $this->permalinkService;
             if ($permalink === '') {
                 $permalink_service->deleteCatPermalink($post_cat_id, $permalinksRequest->isSave);
             } else {
@@ -84,7 +85,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
         } elseif ($permalinksRequest->deletePermanentPresent) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail($htmlRenderer, $this->redirectService);
-            \Piwigo\Bootstrap\ExtendedDomainAccessor::permalinkService()
+            $this->permalinkService
                 ->deleteOldPermalinkByValue($permalinksRequest->deletePermanent);
         }
 

@@ -61,6 +61,7 @@ final class AdminShell
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly \Piwigo\Comment\CommentService $commentService,
     ) {}
 
     /**
@@ -321,7 +322,7 @@ final class AdminShell
             $template->assign('U_COMMENTS', $link_start . 'comments');
 
             // pending comments
-            $nb_comments = \Piwigo\Bootstrap\ExtendedDomainAccessor::commentService()->countUnvalidated();
+            $nb_comments = $this->commentService->countUnvalidated();
 
             if ($nb_comments > 0) {
                 $template->assign('NB_PENDING_COMMENTS', $nb_comments);

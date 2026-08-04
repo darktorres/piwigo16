@@ -116,6 +116,8 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly EntityManagerInterface $entityManager,
+        private readonly \Piwigo\Activity\ActivityService $activityService,
+        private readonly \Piwigo\Metadata\MetadataService $metadataService,
     ) {}
 
     /**
@@ -127,11 +129,6 @@ final class ConfigurationSubController implements AdminSubControllerInterface
      * instance property rather than a local variable.
      */
     private bool $sizesLoadedInTpl = false;
-
-    private static function activityService(Connection $conn): \Piwigo\Activity\ActivityService
-    {
-        return \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService();
-    }
 
     private static function userService(Connection $conn): \Piwigo\Users\UserService
     {
@@ -464,7 +461,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     ]
                 );
 
-                self::activityService($conn)->record('system', ActivitySystem::Core, 'config', [
+                $this->activityService->record('system', ActivitySystem::Core, 'config', [
                     'config_section' => $page['section'],
                 ]);
             }
@@ -491,7 +488,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 ]
             );
 
-            self::activityService($conn)->record('system', ActivitySystem::Core, 'config', [
+            $this->activityService->record('system', ActivitySystem::Core, 'config', [
                 'config_section' => $page['section'],
                 'config_action' => 'restore_settings',
             ]);
@@ -627,7 +624,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 // P22: profile.php's own save_profile_from_post()/
                 // load_profile_in_template() ported to Piwigo\Controller\
                 // ProfileFormHandler in P23 batch 8c.
-                $profileFormHandler = new ProfileFormHandler($this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager);
+                $profileFormHandler = new ProfileFormHandler($this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService);
 
                 $errors = [];
                 if ($profileFormHandler->saveFromPost($edit_user, $errors)) {
@@ -977,7 +974,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         // PluginLoader::autoupdatePlugin()).
         $page_errors = $this->pageState->errors;
 
-        new UploadService($this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager)
+        new UploadService($this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager, $this->activityService, $this->metadataService)
             ->saveUploadFormConfig($updates, $page_errors, $errors);
 
         $this->pageState->errors = array_values($page_errors);
@@ -1180,7 +1177,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 ]
             );
 
-            self::activityService(DbConnection::build())->record('system', ActivitySystem::Core, 'config', [
+            $this->activityService->record('system', ActivitySystem::Core, 'config', [
                 'config_section' => 'sizes',
             ]);
         } else {
@@ -1431,7 +1428,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 ]
             );
 
-            self::activityService(DbConnection::build())->record('system', ActivitySystem::Core, 'config', [
+            $this->activityService->record('system', ActivitySystem::Core, 'config', [
                 'config_section' => 'watermark',
             ]);
         } else {

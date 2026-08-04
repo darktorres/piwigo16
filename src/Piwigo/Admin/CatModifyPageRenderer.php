@@ -43,7 +43,7 @@ final class CatModifyPageRenderer
      *
      * @param array<string, mixed> $category
      */
-    public function render(UrlServiceInterface $urlService, array $category, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate): void
+    public function render(UrlServiceInterface $urlService, array $category, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Activity\ActivityService $activityService): void
     {
         $template = $currentTemplate->get();
 
@@ -235,7 +235,7 @@ final class CatModifyPageRenderer
         $category['nb_images_recursive'] = count($image_ids_recursive);
 
         // date creation
-        $occured_on = \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
+        $occured_on = $activityService
             ->getOccuredOnForObject($category_id, 'album', 'add');
 
         if ($occured_on !== null) {

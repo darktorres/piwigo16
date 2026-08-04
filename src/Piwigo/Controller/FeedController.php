@@ -35,6 +35,7 @@ final class FeedController implements ControllerInterface
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
+        private readonly \Piwigo\Notification\NotificationService $notificationService,
     ) {}
 
     private static function userService(): \Piwigo\Users\UserService
@@ -50,7 +51,7 @@ final class FeedController implements ControllerInterface
         $feed_helper = new FeedHelper();
         $conn = DbConnection::build();
         $feed_repo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Feed\FeedEntity::class);
-        $notificationService = \Piwigo\Bootstrap\ExtendedDomainAccessor::notificationService();
+        $notificationService = $this->notificationService;
 
         $feedRequest = Request\FeedRequest::fromGlobals();
         $feed_id = $feedRequest->feedId;

@@ -8,76 +8,55 @@ use Piwigo\Comment\CommentService;
 use Piwigo\Core\Kernel;
 use Piwigo\History\HistoryService;
 use Piwigo\Metadata\MetadataService;
-use Piwigo\Notification\NotificationByMailService;
-use Piwigo\Notification\NotificationService;
-use Piwigo\Permalink\PermalinkService;
 use Piwigo\Rate\RateService;
-use Piwigo\Search\SearchFilterRenderer;
 use Piwigo\Search\SearchService;
-use Piwigo\Section\SectionPopulator;
 use Piwigo\Tests\Support\KernelContainerOverride;
 
 /**
- * Piwigo\Bootstrap\ExtendedDomainAccessor -- 3 of its 11 typed accessors
- * (commentService()/permalinkService()/notificationByMailService()) had
- * zero coverage (see /home/torres/.claude/plans/piped-enchanting-spark.md,
- * Wave 1): the underlying container bindings ARE exercised (Piwigo\Tests\
- * Integration\ContainerSmokeTest resolves every config/container.php
- * entry directly), but nothing calls these 3 specific thin wrapper
- * methods. Matches ContainerSmokeTest's own "extends plain TestCase, no DB
- * needed to resolve a service" precedent -- these services are lazy DBAL
- * wrappers, not eager connections, at construction time.
+ * Piwigo\Bootstrap\ExtendedDomainAccessor -- singleton/service-locator
+ * elimination campaign, Phase 6: 5 of its original 11 typed accessors
+ * (searchFilterRenderer()/notificationService()/notificationByMailService()/
+ * permalinkService()/sectionPopulator()) were deleted once every real
+ * caller converted to constructor injection, leaving zero remaining callers
+ * for those 5 -- the other 6 (activityService()/commentService()/
+ * searchService()/metadataService()/historyService()/rateService()) stay,
+ * each still reached from at least one Ws/Pwg*.php static-dispatch call
+ * site (Phase-10-locked) or config/messenger.php/Admin/Install's own
+ * genuinely-static-context callers.
  *
- * Every accessor's own "Container returned an unexpected type"
- * \LogicException guard was ALSO entirely uncovered (all 11 throw lines
- * red) -- see Piwigo\Tests\Support\KernelContainerOverride's own docblock
- * and AdminAccessorTest.php's identical shape for the other 4 sibling
- * accessor classes.
+ * commentService()'s own "zero coverage" gap (see /home/torres/.claude/
+ * plans/piped-enchanting-spark.md, Wave 1) is closed below -- the
+ * underlying container binding IS exercised elsewhere (Piwigo\Tests\
+ * Integration\ContainerSmokeTest resolves every config/container.php entry
+ * directly), but nothing called this specific thin wrapper method before.
+ * Matches ContainerSmokeTest's own "extends plain TestCase, no DB needed to
+ * resolve a service" precedent -- these services are lazy DBAL wrappers,
+ * not eager connections, at construction time.
+ *
+ * Every remaining accessor's own "Container returned an unexpected type"
+ * \LogicException guard is covered too -- see Piwigo\Tests\Support\
+ * KernelContainerOverride's own docblock and AdminAccessorTest.php's
+ * identical shape for the other sibling accessor classes.
  */
 beforeEach(function (): void {
     Kernel::reset();
     Kernel::boot(\Piwigo\Core\Paths::fromRoot(sys_get_temp_dir()));
-    // searchFilterRenderer()/sectionPopulator() additionally need
-    // Piwigo\Template\CurrentTemplate seeded (a renderer dependency), even
-    // though nothing here ever renders anything -- Template's own
-    // constructor reads CurrentPaths (hence the real Paths passed into
-    // Kernel::boot() just above) and, unless dataDirChecked is already
-    // marked '1', tries a real DB write via CurrentConfigService, which
-    // isn't booted here -- same "mark it already-checked" setup
-    // TabsheetTest.php's own Template construction uses.
-    \Piwigo\Config\CurrentConfig::setDataLocation('data/');
-    \Piwigo\Config\CurrentConfig::setDataDirChecked('1');
-    \Piwigo\Template\CurrentTemplate::current()->set(new \Piwigo\Template\Template(sys_get_temp_dir()));
 });
 
 afterEach(function (): void {
     Kernel::reset();
-    \Piwigo\Template\CurrentTemplate::current()->reset();
-    \Piwigo\Config\CurrentConfig::reset();
-});
-
-test('commentService resolves a real CommentService from the container', function (): void {
-    expect(ExtendedDomainAccessor::commentService())->toBeInstanceOf(CommentService::class);
-});
-
-test('permalinkService resolves a real PermalinkService from the container', function (): void {
-    expect(ExtendedDomainAccessor::permalinkService())->toBeInstanceOf(PermalinkService::class);
-});
-
-test('notificationByMailService resolves a real NotificationByMailService from the container', function (): void {
-    expect(ExtendedDomainAccessor::notificationByMailService())->toBeInstanceOf(NotificationByMailService::class);
 });
 
 test('activityService resolves a real ActivityService from the container', function (): void {
     expect(ExtendedDomainAccessor::activityService())->toBeInstanceOf(ActivityService::class);
 });
 
-test('searchService resolves a real SearchService from the container', function (): void {
-    expect(ExtendedDomainAccessor::searchService())->toBeInstanceOf(SearchService::class);
+test('commentService resolves a real CommentService from the container', function (): void {
+    expect(ExtendedDomainAccessor::commentService())->toBeInstanceOf(CommentService::class);
 });
 
-test('searchFilterRenderer resolves a real SearchFilterRenderer from the container', function (): void {
-    expect(ExtendedDomainAccessor::searchFilterRenderer())->toBeInstanceOf(SearchFilterRenderer::class);
+test('searchService resolves a real SearchService from the container', function (): void {
+    expect(ExtendedDomainAccessor::searchService())->toBeInstanceOf(SearchService::class);
 });
 
 test('metadataService resolves a real MetadataService from the container', function (): void {
@@ -90,14 +69,6 @@ test('historyService resolves a real HistoryService from the container', functio
 
 test('rateService resolves a real RateService from the container', function (): void {
     expect(ExtendedDomainAccessor::rateService())->toBeInstanceOf(RateService::class);
-});
-
-test('notificationService resolves a real NotificationService from the container', function (): void {
-    expect(ExtendedDomainAccessor::notificationService())->toBeInstanceOf(NotificationService::class);
-});
-
-test('sectionPopulator resolves a real SectionPopulator from the container', function (): void {
-    expect(ExtendedDomainAccessor::sectionPopulator())->toBeInstanceOf(SectionPopulator::class);
 });
 
 test('activityService throws when the container returns an unexpected type', function (): void {
@@ -121,13 +92,6 @@ test('searchService throws when the container returns an unexpected type', funct
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . SearchService::class);
 
-test('searchFilterRenderer throws when the container returns an unexpected type', function (): void {
-    KernelContainerOverride::withWrongTypeFor(
-        SearchFilterRenderer::class,
-        static fn () => ExtendedDomainAccessor::searchFilterRenderer()
-    );
-})->throws(LogicException::class, 'Container returned an unexpected type for ' . SearchFilterRenderer::class);
-
 test('metadataService throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         MetadataService::class,
@@ -148,31 +112,3 @@ test('rateService throws when the container returns an unexpected type', functio
         static fn () => ExtendedDomainAccessor::rateService()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . RateService::class);
-
-test('notificationService throws when the container returns an unexpected type', function (): void {
-    KernelContainerOverride::withWrongTypeFor(
-        NotificationService::class,
-        static fn () => ExtendedDomainAccessor::notificationService()
-    );
-})->throws(LogicException::class, 'Container returned an unexpected type for ' . NotificationService::class);
-
-test('notificationByMailService throws when the container returns an unexpected type', function (): void {
-    KernelContainerOverride::withWrongTypeFor(
-        NotificationByMailService::class,
-        static fn () => ExtendedDomainAccessor::notificationByMailService()
-    );
-})->throws(LogicException::class, 'Container returned an unexpected type for ' . NotificationByMailService::class);
-
-test('permalinkService throws when the container returns an unexpected type', function (): void {
-    KernelContainerOverride::withWrongTypeFor(
-        PermalinkService::class,
-        static fn () => ExtendedDomainAccessor::permalinkService()
-    );
-})->throws(LogicException::class, 'Container returned an unexpected type for ' . PermalinkService::class);
-
-test('sectionPopulator throws when the container returns an unexpected type', function (): void {
-    KernelContainerOverride::withWrongTypeFor(
-        SectionPopulator::class,
-        static fn () => ExtendedDomainAccessor::sectionPopulator()
-    );
-})->throws(LogicException::class, 'Container returned an unexpected type for ' . SectionPopulator::class);

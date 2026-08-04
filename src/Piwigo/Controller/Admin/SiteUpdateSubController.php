@@ -109,6 +109,8 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly EntityManagerInterface $entityManager,
+        private readonly \Piwigo\Activity\ActivityService $activityService,
+        private readonly \Piwigo\Metadata\MetadataService $metadataService,
     ) {}
 
     private static function permissionService(): PermissionService
@@ -121,14 +123,9 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         return \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
     }
 
-    private static function activityService(): \Piwigo\Activity\ActivityService
-    {
-        return \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService();
-    }
-
     private function imageService(Connection $conn): ImageService
     {
-        return new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), self::activityService(), $this->sessionService, $this->eventDispatcher);
+        return new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher);
     }
 
     #[\Override]
@@ -463,7 +460,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                         }
                     }
 
-                    self::activityService()->record('album', $category_ids, 'add', [
+                    $this->activityService->record('album', $category_ids, 'add', [
                         'sync' => true,
                     ]);
 
@@ -540,7 +537,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
 
             if (count($to_delete) > 0) {
                 if (! $simulate) {
-                    self::categoryService()->deleteCategories($to_delete, self::activityService(), $this->urlService, $this->sessionService, $this->eventDispatcher);
+                    self::categoryService()->deleteCategories($to_delete, $this->activityService, $this->urlService, $this->sessionService, $this->eventDispatcher);
                     foreach ($to_delete_derivative_dirs as $to_delete_dir) {
                         if (is_dir($to_delete_dir)) {
                             new DerivativeCacheService()
@@ -737,7 +734,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                         ->insertImageCategoryLinks($insert_links);
                     $this->entityManager->clear();
 
-                    self::activityService()->record('photo', $caddiables, 'add', [
+                    $this->activityService->record('photo', $caddiables, 'add', [
                         'sync' => true,
                     ]);
 
@@ -821,7 +818,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                         $opts['recursive'] = false;
                     }
                 }
-                $files = \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService()
+                $files = $this->metadataService
                     ->getFilelist(
                         $opts['category_id'],
                         $site_id,
@@ -897,7 +894,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                 }
             }
             $start = \Piwigo\Core\TimingHelper::getMoment();
-            $files = \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService()
+            $files = $this->metadataService
                 ->getFilelist(
                     $opts['category_id'],
                     $site_id,

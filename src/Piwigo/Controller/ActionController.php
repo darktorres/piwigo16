@@ -58,12 +58,8 @@ final class ActionController implements ControllerInterface
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
+        private readonly HistoryService $historyService,
     ) {}
-
-    private function historyService(): HistoryService
-    {
-        return \Piwigo\Bootstrap\ExtendedDomainAccessor::historyService();
-    }
 
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
@@ -174,16 +170,16 @@ final class ActionController implements ControllerInterface
 
         $image_id_val = $image_id;
         if ($get_part === 'e') {
-            $this->historyService()
+            $this->historyService
                 ->logVisit($image_id_val, 'high');
         } elseif ($get_part === 'r') {
-            $this->historyService()
+            $this->historyService
                 ->logVisit($image_id_val, 'other');
         } elseif ($get_part === 'f') {
             if ($format_row === null) {
                 return $this->doError(400, 'Invalid request - format');
             }
-            $this->historyService()
+            $this->historyService
                 ->logVisit($image_id_val, 'high', $format_row->formatId);
         }
 

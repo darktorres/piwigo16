@@ -77,6 +77,9 @@ final class IntroSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly InstallationStats $installationStats,
+        private readonly \Piwigo\Comment\CommentService $commentService,
+        private readonly \Piwigo\Activity\ActivityService $activityService,
     ) {}
 
     #[\Override]
@@ -194,7 +197,7 @@ final class IntroSubController implements AdminSubControllerInterface
 
         }
 
-        $stats = InstallationStats::getGeneralStatistics();
+        $stats = $this->installationStats->getGeneralStatistics();
 
         $disk_usage = (float) $stats['disk_usage'];
         $nb_views = (float) $stats['nb_views'];
@@ -223,7 +226,7 @@ final class IntroSubController implements AdminSubControllerInterface
         );
 
         if (\Piwigo\Config\CurrentConfig::activateComments()) {
-            $template->assign('NB_COMMENTS', \Piwigo\Bootstrap\ExtendedDomainAccessor::commentService()->countAll());
+            $template->assign('NB_COMMENTS', $this->commentService->countAll());
         } else {
             $template->assign('NB_COMMENTS', 0);
         }
@@ -299,7 +302,7 @@ final class IntroSubController implements AdminSubControllerInterface
         if ($session_cache_calculated_on === null or $session_cache_calculated_on < Env::now()->getTimestamp() - 300) {
             $start_time = \Piwigo\Core\TimingHelper::getMoment();
 
-            $activity_actions = \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()->getDailyActionCountsSince($date_string);
+            $activity_actions = $this->activityService->getDailyActionCountsSince($date_string);
 
             foreach ($activity_actions as $action) {
                 // set the time to 12:00 (midday) so that it doesn't goes to previous/next day due to timezone offset

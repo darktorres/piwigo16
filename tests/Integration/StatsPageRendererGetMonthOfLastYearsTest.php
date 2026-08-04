@@ -20,10 +20,10 @@ use Piwigo\Db\Tables;
  * identical "private method + unreachable default parameter" precedent.
  *
  * Needs a real, container-resolved HistoryService (Kernel::boot()), not a
- * hand-constructed one -- getMonthOfLastYears() calls
- * Bootstrap\ExtendedDomainAccessor::historyService() directly, with no
- * constructor injection seam of its own. Same minimal "just Kernel::boot(),
- * no IntegrationTestCase base class" shape as
+ * hand-constructed one -- getMonthOfLastYears() takes it as an explicit
+ * parameter now (singleton/service-locator elimination campaign, Phase 6),
+ * resolved here the same way. Same minimal "just Kernel::boot(), no
+ * IntegrationTestCase base class" shape as
  * tests/Integration/InstallationStatsTest.php, which resolves through the
  * same Bootstrap accessor family -- getMonthlyRows()/setMissingValues()/
  * getDateObject() touch no CurrentUser/Lang/Template state at all, so
@@ -42,7 +42,12 @@ function statsGetMonthOfLastYearsInvoke(): array
 {
     $method = new ReflectionMethod(StatsPageRenderer::class, 'getMonthOfLastYears');
 
-    $result = $method->invoke(null, 'all');
+    $historyService = Kernel::container()->get(\Piwigo\History\HistoryService::class);
+    if (! $historyService instanceof \Piwigo\History\HistoryService) {
+        throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\History\HistoryService::class);
+    }
+
+    $result = $method->invoke(null, $historyService, 'all');
     if (! is_array($result)) {
         throw new RuntimeException('getMonthOfLastYears() did not return an array: ' . var_export($result, true));
     }

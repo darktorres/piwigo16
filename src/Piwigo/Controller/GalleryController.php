@@ -70,6 +70,9 @@ final class GalleryController implements ControllerInterface
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly \Piwigo\Section\SectionPopulator $sectionPopulator,
+        private readonly \Piwigo\Search\SearchFilterRenderer $searchFilterRenderer,
+        private readonly \Piwigo\History\HistoryService $historyService,
     ) {}
 
     private static function categoryService(): CategoryService
@@ -87,7 +90,7 @@ final class GalleryController implements ControllerInterface
     {
         $template = $this->currentTemplate->get();
 
-        \Piwigo\Bootstrap\ExtendedDomainAccessor::sectionPopulator()
+        $this->sectionPopulator
             ->populate();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
@@ -274,7 +277,7 @@ final class GalleryController implements ControllerInterface
             }
         }
 
-        $resolved_search_id = \Piwigo\Bootstrap\ExtendedDomainAccessor::searchFilterRenderer()->render($section_context);
+        $resolved_search_id = $this->searchFilterRenderer->render($section_context);
 
         if ($section_context->section === 'categories' and $section_context->category !== null and $section_context->combinedCategories === null) {
             $template->assign(
@@ -594,7 +597,7 @@ final class GalleryController implements ControllerInterface
         $template->parse('index', false);
 
         // ------------------------------------------------ log informations
-        \Piwigo\Bootstrap\ExtendedDomainAccessor::historyService()
+        $this->historyService
             ->logVisit(
                 section: $section_context->section,
                 category: $section_context->category,

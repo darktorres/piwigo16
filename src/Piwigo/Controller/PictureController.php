@@ -102,6 +102,10 @@ final class PictureController implements ControllerInterface
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly \Piwigo\Core\MailerInterface $mailer,
         private readonly EntityManagerInterface $entityManager,
+        private readonly \Piwigo\Section\SectionPopulator $sectionPopulator,
+        private readonly \Piwigo\Activity\ActivityService $activityService,
+        private readonly \Piwigo\Rate\RateService $rateService,
+        private readonly \Piwigo\History\HistoryService $historyService,
     ) {}
 
     private static function permissionService(): PermissionService
@@ -142,7 +146,7 @@ final class PictureController implements ControllerInterface
         // restores, and avoids the needless-reconnection pattern found
         // in earlier construction-chain debt (Phase 1d finding).
         $conn = DbConnection::build();
-        \Piwigo\Bootstrap\ExtendedDomainAccessor::sectionPopulator()
+        $this->sectionPopulator
             ->populate();
 
         $template = $this->currentTemplate->get();
@@ -411,7 +415,7 @@ final class PictureController implements ControllerInterface
                         $representative_category_id = is_numeric($representative_category_id) ? (int) $representative_category_id : 0;
                         self::categoryService()->setRepresentativeImage($representative_category_id, $image_id);
                         $this->entityManager->clear();
-                        \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()->record('album', $representative_category_id, 'edit', [
+                        $this->activityService->record('album', $representative_category_id, 'edit', [
                             'action' => $pictureRequest->action,
                             'image_id' => $image_id,
                         ]);
@@ -430,7 +434,7 @@ final class PictureController implements ControllerInterface
                     // no break
                 case 'rate':
 
-                    \Piwigo\Bootstrap\ExtendedDomainAccessor::rateService()
+                    $this->rateService
                         ->rate($image_id, $pictureRequest->rate);
                     $this->redirectService->redirect($url_self);
 
@@ -1260,7 +1264,7 @@ final class PictureController implements ControllerInterface
         }
         // -------------------------------------------------- log informations
         $current_image_id = $picture['current']['id'];
-        \Piwigo\Bootstrap\ExtendedDomainAccessor::historyService()
+        $this->historyService
             ->logVisit(
                 is_numeric($current_image_id) ? (int) $current_image_id : null,
                 'picture',

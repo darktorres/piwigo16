@@ -19,7 +19,7 @@ use Piwigo\Template\Template;
  */
 final class UserActivityPageRenderer
 {
-    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\Template\CurrentTemplate $currentTemplate): void
+    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Activity\ActivityService $activityService): void
     {
         $template = $currentTemplate->get();
 
@@ -39,7 +39,7 @@ final class UserActivityPageRenderer
         /** @var array<string, string> $user_fields */
         $user_fields = \Piwigo\Config\CurrentConfig::userFields();
 
-        $activity_service = \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService();
+        $activity_service = $activityService;
 
         if ($userActivityRequest->isDownloadLogs) {
             $output_lines = [];

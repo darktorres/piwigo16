@@ -66,6 +66,7 @@ final class BatchManagerGlobalPageRenderer
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly EntityManagerInterface $entityManager,
+        private readonly \Piwigo\Activity\ActivityService $activityService,
     ) {}
 
     private static function tagService(): TagService
@@ -188,7 +189,7 @@ final class BatchManagerGlobalPageRenderer
             $redirect = false;
 
             $tagService = self::tagService();
-            $imageService = new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), $this->sessionService, $this->eventDispatcher);
+            $imageService = new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher);
 
             if ($action === 'remove_from_caddie') {
                 $current_user_id = $this->currentUser->get()
@@ -332,7 +333,7 @@ final class BatchManagerGlobalPageRenderer
                 $imageService->updateTextFieldForImages($collection, 'author', is_string($post['author'] ?? null) ? $post['author'] : null);
                 $this->entityManager->clear();
 
-                \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
+                $this->activityService
                     ->record('photo', $collection, 'edit', [
                         'action' => 'author',
                     ]);
@@ -347,7 +348,7 @@ final class BatchManagerGlobalPageRenderer
                 $imageService->updateTextFieldForImages($collection, 'name', is_string($post['title'] ?? null) ? $post['title'] : null);
                 $this->entityManager->clear();
 
-                \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
+                $this->activityService
                     ->record('photo', $collection, 'edit', [
                         'action' => 'title',
                     ]);
@@ -364,7 +365,7 @@ final class BatchManagerGlobalPageRenderer
                 $imageService->updateTextFieldForImages($collection, 'date_creation', $date_creation);
                 $this->entityManager->clear();
 
-                \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
+                $this->activityService
                     ->record('photo', $collection, 'edit', [
                         'action' => 'date_creation',
                     ]);
@@ -375,7 +376,7 @@ final class BatchManagerGlobalPageRenderer
                 $imageService->updateLevelForImages($collection, is_numeric($post['level']) ? (int) $post['level'] : 0);
                 $this->entityManager->clear();
 
-                \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
+                $this->activityService
                     ->record('photo', $collection, 'edit', [
                         'action' => 'privacy_level',
                     ]);

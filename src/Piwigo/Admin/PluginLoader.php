@@ -49,7 +49,7 @@ final class PluginLoader
     /**
      * Loads all the registered plugins.
      */
-    public static function loadPlugins(LoadedPlugins $loadedPlugins, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher): void
+    public static function loadPlugins(LoadedPlugins $loadedPlugins, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Activity\ActivityService $activityService): void
     {
         $loadedPlugins->set([]);
         if (\Piwigo\Config\CurrentConfig::enablePlugins()) {
@@ -60,7 +60,7 @@ final class PluginLoader
                 // param, which a readonly Plugin object can't support (same
                 // "unbox where genuinely needed" shape as
                 // CategoryCatsRenderer's own unboxing).
-                self::loadPlugin($plugin->toArray(), $loadedPlugins);
+                self::loadPlugin($plugin->toArray(), $loadedPlugins, $activityService);
             }
             $eventDispatcher->dispatchNotify(new PluginsLoaded());
         }
@@ -75,13 +75,13 @@ final class PluginLoader
      *   loadPlugins(), unboxes the repository's typed row there since this
      *   method needs mutable array semantics, not a readonly object)
      */
-    private static function loadPlugin(array $plugin, LoadedPlugins $loadedPlugins): void
+    private static function loadPlugin(array $plugin, LoadedPlugins $loadedPlugins, \Piwigo\Activity\ActivityService $activityService): void
     {
         $plugin_id = $plugin['id'];
 
         $file_name = self::pluginsPath() . $plugin_id . '/main.inc.php';
         if (file_exists($file_name)) {
-            self::autoupdatePlugin($plugin);
+            self::autoupdatePlugin($plugin, $activityService);
             $loadedPlugins->add($plugin_id, $plugin);
             include_once $file_name;
         }
@@ -95,7 +95,7 @@ final class PluginLoader
      *   be updated if version changes - matches loadPlugin()'s own param
      *   shape (its only caller, already guards 'id' to string)
      */
-    private static function autoupdatePlugin(array &$plugin): void
+    private static function autoupdatePlugin(array &$plugin, \Piwigo\Activity\ActivityService $activityService): void
     {
         $plugin_id = $plugin['id'];
 
@@ -170,7 +170,7 @@ final class PluginLoader
                 \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\PluginConfig\PluginEntity::class)
                     ->updateVersion($plugin_id, $fs_version);
 
-                \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
+                $activityService
                     ->record('system', ActivitySystem::Plugin, 'autoupdate', [
                         'plugin_id' => $plugin_id,
                         'from_version' => $old_version,

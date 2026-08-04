@@ -32,6 +32,7 @@ final class ThemesNewPageRenderer
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly \Piwigo\Activity\ActivityService $activityService,
     ) {}
 
     /**
@@ -99,7 +100,7 @@ final class ThemesNewPageRenderer
                     $installed_theme_id = $themesNewInstall->installedThemeId;
                     $installed_fs_theme = $installed_theme_id !== null ? ($extension_scanner->scan(ExtensionType::Theme, $this->urlService)[$installed_theme_id] ?? null) : null;
                     if ($installed_fs_theme !== null) {
-                        \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()->record('system', ActivitySystem::Theme, 'install', [
+                        $this->activityService->record('system', ActivitySystem::Theme, 'install', [
                             'theme_id' => $installed_theme_id,
                             'version' => $installed_fs_theme['version'],
                         ]);

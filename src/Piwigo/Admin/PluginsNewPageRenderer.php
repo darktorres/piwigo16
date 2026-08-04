@@ -37,6 +37,7 @@ final class PluginsNewPageRenderer
         private readonly SessionService $sessionService,
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly \Piwigo\Activity\ActivityService $activityService,
     ) {}
 
     /**
@@ -102,7 +103,7 @@ final class PluginsNewPageRenderer
                     $installed_plugin_id = $pluginsNewRequest->pluginId;
                     $installed_fs_plugin = $installed_plugin_id !== null ? ($extension_scanner->scan(ExtensionType::Plugin, $this->urlService)[$installed_plugin_id] ?? null) : null;
                     if ($installed_fs_plugin !== null) {
-                        \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()->record('system', ActivitySystem::Plugin, 'install', [
+                        $this->activityService->record('system', ActivitySystem::Plugin, 'install', [
                             'plugin_id' => $installed_plugin_id,
                             'version' => $installed_fs_plugin['version'],
                         ]);

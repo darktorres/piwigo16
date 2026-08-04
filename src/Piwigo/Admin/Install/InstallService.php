@@ -86,6 +86,7 @@ final class InstallService
             $urlService,
             CurrentConfigService::current()->get(),
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class),
+            \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(),
         );
         $fs_themes = new ExtensionScanner()
             ->scan(ExtensionType::Theme, $urlService);

@@ -46,6 +46,7 @@ final class CatListPageRenderer
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly CategoryAdminService $categoryAdminService,
+        private readonly \Piwigo\Activity\ActivityService $activityService,
     ) {}
 
     public function render(): void
@@ -110,7 +111,7 @@ final class CatListPageRenderer
         if ($catListRequest->deleteId !== null) {
             $categoryService->deleteCategories(
                 [$catListRequest->deleteId],
-                \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(),
+                $this->activityService,
                 $this->urlService,
                 $this->sessionService,
                 $this->eventDispatcher,
@@ -133,7 +134,7 @@ final class CatListPageRenderer
             $output_create = $this->categoryAdminService
                 ->createVirtualCategory(
                     $virtual_name,
-                    \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(),
+                    $this->activityService,
                     $this->currentUser,
                     $parent_id
                 );

@@ -29,6 +29,7 @@ final class SearchController implements ControllerInterface
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
+        private readonly \Piwigo\Search\SearchService $searchService,
     ) {}
 
     private static function permissionService(): PermissionService
@@ -39,7 +40,7 @@ final class SearchController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        $searchService = \Piwigo\Bootstrap\ExtendedDomainAccessor::searchService();
+        $searchService = $this->searchService;
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 

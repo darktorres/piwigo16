@@ -136,7 +136,12 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
 
         $this->conn->executeStatement('DELETE FROM ' . Tables::activity() . " WHERE object != 'system'");
 
-        new UserActivityPageRenderer()->render($this->urlService, $this->coreTabs, CurrentTemplate::current());
+        $activityService = Kernel::container()->get(\Piwigo\Activity\ActivityService::class);
+        if (! $activityService instanceof \Piwigo\Activity\ActivityService) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Activity\ActivityService::class);
+        }
+
+        new UserActivityPageRenderer()->render($this->urlService, $this->coreTabs, CurrentTemplate::current(), $activityService);
 
         $template = CurrentTemplate::current()->get();
         self::assertSame([], $template->get_template_vars('ulist'));

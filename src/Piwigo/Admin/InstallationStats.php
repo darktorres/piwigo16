@@ -14,13 +14,18 @@ namespace Piwigo\Admin;
  */
 final class InstallationStats
 {
+    public function __construct(
+        private \Piwigo\Rate\RateService $rateService,
+        private \Piwigo\History\HistoryService $historyService,
+    ) {}
+
     /**
      * @return array{nb_photos: int, nb_categories: int, nb_tags: int,
      *   nb_image_tag: int, nb_users: int, nb_admins: int, nb_groups: int,
      *   nb_rates: int, nb_views: int, disk_usage: int, nb_formats: int,
      *   formats_disk_usage: int}
      */
-    public static function getGeneralStatistics(): array
+    public function getGeneralStatistics(): array
     {
         $nb_photos = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->getTotalImageCount();
         $nb_categories = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService()->countAllCategories();
@@ -29,8 +34,8 @@ final class InstallationStats
         $nb_users = \Piwigo\Bootstrap\CoreDomainAccessor::userService()->getTotalUserCount();
         $nb_admins = count(\Piwigo\Bootstrap\CoreDomainAccessor::userService()->getAdminIds());
         $nb_groups = \Piwigo\Bootstrap\CoreDomainAccessor::groupService()->countAll();
-        $nb_rates = \Piwigo\Bootstrap\ExtendedDomainAccessor::rateService()->countAll();
-        $nb_views = \Piwigo\Bootstrap\ExtendedDomainAccessor::historyService()->getTotalPageViews();
+        $nb_rates = $this->rateService->countAll();
+        $nb_views = $this->historyService->getTotalPageViews();
         $images_disk_usage = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->getTotalFilesize();
         $format_stats = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->getFormatCountAndSize();
         $nb_formats = $format_stats['count'];
@@ -60,7 +65,7 @@ final class InstallationStats
      * narrowed to a real ?string at each assignment rather than trusting
      * that blindly.
      */
-    public static function getInstallationDate(): ?string
+    public function getInstallationDate(): ?string
     {
         $candidate = null;
 

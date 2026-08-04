@@ -433,7 +433,7 @@ final class RequestBootstrap
         self::imageStdParams();
 
         session_start();
-        PluginLoader::loadPlugins(self::loadedPlugins(), \Piwigo\PluginConfig\EventDispatcher::get());
+        PluginLoader::loadPlugins(self::loadedPlugins(), \Piwigo\PluginConfig\EventDispatcher::get(), self::activityService($conn));
 
         if (\Piwigo\Config\CurrentConfig::piwigoInstalledVersion() === null) {
             $configService->confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
@@ -1240,6 +1240,26 @@ final class RequestBootstrap
         }
 
         return $deploymentPolicy;
+    }
+
+    /**
+     * Public (unlike the private resolver helpers above): public/admin.php's
+     * own legacy-style `new AdminShell(...)` manual construction needs a way
+     * to obtain the same container-shared instance every other
+     * CommentService consumer receives via constructor injection, without
+     * calling Kernel::container() directly itself (arch-tested to
+     * Bootstrap/ only) -- same "public accessor on this class" shape as
+     * coreTabs()/sessionService()/eventDispatcher()/deploymentPolicy() above
+     * (singleton/service-locator elimination campaign, Phase 6).
+     */
+    public static function commentService(): \Piwigo\Comment\CommentService
+    {
+        $commentService = Kernel::container()->get(\Piwigo\Comment\CommentService::class);
+        if (! $commentService instanceof \Piwigo\Comment\CommentService) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Comment\CommentService::class);
+        }
+
+        return $commentService;
     }
 
     /**

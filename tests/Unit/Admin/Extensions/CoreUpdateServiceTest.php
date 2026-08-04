@@ -26,11 +26,16 @@ use Piwigo\Url\UrlService;
 // never opens a real connection until a query runs), so constructing a
 // real ConfigRepository/ConfigService here is safe without a reachable
 // test DB.
+function core_update_service_test_activity_service(): \Piwigo\Activity\ActivityService
+{
+    return new \Piwigo\Activity\ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class));
+}
+
 function core_update_service(): CoreUpdateService
 {
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(ConfigEntry::class);
 
-    return new CoreUpdateService(new ZipExtractor(), new RedirectService(), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new ConfigService($repo, new \Piwigo\PluginConfig\EventDispatcher()), Paths::fromRoot(dirname(__DIR__, 4)), \Piwigo\Core\PageState::current(), \Piwigo\Template\CurrentTemplate::current());
+    return new CoreUpdateService(new ZipExtractor(), new RedirectService(), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new ConfigService($repo, new \Piwigo\PluginConfig\EventDispatcher()), Paths::fromRoot(dirname(__DIR__, 4)), \Piwigo\Core\PageState::current(), \Piwigo\Template\CurrentTemplate::current(), core_update_service_test_activity_service());
 }
 
 test('containerVersionCompare orders by semantic version first', function (): void {
@@ -79,7 +84,7 @@ function core_update_service_at(string $root): CoreUpdateService
 {
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(ConfigEntry::class);
 
-    return new CoreUpdateService(new ZipExtractor(), new RedirectService(), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new ConfigService($repo, new \Piwigo\PluginConfig\EventDispatcher()), Paths::fromRoot($root), \Piwigo\Core\PageState::current(), \Piwigo\Template\CurrentTemplate::current());
+    return new CoreUpdateService(new ZipExtractor(), new RedirectService(), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new ConfigService($repo, new \Piwigo\PluginConfig\EventDispatcher()), Paths::fromRoot($root), \Piwigo\Core\PageState::current(), \Piwigo\Template\CurrentTemplate::current(), core_update_service_test_activity_service());
 }
 
 function core_update_service_step_is(int|string $step, int $target): bool

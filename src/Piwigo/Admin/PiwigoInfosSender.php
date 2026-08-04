@@ -50,6 +50,8 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
         private readonly ImageStdParams $imageStdParams,
         private readonly \Piwigo\Config\ConfigService $configService,
+        private readonly InstallationStats $installationStats,
+        private readonly \Piwigo\Activity\ActivityService $activityService,
     ) {}
 
     /**
@@ -133,14 +135,14 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
                 'db_datetime' => $dbCurrentDate,
                 'graphics_library' => PwgImage::get_graphics_library(),
             ],
-            'general_stats' => InstallationStats::getGeneralStatistics(),
+            'general_stats' => $this->installationStats->getGeneralStatistics(),
         ];
 
         // convert disk_usage from kB to mB
         $diskUsageKb = (float) $piwigoInfos['general_stats']['disk_usage'];
         $piwigoInfos['general_stats']['disk_usage'] = intval($diskUsageKb / 1024.0);
 
-        $piwigoInfos['general_stats']['installed_on'] = InstallationStats::getInstallationDate();
+        $piwigoInfos['general_stats']['installed_on'] = $this->installationStats->getInstallationDate();
         $piwigoInfos['general_stats']['nb_photos_synced'] = 0;
         $piwigoInfos['general_stats']['last_photo_synced'] = null;
         $piwigoInfos['general_stats']['last_photo'] = null;
@@ -365,8 +367,6 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
         $piwigoInfos['activities'] = [];
         $piwigoInfos['general_stats']['nb_activities'] = 0;
 
-        $activityService = \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService();
-
         // 'activities' is heterogeneous by design: every object except 'system'
         // (queried here, WHERE object != 'system') stores a flat action=>counter
         // map; 'system' (queried below) stores an extra label-bucketing level.
@@ -378,7 +378,7 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
         $piwigoActivitiesFlat = [];
         // separate local accumulator for the same reason as $themesUsage above.
         $nbActivities = 0;
-        foreach ($activityService->getActionCounts(null) as $activity) {
+        foreach ($this->activityService->getActionCounts(null) as $activity) {
             $nbActivities += $activity['counter'];
             $piwigoActivitiesFlat[$activity['object']][$activity['action']] = $activity['counter'];
         }
@@ -391,14 +391,14 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
 
         /** @var array<string, array<string, array<string, int>>> $piwigoActivitiesSystem */
         $piwigoActivitiesSystem = [];
-        foreach ($activityService->getSystemActionCountsByObjectId() as $activity) {
+        foreach ($this->activityService->getSystemActionCountsByObjectId() as $activity) {
             $label = $labelForSystemObjectId[$activity['object_id']] ?? 'undefined';
             $piwigoActivitiesSystem[$activity['object']][$label][$activity['action']] = $activity['counter'];
         }
         $piwigoInfos['activities'] = $piwigoActivitiesFlat + $piwigoActivitiesSystem;
         $piwigoInfos['general_stats']['nb_activities'] = $nbActivities;
 
-        $updates = $activityService->getCoreUpdateHistory();
+        $updates = $this->activityService->getCoreUpdateHistory();
         foreach ($updates as $update) {
             $updateDetails = $update['details'];
             if (! is_string($updateDetails)) {
@@ -429,7 +429,7 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
         // which remote apps have been used?
         $remoteAppsStartTime = TimingHelper::getMoment();
 
-        $activities = $activityService->getUserAgentBreakdown();
+        $activities = $this->activityService->getUserAgentBreakdown();
         $apps = [];
 
         $appsPattern = [

@@ -83,6 +83,8 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         private readonly EntityManagerInterface $entityManager,
         private readonly FilterResolver $filterResolver,
         private readonly BatchManagerUnitPageRenderer $batchManagerUnitPageRenderer,
+        private readonly \Piwigo\Search\SearchService $searchService,
+        private readonly \Piwigo\Activity\ActivityService $activityService,
     ) {}
 
     private static function imageService(): ImageService
@@ -183,7 +185,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
             $this->batchManagerUnitPageRenderer
                 ->render($cat_elements_id, $start);
         } else {
-            new BatchManagerGlobalPageRenderer($this->redirectService, $this->urlService, $this->currentLogger, $this->sessionService, $this->translator, $this->eventDispatcher, $this->imageStdParams, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager)
+            new BatchManagerGlobalPageRenderer($this->redirectService, $this->urlService, $this->currentLogger, $this->sessionService, $this->translator, $this->eventDispatcher, $this->imageStdParams, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService)
                 ->render($cat_elements_id, $start, $duplicates_on_fields);
         }
     }
@@ -645,7 +647,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
             && isset($bulkFilter['search']['q']) && is_string($bulkFilter['search']['q'])
             && (bool) strlen($bulkFilter['search']['q'])) {
             $searchConn = DbConnection::build();
-            $res = \Piwigo\Bootstrap\ExtendedDomainAccessor::searchService()->getQuickSearchResultsNoCache($bulkFilter['search']['q'], [
+            $res = $this->searchService->getQuickSearchResultsNoCache($bulkFilter['search']['q'], [
                 'permissions' => false,
             ]);
             $res_debug = $res['debug'];

@@ -42,6 +42,7 @@ final readonly class CoreUpdateService
         private readonly Paths $paths,
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly \Piwigo\Activity\ActivityService $activityService,
     ) {}
 
     public function checkPiwigoUpgrade(): void
@@ -358,7 +359,7 @@ final readonly class CoreUpdateService
         FilesystemHelper::deltree($this->paths->root . $dataLocation . 'update');
         PermissionCacheInvalidator::invalidate();
         $this->configService->confUpdateParam('piwigo_installed_version', $upgradeTo);
-        \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()->record('system', ActivitySystem::Core, 'update', [
+        $this->activityService->record('system', ActivitySystem::Core, 'update', [
             'from_version' => AppInfo::VERSION,
             'to_version' => $upgradeTo,
         ]);

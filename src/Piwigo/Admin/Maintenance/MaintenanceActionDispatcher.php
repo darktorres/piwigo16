@@ -65,6 +65,8 @@ final class MaintenanceActionDispatcher
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly DbMaintenanceRepository $dbMaintenanceRepository,
+        private readonly \Piwigo\Activity\ActivityService $activityService,
+        private readonly \Piwigo\Rate\RateService $rateService,
         private readonly ?\Piwigo\Cache\PersistentCache $persistentCache = null,
     ) {}
 
@@ -95,7 +97,7 @@ final class MaintenanceActionDispatcher
             case 'lock_gallery':
 
                 $this->configService->confUpdateParam('gallery_locked', true);
-                \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
+                $this->activityService
                     ->record('system', ActivitySystem::Core, 'maintenance', [
                         'maintenance_action' => $action,
                     ]);
@@ -106,7 +108,7 @@ final class MaintenanceActionDispatcher
 
                 $this->configService->confUpdateParam('gallery_locked', false);
                 $_SESSION['page_infos'] = [Lang::t('Gallery unlocked')];
-                \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
+                $this->activityService
                     ->record('system', ActivitySystem::Core, 'maintenance', [
                         'maintenance_action' => $action,
                     ]);
@@ -130,7 +132,7 @@ final class MaintenanceActionDispatcher
                 $this->filesystemIntegrityChecker->imagesIntegrity();
                 self::categoryService()
                     ->updatePath();
-                \Piwigo\Bootstrap\ExtendedDomainAccessor::rateService()
+                $this->rateService
                     ->updateRatingScore();
                 PermissionCacheInvalidator::invalidate();
                 $this->pageState->addInfo(sprintf('%s : %s', Lang::t('Update photos information'), Lang::t('action successfully performed.')));
@@ -194,7 +196,7 @@ final class MaintenanceActionDispatcher
 
             case 'empty_lounge':
 
-                $rows = new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), $this->sessionService, $this->eventDispatcher)
+                $rows = new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher)
                     ->emptyLounge();
                 $this->pageState->addInfo(sprintf('%d photos were moved from the upload lounge to their albums', count($rows ?? [])));
                 break;
@@ -282,7 +284,7 @@ final class MaintenanceActionDispatcher
         }
 
         if ($register_activity) {
-            \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
+            $this->activityService
                 ->record('system', ActivitySystem::Core, 'maintenance', [
                     'maintenance_action' => $action,
                 ]);

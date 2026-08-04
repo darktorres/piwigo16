@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Extensions;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\DummyPluginMaintain;
 use Piwigo\Admin\DummyThemeMaintain;
@@ -74,20 +73,12 @@ final readonly class ExtensionLifecycle
         private UrlServiceInterface $urlService,
         private ConfigService $configService,
         private PluginMigrationRepository $pluginMigrationRepo,
+        private ActivityService $activityService,
     ) {}
 
     private static function userService(): UserService
     {
         return \Piwigo\Bootstrap\CoreDomainAccessor::userService();
-    }
-
-    /**
-     * DRY extraction (Phase 1k DI-chain audit): the same ActivityService
-     * recipe was repeated verbatim at 2 sites in this file.
-     */
-    private static function activityService(Connection $conn): ActivityService
-    {
-        return \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService();
     }
 
     /**
@@ -270,7 +261,7 @@ final readonly class ExtensionLifecycle
                 break;
         }
 
-        self::activityService(DbConnection::build())->record('system', ActivitySystem::Plugin, $action, $activityDetails);
+        $this->activityService->record('system', ActivitySystem::Plugin, $action, $activityDetails);
 
         return array_values($errors);
     }
@@ -376,7 +367,7 @@ final readonly class ExtensionLifecycle
                 break;
         }
 
-        self::activityService(DbConnection::build())->record('system', ActivitySystem::Theme, $action, $activityDetails);
+        $this->activityService->record('system', ActivitySystem::Theme, $action, $activityDetails);
 
         return array_values($errors);
     }

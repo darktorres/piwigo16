@@ -34,7 +34,7 @@ final class StatsPageRenderer
      * shared 'history' tabsheet group (see HistoryPageRenderer, its
      * sibling in that same group).
      */
-    public function render(string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, CoreTabs $coreTabs, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate): void
+    public function render(string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, CoreTabs $coreTabs, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\History\HistoryService $historyService): void
     {
         $template = $currentTemplate->get();
 
@@ -45,7 +45,7 @@ final class StatsPageRenderer
         // call -- an unbounded call here would rescan the entire remaining
         // `history` table in one request right after an admin uses the
         // Maintenance page's "Purge history summary" action.
-        \Piwigo\Bootstrap\ExtendedDomainAccessor::historyService()
+        $historyService
             ->summarize(50000);
 
         $template->set_filename('stats', 'stats.tpl');
@@ -76,7 +76,7 @@ final class StatsPageRenderer
         $first_date = new DateTime();
         $last_hours = self::setMissingValues(
             'hour',
-            self::getLast(72, 'hour'),
+            self::getLast($historyService, 72, 'hour'),
             $first_date->sub(new DateInterval('P3D')),
             $actual_date
         );
@@ -84,7 +84,7 @@ final class StatsPageRenderer
         $first_date = new DateTime();
         $last_days = self::setMissingValues(
             'day',
-            self::getLast(90, 'day'),
+            self::getLast($historyService, 90, 'day'),
             $first_date->sub(new DateInterval('P90D')),
             $actual_date
         );
@@ -92,21 +92,21 @@ final class StatsPageRenderer
         $first_date = new DateTime();
         $last_months = self::setMissingValues(
             'month',
-            self::getLast(60, 'month'),
+            self::getLast($historyService, 60, 'month'),
             $first_date->sub(new DateInterval('P60M')),
             $actual_date
         );
 
-        if (count(self::getLast(60, 'year')) > 1) {
+        if (count(self::getLast($historyService, 60, 'year')) > 1) {
             $last_years = self::setMissingValues(
                 'year',
-                self::getLast(60, 'year')
+                self::getLast($historyService, 60, 'year')
             );
         } else {
             $last_year_date = new DateTime();
             $last_years = self::setMissingValues(
                 'year',
-                self::getLast(60, 'year'),
+                self::getLast($historyService, 60, 'year'),
                 $last_year_date->sub(new DateInterval('P1Y')),
                 new DateTime()
             );
@@ -126,8 +126,8 @@ final class StatsPageRenderer
         $stat_compare_year_displayed = \Piwigo\Config\CurrentConfig::statCompareYearDisplayed();
 
         $template->assign([
-            'compareYears' => self::getMonthOfLastYears($stat_compare_year_displayed),
-            'monthStats' => self::getMonthStats(),
+            'compareYears' => self::getMonthOfLastYears($historyService, $stat_compare_year_displayed),
+            'monthStats' => self::getMonthStats($historyService),
             'lastHours' => $last_hours,
             'lastDays' => $last_days,
             'lastMonths' => $last_months,
@@ -146,19 +146,17 @@ final class StatsPageRenderer
      *
      * @return list<array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null}>
      */
-    private static function getLast(int $last_number = 60, string $type = 'year'): array
+    private static function getLast(\Piwigo\History\HistoryService $historyService, int $last_number = 60, string $type = 'year'): array
     {
-        return \Piwigo\Bootstrap\ExtendedDomainAccessor::historyService()->getLastByType($type, $last_number);
+        return $historyService->getLastByType($type, $last_number);
     }
 
     /**
      * @param int|'all' $last
      * @return float[]|int[]
      */
-    private static function getMonthOfLastYears($last = 'all'): array
+    private static function getMonthOfLastYears(\Piwigo\History\HistoryService $historyService, $last = 'all'): array
     {
-        $historyService = \Piwigo\Bootstrap\ExtendedDomainAccessor::historyService();
-
         if ($last !== 'all') {
             $date = new DateTime();
             $limit = ($last - 1) * 12 + (int) $date->format('n') - 1;
@@ -184,7 +182,7 @@ final class StatsPageRenderer
     /**
      * @return array{month?: list<array<int|string, float|int>>, avg: ?float}
      */
-    private static function getMonthStats(): array
+    private static function getMonthStats(\Piwigo\History\HistoryService $historyService): array
     {
         $result = [];
         $date = new DateTime();
@@ -194,8 +192,6 @@ final class StatsPageRenderer
 
         $date_last_month->sub(new DateInterval('P1M'));
         $date_last_year->sub(new DateInterval('P1Y'));
-
-        $historyService = \Piwigo\Bootstrap\ExtendedDomainAccessor::historyService();
 
         foreach ($historyService->getDailyRowsForMonths(
             (int) $date->format('Y'),

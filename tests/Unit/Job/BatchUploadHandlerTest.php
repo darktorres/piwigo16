@@ -83,6 +83,26 @@ function batch_upload_handler_test_config_service(): \Piwigo\Config\ConfigServic
     return $configService;
 }
 
+function batch_upload_handler_test_activity_service(): \Piwigo\Activity\ActivityService
+{
+    $activityService = Kernel::container()->get(\Piwigo\Activity\ActivityService::class);
+    if (! $activityService instanceof \Piwigo\Activity\ActivityService) {
+        throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Activity\ActivityService::class);
+    }
+
+    return $activityService;
+}
+
+function batch_upload_handler_test_metadata_service(): \Piwigo\Metadata\MetadataService
+{
+    $metadataService = Kernel::container()->get(\Piwigo\Metadata\MetadataService::class);
+    if (! $metadataService instanceof \Piwigo\Metadata\MetadataService) {
+        throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Metadata\MetadataService::class);
+    }
+
+    return $metadataService;
+}
+
 beforeEach(function (): void {
     // A real Paths is required, not a bare boot: batch_upload_handler_test_
     // storage_registry() resolves StorageRegistry::class from the
@@ -111,7 +131,7 @@ test('__invoke returns the existing image id and deletes the newly uploaded file
         $sourceFilepath = sys_get_temp_dir() . '/piwigo-batch-upload-handler-test-' . bin2hex(random_bytes(8)) . '.jpg';
         file_put_contents($sourceFilepath, 'duplicate-upload-bytes');
 
-        $handler = new BatchUploadHandler(new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), batch_upload_handler_test_current_logger(), batch_upload_handler_test_storage_registry(), \Piwigo\PluginConfig\EventDispatcher::get(), batch_upload_handler_test_config_service(), batch_upload_handler_test_entity_manager());
+        $handler = new BatchUploadHandler(new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), batch_upload_handler_test_current_logger(), batch_upload_handler_test_storage_registry(), \Piwigo\PluginConfig\EventDispatcher::get(), batch_upload_handler_test_config_service(), batch_upload_handler_test_entity_manager(), batch_upload_handler_test_activity_service(), batch_upload_handler_test_metadata_service());
 
         $imageId = $handler(new BatchUploadJob(
             sourceFilepath: $sourceFilepath,

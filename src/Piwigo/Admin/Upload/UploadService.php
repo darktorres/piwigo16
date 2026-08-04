@@ -79,6 +79,8 @@ final class UploadService
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Config\ConfigService $configService,
         private readonly EntityManagerInterface $entityManager,
+        private readonly \Piwigo\Activity\ActivityService $activityService,
+        private readonly \Piwigo\Metadata\MetadataService $metadataService,
     ) {}
 
     /**
@@ -538,7 +540,7 @@ final class UploadService
             }
 
             $image_id = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->insertImage($insert);
-            \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
+            $this->activityService
                 ->record('photo', $image_id, 'add');
         }
         $this->entityManager->clear();
@@ -549,7 +551,7 @@ final class UploadService
         if (\Piwigo\Config\CurrentConfig::useExif() and ! function_exists('exif_read_data')) {
             \Piwigo\Config\CurrentConfig::setUseExif(false);
         }
-        \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService()
+        $this->metadataService
             ->syncMetadata([$image_id]);
 
         // cache a derivative
@@ -775,7 +777,7 @@ final class UploadService
             $add_status = 'add';
         }
 
-        \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
+        $this->activityService
             ->record('photo', $format_of, 'edit', [
                 'action' => 'add format',
                 'format_ext' => $format_ext,

@@ -601,6 +601,7 @@ define(\'DB_COLLATE\', \'\');
             $urlService,
             $configService,
             \Piwigo\Db\EntityManagerFactory::build($languageActivationConn)->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class),
+            \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(),
         )->performAction(ExtensionType::Language, 'activate', $this->language, $this->fsLanguages[$this->language] ?? null);
 
         // fill CurrentConfig::$data from the freshly-seeded config table

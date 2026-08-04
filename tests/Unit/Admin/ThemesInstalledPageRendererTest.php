@@ -229,7 +229,9 @@ function themesInstalledLifecycle(): ExtensionLifecycle
     $currentLogger = new \Piwigo\Core\CurrentLogger();
     $currentLogger->set(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::OFF]));
 
-    return new ExtensionLifecycle($repo, new PemCatalog(new ZipExtractor(), $currentLogger), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new ConfigService($configRepo, new \Piwigo\PluginConfig\EventDispatcher()), $pluginMigrationRepo);
+    $activityRepo = EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class);
+
+    return new ExtensionLifecycle($repo, new PemCatalog(new ZipExtractor(), $currentLogger), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new ConfigService($configRepo, new \Piwigo\PluginConfig\EventDispatcher()), $pluginMigrationRepo, new \Piwigo\Activity\ActivityService($activityRepo));
 }
 
 /**

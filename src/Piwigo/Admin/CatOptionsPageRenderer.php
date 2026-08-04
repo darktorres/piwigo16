@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
-use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Category\CategoryService;
@@ -31,12 +30,8 @@ final class CatOptionsPageRenderer
         private readonly CoreTabs $coreTabs,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly CategoryAdminService $categoryAdminService,
+        private readonly ActivityService $activityService,
     ) {}
-
-    private static function activityService(Connection $conn): ActivityService
-    {
-        return \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService();
-    }
 
     private static function categoryService(): CategoryService
     {
@@ -59,10 +54,10 @@ final class CatOptionsPageRenderer
 
         if ($catOptionsRequest->isFalsify and $catOptionsRequest->catTrue !== []) {
             $this->categoryAdminService
-                ->setCategoryOption($catOptionsRequest->catTrue, $catOptionsRequest->sectionRaw, false, self::activityService($conn));
+                ->setCategoryOption($catOptionsRequest->catTrue, $catOptionsRequest->sectionRaw, false, $this->activityService);
         } elseif ($catOptionsRequest->isTrueify and $catOptionsRequest->catFalse !== []) {
             $this->categoryAdminService
-                ->setCategoryOption($catOptionsRequest->catFalse, $catOptionsRequest->sectionRaw, true, self::activityService($conn));
+                ->setCategoryOption($catOptionsRequest->catFalse, $catOptionsRequest->sectionRaw, true, $this->activityService);
         }
 
         $template->set_filenames(

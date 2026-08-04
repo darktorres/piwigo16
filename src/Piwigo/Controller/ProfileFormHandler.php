@@ -8,7 +8,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
-use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\PasswordService;
@@ -45,12 +44,8 @@ final class ProfileFormHandler
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly EntityManagerInterface $entityManager,
+        private readonly \Piwigo\Activity\ActivityService $activityService,
     ) {}
-
-    private static function activityService(Connection $conn): \Piwigo\Activity\ActivityService
-    {
-        return \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService();
-    }
 
     private static function userService(): UserService
     {
@@ -313,7 +308,7 @@ final class ProfileFormHandler
                 $activity_details_tables[] = 'user_infos';
             }
             $this->eventDispatcher->dispatchNotify(new SaveProfileFromPost($user_id));
-            self::activityService($conn)->record('user', $user_id, 'edit', [
+            $this->activityService->record('user', $user_id, 'edit', [
                 'function' => __METHOD__,
                 'tables' => implode(',', $activity_details_tables),
             ]);

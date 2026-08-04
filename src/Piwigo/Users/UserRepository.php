@@ -1177,6 +1177,7 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             $types = $condition->types;
         }
 
+        $orderBySql = self::normalizeOrderBySql($orderBySql);
         $rows = $this->getEntityManager()
             ->getConnection()
             ->executeQuery(
@@ -1208,6 +1209,21 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
         }
 
         return \Piwigo\Image\PhotoSortField::resolveDqlOrderBy($orderBySql, 'i');
+    }
+
+    /**
+     * pgsql support pass: real bug found live -- $orderBySql is raw,
+     * sysadmin-settable SQL text (order_by/order_by_custom, or a plain
+     * "ORDER BY RAND()" fallback both real callers and this class's own
+     * unparseable-order-by test fixture use), commonly containing the
+     * well-known "RAND()" random-order value. Same real gap already fixed
+     * once for {@see \Piwigo\Category\CategoryRepository}'s own raw-DBAL
+     * fallback -- confirmed live: "function rand() does not exist"
+     * against a real Postgres server otherwise.
+     */
+    private static function normalizeOrderBySql(string $orderBySql): string
+    {
+        return str_ireplace('RAND()', \Piwigo\Db\SqlDialect::randomFunction() . '()', $orderBySql);
     }
 
     /**
@@ -1255,6 +1271,8 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             $params = array_merge($params, $condition->parameters);
             $types = $condition->types;
         }
+
+        $orderBySql = self::normalizeOrderBySql($orderBySql);
 
         return $this->getEntityManager()
             ->getConnection()
@@ -1700,22 +1718,40 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
      * ({@see UserEntity}), but that alone doesn't unblock the whole
      * method given the other 3 blockers above.
      *
-     * Phase 5 Item 19: deliberately kept on `SQL_CALC_FOUND_ROWS`/
-     * `FOUND_ROWS()`, unlike its 4 siblings
+     * Phase 5 Item 19 used to deliberately keep this on
+     * `SQL_CALC_FOUND_ROWS`/`FOUND_ROWS()`, unlike its 4 siblings
      * ({@see \Piwigo\Category\CategoryRepository::findListForWs()},
      * {@see \Piwigo\Category\CategoryRepository::findAdminListForWs()},
      * {@see \Piwigo\Image\ImageRepository::findWithConditionsPaginated()},
      * {@see \Piwigo\Comment\CommentRepository::findAllWithConditions()}) --
-     * this query is `SELECT DISTINCT`, not `GROUP BY`. Live-verified: SQL
-     * window functions execute logically *before* `DISTINCT`, so
-     * `COUNT(*) OVER()` reports the pre-deduplication row count, not the
-     * actual distinct total (confirmed with 5 rows collapsing to 2
-     * distinct groups: `SQL_CALC_FOUND_ROWS`/`FOUND_ROWS()` correctly
-     * reports 2, `COUNT(*) OVER()` on the same query wrongly reports 5).
-     * MySQL has no `COUNT(DISTINCT x) OVER()` (unlike PostgreSQL), so
-     * there's no equivalent single-query window-function fix here without
-     * restructuring the query itself (e.g. to `GROUP BY`) -- out of scope
-     * for this pass.
+     * this query is `SELECT DISTINCT`, not `GROUP BY`, and SQL window
+     * functions execute logically *before* `DISTINCT`, so `COUNT(*)
+     * OVER()` would report the pre-deduplication row count, not the
+     * actual distinct total (live-verified at the time: 5 rows collapsing
+     * to 2 distinct groups, `COUNT(*) OVER()` on the same query wrongly
+     * reporting 5).
+     *
+     * pgsql support pass: `SQL_CALC_FOUND_ROWS`/`FOUND_ROWS()` are both
+     * MySQL-only -- no Postgres equivalent exists at all (confirmed live:
+     * "syntax error at or near '.'", Postgres's parser reads the bare
+     * `SQL_CALC_FOUND_ROWS` token as an implicitly-aliased column
+     * reference -- `SELECT DISTINCT SQL_CALC_FOUND_ROWS u.id AS id` valid
+     * Postgres grammar reads as `<col=SQL_CALC_FOUND_ROWS> <alias=u>`,
+     * then chokes on the `.id` that follows). Replaced with a genuinely
+     * portable, single-code-path fix that also sidesteps the
+     * DISTINCT-vs-window-function ordering problem entirely instead of
+     * working around it per platform: a plain `COUNT(DISTINCT u.id)`
+     * aggregate has no such before/after-DISTINCT ambiguity to begin
+     * with, and `u.id` (the `users` table's own primary key) is exactly
+     * the dedup key `SELECT DISTINCT` was already collapsing on here --
+     * every column this query ever projects is functionally dependent on
+     * it (`u.*`/`ui.*`, joined 1:1 via `ui.user_id = u.id`), and the only
+     * real source of row multiplication is the `LEFT JOIN user_group`
+     * (one row per group membership) -- never itself part of the SELECT
+     * list, so two "duplicate" rows for the same user are always
+     * byte-identical. One extra round-trip query instead of a
+     * single-pass MySQL-only trick, same portable tradeoff already
+     * accepted elsewhere in this pass.
      *
      * @param  array<string, string>  $displayColumns
      * @return PaginatedResult<array<string, mixed>>
@@ -1744,14 +1780,12 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
             $columnPairs[] = 'ui.last_visit_from_history AS last_visit_from_history';
         }
         $columnsSql = implode(', ', $columnPairs);
-        $distinctPrefix = $includeTotalCount ? 'SQL_CALC_FOUND_ROWS ' : '';
 
         $combined = self::buildListForWsCondition($criteria);
         $params = $combined->parameters;
         $types = $combined->types;
 
-        $sql = <<<SQL
-            SELECT DISTINCT {$distinctPrefix}{$columnsSql}
+        $joinSql = <<<SQL
             FROM {$usersTable} AS u
                 INNER JOIN {$userInfosTable} AS ui
                     ON u.id = ui.user_id
@@ -1759,6 +1793,21 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
                     ON u.id = ug.user_id
             WHERE
                 {$combined->sql}
+            SQL;
+
+        $total = null;
+        if ($includeTotalCount) {
+            $totalRaw = $conn->fetchOne(
+                "SELECT COUNT(DISTINCT u.id)\n{$joinSql}",
+                $params,
+                $types
+            );
+            $total = is_numeric($totalRaw) ? (int) $totalRaw : 0;
+        }
+
+        $sql = <<<SQL
+            SELECT DISTINCT {$columnsSql}
+            {$joinSql}
             ORDER BY {$orderBy}
             SQL;
 
@@ -1778,14 +1827,6 @@ final class UserRepository extends EntityRepository implements \Piwigo\Core\Webm
         $sql .= ';';
 
         $rows = $conn->fetchAllAssociative($sql, $params, $types);
-
-        $total = null;
-        if ($includeTotalCount) {
-            $totalRaw = $conn->fetchOne(<<<SQL
-                SELECT FOUND_ROWS();
-                SQL);
-            $total = is_numeric($totalRaw) ? (int) $totalRaw : 0;
-        }
 
         return new PaginatedResult($rows, $total);
     }

@@ -369,7 +369,7 @@ final class UserRepositoryTest extends IntegrationTestCase
                 ->fetchAssociative();
             self::assertIsArray($row);
             self::assertSame(27, is_numeric($row['nb_image_page']) ? (int) $row['nb_image_page'] : null);
-            self::assertSame(1, is_numeric($row['expand']) ? (int) $row['expand'] : null);
+            self::assertSame(1, is_bool($row['expand']) || is_numeric($row['expand']) ? (int) (bool) $row['expand'] : null);
         } finally {
             $this->conn->executeStatement('DELETE FROM ' . Tables::userInfos() . ' WHERE user_id = ' . $id->value);
             $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ' . $id->value);
@@ -485,11 +485,19 @@ final class UserRepositoryTest extends IntegrationTestCase
     public function test_find_user_counts_by_status_excludes_the_given_user_and_groups_by_status(): void
     {
         // Excluding user 2 (guest) leaves user 1 (webmaster) and users 3/4
-        // (both normal).
+        // (both normal). No ORDER BY on the underlying GROUP BY query (its
+        // one real caller, Admin\UserListPageRenderer, only ever reads
+        // this map by key, never iterates it) -- key order isn't part of
+        // the real contract, so this asserts the map's contents, not its
+        // order (confirmed a real gap: MySQL and PostgreSQL return GROUP
+        // BY row order differently with no ORDER BY, and this assertion
+        // used to depend on that order incidentally).
+        $counts = $this->repo->findUserCountsByStatus(2);
+        ksort($counts);
         self::assertSame([
-            'webmaster' => 1,
             'normal' => 2,
-        ], $this->repo->findUserCountsByStatus(2));
+            'webmaster' => 1,
+        ], $counts);
     }
 
     public function test_find_user_counts_by_level_excludes_the_given_user_and_groups_by_level(): void
@@ -809,8 +817,8 @@ final class UserRepositoryTest extends IntegrationTestCase
             [$newUserId]
         );
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::userMailNotification() . " (user_id, check_key, enabled) VALUES (?, 'delusrtestkey01', 0)",
-            [$newUserId]
+            'INSERT INTO ' . Tables::userMailNotification() . ' (user_id, check_key, enabled) VALUES (?, ?, ?)',
+            [$newUserId, 'delusrtestkey01', 0]
         );
         $this->conn->executeStatement(
             'INSERT INTO ' . Tables::userFeed() . " (id, user_id) VALUES ('delusrtestfeed01', ?)",

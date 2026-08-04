@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Image\PwgImage;
@@ -114,6 +115,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly EntityManagerInterface $entityManager,
     ) {}
 
     /**
@@ -625,7 +627,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 // P22: profile.php's own save_profile_from_post()/
                 // load_profile_in_template() ported to Piwigo\Controller\
                 // ProfileFormHandler in P23 batch 8c.
-                $profileFormHandler = new ProfileFormHandler($this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate);
+                $profileFormHandler = new ProfileFormHandler($this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager);
 
                 $errors = [];
                 if ($profileFormHandler->saveFromPost($edit_user, $errors)) {
@@ -975,7 +977,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         // PluginLoader::autoupdatePlugin()).
         $page_errors = $this->pageState->errors;
 
-        new UploadService($this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService)
+        new UploadService($this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager)
             ->saveUploadFormConfig($updates, $page_errors, $errors);
 
         $this->pageState->errors = array_values($page_errors);

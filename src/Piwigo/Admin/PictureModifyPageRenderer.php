@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\DBAL\ParameterType;
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
@@ -48,6 +49,7 @@ final class PictureModifyPageRenderer
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly EntityManagerInterface $entityManager,
     ) {}
 
     private static function userService(): UserService
@@ -182,7 +184,7 @@ final class PictureModifyPageRenderer
 
             unset($data['id']);
             $imageService->updateFields($image_id, $data);
-            \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+            $this->entityManager->clear();
 
             // time to deal with tags
             $tagService = self::tagService();
@@ -227,7 +229,7 @@ final class PictureModifyPageRenderer
                     array_values(array_map(intval(...), $new_thumbnail_for)),
                     $image_id
                 );
-                \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+                $this->entityManager->clear();
             }
 
             $represented_albums = $represent_categories;

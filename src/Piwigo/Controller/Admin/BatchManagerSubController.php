@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\BatchManager\FilterResolver;
 use Piwigo\Admin\BatchManagerGlobalPageRenderer;
 use Piwigo\Admin\BatchManagerUnitPageRenderer;
@@ -79,6 +80,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly EntityManagerInterface $entityManager,
     ) {}
 
     private static function imageService(): ImageService
@@ -179,7 +181,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
             \Piwigo\Bootstrap\AdminAccessor::batchManagerUnitPageRenderer()
                 ->render($cat_elements_id, $start);
         } else {
-            new BatchManagerGlobalPageRenderer($this->redirectService, $this->urlService, $this->currentLogger, $this->sessionService, $this->translator, $this->eventDispatcher, $this->imageStdParams, $this->pageState, $this->currentUser, $this->currentTemplate)
+            new BatchManagerGlobalPageRenderer($this->redirectService, $this->urlService, $this->currentLogger, $this->sessionService, $this->translator, $this->eventDispatcher, $this->imageStdParams, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager)
                 ->render($cat_elements_id, $start, $duplicates_on_fields);
         }
     }

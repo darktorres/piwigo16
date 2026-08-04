@@ -73,7 +73,12 @@ function upload_service_test_make(): UploadService
         throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\ConfigService::class);
     }
 
-    return new UploadService(upload_service_test_current_logger(), $storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $configService);
+    $entityManager = Kernel::container()->get(\Doctrine\ORM\EntityManagerInterface::class);
+    if (! $entityManager instanceof \Doctrine\ORM\EntityManagerInterface) {
+        throw new \LogicException('Container returned an unexpected type for ' . \Doctrine\ORM\EntityManagerInterface::class);
+    }
+
+    return new UploadService(upload_service_test_current_logger(), $storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $configService, $entityManager);
 }
 
 beforeEach(function (): void {

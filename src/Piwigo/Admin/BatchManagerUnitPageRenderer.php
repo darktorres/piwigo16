@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\DBAL\ParameterType;
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\BatchManager\FilterPanelRenderer;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
@@ -74,6 +75,7 @@ final class BatchManagerUnitPageRenderer
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly EntityManagerInterface $entityManager,
     ) {}
 
     private static function tagService(): TagService
@@ -188,7 +190,7 @@ final class BatchManagerUnitPageRenderer
                 ],
                 $datas
             );
-            \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+            $this->entityManager->clear();
 
             $this->pageState->addInfo(Lang::t('Photo informations updated'));
             PermissionCacheInvalidator::invalidate();

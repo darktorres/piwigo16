@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Kernel;
@@ -57,6 +58,16 @@ function batch_upload_handler_test_storage_registry(): StorageRegistry
     return $storageRegistry;
 }
 
+function batch_upload_handler_test_entity_manager(): EntityManagerInterface
+{
+    $entityManager = Kernel::container()->get(EntityManagerInterface::class);
+    if (! $entityManager instanceof EntityManagerInterface) {
+        throw new \LogicException('Container returned an unexpected type for ' . EntityManagerInterface::class);
+    }
+
+    return $entityManager;
+}
+
 /**
  * Never actually read -- this suite forces loungeActive true specifically
  * so UploadService's own confUpdateParam() call (the only real reader of
@@ -100,7 +111,7 @@ test('__invoke returns the existing image id and deletes the newly uploaded file
         $sourceFilepath = sys_get_temp_dir() . '/piwigo-batch-upload-handler-test-' . bin2hex(random_bytes(8)) . '.jpg';
         file_put_contents($sourceFilepath, 'duplicate-upload-bytes');
 
-        $handler = new BatchUploadHandler(new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), batch_upload_handler_test_current_logger(), batch_upload_handler_test_storage_registry(), \Piwigo\PluginConfig\EventDispatcher::get(), batch_upload_handler_test_config_service());
+        $handler = new BatchUploadHandler(new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), batch_upload_handler_test_current_logger(), batch_upload_handler_test_storage_registry(), \Piwigo\PluginConfig\EventDispatcher::get(), batch_upload_handler_test_config_service(), batch_upload_handler_test_entity_manager());
 
         $imageId = $handler(new BatchUploadJob(
             sourceFilepath: $sourceFilepath,

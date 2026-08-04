@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Job\Handler;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Job\BatchUploadJob;
@@ -35,11 +36,12 @@ final class BatchUploadHandler
         private readonly StorageRegistry $storageRegistry,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Config\ConfigService $configService,
+        private readonly EntityManagerInterface $entityManager,
     ) {}
 
     public function __invoke(BatchUploadJob $job): int
     {
-        return new UploadService($this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService)
+        return new UploadService($this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager)
             ->addUploadedFile(
                 $job->sourceFilepath,
                 $this->urlService,

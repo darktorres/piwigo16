@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Core\AppInfo;
@@ -46,6 +47,7 @@ final class PhotosAddDirectPageRenderer
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly \Piwigo\Config\ConfigService $configService,
+        private readonly EntityManagerInterface $entityManager,
     ) {}
 
     /**
@@ -208,7 +210,7 @@ final class PhotosAddDirectPageRenderer
 
         $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
 
-        $uploadService = new UploadService($this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService);
+        $uploadService = new UploadService($this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager);
 
         // +-------------------------------------------------------------------+
         // | Photo selection                                                    |

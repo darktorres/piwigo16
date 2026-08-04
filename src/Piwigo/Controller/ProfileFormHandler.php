@@ -9,6 +9,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Core\AdminContext;
@@ -43,6 +44,7 @@ final class ProfileFormHandler
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly EntityManagerInterface $entityManager,
     ) {}
 
     private static function activityService(Connection $conn): \Piwigo\Activity\ActivityService
@@ -306,7 +308,7 @@ final class ProfileFormHandler
                 $infosUpdates = $data;
                 unset($infosUpdates['user_id']);
                 self::userService()->updateInfosForUser(\Piwigo\Common\ValueObject\UserId::from($user_id), $infosUpdates);
-                \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+                $this->entityManager->clear();
 
                 $activity_details_tables[] = 'user_infos';
             }

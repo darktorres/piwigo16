@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\BatchManager\FilterPanelRenderer;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
@@ -64,6 +65,7 @@ final class BatchManagerGlobalPageRenderer
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly EntityManagerInterface $entityManager,
     ) {}
 
     private static function tagService(): TagService
@@ -328,7 +330,7 @@ final class BatchManagerGlobalPageRenderer
                 }
 
                 $imageService->updateTextFieldForImages($collection, 'author', is_string($post['author'] ?? null) ? $post['author'] : null);
-                \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+                $this->entityManager->clear();
 
                 \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
                     ->record('photo', $collection, 'edit', [
@@ -343,7 +345,7 @@ final class BatchManagerGlobalPageRenderer
                 }
 
                 $imageService->updateTextFieldForImages($collection, 'name', is_string($post['title'] ?? null) ? $post['title'] : null);
-                \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+                $this->entityManager->clear();
 
                 \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
                     ->record('photo', $collection, 'edit', [
@@ -360,7 +362,7 @@ final class BatchManagerGlobalPageRenderer
                 }
 
                 $imageService->updateTextFieldForImages($collection, 'date_creation', $date_creation);
-                \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+                $this->entityManager->clear();
 
                 \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
                     ->record('photo', $collection, 'edit', [
@@ -371,7 +373,7 @@ final class BatchManagerGlobalPageRenderer
             // privacy_level
             elseif ($action === 'level') {
                 $imageService->updateLevelForImages($collection, is_numeric($post['level']) ? (int) $post['level'] : 0);
-                \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+                $this->entityManager->clear();
 
                 \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
                     ->record('photo', $collection, 'edit', [

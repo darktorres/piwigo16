@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Upload;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\Image\ImageProcessingException;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Cache\PermissionCacheInvalidator;
@@ -77,6 +78,7 @@ final class UploadService
         private readonly StorageRegistry $storageRegistry,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Config\ConfigService $configService,
+        private readonly EntityManagerInterface $entityManager,
     ) {}
 
     /**
@@ -220,7 +222,7 @@ final class UploadService
         if (count($errors) === 0) {
             \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Config\ConfigEntry::class)
                 ->massUpdateValues($updates);
-            \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+            $this->entityManager->clear();
             return true;
         }
 
@@ -539,7 +541,7 @@ final class UploadService
             \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService()
                 ->record('photo', $image_id, 'add');
         }
-        \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+        $this->entityManager->clear();
 
         $this->addUploadedFileAddToCategories($image_id, $categories);
 

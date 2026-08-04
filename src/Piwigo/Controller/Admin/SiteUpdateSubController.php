@@ -6,6 +6,7 @@ namespace Piwigo\Controller\Admin;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Tabsheet;
@@ -107,6 +108,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly EntityManagerInterface $entityManager,
     ) {}
 
     private static function permissionService(): PermissionService
@@ -733,7 +735,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                     // inserts all links between new elements and their storage category
                     $this->imageService($conn)
                         ->insertImageCategoryLinks($insert_links);
-                    \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+                    $this->entityManager->clear();
 
                     self::activityService()->record('photo', $caddiables, 'add', [
                         'sync' => true,
@@ -848,7 +850,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                             ],
                             $datas
                         );
-                    \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+                    $this->entityManager->clear();
                 }
                 $template->append('footer_elements', '<!-- update files : '
                   . \Piwigo\Core\TimingHelper::getElapsedTime($start, \Piwigo\Core\TimingHelper::getMoment())
@@ -960,7 +962,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                             $datas,
                             isset($post['meta_empty_overrides']) ? 0 : BatchWriter::SKIP_EMPTY
                         );
-                    \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+                    $this->entityManager->clear();
                 }
                 $tagService->setTagsOf($tags_of);
             }

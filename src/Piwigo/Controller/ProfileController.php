@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -54,6 +55,7 @@ final class ProfileController implements ControllerInterface
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly EntityManagerInterface $entityManager,
     ) {}
 
     private static function userService(): UserService
@@ -103,7 +105,7 @@ final class ProfileController implements ControllerInterface
             self::userService()->updateInfosForUser($this->currentUser->get()->id, [
                 'language' => $cookie_lang,
             ]);
-            \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+            $this->entityManager->clear();
 
             Lang::load('common.lang', '', [
                 'language' => $cookie_lang,
@@ -151,7 +153,7 @@ final class ProfileController implements ControllerInterface
             $userdata = array_merge($userdata, $default_user);
         }
 
-        $profileFormHandler = new ProfileFormHandler($this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate);
+        $profileFormHandler = new ProfileFormHandler($this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager);
 
         $page_errors = $this->pageState->errors;
         $profileFormHandler->saveFromPost($userdata, $page_errors);

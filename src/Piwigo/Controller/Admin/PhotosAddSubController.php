@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\PhotosAddApplicationsPageRenderer;
 use Piwigo\Admin\PhotosAddDirectPageRenderer;
 use Piwigo\Admin\PhotosAddFtpPageRenderer;
@@ -36,6 +37,7 @@ final class PhotosAddSubController implements AdminSubControllerInterface
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly \Piwigo\Config\ConfigService $configService,
+        private readonly EntityManagerInterface $entityManager,
     ) {}
 
     #[\Override]
@@ -46,7 +48,7 @@ final class PhotosAddSubController implements AdminSubControllerInterface
         // upload form config is loaded here to match the original page's
         // own behavior (validated/used by the tab templates), even though
         // this sub-controller doesn't read it directly itself.
-        new UploadService($this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService)
+        new UploadService($this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager)
             ->getUploadFormConfig();
 
         // admin.php's own shared check_input_parameter('section', ...,

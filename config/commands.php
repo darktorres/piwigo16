@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Doctrine\Migrations\Tools\Console\Command\MigrateCommand;
 use Piwigo\Command\BackupCreateCommand;
 use Piwigo\Command\BackupRestoreCommand;
 use Piwigo\Command\CacheClearCommand;
@@ -35,4 +36,5 @@ return [
     MaintenanceOrphanTagsCommand::class,
     MaintenanceRepairDbCommand::class,
     MaintenancePurgeFailedLoginsCommand::class,
+    MigrateCommand::class,
 ];

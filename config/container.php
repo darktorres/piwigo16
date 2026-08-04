@@ -3,6 +3,10 @@
 declare(strict_types=1);
 
 use Doctrine\DBAL\Connection;
+use Doctrine\Migrations\Configuration\EntityManager\ExistingEntityManager;
+use Doctrine\Migrations\Configuration\Migration\ConfigurationArray;
+use Doctrine\Migrations\DependencyFactory;
+use Doctrine\Migrations\Tools\Console\Command\MigrateCommand;
 use Doctrine\ORM\EntityManagerInterface;
 use Monolog\Formatter\JsonFormatter;
 use Monolog\Handler\RotatingFileHandler;
@@ -367,4 +371,56 @@ return [
     UserFailedLoginRepository::class => factory(static fn (EntityManagerInterface $em): UserFailedLoginRepository => $em->getRepository(UserFailedLoginEntity::class)),
 
     IntegrityIgnoredAnomalyRepository::class => factory(static fn (EntityManagerInterface $em): IntegrityIgnoredAnomalyRepository => $em->getRepository(IntegrityIgnoredAnomalyEntity::class)),
+
+    // Backs bin/piwigo's registered `migrations:migrate` command --
+    // CLI usage only. Piwigo\Admin\Install\InstallWizard deliberately does
+    // NOT resolve this container entry: its own constructor docblock
+    // explains why (PHP-DI caches this container's first resolution of
+    // Connection::class/EntityManagerInterface::class for the rest of the
+    // request, which would permanently bind to whatever stale, pre-seed
+    // credentials were current before install's own mid-request
+    // DbCredentials::seed() call runs) -- it builds a throwaway
+    // DependencyFactory of its own from an already-seeded connection
+    // instead, following the same pattern already established there for
+    // every other DB-touching service it needs.
+    //
+    // table_storage.table_name is set here, not in config/migrations.php
+    // itself, because it needs the real DbCredentials prefix at resolution
+    // time -- every other table in this schema carries PIWIGO_DB_PREFIX so
+    // multiple installs can share one database; an unprefixed
+    // doctrine_migration_versions ledger table would silently defeat that
+    // guarantee (two prefixed installs in the same DB would collide on,
+    // and corrupt, each other's migration history).
+    DependencyFactory::class => factory(static function (EntityManagerInterface $em, DbCredentials $dbCredentials): DependencyFactory {
+        $raw = require dirname(__DIR__) . '/config/migrations.php';
+        if (! is_array($raw)) {
+            throw new \RuntimeException('config/migrations.php must return an array.');
+        }
+
+        /** @var array<string, mixed> $migrationsConfig */
+        $migrationsConfig = [];
+        foreach ($raw as $key => $value) {
+            if (! is_string($key)) {
+                throw new \RuntimeException('config/migrations.php keys must be strings.');
+            }
+            $migrationsConfig[$key] = $value;
+        }
+        $migrationsConfig['table_storage'] = [
+            'table_name' => $dbCredentials->prefix . 'migration_versions',
+        ];
+
+        return DependencyFactory::fromEntityManager(
+            new ConfigurationArray($migrationsConfig),
+            new ExistingEntityManager($em),
+        );
+    }),
+
+    // MigrateCommand's constructor param is an OPTIONAL/nullable
+    // DependencyFactory -- verified (same as every other optional
+    // class-typed constructor param in this codebase) that PHP-DI's
+    // default reflection autowiring does NOT inject it, so it needs this
+    // explicit factory entry ([[feedback_phpdi_skips_optional_constructor_params]]).
+    MigrateCommand::class => factory(
+        static fn (DependencyFactory $df): MigrateCommand => new MigrateCommand($df),
+    ),
 ];

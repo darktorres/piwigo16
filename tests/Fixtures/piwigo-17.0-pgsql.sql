@@ -18,6 +18,167 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
+ALTER TABLE IF EXISTS ONLY public.piwigo_user_mail_notification DROP CONSTRAINT IF EXISTS fk_user_mail_notification_user_id;
+ALTER TABLE IF EXISTS ONLY public.piwigo_user_infos DROP CONSTRAINT IF EXISTS fk_user_infos_user_id;
+ALTER TABLE IF EXISTS ONLY public.piwigo_user_group DROP CONSTRAINT IF EXISTS fk_user_group_user_id;
+ALTER TABLE IF EXISTS ONLY public.piwigo_user_group DROP CONSTRAINT IF EXISTS fk_user_group_group_id;
+ALTER TABLE IF EXISTS ONLY public.piwigo_user_feed DROP CONSTRAINT IF EXISTS fk_user_feed_user_id;
+ALTER TABLE IF EXISTS ONLY public.piwigo_user_failed_logins DROP CONSTRAINT IF EXISTS fk_user_failed_logins_user_id;
+ALTER TABLE IF EXISTS ONLY public.piwigo_user_auth_keys DROP CONSTRAINT IF EXISTS fk_user_auth_keys_user_id;
+ALTER TABLE IF EXISTS ONLY public.piwigo_user_access DROP CONSTRAINT IF EXISTS fk_user_access_user_id;
+ALTER TABLE IF EXISTS ONLY public.piwigo_user_access DROP CONSTRAINT IF EXISTS fk_user_access_cat_id;
+ALTER TABLE IF EXISTS ONLY public.piwigo_search DROP CONSTRAINT IF EXISTS fk_search_forked_from;
+ALTER TABLE IF EXISTS ONLY public.piwigo_search DROP CONSTRAINT IF EXISTS fk_search_created_by;
+ALTER TABLE IF EXISTS ONLY public.piwigo_rate DROP CONSTRAINT IF EXISTS fk_rate_user_id;
+ALTER TABLE IF EXISTS ONLY public.piwigo_rate DROP CONSTRAINT IF EXISTS fk_rate_element_id;
+ALTER TABLE IF EXISTS ONLY public.piwigo_lounge DROP CONSTRAINT IF EXISTS fk_lounge_image_id;
+ALTER TABLE IF EXISTS ONLY public.piwigo_lounge DROP CONSTRAINT IF EXISTS fk_lounge_category_id;
+ALTER TABLE IF EXISTS ONLY public.piwigo_images DROP CONSTRAINT IF EXISTS fk_images_storage_category_id;
+ALTER TABLE IF EXISTS ONLY public.piwigo_images DROP CONSTRAINT IF EXISTS fk_images_added_by;
+ALTER TABLE IF EXISTS ONLY public.piwigo_image_tag DROP CONSTRAINT IF EXISTS fk_image_tag_tag_id;
+ALTER TABLE IF EXISTS ONLY public.piwigo_image_tag DROP CONSTRAINT IF EXISTS fk_image_tag_image_id;
+ALTER TABLE IF EXISTS ONLY public.piwigo_image_format DROP CONSTRAINT IF EXISTS fk_image_format_image_id;
+ALTER TABLE IF EXISTS ONLY public.piwigo_image_category DROP CONSTRAINT IF EXISTS fk_image_category_image_id;
+ALTER TABLE IF EXISTS ONLY public.piwigo_image_category DROP CONSTRAINT IF EXISTS fk_image_category_category_id;
+ALTER TABLE IF EXISTS ONLY public.piwigo_history DROP CONSTRAINT IF EXISTS fk_history_user_id;
+ALTER TABLE IF EXISTS ONLY public.piwigo_history DROP CONSTRAINT IF EXISTS fk_history_search_id;
+ALTER TABLE IF EXISTS ONLY public.piwigo_history DROP CONSTRAINT IF EXISTS fk_history_image_id;
+ALTER TABLE IF EXISTS ONLY public.piwigo_history DROP CONSTRAINT IF EXISTS fk_history_format_id;
+ALTER TABLE IF EXISTS ONLY public.piwigo_history DROP CONSTRAINT IF EXISTS fk_history_category_id;
+ALTER TABLE IF EXISTS ONLY public.piwigo_history DROP CONSTRAINT IF EXISTS fk_history_auth_key_id;
+ALTER TABLE IF EXISTS ONLY public.piwigo_group_access DROP CONSTRAINT IF EXISTS fk_group_access_group_id;
+ALTER TABLE IF EXISTS ONLY public.piwigo_group_access DROP CONSTRAINT IF EXISTS fk_group_access_cat_id;
+ALTER TABLE IF EXISTS ONLY public.piwigo_favorites DROP CONSTRAINT IF EXISTS fk_favorites_user_id;
+ALTER TABLE IF EXISTS ONLY public.piwigo_favorites DROP CONSTRAINT IF EXISTS fk_favorites_image_id;
+ALTER TABLE IF EXISTS ONLY public.piwigo_comments DROP CONSTRAINT IF EXISTS fk_comments_image_id;
+ALTER TABLE IF EXISTS ONLY public.piwigo_comments DROP CONSTRAINT IF EXISTS fk_comments_author_id;
+ALTER TABLE IF EXISTS ONLY public.piwigo_categories DROP CONSTRAINT IF EXISTS fk_categories_representative_picture_id;
+ALTER TABLE IF EXISTS ONLY public.piwigo_categories DROP CONSTRAINT IF EXISTS fk_categories_id_uppercat;
+ALTER TABLE IF EXISTS ONLY public.piwigo_caddie DROP CONSTRAINT IF EXISTS fk_caddie_user_id;
+ALTER TABLE IF EXISTS ONLY public.piwigo_caddie DROP CONSTRAINT IF EXISTS fk_caddie_element_id;
+ALTER TABLE IF EXISTS ONLY public.piwigo_audit_log DROP CONSTRAINT IF EXISTS fk_audit_log_actor_id;
+ALTER TABLE IF EXISTS ONLY public.piwigo_activity DROP CONSTRAINT IF EXISTS fk_activity_performed_by;
+DROP TRIGGER IF EXISTS trg_user_infos_lastmodified ON public.piwigo_user_infos;
+DROP TRIGGER IF EXISTS trg_tags_lastmodified ON public.piwigo_tags;
+DROP TRIGGER IF EXISTS trg_images_lastmodified ON public.piwigo_images;
+DROP TRIGGER IF EXISTS trg_groups_lastmodified ON public.piwigo_groups;
+DROP TRIGGER IF EXISTS trg_categories_lastmodified ON public.piwigo_categories;
+DROP INDEX IF EXISTS public.user_infos_lastmodified_idx;
+DROP INDEX IF EXISTS public.tags_lastmodified_idx;
+DROP INDEX IF EXISTS public.tags_i1;
+DROP INDEX IF EXISTS public.tags_ft_name;
+DROP INDEX IF EXISTS public.images_lastmodified_idx;
+DROP INDEX IF EXISTS public.images_i9;
+DROP INDEX IF EXISTS public.images_i8;
+DROP INDEX IF EXISTS public.images_i7;
+DROP INDEX IF EXISTS public.images_i6;
+DROP INDEX IF EXISTS public.images_i5;
+DROP INDEX IF EXISTS public.images_i4;
+DROP INDEX IF EXISTS public.images_i3;
+DROP INDEX IF EXISTS public.images_i2;
+DROP INDEX IF EXISTS public.images_i1;
+DROP INDEX IF EXISTS public.images_ft_name_comment;
+DROP INDEX IF EXISTS public.images_ft_author;
+DROP INDEX IF EXISTS public.image_tag_i1;
+DROP INDEX IF EXISTS public.image_category_i1;
+DROP INDEX IF EXISTS public.idx_user_failed_logins_user_time;
+DROP INDEX IF EXISTS public.idx_user_failed_logins_ip_time;
+DROP INDEX IF EXISTS public.idx_images_date_desc;
+DROP INDEX IF EXISTS public.idx_history_date_desc;
+DROP INDEX IF EXISTS public.idx_audit_log_entity;
+DROP INDEX IF EXISTS public.idx_audit_log_created_at;
+DROP INDEX IF EXISTS public.idx_audit_log_actor;
+DROP INDEX IF EXISTS public.groups_lastmodified_idx;
+DROP INDEX IF EXISTS public.comments_i2;
+DROP INDEX IF EXISTS public.comments_i1;
+DROP INDEX IF EXISTS public.categories_lastmodified_idx;
+DROP INDEX IF EXISTS public.categories_i2;
+DROP INDEX IF EXISTS public.categories_ft_name_comment;
+ALTER TABLE IF EXISTS ONLY public.piwigo_users DROP CONSTRAINT IF EXISTS users_ui1_unique;
+ALTER TABLE IF EXISTS ONLY public.piwigo_user_mail_notification DROP CONSTRAINT IF EXISTS user_mail_notification_ui1_unique;
+ALTER TABLE IF EXISTS ONLY public.piwigo_sites DROP CONSTRAINT IF EXISTS sites_ui1_unique;
+ALTER TABLE IF EXISTS ONLY public.piwigo_users DROP CONSTRAINT IF EXISTS piwigo_users_pkey;
+ALTER TABLE IF EXISTS ONLY public.piwigo_user_mail_notification DROP CONSTRAINT IF EXISTS piwigo_user_mail_notification_pkey;
+ALTER TABLE IF EXISTS ONLY public.piwigo_user_infos DROP CONSTRAINT IF EXISTS piwigo_user_infos_pkey;
+ALTER TABLE IF EXISTS ONLY public.piwigo_user_group DROP CONSTRAINT IF EXISTS piwigo_user_group_pkey;
+ALTER TABLE IF EXISTS ONLY public.piwigo_user_feed DROP CONSTRAINT IF EXISTS piwigo_user_feed_pkey;
+ALTER TABLE IF EXISTS ONLY public.piwigo_user_failed_logins DROP CONSTRAINT IF EXISTS piwigo_user_failed_logins_pkey;
+ALTER TABLE IF EXISTS ONLY public.piwigo_user_auth_keys DROP CONSTRAINT IF EXISTS piwigo_user_auth_keys_pkey;
+ALTER TABLE IF EXISTS ONLY public.piwigo_user_access DROP CONSTRAINT IF EXISTS piwigo_user_access_pkey;
+ALTER TABLE IF EXISTS ONLY public.piwigo_themes DROP CONSTRAINT IF EXISTS piwigo_themes_pkey;
+ALTER TABLE IF EXISTS ONLY public.piwigo_tags DROP CONSTRAINT IF EXISTS piwigo_tags_pkey;
+ALTER TABLE IF EXISTS ONLY public.piwigo_sites DROP CONSTRAINT IF EXISTS piwigo_sites_pkey;
+ALTER TABLE IF EXISTS ONLY public.piwigo_sessions DROP CONSTRAINT IF EXISTS piwigo_sessions_pkey;
+ALTER TABLE IF EXISTS ONLY public.piwigo_search DROP CONSTRAINT IF EXISTS piwigo_search_pkey;
+ALTER TABLE IF EXISTS ONLY public.piwigo_search_filter_view DROP CONSTRAINT IF EXISTS piwigo_search_filter_view_pkey;
+ALTER TABLE IF EXISTS ONLY public.piwigo_rate DROP CONSTRAINT IF EXISTS piwigo_rate_pkey;
+ALTER TABLE IF EXISTS ONLY public.piwigo_plugins DROP CONSTRAINT IF EXISTS piwigo_plugins_pkey;
+ALTER TABLE IF EXISTS ONLY public.piwigo_plugin_migrations DROP CONSTRAINT IF EXISTS piwigo_plugin_migrations_pkey;
+ALTER TABLE IF EXISTS ONLY public.piwigo_old_permalinks DROP CONSTRAINT IF EXISTS piwigo_old_permalinks_pkey;
+ALTER TABLE IF EXISTS ONLY public.piwigo_lounge DROP CONSTRAINT IF EXISTS piwigo_lounge_pkey;
+ALTER TABLE IF EXISTS ONLY public.piwigo_languages DROP CONSTRAINT IF EXISTS piwigo_languages_pkey;
+ALTER TABLE IF EXISTS ONLY public.piwigo_integrity_ignored_anomalies DROP CONSTRAINT IF EXISTS piwigo_integrity_ignored_anomalies_pkey;
+ALTER TABLE IF EXISTS ONLY public.piwigo_images DROP CONSTRAINT IF EXISTS piwigo_images_pkey;
+ALTER TABLE IF EXISTS ONLY public.piwigo_image_tag DROP CONSTRAINT IF EXISTS piwigo_image_tag_pkey;
+ALTER TABLE IF EXISTS ONLY public.piwigo_image_format DROP CONSTRAINT IF EXISTS piwigo_image_format_pkey;
+ALTER TABLE IF EXISTS ONLY public.piwigo_image_category DROP CONSTRAINT IF EXISTS piwigo_image_category_pkey;
+ALTER TABLE IF EXISTS ONLY public.piwigo_history_summary DROP CONSTRAINT IF EXISTS piwigo_history_summary_pkey;
+ALTER TABLE IF EXISTS ONLY public.piwigo_history DROP CONSTRAINT IF EXISTS piwigo_history_pkey;
+ALTER TABLE IF EXISTS ONLY public.piwigo_groups DROP CONSTRAINT IF EXISTS piwigo_groups_pkey;
+ALTER TABLE IF EXISTS ONLY public.piwigo_group_access DROP CONSTRAINT IF EXISTS piwigo_group_access_pkey;
+ALTER TABLE IF EXISTS ONLY public.piwigo_favorites DROP CONSTRAINT IF EXISTS piwigo_favorites_pkey;
+ALTER TABLE IF EXISTS ONLY public.piwigo_extension_ignored_updates DROP CONSTRAINT IF EXISTS piwigo_extension_ignored_updates_pkey;
+ALTER TABLE IF EXISTS ONLY public.piwigo_derivative_size DROP CONSTRAINT IF EXISTS piwigo_derivative_size_pkey;
+ALTER TABLE IF EXISTS ONLY public.piwigo_derivative_settings DROP CONSTRAINT IF EXISTS piwigo_derivative_settings_pkey;
+ALTER TABLE IF EXISTS ONLY public.piwigo_config DROP CONSTRAINT IF EXISTS piwigo_config_pkey;
+ALTER TABLE IF EXISTS ONLY public.piwigo_comments DROP CONSTRAINT IF EXISTS piwigo_comments_pkey;
+ALTER TABLE IF EXISTS ONLY public.piwigo_categories DROP CONSTRAINT IF EXISTS piwigo_categories_pkey;
+ALTER TABLE IF EXISTS ONLY public.piwigo_caddie DROP CONSTRAINT IF EXISTS piwigo_caddie_pkey;
+ALTER TABLE IF EXISTS ONLY public.piwigo_audit_log DROP CONSTRAINT IF EXISTS piwigo_audit_log_pkey;
+ALTER TABLE IF EXISTS ONLY public.piwigo_activity DROP CONSTRAINT IF EXISTS piwigo_activity_pkey;
+ALTER TABLE IF EXISTS ONLY public.piwigo_history_summary DROP CONSTRAINT IF EXISTS history_summary_ymdh;
+ALTER TABLE IF EXISTS ONLY public.piwigo_groups DROP CONSTRAINT IF EXISTS groups_ui1_unique;
+ALTER TABLE IF EXISTS ONLY public.piwigo_categories DROP CONSTRAINT IF EXISTS categories_i3_unique;
+DROP TABLE IF EXISTS public.piwigo_users;
+DROP TABLE IF EXISTS public.piwigo_user_mail_notification;
+DROP TABLE IF EXISTS public.piwigo_user_infos;
+DROP TABLE IF EXISTS public.piwigo_user_group;
+DROP TABLE IF EXISTS public.piwigo_user_feed;
+DROP TABLE IF EXISTS public.piwigo_user_failed_logins;
+DROP TABLE IF EXISTS public.piwigo_user_auth_keys;
+DROP TABLE IF EXISTS public.piwigo_user_access;
+DROP TABLE IF EXISTS public.piwigo_themes;
+DROP TABLE IF EXISTS public.piwigo_tags;
+DROP TABLE IF EXISTS public.piwigo_sites;
+DROP TABLE IF EXISTS public.piwigo_sessions;
+DROP TABLE IF EXISTS public.piwigo_search_filter_view;
+DROP TABLE IF EXISTS public.piwigo_search;
+DROP TABLE IF EXISTS public.piwigo_rate;
+DROP TABLE IF EXISTS public.piwigo_plugins;
+DROP TABLE IF EXISTS public.piwigo_plugin_migrations;
+DROP TABLE IF EXISTS public.piwigo_old_permalinks;
+DROP TABLE IF EXISTS public.piwigo_lounge;
+DROP TABLE IF EXISTS public.piwigo_languages;
+DROP TABLE IF EXISTS public.piwigo_integrity_ignored_anomalies;
+DROP TABLE IF EXISTS public.piwigo_images;
+DROP TABLE IF EXISTS public.piwigo_image_tag;
+DROP TABLE IF EXISTS public.piwigo_image_format;
+DROP TABLE IF EXISTS public.piwigo_image_category;
+DROP TABLE IF EXISTS public.piwigo_history_summary;
+DROP TABLE IF EXISTS public.piwigo_history;
+DROP TABLE IF EXISTS public.piwigo_groups;
+DROP TABLE IF EXISTS public.piwigo_group_access;
+DROP TABLE IF EXISTS public.piwigo_favorites;
+DROP TABLE IF EXISTS public.piwigo_extension_ignored_updates;
+DROP TABLE IF EXISTS public.piwigo_derivative_size;
+DROP TABLE IF EXISTS public.piwigo_derivative_settings;
+DROP TABLE IF EXISTS public.piwigo_config;
+DROP TABLE IF EXISTS public.piwigo_comments;
+DROP TABLE IF EXISTS public.piwigo_categories;
+DROP TABLE IF EXISTS public.piwigo_caddie;
+DROP TABLE IF EXISTS public.piwigo_audit_log;
+DROP TABLE IF EXISTS public.piwigo_activity;
+DROP FUNCTION IF EXISTS public.piwigo_set_lastmodified();
 --
 -- Name: piwigo_set_lastmodified(); Type: FUNCTION; Schema: public; Owner: piwigo_fixture_regen
 --
@@ -2721,23 +2882,23 @@ ALTER TABLE public.piwigo_users ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDEN
 COPY public.piwigo_activity (activity_id, object, object_id, action, performed_by, session_idx, ip_address, occured_on, details, user_agent) FROM stdin;
 1	system	3	activate	\N	none	::1	2026-08-01 00:00:00	{"script": "install", "theme_id": "default"}	\N
 2	system	1	install	\N	none	::1	2026-08-01 00:00:00	{"script": "install", "version": "16.3.0"}	\N
-3	user	1	login	1	675e0a3faca263aac6e68e0fcca3f0a8	::1	2026-08-01 00:00:00	{"script": "install"}	PiwigoFixtureRegen/1.0
-4	user	1	login	1	3e6031b75fa706181fc7855ec19969eb	::1	2026-08-01 00:00:00	{"method": "pwg.session.login"}	PiwigoFixtureRegen/1.0
-5	album	1	add	1	3e6031b75fa706181fc7855ec19969eb	::1	2026-08-01 00:00:00	{"method": "pwg.categories.add"}	\N
-6	album	2	add	1	3e6031b75fa706181fc7855ec19969eb	::1	2026-08-01 00:00:00	{"method": "pwg.categories.add"}	\N
-7	photo	1	add	1	3e6031b75fa706181fc7855ec19969eb	::1	2026-08-01 00:00:00	{"method": "pwg.images.addSimple", "added_with": "app"}	\N
-8	photo	2	add	1	3e6031b75fa706181fc7855ec19969eb	::1	2026-08-01 00:00:00	{"method": "pwg.images.addSimple", "added_with": "app"}	\N
-9	photo	3	add	1	3e6031b75fa706181fc7855ec19969eb	::1	2026-08-01 00:00:00	{"method": "pwg.images.addSimple", "added_with": "app"}	\N
-10	photo	4	add	1	3e6031b75fa706181fc7855ec19969eb	::1	2026-08-01 00:00:00	{"method": "pwg.images.addSimple", "added_with": "app"}	\N
-11	photo	5	add	1	3e6031b75fa706181fc7855ec19969eb	::1	2026-08-01 00:00:00	{"method": "pwg.images.addSimple", "added_with": "app"}	\N
-12	tag	1	add	1	3e6031b75fa706181fc7855ec19969eb	::1	2026-08-01 00:00:00	{"method": "pwg.tags.add"}	\N
-13	tag	2	add	1	3e6031b75fa706181fc7855ec19969eb	::1	2026-08-01 00:00:00	{"method": "pwg.tags.add"}	\N
-14	tag	3	add	1	3e6031b75fa706181fc7855ec19969eb	::1	2026-08-01 00:00:00	{"method": "pwg.tags.add"}	\N
-15	user	3	add	1	3e6031b75fa706181fc7855ec19969eb	::1	2026-08-01 00:00:00	{"method": "pwg.users.add"}	\N
-16	user	4	add	1	3e6031b75fa706181fc7855ec19969eb	::1	2026-08-01 00:00:00	{"method": "pwg.users.add"}	\N
-17	group	1	add	1	3e6031b75fa706181fc7855ec19969eb	::1	2026-08-01 00:00:00	{"method": "pwg.groups.add"}	\N
-18	group	2	add	1	3e6031b75fa706181fc7855ec19969eb	::1	2026-08-01 00:00:00	{"method": "pwg.groups.add"}	\N
-19	group	3	add	1	3e6031b75fa706181fc7855ec19969eb	::1	2026-08-01 00:00:00	{"method": "pwg.groups.add"}	\N
+3	user	1	login	1	136d4cd8fe83080d71b405dca96c0ea6	::1	2026-08-01 00:00:00	{"script": "install"}	PiwigoFixtureRegen/1.0
+4	user	1	login	1	8841f6cd90833c3f32de35fdac8f2dea	::1	2026-08-01 00:00:00	{"method": "pwg.session.login"}	PiwigoFixtureRegen/1.0
+5	album	1	add	1	8841f6cd90833c3f32de35fdac8f2dea	::1	2026-08-01 00:00:00	{"method": "pwg.categories.add"}	\N
+6	album	2	add	1	8841f6cd90833c3f32de35fdac8f2dea	::1	2026-08-01 00:00:00	{"method": "pwg.categories.add"}	\N
+7	photo	1	add	1	8841f6cd90833c3f32de35fdac8f2dea	::1	2026-08-01 00:00:00	{"method": "pwg.images.addSimple", "added_with": "app"}	\N
+8	photo	2	add	1	8841f6cd90833c3f32de35fdac8f2dea	::1	2026-08-01 00:00:00	{"method": "pwg.images.addSimple", "added_with": "app"}	\N
+9	photo	3	add	1	8841f6cd90833c3f32de35fdac8f2dea	::1	2026-08-01 00:00:00	{"method": "pwg.images.addSimple", "added_with": "app"}	\N
+10	photo	4	add	1	8841f6cd90833c3f32de35fdac8f2dea	::1	2026-08-01 00:00:00	{"method": "pwg.images.addSimple", "added_with": "app"}	\N
+11	photo	5	add	1	8841f6cd90833c3f32de35fdac8f2dea	::1	2026-08-01 00:00:00	{"method": "pwg.images.addSimple", "added_with": "app"}	\N
+12	tag	1	add	1	8841f6cd90833c3f32de35fdac8f2dea	::1	2026-08-01 00:00:00	{"method": "pwg.tags.add"}	\N
+13	tag	2	add	1	8841f6cd90833c3f32de35fdac8f2dea	::1	2026-08-01 00:00:00	{"method": "pwg.tags.add"}	\N
+14	tag	3	add	1	8841f6cd90833c3f32de35fdac8f2dea	::1	2026-08-01 00:00:00	{"method": "pwg.tags.add"}	\N
+15	user	3	add	1	8841f6cd90833c3f32de35fdac8f2dea	::1	2026-08-01 00:00:00	{"method": "pwg.users.add"}	\N
+16	user	4	add	1	8841f6cd90833c3f32de35fdac8f2dea	::1	2026-08-01 00:00:00	{"method": "pwg.users.add"}	\N
+17	group	1	add	1	8841f6cd90833c3f32de35fdac8f2dea	::1	2026-08-01 00:00:00	{"method": "pwg.groups.add"}	\N
+18	group	2	add	1	8841f6cd90833c3f32de35fdac8f2dea	::1	2026-08-01 00:00:00	{"method": "pwg.groups.add"}	\N
+19	group	3	add	1	8841f6cd90833c3f32de35fdac8f2dea	::1	2026-08-01 00:00:00	{"method": "pwg.groups.add"}	\N
 \.
 
 
@@ -2765,8 +2926,8 @@ COPY public.piwigo_caddie (user_id, element_id) FROM stdin;
 --
 
 COPY public.piwigo_categories (id, name, id_uppercat, comment, dir, rank, status, site_id, visible, representative_picture_id, uppercats, commentable, global_rank, image_order, permalink, lastmodified) FROM stdin;
-1	Sample Album	\N	\N	\N	1	public	\N	t	1	1	t	1	\N	\N	2026-08-04 13:58:32.007954
-2	Nested Sub Album	1	\N	\N	1	public	\N	t	4	1,2	t	1.1	\N	\N	2026-08-04 13:58:34.53482
+1	Sample Album	\N	\N	\N	1	public	\N	t	1	1	t	1	\N	\N	2026-08-04 15:04:51.166819
+2	Nested Sub Album	1	\N	\N	1	public	\N	t	4	1,2	t	1.1	\N	\N	2026-08-04 15:04:53.51588
 \.
 
 
@@ -2854,7 +3015,7 @@ index_search_in_set_action	"true"	\N
 upload_detect_duplicate	true	\N
 webmaster_id	1	\N
 use_standard_pages	true	\N
-secret_key	"d7f49ef5d45b1317c492d9aef83429e092c3d15b"	a secret key specific to the gallery for internal use
+secret_key	"af171d842fef35743aa14bbdf4f32239aba9a42a"	a secret key specific to the gallery for internal use
 activate_comments	true	Global parameter for usage of comments system
 page_banner	"<h1>%gallery_title%</h1>\\n\\n<p>Welcome to my photo gallery</p>"	html displayed on the top each page of your gallery
 piwigo_installed_version	"16.3.0"	\N
@@ -2885,17 +3046,17 @@ COPY public.piwigo_derivative_settings (id, default_quality, watermark_json, cus
 --
 
 COPY public.piwigo_derivative_size (name, enabled, max_width, max_height, max_crop, min_width, min_height, sharpen, last_mod_time) FROM stdin;
-square	1	120	120	1.0000	120	120	0.0000	1785862710
-thumb	1	144	144	0.0000	\N	\N	0.0000	1785862710
-2small	1	240	240	0.0000	\N	\N	0.0000	1785862710
-xsmall	1	432	324	0.0000	\N	\N	0.0000	1785862710
-small	1	576	432	0.0000	\N	\N	0.0000	1785862710
-medium	1	792	594	0.0000	\N	\N	0.0000	1785862710
-large	1	1008	756	0.0000	\N	\N	0.0000	1785862710
-xlarge	1	1224	918	0.0000	\N	\N	0.0000	1785862710
-xxlarge	1	1656	1242	0.0000	\N	\N	0.0000	1785862710
-3xlarge	0	2232	1674	0.0000	\N	\N	0.0000	1785862710
-4xlarge	0	3000	2250	0.0000	\N	\N	0.0000	1785862710
+square	1	120	120	1.0000	120	120	0.0000	1785866689
+thumb	1	144	144	0.0000	\N	\N	0.0000	1785866689
+2small	1	240	240	0.0000	\N	\N	0.0000	1785866689
+xsmall	1	432	324	0.0000	\N	\N	0.0000	1785866689
+small	1	576	432	0.0000	\N	\N	0.0000	1785866689
+medium	1	792	594	0.0000	\N	\N	0.0000	1785866689
+large	1	1008	756	0.0000	\N	\N	0.0000	1785866689
+xlarge	1	1224	918	0.0000	\N	\N	0.0000	1785866689
+xxlarge	1	1656	1242	0.0000	\N	\N	0.0000	1785866689
+3xlarge	0	2232	1674	0.0000	\N	\N	0.0000	1785866689
+4xlarge	0	3000	2250	0.0000	\N	\N	0.0000	1785866689
 \.
 
 
@@ -2996,11 +3157,11 @@ COPY public.piwigo_image_tag (image_id, tag_id) FROM stdin;
 --
 
 COPY public.piwigo_images (id, file, date_available, date_creation, name, comment, author, hit, filesize, width, height, coi, representative_ext, date_metadata_update, rating_score, path, storage_category_id, level, md5sum, added_by, rotation, latitude, longitude, lastmodified) FROM stdin;
-5	fixture-photo-5.jpg	2026-08-01 00:00:00	\N	Photo 5	\N	\N	0	1	200	150	\N	\N	2026-08-04	\N	upload/2026/08/01/20260801000000-4b011e51.jpg	\N	0	4b01d21f3d56009c3b1f913fafda86c5	1	0	\N	\N	2026-08-04 13:58:35.181577
-1	fixture-photo-1.jpg	2026-08-01 00:00:00	\N	Photo 1	\N	\N	0	1	200	150	\N	\N	2026-08-04	4.5	upload/2026/08/01/20260801000000-2e7e1684.jpg	\N	0	2e7ee450c4a4cffe42945205029782b9	1	0	\N	\N	2026-08-04 13:58:37.40019
-2	fixture-photo-2.jpg	2026-08-01 00:00:00	\N	Photo 2	\N	\N	0	1	200	150	\N	\N	2026-08-04	3	upload/2026/08/01/20260801000000-4a01eb2c.jpg	\N	0	4a010138f010067cfc713afb6dcf45e1	1	0	\N	\N	2026-08-04 13:58:37.404541
-3	fixture-photo-3.jpg	2026-08-01 00:00:00	\N	Photo 3	\N	\N	0	1	200	150	\N	\N	2026-08-04	5	upload/2026/08/01/20260801000000-a6a032a8.jpg	\N	0	a6a04acded208db63890b74c4252a012	1	0	\N	\N	2026-08-04 13:58:37.406035
-4	fixture-photo-4.jpg	2026-08-01 00:00:00	\N	Photo 4	\N	\N	0	1	200	150	\N	\N	2026-08-04	2	upload/2026/08/01/20260801000000-3df620f7.jpg	\N	0	3df6bd0ebb6f22ea988f2ffb1c3a9566	1	0	\N	\N	2026-08-04 13:58:37.407467
+5	fixture-photo-5.jpg	2026-08-01 00:00:00	\N	Photo 5	\N	\N	0	1	200	150	\N	\N	2026-08-04	\N	upload/2026/08/01/20260801000000-4b01755f.jpg	\N	0	4b01d21f3d56009c3b1f913fafda86c5	1	0	\N	\N	2026-08-04 15:04:54.075526
+1	fixture-photo-1.jpg	2026-08-01 00:00:00	\N	Photo 1	\N	\N	0	1	200	150	\N	\N	2026-08-04	4.5	upload/2026/08/01/20260801000000-2e7eba7a.jpg	\N	0	2e7ee450c4a4cffe42945205029782b9	1	0	\N	\N	2026-08-04 15:04:56.046013
+2	fixture-photo-2.jpg	2026-08-01 00:00:00	\N	Photo 2	\N	\N	0	1	200	150	\N	\N	2026-08-04	3	upload/2026/08/01/20260801000000-4a01513b.jpg	\N	0	4a010138f010067cfc713afb6dcf45e1	1	0	\N	\N	2026-08-04 15:04:56.048191
+3	fixture-photo-3.jpg	2026-08-01 00:00:00	\N	Photo 3	\N	\N	0	1	200	150	\N	\N	2026-08-04	5	upload/2026/08/01/20260801000000-a6a0de1e.jpg	\N	0	a6a04acded208db63890b74c4252a012	1	0	\N	\N	2026-08-04 15:04:56.048981
+4	fixture-photo-4.jpg	2026-08-01 00:00:00	\N	Photo 4	\N	\N	0	1	200	150	\N	\N	2026-08-04	2	upload/2026/08/01/20260801000000-3df61661.jpg	\N	0	3df6bd0ebb6f22ea988f2ffb1c3a9566	1	0	\N	\N	2026-08-04 15:04:56.049757
 \.
 
 
@@ -3088,12 +3249,12 @@ COPY public.piwigo_search_filter_view (name, config_json, created_at) FROM stdin
 --
 
 COPY public.piwigo_sessions (id, data, expiration) FROM stdin;
-2498b6a55a8281f569a91dfb7e88bfe3		2026-08-01 00:00:00
-9417019dd52a518ee07bb4f0ea6e62eb		2026-08-01 00:00:00
-bbd8e5aa732d62123329449804584290		2026-08-01 00:00:00
-5c3a42c07447a25df7635cdfacc6f9fc		2026-08-01 00:00:00
-fc6aad7be462749054de08d1777847b3		2026-08-01 00:00:00
-3e6031b75fa706181fc7855ec19969eb	pwg_uid|i:1;connected_with|s:16:"ws_session_login";	2026-08-01 00:00:00
+1a073b12b5a554614a31d777a32da0a2		2026-08-01 00:00:00
+74c3af927b47d47a953b9ad0da0826eb		2026-08-01 00:00:00
+43f9d30686ac2f5cbe5e8ceb1866b555		2026-08-01 00:00:00
+b884da54d12be41a0497c85efd42c02c		2026-08-01 00:00:00
+39520802becc7c5ed9fd92d7aec14a3d		2026-08-01 00:00:00
+8841f6cd90833c3f32de35fdac8f2dea	pwg_uid|i:1;connected_with|s:16:"ws_session_login";	2026-08-01 00:00:00
 \.
 
 
@@ -3175,7 +3336,7 @@ COPY public.piwigo_user_group (user_id, group_id) FROM stdin;
 
 COPY public.piwigo_user_infos (user_id, nb_image_page, status, language, expand, show_nb_comments, show_nb_hits, recent_period, theme, registration_date, enabled_high, level, activation_key, activation_key_expire, last_visit, last_visit_from_history, lastmodified, preferences) FROM stdin;
 2	15	guest	en_UK	f	f	f	7	default	2026-08-01 00:00:00	t	0	\N	\N	\N	f	2026-08-01 00:00:00	\N
-1	15	webmaster	en_UK	f	f	f	7	default	2026-08-01 00:00:00	t	8	\N	\N	\N	f	2026-08-04 13:58:30.307758	{"show_whats_new_16": false}
+1	15	webmaster	en_UK	f	f	f	7	default	2026-08-01 00:00:00	t	8	\N	\N	\N	f	2026-08-04 15:04:49.583527	{"show_whats_new_16": false}
 3	15	normal	en_UK	f	f	f	7	default	2026-08-01 00:00:00	t	0	\N	\N	\N	f	2026-08-01 00:00:00	\N
 4	15	normal	en_UK	f	f	f	7	default	2026-08-01 00:00:00	t	0	\N	\N	\N	f	2026-08-01 00:00:00	\N
 \.
@@ -3196,10 +3357,10 @@ COPY public.piwigo_user_mail_notification (user_id, check_key, enabled, last_sen
 --
 
 COPY public.piwigo_users (id, username, password, mail_address) FROM stdin;
-1	fixture_admin	$2y$04$XvjdhLO/bckTuZjxDp.4yO2Ptpzp2mu/wPSi0QJ1P.re4fHSQokLG	fixture_admin@example.test
+1	fixture_admin	$2y$04$4l.yH8hwR2BqH2tqhaRQ5OglKjsMV8s9bU0seCdmZlKWK6jWGRt0a	fixture_admin@example.test
 2	guest	\N	\N
-3	regular_user	$2y$04$Y6bUHL9.M3q5YIRHdTbNsO7jXgkMe7VcVqqY.210fow7HeqYNRWoq	\N
-4	power_user	$2y$04$.ZdfPDb6vwRUdr5KJHBmT.SOuScLdf.A8XUeNqTrc55xLclUW2hzq	\N
+3	regular_user	$2y$04$Y4oi7YnazCrZyCUNW0AXIerUY043JTj8Q7nGqyiPjvqtb.ULvv8vK	\N
+4	power_user	$2y$04$26aIW8I4c8mFVSbyzTqkFuurGcNMYdea4MdyNKV8Vp3wfbBY.yUNO	\N
 \.
 
 

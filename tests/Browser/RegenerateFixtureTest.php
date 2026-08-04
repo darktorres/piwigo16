@@ -428,6 +428,18 @@ final class RegenerateFixtureTest extends IntegrationTestCase
 
         if ($this->dbDriver === 'pgsql') {
             $cmd = ['pg_dump', '-U' . $this->dbUser, '-h' . $this->dbHost];
+            // --clean --if-exists: mysqldump's own --add-drop-table default
+            // (a DROP TABLE IF EXISTS ahead of every CREATE TABLE) is what
+            // makes IntegrationTestCase::loadFixture() safe to call a
+            // second time against an already-populated database (several
+            // real tests do exactly that, reloading in their own finally
+            // block after intentionally corrupting/truncating data) --
+            // pg_dump has no such default, so without these flags a second
+            // load hits "function piwigo_set_lastmodified already exists"
+            // (confirmed live). --if-exists keeps the emitted DROPs from
+            // erroring on a genuinely fresh/empty database either.
+            $cmd[] = '--clean';
+            $cmd[] = '--if-exists';
             $cmd[] = '--exclude-table=' . $this->dbPrefix . 'migration_versions';
             $cmd[] = $this->dbName;
             $env = $this->dbPass !== '' ? array_merge(getenv(), ['PGPASSWORD' => $this->dbPass]) : null;

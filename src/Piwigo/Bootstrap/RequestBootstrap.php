@@ -47,7 +47,6 @@ use Piwigo\Filter\FilterService;
 use Piwigo\Html\HtmlService;
 use Piwigo\Image\Event\GetSrcImageUrl;
 use Piwigo\Image\ImageService;
-use Piwigo\Mail\MailService;
 use Piwigo\Menu\Event\BlockManagerRegisterBlocks;
 use Piwigo\Page\NoPhotoYetRenderer;
 use Piwigo\Session\SessionService;
@@ -561,7 +560,7 @@ final class RequestBootstrap
         Lang::setDefaultLanguageProvider(new UserService(
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class),
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class),
-            new MailService(),
+            self::mailService(),
             self::activityService($conn),
             new HtmlService(),
             $conn,
@@ -611,7 +610,7 @@ final class RequestBootstrap
             $notify_username = self::currentUser()->get()->username;
             $notify_email = self::currentUser()->get()->email;
             $apiKeyRepo = new \Piwigo\Auth\ApiKeyRepository(\Piwigo\Db\EntityManagerFactory::build($conn));
-            $is_mail_send = new \Piwigo\Auth\ApiKeyService(new MailService(), $apiKeyRepo, new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn), self::deploymentPolicy()), self::urlService(), self::sessionService())
+            $is_mail_send = new \Piwigo\Auth\ApiKeyService(self::mailService(), $apiKeyRepo, new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn), self::deploymentPolicy()), self::urlService(), self::sessionService())
                 ->notifyExpiration($notify_username, $notify_email, $notify_api_key_expiration['days_left']);
 
             if ($is_mail_send) {
@@ -672,7 +671,7 @@ final class RequestBootstrap
             // when it decides to take over the page. CurrentConfigService::get()
             // reuses the instance connect() already resolved earlier in the
             // same request (Legacy Coupling Retirement Phase 8, 8d).
-            new NoPhotoYetRenderer(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), self::currentConfigService()->get(), new RedirectService(), self::urlService(), CurrentPaths::get(), self::adminContext(), self::sessionService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::deploymentPolicy(), self::currentUser(), self::currentTemplate())
+            new NoPhotoYetRenderer(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), self::currentConfigService()->get(), new RedirectService(), self::urlService(), CurrentPaths::get(), self::adminContext(), self::sessionService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::deploymentPolicy(), self::currentUser(), self::currentTemplate(), self::mailService())
                 ->render();
         }
 
@@ -774,7 +773,7 @@ final class RequestBootstrap
         // (unlike UploadService's static upload_file handlers below), hence the
         // bound first-class-callable form rather than a bare [Class::class, 'method']
         // array.
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(UserCommentCheck::class, new CommentService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), new MailService(), new HtmlService(), self::urlService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::pageState(), self::currentUser())->checkForSpam(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(UserCommentCheck::class, new CommentService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), self::mailService(), new HtmlService(), self::urlService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::pageState(), self::currentUser())->checkForSpam(...));
         // try_log_user's own handler is registered in connect() instead,
         // before UserBootstrap::initialize() -- see that registration's
         // own comment for why.
@@ -1070,6 +1069,25 @@ final class RequestBootstrap
         }
 
         return $urlService;
+    }
+
+    /**
+     * Resolves the container-shared MailService instance (via its
+     * MailerInterface binding) -- singleton/service-locator elimination
+     * campaign, Phase 6: MailService's own switchLangTo()/switchLangBack()
+     * language-switch stack and template-render cache are real per-request
+     * state that must be the SAME instance across every call within one
+     * request, not a fresh `new MailService()` per site (see MailService's
+     * own class docblock).
+     */
+    private static function mailService(): \Piwigo\Core\MailerInterface
+    {
+        $mailer = Kernel::container()->get(\Piwigo\Core\MailerInterface::class);
+        if (! $mailer instanceof \Piwigo\Core\MailerInterface) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\MailerInterface::class);
+        }
+
+        return $mailer;
     }
 
     /**

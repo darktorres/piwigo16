@@ -53,9 +53,14 @@ use Symfony\Component\Mime\Email;
  * The template-render cache and language-switch stack (`$conf_mail`/
  * `$switch_lang` in the procedural version) are request-scoped state with no
  * other reader in the codebase (confirmed via grep) -- kept as private
- * static state on this class instead of raw globals, with a reset() for
- * test isolation, matching StorageRegistry/SessionService/PageState's own
- * established self-managed-state pattern.
+ * instance state (singleton/service-locator elimination campaign, Phase 6:
+ * was private static state until this class itself became the one
+ * container-shared instance every real caller receives via constructor
+ * injection of `MailerInterface`; a handful of too-many-sites/genuinely
+ * static-context callers stay on a bare `new MailService()`, safe because
+ * they never rely on this per-request cache/stack persisting across calls
+ * -- see the constructor's own docblock), with an instance reset() for
+ * test isolation, matching every other converted class in this campaign.
  *
  * Implements `Piwigo\Core\MailerInterface` (P23 batch 8c) so
  * L2aCoreDomain/L2bExtendedDomain classes that may not depend on this
@@ -77,12 +82,13 @@ final class MailService implements MailerInterface
      * P23 batch 8f-4: replaces the 2 deliberately-bare
      * get_webmaster_mail_address() calls (free function deleted with
      * include/functions.inc.php). Optional-with-lazy-default rather than
-     * required: this class has ~50 `new MailService()` construction sites
-     * and the dependency is only reached on the sender-fallback/
-     * Bcc-webmaster paths -- production sites keep constructing with no
-     * args and get the real Piwigo\Users\UserRepository (a legal L3->L2a
-     * downward dep, constructed lazily so no DB connection is built for
-     * the many code paths that never need it); unit tests
+     * required: this class's own constructor stays cheap to call with no
+     * args (the 2 remaining bare production `new MailService()` sites plus
+     * every unit test's own direct construction rely on that) and the
+     * dependency is only reached on the sender-fallback/Bcc-webmaster
+     * paths -- those callers get the real Piwigo\Users\UserRepository (a
+     * legal L3->L2a downward dep, constructed lazily so no DB connection
+     * is built for the many code paths that never need it); unit tests
      * (MailServiceTest/SendNotificationEmailHandlerTest) pass a fake
      * implementation instead of the old global-function-stub shadowing.
      */
@@ -102,8 +108,12 @@ final class MailService implements MailerInterface
 
     /**
      * Optional-with-lazy-default, same reasoning as
-     * $webmasterMailProvider above -- ~50 `new MailService()` construction
-     * sites, most of which never reach mailAdmins()/mailGroup().
+     * $webmasterMailProvider above -- the 2 remaining bare
+     * `new MailService()` production sites (singleton/service-locator
+     * elimination campaign, Phase 6 -- every other real caller now
+     * constructor-injects the container-shared instance) plus every unit
+     * test's own direct construction, most of which never reach
+     * mailAdmins()/mailGroup().
      */
     private function recipientRepo(): MailRecipientRepositoryInterface
     {
@@ -113,8 +123,7 @@ final class MailService implements MailerInterface
 
     /**
      * Optional-with-lazy-default, same reasoning as
-     * $webmasterMailProvider above -- ~50 `new MailService()` construction
-     * sites, only mailGroup() reaches this. Unlike UserService (which
+     * $webmasterMailProvider above -- only mailGroup() reaches this. Unlike UserService (which
      * genuinely can't be a constructor dependency here -- UserService
      * constructor-depends on MailerInterface, i.e. this class, a real
      * cycle), AuthService doesn't depend back on MailerInterface, so this
@@ -139,11 +148,12 @@ final class MailService implements MailerInterface
     }
 
     /**
-     * Container resolve, not a constructor property -- this class has
-     * ~50 `new MailService()` construction sites, several of them inside
-     * Piwigo\Bootstrap\RedirectService's own early-crash fallback chain
-     * (RedirectService -> UserService -> MailService, all literal `new`
-     * calls). PHP-DI's reflection-based autowiring only ever inspects
+     * Container resolve, not a constructor property -- this class's own
+     * constructor stays cheap to call with no args (see its own docblock:
+     * the 2 remaining bare production `new MailService()` sites plus every
+     * unit test's own direct construction rely on that), so
+     * UrlServiceInterface can't be a required constructor param either.
+     * PHP-DI's reflection-based autowiring only ever inspects
      * class constructors, never ordinary methods, so a private helper
      * method is safe from re-closing that chain even though an
      * optional/nullable constructor property of the same type would not
@@ -194,26 +204,26 @@ final class MailService implements MailerInterface
     /**
      * @var array<string, array{theme: Template}>
      */
-    private static array $templateCache = [];
+    private array $templateCache = [];
 
-    private static bool $switchLangInitialised = false;
+    private bool $switchLangInitialised = false;
 
     /**
      * @var list<string>
      */
-    private static array $switchLangStack = [];
+    private array $switchLangStack = [];
 
     /**
      * @var array<string, array{lang_info: array<string, string|bool>, lang: array<string, string|array<int, string>>, translator: \Piwigo\Lang\Translator}>
      */
-    private static array $switchLangLanguages = [];
+    private array $switchLangLanguages = [];
 
-    public static function reset(): void
+    public function reset(): void
     {
-        self::$templateCache = [];
-        self::$switchLangInitialised = false;
-        self::$switchLangStack = [];
-        self::$switchLangLanguages = [];
+        $this->templateCache = [];
+        $this->switchLangInitialised = false;
+        $this->switchLangStack = [];
+        $this->switchLangLanguages = [];
     }
 
     /**
@@ -436,9 +446,9 @@ final class MailService implements MailerInterface
         $currentUserLanguage = CurrentUser::current()->get()->language;
 
         // Language of the current user is saved (considered OK on first call).
-        if (! self::$switchLangInitialised && ! isset(self::$switchLangLanguages[$currentUserLanguage])) {
-            self::$switchLangInitialised = true;
-            self::$switchLangLanguages[$currentUserLanguage] = [
+        if (! $this->switchLangInitialised && ! isset($this->switchLangLanguages[$currentUserLanguage])) {
+            $this->switchLangInitialised = true;
+            $this->switchLangLanguages[$currentUserLanguage] = [
                 'lang_info' => Lang::langInfo(),
                 'lang' => Lang::snapshot(),
                 // \Piwigo\Core\Lang's own $data/$langInfo are just parallel
@@ -452,10 +462,10 @@ final class MailService implements MailerInterface
             ];
         }
 
-        self::$switchLangStack[] = $currentUserLanguage;
+        $this->switchLangStack[] = $currentUserLanguage;
         CurrentUser::current()->updateLanguage($language);
 
-        if (! isset(self::$switchLangLanguages[$language])) {
+        if (! isset($this->switchLangLanguages[$language])) {
             // Re-init language arrays.
             Lang::setLangInfo([]);
             Lang::restore(null);
@@ -488,13 +498,13 @@ final class MailService implements MailerInterface
                 ]
             );
 
-            self::$switchLangLanguages[$language] = [
+            $this->switchLangLanguages[$language] = [
                 'lang_info' => Lang::langInfo(),
                 'lang' => Lang::snapshot(),
                 'translator' => clone \Piwigo\Lang\Translator::get(),
             ];
         } else {
-            $entry = self::$switchLangLanguages[$language];
+            $entry = $this->switchLangLanguages[$language];
             Lang::setLangInfo($entry['lang_info']);
             Lang::restore($entry['lang']);
             \Piwigo\Lang\Translator::get()->restoreFrom($entry['translator']);
@@ -507,14 +517,14 @@ final class MailService implements MailerInterface
      */
     public function switchLangBack(): void
     {
-        if (self::$switchLangStack === []) {
+        if ($this->switchLangStack === []) {
             return;
         }
 
-        $language = array_pop(self::$switchLangStack);
+        $language = array_pop($this->switchLangStack);
 
-        if (isset(self::$switchLangLanguages[$language])) {
-            $entry = self::$switchLangLanguages[$language];
+        if (isset($this->switchLangLanguages[$language])) {
+            $entry = $this->switchLangLanguages[$language];
             Lang::setLangInfo($entry['lang_info']);
             Lang::restore($entry['lang']);
             \Piwigo\Lang\Translator::get()->restoreFrom($entry['translator']);
@@ -854,9 +864,9 @@ final class MailService implements MailerInterface
                 $cacheKey .= '-' . $args['auth_key'];
             }
 
-            if (! isset(self::$templateCache[$cacheKey])) {
+            if (! isset($this->templateCache[$cacheKey])) {
                 $template = $this->getMailTemplate($contentType);
-                self::$templateCache[$cacheKey] = [
+                $this->templateCache[$cacheKey] = [
                     'theme' => $template,
                 ];
                 \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new BeforeParseMailTemplate($cacheKey, $contentType));
@@ -897,7 +907,7 @@ final class MailService implements MailerInterface
                 }
             }
 
-            $template = self::$templateCache[$cacheKey]['theme'];
+            $template = $this->templateCache[$cacheKey]['theme'];
             $template->assign(
                 [
                     'MAIL_TITLE' => $args['mail_title'],

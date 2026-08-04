@@ -168,10 +168,6 @@ function mail_service_rrmdir(string $dir): void
     rmdir($dir);
 }
 
-beforeEach(function (): void {
-    MailService::reset();
-});
-
 afterEach(function (): void {
     CurrentConfig::reset();
     Lang::reset();

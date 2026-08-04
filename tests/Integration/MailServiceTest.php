@@ -117,7 +117,6 @@ final class MailServiceTest extends IntegrationTestCase
         CurrentConfigService::current()->set($configService);
         $configService->loadConfFromDb();
 
-        MailService::reset();
         $this->mailer = new MailService();
     }
 
@@ -134,7 +133,6 @@ final class MailServiceTest extends IntegrationTestCase
         // later test in this file/process. reset() first is required.
         CurrentUser::current()->reset();
         CurrentUser::current()->attachGlobals();
-        MailService::reset();
         Kernel::reset();
         parent::tearDown();
     }
@@ -375,8 +373,9 @@ final class MailServiceTest extends IntegrationTestCase
         EventDispatcher::get()->addTypedHandler(LoadingLang::class, $handler);
 
         try {
-            // A fresh MailService::reset() (this file's own setUp())
-            // starts with an empty $switchLangLanguages cache -- 'fr_FR'
+            // A fresh $this->mailer (this file's own setUp(), a brand new
+            // instance) starts with an empty $switchLangLanguages cache --
+            // 'fr_FR'
             // (a real installed language, see language/fr_FR/common.po)
             // has never been loaded yet, so this exercises the real
             // re-init branch (Lang::load() for common.lang/admin.lang/
@@ -439,8 +438,9 @@ final class MailServiceTest extends IntegrationTestCase
 
     public function test_switchLangBack_is_a_no_op_when_the_stack_is_empty(): void
     {
-        // A fresh MailService::reset() (this file's own setUp()) starts
-        // with an empty $switchLangStack -- calling switchLangBack()
+        // A fresh $this->mailer (this file's own setUp(), a brand new
+        // instance) starts with an empty $switchLangStack -- calling
+        // switchLangBack()
         // without a prior switchLangTo() must return immediately rather
         // than array_pop()-ing an empty stack.
         //

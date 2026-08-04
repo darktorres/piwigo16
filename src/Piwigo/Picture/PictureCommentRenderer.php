@@ -17,7 +17,6 @@ use Piwigo\Event\User\UserCommentInsertion;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Http\ResponseReadyException;
-use Piwigo\Mail\MailService;
 use Piwigo\Session\SessionService;
 
 /**
@@ -75,12 +74,12 @@ final class PictureCommentRenderer
      *   native DBAL int -- only `uppercats`/`status`/`global_rank` are
      *   genuinely string|null.
      */
-    public function render(?CommentId $editCommentId, int $imageId, int $start, UrlServiceInterface $urlService, array $related_categories, string $url_self, SessionService $sessionService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate): void
+    public function render(?CommentId $editCommentId, int $imageId, int $start, UrlServiceInterface $urlService, array $related_categories, string $url_self, SessionService $sessionService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Core\MailerInterface $mailer): void
     {
         $template = $currentTemplate->get();
 
         $commentRepository = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Comment\CommentEntity::class);
-        $commentService = new CommentService($commentRepository, new EphemeralKeyService(), new MailService(), new HtmlService(), $urlService, $eventDispatcher, $pageState, $currentUser);
+        $commentService = new CommentService($commentRepository, new EphemeralKeyService(), $mailer, new HtmlService(), $urlService, $eventDispatcher, $pageState, $currentUser);
 
         $commentAction = null;
 

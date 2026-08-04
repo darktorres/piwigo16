@@ -76,6 +76,10 @@ final class UserBootstrap
         if (! $currentUser instanceof \Piwigo\Users\CurrentUser) {
             throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Users\CurrentUser::class);
         }
+        $mailer = Kernel::container()->get(\Piwigo\Core\MailerInterface::class);
+        if (! $mailer instanceof \Piwigo\Core\MailerInterface) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\MailerInterface::class);
+        }
         $authService = new AuthService(
             new AuthRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
             new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)),
@@ -91,7 +95,7 @@ final class UserBootstrap
         $userService = new \Piwigo\Users\UserService(
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class),
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class),
-            new \Piwigo\Mail\MailService(),
+            $mailer,
             new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)),
             new HtmlService(),
             $conn,

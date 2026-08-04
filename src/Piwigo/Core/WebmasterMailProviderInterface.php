@@ -17,9 +17,11 @@ namespace Piwigo\Core;
  * that stub mechanism with real DI: `UserRepository implements` it (bound
  * in config/container.php for consistency with the other Core interfaces),
  * MailService takes an optional constructor instance (lazily defaulting to
- * the real UserRepository -- 98 existing `new MailService()` sites stay
- * valid), and the unit tests pass an anonymous fake instead of shadowing a
- * global function.
+ * the real UserRepository -- keeps `new MailService()` valid with no args,
+ * still relied on by the 2 remaining bare production construction sites
+ * plus every unit test's own direct construction, singleton/service-
+ * locator elimination campaign Phase 6), and the unit tests pass an
+ * anonymous fake instead of shadowing a global function.
  */
 interface WebmasterMailProviderInterface
 {

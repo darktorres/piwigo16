@@ -103,6 +103,7 @@ final class NotificationByMailSender
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
+        private readonly MailService $mailer,
     ) {
         $nbmMaxTreatmentTimeoutPercent = \Piwigo\Config\CurrentConfig::nbmMaxTreatmentTimeoutPercent();
 
@@ -156,13 +157,13 @@ final class NotificationByMailSender
     {
         $this->saveCurrentUser = $this->currentUser->get();
         $userLanguage = $this->saveCurrentUser->language;
-        new MailService()
+        $this->mailer
             ->switchLangTo($userLanguage !== '' ? $userLanguage : $this->userService->getDefaultLanguage());
 
         $this->isToSendMail = $isToSendMail;
 
         if ($isToSendMail) {
-            $this->emailFormat = new MailService()
+            $this->emailFormat = $this->mailer
                 ->getStrEmailFormat(\Piwigo\Db\SqlDialect::getBoolean(\Piwigo\Config\CurrentConfig::nbmSendHtmlMail()));
 
             // \Piwigo\Config\CurrentConfig::nbmSendMailAs() is admin-submitted free text (see
@@ -170,14 +171,14 @@ final class NotificationByMailSender
             $nbmSendMailAs = \Piwigo\Config\CurrentConfig::nbmSendMailAs();
             $sendAsName = $nbmSendMailAs !== ''
                 ? $nbmSendMailAs
-                : new MailService()
+                : $this->mailer
                     ->getMailSenderName();
             $this->sendAsName = $sendAsName;
 
             $sendAsMailAddress = \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class)->getWebmasterMailAddress();
             $this->sendAsMailAddress = $sendAsMailAddress;
 
-            $this->sendAsMailFormatted = new MailService()
+            $this->sendAsMailFormatted = $this->mailer
                 ->formatEmail($sendAsName, $sendAsMailAddress);
 
             $this->errorOnMailCount = 0;
@@ -192,7 +193,7 @@ final class NotificationByMailSender
         if ($this->saveCurrentUser instanceof \Piwigo\Users\User) {
             $this->currentUser->set($this->saveCurrentUser);
         }
-        new MailService()
+        $this->mailer
             ->switchLangBack();
 
         if ($this->isToSendMail) {
@@ -217,13 +218,13 @@ final class NotificationByMailSender
 
         $currentUserLanguage = $this->currentUser->get()
             ->language;
-        new MailService()
+        $this->mailer
             ->switchLangTo($currentUserLanguage !== '' ? $currentUserLanguage : $this->userService->getDefaultLanguage());
 
         if ($isActionSend) {
-            $emailFormat = $this->emailFormat ?? new MailService()
+            $emailFormat = $this->emailFormat ?? $this->mailer
                 ->getStrEmailFormat(false);
-            $mailTemplate = new MailService()
+            $mailTemplate = $this->mailer
                 ->getMailTemplate($emailFormat);
             $this->mailTemplate = $mailTemplate;
             $mailTemplate->set_filename('notification_by_mail', 'notification_by_mail.tpl');
@@ -232,7 +233,7 @@ final class NotificationByMailSender
 
     public function unsetUserOnEnv(): void
     {
-        new MailService()
+        $this->mailer
             ->switchLangBack();
         $this->mailTemplate = null;
     }
@@ -288,9 +289,9 @@ final class NotificationByMailSender
 
         $galleryHomeUrlStr = $this->urlService->getGalleryHomeUrl();
 
-        $emailFormat = $this->emailFormat ?? new MailService()
+        $emailFormat = $this->emailFormat ?? $this->mailer
             ->getStrEmailFormat(false);
-        $mailTemplate = $this->mailTemplate ?? new MailService()
+        $mailTemplate = $this->mailTemplate ?? $this->mailer
             ->getMailTemplate($emailFormat);
 
         $mailTemplate->assign(
@@ -368,9 +369,9 @@ final class NotificationByMailSender
                     $sectionActionBy = ($isSubscribe ? 'subscribe_by_' : 'unsubscribe_by_');
                     $sectionActionBy .= ($isAdminRequest ? 'admin' : 'himself');
 
-                    $emailFormat = $this->emailFormat ?? new MailService()
+                    $emailFormat = $this->emailFormat ?? $this->mailer
                         ->getStrEmailFormat(false);
-                    $mailTemplate = $this->mailTemplate ?? new MailService()
+                    $mailTemplate = $this->mailTemplate ?? $this->mailer
                         ->getMailTemplate($emailFormat);
 
                     $mailTemplate->assign(
@@ -383,7 +384,7 @@ final class NotificationByMailSender
 
                     $sendAsMailFormatted = $this->sendAsMailFormatted ?? '';
 
-                    $ret = new MailService()
+                    $ret = $this->mailer
                         ->mail(
                             [
                                 'name' => stripslashes($nbmUser->username),
@@ -556,9 +557,9 @@ final class NotificationByMailSender
                                 $galleryTitle = \Piwigo\Config\CurrentConfig::galleryTitle();
                                 $subject = '[' . $galleryTitle . '] ' . Lang::t('New photos added');
 
-                                $mailEmailFormat = $this->emailFormat ?? new MailService()
+                                $mailEmailFormat = $this->emailFormat ?? $this->mailer
                                     ->getStrEmailFormat($nbmSendHtmlMail);
-                                $mailTemplate = $this->mailTemplate ?? new MailService()
+                                $mailTemplate = $this->mailTemplate ?? $this->mailer
                                     ->getMailTemplate($mailEmailFormat);
 
                                 // Assign current var for nbm mail
@@ -645,7 +646,7 @@ final class NotificationByMailSender
                                     $mailArgs['auth_key'] = $auth;
                                 }
 
-                                $ret = new MailService()
+                                $ret = $this->mailer
                                     ->mail(
                                         [
                                             'name' => stripslashes($nbmUser->username),

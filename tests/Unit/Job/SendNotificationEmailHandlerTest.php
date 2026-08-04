@@ -17,10 +17,6 @@ use Piwigo\PluginConfig\EventDispatcher;
 // `return true` before getMailConfiguration()/the webmaster lookup ever
 // runs (verified against mail()'s own first guard).
 
-beforeEach(function (): void {
-    MailService::reset();
-});
-
 test('__invoke delegates to MailService::mail with the job to/args/tpl', function (): void {
     // An empty $to short-circuits MailService::mail() to `return true`
     // before it ever touches a real Transport (see its own emptyValue($to)

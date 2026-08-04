@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Integrity;
 
+use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Piwigo\Admin\Integrity\Event\ListCheckIntegrity;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
@@ -64,14 +65,34 @@ final class C13yInternal
             'required' => AppInfo::REQUIRED_PHP_VERSION,
         ];
 
+        $conn = DbConnection::build();
+        $isPostgres = $conn->getDatabasePlatform() instanceof PostgreSQLPlatform;
+        $rawDbVersion = new DbInfo($conn)
+            ->version();
+
+        // pgsql support pass: real bug found live -- Postgres's own
+        // SELECT version() output is a full descriptive string
+        // ("PostgreSQL 18.4 (Ubuntu ...) on x86_64-pc-linux-gnu,
+        // compiled by gcc ..."), not a bare parseable version number the
+        // way MySQL's is -- version_compare() against the raw string
+        // always reported "less than" any real required version,
+        // flagging a false anomaly on every real Postgres install.
+        // Extracts just the leading X.Y(.Z) numeric version for the
+        // comparison itself; the anomaly message (if one fires) still
+        // reports the full raw string, unchanged -- more useful
+        // diagnostic text for an admin reading it than a bare number.
+        preg_match('/\d+(?:\.\d+){1,2}/', $rawDbVersion, $versionMatch);
+        $comparableDbVersion = $versionMatch[0] ?? $rawDbVersion;
+
         $check_list[] = [
-            'type' => 'MySQL',
-            'current' => new DbInfo(DbConnection::build())->version(),
-            'required' => SqlDialect::REQUIRED_MYSQL_VERSION,
+            'type' => $isPostgres ? 'PostgreSQL' : 'MySQL',
+            'current' => $rawDbVersion,
+            'compare' => $comparableDbVersion,
+            'required' => $isPostgres ? SqlDialect::REQUIRED_POSTGRES_VERSION : SqlDialect::REQUIRED_MYSQL_VERSION,
         ];
 
         foreach ($check_list as $elem) {
-            if (version_compare($elem['current'], $elem['required'], '<')) {
+            if (version_compare($elem['compare'] ?? $elem['current'], $elem['required'], '<')) {
                 $c13y->add_anomaly(
                     sprintf($this->lang->t('The version of %s [%s] installed is not compatible with the version required [%s]'), $elem['type'], $elem['current'], $elem['required']),
                     null,

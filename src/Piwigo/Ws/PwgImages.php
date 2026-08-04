@@ -28,6 +28,7 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Core\WsError;
+use Piwigo\Db\AdvisorySessionLock;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
 use Piwigo\Db\Tables;
@@ -1324,11 +1325,11 @@ final class PwgImages
                 // still contributes to collision-avoidance against unrelated
                 // applications on a shared MySQL server, same reasoning as Item 18.
                 $uniqueness_lock_name = 'piwigo_iu_' . sha1(DbCredentials::current()->prefix . ':' . $uniqueness_column . ':' . $uniqueness_value);
-                $uniqueness_lock_acquired = $uniqueness_lock_conn->fetchOne(
-                    'SELECT GET_LOCK(?, ?)',
-                    [$uniqueness_lock_name, self::UPLOAD_UNIQUENESS_LOCK_TIMEOUT_SECONDS]
+                $uniqueness_lock_ok = AdvisorySessionLock::acquire(
+                    $uniqueness_lock_conn,
+                    $uniqueness_lock_name,
+                    self::UPLOAD_UNIQUENESS_LOCK_TIMEOUT_SECONDS
                 );
-                $uniqueness_lock_ok = is_numeric($uniqueness_lock_acquired) && (int) $uniqueness_lock_acquired === 1;
 
                 // A failed/timed-out acquisition means another request is right
                 // now checking or inserting this exact value -- treated the same
@@ -1340,7 +1341,7 @@ final class PwgImages
                     $uniqueness_value
                 )) {
                     if ($uniqueness_lock_ok) {
-                        $uniqueness_lock_conn->executeStatement('SELECT RELEASE_LOCK(?)', [$uniqueness_lock_name]);
+                        AdvisorySessionLock::release($uniqueness_lock_conn, $uniqueness_lock_name);
                     }
                     return new PwgError(500, 'file already exists');
                 }
@@ -1384,7 +1385,7 @@ final class PwgImages
             // alone is sufficient -- PHPStan proves this itself, flagging a
             // separate null-check on the name as redundant.
             if ($uniqueness_lock_conn !== null) {
-                $uniqueness_lock_conn->executeStatement('SELECT RELEASE_LOCK(?)', [$uniqueness_lock_name]);
+                AdvisorySessionLock::release($uniqueness_lock_conn, $uniqueness_lock_name);
             }
         }
 

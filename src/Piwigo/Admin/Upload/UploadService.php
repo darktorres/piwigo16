@@ -11,6 +11,7 @@ use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Db\AdvisorySessionLock;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Event\Location\LocEndAddFormat;
@@ -299,12 +300,13 @@ final class UploadService
             // reasoning as add()'s own lock, see PwgImages::add()) rather than
             // concatenated literally.
             $dup_detect_lock_name = 'piwigo_iud_' . sha1(\Piwigo\Db\DbCredentials::current()->prefix . ':' . $md5sum);
-            $dup_detect_lock_acquired = $dup_detect_lock_conn->fetchOne(
-                'SELECT GET_LOCK(?, ?)',
-                [$dup_detect_lock_name, self::DUP_DETECT_LOCK_TIMEOUT_SECONDS]
+            $dup_detect_lock_acquired = AdvisorySessionLock::acquire(
+                $dup_detect_lock_conn,
+                $dup_detect_lock_name,
+                self::DUP_DETECT_LOCK_TIMEOUT_SECONDS
             );
 
-            if (! is_numeric($dup_detect_lock_acquired) || (int) $dup_detect_lock_acquired !== 1) {
+            if (! $dup_detect_lock_acquired) {
                 throw new \Exception(__METHOD__ . '(): could not acquire upload duplicate-detection lock for md5sum ' . $md5sum);
             }
 
@@ -319,7 +321,7 @@ final class UploadService
                 // associate_images_to_categories perfectly handles this case
                 $this->addUploadedFileAddToCategories($image_id, $categories);
 
-                $dup_detect_lock_conn->executeStatement('SELECT RELEASE_LOCK(?)', [$dup_detect_lock_name]);
+                AdvisorySessionLock::release($dup_detect_lock_conn, $dup_detect_lock_name);
                 return $image_id;
             }
         }
@@ -592,7 +594,7 @@ final class UploadService
             // alone is sufficient -- PHPStan proves this itself, flagging a
             // separate null-check on the name as redundant.
             if ($dup_detect_lock_conn !== null) {
-                $dup_detect_lock_conn->executeStatement('SELECT RELEASE_LOCK(?)', [$dup_detect_lock_name]);
+                AdvisorySessionLock::release($dup_detect_lock_conn, $dup_detect_lock_name);
             }
         }
         $this->entityManager->clear();

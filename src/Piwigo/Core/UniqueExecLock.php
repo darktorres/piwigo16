@@ -6,6 +6,7 @@ namespace Piwigo\Core;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
+use Piwigo\Db\AdvisorySessionLock;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
 
@@ -90,9 +91,17 @@ use Piwigo\Db\DbCredentials;
  * (returns `false`, not an error, confirmed live) exactly like
  * `RELEASE_LOCK()` returning `NULL`.
  *
- * Two real differences needed real handling, not just a syntax swap:
+ * Two real differences needed real handling, not just a syntax swap --
+ * both now live in the shared {@see \Piwigo\Db\AdvisorySessionLock} (its
+ * own docblock has the same detail below), since `begins()`/`ends()`'s
+ * underlying MySQL/Postgres translation turned out to be exactly the same
+ * problem two other real call sites independently had (`Ws\PwgImages::add()`'s
+ * upload-uniqueness lock, `Admin\Upload\UploadService::upload()`'s
+ * duplicate-detection lock -- both found still issuing raw `GET_LOCK()`/
+ * `RELEASE_LOCK()` SQL directly, missed by this class's own pgsql-support
+ * pass since they never went through `UniqueExecLock` in the first place):
  *  - Advisory lock names are a `bigint` key, not an arbitrary string --
- *    {@see lockKey()} takes the first 8 bytes of {@see lockName()}'s own
+ *    `AdvisorySessionLock::key()` takes the first 8 bytes of a lock name's
  *    raw (non-hex) sha1 digest and reinterprets them as a signed 64-bit
  *    int via `unpack('J', ...)` -- verified live that PHP's 'J' format
  *    (`unsigned long long, big endian`) actually reinterprets a
@@ -106,8 +115,8 @@ use Piwigo\Db\DbCredentials;
  *    small/positive hash outputs).
  *  - `GET_LOCK(name, timeout)`'s blocking-with-a-cap has no built-in
  *    Postgres equivalent (`pg_try_advisory_lock()` never blocks at all;
- *    `pg_advisory_lock()` blocks with no timeout option) -- {@see
- *    beginsPostgres()} emulates it with a short poll loop
+ *    `pg_advisory_lock()` blocks with no timeout option) --
+ *    `AdvisorySessionLock::acquire()` emulates it with a short poll loop
  *    (`pg_try_advisory_lock()` + `usleep()`, capped by a wall-clock
  *    deadline), which correctly degrades to a single non-blocking attempt
  *    for the real, only-ever-used `$timeout = 0` default (no loop/sleep
@@ -139,9 +148,7 @@ final class UniqueExecLock
         $logger = \Piwigo\Core\CurrentLogger::getStatic();
         $conn = self::connection();
 
-        $acquired = $conn->getDatabasePlatform() instanceof PostgreSQLPlatform
-            ? self::beginsPostgres($conn, $tokenName, $timeout)
-            : $conn->fetchOne('SELECT GET_LOCK(?, ?)', [self::lockName($tokenName), $timeout]) === 1;
+        $acquired = AdvisorySessionLock::acquire($conn, self::lockName($tokenName), $timeout);
 
         if (! $acquired) {
             $logger->info('[' . $tokenName . '] another execution is running, abort');
@@ -170,11 +177,7 @@ final class UniqueExecLock
         $logger = \Piwigo\Core\CurrentLogger::getStatic();
         $conn = self::connection();
 
-        if ($conn->getDatabasePlatform() instanceof PostgreSQLPlatform) {
-            $conn->fetchOne('SELECT pg_advisory_unlock(?)', [self::lockKey($tokenName)]);
-        } else {
-            $conn->fetchOne('SELECT RELEASE_LOCK(?)', [self::lockName($tokenName)]);
-        }
+        AdvisorySessionLock::release($conn, self::lockName($tokenName));
         $logger->info('[' . $tokenName . '] ends now');
     }
 
@@ -195,26 +198,11 @@ final class UniqueExecLock
         return self::$conn ??= DbConnection::build();
     }
 
-    private static function beginsPostgres(Connection $conn, string $tokenName, int $timeout): bool
-    {
-        $key = self::lockKey($tokenName);
-        $deadline = microtime(true) + $timeout;
-
-        while (true) {
-            $acquired = (bool) $conn->fetchOne('SELECT pg_try_advisory_lock(?)', [$key]);
-            if ($acquired || microtime(true) >= $deadline) {
-                return $acquired;
-            }
-
-            usleep(100_000);
-        }
-    }
-
     private static function isRunningPostgres(Connection $conn, string $tokenName): bool
     {
         $held = $conn->fetchOne(
             'SELECT 1 FROM pg_locks WHERE locktype = ? AND objsubid = ? AND ((classid::bigint << 32) | objid::bigint) = ?',
-            ['advisory', 1, self::lockKey($tokenName)]
+            ['advisory', 1, AdvisorySessionLock::key(self::lockName($tokenName))]
         );
 
         return $held !== false;
@@ -225,16 +213,5 @@ final class UniqueExecLock
         $prefix = DbCredentials::current()->prefix;
 
         return 'piwigo_exec_' . sha1($prefix . ':unique_exec:' . $tokenName);
-    }
-
-    private static function lockKey(string $tokenName): int
-    {
-        $prefix = DbCredentials::current()->prefix;
-        $rawHash = sha1($prefix . ':unique_exec:' . $tokenName, true);
-
-        /** @var array{1: int} $unpacked */
-        $unpacked = unpack('J', substr($rawHash, 0, 8));
-
-        return $unpacked[1];
     }
 }

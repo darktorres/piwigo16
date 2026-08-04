@@ -133,12 +133,17 @@ jobs:
           coverage: none
           extensions: ${{ env.PHP_EXTENSIONS }}
       - uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
-      # No --abandoned=fail: phpbench/phpbench (dev-only benchmarking tool,
-      # never shipped) requires doctrine/annotations ^2.0, which Composer
-      # flags abandoned with no replacement. Still reported in the log below,
-      # just not escalated to a failure for a transitive dev-only dependency
-      # we don't control.
-      - run: composer audit
+      # --abandoned=report, not the default (verified: Composer's own
+      # `--abandoned` default is "fail", not "report" -- confirmed live,
+      # this job was failing on the abandoned finding below despite this
+      # comment's original intent). phpbench/phpbench (dev-only
+      # benchmarking tool, never shipped) requires doctrine/annotations
+      # ^2.0, which Composer flags abandoned with no replacement. Still
+      # reported in the log below, just not escalated to a failure for a
+      # transitive dev-only dependency we don't control -- real security
+      # advisories still fail the job (--abandoned only affects abandoned-
+      # package reporting, not the vulnerability-advisory exit code).
+      - run: composer audit --abandoned=report
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
       - run: bun install --frozen-lockfile
       # @lhci/cli@0.15.1 (latest, dev-only Lighthouse CLI, never shipped) pins

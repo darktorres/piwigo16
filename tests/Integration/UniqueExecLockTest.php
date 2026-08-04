@@ -106,6 +106,32 @@ final class UniqueExecLockTest extends IntegrationTestCase
     }
 
     /**
+     * Phase 4 Item 18's own stated central claim, per the plan's own
+     * Verification section: a GET_LOCK() lock releases automatically the
+     * instant its owning connection closes -- not just after an explicit
+     * ends() call -- including an abnormal process death, unlike the old
+     * INSERT-IGNORE-row design this replaced (which needed a manual
+     * staleness timeout to ever notice). Never directly proven until now;
+     * every other test here only exercises the explicit-ends() path.
+     */
+    public function test_lock_is_released_automatically_when_its_owning_connection_closes_without_calling_ends(): void
+    {
+        $otherConn = DbConnection::build();
+
+        $acquiredByOther = $otherConn->fetchOne('SELECT GET_LOCK(?, ?)', [$this->lockNameFor($this->token), 1]);
+        self::assertSame(1, $acquiredByOther, 'the other connection must genuinely hold the lock first');
+        self::assertFalse(UniqueExecLock::begins($this->token), 'contended while the other connection is still open');
+
+        // No RELEASE_LOCK() call -- close the connection outright and drop
+        // every reference to it, simulating an abrupt process death rather
+        // than a clean ends() call.
+        $otherConn->close();
+        unset($otherConn);
+
+        self::assertTrue(UniqueExecLock::begins($this->token), 'must be acquirable now that the other connection is gone, with no explicit release');
+    }
+
+    /**
      * Mirrors UniqueExecLock's own private lockName() exactly, so this
      * test's separate connection contends for the real same lock name.
      */

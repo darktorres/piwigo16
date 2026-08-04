@@ -122,7 +122,7 @@ final class TelemetryServiceTest extends IntegrationTestCase
     {
         $payload = $this->service->buildPayload();
 
-        self::assertSame('mysql', $payload->database->driver);
+        self::assertSame($this->dbDriver === 'pgsql' ? 'pgsql' : 'mysql', $payload->database->driver);
         self::assertNotSame('', $payload->database->serverVersion);
     }
 

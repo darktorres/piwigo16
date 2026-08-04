@@ -50,7 +50,12 @@ final class SectionRepositoryTest extends IntegrationTestCase
     {
         $escaped = $this->repo->escapeToken("o'brien");
 
-        self::assertSame("o\\'brien", $escaped);
+        // escapeToken() routes through Connection::quote() -- the real
+        // per-driver quoting mechanism, already fully portable (MySQL's
+        // own backslash-escape vs Postgres's SQL-standard doubled-quote
+        // escape); only this assertion's own expected shape needs to be
+        // driver-aware.
+        self::assertSame($this->dbDriver === 'pgsql' ? "o''brien" : "o\\'brien", $escaped);
         self::assertStringStartsNotWith("'", $escaped);
         self::assertStringEndsNotWith("'", $escaped);
     }

@@ -45,8 +45,13 @@ final class DbInfoTest extends IntegrationTestCase
         $version = $this->dbInfo->version();
 
         self::assertNotSame('', $version);
-        // A real MySQL/MariaDB version string always starts with a digit.
-        self::assertMatchesRegularExpression('/^\d/', $version);
+        // A real MySQL/MariaDB version string always starts with a digit;
+        // PostgreSQL's own SELECT version() output always starts with the
+        // literal "PostgreSQL" instead.
+        self::assertMatchesRegularExpression(
+            $this->dbDriver === 'pgsql' ? '/^PostgreSQL/' : '/^\d/',
+            $version
+        );
     }
 
     /**

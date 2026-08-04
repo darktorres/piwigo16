@@ -139,23 +139,19 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        // DI-phase follow-on to gap-closure Stage 4: CategoryAdminService
-        // now resolves PermissionService via
-        // Bootstrap\CoreDomainAccessor -> Kernel::container(), which this
-        // isolated Integration test (no full RequestBootstrap) wouldn't
-        // otherwise boot.
         Kernel::boot();
 
         $this->conn = DbConnection::build();
+        $permissionService = new PermissionService(
+            new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)),
+            \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class),
+            \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class)
+        );
         $categoryService = new CategoryService(
             \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class),
-            new PermissionService(
-                new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)),
-                \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class),
-                \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class)
-            )
+            $permissionService
         );
-        $this->service = new CategoryAdminService($categoryService);
+        $this->service = new CategoryAdminService($categoryService, $permissionService);
     }
 
     #[\Override]

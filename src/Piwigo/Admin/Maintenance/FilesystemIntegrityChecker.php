@@ -20,11 +20,11 @@ use Piwigo\Core\Lang;
  * IntroSubController, Admin\MaintenanceActionsPageRenderer, Admin\
  * AdminShell, Admin\Maintenance\MaintenanceActionDispatcher) is already
  * container-autowired or takes this via constructor injection -- no shim
- * needed. `CoreDomainAccessor::imageService()`/`CurrentConfig`/`Lang`
- * inside fsQuickCheck()/imagesIntegrity() stay plain (unconverted) static
- * calls, revisited once each of those targets' own phase lands;
- * `CurrentTemplate` and `CurrentConfigService` themselves took real
- * constructor injection once their own phase (5) landed.
+ * needed. `CurrentConfig`/`Lang` inside fsQuickCheck()/imagesIntegrity()
+ * stay plain (unconverted) static calls, revisited once each of those
+ * targets' own phase lands; `CurrentTemplate`/`CurrentConfigService`
+ * (Phase 5) and `ImageService` (Phase 6, CoreDomainAccessor sub-batch)
+ * themselves took real constructor injection once their own phase landed.
  * `CurrentConfigService` (the wrapper), not plain `ConfigService`, despite
  * every real construction site here being HTTP-admin-page-only (no
  * install/CLI timing risk): this class is resolved from the container by
@@ -43,6 +43,7 @@ final class FilesystemIntegrityChecker
     public function __construct(
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly \Piwigo\Config\CurrentConfigService $currentConfigService,
+        private readonly \Piwigo\Image\ImageService $imageService,
     ) {}
 
     /**
@@ -78,7 +79,7 @@ final class FilesystemIntegrityChecker
         $this->currentConfigService->get()
             ->confUpdateParam('fs_quick_check_last_check', date('c'));
 
-        $imageService = \Piwigo\Bootstrap\CoreDomainAccessor::imageService();
+        $imageService = $this->imageService;
 
         $issue1827_ids = array_map(
             static fn (int $v): string => (string) $v,
@@ -147,7 +148,7 @@ final class FilesystemIntegrityChecker
 
     public function imagesIntegrity(): void
     {
-        $imageService = \Piwigo\Bootstrap\CoreDomainAccessor::imageService();
+        $imageService = $this->imageService;
 
         $orphan_image_ids = $imageService->getOrphanImageCategoryLinkIds();
 

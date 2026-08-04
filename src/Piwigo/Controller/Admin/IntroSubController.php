@@ -80,6 +80,10 @@ final class IntroSubController implements AdminSubControllerInterface
         private readonly InstallationStats $installationStats,
         private readonly \Piwigo\Comment\CommentService $commentService,
         private readonly \Piwigo\Activity\ActivityService $activityService,
+        private readonly \Piwigo\Users\PreferencesService $preferencesService,
+        private readonly \Piwigo\Image\ImageService $imageService,
+        private readonly \Piwigo\Category\CategoryService $categoryService,
+        private readonly \Piwigo\Users\UserService $userService,
     ) {}
 
     #[\Override]
@@ -109,7 +113,7 @@ final class IntroSubController implements AdminSubControllerInterface
         // +-----------------------------------------------------------------------+
 
         if (Request\IntroActionRequest::fromGlobals()->isHideNewsletterSubscription) {
-            \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService()
+            $this->preferencesService
                 ->updateParam('show_newsletter_subscription', 'false');
             exit();
         }
@@ -137,7 +141,7 @@ final class IntroSubController implements AdminSubControllerInterface
         $nb_orphans = $this->pageState->nbOrphans; // already calculated in admin.php
 
         if ($this->pageState->nbPhotosTotal >= 100000) { // but has not been calculated on a big gallery, so force it now
-            $nb_orphans = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()
+            $nb_orphans = $this->imageService
                 ->countOrphans();
         }
 
@@ -152,7 +156,7 @@ final class IntroSubController implements AdminSubControllerInterface
         }
 
         // locked album ?
-        $locked_album = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService()->countByVisible(false);
+        $locked_album = $this->categoryService->countByVisible(false);
         if ($locked_album > 0) {
             $locked_album_url = $this->urlService->getRootUrl() . 'admin.php?page=cat_options&section=visible';
 
@@ -173,11 +177,11 @@ final class IntroSubController implements AdminSubControllerInterface
             'intro' => 'intro.tpl',
         ]);
 
-        if (\Piwigo\Config\CurrentConfig::showNewsletterSubscription() and (bool) \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService()->getParam('show_newsletter_subscription', true)) {
+        if (\Piwigo\Config\CurrentConfig::showNewsletterSubscription() and (bool) $this->preferencesService->getParam('show_newsletter_subscription', true)) {
             $register_date = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class)
                 ->findEarliestRegistrationDate();
-            $nb_cats = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService()->countAllCategories();
-            $nb_images = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->getTotalImageCount();
+            $nb_cats = $this->categoryService->countAllCategories();
+            $nb_images = $this->imageService->getTotalImageCount();
 
             // To see the newsletter promote, the account must have 2 weeks ancient, 3 albums created and 30 photos uploaded
             $register_date_str = is_string($register_date) ? $register_date : '';
@@ -463,7 +467,7 @@ final class IntroSubController implements AdminSubControllerInterface
         $picture_ext = \Piwigo\Config\CurrentConfig::pictureExtensions();
 
         // Select files in Image_Table
-        $imageService = \Piwigo\Bootstrap\CoreDomainAccessor::imageService();
+        $imageService = $this->imageService;
 
         foreach ($imageService->getExtensionBreakdown() as $ext_details) {
             $ext = $ext_details['ext'];
@@ -550,7 +554,7 @@ final class IntroSubController implements AdminSubControllerInterface
         $integrityRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity::class);
         $c13y = new CheckIntegrity($integrityRepo, $this->translator, $this->eventDispatcher, $this->pageState, $this->currentTemplate);
         // add internal checks
-        new C13yInternal($this->sessionService, $this->eventDispatcher, $this->pageState)
+        new C13yInternal($this->sessionService, $this->eventDispatcher, $this->pageState, $this->userService)
             ->registerHandlers();
         // check and display
         $c13y->check();

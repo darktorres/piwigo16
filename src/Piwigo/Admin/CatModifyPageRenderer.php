@@ -43,13 +43,11 @@ final class CatModifyPageRenderer
      *
      * @param array<string, mixed> $category
      */
-    public function render(UrlServiceInterface $urlService, array $category, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Activity\ActivityService $activityService): void
+    public function render(UrlServiceInterface $urlService, array $category, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Activity\ActivityService $activityService, \Piwigo\Category\CategoryService $categoryService): void
     {
         $template = $currentTemplate->get();
 
         $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
-
-        $categoryService = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
 
         $eventDispatcher->dispatchNotify(new LocBeginCatModify());
 
@@ -287,7 +285,7 @@ final class CatModifyPageRenderer
         ]);
 
         if (! (bool) $category['is_virtual']) {
-            $category['cat_full_dir'] = $this->getCompleteDir($category_id);
+            $category['cat_full_dir'] = $this->getCompleteDir($category_id, $categoryService);
             $category_full_dir = preg_replace('/\/$/', '', $category['cat_full_dir']);
             $template->assign(
                 [
@@ -361,9 +359,9 @@ final class CatModifyPageRenderer
      * Piwigo files and this category has 22 for identifier
      * getCompleteDir(22) returns "./galleries/pets/rex/1_year_old/"
      */
-    private function getCompleteDir(int|string $category_id): string
+    private function getCompleteDir(int|string $category_id, \Piwigo\Category\CategoryService $categoryService): string
     {
-        return $this->getSiteUrl($category_id) . $this->getLocalDir($category_id);
+        return $this->getSiteUrl($category_id, $categoryService) . $this->getLocalDir($category_id, $categoryService);
     }
 
     /**
@@ -372,7 +370,7 @@ final class CatModifyPageRenderer
      * Piwigo files and this category has 22 for identifier
      * getLocalDir(22) returns "pets/rex/1_year_old/"
      */
-    private function getLocalDir(int|string $category_id): string
+    private function getLocalDir(int|string $category_id, \Piwigo\Category\CategoryService $categoryService): string
     {
         $local_dir = '';
 
@@ -380,7 +378,6 @@ final class CatModifyPageRenderer
         // this used to read as a shortcut is confirmed dead (nothing in the
         // codebase ever populated it) and $page is retired as a channel
         // altogether, so this always takes the DB-lookup path now.
-        $categoryService = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
         $uppercats = $categoryService->getCategoryUppercatsById((int) $category_id);
         if ($uppercats === null) {
             throw new \Exception(__FUNCTION__ . "(): category #{$category_id} not found");
@@ -403,9 +400,9 @@ final class CatModifyPageRenderer
      * retrieving the site url : "http://domain.com/gallery/" or
      * simply "./galleries/"
      */
-    private function getSiteUrl(int|string $category_id): string
+    private function getSiteUrl(int|string $category_id, \Piwigo\Category\CategoryService $categoryService): string
     {
-        $galleries_url = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService()->getGalleriesUrlForCategory($category_id);
+        $galleries_url = $categoryService->getGalleriesUrlForCategory($category_id);
         if ($galleries_url === null) {
             throw new \Exception(__FUNCTION__ . "(): category #{$category_id} not found");
         }

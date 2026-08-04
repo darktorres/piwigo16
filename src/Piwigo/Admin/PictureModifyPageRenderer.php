@@ -53,31 +53,11 @@ final class PictureModifyPageRenderer
         private readonly \Piwigo\Activity\ActivityService $activityService,
         private readonly \Piwigo\Metadata\MetadataService $metadataService,
         private readonly \Piwigo\Rate\RateService $rateService,
+        private readonly UserService $userService,
+        private readonly TagService $tagService,
+        private readonly CategoryService $categoryService,
+        private readonly PermissionService $permissionService,
     ) {}
-
-    private static function userService(): UserService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::userService();
-    }
-
-    private static function tagService(): TagService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::tagService();
-    }
-
-    private static function categoryService(): CategoryService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
-    }
-
-    /**
-     * DRY extraction (Phase 1k DI-chain audit): the same PermissionService
-     * recipe was repeated verbatim at 3 sites in this file.
-     */
-    private static function permissionService(): PermissionService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::permissionService();
-    }
 
     public function render(string $adminPhotoBaseUrl): void
     {
@@ -117,7 +97,7 @@ final class PictureModifyPageRenderer
         }
 
         // represent
-        $represented_albums = self::categoryService()->getCategoryIdsRepresentedByImage($image_id);
+        $represented_albums = $this->categoryService->getCategoryIdsRepresentedByImage($image_id);
 
         // +-------------------------------------------------------------------+
         // |                             delete photo                          |
@@ -136,7 +116,7 @@ final class PictureModifyPageRenderer
             // 2. else use the first reachable linked category
             // 3. redirect to gallery root
 
-            if ((bool) ($custom_context = self::userService()->getEditContext($image_id))) {
+            if ((bool) ($custom_context = $this->userService->getEditContext($image_id))) {
                 // considering we have a context available, we fake one to build the url
                 // and we replace it with the context found in the session for this image_id
                 $this->redirectService->redirect(str_replace('list/1,2', $custom_context, $this->urlService->makeIndexUrl([
@@ -190,7 +170,7 @@ final class PictureModifyPageRenderer
             $this->entityManager->clear();
 
             // time to deal with tags
-            $tagService = self::tagService();
+            $tagService = $this->tagService;
 
             $tag_ids = [];
             $raw_tags_post = $pictureModifyRequest->tagsRaw;
@@ -222,13 +202,13 @@ final class PictureModifyPageRenderer
             if (count($no_longer_thumbnail_for) > 0) {
                 new CategoryService(
                     \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class),
-                    self::permissionService()
+                    $this->permissionService
                 )->setRandomRepresentant($no_longer_thumbnail_for);
             }
 
             $new_thumbnail_for = array_diff($represent_categories, $represented_albums);
             if (count($new_thumbnail_for) > 0) {
-                self::categoryService()->setRepresentativeImageForCategories(
+                $this->categoryService->setRepresentativeImageForCategories(
                     array_values(array_map(intval(...), $new_thumbnail_for)),
                     $image_id
                 );
@@ -261,7 +241,7 @@ final class PictureModifyPageRenderer
                 JOIN {$tagsTable} AS t ON t.id = it.tag_id
             WHERE image_id = :imageId
             SQL;
-        $tag_selection = self::tagService()
+        $tag_selection = $this->tagService
             ->getTagList($query, $htmlRenderer, params: [
                 'imageId' => $image_id,
             ], types: [
@@ -458,7 +438,7 @@ final class PictureModifyPageRenderer
             $image_level = (int) $page['image']['level'];
         }
 
-        if ((bool) ($custom_context = self::userService()->getEditContext($image_id))) {
+        if ((bool) ($custom_context = $this->userService->getEditContext($image_id))) {
             $template->assign('U_JUMPTO', $this->urlService->makePictureUrl([
                 'image_id' => $image_id,
             ]) . '/' . $custom_context);
@@ -472,7 +452,7 @@ final class PictureModifyPageRenderer
                 $authorized_category_ids,
                 explode(
                     ',',
-                    new \Piwigo\Permission\ForbiddenCategoriesCache(self::permissionService(), \Piwigo\Cache\CachePools::permissions())
+                    new \Piwigo\Permission\ForbiddenCategoriesCache($this->permissionService, \Piwigo\Cache\CachePools::permissions())
                         ->getForUser($this->currentUser->get()->id->value, $this->currentUser->get()->status->value)
                 )
             );

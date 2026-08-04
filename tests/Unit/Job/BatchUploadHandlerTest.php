@@ -103,6 +103,16 @@ function batch_upload_handler_test_metadata_service(): \Piwigo\Metadata\Metadata
     return $metadataService;
 }
 
+function batch_upload_handler_test_image_service(): \Piwigo\Image\ImageService
+{
+    $imageService = Kernel::container()->get(\Piwigo\Image\ImageService::class);
+    if (! $imageService instanceof \Piwigo\Image\ImageService) {
+        throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Image\ImageService::class);
+    }
+
+    return $imageService;
+}
+
 beforeEach(function (): void {
     // A real Paths is required, not a bare boot: batch_upload_handler_test_
     // storage_registry() resolves StorageRegistry::class from the
@@ -131,7 +141,7 @@ test('__invoke returns the existing image id and deletes the newly uploaded file
         $sourceFilepath = sys_get_temp_dir() . '/piwigo-batch-upload-handler-test-' . bin2hex(random_bytes(8)) . '.jpg';
         file_put_contents($sourceFilepath, 'duplicate-upload-bytes');
 
-        $handler = new BatchUploadHandler(new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), batch_upload_handler_test_current_logger(), batch_upload_handler_test_storage_registry(), \Piwigo\PluginConfig\EventDispatcher::get(), batch_upload_handler_test_config_service(), batch_upload_handler_test_entity_manager(), batch_upload_handler_test_activity_service(), batch_upload_handler_test_metadata_service());
+        $handler = new BatchUploadHandler(new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), batch_upload_handler_test_current_logger(), batch_upload_handler_test_storage_registry(), \Piwigo\PluginConfig\EventDispatcher::get(), batch_upload_handler_test_config_service(), batch_upload_handler_test_entity_manager(), batch_upload_handler_test_activity_service(), batch_upload_handler_test_metadata_service(), batch_upload_handler_test_image_service());
 
         $imageId = $handler(new BatchUploadJob(
             sourceFilepath: $sourceFilepath,

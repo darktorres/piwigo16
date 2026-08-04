@@ -8,13 +8,10 @@ use Piwigo\Audit\AuditService;
 use Piwigo\Auth\ApiKeyService;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\PasswordService;
-use Piwigo\Category\CategoryCatsRenderer;
-use Piwigo\Category\CategoryDefaultRenderer;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\Kernel;
 use Piwigo\Group\GroupService;
 use Piwigo\Image\ImageService;
-use Piwigo\Permission\ImageVisibilityChecker;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Tag\TagService;
 use Piwigo\Users\PreferencesService;
@@ -135,33 +132,6 @@ final class CoreDomainAccessor
         $service = Kernel::container()->get(AuditService::class);
         if (! $service instanceof AuditService) {
             throw new \LogicException('Container returned an unexpected type for ' . AuditService::class);
-        }
-        return $service;
-    }
-
-    public static function imageVisibilityChecker(): ImageVisibilityChecker
-    {
-        $service = Kernel::container()->get(ImageVisibilityChecker::class);
-        if (! $service instanceof ImageVisibilityChecker) {
-            throw new \LogicException('Container returned an unexpected type for ' . ImageVisibilityChecker::class);
-        }
-        return $service;
-    }
-
-    public static function categoryDefaultRenderer(): CategoryDefaultRenderer
-    {
-        $service = Kernel::container()->get(CategoryDefaultRenderer::class);
-        if (! $service instanceof CategoryDefaultRenderer) {
-            throw new \LogicException('Container returned an unexpected type for ' . CategoryDefaultRenderer::class);
-        }
-        return $service;
-    }
-
-    public static function categoryCatsRenderer(): CategoryCatsRenderer
-    {
-        $service = Kernel::container()->get(CategoryCatsRenderer::class);
-        if (! $service instanceof CategoryCatsRenderer) {
-            throw new \LogicException('Container returned an unexpected type for ' . CategoryCatsRenderer::class);
         }
         return $service;
     }

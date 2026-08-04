@@ -85,22 +85,10 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         private readonly BatchManagerUnitPageRenderer $batchManagerUnitPageRenderer,
         private readonly \Piwigo\Search\SearchService $searchService,
         private readonly \Piwigo\Activity\ActivityService $activityService,
+        private readonly ImageService $imageService,
+        private readonly TagService $tagService,
+        private readonly CategoryService $categoryService,
     ) {}
-
-    private static function imageService(): ImageService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::imageService();
-    }
-
-    private static function tagService(): TagService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::tagService();
-    }
-
-    private static function categoryService(): CategoryService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
-    }
 
     #[\Override]
     public function handle(ServerRequestInterface $request): void
@@ -185,7 +173,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
             $this->batchManagerUnitPageRenderer
                 ->render($cat_elements_id, $start);
         } else {
-            new BatchManagerGlobalPageRenderer($this->redirectService, $this->urlService, $this->currentLogger, $this->sessionService, $this->translator, $this->eventDispatcher, $this->imageStdParams, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService)
+            new BatchManagerGlobalPageRenderer($this->redirectService, $this->urlService, $this->currentLogger, $this->sessionService, $this->translator, $this->eventDispatcher, $this->imageStdParams, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->tagService, $this->categoryService, $this->imageService)
                 ->render($cat_elements_id, $start, $duplicates_on_fields);
         }
     }
@@ -315,7 +303,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
                 // ints here rather than storing TagId objects.
                 $_SESSION['bulk_manager_filter']['tags'] = array_map(
                     static fn (TagId $id): int => $id->value,
-                    self::tagService()->getTagIds($filter_tags, false)
+                    $this->tagService->getTagIds($filter_tags, false)
                 );
 
                 if (isset($post['tag_mode']) and in_array($post['tag_mode'], ['AND', 'OR'], true)) {
@@ -554,8 +542,8 @@ final class BatchManagerSubController implements AdminSubControllerInterface
             $prefilter_result = match ($prefilter) {
                 // getOrphans()/getPhotosNoMd5sum() are existing, already-tested
                 // ImageService methods -- not duplicated into FilterResolver.
-                'no_album' => self::imageService()->getOrphans(),
-                'no_sync_md5sum' => self::imageService()->getPhotosNoMd5sum(),
+                'no_album' => $this->imageService->getOrphans(),
+                'no_sync_md5sum' => $this->imageService->getPhotosNoMd5sum(),
                 default => $filterResolver->resolvePrefilter($prefilter, $bulkFilter, $userId, $confOrderBy),
             };
 
@@ -577,7 +565,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
             }
 
             $categories = isset($bulkFilter['category_recursive'])
-                ? self::categoryService()->getSubcatIds([$category_id])
+                ? $this->categoryService->getSubcatIds([$category_id])
                 : [$category_id];
             $categories = array_values(array_map(intval(...), array_filter($categories, is_numeric(...))));
 
@@ -602,7 +590,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
 
             $filter_tag_mode = is_string($bulkFilter['tag_mode'] ?? null) ? $bulkFilter['tag_mode'] : 'AND';
 
-            $filter_sets[] = self::tagService()
+            $filter_sets[] = $this->tagService
                 ->getImageIdsForTags(
                     array_map(TagId::from(...), $filter_tag_ids),
                     $filter_tag_mode,
@@ -692,7 +680,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         $dimensions = [];
 
         // get all width, height and ratios
-        foreach (self::imageService()->getDistinctDimensions() as $row) {
+        foreach ($this->imageService->getDistinctDimensions() as $row) {
             if (is_numeric($row['width']) && is_numeric($row['height']) && $row['width'] > 0 && $row['height'] > 0) {
                 $widths[] = $row['width'];
                 $heights[] = $row['height'];
@@ -776,7 +764,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         $filesizes = [];
         $filesize = [];
 
-        foreach (self::imageService()->getDistinctFilesizes() as $row) {
+        foreach ($this->imageService->getDistinctFilesizes() as $row) {
             if (is_numeric($row['filesize'])) {
                 $filesizes[] = sprintf('%.1f', (float) $row['filesize'] / 1024.0);
             }

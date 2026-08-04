@@ -37,6 +37,7 @@ final class LanguagesNewPageRenderer
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly \Piwigo\Activity\ActivityService $activityService,
+        private readonly \Piwigo\Users\UserService $userService,
     ) {}
 
     /**
@@ -69,7 +70,7 @@ final class LanguagesNewPageRenderer
         $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger);
         $extension_scanner = new ExtensionScanner();
         $plugin_migration_repo = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class);
-        $extension_lifecycle = new ExtensionLifecycle($extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo, $this->activityService);
+        $extension_lifecycle = new ExtensionLifecycle($extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo, $this->activityService, $this->userService);
 
         // +-----------------------------------------------------------------------+
         // |                           setup check                                 |

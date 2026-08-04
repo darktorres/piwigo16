@@ -33,8 +33,13 @@ function catModifyReflect(string $method, int|string $categoryId): string
 {
     $reflected = new ReflectionMethod(CatModifyPageRenderer::class, $method);
 
+    $categoryService = Kernel::container()->get(\Piwigo\Category\CategoryService::class);
+    if (! $categoryService instanceof \Piwigo\Category\CategoryService) {
+        throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Category\CategoryService::class);
+    }
+
     /** @var string */
-    return $reflected->invoke(new CatModifyPageRenderer(), $categoryId);
+    return $reflected->invoke(new CatModifyPageRenderer(), $categoryId, $categoryService);
 }
 
 test('getLocalDir throws when the category id matches no real row', function (): void {

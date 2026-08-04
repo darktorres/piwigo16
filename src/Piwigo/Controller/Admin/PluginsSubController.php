@@ -61,6 +61,7 @@ final class PluginsSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly ExtensionUpdateChecker $extensionUpdateChecker,
         private readonly PluginsNewPageRenderer $pluginsNewPageRenderer,
+        private readonly \Piwigo\Users\PreferencesService $preferencesService,
     ) {}
 
     #[\Override]
@@ -90,7 +91,7 @@ final class PluginsSubController implements AdminSubControllerInterface
                 ->render('plugins', $tab);
         } else {
             new PluginsInstalledPageRenderer()
-                ->render('plugins', $this->urlService, $this->currentLogger, $this->sessionService, $this->eventDispatcher, $this->currentTemplate);
+                ->render('plugins', $this->urlService, $this->currentLogger, $this->sessionService, $this->eventDispatcher, $this->currentTemplate, $this->preferencesService);
         }
     }
 }

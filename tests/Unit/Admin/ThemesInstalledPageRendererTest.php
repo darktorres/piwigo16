@@ -231,7 +231,30 @@ function themesInstalledLifecycle(): ExtensionLifecycle
 
     $activityRepo = EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class);
 
-    return new ExtensionLifecycle($repo, new PemCatalog(new ZipExtractor(), $currentLogger), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new ConfigService($configRepo, new \Piwigo\PluginConfig\EventDispatcher()), $pluginMigrationRepo, new \Piwigo\Activity\ActivityService($activityRepo));
+    return new ExtensionLifecycle($repo, new PemCatalog(new ZipExtractor(), $currentLogger), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new ConfigService($configRepo, new \Piwigo\PluginConfig\EventDispatcher()), $pluginMigrationRepo, new \Piwigo\Activity\ActivityService($activityRepo), themesInstalledLifecycleUserService());
+}
+
+/**
+ * Same "lazy DBAL connection, never actually queried" reasoning as
+ * themesInstalledLifecycle() itself -- ExtensionLifecycle's
+ * missingParentTheme()/getChildrenThemes() never touch UserService.
+ */
+function themesInstalledLifecycleUserService(): \Piwigo\Users\UserService
+{
+    $conn = DbConnection::build();
+
+    return new \Piwigo\Users\UserService(
+        EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class),
+        EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class),
+        new \Piwigo\Mail\MailService(),
+        new \Piwigo\Activity\ActivityService(EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)),
+        new HtmlService(),
+        $conn,
+        new \Piwigo\Session\SessionService(EntityManagerFactory::build($conn)->getRepository(\Piwigo\Session\SessionEntity::class)),
+        new \Piwigo\PluginConfig\EventDispatcher(),
+        new \Piwigo\Config\DeploymentPolicy(),
+        new \Piwigo\Users\CurrentUser(),
+    );
 }
 
 /**

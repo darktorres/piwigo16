@@ -21,17 +21,7 @@ use Piwigo\Users\UserService;
  */
 final class UserListPageRenderer
 {
-    private static function userService(): UserService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::userService();
-    }
-
-    private static function preferencesService(): PreferencesService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService();
-    }
-
-    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate): void
+    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, UserService $userService, PreferencesService $preferencesService, \Piwigo\Group\GroupService $groupService): void
     {
         $template = $currentTemplate->get();
         $conn = DbConnection::build();
@@ -48,7 +38,7 @@ final class UserListPageRenderer
         $groups = [];
         $groups_for_filter = [];
 
-        foreach (\Piwigo\Bootstrap\CoreDomainAccessor::groupService()->getListWithMemberCounts() as $row) {
+        foreach ($groupService->getListWithMemberCounts() as $row) {
             $groups[$row['id']] = $row['name'];
             $groups_for_filter[] = [
                 'id' => $row['id'],
@@ -59,7 +49,7 @@ final class UserListPageRenderer
 
         $template->assign('groups_for_filter', $groups_for_filter);
 
-        $register_dates = self::userService()->getDistinctRegistrationYearMonths();
+        $register_dates = $userService->getDistinctRegistrationYearMonths();
 
         $template->assign('register_dates', implode(',', $register_dates));
 
@@ -75,7 +65,7 @@ final class UserListPageRenderer
             'user_list' => 'user_list.tpl',
         ]);
 
-        $default_user = self::userService()->getDefaultUserInfo();
+        $default_user = $userService->getDefaultUserInfo();
         if (! is_array($default_user)) {
             \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                 ->fatalError('Default user not found');
@@ -100,7 +90,7 @@ final class UserListPageRenderer
 
         // an admin can't delete other admin/webmaster
         if ($currentUser->get()->status === \Piwigo\Users\UserStatus::Admin) {
-            $admin_ids = array_map(strval(...), self::userService()->getAdminIds());
+            $admin_ids = array_map(strval(...), $userService->getAdminIds());
 
             $protected_users = array_merge($protected_users, $admin_ids);
 
@@ -113,7 +103,7 @@ final class UserListPageRenderer
 
         $user_fields = \Piwigo\Config\CurrentConfig::userFields();
 
-        $owner_username = self::userService()->getUsernameById(\Piwigo\Common\ValueObject\UserId::from($webmaster_id), $user_fields['id'], $user_fields['username'])->value ?? '';
+        $owner_username = $userService->getUsernameById(\Piwigo\Common\ValueObject\UserId::from($webmaster_id), $user_fields['id'], $user_fields['username'])->value ?? '';
 
         // protected_users/password_protected_users mix CurrentUser::get()->id, several $conf
         // ids (already normalized to int above) and $admin_ids (query2array
@@ -130,9 +120,9 @@ final class UserListPageRenderer
                 'NB_IMAGE_PAGE' => $default_user['nb_image_page'],
                 'RECENT_PERIOD' => $default_user['recent_period'],
                 'theme_options' => \Piwigo\Core\ThemeCatalog::getPwgThemes($eventDispatcher),
-                'theme_selected' => self::userService()->getDefaultTheme(),
+                'theme_selected' => $userService->getDefaultTheme(),
                 'language_options' => \Piwigo\Lang\LangService::getLanguages(),
-                'language_selected' => self::userService()->getDefaultLanguage(),
+                'language_selected' => $userService->getDefaultLanguage(),
                 'association_options' => $groups,
                 'protected_users' => implode(',', array_unique($protected_users)),
                 'password_protected_users' => implode(',', array_unique($password_protected_users)),
@@ -159,7 +149,7 @@ final class UserListPageRenderer
         }
 
         $nb_users_by_status = [];
-        foreach (self::userService()->getUserCountsByStatus($guest_id) as $status => $counter) {
+        foreach ($userService->getUserCountsByStatus($guest_id) as $status => $counter) {
             $nb_users_by_status[$status] = [
                 'name' => Lang::t('user_status_' . $status),
                 'counter' => $counter,
@@ -190,7 +180,7 @@ final class UserListPageRenderer
         }
 
         $nb_users_by_level = $level_options;
-        foreach (self::userService()->getUserCountsByLevel($guest_id) as $level => $counter) {
+        foreach ($userService->getUserCountsByLevel($guest_id) as $level => $counter) {
             $nb_users_by_level[$level] = [
                 'name' => Lang::t(sprintf('Level %d', $level)),
                 'counter' => $counter,
@@ -203,7 +193,7 @@ final class UserListPageRenderer
 
         $groups_arr_id = [];
         $groups_arr_name = [];
-        foreach (\Piwigo\Bootstrap\CoreDomainAccessor::groupService()->getAllBasic() as $group) {
+        foreach ($groupService->getAllBasic() as $group) {
             $groups_arr_name[] = '"' . addslashes($group->name) . '"';
             $groups_arr_id[] = (string) $group->id->value;
         }
@@ -212,14 +202,14 @@ final class UserListPageRenderer
         $template->assign('groups_arr_name', implode(',', $groups_arr_name));
         $template->assign('guest_id', $guest_id);
 
-        $template->assign('view_selector', self::preferencesService()->getParam('user-manager-view', 'line'));
+        $template->assign('view_selector', $preferencesService->getParam('user-manager-view', 'line'));
 
-        if (self::preferencesService()->getParam('user-manager-view', 'line') === 'line') {
+        if ($preferencesService->getParam('user-manager-view', 'line') === 'line') {
             // Show 5 users by default
-            $template->assign('pagination', self::preferencesService()->getParam('user-manager-pagination', 5));
+            $template->assign('pagination', $preferencesService->getParam('user-manager-pagination', 5));
         } else {
             // Show 10 users by default
-            $template->assign('pagination', self::preferencesService()->getParam('user-manager-pagination', 10));
+            $template->assign('pagination', $preferencesService->getParam('user-manager-pagination', 10));
         }
 
         if (self::webmasterIdIsLocal()) {

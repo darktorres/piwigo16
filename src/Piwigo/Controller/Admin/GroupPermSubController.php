@@ -22,12 +22,16 @@ final class GroupPermSubController implements AdminSubControllerInterface
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly \Piwigo\Audit\AuditService $auditService,
+        private readonly \Piwigo\Category\CategoryService $categoryService,
+        private readonly \Piwigo\Group\GroupService $groupService,
+        private readonly \Piwigo\Permission\PermissionService $permissionService,
     ) {}
 
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        new GroupPermPageRenderer($this->redirectService, $this->urlService, $this->currentUser, $this->currentTemplate)
+        new GroupPermPageRenderer($this->redirectService, $this->urlService, $this->currentUser, $this->currentTemplate, $this->auditService, $this->categoryService, $this->groupService, $this->permissionService)
             ->render();
     }
 }

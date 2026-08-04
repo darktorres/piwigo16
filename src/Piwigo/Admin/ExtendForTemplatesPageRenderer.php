@@ -29,7 +29,7 @@ use Piwigo\Template\Template;
  */
 final class ExtendForTemplatesPageRenderer
 {
-    public function render(UrlServiceInterface $urlService, ConfigService $configService, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate): void
+    public function render(UrlServiceInterface $urlService, ConfigService $configService, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Category\CategoryService $categoryService): void
     {
         $template = $currentTemplate->get();
 
@@ -70,7 +70,7 @@ final class ExtendForTemplatesPageRenderer
             'tags',
         ];
         /* Add active permalinks */
-        $permalinks = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService()->getActivePermalinks();
+        $permalinks = $categoryService->getActivePermalinks();
         $relevant_parameters = array_merge($relevant_parameters, $permalinks);
 
         /* Link all supported templates to their respective handle */

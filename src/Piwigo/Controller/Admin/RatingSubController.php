@@ -23,12 +23,13 @@ final class RatingSubController implements AdminSubControllerInterface
     public function __construct(
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly \Piwigo\Category\CategoryService $categoryService,
     ) {}
 
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
         new RatingPageRenderer()
-            ->render($this->urlService, $this->currentTemplate);
+            ->render($this->urlService, $this->currentTemplate, $this->categoryService);
     }
 }

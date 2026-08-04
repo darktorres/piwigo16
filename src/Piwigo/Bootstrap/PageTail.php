@@ -44,7 +44,7 @@ final class PageTail
         // (L4) is the one place the concrete L4 implementation gets
         // constructed. Legacy Coupling Retirement Phase 4c: UrlServiceInterface
         // is wired the same way, see PageTailRenderer's own docblock.
-        new PageTailRenderer(new PiwigoInfosSender(self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService()), self::urlService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::pageState(), self::currentTemplate())
+        new PageTailRenderer(new PiwigoInfosSender(self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService()), self::urlService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::pageState(), self::currentTemplate())
             ->render(self::pageState()->requestStart);
     }
 
@@ -58,7 +58,7 @@ final class PageTail
     {
         self::checkForUpdates();
 
-        return new PageTailRenderer(new PiwigoInfosSender(self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService()), self::urlService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::pageState(), self::currentTemplate())
+        return new PageTailRenderer(new PiwigoInfosSender(self::currentLogger(), self::imageStdParams(), self::currentConfigService()->get(), self::installationStats(), self::activityService(), self::userService(), self::imageService()), self::urlService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::pageState(), self::currentTemplate())
             ->renderToString(self::pageState()->requestStart);
     }
 
@@ -174,6 +174,26 @@ final class PageTail
         return $installationStats;
     }
 
+    private static function userService(): \Piwigo\Users\UserService
+    {
+        $userService = \Piwigo\Core\Kernel::container()->get(\Piwigo\Users\UserService::class);
+        if (! $userService instanceof \Piwigo\Users\UserService) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Users\UserService::class);
+        }
+
+        return $userService;
+    }
+
+    private static function imageService(): \Piwigo\Image\ImageService
+    {
+        $imageService = \Piwigo\Core\Kernel::container()->get(\Piwigo\Image\ImageService::class);
+        if (! $imageService instanceof \Piwigo\Image\ImageService) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Image\ImageService::class);
+        }
+
+        return $imageService;
+    }
+
     private static function checkForUpdates(): void
     {
         // ----------------------------------------------- update notification
@@ -195,7 +215,7 @@ final class PageTail
             if ($check_for_updates) {
                 $exec_id = UniqueExecLock::begins('check_for_updates');
                 if ($exec_id !== false) {
-                    new CoreUpdateService(new ZipExtractor(), new RedirectService(), self::urlService(), self::currentConfigService()->get(), \Piwigo\Core\CurrentPaths::get(), self::pageState(), self::currentTemplate(), self::activityService())
+                    new CoreUpdateService(new ZipExtractor(), new RedirectService(), self::urlService(), self::currentConfigService()->get(), \Piwigo\Core\CurrentPaths::get(), self::pageState(), self::currentTemplate(), self::activityService(), self::userService())
                         ->notifyPiwigoNewVersions();
 
                     UniqueExecLock::ends('check_for_updates');

@@ -99,7 +99,11 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
         if (! $activityService instanceof \Piwigo\Activity\ActivityService) {
             throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Activity\ActivityService::class);
         }
-        $this->renderer = new ThemesInstalledPageRenderer(new RedirectService(), $urlService, $this->configService, $currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), CurrentTemplate::current(), $activityService);
+        $userService = Kernel::container()->get(\Piwigo\Users\UserService::class);
+        if (! $userService instanceof \Piwigo\Users\UserService) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Users\UserService::class);
+        }
+        $this->renderer = new ThemesInstalledPageRenderer(new RedirectService(), $urlService, $this->configService, $currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), CurrentTemplate::current(), $activityService, $userService);
 
         $this->fixtureRoot = sys_get_temp_dir() . '/piwigo-themes-installed-integration-' . bin2hex(random_bytes(6)) . '/';
         mkdir($this->fixtureRoot . 'themes', 0o777, true);

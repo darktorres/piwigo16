@@ -49,6 +49,7 @@ final class ThemesInstalledPageRenderer
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly \Piwigo\Activity\ActivityService $activityService,
+        private readonly \Piwigo\Users\UserService $userService,
     ) {}
 
     /**
@@ -73,7 +74,7 @@ final class ThemesInstalledPageRenderer
         $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger);
         $extension_scanner = new ExtensionScanner();
         $plugin_migration_repo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class);
-        $extension_lifecycle = new ExtensionLifecycle($extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo, $this->activityService);
+        $extension_lifecycle = new ExtensionLifecycle($extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo, $this->activityService, $this->userService);
 
         // +-----------------------------------------------------------------------+
         // |                          perform actions                              |
@@ -108,7 +109,7 @@ final class ThemesInstalledPageRenderer
         $fs_themes = $extension_scanner->scan(ExtensionType::Theme, $this->urlService);
         uasort($fs_themes, \Piwigo\Bootstrap\PresentationAccessor::htmlService()->nameCompare(...));
 
-        $default_theme = \Piwigo\Bootstrap\CoreDomainAccessor::userService()
+        $default_theme = $this->userService
             ->getDefaultTheme();
 
         $db_theme_ids = array_keys($extension_repository->findAll(ExtensionType::Theme));

@@ -30,6 +30,11 @@ final class AlbumNotificationPageRenderer
         private readonly Translator $translator,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly \Piwigo\Image\ImageService $imageService,
+        private readonly \Piwigo\Users\UserService $userService,
+        private readonly \Piwigo\Auth\AuthService $authService,
+        private readonly \Piwigo\Group\GroupService $groupService,
+        private readonly \Piwigo\Category\CategoryService $categoryService,
     ) {}
 
     /**
@@ -88,7 +93,7 @@ final class AlbumNotificationPageRenderer
             // a direct-representative check. Not a defect, just a smaller
             // feature than a full recursive lookup would be.
             if ($category['representative_picture_id'] !== null && $category['representative_picture_id'] !== 0) {
-                $element = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->getImageRow($category['representative_picture_id']);
+                $element = $this->imageService->getImageRow($category['representative_picture_id']);
                 if ($element !== null) {
                     $img = [
                         'link' => $this->urlService->makePictureUrl(
@@ -136,7 +141,7 @@ final class AlbumNotificationPageRenderer
                 // private content beyond a public category name/link.
                 $post_user_ids = $albumNotificationSubmit->users;
 
-                $users = \Piwigo\Bootstrap\CoreDomainAccessor::userService()->getNotificationRecipientsByIds($post_user_ids, $user_field_id, $user_field_username, $user_field_email);
+                $users = $this->userService->getNotificationRecipientsByIds($post_user_ids, $user_field_id, $user_field_username, $user_field_email);
                 $usernames = [];
 
                 foreach ($users as $u) {
@@ -151,7 +156,7 @@ final class AlbumNotificationPageRenderer
                     $usernames[] = $u_username;
 
                     $u_status = is_string($u['status']) ? $u['status'] : null;
-                    $authkey = \Piwigo\Bootstrap\CoreDomainAccessor::authService()
+                    $authkey = $this->authService
                         ->createUserAuthKey((int) $u['user_id'], $u_status);
 
                     $user_tpl = $tpl;
@@ -176,7 +181,7 @@ final class AlbumNotificationPageRenderer
                         $user_args['auth_key'] = $authkey['auth_key'];
                     }
 
-                    $user_language = is_string($u['language']) ? $u['language'] : \Piwigo\Bootstrap\CoreDomainAccessor::userService()->getDefaultLanguage();
+                    $user_language = is_string($u['language']) ? $u['language'] : $this->userService->getDefaultLanguage();
                     $user_email = is_string($u['email']) ? $u['email'] : '';
 
                     \Piwigo\Bootstrap\PresentationAccessor::mailService()
@@ -206,7 +211,7 @@ final class AlbumNotificationPageRenderer
                 \Piwigo\Bootstrap\PresentationAccessor::mailService()
                     ->mailGroup($group_id, $args, $tpl);
 
-                $group_name = \Piwigo\Bootstrap\CoreDomainAccessor::groupService()->getName(\Piwigo\Common\ValueObject\GroupId::from($group_id));
+                $group_name = $this->groupService->getName(\Piwigo\Common\ValueObject\GroupId::from($group_id));
 
                 $template->assign(
                     [
@@ -265,7 +270,7 @@ final class AlbumNotificationPageRenderer
 
         $all_group_ids = array_map(
             static fn (\Piwigo\Group\Projection\Group $group): int => $group->id->value,
-            \Piwigo\Bootstrap\CoreDomainAccessor::groupService()->getAllBasic()
+            $this->groupService->getAllBasic()
         );
         // group_ids stays [] (rather than undefined) when the gallery has no
         // groups at all, so the "private album" branch below can safely read it
@@ -278,7 +283,7 @@ final class AlbumNotificationPageRenderer
             if ($category['status'] === 'private') {
                 $template->assign('permission_url', $admin_album_base_url . '-permissions');
 
-                $group_ids = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService()->getAccessGroupIds($category_id);
+                $group_ids = $this->categoryService->getAccessGroupIds($category_id);
             } else {
                 $group_ids = $all_group_ids;
             }
@@ -286,7 +291,7 @@ final class AlbumNotificationPageRenderer
             if (count($group_ids) > 0) {
                 $template->assign(
                     'group_mail_options',
-                    \Piwigo\Bootstrap\CoreDomainAccessor::groupService()->getNamesByIds($group_ids)
+                    $this->groupService->getNamesByIds($group_ids)
                 );
             }
         }
@@ -294,7 +299,7 @@ final class AlbumNotificationPageRenderer
         // all users with status != guest and permitted to this this album (for a
         // perfect search, we should also check that album is not only filled with
         // private photos)
-        $all_user_ids = \Piwigo\Bootstrap\CoreDomainAccessor::userService()->getUserIdsExcludingStatus('guest');
+        $all_user_ids = $this->userService->getUserIdsExcludingStatus('guest');
 
         if ($category['status'] === 'private') {
             $user_ids_access_indirect = [];
@@ -302,13 +307,13 @@ final class AlbumNotificationPageRenderer
             if (count($group_ids) > 0) {
                 $user_ids_access_indirect = array_map(
                     static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
-                    array_column(\Piwigo\Bootstrap\CoreDomainAccessor::groupService()->getMembersByGroupIds($group_ids), 'user_id')
+                    array_column($this->groupService->getMembersByGroupIds($group_ids), 'user_id')
                 );
             }
 
             $user_ids_access_direct = array_map(
                 strval(...),
-                \Piwigo\Bootstrap\CoreDomainAccessor::categoryService()->getAccessUserIds($category_id)
+                $this->categoryService->getAccessUserIds($category_id)
             );
 
             $user_ids_access = array_unique(array_merge($user_ids_access_direct, $user_ids_access_indirect));
@@ -323,7 +328,7 @@ final class AlbumNotificationPageRenderer
             // above) id column the SELECT aliases to "id" -- a literal `id` here
             // would silently filter on the wrong column for a site using a
             // non-default external-auth $conf['user_fields']['id'] mapping.
-            $users = \Piwigo\Bootstrap\CoreDomainAccessor::userService()->getUsernamesByIds(array_values($user_ids));
+            $users = $this->userService->getUsernamesByIds(array_values($user_ids));
 
             $template->assign('user_options', $users);
         }

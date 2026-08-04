@@ -35,11 +35,9 @@ use Piwigo\Template\Template;
  */
 final class AlbumsPageRenderer
 {
-    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, CategoryAdminService $categoryAdminService): void
+    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, CategoryAdminService $categoryAdminService, \Piwigo\Category\CategoryService $categoryService): void
     {
         $template = $currentTemplate->get();
-
-        $categoryService = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
 
         $albums_counter = $categoryService->countAllCategories();
 

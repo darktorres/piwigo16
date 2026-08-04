@@ -59,6 +59,8 @@ final class ActionController implements ControllerInterface
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly HistoryService $historyService,
+        private readonly \Piwigo\Permission\PermissionService $permissionService,
+        private readonly \Piwigo\Image\ImageService $imageService,
     ) {}
 
     #[\Override]
@@ -115,13 +117,13 @@ final class ActionController implements ControllerInterface
 
         // $filter['visible_categories'] and $filter['visible_images']
         // are not used because it's not necessary (filter <> restriction)
-        $permissionCondition = \Piwigo\Bootstrap\CoreDomainAccessor::permissionService()->getSqlConditionFandFAsCondition([
+        $permissionCondition = $this->permissionService->getSqlConditionFandFAsCondition([
             'forbidden_categories' => 'category_id',
             'forbidden_images' => 'image_id',
         ]);
         if (
             ! $is_admin_download
-            and ! \Piwigo\Bootstrap\CoreDomainAccessor::imageService()
+            and ! $this->imageService
                 ->isImageAccessibleViaCategoryWithCondition($image_id, $permissionCondition)
         ) {
             return $this->doError(401, 'Access denied');

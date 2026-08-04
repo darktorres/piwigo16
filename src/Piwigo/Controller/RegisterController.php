@@ -41,6 +41,9 @@ final class RegisterController implements ControllerInterface
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly \Piwigo\Users\UserService $userService,
+        private readonly \Piwigo\Audit\AuditService $auditService,
+        private readonly \Piwigo\Auth\AuthService $authService,
     ) {}
 
     #[\Override]
@@ -117,7 +120,7 @@ final class RegisterController implements ControllerInterface
                 // "someone tried to register your username" email instead of
                 // the requester ever seeing an error here).
                 $conn = DbConnection::build();
-                $userService = \Piwigo\Bootstrap\CoreDomainAccessor::userService();
+                $userService = $this->userService;
                 $registration_result = $userService
                     ->registerUser(
                         $post_login,
@@ -137,7 +140,7 @@ final class RegisterController implements ControllerInterface
                 // user themselves (self-registration has no separate acting
                 // admin); only the username is recorded, never the password.
                 if ($new_user_id !== null) {
-                    \Piwigo\Bootstrap\CoreDomainAccessor::auditService()
+                    $this->auditService
                         ->record($new_user_id, 'create', 'user', $new_user_id, null, [
                             'username' => $post_login,
                         ]);
@@ -174,7 +177,7 @@ final class RegisterController implements ControllerInterface
                             $userService->buildUser(\Piwigo\Common\ValueObject\UserId::from($new_user_id))
                         ));
                         $this->currentUser->markRealUserResolved();
-                        \Piwigo\Bootstrap\CoreDomainAccessor::authService()
+                        $this->authService
                             ->logUser($new_user_id, false);
                     }
                     $this->redirectService->redirect($this->urlService->makeIndexUrl());

@@ -57,12 +57,10 @@ final class ProfileController implements ControllerInterface
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly EntityManagerInterface $entityManager,
         private readonly \Piwigo\Activity\ActivityService $activityService,
+        private readonly UserService $userService,
+        private readonly \Piwigo\Auth\PasswordService $passwordService,
+        private readonly \Piwigo\Auth\AuthService $authService,
     ) {}
-
-    private static function userService(): UserService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::userService();
-    }
 
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
@@ -103,7 +101,7 @@ final class ProfileController implements ControllerInterface
             }
 
             $this->currentUser->updateLanguage($cookie_lang);
-            self::userService()->updateInfosForUser($this->currentUser->get()->id, [
+            $this->userService->updateInfosForUser($this->currentUser->get()->id, [
                 'language' => $cookie_lang,
             ]);
             $this->entityManager->clear();
@@ -129,7 +127,7 @@ final class ProfileController implements ControllerInterface
         // down to $fields so no extra column (activation_key included)
         // leaks into the DEFAULT_USER_VALUES template assignment below,
         // matching this method's own original raw-query column list.
-        $default_user = self::userService()->getDefaultUserInfo();
+        $default_user = $this->userService->getDefaultUserInfo();
         $default_user = is_array($default_user) ? array_intersect_key($default_user, array_flip($fields)) : [];
 
         // profile.tpl's inline JS (preferencesDefaultValues) interpolates
@@ -154,7 +152,7 @@ final class ProfileController implements ControllerInterface
             $userdata = array_merge($userdata, $default_user);
         }
 
-        $profileFormHandler = new ProfileFormHandler($this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService);
+        $profileFormHandler = new ProfileFormHandler($this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->userService, $this->passwordService, $this->authService);
 
         $page_errors = $this->pageState->errors;
         $profileFormHandler->saveFromPost($userdata, $page_errors);

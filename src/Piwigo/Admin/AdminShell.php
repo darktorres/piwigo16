@@ -62,16 +62,10 @@ final class AdminShell
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly \Piwigo\Comment\CommentService $commentService,
+        private readonly ImageService $imageService,
+        private readonly \Piwigo\Users\PreferencesService $preferencesService,
+        private readonly \Piwigo\Users\UserService $userService,
     ) {}
-
-    /**
-     * DRY extraction (Phase 1k DI-chain audit): the same ImageService
-     * recipe was repeated verbatim at 2 sites in this file.
-     */
-    private static function imageService(): ImageService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::imageService();
-    }
 
     /**
      * Workstream C3, catch point 3: runDispatch() below is the entire
@@ -152,7 +146,7 @@ final class AdminShell
         // theme changer
         if ($adminShellRequest->changeThemePresent) {
             $admin_themes = ['roma', 'clear'];
-            $admin_theme_param = \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService()
+            $admin_theme_param = $this->preferencesService
                 ->getParam('admin_theme', \Piwigo\Config\CurrentConfig::adminTheme());
             $admin_theme_array = [is_string($admin_theme_param) ? $admin_theme_param : \Piwigo\Config\CurrentConfig::adminTheme()];
             $result = array_diff(
@@ -164,7 +158,7 @@ final class AdminShell
                 $result
             );
 
-            \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService()
+            $this->preferencesService
                 ->updateParam('admin_theme', $new_admin_theme);
 
             $url_params = [];
@@ -186,7 +180,7 @@ final class AdminShell
 
         // sync_user() is only useful when external authentication is activated
         if ($this->deploymentPolicy->externalAuthentification) {
-            \Piwigo\Bootstrap\CoreDomainAccessor::userService()->syncUsers();
+            $this->userService->syncUsers();
         }
 
         // +-------------------------------------------------------------------+
@@ -353,7 +347,7 @@ final class AdminShell
 
         // any photos with no md5sum ?
         if (in_array($page_slug, ['site_update', 'batch_manager'], true)) {
-            $imageService = self::imageService();
+            $imageService = $this->imageService;
 
             $nb_no_md5sum = count($imageService->getPhotosNoMd5sum());
 
@@ -365,9 +359,9 @@ final class AdminShell
         // only calculate number of orphans on all pages if the number of images is "not huge"
         $nb_orphans = 0;
 
-        $nb_photos_total = self::imageService()->getTotalImageCount();
+        $nb_photos_total = $this->imageService->getTotalImageCount();
         if ($nb_photos_total < 100000) { // 100k is already a big gallery
-            $nb_orphans = self::imageService()
+            $nb_orphans = $this->imageService
                 ->countOrphans();
         }
         $this->pageState->setNbPhotosTotal($nb_photos_total);
@@ -414,9 +408,9 @@ final class AdminShell
 
         $whats_new_major_version = \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION);
 
-        if ((bool) \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService()->getParam('show_whats_new_' . $whats_new_major_version, true) and $this->configService->pwgIsDbconfWriteable()) {
+        if ((bool) $this->preferencesService->getParam('show_whats_new_' . $whats_new_major_version, true) and $this->configService->pwgIsDbconfWriteable()) {
             if ($this->currentUser->get()->rawAttributes['registration_date'] > \Piwigo\Config\CurrentConfig::lastMajorUpdate()) {
-                \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService()
+                $this->preferencesService
                     ->updateParam('show_whats_new_' . $whats_new_major_version, false);
             } else {
                 // purge old whats_new_*
@@ -431,7 +425,7 @@ final class AdminShell
                 }
 
                 if (count($userprefs_params_to_delete) > 0) {
-                    \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService()
+                    $this->preferencesService
                         ->deleteParam($userprefs_params_to_delete);
                 }
 

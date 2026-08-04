@@ -25,12 +25,15 @@ final class UserListSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly \Piwigo\Users\UserService $userService,
+        private readonly \Piwigo\Users\PreferencesService $preferencesService,
+        private readonly \Piwigo\Group\GroupService $groupService,
     ) {}
 
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
         new UserListPageRenderer()
-            ->render($this->urlService, $this->coreTabs, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate);
+            ->render($this->urlService, $this->coreTabs, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->userService, $this->preferencesService, $this->groupService);
     }
 }

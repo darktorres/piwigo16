@@ -81,6 +81,7 @@ final class UploadService
         private readonly EntityManagerInterface $entityManager,
         private readonly \Piwigo\Activity\ActivityService $activityService,
         private readonly \Piwigo\Metadata\MetadataService $metadataService,
+        private readonly \Piwigo\Image\ImageService $imageService,
     ) {}
 
     /**
@@ -267,7 +268,7 @@ final class UploadService
 
         // we only try to detect duplicate on a new image, not when updating an existing image
         if (! isset($image_id) and \Piwigo\Config\CurrentConfig::uploadDetectDuplicate()) {
-            $images_found = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->getIdsByMd5sum($md5sum);
+            $images_found = $this->imageService->getIdsByMd5sum($md5sum);
 
             if (count($images_found) > 0) {
                 $image_id = $images_found[0];
@@ -291,7 +292,7 @@ final class UploadService
 
         if (isset($image_id)) {
             // this photo already exists, we update it
-            $existing_paths = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->getPathsForIds([$image_id]);
+            $existing_paths = $this->imageService->getPathsForIds([$image_id]);
             foreach ($existing_paths as $row) {
                 $file_path = $row['path'];
             }
@@ -319,7 +320,7 @@ final class UploadService
             $file_path = \Piwigo\Core\CurrentPaths::get()->root . $file_path;
 
             // delete all physical files related to the photo (thumbnail, web site, HD)
-            \Piwigo\Bootstrap\CoreDomainAccessor::imageService()
+            $this->imageService
                 ->deleteElementFiles([$image_id], $urlService);
         } else {
             // this photo is new
@@ -506,7 +507,7 @@ final class UploadService
                 $update['level'] = $level;
             }
 
-            \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->updateFields($image_id, $update);
+            $this->imageService->updateFields($image_id, $update);
         } else {
             // database registration
             $file = $original_filename ?? basename($file_path);
@@ -539,7 +540,7 @@ final class UploadService
                 $insert['representative_ext'] = $representative_ext;
             }
 
-            $image_id = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->insertImage($insert);
+            $image_id = $this->imageService->insertImage($insert);
             $this->activityService
                 ->record('photo', $image_id, 'add');
         }
@@ -565,7 +566,7 @@ final class UploadService
         // optional -- but this query never selected `file`, so every real
         // addUploadedFile() call (new photo or update) hit that warning
         // right here, not just the update branch.
-        $image_infos = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->getImageRow($image_id);
+        $image_infos = $this->imageService->getImageRow($image_id);
         if ($image_infos === null) {
             throw new \Exception(__METHOD__ . '(): image #' . $image_id . ' not found right after being saved');
         }
@@ -597,7 +598,7 @@ final class UploadService
 
         if (! \Piwigo\Config\CurrentConfig::loungeActive()) {
             // check if we need to use the lounge from now
-            $nb_photos = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->getTotalImageCount();
+            $nb_photos = $this->imageService->getTotalImageCount();
             if ($nb_photos >= \Piwigo\Config\CurrentConfig::loungeActivateThreshold()) {
                 $this->configService->confUpdateParam('lounge_active', true, true);
             }
@@ -605,7 +606,7 @@ final class UploadService
 
         if (isset($categories) and count($categories) > 0) {
             $imageConn = DbConnection::build();
-            $imageService = \Piwigo\Bootstrap\CoreDomainAccessor::imageService();
+            $imageService = $this->imageService;
 
             if (\Piwigo\Config\CurrentConfig::loungeActive()) {
                 // fillLounge() requires int keys for $categories; a WS param
@@ -718,7 +719,7 @@ final class UploadService
             throw new ImageProcessingException('[' . __METHOD__ . '] unexpected format extension "' . $format_ext . '" (authorized extensions: ' . implode(', ', $authorized_format_exts) . ')');
         }
 
-        $images = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->getPathsForIds([$format_of]);
+        $images = $this->imageService->getPathsForIds([$format_of]);
 
         if (! isset($images[0])) {
             throw new ImageProcessingException('[' . __METHOD__ . '] this photo does not exist in the database');
@@ -767,13 +768,13 @@ final class UploadService
 
         $filesize = (int) $file_infos['filesize'];
 
-        $existing_format_id = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->getFormatIdByImageAndExt((int) $format_of, $format_ext);
+        $existing_format_id = $this->imageService->getFormatIdByImageAndExt((int) $format_of, $format_ext);
         if ($existing_format_id !== null) {
-            \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->updateFormatFilesize($existing_format_id, $filesize);
+            $this->imageService->updateFormatFilesize($existing_format_id, $filesize);
             $format_id = $existing_format_id;
             $add_status = 'update';
         } else {
-            $format_id = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->insertFormat((int) $format_of, $format_ext, $filesize);
+            $format_id = $this->imageService->insertFormat((int) $format_of, $format_ext, $filesize);
             $add_status = 'add';
         }
 

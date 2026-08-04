@@ -60,17 +60,9 @@ final class CommentsController implements ControllerInterface
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly PermissionService $permissionService,
+        private readonly CategoryService $categoryService,
     ) {}
-
-    private static function permissionService(): PermissionService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::permissionService();
-    }
-
-    private static function categoryService(): CategoryService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
-    }
 
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
@@ -185,7 +177,7 @@ final class CommentsController implements ControllerInterface
         // which category to filter on ?
         $cat_id = $commentsRequest->catId;
         if ($cat_id !== null) {
-            $category_ids = self::categoryService()->getSubcatIds([$cat_id]);
+            $category_ids = $this->categoryService->getSubcatIds([$cat_id]);
             if ($category_ids === []) {
                 $category_ids = [-1];
             }
@@ -284,7 +276,7 @@ final class CommentsController implements ControllerInterface
             $whereClauses[] = new SqlCondition('validated=1');
         }
 
-        $whereClauses[] = self::permissionService()->getSqlConditionFandFAsCondition([
+        $whereClauses[] = $this->permissionService->getSqlConditionFandFAsCondition([
             'forbidden_categories' => 'category_id',
             'visible_categories' => 'category_id',
             'visible_images' => 'ic.image_id',
@@ -408,7 +400,7 @@ final class CommentsController implements ControllerInterface
         $blockname = 'categories';
 
         $categoriesTable = Tables::categories();
-        $categoryCondition = self::permissionService()->getSqlConditionFandFAsCondition([
+        $categoryCondition = $this->permissionService->getSqlConditionFandFAsCondition([
             'forbidden_categories' => 'id',
             'visible_categories' => 'id',
         ]);
@@ -418,7 +410,7 @@ final class CommentsController implements ControllerInterface
             FROM {$categoriesTable}
             {$categoryConditionSql}
             SQL;
-        self::categoryService()
+        $this->categoryService
             ->displaySelectCatWrapper($query, [$commentsRequest->catDisplay], $blockname, \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $template, true, $categoryCondition->parameters, $categoryCondition->types);
 
         // Filter on recent comments...
@@ -507,7 +499,7 @@ final class CommentsController implements ControllerInterface
 
             // retrieving category informations
             $categories = array_column(
-                self::categoryService()->getCategoriesByIds(array_map(intval(...), $category_ids)),
+                $this->categoryService->getCategoriesByIds(array_map(intval(...), $category_ids)),
                 null,
                 'id'
             );

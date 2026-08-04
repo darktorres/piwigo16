@@ -17,6 +17,11 @@ final class InstallationStats
     public function __construct(
         private \Piwigo\Rate\RateService $rateService,
         private \Piwigo\History\HistoryService $historyService,
+        private \Piwigo\Image\ImageService $imageService,
+        private \Piwigo\Category\CategoryService $categoryService,
+        private \Piwigo\Tag\TagService $tagService,
+        private \Piwigo\Users\UserService $userService,
+        private \Piwigo\Group\GroupService $groupService,
     ) {}
 
     /**
@@ -27,17 +32,17 @@ final class InstallationStats
      */
     public function getGeneralStatistics(): array
     {
-        $nb_photos = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->getTotalImageCount();
-        $nb_categories = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService()->countAllCategories();
-        $nb_tags = \Piwigo\Bootstrap\CoreDomainAccessor::tagService()->countAll();
-        $nb_image_tag = \Piwigo\Bootstrap\CoreDomainAccessor::tagService()->countAllImageTagLinks();
-        $nb_users = \Piwigo\Bootstrap\CoreDomainAccessor::userService()->getTotalUserCount();
-        $nb_admins = count(\Piwigo\Bootstrap\CoreDomainAccessor::userService()->getAdminIds());
-        $nb_groups = \Piwigo\Bootstrap\CoreDomainAccessor::groupService()->countAll();
+        $nb_photos = $this->imageService->getTotalImageCount();
+        $nb_categories = $this->categoryService->countAllCategories();
+        $nb_tags = $this->tagService->countAll();
+        $nb_image_tag = $this->tagService->countAllImageTagLinks();
+        $nb_users = $this->userService->getTotalUserCount();
+        $nb_admins = count($this->userService->getAdminIds());
+        $nb_groups = $this->groupService->countAll();
         $nb_rates = $this->rateService->countAll();
         $nb_views = $this->historyService->getTotalPageViews();
-        $images_disk_usage = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->getTotalFilesize();
-        $format_stats = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->getFormatCountAndSize();
+        $images_disk_usage = $this->imageService->getTotalFilesize();
+        $format_stats = $this->imageService->getFormatCountAndSize();
         $nb_formats = $format_stats['count'];
         $formats_disk_usage = $format_stats['sum'];
 
@@ -73,15 +78,15 @@ final class InstallationStats
         // to have an installation prior to this "origin of times"
         $piwigo_origins = '2001-09-01 00:00:00';
 
-        $candidate = \Piwigo\Bootstrap\CoreDomainAccessor::userService()->getRegistrationDateById(2);
+        $candidate = $this->userService->getRegistrationDateById(2);
 
         if (in_array($candidate, [null, false, 0, '0', '', []], true) or strtotime($candidate) < strtotime($piwigo_origins)) {
-            $candidate = \Piwigo\Bootstrap\CoreDomainAccessor::userService()->getMinRegistrationDateAfter($piwigo_origins);
+            $candidate = $this->userService->getMinRegistrationDateAfter($piwigo_origins);
         }
 
         if (in_array($candidate, [null, false, 0, '0', '', []], true) or strtotime($candidate) < strtotime($piwigo_origins)) {
             // let's find another candidate
-            $candidate = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->getEarliestDateAvailable();
+            $candidate = $this->imageService->getEarliestDateAvailable();
         }
 
         return $candidate;

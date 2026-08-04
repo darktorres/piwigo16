@@ -111,17 +111,10 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         private readonly EntityManagerInterface $entityManager,
         private readonly \Piwigo\Activity\ActivityService $activityService,
         private readonly \Piwigo\Metadata\MetadataService $metadataService,
+        private readonly PermissionService $permissionService,
+        private readonly CategoryService $categoryService,
+        private readonly \Piwigo\Tag\TagService $tagService,
     ) {}
-
-    private static function permissionService(): PermissionService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::permissionService();
-    }
-
-    private static function categoryService(): CategoryService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
-    }
 
     private function imageService(Connection $conn): ImageService
     {
@@ -303,11 +296,11 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             // common shape for both origins; individual fields are narrowed with
             // is_string()/is_int() at each point of use below.
             /** @var array<int|string, array<string, mixed>> $db_categories */
-            $db_categories = array_column(self::categoryService()->getSyncCandidatesForSite($site_id, $extra_condition, $extra_params, $extra_types), null, 'id');
+            $db_categories = array_column($this->categoryService->getSyncCandidatesForSite($site_id, $extra_condition, $extra_params, $extra_types), null, 'id');
 
             // get categort full directories in an array for comparison with file
             // system directory tree
-            $db_fulldirs = self::categoryService()->getFulldirs(array_map(intval(...), array_keys($db_categories)));
+            $db_fulldirs = $this->categoryService->getFulldirs(array_map(intval(...), array_keys($db_categories)));
 
             // what is the base directory to search file system sub-directories ?
             if (isset($post['cat']) and is_numeric($post['cat'])) {
@@ -328,12 +321,12 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                 'NULL' => 1,
             ];
 
-            foreach (self::categoryService()->getAllIds() as $row_id) {
+            foreach ($this->categoryService->getAllIds() as $row_id) {
                 $next_rank[$row_id] = 1;
             }
 
             // let's see if some categories already have some sub-categories...
-            foreach (self::categoryService()->getNextRanksByParent() as $row) {
+            foreach ($this->categoryService->getNextRanksByParent() as $row) {
                 // for the id_uppercat NULL, we write 'NULL' and not the empty string
                 if (! isset($row['id_uppercat']) or $row['id_uppercat'] === '') {
                     $row['id_uppercat'] = 'NULL';
@@ -350,7 +343,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             }
 
             // next category id available
-            $next_id = self::categoryService()->getNextId();
+            $next_id = $this->categoryService->getNextId();
 
             // retrieve sub-directories fulldirs from the site reader
             $fs_fulldirs = $site_reader->get_full_directories($basedir);
@@ -448,7 +441,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                         'id', 'dir', 'name', 'site_id', 'id_uppercat', 'uppercats', 'commentable',
                         'visible', 'status', 'rank', 'global_rank',
                     ];
-                    self::categoryService()->massInsertCategories($dbfields, $inserts);
+                    $this->categoryService->massInsertCategories($dbfields, $inserts);
 
                     // add default permissions to categories
                     $category_ids = [];
@@ -501,11 +494,11 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                                 }
                             }
                         }
-                        self::categoryService()->massInsertGroupAccess($insert_granted_grps);
+                        $this->categoryService->massInsertGroupAccess($insert_granted_grps);
                         $insert_granted_users = array_values(array_unique($insert_granted_users, SORT_REGULAR));
-                        self::permissionService()->massInsertUserAccess($insert_granted_users, ignore: false);
+                        $this->permissionService->massInsertUserAccess($insert_granted_users, ignore: false);
                     } else {
-                        self::permissionService()
+                        $this->permissionService
                             ->addPermissionOnCategory($category_ids, array_map(
                                 static fn (\Piwigo\Common\ValueObject\UserId $id): int => $id->value,
                                 \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class)->findAdminIds()
@@ -537,7 +530,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
 
             if (count($to_delete) > 0) {
                 if (! $simulate) {
-                    self::categoryService()->deleteCategories($to_delete, $this->activityService, $this->urlService, $this->sessionService, $this->eventDispatcher);
+                    $this->categoryService->deleteCategories($to_delete, $this->activityService, $this->urlService, $this->sessionService, $this->eventDispatcher);
                     foreach ($to_delete_derivative_dirs as $to_delete_dir) {
                         if (is_dir($to_delete_dir)) {
                             new DerivativeCacheService()
@@ -791,7 +784,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             and ($post['sync'] === 'dirs' or $post['sync'] === 'files')
             and ! $general_failure) {
             if (! $simulate) {
-                $syncCategoryService = self::categoryService();
+                $syncCategoryService = $this->categoryService;
 
                 $start = \Piwigo\Core\TimingHelper::getMoment();
                 $syncCategoryService->updateCategory('all');
@@ -910,7 +903,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             $datas = [];
             $tags_of = [];
 
-            $tagService = \Piwigo\Bootstrap\CoreDomainAccessor::tagService();
+            $tagService = $this->tagService;
 
             foreach ($files as $id => $element_infos) {
                 $data = $site_reader->get_element_metadata($element_infos);
@@ -1062,7 +1055,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             FROM {$categoriesTable}
             WHERE site_id = :siteId
             SQL;
-        self::categoryService()->displaySelectCatWrapper(
+        $this->categoryService->displaySelectCatWrapper(
             $query,
             $cat_selected,
             'category_options',

@@ -50,6 +50,91 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
 
     private MaintenanceActionDispatcher $dispatcher;
 
+    /**
+     * Never actually invoked -- this suite's own docblock already documents
+     * that the `categories`/`images` dispatch cases (the only 2 that reach
+     * FilesystemIntegrityChecker::imagesIntegrity(), and by extension this
+     * ImageService) need a legacy $mysqli bootstrap this suite doesn't set
+     * up, so they're verified live instead. A type-satisfying instance is
+     * enough here, same lazy-DBAL-repository reasoning as this file's own
+     * other throwaway constructor args.
+     */
+    private function maintenanceActionDispatcherTestImageService(): \Piwigo\Image\ImageService
+    {
+        return new \Piwigo\Image\ImageService(
+            \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class),
+            $this->maintenanceActionDispatcherTestActivityService(),
+            new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class)),
+            new \Piwigo\PluginConfig\EventDispatcher(),
+        );
+    }
+
+    /**
+     * Never actually invoked -- same reasoning as
+     * maintenanceActionDispatcherTestImageService(): the dispatch cases that
+     * reach it (`lock_gallery`/`unlock_gallery`/`categories`/`images` and
+     * the final `record()` call) are all verified live, not via this suite.
+     */
+    private function maintenanceActionDispatcherTestActivityService(): \Piwigo\Activity\ActivityService
+    {
+        return new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class));
+    }
+
+    /**
+     * Never actually invoked -- same reasoning as
+     * maintenanceActionDispatcherTestImageService() (only the `images` case
+     * reaches it, verified live).
+     */
+    private function maintenanceActionDispatcherTestRateService(): \Piwigo\Rate\RateService
+    {
+        return new \Piwigo\Rate\RateService(
+            \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Rate\RateEntity::class),
+            new \Piwigo\Auth\CookieService(),
+            new \Piwigo\PluginConfig\EventDispatcher(),
+            new \Piwigo\Users\CurrentUser(),
+        );
+    }
+
+    private function maintenanceActionDispatcherTestPermissionService(): \Piwigo\Permission\PermissionService
+    {
+        $conn = DbConnection::build();
+
+        return new \Piwigo\Permission\PermissionService(
+            new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
+            \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class),
+            \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class),
+        );
+    }
+
+    /**
+     * Never actually invoked -- same reasoning as
+     * maintenanceActionDispatcherTestImageService() (only the
+     * `categories`/`images` cases reach it, verified live).
+     */
+    private function maintenanceActionDispatcherTestCategoryService(): \Piwigo\Category\CategoryService
+    {
+        return new \Piwigo\Category\CategoryService(
+            \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Category\CategoryEntity::class),
+            $this->maintenanceActionDispatcherTestPermissionService(),
+        );
+    }
+
+    /**
+     * Never actually invoked -- same reasoning as
+     * maintenanceActionDispatcherTestImageService() (only
+     * `delete_orphan_tags` reaches it, verified live).
+     */
+    private function maintenanceActionDispatcherTestTagService(): \Piwigo\Tag\TagService
+    {
+        return new \Piwigo\Tag\TagService(
+            \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Tag\TagEntity::class),
+            $this->maintenanceActionDispatcherTestPermissionService(),
+            $this->maintenanceActionDispatcherTestActivityService(),
+            new \Piwigo\PluginConfig\EventDispatcher(),
+            new \Piwigo\Users\CurrentUser(),
+        );
+    }
+
     #[\Override]
     protected function setUp(): void
     {
@@ -85,7 +170,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
         $configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher());
-        $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService(), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), $configService, new FilesystemIntegrityChecker(CurrentTemplate::current(), CurrentConfigService::current()), new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class)), new Translator(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), CurrentTemplate::current(), new \Piwigo\Admin\Maintenance\DbMaintenanceRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Db\DbCredentials::current()));
+        $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService(), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), $configService, new FilesystemIntegrityChecker(CurrentTemplate::current(), CurrentConfigService::current(), $this->maintenanceActionDispatcherTestImageService()), new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class)), new Translator(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), CurrentTemplate::current(), new \Piwigo\Admin\Maintenance\DbMaintenanceRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Db\DbCredentials::current()), $this->maintenanceActionDispatcherTestActivityService(), $this->maintenanceActionDispatcherTestRateService(), $this->maintenanceActionDispatcherTestCategoryService(), $this->maintenanceActionDispatcherTestTagService());
     }
 
     #[\Override]
@@ -466,13 +551,17 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             new RedirectService(),
             new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()),
             $configService,
-            new FilesystemIntegrityChecker(CurrentTemplate::current(), CurrentConfigService::current()),
+            new FilesystemIntegrityChecker(CurrentTemplate::current(), CurrentConfigService::current(), $this->maintenanceActionDispatcherTestImageService()),
             new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class)),
             new Translator(),
             new \Piwigo\PluginConfig\EventDispatcher(),
             \Piwigo\Core\PageState::current(),
             CurrentTemplate::current(),
             new \Piwigo\Admin\Maintenance\DbMaintenanceRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Db\DbCredentials::current()),
+            $this->maintenanceActionDispatcherTestActivityService(),
+            $this->maintenanceActionDispatcherTestRateService(),
+            $this->maintenanceActionDispatcherTestCategoryService(),
+            $this->maintenanceActionDispatcherTestTagService(),
             new \Piwigo\Cache\PersistentFileCache(),
         );
 

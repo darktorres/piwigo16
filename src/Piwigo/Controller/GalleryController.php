@@ -73,17 +73,11 @@ final class GalleryController implements ControllerInterface
         private readonly \Piwigo\Section\SectionPopulator $sectionPopulator,
         private readonly \Piwigo\Search\SearchFilterRenderer $searchFilterRenderer,
         private readonly \Piwigo\History\HistoryService $historyService,
+        private readonly CategoryService $categoryService,
+        private readonly TagService $tagService,
+        private readonly \Piwigo\Category\CategoryCatsRenderer $categoryCatsRenderer,
+        private readonly \Piwigo\Category\CategoryDefaultRenderer $categoryDefaultRenderer,
     ) {}
-
-    private static function categoryService(): CategoryService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
-    }
-
-    private static function tagService(): TagService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::tagService();
-    }
 
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
@@ -115,7 +109,7 @@ final class GalleryController implements ControllerInterface
 
         // access authorization check
         if ($section_context->category !== null && is_numeric($section_context->category['id'] ?? null)) {
-            self::categoryService()->checkRestrictions((int) $section_context->category['id'], \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService, $this->currentUser);
+            $this->categoryService->checkRestrictions((int) $section_context->category['id'], \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService, $this->currentUser);
         }
         if ($page_start > 0 && $page_start >= count($page_items)) {
             \Piwigo\Bootstrap\PresentationAccessor::htmlService()
@@ -132,8 +126,8 @@ final class GalleryController implements ControllerInterface
         // straight into PageHeaderRenderer::render() below) -- no other
         // file reads $GLOBALS['title']. Plain local, not global.
 
-        $tagService = self::tagService();
-        $categoryService = self::categoryService();
+        $tagService = $this->tagService;
+        $categoryService = $this->categoryService;
 
         $this->eventDispatcher->dispatchNotify(new LocBeginIndex());
 
@@ -513,12 +507,12 @@ final class GalleryController implements ControllerInterface
           and ($section_context->section === 'recent_cats' or $section_context->section === 'categories')
           and ($section_context->category === null or $categoryCountCategories === null or $categoryCountCategories > 0)
         ) {
-            \Piwigo\Bootstrap\CoreDomainAccessor::categoryCatsRenderer()->render($section_context->section, $section_context->category, $section_context->startcat);
+            $this->categoryCatsRenderer->render($section_context->section, $section_context->category, $section_context->startcat);
         }
 
         $slideshow_url = null;
         if ($page_items !== []) {
-            $slideshow_url = \Piwigo\Bootstrap\CoreDomainAccessor::categoryDefaultRenderer()->render($page_items, $page_start, $page_nb_image_page, $section_context->section);
+            $slideshow_url = $this->categoryDefaultRenderer->render($page_items, $page_start, $page_nb_image_page, $section_context->section);
 
             if (\Piwigo\Config\CurrentConfig::indexSizesIcon()) {
                 $url = $urlService->addUrlParams(

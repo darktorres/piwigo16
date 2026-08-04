@@ -52,6 +52,11 @@ final class PasswordController implements ControllerInterface
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly \Piwigo\Activity\ActivityService $activityService,
+        private readonly UserService $userService,
+        private readonly PasswordService $passwordService,
+        private readonly AuthService $authService,
+        private readonly \Piwigo\Users\PreferencesService $preferencesService,
+        private readonly \Piwigo\Auth\ApiKeyService $apiKeyService,
     ) {}
 
     /**
@@ -78,21 +83,6 @@ final class PasswordController implements ControllerInterface
     private ?string $username = null;
 
     private Request\PasswordRequest $request;
-
-    private static function userService(): UserService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::userService();
-    }
-
-    private static function passwordService(): PasswordService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::passwordService();
-    }
-
-    private static function authService(): AuthService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::authService();
-    }
 
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
@@ -145,11 +135,11 @@ final class PasswordController implements ControllerInterface
             $user_id = $this->checkPasswordResetKey($key);
             if (is_int($user_id)) {
                 $conn = DbConnection::build();
-                $userdata = self::userService()->getUserData(\Piwigo\Common\ValueObject\UserId::from($user_id));
+                $userdata = $this->userService->getUserData(\Piwigo\Common\ValueObject\UserId::from($user_id));
                 $userdata_username = $userdata['username'] ?? null;
                 $this->username = is_string($userdata_username) ? $userdata_username : '';
                 $template->assign('key', $key);
-                $first_login = self::authService()->hasAlreadyLoggedIn($user_id);
+                $first_login = $this->authService->hasAlreadyLoggedIn($user_id);
 
                 if ($this->action === null) {
                     $this->action = 'reset';
@@ -316,11 +306,11 @@ final class PasswordController implements ControllerInterface
 
         // retrievies user by email is not try by username
         $emailOrNull = \Piwigo\Common\ValueObject\Email::tryFrom($username_or_email);
-        $user_id_raw = $emailOrNull === null ? null : self::userService()->getUserIdByEmail($emailOrNull);
+        $user_id_raw = $emailOrNull === null ? null : $this->userService->getUserIdByEmail($emailOrNull);
 
         if ($user_id_raw === null) {
             $usernameOrNull = \Piwigo\Common\ValueObject\Username::tryFrom($username_or_email);
-            $user_id_raw = $usernameOrNull === null ? null : self::userService()->getUserId($usernameOrNull);
+            $user_id_raw = $usernameOrNull === null ? null : $this->userService->getUserId($usernameOrNull);
         }
 
         // when no user is found, we assign guest_id instead of stopping.
@@ -333,7 +323,7 @@ final class PasswordController implements ControllerInterface
             $user_id = \Piwigo\Common\ValueObject\UserId::from(\Piwigo\Config\CurrentConfig::guestId());
         }
 
-        $userdata = self::userService()->getUserData($user_id);
+        $userdata = $this->userService->getUserData($user_id);
 
         $status = $userdata['status'] ?? '';
         $status = is_string($status) ? $status : '';
@@ -448,14 +438,14 @@ final class PasswordController implements ControllerInterface
                 // lockout account for 1hour
                 if ($has_valid_user_id) {
                     $saveCurrentUser = $this->currentUser->get();
-                    $target_user_data = self::userService()->buildUser(\Piwigo\Common\ValueObject\UserId::from((int) $user_id_raw));
+                    $target_user_data = $this->userService->buildUser(\Piwigo\Common\ValueObject\UserId::from((int) $user_id_raw));
                     // PreferencesService writes onto CurrentUser::get()->id
                     // (Legacy Coupling Retirement Track A batch A3), so the
                     // identity must switch here too, or the preference
                     // would land on the ORIGINAL requester instead of the
                     // locked-out target user.
                     $this->currentUser->set(\Piwigo\Users\User::fromUserArray($target_user_data));
-                    \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService()
+                    $this->preferencesService
                         ->updateParam('reset_password_forbidden_until', time() + 60 * 60);
                     $this->currentUser->set($saveCurrentUser);
 
@@ -496,12 +486,12 @@ final class PasswordController implements ControllerInterface
         $user_id = \Piwigo\Common\ValueObject\UserId::from((int) $user_id_raw);
 
         $saveCurrentUser = $this->currentUser->get();
-        $target_user_data = self::userService()->buildUser($user_id);
+        $target_user_data = $this->userService->buildUser($user_id);
         // Same CurrentUser identity-switch requirement as the lockout branch
         // above -- PreferencesService::deleteParam() writes onto
         // CurrentUser::get()->id.
         $this->currentUser->set(\Piwigo\Users\User::fromUserArray($target_user_data));
-        \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService()
+        $this->preferencesService
             ->deleteParam('reset_password_forbidden_until');
 
         $targetUser = $this->currentUser->get();
@@ -546,11 +536,11 @@ final class PasswordController implements ControllerInterface
         }
 
         $user_id = null;
-        foreach (self::userService()->getPendingActivationKeyRows() as $activationKeyRow) {
+        foreach ($this->userService->getPendingActivationKeyRows() as $activationKeyRow) {
             if ($activationKeyRow->activationKey === '') {
                 continue;
             }
-            if (self::passwordService()->verify($key, $activationKeyRow->activationKey)) {
+            if ($this->passwordService->verify($key, $activationKeyRow->activationKey)) {
                 if (\Piwigo\Auth\AccessControl::isAGuest($activationKeyRow->status) or \Piwigo\Auth\AccessControl::isGeneric($activationKeyRow->status)) {
                     $this->errors['password_page_error'] = Lang::t('Password reset is not allowed for this user');
                     return false;
@@ -597,11 +587,11 @@ final class PasswordController implements ControllerInterface
 
         $conn = DbConnection::build();
 
-        self::userService()->updateAccountFields(
+        $this->userService->updateAccountFields(
             $user_id,
             $user_fields['id'],
             [
-                $user_fields['password'] => self::passwordService()->hash($new_password),
+                $user_fields['password'] => $this->passwordService->hash($new_password),
             ]
         );
 
@@ -615,7 +605,7 @@ final class PasswordController implements ControllerInterface
 
             $reset_user_id = $reset_session['user_id'] ?? null;
             $reset_user_id_int = is_numeric($reset_user_id) ? (int) $reset_user_id : 0;
-            $api_keys = \Piwigo\Bootstrap\CoreDomainAccessor::apiKeyService()
+            $api_keys = $this->apiKeyService
                 ->getAvailable($reset_user_id_int);
             $nb_of_apikeys = (bool) $api_keys ? count($api_keys) : 0;
 
@@ -663,8 +653,8 @@ final class PasswordController implements ControllerInterface
         }
 
         $conn = DbConnection::build();
-        self::authService()->deactivatePasswordResetKey($user_id);
-        self::authService()->deactivateUserAuthKeys($user_id);
+        $this->authService->deactivatePasswordResetKey($user_id);
+        $this->authService->deactivateUserAuthKeys($user_id);
         return $user_id;
     }
 

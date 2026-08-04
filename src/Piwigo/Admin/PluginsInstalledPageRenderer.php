@@ -50,7 +50,7 @@ final class PluginsInstalledPageRenderer
      * slug statically (it's the only class registered for the 'plugins'
      * slug in config/admin_pages.php).
      */
-    public function render(string $pageSlug, UrlServiceInterface $urlService, \Piwigo\Core\CurrentLogger $currentLogger, SessionService $sessionService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Template\CurrentTemplate $currentTemplate): void
+    public function render(string $pageSlug, UrlServiceInterface $urlService, \Piwigo\Core\CurrentLogger $currentLogger, SessionService $sessionService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Users\PreferencesService $preferencesService): void
     {
         $template = $currentTemplate->get();
 
@@ -256,7 +256,7 @@ final class PluginsInstalledPageRenderer
                 'max_inactive_before_hide' => $pluginsDisplay->showInactive ? 999 : 8,
                 'isWebmaster' => (\Piwigo\Auth\AccessControl::isWebmaster()) ? 1 : 0,
                 'ADMIN_PAGE_TITLE' => Lang::t('Plugins'),
-                'view_selector' => \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService()
+                'view_selector' => $preferencesService
                     ->getParam('plugin-manager-view', 'classic'),
                 'CONF_ENABLE_EXTENSIONS_INSTALL' => \Piwigo\Config\CurrentConfig::enableExtensionsInstall(),
             ]

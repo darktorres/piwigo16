@@ -33,6 +33,7 @@ final class ThemesNewPageRenderer
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly \Piwigo\Activity\ActivityService $activityService,
+        private readonly \Piwigo\Users\PreferencesService $preferencesService,
     ) {}
 
     /**
@@ -177,7 +178,7 @@ final class ThemesNewPageRenderer
             $this->pageState->addError(Lang::t('Can\'t connect to server.'));
         }
 
-        $admin_theme_pref = \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService()->getParam('admin_theme', \Piwigo\Config\CurrentConfig::adminTheme());
+        $admin_theme_pref = $this->preferencesService->getParam('admin_theme', \Piwigo\Config\CurrentConfig::adminTheme());
         $template->assign(
             'default_screenshot',
             $this->urlService->getRootUrl() . 'themes/admin/' . (is_string($admin_theme_pref) ? $admin_theme_pref : \Piwigo\Config\CurrentConfig::adminTheme()) . '/images/missing_screenshot.png'

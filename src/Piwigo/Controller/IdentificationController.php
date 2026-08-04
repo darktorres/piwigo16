@@ -50,6 +50,8 @@ final class IdentificationController implements ControllerInterface
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly \Piwigo\Users\UserService $userService,
+        private readonly \Piwigo\Auth\AuthService $authService,
     ) {}
 
     #[\Override]
@@ -99,14 +101,14 @@ final class IdentificationController implements ControllerInterface
 
                 $conn = \Piwigo\Db\DbConnection::build();
                 if (\Piwigo\Config\CurrentConfig::insensitiveCaseLogon()) {
-                    $username = \Piwigo\Bootstrap\CoreDomainAccessor::userService()
+                    $username = $this->userService
                         ->searchCaseUsername($username);
                 }
 
                 $redirect_to = $identificationSubmit->postRedirectDecoded ?? '';
                 $remember_me = $identificationSubmit->isRememberMe;
 
-                if (\Piwigo\Bootstrap\CoreDomainAccessor::authService()->tryLogUser($username, $password, $remember_me)) {
+                if ($this->authService->tryLogUser($username, $password, $remember_me)) {
                     // security (level 2): force redirect within Piwigo. We
                     // redirect to absolute root url, including http(s)://,
                     // without the cookie path, concatenated with

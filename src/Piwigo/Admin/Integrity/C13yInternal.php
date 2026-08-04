@@ -26,6 +26,7 @@ final class C13yInternal
         private readonly SessionService $sessionService,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Core\PageState $pageState,
+        private readonly UserService $userService,
     ) {}
 
     /**
@@ -44,11 +45,6 @@ final class C13yInternal
         $this->eventDispatcher->addTypedHandler(ListCheckIntegrity::class, $this->c13y_version(...));
         $this->eventDispatcher->addTypedHandler(ListCheckIntegrity::class, $this->c13y_exif(...));
         $this->eventDispatcher->addTypedHandler(ListCheckIntegrity::class, $this->c13y_user(...));
-    }
-
-    private static function userService(): UserService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::userService();
     }
 
     /**
@@ -152,7 +148,7 @@ final class C13yInternal
         $user_fields = \Piwigo\Config\CurrentConfig::userFields();
         $user_id_field = $user_fields['id'];
 
-        $status = self::userService()->getStatusByIds($user_id_field, array_keys($c13y_users));
+        $status = $this->userService->getStatusByIds($user_id_field, array_keys($c13y_users));
 
         foreach ($c13y_users as $id => $data) {
             if (! array_key_exists($id, $status)) {
@@ -214,19 +210,19 @@ final class C13yInternal
                     if (isset($name)) {
                         $name_ok = false;
                         while (! $name_ok) {
-                            $name_ok = (self::userService()->getUserId(\Piwigo\Common\ValueObject\Username::from($name)) === null);
+                            $name_ok = ($this->userService->getUserId(\Piwigo\Common\ValueObject\Username::from($name)) === null);
                             if (! $name_ok) {
                                 $name .= $this->sessionService->generateKey(1);
                             }
                         }
 
-                        self::userService()->insertUserRow([
+                        $this->userService->insertUserRow([
                             'id' => $id,
                             'username' => addslashes($name),
                             'password' => $password,
                         ]);
 
-                        self::userService()->createUserInfos([\Piwigo\Common\ValueObject\UserId::from($id)]);
+                        $this->userService->createUserInfos([\Piwigo\Common\ValueObject\UserId::from($id)]);
 
                         $this->pageState->addInfo(sprintf(Lang::t('User "%s" created with "%s" like password'), $name, $password ?? ''));
 
@@ -243,9 +239,9 @@ final class C13yInternal
                     }
 
                     if (isset($status)) {
-                        self::userService()->updateStatusForUsers([\Piwigo\Common\ValueObject\UserId::from($id)], $status);
+                        $this->userService->updateStatusForUsers([\Piwigo\Common\ValueObject\UserId::from($id)], $status);
 
-                        $updated_username = self::userService()->getUsername(\Piwigo\Common\ValueObject\UserId::from($id));
+                        $updated_username = $this->userService->getUsername(\Piwigo\Common\ValueObject\UserId::from($id));
                         $this->pageState->addInfo(sprintf(Lang::t('Status of user "%s" updated'), $updated_username === null ? '' : $updated_username->value));
 
                         $result = true;

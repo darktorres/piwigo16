@@ -43,6 +43,7 @@ final class CategoryAdminService
 {
     public function __construct(
         private CategoryService $categoryService,
+        private \Piwigo\Permission\PermissionService $permissionService,
     ) {}
 
     /**
@@ -252,7 +253,7 @@ final class CategoryAdminService
         }
 
         if (count($userIds) > 0) {
-            \Piwigo\Bootstrap\CoreDomainAccessor::permissionService()
+            $this->permissionService
                 ->addPermissionOnCategory($catId, $userIds, $applyOnSub);
         }
     }

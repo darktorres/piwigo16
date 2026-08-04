@@ -29,12 +29,13 @@ final class ExtendForTemplatesSubController implements AdminSubControllerInterfa
         private readonly ConfigService $configService,
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly \Piwigo\Category\CategoryService $categoryService,
     ) {}
 
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
         new ExtendForTemplatesPageRenderer()
-            ->render($this->urlService, $this->configService, $this->pageState, $this->currentTemplate);
+            ->render($this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->categoryService);
     }
 }

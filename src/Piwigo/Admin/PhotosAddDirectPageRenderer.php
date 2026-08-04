@@ -50,6 +50,8 @@ final class PhotosAddDirectPageRenderer
         private readonly EntityManagerInterface $entityManager,
         private readonly \Piwigo\Activity\ActivityService $activityService,
         private readonly \Piwigo\Metadata\MetadataService $metadataService,
+        private readonly \Piwigo\Image\ImageService $imageService,
+        private readonly \Piwigo\Users\PreferencesService $preferencesService,
     ) {}
 
     /**
@@ -96,7 +98,7 @@ final class PhotosAddDirectPageRenderer
             $this->redirectService->redirect($this->urlService->getRootUrl() . 'admin.php?page=batch_manager&filter=prefilter-caddie');
         }
 
-        if ((bool) \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService()->getParam('promote-mobile-apps', true)) {
+        if ((bool) $this->preferencesService->getParam('promote-mobile-apps', true)) {
             $register_date = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class)
                 ->findEarliestRegistrationDate();
             $nb_cats = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class)
@@ -132,7 +134,7 @@ final class PhotosAddDirectPageRenderer
 
         // If URL parameter isn't empty
         if ($photosAddDirectRequest->formatsTruthy) {
-            $formats_original_info = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()
+            $formats_original_info = $this->imageService
                 ->getImageInfos($photosAddDirectRequest->formatsId, $htmlRenderer);
             if ((bool) $formats_original_info) {
                 $src_image = new SrcImage($formats_original_info);
@@ -212,7 +214,7 @@ final class PhotosAddDirectPageRenderer
 
         $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
 
-        $uploadService = new UploadService($this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager, $this->activityService, $this->metadataService);
+        $uploadService = new UploadService($this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService);
 
         // +-------------------------------------------------------------------+
         // | Photo selection                                                    |

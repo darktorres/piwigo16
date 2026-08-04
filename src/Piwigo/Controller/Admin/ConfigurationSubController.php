@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
-use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
@@ -118,6 +117,11 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         private readonly EntityManagerInterface $entityManager,
         private readonly \Piwigo\Activity\ActivityService $activityService,
         private readonly \Piwigo\Metadata\MetadataService $metadataService,
+        private readonly \Piwigo\Image\ImageService $imageService,
+        private readonly \Piwigo\Users\UserService $userService,
+        private readonly \Piwigo\Group\GroupService $groupService,
+        private readonly \Piwigo\Auth\PasswordService $passwordService,
+        private readonly \Piwigo\Auth\AuthService $authService,
     ) {}
 
     /**
@@ -129,11 +133,6 @@ final class ConfigurationSubController implements AdminSubControllerInterface
      * instance property rather than a local variable.
      */
     private bool $sizesLoadedInTpl = false;
-
-    private static function userService(Connection $conn): \Piwigo\Users\UserService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::userService();
-    }
 
     #[\Override]
     public function handle(ServerRequestInterface $request): void
@@ -572,7 +571,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
                 // list of groups
                 $groups = [];
-                foreach (\Piwigo\Bootstrap\CoreDomainAccessor::groupService()->getAllBasic() as $group) {
+                foreach ($this->groupService->getAllBasic() as $group) {
                     $groups[$group->id->value] = $group->name;
                 }
                 natcasesort($groups);
@@ -620,16 +619,16 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
                 $guest_id = \Piwigo\Config\CurrentConfig::guestId();
 
-                $edit_user = self::userService($conn)->buildUser(\Piwigo\Common\ValueObject\UserId::from($guest_id));
+                $edit_user = $this->userService->buildUser(\Piwigo\Common\ValueObject\UserId::from($guest_id));
                 // P22: profile.php's own save_profile_from_post()/
                 // load_profile_in_template() ported to Piwigo\Controller\
                 // ProfileFormHandler in P23 batch 8c.
-                $profileFormHandler = new ProfileFormHandler($this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService);
+                $profileFormHandler = new ProfileFormHandler($this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->userService, $this->passwordService, $this->authService);
 
                 $errors = [];
                 if ($profileFormHandler->saveFromPost($edit_user, $errors)) {
                     // Reload user
-                    $edit_user = self::userService($conn)->buildUser(\Piwigo\Common\ValueObject\UserId::from($guest_id));
+                    $edit_user = $this->userService->buildUser(\Piwigo\Common\ValueObject\UserId::from($guest_id));
                     $this->pageState->addInfo(Lang::t('Information data registered in database'));
                 }
                 $this->pageState->errors = array_merge($this->pageState->errors, array_values(array_filter($errors, is_string(...))));
@@ -974,7 +973,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         // PluginLoader::autoupdatePlugin()).
         $page_errors = $this->pageState->errors;
 
-        new UploadService($this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager, $this->activityService, $this->metadataService)
+        new UploadService($this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService)
             ->saveUploadFormConfig($updates, $page_errors, $errors);
 
         $this->pageState->errors = array_values($page_errors);

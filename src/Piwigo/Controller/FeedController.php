@@ -36,12 +36,8 @@ final class FeedController implements ControllerInterface
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly \Piwigo\Notification\NotificationService $notificationService,
+        private readonly \Piwigo\Users\UserService $userService,
     ) {}
-
-    private static function userService(): \Piwigo\Users\UserService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::userService();
-    }
 
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
@@ -67,7 +63,7 @@ final class FeedController implements ControllerInterface
             }
             $feed_last_check = $feed_row['lastCheck'];
             if ($feed_row['userId'] !== $this->currentUser->get()->id->value) { // new user
-                $feed_owner = self::userService()->buildUser(\Piwigo\Common\ValueObject\UserId::from($feed_row['userId']));
+                $feed_owner = $this->userService->buildUser(\Piwigo\Common\ValueObject\UserId::from($feed_row['userId']));
                 // The feed is per-user-token, so this request's "current user"
                 // genuinely becomes the feed owner, not the real session user.
                 $this->currentUser->set(\Piwigo\Users\User::fromUserArray($feed_owner));
@@ -76,7 +72,7 @@ final class FeedController implements ControllerInterface
             $image_only = true;
             if (! \Piwigo\Auth\AccessControl::isAGuest()) {// auto session was created - so switch to guest
                 $guest_id = \Piwigo\Config\CurrentConfig::guestId();
-                $guest_user = self::userService()->buildUser(\Piwigo\Common\ValueObject\UserId::from($guest_id));
+                $guest_user = $this->userService->buildUser(\Piwigo\Common\ValueObject\UserId::from($guest_id));
                 $this->currentUser->set(\Piwigo\Users\User::fromUserArray($guest_user));
             }
         }

@@ -28,6 +28,8 @@ final class CatPermPageRenderer
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly CategoryAdminService $categoryAdminService,
+        private readonly \Piwigo\Group\GroupService $groupService,
+        private readonly \Piwigo\Users\UserService $userService,
     ) {}
 
     /**
@@ -114,7 +116,7 @@ final class CatPermPageRenderer
         // minus groups granted to find groups denied.
 
         $groups = [];
-        foreach (\Piwigo\Bootstrap\CoreDomainAccessor::groupService()->getAllBasic() as $g) {
+        foreach ($this->groupService->getAllBasic() as $g) {
             $groups[$g->id->value] = $g->name;
         }
         $template->assign('groups', $groups);
@@ -135,7 +137,7 @@ final class CatPermPageRenderer
         $user_field_id = $user_fields['id'];
         $user_field_username = $user_fields['username'];
 
-        $users = \Piwigo\Bootstrap\CoreDomainAccessor::userService()->getAllUsernamesById($user_field_id, $user_field_username);
+        $users = $this->userService->getAllUsernamesById($user_field_id, $user_field_username);
         $template->assign('users', $users);
 
         $user_granted_direct_ids = $permissionRepository->findGrantedUserIdsByCategory([$cat_id])[$cat_id] ?? [];
@@ -145,7 +147,7 @@ final class CatPermPageRenderer
         if (count($group_granted_ids) > 0) {
             $granted_groups = [];
 
-            foreach (\Piwigo\Bootstrap\CoreDomainAccessor::groupService()->getMembersByGroupIds($group_granted_ids) as $row) {
+            foreach ($this->groupService->getMembersByGroupIds($group_granted_ids) as $row) {
                 // group_id/user_id are NOT NULL numeric columns; DBAL can hand
                 // back a native int for either (mysqli always gave a numeric
                 // string), so accept both before using group_id as an array key

@@ -52,16 +52,9 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
         private readonly \Piwigo\Config\ConfigService $configService,
         private readonly InstallationStats $installationStats,
         private readonly \Piwigo\Activity\ActivityService $activityService,
+        private readonly UserService $userService,
+        private readonly \Piwigo\Image\ImageService $imageService,
     ) {}
-
-    /**
-     * DRY extraction (Phase 1k DI-chain audit): the same UserService
-     * recipe was repeated verbatim at 2 sites in this file.
-     */
-    private static function userService(): UserService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::userService();
-    }
 
     #[\Override]
     public function send(): void
@@ -148,7 +141,7 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
         $piwigoInfos['general_stats']['last_photo'] = null;
 
         if ($piwigoInfos['general_stats']['nb_photos'] > 0) {
-            $imageService = \Piwigo\Bootstrap\CoreDomainAccessor::imageService();
+            $imageService = $this->imageService;
 
             if ($imageService->countWithStorageCategory() > 0) {
                 // slow SQL query, but necessary if you have files added by sync
@@ -337,7 +330,7 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
         $piwigoInfos['general_stats']['nb_private_themes'] = count(array_keys($privateThemes));
         $piwigoInfos['general_stats']['nb_themes'] = $piwigoInfos['general_stats']['nb_private_themes'] + count($piwigoInfos['themes']);
 
-        $defaultTheme = self::userService()
+        $defaultTheme = $this->userService
             ->getDefaultTheme();
         if (isset($privateThemes[$defaultTheme])) {
             $defaultTheme = 'private theme';
@@ -345,7 +338,7 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
         $piwigoInfos['general_stats']['default_theme'] = $defaultTheme;
 
         $piwigoInfos['themes_usage'] = [];
-        $themesUsed = self::userService()->getThemeUsageCounts();
+        $themesUsed = $this->userService->getThemeUsageCounts();
         // built as a separate local accumulator (rather than mutating
         // $piwigoInfos directly with a dynamic key) so PHPStan keeps tracking
         // a precise array<string, int> type instead of widening the whole
@@ -360,9 +353,9 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
         }
         $piwigoInfos['themes_usage'] = $themesUsage;
 
-        $piwigoInfos['general_stats']['default_language'] = self::userService()->getDefaultLanguage();
+        $piwigoInfos['general_stats']['default_language'] = $this->userService->getDefaultLanguage();
 
-        $piwigoInfos['languages_usage'] = self::userService()->getLanguageUsageCounts();
+        $piwigoInfos['languages_usage'] = $this->userService->getLanguageUsageCounts();
 
         $piwigoInfos['activities'] = [];
         $piwigoInfos['general_stats']['nb_activities'] = 0;

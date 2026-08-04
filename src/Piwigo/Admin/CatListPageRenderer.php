@@ -47,13 +47,14 @@ final class CatListPageRenderer
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly CategoryAdminService $categoryAdminService,
         private readonly \Piwigo\Activity\ActivityService $activityService,
+        private readonly \Piwigo\Category\CategoryService $categoryService,
     ) {}
 
     public function render(): void
     {
         $template = $this->currentTemplate->get();
 
-        $categoryService = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
+        $categoryService = $this->categoryService;
 
         $this->eventDispatcher->dispatchNotify(new LocBeginCatList());
 

@@ -106,32 +106,12 @@ final class PictureController implements ControllerInterface
         private readonly \Piwigo\Activity\ActivityService $activityService,
         private readonly \Piwigo\Rate\RateService $rateService,
         private readonly \Piwigo\History\HistoryService $historyService,
+        private readonly PermissionService $permissionService,
+        private readonly CategoryService $categoryService,
+        private readonly TagService $tagService,
+        private readonly UserService $userService,
+        private readonly ImageService $imageService,
     ) {}
-
-    private static function permissionService(): PermissionService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::permissionService();
-    }
-
-    private static function categoryService(): CategoryService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
-    }
-
-    private static function tagService(): TagService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::tagService();
-    }
-
-    private static function userService(): UserService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::userService();
-    }
-
-    private static function imageService(): ImageService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::imageService();
-    }
 
     private function commentService(Connection $conn, UrlServiceInterface $urlService): CommentService
     {
@@ -161,7 +141,7 @@ final class PictureController implements ControllerInterface
             throw new \RuntimeException('SectionContextRegistry::current() is null after SectionPopulator::populate()');
         }
 
-        self::userService()->saveEditContext($section_context->sectionUrl, $section_context->imageId);
+        $this->userService->saveEditContext($section_context->sectionUrl, $section_context->imageId);
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
 
@@ -170,7 +150,7 @@ final class PictureController implements ControllerInterface
         // access authorization check
         if ($page_category !== null) {
             $category_id = $page_category['id'] ?? null;
-            self::categoryService()->checkRestrictions(is_numeric($category_id) ? (int) $category_id : 0, \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService, $this->currentUser);
+            $this->categoryService->checkRestrictions(is_numeric($category_id) ? (int) $category_id : 0, \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService, $this->currentUser);
         }
 
         // $section_context->items is mutated in place below (best_rated
@@ -197,7 +177,7 @@ final class PictureController implements ControllerInterface
                 assert($image_file !== null && $image_file !== '');
                 $escaped_image_file = str_replace(['_', '%'], ['/_', '/%'], $image_file);
             }
-            $row = self::imageService()->findByIdOrFilePattern($image_id, $escaped_image_file);
+            $row = $this->imageService->findByIdOrFilePattern($image_id, $escaped_image_file);
             if ($row === false) {// element does not exist
                 \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                     ->pageNotFound(
@@ -246,9 +226,9 @@ final class PictureController implements ControllerInterface
                     \Piwigo\Bootstrap\PresentationAccessor::htmlService()
                         ->accessDenied($this->redirectService);
                 } else {// try to see if we can access it differently
-                    $accessible = self::imageService()->isImageAccessibleWithCondition(
+                    $accessible = $this->imageService->isImageAccessibleWithCondition(
                         $image_id,
-                        self::permissionService()->getSqlConditionFandFAsCondition([
+                        $this->permissionService->getSqlConditionFandFAsCondition([
                             'forbidden_categories' => 'category_id',
                         ])
                     );
@@ -392,14 +372,14 @@ final class PictureController implements ControllerInterface
             switch ($pictureRequest->action) {
                 case 'add_to_favorites':
 
-                    self::userService()->addFavorite($user->id, $image_id);
+                    $this->userService->addFavorite($user->id, $image_id);
 
                     $this->redirectService->redirect($url_self);
 
                     // no break
                 case 'remove_from_favorites':
 
-                    self::userService()->removeFavorite($user->id, $image_id);
+                    $this->userService->removeFavorite($user->id, $image_id);
 
                     if ($section_context->section === 'favorites') {
                         $this->redirectService->redirect($url_up);
@@ -413,7 +393,7 @@ final class PictureController implements ControllerInterface
                     if (\Piwigo\Auth\AccessControl::isAdmin() and $page_category !== null) {
                         $representative_category_id = $page_category['id'] ?? null;
                         $representative_category_id = is_numeric($representative_category_id) ? (int) $representative_category_id : 0;
-                        self::categoryService()->setRepresentativeImage($representative_category_id, $image_id);
+                        $this->categoryService->setRepresentativeImage($representative_category_id, $image_id);
                         $this->entityManager->clear();
                         $this->activityService->record('album', $representative_category_id, 'edit', [
                             'action' => $pictureRequest->action,
@@ -597,9 +577,9 @@ final class PictureController implements ControllerInterface
         // Row shape is mixed, not uniformly string|null -- see
         // PictureCommentRenderer::render()'s own param docblock for the
         // real per-column breakdown.
-        $related_categories = self::imageService()->getVisibleCategoriesForImage(
+        $related_categories = $this->imageService->getVisibleCategoriesForImage(
             $image_id,
-            self::permissionService()->getSqlConditionFandFAsCondition([
+            $this->permissionService->getSqlConditionFandFAsCondition([
                 'forbidden_categories' => 'id',
                 'visible_categories' => 'id',
             ])
@@ -690,9 +670,9 @@ final class PictureController implements ControllerInterface
                 'nofollow' => 1,
             ]);
 
-            $slideshow_params = self::imageService()
+            $slideshow_params = $this->imageService
                 ->decodeSlideshowParams($pictureRequest->slideshow);
-            $slideshow_url_params['slideshow'] = self::imageService()->encodeSlideshowParams($slideshow_params);
+            $slideshow_url_params['slideshow'] = $this->imageService->encodeSlideshowParams($slideshow_params);
 
             if ((bool) $slideshow_params['play']) {
                 $id_pict_redirect = '';
@@ -887,7 +867,7 @@ final class PictureController implements ControllerInterface
                       $urlService->addUrlParams(
                           $picture['current']['url'],
                           [
-                              'slideshow' => self::imageService()
+                              'slideshow' => $this->imageService
                                   ->encodeSlideshowParams(
                                       array_merge(
                                           $slideshow_params,
@@ -910,7 +890,7 @@ final class PictureController implements ControllerInterface
                 $slideshow_period_step = \Piwigo\Config\CurrentConfig::slideshowPeriodStep();
                 $new_period = $current_period + ((($op === 'dec') ? -1 : 1) * $slideshow_period_step);
                 $new_slideshow_params =
-                  self::imageService()
+                  $this->imageService
                       ->correctSlideshowParams(
                           array_merge(
                               $slideshow_params,
@@ -926,7 +906,7 @@ final class PictureController implements ControllerInterface
                           $urlService->addUrlParams(
                               $picture['current']['url'],
                               [
-                                  'slideshow' => self::imageService()
+                                  'slideshow' => $this->imageService
                                       ->encodeSlideshowParams($new_slideshow_params),
                               ]
                           );
@@ -1000,7 +980,7 @@ final class PictureController implements ControllerInterface
         if (! \Piwigo\Auth\AccessControl::isAGuest() and \Piwigo\Config\CurrentConfig::pictureFavoriteIcon()) {
             // verify if the picture is already in the favorite of the
             // user
-            $is_favorite = self::userService()->isFavorite($user->id, $image_id);
+            $is_favorite = $this->userService->isFavorite($user->id, $image_id);
 
             $template->assign(
                 'favorite',
@@ -1088,7 +1068,7 @@ final class PictureController implements ControllerInterface
         $template->assign('display_info', \Piwigo\Config\CurrentConfig::pictureInformations());
 
         // related tags
-        $tags = self::tagService()
+        $tags = $this->tagService
             ->getCommonTags([$image_id], -1, \Piwigo\Bootstrap\PresentationAccessor::htmlService());
         if ($tags !== []) {
             foreach ($tags as $tag) {
@@ -1155,7 +1135,7 @@ final class PictureController implements ControllerInterface
                 $ids = array_merge($ids, explode(',', is_scalar($categoryUppercats) ? (string) $categoryUppercats : ''));
             }
             $ids = array_unique($ids);
-            $cat_map = self::categoryService()->getNamesByIds(array_values(array_map(intval(...), $ids)));
+            $cat_map = $this->categoryService->getNamesByIds(array_values(array_map(intval(...), $ids)));
             foreach ($related_categories as $category) {
                 $cats = [];
                 $categoryUppercats = $category['uppercats'];
@@ -1186,7 +1166,7 @@ final class PictureController implements ControllerInterface
                     // level below the real upload root -- silently
                     // returning false (never a real page count) on every
                     // live request; confirmed live via a real PDF upload.
-                    'PDF_NB_PAGES' => self::imageService()
+                    'PDF_NB_PAGES' => $this->imageService
                         ->countPdfPages(\Piwigo\Core\CurrentPaths::get()->root . $picture['current']['path']),
                 ]
             );

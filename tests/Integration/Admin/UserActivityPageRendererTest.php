@@ -141,7 +141,27 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
             throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Activity\ActivityService::class);
         }
 
-        new UserActivityPageRenderer()->render($this->urlService, $this->coreTabs, CurrentTemplate::current(), $activityService);
+        $userService = Kernel::container()->get(\Piwigo\Users\UserService::class);
+        if (! $userService instanceof \Piwigo\Users\UserService) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Users\UserService::class);
+        }
+
+        $imageService = Kernel::container()->get(\Piwigo\Image\ImageService::class);
+        if (! $imageService instanceof \Piwigo\Image\ImageService) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Image\ImageService::class);
+        }
+
+        $categoryService = Kernel::container()->get(\Piwigo\Category\CategoryService::class);
+        if (! $categoryService instanceof \Piwigo\Category\CategoryService) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Category\CategoryService::class);
+        }
+
+        $groupService = Kernel::container()->get(\Piwigo\Group\GroupService::class);
+        if (! $groupService instanceof \Piwigo\Group\GroupService) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Group\GroupService::class);
+        }
+
+        new UserActivityPageRenderer()->render($this->urlService, $this->coreTabs, CurrentTemplate::current(), $activityService, $userService, $imageService, $categoryService, $groupService);
 
         $template = CurrentTemplate::current()->get();
         self::assertSame([], $template->get_template_vars('ulist'));

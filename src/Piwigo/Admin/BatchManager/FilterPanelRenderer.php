@@ -55,6 +55,7 @@ final class FilterPanelRenderer
         UrlServiceInterface $urlService,
         \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         \Piwigo\Core\PageState $pageState,
+        \Piwigo\Tag\TagService $tagService,
     ): void {
         $conn = DbConnection::build();
 
@@ -182,7 +183,7 @@ final class FilterPanelRenderer
                 WHERE id IN (:tagIds)
                 SQL;
 
-            $filter_tags = \Piwigo\Bootstrap\CoreDomainAccessor::tagService()
+            $filter_tags = $tagService
                 ->getTagList(
                     $query,
                     \Piwigo\Bootstrap\PresentationAccessor::htmlService(),

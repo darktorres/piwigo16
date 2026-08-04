@@ -58,11 +58,55 @@ test('send returns immediately without touching the DB or network when telemetry
         new \Piwigo\Core\PageState(),
         new \Piwigo\Users\CurrentUser(),
     );
-    $installationStats = new \Piwigo\Admin\InstallationStats($rateService, $historyService);
     $activityService = new \Piwigo\Activity\ActivityService(
         \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Activity\ActivityEntity::class),
     );
-    new PiwigoInfosSender($currentLogger, new ImageStdParams(), $configService, $installationStats, $activityService)->send();
+    // Never actually read either -- same "send() returns before touching
+    // anything past the guard" reasoning as $configService above.
+    $userService = new \Piwigo\Users\UserService(
+        \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Users\UserInfoEntity::class),
+        \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Group\GroupEntity::class),
+        new \Piwigo\Mail\MailService(),
+        $activityService,
+        new \Piwigo\Html\HtmlService(),
+        \Piwigo\Db\DbConnection::build(),
+        new \Piwigo\Session\SessionService(\Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Session\SessionEntity::class)),
+        new \Piwigo\PluginConfig\EventDispatcher(),
+        new \Piwigo\Config\DeploymentPolicy(),
+        new \Piwigo\Users\CurrentUser(),
+    );
+    $imageService = new \Piwigo\Image\ImageService(
+        \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Image\ImageEntity::class),
+        $activityService,
+        new \Piwigo\Session\SessionService(\Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Session\SessionEntity::class)),
+        new \Piwigo\PluginConfig\EventDispatcher(),
+    );
+    $permissionService = new \Piwigo\Permission\PermissionService(
+        new \Piwigo\Permission\PermissionRepository(\Piwigo\Db\EntityManagerFactory::build()),
+        \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Group\GroupEntity::class),
+        \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Category\CategoryEntity::class),
+    );
+    $categoryService = new \Piwigo\Category\CategoryService(
+        \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Category\CategoryEntity::class),
+        $permissionService,
+    );
+    $tagService = new \Piwigo\Tag\TagService(
+        \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Tag\TagEntity::class),
+        $permissionService,
+        $activityService,
+        new \Piwigo\PluginConfig\EventDispatcher(),
+        new \Piwigo\Users\CurrentUser(),
+    );
+    $groupService = new \Piwigo\Group\GroupService(
+        \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Group\GroupEntity::class),
+        $activityService,
+        new \Piwigo\Audit\AuditService(\Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Audit\AuditLogEntity::class)),
+        $configService,
+        new \Piwigo\PluginConfig\EventDispatcher(),
+        new \Piwigo\Users\CurrentUser(),
+    );
+    $installationStats = new \Piwigo\Admin\InstallationStats($rateService, $historyService, $imageService, $categoryService, $tagService, $userService, $groupService);
+    new PiwigoInfosSender($currentLogger, new ImageStdParams(), $configService, $installationStats, $activityService, $userService, $imageService)->send();
 
     expect(true)->toBeTrue();
 });

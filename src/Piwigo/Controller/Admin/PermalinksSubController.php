@@ -57,6 +57,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
         private readonly CoreTabs $coreTabs,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly \Piwigo\Permalink\PermalinkService $permalinkService,
+        private readonly \Piwigo\Category\CategoryService $categoryService,
     ) {}
 
     #[\Override]
@@ -102,7 +103,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
         $tabsheet->select('permalinks');
         $tabsheet->assign($this->currentTemplate);
 
-        $nb_cats = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService()->countAllCategories();
+        $nb_cats = $this->categoryService->countAllCategories();
         $template->assign(
             [
                 'nb_cats' => $nb_cats,
@@ -118,7 +119,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
             FROM {$categoriesTable}
             SQL;
 
-        \Piwigo\Bootstrap\CoreDomainAccessor::categoryService()->displaySelectCatWrapper($query, $selected_cat, 'categories', $htmlRenderer, $template, false);
+        $this->categoryService->displaySelectCatWrapper($query, $selected_cat, 'categories', $htmlRenderer, $template, false);
 
         $pwg_token = new \Piwigo\Csrf\CsrfService()
             ->getToken();
@@ -136,7 +137,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
 
         $order_by_sql = ($sort_by[0] === 'id' or $sort_by[0] === 'permalink') ? ' ORDER BY ' . $sort_by[0] : '';
         $categories = [];
-        foreach (\Piwigo\Bootstrap\CoreDomainAccessor::categoryService()->getActivePermalinksList($order_by_sql) as $row) {
+        foreach ($this->categoryService->getActivePermalinksList($order_by_sql) as $row) {
             // uppercats is NOT NULL in the schema; is_string() is a defensive
             // narrowing of the driver's generic string|null column type, not a
             // documented nullability.

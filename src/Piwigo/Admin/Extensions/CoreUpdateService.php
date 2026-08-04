@@ -43,6 +43,7 @@ final readonly class CoreUpdateService
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly \Piwigo\Activity\ActivityService $activityService,
+        private readonly \Piwigo\Users\UserService $userService,
     ) {}
 
     public function checkPiwigoUpgrade(): void
@@ -206,7 +207,7 @@ final readonly class CoreUpdateService
 
         $notifyConn = \Piwigo\Db\DbConnection::build();
         \Piwigo\Bootstrap\PresentationAccessor::mailService()
-            ->switchLangTo(\Piwigo\Bootstrap\CoreDomainAccessor::userService()->getDefaultLanguage());
+            ->switchLangTo($this->userService->getDefaultLanguage());
 
         $content = Lang::t('Hello,');
         $content .= "\n\n" . Lang::t(

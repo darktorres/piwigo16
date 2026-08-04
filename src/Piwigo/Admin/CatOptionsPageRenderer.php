@@ -31,12 +31,8 @@ final class CatOptionsPageRenderer
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly CategoryAdminService $categoryAdminService,
         private readonly ActivityService $activityService,
+        private readonly CategoryService $categoryService,
     ) {}
-
-    private static function categoryService(): CategoryService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
-    }
 
     public function render(): void
     {
@@ -169,7 +165,7 @@ SELECT DISTINCT id,name,uppercats,global_rank
                 'L_CAT_OPTIONS_FALSE' => $l_false,
             ]
         );
-        $categoryService = self::categoryService();
+        $categoryService = $this->categoryService;
         $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true', \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $template);
         $categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false', \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $template);
         $template->assign('PWG_TOKEN', new \Piwigo\Csrf\CsrfService()->getToken());

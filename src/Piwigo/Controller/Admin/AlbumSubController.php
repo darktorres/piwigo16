@@ -49,6 +49,7 @@ final class AlbumSubController implements AdminSubControllerInterface
         private readonly CatPermPageRenderer $catPermPageRenderer,
         private readonly AlbumNotificationPageRenderer $albumNotificationPageRenderer,
         private readonly \Piwigo\Activity\ActivityService $activityService,
+        private readonly \Piwigo\Category\CategoryService $categoryService,
     ) {}
 
     #[\Override]
@@ -89,7 +90,7 @@ final class AlbumSubController implements AdminSubControllerInterface
 
         if ($tab === 'properties') {
             new CatModifyPageRenderer()
-                ->render($this->urlService, $category, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->activityService);
+                ->render($this->urlService, $category, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->activityService, $this->categoryService);
         } elseif ($tab === 'sort_order') {
             $this->elementSetRanksPageRenderer
                 ->render();

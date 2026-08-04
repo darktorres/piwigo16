@@ -30,12 +30,12 @@ final class SearchController implements ControllerInterface
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly \Piwigo\Search\SearchService $searchService,
+        private readonly PermissionService $permissionService,
+        private readonly \Piwigo\Users\PreferencesService $preferencesService,
+        private readonly \Piwigo\Category\CategoryService $categoryService,
+        private readonly \Piwigo\Tag\TagService $tagService,
+        private readonly \Piwigo\Image\ImageService $imageService,
     ) {}
-
-    private static function permissionService(): PermissionService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::permissionService();
-    }
 
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
@@ -96,7 +96,7 @@ final class SearchController implements ControllerInterface
         if (\Piwigo\Auth\AccessControl::isAGuest() or \Piwigo\Auth\AccessControl::isGeneric() or ! (bool) $last_filters_conf) {
             $fields = $default_fields;
         } else {
-            $raw_fields = \Piwigo\Bootstrap\CoreDomainAccessor::preferencesService()
+            $raw_fields = $this->preferencesService
                 ->getParam('gallery_search_filters', $default_fields);
             $fields = is_array($raw_fields) ? $raw_fields : $default_fields;
         }
@@ -137,7 +137,7 @@ final class SearchController implements ControllerInterface
                 ->forbiddenCategories;
             $forbidden_categories_csv = $forbidden_categories !== '' ? $forbidden_categories : '0';
 
-            $category_accessible = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService()
+            $category_accessible = $this->categoryService
                 ->existsAndNotForbidden((int) $cat_id, $forbidden_categories_csv);
             if (! $category_accessible) {
                 \Piwigo\Bootstrap\PresentationAccessor::htmlService()
@@ -154,7 +154,7 @@ final class SearchController implements ControllerInterface
             ];
         }
 
-        $tagService = \Piwigo\Bootstrap\CoreDomainAccessor::tagService();
+        $tagService = $this->tagService;
 
         if (count($tagService->getAvailableTags()) > 0) {
             $tag_ids = [];
@@ -178,8 +178,8 @@ final class SearchController implements ControllerInterface
 
         if (in_array('author', $fields, true)) {
             // does this Piwigo has authors for current user?
-            $has_author = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->hasAccessibleImageWithAuthor(
-                self::permissionService()->getSqlConditionFandFAsCondition([
+            $has_author = $this->imageService->hasAccessibleImageWithAuthor(
+                $this->permissionService->getSqlConditionFandFAsCondition([
                     'forbidden_categories' => 'category_id',
                     'visible_categories' => 'category_id',
                     'visible_images' => 'id',

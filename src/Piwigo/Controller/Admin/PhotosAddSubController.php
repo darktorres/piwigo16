@@ -41,6 +41,7 @@ final class PhotosAddSubController implements AdminSubControllerInterface
         private readonly PhotosAddDirectPageRenderer $photosAddDirectPageRenderer,
         private readonly \Piwigo\Activity\ActivityService $activityService,
         private readonly \Piwigo\Metadata\MetadataService $metadataService,
+        private readonly \Piwigo\Image\ImageService $imageService,
     ) {}
 
     #[\Override]
@@ -51,7 +52,7 @@ final class PhotosAddSubController implements AdminSubControllerInterface
         // upload form config is loaded here to match the original page's
         // own behavior (validated/used by the tab templates), even though
         // this sub-controller doesn't read it directly itself.
-        new UploadService($this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager, $this->activityService, $this->metadataService)
+        new UploadService($this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService)
             ->getUploadFormConfig();
 
         // admin.php's own shared check_input_parameter('section', ...,

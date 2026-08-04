@@ -67,22 +67,10 @@ final class BatchManagerGlobalPageRenderer
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly EntityManagerInterface $entityManager,
         private readonly \Piwigo\Activity\ActivityService $activityService,
+        private readonly TagService $tagService,
+        private readonly CategoryService $categoryService,
+        private readonly ImageService $imageService,
     ) {}
-
-    private static function tagService(): TagService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::tagService();
-    }
-
-    private static function categoryService(): CategoryService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
-    }
-
-    private static function imageService(): ImageService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::imageService();
-    }
 
     /**
      * @param array<array-key, int|string|float|bool> $catElementsId a
@@ -188,7 +176,7 @@ final class BatchManagerGlobalPageRenderer
             $action = $batchManagerGlobalRequest->selectAction;
             $redirect = false;
 
-            $tagService = self::tagService();
+            $tagService = $this->tagService;
             $imageService = new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher);
 
             if ($action === 'remove_from_caddie') {
@@ -281,7 +269,7 @@ final class BatchManagerGlobalPageRenderer
                         // before "associate" became a multi-value field).
                         $first_associate_category = reset($associate_categories);
                         if ($first_associate_category !== false) {
-                            $category_info = self::categoryService()->getCategoryInfo($first_associate_category);
+                            $category_info = $this->categoryService->getCategoryInfo($first_associate_category);
                             if (($category_info['dir'] ?? '') === '') {
                                 $redirect = true;
                             }
@@ -301,7 +289,7 @@ final class BatchManagerGlobalPageRenderer
                     $redirect = true;
                 } elseif ($prefilter_value === 'no_virtual_album') {
                     if ($move_category !== null) {
-                        $category_info = self::categoryService()->getCategoryInfo($move_category);
+                        $category_info = $this->categoryService->getCategoryInfo($move_category);
                         if (($category_info['dir'] ?? '') === '') {
                             $redirect = true;
                         }
@@ -471,7 +459,7 @@ final class BatchManagerGlobalPageRenderer
         $page_start = $pageStart;
 
         new FilterPanelRenderer()
-            ->render($template, $base_url, $collection, $cat_elements_id, $page_start, $this->urlService, $this->eventDispatcher, $this->pageState);
+            ->render($template, $base_url, $collection, $cat_elements_id, $page_start, $this->urlService, $this->eventDispatcher, $this->pageState, $this->tagService);
 
         // +-------------------------------------------------------------------+
         // |                            caddie options                             |
@@ -484,7 +472,7 @@ final class BatchManagerGlobalPageRenderer
 
         if (count($cat_elements_id) > 0) {
             // remove tags
-            $template->assign('associated_tags', self::tagService()
+            $template->assign('associated_tags', $this->tagService
                 ->getCommonTags($cat_elements_id, -1, \Piwigo\Bootstrap\PresentationAccessor::htmlService()));
         }
 
@@ -572,7 +560,7 @@ final class BatchManagerGlobalPageRenderer
             }
 
             if ($is_category) {
-                $category_info = self::categoryService()->getCategoryInfo($filter_category_id);
+                $category_info = $this->categoryService->getCategoryInfo($filter_category_id);
 
                 $order_by = \Piwigo\Config\CurrentConfig::orderByInsideCategory();
                 $category_image_order = $category_info !== null ? ($category_info['image_order'] ?? null) : null;
@@ -583,7 +571,7 @@ final class BatchManagerGlobalPageRenderer
 
             $thumb_params = $this->imageStdParams->get_by_type(ImageStdParams::SQUARE);
             // template thumbnail initialization
-            foreach (self::imageService()->getBatchManagerThumbnails($cat_elements_id, $is_category ? $filter_category_id : null, $order_by, $nb_images, $page_start) as $row) {
+            foreach ($this->imageService->getBatchManagerThumbnails($cat_elements_id, $is_category ? $filter_category_id : null, $order_by, $nb_images, $page_start) as $row) {
                 $nb_thumbs_page++;
                 $src_image = new SrcImage($row);
 

@@ -45,22 +45,10 @@ final class ProfileFormHandler
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly EntityManagerInterface $entityManager,
         private readonly \Piwigo\Activity\ActivityService $activityService,
+        private readonly UserService $userService,
+        private readonly PasswordService $passwordService,
+        private readonly AuthService $authService,
     ) {}
-
-    private static function userService(): UserService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::userService();
-    }
-
-    private static function passwordService(): PasswordService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::passwordService();
-    }
-
-    private static function authService(): AuthService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::authService();
-    }
 
     // ------------------------------------------------------ update & customization
     /**
@@ -110,8 +98,8 @@ final class ProfileFormHandler
                 $post['theme'],
                 $post['language']
             );
-            $post['theme'] = self::userService()->getDefaultTheme();
-            $post['language'] = self::userService()->getDefaultLanguage();
+            $post['theme'] = $this->userService->getDefaultTheme();
+            $post['language'] = $this->userService->getDefaultLanguage();
         }
 
         if (! $this->adminContext->isActive()) {
@@ -155,7 +143,7 @@ final class ProfileFormHandler
             // if $_POST and $userdata have are same email
             // validate_mail_address allows, however, to check email
             $mail_address_input = is_string($post['mail_address']) ? $post['mail_address'] : null;
-            $mail_error = self::userService()->validateMailAddress(\Piwigo\Common\ValueObject\UserId::tryFrom($user_id), $mail_address_input);
+            $mail_error = $this->userService->validateMailAddress(\Piwigo\Common\ValueObject\UserId::tryFrom($user_id), $mail_address_input);
             if ($mail_error !== '' && $mail_error !== '0') {
                 $errors[] = $mail_error;
             }
@@ -178,7 +166,7 @@ final class ProfileFormHandler
             }
 
             if (! $this->adminContext->isActive()) {// changing password requires old password
-                $current_password = self::authService()->getPasswordHash($user_id, $user_fields['id'], $user_fields['username'], $user_fields['password']);
+                $current_password = $this->authService->getPasswordHash($user_id, $user_fields['id'], $user_fields['username'], $user_fields['password']);
 
                 // the password column allows NULL (external-authentication
                 // accounts with no local password set); such an account can
@@ -186,7 +174,7 @@ final class ProfileFormHandler
                 $password_input = $post['password'] ?? null;
                 if (! is_string($current_password)
                     or ! is_string($password_input)
-                    or ! self::passwordService()->verify($password_input, $current_password)) {
+                    or ! $this->passwordService->verify($password_input, $current_password)) {
                     $errors[] = Lang::t('Current password is wrong');
                 }
             }
@@ -208,9 +196,9 @@ final class ProfileFormHandler
                 $new_pwd_for_update = $post['use_new_pwd'] ?? null;
                 if (is_string($new_pwd_for_update) and $new_pwd_for_update !== '' and $new_pwd_for_update !== '0') {
                     $fields[] = $user_fields['password'];
-                    $data[$user_fields['password']] = self::passwordService()->hash($new_pwd_for_update);
+                    $data[$user_fields['password']] = $this->passwordService->hash($new_pwd_for_update);
 
-                    self::authService()->deactivateUserAuthKeys($user_id);
+                    $this->authService->deactivateUserAuthKeys($user_id);
                 }
 
                 // username is updated only if allowed
@@ -218,7 +206,7 @@ final class ProfileFormHandler
                 if (is_string($username_for_update) and $username_for_update !== '' and $username_for_update !== '0') {
                     $username = $username_for_update;
                     $usernameVo = \Piwigo\Common\ValueObject\Username::tryFrom($username);
-                    if ($username !== $userdata['username'] and $usernameVo !== null and self::userService()->getUserId($usernameVo) !== null) {
+                    if ($username !== $userdata['username'] and $usernameVo !== null and $this->userService->getUserId($usernameVo) !== null) {
                         $this->pageState->addError(Lang::t('this login is already used'));
                         unset($post['redirect']);
                     } else {
@@ -227,7 +215,7 @@ final class ProfileFormHandler
 
                         // send email to the user
                         if ($username !== $userdata['username']) {
-                            $notification_language = is_string($userdata['language']) ? $userdata['language'] : self::userService()->getDefaultLanguage();
+                            $notification_language = is_string($userdata['language']) ? $userdata['language'] : $this->userService->getDefaultLanguage();
                             \Piwigo\Bootstrap\PresentationAccessor::mailService()
                                 ->switchLangTo($notification_language);
 
@@ -257,10 +245,10 @@ final class ProfileFormHandler
                 foreach ($fields as $field) {
                     $accountUpdates[$field] = $data[$field];
                 }
-                self::userService()->updateAccountFields($user_id, $user_fields['id'], $accountUpdates);
+                $this->userService->updateAccountFields($user_id, $user_fields['id'], $accountUpdates);
 
                 if ($mail_address !== $userdata['email']) {
-                    self::authService()->deactivatePasswordResetKey($user_id);
+                    $this->authService->deactivatePasswordResetKey($user_id);
                 }
 
                 $activity_details_tables[] = 'users';
@@ -302,7 +290,7 @@ final class ProfileFormHandler
                 }
                 $infosUpdates = $data;
                 unset($infosUpdates['user_id']);
-                self::userService()->updateInfosForUser(\Piwigo\Common\ValueObject\UserId::from($user_id), $infosUpdates);
+                $this->userService->updateInfosForUser(\Piwigo\Common\ValueObject\UserId::from($user_id), $infosUpdates);
                 $this->entityManager->clear();
 
                 $activity_details_tables[] = 'user_infos';

@@ -28,19 +28,18 @@ final class GroupPermPageRenderer
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly AuditService $auditService,
+        private readonly \Piwigo\Category\CategoryService $categoryService,
+        private readonly GroupService $groupService,
+        private readonly \Piwigo\Permission\PermissionService $permissionService,
     ) {}
-
-    private static function auditService(): AuditService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::auditService();
-    }
 
     public function render(): void
     {
         $template = $this->currentTemplate->get();
 
         $conn = DbConnection::build();
-        $categoryService = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
+        $categoryService = $this->categoryService;
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
@@ -69,7 +68,7 @@ final class GroupPermPageRenderer
                 ->fatalError('group_id URL parameter is missing');
         }
 
-        $group_service = \Piwigo\Bootstrap\CoreDomainAccessor::groupService();
+        $group_service = $this->groupService;
 
         // [SEC-57] actor for either branch below
         $actor_id = $this->currentUser->get()
@@ -83,14 +82,14 @@ final class GroupPermPageRenderer
             $subcat_ids = array_map(intval(...), $subcats);
             $group_service->removeAccess($groupId, array_map(CategoryId::from(...), $subcat_ids));
 
-            self::auditService()
+            $this->auditService
                 ->record($actor_id, 'permission_revoke', 'group', $groupId->value, [
                     'category_ids' => $subcat_ids,
                 ], null);
         } elseif ($groupPermSubmit->isTrueify
                  and count($cat_false) > 0) {
             $uppercats = $categoryService->getUppercatIds($cat_false);
-            $private_uppercat_ids = \Piwigo\Bootstrap\CoreDomainAccessor::permissionService()
+            $private_uppercat_ids = $this->permissionService
                 ->getPrivateCategoryIdsAmong(array_values(array_map(intval(...), $uppercats)));
 
             // GroupService::addAccess() itself skips categories the group is
@@ -98,7 +97,7 @@ final class GroupPermPageRenderer
             // category may cause a duplicate-key SQL error otherwise).
             $group_service->addAccess($groupId, array_map(CategoryId::from(...), $private_uppercat_ids));
 
-            self::auditService()
+            $this->auditService
                 ->record($actor_id, 'permission_grant', 'group', $groupId->value, null, [
                     'category_ids' => $private_uppercat_ids,
                 ]);

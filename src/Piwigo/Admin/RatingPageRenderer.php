@@ -15,7 +15,7 @@ use Piwigo\Image\DerivativeImage;
  */
 final class RatingPageRenderer
 {
-    public function render(UrlServiceInterface $urlService, \Piwigo\Template\CurrentTemplate $currentTemplate): void
+    public function render(UrlServiceInterface $urlService, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Category\CategoryService $categoryService): void
     {
         $template = $currentTemplate->get();
 
@@ -41,7 +41,6 @@ final class RatingPageRenderer
 
         $cat_ids = [];
         if ($ratingRequest->catId !== null) {
-            $categoryService = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
             $cat_ids = array_values(array_map(intval(...), array_filter($categoryService->getSubcatIds([$ratingRequest->catId]), is_numeric(...))));
         }
 

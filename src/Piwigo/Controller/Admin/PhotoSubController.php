@@ -47,6 +47,7 @@ final class PhotoSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly PictureModifyPageRenderer $pictureModifyPageRenderer,
         private readonly PictureCoiPageRenderer $pictureCoiPageRenderer,
+        private readonly \Piwigo\Image\ImageService $imageService,
     ) {}
 
     #[\Override]
@@ -70,7 +71,7 @@ final class PhotoSubController implements AdminSubControllerInterface
 
         // retrieving direct information about picture
         $imageConn = DbConnection::build();
-        $page['image'] = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()
+        $page['image'] = $this->imageService
             ->getImageInfos($get_image_id, \Piwigo\Bootstrap\PresentationAccessor::htmlService(), true);
 
         $tab = $photoDispatch->tab;

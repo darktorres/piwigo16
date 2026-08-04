@@ -47,12 +47,8 @@ final class LanguagesInstalledPageRenderer
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly \Piwigo\Activity\ActivityService $activityService,
+        private readonly UserService $userService,
     ) {}
-
-    private static function userService(): UserService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::userService();
-    }
 
     /**
      * Legacy Coupling Retirement Track A batch A5.2f: $pageSlug is an
@@ -82,7 +78,7 @@ final class LanguagesInstalledPageRenderer
         $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger);
         $extension_scanner = new ExtensionScanner();
         $plugin_migration_repo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class);
-        $extension_lifecycle = new ExtensionLifecycle($extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo, $this->activityService);
+        $extension_lifecycle = new ExtensionLifecycle($extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo, $this->activityService, $this->userService);
 
         $fs_languages = $extension_scanner->scan(ExtensionType::Language, $this->urlService);
         $db_languages = $extension_repository->findAll(ExtensionType::Language);
@@ -106,7 +102,7 @@ final class LanguagesInstalledPageRenderer
         // +-----------------------------------------------------------------------+
         // |                     start template output                             |
         // +-----------------------------------------------------------------------+
-        $default_language = self::userService()->getDefaultLanguage();
+        $default_language = $this->userService->getDefaultLanguage();
 
         $tpl_languages = [];
 
@@ -157,7 +153,7 @@ final class LanguagesInstalledPageRenderer
         );
 
         foreach ($missing_language_ids as $language_id) {
-            $extension_repository->reassignUsersFromLanguage($language_id, self::userService()->getDefaultLanguage());
+            $extension_repository->reassignUsersFromLanguage($language_id, $this->userService->getDefaultLanguage());
             $extension_repository->delete(ExtensionType::Language, $language_id);
         }
 

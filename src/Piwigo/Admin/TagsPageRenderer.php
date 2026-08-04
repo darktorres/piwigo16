@@ -22,6 +22,7 @@ final class TagsPageRenderer
         private readonly CoreTabs $coreTabs,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly \Piwigo\Tag\TagService $tagService,
     ) {}
 
     public function render(): void
@@ -41,7 +42,7 @@ final class TagsPageRenderer
         $tabsheet->select('');
         $tabsheet->assign($this->currentTemplate);
 
-        $tagService = \Piwigo\Bootstrap\CoreDomainAccessor::tagService();
+        $tagService = $this->tagService;
 
         if (Request\TagsActionRequest::fromGlobals()->isDeleteOrphans) {
             new \Piwigo\Csrf\CsrfService()

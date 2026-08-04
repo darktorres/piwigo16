@@ -67,17 +67,10 @@ final class MaintenanceActionDispatcher
         private readonly DbMaintenanceRepository $dbMaintenanceRepository,
         private readonly \Piwigo\Activity\ActivityService $activityService,
         private readonly \Piwigo\Rate\RateService $rateService,
+        private readonly CategoryService $categoryService,
+        private readonly \Piwigo\Tag\TagService $tagService,
         private readonly ?\Piwigo\Cache\PersistentCache $persistentCache = null,
     ) {}
-
-    /**
-     * DRY extraction (Phase 1k DI-chain audit): the same CategoryService
-     * recipe was repeated verbatim at 2 sites in this file.
-     */
-    private static function categoryService(): CategoryService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
-    }
 
     public function dispatch(string $action): void
     {
@@ -118,7 +111,7 @@ final class MaintenanceActionDispatcher
             case 'categories':
 
                 $this->filesystemIntegrityChecker->imagesIntegrity();
-                $categoriesService = self::categoryService();
+                $categoriesService = $this->categoryService;
                 $categoriesService->checkCategoriesIntegrity();
                 $categoriesService->updateUppercats();
                 $categoriesService->updateCategory('all');
@@ -130,7 +123,7 @@ final class MaintenanceActionDispatcher
             case 'images':
 
                 $this->filesystemIntegrityChecker->imagesIntegrity();
-                self::categoryService()
+                $this->categoryService
                     ->updatePath();
                 $this->rateService
                     ->updateRatingScore();
@@ -140,7 +133,7 @@ final class MaintenanceActionDispatcher
 
             case 'delete_orphan_tags':
 
-                \Piwigo\Bootstrap\CoreDomainAccessor::tagService()
+                $this->tagService
                     ->deleteOrphanTags();
                 $this->pageState->addInfo(sprintf('%s : %s', Lang::t('Delete orphan tags'), Lang::t('action successfully performed.')));
                 break;

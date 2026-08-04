@@ -38,6 +38,7 @@ final class TagsController implements ControllerInterface
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly \Piwigo\Tag\TagService $tagService,
     ) {}
 
     #[\Override]
@@ -79,7 +80,7 @@ final class TagsController implements ControllerInterface
         $template->assign('display_mode', $display_mode);
 
         $conn = DbConnection::build();
-        $tagService = \Piwigo\Bootstrap\CoreDomainAccessor::tagService();
+        $tagService = $this->tagService;
 
         // find all tags available for the current user
         $tags = $tagService->getAvailableTags();

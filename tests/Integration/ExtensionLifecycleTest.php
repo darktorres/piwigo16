@@ -79,7 +79,9 @@ namespace Piwigo\Tests\Integration {
             $currentLogger->set(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::OFF]));
             $activityService = Kernel::container()->get(\Piwigo\Activity\ActivityService::class);
             self::assertInstanceOf(\Piwigo\Activity\ActivityService::class, $activityService);
-            $this->lifecycle = new ExtensionLifecycle($this->repo, new PemCatalog(new ZipExtractor(), $currentLogger), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()), $this->pluginMigrationRepo, $activityService);
+            $userService = Kernel::container()->get(\Piwigo\Users\UserService::class);
+            self::assertInstanceOf(\Piwigo\Users\UserService::class, $userService);
+            $this->lifecycle = new ExtensionLifecycle($this->repo, new PemCatalog(new ZipExtractor(), $currentLogger), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()), $this->pluginMigrationRepo, $activityService, $userService);
 
             CurrentConfig::setEnableExtensionsInstall(true);
             CurrentConfig::setPhpExtensionInUrls(false);

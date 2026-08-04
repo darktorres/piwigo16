@@ -74,12 +74,8 @@ final readonly class ExtensionLifecycle
         private ConfigService $configService,
         private PluginMigrationRepository $pluginMigrationRepo,
         private ActivityService $activityService,
+        private UserService $userService,
     ) {}
-
-    private static function userService(): UserService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::userService();
-    }
 
     /**
      * @param array<string, mixed>|null $fsEntry ExtensionScanner's scanned
@@ -326,7 +322,7 @@ final readonly class ExtensionLifecycle
                     break;
                 }
 
-                if ($id === self::userService()->getDefaultTheme()) {
+                if ($id === $this->userService->getDefaultTheme()) {
                     $newTheme = $this->pickReplacementDefaultTheme($id);
                     $this->setDefaultTheme($newTheme);
                 }
@@ -400,7 +396,7 @@ final readonly class ExtensionLifecycle
                     $errors[] = 'CANNOT DEACTIVATE - LANGUAGE IS ALREADY DEACTIVATED';
                     break;
                 }
-                if ($id === self::userService()->getDefaultLanguage()) {
+                if ($id === $this->userService->getDefaultLanguage()) {
                     $errors[] = 'CANNOT DEACTIVATE - LANGUAGE IS DEFAULT LANGUAGE';
                     break;
                 }
@@ -418,7 +414,7 @@ final readonly class ExtensionLifecycle
                     break;
                 }
 
-                $this->repo->reassignUsersFromLanguage($id, self::userService()->getDefaultLanguage());
+                $this->repo->reassignUsersFromLanguage($id, $this->userService->getDefaultLanguage());
 
                 $languagesDir = \Piwigo\Core\CurrentPaths::get()->root . 'language/';
                 FilesystemHelper::deltree($languagesDir . $id, $languagesDir . 'trash');
@@ -485,7 +481,7 @@ final readonly class ExtensionLifecycle
     private function setDefaultTheme(string $themeId): void
     {
 
-        $defaultTheme = self::userService()->getDefaultTheme();
+        $defaultTheme = $this->userService->getDefaultTheme();
         $userIds = $this->repo->findUserIdsByTheme($defaultTheme);
 
         $defaultUserId = \Piwigo\Config\CurrentConfig::defaultUserId();

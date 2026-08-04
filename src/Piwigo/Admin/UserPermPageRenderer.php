@@ -27,6 +27,9 @@ final class UserPermPageRenderer
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly PermissionService $permissionService,
+        private readonly CategoryService $categoryService,
+        private readonly \Piwigo\Users\UserService $userService,
     ) {}
 
     public function render(): void
@@ -35,10 +38,8 @@ final class UserPermPageRenderer
 
         $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
 
-        // Built once, reused below -- was the same PermissionService recipe
-        // repeated verbatim at 2 sites in this method (Phase 1k DI-chain audit).
-        $permissionService = \Piwigo\Bootstrap\CoreDomainAccessor::permissionService();
-        $categoryService = \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
+        $permissionService = $this->permissionService;
+        $categoryService = $this->categoryService;
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
@@ -80,7 +81,7 @@ final class UserPermPageRenderer
             [
                 'TITLE' => Lang::t(
                     'Manage permissions for user "%s"',
-                    \Piwigo\Bootstrap\CoreDomainAccessor::userService()
+                    $this->userService
                         ->getUsername(\Piwigo\Common\ValueObject\UserId::from($user_id))->value ?? ''
                 ),
                 'L_CAT_OPTIONS_TRUE' => Lang::t('Authorized'),

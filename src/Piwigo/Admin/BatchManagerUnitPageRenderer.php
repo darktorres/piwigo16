@@ -77,32 +77,12 @@ final class BatchManagerUnitPageRenderer
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly EntityManagerInterface $entityManager,
         private readonly \Piwigo\Activity\ActivityService $activityService,
+        private readonly TagService $tagService,
+        private readonly PermissionService $permissionService,
+        private readonly CategoryService $categoryService,
+        private readonly ImageService $imageService,
+        private readonly \Piwigo\Users\UserService $userService,
     ) {}
-
-    private static function tagService(): TagService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::tagService();
-    }
-
-    private static function permissionService(): PermissionService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::permissionService();
-    }
-
-    private static function categoryService(): CategoryService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
-    }
-
-    private static function imageService(): ImageService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::imageService();
-    }
-
-    private static function userService(): \Piwigo\Users\UserService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::userService();
-    }
 
     /**
      * @param array<array-key, int|string|float|bool> $catElementsId a
@@ -131,9 +111,9 @@ final class BatchManagerUnitPageRenderer
 
             $datas = [];
 
-            $tagService = self::tagService();
+            $tagService = $this->tagService;
 
-            foreach (self::imageService()->getIdsAndDatesForBatchUnitSave($collection) as $row) {
+            foreach ($this->imageService->getIdsAndDatesForBatchUnitSave($collection) as $row) {
                 // Tables::images().id is a NOT NULL auto_increment primary key; this
                 // guard only defends against the generic mixed element type a
                 // fetched row carries for every column.
@@ -184,7 +164,7 @@ final class BatchManagerUnitPageRenderer
                 $tagService->setTags($tag_ids, $image_id);
             }
 
-            self::imageService()->massUpdateFields(
+            $this->imageService->massUpdateFields(
                 [
                     'primary' => ['id'],
                     'update' => ['name', 'author', 'level', 'comment', 'date_creation'],
@@ -250,7 +230,7 @@ final class BatchManagerUnitPageRenderer
         $page_start = $pageStart;
 
         new FilterPanelRenderer()
-            ->render($template, $base_url, $collection, $cat_elements_id, $page_start, $this->urlService, $this->eventDispatcher, $this->pageState);
+            ->render($template, $base_url, $collection, $cat_elements_id, $page_start, $this->urlService, $this->eventDispatcher, $this->pageState, $this->tagService);
         // +-------------------------------------------------------------------+
         // |                        global mode thumbnails                         |
         // +-------------------------------------------------------------------+
@@ -307,7 +287,7 @@ final class BatchManagerUnitPageRenderer
             }
 
             if ($is_category) {
-                $category_info = self::categoryService()->getCategoryInfo($filter_category_id);
+                $category_info = $this->categoryService->getCategoryInfo($filter_category_id);
 
                 $order_by = \Piwigo\Config\CurrentConfig::orderByInsideCategory();
                 $category_image_order = $category_info !== null ? ($category_info['image_order'] ?? null) : null;
@@ -316,7 +296,7 @@ final class BatchManagerUnitPageRenderer
                 }
             }
 
-            $images = self::imageService()->getBatchManagerUnitRows($cat_elements_id, $is_category ? $filter_category_id : null, $order_by, $page_nb_images, $page_start);
+            $images = $this->imageService->getBatchManagerUnitRows($cat_elements_id, $is_category ? $filter_category_id : null, $order_by, $page_nb_images, $page_start);
             $added_by_ids = array_values(array_unique(array_map(strval(...), array_filter(
                 array_column($images, 'added_by'),
                 static fn (mixed $v): bool => is_int($v) || is_string($v)
@@ -328,10 +308,10 @@ final class BatchManagerUnitPageRenderer
             // that cross-block invariant).
             $added_by_username_of = [];
             if (count($added_by_ids) > 0) {
-                $added_by_username_of = self::userService()->getUsernamesByIds($added_by_ids);
+                $added_by_username_of = $this->userService->getUsernamesByIds($added_by_ids);
             }
 
-            $tagService = self::tagService();
+            $tagService = $this->tagService;
             $imageService = new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher);
 
             foreach ($images as $row) {
@@ -438,7 +418,7 @@ final class BatchManagerUnitPageRenderer
                     ),
                     explode(
                         ',',
-                        new \Piwigo\Permission\ForbiddenCategoriesCache(self::permissionService(), \Piwigo\Cache\CachePools::permissions())
+                        new \Piwigo\Permission\ForbiddenCategoriesCache($this->permissionService, \Piwigo\Cache\CachePools::permissions())
                             ->getForUser($user->id->value, $user->status->value)
                     )
                 );

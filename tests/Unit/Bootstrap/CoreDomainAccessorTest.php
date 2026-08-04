@@ -7,12 +7,9 @@ use Piwigo\Auth\ApiKeyService;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Bootstrap\CoreDomainAccessor;
-use Piwigo\Category\CategoryCatsRenderer;
-use Piwigo\Category\CategoryDefaultRenderer;
 use Piwigo\Category\CategoryService;
 use Piwigo\Group\GroupService;
 use Piwigo\Image\ImageService;
-use Piwigo\Permission\ImageVisibilityChecker;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Tag\TagService;
 use Piwigo\Tests\Support\KernelContainerOverride;
@@ -21,11 +18,15 @@ use Piwigo\Users\UserService;
 
 /**
  * Piwigo\Bootstrap\CoreDomainAccessor -- same "26/26 AdminAccessor" gap
- * shape, but for all 14 of this class's own accessors: the container
- * really does resolve the right type on every real call site elsewhere
- * in the codebase, so the "unexpected type" \LogicException guard itself
- * had zero coverage. See AdminAccessorTest.php's own docblock for the
- * KernelContainerOverride rationale.
+ * shape, but for all 11 of this class's own remaining accessors (Phase 6
+ * CoreDomainAccessor sub-batch converted every real caller of
+ * imageVisibilityChecker()/categoryDefaultRenderer()/categoryCatsRenderer()
+ * to constructor injection, leaving those 3 methods with zero remaining
+ * callers -- deleted along with their own dedicated tests below): the
+ * container really does resolve the right type on every real call site
+ * elsewhere in the codebase, so the "unexpected type" \LogicException
+ * guard itself had zero coverage. See AdminAccessorTest.php's own
+ * docblock for the KernelContainerOverride rationale.
  */
 afterEach(function (): void {
     \Piwigo\Core\Kernel::reset();
@@ -37,11 +38,7 @@ test('every accessor returns its real, correctly-typed instance from a real cont
     // Same "wrong-type tests below only prove the throw side" gap as
     // AdminAccessorTest.php's own identical test -- see that file's
     // docblock for the full rationale, including why Kernel::boot() needs
-    // a real Paths passed in. categoryDefaultRenderer()/categoryCatsRenderer()
-    // additionally need Piwigo\Template\CurrentTemplate seeded (a renderer
-    // dependency, itself needing dataDirChecked marked already-checked to
-    // avoid a real DB write) -- see ExtendedDomainAccessorTest.php's own
-    // identical setup for the full reasoning.
+    // a real Paths passed in.
     \Piwigo\Core\Kernel::reset();
     \Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot(sys_get_temp_dir()));
     \Piwigo\Config\CurrentConfig::setDataLocation('data/');
@@ -59,9 +56,6 @@ test('every accessor returns its real, correctly-typed instance from a real cont
     expect(CoreDomainAccessor::preferencesService())->toBeInstanceOf(PreferencesService::class);
     expect(CoreDomainAccessor::apiKeyService())->toBeInstanceOf(ApiKeyService::class);
     expect(CoreDomainAccessor::auditService())->toBeInstanceOf(AuditService::class);
-    expect(CoreDomainAccessor::imageVisibilityChecker())->toBeInstanceOf(ImageVisibilityChecker::class);
-    expect(CoreDomainAccessor::categoryDefaultRenderer())->toBeInstanceOf(CategoryDefaultRenderer::class);
-    expect(CoreDomainAccessor::categoryCatsRenderer())->toBeInstanceOf(CategoryCatsRenderer::class);
 });
 
 test('permissionService throws when the container returns an unexpected type', function (): void {
@@ -140,24 +134,3 @@ test('auditService throws when the container returns an unexpected type', functi
         static fn () => CoreDomainAccessor::auditService()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . AuditService::class);
-
-test('imageVisibilityChecker throws when the container returns an unexpected type', function (): void {
-    KernelContainerOverride::withWrongTypeFor(
-        ImageVisibilityChecker::class,
-        static fn () => CoreDomainAccessor::imageVisibilityChecker()
-    );
-})->throws(LogicException::class, 'Container returned an unexpected type for ' . ImageVisibilityChecker::class);
-
-test('categoryDefaultRenderer throws when the container returns an unexpected type', function (): void {
-    KernelContainerOverride::withWrongTypeFor(
-        CategoryDefaultRenderer::class,
-        static fn () => CoreDomainAccessor::categoryDefaultRenderer()
-    );
-})->throws(LogicException::class, 'Container returned an unexpected type for ' . CategoryDefaultRenderer::class);
-
-test('categoryCatsRenderer throws when the container returns an unexpected type', function (): void {
-    KernelContainerOverride::withWrongTypeFor(
-        CategoryCatsRenderer::class,
-        static fn () => CoreDomainAccessor::categoryCatsRenderer()
-    );
-})->throws(LogicException::class, 'Container returned an unexpected type for ' . CategoryCatsRenderer::class);

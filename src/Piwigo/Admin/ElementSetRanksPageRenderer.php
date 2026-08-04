@@ -49,6 +49,7 @@ final class ElementSetRanksPageRenderer
         private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly CategoryAdminService $categoryAdminService,
+        private readonly \Piwigo\Image\ImageService $imageService,
     ) {}
 
     public function render(): void
@@ -102,7 +103,7 @@ final class ElementSetRanksPageRenderer
                 ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
 
             if ($elementSetRanksRequest->rankOfImage !== []) {
-                \Piwigo\Bootstrap\CoreDomainAccessor::imageService()
+                $this->imageService
                     ->saveImagesOrder(
                         $category_id,
                         array_map(intval(...), array_keys($elementSetRanksRequest->rankOfImage))

@@ -19,7 +19,7 @@ use Piwigo\Template\Template;
  */
 final class UserActivityPageRenderer
 {
-    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Activity\ActivityService $activityService): void
+    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Activity\ActivityService $activityService, \Piwigo\Users\UserService $userService, \Piwigo\Image\ImageService $imageService, \Piwigo\Category\CategoryService $categoryService, \Piwigo\Group\GroupService $groupService): void
     {
         $template = $currentTemplate->get();
 
@@ -92,7 +92,7 @@ final class UserActivityPageRenderer
         $nb_lines_for_user = $activity_service->getCountByUser();
 
         if (count($nb_lines_for_user) > 0) {
-            $username_of = \Piwigo\Bootstrap\CoreDomainAccessor::userService()->getUsernamesByIds(array_map(strval(...), array_keys($nb_lines_for_user)));
+            $username_of = $userService->getUsernamesByIds(array_map(strval(...), array_keys($nb_lines_for_user)));
         } else {
             // no activity lines at all: skip the lookup query rather than
             // re-running the stale $query from above (previously left in place
@@ -115,7 +115,7 @@ final class UserActivityPageRenderer
         }
         $template->assign('ulist', $filterable_users);
 
-        $nb_users = \Piwigo\Bootstrap\CoreDomainAccessor::userService()->getTotalUserCount();
+        $nb_users = $userService->getTotalUserCount();
         $template->assign('nb_users', $nb_users);
 
         $min_date = $activity_service->getMinOccuredOn();
@@ -145,9 +145,9 @@ final class UserActivityPageRenderer
 
                 $filter_id = (int) $filter_value;
                 $name = match ($filter_key) {
-                    'photo' => \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->getImageRow($filter_id)['name'] ?? null,
-                    'album' => \Piwigo\Bootstrap\CoreDomainAccessor::categoryService()->getNamesByIds([$filter_id])[$filter_id]['name'] ?? null,
-                    'group' => \Piwigo\Bootstrap\CoreDomainAccessor::groupService()->getName(\Piwigo\Common\ValueObject\GroupId::from($filter_id)),
+                    'photo' => $imageService->getImageRow($filter_id)['name'] ?? null,
+                    'album' => $categoryService->getNamesByIds([$filter_id])[$filter_id]['name'] ?? null,
+                    'group' => $groupService->getName(\Piwigo\Common\ValueObject\GroupId::from($filter_id)),
                 };
 
                 if ($name === null) {

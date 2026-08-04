@@ -1263,6 +1263,52 @@ final class RequestBootstrap
     }
 
     /**
+     * Public (unlike the private resolver helpers above): public/admin.php's
+     * own legacy-style `new AdminShell(...)` manual construction needs a way
+     * to obtain the same container-shared instance every other ImageService
+     * consumer receives via constructor injection, without calling
+     * Kernel::container() directly itself (arch-tested to Bootstrap/ only)
+     * -- same "public accessor on this class" shape as coreTabs()/
+     * sessionService()/eventDispatcher()/deploymentPolicy()/commentService()
+     * above (singleton/service-locator elimination campaign, Phase 6).
+     */
+    public static function imageService(): \Piwigo\Image\ImageService
+    {
+        $imageService = Kernel::container()->get(\Piwigo\Image\ImageService::class);
+        if (! $imageService instanceof \Piwigo\Image\ImageService) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Image\ImageService::class);
+        }
+
+        return $imageService;
+    }
+
+    /**
+     * Same reasoning as commentService()/imageService() above.
+     */
+    public static function preferencesService(): \Piwigo\Users\PreferencesService
+    {
+        $preferencesService = Kernel::container()->get(\Piwigo\Users\PreferencesService::class);
+        if (! $preferencesService instanceof \Piwigo\Users\PreferencesService) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Users\PreferencesService::class);
+        }
+
+        return $preferencesService;
+    }
+
+    /**
+     * Same reasoning as commentService()/imageService() above.
+     */
+    public static function userService(): \Piwigo\Users\UserService
+    {
+        $userService = Kernel::container()->get(\Piwigo\Users\UserService::class);
+        if (! $userService instanceof \Piwigo\Users\UserService) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Users\UserService::class);
+        }
+
+        return $userService;
+    }
+
+    /**
      * Leaf values recursed into by array_walk_recursive() from $_GET/
      * $_POST/$_COOKIE are always strings in practice (HTTP request data
      * never contains scalars other than strings; arrays are recursed

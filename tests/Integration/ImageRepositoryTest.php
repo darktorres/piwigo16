@@ -340,8 +340,9 @@ final class ImageRepositoryTest extends IntegrationTestCase
             $withLoungedIds = $this->repo->findOrphanImageIds([3]);
             self::assertNotContains(3, $withLoungedIds);
         } finally {
+            $rank = $this->conn->getDatabasePlatform()->quoteSingleIdentifier('rank');
             $this->conn->executeStatement(
-                'INSERT INTO ' . Tables::imageCategory() . ' (image_id, category_id, `rank`) VALUES (3, 1, 3)'
+                'INSERT INTO ' . Tables::imageCategory() . " (image_id, category_id, {$rank}) VALUES (3, 1, 3)"
             );
         }
     }
@@ -1133,11 +1134,12 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_increment_ranks_from_for_category_bumps_ranks_at_or_above_the_given_rank(): void
     {
+        $rankIdentifier = $this->conn->getDatabasePlatform()->quoteSingleIdentifier('rank');
         try {
             $this->repo->incrementRanksFromForCategory(1, 2);
 
             $ranks = $this->conn->createQueryBuilder()
-                ->select('image_id', '`rank`')
+                ->select('image_id', $rankIdentifier)
                 ->from(Tables::imageCategory())
                 ->where('category_id = 1')
                 ->executeQuery()
@@ -1150,17 +1152,18 @@ final class ImageRepositoryTest extends IntegrationTestCase
             // and rank are numerically identical by construction (1/1,
             // 2/2, 3/3) -- restoring rank = image_id is exact, not an
             // approximation.
-            $this->conn->executeStatement('UPDATE ' . Tables::imageCategory() . ' SET `rank` = image_id WHERE category_id = 1');
+            $this->conn->executeStatement("UPDATE " . Tables::imageCategory() . " SET {$rankIdentifier} = image_id WHERE category_id = 1");
         }
     }
 
     public function test_update_rank_for_image_in_category_sets_the_rank(): void
     {
+        $rankIdentifier = $this->conn->getDatabasePlatform()->quoteSingleIdentifier('rank');
         try {
             $this->repo->updateRankForImageInCategory(1, 1, 99);
 
             $rank = $this->conn->createQueryBuilder()
-                ->select('`rank`')
+                ->select($rankIdentifier)
                 ->from(Tables::imageCategory())
                 ->where('image_id = 1')
                 ->andWhere('category_id = 1')
@@ -1168,7 +1171,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
                 ->fetchOne();
             self::assertSame(99, $rank);
         } finally {
-            $this->conn->executeStatement('UPDATE ' . Tables::imageCategory() . ' SET `rank` = 1 WHERE image_id = 1 AND category_id = 1');
+            $this->conn->executeStatement("UPDATE " . Tables::imageCategory() . " SET {$rankIdentifier} = 1 WHERE image_id = 1 AND category_id = 1");
         }
     }
 

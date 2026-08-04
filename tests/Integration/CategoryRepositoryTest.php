@@ -423,7 +423,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
             $path = $this->conn->fetchOne('SELECT path FROM ' . Tables::images() . ' WHERE id = 1');
             self::assertSame('galleries/renamed-album/fixture-photo-1.jpg', $path);
         } finally {
-            $this->conn->executeStatement("UPDATE " . Tables::images() . " SET storage_category_id = NULL, path = 'upload/2026/08/01/20260801000000-2e7e7e49.jpg' WHERE id = 1");
+            $this->conn->executeStatement("UPDATE " . Tables::images() . " SET storage_category_id = NULL, path = 'upload/2026/08/01/20260801000000-2e7ed018.jpg' WHERE id = 1");
         }
     }
 

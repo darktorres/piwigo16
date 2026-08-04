@@ -206,9 +206,9 @@ final class NotificationRepositoryTest extends IntegrationTestCase
             }
         }
         self::assertSame('fixture-photo-1.jpg', $byId[1]['file']);
-        self::assertSame('upload/2026/08/01/20260801000000-2e7e7e49.jpg', $byId[1]['path']);
+        self::assertSame('upload/2026/08/01/20260801000000-2e7ed018.jpg', $byId[1]['path']);
         self::assertSame('fixture-photo-2.jpg', $byId[2]['file']);
-        self::assertSame('upload/2026/08/01/20260801000000-4a01a905.jpg', $byId[2]['path']);
+        self::assertSame('upload/2026/08/01/20260801000000-4a01786c.jpg', $byId[2]['path']);
     }
 
     public function test_find_recent_categories_for_date_returns_matching_rows(): void

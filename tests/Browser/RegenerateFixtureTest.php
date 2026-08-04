@@ -10,10 +10,12 @@ use Piwigo\Tests\Browser\Helpers\FixturePhotoGenerator;
 use Piwigo\Tests\Integration\IntegrationTestCase;
 
 /**
- * Regenerates tests/Fixtures/piwigo-17.0.sql by driving a fresh install
- * (which creates the final schema directly -- no Doctrine Migrations
- * step, since install/piwigo_structure-mysql.sql already has every fix
- * applied), seeding content, then dumping it.
+ * Regenerates tests/Fixtures/piwigo-17.0.sql (or, on Postgres,
+ * piwigo-17.0-pgsql.sql) by driving a fresh install -- via the real
+ * Doctrine Migrations baseline InstallWizard::performInstall() now runs
+ * (Phase B of the pgsql-support pass; this docblock's own prior "no
+ * Doctrine Migrations step" claim predates that and is no longer
+ * accurate) -- seeding content, then dumping it.
  *
  * Usage:
  *   vendor/bin/pest --group=fixture-regen
@@ -22,8 +24,14 @@ use Piwigo\Tests\Integration\IntegrationTestCase;
  * --exclude-group=fixture-regen) — this wipes the test DB and overwrites a
  * committed fixture file. It is not a regression test.
  *
- * Credentials come from .env.test (PIWIGO_DB_HOST/USER/PASSWORD/BASE/PREFIX),
- * loaded via IntegrationTestCase::setUpConnectionFromEnv().
+ * Credentials come from .env.test (PIWIGO_DB_HOST/USER/PASSWORD/BASE/PREFIX/
+ * DRIVER), loaded via IntegrationTestCase::setUpConnectionFromEnv() --
+ * running this against Postgres needs .env.test's own PIWIGO_DB_DRIVER set
+ * to pgsql beforehand (the real, live-server-facing side of this test;
+ * unlike most Integration tests, it can't be driven by an env-var override
+ * on the CLI invocation alone, since the *real running web server* --
+ * not this CLI process -- is what actually executes install.php/ws.php
+ * and re-reads .env.test itself for every request).
  */
 #[Group('fixture-regen')]
 final class RegenerateFixtureTest extends IntegrationTestCase
@@ -65,6 +73,39 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         return $this->cookieJar;
     }
 
+    /**
+     * pgsql support pass: this test's own real, direct (raw, unbound)
+     * INSERT statements below need a per-connection-type dispatch --
+     * unlike every other real caller in this codebase (which goes
+     * through Doctrine DBAL, already portable), this file's own seed
+     * data is built with $this->newMysqli()/newPgsqlConnection()'s
+     * native, driver-specific connection objects directly (matching
+     * IntegrationTestCase's own established "raw escape hatch" shape for
+     * this kind of fixture-authoring code, not app code).
+     */
+    private function dbQuery(\mysqli|\PgSql\Connection $db, string $sql): void
+    {
+        if ($db instanceof \mysqli) {
+            $db->query($sql);
+        } else {
+            pg_query($db, $sql);
+        }
+    }
+
+    private function dbEscape(\mysqli|\PgSql\Connection $db, string $value): string
+    {
+        return $db instanceof \mysqli ? $db->real_escape_string($value) : pg_escape_string($db, $value);
+    }
+
+    private function dbClose(\mysqli|\PgSql\Connection $db): void
+    {
+        if ($db instanceof \mysqli) {
+            $db->close();
+        } else {
+            pg_close($db);
+        }
+    }
+
     public function test_regenerate_fixture(): void
     {
         if ($this->dbName === '' || $this->dbName === 'piwigo') {
@@ -83,12 +124,20 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         // itself preserves any pre-existing custom line (e.g. PIWIGO_TEST_NOW
         // — see \Piwigo\Core\Env::now()) when it rewrites .env.test,
         // so nothing extra is needed here to keep it across a regen.
+        //
+        // 'dbdriver' is real, not a no-op default -- InstallWizardRequest's
+        // own parsing falls back to 'mysqli' for anything but a literal
+        // 'pgsql' string, so omitting it here would silently install
+        // against mysqli even when this whole test is otherwise pgsql-
+        // targeted (this->dbDriver already reflects the real .env.test
+        // PIWIGO_DB_DRIVER, via setUpConnectionFromEnv()).
         $installBody = $this->postForm('install.php', [
             'install'       => '1',
             'dbhost'        => $this->dbHost,
             'dbuser'        => $this->dbUser,
             'dbpasswd'      => $this->dbPass,
             'dbname'        => $this->dbName,
+            'dbdriver'      => $this->dbDriver,
             'prefix'        => $this->dbPrefix,
             'admin_name'    => self::ADMIN_USER,
             'admin_pass1'   => self::ADMIN_PASS,
@@ -154,8 +203,8 @@ final class RegenerateFixtureTest extends IntegrationTestCase
             self::assertIsArray($tagAddResult, 'pwg.tags.add result must be an array');
             $tagIds[] = self::idFromWsValue($tagAddResult['id'], 'pwg.tags.add');
         }
-        $db = $this->newMysqli($this->dbName);
-        $db->query(sprintf(
+        $db = $this->dbDriver === 'pgsql' ? $this->newPgsqlConnection($this->dbName) : $this->newMysqli($this->dbName);
+        $this->dbQuery($db, sprintf(
             'INSERT INTO %simage_tag (image_id, tag_id) VALUES (%d,%d),(%d,%d),(%d,%d),(%d,%d),(%d,%d)',
             $this->dbPrefix,
             $photoIds[0], $tagIds[0],
@@ -193,7 +242,7 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         // Env::now()'s PIWIGO_TEST_NOW freeze, so every regeneration produced
         // a fresh, non-reproducible timestamp in the committed fixture.
         $now = Env::now()->format('Y-m-d H:i:s');
-        $db->query(sprintf(
+        $this->dbQuery($db, sprintf(
             "INSERT INTO %scomments (image_id, date, author, anonymous_id, author_id, content, validated, validation_date) VALUES "
             . "(%d, '%s', 'fixture_admin', '127.0.0.1', 1, 'Fixture comment for integration tests.', 1, '%s'), "
             . "(%d, '%s', 'regular_user', '127.0.0.2', %d, 'Another perspective on this photo.', 1, '%s'), "
@@ -221,7 +270,7 @@ final class RegenerateFixtureTest extends IntegrationTestCase
             self::assertIsArray($firstAddedGroup, 'pwg.groups.add groups[0] must be an array');
             $groupIds[] = self::idFromWsValue($firstAddedGroup['id'], 'pwg.groups.add');
         }
-        $db->query(sprintf(
+        $this->dbQuery($db, sprintf(
             'INSERT INTO %suser_group (user_id, group_id) VALUES (1,%d),(%d,%d),(%d,%d),(%d,%d)',
             $this->dbPrefix,
             $groupIds[0],
@@ -229,7 +278,7 @@ final class RegenerateFixtureTest extends IntegrationTestCase
             $userIds['regular_user'], $groupIds[1],
             $userIds['power_user'], $groupIds[2]
         ));
-        $db->query(sprintf(
+        $this->dbQuery($db, sprintf(
             'INSERT INTO %sgroup_access (group_id, cat_id) VALUES (%d,%d),(%d,%d),(%d,%d),(%d,%d)',
             $this->dbPrefix,
             $groupIds[0], $rootAlbumId,
@@ -240,7 +289,7 @@ final class RegenerateFixtureTest extends IntegrationTestCase
 
         // 10. Five ratings across users/photos.
         $today = Env::now()->format('Y-m-d');
-        $db->query(sprintf(
+        $this->dbQuery($db, sprintf(
             "INSERT INTO %srate (user_id, element_id, anonymous_id, rate, date) VALUES "
             . "(1,%d,'',5,'%s'), (%d,%d,'',4,'%s'), (%d,%d,'',3,'%s'), "
             . "(1,%d,'',5,'%s'), (%d,%d,'',2,'%s')",
@@ -251,29 +300,29 @@ final class RegenerateFixtureTest extends IntegrationTestCase
             $photoIds[2], $today,
             $userIds['regular_user'], $photoIds[3], $today
         ));
-        $db->query(sprintf(
+        $this->dbQuery($db, sprintf(
             'UPDATE %simages SET rating_score = 4.50 WHERE id = %d',
             $this->dbPrefix,
             $photoIds[0]
         ));
-        $db->query(sprintf(
+        $this->dbQuery($db, sprintf(
             'UPDATE %simages SET rating_score = 3.00 WHERE id = %d',
             $this->dbPrefix,
             $photoIds[1]
         ));
-        $db->query(sprintf(
+        $this->dbQuery($db, sprintf(
             'UPDATE %simages SET rating_score = 5.00 WHERE id = %d',
             $this->dbPrefix,
             $photoIds[2]
         ));
-        $db->query(sprintf(
+        $this->dbQuery($db, sprintf(
             'UPDATE %simages SET rating_score = 2.00 WHERE id = %d',
             $this->dbPrefix,
             $photoIds[3]
         ));
 
         // 11. Three favorites for the admin user.
-        $db->query(sprintf(
+        $this->dbQuery($db, sprintf(
             'INSERT INTO %sfavorites (user_id, image_id) VALUES (1,%d),(1,%d),(1,%d)',
             $this->dbPrefix,
             $photoIds[0],
@@ -282,7 +331,7 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         ));
 
         // 12. Two mail notification entries.
-        $db->query(sprintf(
+        $this->dbQuery($db, sprintf(
             "INSERT INTO %suser_mail_notification (user_id, check_key, enabled, last_send) VALUES "
             . "(1, 'abcdef1234567890', 1, '%s'), (%d, 'ghijkl9876543210', 0, NULL)",
             $this->dbPrefix,
@@ -291,7 +340,7 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         ));
 
         // 13. One old permalink.
-        $db->query(sprintf(
+        $this->dbQuery($db, sprintf(
             "INSERT INTO %sold_permalinks (cat_id, permalink, date_deleted, last_hit, hit) VALUES "
             . "(%d, 'old-sample-album', '%s', '%s', 42)",
             $this->dbPrefix,
@@ -326,58 +375,93 @@ final class RegenerateFixtureTest extends IntegrationTestCase
             'show_piwigo_latest_news'      => false,
             'dashboard_check_for_updates'  => false,
         ];
+        // ON DUPLICATE KEY UPDATE has no Postgres equivalent -- ON CONFLICT
+        // (param) DO UPDATE SET is the real one (piwigo_config.param is the
+        // PRIMARY KEY on both platforms, so the conflict target is valid
+        // either way).
+        $upsertSql = $this->dbDriver === 'pgsql'
+            ? "INSERT INTO %sconfig (param, value) VALUES ('%s', '%s') ON CONFLICT (param) DO UPDATE SET value = '%s'"
+            : "INSERT INTO %sconfig (param, value) VALUES ('%s', '%s') ON DUPLICATE KEY UPDATE value = '%s'";
         foreach ($configEntries as $param => $value) {
             $jsonValue = json_encode($value);
             if ($jsonValue === false) {
                 throw new \RuntimeException("json_encode failed for config param '{$param}'");
             }
 
-            $db->query(sprintf(
-                "INSERT INTO %sconfig (param, value) VALUES ('%s', '%s') ON DUPLICATE KEY UPDATE value = '%s'",
+            $this->dbQuery($db, sprintf(
+                $upsertSql,
                 $this->dbPrefix,
-                $db->real_escape_string($param),
-                $db->real_escape_string($jsonValue),
-                $db->real_escape_string($jsonValue)
+                $this->dbEscape($db, $param),
+                $this->dbEscape($db, $jsonValue),
+                $this->dbEscape($db, $jsonValue)
             ));
         }
-        $db->close();
+        $this->dbClose($db);
 
-        // 15. Dump the scratch DB to tests/Fixtures/piwigo-17.0.sql.
+        // 15. Dump the scratch DB to tests/Fixtures/piwigo-17.0.sql (or,
+        // on Postgres, piwigo-17.0-pgsql.sql -- the exact sibling path
+        // IntegrationTestCase::loadFixture() itself derives from the
+        // mysql-shaped literal every real call site passes).
         // --set-gtid-purged=OFF strips a host-specific GTID set that would
         // otherwise make every regeneration produce a spurious diff.
-        $fixturePath = dirname(__DIR__) . '/Fixtures/piwigo-17.0.sql';
-        $cmd = ['mysqldump', '-u' . $this->dbUser];
-        if ($this->dbPass !== '') {
-            $cmd[] = '-p' . $this->dbPass;
+        // --ignore-table/--exclude-table={prefix}migration_versions: real
+        // and necessary for `bin/piwigo migrations:migrate` against a real
+        // install, but out of place baked into a fixture (same reasoning
+        // Piwigo\Db\SchemaDumpService's own docblock already gives for its
+        // schema-only dump) -- this table didn't exist in this fixture
+        // before InstallWizard started driving schema creation through the
+        // real Migrator (Phase B), so this exclusion is a real, newly-
+        // needed fix, not carried over from before.
+        $fixturePath = $this->dbDriver === 'pgsql'
+            ? dirname(__DIR__) . '/Fixtures/piwigo-17.0-pgsql.sql'
+            : dirname(__DIR__) . '/Fixtures/piwigo-17.0.sql';
+
+        if ($this->dbDriver === 'pgsql') {
+            $cmd = ['pg_dump', '-U' . $this->dbUser, '-h' . $this->dbHost];
+            $cmd[] = '--exclude-table=' . $this->dbPrefix . 'migration_versions';
+            $cmd[] = $this->dbName;
+            $env = $this->dbPass !== '' ? array_merge(getenv(), ['PGPASSWORD' => $this->dbPass]) : null;
+        } else {
+            $cmd = ['mysqldump', '-u' . $this->dbUser];
+            if ($this->dbPass !== '') {
+                $cmd[] = '-p' . $this->dbPass;
+            }
+
+            $cmd[] = str_starts_with($this->dbHost, '/') ? '--socket=' . $this->dbHost : '-h' . $this->dbHost;
+            $cmd[] = '--no-tablespaces';
+            $cmd[] = '--set-gtid-purged=OFF';
+            $cmd[] = '--ignore-table=' . $this->dbName . '.' . $this->dbPrefix . 'migration_versions';
+            $cmd[] = $this->dbName;
+            $env = null;
         }
 
-        $cmd[] = str_starts_with($this->dbHost, '/') ? '--socket=' . $this->dbHost : '-h' . $this->dbHost;
-        $cmd[] = '--no-tablespaces';
-        $cmd[] = '--set-gtid-purged=OFF';
-        $cmd[] = $this->dbName;
-
         $descriptors = [1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
-        $proc = proc_open($cmd, $descriptors, $pipes);
-        self::assertIsResource($proc, 'proc_open failed for mysqldump');
+        $proc = proc_open($cmd, $descriptors, $pipes, null, $env);
+        self::assertIsResource($proc, 'proc_open failed for ' . $cmd[0]);
         $dump   = stream_get_contents($pipes[1]);
         $stderr = stream_get_contents($pipes[2]);
         fclose($pipes[1]);
         fclose($pipes[2]);
         $exit = proc_close($proc);
         self::assertIsString($stderr);
-        self::assertSame(0, $exit, 'mysqldump failed: ' . $stderr);
-        self::assertIsString($dump, 'mysqldump produced no output');
+        self::assertSame(0, $exit, $cmd[0] . ' failed: ' . $stderr);
+        self::assertIsString($dump, $cmd[0] . ' produced no output');
 
-        // Item 22: mysqldump's own output never includes this -- MySQL
-        // bakes a FULLTEXT index's effective stopword-filtering behavior
-        // in at CREATE TABLE time (confirmed live: a later per-connection
-        // setting has zero effect on an already-existing index), so the
-        // categories/images/tags ngram FULLTEXT indexes below need this
-        // active before their own CREATE TABLE runs when this dump is
-        // reloaded via IntegrationTestCase::loadFixture() -- same
-        // rationale as install/piwigo_structure-mysql.sql's own identical
-        // line, kept in sync with it.
-        $dump = "SET SESSION innodb_ft_enable_stopword = 0;\n" . $dump;
+        if ($this->dbDriver !== 'pgsql') {
+            // Item 22: mysqldump's own output never includes this -- MySQL
+            // bakes a FULLTEXT index's effective stopword-filtering behavior
+            // in at CREATE TABLE time (confirmed live: a later per-connection
+            // setting has zero effect on an already-existing index), so the
+            // categories/images/tags ngram FULLTEXT indexes below need this
+            // active before their own CREATE TABLE runs when this dump is
+            // reloaded via IntegrationTestCase::loadFixture() -- same
+            // rationale as install/piwigo_structure-mysql.sql's own identical
+            // line, kept in sync with it. Postgres has no equivalent concept
+            // to prepend -- its own FULLTEXT parity uses generated tsvector
+            // columns (Phase B/F of the pgsql-support pass), with no
+            // session-level setting of any kind involved.
+            $dump = "SET SESSION innodb_ft_enable_stopword = 0;\n" . $dump;
+        }
 
         file_put_contents($fixturePath, $dump);
         $fixtureSize = filesize($fixturePath);

@@ -197,7 +197,7 @@ final class WsTopLevelTest extends ContractTestCase
         // fixture image 1's real on-disk file (dedicated fixture asset,
         // never touched by other Contract test files) is missing its
         // 'square' derivative on disk -- confirmed live before writing this
-        // assertion (`i.php?/.../20260801000000-2e7e7e49-sq.jpg` shows up
+        // assertion (`i.php?/.../20260801000000-2e7ed018-sq.jpg` shows up
         // in the un-filtered call's result too).
         $response = $this->wsAdmin('pwg.getMissingDerivatives', ['ids' => [1], 'max_urls' => 5000]);
 
@@ -209,7 +209,7 @@ final class WsTopLevelTest extends ContractTestCase
         self::assertNotEmpty($urls);
         foreach ($urls as $url) {
             self::assertIsString($url);
-            self::assertStringContainsString('2e7e7e49', $url);
+            self::assertStringContainsString('2e7ed018', $url);
         }
     }
 

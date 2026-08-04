@@ -702,8 +702,25 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         // $userdata here would widen every other key's inferred type to
         // mixed for the remainder of this function. Merged back in just
         // before the final return instead.
+        //
+        // Real bug found live (2026-08-04, via a failing AdminShellTest
+        // purge-logic assertion): this used to only accept a raw JSON
+        // *string*, matching fetchUserInfosWithThemeName()'s old raw-DBAL
+        // return shape. Item 16H converted that method to real DQL
+        // UserInfoEntity hydration, whose `preferences` column maps as
+        // Doctrine's native `json` type -- already a decoded PHP array by
+        // the time it reaches here, never a string anymore. is_string()
+        // was therefore always false post-conversion, silently discarding
+        // every real user's preferences on every single login (test and
+        // production alike) -- confirmed live via CurrentUser::get()
+        // ->preferences coming back `[]` immediately after a real login,
+        // despite the DB row genuinely holding real preference data.
+        // ArrayHelper::safeJsonDecode() already accepts array|string
+        // (passes an array straight through unchanged), so widening the
+        // gate to match its own accepted type is the real fix, not adding
+        // a second decode path.
         $preferences_raw = $userdata['preferences'];
-        $preferences = ! self::emptyValue($preferences_raw) && is_string($preferences_raw)
+        $preferences = ! self::emptyValue($preferences_raw) && (is_array($preferences_raw) || is_string($preferences_raw))
             ? \Piwigo\Core\ArrayHelper::safeJsonDecode($preferences_raw)
             : [];
 

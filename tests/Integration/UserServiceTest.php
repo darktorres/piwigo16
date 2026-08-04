@@ -1133,6 +1133,43 @@ namespace Piwigo\Tests\Integration {
             }
         }
 
+        public function test_get_user_data_preserves_real_non_empty_preferences_from_the_db(): void
+        {
+            // Real bug found live (2026-08-04, via a failing AdminShellTest
+            // purge-logic assertion): fetchUserInfosWithThemeName()'s
+            // Item-16H conversion to real DQL UserInfoEntity hydration made
+            // its own `preferences` column arrive already decoded as a PHP
+            // array (Doctrine's native `json` Type), not the raw JSON
+            // *string* getUserData()'s own is_string() gate still expected
+            // -- silently discarding every real user's preferences on
+            // every single login, test and production alike, with no
+            // existing test ever exercising a genuinely non-empty
+            // preferences value through this path to catch it.
+            $this->conn->executeStatement(
+                "INSERT INTO " . Tables::users() . " (username, password, mail_address) VALUES ('prefs-user', NULL, NULL)"
+            );
+            $userId = (int) $this->conn->lastInsertId();
+            $this->conn->executeStatement(
+                'INSERT INTO ' . Tables::userInfos() . " (user_id, preferences) VALUES (?, '{\"show_whats_new_16\": false, \"admin_theme\": \"clear\"}')",
+                [$userId]
+            );
+
+            try {
+                $data = $this->service->getUserData(UserId::from($userId));
+
+                // ksort(), not assertSame() directly -- MySQL's native JSON
+                // type doesn't preserve insertion order on round-trip; this
+                // test cares about the decoded key/value content, not the
+                // incidental storage order.
+                $preferences = $data['preferences'];
+                self::assertIsArray($preferences);
+                ksort($preferences);
+                self::assertSame(['admin_theme' => 'clear', 'show_whats_new_16' => false], $preferences);
+            } finally {
+                $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ?', [$userId]);
+            }
+        }
+
         public function test_check_user_favorites_does_nothing_when_the_user_has_no_forbidden_categories(): void
         {
             // Default guest CurrentUser's forbiddenCategories is '' --

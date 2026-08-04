@@ -6,6 +6,7 @@ namespace Piwigo\Db;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
+use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 
 /**
  * Real DB round-trips for a `SqlDialect`-built date expression --
@@ -16,6 +17,13 @@ use Doctrine\DBAL\ParameterType;
  * fragment to splice into their own larger query) go through this class
  * instead, rather than each hand-rolling `DbConnection::build()->fetchOne('SELECT
  * ' . ...)` inline.
+ *
+ * pgsql support pass: `fetchTomorrow()`/`fetchFutureDatesFor()` branch on
+ * `$this->conn->getDatabasePlatform()` directly (a real Connection is
+ * already available here, unlike `SqlDialect`'s own static methods) --
+ * `ADDDATE(NOW(), INTERVAL n DAY)` has no Postgres equivalent, `NOW() +
+ * make_interval(days => n)` is the real one (`NOW()` itself is already
+ * portable, needs no branch of its own).
  */
 final class SqlDialectExecutor
 {
@@ -58,9 +66,11 @@ final class SqlDialectExecutor
      */
     public function fetchTomorrow(): string
     {
-        $value = $this->conn->fetchOne(<<<SQL
-            SELECT ADDDATE(NOW(), INTERVAL 1 DAY)
-            SQL);
+        $expr = $this->conn->getDatabasePlatform() instanceof PostgreSQLPlatform
+            ? 'NOW() + make_interval(days => 1)'
+            : 'ADDDATE(NOW(), INTERVAL 1 DAY)';
+
+        $value = $this->conn->fetchOne('SELECT ' . $expr);
 
         return is_string($value) ? $value : '';
     }
@@ -82,14 +92,23 @@ final class SqlDialectExecutor
         // SQL-modernization audit: the day count is real caller-supplied
         // data (Controller\ProfileFormHandler's own $conf['api_key_duration']
         // list) -- was spliced directly into INTERVAL {$day} DAY; now bound.
-        // The `` `{$day}` `` column alias stays interpolated: SQL has no
-        // bound-placeholder syntax for identifier/alias position, and $day
-        // is a real `int` (not attacker-controlled string content) by the
-        // time it reaches string interpolation there.
+        // The column alias stays interpolated: SQL has no bound-placeholder
+        // syntax for identifier/alias position, and $day is a real `int`
+        // (not attacker-controlled string content) by the time it reaches
+        // string interpolation there. quoteSingleIdentifier() picks the
+        // real per-platform quoting (backticks/double-quotes) rather than
+        // the previous hand-rolled, MySQL-only backtick literal -- needed
+        // here specifically since a bare numeric alias is otherwise invalid
+        // identifier syntax on either platform.
+        $platform = $this->conn->getDatabasePlatform();
+        $expr = $platform instanceof PostgreSQLPlatform
+            ? 'NOW() + make_interval(days => :%s)'
+            : 'ADDDATE(NOW(), INTERVAL :%s DAY)';
+
         $qb = $this->conn->createQueryBuilder();
         foreach ($days as $i => $day) {
             $placeholder = 'day' . $i;
-            $qb->addSelect('ADDDATE(NOW(), INTERVAL :' . $placeholder . ' DAY) as `' . $day . '`');
+            $qb->addSelect(sprintf($expr, $placeholder) . ' as ' . $platform->quoteSingleIdentifier((string) $day));
             $qb->setParameter($placeholder, $day, ParameterType::INTEGER);
         }
 

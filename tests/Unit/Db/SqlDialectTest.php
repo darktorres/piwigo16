@@ -21,7 +21,25 @@ use Piwigo\Db\SqlDialect;
  * CategoryRepository's own DQL conversion (Item 14/15) and
  * Db\DqlFunction\RegexpFunction had already independently arrived at
  * calling the framework's own equivalents.
+ *
+ * pgsql support pass: getHour()/dateToTs()/getRecentPeriodExpression()
+ * branch on PIWIGO_DB_DRIVER (via DbCredentials::fromEnv() -- this class
+ * has no Connection of its own, see its class docblock) -- same
+ * save/restore-around-a-scenario shape DbConnectionTest.php's own
+ * $envVars/beforeEach/afterEach already establishes for this exact env
+ * var, scoped to just PIWIGO_DB_DRIVER since that's the only one this
+ * class reads.
  */
+$originalDbDriver = null;
+
+beforeEach(function () use (&$originalDbDriver): void {
+    $value = getenv('PIWIGO_DB_DRIVER');
+    $originalDbDriver = $value === false ? null : $value;
+});
+
+afterEach(function () use (&$originalDbDriver): void {
+    putenv($originalDbDriver === null ? 'PIWIGO_DB_DRIVER' : 'PIWIGO_DB_DRIVER=' . $originalDbDriver);
+});
 test('getBoolean treats the string "false" as false, everything else by normal truthiness', function (): void {
     expect(SqlDialect::getBoolean('false'))->toBeFalse();
     expect(SqlDialect::getBoolean('FALSE'))->toBeFalse();
@@ -49,8 +67,20 @@ test('getHour wraps a date expression in HOUR()', function (): void {
     expect(SqlDialect::getHour('images.date_available'))->toBe('HOUR(images.date_available)');
 });
 
+test('getHour wraps a date expression in EXTRACT(HOUR FROM ...) on pgsql', function (): void {
+    putenv('PIWIGO_DB_DRIVER=pgsql');
+
+    expect(SqlDialect::getHour('images.date_available'))->toBe('EXTRACT(HOUR FROM images.date_available)');
+});
+
 test('dateToTs wraps a date expression in UNIX_TIMESTAMP()', function (): void {
     expect(SqlDialect::dateToTs('d'))->toBe('UNIX_TIMESTAMP(d)');
+});
+
+test('dateToTs wraps a date expression in EXTRACT(EPOCH FROM ...) on pgsql', function (): void {
+    putenv('PIWIGO_DB_DRIVER=pgsql');
+
+    expect(SqlDialect::dateToTs('d'))->toBe('EXTRACT(EPOCH FROM d)');
 });
 
 /**
@@ -61,4 +91,19 @@ test('dateToTs wraps a date expression in UNIX_TIMESTAMP()', function (): void {
  */
 test('getRecentPeriodExpression builds a SUBDATE(...) fragment for a caller-supplied bound-parameter placeholder', function (): void {
     expect(SqlDialect::getRecentPeriodExpression(7, ':lastDate'))->toBe('SUBDATE(:lastDate,INTERVAL 7 DAY)');
+});
+
+/**
+ * pgsql support pass: SUBDATE() has no Postgres equivalent -- verified
+ * live that `$date - make_interval(...)` needs an explicit `::timestamp`
+ * cast on $date first (a bare untyped literal/bound parameter minus an
+ * interval fails outright: "invalid input syntax for type interval"),
+ * and that `::timestamp` (not `::date`) is required specifically to avoid
+ * silently truncating a caller-supplied datetime's time-of-day component
+ * -- see that method's own docblock for the full verification.
+ */
+test('getRecentPeriodExpression builds a make_interval(...) fragment on pgsql', function (): void {
+    putenv('PIWIGO_DB_DRIVER=pgsql');
+
+    expect(SqlDialect::getRecentPeriodExpression(7, ':lastDate'))->toBe('(:lastDate)::timestamp - make_interval(days => 7)');
 });

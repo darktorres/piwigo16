@@ -15,17 +15,18 @@ use Piwigo\Core\Env;
  * `MysqliDb::getEnums()`/`getRecentPeriod()`/`doMaintenanceAllTables()`,
  * which stay on the DB-access side of the migration since they do.
  *
- * MySQL-specific today (`DB_RANDOM_FUNCTION`/`getRecentPeriodExpression()`'s
- * `SUBDATE()`), same as the class this was extracted from --
- * `DbCredentials::current()->driver` already supports `'pgsql'` for the
- * DBAL connection layer itself, but nothing under `src/Piwigo/` ever
- * exercised pgsql beyond `DbConnection::build()`'s own driver branch
- * supporting it -- no `install/schema/pgsql.sql` or equivalent exists in
- * this repo; a real multi-dialect split (a `Piwigo\Db\SqlDialect`
- * interface with MySQL/Postgres implementations, selected by
- * `DbCredentials::current()->driver`) is out of scope for this pass and
- * left as a follow-up once a real pgsql install path is exercised end to
- * end.
+ * pgsql support pass: `getRecentPeriodExpression()`/`getHour()`/
+ * `dateToTs()` are now real per-platform branches (Postgres has no
+ * `SUBDATE()`/`HOUR()`/`UNIX_TIMESTAMP()` -- `- make_interval(...)`/
+ * `EXTRACT(HOUR FROM ...)`/`EXTRACT(EPOCH FROM ...)` are the real
+ * equivalents, verified live) -- selected via `DbCredentials::fromEnv()->
+ * driver` (this class is a pure static string builder with no `Connection`
+ * of its own to read `getDatabasePlatform()` from, unlike
+ * `SqlDialectExecutor`/`DbInfo`/the DQL functions, which branch on the
+ * real connection's platform directly). A real interface split (MySQL/
+ * Postgres implementations selected by DI) remains a follow-up if this
+ * class ever grows enough per-platform branches to justify it -- not
+ * needed for 3 methods.
  *
  * Further SQL-modernization audit, Item 15G: the 10 Calendar-exclusive
  * date-part/`CONCAT_WS`/cast-passthrough methods this class used to carry
@@ -144,6 +145,22 @@ final class SqlDialect
      * for the one remaining literal-date case: the internal test-mode
      * override below, a controlled `Y-m-d`-formatted string, not caller
      * input.
+     *
+     * pgsql support pass: Postgres has no `SUBDATE()` -- `$date -
+     * make_interval(days => $period)` is the real equivalent. Needs an
+     * explicit `::timestamp` cast on `$date` first, verified live: bare
+     * subtraction of an `interval` from an untyped string literal/bound
+     * parameter (`'2026-08-01' - make_interval(...)`) fails outright
+     * (`ERROR: invalid input syntax for type interval`) -- Postgres can't
+     * infer `date`/`timestamp` from context here the way MySQL's own
+     * looser typing does, unlike the `CURRENT_DATE` keyword case (already
+     * a real `date`, so the cast is a no-op there). `::timestamp`, not
+     * `::date`, specifically: verified live that a `::date` cast would
+     * silently truncate a caller-supplied value's time-of-day component
+     * (`getRecentPhotosCondition()`'s own `last_photo_date` bind is a
+     * full datetime, not a bare date) -- `::timestamp` preserves it,
+     * matching `SUBDATE()`'s own type-preserving behavior on the MySQL
+     * side exactly.
      */
     public static function getRecentPeriodExpression(int $period, string $date = 'CURRENT_DATE'): string
     {
@@ -159,16 +176,39 @@ final class SqlDialect
             $date = '\'' . Env::now()->format('Y-m-d') . '\'';
         }
 
+        if (self::isPostgres()) {
+            return '(' . $date . ')::timestamp - make_interval(days => ' . $period . ')';
+        }
+
         return 'SUBDATE(' . $date . ',INTERVAL ' . $period . ' DAY)';
     }
 
     public static function getHour(string $date): string
     {
+        if (self::isPostgres()) {
+            return 'EXTRACT(HOUR FROM ' . $date . ')';
+        }
+
         return 'HOUR(' . $date . ')';
     }
 
     public static function dateToTs(string $date): string
     {
+        if (self::isPostgres()) {
+            return 'EXTRACT(EPOCH FROM ' . $date . ')';
+        }
+
         return 'UNIX_TIMESTAMP(' . $date . ')';
+    }
+
+    /**
+     * This class is a pure static string builder with no `Connection` of
+     * its own (see class docblock) -- `DbCredentials::fromEnv()` (not the
+     * `@deprecated ::current()` bridge, which this file isn't on the
+     * allow-list for) is the only platform signal available here.
+     */
+    private static function isPostgres(): bool
+    {
+        return DbCredentials::fromEnv()->driver === 'pgsql';
     }
 }

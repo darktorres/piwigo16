@@ -6,6 +6,7 @@ namespace Piwigo\Tests\Integration;
 
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
+use Piwigo\Db\Tables;
 
 /**
  * Piwigo\Db\DbInfo -- had zero dedicated coverage (see /home/torres/.claude/
@@ -48,4 +49,24 @@ final class DbInfoTest extends IntegrationTestCase
         self::assertMatchesRegularExpression('/^\d/', $version);
     }
 
+    /**
+     * Had zero coverage at all before the pgsql-support pass touched this
+     * method (added the per-platform epoch expression, fixed a latent
+     * double-quoted-string-literal portability bug) -- a real assertion
+     * this codebase's own conventions call for, not just a pgsql-branch
+     * addition without ever having proven the pre-existing MySQL branch
+     * correct in the first place.
+     */
+    public function test_get_table_fingerprint_matches_the_real_epoch_and_row_count(): void
+    {
+        $conn = DbConnection::build();
+        $expectedCount = $conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::categories());
+        self::assertIsNumeric($expectedCount);
+
+        $fingerprint = $this->dbInfo->getTableFingerprint(Tables::categories());
+
+        self::assertMatchesRegularExpression('/^\d+_\d+$/', $fingerprint);
+        [, $count] = explode('_', $fingerprint);
+        self::assertSame((string) (int) $expectedCount, $count);
+    }
 }

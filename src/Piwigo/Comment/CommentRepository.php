@@ -361,9 +361,24 @@ final class CommentRepository extends EntityRepository implements CommentCounter
     {
         $conditions = self::buildApiConditions($criteria, $includeAuthorId);
 
+        // pgsql support pass: real bug found live -- a bare 0/1 integer
+        // literal spliced into raw SQL text is rejected outright against
+        // a genuine PostgreSQL boolean column ("operator does not exist:
+        // boolean = integer"). The identical value bound as a real
+        // parameter is correctly coerced by the driver on both platforms
+        // (confirmed live), so binding rather than splicing fixes this
+        // portably with no per-platform branch needed.
         $statusCondition = match ($criteria->status) {
-            'pending' => new SqlCondition('validated = 0'),
-            'validated' => new SqlCondition('validated = 1'),
+            'pending' => new SqlCondition('validated = :validated', [
+                'validated' => 0,
+            ], [
+                'validated' => ParameterType::INTEGER,
+            ]),
+            'validated' => new SqlCondition('validated = :validated', [
+                'validated' => 1,
+            ], [
+                'validated' => ParameterType::INTEGER,
+            ]),
             default => null,
         };
 
@@ -718,10 +733,25 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * `$userIdColumn`/`$userEmailColumn` multi-auth column-name params --
      * `users` is now mapped ({@see \Piwigo\Users\UserEntity}), always
      * `id`/`mail_address`. Item 14 DQL audit: still stays on DBAL -- joins
-     * the never-entity-mapped `image_category`, MySQL-specific
-     * `ANY_VALUE()` (has no DQL equivalent), and dynamic caller-supplied
-     * SqlCondition fragments -- several independent, genuine DQL blockers
-     * remain on this query.
+     * the never-entity-mapped `image_category`, `ANY_VALUE()` (has no DQL
+     * equivalent), and dynamic caller-supplied SqlCondition fragments --
+     * several independent, genuine DQL blockers remain on this query.
+     *
+     * pgsql support pass: `u.mail_address` needs `ANY_VALUE()` too, not
+     * just `ic.category_id` -- real bug found live. MySQL's
+     * ONLY_FULL_GROUP_BY functional-dependency check reasons transitively
+     * through the `u.id = com.author_id` join (grouping by `com.id`
+     * determines `com.author_id`, which -- joined against `users`' own
+     * primary key -- determines `u.mail_address`), so MySQL tolerated the
+     * bare column unwrapped. PostgreSQL's functional-dependency check
+     * (confirmed via its own docs) only recognizes a table's OWN primary
+     * key appearing in GROUP BY, never transitively through a join --
+     * rejects it outright ("column u.mail_address must appear in the
+     * GROUP BY clause or be used in an aggregate function"). `ANY_VALUE()`
+     * is genuinely portable here (confirmed: PostgreSQL 16+ ships it as a
+     * real aggregate, and this environment runs 18.4), so this isn't a
+     * MySQL-only function despite the docblock line above -- just needs
+     * applying consistently to every non-grouped, non-`com.*` column.
      *
      * Phase 5 Item 19: `SQL_CALC_FOUND_ROWS`/`FOUND_ROWS()` replaced with
      * `COUNT(*) OVER() AS total_count`, computed in the same query as the
@@ -753,7 +783,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
                 'ANY_VALUE(ic.category_id) AS category_id',
                 'com.author',
                 'com.author_id',
-                'u.mail_address AS user_email',
+                'ANY_VALUE(u.mail_address) AS user_email',
                 'com.email',
                 'com.date',
                 'com.website_url',

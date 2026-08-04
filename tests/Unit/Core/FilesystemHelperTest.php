@@ -266,8 +266,17 @@ test('mkgetdir delegates the fatal message to the installed HtmlRenderingInterfa
     // (singleton/service-locator elimination campaign, Phase 3) --
     // KernelContainerOverride::with() gives this one test a real
     // container with the fake renderer bound, then tears it back down.
+    // Piwigo\Core\Paths is also bound explicitly: mkgetdir()'s own error
+    // message now builds via Lang::current()->t('no write access')
+    // (singleton/service-locator elimination campaign, Phase 8), and
+    // Lang's Paths constructor collaborator has no autowireable default
+    // -- KernelContainerOverride::with()'s own Container::build() call
+    // never binds one on its own.
     KernelContainerOverride::with(
-        [HtmlRenderingInterface::class => filesystemHelperTestMakeFatalRenderer($capture)],
+        [
+            HtmlRenderingInterface::class => filesystemHelperTestMakeFatalRenderer($capture),
+            \Piwigo\Core\Paths::class => \Piwigo\Core\Paths::fromRoot(sys_get_temp_dir()),
+        ],
         function () use ($dir): void {
             expect(fn () => FilesystemHelper::mkgetdir($dir, FilesystemHelper::MKGETDIR_DIE_ON_ERROR))
                 ->toThrow(\RuntimeException::class, 'renderer-fatal:' . $dir . ' no write access');

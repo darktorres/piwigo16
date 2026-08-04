@@ -7,6 +7,7 @@ namespace Piwigo\Filter;
 use Doctrine\DBAL\Connection;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\FilterUpdaterInterface;
+use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Lang\Translator;
@@ -27,6 +28,7 @@ final class FilterService implements FilterUpdaterInterface
         private readonly \Piwigo\Core\FilterState $filterState,
         private readonly SessionService $sessionService,
         private readonly Translator $translator,
+        private readonly Lang $lang,
         private ?Connection $conn = null,
     ) {}
 
@@ -159,7 +161,7 @@ final class FilterService implements FilterUpdaterInterface
                 // consumer (e.g. CategoryCatsRenderer) observes the same
                 // value.
                 $computedCategories = new CategoryService(
-                    \Piwigo\Core\Lang::current(),
+                    $this->lang,
                     \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Category\CategoryEntity::class),
                     new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn)), \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Category\CategoryEntity::class))
                 )->getComputedCategories($user->toUserArray(), $filter_recent_period);

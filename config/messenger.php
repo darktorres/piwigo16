@@ -51,10 +51,36 @@ return [
         // dispatch, so a shim that throws when nothing has activated it
         // yet would break every job type's construction, not just this
         // one's.
-        BatchUploadJob::class => static fn (): callable => new BatchUploadHandler(\Piwigo\Bootstrap\PresentationAccessor::urlService(), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get(), new \Piwigo\Config\ConfigService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Config\ConfigEntry::class), \Piwigo\PluginConfig\EventDispatcher::get()), \Piwigo\Bootstrap\InfrastructureAccessor::entityManager(), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService(), \Piwigo\Bootstrap\CoreDomainAccessor::imageService()),
+        BatchUploadJob::class => static fn (): callable => new BatchUploadHandler(
+            new \Piwigo\Core\Lang(
+                new \Piwigo\Lang\Translator(),
+                new \Piwigo\Html\HtmlService(),
+                \Piwigo\Core\Paths::fromRoot(dirname(__DIR__)),
+                new \Piwigo\Core\InstallationFlag(),
+            ),
+            \Piwigo\Bootstrap\PresentationAccessor::urlService(),
+            \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(),
+            \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(),
+            \Piwigo\PluginConfig\EventDispatcher::get(),
+            new \Piwigo\Config\ConfigService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Config\ConfigEntry::class), \Piwigo\PluginConfig\EventDispatcher::get()),
+            \Piwigo\Bootstrap\InfrastructureAccessor::entityManager(),
+            \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(),
+            \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService(),
+            \Piwigo\Bootstrap\CoreDomainAccessor::imageService()
+        ),
         GenerateDerivativeJob::class => static fn (): callable => new GenerateDerivativeHandler(new DerivativeCacheService()),
         RegenerateAllDerivativesJob::class => static fn (): callable => new RegenerateAllDerivativesHandler(new DerivativeCacheService()),
-        ReindexImagesJob::class => static fn (): callable => new ReindexImagesHandler(new MetadataService(new MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\PluginConfig\EventDispatcher::get())),
+        ReindexImagesJob::class => static fn (): callable => new ReindexImagesHandler(new MetadataService(
+            new \Piwigo\Core\Lang(
+                new \Piwigo\Lang\Translator(),
+                new \Piwigo\Html\HtmlService(),
+                \Piwigo\Core\Paths::fromRoot(dirname(__DIR__)),
+                new \Piwigo\Core\InstallationFlag(),
+            ),
+            new MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())),
+            \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(),
+            \Piwigo\PluginConfig\EventDispatcher::get()
+        )),
         SendNotificationEmailJob::class => static fn (): callable => new SendNotificationEmailHandler(new MailService()),
     ],
 ];

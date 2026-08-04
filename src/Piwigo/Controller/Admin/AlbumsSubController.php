@@ -7,6 +7,7 @@ namespace Piwigo\Controller\Admin;
 use Piwigo\Admin\AlbumsPageRenderer;
 use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\CoreTabs;
+use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -22,6 +23,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class AlbumsSubController implements AdminSubControllerInterface
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
@@ -36,6 +38,6 @@ final class AlbumsSubController implements AdminSubControllerInterface
     public function handle(ServerRequestInterface $request): void
     {
         new AlbumsPageRenderer()
-            ->render(\Piwigo\Core\Lang::current(), $this->urlService, $this->coreTabs, $this->eventDispatcher, $this->currentUser, $this->currentTemplate, $this->categoryAdminService, $this->categoryService, $this->htmlRenderer);
+            ->render($this->lang, $this->urlService, $this->coreTabs, $this->eventDispatcher, $this->currentUser, $this->currentTemplate, $this->categoryAdminService, $this->categoryService, $this->htmlRenderer);
     }
 }

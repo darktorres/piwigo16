@@ -267,14 +267,16 @@ final class SearchServiceTest extends IntegrationTestCase
             $this->repo,
             new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class)),
             new CategoryService(
+                \Piwigo\Core\Lang::current(),
                 \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class),
                 new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class))
             ),
             new MailService(),
             new HtmlService(),
-            new RedirectService($this->userService()),
+            new RedirectService(\Piwigo\Core\Lang::current(), $this->userService()),
             new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)), \Piwigo\PluginConfig\EventDispatcher::get(),
             \Piwigo\Users\CurrentUser::current(),
+            \Piwigo\Core\Lang::current(),
         );
     }
 
@@ -314,14 +316,16 @@ final class SearchServiceTest extends IntegrationTestCase
             $repo,
             new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class)),
             new CategoryService(
+                \Piwigo\Core\Lang::current(),
                 \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class),
                 new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class))
             ),
             new MailService(),
             $htmlRenderer,
-            new RedirectService($this->userService()),
+            new RedirectService(\Piwigo\Core\Lang::current(), $this->userService()),
             new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)), \Piwigo\PluginConfig\EventDispatcher::get(),
             \Piwigo\Users\CurrentUser::current(),
+            \Piwigo\Core\Lang::current(),
         );
     }
 

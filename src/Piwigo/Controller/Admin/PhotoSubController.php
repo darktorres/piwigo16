@@ -99,7 +99,7 @@ final class PhotoSubController implements AdminSubControllerInterface
                 ->render();
         } elseif (\Piwigo\Config\CurrentConfig::isFormatsEnabled()) {
             new PictureFormatsPageRenderer()
-                ->render(\Piwigo\Core\Lang::current(), $this->accessControl, $this->urlService, $this->imageStdParams, $this->currentTemplate, $this->htmlRenderer);
+                ->render($this->lang, $this->accessControl, $this->urlService, $this->imageStdParams, $this->currentTemplate, $this->htmlRenderer);
         }
     }
 }

@@ -314,7 +314,7 @@ final class BatchManagerUnitPageRenderer
             }
 
             $tagService = $this->tagService;
-            $imageService = new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher);
+            $imageService = new ImageService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher);
 
             foreach ($images as $row) {
                 // Tables::images().id is a NOT NULL auto_increment primary key; this

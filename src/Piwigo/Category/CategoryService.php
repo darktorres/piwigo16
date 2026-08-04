@@ -79,7 +79,7 @@ final readonly class CategoryService
      */
     private function imageService(ActivityLoggerInterface $activityLogger, SessionService $sessionService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher): ImageService
     {
-        return new ImageService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), $activityLogger, $sessionService, $eventDispatcher);
+        return new ImageService($this->lang, \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class), $activityLogger, $sessionService, $eventDispatcher);
     }
 
     private function userRepository(): UserRepository

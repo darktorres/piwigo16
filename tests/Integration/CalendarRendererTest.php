@@ -74,7 +74,7 @@ final class CalendarRendererTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
         CurrentConfig::setDataLocation('data/');
         CurrentConfig::setDataDirChecked('1');
-        Lang::reset();
+        Lang::current()->reset();
         Translator::get()->reset();
 
         $this->conn = DbConnection::build();
@@ -114,14 +114,14 @@ final class CalendarRendererTest extends IntegrationTestCase
         // -- real bug, found live (a stray data/templates_c/index.htm
         // showed up as untracked repo debris after a coverage run).
         calendar_renderer_test_rrmdir(CurrentPaths::get()->root . 'data');
-        Lang::reset();
+        Lang::current()->reset();
         Translator::get()->reset();
         parent::tearDown();
     }
 
     private function makeRenderer(): CalendarRenderer
     {
-        return new CalendarRenderer($this->htmlService, new Template(), $this->urlService, CurrentUser::current());
+        return new CalendarRenderer(Lang::current(), $this->htmlService, new Template(), $this->urlService, CurrentUser::current());
     }
 
     /**
@@ -254,7 +254,7 @@ final class CalendarRendererTest extends IntegrationTestCase
     public function test_render_groups_multiple_years_and_months_for_the_default_monthly_calendar_view(): void
     {
         $template = new Template();
-        $renderer = new CalendarRenderer($this->htmlService, $template, $this->urlService, CurrentUser::current());
+        $renderer = new CalendarRenderer(Lang::current(), $this->htmlService, $template, $this->urlService, CurrentUser::current());
 
         $result = $renderer->render(
             section: 'items',
@@ -302,7 +302,7 @@ final class CalendarRendererTest extends IntegrationTestCase
     public function test_render_normalizes_chronology_date_to_ints_and_next_prev_navigation_still_works(): void
     {
         $template = new Template();
-        $renderer = new CalendarRenderer($this->htmlService, $template, $this->urlService, CurrentUser::current());
+        $renderer = new CalendarRenderer(Lang::current(), $this->htmlService, $template, $this->urlService, CurrentUser::current());
 
         $result = $renderer->render(
             section: 'items',

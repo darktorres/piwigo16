@@ -48,14 +48,14 @@ final class ThemeCatalogTest extends IntegrationTestCase
         // Untranslated-key fallback for Lang::t('Mobile') below --
         // deterministic regardless of what an earlier Integration test in
         // this shared process may have loaded into Translator's mirror.
-        Lang::reset();
+        Lang::current()->reset();
         Translator::get()->reset();
     }
 
     #[\Override]
     protected function tearDown(): void
     {
-        Lang::reset();
+        Lang::current()->reset();
         Translator::get()->reset();
         CurrentConfig::reset();
         parent::tearDown();

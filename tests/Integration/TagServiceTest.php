@@ -55,7 +55,7 @@ namespace Piwigo\Tests\Integration {
             CurrentConfig::setTagsLevels(5);
 
             $this->conn = DbConnection::build();
-            $this->service = new TagService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Tag\TagEntity::class), new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class)), new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), EventDispatcher::get(), \Piwigo\Users\CurrentUser::current());
+            $this->service = new TagService(\Piwigo\Core\Lang::current(), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Tag\TagEntity::class), new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class)), new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), EventDispatcher::get(), \Piwigo\Users\CurrentUser::current());
         }
 
         #[\Override]

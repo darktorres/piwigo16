@@ -101,14 +101,19 @@ function seedPermissionUserRaw(array $rawAttributes): void
 }
 
 beforeEach(function (): void {
-    Kernel::boot();
+    // A real Paths is required now: PermissionService::getPrivacyLevelOptions()
+    // reads Lang::current() (singleton/service-locator elimination
+    // campaign, Phase 8), and Lang's own Paths constructor collaborator
+    // has no autowireable default -- a bare Kernel::boot() with no Paths
+    // argument leaves it unresolvable in the container.
+    Kernel::boot(\Piwigo\Core\Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     seedPermissionUser();
 });
 
 afterEach(function (): void {
     CurrentUser::current()->reset();
     CurrentConfig::reset();
-    Lang::reset();
+    Lang::current()->reset();
     Translator::get()->reset();
     Kernel::reset();
 });
@@ -379,7 +384,7 @@ test('getPrivacyLevelOptions does not prepend a stray separator before the very 
     // *output* key, so it maps the already-`sprintf()`-formatted 'Level 2'
     // string, not the 'Level %d' format string itself.
     CurrentConfig::setAvailablePermissionLevels([0, 1, 2]);
-    Lang::loadArray(['Level 2' => 'X']);
+    Lang::current()->loadArray(['Level 2' => 'X']);
 
     $options = PermissionService::getPrivacyLevelOptions();
 

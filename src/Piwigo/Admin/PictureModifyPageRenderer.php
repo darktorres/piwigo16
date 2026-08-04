@@ -84,7 +84,7 @@ final class PictureModifyPageRenderer
         $template = $this->currentTemplate->get();
 
         $conn = DbConnection::build();
-        $imageService = new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher);
+        $imageService = new ImageService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher);
         $htmlRenderer = $this->htmlRenderer;
 
         $this->accessControl->checkStatus(AccessLevel::Administrator);

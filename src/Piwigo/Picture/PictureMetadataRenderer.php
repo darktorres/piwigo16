@@ -30,7 +30,7 @@ final class PictureMetadataRenderer
     {
         $template = $currentTemplate->get();
 
-        $metadataService = new MetadataService(new MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), $currentLogger, $eventDispatcher);
+        $metadataService = new MetadataService(Lang::current(), new MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), $currentLogger, $eventDispatcher);
 
         if ((\Piwigo\Config\CurrentConfig::showExif()) and function_exists('exif_read_data')) {
             $showExifFields = \Piwigo\Config\CurrentConfig::showExifFields();

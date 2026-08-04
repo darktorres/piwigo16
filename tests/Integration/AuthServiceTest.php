@@ -672,6 +672,7 @@ namespace Piwigo\Tests\Integration {
         public function test_auth_key_login_rejects_an_api_key_with_the_wrong_secret(): void
         {
             $apiKeyService = new ApiKeyService(
+                \Piwigo\Core\Lang::current(),
                 new \Piwigo\Mail\MailService(),
                 new ApiKeyRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)),
                 new PasswordService(new PasswordRepository($this->conn), new \Piwigo\Config\DeploymentPolicy()),
@@ -695,6 +696,7 @@ namespace Piwigo\Tests\Integration {
         public function test_auth_key_login_rejects_a_revoked_api_key(): void
         {
             $apiKeyService = new ApiKeyService(
+                \Piwigo\Core\Lang::current(),
                 new \Piwigo\Mail\MailService(),
                 new ApiKeyRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)),
                 new PasswordService(new PasswordRepository($this->conn), new \Piwigo\Config\DeploymentPolicy()),

@@ -202,7 +202,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         // Lang::t()'s real en_UK wording is deterministic regardless of run
         // order, same reasoning as MaintenanceActionDispatcherTest's own
         // setUp().
-        Lang::load('admin.lang');
+        Lang::current()->load('admin.lang');
 
         $this->configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher());
         CurrentConfigService::current()->set($this->configService);
@@ -276,8 +276,9 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         // resolves anything, singleton/service-locator elimination
         // campaign, Phase 2).
         return new ThemesStandardPagesPageRenderer(
+            Lang::current(),
             \Piwigo\Auth\AccessControl::current(),
-            new RedirectService($this->userService()),
+            new RedirectService(Lang::current(), $this->userService()),
             new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()),
             $this->configService,
             StorageRegistry::fromConfig(dirname(__DIR__, 2) . '/config/storage.php'),
@@ -373,7 +374,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
 
             $uploadDir = $fixtureRoot . 'logo';
             self::assertSame(
-                sprintf(Lang::t('Add write access to the "%s" directory'), $uploadDir),
+                sprintf(Lang::current()->t('Add write access to the "%s" directory'), $uploadDir),
                 CurrentTemplate::current()->get()->get_template_vars('save_error')
             );
         } finally {
@@ -421,7 +422,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
 
             $uploadDir = $fixtureRoot . 'logo';
             self::assertSame(
-                "{$uploadDir}/stdpageslogo.png " . Lang::t('no write access'),
+                "{$uploadDir}/stdpageslogo.png " . Lang::current()->t('no write access'),
                 CurrentTemplate::current()->get()->get_template_vars('save_error')
             );
 

@@ -179,7 +179,7 @@ final class BatchManagerGlobalPageRenderer
             $redirect = false;
 
             $tagService = $this->tagService;
-            $imageService = new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher);
+            $imageService = new ImageService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher);
 
             if ($action === 'remove_from_caddie') {
                 $current_user_id = $this->currentUser->get()
@@ -493,7 +493,7 @@ final class BatchManagerGlobalPageRenderer
         );
 
         // metadata
-        $site_reader = new LocalSiteReader('./', new \Piwigo\Metadata\MetadataService(new \Piwigo\Metadata\MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())), $this->currentLogger, $this->eventDispatcher));
+        $site_reader = new LocalSiteReader('./', new \Piwigo\Metadata\MetadataService($this->lang, new \Piwigo\Metadata\MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())), $this->currentLogger, $this->eventDispatcher));
         $used_metadata = implode(', ', $site_reader->get_metadata_attributes());
 
         $template->assign(

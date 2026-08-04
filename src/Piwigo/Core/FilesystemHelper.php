@@ -77,6 +77,23 @@ final class FilesystemHelper
     }
 
     /**
+     * Mirrors fatalError()'s own Kernel::isBooted() tolerance just above --
+     * this class is a purely static utility (no wrapper instance, see this
+     * class's own docblock) called from code paths that may run before
+     * Kernel is booted at all (e.g. a cold-cache thumbnail generation via
+     * i.php's lighter bootstrap). Lang::current() (singleton/service-
+     * locator elimination campaign, Phase 8) has no pre-boot fallback and
+     * would throw before fatalError()'s own graceful degradation is ever
+     * reached; falling back to the raw, untranslated key here matches
+     * Translator::translate()'s own "no data loaded" fallback behavior,
+     * the same safe default this call site already had before Phase 8.
+     */
+    private static function t(string $key): string
+    {
+        return Kernel::isBooted() ? Lang::current()->t($key) : $key;
+    }
+
+    /**
      * Walks up from $dir to the nearest ancestor that already exists, so
      * callers can check write access before attempting a recursive mkdir()
      * whose immediate parent may not exist yet.
@@ -120,7 +137,7 @@ final class FilesystemHelper
             // slow filesystems -- that is success, not an error (re-check
             // ported from HEAD i.php's local mkgetdir()).
             if ($mkd === false && ! is_dir($dir)) {
-                ! (bool) ($flags & self::MKGETDIR_DIE_ON_ERROR) or self::fatalError("{$dir} " . Lang::current()->t('no write access'));
+                ! (bool) ($flags & self::MKGETDIR_DIE_ON_ERROR) or self::fatalError("{$dir} " . self::t('no write access'));
                 return false;
             }
             if ((bool) ($flags & self::MKGETDIR_PROTECT_HTACCESS)) {
@@ -133,7 +150,7 @@ final class FilesystemHelper
             }
         }
         if (! is_writable($dir)) {
-            ! (bool) ($flags & self::MKGETDIR_DIE_ON_ERROR) or self::fatalError("{$dir} " . Lang::current()->t('no write access'));
+            ! (bool) ($flags & self::MKGETDIR_DIE_ON_ERROR) or self::fatalError("{$dir} " . self::t('no write access'));
             return false;
         }
         return true;

@@ -7,6 +7,7 @@ namespace Piwigo\Controller\Admin;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -27,6 +28,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class ThemeSubController implements AdminSubControllerInterface
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
     ) {}
@@ -37,7 +39,7 @@ final class ThemeSubController implements AdminSubControllerInterface
         $theme = Request\ThemeIdRequest::fromGlobals()->themeId;
 
         $fs_themes = new ExtensionScanner()
-            ->scan(ExtensionType::Theme, $this->urlService, \Piwigo\Core\Lang::current());
+            ->scan(ExtensionType::Theme, $this->urlService, $this->lang);
         if (! in_array($theme, array_keys($fs_themes), true)) {
             $this->htmlRenderer
                 ->fatalError('Invalid theme');

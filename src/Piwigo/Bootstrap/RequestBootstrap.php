@@ -466,7 +466,7 @@ final class RequestBootstrap
         }
 
         if (\Piwigo\Image\LoungeMaintenance::needsEmptying()) {
-            new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), self::activityService($conn), self::sessionService(), \Piwigo\PluginConfig\EventDispatcher::get())
+            new ImageService(self::lang(), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), self::activityService($conn), self::sessionService(), \Piwigo\PluginConfig\EventDispatcher::get())
                 ->emptyLounge();
         }
 
@@ -706,7 +706,7 @@ final class RequestBootstrap
         if (\Piwigo\Config\CurrentConfig::filterPages() !== [] and (bool) \Piwigo\Core\PageFilterHelper::getFilterPageValue('used')) {
             // Formerly a conditional `include PHPWG_ROOT_PATH .
             // 'include/filter.inc.php';` (deleted, P23 sub-batch 8f-5).
-            new FilterService(self::filterState(), self::sessionService(), self::translator(), $conn)
+            new FilterService(self::filterState(), self::sessionService(), self::translator(), self::lang(), $conn)
                 ->initializeFromRequest(self::pageState(), self::currentUser());
         } else {
             self::filterState()->set(false);

@@ -7,6 +7,7 @@ namespace Piwigo\Controller\Admin;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\HelpPageRenderer;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -22,6 +23,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class HelpSubController implements AdminSubControllerInterface
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
@@ -35,6 +37,6 @@ final class HelpSubController implements AdminSubControllerInterface
     public function handle(ServerRequestInterface $request): void
     {
         new HelpPageRenderer()
-            ->render(\Piwigo\Core\Lang::current(), $this->accessControl, $this->urlService, $this->coreTabs, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate);
+            ->render($this->lang, $this->accessControl, $this->urlService, $this->coreTabs, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate);
     }
 }

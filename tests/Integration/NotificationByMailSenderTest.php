@@ -108,7 +108,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         // which other Integration test file ran earlier in this shared
         // process -- confirmed live. Loading it explicitly here makes
         // every assertion deterministic regardless of run order.
-        Lang::load('admin.lang');
+        Lang::current()->load('admin.lang');
 
         $conn = DbConnection::build();
         $repo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
@@ -206,7 +206,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         // calls against the fresh, empty Translator fall back to their raw
         // untranslated literal instead of the real po wording every
         // assertion in this file expects.
-        Lang::load('admin.lang');
+        Lang::current()->load('admin.lang');
         // Kernel::reset() also discards the container-shared CurrentUser
         // instance setUp()'s own attachGlobals() seed populated
         // (singleton/service-locator elimination campaign, Phase 5 --

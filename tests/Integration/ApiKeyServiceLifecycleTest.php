@@ -103,6 +103,7 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
 
         $this->em = EntityManagerFactory::build($this->conn);
         $this->service = new ApiKeyService(
+            \Piwigo\Core\Lang::current(),
             new ApiKeyServiceLifecycleTestSpyMailer(),
             new ApiKeyRepository($this->em),
             new PasswordService(new PasswordRepository($this->conn), new \Piwigo\Config\DeploymentPolicy()),
@@ -202,6 +203,7 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
     {
         $mailer = new ApiKeyServiceLifecycleTestSpyMailer();
         $service = new ApiKeyService(
+            \Piwigo\Core\Lang::current(),
             $mailer,
             new ApiKeyRepository($this->em),
             new PasswordService(new PasswordRepository($this->conn), new \Piwigo\Config\DeploymentPolicy()),
@@ -224,6 +226,7 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
     {
         $mailer = new ApiKeyServiceLifecycleTestSpyMailer();
         $service = new ApiKeyService(
+            \Piwigo\Core\Lang::current(),
             $mailer,
             new ApiKeyRepository($this->em),
             new PasswordService(new PasswordRepository($this->conn), new \Piwigo\Config\DeploymentPolicy()),

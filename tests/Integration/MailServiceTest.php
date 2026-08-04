@@ -140,6 +140,7 @@ final class MailServiceTest extends IntegrationTestCase
     private function buildUserService(): UserService
     {
         return new UserService(
+            Lang::current(),
             EntityManagerFactory::build($this->conn)->getRepository(UserInfoEntity::class),
             EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class),
             new MailService(),
@@ -199,10 +200,10 @@ final class MailServiceTest extends IntegrationTestCase
     public function test_mailNotificationAdmins_builds_subject_and_content_from_lang_args_arrays(): void
     {
         CurrentConfig::setSmtpHost('127.0.0.1:1');
-        $subject = Lang::buildArgs('Registration of %s', 'someuser');
+        $subject = Lang::current()->buildArgs('Registration of %s', 'someuser');
         $content = [
-            Lang::buildArgs('User: %s', 'someuser'),
-            Lang::buildArgs('Email: %s', 'someuser@example.test'),
+            Lang::current()->buildArgs('User: %s', 'someuser'),
+            Lang::current()->buildArgs('Email: %s', 'someuser@example.test'),
         ];
 
         $result = $this->suppressMailerWarning(fn () => $this->mailer->mailNotificationAdmins($subject, $content));
@@ -408,7 +409,7 @@ final class MailServiceTest extends IntegrationTestCase
         // foreach's own body (MailService.php lines ~453-456), not just
         // the empty-map zero-iteration case the sibling test alone would
         // leave covered.
-        Lang::load('missing.lang', 'my-plugin/', ['language' => 'en_UK']);
+        Lang::current()->load('missing.lang', 'my-plugin/', ['language' => 'en_UK']);
 
         try {
             // Must not throw/warn even though 'my-plugin/missing.lang.php'
@@ -424,15 +425,15 @@ final class MailServiceTest extends IntegrationTestCase
             // passed through -- is what's still on record afterward.
             self::assertSame(
                 ['language' => 'en_UK'],
-                Lang::languageFiles()['my-plugin/']['missing.lang']
+                Lang::current()->languageFiles()['my-plugin/']['missing.lang']
             );
         } finally {
             $this->mailer->switchLangBack();
-            // Lang::$languageFiles is static/process-shared and this test
-            // is the only one in the suite that ever populates it --
-            // without this, the 'my-plugin/' entry above would leak into
-            // every later test in this process.
-            Lang::reset();
+            // Lang::current()'s own $languageFiles is container-shared/
+            // process-shared and this test is the only one in the suite
+            // that ever populates it -- without this, the 'my-plugin/'
+            // entry above would leak into every later test in this process.
+            Lang::current()->reset();
         }
     }
 

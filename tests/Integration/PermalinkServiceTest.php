@@ -38,7 +38,7 @@ final class PermalinkServiceTest extends IntegrationTestCase
         PageState::current()->reset();
 
         $this->repo = new PermalinkRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build()));
-        $this->service = new PermalinkService($this->repo, new ProcessCache(), PageState::current());
+        $this->service = new PermalinkService(\Piwigo\Core\Lang::current(), $this->repo, new ProcessCache(), PageState::current());
 
         $this->repo->clearCategoryPermalink(1);
     }

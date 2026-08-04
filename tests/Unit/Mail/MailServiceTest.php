@@ -170,7 +170,15 @@ function mail_service_rrmdir(string $dir): void
 
 afterEach(function (): void {
     CurrentConfig::reset();
-    Lang::reset();
+    // Lang is a real, container-shared instance now (singleton/service-
+    // locator elimination campaign, Phase 8) with no pre-boot memoized
+    // fallback (see Lang::current()'s own docblock) -- unlike
+    // Kernel::reset() below, this file's tests are a genuine mix of ones
+    // that boot Kernel and ones that never do, so a bare Lang::current()
+    // here would throw for every test in the latter group.
+    if (Kernel::isBooted()) {
+        Lang::current()->reset();
+    }
     CurrentUser::current()->reset();
     // The switchLangTo() tests below genuinely load real .po translations
     // (e.g. de_DE's real admin.po) into the Translator singleton -- a real
@@ -1019,7 +1027,12 @@ test('mail includes the html part only when mail_allow_html is true and email_fo
     CurrentConfig::setMailSenderEmail('sender@example.test');
     CurrentConfig::setMailAllowHtml(false);
     CurrentConfig::setMailAllowHtml(true);
-    Lang::setLangInfo(['code' => 'en', 'direction' => 'ltr']);
+    // Boots Kernel here (idempotently no-op'd by mail_service_capture_send()'s
+    // own later call) so Lang::current() below resolves the same
+    // container-shared instance mail()'s own real Lang::current()->langInfo()
+    // read will see once mail_service_capture_send() actually sends.
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
+    Lang::current()->setLangInfo(['code' => 'en', 'direction' => 'ltr']);
     $service = new MailService();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
@@ -1053,7 +1066,8 @@ test('mail converts a text/plain content into HTML: paragraph-wrapped, escaped, 
     CurrentConfig::setMailSenderEmail('sender@example.test');
     CurrentConfig::setMailAllowHtml(false);
     CurrentConfig::setMailAllowHtml(true);
-    Lang::setLangInfo(['code' => 'en', 'direction' => 'ltr']);
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
+    Lang::current()->setLangInfo(['code' => 'en', 'direction' => 'ltr']);
     $service = new MailService();
 
     $result = mail_service_capture_send($service, 'bob@example.test', [
@@ -1120,7 +1134,8 @@ test('mail assigns the real CONTENT_ENCODING charset into the html header\'s met
     CurrentConfig::setMailSenderEmail('sender@example.test');
     CurrentConfig::setMailAllowHtml(false);
     CurrentConfig::setMailAllowHtml(true);
-    Lang::setLangInfo(['code' => 'en', 'direction' => 'ltr']);
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
+    Lang::current()->setLangInfo(['code' => 'en', 'direction' => 'ltr']);
     $service = new MailService();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
@@ -1194,7 +1209,8 @@ test('mail keeps the html and plain-text cache entries of the SAME call separate
     // rendered <html>/<style> markup) for the supposedly plain-text part.
     CurrentConfig::setMailSenderEmail('sender@example.test');
     CurrentConfig::setMailAllowHtml(true);
-    Lang::setLangInfo(['code' => 'en', 'direction' => 'ltr']);
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
+    Lang::current()->setLangInfo(['code' => 'en', 'direction' => 'ltr']);
     $service = new MailService();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y', 'auth_key' => 'ZZZ']);
@@ -1208,11 +1224,12 @@ test('mail keys its per-request template cache by lang_info[code] too, not reusi
     CurrentConfig::setMailSenderEmail('sender@example.test');
     CurrentConfig::setMailAllowHtml(true);
     $service = new MailService();
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
 
-    Lang::setLangInfo(['code' => 'en', 'direction' => 'ltr']);
+    Lang::current()->setLangInfo(['code' => 'en', 'direction' => 'ltr']);
     $result1 = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
 
-    Lang::setLangInfo(['code' => 'ar', 'direction' => 'rtl']);
+    Lang::current()->setLangInfo(['code' => 'ar', 'direction' => 'rtl']);
     $result2 = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
 
     expect($result1['email']->getHtmlBody())->toContain('dir="ltr"');
@@ -1228,7 +1245,8 @@ test('mail keys its per-request template cache by theme too, not reusing one the
     // not a rewrite regression. Emogrifier lowercases inlined hex colors.
     CurrentConfig::setMailSenderEmail('sender@example.test');
     CurrentConfig::setMailAllowHtml(true);
-    Lang::setLangInfo(['code' => 'en', 'direction' => 'ltr']);
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
+    Lang::current()->setLangInfo(['code' => 'en', 'direction' => 'ltr']);
     $service = new MailService();
 
     $clearResult = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y', 'theme' => 'clear']);
@@ -1251,7 +1269,8 @@ test('mail keys its per-request template cache by theme too, not reusing one the
 test('mail inlines the global mail CSS into the html part\'s elements, on top of the selected theme\'s own CSS', function (): void {
     CurrentConfig::setMailSenderEmail('sender@example.test');
     CurrentConfig::setMailAllowHtml(true);
-    Lang::setLangInfo(['code' => 'en', 'direction' => 'ltr']);
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
+    Lang::current()->setLangInfo(['code' => 'en', 'direction' => 'ltr']);
     $service = new MailService();
 
     $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
@@ -1379,12 +1398,12 @@ test('mail returns false and logs a Mailer Error when the real Transport rejects
 test('switchLangTo pushes the current language and translations, switchLangBack fully restores them (not just CurrentUser::language)', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentUser::current()->set(User::fromUserArray(['id' => 1, 'username' => 'tester', 'status' => 'normal', 'language' => 'en_UK']));
-    Lang::setLangInfo(['code' => 'en_UK_marker']);
+    Lang::current()->setLangInfo(['code' => 'en_UK_marker']);
     $service = new MailService();
 
     $service->switchLangTo('fr_FR');
     expect(CurrentUser::current()->get()->language)->toBe('fr_FR');
-    expect(Lang::langInfo()['code'] ?? null)->toBe('fr');
+    expect(Lang::current()->langInfo()['code'] ?? null)->toBe('fr');
 
     $service->switchLangBack();
 
@@ -1394,7 +1413,7 @@ test('switchLangTo pushes the current language and translations, switchLangBack 
     // snapshot (considering it "already initialised"), so switchLangBack()
     // would have nothing real to restore it from.
     expect(CurrentUser::current()->get()->language)->toBe('en_UK');
-    expect(Lang::langInfo()['code'] ?? null)->toBe('en_UK_marker');
+    expect(Lang::current()->langInfo()['code'] ?? null)->toBe('en_UK_marker');
 });
 
 test('switchLangTo resets lang_info/the translation dictionary before reloading, rather than merging fresh data on top of stale state', function (): void {
@@ -1404,14 +1423,14 @@ test('switchLangTo resets lang_info/the translation dictionary before reloading,
     // survive switchLangTo('fr_FR'), the reset (not the reload itself)
     // was skipped: Lang::load()'s own internal array_merge($old, $fresh)
     // would otherwise carry stale keys forward indefinitely.
-    Lang::setLangInfo(['code' => 'xx', 'my_custom_marker' => 'stale']);
-    Lang::loadArray(['my_data_marker_key' => 'stale-data']);
+    Lang::current()->setLangInfo(['code' => 'xx', 'my_custom_marker' => 'stale']);
+    Lang::current()->loadArray(['my_data_marker_key' => 'stale-data']);
     $service = new MailService();
 
     $service->switchLangTo('fr_FR');
 
-    expect(Lang::langInfo())->not->toHaveKey('my_custom_marker');
-    expect(Lang::has('my_data_marker_key'))->toBeFalse();
+    expect(Lang::current()->langInfo())->not->toHaveKey('my_custom_marker');
+    expect(Lang::current()->has('my_data_marker_key'))->toBeFalse();
 });
 
 test('switchLangTo fires the loading_lang event while reloading a language for the first time', function (): void {
@@ -1471,7 +1490,7 @@ test('switchLangTo reuses its own cache for a language already switched to once,
     }
 
     expect($loadingLangCalls)->toBe(0);
-    expect(Lang::langInfo()['code'] ?? null)->toBe('fr');
+    expect(Lang::current()->langInfo()['code'] ?? null)->toBe('fr');
 });
 
 test('switchLangTo only ever snapshots the ORIGINAL starting language once per request, not once per distinct language switched away from', function (): void {
@@ -1488,16 +1507,16 @@ test('switchLangTo only ever snapshots the ORIGINAL starting language once per r
     CurrentUser::current()->set(User::fromUserArray(['id' => 1, 'username' => 'tester', 'status' => 'normal', 'language' => 'en_UK']));
     $service = new MailService();
 
-    Lang::setLangInfo(['code' => 'marker-en']);
+    Lang::current()->setLangInfo(['code' => 'marker-en']);
     $service->switchLangTo('fr_FR');
     $service->switchLangBack();
 
     CurrentUser::current()->updateLanguage('de_DE');
-    Lang::setLangInfo(['code' => 'marker-de']);
+    Lang::current()->setLangInfo(['code' => 'marker-de']);
     $service->switchLangTo('es_ES');
     $service->switchLangBack();
 
-    expect(Lang::langInfo()['code'] ?? null)->not->toBe('marker-de');
+    expect(Lang::current()->langInfo()['code'] ?? null)->not->toBe('marker-de');
     expect(CurrentUser::current()->get()->language)->toBe('de_DE');
 });
 
@@ -1511,7 +1530,7 @@ test('switchLangTo replays every plugin language file already loaded this reques
         // A real Lang::load() call for a plugin ($dirname non-empty) both
         // loads it AND registers it into Lang::languageFiles() -- the
         // exact list switchLangTo()'s own plugin-file replay loop reads.
-        Lang::load('plugin.lang', $dir, ['language' => 'fr_FR']);
+        Lang::current()->load('plugin.lang', $dir, ['language' => 'fr_FR']);
 
         mail_service_write_po($dir . 'language/de_DE/plugin.po', 'Deutscher Marker');
         $service = new MailService();

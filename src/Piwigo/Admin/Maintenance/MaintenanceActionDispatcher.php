@@ -191,7 +191,7 @@ final class MaintenanceActionDispatcher
 
             case 'empty_lounge':
 
-                $rows = new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher)
+                $rows = new ImageService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher)
                     ->emptyLounge();
                 $this->pageState->addInfo(sprintf('%d photos were moved from the upload lounge to their albums', count($rows ?? [])));
                 break;

@@ -88,7 +88,7 @@ namespace Piwigo\Tests\Integration {
             CurrentConfig::setAvailablePermissionLevels([0, 1, 2, 4, 8]);
 
             $this->conn = DbConnection::build();
-            $this->service = new UserService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new MailService(), new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), new HtmlService(), $this->conn, new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current());
+            $this->service = new UserService(Lang::current(), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new MailService(), new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), new HtmlService(), $this->conn, new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current());
 
             // checkAndSaveUserInfos()'s own success path (any call that
             // doesn't return an early 'error') reaches
@@ -342,7 +342,7 @@ namespace Piwigo\Tests\Integration {
             $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'username' => 'fixture_admin'], \Piwigo\Core\PageState::current());
 
             self::assertSame(
-                ['error' => ['code' => WsError::INVALID_PARAM, 'message' => Lang::t('this login is already used')]],
+                ['error' => ['code' => WsError::INVALID_PARAM, 'message' => Lang::current()->t('this login is already used')]],
                 $result
             );
         }
@@ -352,7 +352,7 @@ namespace Piwigo\Tests\Integration {
             $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'username' => '<b>evil</b>'], \Piwigo\Core\PageState::current());
 
             self::assertSame(
-                ['error' => ['code' => WsError::INVALID_PARAM, 'message' => Lang::t('html tags are not allowed in login')]],
+                ['error' => ['code' => WsError::INVALID_PARAM, 'message' => Lang::current()->t('html tags are not allowed in login')]],
                 $result
             );
         }
@@ -829,7 +829,7 @@ namespace Piwigo\Tests\Integration {
             );
 
             self::assertNull($result['userId']);
-            self::assertSame([Lang::t('login mustn\'t end with a space character')], $result['errors']);
+            self::assertSame([Lang::current()->t('login mustn\'t end with a space character')], $result['errors']);
         }
 
         public function test_register_user_rejects_a_login_starting_with_a_space(): void
@@ -842,7 +842,7 @@ namespace Piwigo\Tests\Integration {
             );
 
             self::assertNull($result['userId']);
-            self::assertSame([Lang::t('login mustn\'t start with a space character')], $result['errors']);
+            self::assertSame([Lang::current()->t('login mustn\'t start with a space character')], $result['errors']);
         }
 
         public function test_register_user_rejects_a_login_with_html_tags(): void
@@ -855,7 +855,7 @@ namespace Piwigo\Tests\Integration {
             );
 
             self::assertNull($result['userId']);
-            self::assertSame([Lang::t('html tags are not allowed in login')], $result['errors']);
+            self::assertSame([Lang::current()->t('html tags are not allowed in login')], $result['errors']);
         }
 
         public function test_register_user_rejects_an_invalid_mail_address(): void
@@ -1040,7 +1040,7 @@ namespace Piwigo\Tests\Integration {
             // DeploymentPolicy is now a real constructor dependency, not a
             // mutable static, so this test can no longer flip it on the
             // shared instance.
-            $service = new UserService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new MailService(), new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), new HtmlService(), $this->conn, new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(externalAuthentification: true), \Piwigo\Users\CurrentUser::current());
+            $service = new UserService(Lang::current(), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), new MailService(), new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), new HtmlService(), $this->conn, new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(externalAuthentification: true), \Piwigo\Users\CurrentUser::current());
 
             try {
                 self::assertSame(0, $this->fetchOneInt(

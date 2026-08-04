@@ -255,6 +255,7 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
         '/src/Piwigo/Core/CurrentThemeConfProvider.php',
         '/src/Piwigo/Mail/MailService.php',
         '/src/Piwigo/Auth/AccessControl.php',
+        '/src/Piwigo/Core/Lang.php',
     ];
 
     $hits = [
@@ -697,7 +698,6 @@ test('CurrentPaths::get()/isSet() transitional bridge has a shrinking, known all
         '/src/Piwigo/Controller/NbmController.php',
         '/src/Piwigo/Controller/PictureController.php',
         '/src/Piwigo/Core/ErrorCollector.php',
-        '/src/Piwigo/Core/Lang.php',
         '/src/Piwigo/Core/ThemeCatalog.php',
         '/src/Piwigo/Image/DerivativeCacheService.php',
         '/src/Piwigo/Image/DerivativeImage.php',
@@ -853,18 +853,19 @@ test('FilterState::*Static() transitional shims have a shrinking, known allow-li
 
 test('InstallationFlag::isActiveStatic() transitional shim has a shrinking, known allow-list', function (): void {
     // Singleton/service-locator elimination campaign, Phase 1: real callers
-    // (Piwigo\Core\Lang -- Phase 8; Piwigo\Users\UserService -- large
-    // construction-site fan-out, out of scope for this phase;
-    // Piwigo\Bootstrap\SessionBootstrap -- a genuinely static-only class)
-    // aren't converted to constructor injection yet, so they use this
-    // static shim instead of the real isActive() instance method (see
-    // that method's own docblock). Every phase that converts one more of
+    // (Piwigo\Users\UserService -- large construction-site fan-out, out of
+    // scope for this phase; Piwigo\Bootstrap\SessionBootstrap -- a
+    // genuinely static-only class) aren't converted to constructor
+    // injection yet, so they use this static shim instead of the real
+    // isActive() instance method (see that method's own docblock).
+    // Piwigo\Core\Lang removed from this allow-list in Phase 8: it now
+    // constructor-injects InstallationFlag and calls the real isActive()
+    // instance method instead. Every phase that converts one more of
     // these files should remove it from the allow-list below; once the
     // allow-list is empty, delete isActiveStatic() itself and this test.
     $repoRoot = __DIR__ . '/../..';
 
     $allowedFiles = [
-        '/src/Piwigo/Core/Lang.php',
         '/src/Piwigo/Users/UserService.php',
         '/src/Piwigo/Bootstrap/SessionBootstrap.php',
     ];
@@ -1075,10 +1076,11 @@ test('InputValidator::createStatic() transitional shim has a shrinking, known al
 test('Translator::get() transitional bridge has a shrinking, known allow-list', function (): void {
     // Singleton/service-locator elimination campaign, Phase 4: same shape
     // as SessionService::get() above (no Static suffix -- there is no
-    // competing real instance method to disambiguate from). Lang.php is a
-    // not-yet-converted (Phase 8) static facade consumer -- the textbook
-    // transitional-shim case the campaign plan documents. DateHelper.php
-    // is a stateless static utility (no instance context to receive
+    // competing real instance method to disambiguate from). Lang.php was
+    // the textbook transitional-shim case the campaign plan documented,
+    // but Phase 8 converted it to constructor-injected Translator, so it's
+    // no longer a caller. DateHelper.php is a stateless static utility (no
+    // instance context to receive
     // constructor injection through). HtmlService.php/MailService.php
     // deliberately avoid a required constructor dependency (59/29 real
     // `new` construction sites each), matching FilesystemHelper's own "no

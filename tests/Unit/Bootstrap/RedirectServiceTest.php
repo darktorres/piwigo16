@@ -6,11 +6,15 @@ use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Core\InstallationFlag;
+use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseReadyException;
+use Piwigo\Lang\Translator;
 use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
@@ -39,11 +43,23 @@ use Piwigo\Users\UserService;
 // this is safe to construct with no reachable test DB, same recipe used
 // throughout this campaign (e.g. CoreUpdateServiceTest.php's own
 // core_update_service_test_user_service()).
+/**
+ * This suite never boots a Kernel (redirectHttp() never reaches
+ * $this->lang either, same as $this->userService above), so Lang::current()
+ * (a live container resolve) isn't available -- a real, throwaway instance
+ * built from its 4 real, cheap, DB-free collaborators is enough.
+ */
+function redirect_service_test_lang(): Lang
+{
+    return new Lang(new Translator(), new HtmlService(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
+}
+
 function redirect_service_test_user_service(): UserService
 {
     $conn = DbConnection::build();
 
     return new UserService(
+        redirect_service_test_lang(),
         EntityManagerFactory::build($conn)->getRepository(UserInfoEntity::class),
         EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
         new MailService(),
@@ -58,7 +74,7 @@ function redirect_service_test_user_service(): UserService
 }
 
 test('redirectHttp throws ResponseReadyException with a 302 redirect to the given URL', function (): void {
-    $service = new RedirectService(redirect_service_test_user_service());
+    $service = new RedirectService(redirect_service_test_lang(), redirect_service_test_user_service());
     $exception = null;
     try {
         $service->redirectHttp('http://example.test/target.php');
@@ -73,7 +89,7 @@ test('redirectHttp throws ResponseReadyException with a 302 redirect to the give
 });
 
 test('redirectHttp html_entity_decode()s the URL before redirecting', function (): void {
-    $service = new RedirectService(redirect_service_test_user_service());
+    $service = new RedirectService(redirect_service_test_lang(), redirect_service_test_user_service());
     $exception = null;
     try {
         $service->redirectHttp('http://example.test/target.php?a=1&amp;b=2');

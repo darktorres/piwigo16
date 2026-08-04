@@ -148,6 +148,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
             \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class)
         );
         $categoryService = new CategoryService(
+            \Piwigo\Core\Lang::current(),
             \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class),
             $permissionService
         );
@@ -315,7 +316,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
 
     public function test_save_image_order_updates_the_category_row_only_when_subcats_is_false(): void
     {
-        $this->service->saveImageOrder(2, '`rank` ASC', false, new RedirectService($this->userService()));
+        $this->service->saveImageOrder(2, '`rank` ASC', false, new RedirectService(\Piwigo\Core\Lang::current(), $this->userService()));
 
         $cat1 = $this->fetchCategory(1);
         $cat2 = $this->fetchCategory(2);
@@ -330,7 +331,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         // Category 2's own uppercats ('1,2') includes category 1 --
         // saving on category 1 with $applySubcats=true matches every row
         // whose uppercats starts with '1,', which includes category 2.
-        $this->service->saveImageOrder(1, 'id ASC', true, new RedirectService($this->userService()));
+        $this->service->saveImageOrder(1, 'id ASC', true, new RedirectService(\Piwigo\Core\Lang::current(), $this->userService()));
 
         $cat1 = $this->fetchCategory(1);
         $cat2 = $this->fetchCategory(2);

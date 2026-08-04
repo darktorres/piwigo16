@@ -100,10 +100,10 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         RequestBootstrap::finalize();
 
         self::assertSame(
-            [Lang::t('Your authentication key is no longer valid.') . sprintf(
+            [Lang::current()->t('Your authentication key is no longer valid.') . sprintf(
                 ' <a href="%s">%s</a>',
                 new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride())->getRootUrl() . 'identification.php',
-                Lang::t('Login')
+                Lang::current()->t('Login')
             )],
             PageState::current()->errors
         );
@@ -169,7 +169,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         // PageState-side list back to [] in the same method body -- the
         // template var is the only place left to observe it afterwards.
         self::assertSame(
-            [Lang::t('Bad status for user "guest", default status will be used. Please notify the webmaster.')],
+            [Lang::current()->t('Bad status for user "guest", default status will be used. Please notify the webmaster.')],
             CurrentTemplate::current()->get()->get_template_vars('header_msgs')
         );
     }
@@ -186,7 +186,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
             self::assertSame(503, $response->getStatusCode());
             self::assertSame('900', $response->getHeaderLine('Retry-After'));
             $expectedBody = '<a href="' . new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride())->getAbsoluteRootUrl(false) . 'identification.php">'
-                . Lang::t('The gallery is locked for maintenance. Please, come back later.') . '</a>'
+                . Lang::current()->t('The gallery is locked for maintenance. Please, come back later.') . '</a>'
                 . str_repeat(' ', 512);
             self::assertSame($expectedBody, (string) $response->getBody());
         }

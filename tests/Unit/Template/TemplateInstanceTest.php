@@ -339,7 +339,7 @@ test('constructor loads admin.lang before rendering the data-dir-not-writable er
         restore_error_handler();
         chmod(CurrentPaths::get()->root, 0o755);
         \Piwigo\Lang\Translator::get()->reset();
-        Lang::reset();
+        Lang::current()->reset();
     }
 
     expect($body)->not->toBeNull()
@@ -448,12 +448,12 @@ test('constructor resets Smarty template dir to empty before adding its own (roo
 });
 
 test('constructor derives jquery_code and plupload_code from the lang code when not already set', function (): void {
-    Lang::setLangInfo(['code' => 'en-UK']);
+    Lang::current()->setLangInfo(['code' => 'en-UK']);
 
     $t = new Template();
 
     $expected = ['code' => 'en-UK', 'jquery_code' => 'en-UK', 'plupload_code' => 'en_UK'];
-    expect(Lang::langInfo())->toBe($expected)
+    expect(Lang::current()->langInfo())->toBe($expected)
         ->and($t->get_template_vars('lang_info'))->toBe($expected);
 });
 
@@ -1097,7 +1097,7 @@ test('parse registers external filters before compiling (so they run) and unregi
 
 test('parse salts compile_id with the current lang code during compilation when cache-by-language is on', function (): void {
     CurrentConfig::setCompiledTemplateCacheLanguage(true);
-    Lang::setLangInfo(['code' => 'fr_FR']);
+    Lang::current()->setLangInfo(['code' => 'fr_FR']);
     $t = new Template();
     $tplDir = CurrentPaths::get()->root . '/tpl/';
     mkdir($tplDir, 0o777, true);
@@ -1124,7 +1124,7 @@ test('parse salts compile_id with the current lang code during compilation when 
 
 test('parse does not salt compile_id with a lang code when cache-by-language is off', function (): void {
     CurrentConfig::setCompiledTemplateCacheLanguage(false);
-    Lang::setLangInfo(['code' => 'fr_FR']);
+    Lang::current()->setLangInfo(['code' => 'fr_FR']);
     $t = new Template();
     $tplDir = CurrentPaths::get()->root . '/tpl/';
     mkdir($tplDir, 0o777, true);

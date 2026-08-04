@@ -10,6 +10,7 @@ use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Event\Album\EmptyLounge;
@@ -45,6 +46,7 @@ use Piwigo\Session\SessionService;
 final readonly class ImageService
 {
     public function __construct(
+        private Lang $lang,
         private ImageRepository $repo,
         private ActivityLoggerInterface $activityLogger,
         private SessionService $sessionService,
@@ -64,7 +66,7 @@ final readonly class ImageService
         $conn = DbConnection::build();
 
         return new CategoryService(
-            \Piwigo\Core\Lang::current(),
+            $this->lang,
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class),
             new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class))
         );

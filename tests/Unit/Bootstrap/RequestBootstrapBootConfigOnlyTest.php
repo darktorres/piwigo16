@@ -38,18 +38,37 @@ beforeEach(function (): void {
     // earlier test would make these tests skip that resolve-and-load path
     // entirely and silently pass/fail on stale state.
     CurrentConfigService::current()->reset();
-    Lang::reset();
+    // No Lang::current()->reset() here (unlike afterEach below): Lang, since
+    // the singleton/service-locator elimination campaign's Phase 8, has no
+    // memoized pre-boot fallback the way CurrentUser::current()/
+    // CurrentConfigService::current() do -- see its own docblock -- and
+    // Kernel::reset() just above already tore down whatever container (and
+    // whatever Lang instance lived in it) the previous test left behind.
+    // There's nothing left to reset here; a fresh Kernel::boot() a few lines
+    // into each test body below hands out a brand new, already-empty
+    // instance from a brand new container.
     Translator::get()->reset();
     SentrySdk::init();
     putenv('SENTRY_DSN');
 });
 
 afterEach(function (): void {
-    Kernel::reset();
     CurrentConfig::reset();
     CurrentUser::current()->reset();
     CurrentConfigService::current()->reset();
-    Lang::reset();
+    // Lang::current() has no memoized pre-boot fallback (see beforeEach's
+    // own comment above), so it must resolve -- and get reset -- while the
+    // container is still up, before Kernel::reset() below tears it down;
+    // same ordering ExtensionScannerTest.php's own afterEach() already
+    // established. Not every test in this file boots the Kernel at all
+    // ("CurrentConfigService::get throws when nothing has ever been set"
+    // never does, and KernelContainerOverride::with() -- used by the
+    // wrong-type test -- already tears its own override container back down
+    // in its own finally block before this hook ever runs), hence the guard.
+    if (Kernel::isBooted()) {
+        Lang::current()->reset();
+    }
+    Kernel::reset();
     Translator::get()->reset();
     SentrySdk::init();
     putenv('SENTRY_DSN');
@@ -154,8 +173,8 @@ test('bootConfigOnly attaches Lang globals from whatever the Translator has load
 
     RequestBootstrap::bootConfigOnly($paths);
 
-    expect(Lang::has('bootconfigonly_probe'))->toBeTrue()
-        ->and(Lang::snapshot()['bootconfigonly_probe'])->toBe('probe-value');
+    expect(Lang::current()->has('bootconfigonly_probe'))->toBeTrue()
+        ->and(Lang::current()->snapshot()['bootconfigonly_probe'])->toBe('probe-value');
 });
 
 test('bootConfigOnly reuses an already-set CurrentConfigService instead of resolving a new one', function (): void {

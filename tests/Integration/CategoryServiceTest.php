@@ -216,6 +216,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         $this->repo = \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class);
         $this->service = new CategoryService(
+            \Piwigo\Core\Lang::current(),
             $this->repo,
             new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn)), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class))
         );

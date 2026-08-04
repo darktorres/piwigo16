@@ -60,12 +60,14 @@ final class FilterResolverTest extends IntegrationTestCase
         $em = EntityManagerFactory::build($this->conn);
         $sessionService = new SessionService($em->getRepository(SessionEntity::class));
         $imageService = new ImageService(
+            \Piwigo\Core\Lang::current(),
             $em->getRepository(\Piwigo\Image\ImageEntity::class),
             new ActivityService($em->getRepository(\Piwigo\Activity\ActivityEntity::class)),
             $sessionService,
             new \Piwigo\PluginConfig\EventDispatcher(),
         );
         $categoryService = new CategoryService(
+            \Piwigo\Core\Lang::current(),
             $em->getRepository(\Piwigo\Category\CategoryEntity::class),
             new PermissionService(
                 new PermissionRepository($em),
@@ -75,6 +77,7 @@ final class FilterResolverTest extends IntegrationTestCase
         );
         $caddieRepo = new CaddieRepository($this->conn);
         $userService = new UserService(
+            \Piwigo\Core\Lang::current(),
             $em->getRepository(\Piwigo\Users\UserInfoEntity::class),
             $em->getRepository(\Piwigo\Group\GroupEntity::class),
             new MailService(),

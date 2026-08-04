@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\DefaultLanguageProviderInterface;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
 
 /**
  * Piwigo\Core\DateHelper::formatDateLegacy()/formatFromto()/transformDate()
@@ -20,9 +22,21 @@ use Piwigo\Core\Lang;
  * which only formatDateLegacy() (called directly, bypassing formatDate()'s
  * Intl branch) actually reads. Every value below was independently
  * confirmed by invoking the real class before writing the assertion.
+ *
+ * DateHelper's own Lang::current()->t()/day()/month()/currentUserLanguage()
+ * calls (singleton/service-locator elimination campaign, Phase 8) are a
+ * live container resolve with no pre-boot fallback -- see Lang's own
+ * docblock -- so this file now also boots/resets a real Kernel around each
+ * test, matching TemplateTest.php's own established pattern for the same
+ * reason. A real Paths must be supplied to boot() too -- Lang's own
+ * constructor needs one, and PHP-DI can't autowire Paths on its own (every
+ * property is a required string with no default). No filesystem access is
+ * ever exercised through it here, so a bare sys_get_temp_dir() root, never
+ * actually written to, is enough.
  */
 beforeEach(function (): void {
-    Lang::loadArray([
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
+    Lang::current()->loadArray([
         'month' => [1 => 'January', 2 => 'February', 3 => 'March', 4 => 'April', 5 => 'May', 6 => 'June',
             7 => 'July', 8 => 'August', 9 => 'September', 10 => 'October', 11 => 'November', 12 => 'December'],
         'day' => [0 => 'Sunday', 1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday'],
@@ -30,7 +44,8 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    Lang::reset();
+    Lang::current()->reset();
+    Kernel::reset();
 });
 
 test('formatDateLegacy renders only the requested components, in day/month/year order', function (): void {
@@ -298,7 +313,7 @@ test('formatDate uses the current user\'s own language as the ICU locale, not al
     // be AppInfo::DEFAULT_LANGUAGE ('en_UK') would keep producing
     // English month/day names even with a real, present current-user
     // language.
-    Lang::setDefaultLanguageProvider(new class implements DefaultLanguageProviderInterface {
+    Lang::current()->setDefaultLanguageProvider(new class implements DefaultLanguageProviderInterface {
         public function getDefaultLanguage(): string
         {
             return 'en_UK';

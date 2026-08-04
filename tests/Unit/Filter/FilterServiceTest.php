@@ -3,7 +3,11 @@
 declare(strict_types=1);
 
 use Piwigo\Core\FilterState;
+use Piwigo\Core\InstallationFlag;
+use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
 use Piwigo\Filter\FilterService;
+use Piwigo\Html\HtmlService;
 use Piwigo\Lang\Translator;
 use Piwigo\Session\SessionService;
 
@@ -21,12 +25,22 @@ use Piwigo\Session\SessionService;
 // now a container-shared instance, constructor-injected into FilterService
 // -- each test constructs its own fresh instance directly, no
 // reset()/Kernel::boot() needed.
+//
+// Phase 8: FilterService also takes a constructor-injected Lang -- this
+// file never boots Kernel, so Lang::current() (no memoized pre-boot
+// fallback) isn't an option; a throwaway instance is built directly
+// instead, matching the same "real, cheap, DB-free collaborators" recipe
+// used throughout this campaign's own test fallout fixes.
+function filterServiceTestLang(): Lang
+{
+    return new Lang(new Translator(), new HtmlService(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
+}
 
 test('updateCatsWithFilteredData leaves cats untouched when the filter is disabled', function (): void {
     $filterState = new FilterState();
     $filterState->set(false, '', '', [1 => ['nb_images' => 999]]);
     $cats = [0 => ['id' => 1, 'nb_images' => 5]];
-    $service = new FilterService($filterState, SessionService::get(), Translator::get());
+    $service = new FilterService($filterState, SessionService::get(), Translator::get(), filterServiceTestLang());
 
     $service->updateCatsWithFilteredData($cats);
 
@@ -45,7 +59,7 @@ test('updateCatsWithFilteredData overwrites the aggregate fields for a matched c
         ],
     ]);
     $cats = [0 => ['id' => 1, 'nb_images' => 5, 'untouched' => 'kept']];
-    $service = new FilterService($filterState, SessionService::get(), Translator::get());
+    $service = new FilterService($filterState, SessionService::get(), Translator::get(), filterServiceTestLang());
 
     $service->updateCatsWithFilteredData($cats);
 
@@ -64,7 +78,7 @@ test('updateCatsWithFilteredData skips a category id with no matching filter ent
     $filterState = new FilterState();
     $filterState->set(true, '', '', [2 => ['nb_images' => 20]]);
     $cats = [0 => ['id' => 1, 'nb_images' => 5]];
-    $service = new FilterService($filterState, SessionService::get(), Translator::get());
+    $service = new FilterService($filterState, SessionService::get(), Translator::get(), filterServiceTestLang());
 
     $service->updateCatsWithFilteredData($cats);
 
@@ -75,7 +89,7 @@ test('updateCatsWithFilteredData skips a category row with a non-int/string id',
     $filterState = new FilterState();
     $filterState->set(true, '', '', [1 => ['nb_images' => 20]]);
     $cats = [0 => ['id' => null, 'nb_images' => 5]];
-    $service = new FilterService($filterState, SessionService::get(), Translator::get());
+    $service = new FilterService($filterState, SessionService::get(), Translator::get(), filterServiceTestLang());
 
     $service->updateCatsWithFilteredData($cats);
 
@@ -86,7 +100,7 @@ test('updateCatsWithFilteredData matches a string category id', function (): voi
     $filterState = new FilterState();
     $filterState->set(true, '', '', ['abc' => ['nb_images' => 30]]);
     $cats = [0 => ['id' => 'abc', 'nb_images' => 5]];
-    $service = new FilterService($filterState, SessionService::get(), Translator::get());
+    $service = new FilterService($filterState, SessionService::get(), Translator::get(), filterServiceTestLang());
 
     $service->updateCatsWithFilteredData($cats);
 
@@ -101,7 +115,7 @@ test('updateCatsWithFilteredData continues past a non-int/string id to still pro
     $filterState = new FilterState();
     $filterState->set(true, '', '', [2 => ['nb_images' => 99]]);
     $cats = [0 => ['id' => null, 'nb_images' => 5], 1 => ['id' => 2, 'nb_images' => 7]];
-    $service = new FilterService($filterState, SessionService::get(), Translator::get());
+    $service = new FilterService($filterState, SessionService::get(), Translator::get(), filterServiceTestLang());
 
     $service->updateCatsWithFilteredData($cats);
 
@@ -116,7 +130,7 @@ test('updateCatsWithFilteredData continues past a non-matching filter entry to s
     $filterState = new FilterState();
     $filterState->set(true, '', '', [2 => ['nb_images' => 99]]);
     $cats = [0 => ['id' => 1, 'nb_images' => 5], 1 => ['id' => 2, 'nb_images' => 7]];
-    $service = new FilterService($filterState, SessionService::get(), Translator::get());
+    $service = new FilterService($filterState, SessionService::get(), Translator::get(), filterServiceTestLang());
 
     $service->updateCatsWithFilteredData($cats);
 
@@ -127,7 +141,7 @@ test('updateCatsWithFilteredData fills a missing aggregate field with null', fun
     $filterState = new FilterState();
     $filterState->set(true, '', '', [1 => ['nb_images' => 20]]);
     $cats = [0 => ['id' => 1, 'nb_images' => 5]];
-    $service = new FilterService($filterState, SessionService::get(), Translator::get());
+    $service = new FilterService($filterState, SessionService::get(), Translator::get(), filterServiceTestLang());
 
     $service->updateCatsWithFilteredData($cats);
 

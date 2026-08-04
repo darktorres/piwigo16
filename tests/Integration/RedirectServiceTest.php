@@ -78,7 +78,7 @@ final class RedirectServiceTest extends IntegrationTestCase
         // Lang::reset() are the actual precondition the early-crash branch
         // needs, so each test below sets them up (or not) explicitly.
         CurrentTemplate::current()->reset();
-        Lang::reset();
+        Lang::current()->reset();
     }
 
     #[\Override]
@@ -86,7 +86,7 @@ final class RedirectServiceTest extends IntegrationTestCase
     {
         UniqueExecLock::ends('check_for_updates');
         CurrentTemplate::current()->reset();
-        Lang::reset();
+        Lang::current()->reset();
         CurrentConfig::reset();
         parent::tearDown();
     }
@@ -119,7 +119,7 @@ final class RedirectServiceTest extends IntegrationTestCase
         // reset both) -- exactly what a fatal before common.inc.php
         // finishes bootstrapping would look like.
         self::assertFalse(CurrentTemplate::current()->isInitialized());
-        self::assertFalse(Lang::isLangInfoInitialized());
+        self::assertFalse(Lang::current()->isLangInfoInitialized());
 
         $execId = UniqueExecLock::begins('check_for_updates');
         self::assertIsString($execId);
@@ -127,7 +127,7 @@ final class RedirectServiceTest extends IntegrationTestCase
         $body = null;
         $status = null;
         try {
-            new RedirectService($this->userService())->redirectHtml('http://example.test/target.php', 'A custom redirect message');
+            new RedirectService(Lang::current(), $this->userService())->redirectHtml('http://example.test/target.php', 'A custom redirect message');
         } catch (ResponseReadyException $e) {
             $response = $e->response();
             $status = $response->getStatusCode();
@@ -156,7 +156,7 @@ final class RedirectServiceTest extends IntegrationTestCase
         // reads pointed at an empty array (confirmed live: a real
         // "Undefined array key" warning under this suite's own
         // failOnWarning=true).
-        Lang::setLangInfo(['code' => 'en_UK', 'direction' => 'ltr']);
+        Lang::current()->setLangInfo(['code' => 'en_UK', 'direction' => 'ltr']);
         CurrentTemplate::current()->set(new Template(CurrentPaths::get()->root . 'themes', 'default'));
 
         $execId = UniqueExecLock::begins('check_for_updates');
@@ -164,12 +164,12 @@ final class RedirectServiceTest extends IntegrationTestCase
 
         $body = null;
         try {
-            new RedirectService($this->userService())->redirectHtml('http://example.test/other.php', '');
+            new RedirectService(Lang::current(), $this->userService())->redirectHtml('http://example.test/other.php', '');
         } catch (ResponseReadyException $e) {
             $body = (string) $e->response()->getBody();
         }
 
-        self::assertStringContainsString(nl2br(Lang::t('Redirection...')), $body);
+        self::assertStringContainsString(nl2br(Lang::current()->t('Redirection...')), $body);
     }
 
     public function test_redirect_calls_redirectHtml_when_a_nonzero_refresh_time_is_given(): void
@@ -177,7 +177,7 @@ final class RedirectServiceTest extends IntegrationTestCase
         // Ordering note: see test_redirectHtml_defaults_the_message_to_a_translated_redirection_notice_when_msg_is_empty()'s
         // own comment -- Lang::setLangInfo() must run before Template's
         // own construction snapshots it.
-        Lang::setLangInfo(['code' => 'en_UK', 'direction' => 'ltr']);
+        Lang::current()->setLangInfo(['code' => 'en_UK', 'direction' => 'ltr']);
         CurrentTemplate::current()->set(new Template(CurrentPaths::get()->root . 'themes', 'default'));
         // Would take the redirectHttp() branch (a bare 302, no rendered
         // body) if $refresh_time were ignored -- forcing the http method
@@ -191,7 +191,7 @@ final class RedirectServiceTest extends IntegrationTestCase
         $status = null;
         $body = null;
         try {
-            new RedirectService($this->userService())->redirect('http://example.test/refresh-target.php', 'Refresh redirect', 5);
+            new RedirectService(Lang::current(), $this->userService())->redirect('http://example.test/refresh-target.php', 'Refresh redirect', 5);
         } catch (ResponseReadyException $e) {
             $response = $e->response();
             $status = $response->getStatusCode();

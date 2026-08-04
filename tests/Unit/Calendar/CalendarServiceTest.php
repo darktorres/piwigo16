@@ -8,6 +8,8 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
@@ -50,7 +52,7 @@ function makeCalendarService(): CalendarService
 
     return new CalendarService(
         $permissionService,
-        new CategoryService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class), $permissionService),
+        new CategoryService(Lang::current(), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class), $permissionService),
     );
 }
 
@@ -72,7 +74,15 @@ function seedCalendarFilterState(bool $enabled, string $visibleCategories = '', 
 }
 
 beforeEach(function (): void {
-    Kernel::boot();
+    // A bare Kernel::boot() (no Paths bound) used to be enough here -- none
+    // of PermissionService/CategoryService's own dependencies needed one.
+    // CategoryService now takes Lang via constructor injection (singleton/
+    // service-locator elimination campaign, Phase 8), and Lang's own
+    // container resolution requires a real, bound Paths::class -- so a real
+    // (if never actually read from disk here) root is needed for the
+    // container to resolve it at all, same recipe as UploadServiceTest's own
+    // beforeEach()'s Kernel::boot(Paths::fromRoot(...)) call.
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
     CurrentUser::current()->set(new User(
         id: \Piwigo\Common\ValueObject\UserId::from(1),
         username: '',

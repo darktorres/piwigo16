@@ -5,6 +5,9 @@ declare(strict_types=1);
 use Piwigo\Activity\Projection\SystemActivityLogEntry;
 use Piwigo\Admin\Maintenance\ActivityLogEntryFormatter;
 use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\Kernel;
+use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
 
 /**
  * ActivityLogEntryFormatter::format() -- extracted from
@@ -36,8 +39,37 @@ function makeActivityRow(array $overrides = []): SystemActivityLogEntry
     );
 }
 
+/**
+ * ActivityLogEntryFormatter::format() gained a required Lang parameter
+ * (singleton/service-locator elimination campaign, Phase 8) -- but a
+ * bare throwaway instance isn't enough here, unlike most other NOCTOR
+ * page-renderer Unit tests: format()'s own 'date' key runs through
+ * DateHelper::formatDate(), which internally reaches Lang::current()
+ * (the deprecated container-resolve shim -- no memoized pre-boot
+ * fallback, see Lang's own docblock) regardless of what gets passed in
+ * here. A real, booted Kernel (see beforeEach()/afterEach() below) is
+ * therefore required for every test in this file, so the instance
+ * passed to format() might as well be the same container-shared one
+ * DateHelper resolves -- with no data loaded, t()/day()/month() all
+ * return their raw, untranslated key/index, matching every assertion in
+ * this file.
+ */
+function activityLogEntryFormatterLang(): Lang
+{
+    return Lang::current();
+}
+
+beforeEach(function (): void {
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 4)));
+});
+
+afterEach(function (): void {
+    Lang::current()->reset();
+    Kernel::reset();
+});
+
 test('core install action gets the green download icon', function (): void {
-    $entry = new ActivityLogEntryFormatter()->format(makeActivityRow(), []);
+    $entry = new ActivityLogEntryFormatter()->format(activityLogEntryFormatterLang(), makeActivityRow(), []);
 
     expect($entry['object_icon'])->toBe('icon-piwigo')
         ->and($entry['object'])->toBe('Core')
@@ -48,7 +80,7 @@ test('core install action gets the green download icon', function (): void {
 });
 
 test('core update action is flagged as major_infos', function (): void {
-    $entry = new ActivityLogEntryFormatter()->format(
+    $entry = new ActivityLogEntryFormatter()->format(activityLogEntryFormatterLang(), 
         makeActivityRow(['action' => 'update']),
         []
     );
@@ -61,7 +93,7 @@ test('core maintenance action looks up its icon/label from maint_actions', funct
     $maintActions = [
         'user_cache' => ['icon' => 'icon-user-1', 'label' => 'Purge user cache'],
     ];
-    $entry = new ActivityLogEntryFormatter()->format(
+    $entry = new ActivityLogEntryFormatter()->format(activityLogEntryFormatterLang(), 
         makeActivityRow([
             'action' => 'maintenance',
             'details' => ['maintenance_action' => 'user_cache'],
@@ -76,7 +108,7 @@ test('core maintenance action looks up its icon/label from maint_actions', funct
 });
 
 test('core maintenance action falls back to the raw action name when unknown to maint_actions', function (): void {
-    $entry = new ActivityLogEntryFormatter()->format(
+    $entry = new ActivityLogEntryFormatter()->format(activityLogEntryFormatterLang(), 
         makeActivityRow([
             'action' => 'maintenance',
             'details' => ['maintenance_action' => 'some_future_action'],
@@ -100,7 +132,7 @@ test('core maintenance action with a non-string/non-int maintenance_action falls
     $maintActions = [
         '' => ['icon' => 'icon-fallback-key', 'label' => 'Fallback key label'],
     ];
-    $entry = new ActivityLogEntryFormatter()->format(
+    $entry = new ActivityLogEntryFormatter()->format(activityLogEntryFormatterLang(), 
         makeActivityRow([
             'action' => 'maintenance',
             'details' => ['maintenance_action' => true],
@@ -114,7 +146,7 @@ test('core maintenance action with a non-string/non-int maintenance_action falls
 });
 
 test('core config action with a known section', function (): void {
-    $entry = new ActivityLogEntryFormatter()->format(
+    $entry = new ActivityLogEntryFormatter()->format(activityLogEntryFormatterLang(), 
         makeActivityRow([
             'action' => 'config',
             'details' => ['config_section' => 'watermark'],
@@ -128,7 +160,7 @@ test('core config action with a known section', function (): void {
 });
 
 test('plugin delete action reports db and filesystem version details', function (): void {
-    $entry = new ActivityLogEntryFormatter()->format(
+    $entry = new ActivityLogEntryFormatter()->format(activityLogEntryFormatterLang(), 
         makeActivityRow([
             'object_id' => ActivitySystem::Plugin,
             'action' => 'delete',
@@ -153,7 +185,7 @@ test('plugin_id present but non-string is left unused, not passed to str_replace
     // isset() is true but is_string() is false here -- real code requires
     // BOTH (an OR would instead try str_replace() on a non-string $subject,
     // which throws a TypeError under strict_types=1).
-    $entry = new ActivityLogEntryFormatter()->format(
+    $entry = new ActivityLogEntryFormatter()->format(activityLogEntryFormatterLang(), 
         makeActivityRow(['object_id' => ActivitySystem::Plugin, 'details' => ['plugin_id' => 123]]),
         []
     );
@@ -162,7 +194,7 @@ test('plugin_id present but non-string is left unused, not passed to str_replace
 });
 
 test('db_version present but non-string is left out of the delete detail', function (): void {
-    $entry = new ActivityLogEntryFormatter()->format(
+    $entry = new ActivityLogEntryFormatter()->format(activityLogEntryFormatterLang(), 
         makeActivityRow([
             'object_id' => ActivitySystem::Plugin,
             'action' => 'delete',
@@ -175,7 +207,7 @@ test('db_version present but non-string is left out of the delete detail', funct
 });
 
 test('fs_version present but non-string is left out of the delete detail', function (): void {
-    $entry = new ActivityLogEntryFormatter()->format(
+    $entry = new ActivityLogEntryFormatter()->format(activityLogEntryFormatterLang(), 
         makeActivityRow([
             'object_id' => ActivitySystem::Plugin,
             'action' => 'delete',
@@ -188,7 +220,7 @@ test('fs_version present but non-string is left out of the delete detail', funct
 });
 
 test('theme_id present but non-string is left unused, not passed to str_replace', function (): void {
-    $entry = new ActivityLogEntryFormatter()->format(
+    $entry = new ActivityLogEntryFormatter()->format(activityLogEntryFormatterLang(), 
         makeActivityRow(['object_id' => ActivitySystem::Theme, 'details' => ['theme_id' => 123]]),
         []
     );
@@ -197,7 +229,7 @@ test('theme_id present but non-string is left unused, not passed to str_replace'
 });
 
 test('theme_id with both an underscore and a hyphen gets both replaced with spaces', function (): void {
-    $entry = new ActivityLogEntryFormatter()->format(
+    $entry = new ActivityLogEntryFormatter()->format(activityLogEntryFormatterLang(), 
         makeActivityRow(['object_id' => ActivitySystem::Theme, 'details' => ['theme_id' => 'my_theme-name']]),
         []
     );
@@ -206,7 +238,7 @@ test('theme_id with both an underscore and a hyphen gets both replaced with spac
 });
 
 test('theme set_default action', function (): void {
-    $entry = new ActivityLogEntryFormatter()->format(
+    $entry = new ActivityLogEntryFormatter()->format(activityLogEntryFormatterLang(), 
         makeActivityRow([
             'object_id' => ActivitySystem::Theme,
             'action' => 'set_default',
@@ -221,7 +253,7 @@ test('theme set_default action', function (): void {
 });
 
 test('unknown object_id falls through to empty icon/object/color and the default empty detail', function (): void {
-    $entry = new ActivityLogEntryFormatter()->format(
+    $entry = new ActivityLogEntryFormatter()->format(activityLogEntryFormatterLang(), 
         makeActivityRow(['object_id' => 999]),
         []
     );
@@ -234,7 +266,7 @@ test('unknown object_id falls through to empty icon/object/color and the default
 });
 
 test('from_version detail overrides the object/action-specific detail', function (): void {
-    $entry = new ActivityLogEntryFormatter()->format(
+    $entry = new ActivityLogEntryFormatter()->format(activityLogEntryFormatterLang(), 
         makeActivityRow([
             'object_id' => ActivitySystem::Plugin,
             'action' => 'update',
@@ -250,7 +282,7 @@ test('from_version detail overrides the object/action-specific detail', function
 });
 
 test('from_version detail with no to_version falls back to the result value', function (): void {
-    $entry = new ActivityLogEntryFormatter()->format(
+    $entry = new ActivityLogEntryFormatter()->format(activityLogEntryFormatterLang(), 
         makeActivityRow(['details' => ['from_version' => '1.0', 'result' => 'failed']]),
         []
     );
@@ -260,7 +292,7 @@ test('from_version detail with no to_version falls back to the result value', fu
 });
 
 test('from_version detail with neither to_version nor result falls back to an empty text', function (): void {
-    $entry = new ActivityLogEntryFormatter()->format(
+    $entry = new ActivityLogEntryFormatter()->format(activityLogEntryFormatterLang(), 
         makeActivityRow(['details' => ['from_version' => '1.0']]),
         []
     );
@@ -270,7 +302,7 @@ test('from_version detail with neither to_version nor result falls back to an em
 });
 
 test('version-only detail is formatted as a version badge', function (): void {
-    $entry = new ActivityLogEntryFormatter()->format(
+    $entry = new ActivityLogEntryFormatter()->format(activityLogEntryFormatterLang(), 
         makeActivityRow(['details' => ['version' => '3.1.4']]),
         []
     );
@@ -279,7 +311,7 @@ test('version-only detail is formatted as a version badge', function (): void {
 });
 
 test('result-only detail is formatted as an error badge', function (): void {
-    $entry = new ActivityLogEntryFormatter()->format(
+    $entry = new ActivityLogEntryFormatter()->format(activityLogEntryFormatterLang(), 
         makeActivityRow(['details' => ['result' => 'failed']]),
         []
     );
@@ -288,7 +320,7 @@ test('result-only detail is formatted as an error badge', function (): void {
 });
 
 test('core config action with an unknown section falls back to the raw section name', function (): void {
-    $entry = new ActivityLogEntryFormatter()->format(
+    $entry = new ActivityLogEntryFormatter()->format(activityLogEntryFormatterLang(), 
         makeActivityRow([
             'action' => 'config',
             'details' => ['config_section' => 'totally-unknown-section'],
@@ -302,7 +334,7 @@ test('core config action with an unknown section falls back to the raw section n
 });
 
 test('core autoupdate action is flagged as major_infos with the blue update icon', function (): void {
-    $entry = new ActivityLogEntryFormatter()->format(
+    $entry = new ActivityLogEntryFormatter()->format(activityLogEntryFormatterLang(), 
         makeActivityRow(['action' => 'autoupdate']),
         []
     );
@@ -314,7 +346,7 @@ test('core autoupdate action is flagged as major_infos with the blue update icon
 });
 
 test('core unknown action falls back to the default yellow download icon', function (): void {
-    $entry = new ActivityLogEntryFormatter()->format(
+    $entry = new ActivityLogEntryFormatter()->format(activityLogEntryFormatterLang(), 
         makeActivityRow(['action' => 'some-future-core-action']),
         []
     );
@@ -328,7 +360,7 @@ test('core unknown action falls back to the default yellow download icon', funct
 });
 
 test('plugin install action gets the green download icon', function (): void {
-    $entry = new ActivityLogEntryFormatter()->format(
+    $entry = new ActivityLogEntryFormatter()->format(activityLogEntryFormatterLang(), 
         makeActivityRow(['object_id' => ActivitySystem::Plugin, 'action' => 'install', 'details' => ['plugin_id' => 'plugin-one']]),
         []
     );
@@ -340,7 +372,7 @@ test('plugin install action gets the green download icon', function (): void {
 });
 
 test('plugin activate action gets the green check icon', function (): void {
-    $entry = new ActivityLogEntryFormatter()->format(
+    $entry = new ActivityLogEntryFormatter()->format(activityLogEntryFormatterLang(), 
         makeActivityRow(['object_id' => ActivitySystem::Plugin, 'action' => 'activate', 'details' => ['plugin_id' => 'plugin-two']]),
         []
     );
@@ -351,7 +383,7 @@ test('plugin activate action gets the green check icon', function (): void {
 });
 
 test('plugin deactivate action gets the purple block icon', function (): void {
-    $entry = new ActivityLogEntryFormatter()->format(
+    $entry = new ActivityLogEntryFormatter()->format(activityLogEntryFormatterLang(), 
         makeActivityRow(['object_id' => ActivitySystem::Plugin, 'action' => 'deactivate', 'details' => ['plugin_id' => 'plugin-three']]),
         []
     );
@@ -362,7 +394,7 @@ test('plugin deactivate action gets the purple block icon', function (): void {
 });
 
 test('plugin uninstall action gets the red trash icon', function (): void {
-    $entry = new ActivityLogEntryFormatter()->format(
+    $entry = new ActivityLogEntryFormatter()->format(activityLogEntryFormatterLang(), 
         makeActivityRow(['object_id' => ActivitySystem::Plugin, 'action' => 'uninstall', 'details' => ['plugin_id' => 'plugin-four']]),
         []
     );
@@ -373,7 +405,7 @@ test('plugin uninstall action gets the red trash icon', function (): void {
 });
 
 test('plugin restore action gets the blue back-in-time icon', function (): void {
-    $entry = new ActivityLogEntryFormatter()->format(
+    $entry = new ActivityLogEntryFormatter()->format(activityLogEntryFormatterLang(), 
         makeActivityRow(['object_id' => ActivitySystem::Plugin, 'action' => 'restore', 'details' => ['plugin_id' => 'plugin-five']]),
         []
     );
@@ -384,7 +416,7 @@ test('plugin restore action gets the blue back-in-time icon', function (): void 
 });
 
 test('plugin autoupdate action gets the blue update icon, not flagged major_infos', function (): void {
-    $entry = new ActivityLogEntryFormatter()->format(
+    $entry = new ActivityLogEntryFormatter()->format(activityLogEntryFormatterLang(), 
         makeActivityRow(['object_id' => ActivitySystem::Plugin, 'action' => 'autoupdate', 'details' => ['plugin_id' => 'plugin-six']]),
         []
     );
@@ -398,7 +430,7 @@ test('plugin autoupdate action gets the blue update icon, not flagged major_info
 });
 
 test('plugin unknown action falls back to the default yellow puzzle icon', function (): void {
-    $entry = new ActivityLogEntryFormatter()->format(
+    $entry = new ActivityLogEntryFormatter()->format(activityLogEntryFormatterLang(), 
         makeActivityRow(['object_id' => ActivitySystem::Plugin, 'action' => 'some-future-plugin-action', 'details' => ['plugin_id' => 'plugin-seven']]),
         []
     );
@@ -409,7 +441,7 @@ test('plugin unknown action falls back to the default yellow puzzle icon', funct
 });
 
 test('theme install action gets the green download icon', function (): void {
-    $entry = new ActivityLogEntryFormatter()->format(
+    $entry = new ActivityLogEntryFormatter()->format(activityLogEntryFormatterLang(), 
         makeActivityRow(['object_id' => ActivitySystem::Theme, 'action' => 'install', 'details' => ['theme_id' => 'theme-one']]),
         []
     );
@@ -421,7 +453,7 @@ test('theme install action gets the green download icon', function (): void {
 });
 
 test('theme deactivate action gets the purple block icon', function (): void {
-    $entry = new ActivityLogEntryFormatter()->format(
+    $entry = new ActivityLogEntryFormatter()->format(activityLogEntryFormatterLang(), 
         makeActivityRow(['object_id' => ActivitySystem::Theme, 'action' => 'deactivate', 'details' => ['theme_id' => 'theme-two']]),
         []
     );
@@ -432,7 +464,7 @@ test('theme deactivate action gets the purple block icon', function (): void {
 });
 
 test('theme delete action gets the red trash icon', function (): void {
-    $entry = new ActivityLogEntryFormatter()->format(
+    $entry = new ActivityLogEntryFormatter()->format(activityLogEntryFormatterLang(), 
         makeActivityRow(['object_id' => ActivitySystem::Theme, 'action' => 'delete', 'details' => ['theme_id' => 'theme-three']]),
         []
     );
@@ -443,7 +475,7 @@ test('theme delete action gets the red trash icon', function (): void {
 });
 
 test('theme update action gets the blue update icon', function (): void {
-    $entry = new ActivityLogEntryFormatter()->format(
+    $entry = new ActivityLogEntryFormatter()->format(activityLogEntryFormatterLang(), 
         makeActivityRow(['object_id' => ActivitySystem::Theme, 'action' => 'update', 'details' => ['theme_id' => 'theme-four']]),
         []
     );
@@ -454,7 +486,7 @@ test('theme update action gets the blue update icon', function (): void {
 });
 
 test('theme unknown action falls back to the default yellow brush icon', function (): void {
-    $entry = new ActivityLogEntryFormatter()->format(
+    $entry = new ActivityLogEntryFormatter()->format(activityLogEntryFormatterLang(), 
         makeActivityRow(['object_id' => ActivitySystem::Theme, 'action' => 'some-future-theme-action', 'details' => ['theme_id' => 'theme-five']]),
         []
     );
@@ -465,7 +497,7 @@ test('theme unknown action falls back to the default yellow brush icon', functio
 });
 
 test('date and hour are split from occured_on and id/user/username pass through', function (): void {
-    $entry = new ActivityLogEntryFormatter()->format(
+    $entry = new ActivityLogEntryFormatter()->format(activityLogEntryFormatterLang(), 
         makeActivityRow([
             'activity_id' => 7,
             'performed_by' => 3,

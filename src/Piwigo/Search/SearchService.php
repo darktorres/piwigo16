@@ -8,6 +8,7 @@ use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\Lang;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
@@ -76,6 +77,7 @@ final readonly class SearchService
         private SessionService $sessionService,
         private \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private \Piwigo\Users\CurrentUser $currentUser,
+        private Lang $lang,
         private ?TagService $tagService = null,
         private ?UserService $userService = null,
         private ?\Piwigo\Users\PreferencesService $preferencesService = null,
@@ -422,7 +424,7 @@ final readonly class SearchService
         $tagsMode = is_array($tagsField) && is_string($tagsField['mode'] ?? null) ? $tagsField['mode'] : 'AND';
         if (isset($searchFields['tags']) && $tagsWords !== [] && (bool) ($displayFilters['tags']['access'] ?? false)) {
             $hasFiltersFilled = true;
-            $tagService = $this->tagService ?? new TagService(\Piwigo\Core\Lang::current(), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Tag\TagEntity::class), $this->permissionService, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), $this->eventDispatcher, $this->currentUser);
+            $tagService = $this->tagService ?? new TagService($this->lang, \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Tag\TagEntity::class), $this->permissionService, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), $this->eventDispatcher, $this->currentUser);
             $imageIdsForFilter['tags'] = array_values(array_map(intval(...), array_filter($tagService->getImageIdsForTags(array_map(TagId::from(...), $tagsWords), $tagsMode), is_numeric(...))));
         }
 
@@ -1236,7 +1238,7 @@ final readonly class SearchService
         $expression = new QExpression($q, $scopes);
 
         $inflector = null;
-        $userService = $this->userService ?? new UserService(\Piwigo\Core\Lang::current(), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), $this->mailer, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), $this->htmlRenderer, DbConnection::build(), $this->sessionService, $this->eventDispatcher, \Piwigo\Config\DeploymentPolicy::current(), $this->currentUser);
+        $userService = $this->userService ?? new UserService($this->lang, \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), $this->mailer, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), $this->htmlRenderer, DbConnection::build(), $this->sessionService, $this->eventDispatcher, \Piwigo\Config\DeploymentPolicy::current(), $this->currentUser);
         $langCode = substr($userService->getDefaultLanguage(), 0, 2);
         $className = '\\Piwigo\\Search\\Inflector\\Inflector_' . $langCode;
         if (class_exists($className)) {

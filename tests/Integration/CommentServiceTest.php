@@ -206,7 +206,7 @@ namespace Piwigo\Tests\Integration {
             \Piwigo\Core\PageState::current()->reset();
 
             $this->conn = DbConnection::build();
-            $this->service = new CommentService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), new MailService(), new HtmlService(), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
+            $this->service = new CommentService(\Piwigo\Core\Lang::current(), \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), new MailService(), new HtmlService(), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
         }
 
         private function accessControl(): \Piwigo\Auth\AccessControl
@@ -833,6 +833,7 @@ namespace Piwigo\Tests\Integration {
         private function serviceWithMailer(MailerInterface $mailer): CommentService
         {
             return new CommentService(
+                \Piwigo\Core\Lang::current(),
                 \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Comment\CommentEntity::class),
                 new EphemeralKeyService(),
                 $mailer,
@@ -853,6 +854,7 @@ namespace Piwigo\Tests\Integration {
         private function serviceWithHtmlRenderer(HtmlRenderingInterface $htmlRenderer): CommentService
         {
             return new CommentService(
+                \Piwigo\Core\Lang::current(),
                 \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Comment\CommentEntity::class),
                 new EphemeralKeyService(),
                 new MailService(),

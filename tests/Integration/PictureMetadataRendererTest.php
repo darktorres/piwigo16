@@ -69,7 +69,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
         @rmdir($this->scratchDir);
 
         CurrentTemplate::current()->reset();
-        Lang::restore(null);
+        Lang::current()->restore(null);
 
         parent::tearDown();
     }
@@ -177,7 +177,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
         // separate Translator singleton, which only loadArray() seeds --
         // confirmed live, restore() alone (which only updates Lang::has()'s
         // own table) leaves Lang::t() returning the untranslated key.
-        Lang::loadArray(['exif_field_Artist' => 'Translated Artist']);
+        Lang::current()->loadArray(['exif_field_Artist' => 'Translated Artist']);
 
         $relativePath = '_data/picture-metadata-renderer-test-scratch/exif-fields.jpg';
         file_put_contents(
@@ -185,7 +185,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
             $this->makeJpegWithSegments($this->buildApp1ExifSegment(['Artist' => 'Jane Photographer', 'ImageDescription' => 'A test photo']))
         );
 
-        $this->renderer->render($this->makePicture($relativePath), $this->currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current());
+        $this->renderer->render(Lang::current(), $this->makePicture($relativePath), $this->currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current());
 
         $metadata = CurrentTemplate::current()->get()->get_template_vars('metadata');
         self::assertIsArray($metadata);
@@ -217,7 +217,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
         // Lang::has()-true sub-branch (distinct from the direct-field
         // Lang::has()/Lang::t() pair a few lines above it in the source).
         CurrentConfig::setShowExifFields(['COMPUTED;Height']);
-        Lang::loadArray(['exif_field_Height' => 'Hauteur']);
+        Lang::current()->loadArray(['exif_field_Height' => 'Hauteur']);
 
         $relativePath = '_data/picture-metadata-renderer-test-scratch/exif-composite-translated.jpg';
         file_put_contents(
@@ -225,7 +225,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
             $this->makeJpegWithSegments($this->buildApp1ExifSegment([]))
         );
 
-        $this->renderer->render($this->makePicture($relativePath), $this->currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current());
+        $this->renderer->render(Lang::current(), $this->makePicture($relativePath), $this->currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current());
 
         $metadata = CurrentTemplate::current()->get()->get_template_vars('metadata');
         self::assertIsArray($metadata);
@@ -244,7 +244,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
         $relativePath = '_data/picture-metadata-renderer-test-scratch/exif-empty.jpg';
         file_put_contents(dirname(__DIR__, 2) . '/' . $relativePath, $this->makeJpegWithSegments($this->buildApp1ExifSegment(['Artist' => 'Jane'])));
 
-        $this->renderer->render($this->makePicture($relativePath), $this->currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current());
+        $this->renderer->render(Lang::current(), $this->makePicture($relativePath), $this->currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current());
 
         self::assertNull(CurrentTemplate::current()->get()->get_template_vars('metadata'));
     }
@@ -264,7 +264,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
         // singleton, which only loadArray() seeds -- confirmed live,
         // restore() alone (which only updates Lang::has()'s own table)
         // leaves Lang::t() returning the untranslated key.
-        Lang::loadArray(['author' => 'By-line']);
+        Lang::current()->loadArray(['author' => 'By-line']);
 
         $relativePath = '_data/picture-metadata-renderer-test-scratch/iptc-fields.jpg';
         file_put_contents(
@@ -272,7 +272,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
             $this->makeJpegWithSegments($this->buildApp13IptcSegment([[5, 'Sunset Over The Bay'], [80, 'Jane Photographer']]))
         );
 
-        $this->renderer->render($this->makePicture($relativePath), $this->currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current());
+        $this->renderer->render(Lang::current(), $this->makePicture($relativePath), $this->currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current());
 
         $metadata = CurrentTemplate::current()->get()->get_template_vars('metadata');
         self::assertIsArray($metadata);
@@ -301,7 +301,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
         );
         file_put_contents(dirname(__DIR__, 2) . '/' . $relativePath, $combined);
 
-        $this->renderer->render($this->makePicture($relativePath), $this->currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current());
+        $this->renderer->render(Lang::current(), $this->makePicture($relativePath), $this->currentLogger, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current());
 
         $metadata = CurrentTemplate::current()->get()->get_template_vars('metadata');
         self::assertIsArray($metadata);

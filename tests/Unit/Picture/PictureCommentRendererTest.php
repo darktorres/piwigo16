@@ -107,7 +107,7 @@ function makePictureCommentSessionService(): SessionService
 test('render does nothing when no related category is commentable', function (): void {
     $renderer = new PictureCommentRenderer();
 
-    $renderer->render(\Piwigo\Auth\AccessControl::current(), null, 42, 0, makePictureCommentUrlService(), [
+    $renderer->render(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), null, 42, 0, makePictureCommentUrlService(), [
         ['commentable' => false],
         ['commentable' => 0],
     ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current(), new \Piwigo\Mail\MailService());
@@ -179,7 +179,7 @@ test('render only counts the first commentable related category then stops (`bre
 
     $exception = null;
     try {
-        $renderer->render(\Piwigo\Auth\AccessControl::current(), null, 42, 0, makePictureCommentUrlService(), [
+        $renderer->render(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), null, 42, 0, makePictureCommentUrlService(), [
             ['commentable' => true],
             ['id' => 999], // no 'commentable' key -- only reached by `continue`
         ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current(), new \Piwigo\Mail\MailService());
@@ -205,7 +205,7 @@ test('render rejects a posted comment as "ugly spammer" when no related category
 
     $exception = null;
     try {
-        $renderer->render(\Piwigo\Auth\AccessControl::current(), null, 42, 0, makePictureCommentUrlService(), [
+        $renderer->render(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), null, 42, 0, makePictureCommentUrlService(), [
             ['commentable' => false],
         ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current(), new \Piwigo\Mail\MailService());
     } catch (ResponseReadyException $e) {
@@ -237,7 +237,7 @@ test('render rejects a posted comment as "Session expired" for a guest when comm
 
     $exception = null;
     try {
-        $renderer->render(\Piwigo\Auth\AccessControl::current(), null, 42, 0, makePictureCommentUrlService(), [
+        $renderer->render(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), null, 42, 0, makePictureCommentUrlService(), [
             ['commentable' => true],
         ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current(), new \Piwigo\Mail\MailService());
     } catch (ResponseReadyException $e) {
@@ -270,7 +270,7 @@ test('render lets a guest post a comment when comments_forall is on', function (
     // and stays at Integration level).
 
     $renderer = new PictureCommentRenderer();
-    $renderer->render(\Piwigo\Auth\AccessControl::current(), null, 42, 0, makePictureCommentUrlService(), [
+    $renderer->render(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), null, 42, 0, makePictureCommentUrlService(), [
         ['commentable' => false],
     ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current(), new \Piwigo\Mail\MailService());
 
@@ -313,7 +313,7 @@ test('render does not reject a logged-in (non-guest) user\'s posted comment even
     // harmless (always 0 rows), so the row-fetching branch below it
     // (which needs a real CommentRepository row -- DB-write territory)
     // is never entered either.
-    $renderer->render(\Piwigo\Auth\AccessControl::current(), null, 999999999, 0, makePictureCommentUrlService(), [
+    $renderer->render(\Piwigo\Core\Lang::current(), \Piwigo\Auth\AccessControl::current(), null, 999999999, 0, makePictureCommentUrlService(), [
         ['commentable' => true],
     ], '/picture.php', makePictureCommentSessionService(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current(), new \Piwigo\Mail\MailService());
 

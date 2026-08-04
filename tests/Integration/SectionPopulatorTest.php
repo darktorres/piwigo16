@@ -121,7 +121,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
-        Lang::setLangInfo(['code' => 'en_UK', 'direction' => 'ltr']);
+        Lang::current()->setLangInfo(['code' => 'en_UK', 'direction' => 'ltr']);
         CurrentConfig::setSendPiwigoInfos(false);
         CurrentConfig::setQuestionMarkInUrls(false);
 
@@ -129,11 +129,11 @@ final class SectionPopulatorTest extends IntegrationTestCase
         $em = \Piwigo\Db\EntityManagerFactory::build($this->conn);
         $categoryRepo = $em->getRepository(CategoryEntity::class);
         $this->permissionService = new PermissionService(new PermissionRepository($em), $em->getRepository(GroupEntity::class), $categoryRepo);
-        $this->categoryService = new CategoryService($categoryRepo, $this->permissionService);
-        $this->tagService = new TagService($em->getRepository(TagEntity::class), $this->permissionService, new ActivityService($em->getRepository(ActivityEntity::class)), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Users\CurrentUser::current());
+        $this->categoryService = new CategoryService(Lang::current(), $categoryRepo, $this->permissionService);
+        $this->tagService = new TagService(Lang::current(), $em->getRepository(TagEntity::class), $this->permissionService, new ActivityService($em->getRepository(ActivityEntity::class)), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Users\CurrentUser::current());
         $this->sessionService = new SessionService($em->getRepository(SessionEntity::class));
-        $this->userService = new UserService($em->getRepository(UserInfoEntity::class), $em->getRepository(GroupEntity::class), new MailService(), new ActivityService($em->getRepository(ActivityEntity::class)), new HtmlService(), $this->conn, $this->sessionService, new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current());
-        $this->searchService = new SearchService(\Piwigo\Auth\AccessControl::current(), new SearchRepository($this->conn), $this->permissionService, $this->categoryService, new MailService(), new HtmlService(), new RedirectService($this->userService), $this->sessionService, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Users\CurrentUser::current(), $this->tagService);
+        $this->userService = new UserService(Lang::current(), $em->getRepository(UserInfoEntity::class), $em->getRepository(GroupEntity::class), new MailService(), new ActivityService($em->getRepository(ActivityEntity::class)), new HtmlService(), $this->conn, $this->sessionService, new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current());
+        $this->searchService = new SearchService(\Piwigo\Auth\AccessControl::current(), new SearchRepository($this->conn), $this->permissionService, $this->categoryService, new MailService(), new HtmlService(), new RedirectService(Lang::current(), $this->userService), $this->sessionService, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Users\CurrentUser::current(), Lang::current(), $this->tagService);
         $this->sectionRepo = new SectionRepository($this->conn);
         $this->filterState = new FilterState();
         $this->currentLogger = new CurrentLogger();
@@ -176,6 +176,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
     private function makePopulator(): SectionPopulator
     {
         return new SectionPopulator(
+            Lang::current(),
             \Piwigo\Auth\AccessControl::current(),
             new HtmlService(),
             CurrentTemplate::current()->get(),
@@ -185,7 +186,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
             $this->tagService,
             $this->searchService,
             $this->userService,
-            new RedirectService($this->userService),
+            new RedirectService(Lang::current(), $this->userService),
             new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()),
             $this->filterState,
             $this->currentLogger,

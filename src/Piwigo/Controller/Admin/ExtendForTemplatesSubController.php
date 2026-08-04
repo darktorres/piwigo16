@@ -7,6 +7,7 @@ namespace Piwigo\Controller\Admin;
 use Piwigo\Admin\ExtendForTemplatesPageRenderer;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
+use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -26,6 +27,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class ExtendForTemplatesSubController implements AdminSubControllerInterface
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
@@ -38,6 +40,6 @@ final class ExtendForTemplatesSubController implements AdminSubControllerInterfa
     public function handle(ServerRequestInterface $request): void
     {
         new ExtendForTemplatesPageRenderer()
-            ->render(\Piwigo\Core\Lang::current(), $this->accessControl, $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->categoryService);
+            ->render($this->lang, $this->accessControl, $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->categoryService);
     }
 }

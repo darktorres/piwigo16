@@ -59,6 +59,7 @@ final class ApiKeyServiceGetAvailableTest extends IntegrationTestCase
 
         $this->em = EntityManagerFactory::build($this->conn);
         $this->service = new ApiKeyService(
+            \Piwigo\Core\Lang::current(),
             new MailService(),
             new ApiKeyRepository($this->em),
             new PasswordService(new PasswordRepository($this->conn), new \Piwigo\Config\DeploymentPolicy()),

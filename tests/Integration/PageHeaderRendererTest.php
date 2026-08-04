@@ -63,7 +63,7 @@ final class PageHeaderRendererTest extends IntegrationTestCase
         // Lang::langInfo() -- unset by default, real RequestBootstrap-only
         // wiring this test never boots (same reasoning as SectionInitializerTest/
         // RedirectServiceTest/SectionPopulatorTest's own identical setUp).
-        Lang::setLangInfo(['code' => 'en_UK', 'direction' => 'ltr']);
+        Lang::current()->setLangInfo(['code' => 'en_UK', 'direction' => 'ltr']);
         CurrentTemplate::current()->set(new Template(CurrentPaths::get()->root . 'themes', 'default'));
 
         $this->renderer = new PageHeaderRenderer();

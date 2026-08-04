@@ -10,6 +10,7 @@ use Piwigo\Admin\PhotosAddDirectPageRenderer;
 use Piwigo\Admin\PhotosAddFtpPageRenderer;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\Upload\UploadService;
+use Piwigo\Core\Lang;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Template\Template;
 use Psr\Http\Message\ServerRequestInterface;
@@ -32,6 +33,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class PhotosAddSubController implements AdminSubControllerInterface
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
         private readonly StorageRegistry $storageRegistry,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
@@ -52,7 +54,7 @@ final class PhotosAddSubController implements AdminSubControllerInterface
         // upload form config is loaded here to match the original page's
         // own behavior (validated/used by the tab templates), even though
         // this sub-controller doesn't read it directly itself.
-        new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService)
+        new UploadService($this->lang, $this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService)
             ->getUploadFormConfig();
 
         // admin.php's own shared check_input_parameter('section', ...,
@@ -89,10 +91,10 @@ final class PhotosAddSubController implements AdminSubControllerInterface
                 ->render();
         } elseif ($tab === 'applications') {
             new PhotosAddApplicationsPageRenderer()
-                ->render(\Piwigo\Core\Lang::current(), $this->currentTemplate);
+                ->render($this->lang, $this->currentTemplate);
         } else {
             new PhotosAddFtpPageRenderer()
-                ->render(\Piwigo\Core\Lang::current(), $this->currentTemplate);
+                ->render($this->lang, $this->currentTemplate);
         }
     }
 }

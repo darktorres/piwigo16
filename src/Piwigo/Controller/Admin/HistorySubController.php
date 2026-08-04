@@ -7,6 +7,7 @@ namespace Piwigo\Controller\Admin;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\HistoryPageRenderer;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -27,6 +28,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class HistorySubController implements AdminSubControllerInterface
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
@@ -37,6 +39,6 @@ final class HistorySubController implements AdminSubControllerInterface
     public function handle(ServerRequestInterface $request): void
     {
         new HistoryPageRenderer()
-            ->render(\Piwigo\Core\Lang::current(), $this->accessControl, 'history', $this->urlService, $this->coreTabs, $this->currentTemplate);
+            ->render($this->lang, $this->accessControl, 'history', $this->urlService, $this->coreTabs, $this->currentTemplate);
     }
 }

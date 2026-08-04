@@ -23,7 +23,7 @@ use Piwigo\Core\Paths;
  */
 function intronewsCachePath(): string
 {
-    $langCode = \Piwigo\Core\Lang::langInfo()['code'] ?? null;
+    $langCode = \Piwigo\Core\Lang::current()->langInfo()['code'] ?? null;
     $langCode = is_string($langCode) ? $langCode : '';
 
     return CurrentPaths::get()->root . \Piwigo\Config\CurrentConfig::dataLocation()
@@ -34,7 +34,7 @@ function intronewsInvoke(): mixed
 {
     $method = new ReflectionMethod(IntroSubController::class, 'getLatestNews');
 
-    return $method->invoke(null);
+    return $method->invoke(null, \Piwigo\Core\Lang::current());
 }
 
 beforeEach(function (): void {

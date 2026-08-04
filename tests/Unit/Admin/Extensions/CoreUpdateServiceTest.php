@@ -7,10 +7,13 @@ use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigService;
+use Piwigo\Core\InstallationFlag;
+use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Html\HtmlService;
+use Piwigo\Lang\Translator;
 use Piwigo\Url\UrlService;
 
 // Only containerVersionCompare() is covered here -- checkPiwigoUpgrade()/
@@ -39,6 +42,7 @@ function core_update_service_test_user_service(): \Piwigo\Users\UserService
     $conn = DbConnection::build();
 
     return new \Piwigo\Users\UserService(
+        core_update_service_test_lang(),
         EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class),
         EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class),
         new \Piwigo\Mail\MailService(),
@@ -52,11 +56,21 @@ function core_update_service_test_user_service(): \Piwigo\Users\UserService
     );
 }
 
+// Plain Unit test -- no Kernel::boot() anywhere in this file, so
+// Lang::current() (no memoized pre-boot fallback, see its own docblock)
+// would throw; containerVersionCompare()/stepIs()/processObsoleteList()
+// never touch the injected Lang either, same "type-satisfying instance
+// is enough" reasoning as $activityService/$userService above.
+function core_update_service_test_lang(): Lang
+{
+    return new Lang(new Translator(), new HtmlService(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
+}
+
 function core_update_service(): CoreUpdateService
 {
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(ConfigEntry::class);
 
-    return new CoreUpdateService(new ZipExtractor(), new RedirectService(core_update_service_test_user_service()), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new ConfigService($repo, new \Piwigo\PluginConfig\EventDispatcher()), Paths::fromRoot(dirname(__DIR__, 4)), \Piwigo\Core\PageState::current(), \Piwigo\Template\CurrentTemplate::current(), core_update_service_test_activity_service(), core_update_service_test_user_service(), new \Piwigo\Mail\MailService());
+    return new CoreUpdateService(core_update_service_test_lang(), new ZipExtractor(), new RedirectService(core_update_service_test_lang(), core_update_service_test_user_service()), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new ConfigService($repo, new \Piwigo\PluginConfig\EventDispatcher()), Paths::fromRoot(dirname(__DIR__, 4)), \Piwigo\Core\PageState::current(), \Piwigo\Template\CurrentTemplate::current(), core_update_service_test_activity_service(), core_update_service_test_user_service(), new \Piwigo\Mail\MailService());
 }
 
 test('containerVersionCompare orders by semantic version first', function (): void {
@@ -105,7 +119,7 @@ function core_update_service_at(string $root): CoreUpdateService
 {
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(ConfigEntry::class);
 
-    return new CoreUpdateService(new ZipExtractor(), new RedirectService(core_update_service_test_user_service()), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new ConfigService($repo, new \Piwigo\PluginConfig\EventDispatcher()), Paths::fromRoot($root), \Piwigo\Core\PageState::current(), \Piwigo\Template\CurrentTemplate::current(), core_update_service_test_activity_service(), core_update_service_test_user_service(), new \Piwigo\Mail\MailService());
+    return new CoreUpdateService(core_update_service_test_lang(), new ZipExtractor(), new RedirectService(core_update_service_test_lang(), core_update_service_test_user_service()), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new ConfigService($repo, new \Piwigo\PluginConfig\EventDispatcher()), Paths::fromRoot($root), \Piwigo\Core\PageState::current(), \Piwigo\Template\CurrentTemplate::current(), core_update_service_test_activity_service(), core_update_service_test_user_service(), new \Piwigo\Mail\MailService());
 }
 
 function core_update_service_step_is(int|string $step, int $target): bool

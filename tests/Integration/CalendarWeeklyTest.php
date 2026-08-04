@@ -83,7 +83,7 @@ final class CalendarWeeklyTest extends IntegrationTestCase
         // makePictureCommentTestTemplate().
         CurrentConfig::setDataLocation('data/');
         CurrentConfig::setDataDirChecked('1');
-        Lang::reset();
+        Lang::current()->reset();
         Translator::get()->reset();
 
         $this->conn = DbConnection::build();
@@ -111,14 +111,14 @@ final class CalendarWeeklyTest extends IntegrationTestCase
         // found live (a stray data/templates_c/index.htm showed up as
         // untracked repo debris after a coverage run).
         calendar_weekly_test_rrmdir(CurrentPaths::get()->root . 'data');
-        Lang::reset();
+        Lang::current()->reset();
         Translator::get()->reset();
         parent::tearDown();
     }
 
     private function makeCalendar(): CalendarWeekly
     {
-        $calendar = new CalendarWeekly(new CalendarRepository($this->conn), $this->urlService);
+        $calendar = new CalendarWeekly(Lang::current(), new CalendarRepository($this->conn), $this->urlService);
         $calendar->chronology_field = 'posted';
         $calendar->initialize(new SqlCondition(' FROM ' . Tables::images() . ' WHERE id IN (1,2,3,4,5)'));
 
@@ -309,7 +309,7 @@ final class CalendarWeeklyTest extends IntegrationTestCase
      */
     public function test_initialize_rotates_sunday_to_the_end_of_the_day_labels_when_monday_starts_the_week(): void
     {
-        Lang::loadArray(['day' => ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']]);
+        Lang::current()->loadArray(['day' => ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']]);
         CurrentConfig::setWeekStartsOn('monday');
 
         $calendar = $this->makeCalendar();

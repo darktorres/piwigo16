@@ -62,6 +62,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
     private function maintenanceActionDispatcherTestImageService(): \Piwigo\Image\ImageService
     {
         return new \Piwigo\Image\ImageService(
+            Lang::current(),
             \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class),
             $this->maintenanceActionDispatcherTestActivityService(),
             new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class)),
@@ -111,6 +112,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         $conn = DbConnection::build();
 
         return new \Piwigo\Users\UserService(
+            Lang::current(),
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class),
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class),
             new \Piwigo\Mail\MailService(),
@@ -143,6 +145,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
     private function maintenanceActionDispatcherTestCategoryService(): \Piwigo\Category\CategoryService
     {
         return new \Piwigo\Category\CategoryService(
+            Lang::current(),
             \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Category\CategoryEntity::class),
             $this->maintenanceActionDispatcherTestPermissionService(),
         );
@@ -171,6 +174,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         ));
 
         return new \Piwigo\Tag\TagService(
+            Lang::current(),
             \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Tag\TagEntity::class),
             $this->maintenanceActionDispatcherTestPermissionService(),
             $this->maintenanceActionDispatcherTestActivityService(),
@@ -209,12 +213,12 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         // which other Integration test file ran earlier in this shared
         // process -- confirmed live. Loading it explicitly here makes
         // every assertion deterministic regardless of run order.
-        Lang::load('admin.lang');
+        Lang::current()->load('admin.lang');
 
         $this->conn = DbConnection::build();
         CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
         $configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher());
-        $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService($this->maintenanceActionDispatcherTestUserService()), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), $configService, new FilesystemIntegrityChecker(CurrentTemplate::current(), CurrentConfigService::current(), $this->maintenanceActionDispatcherTestImageService()), new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class)), new Translator(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), CurrentTemplate::current(), new \Piwigo\Admin\Maintenance\DbMaintenanceRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Db\DbCredentials::current()), $this->maintenanceActionDispatcherTestActivityService(), $this->maintenanceActionDispatcherTestRateService(), $this->maintenanceActionDispatcherTestCategoryService(), $this->maintenanceActionDispatcherTestTagService(), new HtmlService());
+        $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService(Lang::current(), $this->maintenanceActionDispatcherTestUserService()), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), $configService, new FilesystemIntegrityChecker(Lang::current(), CurrentTemplate::current(), CurrentConfigService::current(), $this->maintenanceActionDispatcherTestImageService()), new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class)), new Translator(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), CurrentTemplate::current(), new \Piwigo\Admin\Maintenance\DbMaintenanceRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Db\DbCredentials::current()), $this->maintenanceActionDispatcherTestActivityService(), $this->maintenanceActionDispatcherTestRateService(), $this->maintenanceActionDispatcherTestCategoryService(), $this->maintenanceActionDispatcherTestTagService(), new HtmlService(), Lang::current());
     }
 
     #[\Override]
@@ -592,10 +596,10 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         // set()/reset() ceremony needed.
         $configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher());
         $dispatcher = new MaintenanceActionDispatcher(
-            new RedirectService($this->maintenanceActionDispatcherTestUserService()),
+            new RedirectService(Lang::current(), $this->maintenanceActionDispatcherTestUserService()),
             new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()),
             $configService,
-            new FilesystemIntegrityChecker(CurrentTemplate::current(), CurrentConfigService::current(), $this->maintenanceActionDispatcherTestImageService()),
+            new FilesystemIntegrityChecker(Lang::current(), CurrentTemplate::current(), CurrentConfigService::current(), $this->maintenanceActionDispatcherTestImageService()),
             new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class)),
             new Translator(),
             new \Piwigo\PluginConfig\EventDispatcher(),
@@ -607,6 +611,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             $this->maintenanceActionDispatcherTestCategoryService(),
             $this->maintenanceActionDispatcherTestTagService(),
             new HtmlService(),
+            Lang::current(),
             new \Piwigo\Cache\PersistentFileCache(),
         );
 

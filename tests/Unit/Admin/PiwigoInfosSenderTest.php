@@ -6,8 +6,13 @@ use Piwigo\Admin\PiwigoInfosSender;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\InstallationFlag;
+use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
+use Piwigo\Core\Paths;
+use Piwigo\Html\HtmlService;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Lang\Translator;
 
 // send()'s real body talks to piwigo.org's PEM/telemetry endpoints over the
 // network (via the static, non-injectable Piwigo\Http\HttpClientService::
@@ -25,6 +30,18 @@ use Piwigo\Image\ImageStdParams;
 afterEach(function (): void {
     CurrentConfig::setSendPiwigoInfos(true);
 });
+
+// PiwigoInfosSender/UserService/ImageService/CategoryService/TagService
+// all gained a required Lang constructor collaborator (singleton/
+// service-locator elimination campaign, Phase 8) and this plain Unit
+// test never boots a Kernel, so each call site below needs its own
+// throwaway, DB-free instance -- none of them are ever actually read,
+// same "send() returns before touching anything past the guard"
+// reasoning as every other collaborator in this file.
+function piwigoInfosSenderTestLang(): Lang
+{
+    return new Lang(new Translator(), new HtmlService(), Paths::fromRoot(sys_get_temp_dir()), new InstallationFlag());
+}
 
 test('send returns immediately without touching the DB or network when telemetry is disabled', function (): void {
     $currentLogger = new CurrentLogger();
@@ -75,6 +92,7 @@ test('send returns immediately without touching the DB or network when telemetry
     // Never actually read either -- same "send() returns before touching
     // anything past the guard" reasoning as $configService above.
     $userService = new \Piwigo\Users\UserService(
+        piwigoInfosSenderTestLang(),
         \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Users\UserInfoEntity::class),
         \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Group\GroupEntity::class),
         new \Piwigo\Mail\MailService(),
@@ -87,6 +105,7 @@ test('send returns immediately without touching the DB or network when telemetry
         new \Piwigo\Users\CurrentUser(),
     );
     $imageService = new \Piwigo\Image\ImageService(
+        piwigoInfosSenderTestLang(),
         \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Image\ImageEntity::class),
         $activityService,
         new \Piwigo\Session\SessionService(\Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Session\SessionEntity::class)),
@@ -98,10 +117,12 @@ test('send returns immediately without touching the DB or network when telemetry
         \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Category\CategoryEntity::class),
     );
     $categoryService = new \Piwigo\Category\CategoryService(
+        piwigoInfosSenderTestLang(),
         \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Category\CategoryEntity::class),
         $permissionService,
     );
     $tagService = new \Piwigo\Tag\TagService(
+        piwigoInfosSenderTestLang(),
         \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Tag\TagEntity::class),
         $permissionService,
         $activityService,
@@ -120,7 +141,7 @@ test('send returns immediately without touching the DB or network when telemetry
     // Never actually read either -- same "send() returns before touching
     // anything past the guard" reasoning as $configService above.
     $urlService = new \Piwigo\Url\UrlService(new \Piwigo\Html\HtmlService(), new \Piwigo\Url\RootPathOverride());
-    new PiwigoInfosSender($currentLogger, new ImageStdParams(), $configService, $installationStats, $activityService, $userService, $imageService, $urlService)->send();
+    new PiwigoInfosSender(piwigoInfosSenderTestLang(), $currentLogger, new ImageStdParams(), $configService, $installationStats, $activityService, $userService, $imageService, $urlService)->send();
 
     expect(true)->toBeTrue();
 });

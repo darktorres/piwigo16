@@ -8,6 +8,7 @@ use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\StatsPageRenderer;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
+use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -24,6 +25,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class StatsSubController implements AdminSubControllerInterface
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
@@ -37,6 +39,6 @@ final class StatsSubController implements AdminSubControllerInterface
     public function handle(ServerRequestInterface $request): void
     {
         new StatsPageRenderer()
-            ->render(\Piwigo\Core\Lang::current(), $this->accessControl, 'stats', $this->urlService, $this->configService, $this->coreTabs, $this->currentUser, $this->currentTemplate, $this->historyService);
+            ->render($this->lang, $this->accessControl, 'stats', $this->urlService, $this->configService, $this->coreTabs, $this->currentUser, $this->currentTemplate, $this->historyService);
     }
 }

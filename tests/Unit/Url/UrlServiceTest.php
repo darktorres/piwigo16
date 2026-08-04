@@ -1198,17 +1198,29 @@ test('getUserFavorites returns an empty array for a guest', function (): void {
 });
 
 test('parseSectionUrl enters the categories section for a token starting with "categor"', function (): void {
-    $service = new UrlService(new HtmlService(), new RootPathOverride());
-    $i = 0;
+    // The categories branch unconditionally constructs a CategoryService
+    // (needs Piwigo\Core\Lang::current()) right after entering, before the
+    // while loop below it ever runs -- same "real booted Kernel + a real
+    // Paths for Lang's own constructor" requirement as the
+    // getUserFavorites() test above, even though this test's single,
+    // followerless token never reaches the loop body itself.
+    KernelContainerOverride::with(
+        [Paths::class => Paths::fromRoot(sys_get_temp_dir())],
+        static function (): void {
+            $service = new UrlService(new HtmlService(), new RootPathOverride());
+            $i = 0;
 
-    // A single token with nothing following it -- the while loop inside
-    // the categories branch never executes (isset($tokens[1]) is false),
-    // so this exercises the str_starts_with() guard itself without
-    // needing any category row to actually exist in the DB.
-    $page = $service->parseSectionUrl(['category'], $i, new UrlServiceTestRedirectService());
+            // A single token with nothing following it -- the while loop
+            // inside the categories branch never executes (isset($tokens[1])
+            // is false), so this exercises the str_starts_with() guard
+            // itself without needing any category row to actually exist in
+            // the DB.
+            $page = $service->parseSectionUrl(['category'], $i, new UrlServiceTestRedirectService());
 
-    expect($page)->toBe(['section' => 'categories'])
-        ->and($i)->toBe(1);
+            expect($page)->toBe(['section' => 'categories'])
+                ->and($i)->toBe(1);
+        }
+    );
 });
 
 test('parseSectionUrl rejects a bare tags token with no tag identifiers', function (): void {

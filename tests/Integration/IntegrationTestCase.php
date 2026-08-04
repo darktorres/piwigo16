@@ -46,6 +46,8 @@ abstract class IntegrationTestCase extends TestCase
 
     protected string $dbPrefix = 'piwigo_';
 
+    protected string $dbDriver = 'mysqli';
+
     protected string $baseUrl = '';
 
     /**
@@ -281,6 +283,7 @@ abstract class IntegrationTestCase extends TestCase
         $dbPass   = getenv('PIWIGO_DB_PASSWORD');
         $dbName   = getenv('PIWIGO_DB_BASE');
         $dbPrefix = getenv('PIWIGO_DB_PREFIX');
+        $dbDriver = getenv('PIWIGO_DB_DRIVER');
         $baseUrl  = getenv('PIWIGO_BASE_URL');
 
         $this->dbHost   = $dbHost !== false ? $dbHost : '127.0.0.1';
@@ -288,6 +291,7 @@ abstract class IntegrationTestCase extends TestCase
         $this->dbPass   = $dbPass !== false ? $dbPass : '';
         $this->dbName   = $dbName !== false ? $dbName : '';
         $this->dbPrefix = $dbPrefix !== false ? $dbPrefix : 'piwigo_';
+        $this->dbDriver = $dbDriver === 'pgsql' ? 'pgsql' : 'mysqli';
         $this->baseUrl  = rtrim($baseUrl !== false ? $baseUrl : '', '/');
     }
 
@@ -315,43 +319,56 @@ abstract class IntegrationTestCase extends TestCase
 
     protected function resetDatabase(): void
     {
+        if ($this->dbDriver === 'pgsql') {
+            $this->resetDatabasePostgres();
+
+            return;
+        }
+
         $db = $this->newMysqli('');
         $db->query(sprintf('DROP DATABASE IF EXISTS `%s`', $this->dbName));
         $db->query(sprintf('CREATE DATABASE `%s` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci', $this->dbName));
         $db->close();
     }
 
+    /**
+     * pgsql support pass: a bare `DROP DATABASE` fails outright
+     * (`ERROR: database "..." is being accessed by other users`, a real
+     * nonzero-exit-code error, not a warning) if any other connection is
+     * still attached -- verified live against a genuinely active,
+     * `pg_stat_activity`-confirmed connection (a real risk here: a prior
+     * Browser test's Apache/FrankenPHP worker connection, or this test
+     * process's own previous connection, can easily still be attached
+     * when the next test's resetDatabase() runs). `WITH (FORCE)`
+     * (Postgres 13+ -- this environment runs 18) terminates other
+     * backends automatically first -- verified live against that same
+     * active-connection setup that a bare DROP DATABASE couldn't clear.
+     * Connects to the `postgres` maintenance database (always exists,
+     * can't be dropped) since Postgres can't DROP/CREATE the database
+     * the current connection is itself attached to, mirroring
+     * newMysqli('')'s own no-dbname admin-connection shape.
+     */
+    private function resetDatabasePostgres(): void
+    {
+        $conn = $this->newPgsqlConnection('postgres');
+        pg_query($conn, sprintf('DROP DATABASE IF EXISTS "%s" WITH (FORCE)', $this->dbName));
+        pg_query($conn, sprintf('CREATE DATABASE "%s" WITH ENCODING \'UTF8\'', $this->dbName));
+        pg_close($conn);
+    }
+
     protected function loadFixture(string $path): void
     {
-        self::assertFileExists($path, 'Fixture file must exist: ' . $path);
-
-        $cmd = ['mysql', '-u' . $this->dbUser];
-        if ($this->dbPass !== '') {
-            $cmd[] = '-p' . $this->dbPass;
+        if ($this->dbDriver === 'pgsql') {
+            $this->loadFixtureViaPsql($this->pgsqlFixturePath($path));
+        } else {
+            $this->loadFixtureViaMysql($path);
         }
 
-        $cmd[] = str_starts_with($this->dbHost, '/') ? '--socket=' . $this->dbHost : '-h' . $this->dbHost;
-
-        $cmd[] = $this->dbName;
-
-        $descriptors = [
-            0 => ['file', $path, 'r'],
-            1 => ['pipe', 'w'],
-            2 => ['pipe', 'w'],
-        ];
-        $proc = proc_open($cmd, $descriptors, $pipes);
-        self::assertIsResource($proc, 'proc_open failed for mysql fixture load');
-        fclose($pipes[1]);
-        $stderr = stream_get_contents($pipes[2]);
-        fclose($pipes[2]);
-        $exit = proc_close($proc);
-        self::assertSame(0, $exit, 'mysql fixture load failed: ' . ($stderr === false ? '' : $stderr));
-
-        // The raw `mysql` import above never goes through ConfigService,
-        // so its own confUpdateParam()/confDeleteParam() cache-clearing
-        // never fires -- without this, any real server process sharing
-        // this filesystem-backed cache (see setUp()'s own comment) would
-        // keep serving whatever config rows it cached before this fixture
+        // The raw import above never goes through ConfigService, so its
+        // own confUpdateParam()/confDeleteParam() cache-clearing never
+        // fires -- without this, any real server process sharing this
+        // filesystem-backed cache (see setUp()'s own comment) would keep
+        // serving whatever config rows it cached before this fixture
         // replaced them.
         \Piwigo\Cache\CachePools::config()->clear();
 
@@ -384,6 +401,89 @@ abstract class IntegrationTestCase extends TestCase
         $this->settleDatabase();
     }
 
+    private function loadFixtureViaMysql(string $path): void
+    {
+        self::assertFileExists($path, 'Fixture file must exist: ' . $path);
+
+        $cmd = ['mysql', '-u' . $this->dbUser];
+        if ($this->dbPass !== '') {
+            $cmd[] = '-p' . $this->dbPass;
+        }
+
+        $cmd[] = str_starts_with($this->dbHost, '/') ? '--socket=' . $this->dbHost : '-h' . $this->dbHost;
+
+        $cmd[] = $this->dbName;
+
+        $descriptors = [
+            0 => ['file', $path, 'r'],
+            1 => ['pipe', 'w'],
+            2 => ['pipe', 'w'],
+        ];
+        $proc = proc_open($cmd, $descriptors, $pipes);
+        self::assertIsResource($proc, 'proc_open failed for mysql fixture load');
+        fclose($pipes[1]);
+        $stderr = stream_get_contents($pipes[2]);
+        fclose($pipes[2]);
+        $exit = proc_close($proc);
+        self::assertSame(0, $exit, 'mysql fixture load failed: ' . ($stderr === false ? '' : $stderr));
+    }
+
+    /**
+     * pgsql support pass: `tests/Fixtures/piwigo-17.0-pgsql.sql` is a
+     * plain-SQL `pg_dump` (schema + data, same shape
+     * Piwigo\Db\SchemaDumpService's own schema-only dump uses) -- `psql
+     * -f` loads it directly, no `pg_restore`/custom-format machinery
+     * needed. `-v ON_ERROR_STOP=1` matters here specifically: psql's own
+     * default is to keep running past a failed statement (and still
+     * exit 0), which would silently leave a partially-loaded fixture
+     * indistinguishable from a fully-loaded one to this method's own
+     * exit-code check.
+     */
+    private function loadFixtureViaPsql(string $path): void
+    {
+        self::assertFileExists($path, 'Fixture file must exist: ' . $path);
+
+        $cmd = ['psql', '-v', 'ON_ERROR_STOP=1', '-q'];
+        $cmd[] = '-U' . $this->dbUser;
+        $cmd[] = '-h' . $this->dbHost;
+        $cmd[] = '-d' . $this->dbName;
+        $cmd[] = '-f' . $path;
+
+        $descriptors = [
+            0 => ['pipe', 'r'],
+            1 => ['pipe', 'w'],
+            2 => ['pipe', 'w'],
+        ];
+        // getenv() (real process env vars, always string-valued), not
+        // $_SERVER -- proc_open()'s own $env_vars param requires every
+        // value to be a string, and $_SERVER carries CLI-SAPI-specific
+        // array-valued entries too (e.g. 'argv'), confirmed live to throw
+        // "Array to string conversion" partway through proc_open()'s own
+        // internal env-var marshalling otherwise.
+        $env = $this->dbPass !== '' ? array_merge(getenv(), ['PGPASSWORD' => $this->dbPass]) : null;
+        $proc = proc_open($cmd, $descriptors, $pipes, null, $env);
+        self::assertIsResource($proc, 'proc_open failed for psql fixture load');
+        fclose($pipes[0]);
+        fclose($pipes[1]);
+        $stderr = stream_get_contents($pipes[2]);
+        fclose($pipes[2]);
+        $exit = proc_close($proc);
+        self::assertSame(0, $exit, 'psql fixture load failed: ' . ($stderr === false ? '' : $stderr));
+    }
+
+    /**
+     * `piwigo-17.0.sql` -> `piwigo-17.0-pgsql.sql` -- every real
+     * loadFixture() caller passes the same hardcoded mysql-shaped
+     * literal path (~120 call sites), so this derives the pgsql sibling
+     * from it rather than needing every call site to pass both.
+     */
+    private function pgsqlFixturePath(string $mysqlPath): string
+    {
+        self::assertStringEndsWith('.sql', $mysqlPath, 'Fixture path must end in .sql: ' . $mysqlPath);
+
+        return substr($mysqlPath, 0, -4) . '-pgsql.sql';
+    }
+
     /**
      * A cold InnoDB buffer pool on a freshly (re)imported schema can make the
      * very first heavy query slow enough to blow a browser-test assertion's
@@ -396,15 +496,34 @@ abstract class IntegrationTestCase extends TestCase
     {
         $deadline = microtime(true) + 30.0;
         while (microtime(true) < $deadline) {
-            $db = $this->newMysqli($this->dbName);
-            if ($db->connect_errno === 0) {
-                $result = $db->query(sprintf('SELECT COUNT(*) FROM `%simages`', $this->dbPrefix));
-                if ($result !== false) {
-                    $db->close();
-                    return;
+            if ($this->dbDriver === 'pgsql') {
+                // PGSQL_CONNECT_FORCE_NEW is load-bearing here specifically
+                // -- see newPgsqlConnection()'s own docblock: without it,
+                // this loop would keep reusing the same (possibly dead,
+                // e.g. right after resetDatabase()'s own WITH (FORCE))
+                // cached connection handle every iteration instead of
+                // genuinely re-probing.
+                $conn = @pg_connect($this->pgsqlConnectionString($this->dbName), PGSQL_CONNECT_FORCE_NEW);
+                if ($conn !== false) {
+                    $result = @pg_query($conn, sprintf('SELECT COUNT(*) FROM "%simages"', $this->dbPrefix));
+                    pg_close($conn);
+                    if ($result !== false) {
+                        return;
+                    }
                 }
+            } else {
+                $db = $this->newMysqli($this->dbName);
+                if ($db->connect_errno === 0) {
+                    $result = $db->query(sprintf('SELECT COUNT(*) FROM `%simages`', $this->dbPrefix));
+                    if ($result !== false) {
+                        $db->close();
+
+                        return;
+                    }
+                }
+                $db->close();
             }
-            $db->close();
+
             usleep(100_000);
         }
         self::fail('Test database did not become queryable within 30s after fixture load.');
@@ -433,6 +552,49 @@ abstract class IntegrationTestCase extends TestCase
     protected function newMysqli(string $dbName): \mysqli
     {
         return new \mysqli($this->dbHost, $this->dbUser, $this->dbPass, $dbName);
+    }
+
+    /**
+     * pgsql support pass: the same raw, driver-native low-level escape
+     * hatch newMysqli() already gives MySQL-targeted tests, for the
+     * (currently only internal, see resetDatabase()/settleDatabase())
+     * pgsql-targeted equivalent.
+     *
+     * PGSQL_CONNECT_FORCE_NEW is load-bearing, not defensive -- unlike
+     * `new \mysqli(...)` (always a genuinely new connection), PHP's
+     * `pg_connect()` caches and reuses a connection object per identical
+     * connection string within one process by default. Real bug found
+     * live: resetDatabase()'s own `WITH (FORCE)` terminates the server
+     * backend for any prior connection to that database, but a later
+     * plain `pg_connect()` call with the same string still returned that
+     * same, now-dead PHP-level handle -- confirmed by comparing object
+     * identity (`===`) and `pg_get_pid()` before/after a real drop+
+     * recreate cycle in one process, then observing every query against
+     * it fail with "FATAL: terminating connection due to administrator
+     * command". settleDatabase()'s own poll loop calling plain
+     * `pg_connect()` in this state would loop for the full 30s timeout
+     * and always fail, never actually re-probing a live connection.
+     */
+    protected function newPgsqlConnection(string $dbName): \PgSql\Connection
+    {
+        $conn = pg_connect($this->pgsqlConnectionString($dbName), PGSQL_CONNECT_FORCE_NEW);
+        self::assertNotFalse($conn, 'pg_connect failed');
+
+        return $conn;
+    }
+
+    private function pgsqlConnectionString(string $dbName): string
+    {
+        $parts = [
+            'host=' . $this->dbHost,
+            'user=' . $this->dbUser,
+            'dbname=' . $dbName,
+        ];
+        if ($this->dbPass !== '') {
+            $parts[] = 'password=' . $this->dbPass;
+        }
+
+        return implode(' ', $parts);
     }
 
     /**

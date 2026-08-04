@@ -1,0 +1,84 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Piwigo\Tests\Integration;
+
+use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\SchemaDumpService;
+
+/**
+ * Covers the MySQL path against the real fixture DB (the future
+ * db-multi-provider CI matrix job -- Phase H -- covers PostgreSQL
+ * directly against a real service container instead; this Integration
+ * suite only ever runs against MySQL, per every other test file here).
+ *
+ * SchemaDumpService::dump() writes to the real, tracked
+ * install/piwigo_structure-mysql.sql (there's no test-injectable output
+ * path -- schema:dump is meant to run against a genuinely blank,
+ * freshly-migrated database and overwrite that file for real). The
+ * fixture DB here is a captured historical snapshot, not a fresh
+ * Migrator run, so its schema can carry harmless rendering differences
+ * (e.g. a redundant per-column CHARACTER SET clause matching the table's
+ * own default) that don't reflect real drift -- snapshot/restore the
+ * file around this test the same way other Integration tests here
+ * snapshot/restore real env/global state, so running this test never
+ * leaves an uncommitted diff in the working tree.
+ */
+final class SchemaDumpServiceTest extends IntegrationTestCase
+{
+    private static bool $fixtureReady = false;
+
+    private string $schemaFilePath;
+
+    private string $originalSchemaFileContent;
+
+    #[\Override]
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->setUpConnectionFromEnv();
+
+        if (! self::$fixtureReady) {
+            $this->resetDatabase();
+            $this->loadFixture(dirname(__DIR__, 2) . '/tests/Fixtures/piwigo-17.0.sql');
+            self::$fixtureReady = true;
+        }
+
+        CurrentConfig::reset();
+        ConfigLoader::applyDefaults();
+        ConfigLoader::applyEnvOverrides();
+
+        $this->schemaFilePath = dirname(__DIR__, 2) . '/install/piwigo_structure-mysql.sql';
+        $this->originalSchemaFileContent = (string) file_get_contents($this->schemaFilePath);
+    }
+
+    #[\Override]
+    protected function tearDown(): void
+    {
+        file_put_contents($this->schemaFilePath, $this->originalSchemaFileContent);
+        parent::tearDown();
+    }
+
+    public function test_dump_detects_mysql_and_writes_a_deterministic_schema_file(): void
+    {
+        $service = new SchemaDumpService(DbConnection::build());
+
+        $result = $service->dump();
+
+        self::assertSame('mysql', $result['label']);
+        self::assertFileExists($result['path']);
+
+        $content = (string) file_get_contents($result['path']);
+        self::assertStringContainsString('CREATE TABLE', $content);
+        self::assertStringNotContainsString('migration_versions', $content);
+        self::assertStringNotContainsString('GTID_PURGED', $content);
+        self::assertStringNotContainsString('AUTO_INCREMENT=', $content);
+
+        $second = $service->dump();
+        $secondContent = (string) file_get_contents($second['path']);
+        self::assertSame($content, $secondContent, 'schema:dump output must be deterministic across runs');
+    }
+}

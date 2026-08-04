@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Maintenance;
 
 use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\Expr\Join;
 use Piwigo\Common\ValueObject\TagId;
@@ -146,6 +147,23 @@ final readonly class DbMaintenanceRepository
      * statement throws instead -- so completing this method without an
      * exception already means every step succeeded; no return value
      * needed.
+     *
+     * pgsql support pass: Postgres has no `REPAIR TABLE`/`ALTER TABLE ...
+     * ORDER BY`/`OPTIMIZE TABLE` -- and neither of the first two has a
+     * safe, meaningful Postgres equivalent worth porting (REPAIR TABLE is
+     * a MyISAM-era corruption-recovery statement; this schema is
+     * uniformly InnoDB, where REPAIR TABLE is already a real no-op.
+     * ALTER TABLE ... ORDER BY physically re-sorts row storage by PK --
+     * its closest Postgres analog, CLUSTER, needs a specific index chosen
+     * and is a far more disruptive, not-routinely-automated operation in
+     * real Postgres practice, not a like-for-like swap). `VACUUM
+     * (ANALYZE)` (reclaim dead tuples + refresh planner stats) + `REINDEX
+     * TABLE` (rebuild index bloat) are Postgres's own real maintenance-
+     * sweep primitives -- verified live that `VACUUM` cannot run inside
+     * an explicit transaction block, which this method's own
+     * all-bare-executeStatement()-calls shape (confirmed by reading the
+     * full method body: no beginTransaction()/transactional() wraps any
+     * of these statements) already satisfies.
      */
     public function repairOptimizeAllTables(): void
     {
@@ -155,12 +173,13 @@ final readonly class DbMaintenanceRepository
         // introspectTableNames()/introspectTablePrimaryKeyConstraint() are
         // typed, no raw-row-shape guessing against MySQL's own display
         // formatting ('Key' === 'PRI' string matching) needed. REPAIR/
-        // ALTER ... ORDER BY/OPTIMIZE themselves have no DBAL Schema-API
-        // or QueryBuilder equivalent (that API defines/diffs schemas for
-        // migrations, not maintenance commands) and no bind-able parameter
-        // position in any dialect (table/column identifiers in DDL-ish
-        // statements can never be placeholders) -- those 3 stay raw SQL,
-        // spliced only from already-introspected identifier-shaped values.
+        // ALTER ... ORDER BY/OPTIMIZE (and their Postgres equivalents)
+        // have no DBAL Schema-API or QueryBuilder equivalent (that API
+        // defines/diffs schemas for migrations, not maintenance commands)
+        // and no bind-able parameter position in any dialect (table/
+        // column identifiers in DDL-ish statements can never be
+        // placeholders) -- those stay raw SQL, spliced only from
+        // already-introspected identifier-shaped values.
         $conn = $this->em->getConnection();
         $prefix = $this->dbCredentials->prefix;
         $schemaManager = $conn->createSchemaManager();
@@ -177,6 +196,15 @@ final readonly class DbMaintenanceRepository
                 ->getValue(),
             $allTableNames
         );
+
+        if ($conn->getDatabasePlatform() instanceof PostgreSQLPlatform) {
+            foreach ($allTables as $table) {
+                $conn->executeStatement("VACUUM (ANALYZE) {$table}");
+                $conn->executeStatement("REINDEX TABLE {$table}");
+            }
+
+            return;
+        }
 
         $allTablesCsv = implode(', ', $allTables);
         $conn->executeStatement(<<<SQL

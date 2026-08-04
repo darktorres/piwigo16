@@ -320,41 +320,67 @@ abstract class IntegrationTestCase extends TestCase
 
     protected function resetDatabase(): void
     {
+        $this->dropAndCreateDatabase($this->dbName);
+    }
+
+    /**
+     * pgsql support pass: generalized from resetDatabase()'s own former
+     * $this->dbName-only body so scratch-database-using tests (backup/
+     * restore round-trips, which deliberately restore into their own
+     * disposable database rather than the shared fixture one) can reuse
+     * the same real drop+recreate mechanics under any name, not just the
+     * one this class's own fixture lives in.
+     *
+     * A bare `DROP DATABASE` fails outright (`ERROR: database "..." is
+     * being accessed by other users`, a real nonzero-exit-code error, not
+     * a warning) if any other connection is still attached -- verified
+     * live against a genuinely active, `pg_stat_activity`-confirmed
+     * connection (a real risk here: a prior Browser test's Apache/
+     * FrankenPHP worker connection, or this test process's own previous
+     * connection, can easily still be attached when the next reset runs).
+     * `WITH (FORCE)` (Postgres 13+ -- this environment runs 18) terminates
+     * other backends automatically first -- verified live against that
+     * same active-connection setup that a bare DROP DATABASE couldn't
+     * clear. Connects to the `postgres` maintenance database (always
+     * exists, can't be dropped) since Postgres can't DROP/CREATE the
+     * database the current connection is itself attached to, mirroring
+     * newMysqli('')'s own no-dbname admin-connection shape.
+     */
+    protected function dropAndCreateDatabase(string $dbName): void
+    {
         if ($this->dbDriver === 'pgsql') {
-            $this->resetDatabasePostgres();
+            $conn = $this->newPgsqlConnection('postgres');
+            pg_query($conn, sprintf('DROP DATABASE IF EXISTS "%s" WITH (FORCE)', $dbName));
+            pg_query($conn, sprintf('CREATE DATABASE "%s" WITH ENCODING \'UTF8\'', $dbName));
+            pg_close($conn);
 
             return;
         }
 
         $db = $this->newMysqli('');
-        $db->query(sprintf('DROP DATABASE IF EXISTS `%s`', $this->dbName));
-        $db->query(sprintf('CREATE DATABASE `%s` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci', $this->dbName));
+        $db->query(sprintf('DROP DATABASE IF EXISTS `%s`', $dbName));
+        $db->query(sprintf('CREATE DATABASE `%s` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci', $dbName));
         $db->close();
     }
 
     /**
-     * pgsql support pass: a bare `DROP DATABASE` fails outright
-     * (`ERROR: database "..." is being accessed by other users`, a real
-     * nonzero-exit-code error, not a warning) if any other connection is
-     * still attached -- verified live against a genuinely active,
-     * `pg_stat_activity`-confirmed connection (a real risk here: a prior
-     * Browser test's Apache/FrankenPHP worker connection, or this test
-     * process's own previous connection, can easily still be attached
-     * when the next test's resetDatabase() runs). `WITH (FORCE)`
-     * (Postgres 13+ -- this environment runs 18) terminates other
-     * backends automatically first -- verified live against that same
-     * active-connection setup that a bare DROP DATABASE couldn't clear.
-     * Connects to the `postgres` maintenance database (always exists,
-     * can't be dropped) since Postgres can't DROP/CREATE the database
-     * the current connection is itself attached to, mirroring
-     * newMysqli('')'s own no-dbname admin-connection shape.
+     * Drop-only counterpart to {@see dropAndCreateDatabase()} -- for
+     * scratch-database cleanup in a test's own tearDown(), which only
+     * ever needs the database gone, not recreated.
      */
-    private function resetDatabasePostgres(): void
+    protected function dropDatabase(string $dbName): void
     {
-        $conn = $this->newPgsqlConnection('postgres');
-        pg_query($conn, sprintf('DROP DATABASE IF EXISTS "%s" WITH (FORCE)', $this->dbName));
-        pg_query($conn, sprintf('CREATE DATABASE "%s" WITH ENCODING \'UTF8\'', $this->dbName));
-        pg_close($conn);
+        if ($this->dbDriver === 'pgsql') {
+            $conn = $this->newPgsqlConnection('postgres');
+            pg_query($conn, sprintf('DROP DATABASE IF EXISTS "%s" WITH (FORCE)', $dbName));
+            pg_close($conn);
+
+            return;
+        }
+
+        $db = $this->newMysqli('');
+        $db->query(sprintf('DROP DATABASE IF EXISTS `%s`', $dbName));
+        $db->close();
     }
 
     protected function loadFixture(string $path): void
@@ -679,14 +705,53 @@ abstract class IntegrationTestCase extends TestCase
         );
     }
 
+    /**
+     * pgsql support pass: was hardcoded to a raw mysqli connection --
+     * DbConnection::build()'s portable DBAL Connection handles a single
+     * scalar fetch identically on both platforms, no raw driver dispatch
+     * needed for a plain SELECT. Every real caller queries a numeric
+     * column (id/COUNT(*)); mysqli's own raw fetch always returned these
+     * as strings, but DBAL's own fetchOne() may return a native int/float
+     * per platform/driver -- stringified here so this method's own return
+     * contract stays exactly what every real caller already expects,
+     * regardless of which native type the driver happens to hand back.
+     */
     protected function queryScalar(string $sql): string
     {
-        $db     = $this->newMysqli($this->dbName);
+        $value = DbConnection::build()->fetchOne($sql);
+        self::assertTrue(is_scalar($value), 'queryScalar() expects a single scalar column value');
+
+        return (string) $value;
+    }
+
+    /**
+     * {@see queryScalar()}'s own counterpart for a database OTHER than
+     * the one DbCredentials::fromEnv() currently points at (e.g. a
+     * disposable backup/restore scratch database) -- DbConnection::build()
+     * has no dbname override, so this needs the same raw, driver-native
+     * connection {@see newMysqli()}/{@see newPgsqlConnection()} already
+     * give MySQL/pgsql-targeted tests, dispatched per platform.
+     */
+    protected function queryScalarFromDatabase(string $dbName, string $sql): ?string
+    {
+        if ($this->dbDriver === 'pgsql') {
+            $conn = $this->newPgsqlConnection($dbName);
+            $result = pg_query($conn, $sql);
+            self::assertNotFalse($result, 'pg_query failed');
+            $row = pg_fetch_row($result);
+            pg_close($conn);
+
+            return $row === false ? null : $row[0];
+        }
+
+        $db = $this->newMysqli($dbName);
         $result = $db->query($sql);
         self::assertInstanceOf(\mysqli_result::class, $result);
         $row = $result->fetch_row();
         $db->close();
-        self::assertIsArray($row);
+        if (! is_array($row)) {
+            return null;
+        }
         self::assertIsString($row[0]);
 
         return $row[0];

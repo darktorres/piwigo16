@@ -135,14 +135,18 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         );
         self::assertIsArray($row);
         self::assertIsString($row['check_key']);
-        self::assertIsNumeric($row['enabled']);
+        // enabled is a genuine boolean column -- a raw (unmapped) fetch
+        // returns a native PHP bool for it on Postgres, but a numeric 1/0
+        // on MySQL (confirmed live, same as categories.visible/commentable
+        // elsewhere). (int) (bool) normalizes either representation.
+        self::assertTrue(is_bool($row['enabled']) || is_numeric($row['enabled']));
         $lastSend = $row['last_send'];
         if ($lastSend !== null) {
             self::assertIsString($lastSend);
         }
         $this->user1OriginalRow = [
             'check_key' => $row['check_key'],
-            'enabled' => (int) $row['enabled'],
+            'enabled' => (int) (bool) $row['enabled'],
             'last_send' => $lastSend,
         ];
 
@@ -250,9 +254,9 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         $value = $this->conn->fetchOne(
             'SELECT enabled FROM ' . Tables::userMailNotification() . ' WHERE user_id = 1'
         );
-        self::assertIsNumeric($value);
+        self::assertTrue(is_bool($value) || is_numeric($value));
 
-        return (int) $value;
+        return (int) (bool) $value;
     }
 
     /**
@@ -622,8 +626,14 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         $this->conn->executeStatement("UPDATE " . Tables::users() . " SET mail_address = 'temp4@example.test' WHERE id = 4");
         // check_key is varchar(16) -- must stay within that limit.
         $checkKey = 'user4-tmp-key';
+        // enabled is a genuine boolean column -- a bare `1` literal in the
+        // SQL text itself (unlike a bound parameter, which the driver
+        // coerces implicitly) is rejected outright by Postgres ("column
+        // ... is of type boolean but expression is of type integer",
+        // confirmed live).
+        $enabledLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::userMailNotification() . ' (user_id, check_key, enabled, last_send) VALUES (?, ?, 1, NULL)',
+            'INSERT INTO ' . Tables::userMailNotification() . " (user_id, check_key, enabled, last_send) VALUES (?, ?, {$enabledLiteral}, NULL)",
             [4, $checkKey]
         );
         CurrentConfig::current()->setSmtpHost('127.0.0.1:1');

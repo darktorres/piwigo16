@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Auth\AccessControl;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
@@ -84,6 +85,22 @@ function setAdminUser(): void
     ));
 }
 
+/**
+ * FileCombiner only ever reads `isAdmin()` (via `computeForce()`), which
+ * itself only reads CurrentUser::current() -- the HtmlRenderingInterface/
+ * RedirectServiceInterface collaborators are never touched, so the shared
+ * "throws if called" fakes from AccessControlTest.php are reused here
+ * rather than duplicating them.
+ */
+function fileCombinerTestAccessControl(): AccessControl
+{
+    return new AccessControl(
+        new \Piwigo\Tests\Unit\Auth\AccessControlTestFakeHtmlRendererDeniesAccess(),
+        new \Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled(),
+        CurrentUser::current(),
+    );
+}
+
 test('computeForce stays false for a guest even when the file type would otherwise qualify', function (): void {
     // Guards two things at once: the isAdmin() && (...) join being a real
     // AND (not an OR -- is_css=true alone would satisfy the right-hand
@@ -92,7 +109,7 @@ test('computeForce stays false for a guest even when the file type would otherwi
     $_SERVER['HTTP_CACHE_CONTROL'] = 'max-age=0';
 
     try {
-        $combiner = new FileCombiner('css', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
+        $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'css', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
 
         expect(invokeComputeForce($combiner))->toBeFalse();
     } finally {
@@ -109,7 +126,7 @@ test('computeForce is true for an admin combining CSS with a cache-busting heade
     $_SERVER['HTTP_CACHE_CONTROL'] = 'max-age=0';
 
     try {
-        $combiner = new FileCombiner('css', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
+        $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'css', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
 
         expect(invokeComputeForce($combiner))->toBeTrue();
     } finally {
@@ -128,7 +145,7 @@ test('computeForce is true for an admin combining JS with templateCompileCheck o
     $_SERVER['HTTP_CACHE_CONTROL'] = 'max-age=0';
 
     try {
-        $combiner = new FileCombiner('js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
+        $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
 
         expect(invokeComputeForce($combiner))->toBeTrue();
     } finally {
@@ -143,7 +160,7 @@ test('computeForce is false for an admin JS combine with no cache-busting header
     CurrentConfig::setTemplateCompileCheck(false);
 
     try {
-        $combiner = new FileCombiner('js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
+        $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
 
         expect(invokeComputeForce($combiner))->toBeFalse();
     } finally {
@@ -188,14 +205,14 @@ function invokeInitialKey(FileCombiner $combiner): array
 }
 
 test('initialKey is empty for JS combining', function (): void {
-    $combiner = new FileCombiner('js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
 
     expect(invokeInitialKey($combiner))->toBe([]);
 });
 
 test('initialKey seeds the scheme-less absolute root URL for CSS combining, so a scheme change alone busts the cache', function (): void {
     $urlService = new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride());
-    $combiner = new FileCombiner('css', $urlService, Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'css', $urlService, Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
 
     $key = invokeInitialKey($combiner);
 
@@ -206,14 +223,14 @@ test('initialKey seeds the scheme-less absolute root URL for CSS combining, so a
 });
 
 test('combine returns an empty array for no combinables', function (): void {
-    $combiner = new FileCombiner('js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
 
     expect($combiner->combine())->toBe([]);
 });
 
 test('combine returns a single non-template combinable unchanged', function (): void {
     $combinable = new Combinable('my-script', 'themes/default/js/foo.js');
-    $combiner = new FileCombiner('js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), [$combinable]);
+    $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), [$combinable]);
 
     $result = $combiner->combine();
 
@@ -224,7 +241,7 @@ test('combine returns a single non-template combinable unchanged', function (): 
 test('combine passes remote combinables through without combining them', function (): void {
     $remote = new Combinable('remote-script', 'https://cdn.example.com/foo.js');
     $local = new Combinable('local-script', 'themes/default/js/bar.js');
-    $combiner = new FileCombiner('js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), [$remote, $local]);
+    $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), [$remote, $local]);
 
     $result = $combiner->combine();
 
@@ -242,7 +259,7 @@ test('combine flushes pending items before appending a remote combinable, preser
     CurrentConfig::setTemplateCombineFiles(true);
     $first = new Combinable('first', 'themes/default/js/a.js');
     $remote = new Combinable('remote-script', 'https://cdn.example.com/foo.js');
-    $combiner = new FileCombiner('js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), [$first, $remote]);
+    $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), [$first, $remote]);
 
     $result = $combiner->combine();
 
@@ -285,7 +302,7 @@ test('combine merges 2+ non-template files into a single combined output on disk
 
     $first = new Combinable('a', 'themes/default/js/a.js');
     $second = new Combinable('b', 'themes/default/js/b.js');
-    $combiner = new FileCombiner('js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), [$first, $second]);
+    $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), [$first, $second]);
 
     try {
         $result = $combiner->combine();
@@ -326,7 +343,7 @@ test('combine does not rewrite an already-combined file on a second call (cache 
     file_put_contents($root . '/themes/default/js/b.js', "var b = 2;\n");
     CurrentConfig::setTemplateCombineFiles(true);
 
-    $combinerFirst = new FileCombiner('js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), [
+    $combinerFirst = new FileCombiner(fileCombinerTestAccessControl(), 'js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), [
         new Combinable('a', 'themes/default/js/a.js'),
         new Combinable('b', 'themes/default/js/b.js'),
     ]);
@@ -342,7 +359,7 @@ test('combine does not rewrite an already-combined file on a second call (cache 
         sleep(1);
         file_put_contents($root . '/themes/default/js/a.js', "var a = 999;\n");
 
-        $combinerSecond = new FileCombiner('js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), [
+        $combinerSecond = new FileCombiner(fileCombinerTestAccessControl(), 'js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), [
             new Combinable('a', 'themes/default/js/a.js'),
             new Combinable('b', 'themes/default/js/b.js'),
         ]);
@@ -364,7 +381,7 @@ test('combine invalidates the multi-item cache when a source file\'s mtime chang
     CurrentConfig::setTemplateCombineFiles(true);
     CurrentConfig::setTemplateCompileCheck(true);
 
-    $combinerFirst = new FileCombiner('js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), [
+    $combinerFirst = new FileCombiner(fileCombinerTestAccessControl(), 'js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), [
         new Combinable('a', 'themes/default/js/a.js'),
         new Combinable('b', 'themes/default/js/b.js'),
     ]);
@@ -375,7 +392,7 @@ test('combine invalidates the multi-item cache when a source file\'s mtime chang
         sleep(1);
         file_put_contents($root . '/themes/default/js/a.js', "var a = 999;\n");
 
-        $combinerSecond = new FileCombiner('js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), [
+        $combinerSecond = new FileCombiner(fileCombinerTestAccessControl(), 'js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), [
             new Combinable('a', 'themes/default/js/a.js'),
             new Combinable('b', 'themes/default/js/b.js'),
         ]);
@@ -399,7 +416,7 @@ test('combine merges 2+ CSS files into a single combined output, with a stripped
     CurrentConfig::setTemplateCombineFiles(true);
 
     $urlService = new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride());
-    $combiner = new FileCombiner('css', $urlService, Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), [
+    $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'css', $urlService, Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), [
         new Combinable('a', 'themes/default/css/a.css'),
         new Combinable('b', 'themes/default/css/b.css'),
     ]);
@@ -425,7 +442,7 @@ test('combine merges 2+ CSS files into a single combined output, with a stripped
 });
 
 test('add appends a single combinable', function (): void {
-    $combiner = new FileCombiner('js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
     $combinable = new Combinable('my-script', 'themes/default/js/foo.js');
 
     $combiner->add($combinable);
@@ -434,7 +451,7 @@ test('add appends a single combinable', function (): void {
 });
 
 test('add merges an array of combinables', function (): void {
-    $combiner = new FileCombiner('js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
     $first = new Combinable('first', 'themes/default/js/a.js');
     $second = new Combinable('second', 'themes/default/js/b.js');
 
@@ -579,7 +596,7 @@ test('combine reaches process_combinable for a single template combinable via fl
     CurrentConfig::setDataLocation('_data/');
     CurrentConfig::setDataDirChecked('1');
 
-    $combiner = new FileCombiner('js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
 
     try {
         CurrentTemplate::current()->set(new Template());
@@ -614,7 +631,7 @@ test('process_combinable\'s single-file cache key is sensitive to the combinable
     CurrentConfig::setDataLocation('_data/');
     CurrentConfig::setDataDirChecked('1');
 
-    $combiner = new FileCombiner('js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
 
     try {
         CurrentTemplate::current()->set(new Template());
@@ -645,7 +662,7 @@ test('process_combinable\'s single-file cache key is sensitive to the combinable
     CurrentConfig::setDataLocation('_data/');
     CurrentConfig::setDataDirChecked('1');
 
-    $combiner = new FileCombiner('js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
 
     try {
         CurrentTemplate::current()->set(new Template());
@@ -680,7 +697,7 @@ test('process_combinable\'s single-file cache filename exactly matches the crc32
     // pins the *16 and *36 base-conversion arguments precisely.
     CurrentConfig::setTemplateCompileCheck(true);
 
-    $combiner = new FileCombiner('js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
 
     try {
         CurrentTemplate::current()->set(new Template());
@@ -714,7 +731,7 @@ test('process_combinable reuses an already-combined template file (matching a fi
     // is scoped to.
     CurrentConfig::setTemplateCompileCheck(true);
 
-    $combiner = new FileCombiner('js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
 
     try {
         CurrentTemplate::current()->set(new Template());
@@ -760,7 +777,7 @@ test('process_combinable builds and writes a new combined JS file on a cache mis
     CurrentConfig::setDataLocation('_data/');
     CurrentConfig::setDataDirChecked('1');
 
-    $combiner = new FileCombiner('js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
 
     try {
         CurrentTemplate::current()->set(new Template());
@@ -801,7 +818,7 @@ test('process_combinable builds and writes a new combined CSS file on a cache mi
     CurrentConfig::setDataLocation('_data/');
     CurrentConfig::setDataDirChecked('1');
 
-    $combiner = new FileCombiner('css', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'css', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
 
     try {
         CurrentTemplate::current()->set(new Template());
@@ -840,7 +857,7 @@ test('process_combinable returns rendered content directly for a template combin
     CurrentConfig::setDataLocation('_data/');
     CurrentConfig::setDataDirChecked('1');
 
-    $combiner = new FileCombiner('js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
 
     try {
         $template = new Template();
@@ -873,7 +890,7 @@ test('process_combinable throws when a template combinable points at a file that
     CurrentConfig::setDataLocation('_data/');
     CurrentConfig::setDataDirChecked('1');
 
-    $combiner = new FileCombiner('js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
 
     try {
         CurrentTemplate::current()->set(new Template());
@@ -896,7 +913,7 @@ test('process_css throws when a combined_css_postfilter listener returns somethi
     EventDispatcher::get()->addEventHandler(CombinedCssPostfilter::class, static fn (): int => 42);
 
     $combinable = new Combinable('foo-css', 'themes/default/css/foo.css');
-    $combiner = new FileCombiner('css', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), EventDispatcher::get(), \Piwigo\Template\CurrentTemplate::current(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'css', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), EventDispatcher::get(), \Piwigo\Template\CurrentTemplate::current(), []);
 
     try {
         $header = '';
@@ -946,7 +963,7 @@ test('process_css_rec resolves a nested @import file recursively into the combin
     file_put_contents($root . '/themes/default/css/main.css', "@import 'sub.css';\nbody{color:red;}\n");
 
     $combinable = new Combinable('main-css', 'themes/default/css/main.css');
-    $combiner = new FileCombiner('css', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'css', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
 
     try {
         $header = '';
@@ -968,7 +985,7 @@ test('process_css_rec strips path-traversal, remote, and unreadable @import dire
     );
 
     $combinable = new Combinable('main-css', 'themes/default/css/main.css');
-    $combiner = new FileCombiner('css', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'css', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
 
     try {
         $header = '';
@@ -1004,7 +1021,7 @@ test('process_css_rec still strips a "\.\." @import even when the path it traver
     file_put_contents($root . '/themes/default/css/sibling.css', "p{color:pink;}\n");
 
     $combinable = new Combinable('main-css', 'themes/default/css/sub/main.css');
-    $combiner = new FileCombiner('css', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'css', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
 
     try {
         $header = '';
@@ -1039,7 +1056,7 @@ test('process_css_rec throws when an @import target passes the is_readable() che
     expect(socket_bind($socket, $socketPath))->toBeTrue();
 
     $combinable = new Combinable('main-css', 'themes/default/css/main.css');
-    $combiner = new FileCombiner('css', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'css', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
 
     set_error_handler(static fn (): bool => true);
     try {
@@ -1062,7 +1079,7 @@ test('process_css_rec rewrites a relative url() reference into an embellished ab
     );
 
     $combinable = new Combinable('main-css', 'themes/default/css/main.css');
-    $combiner = new FileCombiner('css', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'css', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
 
     try {
         $header = '';
@@ -1097,7 +1114,7 @@ test('process_css_rec only rewrites url() references starting with "/" when chec
     );
 
     $combinable = new Combinable('main-css', 'themes/default/css/main.css');
-    $combiner = new FileCombiner('css', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'css', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
 
     try {
         $header = '';
@@ -1125,7 +1142,7 @@ test('process_css_rec resolves a relative url() reference against the CSS file\'
 
     $combinable = new Combinable('main-css', 'themes/default/css/sub/main.css');
     $urlService = new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride());
-    $combiner = new FileCombiner('css', $urlService, Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'css', $urlService, Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
 
     try {
         $header = '';
@@ -1148,7 +1165,7 @@ test('process_css_rec leaves a remote or data-URI url() reference untouched', fu
     );
 
     $combinable = new Combinable('main-css', 'themes/default/css/main.css');
-    $combiner = new FileCombiner('css', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'css', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
 
     try {
         $header = '';
@@ -1173,7 +1190,7 @@ test('process_css_rec resolves a doubly-nested @import against the correct subdi
     file_put_contents($root . '/themes/default/css/subdir/nested.css', "p{color:green;}\n");
 
     $combinable = new Combinable('main-css', 'themes/default/css/main.css');
-    $combiner = new FileCombiner('css', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'css', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
 
     try {
         $header = '';
@@ -1195,7 +1212,7 @@ test('process_combinable throws for a non-template combinable whose file cannot 
     mkdir($root, 0o777, true);
 
     $combinable = new Combinable('missing', 'themes/default/js/does-not-exist.js');
-    $combiner = new FileCombiner('js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
 
     set_error_handler(static fn (): bool => true);
     try {
@@ -1213,7 +1230,7 @@ test('process_combinable dispatches a non-template combinable to process_js when
     file_put_contents($root . '/themes/default/js/foo.js', "  var a = 1;  ;;\n");
 
     $combinable = new Combinable('foo', 'themes/default/js/foo.js');
-    $combiner = new FileCombiner('js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
 
     try {
         $header = '';
@@ -1234,7 +1251,7 @@ test('process_combinable registers the template file under a handle combining th
     CurrentConfig::setDataLocation('_data/');
     CurrentConfig::setDataDirChecked('1');
 
-    $combiner = new FileCombiner('js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Template\CurrentTemplate::current(), []);
     $template = new Template();
 
     try {
@@ -1267,7 +1284,7 @@ test('process_combinable notifies combinable_preparse listeners before parsing a
         $notifiedWith = $event;
     });
 
-    $combiner = new FileCombiner('js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), EventDispatcher::get(), \Piwigo\Template\CurrentTemplate::current(), []);
+    $combiner = new FileCombiner(fileCombinerTestAccessControl(), 'js', new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot($root), EventDispatcher::get(), \Piwigo\Template\CurrentTemplate::current(), []);
 
     try {
         CurrentTemplate::current()->set(new Template());

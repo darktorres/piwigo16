@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Admin\PiwigoInfosSender;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Logger;
@@ -45,12 +46,22 @@ test('send returns immediately without touching the DB or network when telemetry
     // Never actually read either -- same "send() returns before touching
     // anything past the guard" reasoning as $configService above.
     $rateService = new \Piwigo\Rate\RateService(
+        new AccessControl(
+            new \Piwigo\Tests\Unit\Auth\AccessControlTestFakeHtmlRendererDeniesAccess(),
+            new \Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled(),
+            new \Piwigo\Users\CurrentUser(),
+        ),
         \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Rate\RateEntity::class),
         new \Piwigo\Auth\CookieService(),
         new \Piwigo\PluginConfig\EventDispatcher(),
         new \Piwigo\Users\CurrentUser(),
     );
     $historyService = new \Piwigo\History\HistoryService(
+        new AccessControl(
+            new \Piwigo\Tests\Unit\Auth\AccessControlTestFakeHtmlRendererDeniesAccess(),
+            new \Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled(),
+            new \Piwigo\Users\CurrentUser(),
+        ),
         \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\History\HistoryEntity::class),
         $configService,
         $currentLogger,

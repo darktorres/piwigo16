@@ -254,6 +254,7 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
         '/src/Piwigo/Page/PageHeaderRenderer.php',
         '/src/Piwigo/Core/CurrentThemeConfProvider.php',
         '/src/Piwigo/Mail/MailService.php',
+        '/src/Piwigo/Auth/AccessControl.php',
     ];
 
     $hits = [
@@ -1313,10 +1314,13 @@ test('CurrentUser::current() transitional bridge has a shrinking, known allow-li
     // competing real instance method to disambiguate from). Every phase
     // that converts one more of these files to constructor-injected
     // CurrentUser should remove it from the allow-list below.
-    // ExtensionScanner.php/AccessControl.php/PwgTOTP.php/CaddieService.php
-    // are genuinely static-context-only utilities/classes with too many
-    // manual construction sites for a required constructor param (same
-    // "no wrapper needed" precedent as FilesystemHelper/HtmlService).
+    // ExtensionScanner.php/PwgTOTP.php/CaddieService.php are genuinely
+    // static-context-only utilities/classes with too many manual
+    // construction sites for a required constructor param (same "no
+    // wrapper needed" precedent as FilesystemHelper/HtmlService).
+    // AccessControl.php itself now constructor-injects CurrentUser for
+    // real (Phase 7), so it's off this allow-list -- see its own
+    // "AccessControl::current() transitional bridge" test below instead.
     // HtmlService.php/MailService.php/UrlService.php/MetadataService.php
     // are Phase-6-entangled (dozens of manual construction sites each).
     // Ws/Pwg*.php + WsDefaultMethods.php/WsHelper.php are Phase-10-locked
@@ -1341,7 +1345,6 @@ test('CurrentUser::current() transitional bridge has a shrinking, known allow-li
         '/src/Piwigo/Admin/Extensions/PemCatalog.php',
         '/src/Piwigo/Admin/Install/InstallWizard.php',
         '/src/Piwigo/Admin/Upload/UploadService.php',
-        '/src/Piwigo/Auth/AccessControl.php',
         '/src/Piwigo/Auth/PwgTOTP.php',
         '/src/Piwigo/Caddie/CaddieService.php',
         '/src/Piwigo/Comment/CommentService.php',
@@ -1363,6 +1366,70 @@ test('CurrentUser::current() transitional bridge has a shrinking, known allow-li
     $hits = [
         ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'CurrentUser::current('),
         ...findCallSitesOutsideComments($repoRoot . '/public', 'CurrentUser::current('),
+    ];
+
+    $disallowed = array_values(array_filter(
+        $hits,
+        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
+    ));
+
+    expect(describeCallSites($disallowed))->toBe([]);
+});
+
+test('AccessControl::current() transitional bridge has a shrinking, known allow-list', function (): void {
+    // Singleton/service-locator elimination campaign, Phase 7: current()
+    // kept its original name (no `Static` suffix, matching every other
+    // large facade's own precedent -- no competing real instance method to
+    // disambiguate from). Unlike CurrentUser/CurrentTemplate/etc., this
+    // shim has no memoized pre-boot fallback (a live container resolve on
+    // every call instead) -- see the class's own docblock for why.
+    // HtmlService.php/MailService.php/UrlService.php/Template.php match
+    // their own already-established too-many-manual-construction-sites
+    // precedent (same files stay on every other large facade's own
+    // allow-list too). PermissionService.php/CategoryService.php/
+    // CommentService.php/UserService.php have real Ws/Pwg*.php-locked
+    // callers (Phase-10-locked static dispatch). CssLoader.php/
+    // ScriptLoader.php construct FileCombiner, itself entangled with the
+    // same UrlService-bridge group Phase 6 already flagged. PluginMaintain.php
+    // is a plugin-extensible base class whose own constructor contract
+    // can't gain a new required param. Bootstrap/PageTail.php/
+    // Bootstrap/RequestBootstrap.php resolve it the same way every other
+    // Bootstrap/-internal file resolves a not-yet-constructor-injected
+    // collaborator. Ws/Pwg*.php + WsDefaultMethods.php/WsHelper.php are
+    // Phase-10-locked static dispatch. public/admin.php is a raw
+    // entry-shell root file, no constructor to inject through. Every
+    // phase that converts one more of these files to constructor-injected
+    // AccessControl should remove it from the allow-list below.
+    $repoRoot = __DIR__ . '/../..';
+
+    $allowedFiles = [
+        '/public/admin.php',
+        '/src/Piwigo/Admin/PluginMaintain.php',
+        '/src/Piwigo/Bootstrap/PageTail.php',
+        '/src/Piwigo/Bootstrap/RequestBootstrap.php',
+        '/src/Piwigo/Category/CategoryService.php',
+        '/src/Piwigo/Comment/CommentService.php',
+        '/src/Piwigo/Html/HtmlService.php',
+        '/src/Piwigo/Mail/MailService.php',
+        '/src/Piwigo/Permission/PermissionService.php',
+        '/src/Piwigo/Template/CssLoader.php',
+        '/src/Piwigo/Template/ScriptLoader.php',
+        '/src/Piwigo/Template/Template.php',
+        '/src/Piwigo/Url/UrlService.php',
+        '/src/Piwigo/Users/UserService.php',
+        '/src/Piwigo/Ws/PwgCategories.php',
+        '/src/Piwigo/Ws/PwgCore.php',
+        '/src/Piwigo/Ws/PwgExtensions.php',
+        '/src/Piwigo/Ws/PwgImages.php',
+        '/src/Piwigo/Ws/PwgServer.php',
+        '/src/Piwigo/Ws/PwgUsers.php',
+        '/src/Piwigo/Ws/WsDefaultMethods.php',
+        '/src/Piwigo/Ws/WsHelper.php',
+    ];
+
+    $hits = [
+        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'AccessControl::current('),
+        ...findCallSitesOutsideComments($repoRoot . '/public', 'AccessControl::current('),
     ];
 
     $disallowed = array_values(array_filter(

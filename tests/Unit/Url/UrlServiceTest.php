@@ -7,6 +7,7 @@ namespace Piwigo\Tests\Unit\Url;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\Paths;
 use Piwigo\Core\RequestMountDepth;
 use Piwigo\Core\WsContext;
 use Piwigo\Html\HtmlService;
@@ -1177,15 +1178,23 @@ test('embellishUrl leaves a /../ segment unresolved when there is no preceding s
 });
 
 test('getUserFavorites returns an empty array for a guest', function (): void {
-    \Piwigo\Users\CurrentUser::current()->set(\Piwigo\Users\User::fromUserArray(['id' => 2, 'status' => 'guest']));
+    // getUserFavorites() reaches AccessControl::current()->isAGuest()
+    // (UrlService.php's own guard) -- unlike CurrentUser::current(),
+    // AccessControl::current() has no pre-boot memoized fallback
+    // (singleton/service-locator elimination campaign, Phase 7), so a real
+    // booted Kernel is required here now. The user status must be seeded
+    // INSIDE the callback, once the container exists (Phase 5 execution
+    // finding, same pitfall Translator/EventDispatcher already hit).
+    KernelContainerOverride::with(
+        [Paths::class => Paths::fromRoot(sys_get_temp_dir())],
+        static function (): void {
+            \Piwigo\Users\CurrentUser::current()->set(\Piwigo\Users\User::fromUserArray(['id' => 2, 'status' => 'guest']));
 
-    try {
-        $service = new UrlService(new HtmlService(), new RootPathOverride());
+            $service = new UrlService(new HtmlService(), new RootPathOverride());
 
-        expect($service->getUserFavorites())->toBe([]);
-    } finally {
-        \Piwigo\Users\CurrentUser::current()->reset();
-    }
+            expect($service->getUserFavorites())->toBe([]);
+        }
+    );
 });
 
 test('parseSectionUrl enters the categories section for a token starting with "categor"', function (): void {
@@ -1371,20 +1380,23 @@ test('getQueryStringDiff does not prefix a purely-numeric query key', function (
 });
 
 test('getUserFavorites returns early for a guest without ever touching the database connection', function (): void {
-    \Piwigo\Users\CurrentUser::current()->set(\Piwigo\Users\User::fromUserArray(['id' => 2, 'status' => 'guest']));
+    // Same AccessControl::current()-needs-a-booted-Kernel reasoning as the
+    // sibling "returns an empty array for a guest" test above.
+    KernelContainerOverride::with(
+        [Paths::class => Paths::fromRoot(sys_get_temp_dir())],
+        static function (): void {
+            \Piwigo\Users\CurrentUser::current()->set(\Piwigo\Users\User::fromUserArray(['id' => 2, 'status' => 'guest']));
 
-    try {
-        $service = new UrlService(new HtmlService(), new RootPathOverride());
+            $service = new UrlService(new HtmlService(), new RootPathOverride());
 
-        expect($service->getUserFavorites())->toBe([]);
+            expect($service->getUserFavorites())->toBe([]);
 
-        // The lazily-built Connection property must still be null -- proof
-        // the DB-touching code past the guest guard never ran. A value
-        // assertion alone can't distinguish this from a real query that
-        // just happens to also find zero rows for this user id.
-        $conn = new ReflectionProperty($service, 'conn')->getValue($service);
-        expect($conn)->toBeNull();
-    } finally {
-        \Piwigo\Users\CurrentUser::current()->reset();
-    }
+            // The lazily-built Connection property must still be null -- proof
+            // the DB-touching code past the guest guard never ran. A value
+            // assertion alone can't distinguish this from a real query that
+            // just happens to also find zero rows for this user id.
+            $conn = new ReflectionProperty($service, 'conn')->getValue($service);
+            expect($conn)->toBeNull();
+        }
+    );
 });

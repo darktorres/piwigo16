@@ -209,6 +209,19 @@ namespace Piwigo\Tests\Integration {
             $this->service = new CommentService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), new MailService(), new HtmlService(), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
         }
 
+        private function accessControl(): \Piwigo\Auth\AccessControl
+        {
+            // Kernel is already booted by parent::setUp() above -- resolve
+            // the same container-shared instance a real request would get
+            // (singleton/service-locator elimination campaign, Phase 7).
+            $accessControl = \Piwigo\Core\Kernel::container()->get(\Piwigo\Auth\AccessControl::class);
+            if (! $accessControl instanceof \Piwigo\Auth\AccessControl) {
+                throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Auth\AccessControl::class);
+            }
+
+            return $accessControl;
+        }
+
         // --- checkForSpam() -------------------------------------------------
 
         /**
@@ -707,7 +720,7 @@ namespace Piwigo\Tests\Integration {
             $authorId = $this->service->getCommentAuthorId(CommentId::from($id));
             self::assertNotFalse($authorId); // dieOnError defaults to true; see getCommentAuthorId()'s docblock
 
-            self::assertFalse(\Piwigo\Auth\AccessControl::canManageComment('edit', $authorId));
+            self::assertFalse($this->accessControl()->canManageComment('edit', $authorId));
         }
 
         /**

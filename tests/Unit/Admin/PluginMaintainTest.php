@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Admin\PluginMaintain;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Core\Paths;
 use Piwigo\Core\WsContext;
 use Piwigo\Tests\Support\KernelContainerOverride;
 use Piwigo\Users\CurrentUser;
@@ -57,8 +58,6 @@ function pluginMaintainSetUserStatus(UserStatus $status): void
 }
 
 test('autoUpdate() triggers its deprecation warning for an admin user outside a WS request', function (): void {
-    pluginMaintainSetUserStatus(UserStatus::Admin);
-
     $capturedLevel = null;
     $capturedMessage = null;
     set_error_handler(static function (int $errno, string $errstr) use (&$capturedLevel, &$capturedMessage): bool {
@@ -69,7 +68,20 @@ test('autoUpdate() triggers its deprecation warning for an admin user outside a 
     });
 
     try {
-        new PluginMaintain('some-plugin')->autoUpdate();
+        // AccessControl::current() (Phase 7 of the singleton/service-locator
+        // elimination campaign) has no memoized pre-boot fallback, unlike
+        // CurrentUser::current() -- a real, resolvable container is now
+        // required for every test reaching autoUpdate(), not just the
+        // WS-context one. The user status must be seeded INSIDE the
+        // callback, once the container exists (Phase 5 execution finding,
+        // same pitfall Translator/EventDispatcher already hit).
+        KernelContainerOverride::with(
+            [Paths::class => Paths::fromRoot(sys_get_temp_dir())],
+            static function (): void {
+                pluginMaintainSetUserStatus(UserStatus::Admin);
+                new PluginMaintain('some-plugin')->autoUpdate();
+            }
+        );
     } finally {
         restore_error_handler();
     }
@@ -84,8 +96,6 @@ test('autoUpdate() stays silent for a webmaster user (a higher status than admin
     // higher access level) still satisfies isAdmin() -- this test exists
     // to confirm that, not to find a silent case; see the next test for
     // the real "stays silent" scenario (a normal user).
-    pluginMaintainSetUserStatus(UserStatus::Webmaster);
-
     $triggered = false;
     set_error_handler(static function () use (&$triggered): bool {
         $triggered = true;
@@ -94,7 +104,13 @@ test('autoUpdate() stays silent for a webmaster user (a higher status than admin
     });
 
     try {
-        new PluginMaintain('some-plugin')->autoUpdate();
+        KernelContainerOverride::with(
+            [Paths::class => Paths::fromRoot(sys_get_temp_dir())],
+            static function (): void {
+                pluginMaintainSetUserStatus(UserStatus::Webmaster);
+                new PluginMaintain('some-plugin')->autoUpdate();
+            }
+        );
     } finally {
         restore_error_handler();
     }
@@ -103,8 +119,6 @@ test('autoUpdate() stays silent for a webmaster user (a higher status than admin
 });
 
 test('autoUpdate() stays silent for a normal (non-admin) user', function (): void {
-    pluginMaintainSetUserStatus(UserStatus::Normal);
-
     $triggered = false;
     set_error_handler(static function () use (&$triggered): bool {
         $triggered = true;
@@ -113,7 +127,13 @@ test('autoUpdate() stays silent for a normal (non-admin) user', function (): voi
     });
 
     try {
-        new PluginMaintain('some-plugin')->autoUpdate();
+        KernelContainerOverride::with(
+            [Paths::class => Paths::fromRoot(sys_get_temp_dir())],
+            static function (): void {
+                pluginMaintainSetUserStatus(UserStatus::Normal);
+                new PluginMaintain('some-plugin')->autoUpdate();
+            }
+        );
     } finally {
         restore_error_handler();
     }
@@ -141,7 +161,10 @@ test('autoUpdate() stays silent for an admin user inside an active WS request', 
         // Kernel is booted here (Phase 5 execution finding, same pitfall
         // Translator/EventDispatcher already hit).
         KernelContainerOverride::with(
-            [WsContext::class => new WsContext(true)],
+            [
+                WsContext::class => new WsContext(true),
+                Paths::class => Paths::fromRoot(sys_get_temp_dir()),
+            ],
             static function (): void {
                 pluginMaintainSetUserStatus(UserStatus::Admin);
                 new PluginMaintain('some-plugin')->autoUpdate();

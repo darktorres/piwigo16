@@ -189,14 +189,21 @@ test('add_inline records the code verbatim', function (): void {
     expect($loader->inline_scripts)->toBe(['console.log("hello");']);
 });
 
-test('urlService() throws when no URL service has been set', function (): void {
+test('do_combine() throws when Kernel is not booted, before urlService() is even reached', function (): void {
     // Every call path to a private static urlService() eventually funnels
     // through do_combine() -- even a completely empty loader reaches it,
-    // no filesystem or registered scripts needed.
+    // no filesystem or registered scripts needed. do_combine() builds a
+    // FileCombiner whose first constructor argument is now
+    // AccessControl::current() (singleton/service-locator elimination
+    // campaign, Phase 7) -- unlike urlService()'s own Kernel::isBooted()
+    // guard, AccessControl::current() has no pre-boot fallback and throws
+    // straight from Kernel::container() (see that class's own docblock),
+    // so this fires before urlService()'s own, more specific "no URL
+    // service set" guard is ever reached.
     $loader = new ScriptLoader();
 
     expect(fn () => $loader->get_head_scripts())
-        ->toThrow(RuntimeException::class, 'ScriptLoader: no URL service set (RequestBootstrap not run yet?)');
+        ->toThrow(LogicException::class, 'Kernel not booted — call Kernel::boot() first.');
 });
 
 test('add_inline downgrades a load_mode=2 dependency to load_mode=1', function (): void {

@@ -7,11 +7,10 @@ namespace Piwigo\Tests\Unit\Auth;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
-use ReflectionClass;
-use ReflectionProperty;
 use RuntimeException;
 
 /**
@@ -22,10 +21,22 @@ use RuntimeException;
  * read of CurrentUser/CurrentConfig, no DB access (see the class's own
  * docblock), so it's tested directly rather than only indirectly through
  * a renderer.
+ *
+ * Singleton/service-locator elimination campaign, Phase 7: AccessControl
+ * is now a real, constructor-injected instance (HtmlRenderingInterface/
+ * RedirectServiceInterface/CurrentUser), so every test below constructs
+ * its own fresh instance via accessControlTestMake() instead of
+ * reflecting into static properties -- strictly simpler than before, same
+ * "no shared mutable global" simplification every large facade in this
+ * campaign has already gone through (see e.g. CurrentUserTest.php). No
+ * beforeEach()/afterEach() CurrentUser seed/reset is needed anymore for
+ * the same reason; CurrentConfig itself is untouched by this phase (Phase
+ * 9), so its own reset() still runs after every test.
  */
-function seedAccessControlUser(UserStatus $status, int $id = 1): void
+function seedAccessControlUser(UserStatus $status, int $id = 1): CurrentUser
 {
-    CurrentUser::current()->set(new User(
+    $currentUser = new CurrentUser();
+    $currentUser->set(new User(
         id: \Piwigo\Common\ValueObject\UserId::from($id),
         username: '',
         email: '',
@@ -34,84 +45,121 @@ function seedAccessControlUser(UserStatus $status, int $id = 1): void
         status: $status,
         enabledHigh: false,
     ));
+
+    return $currentUser;
 }
 
-beforeEach(function (): void {
-    seedAccessControlUser(UserStatus::Normal);
-});
+/**
+ * Both collaborators default to a fake that throws on every method except
+ * accessDenied() (which the checkStatus() tests below individually
+ * override to observe) -- every real caller now always has both wired
+ * (container-resolved instance guarantees it), so no test here needs to
+ * exercise a "not wired" scenario, unlike before this phase's own
+ * conversion.
+ */
+function accessControlTestMake(
+    UserStatus $status,
+    int $id = 1,
+    ?HtmlRenderingInterface $htmlRenderer = null,
+    ?RedirectServiceInterface $redirectService = null,
+): AccessControl {
+    return new AccessControl(
+        $htmlRenderer ?? new AccessControlTestFakeHtmlRendererDeniesAccess(),
+        $redirectService ?? new AccessControlTestFakeRedirectServiceNeverCalled(),
+        seedAccessControlUser($status, $id),
+    );
+}
 
 afterEach(function (): void {
-    CurrentUser::current()->reset();
     CurrentConfig::reset();
 });
 
 test('getUserStatus falls back to the current user when no explicit status is given', function (): void {
-    seedAccessControlUser(UserStatus::Admin);
+    $accessControl = accessControlTestMake(UserStatus::Admin);
 
-    expect(AccessControl::getUserStatus())->toBe('admin')
-        ->and(AccessControl::getUserStatus('webmaster'))->toBe('webmaster');
+    expect($accessControl->getUserStatus())->toBe('admin')
+        ->and($accessControl->getUserStatus('webmaster'))->toBe('webmaster');
 });
 
 test('isAGuest/isClassicUser/isAdmin/isWebmaster read the current user status', function (): void {
-    seedAccessControlUser(UserStatus::Guest);
-    expect(AccessControl::isAGuest())->toBeTrue()
-        ->and(AccessControl::isClassicUser())->toBeFalse()
-        ->and(AccessControl::isAdmin())->toBeFalse()
-        ->and(AccessControl::isWebmaster())->toBeFalse();
+    $guest = accessControlTestMake(UserStatus::Guest);
+    expect($guest->isAGuest())->toBeTrue()
+        ->and($guest->isClassicUser())->toBeFalse()
+        ->and($guest->isAdmin())->toBeFalse()
+        ->and($guest->isWebmaster())->toBeFalse();
 
-    seedAccessControlUser(UserStatus::Normal);
-    expect(AccessControl::isAGuest())->toBeFalse()
-        ->and(AccessControl::isClassicUser())->toBeTrue()
-        ->and(AccessControl::isAdmin())->toBeFalse();
+    $normal = accessControlTestMake(UserStatus::Normal);
+    expect($normal->isAGuest())->toBeFalse()
+        ->and($normal->isClassicUser())->toBeTrue()
+        ->and($normal->isAdmin())->toBeFalse();
 
-    seedAccessControlUser(UserStatus::Admin);
-    expect(AccessControl::isClassicUser())->toBeTrue()
-        ->and(AccessControl::isAdmin())->toBeTrue()
-        ->and(AccessControl::isWebmaster())->toBeFalse();
+    $admin = accessControlTestMake(UserStatus::Admin);
+    expect($admin->isClassicUser())->toBeTrue()
+        ->and($admin->isAdmin())->toBeTrue()
+        ->and($admin->isWebmaster())->toBeFalse();
 
-    seedAccessControlUser(UserStatus::Webmaster);
-    expect(AccessControl::isAdmin())->toBeTrue()
-        ->and(AccessControl::isWebmaster())->toBeTrue();
+    $webmaster = accessControlTestMake(UserStatus::Webmaster);
+    expect($webmaster->isAdmin())->toBeTrue()
+        ->and($webmaster->isWebmaster())->toBeTrue();
 });
 
 test('isGeneric is true only for the generic status', function (): void {
-    seedAccessControlUser(UserStatus::Generic);
-    expect(AccessControl::isGeneric())->toBeTrue();
-
-    seedAccessControlUser(UserStatus::Normal);
-    expect(AccessControl::isGeneric())->toBeFalse();
+    expect(accessControlTestMake(UserStatus::Generic)->isGeneric())->toBeTrue();
+    expect(accessControlTestMake(UserStatus::Normal)->isGeneric())->toBeFalse();
 });
 
 test('a guest without guest_access configured is below Guest level, and generic is pinned at Guest level', function (): void {
+    $accessControl = accessControlTestMake(UserStatus::Normal);
+
     CurrentConfig::setGuestAccess(false);
-    expect(AccessControl::isAuthorizeStatus(\Piwigo\Core\AccessLevel::Guest, 'guest'))->toBeFalse();
+    expect($accessControl->isAuthorizeStatus(\Piwigo\Core\AccessLevel::Guest, 'guest'))->toBeFalse();
 
     CurrentConfig::setGuestAccess(true);
-    expect(AccessControl::isAuthorizeStatus(\Piwigo\Core\AccessLevel::Guest, 'guest'))->toBeTrue();
+    expect($accessControl->isAuthorizeStatus(\Piwigo\Core\AccessLevel::Guest, 'guest'))->toBeTrue();
 
-    expect(AccessControl::isAuthorizeStatus(\Piwigo\Core\AccessLevel::Guest, 'generic'))->toBeTrue()
-        ->and(AccessControl::isAuthorizeStatus(\Piwigo\Core\AccessLevel::Classic, 'generic'))->toBeFalse();
+    expect($accessControl->isAuthorizeStatus(\Piwigo\Core\AccessLevel::Guest, 'generic'))->toBeTrue()
+        ->and($accessControl->isAuthorizeStatus(\Piwigo\Core\AccessLevel::Classic, 'generic'))->toBeFalse();
 });
 
-test('checkStatus throws when the current user is under the required access level', function (): void {
-    seedAccessControlUser(UserStatus::Guest);
-
-    AccessControl::checkStatus(\Piwigo\Core\AccessLevel::Classic);
-})->throws(RuntimeException::class, 'Access denied');
-
 test('checkStatus does nothing when the current user meets the required access level', function (): void {
-    seedAccessControlUser(UserStatus::Admin);
-
-    AccessControl::checkStatus(\Piwigo\Core\AccessLevel::Classic);
+    accessControlTestMake(UserStatus::Admin)->checkStatus(\Piwigo\Core\AccessLevel::Classic);
 
     expect(true)->toBeTrue();
 });
 
-test('canManageComment denies a guest regardless of action or authorship', function (): void {
-    seedAccessControlUser(UserStatus::Guest, id: 5);
+/**
+ * checkStatus()'s own former nullable-collaborator guard (allowing
+ * accessDenied() to be silently skipped when either collaborator was
+ * unset) is gone since Phase 7's conversion -- a constructed AccessControl
+ * instance always has both, so accessDenied() is unconditionally reached
+ * on denial. This single test replaces the pre-Phase-7 file's 3 separate
+ * "wired/not wired" scenarios, which tested a state that can no longer
+ * exist.
+ */
+test('checkStatus calls the installed HtmlRenderingInterface accessDenied() before throwing', function (): void {
+    $renderer = new AccessControlTestFakeHtmlRendererDeniesAccess();
+    $accessControl = accessControlTestMake(UserStatus::Guest, htmlRenderer: $renderer);
 
-    expect(AccessControl::canManageComment('edit', 5))->toBeFalse()
-        ->and(AccessControl::canManageComment('delete', 5))->toBeFalse();
+    $thrown = null;
+    try {
+        $accessControl->checkStatus(\Piwigo\Core\AccessLevel::Classic);
+    } catch (\Throwable $e) {
+        $thrown = $e;
+    }
+
+    // accessDenied() is `never`-typed and the fake throws RuntimeException
+    // itself -- the marker message proves accessDenied() produced this
+    // exception, not some other path.
+    expect($thrown)->toBeInstanceOf(RuntimeException::class)
+        ->and($thrown?->getMessage())->toBe('ACCESS_CONTROL_ACCESS_DENIED_MARKER')
+        ->and($renderer->accessDeniedWasCalled)->toBeTrue();
+});
+
+test('canManageComment denies a guest regardless of action or authorship', function (): void {
+    $accessControl = accessControlTestMake(UserStatus::Guest, id: 5);
+
+    expect($accessControl->canManageComment('edit', 5))->toBeFalse()
+        ->and($accessControl->canManageComment('delete', 5))->toBeFalse();
 });
 
 test('canManageComment denies a guest even when they own the comment and editing is enabled', function (): void {
@@ -119,192 +167,78 @@ test('canManageComment denies a guest even when they own the comment and editing
     // can't prove the guest check runs first (both give false either way)
     // -- enabling it, and matching the guest's own id to the comment
     // author, is the only way a skipped guest-guard would flip the result.
-    seedAccessControlUser(UserStatus::Guest, id: 5);
+    $accessControl = accessControlTestMake(UserStatus::Guest, id: 5);
     CurrentConfig::setUserCanEditComment(true);
 
-    expect(AccessControl::canManageComment('edit', 5))->toBeFalse();
+    expect($accessControl->canManageComment('edit', 5))->toBeFalse();
 });
 
 test('canManageComment denies an action outside delete/edit/validate', function (): void {
-    seedAccessControlUser(UserStatus::Admin);
-
-    expect(AccessControl::canManageComment('publish', 1))->toBeFalse();
+    expect(accessControlTestMake(UserStatus::Admin)->canManageComment('publish', 1))->toBeFalse();
 });
 
 test('canManageComment grants an admin every real action regardless of authorship', function (): void {
-    seedAccessControlUser(UserStatus::Admin, id: 1);
+    $accessControl = accessControlTestMake(UserStatus::Admin, id: 1);
 
-    expect(AccessControl::canManageComment('delete', 999))->toBeTrue()
-        ->and(AccessControl::canManageComment('edit', 999))->toBeTrue()
-        ->and(AccessControl::canManageComment('validate', 999))->toBeTrue();
+    expect($accessControl->canManageComment('delete', 999))->toBeTrue()
+        ->and($accessControl->canManageComment('edit', 999))->toBeTrue()
+        ->and($accessControl->canManageComment('validate', 999))->toBeTrue();
 });
 
 test('canManageComment lets a normal user edit their own comment only when user_can_edit_comment is enabled', function (): void {
-    seedAccessControlUser(UserStatus::Normal, id: 7);
+    $accessControl = accessControlTestMake(UserStatus::Normal, id: 7);
 
     CurrentConfig::setUserCanEditComment(false);
-    expect(AccessControl::canManageComment('edit', 7))->toBeFalse();
+    expect($accessControl->canManageComment('edit', 7))->toBeFalse();
 
     CurrentConfig::setUserCanEditComment(true);
-    expect(AccessControl::canManageComment('edit', 7))->toBeTrue()
-        ->and(AccessControl::canManageComment('edit', 8))->toBeFalse();
+    expect($accessControl->canManageComment('edit', 7))->toBeTrue()
+        ->and($accessControl->canManageComment('edit', 8))->toBeFalse();
 });
 
 test('canManageComment lets a normal user delete their own comment only when user_can_delete_comment is enabled', function (): void {
-    seedAccessControlUser(UserStatus::Normal, id: 7);
+    $accessControl = accessControlTestMake(UserStatus::Normal, id: 7);
 
     CurrentConfig::setUserCanDeleteComment(false);
-    expect(AccessControl::canManageComment('delete', 7))->toBeFalse();
+    expect($accessControl->canManageComment('delete', 7))->toBeFalse();
 
     CurrentConfig::setUserCanDeleteComment(true);
-    expect(AccessControl::canManageComment('delete', 7))->toBeTrue()
-        ->and(AccessControl::canManageComment('delete', 8))->toBeFalse();
+    expect($accessControl->canManageComment('delete', 7))->toBeTrue()
+        ->and($accessControl->canManageComment('delete', 8))->toBeFalse();
 });
 
 test('canManageComment never lets a normal user validate a comment', function (): void {
-    seedAccessControlUser(UserStatus::Normal, id: 7);
+    $accessControl = accessControlTestMake(UserStatus::Normal, id: 7);
     CurrentConfig::setUserCanEditComment(true);
     CurrentConfig::setUserCanDeleteComment(true);
 
-    expect(AccessControl::canManageComment('validate', 7))->toBeFalse();
+    expect($accessControl->canManageComment('validate', 7))->toBeFalse();
 });
 
 test('canManageComment compares the string-typed author id numerically', function (): void {
-    seedAccessControlUser(UserStatus::Normal, id: 7);
+    $accessControl = accessControlTestMake(UserStatus::Normal, id: 7);
     CurrentConfig::setUserCanEditComment(true);
 
-    expect(AccessControl::canManageComment('edit', '7'))->toBeTrue();
+    expect($accessControl->canManageComment('edit', '7'))->toBeTrue();
 });
 
 test('canManageComment compares a string-typed author id numerically for delete too', function (): void {
-    seedAccessControlUser(UserStatus::Normal, id: 7);
+    $accessControl = accessControlTestMake(UserStatus::Normal, id: 7);
     CurrentConfig::setUserCanDeleteComment(true);
 
-    expect(AccessControl::canManageComment('delete', '7'))->toBeTrue();
+    expect($accessControl->canManageComment('delete', '7'))->toBeTrue();
 });
 
 test('canManageComment denies a normal user on a null (anonymous) author id without throwing', function (): void {
-    seedAccessControlUser(UserStatus::Normal, id: 7);
+    $accessControl = accessControlTestMake(UserStatus::Normal, id: 7);
     CurrentConfig::setUserCanEditComment(true);
     CurrentConfig::setUserCanDeleteComment(true);
 
-    expect(AccessControl::canManageComment('edit', null))->toBeFalse()
-        ->and(AccessControl::canManageComment('delete', null))->toBeFalse()
-        ->and(AccessControl::canManageComment('validate', null))->toBeFalse();
+    expect($accessControl->canManageComment('edit', null))->toBeFalse()
+        ->and($accessControl->canManageComment('delete', null))->toBeFalse()
+        ->and($accessControl->canManageComment('validate', null))->toBeFalse();
 });
 
 test('canManageComment lets an admin manage a comment with a null (anonymous) author id', function (): void {
-    seedAccessControlUser(UserStatus::Admin);
-
-    expect(AccessControl::canManageComment('delete', null))->toBeTrue();
-});
-
-// AccessControl is a static utility -- the private no-op constructor
-// (matching AccessLevel's own static-const convention, see the class's
-// own docblock) is otherwise never invoked by any real code path.
-// Reflection-invoking it directly is the same pattern this repo already
-// uses for other setter-only/static-utility classes with no real
-// instantiation site (see tests/Unit/Admin/ThemesInstalledPageRendererTest.php).
-test('the private constructor exists purely to block real instantiation', function (): void {
-    $reflection = new ReflectionClass(AccessControl::class);
-    $constructor = $reflection->getConstructor();
-    if ($constructor === null) {
-        throw new RuntimeException('AccessControl has no constructor');
-    }
-
-    expect($constructor->isPrivate())->toBeTrue();
-
-    $instance = $reflection->newInstanceWithoutConstructor();
-    $constructor->invoke($instance);
-
-    expect($instance)->toBeInstanceOf(AccessControl::class);
-});
-
-/**
- * setHtmlRenderer()/setRedirectService() are setter-only statics with no
- * public reset (same shape documented by FilesystemHelperTest.php for
- * Piwigo\Core\FilesystemHelper::$htmlRenderer) -- reflection sets/restores
- * them directly here so this doesn't leak a non-null renderer/redirect
- * service into every other test in this process (checkStatus()'s own
- * "Access denied" tests above rely on both being null).
- */
-function accessControlTestSetRenderer(?HtmlRenderingInterface $renderer): void
-{
-    $prop = new ReflectionProperty(AccessControl::class, 'htmlRenderer');
-    $prop->setValue(null, $renderer);
-}
-
-function accessControlTestSetRedirectService(?\Piwigo\Core\RedirectServiceInterface $redirectService): void
-{
-    $prop = new ReflectionProperty(AccessControl::class, 'redirectService');
-    $prop->setValue(null, $redirectService);
-}
-
-test('checkStatus calls the installed HtmlRenderingInterface accessDenied() before throwing, when both are wired', function (): void {
-    seedAccessControlUser(UserStatus::Guest);
-
-    $renderer = new AccessControlTestFakeHtmlRendererDeniesAccess();
-    accessControlTestSetRenderer($renderer);
-    accessControlTestSetRedirectService(new AccessControlTestFakeRedirectServiceNeverCalled());
-
-    try {
-        $thrown = null;
-        try {
-            AccessControl::checkStatus(\Piwigo\Core\AccessLevel::Classic);
-        } catch (\Throwable $e) {
-            $thrown = $e;
-        }
-
-        // accessDenied() is `never`-typed and the fake throws
-        // RuntimeException itself -- checkStatus()'s own trailing
-        // `throw new \RuntimeException('Access denied')` is unreachable
-        // once accessDenied() is called, so the marker message proves
-        // accessDenied() (not the fallback) produced this exception.
-        expect($thrown)->toBeInstanceOf(RuntimeException::class)
-            ->and($thrown?->getMessage())->toBe('ACCESS_CONTROL_ACCESS_DENIED_MARKER')
-            ->and($renderer->accessDeniedWasCalled)->toBeTrue();
-    } finally {
-        accessControlTestSetRenderer(null);
-        accessControlTestSetRedirectService(null);
-    }
-});
-
-test('checkStatus skips accessDenied() and throws the plain fallback when only htmlRenderer is wired', function (): void {
-    // Both instanceof checks are required (a real AND, not an OR) -- with
-    // only htmlRenderer set and redirectService still null, accessDenied()
-    // must NOT be called (calling it would pass null where
-    // RedirectServiceInterface is required and throw a TypeError instead
-    // of the plain fallback below).
-    seedAccessControlUser(UserStatus::Guest);
-
-    $renderer = new AccessControlTestFakeHtmlRendererDeniesAccess();
-    accessControlTestSetRenderer($renderer);
-
-    try {
-        $thrown = null;
-        try {
-            AccessControl::checkStatus(\Piwigo\Core\AccessLevel::Classic);
-        } catch (\Throwable $e) {
-            $thrown = $e;
-        }
-
-        expect($thrown)->toBeInstanceOf(RuntimeException::class)
-            ->and($thrown?->getMessage())->toBe('Access denied')
-            ->and($renderer->accessDeniedWasCalled)->toBeFalse();
-    } finally {
-        accessControlTestSetRenderer(null);
-    }
-});
-
-test('checkStatus skips accessDenied() and throws the plain fallback when only redirectService is wired', function (): void {
-    seedAccessControlUser(UserStatus::Guest);
-
-    accessControlTestSetRedirectService(new AccessControlTestFakeRedirectServiceNeverCalled());
-
-    try {
-        expect(fn () => AccessControl::checkStatus(\Piwigo\Core\AccessLevel::Classic))
-            ->toThrow(RuntimeException::class, 'Access denied');
-    } finally {
-        accessControlTestSetRedirectService(null);
-    }
+    expect(accessControlTestMake(UserStatus::Admin)->canManageComment('delete', null))->toBeTrue();
 });

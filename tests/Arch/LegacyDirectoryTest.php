@@ -172,6 +172,7 @@ test('install/ contains only data files and the anti-listing stub', function ():
         'obsolete.list',
         'obsolete_extensions.list',
         'piwigo_structure-mysql.sql',
+        'piwigo_structure-pgsql.sql',
     ]);
 });
 

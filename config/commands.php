@@ -11,6 +11,7 @@ use Piwigo\Command\MaintenancePurgeFailedLoginsCommand;
 use Piwigo\Command\MaintenancePurgeHistoryCommand;
 use Piwigo\Command\MaintenancePurgeSessionsCommand;
 use Piwigo\Command\MaintenanceRepairDbCommand;
+use Piwigo\Command\SchemaDumpCommand;
 use Piwigo\Command\UserListCommand;
 
 // bin/piwigo's registered command list, resolved via the DI container
@@ -37,4 +38,5 @@ return [
     MaintenanceRepairDbCommand::class,
     MaintenancePurgeFailedLoginsCommand::class,
     MigrateCommand::class,
+    SchemaDumpCommand::class,
 ];

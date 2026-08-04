@@ -104,6 +104,22 @@ final class Version20260804122300 extends AbstractMigration
 
     private function upMysql(): void
     {
+        // Must run before any of this migration's FULLTEXT ... WITH PARSER
+        // ngram tables below (categories/images/tags) -- MySQL bakes a
+        // FULLTEXT index's effective stopword-filtering behavior in at
+        // CREATE TABLE time, for the lifetime of that index (confirmed
+        // live: a later per-connection SET SESSION at INSERT time has
+        // zero effect on an already-existing index). Without this, any
+        // 2-character fragment of a word matching MySQL's default
+        // stopword list (at/in/on/etc, ngram_token_size is 2) makes that
+        // whole word unsearchable -- e.g. "cat" (contains "at") becomes
+        // entirely unmatched, hitting any word containing at/in/on/etc
+        // anywhere in it (cat, chat, combat, station, water, later...).
+        // Real gap found via schema:dump's regenerated output silently
+        // dropping this line that the previously hand-maintained
+        // install/piwigo_structure-mysql.sql explicitly carried.
+        $this->addSql('SET SESSION innodb_ft_enable_stopword = 0');
+
         $this->addSql($this->withMysqlPrefix(<<<'SQL'
             CREATE TABLE `piwigo_caddie` (
               `user_id` mediumint(8) unsigned NOT NULL default '0' COMMENT 'owning user id',

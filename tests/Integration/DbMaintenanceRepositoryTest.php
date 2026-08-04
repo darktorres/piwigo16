@@ -301,6 +301,87 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
         $this->repo->repairOptimizeAllTables();
     }
 
+    /**
+     * Item 17's own plan text specifically asks to confirm the new
+     * AbstractSchemaManager-based introspection finds "the exact same
+     * table set and primary-key columns via the new introspection calls
+     * as the old SHOW TABLES/DESC parsing did" -- a check
+     * test_repair_optimize_all_tables_completes_without_throwing() above
+     * doesn't actually perform (a table silently dropped from the
+     * introspected set, or a wrong PK column for one specific table,
+     * wouldn't necessarily raise an exception). The old SHOW TABLES/DESC
+     * code no longer exists to diff against directly, so this instead
+     * cross-checks introspectTableNames()/introspectTablePrimaryKeyConstraint()
+     * -- the exact calls repairOptimizeAllTables() itself uses -- against
+     * raw MySQL-reported ground truth computed independently in this
+     * test, proving the switch didn't silently lose or corrupt anything.
+     *
+     * Real finding while writing this: DESC's own row order for a
+     * composite PK is column-*definition* order, not the PRIMARY KEY
+     * clause's own *declared* column order -- confirmed live on
+     * `piwigo_rate` (columns defined user_id/element_id/anonymous_id, but
+     * `PRIMARY KEY (element_id, user_id, anonymous_id)` declared in a
+     * different order). `introspectTablePrimaryKeyConstraint()` reports
+     * the real declared order (matching `SHOW CREATE TABLE`'s own
+     * `PRIMARY KEY (...)` clause exactly, confirmed live) -- ground truth
+     * here is `SHOW CREATE TABLE`, not DESC, precisely because
+     * `ALTER TABLE ... ORDER BY` (what this method's own PK columns feed
+     * into) cares about the constraint's real column order, not table
+     * column-definition order.
+     */
+    public function test_repair_optimize_all_tables_introspection_matches_raw_show_tables_and_create_table(): void
+    {
+        $prefix = \Piwigo\Db\DbCredentials::current()->prefix;
+        $schemaManager = $this->conn->createSchemaManager();
+
+        $introspectedTableNames = array_values(array_filter(
+            array_map(
+                static fn (\Doctrine\DBAL\Schema\Name\OptionallyQualifiedName $name): string => $name->getUnqualifiedName()->getValue(),
+                $schemaManager->introspectTableNames(),
+            ),
+            static fn (string $name): bool => str_starts_with($name, $prefix),
+        ));
+        sort($introspectedTableNames);
+
+        /** @var list<string> $rawTableNames */
+        $rawTableNames = $this->conn->fetchFirstColumn('SHOW TABLES LIKE ' . $this->conn->quote($prefix . '%'));
+        sort($rawTableNames);
+
+        self::assertSame($rawTableNames, $introspectedTableNames, 'introspectTableNames() must find the exact same table set raw SHOW TABLES does');
+        self::assertNotEmpty($introspectedTableNames, 'the fixture must have real prefixed tables for this comparison to prove anything');
+
+        $sawACompositePrimaryKey = false;
+
+        foreach ($introspectedTableNames as $tableName) {
+            $primaryKey = $schemaManager->introspectTablePrimaryKeyConstraint(
+                \Doctrine\DBAL\Schema\Name\OptionallyQualifiedName::unquoted($tableName)
+            );
+            $introspectedPkColumns = $primaryKey === null ? [] : array_map(
+                static fn (\Doctrine\DBAL\Schema\Name\UnqualifiedName $column): string => $column->getIdentifier()->getValue(),
+                $primaryKey->getColumnNames(),
+            );
+
+            $createTableRow = $this->conn->fetchAssociative('SHOW CREATE TABLE ' . $tableName);
+            self::assertIsArray($createTableRow);
+            $createTableSql = $createTableRow['Create Table'] ?? null;
+            self::assertIsString($createTableSql);
+
+            $matched = preg_match('/PRIMARY KEY\s*\(([^)]*)\)/', $createTableSql, $matches);
+            $rawPkColumns = $matched !== 1 ? [] : array_map(
+                static fn (string $column): string => trim($column, '` '),
+                explode(',', $matches[1]),
+            );
+
+            if (count($rawPkColumns) > 1) {
+                $sawACompositePrimaryKey = true;
+            }
+
+            self::assertSame($rawPkColumns, $introspectedPkColumns, "introspectTablePrimaryKeyConstraint() must match SHOW CREATE TABLE's own declared PRIMARY KEY column order for {$tableName}");
+        }
+
+        self::assertTrue($sawACompositePrimaryKey, 'the fixture must have at least one composite PK for this comparison to prove column *order* is preserved, not just column identity');
+    }
+
     private function countRows(string $table): int
     {
         $value = $this->conn->createQueryBuilder()

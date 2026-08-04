@@ -200,4 +200,82 @@ final class BatchWriterTest extends IntegrationTestCase
             ['id' => 8, 'name' => 'row-eight', 'note' => 'has-note'],
         ], $this->fetchAllRows());
     }
+
+    /**
+     * Item 16's own plan text specifically calls for "a column/table name
+     * containing a literal backtick character, asserted as correctly
+     * escaped, not silently broken" -- the one real behavioral difference
+     * between the old hand-rolled protectColumnName() (`` '`' . $name .
+     * '`' ``, no escaping of an embedded backtick) and
+     * AbstractMySQLPlatform::quoteSingleIdentifier() (`` '`' .
+     * str_replace('`', '``', $name) . '`' ``) this item's own docblock
+     * names -- confirmed missing from every existing BatchWriter test
+     * file. Not a live vulnerability (every real caller passes a fixed,
+     * code-controlled name), but the framework method's own real
+     * correctness gain over the code it replaced, worth proving directly
+     * rather than trusting it because the happy-path tests above pass.
+     *
+     * Only exercises `updateRow()` (via singleUpdate()'s SET and WHERE
+     * sides), not singleInsert()/massInsert() -- confirmed live that
+     * those 2 derive their bound-*parameter* name directly from the raw
+     * column key (`':' . $key`), a real, separate, narrower limitation
+     * (any column name that isn't itself a valid bound-parameter token --
+     * not just a backtick -- breaks there) that predates this item and is
+     * out of Item 16's own scope (identifier *quoting* in the SQL text,
+     * not placeholder-name generation). updateRow()'s own SET/WHERE
+     * placeholders are counter-based (`'set' . $i++` / `'where' . $j++`),
+     * never derived from the column name, so they're unaffected either
+     * way -- the real, common case every actual BatchWriter caller today
+     * exercises.
+     *
+     * Uses its own disposable scratch table/column (both named with an
+     * embedded backtick) rather than self::TABLE, since creating them
+     * needs the doubled-backtick DDL-quoting convention itself; seeded via
+     * a raw INSERT rather than BatchWriter::singleInsert(), to keep this
+     * test isolated from the unrelated limitation above.
+     */
+    public function testSingleUpdateCorrectlyEscapesATableAndColumnNameContainingALiteralBacktickOnBothTheSetAndWhereSides(): void
+    {
+        $table = 'batchwriter_test_scratch_back`tick';
+        $column = 'na`me';
+        $quotedTable = '`' . str_replace('`', '``', $table) . '`';
+        $quotedColumn = '`' . str_replace('`', '``', $column) . '`';
+
+        $this->conn->executeStatement('DROP TABLE IF EXISTS ' . $quotedTable);
+        $this->conn->executeStatement(
+            'CREATE TABLE ' . $quotedTable . ' ('
+            . 'id INT NOT NULL PRIMARY KEY, '
+            . $quotedColumn . ' VARCHAR(50) NULL'
+            . ') ENGINE=InnoDB'
+        );
+
+        try {
+            $this->conn->executeStatement(
+                'INSERT INTO ' . $quotedTable . ' (id, ' . $quotedColumn . ") VALUES (1, 'target'), (2, 'other')"
+            );
+
+            // WHERE-side: match via the backtick column, change a plain one.
+            $this->writer->singleUpdate($table, ['id' => 99], [$column => 'target']);
+
+            self::assertSame(
+                [1 => false, 99 => true, 2 => true],
+                [
+                    1 => (bool) $this->conn->fetchOne('SELECT COUNT(*) FROM ' . $quotedTable . ' WHERE id = 1'),
+                    99 => (bool) $this->conn->fetchOne('SELECT COUNT(*) FROM ' . $quotedTable . ' WHERE id = 99'),
+                    2 => (bool) $this->conn->fetchOne('SELECT COUNT(*) FROM ' . $quotedTable . ' WHERE id = 2'),
+                ],
+                'only the row matching the backtick-named WHERE column must have been updated'
+            );
+
+            // SET-side: change the backtick column's own value.
+            $this->writer->singleUpdate($table, [$column => 'updated'], ['id' => 99]);
+
+            self::assertSame(
+                'updated',
+                $this->conn->fetchOne('SELECT ' . $quotedColumn . ' FROM ' . $quotedTable . ' WHERE id = 99')
+            );
+        } finally {
+            $this->conn->executeStatement('DROP TABLE IF EXISTS ' . $quotedTable);
+        }
+    }
 }

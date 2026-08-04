@@ -277,6 +277,43 @@ final class WsCommentsTest extends ContractTestCase
     }
 
     /**
+     * SQL-modernization audit, Item 13's own Verification note: confirms
+     * end to end, through the real WS layer (not just
+     * CommentRepositoryTest.php's own repository-level coverage), that
+     * `filters.nb_authors` -- CommentApiCriteria's one deliberately
+     * asymmetric field, per CommentRepository::findAuthorCounts()'s own
+     * docblock -- genuinely ignores the request's own `author_id` filter,
+     * matching the original `unset($where_clauses['author_id'])` intent.
+     * Fixture comments (status=all): author_id 1 (fixture_admin, 2
+     * comments), 3 (regular_user, 1), 4 (power_user, 2) -- 3 distinct
+     * authors. Filtering the main `comments` list to author_id=1 must not
+     * shrink `filters.nb_authors` down to just that one author.
+     */
+    public function test_userComments_getList_nb_authors_ignores_the_author_id_filter(): void
+    {
+        $response = $this->wsAdmin('pwg.userComments.getList', [
+            'per_page' => 10, 'page' => 0, 'status' => 'all', 'author_id' => 1,
+        ]);
+
+        self::assertSame('ok', $response['stat']);
+        $result = $response['result'];
+        self::assertIsArray($result);
+        $filters = $result['filters'];
+        self::assertIsArray($filters);
+        $nbAuthors = $filters['nb_authors'];
+        self::assertIsArray($nbAuthors);
+
+        $authorIds = [];
+        foreach ($nbAuthors as $row) {
+            self::assertIsArray($row);
+            $authorIds[] = $row['author_id'];
+        }
+
+        sort($authorIds);
+        self::assertSame([1, 3, 4], $authorIds, 'nb_authors must report every author, not just the one the comments list itself is filtered to');
+    }
+
+    /**
      * f_min_date's `date_format($min_date, 'Y-m-d 00:00:00')` +
      * `date >= '...'` clause. All 5 fixture comments share the same
      * '2026-08-01 00:00:00' date -- image_id=4 narrows to just fixture

@@ -6,6 +6,7 @@ namespace Piwigo\Controller\Admin;
 
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
+use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\UpdatesExtPageRenderer;
 use Piwigo\Admin\UpdatesPwgPageRenderer;
@@ -63,6 +64,8 @@ final class UpdatesSubController implements AdminSubControllerInterface
         private readonly CoreTabs $coreTabs,
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly ExtensionUpdateChecker $extensionUpdateChecker,
+        private readonly UpdatesPwgPageRenderer $updatesPwgPageRenderer,
     ) {}
 
     #[\Override]
@@ -88,9 +91,9 @@ final class UpdatesSubController implements AdminSubControllerInterface
 
         if ($tab === 'ext') {
             new UpdatesExtPageRenderer()
-                ->render('updates', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate);
+                ->render('updates', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker);
         } else {
-            \Piwigo\Bootstrap\AdminAccessor::updatesPwgPageRenderer()
+            $this->updatesPwgPageRenderer
                 ->render();
         }
     }

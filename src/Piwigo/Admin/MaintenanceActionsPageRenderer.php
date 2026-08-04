@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Imagick;
 use Piwigo\Admin\Image\PwgImage;
+use Piwigo\Admin\Maintenance\DbMaintenanceRepository;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Admin\Maintenance\MaintenanceActionDispatcher;
 use Piwigo\Admin\Maintenance\Request\MaintenanceActionRequest;
@@ -53,6 +54,7 @@ final class MaintenanceActionsPageRenderer
         private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly DbMaintenanceRepository $dbMaintenanceRepository,
         private readonly ?\Piwigo\Cache\PersistentCache $persistentCache = null,
     ) {}
 
@@ -66,7 +68,7 @@ final class MaintenanceActionsPageRenderer
         $this->filesystemIntegrityChecker->fsQuickCheck();
 
         $action = MaintenanceActionRequest::fromGlobals()->action;
-        new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->filesystemIntegrityChecker, $this->sessionService, $this->translator, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->persistentCache)
+        new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->filesystemIntegrityChecker, $this->sessionService, $this->translator, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->dbMaintenanceRepository, $this->persistentCache)
             ->dispatch($action);
 
         // +-------------------------------------------------------------------+
@@ -197,7 +199,7 @@ final class MaintenanceActionsPageRenderer
             );
         }
 
-        $db_maintenance = \Piwigo\Bootstrap\AdminAccessor::dbMaintenanceRepository();
+        $db_maintenance = $this->dbMaintenanceRepository;
         $nb_lounge = $db_maintenance->countLoungeItems();
 
         if ($nb_lounge > 0) {

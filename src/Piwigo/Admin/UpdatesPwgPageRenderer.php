@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Admin\Extensions\CoreUpdateService;
+use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -37,6 +38,8 @@ final class UpdatesPwgPageRenderer
         private readonly RedirectServiceInterface $redirectService,
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly CoreUpdateService $coreUpdateService,
+        private readonly ExtensionUpdateChecker $extensionUpdateChecker,
     ) {}
 
     public function render(): void
@@ -68,7 +71,7 @@ final class UpdatesPwgPageRenderer
             ]);
         }
 
-        $core_update_service = \Piwigo\Bootstrap\AdminAccessor::coreUpdateService();
+        $core_update_service = $this->coreUpdateService;
         $new_versions = $core_update_service->getPiwigoNewVersions();
 
         // +-----------------------------------------------------------------------+
@@ -118,7 +121,7 @@ final class UpdatesPwgPageRenderer
                 $core_update_service->upgradeTo($updatesPwgRequest->upgradeToSubmitted, $step);
             }
 
-            $extension_update_checker = \Piwigo\Bootstrap\AdminAccessor::extensionUpdateChecker();
+            $extension_update_checker = $this->extensionUpdateChecker;
             $template->assign('missing', $extension_update_checker->getMissingExtensions($upgrade_to));
         }
 

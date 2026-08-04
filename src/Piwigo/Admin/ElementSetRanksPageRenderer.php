@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -47,6 +48,7 @@ final class ElementSetRanksPageRenderer
         private readonly ErrorCollector $errorCollector,
         private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly CategoryAdminService $categoryAdminService,
     ) {}
 
     public function render(): void
@@ -126,7 +128,7 @@ final class ElementSetRanksPageRenderer
 
                 $message = Lang::t('Images manual order was saved');
             }
-            \Piwigo\Bootstrap\AdminAccessor::categoryAdminService()->saveImageOrder($category_id, $image_order, $elementSetRanksRequest->isImageOrderSubcats, $this->redirectService);
+            $this->categoryAdminService->saveImageOrder($category_id, $image_order, $elementSetRanksRequest->isImageOrderSubcats, $this->redirectService);
 
             $template->assign(
                 [

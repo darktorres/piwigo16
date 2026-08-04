@@ -15,10 +15,14 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class TagsSubController implements AdminSubControllerInterface
 {
+    public function __construct(
+        private readonly TagsPageRenderer $tagsPageRenderer,
+    ) {}
+
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        \Piwigo\Bootstrap\AdminAccessor::tagsPageRenderer()
+        $this->tagsPageRenderer
             ->render();
     }
 }

@@ -81,6 +81,8 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly EntityManagerInterface $entityManager,
+        private readonly FilterResolver $filterResolver,
+        private readonly BatchManagerUnitPageRenderer $batchManagerUnitPageRenderer,
     ) {}
 
     private static function imageService(): ImageService
@@ -122,7 +124,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         /** @var array<string, mixed> $bulk_filter */
         $bulk_filter = is_array($_SESSION['bulk_manager_filter'] ?? null) ? $_SESSION['bulk_manager_filter'] : [];
 
-        $filter_resolver = \Piwigo\Bootstrap\AdminAccessor::filterResolver();
+        $filter_resolver = $this->filterResolver;
 
         $duplicates_on_fields = null;
         $cat_elements_id = $this->computeCurrentSet(
@@ -178,7 +180,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         // +-------------------------------------------------------------------+
 
         if ($tab === 'unit') {
-            \Piwigo\Bootstrap\AdminAccessor::batchManagerUnitPageRenderer()
+            $this->batchManagerUnitPageRenderer
                 ->render($cat_elements_id, $start);
         } else {
             new BatchManagerGlobalPageRenderer($this->redirectService, $this->urlService, $this->currentLogger, $this->sessionService, $this->translator, $this->eventDispatcher, $this->imageStdParams, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager)

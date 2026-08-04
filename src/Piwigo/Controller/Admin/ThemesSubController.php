@@ -6,9 +6,11 @@ namespace Piwigo\Controller\Admin;
 
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
+use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\ThemesInstalledPageRenderer;
 use Piwigo\Admin\ThemesNewPageRenderer;
+use Piwigo\Admin\ThemesStandardPagesPageRenderer;
 use Piwigo\Admin\UpdatesExtPageRenderer;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\Lang;
@@ -59,6 +61,10 @@ final class ThemesSubController implements AdminSubControllerInterface
         private readonly CoreTabs $coreTabs,
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly ExtensionUpdateChecker $extensionUpdateChecker,
+        private readonly ThemesNewPageRenderer $themesNewPageRenderer,
+        private readonly ThemesStandardPagesPageRenderer $themesStandardPagesPageRenderer,
+        private readonly ThemesInstalledPageRenderer $themesInstalledPageRenderer,
     ) {}
 
     #[\Override]
@@ -81,16 +87,16 @@ final class ThemesSubController implements AdminSubControllerInterface
 
         if ($tab === 'update') {
             new UpdatesExtPageRenderer()
-                ->render('themes', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate);
+                ->render('themes', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker);
             $template->assign('ADMIN_PAGE_TITLE', Lang::t('Themes'));
         } elseif ($tab === 'new') {
-            \Piwigo\Bootstrap\AdminAccessor::themesNewPageRenderer()
+            $this->themesNewPageRenderer
                 ->render('themes', $tab);
         } elseif ($tab === 'standard_pages') {
-            \Piwigo\Bootstrap\AdminAccessor::themesStandardPagesPageRenderer()
+            $this->themesStandardPagesPageRenderer
                 ->render();
         } else {
-            \Piwigo\Bootstrap\AdminAccessor::themesInstalledPageRenderer()
+            $this->themesInstalledPageRenderer
                 ->render('themes');
         }
     }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Admin\Image\PwgImage;
+use Piwigo\Admin\Maintenance\DbMaintenanceRepository;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Admin\Maintenance\MaintenanceActionDispatcher;
 use Piwigo\Admin\Maintenance\Request\MaintenanceActionRequest;
@@ -54,6 +55,7 @@ final class MaintenanceEnvPageRenderer
         private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly DbMaintenanceRepository $dbMaintenanceRepository,
         private readonly ?\Piwigo\Cache\PersistentCache $persistentCache = null,
     ) {}
 
@@ -62,7 +64,7 @@ final class MaintenanceEnvPageRenderer
         $template = $this->currentTemplate->get();
 
         $action = MaintenanceActionRequest::fromGlobals()->action;
-        new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->filesystemIntegrityChecker, $this->sessionService, $this->translator, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->persistentCache)
+        new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->filesystemIntegrityChecker, $this->sessionService, $this->translator, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->dbMaintenanceRepository, $this->persistentCache)
             ->dispatch($action);
 
         // +-------------------------------------------------------------------+

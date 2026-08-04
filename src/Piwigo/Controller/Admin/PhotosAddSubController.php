@@ -38,6 +38,7 @@ final class PhotosAddSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly \Piwigo\Config\ConfigService $configService,
         private readonly EntityManagerInterface $entityManager,
+        private readonly PhotosAddDirectPageRenderer $photosAddDirectPageRenderer,
     ) {}
 
     #[\Override]
@@ -81,7 +82,7 @@ final class PhotosAddSubController implements AdminSubControllerInterface
         ]);
 
         if ($tab === 'direct') {
-            \Piwigo\Bootstrap\AdminAccessor::photosAddDirectPageRenderer()
+            $this->photosAddDirectPageRenderer
                 ->render();
         } elseif ($tab === 'applications') {
             new PhotosAddApplicationsPageRenderer()

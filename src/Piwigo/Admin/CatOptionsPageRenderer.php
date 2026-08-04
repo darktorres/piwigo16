@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityService;
+use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
@@ -29,6 +30,7 @@ final class CatOptionsPageRenderer
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly CategoryAdminService $categoryAdminService,
     ) {}
 
     private static function activityService(Connection $conn): ActivityService
@@ -56,10 +58,10 @@ final class CatOptionsPageRenderer
         }
 
         if ($catOptionsRequest->isFalsify and $catOptionsRequest->catTrue !== []) {
-            \Piwigo\Bootstrap\AdminAccessor::categoryAdminService()
+            $this->categoryAdminService
                 ->setCategoryOption($catOptionsRequest->catTrue, $catOptionsRequest->sectionRaw, false, self::activityService($conn));
         } elseif ($catOptionsRequest->isTrueify and $catOptionsRequest->catFalse !== []) {
-            \Piwigo\Bootstrap\AdminAccessor::categoryAdminService()
+            $this->categoryAdminService
                 ->setCategoryOption($catOptionsRequest->catFalse, $catOptionsRequest->sectionRaw, true, self::activityService($conn));
         }
 

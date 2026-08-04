@@ -41,7 +41,7 @@ final class UpdatesExtPageRenderer
      * slug statically (config/admin_pages.php registers each of those 4
      * controllers for exactly one slug), so each passes its own literal.
      */
-    public function render(string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate): void
+    public function render(string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate, ExtensionUpdateChecker $extensionUpdateChecker): void
     {
         $template = $currentTemplate->get();
 
@@ -68,7 +68,7 @@ final class UpdatesExtPageRenderer
             ? array_filter(ExtensionType::cases(), static fn (ExtensionType $type): bool => $plural_by_type[$type->value] === $pageSlug)
             : ExtensionType::cases();
 
-        $extension_update_checker = \Piwigo\Bootstrap\AdminAccessor::extensionUpdateChecker();
+        $extension_update_checker = $extensionUpdateChecker;
 
         // Investigated, not reproduced exactly: updates.class.php::get_server_extensions()
         // makes ONE combined, uncategorized (no pem_*_category get_data key) PEM

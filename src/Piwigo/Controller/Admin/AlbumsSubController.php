@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Piwigo\Admin\AlbumsPageRenderer;
+use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Core\UrlServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -26,12 +27,13 @@ final class AlbumsSubController implements AdminSubControllerInterface
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly CategoryAdminService $categoryAdminService,
     ) {}
 
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
         new AlbumsPageRenderer()
-            ->render($this->urlService, $this->coreTabs, $this->eventDispatcher, $this->currentUser, $this->currentTemplate);
+            ->render($this->urlService, $this->coreTabs, $this->eventDispatcher, $this->currentUser, $this->currentTemplate, $this->categoryAdminService);
     }
 }

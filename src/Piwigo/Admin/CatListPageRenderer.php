@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -44,6 +45,7 @@ final class CatListPageRenderer
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly CategoryAdminService $categoryAdminService,
     ) {}
 
     public function render(): void
@@ -128,7 +130,7 @@ final class CatListPageRenderer
         // request to add a virtual category
         elseif ($catListRequest->isSubmitAdd) {
             $virtual_name = $catListRequest->virtualName;
-            $output_create = \Piwigo\Bootstrap\AdminAccessor::categoryAdminService()
+            $output_create = $this->categoryAdminService
                 ->createVirtualCategory(
                     $virtual_name,
                     \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(),

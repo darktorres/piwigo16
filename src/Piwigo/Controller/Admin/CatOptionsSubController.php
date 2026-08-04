@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Piwigo\Admin\CatOptionsPageRenderer;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -15,10 +16,14 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class CatOptionsSubController implements AdminSubControllerInterface
 {
+    public function __construct(
+        private readonly CatOptionsPageRenderer $catOptionsPageRenderer,
+    ) {}
+
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        \Piwigo\Bootstrap\AdminAccessor::catOptionsPageRenderer()
+        $this->catOptionsPageRenderer
             ->render();
     }
 }

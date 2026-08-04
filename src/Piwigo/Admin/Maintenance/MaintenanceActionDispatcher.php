@@ -64,6 +64,7 @@ final class MaintenanceActionDispatcher
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly DbMaintenanceRepository $dbMaintenanceRepository,
         private readonly ?\Piwigo\Cache\PersistentCache $persistentCache = null,
     ) {}
 
@@ -80,7 +81,7 @@ final class MaintenanceActionDispatcher
     {
         $register_activity = true;
         $conn = DbConnection::build();
-        $db_maintenance = \Piwigo\Bootstrap\AdminAccessor::dbMaintenanceRepository();
+        $db_maintenance = $this->dbMaintenanceRepository;
 
         switch ($action) {
             case 'phpinfo':

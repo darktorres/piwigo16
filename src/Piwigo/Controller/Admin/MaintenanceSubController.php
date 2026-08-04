@@ -6,6 +6,7 @@ namespace Piwigo\Controller\Admin;
 
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
+use Piwigo\Admin\MaintenanceActionsPageRenderer;
 use Piwigo\Admin\MaintenanceEnvPageRenderer;
 use Piwigo\Admin\MaintenanceSysPageRenderer;
 use Piwigo\Admin\Tabsheet;
@@ -61,6 +62,8 @@ final class MaintenanceSubController implements AdminSubControllerInterface
         private readonly CoreTabs $coreTabs,
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly MaintenanceEnvPageRenderer $maintenanceEnvPageRenderer,
+        private readonly MaintenanceActionsPageRenderer $maintenanceActionsPageRenderer,
     ) {}
 
     #[\Override]
@@ -164,13 +167,13 @@ final class MaintenanceSubController implements AdminSubControllerInterface
         $tabsheet->assign($this->currentTemplate);
 
         if ($tab === 'env') {
-            \Piwigo\Bootstrap\AdminAccessor::maintenanceEnvPageRenderer()
+            $this->maintenanceEnvPageRenderer
                 ->render();
         } elseif ($tab === 'sys') {
             new MaintenanceSysPageRenderer()
                 ->render($maintActions, $this->pageState, $this->currentTemplate);
         } else {
-            \Piwigo\Bootstrap\AdminAccessor::maintenanceActionsPageRenderer()
+            $this->maintenanceActionsPageRenderer
                 ->render($maintActions);
         }
 

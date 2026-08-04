@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
@@ -26,6 +27,7 @@ final class CatPermPageRenderer
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly CategoryAdminService $categoryAdminService,
     ) {}
 
     /**
@@ -75,7 +77,7 @@ final class CatPermPageRenderer
             $post_groups = $catPermSubmit->groups;
             $post_users = $catPermSubmit->users;
 
-            \Piwigo\Bootstrap\AdminAccessor::categoryAdminService()->setCategoryPermissions($page['cat'], $current_status, $post_status, $apply_on_sub, $post_groups, $post_users);
+            $this->categoryAdminService->setCategoryPermissions($page['cat'], $current_status, $post_status, $apply_on_sub, $post_groups, $post_users);
             $category['status'] = $post_status;
 
             $template->assign(

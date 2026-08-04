@@ -6,6 +6,7 @@ namespace Piwigo\Controller\Admin;
 
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
+use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
 use Piwigo\Admin\LanguagesInstalledPageRenderer;
 use Piwigo\Admin\LanguagesNewPageRenderer;
 use Piwigo\Admin\Tabsheet;
@@ -53,6 +54,9 @@ final class LanguagesSubController implements AdminSubControllerInterface
         private readonly CoreTabs $coreTabs,
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly ExtensionUpdateChecker $extensionUpdateChecker,
+        private readonly LanguagesNewPageRenderer $languagesNewPageRenderer,
+        private readonly LanguagesInstalledPageRenderer $languagesInstalledPageRenderer,
     ) {}
 
     #[\Override]
@@ -75,13 +79,13 @@ final class LanguagesSubController implements AdminSubControllerInterface
 
         if ($tab === 'update') {
             new UpdatesExtPageRenderer()
-                ->render('languages', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate);
+                ->render('languages', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker);
             $template->assign('ADMIN_PAGE_TITLE', Lang::t('Languages'));
         } elseif ($tab === 'new') {
-            \Piwigo\Bootstrap\AdminAccessor::languagesNewPageRenderer()
+            $this->languagesNewPageRenderer
                 ->render('languages', $tab);
         } else {
-            \Piwigo\Bootstrap\AdminAccessor::languagesInstalledPageRenderer()
+            $this->languagesInstalledPageRenderer
                 ->render('languages');
         }
     }

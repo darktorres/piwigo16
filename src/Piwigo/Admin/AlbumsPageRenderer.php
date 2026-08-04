@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Category\CategoryAdminService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\SqlDialect;
@@ -34,7 +35,7 @@ use Piwigo\Template\Template;
  */
 final class AlbumsPageRenderer
 {
-    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate): void
+    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, CategoryAdminService $categoryAdminService): void
     {
         $template = $currentTemplate->get();
 
@@ -111,7 +112,7 @@ final class AlbumsPageRenderer
             if (str_starts_with($order_by_field, 'date_')) {
                 $order_by_date = true;
 
-                $ref_dates = \Piwigo\Bootstrap\AdminAccessor::categoryAdminService()
+                $ref_dates = $categoryAdminService
                     ->getCategoriesRefDate($category_ids, $order_by_field, $order_by_asc === 'ASC' ? 'min' : 'max');
             }
 

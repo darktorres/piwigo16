@@ -6,6 +6,7 @@ namespace Piwigo\Controller\Admin;
 
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
+use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
 use Piwigo\Admin\PluginsInstalledPageRenderer;
 use Piwigo\Admin\PluginsNewPageRenderer;
 use Piwigo\Admin\Tabsheet;
@@ -58,6 +59,8 @@ final class PluginsSubController implements AdminSubControllerInterface
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly ExtensionUpdateChecker $extensionUpdateChecker,
+        private readonly PluginsNewPageRenderer $pluginsNewPageRenderer,
     ) {}
 
     #[\Override]
@@ -80,10 +83,10 @@ final class PluginsSubController implements AdminSubControllerInterface
 
         if ($tab === 'update') {
             new UpdatesExtPageRenderer()
-                ->render('plugins', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate);
+                ->render('plugins', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker);
             $template->assign('ADMIN_PAGE_TITLE', Lang::t('Plugins'));
         } elseif ($tab === 'new') {
-            \Piwigo\Bootstrap\AdminAccessor::pluginsNewPageRenderer()
+            $this->pluginsNewPageRenderer
                 ->render('plugins', $tab);
         } else {
             new PluginsInstalledPageRenderer()

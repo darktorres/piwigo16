@@ -45,6 +45,9 @@ final class AlbumSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly ElementSetRanksPageRenderer $elementSetRanksPageRenderer,
+        private readonly CatPermPageRenderer $catPermPageRenderer,
+        private readonly AlbumNotificationPageRenderer $albumNotificationPageRenderer,
     ) {}
 
     #[\Override]
@@ -87,13 +90,13 @@ final class AlbumSubController implements AdminSubControllerInterface
             new CatModifyPageRenderer()
                 ->render($this->urlService, $category, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate);
         } elseif ($tab === 'sort_order') {
-            \Piwigo\Bootstrap\AdminAccessor::elementSetRanksPageRenderer()
+            $this->elementSetRanksPageRenderer
                 ->render();
         } elseif ($tab === 'permissions') {
-            \Piwigo\Bootstrap\AdminAccessor::catPermPageRenderer()
+            $this->catPermPageRenderer
                 ->render($adminAlbumBaseUrl, $category);
         } else {
-            \Piwigo\Bootstrap\AdminAccessor::albumNotificationPageRenderer()
+            $this->albumNotificationPageRenderer
                 ->render($adminAlbumBaseUrl, $category);
         }
     }

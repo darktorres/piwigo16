@@ -66,10 +66,11 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        // DI-phase follow-on: MaintenanceActionDispatcher now resolves
-        // DbMaintenanceRepository via Bootstrap\AdminAccessor ->
-        // Kernel::container(), which this isolated Integration test (no
-        // full RequestBootstrap) wouldn't otherwise boot.
+        // DbMaintenanceRepository is now constructor-injected directly (no
+        // more Bootstrap\AdminAccessor indirection), but this isolated
+        // Integration test (no full RequestBootstrap) still needs a booted
+        // Kernel for CurrentConfigService/CurrentTemplate/DbCredentials::
+        // current() below.
         Kernel::boot();
         // Every Lang::t() assertion in this file expects the real en_UK
         // admin.po wording (which sometimes differs from the raw English
@@ -84,7 +85,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
         $configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher());
-        $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService(), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), $configService, new FilesystemIntegrityChecker(CurrentTemplate::current(), CurrentConfigService::current()), new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class)), new Translator(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), CurrentTemplate::current());
+        $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService(), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), $configService, new FilesystemIntegrityChecker(CurrentTemplate::current(), CurrentConfigService::current()), new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class)), new Translator(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), CurrentTemplate::current(), new \Piwigo\Admin\Maintenance\DbMaintenanceRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Db\DbCredentials::current()));
     }
 
     #[\Override]
@@ -471,6 +472,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             new \Piwigo\PluginConfig\EventDispatcher(),
             \Piwigo\Core\PageState::current(),
             CurrentTemplate::current(),
+            new \Piwigo\Admin\Maintenance\DbMaintenanceRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Db\DbCredentials::current()),
             new \Piwigo\Cache\PersistentFileCache(),
         );
 

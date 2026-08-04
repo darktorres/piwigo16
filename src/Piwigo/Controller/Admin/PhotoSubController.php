@@ -45,6 +45,8 @@ final class PhotoSubController implements AdminSubControllerInterface
         private readonly CoreTabs $coreTabs,
         private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly PictureModifyPageRenderer $pictureModifyPageRenderer,
+        private readonly PictureCoiPageRenderer $pictureCoiPageRenderer,
     ) {}
 
     #[\Override]
@@ -85,10 +87,10 @@ final class PhotoSubController implements AdminSubControllerInterface
         );
 
         if ($tab === 'properties') {
-            \Piwigo\Bootstrap\AdminAccessor::pictureModifyPageRenderer()
+            $this->pictureModifyPageRenderer
                 ->render($adminPhotoBaseUrl);
         } elseif ($tab === 'coi') {
-            \Piwigo\Bootstrap\AdminAccessor::pictureCoiPageRenderer()
+            $this->pictureCoiPageRenderer
                 ->render();
         } elseif (\Piwigo\Config\CurrentConfig::isFormatsEnabled()) {
             new PictureFormatsPageRenderer()

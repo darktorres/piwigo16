@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller\Admin;
 
+use Piwigo\Admin\PictureCoiPageRenderer;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -16,10 +17,14 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 final class PictureCoiSubController implements AdminSubControllerInterface
 {
+    public function __construct(
+        private readonly PictureCoiPageRenderer $pictureCoiPageRenderer,
+    ) {}
+
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        \Piwigo\Bootstrap\AdminAccessor::pictureCoiPageRenderer()
+        $this->pictureCoiPageRenderer
             ->render();
     }
 }

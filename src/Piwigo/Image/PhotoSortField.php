@@ -112,6 +112,19 @@ enum PhotoSortField
      * function call, not a column -- callers must not prefix it with a
      * table alias (same exception `stdImageSqlOrder()`'s own $tbl_name
      * handling already carved out).
+     *
+     * `Rank` is quoted because `rank` is a genuine reserved word on both
+     * platforms (confirmed live: a bare `SELECT rank FROM ...` fails
+     * outright on MySQL, "You have an error in your SQL syntax"), but the
+     * quoting character itself isn't portable -- backticks are MySQL-only,
+     * and MySQL's default (non-ANSI_QUOTES) SQL mode treats a
+     * double-quoted `"rank"` as a *string literal*, not an identifier
+     * reference (confirmed live), so this can't be a single hardcoded
+     * literal the way most of this method's other cases are. No
+     * `Connection` is available in this plain enum method (same
+     * constraint {@see \Piwigo\Db\SqlDialect::randomFunction()} already
+     * has), so the platform comes from `DbCredentials::fromEnv()->driver`
+     * the same way.
      */
     public function column(): string
     {
@@ -124,7 +137,7 @@ enum PhotoSortField
             self::DateCreation => 'date_creation',
             self::DateAvailable => 'date_available',
             self::Random => SqlDialect::randomFunction() . '()',
-            self::Rank => '`rank`',
+            self::Rank => \Piwigo\Db\DbCredentials::fromEnv()->driver === 'pgsql' ? '"rank"' : '`rank`',
         };
     }
 

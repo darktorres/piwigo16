@@ -37,6 +37,12 @@ test('fromToken returns null for an unrecognized token', function (): void {
 });
 
 test('column returns the real column or function name for every field', function (): void {
+    // Random/Rank both read DbCredentials::fromEnv()->driver internally
+    // (no Connection available in this plain enum method -- see
+    // column()'s own docblock) -- driver-aware here so this test passes
+    // regardless of which platform .env.test currently points at.
+    $pgsql = Piwigo\Db\DbCredentials::fromEnv()->driver === 'pgsql';
+
     expect(PhotoSortField::Id->column())->toBe('id')
         ->and(PhotoSortField::File->column())->toBe('file')
         ->and(PhotoSortField::Name->column())->toBe('name')
@@ -44,8 +50,8 @@ test('column returns the real column or function name for every field', function
         ->and(PhotoSortField::RatingScore->column())->toBe('rating_score')
         ->and(PhotoSortField::DateCreation->column())->toBe('date_creation')
         ->and(PhotoSortField::DateAvailable->column())->toBe('date_available')
-        ->and(PhotoSortField::Random->column())->toBe('RAND()')
-        ->and(PhotoSortField::Rank->column())->toBe('`rank`');
+        ->and(PhotoSortField::Random->column())->toBe($pgsql ? 'RANDOM()' : 'RAND()')
+        ->and(PhotoSortField::Rank->column())->toBe($pgsql ? '"rank"' : '`rank`');
 });
 
 /**

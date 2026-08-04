@@ -33,6 +33,7 @@ use Piwigo\Core\Paths;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
+use Piwigo\Db\DbInfo;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\MigrationDependencyFactory;
 use Piwigo\Db\Tables;
@@ -680,6 +681,8 @@ define(\'DB_COLLATE\', \'\');
         ];
         new BatchWriter($conn)
             ->massInsert(Tables::sites(), array_keys($insert), [$insert]);
+        new DbInfo($conn)
+            ->resyncIdentitySequence(Tables::sites());
 
         // webmaster admin user
         $inserts = [
@@ -697,6 +700,8 @@ define(\'DB_COLLATE\', \'\');
         ];
         new BatchWriter($conn)
             ->massInsert(Tables::users(), array_keys($inserts[0]), $inserts);
+        new DbInfo($conn)
+            ->resyncIdentitySequence(Tables::users());
 
         $this->userService($conn)
             ->createUserInfos([\Piwigo\Common\ValueObject\UserId::from(1), \Piwigo\Common\ValueObject\UserId::from(2)], [

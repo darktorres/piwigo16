@@ -29,7 +29,7 @@ final class MaintenanceSysPageRenderer
     /**
      * @param array<string, array{icon: string, label: string}> $maintActions
      */
-    public function render(AccessControl $accessControl, array $maintActions, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate): void
+    public function render(Lang $lang, AccessControl $accessControl, array $maintActions, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate): void
     {
         $template = $currentTemplate->get();
 
@@ -53,7 +53,7 @@ final class MaintenanceSysPageRenderer
 
                 // Format our data for frontend
                 foreach ($activity_log as $rows) {
-                    $data[] = $formatter->format($rows, $maintActions);
+                    $data[] = $formatter->format($lang, $rows, $maintActions);
                 }
 
                 // Now we good to send our response data
@@ -64,7 +64,7 @@ final class MaintenanceSysPageRenderer
                 exit;
             }
         } else {
-            $pageState->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
+            $pageState->addWarning(str_replace('%s', $lang->t('user_status_webmaster'), $lang->t('%s status is required to edit parameters.')));
         }
 
         // +-------------------------------------------------------------------+

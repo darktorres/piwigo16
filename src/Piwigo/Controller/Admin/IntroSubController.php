@@ -67,6 +67,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class IntroSubController implements AdminSubControllerInterface
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly \Piwigo\Core\UrlServiceInterface $urlService,
         private readonly LoadedPlugins $loadedPlugins,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
@@ -129,9 +130,9 @@ final class IntroSubController implements AdminSubControllerInterface
 
         $nb_pending_comments = $this->pageState->nbPendingComments;
         if ($nb_pending_comments !== null) {
-            $message = Lang::t('User comments') . ' <i class="icon-chat"></i> ';
+            $message = $this->lang->t('User comments') . ' <i class="icon-chat"></i> ';
             $message .= '<a href="' . $link_start . 'comments">';
-            $message .= Lang::t('%d waiting for validation', $nb_pending_comments);
+            $message .= $this->lang->t('%d waiting for validation', $nb_pending_comments);
             $message .= ' <i class="icon-right"></i></a>';
 
             $this->pageState->addMessage($message);
@@ -149,7 +150,7 @@ final class IntroSubController implements AdminSubControllerInterface
             $orphans_url = $this->urlService->getRootUrl() . 'admin.php?page=batch_manager&amp;filter=prefilter-no_album';
 
             $message = '<a href="' . $orphans_url . '"><i class="icon-heart-broken"></i>';
-            $message .= Lang::t('Orphans') . '</a>';
+            $message .= $this->lang->t('Orphans') . '</a>';
             $message .= '<span class="adminMenubarCounter">' . $nb_orphans . '</span>';
 
             $this->pageState->addWarning($message);
@@ -161,7 +162,7 @@ final class IntroSubController implements AdminSubControllerInterface
             $locked_album_url = $this->urlService->getRootUrl() . 'admin.php?page=cat_options&section=visible';
 
             $message = '<a href="' . $locked_album_url . '"><i class="icon-cone"></i>';
-            $message .= Lang::t('Locked album') . '</a>';
+            $message .= $this->lang->t('Locked album') . '</a>';
             $message .= '<span class="adminMenubarCounter">' . (string) $locked_album . '</span>';
 
             $this->pageState->addWarning($message);
@@ -223,7 +224,7 @@ final class IntroSubController implements AdminSubControllerInterface
                 'NB_RATES' => $stats['nb_rates'],
                 'NB_VIEWS' => AdminUiHelper::numberFormatHumanReadable($nb_views),
                 'NB_PLUGINS' => count($this->loadedPlugins->get()),
-                'STORAGE_USED' => str_replace(' ', '&nbsp;', Lang::t('%sGB', number_format($du_gb, $du_decimals))),
+                'STORAGE_USED' => str_replace(' ', '&nbsp;', $this->lang->t('%sGB', number_format($du_gb, $du_decimals))),
                 'U_QUICK_SYNC' => $this->urlService->getRootUrl() . 'admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken(),
                 'CHECK_FOR_UPDATES' => \Piwigo\Config\CurrentConfig::dashboardCheckForUpdates(),
             ]
@@ -236,7 +237,7 @@ final class IntroSubController implements AdminSubControllerInterface
         }
 
         if (\Piwigo\Config\CurrentConfig::showPiwigoLatestNews()) {
-            $latest_news = self::getLatestNews();
+            $latest_news = self::getLatestNews($this->lang);
 
             // getLatestNews() is declared to return mixed (it can come straight
             // back out of unserialize() on the cache file), so every field needs a
@@ -260,7 +261,7 @@ final class IntroSubController implements AdminSubControllerInterface
 
                 $this->pageState->addMessage(sprintf(
                     '%s <a href="%s" title="%s" target="_blank"><i class="icon-bell"></i> %s</a>',
-                    Lang::t('Latest Piwigo news'),
+                    $this->lang->t('Latest Piwigo news'),
                     $news_url,
                     \Piwigo\Core\DateHelper::timeSince($news_posted_on, 'year') . ' (' . $news_posted . ')',
                     $news_subject
@@ -445,7 +446,7 @@ final class IntroSubController implements AdminSubControllerInterface
         $template->assign('ACTIVITY_CHART_DATA', $chart_data);
         $template->assign('ACTIVITY_CHART_NUMBER_SIZES', $size);
 
-        $lang_days = \Piwigo\Core\Lang::days();
+        $lang_days = $this->lang->days();
 
         $day_labels = [];
         for ($i = 0; $i <= 6; $i++) {
@@ -552,9 +553,9 @@ final class IntroSubController implements AdminSubControllerInterface
 
         // Check integrity
         $integrityRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity::class);
-        $c13y = new CheckIntegrity($integrityRepo, $this->translator, $this->eventDispatcher, $this->pageState, $this->currentTemplate);
+        $c13y = new CheckIntegrity($this->lang, $integrityRepo, $this->translator, $this->eventDispatcher, $this->pageState, $this->currentTemplate);
         // add internal checks
-        new C13yInternal($this->sessionService, $this->eventDispatcher, $this->pageState, $this->userService)
+        new C13yInternal($this->lang, $this->sessionService, $this->eventDispatcher, $this->pageState, $this->userService)
             ->registerHandlers();
         // check and display
         $c13y->check();
@@ -579,12 +580,12 @@ final class IntroSubController implements AdminSubControllerInterface
      * view-shaping stays inline" precedent this class's own docblock
      * already establishes for its other dashboard queries.
      */
-    private static function getLatestNews(): mixed
+    private static function getLatestNews(Lang $lang): mixed
     {
         $news = null;
 
         $data_location = \Piwigo\Config\CurrentConfig::dataLocation();
-        $lang_code = \Piwigo\Core\Lang::langInfo()['code'] ?? null;
+        $lang_code = $lang->langInfo()['code'] ?? null;
         $lang_code = is_string($lang_code) ? $lang_code : '';
         $cache_path = \Piwigo\Core\CurrentPaths::get()->root . $data_location . 'cache/piwigo_latest_news-' . $lang_code . '.cache.php';
         if (! is_file($cache_path) or filemtime($cache_path) < strtotime('24 hours ago')) {

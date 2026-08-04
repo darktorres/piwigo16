@@ -11,6 +11,7 @@ use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\ArrayHelper;
 use Piwigo\Core\ContainerDetector;
+use Piwigo\Core\Lang;
 use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UniqueExecLock;
 use Piwigo\Db\DbConnection;
@@ -47,6 +48,7 @@ use Piwigo\Users\UserService;
 final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
         private readonly ImageStdParams $imageStdParams,
         private readonly \Piwigo\Config\ConfigService $configService,
@@ -225,7 +227,7 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
 
         $urlService = $this->urlService;
         $fsPlugins = new ExtensionScanner()
-            ->scan(ExtensionType::Plugin, $urlService);
+            ->scan(ExtensionType::Plugin, $urlService, $this->lang);
         $dbPluginsById = new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($conn))
             ->findAll(ExtensionType::Plugin);
         $piwigoInfos['general_stats']['nb_private_plugins'] = 0;
@@ -278,7 +280,7 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
         $piwigoInfos['general_stats']['nb_plugins'] = $piwigoInfos['general_stats']['nb_private_plugins'] + count($piwigoInfos['plugins']);
 
         $fsThemes = new ExtensionScanner()
-            ->scan(ExtensionType::Theme, $urlService);
+            ->scan(ExtensionType::Theme, $urlService, $this->lang);
         $dbThemesById = new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($conn))
             ->findAll(ExtensionType::Theme);
         $piwigoInfos['general_stats']['nb_private_themes'] = 0;

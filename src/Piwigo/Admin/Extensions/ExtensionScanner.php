@@ -34,7 +34,7 @@ final class ExtensionScanner
      * @return array<string, array<string, mixed>> keyed by extension id
      *   (directory name)
      */
-    public function scan(ExtensionType $type, UrlServiceInterface $urlService, ?string $targetCharset = null): array
+    public function scan(ExtensionType $type, UrlServiceInterface $urlService, Lang $lang, ?string $targetCharset = null): array
     {
         $dir = opendir($type->scanDirectory());
         if ($dir === false) {
@@ -51,8 +51,8 @@ final class ExtensionScanner
             }
 
             $entry = match ($type) {
-                ExtensionType::Plugin => $this->scanPlugin($file),
-                ExtensionType::Theme => $this->scanTheme($file, $urlService),
+                ExtensionType::Plugin => $this->scanPlugin($lang, $file),
+                ExtensionType::Theme => $this->scanTheme($lang, $file, $urlService),
                 ExtensionType::Language => $this->scanLanguage($file, $targetCharset),
             };
 
@@ -77,7 +77,7 @@ final class ExtensionScanner
     /**
      * @return array{name: string, version: string, uri: string, description: string, author: string, hasSettings: bool, 'author uri'?: string, extension?: string}|null
      */
-    private function scanPlugin(string $pluginId): ?array
+    private function scanPlugin(Lang $lang, string $pluginId): ?array
     {
         $path = \Piwigo\Admin\PluginLoader::pluginsPath() . $pluginId;
         if (! is_dir($path) || is_link($path) || ! file_exists($path . '/main.inc.php')) {
@@ -106,7 +106,7 @@ final class ExtensionScanner
         if ((bool) preg_match('|Plugin URI:\s*(https?:\/\/.+)|', $data, $val)) {
             $plugin['uri'] = trim($val[1]);
         }
-        $desc = Lang::load('description.txt', $path . '/', [
+        $desc = $lang->load('description.txt', $path . '/', [
             'return' => true,
         ]);
         if (is_string($desc) && $desc !== '') {
@@ -163,7 +163,7 @@ final class ExtensionScanner
      *   admin_uri?: string,
      * }|null
      */
-    private function scanTheme(string $themeId, UrlServiceInterface $urlService): ?array
+    private function scanTheme(Lang $lang, string $themeId, UrlServiceInterface $urlService): ?array
     {
         $path = ExtensionType::Theme->scanDirectory() . $themeId;
         if (! is_dir($path) || ! file_exists($path . '/themeconf.inc.php')) {
@@ -194,7 +194,7 @@ final class ExtensionScanner
         if ((bool) preg_match('|Theme URI:\s*(https?:\/\/.+)|', $data, $val)) {
             $theme['uri'] = trim($val[1]);
         }
-        $desc = Lang::load('description.txt', $path . '/', [
+        $desc = $lang->load('description.txt', $path . '/', [
             'return' => true,
         ]);
         if (is_string($desc) && $desc !== '') {

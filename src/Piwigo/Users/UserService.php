@@ -61,6 +61,7 @@ use Piwigo\Session\SessionService;
 final readonly class UserService implements DefaultLanguageProviderInterface
 {
     public function __construct(
+        private Lang $lang,
         private UserRepository $repo,
         private GroupRepository $groupRepo,
         private MailerInterface $mailer,
@@ -93,7 +94,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      */
     private function categoryService(): CategoryService
     {
-        return new CategoryService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class), $this->permissionService());
+        return new CategoryService($this->lang, \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class), $this->permissionService());
     }
 
     /**
@@ -122,7 +123,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         $email = \Piwigo\Validation\InputValidator::checkEmailFormat($mailAddress) ? Email::tryFrom($mailAddress) : null;
         if ($email === null) {
-            return Lang::t('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
+            return $this->lang->t('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
         }
 
         if (\Piwigo\Core\InstallationFlag::isActiveStatic() && ! $isEmpty) {
@@ -130,7 +131,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             $user_fields = \Piwigo\Config\CurrentConfig::userFields();
 
             if ($this->repo->emailExists($email, $user_fields['email'], $user_fields['id'], $userId)) {
-                return Lang::t('this email address is already in use');
+                return $this->lang->t('this email address is already in use');
             }
         }
 
@@ -150,7 +151,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             $user_fields = \Piwigo\Config\CurrentConfig::userFields();
 
             if ($this->repo->usernameExistsCaseInsensitive($username, $user_fields['username'])) {
-                return Lang::t('this login is already used');
+                return $this->lang->t('this login is already used');
             }
         }
 
@@ -288,20 +289,20 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         $duplicateUsername = false;
 
         if ($login === '') {
-            $errors[] = Lang::t('Please, enter a login');
+            $errors[] = $this->lang->t('Please, enter a login');
         }
         if (preg_match('/^.* $/', $login) === 1) {
-            $errors[] = Lang::t('login mustn\'t end with a space character');
+            $errors[] = $this->lang->t('login mustn\'t end with a space character');
         }
         if (preg_match('/^ .*$/', $login) === 1) {
-            $errors[] = Lang::t('login mustn\'t start with a space character');
+            $errors[] = $this->lang->t('login mustn\'t start with a space character');
         }
         $loginUsername = Username::tryFrom($login);
         if ($loginUsername !== null && $this->getUserId($loginUsername) !== null) {
             $duplicateUsername = true;
         }
         if ($login !== strip_tags($login)) {
-            $errors[] = Lang::t('html tags are not allowed in login');
+            $errors[] = $this->lang->t('html tags are not allowed in login');
         }
 
         $mailError = $this->validateMailAddress(null, $mailAddress);
@@ -548,12 +549,12 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         $this->mailer->mail(
             $existing['email'],
             [
-                'subject' => '[' . $gallery_title . '] ' . Lang::t('Registration'),
-                'content' => Lang::args([
-                    Lang::buildArgs('Someone tried to create an account on %s using your username.', $gallery_title),
-                    Lang::buildArgs('', ''),
-                    Lang::buildArgs('If this was you, you already have an account -- try logging in or resetting your password instead.', ''),
-                    Lang::buildArgs('If this was not you, no action is needed.', ''),
+                'subject' => '[' . $gallery_title . '] ' . $this->lang->t('Registration'),
+                'content' => $this->lang->args([
+                    $this->lang->buildArgs('Someone tried to create an account on %s using your username.', $gallery_title),
+                    $this->lang->buildArgs('', ''),
+                    $this->lang->buildArgs('If this was you, you already have an account -- try logging in or resetting your password instead.', ''),
+                    $this->lang->buildArgs('If this was not you, no action is needed.', ''),
                 ]),
                 'content_format' => 'text/plain',
             ]
@@ -566,10 +567,10 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         $adminUrl = $urlService->getAbsoluteRootUrl() . 'admin.php?page=user_list&user_id=' . $userId->value;
 
         $keyargsContent = [
-            Lang::buildArgs('User: %s', stripslashes($login)),
-            Lang::buildArgs('Email: %s', $mailAddress),
-            Lang::buildArgs(''),
-            Lang::buildArgs('Admin: %s', $adminUrl),
+            $this->lang->buildArgs('User: %s', stripslashes($login)),
+            $this->lang->buildArgs('Email: %s', $mailAddress),
+            $this->lang->buildArgs(''),
+            $this->lang->buildArgs('Admin: %s', $adminUrl),
         ];
 
         $groupId = null;
@@ -579,7 +580,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         }
 
         $this->mailer->mailNotificationAdmins(
-            Lang::buildArgs('Registration of %s', stripslashes($login)),
+            $this->lang->buildArgs('Registration of %s', stripslashes($login)),
             $keyargsContent,
             true,
             $groupId
@@ -591,17 +592,17 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         $length = mt_rand(10, 15);
         $keyargsContent = [
-            Lang::buildArgs('Hello %s,', stripslashes($login)),
-            Lang::buildArgs('Thank you for registering at %s!', \Piwigo\Config\CurrentConfig::galleryTitle()),
-            Lang::buildArgs('', ''),
-            Lang::buildArgs('Here are your connection settings', ''),
-            Lang::buildArgs('', ''),
-            Lang::buildArgs('Link: %s', $urlService->getAbsoluteRootUrl()),
-            Lang::buildArgs('Username: %s', stripslashes($login)),
-            Lang::buildArgs('Password: %s', str_repeat('*', $length)),
-            Lang::buildArgs('Email: %s', $mailAddress),
-            Lang::buildArgs('', ''),
-            Lang::buildArgs('If you think you\'ve received this email in error, please contact us at %s', \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Users\UserInfoEntity::class)->getWebmasterMailAddress()),
+            $this->lang->buildArgs('Hello %s,', stripslashes($login)),
+            $this->lang->buildArgs('Thank you for registering at %s!', \Piwigo\Config\CurrentConfig::galleryTitle()),
+            $this->lang->buildArgs('', ''),
+            $this->lang->buildArgs('Here are your connection settings', ''),
+            $this->lang->buildArgs('', ''),
+            $this->lang->buildArgs('Link: %s', $urlService->getAbsoluteRootUrl()),
+            $this->lang->buildArgs('Username: %s', stripslashes($login)),
+            $this->lang->buildArgs('Password: %s', str_repeat('*', $length)),
+            $this->lang->buildArgs('Email: %s', $mailAddress),
+            $this->lang->buildArgs('', ''),
+            $this->lang->buildArgs('If you think you\'ve received this email in error, please contact us at %s', \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Users\UserInfoEntity::class)->getWebmasterMailAddress()),
         ];
 
         $gallery_title = \Piwigo\Config\CurrentConfig::galleryTitle();
@@ -609,8 +610,8 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         $this->mailer->mail(
             $mailAddress,
             [
-                'subject' => '[' . $gallery_title . '] ' . Lang::t('Registration'),
-                'content' => Lang::args($keyargsContent),
+                'subject' => '[' . $gallery_title . '] ' . $this->lang->t('Registration'),
+                'content' => $this->lang->args($keyargsContent),
                 'content_format' => 'text/plain',
             ]
         );
@@ -1254,7 +1255,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
                     return [
                         'error' => [
                             'code' => WsError::INVALID_PARAM,
-                            'message' => Lang::t('this login is already used'),
+                            'message' => $this->lang->t('this login is already used'),
                         ],
                     ];
                 }
@@ -1262,7 +1263,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
                     return [
                         'error' => [
                             'code' => WsError::INVALID_PARAM,
-                            'message' => Lang::t('html tags are not allowed in login'),
+                            'message' => $this->lang->t('html tags are not allowed in login'),
                         ],
                     ];
                 }

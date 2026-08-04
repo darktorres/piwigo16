@@ -65,12 +65,12 @@ final readonly class PermissionService
         $label = '';
         foreach (array_reverse($available_permission_levels) as $level) {
             if ($level === 0) {
-                $label = Lang::t('Everybody');
+                $label = Lang::current()->t('Everybody');
             } else {
                 if (strlen($label) > 0) {
                     $label .= ', ';
                 }
-                $label .= Lang::t(sprintf('Level %d', $level));
+                $label .= Lang::current()->t(sprintf('Level %d', $level));
             }
             $options[$level] = $label;
         }

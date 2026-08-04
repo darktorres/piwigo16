@@ -41,6 +41,7 @@ use Piwigo\Core\Lang;
 final class FilesystemIntegrityChecker
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly \Piwigo\Config\CurrentConfigService $currentConfigService,
         private readonly \Piwigo\Image\ImageService $imageService,
@@ -121,7 +122,7 @@ final class FilesystemIntegrityChecker
                 $template->assign(
                     'header_msgs',
                     [
-                        Lang::t('Some photos are missing from your file system. Details provided by plugin Check Uploads'),
+                        $this->lang->t('Some photos are missing from your file system. Details provided by plugin Check Uploads'),
                     ]
                 );
 
@@ -138,7 +139,7 @@ final class FilesystemIntegrityChecker
             $template->assign(
                 'header_msgs',
                 [
-                    Lang::t('We have found %d duplicate paths. Details provided by plugin Check Uploads', count($duplicate_paths)),
+                    $this->lang->t('We have found %d duplicate paths. Details provided by plugin Check Uploads', count($duplicate_paths)),
                 ]
             );
 

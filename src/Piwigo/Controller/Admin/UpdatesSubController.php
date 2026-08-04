@@ -94,7 +94,7 @@ final class UpdatesSubController implements AdminSubControllerInterface
 
         if ($tab === 'ext') {
             new UpdatesExtPageRenderer()
-                ->render($this->accessControl, 'updates', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker, $this->htmlRenderer);
+                ->render(\Piwigo\Core\Lang::current(), $this->accessControl, 'updates', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker, $this->htmlRenderer);
         } else {
             $this->updatesPwgPageRenderer
                 ->render();

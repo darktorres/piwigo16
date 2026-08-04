@@ -44,7 +44,7 @@ final class BatchUploadHandler
 
     public function __invoke(BatchUploadJob $job): int
     {
-        return new UploadService($this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService)
+        return new UploadService(\Piwigo\Core\Lang::current(), $this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService)
             ->addUploadedFile(
                 $job->sourceFilepath,
                 $this->urlService,

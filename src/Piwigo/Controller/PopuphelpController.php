@@ -40,6 +40,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class PopuphelpController implements ControllerInterface
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Core\PageState $pageState,
@@ -68,7 +69,7 @@ final class PopuphelpController implements ControllerInterface
         $template = $this->currentTemplate->get();
 
         $this->pageState->setBodyId('thePopuphelpPage');
-        $title = Lang::t('Piwigo Help');
+        $title = $this->lang->t('Piwigo Help');
         $this->pageState->setPageBanner('');
         $this->pageState->setMetaRobots([
             'noindex' => 1,
@@ -81,7 +82,7 @@ final class PopuphelpController implements ControllerInterface
             throw new ResponseReadyException(ResponseFactory::text('Hacking attempt!', 400));
         }
 
-        $help_content = Lang::load('help/' . $rawPage . '.html', '', [
+        $help_content = $this->lang->load('help/' . $rawPage . '.html', '', [
             'return' => true,
         ]);
         if (! is_string($help_content)) {

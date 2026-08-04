@@ -42,6 +42,7 @@ use Piwigo\Users\UserService;
 final class PictureModifyPageRenderer
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
@@ -140,7 +141,7 @@ final class PictureModifyPageRenderer
 
             $this->metadataService
                 ->syncMetadata([$image_id]);
-            $this->pageState->addInfo(Lang::t('Metadata synchronized from file'));
+            $this->pageState->addInfo($this->lang->t('Metadata synchronized from file'));
         }
 
         // --------------------------------------------------------- update informations
@@ -204,6 +205,7 @@ final class PictureModifyPageRenderer
             $no_longer_thumbnail_for = array_diff($represented_albums, $represent_categories);
             if (count($no_longer_thumbnail_for) > 0) {
                 new CategoryService(
+                    $this->lang,
                     \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class),
                     $this->permissionService
                 )->setRandomRepresentant($no_longer_thumbnail_for);
@@ -222,7 +224,7 @@ final class PictureModifyPageRenderer
 
             $template->assign(
                 [
-                    'save_success' => Lang::t('Photo informations updated'),
+                    'save_success' => $this->lang->t('Photo informations updated'),
                 ]
             );
 
@@ -351,21 +353,21 @@ final class PictureModifyPageRenderer
         $extTab = explode('.', $row_file);
 
         $intro_vars = [
-            'file' => Lang::t('%s', $row_file),
-            'date' => Lang::t('Posted the %s', \Piwigo\Core\DateHelper::formatDate(is_string($row['date_available']) || is_int($row['date_available']) ? $row['date_available'] : false, ['day', 'month', 'year'])),
-            'age' => Lang::t(ucfirst(\Piwigo\Core\DateHelper::timeSince(is_string($row['date_available']) || is_int($row['date_available']) ? $row['date_available'] : '', 'year'))),
-            'added_by' => Lang::t('Added by %s', $row['added_by']),
-            'size' => Lang::t('%s pixels, %.2f MB', (is_scalar($row['width']) ? (string) $row['width'] : '') . '&times;' . (is_scalar($row['height']) ? (string) $row['height'] : ''), (is_numeric($row['filesize']) ? (float) $row['filesize'] : 0.0) / 1024.0),
-            'stats' => Lang::t('Visited %d times', $row['hit']),
-            'id' => Lang::t(is_string($row['id']) ? $row['id'] : ''),
-            'ext' => Lang::t('%s file type', strtoupper(end($extTab))),
+            'file' => $this->lang->t('%s', $row_file),
+            'date' => $this->lang->t('Posted the %s', \Piwigo\Core\DateHelper::formatDate(is_string($row['date_available']) || is_int($row['date_available']) ? $row['date_available'] : false, ['day', 'month', 'year'])),
+            'age' => $this->lang->t(ucfirst(\Piwigo\Core\DateHelper::timeSince(is_string($row['date_available']) || is_int($row['date_available']) ? $row['date_available'] : '', 'year'))),
+            'added_by' => $this->lang->t('Added by %s', $row['added_by']),
+            'size' => $this->lang->t('%s pixels, %.2f MB', (is_scalar($row['width']) ? (string) $row['width'] : '') . '&times;' . (is_scalar($row['height']) ? (string) $row['height'] : ''), (is_numeric($row['filesize']) ? (float) $row['filesize'] : 0.0) / 1024.0),
+            'stats' => $this->lang->t('Visited %d times', $row['hit']),
+            'id' => $this->lang->t(is_string($row['id']) ? $row['id'] : ''),
+            'ext' => $this->lang->t('%s file type', strtoupper(end($extTab))),
             'is_svg' => (strtoupper(end($extTab)) === 'SVG'),
         ];
 
         if (\Piwigo\Config\CurrentConfig::rateEnabled() && ! in_array($row['rating_score'], [null, false, 0, 0.0, '0', '', []], true)) {
             $row['nb_rates'] = $this->rateService->countRatesForElement($image_id);
 
-            $intro_vars['stats'] .= ', ' . sprintf(Lang::t('Rated %d times, score : %.2f'), $row['nb_rates'], is_numeric($row['rating_score']) ? (float) $row['rating_score'] : 0.0);
+            $intro_vars['stats'] .= ', ' . sprintf($this->lang->t('Rated %d times, score : %.2f'), $row['nb_rates'], is_numeric($row['rating_score']) ? (float) $row['rating_score'] : 0.0);
         }
 
         $formats = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
@@ -378,7 +380,7 @@ final class PictureModifyPageRenderer
                 $format_strings[] = sprintf('%s (%.2fMB)', $format->ext, ((float) ($format->filesize ?? 0)) / 1024.0);
             }
 
-            $intro_vars['formats'] = Lang::t('Formats: %s', implode(', ', $format_strings));
+            $intro_vars['formats'] = $this->lang->t('Formats: %s', implode(', ', $format_strings));
         }
 
         $template->assign('INTRO', $intro_vars);

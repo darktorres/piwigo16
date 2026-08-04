@@ -35,6 +35,6 @@ final class HelpSubController implements AdminSubControllerInterface
     public function handle(ServerRequestInterface $request): void
     {
         new HelpPageRenderer()
-            ->render($this->accessControl, $this->urlService, $this->coreTabs, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate);
+            ->render(\Piwigo\Core\Lang::current(), $this->accessControl, $this->urlService, $this->coreTabs, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate);
     }
 }

@@ -41,6 +41,7 @@ use Piwigo\Users\UserService;
 final class LanguagesInstalledPageRenderer
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
@@ -67,7 +68,7 @@ final class LanguagesInstalledPageRenderer
         $template = $this->currentTemplate->get();
 
         if (! $this->accessControl->isWebmaster()) {
-            $this->pageState->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
+            $this->pageState->addWarning(str_replace('%s', $this->lang->t('user_status_webmaster'), $this->lang->t('%s status is required to edit parameters.')));
         }
 
         $template->set_filenames([
@@ -81,9 +82,9 @@ final class LanguagesInstalledPageRenderer
         $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger);
         $extension_scanner = new ExtensionScanner();
         $plugin_migration_repo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class);
-        $extension_lifecycle = new ExtensionLifecycle($extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo, $this->activityService, $this->userService, $this->htmlRenderer);
+        $extension_lifecycle = new ExtensionLifecycle($this->lang, $extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo, $this->activityService, $this->userService, $this->htmlRenderer);
 
-        $fs_languages = $extension_scanner->scan(ExtensionType::Language, $this->urlService);
+        $fs_languages = $extension_scanner->scan(ExtensionType::Language, $this->urlService, $this->lang);
         $db_languages = $extension_repository->findAll(ExtensionType::Language);
 
         // --------------------------------------------------perform requested actions
@@ -122,12 +123,12 @@ final class LanguagesInstalledPageRenderer
 
                 if (count($db_languages) <= 1) {
                     $language['deactivable'] = false;
-                    $language['deactivate_tooltip'] = Lang::t('Impossible to deactivate this language, you need at least one language.');
+                    $language['deactivate_tooltip'] = $this->lang->t('Impossible to deactivate this language, you need at least one language.');
                 }
 
                 if ($language_id === $default_language) {
                     $language['deactivable'] = false;
-                    $language['deactivate_tooltip'] = Lang::t('Impossible to deactivate this language, first set another language as default.');
+                    $language['deactivate_tooltip'] = $this->lang->t('Impossible to deactivate this language, first set another language as default.');
                 }
             } else {
                 $language['state'] = 'inactive';
@@ -161,7 +162,7 @@ final class LanguagesInstalledPageRenderer
         }
 
         $template->assign('isWebmaster', ($this->accessControl->isWebmaster()) ? 1 : 0);
-        $template->assign('ADMIN_PAGE_TITLE', Lang::t('Languages'));
+        $template->assign('ADMIN_PAGE_TITLE', $this->lang->t('Languages'));
         $template->assign('CONF_ENABLE_EXTENSIONS_INSTALL', \Piwigo\Config\CurrentConfig::enableExtensionsInstall());
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'languages');

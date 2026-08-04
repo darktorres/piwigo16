@@ -56,6 +56,7 @@ use Piwigo\Users\UserService;
 final class RedirectService implements RedirectServiceInterface
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly UserService $userService,
     ) {}
 
@@ -102,14 +103,14 @@ final class RedirectService implements RedirectServiceInterface
         // Phase 8, 8h).
         $template = self::currentTemplate()->isInitialized() ? self::currentTemplate()->get() : null;
 
-        if (! Lang::isLangInfoInitialized() || ! isset($template)) {
+        if (! $this->lang->isLangInfoInitialized() || ! isset($template)) {
             $paths = CurrentPaths::get();
             $guest_id = CurrentConfig::guestId();
             $user = $this->userService->buildUser(\Piwigo\Common\ValueObject\UserId::from($guest_id));
             self::currentUser()->set(User::fromUserArray($user));
-            Lang::load('common.lang');
+            $this->lang->load('common.lang');
             EventDispatcher::get()->dispatchNotify(new LoadingLang());
-            Lang::load('lang', $paths->siteLocal, [
+            $this->lang->load('lang', $paths->siteLocal, [
                 'no_fallback' => true,
                 'local' => true,
             ]);
@@ -130,7 +131,7 @@ final class RedirectService implements RedirectServiceInterface
         // global) is provably dead code now, not just redundant.
 
         if ($msg === '' || $msg === '0') {
-            $msg = nl2br(Lang::t('Redirection...'));
+            $msg = nl2br($this->lang->t('Redirection...'));
         }
 
         $url_link = $url;

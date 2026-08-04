@@ -36,6 +36,7 @@ use Piwigo\Template\Template;
 final class UpdatesPwgPageRenderer
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly \Piwigo\Core\PageState $pageState,
@@ -145,7 +146,7 @@ final class UpdatesPwgPageRenderer
         // +-----------------------------------------------------------------------+
 
         if (! $this->accessControl->isWebmaster()) {
-            $this->pageState->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
+            $this->pageState->addWarning(str_replace('%s', $this->lang->t('user_status_webmaster'), $this->lang->t('%s status is required to edit parameters.')));
         }
 
         $template->assign(
@@ -183,7 +184,7 @@ final class UpdatesPwgPageRenderer
             );
         }
 
-        $template->assign('ADMIN_PAGE_TITLE', Lang::t('Updates'));
+        $template->assign('ADMIN_PAGE_TITLE', $this->lang->t('Updates'));
         $template->set_filename('plugin_admin_content', 'updates_pwg.tpl');
         $template->assign_var_from_handle('ADMIN_CONTENT', 'plugin_admin_content');
     }

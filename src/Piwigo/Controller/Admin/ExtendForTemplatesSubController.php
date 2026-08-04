@@ -38,6 +38,6 @@ final class ExtendForTemplatesSubController implements AdminSubControllerInterfa
     public function handle(ServerRequestInterface $request): void
     {
         new ExtendForTemplatesPageRenderer()
-            ->render($this->accessControl, $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->categoryService);
+            ->render(\Piwigo\Core\Lang::current(), $this->accessControl, $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->categoryService);
     }
 }

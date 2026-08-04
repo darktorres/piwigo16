@@ -21,7 +21,7 @@ use Piwigo\Users\UserService;
  */
 final class UserListPageRenderer
 {
-    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, UserService $userService, PreferencesService $preferencesService, \Piwigo\Group\GroupService $groupService, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer): void
+    public function render(Lang $lang, UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, UserService $userService, PreferencesService $preferencesService, \Piwigo\Group\GroupService $groupService, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer): void
     {
         $template = $currentTemplate->get();
         $conn = DbConnection::build();
@@ -55,7 +55,7 @@ final class UserListPageRenderer
 
         $template->assign(
             [
-                'ADMIN_PAGE_TITLE' => Lang::t('Users'),
+                'ADMIN_PAGE_TITLE' => $lang->t('Users'),
                 'ACTIVATE_COMMENTS' => \Piwigo\Config\CurrentConfig::activateComments(),
                 'Double_Password' => \Piwigo\Config\CurrentConfig::doublePasswordTypeInAdmin(),
             ]
@@ -145,13 +145,13 @@ final class UserListPageRenderer
         // Status options
         $label_of_status = [];
         foreach (new DbInfo($conn)->getEnums(Tables::userInfos(), 'status') as $status) {
-            $label_of_status[$status] = Lang::t('user_status_' . $status);
+            $label_of_status[$status] = $lang->t('user_status_' . $status);
         }
 
         $nb_users_by_status = [];
         foreach ($userService->getUserCountsByStatus($guest_id) as $status => $counter) {
             $nb_users_by_status[$status] = [
-                'name' => Lang::t('user_status_' . $status),
+                'name' => $lang->t('user_status_' . $status),
                 'counter' => $counter,
             ];
         }
@@ -176,13 +176,13 @@ final class UserListPageRenderer
 
         $level_options = [];
         foreach ($available_permission_levels as $level) {
-            $level_options[$level] = Lang::t(sprintf('Level %d', $level));
+            $level_options[$level] = $lang->t(sprintf('Level %d', $level));
         }
 
         $nb_users_by_level = $level_options;
         foreach ($userService->getUserCountsByLevel($guest_id) as $level => $counter) {
             $nb_users_by_level[$level] = [
-                'name' => Lang::t(sprintf('Level %d', $level)),
+                'name' => $lang->t(sprintf('Level %d', $level)),
                 'counter' => $counter,
             ];
         }
@@ -213,7 +213,7 @@ final class UserListPageRenderer
         }
 
         if (self::webmasterIdIsLocal()) {
-            $pageState->addWarning(Lang::t('You have specified <i>$conf[\'webmaster_id\']</i> in your local configuration file, this parameter in deprecated, please remove it!'));
+            $pageState->addWarning($lang->t('You have specified <i>$conf[\'webmaster_id\']</i> in your local configuration file, this parameter in deprecated, please remove it!'));
         }
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'user_list');

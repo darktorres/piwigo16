@@ -26,6 +26,7 @@ use Piwigo\Session\SessionService;
 final readonly class ApiKeyService
 {
     public function __construct(
+        private Lang $lang,
         private MailerInterface $mailer,
         private ApiKeyRepository $repo,
         private PasswordService $passwordService,
@@ -68,7 +69,7 @@ final readonly class ApiKeyService
     public function revoke(int $userId, string $pkid): string|true
     {
         if ($this->repo->countByAuthKeyAndUser($pkid, $userId) === 0) {
-            return Lang::t('API Key not found');
+            return $this->lang->t('API Key not found');
         }
 
         $this->repo->revoke($pkid, $userId, Env::now());
@@ -82,7 +83,7 @@ final readonly class ApiKeyService
     public function edit(int $userId, string $pkid, ?string $apiName): string|true
     {
         if ($this->repo->countByAuthKeyAndUser($pkid, $userId) === 0) {
-            return Lang::t('API Key not found');
+            return $this->lang->t('API Key not found');
         }
 
         $this->repo->updateName($pkid, $userId, $apiName);
@@ -125,7 +126,7 @@ final readonly class ApiKeyService
             $api_key['last_used_on_since'] =
               $last_used_on !== null
               ? \Piwigo\Core\DateHelper::timeSince($last_used_on, 'day')
-              : Lang::t('Never');
+              : $this->lang->t('Never');
 
             $expired_on = \Piwigo\Core\DateHelper::str2DateTime($expired_on_raw);
             $now = \Piwigo\Core\DateHelper::str2DateTime($now);
@@ -135,15 +136,15 @@ final readonly class ApiKeyService
 
             $api_key['is_expired'] = $expired_on < $now;
             if ($api_key['is_expired']) {
-                $api_key['expiration'] = Lang::t('Expired');
+                $api_key['expiration'] = $this->lang->t('Expired');
             } else {
                 $diff = \Piwigo\Core\DateHelper::dateDiff($now, $expired_on);
                 if ($diff->days > 0) {
-                    $api_key['expiration'] = Lang::t('%d days', $diff->days);
+                    $api_key['expiration'] = $this->lang->t('%d days', $diff->days);
                 } elseif ($diff->h > 0) {
-                    $api_key['expiration'] = Lang::t('%d hours', $diff->h);
+                    $api_key['expiration'] = $this->lang->t('%d hours', $diff->h);
                 } else {
-                    $api_key['expiration'] = Lang::t('%d minutes', $diff->i);
+                    $api_key['expiration'] = $this->lang->t('%d minutes', $diff->i);
                 }
             }
 
@@ -156,7 +157,7 @@ final readonly class ApiKeyService
 
             $api_key['revoked_on_message'] =
               (bool) $revoked_on
-              ? Lang::t('This API key was manually revoked on %s', \Piwigo\Core\DateHelper::formatDate($revoked_on, ['day', 'month', 'year']))
+              ? $this->lang->t('This API key was manually revoked on %s', \Piwigo\Core\DateHelper::formatDate($revoked_on, ['day', 'month', 'year']))
               : null;
 
             $results[] = $api_key;
@@ -207,20 +208,20 @@ final readonly class ApiKeyService
     {
 
         $days_left_str = $daysLeft <= 1 ?
-          Lang::t('Your API key will expire in %d day.', $daysLeft)
-          : Lang::t('Your API key will expire in %d days.', $daysLeft);
+          $this->lang->t('Your API key will expire in %d day.', $daysLeft)
+          : $this->lang->t('Your API key will expire in %d days.', $daysLeft);
 
-        $message = '<p style="margin: 20px 0">' . Lang::t('Hello %s,', $username) . '</p>';
+        $message = '<p style="margin: 20px 0">' . $this->lang->t('Hello %s,', $username) . '</p>';
         $message .= '<p style="margin: 20px 0">' . $days_left_str . '</p>';
-        $message .= '<p style="margin: 20px 0">' . Lang::t('To continue using the API, please renew your key before it expires.') . '</p>';
-        $message .= '<p style="margin: 20px 0">' . Lang::t('You can manage your API keys in your <a href="%s">account settings.</a>', $this->urlService->getAbsoluteRootUrl() . 'profile.php') . '</p>';
+        $message .= '<p style="margin: 20px 0">' . $this->lang->t('To continue using the API, please renew your key before it expires.') . '</p>';
+        $message .= '<p style="margin: 20px 0">' . $this->lang->t('You can manage your API keys in your <a href="%s">account settings.</a>', $this->urlService->getAbsoluteRootUrl() . 'profile.php') . '</p>';
 
         $gallery_title = \Piwigo\Config\CurrentConfig::galleryTitle();
 
         return $this->mailer->mail(
             $email,
             [
-                'subject' => '[' . $gallery_title . '] ' . Lang::t('Your API key will expire soon'),
+                'subject' => '[' . $gallery_title . '] ' . $this->lang->t('Your API key will expire soon'),
                 'content' => $message,
                 'content_format' => 'text/html',
             ]

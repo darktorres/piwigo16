@@ -68,6 +68,7 @@ use Piwigo\Users\UserService;
 final readonly class ExtensionLifecycle
 {
     public function __construct(
+        private Lang $lang,
         private ExtensionRepository $repo,
         private PemCatalog $pemCatalog,
         private UrlServiceInterface $urlService,
@@ -162,7 +163,7 @@ final readonly class ExtensionLifecycle
 
                 if ($errors[0] === 'ok') {
                     $newFsEntry = new ExtensionScanner()
-                        ->scan(ExtensionType::Plugin, $this->urlService)[$id] ?? null;
+                        ->scan(ExtensionType::Plugin, $this->urlService, $this->lang)[$id] ?? null;
                     $newVersion = $this->stringOrDefault($newFsEntry['version'] ?? null, '0');
                     $activityDetails['to_version'] = $newVersion;
 
@@ -286,7 +287,7 @@ final readonly class ExtensionLifecycle
 
                 $missingParent = $this->missingParentTheme($id, $fsEntry);
                 if ($missingParent !== null) {
-                    $errors[] = Lang::t('Impossible to activate this theme, the parent theme is missing: %s', $missingParent);
+                    $errors[] = $this->lang->t('Impossible to activate this theme, the parent theme is missing: %s', $missingParent);
                     break;
                 }
 
@@ -294,7 +295,7 @@ final readonly class ExtensionLifecycle
                 $currentMobileTheme = \Piwigo\Config\CurrentConfig::mobilTheme();
                 $hasOtherMobileTheme = $currentMobileTheme !== '' && $currentMobileTheme !== '0';
                 if ($isMobile && $hasOtherMobileTheme && $currentMobileTheme !== $id) {
-                    $errors[] = Lang::t('You can activate only one mobile theme.');
+                    $errors[] = $this->lang->t('You can activate only one mobile theme.');
                     break;
                 }
 
@@ -319,7 +320,7 @@ final readonly class ExtensionLifecycle
                 }
 
                 if ($this->repo->count(ExtensionType::Theme) <= 1) {
-                    $errors[] = Lang::t('Impossible to deactivate this theme, you need at least one theme.');
+                    $errors[] = $this->lang->t('Impossible to deactivate this theme, you need at least one theme.');
                     break;
                 }
 
@@ -349,7 +350,7 @@ final readonly class ExtensionLifecycle
 
                 $children = $this->getChildrenThemes($id);
                 if ($children !== []) {
-                    $errors[] = Lang::t('Impossible to delete this theme. Other themes depends on it: %s', implode(', ', $children));
+                    $errors[] = $this->lang->t('Impossible to delete this theme. Other themes depends on it: %s', implode(', ', $children));
                     break;
                 }
 
@@ -445,7 +446,7 @@ final readonly class ExtensionLifecycle
         }
 
         $parentFsEntry = new ExtensionScanner()
-            ->scan(ExtensionType::Theme, $this->urlService)[$parent] ?? null;
+            ->scan(ExtensionType::Theme, $this->urlService, $this->lang)[$parent] ?? null;
         if ($parentFsEntry === null) {
             return $parent;
         }
@@ -462,7 +463,7 @@ final readonly class ExtensionLifecycle
     public function getChildrenThemes(string $themeId): array
     {
         $children = [];
-        foreach (new ExtensionScanner()->scan(ExtensionType::Theme, $this->urlService) as $candidate) {
+        foreach (new ExtensionScanner()->scan(ExtensionType::Theme, $this->urlService, $this->lang) as $candidate) {
             if (($candidate['parent'] ?? null) === $themeId) {
                 $name = $candidate['name'] ?? null;
                 if (is_string($name)) {

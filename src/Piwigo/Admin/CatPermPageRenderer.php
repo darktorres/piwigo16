@@ -24,6 +24,7 @@ use Piwigo\Template\Template;
 final class CatPermPageRenderer
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
@@ -85,7 +86,7 @@ final class CatPermPageRenderer
 
             $template->assign(
                 [
-                    'save_success' => Lang::t('Album updated successfully'),
+                    'save_success' => $this->lang->t('Album updated successfully'),
                 ]
             );
         }

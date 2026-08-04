@@ -25,6 +25,7 @@ use Piwigo\Template\Template;
 final class AlbumNotificationPageRenderer
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly Translator $translator,
@@ -114,7 +115,7 @@ final class AlbumNotificationPageRenderer
             $renderedCategoryName = $nameEvent->categoryName;
 
             $args = [
-                'subject' => Lang::t('[%s] Visit album %s', \Piwigo\Config\CurrentConfig::galleryTitle(), $renderedCategoryName),
+                'subject' => $this->lang->t('[%s] Visit album %s', \Piwigo\Config\CurrentConfig::galleryTitle(), $renderedCategoryName),
             ];
 
             $mail_content = $albumNotificationSubmit->mailContent;
@@ -217,7 +218,7 @@ final class AlbumNotificationPageRenderer
 
                 $template->assign(
                     [
-                        'save_success' => Lang::t('An information email was sent to group "%s"', $group_name),
+                        'save_success' => $this->lang->t('An information email was sent to group "%s"', $group_name),
                     ]
                 );
             }

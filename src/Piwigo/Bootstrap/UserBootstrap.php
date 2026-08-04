@@ -95,6 +95,7 @@ final class UserBootstrap
             $currentUser,
         );
         $userService = new \Piwigo\Users\UserService(
+            \Piwigo\Bootstrap\RequestBootstrap::lang(),
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class),
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class),
             $mailer,

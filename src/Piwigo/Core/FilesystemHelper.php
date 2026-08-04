@@ -120,7 +120,7 @@ final class FilesystemHelper
             // slow filesystems -- that is success, not an error (re-check
             // ported from HEAD i.php's local mkgetdir()).
             if ($mkd === false && ! is_dir($dir)) {
-                ! (bool) ($flags & self::MKGETDIR_DIE_ON_ERROR) or self::fatalError("{$dir} " . Lang::t('no write access'));
+                ! (bool) ($flags & self::MKGETDIR_DIE_ON_ERROR) or self::fatalError("{$dir} " . Lang::current()->t('no write access'));
                 return false;
             }
             if ((bool) ($flags & self::MKGETDIR_PROTECT_HTACCESS)) {
@@ -133,7 +133,7 @@ final class FilesystemHelper
             }
         }
         if (! is_writable($dir)) {
-            ! (bool) ($flags & self::MKGETDIR_DIE_ON_ERROR) or self::fatalError("{$dir} " . Lang::t('no write access'));
+            ! (bool) ($flags & self::MKGETDIR_DIE_ON_ERROR) or self::fatalError("{$dir} " . Lang::current()->t('no write access'));
             return false;
         }
         return true;

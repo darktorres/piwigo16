@@ -32,6 +32,7 @@ use Piwigo\Template\Template;
 final class PluginsNewPageRenderer
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
@@ -77,7 +78,7 @@ final class PluginsNewPageRenderer
         // ------------------------------------------------------automatic installation
         if ($pluginsNewRequest->revision !== null and $pluginsNewRequest->extension !== null) {
             if (! $this->accessControl->isWebmaster()) {
-                $this->pageState->addError(Lang::t('Webmaster status is required.'));
+                $this->pageState->addError($this->lang->t('Webmaster status is required.'));
             } else {
                 new \Piwigo\Csrf\CsrfService()
                     ->checkOrFail($this->htmlRenderer, $this->redirectService);
@@ -100,11 +101,11 @@ final class PluginsNewPageRenderer
                     // installed plugin and click on the activation switch.
                     $activate_url = $this->urlService->getRootUrl() . 'admin.php?page=plugins&amp;filter=deactivated';
 
-                    $this->pageState->addInfo(Lang::t('Plugin has been successfully copied'));
-                    $this->pageState->addInfo('<a href="' . $activate_url . '">' . Lang::t('Activate it now') . '</a>');
+                    $this->pageState->addInfo($this->lang->t('Plugin has been successfully copied'));
+                    $this->pageState->addInfo('<a href="' . $activate_url . '">' . $this->lang->t('Activate it now') . '</a>');
 
                     $installed_plugin_id = $pluginsNewRequest->pluginId;
-                    $installed_fs_plugin = $installed_plugin_id !== null ? ($extension_scanner->scan(ExtensionType::Plugin, $this->urlService)[$installed_plugin_id] ?? null) : null;
+                    $installed_fs_plugin = $installed_plugin_id !== null ? ($extension_scanner->scan(ExtensionType::Plugin, $this->urlService, $this->lang)[$installed_plugin_id] ?? null) : null;
                     if ($installed_fs_plugin !== null) {
                         $this->activityService->record('system', ActivitySystem::Plugin, 'install', [
                             'plugin_id' => $installed_plugin_id,
@@ -114,20 +115,20 @@ final class PluginsNewPageRenderer
                     break;
 
                 case 'temp_path_error':
-                    $this->pageState->addError(Lang::t('Can\'t create temporary file.'));
+                    $this->pageState->addError($this->lang->t('Can\'t create temporary file.'));
                     break;
 
                 case 'dl_archive_error':
-                    $this->pageState->addError(Lang::t('Can\'t download archive.'));
+                    $this->pageState->addError($this->lang->t('Can\'t download archive.'));
                     break;
 
                 case 'archive_error':
-                    $this->pageState->addError(Lang::t('Can\'t read or extract archive.'));
+                    $this->pageState->addError($this->lang->t('Can\'t read or extract archive.'));
                     break;
 
                 default:
-                    $this->pageState->addError(Lang::t('An error occured during extraction (%s).', htmlspecialchars($pluginsNewRequest->installStatus)));
-                    $this->pageState->addError(Lang::t('Please check "plugins" folder and sub-folders permissions (CHMOD).'));
+                    $this->pageState->addError($this->lang->t('An error occured during extraction (%s).', htmlspecialchars($pluginsNewRequest->installStatus)));
+                    $this->pageState->addError($this->lang->t('Please check "plugins" folder and sub-folders permissions (CHMOD).'));
             }
         }
 
@@ -135,11 +136,11 @@ final class PluginsNewPageRenderer
         $template->assign(
             'order_options',
             [
-                'date' => Lang::t('Post date'),
-                'revision' => Lang::t('Last revisions'),
-                'name' => Lang::t('Name'),
-                'author' => Lang::t('Author'),
-                'downloads' => Lang::t('Number of downloads'),
+                'date' => $this->lang->t('Post date'),
+                'revision' => $this->lang->t('Last revisions'),
+                'name' => $this->lang->t('Name'),
+                'author' => $this->lang->t('Author'),
+                'downloads' => $this->lang->t('Number of downloads'),
             ]
         );
 
@@ -154,7 +155,7 @@ final class PluginsNewPageRenderer
         $pem_base_url = \Piwigo\Bootstrap\RequestBootstrap::pemUrl();
 
         $fs_plugin_ids = [];
-        foreach ($extension_scanner->scan(ExtensionType::Plugin, $this->urlService) as $fs_plugin) {
+        foreach ($extension_scanner->scan(ExtensionType::Plugin, $this->urlService, $this->lang) as $fs_plugin) {
             $extension = $fs_plugin['extension'] ?? null;
             if (is_scalar($extension)) {
                 $fs_plugin_ids[] = (string) $extension;
@@ -265,13 +266,13 @@ final class PluginsNewPageRenderer
             }
 
         } else {
-            $this->pageState->addError(Lang::t('Can\'t connect to server.'));
+            $this->pageState->addError($this->lang->t('Can\'t connect to server.'));
         }
 
         if (! $beta_test and (bool) preg_match('/(beta|RC)/', AppInfo::VERSION)) {
             $template->assign('BETA_URL', $base_url . '&amp;beta-test=true');
         }
-        $template->assign('ADMIN_PAGE_TITLE', Lang::t('Plugins'));
+        $template->assign('ADMIN_PAGE_TITLE', $this->lang->t('Plugins'));
         $template->assign('BETA_TEST', $beta_test);
         $template->assign_var_from_handle('ADMIN_CONTENT', 'plugins');
     }

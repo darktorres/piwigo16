@@ -42,7 +42,7 @@ final class RecentIconResolver
         $get_icon_cache = is_array($get_icon_cache_raw) ? $get_icon_cache_raw : [];
 
         if (! isset($get_icon_cache['title'])) {
-            $get_icon_cache['title'] = Lang::t(
+            $get_icon_cache['title'] = Lang::current()->t(
                 'photos posted during the last %d days',
                 $recent_period
             );

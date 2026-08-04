@@ -37,6 +37,6 @@ final class StatsSubController implements AdminSubControllerInterface
     public function handle(ServerRequestInterface $request): void
     {
         new StatsPageRenderer()
-            ->render($this->accessControl, 'stats', $this->urlService, $this->configService, $this->coreTabs, $this->currentUser, $this->currentTemplate, $this->historyService);
+            ->render(\Piwigo\Core\Lang::current(), $this->accessControl, 'stats', $this->urlService, $this->configService, $this->coreTabs, $this->currentUser, $this->currentTemplate, $this->historyService);
     }
 }

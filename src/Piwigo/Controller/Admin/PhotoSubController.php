@@ -42,6 +42,7 @@ final class PhotoSubController implements AdminSubControllerInterface
     private const array KNOWN_TABS = ['properties', 'coi', 'formats'];
 
     public function __construct(
+        private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
@@ -86,7 +87,7 @@ final class PhotoSubController implements AdminSubControllerInterface
 
         $template->assign(
             [
-                'ADMIN_PAGE_TITLE' => Lang::t('Edit photo') . ' <span class="image-id">#' . $get_image_id . '</span>',
+                'ADMIN_PAGE_TITLE' => $this->lang->t('Edit photo') . ' <span class="image-id">#' . $get_image_id . '</span>',
             ]
         );
 
@@ -98,7 +99,7 @@ final class PhotoSubController implements AdminSubControllerInterface
                 ->render();
         } elseif (\Piwigo\Config\CurrentConfig::isFormatsEnabled()) {
             new PictureFormatsPageRenderer()
-                ->render($this->accessControl, $this->urlService, $this->imageStdParams, $this->currentTemplate, $this->htmlRenderer);
+                ->render(\Piwigo\Core\Lang::current(), $this->accessControl, $this->urlService, $this->imageStdParams, $this->currentTemplate, $this->htmlRenderer);
         }
     }
 }

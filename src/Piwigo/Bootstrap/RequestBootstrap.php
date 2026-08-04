@@ -228,7 +228,7 @@ final class RequestBootstrap
         }
         self::currentUser()->attachGlobals();
         self::pageState();
-        Lang::attachGlobals();
+        self::lang()->attachGlobals();
 
         self::serverTiming()->stop('boot');
     }
@@ -315,10 +315,10 @@ final class RequestBootstrap
         // themselves beforehand, unlike admin.php/index.php's own explicit
         // up-front require (ordering bug caught live via a random.php
         // smoke test). AccessControl::setHtmlRenderer()/setRedirectService()
-        // used to sit here too -- removed (singleton/service-locator
-        // elimination campaign, Phase 7): AccessControl is now a real,
-        // container-shared instance, autowired with zero manual wiring.
-        Lang::setHtmlRenderer(new HtmlService());
+        // and Lang::setHtmlRenderer() used to sit here too -- removed
+        // (singleton/service-locator elimination campaign, Phases 7-8):
+        // both are now real, container-shared instances, autowired with
+        // zero manual wiring.
 
         // Piwigo\Db\Tables::*()/other Piwigo\Config\Config::* accessors used
         // further down in this bootstrap's own body (not just by code that
@@ -396,7 +396,7 @@ final class RequestBootstrap
             $conn->getNativeConnection();
         } catch (\Exception $e) {
             new HtmlService()
-                ->fatalError(Lang::t($e->getMessage()));
+                ->fatalError(self::lang()->t($e->getMessage()));
         }
 
         // Legacy Coupling Retirement Phase 8, 8d: safe now that 8c retargeted
@@ -514,7 +514,7 @@ final class RequestBootstrap
         )->pwgLogin(...));
         new UserBootstrap(
             \Piwigo\Auth\AccessControl::current(),
-            new RedirectService(self::userService()),
+            new RedirectService(self::lang(), self::userService()),
             self::urlService(),
             self::apiKeyRequestFlag(),
             self::currentLogger(),
@@ -556,7 +556,8 @@ final class RequestBootstrap
         $conn = DbConnection::build();
 
         // language files
-        Lang::setDefaultLanguageProvider(new UserService(
+        self::lang()->setDefaultLanguageProvider(new UserService(
+            self::lang(),
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class),
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class),
             self::mailService(),
@@ -568,14 +569,14 @@ final class RequestBootstrap
             self::deploymentPolicy(),
             self::currentUser(),
         ));
-        Lang::load('common.lang');
+        self::lang()->load('common.lang');
         if (\Piwigo\Auth\AccessControl::current()->isAdmin() || self::adminContext()->isActive()) {
-            Lang::load('admin.lang');
+            self::lang()->load('admin.lang');
             // Add language for temporary strings for new popup, from piwigo 15
-            Lang::load('whats_new_' . \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION) . '.lang');
+            self::lang()->load('whats_new_' . \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION) . '.lang');
         }
         \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LoadingLang());
-        Lang::load('lang', CurrentPaths::get()->siteLocal, [
+        self::lang()->load('lang', CurrentPaths::get()->siteLocal, [
             'no_fallback' => true,
             'local' => true,
         ]);
@@ -589,7 +590,7 @@ final class RequestBootstrap
             // username), so only the localized-username case needs a
             // second sync; the non-guest path never mutates CurrentUser
             // again after initialize()'s own sync.
-            self::currentUser()->set(self::currentUser()->get()->withUsername(Lang::t('guest')));
+            self::currentUser()->set(self::currentUser()->get()->withUsername(self::lang()->t('guest')));
         }
 
         $pageState = self::pageState();
@@ -598,8 +599,8 @@ final class RequestBootstrap
         // be here, with language loaded, to prepare the message
         if ($pageState->authKeyInvalid) {
             $pageState->addError(
-                Lang::t('Your authentication key is no longer valid.')
-              . sprintf(' <a href="%s">%s</a>', self::urlService()->getRootUrl() . 'identification.php', Lang::t('Login'))
+                self::lang()->t('Your authentication key is no longer valid.')
+              . sprintf(' <a href="%s">%s</a>', self::urlService()->getRootUrl() . 'identification.php', self::lang()->t('Login'))
             );
         }
 
@@ -609,7 +610,7 @@ final class RequestBootstrap
             $notify_username = self::currentUser()->get()->username;
             $notify_email = self::currentUser()->get()->email;
             $apiKeyRepo = new \Piwigo\Auth\ApiKeyRepository(\Piwigo\Db\EntityManagerFactory::build($conn));
-            $is_mail_send = new \Piwigo\Auth\ApiKeyService(self::mailService(), $apiKeyRepo, new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn), self::deploymentPolicy()), self::urlService(), self::sessionService())
+            $is_mail_send = new \Piwigo\Auth\ApiKeyService(self::lang(), self::mailService(), $apiKeyRepo, new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn), self::deploymentPolicy()), self::urlService(), self::sessionService())
                 ->notifyExpiration($notify_username, $notify_email, $notify_api_key_expiration['days_left']);
 
             if ($is_mail_send) {
@@ -670,17 +671,17 @@ final class RequestBootstrap
             // when it decides to take over the page. CurrentConfigService::get()
             // reuses the instance connect() already resolved earlier in the
             // same request (Legacy Coupling Retirement Phase 8, 8d).
-            new NoPhotoYetRenderer(\Piwigo\Auth\AccessControl::current(), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), self::currentConfigService()->get(), new RedirectService(self::userService()), self::urlService(), CurrentPaths::get(), self::adminContext(), self::sessionService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::deploymentPolicy(), self::currentUser(), self::currentTemplate(), self::mailService())
+            new NoPhotoYetRenderer(self::lang(), \Piwigo\Auth\AccessControl::current(), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), self::currentConfigService()->get(), new RedirectService(self::lang(), self::userService()), self::urlService(), CurrentPaths::get(), self::adminContext(), self::sessionService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::deploymentPolicy(), self::currentUser(), self::currentTemplate(), self::mailService())
                 ->render();
         }
 
         $user_internal_status = self::currentUser()->get()->internalStatus;
         if (($user_internal_status['guest_must_be_guest'] ?? false) === true) {
-            $pageState->addHeaderMessage(Lang::t('Bad status for user "guest", using default status. Please notify the webmaster.'));
+            $pageState->addHeaderMessage(self::lang()->t('Bad status for user "guest", using default status. Please notify the webmaster.'));
         }
 
         if (\Piwigo\Config\CurrentConfig::galleryLocked()) {
-            $pageState->addHeaderMessage(Lang::t('The gallery is locked for maintenance. Please, come back later.'));
+            $pageState->addHeaderMessage(self::lang()->t('The gallery is locked for maintenance. Please, come back later.'));
 
             if (\Piwigo\Core\PageFilterHelper::scriptBasename() !== 'identification' and ! \Piwigo\Auth\AccessControl::current()->isAdmin()) {
                 // Workstream C3, catch point 1: throws instead of the
@@ -688,7 +689,7 @@ final class RequestBootstrap
                 // include/common.inc.php, the one seam both dispatch
                 // contexts that reach this code (pipeline-routed root
                 // files and admin.php/admin/popuphelp.php) include.
-                $body = '<a href="' . self::urlService()->getAbsoluteRootUrl(false) . 'identification.php">' . Lang::t('The gallery is locked for maintenance. Please, come back later.') . '</a>';
+                $body = '<a href="' . self::urlService()->getAbsoluteRootUrl(false) . 'identification.php">' . self::lang()->t('The gallery is locked for maintenance. Please, come back later.') . '</a>';
                 $body .= str_repeat(' ', 512); // IE6 doesn't error output if below a size
                 throw new \Piwigo\Http\ResponseReadyException(\Piwigo\Http\ResponseFactory::raw($body, [
                     'Retry-After' => '900',
@@ -772,7 +773,7 @@ final class RequestBootstrap
         // (unlike UploadService's static upload_file handlers below), hence the
         // bound first-class-callable form rather than a bare [Class::class, 'method']
         // array.
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(UserCommentCheck::class, new CommentService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), self::mailService(), new HtmlService(), self::urlService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::pageState(), self::currentUser())->checkForSpam(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(UserCommentCheck::class, new CommentService(self::lang(), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), self::mailService(), new HtmlService(), self::urlService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::pageState(), self::currentUser())->checkForSpam(...));
         // try_log_user's own handler is registered in connect() instead,
         // before UserBootstrap::initialize() -- see that registration's
         // own comment for why.
@@ -818,11 +819,11 @@ final class RequestBootstrap
         // that reach finalize() without having run those earlier steps.
         // Lang::attachGlobals() is the one with a real ordering
         // requirement -- it snapshots Translator's already-loaded strings,
-        // so it must run after this method's own Lang::load() calls above,
+        // so it must run after this method's own lang()->load() calls above,
         // not before.
         self::currentUser()->attachGlobals();
         self::pageState();
-        Lang::attachGlobals();
+        self::lang()->attachGlobals();
     }
 
     /**
@@ -918,6 +919,22 @@ final class RequestBootstrap
         }
 
         return $translator;
+    }
+
+    /**
+     * Resolves the container-shared instance so that this method's own
+     * attachGlobals()/load()/setDefaultLanguageProvider() writes are
+     * visible to every other consumer holding the same shared instance
+     * (singleton/service-locator elimination campaign, Phase 8).
+     */
+    public static function lang(): Lang
+    {
+        $lang = Kernel::container()->get(Lang::class);
+        if (! $lang instanceof Lang) {
+            throw new \LogicException('Container returned an unexpected type for ' . Lang::class);
+        }
+
+        return $lang;
     }
 
     /**

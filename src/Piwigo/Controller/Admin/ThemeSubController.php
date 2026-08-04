@@ -37,7 +37,7 @@ final class ThemeSubController implements AdminSubControllerInterface
         $theme = Request\ThemeIdRequest::fromGlobals()->themeId;
 
         $fs_themes = new ExtensionScanner()
-            ->scan(ExtensionType::Theme, $this->urlService);
+            ->scan(ExtensionType::Theme, $this->urlService, \Piwigo\Core\Lang::current());
         if (! in_array($theme, array_keys($fs_themes), true)) {
             $this->htmlRenderer
                 ->fatalError('Invalid theme');

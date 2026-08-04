@@ -46,7 +46,7 @@ use Symfony\Component\Mime\Email;
  * helpers, matching every other P17/P18-era service; Url-family calls go
  * through the private urlService() helper below (Legacy Coupling
  * Retirement Phase 4c, see its own docblock). l10n_args()/load_language()
- * calls above were retargeted to Piwigo\Core\Lang::args()/::load() in
+ * calls above were retargeted to Piwigo\Core\Lang::current()->args()/::load() in
  * P23 batch 8d -- l10n() itself stays a bare call (track-2 relocated,
  * too widely used to retarget, see src/Piwigo/Lang/functions.php).
  *
@@ -188,6 +188,7 @@ final class MailService implements MailerInterface
     private function userService(): \Piwigo\Users\UserService
     {
         return new \Piwigo\Users\UserService(
+            \Piwigo\Core\Lang::current(),
             \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class),
             \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class),
             new self(),
@@ -449,12 +450,12 @@ final class MailService implements MailerInterface
         if (! $this->switchLangInitialised && ! isset($this->switchLangLanguages[$currentUserLanguage])) {
             $this->switchLangInitialised = true;
             $this->switchLangLanguages[$currentUserLanguage] = [
-                'lang_info' => Lang::langInfo(),
-                'lang' => Lang::snapshot(),
+                'lang_info' => Lang::current()->langInfo(),
+                'lang' => Lang::current()->snapshot(),
                 // \Piwigo\Core\Lang's own $data/$langInfo are just parallel
                 // bookkeeping (has()/langInfo()) -- the real translations
                 // t() actually reads live in the separate Translator
-                // singleton's gettext dictionary, which Lang::snapshot()/
+                // singleton's gettext dictionary, which Lang::current()->snapshot()/
                 // restore() never touch. A clone (Translator::__clone()
                 // deep-copies its own $inner) is the only way to capture
                 // and later restore that real state too.
@@ -467,28 +468,28 @@ final class MailService implements MailerInterface
 
         if (! isset($this->switchLangLanguages[$language])) {
             // Re-init language arrays.
-            Lang::setLangInfo([]);
-            Lang::restore(null);
+            Lang::current()->setLangInfo([]);
+            Lang::current()->restore(null);
 
-            Lang::load('common.lang', '', [
+            Lang::current()->load('common.lang', '', [
                 'language' => $language,
             ]);
             // No test admin because script is checked admin (user selected no).
             // Translations are in admin file too.
-            Lang::load('admin.lang', '', [
+            Lang::current()->load('admin.lang', '', [
                 'language' => $language,
             ]);
 
-            // Reload all plugin files (see Lang::load()'s own docblock).
-            foreach (Lang::languageFiles() as $dirname => $files) {
+            // Reload all plugin files (see Lang::current()->load()'s own docblock).
+            foreach (Lang::current()->languageFiles() as $dirname => $files) {
                 foreach ($files as $filename => $options) {
                     $options['language'] = $language;
-                    Lang::load($filename, $dirname, $options);
+                    Lang::current()->load($filename, $dirname, $options);
                 }
             }
 
             \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new LoadingLang());
-            Lang::load(
+            Lang::current()->load(
                 'lang',
                 CurrentPaths::get()->siteLocal,
                 [
@@ -499,14 +500,14 @@ final class MailService implements MailerInterface
             );
 
             $this->switchLangLanguages[$language] = [
-                'lang_info' => Lang::langInfo(),
-                'lang' => Lang::snapshot(),
+                'lang_info' => Lang::current()->langInfo(),
+                'lang' => Lang::current()->snapshot(),
                 'translator' => clone \Piwigo\Lang\Translator::get(),
             ];
         } else {
             $entry = $this->switchLangLanguages[$language];
-            Lang::setLangInfo($entry['lang_info']);
-            Lang::restore($entry['lang']);
+            Lang::current()->setLangInfo($entry['lang_info']);
+            Lang::current()->restore($entry['lang']);
             \Piwigo\Lang\Translator::get()->restoreFrom($entry['translator']);
         }
     }
@@ -525,8 +526,8 @@ final class MailService implements MailerInterface
 
         if (isset($this->switchLangLanguages[$language])) {
             $entry = $this->switchLangLanguages[$language];
-            Lang::setLangInfo($entry['lang_info']);
-            Lang::restore($entry['lang']);
+            Lang::current()->setLangInfo($entry['lang_info']);
+            Lang::current()->restore($entry['lang']);
             \Piwigo\Lang\Translator::get()->restoreFrom($entry['translator']);
         }
         CurrentUser::current()->updateLanguage($language);
@@ -551,10 +552,10 @@ final class MailService implements MailerInterface
             $this->switchLangTo($this->userService()->getDefaultLanguage());
 
             if (is_array($subject)) {
-                $subject = Lang::args($subject);
+                $subject = Lang::current()->args($subject);
             }
             if (is_array($content)) {
-                $content = Lang::args($content);
+                $content = Lang::current()->args($content);
             }
 
             $this->switchLangBack();
@@ -843,7 +844,7 @@ final class MailService implements MailerInterface
         }
         $contentTypeList[] = 'text/plain';
 
-        $langCode = Lang::langInfo()['code'] ?? null;
+        $langCode = Lang::current()->langInfo()['code'] ?? null;
         $langCode = is_string($langCode) ? $langCode : '';
 
         $contents = [];
@@ -1090,7 +1091,7 @@ final class MailService implements MailerInterface
         $dir = CurrentPaths::get()->root . $dataLocation . 'tmp';
         if (\Piwigo\Core\FilesystemHelper::mkgetdir($dir, \Piwigo\Core\FilesystemHelper::MKGETDIR_DEFAULT & ~\Piwigo\Core\FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
             $username = \Piwigo\Users\CurrentUser::current()->get()->username;
-            $langCode = Lang::langInfo()['code'] ?? null;
+            $langCode = Lang::current()->langInfo()['code'] ?? null;
             $langCode = is_string($langCode) ? $langCode : '';
 
             $filename = $dir . '/mail.' . stripslashes($username) . '.' . $langCode . '-' . date('YmdHis') . ($success ? '' : '.ERROR');
@@ -1119,14 +1120,14 @@ final class MailService implements MailerInterface
             ->setMakeFullUrl();
 
         $message = '<p style="margin: 20px 0">';
-        $message .= Lang::t('Someone requested that the password be reset for the following user account:') . ' ' . $username . '</p>';
-        $message .= '<p style="margin: 20px 0">' . Lang::t('To reset your password, visit the following address:');
-        $message .= ' <a href="' . $passwordLink . '">' . Lang::t('Change my password') . '</a></p>';
+        $message .= Lang::current()->t('Someone requested that the password be reset for the following user account:') . ' ' . $username . '</p>';
+        $message .= '<p style="margin: 20px 0">' . Lang::current()->t('To reset your password, visit the following address:');
+        $message .= ' <a href="' . $passwordLink . '">' . Lang::current()->t('Change my password') . '</a></p>';
         $message .= '<p style="text-align: center; font-size: 70%;">' . $passwordLink . '</p>';
         $message .= '<p style="margin: 20px 0;">';
-        $message .= Lang::t('This link is valid for %s. After this time, you will need to request a new link.', $remainingTime);
+        $message .= Lang::current()->t('This link is valid for %s. After this time, you will need to request a new link.', $remainingTime);
         $message .= ' ';
-        $message .= Lang::t('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
+        $message .= Lang::current()->t('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
 
         $this->urlService()
             ->unsetMakeFullUrl();
@@ -1134,7 +1135,7 @@ final class MailService implements MailerInterface
         $message = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderLostPasswordMailContent($message))->message;
 
         return [
-            'subject' => '[' . $galleryTitle . '] ' . Lang::t('Password Reset'),
+            'subject' => '[' . $galleryTitle . '] ' . Lang::current()->t('Password Reset'),
             'content' => $message,
             'content_format' => 'text/html',
         ];
@@ -1151,14 +1152,14 @@ final class MailService implements MailerInterface
             ->setMakeFullUrl();
 
         $message = '<p style="margin: 20px 0">';
-        $message .= Lang::t('A photo library administrator has created the following account for you:') . ' ' . $username . '</p>';
-        $message .= '<p style="margin: 20px 0">' . Lang::t('To set your password, visit the following address:');
-        $message .= ' <a href="' . $setPasswordLink . '">' . Lang::t('Activate') . '</a></p>';
+        $message .= Lang::current()->t('A photo library administrator has created the following account for you:') . ' ' . $username . '</p>';
+        $message .= '<p style="margin: 20px 0">' . Lang::current()->t('To set your password, visit the following address:');
+        $message .= ' <a href="' . $setPasswordLink . '">' . Lang::current()->t('Activate') . '</a></p>';
         $message .= '<p style="text-align: center; font-size: 70%; margin: 20px 0;">' . $setPasswordLink . '</p>';
         $message .= '<p style="margin: 20px 0;">';
-        $message .= Lang::t('This link is valid for %s. After this time, you will need to request a new link.', $remainingTime);
+        $message .= Lang::current()->t('This link is valid for %s. After this time, you will need to request a new link.', $remainingTime);
         $message .= ' ';
-        $message .= Lang::t('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
+        $message .= Lang::current()->t('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
 
         $this->urlService()
             ->unsetMakeFullUrl();
@@ -1166,7 +1167,7 @@ final class MailService implements MailerInterface
         $message = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderLostPasswordMailContent($message))->message;
 
         return [
-            'subject' => Lang::t('Welcome to %s', $galleryTitle),
+            'subject' => Lang::current()->t('Welcome to %s', $galleryTitle),
             'content' => $message,
             'content_format' => 'text/html',
         ];
@@ -1182,17 +1183,17 @@ final class MailService implements MailerInterface
         $this->urlService()
             ->setMakeFullUrl();
         $message = '<p style="margin: 20px 0">';
-        $message .= Lang::t('Here is your verification code:') . ' <br />';
+        $message .= Lang::current()->t('Here is your verification code:') . ' <br />';
         $message .= '<span style="font-size: 16px">' . $code . '</span></p>';
         $message .= '<p style="margin: 20px 0;">';
-        $message .= Lang::t('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
+        $message .= Lang::current()->t('If this was a mistake, just ignore this email and nothing will happen.') . '</p>';
         $this->urlService()
             ->unsetMakeFullUrl();
 
         $galleryTitle = \Piwigo\Config\CurrentConfig::galleryTitle();
 
         return [
-            'subject' => '[' . $galleryTitle . '] ' . Lang::t('Your verification code'),
+            'subject' => '[' . $galleryTitle . '] ' . Lang::current()->t('Your verification code'),
             'content' => $message,
             'content_format' => 'text/html',
         ];
@@ -1210,15 +1211,15 @@ final class MailService implements MailerInterface
         $profileUrl = $this->urlService()
             ->getRootUrl() . 'profile.php';
 
-        $message = '<p style="margin-top: 20px;">' . Lang::t('Hello %s,', $username) . '</p>';
-        $message .= '<p style="margin-bottom: 20px;">' . Lang::t('Your password was successfully reset') . '.</p>';
+        $message = '<p style="margin-top: 20px;">' . Lang::current()->t('Hello %s,', $username) . '</p>';
+        $message .= '<p style="margin-bottom: 20px;">' . Lang::current()->t('Your password was successfully reset') . '.</p>';
         $message .= '<p>';
-        $message .= Lang::t('If this wasn\'t you, please change your password immediately or contact your webmaster.');
+        $message .= Lang::current()->t('If this wasn\'t you, please change your password immediately or contact your webmaster.');
         $message .= '</p>';
 
         if ($nbOfApikeys > 0) {
             $message .= '<p style="margin: 20px 0;">';
-            $message .= Lang::t(
+            $message .= Lang::current()->t(
                 'If you changed your password because you think it was stolen, we recommend revoking your %d API keys <a href="%s">in your profile</a>.',
                 $nbOfApikeys,
                 $profileUrl
@@ -1231,7 +1232,7 @@ final class MailService implements MailerInterface
         $galleryTitle = \Piwigo\Config\CurrentConfig::galleryTitle();
 
         return [
-            'subject' => '[' . $galleryTitle . '] ' . Lang::t('Your password has been reset'),
+            'subject' => '[' . $galleryTitle . '] ' . Lang::current()->t('Your password has been reset'),
             'content' => $message,
             'content_format' => 'text/html',
         ];

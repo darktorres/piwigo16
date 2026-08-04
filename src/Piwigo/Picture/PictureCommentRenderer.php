@@ -75,12 +75,12 @@ final class PictureCommentRenderer
      *   native DBAL int -- only `uppercats`/`status`/`global_rank` are
      *   genuinely string|null.
      */
-    public function render(AccessControl $accessControl, ?CommentId $editCommentId, int $imageId, int $start, UrlServiceInterface $urlService, array $related_categories, string $url_self, SessionService $sessionService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Core\MailerInterface $mailer): void
+    public function render(Lang $lang, AccessControl $accessControl, ?CommentId $editCommentId, int $imageId, int $start, UrlServiceInterface $urlService, array $related_categories, string $url_self, SessionService $sessionService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Core\MailerInterface $mailer): void
     {
         $template = $currentTemplate->get();
 
         $commentRepository = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Comment\CommentEntity::class);
-        $commentService = new CommentService($commentRepository, new EphemeralKeyService(), $mailer, new HtmlService(), $urlService, $eventDispatcher, $pageState, $currentUser);
+        $commentService = new CommentService($lang, $commentRepository, new EphemeralKeyService(), $mailer, new HtmlService(), $urlService, $eventDispatcher, $pageState, $currentUser);
 
         $commentAction = null;
 
@@ -131,15 +131,15 @@ final class PictureCommentRenderer
 
             switch ($commentAction) {
                 case 'moderate':
-                    $commentInfos[] = Lang::t('An administrator must authorize your comment before it is visible.');
+                    $commentInfos[] = $lang->t('An administrator must authorize your comment before it is visible.');
                     // no break
                 case 'validate':
-                    $commentInfos[] = Lang::t('Your comment has been registered');
+                    $commentInfos[] = $lang->t('Your comment has been registered');
                     break;
                 case 'reject':
                     new HtmlService()
                         ->setStatusHeader(403);
-                    $commentErrors[] = Lang::t('Your comment has NOT been registered because it did not pass the validation rules');
+                    $commentErrors[] = $lang->t('Your comment has NOT been registered because it did not pass the validation rules');
                     break;
                 default:
                     trigger_error('Invalid comment action ' . $commentAction, E_USER_WARNING);
@@ -194,7 +194,7 @@ final class PictureCommentRenderer
                 'COMMENTS_ORDER_URL' => $urlService->addUrlParams($urlService->duplicatePictureUrl(), [
                     'comments_order' => ($commentsOrder === 'ASC' ? 'DESC' : 'ASC'),
                 ]),
-                'COMMENTS_ORDER_TITLE' => $commentsOrder === 'ASC' ? Lang::t('Show latest comments first') : Lang::t('Show oldest comments first'),
+                'COMMENTS_ORDER_TITLE' => $commentsOrder === 'ASC' ? $lang->t('Show latest comments first') : $lang->t('Show oldest comments first'),
             ]);
 
             $userFields = \Piwigo\Config\CurrentConfig::userFields();
@@ -212,7 +212,7 @@ final class PictureCommentRenderer
             );
 
             foreach ($rows as $row) {
-                $author = $row->author === 'guest' ? Lang::t('guest') : $row->author;
+                $author = $row->author === 'guest' ? $lang->t('guest') : $row->author;
 
                 $email = null;
                 if ($row->userEmail !== null && $row->userEmail !== '' && $row->userEmail !== '0') {

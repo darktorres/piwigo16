@@ -30,6 +30,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class TagsController implements ControllerInterface
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\FilterState $filterState,
@@ -59,7 +60,7 @@ final class TagsController implements ControllerInterface
         // file reads $GLOBALS['title']. Plain local, not global.
         $template = $this->currentTemplate->get();
 
-        $title = Lang::t('Tags');
+        $title = $this->lang->t('Tags');
         $this->pageState->setBodyId('theTagsPage');
 
         $template->set_filenames([
@@ -194,7 +195,7 @@ final class TagsController implements ControllerInterface
         $themeconf = is_array($themeconf) ? $themeconf : [];
         if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theTagsPage', $themeconf['hide_menu_on'], true)) {
             new MenubarRenderer()
-                ->render($this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
+                ->render($this->lang, $this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
         }
 
         new \Piwigo\Page\PageHeaderRenderer()

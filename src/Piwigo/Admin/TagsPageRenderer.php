@@ -18,6 +18,7 @@ use Piwigo\Event\Tag\RenderTagName;
 final class TagsPageRenderer
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
@@ -52,7 +53,7 @@ final class TagsPageRenderer
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             $tagService->deleteOrphanTags();
-            $_SESSION['message_tags'] = Lang::t('Orphan tags deleted');
+            $_SESSION['message_tags'] = $this->lang->t('Orphan tags deleted');
             $this->redirectService->redirect($this->urlService->getRootUrl() . 'admin.php?page=tags');
         }
 
@@ -81,12 +82,12 @@ final class TagsPageRenderer
 
         if (count($orphan_tag_names) > 0) {
             $warning_tags = sprintf(
-                Lang::t('You have %d orphan tags %s'),
+                $this->lang->t('You have %d orphan tags %s'),
                 count($orphan_tag_names),
                 '<a
       class="icon-eye"
       data-url="' . $this->urlService->getRootUrl() . 'admin.php?page=tags&amp;action=delete_orphans&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken() . '">'
-                . Lang::t('Review') . '</a>'
+                . $this->lang->t('Review') . '</a>'
             );
 
             $orphan_tag_names_array = '["';
@@ -156,7 +157,7 @@ final class TagsPageRenderer
                 'data' => $all_tags,
                 'total' => count($all_tags),
                 'per_page' => $per_page,
-                'ADMIN_PAGE_TITLE' => Lang::t('Tags'),
+                'ADMIN_PAGE_TITLE' => $this->lang->t('Tags'),
             ]
         );
 

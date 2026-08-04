@@ -32,6 +32,6 @@ final class RatingSubController implements AdminSubControllerInterface
     public function handle(ServerRequestInterface $request): void
     {
         new RatingPageRenderer()
-            ->render($this->accessControl, $this->urlService, $this->currentTemplate, $this->categoryService);
+            ->render(\Piwigo\Core\Lang::current(), $this->accessControl, $this->urlService, $this->currentTemplate, $this->categoryService);
     }
 }

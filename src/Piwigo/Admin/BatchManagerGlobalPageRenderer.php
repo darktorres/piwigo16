@@ -55,6 +55,7 @@ use Piwigo\Template\Template;
 final class BatchManagerGlobalPageRenderer
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
@@ -171,7 +172,7 @@ final class BatchManagerGlobalPageRenderer
             // if the user tries to apply an action, it means that there is at least 1
             // photo in the selection
             if (count($collection) === 0) {
-                $this->pageState->addError(Lang::t('Select at least one photo'));
+                $this->pageState->addError($this->lang->t('Select at least one photo'));
             }
 
             $action = $batchManagerGlobalRequest->selectAction;
@@ -191,7 +192,7 @@ final class BatchManagerGlobalPageRenderer
             } elseif ($action === 'add_tags') {
                 $post_add_tags = $post['add_tags'] ?? null;
                 if (! is_array($post_add_tags) || count($post_add_tags) === 0) {
-                    $this->pageState->addError(Lang::t('Select at least one tag'));
+                    $this->pageState->addError($this->lang->t('Select at least one tag'));
                 } else {
                     $add_tags = [];
                     foreach ($post_add_tags as $raw_tag) {
@@ -234,14 +235,14 @@ final class BatchManagerGlobalPageRenderer
                         $redirect = true;
                     }
                 } else {
-                    $this->pageState->addError(Lang::t('Select at least one tag'));
+                    $this->pageState->addError($this->lang->t('Select at least one tag'));
                 }
             }
 
             if ($action === 'associate') {
                 $post_associate = $post['associate'] ?? null;
                 if (! is_array($post_associate) || count($post_associate) === 0) {
-                    $this->pageState->addError(Lang::t('Select at least one album'));
+                    $this->pageState->addError($this->lang->t('Select at least one album'));
                 } else {
                     $associate_categories = [];
                     foreach ($post_associate as $raw_category_id) {
@@ -256,7 +257,7 @@ final class BatchManagerGlobalPageRenderer
                     );
 
                     $_SESSION['page_infos'] = [
-                        Lang::t('Information data registered in database'),
+                        $this->lang->t('Information data registered in database'),
                     ];
 
                     // let's refresh the page because we the current set might be modified
@@ -282,7 +283,7 @@ final class BatchManagerGlobalPageRenderer
                 $imageService->moveImagesToCategories($collection, $move_category !== null ? [$move_category] : []);
 
                 $_SESSION['page_infos'] = [
-                    Lang::t('Information data registered in database'),
+                    $this->lang->t('Information data registered in database'),
                 ];
 
                 // let's refresh the page because we the current set might be modified
@@ -305,7 +306,7 @@ final class BatchManagerGlobalPageRenderer
 
                 if ($nb_dissociated > 0) {
                     $_SESSION['page_infos'] = [
-                        Lang::t('Information data registered in database'),
+                        $this->lang->t('Information data registered in database'),
                     ];
 
                     // let's refresh the page because the current set might be modified
@@ -400,16 +401,16 @@ final class BatchManagerGlobalPageRenderer
                         $redirect_url = $this->urlService->getRootUrl() . 'admin.php?page=' . $get_page;
                         $redirect = true;
                     } else {
-                        $this->pageState->addError(Lang::t('No photo can be deleted'));
+                        $this->pageState->addError($this->lang->t('No photo can be deleted'));
                     }
                 } else {
-                    $this->pageState->addError(Lang::t('You need to confirm deletion'));
+                    $this->pageState->addError($this->lang->t('You need to confirm deletion'));
                 }
             }
 
             // synchronize metadata
             elseif ($action === 'metadata') {
-                $this->pageState->addInfo(Lang::t('Metadata synchronized from file') . ' <span class="badge">' . count($collection) . '</span>');
+                $this->pageState->addInfo($this->lang->t('Metadata synchronized from file') . ' <span class="badge">' . count($collection) . '</span>');
             } elseif ($action === 'delete_derivatives' && isset($post['del_derivatives_type']) && is_array($post['del_derivatives_type']) && count($post['del_derivatives_type']) > 0) {
                 foreach ($imageService->getPathsForFileDeletion($collection) as $info) {
                     $derivative_infos = [
@@ -427,10 +428,10 @@ final class BatchManagerGlobalPageRenderer
                 }
             } elseif ($action === 'generate_derivatives') {
                 if (($post['regenerateSuccess'] ?? '0') !== '0') {
-                    $this->pageState->addInfo(Lang::t('%s photos have been regenerated', $post['regenerateSuccess'] ?? '0'));
+                    $this->pageState->addInfo($this->lang->t('%s photos have been regenerated', $post['regenerateSuccess'] ?? '0'));
                 }
                 if (($post['regenerateError'] ?? '0') !== '0') {
-                    $this->pageState->addWarning(Lang::t('%s photos can not be regenerated', $post['regenerateError'] ?? '0'));
+                    $this->pageState->addWarning($this->lang->t('%s photos can not be regenerated', $post['regenerateError'] ?? '0'));
                 }
             }
 
@@ -460,7 +461,7 @@ final class BatchManagerGlobalPageRenderer
         $page_start = $pageStart;
 
         new FilterPanelRenderer()
-            ->render($template, $base_url, $collection, $cat_elements_id, $page_start, $this->urlService, $this->eventDispatcher, $this->pageState, $this->tagService, $this->htmlRenderer);
+            ->render($this->lang, $template, $base_url, $collection, $cat_elements_id, $page_start, $this->urlService, $this->eventDispatcher, $this->pageState, $this->tagService, $this->htmlRenderer);
 
         // +-------------------------------------------------------------------+
         // |                            caddie options                             |
@@ -504,10 +505,10 @@ final class BatchManagerGlobalPageRenderer
         // derivatives
         $del_deriv_map = [];
         foreach ($this->imageStdParams->get_defined_type_map() as $params) {
-            $del_deriv_map[$params->type] = Lang::t($params->type);
+            $del_deriv_map[$params->type] = $this->lang->t($params->type);
         }
         $gen_deriv_map = $del_deriv_map;
-        $del_deriv_map[ImageStdParams::CUSTOM] = Lang::t(ImageStdParams::CUSTOM);
+        $del_deriv_map[ImageStdParams::CUSTOM] = $this->lang->t(ImageStdParams::CUSTOM);
         $template->assign(
             [
                 'del_derivatives_types' => $del_deriv_map,

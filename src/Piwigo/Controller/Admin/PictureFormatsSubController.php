@@ -28,6 +28,6 @@ final class PictureFormatsSubController implements AdminSubControllerInterface
     public function handle(ServerRequestInterface $request): void
     {
         new PictureFormatsPageRenderer()
-            ->render($this->accessControl, $this->urlService, $this->imageStdParams, $this->currentTemplate, $this->htmlRenderer);
+            ->render(\Piwigo\Core\Lang::current(), $this->accessControl, $this->urlService, $this->imageStdParams, $this->currentTemplate, $this->htmlRenderer);
     }
 }

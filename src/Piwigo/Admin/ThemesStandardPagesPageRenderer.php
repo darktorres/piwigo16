@@ -45,6 +45,7 @@ use Piwigo\Template\Template;
 final class ThemesStandardPagesPageRenderer
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
@@ -60,7 +61,7 @@ final class ThemesStandardPagesPageRenderer
         $template = $this->currentTemplate->get();
 
         if (! $this->accessControl->isWebmaster()) {
-            $this->pageState->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
+            $this->pageState->addWarning(str_replace('%s', $this->lang->t('user_status_webmaster'), $this->lang->t('%s status is required to edit parameters.')));
         }
 
         // +-----------------------------------------------------------------------+
@@ -167,7 +168,7 @@ final class ThemesStandardPagesPageRenderer
                     } else {
                         $template->assign(
                             [
-                                'save_error' => "{$upload_dir}/{$logo_filename} " . Lang::t('no write access'),
+                                'save_error' => "{$upload_dir}/{$logo_filename} " . $this->lang->t('no write access'),
                             ]
                         );
                     }
@@ -175,7 +176,7 @@ final class ThemesStandardPagesPageRenderer
                     $template->assign(
                         [
                             'save_error' => sprintf(
-                                Lang::t('Add write access to the "%s" directory'),
+                                $this->lang->t('Add write access to the "%s" directory'),
                                 $upload_dir
                             ),
                         ]
@@ -186,7 +187,7 @@ final class ThemesStandardPagesPageRenderer
 
         // We want to now if any themes use standard pages and which ones
         $fs_themes = new ExtensionScanner()
-            ->scan(ExtensionType::Theme, $this->urlService);
+            ->scan(ExtensionType::Theme, $this->urlService, $this->lang);
 
         $is_standard_pages_used = false;
         $standard_pages_used_by = [];
@@ -234,7 +235,7 @@ final class ThemesStandardPagesPageRenderer
             'themes' => 'themes_standard_pages.tpl',
         ]);
 
-        $template->assign('ADMIN_PAGE_TITLE', Lang::t('Themes'));
+        $template->assign('ADMIN_PAGE_TITLE', $this->lang->t('Themes'));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'themes');
     }

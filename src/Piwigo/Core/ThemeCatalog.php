@@ -41,7 +41,7 @@ final class ThemeCatalog
                 if (! $showMobile) {
                     continue;
                 }
-                $name .= ' (' . Lang::t('Mobile') . ')';
+                $name .= ' (' . Lang::current()->t('Mobile') . ')';
             }
             if (self::checkThemeInstalled($id)) {
                 $themes[$id] = $name;

@@ -57,6 +57,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class ThemesSubController implements AdminSubControllerInterface
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
@@ -90,8 +91,8 @@ final class ThemesSubController implements AdminSubControllerInterface
 
         if ($tab === 'update') {
             new UpdatesExtPageRenderer()
-                ->render($this->accessControl, 'themes', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker, $this->htmlRenderer);
-            $template->assign('ADMIN_PAGE_TITLE', Lang::t('Themes'));
+                ->render(\Piwigo\Core\Lang::current(), $this->accessControl, 'themes', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker, $this->htmlRenderer);
+            $template->assign('ADMIN_PAGE_TITLE', $this->lang->t('Themes'));
         } elseif ($tab === 'new') {
             $this->themesNewPageRenderer
                 ->render('themes', $tab);

@@ -58,6 +58,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class MaintenanceSubController implements AdminSubControllerInterface
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
@@ -94,67 +95,67 @@ final class MaintenanceSubController implements AdminSubControllerInterface
         $maintActions = [
             'derivatives' => [
                 'icon' => 'icon-trash-1',
-                'label' => Lang::t('Delete multiple size images'),
+                'label' => $this->lang->t('Delete multiple size images'),
             ],
             'lock_gallery' => [
                 'icon' => 'icon-lock',
-                'label' => Lang::t('Lock gallery'),
+                'label' => $this->lang->t('Lock gallery'),
             ],
             'unlock_gallery' => [
                 'icon' => 'icon-lock',
-                'label' => Lang::t('Unlock gallery'),
+                'label' => $this->lang->t('Unlock gallery'),
             ],
             'categories' => [
                 'icon' => 'icon-folder-open',
-                'label' => Lang::t('Update albums informations'),
+                'label' => $this->lang->t('Update albums informations'),
             ],
             'images' => [
                 'icon' => 'icon-info-circled-1',
-                'label' => Lang::t('Update photos information'),
+                'label' => $this->lang->t('Update photos information'),
             ],
             'empty_lounge' => [
                 'icon' => 'icon-thumbs-up',
-                'label' => Lang::t('Empty lounge'),
+                'label' => $this->lang->t('Empty lounge'),
             ],
             'delete_orphan_tags' => [
                 'icon' => 'icon-tags',
-                'label' => Lang::t('Delete orphan tags'),
+                'label' => $this->lang->t('Delete orphan tags'),
             ],
             'user_cache' => [
                 'icon' => 'icon-user-1',
-                'label' => Lang::t('Purge user cache'),
+                'label' => $this->lang->t('Purge user cache'),
             ],
             'history_detail' => [
                 'icon' => 'icon-back-in-time',
-                'label' => Lang::t('Purge history detail'),
+                'label' => $this->lang->t('Purge history detail'),
             ],
             'history_summary' => [
                 'icon' => 'icon-back-in-time',
-                'label' => Lang::t('Purge history summary'),
+                'label' => $this->lang->t('Purge history summary'),
             ],
             'sessions' => [
                 'icon' => 'icon-th-list',
-                'label' => Lang::t('Purge sessions'),
+                'label' => $this->lang->t('Purge sessions'),
             ],
             'feeds' => [
                 'icon' => 'icon-bell',
-                'label' => Lang::t('Purge never used notification feeds'),
+                'label' => $this->lang->t('Purge never used notification feeds'),
             ],
             'database' => [
                 'icon' => 'icon-database',
-                'label' => Lang::t('Repair and optimize database'),
+                'label' => $this->lang->t('Repair and optimize database'),
             ],
             'c13y' => [
                 'icon' => 'icon-ok',
-                'label' => Lang::t('Reinitialize check integrity'),
+                'label' => $this->lang->t('Reinitialize check integrity'),
             ],
             'search' => [
                 'icon' => 'icon-search',
-                'label' => Lang::t('Purge search history'),
+                'label' => $this->lang->t('Purge search history'),
             ],
             'compiled-templates' => [
                 'icon' => 'icon-file-code',
-                'label' => Lang::t('Purge compiled templates'),
+                'label' => $this->lang->t('Purge compiled templates'),
             ],
         ];
 
@@ -174,7 +175,7 @@ final class MaintenanceSubController implements AdminSubControllerInterface
                 ->render();
         } elseif ($tab === 'sys') {
             new MaintenanceSysPageRenderer()
-                ->render($this->accessControl, $maintActions, $this->pageState, $this->currentTemplate);
+                ->render($this->lang, $this->accessControl, $maintActions, $this->pageState, $this->currentTemplate);
         } else {
             $this->maintenanceActionsPageRenderer
                 ->render($maintActions);
@@ -182,7 +183,7 @@ final class MaintenanceSubController implements AdminSubControllerInterface
 
         $template->assign(
             [
-                'ADMIN_PAGE_TITLE' => Lang::t('Maintenance'),
+                'ADMIN_PAGE_TITLE' => $this->lang->t('Maintenance'),
             ]
         );
     }

@@ -86,6 +86,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class NotificationByMailSubController implements AdminSubControllerInterface
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
@@ -139,7 +140,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         // +-----------------------------------------------------------------------+
         if (count($post) === 0) {
             // No insert data in post mode
-            self::insertNewDataUserMailNotification($nbmSender, $this->redirectService, $this->urlService, $this->sessionService);
+            self::insertNewDataUserMailNotification($this->lang, $nbmSender, $this->redirectService, $this->urlService, $this->sessionService);
         }
 
         // +-----------------------------------------------------------------------+
@@ -281,8 +282,8 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
 
                 $template->assign(
                     [
-                        'L_CAT_OPTIONS_TRUE' => Lang::t('Subscribed'),
-                        'L_CAT_OPTIONS_FALSE' => Lang::t('Unsubscribed'),
+                        'L_CAT_OPTIONS_TRUE' => $this->lang->t('Subscribed'),
+                        'L_CAT_OPTIONS_FALSE' => $this->lang->t('Unsubscribed'),
                     ]
                 );
 
@@ -373,7 +374,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
 
         }
 
-        $template->assign('ADMIN_PAGE_TITLE', Lang::t('Send mail to users'));
+        $template->assign('ADMIN_PAGE_TITLE', $this->lang->t('Send mail to users'));
 
         // +-----------------------------------------------------------------------+
         // | Sending html code                                                     |
@@ -430,7 +431,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
     /**
      * Inserting News users
      */
-    private static function insertNewDataUserMailNotification(NotificationByMailSender $nbmSender, RedirectServiceInterface $redirectService, UrlServiceInterface $urlService, SessionService $sessionService): void
+    private static function insertNewDataUserMailNotification(Lang $lang, NotificationByMailSender $nbmSender, RedirectServiceInterface $redirectService, UrlServiceInterface $urlService, SessionService $sessionService): void
     {
         // Recomputed rather than threaded from handle()'s own CoreTabs
         // value: this is the method's only real call site, and it already
@@ -474,7 +475,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
 
                 $nbm_username = $nbm_user['username'];
                 $nbm_username = is_scalar($nbm_username) ? (string) $nbm_username : '';
-                \Piwigo\Core\PageState::current()->addInfo(Lang::t(
+                \Piwigo\Core\PageState::current()->addInfo($lang->t(
                     'User %s [%s] added.',
                     stripslashes($nbm_username),
                     $nbm_user['mail_address']
@@ -496,7 +497,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                 if (count($untreated_check_key_list) !== 0) {
                     $notificationByMailService->deleteByCheckKeys($untreated_check_key_list);
 
-                    $redirectService->redirect($base_url . $urlService->getQueryStringDiff([], false), Lang::t('Operation in progress') . "\n" . Lang::t('Please wait...'));
+                    $redirectService->redirect($base_url . $urlService->getQueryStringDiff([], false), $lang->t('Operation in progress') . "\n" . $lang->t('Please wait...'));
                 }
             }
         }

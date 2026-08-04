@@ -25,6 +25,7 @@ use Piwigo\Permission\PermissionService;
 final class UserPermPageRenderer
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
@@ -82,13 +83,13 @@ final class UserPermPageRenderer
 
         $template->assign(
             [
-                'TITLE' => Lang::t(
+                'TITLE' => $this->lang->t(
                     'Manage permissions for user "%s"',
                     $this->userService
                         ->getUsername(\Piwigo\Common\ValueObject\UserId::from($user_id))->value ?? ''
                 ),
-                'L_CAT_OPTIONS_TRUE' => Lang::t('Authorized'),
-                'L_CAT_OPTIONS_FALSE' => Lang::t('Forbidden'),
+                'L_CAT_OPTIONS_TRUE' => $this->lang->t('Authorized'),
+                'L_CAT_OPTIONS_FALSE' => $this->lang->t('Forbidden'),
 
                 'F_ACTION' => $this->urlService->getRootUrl() .
                     'admin.php?page=user_perm' .

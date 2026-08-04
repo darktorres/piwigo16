@@ -42,7 +42,7 @@ final class UpdatesExtPageRenderer
      * slug statically (config/admin_pages.php registers each of those 4
      * controllers for exactly one slug), so each passes its own literal.
      */
-    public function render(AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate, ExtensionUpdateChecker $extensionUpdateChecker, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer): void
+    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate, ExtensionUpdateChecker $extensionUpdateChecker, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer): void
     {
         $template = $currentTemplate->get();
 
@@ -52,7 +52,7 @@ final class UpdatesExtPageRenderer
         }
 
         if (! $accessControl->isWebmaster()) {
-            $pageState->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
+            $pageState->addWarning(str_replace('%s', $lang->t('user_status_webmaster'), $lang->t('%s status is required to edit parameters.')));
         }
 
         // updates.class.php::__construct() restricts itself to a single type when
@@ -152,7 +152,7 @@ final class UpdatesExtPageRenderer
             // used throughout every other renderer), so the page just
             // renders without the update-list content below rather than
             // needing a dedicated termination mechanism.
-            $pageState->addError(Lang::t('Can\'t connect to server.'));
+            $pageState->addError($lang->t('Can\'t connect to server.'));
             return;
         }
 
@@ -163,6 +163,6 @@ final class UpdatesExtPageRenderer
         $template->assign('isWebmaster', ($accessControl->isWebmaster()) ? 1 : 0);
         $template->set_filename('plugin_admin_content', 'updates_ext.tpl');
         $template->assign_var_from_handle('ADMIN_CONTENT', 'plugin_admin_content');
-        $template->assign('ADMIN_PAGE_TITLE', Lang::t('Updates'));
+        $template->assign('ADMIN_PAGE_TITLE', $lang->t('Updates'));
     }
 }

@@ -43,6 +43,7 @@ use Piwigo\Template\Template;
 final class ElementSetRanksPageRenderer
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly ErrorCollector $errorCollector,
@@ -62,21 +63,21 @@ final class ElementSetRanksPageRenderer
 
         $sort_fields = [
             '' => '',
-            'file ASC' => Lang::t('File name, A &rarr; Z'),
-            'file DESC' => Lang::t('File name, Z &rarr; A'),
-            'name ASC' => Lang::t('Photo title, A &rarr; Z'),
-            'name DESC' => Lang::t('Photo title, Z &rarr; A'),
-            'date_creation DESC' => Lang::t('Date created, new &rarr; old'),
-            'date_creation ASC' => Lang::t('Date created, old &rarr; new'),
-            'date_available DESC' => Lang::t('Date posted, new &rarr; old'),
-            'date_available ASC' => Lang::t('Date posted, old &rarr; new'),
-            'rating_score DESC' => Lang::t('Rating score, high &rarr; low'),
-            'rating_score ASC' => Lang::t('Rating score, low &rarr; high'),
-            'hit DESC' => Lang::t('Visits, high &rarr; low'),
-            'hit ASC' => Lang::t('Visits, low &rarr; high'),
-            'id ASC' => Lang::t('Numeric identifier, 1 &rarr; 9'),
-            'id DESC' => Lang::t('Numeric identifier, 9 &rarr; 1'),
-            'rank ASC' => Lang::t('Manual sort order'),
+            'file ASC' => $this->lang->t('File name, A &rarr; Z'),
+            'file DESC' => $this->lang->t('File name, Z &rarr; A'),
+            'name ASC' => $this->lang->t('Photo title, A &rarr; Z'),
+            'name DESC' => $this->lang->t('Photo title, Z &rarr; A'),
+            'date_creation DESC' => $this->lang->t('Date created, new &rarr; old'),
+            'date_creation ASC' => $this->lang->t('Date created, old &rarr; new'),
+            'date_available DESC' => $this->lang->t('Date posted, new &rarr; old'),
+            'date_available ASC' => $this->lang->t('Date posted, old &rarr; new'),
+            'rating_score DESC' => $this->lang->t('Rating score, high &rarr; low'),
+            'rating_score ASC' => $this->lang->t('Rating score, low &rarr; high'),
+            'hit DESC' => $this->lang->t('Visits, high &rarr; low'),
+            'hit ASC' => $this->lang->t('Visits, low &rarr; high'),
+            'id ASC' => $this->lang->t('Numeric identifier, 1 &rarr; 9'),
+            'id DESC' => $this->lang->t('Numeric identifier, 9 &rarr; 1'),
+            'rank ASC' => $this->lang->t('Manual sort order'),
         ];
 
         $elementSetRanksRequest = Request\ElementSetRanksRequest::fromGlobals();
@@ -111,7 +112,7 @@ final class ElementSetRanksPageRenderer
                     );
             }
 
-            $message = Lang::t('Album updated successfully');
+            $message = $this->lang->t('Album updated successfully');
 
             $image_order = null;
             if ($image_order_choice === 'user_define') {
@@ -128,7 +129,7 @@ final class ElementSetRanksPageRenderer
             } elseif ($image_order_choice === 'rank') {
                 $image_order = '`rank` ASC';
 
-                $message = Lang::t('Images manual order was saved');
+                $message = $this->lang->t('Images manual order was saved');
             }
             $this->categoryAdminService->saveImageOrder($category_id, $image_order, $elementSetRanksRequest->isImageOrderSubcats, $this->redirectService);
 

@@ -30,6 +30,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class NbmController implements ControllerInterface
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\FilterState $filterState,
@@ -50,10 +51,10 @@ final class NbmController implements ControllerInterface
         $this->accessControl->checkStatus(AccessLevel::Free);
 
         // Translations are in the admin file too.
-        Lang::load('admin.lang');
+        $this->lang->load('admin.lang');
         // Need to update a second time.
         $this->eventDispatcher->dispatchNotify(new LoadingLang());
-        Lang::load('lang', \Piwigo\Core\CurrentPaths::get()->siteLocal, [
+        $this->lang->load('lang', \Piwigo\Core\CurrentPaths::get()->siteLocal, [
             'no_fallback' => true,
             'local' => true,
         ]);
@@ -78,10 +79,10 @@ final class NbmController implements ControllerInterface
         } elseif (is_string($unsubscribe) && (bool) preg_match('/^[A-Za-z0-9]{16}$/', $unsubscribe)) {
             $nbmSender->unsubscribeNotificationByMail(false, [$unsubscribe]);
         } else {
-            $this->pageState->addError(Lang::t('Unknown identifier'));
+            $this->pageState->addError($this->lang->t('Unknown identifier'));
         }
 
-        $title = Lang::t('Notification');
+        $title = $this->lang->t('Notification');
         $this->pageState->setBodyId('theNBMPage');
 
         $template->set_filenames([
@@ -93,7 +94,7 @@ final class NbmController implements ControllerInterface
         $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
         if (! is_array($hide_menu_on) or ! in_array('theNBMPage', $hide_menu_on, true)) {
             new MenubarRenderer()
-                ->render($this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
+                ->render($this->lang, $this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
         }
 
         new \Piwigo\Page\PageHeaderRenderer()

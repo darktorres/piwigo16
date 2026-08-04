@@ -37,6 +37,6 @@ final class HistorySubController implements AdminSubControllerInterface
     public function handle(ServerRequestInterface $request): void
     {
         new HistoryPageRenderer()
-            ->render($this->accessControl, 'history', $this->urlService, $this->coreTabs, $this->currentTemplate);
+            ->render(\Piwigo\Core\Lang::current(), $this->accessControl, 'history', $this->urlService, $this->coreTabs, $this->currentTemplate);
     }
 }

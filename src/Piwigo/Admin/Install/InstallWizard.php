@@ -160,6 +160,7 @@ final class InstallWizard
      * reasoning MailService/TagService already use for this exact shim.
      */
     public function __construct(
+        private readonly Lang $lang,
         private readonly string $prefixeTable,
         private readonly Paths $paths,
         private readonly DbCredentials $dbCredentials,
@@ -308,7 +309,7 @@ final class InstallWizard
         }
 
         $this->fsLanguages = new ExtensionScanner()
-            ->scan(ExtensionType::Language, \Piwigo\Bootstrap\PresentationAccessor::urlService(), 'utf-8');
+            ->scan(ExtensionType::Language, \Piwigo\Bootstrap\PresentationAccessor::urlService(), $this->lang, 'utf-8');
 
         if ($this->request->languageParam !== null) {
             $language = $this->request->languageParam;
@@ -330,20 +331,20 @@ final class InstallWizard
         }
         $this->language = $language;
 
-        Lang::load('common.lang', '', [
+        $this->lang->load('common.lang', '', [
             'language' => $language,
         ]);
-        Lang::load('admin.lang', '', [
+        $this->lang->load('admin.lang', '', [
             'language' => $language,
         ]);
-        Lang::load('install.lang', '', [
+        $this->lang->load('install.lang', '', [
             'language' => $language,
         ]);
 
         header('Content-Type: text/html; charset=UTF-8');
         // ----------------------------------------------- check php version
         if (version_compare(PHP_VERSION, AppInfo::REQUIRED_PHP_VERSION, '<')) {
-            $this->errors[] = Lang::t('PHP version %s required (you are running on PHP %s)', AppInfo::REQUIRED_PHP_VERSION, PHP_VERSION);
+            $this->errors[] = $this->lang->t('PHP version %s required (you are running on PHP %s)', AppInfo::REQUIRED_PHP_VERSION, PHP_VERSION);
         }
 
         // --------------------------------------------- template initialization
@@ -374,7 +375,7 @@ final class InstallWizard
     private function userService(?Connection $conn = null): UserService
     {
         $conn ??= DbConnection::build();
-        return new UserService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Bootstrap\PresentationAccessor::mailService(), new ActivityService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $conn, new \Piwigo\Session\SessionService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Session\SessionEntity::class)), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\DeploymentPolicy::current(), \Piwigo\Users\CurrentUser::current());
+        return new UserService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Bootstrap\PresentationAccessor::mailService(), new ActivityService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $conn, new \Piwigo\Session\SessionService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Session\SessionEntity::class)), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\DeploymentPolicy::current(), \Piwigo\Users\CurrentUser::current());
     }
 
     /**
@@ -415,15 +416,15 @@ final class InstallWizard
 
         $webmaster = trim((string) preg_replace('/\s{2,}/', ' ', $this->adminName));
         if ($webmaster === '') {
-            $this->errors[] = Lang::t('enter a login for webmaster');
+            $this->errors[] = $this->lang->t('enter a login for webmaster');
         } elseif ((bool) preg_match('/[\'"]/', $webmaster)) {
-            $this->errors[] = Lang::t('webmaster login can\'t contain characters \' or "');
+            $this->errors[] = $this->lang->t('webmaster login can\'t contain characters \' or "');
         }
         if ($this->adminPass1 !== $this->adminPass2 || $this->adminPass1 === '') {
-            $this->errors[] = Lang::t('please enter your password again');
+            $this->errors[] = $this->lang->t('please enter your password again');
         }
         if ($this->adminMail === '') {
-            $this->errors[] = Lang::t('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
+            $this->errors[] = $this->lang->t('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
         } else {
             $error_mail_address = $this->userService()
                 ->validateMailAddress(null, $this->adminMail);
@@ -580,11 +581,11 @@ define(\'DB_COLLATE\', \'\');
         ]);
 
         $configService = $this->currentConfigService->get();
-        $configService->confUpdateParam('gallery_title', Lang::t('Just another Piwigo gallery'));
+        $configService->confUpdateParam('gallery_title', $this->lang->t('Just another Piwigo gallery'));
 
         $configService->confUpdateParam(
             'page_banner',
-            '<h1>%gallery_title%</h1>' . "\n\n<p>" . Lang::t('Welcome to my photo gallery') . '</p>'
+            '<h1>%gallery_title%</h1>' . "\n\n<p>" . $this->lang->t('Welcome to my photo gallery') . '</p>'
         );
 
         // fill languages table, only activate the current language
@@ -596,6 +597,7 @@ define(\'DB_COLLATE\', \'\');
         $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
         $languageActivationConn = DbConnection::build();
         new ExtensionLifecycle(
+            $this->lang,
             new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($languageActivationConn)),
             new PemCatalog(new ZipExtractor(), \Piwigo\Bootstrap\InstallBootstrap::currentLogger()),
             $urlService,
@@ -680,7 +682,7 @@ define(\'DB_COLLATE\', \'\');
                 'F_ADMIN_EMAIL' => $this->adminMail,
                 'EMAIL' => '<span class="adminEmail">' . $this->adminMail . '</span>',
                 'F_NEWSLETTER_SUBSCRIBE' => $this->isNewsletterSubscribe,
-                'L_INSTALL_HELP' => Lang::t('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.', AppInfo::URL . '/forum'),
+                'L_INSTALL_HELP' => $this->lang->t('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.', AppInfo::URL . '/forum'),
             ]
         );
 
@@ -699,7 +701,7 @@ define(\'DB_COLLATE\', \'\');
                 ->record('system', ActivitySystem::Core, 'install', [
                     'version' => AppInfo::VERSION,
                 ]);
-            $this->infos[] = Lang::t('Congratulations, Piwigo installation is completed');
+            $this->infos[] = $this->lang->t('Congratulations, Piwigo installation is completed');
 
             // The former top-level code wrapped everything below in
             // `if (isset($error_copy)) { $errors[] = $error_copy; } else {...}`;
@@ -794,25 +796,25 @@ define(\'DB_COLLATE\', \'\');
             // email notification
             if ($this->request->isSendCredentialsByMail) {
                 $keyargs_content = [
-                    Lang::buildArgs('Hello %s,', $this->adminName),
-                    Lang::buildArgs('Welcome to your new installation of Piwigo!', ''),
-                    Lang::buildArgs('', ''),
-                    Lang::buildArgs('Here are your connection settings', ''),
-                    Lang::buildArgs('', ''),
-                    Lang::buildArgs('Link: %s', \Piwigo\Bootstrap\PresentationAccessor::urlService()->getAbsoluteRootUrl()),
-                    Lang::buildArgs('Username: %s', $this->adminName),
-                    Lang::buildArgs('Password: ********** (no copy by email)', ''),
-                    Lang::buildArgs('Email: %s', $this->adminMail),
-                    Lang::buildArgs('', ''),
-                    Lang::buildArgs('Don\'t hesitate to consult our forums for any help: %s', AppInfo::URL),
+                    $this->lang->buildArgs('Hello %s,', $this->adminName),
+                    $this->lang->buildArgs('Welcome to your new installation of Piwigo!', ''),
+                    $this->lang->buildArgs('', ''),
+                    $this->lang->buildArgs('Here are your connection settings', ''),
+                    $this->lang->buildArgs('', ''),
+                    $this->lang->buildArgs('Link: %s', \Piwigo\Bootstrap\PresentationAccessor::urlService()->getAbsoluteRootUrl()),
+                    $this->lang->buildArgs('Username: %s', $this->adminName),
+                    $this->lang->buildArgs('Password: ********** (no copy by email)', ''),
+                    $this->lang->buildArgs('Email: %s', $this->adminMail),
+                    $this->lang->buildArgs('', ''),
+                    $this->lang->buildArgs('Don\'t hesitate to consult our forums for any help: %s', AppInfo::URL),
                 ];
 
                 \Piwigo\Bootstrap\PresentationAccessor::mailService()
                     ->mail(
                         $this->adminMail,
                         [
-                            'subject' => Lang::t('Just another Piwigo gallery'),
-                            'content' => Lang::args($keyargs_content),
+                            'subject' => $this->lang->t('Just another Piwigo gallery'),
+                            'content' => $this->lang->args($keyargs_content),
                             'content_format' => 'text/plain',
                         ]
                     );

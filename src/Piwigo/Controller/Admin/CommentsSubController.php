@@ -28,6 +28,6 @@ final class CommentsSubController implements AdminSubControllerInterface
     public function handle(ServerRequestInterface $request): void
     {
         new CommentsPageRenderer()
-            ->render($this->accessControl, $this->urlService, $this->coreTabs, $this->currentTemplate);
+            ->render(\Piwigo\Core\Lang::current(), $this->accessControl, $this->urlService, $this->coreTabs, $this->currentTemplate);
     }
 }

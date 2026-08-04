@@ -907,9 +907,9 @@ final class PwgCore
         $types = array_merge(['none'], new DbInfo($conn)->getEnums(Tables::history(), 'image_type'));
 
         $display_thumbnails = [
-            'no_display_thumbnail' => Lang::t('No display'),
-            'display_thumbnail_classic' => Lang::t('Classic display'),
-            'display_thumbnail_hoverbox' => Lang::t('Hoverbox display'),
+            'no_display_thumbnail' => Lang::current()->t('No display'),
+            'display_thumbnail_classic' => Lang::current()->t('Classic display'),
+            'display_thumbnail_hoverbox' => Lang::current()->t('Hoverbox display'),
         ];
 
         // +-----------------------------------------------------------------------+
@@ -1382,8 +1382,8 @@ final class PwgCore
                     'EDIT_IMAGE' => $image_edit_string,
                     'TYPE' => $line_image_type,
                     'SECTION' => $line_section,
-                    'FULL_CATEGORY_PATH' => $line_category_id !== null && isset($full_cat_path[$line_category_id]) ? strip_tags($full_cat_path[$line_category_id]) : Lang::t('Root') . $line_category_id,
-                    'CATEGORY' => $line_category_id !== null && isset($name_of_category[$line_category_id]) ? $name_of_category[$line_category_id] : Lang::t('Root') . $line_category_id,
+                    'FULL_CATEGORY_PATH' => $line_category_id !== null && isset($full_cat_path[$line_category_id]) ? strip_tags($full_cat_path[$line_category_id]) : Lang::current()->t('Root') . $line_category_id,
+                    'CATEGORY' => $line_category_id !== null && isset($name_of_category[$line_category_id]) ? $name_of_category[$line_category_id] : Lang::current()->t('Root') . $line_category_id,
                     'SEARCH_ID' => $line_search_id,
                     'TAGS' => explode(',', (string) $tag_names),
                     'TAGIDS' => explode(',', $tag_ids),

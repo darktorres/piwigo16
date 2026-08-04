@@ -205,7 +205,7 @@ final class PwgComments
                 $author_name = $row_author;
             } else {
                 $row_username = $row['username'] ?? null;
-                $author_name = stripslashes((is_string($row_username) ? $row_username : null) ?? $row_author ?? Lang::t('guest'));
+                $author_name = stripslashes((is_string($row_username) ? $row_username : null) ?? $row_author ?? Lang::current()->t('guest'));
             }
 
             // date/date_available are NOT NULL DATETIME columns -- always
@@ -274,7 +274,7 @@ final class PwgComments
     public static function delete(array $params, PwgServer &$service): PwgError|string
     {
         if (new CsrfService()->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, Lang::t('Invalid security token'));
+            return new PwgError(403, Lang::current()->t('Invalid security token'));
         }
 
         $commentIds = array_values(array_map(CommentId::from(...), array_unique($params['comment_id'])));
@@ -294,7 +294,7 @@ final class PwgComments
     public static function validate(array $params, PwgServer &$service): PwgError|string
     {
         if (new CsrfService()->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, Lang::t('Invalid security token'));
+            return new PwgError(403, Lang::current()->t('Invalid security token'));
         }
 
         $commentIds = array_values(array_map(CommentId::from(...), array_unique($params['comment_id'])));
@@ -310,6 +310,6 @@ final class PwgComments
      */
     private static function commentService(): CommentService
     {
-        return new CommentService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), \Piwigo\Bootstrap\PresentationAccessor::urlService(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
+        return new CommentService(\Piwigo\Core\Lang::current(), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), \Piwigo\Bootstrap\PresentationAccessor::urlService(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current());
     }
 }

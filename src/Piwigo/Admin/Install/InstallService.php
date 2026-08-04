@@ -21,7 +21,6 @@ use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\AppInfo;
-use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
 use RuntimeException;
 
@@ -81,6 +80,7 @@ final class InstallService
         $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
         $conn = DbConnection::build();
         $lifecycle = new ExtensionLifecycle(
+            \Piwigo\Core\Lang::current(),
             new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
             new PemCatalog(new ZipExtractor(), \Piwigo\Bootstrap\InstallBootstrap::currentLogger()),
             $urlService,
@@ -91,7 +91,7 @@ final class InstallService
             \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
         );
         $fs_themes = new ExtensionScanner()
-            ->scan(ExtensionType::Theme, $urlService);
+            ->scan(ExtensionType::Theme, $urlService, \Piwigo\Core\Lang::current());
         foreach ($fs_themes as $theme_id => $fs_theme) {
             if (in_array($theme_id, [AppInfo::DEFAULT_TEMPLATE], true)) {
                 $lifecycle->performAction(ExtensionType::Theme, 'activate', $theme_id, $fs_theme);
@@ -107,7 +107,7 @@ final class InstallService
         // No core plugins are auto-activated at install time (empty list,
         // matching the original's own empty in_array() haystack).
         new ExtensionScanner()
-            ->scan(ExtensionType::Plugin, \Piwigo\Bootstrap\PresentationAccessor::urlService());
+            ->scan(ExtensionType::Plugin, \Piwigo\Bootstrap\PresentationAccessor::urlService(), \Piwigo\Core\Lang::current());
     }
 
     /**
@@ -136,7 +136,7 @@ final class InstallService
 
             return $conn;
         } catch (Exception $e) {
-            $errors[] = Lang::t($e->getMessage());
+            $errors[] = \Piwigo\Core\Lang::current()->t($e->getMessage());
 
             return null;
         }

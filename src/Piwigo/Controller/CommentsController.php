@@ -50,6 +50,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class CommentsController implements ControllerInterface
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
@@ -90,14 +91,14 @@ final class CommentsController implements ControllerInterface
           . $this->urlService->getQueryStringDiff(['delete', 'edit', 'validate', 'pwg_token']);
 
         $sort_order = [
-            'DESC' => Lang::t('descending'),
-            'ASC' => Lang::t('ascending'),
+            'DESC' => $this->lang->t('descending'),
+            'ASC' => $this->lang->t('ascending'),
         ];
 
         // sort_by : database fields proposed for sorting comments list
         $sort_by = [
-            'date' => Lang::t('comment date'),
-            'image_id' => Lang::t('photo'),
+            'date' => $this->lang->t('comment date'),
+            'image_id' => $this->lang->t('photo'),
         ];
 
         // items_number : list of number of items to display per page
@@ -135,19 +136,19 @@ final class CommentsController implements ControllerInterface
         //
         $since_options = [
             1 => [
-                'label' => Lang::t('today'),
+                'label' => $this->lang->t('today'),
                 'clause' => 'date > ' . SqlDialect::getRecentPeriodExpression(1),
             ],
             2 => [
-                'label' => Lang::t('last %d days', 7),
+                'label' => $this->lang->t('last %d days', 7),
                 'clause' => 'date > ' . SqlDialect::getRecentPeriodExpression(7),
             ],
             3 => [
-                'label' => Lang::t('last %d days', 30),
+                'label' => $this->lang->t('last %d days', 30),
                 'clause' => 'date > ' . SqlDialect::getRecentPeriodExpression(30),
             ],
             4 => [
-                'label' => Lang::t('the beginning'),
+                'label' => $this->lang->t('the beginning'),
                 'clause' => '1=1',
             ], // stupid but generic
         ];
@@ -294,7 +295,7 @@ final class CommentsController implements ControllerInterface
         $comment_id = $commentsRequest->actionCommentId;
         $edit_comment = null;
 
-        $commentService = new CommentService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), $this->mailer, $this->htmlService, $this->urlService, $this->eventDispatcher, $this->pageState, $this->currentUser);
+        $commentService = new CommentService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), $this->mailer, $this->htmlService, $this->urlService, $this->eventDispatcher, $this->pageState, $this->currentUser);
 
         if (isset($action) and $comment_id !== null) {
             $commentIdVo = CommentId::from($comment_id);
@@ -339,20 +340,20 @@ final class CommentsController implements ControllerInterface
                                 if (! isset($_SESSION['page_infos']) or ! is_array($_SESSION['page_infos'])) {
                                     $_SESSION['page_infos'] = [];
                                 }
-                                $_SESSION['page_infos'][] = Lang::t('An administrator must authorize your comment before it is visible.');
+                                $_SESSION['page_infos'][] = $this->lang->t('An administrator must authorize your comment before it is visible.');
                                 // no break
                             case 'validate':
                                 if (! isset($_SESSION['page_infos']) or ! is_array($_SESSION['page_infos'])) {
                                     $_SESSION['page_infos'] = [];
                                 }
-                                $_SESSION['page_infos'][] = Lang::t('Your comment has been registered');
+                                $_SESSION['page_infos'][] = $this->lang->t('Your comment has been registered');
                                 $perform_redirect = true;
                                 break;
                             case 'reject':
                                 if (! isset($_SESSION['page_errors']) or ! is_array($_SESSION['page_errors'])) {
                                     $_SESSION['page_errors'] = [];
                                 }
-                                $_SESSION['page_errors'][] = Lang::t('Your comment has NOT been registered because it did not pass the validation rules');
+                                $_SESSION['page_errors'][] = $this->lang->t('Your comment has NOT been registered because it did not pass the validation rules');
                                 break;
                             default:
                                 trigger_error('Invalid comment action ' . $comment_action, E_USER_WARNING);
@@ -378,7 +379,7 @@ final class CommentsController implements ControllerInterface
         // |                    page header and options                    |
         // +---------------------------------------------------------------+
 
-        $title = Lang::t('User comments');
+        $title = $this->lang->t('User comments');
         $this->pageState->setBodyId('theCommentsPage');
 
         $template->set_filenames([
@@ -437,7 +438,7 @@ final class CommentsController implements ControllerInterface
         $blockname = 'items_number_option';
         $tpl_var = [];
         foreach ($items_number as $option) {
-            $tpl_var[$option] = is_numeric($option) ? $option : Lang::t($option);
+            $tpl_var[$option] = is_numeric($option) ? $option : $this->lang->t($option);
         }
         $template->assign('item_number_options', $tpl_var);
         $template->assign('item_number_options_selected', $selected_items_number);
@@ -641,7 +642,7 @@ final class CommentsController implements ControllerInterface
         $themeconf = is_array($themeconf) ? $themeconf : [];
         if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theCommentsPage', $themeconf['hide_menu_on'], true)) {
             new MenubarRenderer()
-                ->render($this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
+                ->render($this->lang, $this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
         }
 
         // +---------------------------------------------------------------+

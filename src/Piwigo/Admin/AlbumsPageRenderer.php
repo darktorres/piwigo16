@@ -35,7 +35,7 @@ use Piwigo\Template\Template;
  */
 final class AlbumsPageRenderer
 {
-    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, CategoryAdminService $categoryAdminService, \Piwigo\Category\CategoryService $categoryService, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer): void
+    public function render(Lang $lang, UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, CategoryAdminService $categoryAdminService, \Piwigo\Category\CategoryService $categoryService, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer): void
     {
         $template = $currentTemplate->get();
 
@@ -264,7 +264,7 @@ final class AlbumsPageRenderer
                 'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
                     ->getToken(),
                 'nb_albums' => count($allAlbum),
-                'ADMIN_PAGE_TITLE' => Lang::t('Albums'),
+                'ADMIN_PAGE_TITLE' => $lang->t('Albums'),
                 'light_album_manager' => ($albums_counter > \Piwigo\Config\CurrentConfig::lightAlbumManagerThreshold()) ? 1 : 0,
             ]
         );

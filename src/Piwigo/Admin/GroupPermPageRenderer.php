@@ -25,6 +25,7 @@ use Piwigo\Group\GroupService;
 final class GroupPermPageRenderer
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
@@ -115,13 +116,13 @@ final class GroupPermPageRenderer
 
         $template->assign(
             [
-                'TITLE' => Lang::t(
+                'TITLE' => $this->lang->t(
                     'Manage permissions for group "%s"',
                     \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class)
                         ->findName($groupId) ?? false
                 ),
-                'L_CAT_OPTIONS_TRUE' => Lang::t('Authorized'),
-                'L_CAT_OPTIONS_FALSE' => Lang::t('Forbidden'),
+                'L_CAT_OPTIONS_TRUE' => $this->lang->t('Authorized'),
+                'L_CAT_OPTIONS_FALSE' => $this->lang->t('Forbidden'),
 
                 'F_ACTION' => $this->urlService->getRootUrl() .
                     'admin.php?page=group_perm&amp;group_id=' .

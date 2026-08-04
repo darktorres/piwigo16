@@ -23,6 +23,7 @@ use Piwigo\Users\UserService;
 final class C13yInternal
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly SessionService $sessionService,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Core\PageState $pageState,
@@ -71,10 +72,10 @@ final class C13yInternal
         foreach ($check_list as $elem) {
             if (version_compare($elem['current'], $elem['required'], '<')) {
                 $c13y->add_anomaly(
-                    sprintf(Lang::t('The version of %s [%s] installed is not compatible with the version required [%s]'), $elem['type'], $elem['current'], $elem['required']),
+                    sprintf($this->lang->t('The version of %s [%s] installed is not compatible with the version required [%s]'), $elem['type'], $elem['current'], $elem['required']),
                     null,
                     null,
-                    Lang::t('You need to upgrade your system to take full advantage of the application else the application will not work correctly, or not at all')
+                    $this->lang->t('You need to upgrade your system to take full advantage of the application else the application will not work correctly, or not at all')
           . '<br>' .
           $c13y->get_htlm_links_more_info()
                 );
@@ -95,10 +96,10 @@ final class C13yInternal
         foreach ($checks as $value => $enabled) {
             if ($enabled and (! function_exists('exif_read_data'))) {
                 $c13y->add_anomaly(
-                    sprintf(Lang::t('%s value is not correct file because exif are not supported'), '$conf[\'' . $value . '\']'),
+                    sprintf($this->lang->t('%s value is not correct file because exif are not supported'), '$conf[\'' . $value . '\']'),
                     null,
                     null,
-                    sprintf(Lang::t('%s must be to set to false in your local/config/config.inc.php file'), '$conf[\'' . $value . '\']')
+                    sprintf($this->lang->t('%s must be to set to false in your local/config/config.inc.php file'), '$conf[\'' . $value . '\']')
           . '<br>' .
           $c13y->get_htlm_links_more_info()
                 );
@@ -153,7 +154,7 @@ final class C13yInternal
         foreach ($c13y_users as $id => $data) {
             if (! array_key_exists($id, $status)) {
                 $c13y->add_anomaly(
-                    Lang::t($data['l10n_non_existent']),
+                    $this->lang->t($data['l10n_non_existent']),
                     'c13y_correction_user',
                     [
                         'id' => $id,
@@ -162,7 +163,7 @@ final class C13yInternal
                 );
             } elseif (! in_array($data['status'] ?? null, [null, false, 0, '0', '', []], true) and ($status[$id] ?? '') !== $data['status']) {
                 $c13y->add_anomaly(
-                    Lang::t($data['l10n_bad_status']),
+                    $this->lang->t($data['l10n_bad_status']),
                     'c13y_correction_user',
                     [
                         'id' => $id,
@@ -224,7 +225,7 @@ final class C13yInternal
 
                         $this->userService->createUserInfos([\Piwigo\Common\ValueObject\UserId::from($id)]);
 
-                        $this->pageState->addInfo(sprintf(Lang::t('User "%s" created with "%s" like password'), $name, $password ?? ''));
+                        $this->pageState->addInfo(sprintf($this->lang->t('User "%s" created with "%s" like password'), $name, $password ?? ''));
 
                         $result = true;
                     }
@@ -242,7 +243,7 @@ final class C13yInternal
                         $this->userService->updateStatusForUsers([\Piwigo\Common\ValueObject\UserId::from($id)], $status);
 
                         $updated_username = $this->userService->getUsername(\Piwigo\Common\ValueObject\UserId::from($id));
-                        $this->pageState->addInfo(sprintf(Lang::t('Status of user "%s" updated'), $updated_username === null ? '' : $updated_username->value));
+                        $this->pageState->addInfo(sprintf($this->lang->t('Status of user "%s" updated'), $updated_username === null ? '' : $updated_username->value));
 
                         $result = true;
                     }

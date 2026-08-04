@@ -45,6 +45,7 @@ use Piwigo\Permission\PermissionService;
 final readonly class CalendarRenderer
 {
     public function __construct(
+        private Lang $lang,
         private HtmlRenderingInterface $htmlRenderer,
         private TemplateInterface $template,
         private UrlServiceInterface $urlService,
@@ -76,7 +77,7 @@ final readonly class CalendarRenderer
         $permissionService = new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class));
         $calendarService = new CalendarService(
             $permissionService,
-            new CategoryService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class), $permissionService)
+            new CategoryService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class), $permissionService)
         );
 
         if ($section === 'categories') { // we will regenerate the items by including subcats elements
@@ -108,11 +109,11 @@ final readonly class CalendarRenderer
         $fields = [
             // Created
             'created' => [
-                'label' => Lang::t('Creation date'),
+                'label' => $this->lang->t('Creation date'),
             ],
             // Posted
             'posted' => [
-                'label' => Lang::t('Post date'),
+                'label' => $this->lang->t('Post date'),
             ],
         ];
 
@@ -142,7 +143,7 @@ final readonly class CalendarRenderer
         $cal_style = $chronology_style;
         $classname = $styles[$cal_style]['classname'];
 
-        $calendar = new $classname(new CalendarRepository($conn), $this->urlService);
+        $calendar = new $classname($this->lang, new CalendarRepository($conn), $this->urlService);
         $calendar->chronology_field = $chronologyField;
 
         // Retrieve view
@@ -236,7 +237,7 @@ final readonly class CalendarRenderer
                             'chronology_views',
                             [
                                 'VALUE' => $url,
-                                'CONTENT' => Lang::t('chronology_' . $style . '_' . $view),
+                                'CONTENT' => $this->lang->t('chronology_' . $style . '_' . $view),
                                 'SELECTED' => $selected,
                             ]
                         );

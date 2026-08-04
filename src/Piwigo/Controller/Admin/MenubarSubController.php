@@ -32,6 +32,6 @@ final class MenubarSubController implements AdminSubControllerInterface
     public function handle(ServerRequestInterface $request): void
     {
         new MenubarPageRenderer()
-            ->render($this->accessControl, $this->urlService, $this->coreTabs, $this->eventDispatcher, $this->pageState, $this->currentTemplate);
+            ->render(\Piwigo\Core\Lang::current(), $this->accessControl, $this->urlService, $this->coreTabs, $this->eventDispatcher, $this->pageState, $this->currentTemplate);
     }
 }

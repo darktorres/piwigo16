@@ -36,6 +36,6 @@ final class AlbumsSubController implements AdminSubControllerInterface
     public function handle(ServerRequestInterface $request): void
     {
         new AlbumsPageRenderer()
-            ->render($this->urlService, $this->coreTabs, $this->eventDispatcher, $this->currentUser, $this->currentTemplate, $this->categoryAdminService, $this->categoryService, $this->htmlRenderer);
+            ->render(\Piwigo\Core\Lang::current(), $this->urlService, $this->coreTabs, $this->eventDispatcher, $this->currentUser, $this->currentTemplate, $this->categoryAdminService, $this->categoryService, $this->htmlRenderer);
     }
 }

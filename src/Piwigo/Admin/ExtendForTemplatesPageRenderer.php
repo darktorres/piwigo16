@@ -30,7 +30,7 @@ use Piwigo\Template\Template;
  */
 final class ExtendForTemplatesPageRenderer
 {
-    public function render(AccessControl $accessControl, UrlServiceInterface $urlService, ConfigService $configService, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Category\CategoryService $categoryService): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, ConfigService $configService, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Category\CategoryService $categoryService): void
     {
         $template = $currentTemplate->get();
 
@@ -153,7 +153,7 @@ final class ExtendForTemplatesPageRenderer
             $tpl_extension = $replacements;
             /* ecrire la nouvelle conf */
             $configService->confUpdateParam('extents_for_templates', $replacements);
-            $pageState->addInfo(Lang::t('Templates configuration has been recorded.'));
+            $pageState->addInfo($lang->t('Templates configuration has been recorded.'));
         }
 
         /* Clearing (remove old extents, add new ones) */
@@ -196,7 +196,7 @@ final class ExtendForTemplatesPageRenderer
                 ]
             );
         }
-        $template->assign('ADMIN_PAGE_TITLE', Lang::t('Extend for templates'));
+        $template->assign('ADMIN_PAGE_TITLE', $lang->t('Extend for templates'));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'extend_for_templates');
     }

@@ -27,12 +27,12 @@ use Piwigo\Menu\BlockManager;
  */
 final class MenubarPageRenderer
 {
-    public function render(AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate): void
     {
         $template = $currentTemplate->get();
 
         if (! $accessControl->isWebmaster()) {
-            $pageState->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
+            $pageState->addWarning(str_replace('%s', $lang->t('user_status_webmaster'), $lang->t('%s status is required to edit parameters.')));
         }
 
         // Legacy Coupling Retirement Phase 8, 8g: real, previously-unfixed
@@ -108,7 +108,7 @@ final class MenubarPageRenderer
 
             $template->assign(
                 [
-                    'save_success' => Lang::t('Order of menubar items has been updated successfully.'),
+                    'save_success' => $lang->t('Order of menubar items has been updated successfully.'),
                 ]
             );
         }
@@ -131,7 +131,7 @@ final class MenubarPageRenderer
         ]);
 
         $template->assign('isWebmaster', $accessControl->isWebmaster() ? 1 : 0);
-        $template->assign('ADMIN_PAGE_TITLE', Lang::t('Menu Management'));
+        $template->assign('ADMIN_PAGE_TITLE', $lang->t('Menu Management'));
 
         $template->set_filename('menubar_admin_content', 'menubar.tpl');
         $template->assign_var_from_handle('ADMIN_CONTENT', 'menubar_admin_content');

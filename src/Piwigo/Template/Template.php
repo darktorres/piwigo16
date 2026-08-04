@@ -142,14 +142,14 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
             $dir = CurrentPaths::get()->root . $conf_data_location;
             \Piwigo\Core\FilesystemHelper::mkgetdir($dir, \Piwigo\Core\FilesystemHelper::MKGETDIR_DEFAULT & ~\Piwigo\Core\FilesystemHelper::MKGETDIR_DIE_ON_ERROR);
             if (! is_writable($dir)) {
-                Lang::load('admin.lang');
+                Lang::current()->load('admin.lang');
                 new HtmlService()
                     ->fatalError(
-                        Lang::t(
+                        Lang::current()->t(
                             'Give write access (chmod 777) to "%s" directory at the root of your Piwigo installation',
                             $conf_data_location
                         ),
-                        Lang::t('an error happened'),
+                        Lang::current()->t('an error happened'),
                         false // show trace
                     );
             }
@@ -213,7 +213,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
 
         $this->smarty->setCompileDir($compile_dir);
 
-        $this->smarty->assign('pwg', new PwgTemplateAdapter());
+        $this->smarty->assign('pwg', new PwgTemplateAdapter(\Piwigo\Core\Lang::current()));
         $this->smarty->registerPlugin('modifiercompiler', 'translate', self::modcompiler_translate(...));
         $this->smarty->registerPlugin('modifiercompiler', 'translate_dec', self::modcompiler_translate_dec(...));
         $this->smarty->registerPlugin('modifier', 'sprintf', 'sprintf');
@@ -248,7 +248,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
         $this->smarty->registerFilter('pre', self::prefilter_white_space(...));
         $this->smarty->registerPlugin('modifier', 'url_is_remote', self::urlService()->urlIsRemote(...));
         $this->smarty->registerPlugin('modifier', 'is_null', 'is_null');
-        $this->smarty->registerPlugin('modifier', 'l10n', Lang::t(...));
+        $this->smarty->registerPlugin('modifier', 'l10n', Lang::current()->t(...));
         $this->smarty->registerPlugin('modifier', 'str_replace', 'str_replace');
         // Deliberately lazy (unlike the other AccessControl::current()-free
         // modifiers above) -- AccessControl::current()'s dependency chain
@@ -284,7 +284,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
             $this->set_template_dir($root);
         }
 
-        $lang_info = Lang::langInfo();
+        $lang_info = Lang::current()->langInfo();
         if (isset($lang_info['code']) and ! isset($lang_info['jquery_code'])) {
             $lang_info['jquery_code'] = $lang_info['code'];
         }
@@ -293,7 +293,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
             $lang_info['plupload_code'] = str_replace('-', '_', $lang_info['jquery_code']);
         }
 
-        Lang::setLangInfo($lang_info);
+        Lang::current()->setLangInfo($lang_info);
         $this->smarty->assign('lang_info', $lang_info);
 
         if (! AdminContext::isActiveStatic()) {
@@ -673,7 +673,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
         $save_compile_id = $this->smarty->compile_id;
         $this->load_external_filters($handle);
 
-        $lang_info = Lang::langInfo();
+        $lang_info = Lang::current()->langInfo();
         if (\Piwigo\Config\CurrentConfig::compiledTemplateCacheLanguage() and isset($lang_info['code']) and is_string($lang_info['code'])) {
             $this->smarty->compile_id .= '_' . $lang_info['code'];
         }
@@ -847,7 +847,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
      * Usage :
      *    - {'Comment'|translate}
      *    - {'%d comments'|translate:$count}
-     * @see Lang::t()
+     * @see Lang::current()->t()
      * @param array<int, string> $params
      */
     public static function modcompiler_translate(array $params): string
@@ -863,11 +863,11 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
                 // explicitly since the callee's return type is opaque.
                 if (\Piwigo\Config\CurrentConfig::compiledTemplateCacheLanguage()
                   && is_string($key)
-                  && Lang::has($key)
+                  && Lang::current()->has($key)
                 ) {
-                    return var_export(Lang::t($key), true);
+                    return var_export(Lang::current()->t($key), true);
                 }
-                return '\Piwigo\Core\Lang::t(' . $params[0] . ')';
+                return '\Piwigo\Core\Lang::current()->t(' . $params[0] . ')';
 
             default:
                 if (\Piwigo\Config\CurrentConfig::compiledTemplateCacheLanguage()) {
@@ -877,7 +877,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
                     $ret .= ')';
                     return $ret;
                 }
-                return '\Piwigo\Core\Lang::t(' . $params[0] . ',' . implode(',', array_slice($params, 1)) . ')';
+                return '\Piwigo\Core\Lang::current()->t(' . $params[0] . ',' . implode(',', array_slice($params, 1)) . ')';
         }
     }
 
@@ -885,14 +885,14 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
      * "translate_dec" variable modifier.
      * Usage :
      *    - {$count|translate_dec:'%d comment':'%d comments'}
-     * @see Lang::plural()
+     * @see Lang::current()->plural()
      * @param array<int, string> $params
      */
     public static function modcompiler_translate_dec(array $params): string
     {
         if (\Piwigo\Config\CurrentConfig::compiledTemplateCacheLanguage()) {
             $ret = 'sprintf(';
-            if ((bool) Lang::langInfo()['zero_plural']) {
+            if ((bool) Lang::current()->langInfo()['zero_plural']) {
                 $ret .= '($tmp=(' . $params[0] . '))>1||$tmp==0';
             } else {
                 $ret .= '($tmp=(' . $params[0] . '))>1';
@@ -905,7 +905,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
             $ret .= ')';
             return $ret;
         }
-        return '\Piwigo\Core\Lang::plural(' . $params[1] . ',' . $params[2] . ',' . $params[0] . ')';
+        return '\Piwigo\Core\Lang::current()->plural(' . $params[1] . ',' . $params[2] . ',' . $params[0] . ')';
     }
 
     /**

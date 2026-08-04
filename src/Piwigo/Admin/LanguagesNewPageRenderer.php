@@ -31,6 +31,7 @@ use Piwigo\Template\Template;
 final class LanguagesNewPageRenderer
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
@@ -73,7 +74,7 @@ final class LanguagesNewPageRenderer
         $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger);
         $extension_scanner = new ExtensionScanner();
         $plugin_migration_repo = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class);
-        $extension_lifecycle = new ExtensionLifecycle($extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo, $this->activityService, $this->userService, $this->htmlRenderer);
+        $extension_lifecycle = new ExtensionLifecycle($this->lang, $extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo, $this->activityService, $this->userService, $this->htmlRenderer);
 
         // +-----------------------------------------------------------------------+
         // |                           setup check                                 |
@@ -81,7 +82,7 @@ final class LanguagesNewPageRenderer
 
         $languages_dir = \Piwigo\Core\CurrentPaths::get()->root . 'language';
         if (! is_writable($languages_dir)) {
-            $this->pageState->addError(Lang::t('Add write access to the "%s" directory', 'language'));
+            $this->pageState->addError($this->lang->t('Add write access to the "%s" directory', 'language'));
         }
 
         // +-----------------------------------------------------------------------+
@@ -92,7 +93,7 @@ final class LanguagesNewPageRenderer
 
         if ($languagesNewInstall->revision !== null) {
             if (! $this->accessControl->isWebmaster()) {
-                $this->pageState->addError(Lang::t('Webmaster status is required.'));
+                $this->pageState->addError($this->lang->t('Webmaster status is required.'));
             } else {
                 new \Piwigo\Csrf\CsrfService()
                     ->checkOrFail($this->htmlRenderer, $this->redirectService);
@@ -108,7 +109,7 @@ final class LanguagesNewPageRenderer
                 // PemCatalog::extractArchive() only extracts, it doesn't know about
                 // the lifecycle state machine.
                 if ($install_status === 'ok' && $extraction['id'] !== null) {
-                    $fs_language_entry = $extension_scanner->scan(ExtensionType::Language, $this->urlService)[$extraction['id']] ?? null;
+                    $fs_language_entry = $extension_scanner->scan(ExtensionType::Language, $this->urlService, $this->lang)[$extraction['id']] ?? null;
                     $extension_lifecycle->performAction(ExtensionType::Language, 'activate', $extraction['id'], $fs_language_entry);
                 }
 
@@ -123,11 +124,11 @@ final class LanguagesNewPageRenderer
             $installstatus = $languagesNewInstall->installStatus;
 
             match ($installstatus) {
-                'ok' => $this->pageState->addInfo(Lang::t('Language has been successfully installed')),
-                'temp_path_error' => $this->pageState->addError(Lang::t('Can\'t create temporary file.')),
-                'dl_archive_error' => $this->pageState->addError(Lang::t('Can\'t download archive.')),
-                'archive_error' => $this->pageState->addError(Lang::t('Can\'t read or extract archive.')),
-                default => $this->pageState->addError(Lang::t('An error occured during extraction (%s).', htmlspecialchars($installstatus))),
+                'ok' => $this->pageState->addInfo($this->lang->t('Language has been successfully installed')),
+                'temp_path_error' => $this->pageState->addError($this->lang->t('Can\'t create temporary file.')),
+                'dl_archive_error' => $this->pageState->addError($this->lang->t('Can\'t download archive.')),
+                'archive_error' => $this->pageState->addError($this->lang->t('Can\'t read or extract archive.')),
+                default => $this->pageState->addError($this->lang->t('An error occured during extraction (%s).', htmlspecialchars($installstatus))),
             };
         }
 
@@ -135,7 +136,7 @@ final class LanguagesNewPageRenderer
         // |                     start template output                             |
         // +-----------------------------------------------------------------------+
         $fs_language_ids = [];
-        foreach ($extension_scanner->scan(ExtensionType::Language, $this->urlService) as $fs_language) {
+        foreach ($extension_scanner->scan(ExtensionType::Language, $this->urlService, $this->lang) as $fs_language) {
             $extension = $fs_language['extension'] ?? null;
             if (is_scalar($extension)) {
                 $fs_language_ids[] = (string) $extension;
@@ -183,9 +184,9 @@ final class LanguagesNewPageRenderer
                 ]);
             }
         } else {
-            $this->pageState->addError(Lang::t('Can\'t connect to server.'));
+            $this->pageState->addError($this->lang->t('Can\'t connect to server.'));
         }
-        $template->assign('ADMIN_PAGE_TITLE', Lang::t('Languages'));
+        $template->assign('ADMIN_PAGE_TITLE', $this->lang->t('Languages'));
         $template->assign('isWebmaster', ($this->accessControl->isWebmaster()) ? 1 : 0);
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'languages');

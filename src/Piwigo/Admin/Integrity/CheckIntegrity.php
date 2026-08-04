@@ -57,6 +57,7 @@ final class CheckIntegrity
      *   piwigo_config blob entirely
      */
     public function __construct(
+        private readonly Lang $lang,
         private readonly IntegrityIgnoredAnomalyRepository $repo,
         private readonly Translator $translator,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
@@ -329,9 +330,9 @@ final class CheckIntegrity
         $link_fmt = '<a href="%s" onclick="window.open(this.href, \'\'); return false;">%s</a>';
         return
           sprintf(
-              Lang::t('Go to %s or %s for more informations'),
-              sprintf($link_fmt, $pwg_links['FORUM'], Lang::t('the forum')),
-              sprintf($link_fmt, $pwg_links['WIKI'], Lang::t('the wiki'))
+              $this->lang->t('Go to %s or %s for more informations'),
+              sprintf($link_fmt, $pwg_links['FORUM'], $this->lang->t('the forum')),
+              sprintf($link_fmt, $pwg_links['WIKI'], $this->lang->t('the wiki'))
           );
     }
 }

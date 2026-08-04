@@ -41,6 +41,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class AboutController implements ControllerInterface
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\FilterState $filterState,
@@ -66,21 +67,21 @@ final class AboutController implements ControllerInterface
         // file reads $GLOBALS['title']. Plain local, not global.
         $template = $this->currentTemplate->get();
 
-        $title = Lang::t('About Piwigo');
+        $title = $this->lang->t('About Piwigo');
         $this->pageState->setBodyId('theAboutPage');
 
         $this->eventDispatcher->dispatchNotify(new LocBeginAbout());
 
         $template->set_filename('about', 'about.tpl');
 
-        $template->assign('ABOUT_MESSAGE', Lang::load('about.html', '', [
+        $template->assign('ABOUT_MESSAGE', $this->lang->load('about.html', '', [
             'return' => true,
         ]));
 
         $user_theme = $this->currentUser->get()
             ->theme;
 
-        $theme_about = Lang::load('about.html', CurrentConfig::themesPath() . $user_theme . '/', [
+        $theme_about = $this->lang->load('about.html', CurrentConfig::themesPath() . $user_theme . '/', [
             'return' => true,
         ]);
         if ($theme_about !== false) {
@@ -91,7 +92,7 @@ final class AboutController implements ControllerInterface
         $themeconf = is_array($themeconf) ? $themeconf : [];
         if (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('theAboutPage', $themeconf['hide_menu_on'], true)) {
             new MenubarRenderer()
-                ->render($this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
+                ->render($this->lang, $this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
         }
 
         new \Piwigo\Page\PageHeaderRenderer()

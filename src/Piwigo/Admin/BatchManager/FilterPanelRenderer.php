@@ -47,6 +47,7 @@ final class FilterPanelRenderer
      *   {@see \Piwigo\Controller\Admin\BatchManagerSubController::computeCurrentSet()}
      */
     public function render(
+        Lang $lang,
         Template $template,
         string $baseUrl,
         array $collection,
@@ -66,42 +67,42 @@ final class FilterPanelRenderer
         $prefilters = [
             [
                 'ID' => 'caddie',
-                'NAME' => Lang::t('Caddie'),
+                'NAME' => $lang->t('Caddie'),
             ],
             [
                 'ID' => 'favorites',
-                'NAME' => Lang::t('Your favorites'),
+                'NAME' => $lang->t('Your favorites'),
             ],
             [
                 'ID' => 'last_import',
-                'NAME' => Lang::t('Last import'),
+                'NAME' => $lang->t('Last import'),
             ],
             [
                 'ID' => 'no_album',
-                'NAME' => Lang::t('With no album') . ' (' . Lang::t('Orphans') . ')',
+                'NAME' => $lang->t('With no album') . ' (' . $lang->t('Orphans') . ')',
             ],
             [
                 'ID' => 'no_tag',
-                'NAME' => Lang::t('With no tag'),
+                'NAME' => $lang->t('With no tag'),
             ],
             [
                 'ID' => 'duplicates',
-                'NAME' => Lang::t('Duplicates'),
+                'NAME' => $lang->t('Duplicates'),
             ],
             [
                 'ID' => 'all_photos',
-                'NAME' => Lang::t('All'),
+                'NAME' => $lang->t('All'),
             ],
         ];
 
         if (\Piwigo\Config\CurrentConfig::enableSynchronization()) {
             $prefilters[] = [
                 'ID' => 'no_virtual_album',
-                'NAME' => Lang::t('With no virtual album'),
+                'NAME' => $lang->t('With no virtual album'),
             ];
             $prefilters[] = [
                 'ID' => 'no_sync_md5sum',
-                'NAME' => Lang::t('With no checksum'),
+                'NAME' => $lang->t('With no checksum'),
             ];
         }
 
@@ -128,7 +129,7 @@ final class FilterPanelRenderer
                     ->getToken(),
                 'U_DISPLAY' => $baseUrl . $urlService->getQueryStringDiff(['display']),
                 'F_ACTION' => $baseUrl . $urlService->getQueryStringDiff(['cat', 'start', 'tag', 'filter']),
-                'ADMIN_PAGE_TITLE' => Lang::t('Batch Manager'),
+                'ADMIN_PAGE_TITLE' => $lang->t('Batch Manager'),
             ]
         );
 
@@ -155,10 +156,10 @@ final class FilterPanelRenderer
 
         $level_options = [];
         foreach ($available_permission_levels as $level) {
-            $level_options[$level] = Lang::t(sprintf('Level %d', $level));
+            $level_options[$level] = $lang->t(sprintf('Level %d', $level));
 
             if ($level === 0) {
-                $level_options[$level] = Lang::t('Everybody');
+                $level_options[$level] = $lang->t('Everybody');
             }
         }
         $template->assign(
@@ -230,7 +231,7 @@ final class FilterPanelRenderer
 
         $template->assign('associated_categories', $associated_categories);
 
-        Lang::load('help_quick_search.lang');
+        $lang->load('help_quick_search.lang');
     }
 
     /**

@@ -52,6 +52,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class SiteManagerSubController implements AdminSubControllerInterface
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
@@ -126,17 +127,17 @@ final class SiteManagerSubController implements AdminSubControllerInterface
             // site must not exists
             $site_repo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Site\SiteEntity::class);
             if ($site_repo->countByUrl($url) > 0) {
-                $this->pageState->addError(Lang::t('This site already exists') . ' [' . $url . ']');
+                $this->pageState->addError($this->lang->t('This site already exists') . ' [' . $url . ']');
             }
             if (! $this->pageState->hasErrors()) {
                 if (! file_exists($url)) {
-                    $this->pageState->addError(Lang::t('Directory does not exist') . ' [' . $url . ']');
+                    $this->pageState->addError($this->lang->t('Directory does not exist') . ' [' . $url . ']');
                 }
             }
 
             if (! $this->pageState->hasErrors()) {
                 $site_repo->insert($url);
-                $this->pageState->addInfo($url . ' ' . Lang::t('created'));
+                $this->pageState->addInfo($url . ' ' . $this->lang->t('created'));
             }
         }
 
@@ -151,7 +152,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
                 case 'delete':
 
                     $this->categoryService->deleteSite($site_id, $this->activityService, $this->urlService, $this->sessionService, $this->eventDispatcher);
-                    $this->pageState->addInfo($galleries_url . ' ' . Lang::t('deleted'));
+                    $this->pageState->addInfo($galleries_url . ' ' . $this->lang->t('deleted'));
                     break;
 
             }
@@ -162,7 +163,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
                 'F_ACTION' => $this->urlService->getRootUrl() . 'admin.php' . $this->urlService->getQueryStringDiff(['action', 'site', 'pwg_token']),
                 'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
                     ->getToken(),
-                'ADMIN_PAGE_TITLE' => Lang::t('Synchronize'),
+                'ADMIN_PAGE_TITLE' => $this->lang->t('Synchronize'),
             ]
         );
 
@@ -187,7 +188,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
             $tpl_var =
               [
                   'NAME' => $galleries_url,
-                  'TYPE' => Lang::t($is_remote ? 'Remote' : 'Local'),
+                  'TYPE' => $this->lang->t($is_remote ? 'Remote' : 'Local'),
                   'CATEGORIES' => $sites_detail[$id_int]['nb_categories'] ?? 0,
                   'IMAGES' => $sites_detail[$id_int]['nb_images'] ?? 0,
                   'U_SYNCHRONIZE' => $update_url,

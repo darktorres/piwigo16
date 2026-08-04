@@ -598,6 +598,7 @@ final class UrlService implements UrlServiceInterface
 
             $categoryConn = DbConnection::build();
             $categoryService = new CategoryService(
+                \Piwigo\Core\Lang::current(),
                 \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Category\CategoryEntity::class),
                 new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn)), \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Category\CategoryEntity::class))
             );
@@ -664,7 +665,7 @@ final class UrlService implements UrlServiceInterface
                                 $combined_category_ids[] = $cat_id;
                             }
                         } else {
-                            $this->htmlRenderer->pageNotFound($redirectService, Lang::t('Permalink for album not found'));
+                            $this->htmlRenderer->pageNotFound($redirectService, Lang::current()->t('Permalink for album not found'));
                         }
                     }
                 }
@@ -677,7 +678,7 @@ final class UrlService implements UrlServiceInterface
             if ($category !== null) {
                 $result = $categoryService->getCategoryInfo((int) $category);
                 if ($result === null) {
-                    $this->htmlRenderer->pageNotFound($redirectService, Lang::t('Requested album does not exist'));
+                    $this->htmlRenderer->pageNotFound($redirectService, Lang::current()->t('Requested album does not exist'));
                 }
                 $page['category'] = $result;
             }
@@ -688,7 +689,7 @@ final class UrlService implements UrlServiceInterface
                 foreach ($combined_category_ids as $cat_id) {
                     $result = $categoryService->getCategoryInfo((int) $cat_id);
                     if ($result === null) {
-                        $this->htmlRenderer->pageNotFound($redirectService, Lang::t('Requested album does not exist'));
+                        $this->htmlRenderer->pageNotFound($redirectService, Lang::current()->t('Requested album does not exist'));
                     }
 
                     $combined_categories[] = $result;
@@ -727,10 +728,10 @@ final class UrlService implements UrlServiceInterface
             }
 
             $tagConn = DbConnection::build();
-            $page['tags'] = new TagService(\Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Tag\TagEntity::class), new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($tagConn)), \Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Category\CategoryEntity::class)), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Users\CurrentUser::current())
+            $page['tags'] = new TagService(\Piwigo\Core\Lang::current(), \Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Tag\TagEntity::class), new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($tagConn)), \Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($tagConn)->getRepository(\Piwigo\Category\CategoryEntity::class)), new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Users\CurrentUser::current())
                 ->findTags($requested_tag_ids, $requested_tag_url_names);
             if ($page['tags'] === []) {
-                $this->htmlRenderer->pageNotFound($redirectService, Lang::t('Requested tag does not exist'), $this->getRootUrl() . 'tags.php');
+                $this->htmlRenderer->pageNotFound($redirectService, Lang::current()->t('Requested tag does not exist'), $this->getRootUrl() . 'tags.php');
             }
         } elseif (($tokens[$nextToken] ?? null) === 'favorites') {
             $page['section'] = 'favorites';

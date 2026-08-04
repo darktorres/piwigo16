@@ -62,6 +62,7 @@ final class MaintenanceActionsPageRenderer
         private readonly \Piwigo\Category\CategoryService $categoryService,
         private readonly \Piwigo\Tag\TagService $tagService,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
+        private readonly Lang $lang,
         private readonly ?\Piwigo\Cache\PersistentCache $persistentCache = null,
     ) {}
 
@@ -75,7 +76,7 @@ final class MaintenanceActionsPageRenderer
         $this->filesystemIntegrityChecker->fsQuickCheck();
 
         $action = MaintenanceActionRequest::fromGlobals()->action;
-        new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->filesystemIntegrityChecker, $this->sessionService, $this->translator, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->dbMaintenanceRepository, $this->activityService, $this->rateService, $this->categoryService, $this->tagService, $this->htmlRenderer, $this->persistentCache)
+        new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->filesystemIntegrityChecker, $this->sessionService, $this->translator, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->dbMaintenanceRepository, $this->activityService, $this->rateService, $this->categoryService, $this->tagService, $this->htmlRenderer, $this->lang, $this->persistentCache)
             ->dispatch($action);
 
         // +-------------------------------------------------------------------+
@@ -90,16 +91,16 @@ final class MaintenanceActionsPageRenderer
         $url_format = $this->urlService->getRootUrl() . 'admin.php?page=maintenance&amp;action=%s&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken();
 
         if (! $this->accessControl->isWebmaster()) {
-            $this->pageState->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
+            $this->pageState->addWarning(str_replace('%s', $this->lang->t('user_status_webmaster'), $this->lang->t('%s status is required to edit parameters.')));
         }
 
         /** @var array<string, string> $purge_urls */
         $purge_urls = [];
-        $purge_urls[Lang::t('All')] = 'all';
+        $purge_urls[$this->lang->t('All')] = 'all';
         foreach ($this->imageStdParams->get_defined_type_map() as $params) {
-            $purge_urls[Lang::t($params->type)] = $params->type;
+            $purge_urls[$this->lang->t($params->type)] = $params->type;
         }
-        $purge_urls[Lang::t(ImageStdParams::CUSTOM)] = ImageStdParams::CUSTOM;
+        $purge_urls[$this->lang->t(ImageStdParams::CUSTOM)] = ImageStdParams::CUSTOM;
 
         $dbInfo = new DbInfo(DbConnection::build());
         $php_current_timestamp = date('Y-m-d H:i:s');

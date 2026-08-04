@@ -26,7 +26,7 @@ final class PictureMetadataRenderer
     /**
      * @param array<string, array{src_image: SrcImage, ...}> $picture
      */
-    public function render(array $picture, \Piwigo\Core\CurrentLogger $currentLogger, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Template\CurrentTemplate $currentTemplate): void
+    public function render(Lang $lang, array $picture, \Piwigo\Core\CurrentLogger $currentLogger, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Template\CurrentTemplate $currentTemplate): void
     {
         $template = $currentTemplate->get();
 
@@ -44,7 +44,7 @@ final class PictureMetadataRenderer
 
             if (count($exif) > 0) {
                 $tplMeta = [
-                    'TITLE' => Lang::t('EXIF Metadata'),
+                    'TITLE' => $lang->t('EXIF Metadata'),
                     'lines' => [],
                 ];
 
@@ -52,8 +52,8 @@ final class PictureMetadataRenderer
                     if (! str_contains($field, ';')) {
                         if (isset($exif[$field]) and ! is_array($exif[$field])) {
                             $key = $field;
-                            if (\Piwigo\Core\Lang::has('exif_field_' . $field)) {
-                                $key = \Piwigo\Core\Lang::t('exif_field_' . $field);
+                            if ($lang->has('exif_field_' . $field)) {
+                                $key = $lang->t('exif_field_' . $field);
                             }
                             $tplMeta['lines'][$key] = $exif[$field];
                         }
@@ -61,8 +61,8 @@ final class PictureMetadataRenderer
                         $tokens = explode(';', $field);
                         if (isset($exif[$field]) and ! is_array($exif[$field])) {
                             $key = $tokens[1];
-                            if (\Piwigo\Core\Lang::has('exif_field_' . $key)) {
-                                $key = \Piwigo\Core\Lang::t('exif_field_' . $key);
+                            if ($lang->has('exif_field_' . $key)) {
+                                $key = $lang->t('exif_field_' . $key);
                             }
                             $tplMeta['lines'][$key] = $exif[$field];
                         }
@@ -79,14 +79,14 @@ final class PictureMetadataRenderer
 
             if (count($iptc) > 0) {
                 $tplMeta = [
-                    'TITLE' => Lang::t('IPTC Metadata'),
+                    'TITLE' => $lang->t('IPTC Metadata'),
                     'lines' => [],
                 ];
 
                 foreach ($iptc as $field => $value) {
                     $key = $field;
-                    if (\Piwigo\Core\Lang::has($field)) {
-                        $key = \Piwigo\Core\Lang::t($field);
+                    if ($lang->has($field)) {
+                        $key = $lang->t($field);
                     }
                     $tplMeta['lines'][$key] = $value;
                 }

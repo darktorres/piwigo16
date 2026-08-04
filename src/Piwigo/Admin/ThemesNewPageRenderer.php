@@ -28,6 +28,7 @@ use Piwigo\Template\Template;
 final class ThemesNewPageRenderer
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
@@ -68,7 +69,7 @@ final class ThemesNewPageRenderer
 
         $themes_dir = \Piwigo\Core\CurrentPaths::get()->themes;
         if (! is_writable($themes_dir)) {
-            $this->pageState->addError(Lang::t('Add write access to the "%s" directory', 'themes'));
+            $this->pageState->addError($this->lang->t('Add write access to the "%s" directory', 'themes'));
         }
 
         // +-----------------------------------------------------------------------+
@@ -79,7 +80,7 @@ final class ThemesNewPageRenderer
 
         if ($themesNewInstall->revision !== null and $themesNewInstall->extension !== null) {
             if (! $this->accessControl->isWebmaster()) {
-                $this->pageState->addError(Lang::t('Webmaster status is required.'));
+                $this->pageState->addError($this->lang->t('Webmaster status is required.'));
             } else {
                 new \Piwigo\Csrf\CsrfService()
                     ->checkOrFail($this->htmlRenderer, $this->redirectService);
@@ -99,10 +100,10 @@ final class ThemesNewPageRenderer
         if ($themesNewInstall->installStatus !== null) {
             switch ($themesNewInstall->installStatus) {
                 case 'ok':
-                    $this->pageState->addInfo(Lang::t('Theme has been successfully installed'));
+                    $this->pageState->addInfo($this->lang->t('Theme has been successfully installed'));
 
                     $installed_theme_id = $themesNewInstall->installedThemeId;
-                    $installed_fs_theme = $installed_theme_id !== null ? ($extension_scanner->scan(ExtensionType::Theme, $this->urlService)[$installed_theme_id] ?? null) : null;
+                    $installed_fs_theme = $installed_theme_id !== null ? ($extension_scanner->scan(ExtensionType::Theme, $this->urlService, $this->lang)[$installed_theme_id] ?? null) : null;
                     if ($installed_fs_theme !== null) {
                         $this->activityService->record('system', ActivitySystem::Theme, 'install', [
                             'theme_id' => $installed_theme_id,
@@ -112,20 +113,20 @@ final class ThemesNewPageRenderer
                     break;
 
                 case 'temp_path_error':
-                    $this->pageState->addError(Lang::t('Can\'t create temporary file.'));
+                    $this->pageState->addError($this->lang->t('Can\'t create temporary file.'));
                     break;
 
                 case 'dl_archive_error':
-                    $this->pageState->addError(Lang::t('Can\'t download archive.'));
+                    $this->pageState->addError($this->lang->t('Can\'t download archive.'));
                     break;
 
                 case 'archive_error':
-                    $this->pageState->addError(Lang::t('Can\'t read or extract archive.'));
+                    $this->pageState->addError($this->lang->t('Can\'t read or extract archive.'));
                     break;
 
                 default:
                     $this->pageState->addError(
-                        Lang::t(
+                        $this->lang->t(
                             'An error occured during extraction (%s).',
                             htmlspecialchars($themesNewInstall->installStatus)
                         )
@@ -142,7 +143,7 @@ final class ThemesNewPageRenderer
         ]);
 
         $fs_theme_ids = [];
-        foreach ($extension_scanner->scan(ExtensionType::Theme, $this->urlService) as $fs_theme) {
+        foreach ($extension_scanner->scan(ExtensionType::Theme, $this->urlService, $this->lang) as $fs_theme) {
             $extension = $fs_theme['extension'] ?? null;
             if (is_scalar($extension)) {
                 $fs_theme_ids[] = (string) $extension;
@@ -178,7 +179,7 @@ final class ThemesNewPageRenderer
                 );
             }
         } else {
-            $this->pageState->addError(Lang::t('Can\'t connect to server.'));
+            $this->pageState->addError($this->lang->t('Can\'t connect to server.'));
         }
 
         $admin_theme_pref = $this->preferencesService->getParam('admin_theme', \Piwigo\Config\CurrentConfig::adminTheme());
@@ -186,7 +187,7 @@ final class ThemesNewPageRenderer
             'default_screenshot',
             $this->urlService->getRootUrl() . 'themes/admin/' . (is_string($admin_theme_pref) ? $admin_theme_pref : \Piwigo\Config\CurrentConfig::adminTheme()) . '/images/missing_screenshot.png'
         );
-        $template->assign('ADMIN_PAGE_TITLE', Lang::t('Themes'));
+        $template->assign('ADMIN_PAGE_TITLE', $this->lang->t('Themes'));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'themes');
     }

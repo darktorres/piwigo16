@@ -58,6 +58,7 @@ use Piwigo\Users\UserService;
 final readonly class SectionPopulator
 {
     public function __construct(
+        private Lang $lang,
         private AccessControl $accessControl,
         private HtmlRenderingInterface $htmlRenderer,
         private TemplateInterface $template,
@@ -461,7 +462,7 @@ final readonly class SectionPopulator
                         'title' => '<a href="' . $this->urlService->duplicateIndexUrl([
                             'start' => 0,
                         ]) . '">'
-                                    . Lang::t('Search results') . '</a>',
+                                    . $this->lang->t('Search results') . '</a>',
                     ]
                 );
             }
@@ -477,7 +478,7 @@ final readonly class SectionPopulator
                         'title' => '<a href="' . $this->urlService->duplicateIndexUrl([
                             'start' => 0,
                         ]) . '">'
-                                    . Lang::t('Favorites') . '</a>',
+                                    . $this->lang->t('Favorites') . '</a>',
                     ]
                 );
 
@@ -542,7 +543,7 @@ final readonly class SectionPopulator
                         'title' => '<a href="' . $this->urlService->duplicateIndexUrl([
                             'start' => 0,
                         ]) . '">'
-                                    . Lang::t('Recent photos') . '</a>',
+                                    . $this->lang->t('Recent photos') . '</a>',
                         'items' => $this->repo->findRecentImageIds(
                             $this->userService->getRecentPhotosSql('date_available'),
                             $forbidden,
@@ -563,7 +564,7 @@ final readonly class SectionPopulator
                         'title' => '<a href="' . $this->urlService->duplicateIndexUrl([
                             'start' => 0,
                         ]) . '">'
-                                    . Lang::t('Recent albums') . '</a>',
+                                    . $this->lang->t('Recent albums') . '</a>',
                     ]
                 );
             }
@@ -584,7 +585,7 @@ final readonly class SectionPopulator
                         'title' => '<a href="' . $this->urlService->duplicateIndexUrl([
                             'start' => 0,
                         ]) . '">'
-                                    . $top_number . ' ' . Lang::t('Most visited') . '</a>',
+                                    . $top_number . ' ' . $this->lang->t('Most visited') . '</a>',
                         'items' => $this->repo->findTopByHitsImageIds($forbidden, $order_by, $top_number, $forbidden_params, $forbidden_types),
                     ]
                 );
@@ -607,7 +608,7 @@ final readonly class SectionPopulator
                         'title' => '<a href="' . $this->urlService->duplicateIndexUrl([
                             'start' => 0,
                         ]) . '">'
-                                    . $top_number . ' ' . Lang::t('Best rated') . '</a>',
+                                    . $top_number . ' ' . $this->lang->t('Best rated') . '</a>',
                         'items' => $this->repo->findTopRatedImageIds($forbidden, $order_by, $top_number, $forbidden_params, $forbidden_types),
                     ]
                 );
@@ -629,7 +630,7 @@ final readonly class SectionPopulator
                         'title' => '<a href="' . $this->urlService->duplicateIndexUrl([
                             'start' => 0,
                         ]) . '">'
-                                    . Lang::t('Random photos') . '</a>',
+                                    . $this->lang->t('Random photos') . '</a>',
                         'items' => $this->repo->findImageIdsAmongList($list_ids, $forbidden, $order_by, $forbidden_params, $forbidden_types),
                     ]
                 );
@@ -656,7 +657,7 @@ final readonly class SectionPopulator
             $calendar_items_raw = is_array($page['items'] ?? null) ? $page['items'] : [];
             $calendar_items = array_values(array_filter($calendar_items_raw, static fn (mixed $v): bool => is_int($v) || is_string($v)));
 
-            $calendar_result = new CalendarRenderer($this->htmlRenderer, $this->template, $this->urlService, $this->currentUser)
+            $calendar_result = new CalendarRenderer($this->lang, $this->htmlRenderer, $this->template, $this->urlService, $this->currentUser)
                 ->render(
                     $section,
                     $page_category,
@@ -678,7 +679,7 @@ final readonly class SectionPopulator
         // title update
         if (isset($page['title'])) {
             $gallery_home_url = $this->urlService->getGalleryHomeUrl();
-            $page['section_title'] = '<a href="' . $gallery_home_url . '">' . Lang::t('Home') . '</a>';
+            $page['section_title'] = '<a href="' . $gallery_home_url . '">' . $this->lang->t('Home') . '</a>';
             $title_value = is_string($page['title']) ? $page['title'] : '';
             if ($title_value !== '' && $title_value !== '0') {
                 $level_separator = \Piwigo\Config\CurrentConfig::levelSeparator();

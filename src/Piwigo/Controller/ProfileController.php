@@ -45,6 +45,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class ProfileController implements ControllerInterface
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
@@ -110,7 +111,7 @@ final class ProfileController implements ControllerInterface
             ]);
             $this->entityManager->clear();
 
-            Lang::load('common.lang', '', [
+            $this->lang->load('common.lang', '', [
                 'language' => $cookie_lang,
             ]);
         }
@@ -156,7 +157,7 @@ final class ProfileController implements ControllerInterface
             $userdata = array_merge($userdata, $default_user);
         }
 
-        $profileFormHandler = new ProfileFormHandler($this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->userService, $this->passwordService, $this->authService, $this->htmlService, $this->mailService);
+        $profileFormHandler = new ProfileFormHandler($this->lang, $this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->userService, $this->passwordService, $this->authService, $this->htmlService, $this->mailService);
 
         $page_errors = $this->pageState->errors;
         $profileFormHandler->saveFromPost($userdata, $page_errors);
@@ -178,7 +179,7 @@ final class ProfileController implements ControllerInterface
         // $title is set and read entirely within this method (passed
         // straight into PageHeaderRenderer::render() below) -- no other
         // file reads $GLOBALS['title']. Plain local, not global.
-        $title = Lang::t('Your Gallery Customization');
+        $title = $this->lang->t('Your Gallery Customization');
 
         // include menubar
         $themeconf = $template->get_template_vars('themeconf');
@@ -187,7 +188,7 @@ final class ProfileController implements ControllerInterface
         if (! is_array($hide_menu_on) or ! in_array('theProfilePage', $hide_menu_on, true)) {
             if (($themeconf['id'] ?? null) !== 'standard_pages') {
                 new MenubarRenderer()
-                    ->render($this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
+                    ->render($this->lang, $this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
             }
         }
 

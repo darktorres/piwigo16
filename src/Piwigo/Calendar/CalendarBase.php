@@ -124,6 +124,7 @@ abstract class CalendarBase
     public $chronology_view = '';
 
     public function __construct(
+        protected readonly Lang $lang,
         protected readonly CalendarRepository $calendarRepository,
         protected readonly UrlServiceInterface $urlService,
     ) {}
@@ -206,7 +207,7 @@ abstract class CalendarBase
         if (isset($this->calendar_levels[$level]['labels'][$date_component])) {
             $label = $this->calendar_levels[$level]['labels'][$date_component];
         } elseif ($date_component === 'any') {
-            $label = Lang::t('All');
+            $label = $this->lang->t('All');
         }
         return $label;
     }
@@ -298,7 +299,7 @@ abstract class CalendarBase
                 ['start']
             );
             $nav_bar_datas[] = [
-                'LABEL' => Lang::t('All'),
+                'LABEL' => $this->lang->t('All'),
                 'URL' => $url,
             ];
         }

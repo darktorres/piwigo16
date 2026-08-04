@@ -69,6 +69,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class BatchManagerSubController implements AdminSubControllerInterface
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
@@ -174,7 +175,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
             $this->batchManagerUnitPageRenderer
                 ->render($cat_elements_id, $start);
         } else {
-            new BatchManagerGlobalPageRenderer($this->redirectService, $this->urlService, $this->currentLogger, $this->sessionService, $this->translator, $this->eventDispatcher, $this->imageStdParams, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->tagService, $this->categoryService, $this->imageService, $this->htmlRenderer)
+            new BatchManagerGlobalPageRenderer($this->lang, $this->redirectService, $this->urlService, $this->currentLogger, $this->sessionService, $this->translator, $this->eventDispatcher, $this->imageStdParams, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->tagService, $this->categoryService, $this->imageService, $this->htmlRenderer)
                 ->render($cat_elements_id, $start, $duplicates_on_fields);
         }
     }
@@ -194,7 +195,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
                 ->replaceForUser($userId, []);
 
             $_SESSION['page_infos'] = [
-                Lang::t('Information data registered in database'),
+                $this->lang->t('Information data registered in database'),
             ];
 
             $this->redirectService->redirect($this->urlService->getRootUrl() . 'admin.php?page=' . $getPage);

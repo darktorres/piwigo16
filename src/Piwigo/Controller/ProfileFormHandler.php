@@ -37,6 +37,7 @@ use Piwigo\Users\UserService;
 final class ProfileFormHandler
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly RedirectServiceInterface $redirectService,
         private readonly AdminContext $adminContext,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
@@ -119,7 +120,7 @@ final class ProfileFormHandler
             if ($nb_image_page_is_empty
                 or (! is_scalar($nb_image_page))
                 or (! (bool) preg_match($int_pattern, (string) $nb_image_page))) {
-                $errors[] = Lang::t('The number of photos per page must be a not null scalar');
+                $errors[] = $this->lang->t('The number of photos per page must be a not null scalar');
             }
 
             // periods must be integer values, they represents number of days
@@ -127,7 +128,7 @@ final class ProfileFormHandler
             if (! is_scalar($recent_period)
                 or ! (bool) preg_match($int_pattern, (string) $recent_period)
                 or $recent_period < 0) {
-                $errors[] = Lang::t('Recent period must be a positive integer value');
+                $errors[] = $this->lang->t('Recent period must be a positive integer value');
             }
 
             if (! in_array($post['language'] ?? null, array_keys(\Piwigo\Lang\LangService::getLanguages()), true)) {
@@ -164,7 +165,7 @@ final class ProfileFormHandler
                 (is_string($new_pwd_raw) ? $new_pwd_raw : '')
                 !== (is_string($pwd_conf_raw) ? $pwd_conf_raw : '')
             ) {
-                $errors[] = Lang::t('The passwords do not match');
+                $errors[] = $this->lang->t('The passwords do not match');
             }
 
             if (! $this->adminContext->isActive()) {// changing password requires old password
@@ -177,7 +178,7 @@ final class ProfileFormHandler
                 if (! is_string($current_password)
                     or ! is_string($password_input)
                     or ! $this->passwordService->verify($password_input, $current_password)) {
-                    $errors[] = Lang::t('Current password is wrong');
+                    $errors[] = $this->lang->t('Current password is wrong');
                 }
             }
         }
@@ -209,7 +210,7 @@ final class ProfileFormHandler
                     $username = $username_for_update;
                     $usernameVo = \Piwigo\Common\ValueObject\Username::tryFrom($username);
                     if ($username !== $userdata['username'] and $usernameVo !== null and $this->userService->getUserId($usernameVo) !== null) {
-                        $this->pageState->addError(Lang::t('this login is already used'));
+                        $this->pageState->addError($this->lang->t('this login is already used'));
                         unset($post['redirect']);
                     } else {
                         $fields[] = $user_fields['username'];
@@ -222,8 +223,8 @@ final class ProfileFormHandler
                                 ->switchLangTo($notification_language);
 
                             $keyargs_content = [
-                                Lang::buildArgs('Hello', ''),
-                                Lang::buildArgs('Your username has been successfully changed to : %s', $username),
+                                $this->lang->buildArgs('Hello', ''),
+                                $this->lang->buildArgs('Your username has been successfully changed to : %s', $username),
                             ];
 
                             $gallery_title = \Piwigo\Config\CurrentConfig::galleryTitle();
@@ -231,8 +232,8 @@ final class ProfileFormHandler
                                 ->mail(
                                     $mail_address,
                                     [
-                                        'subject' => '[' . $gallery_title . '] ' . Lang::t('Username modification'),
-                                        'content' => Lang::args($keyargs_content),
+                                        'subject' => '[' . $gallery_title . '] ' . $this->lang->t('Username modification'),
+                                        'content' => $this->lang->args($keyargs_content),
                                         'content_format' => 'text/plain',
                                     ]
                                 );
@@ -326,8 +327,8 @@ final class ProfileFormHandler
         $template->assign(
             'radio_options',
             [
-                'true' => Lang::t('Yes'),
-                'false' => Lang::t('No'),
+                'true' => $this->lang->t('Yes'),
+                'false' => $this->lang->t('No'),
             ]
         );
 
@@ -387,11 +388,11 @@ final class ProfileFormHandler
         $result = $sqlDialectExecutor->fetchFutureDatesFor($duration_days);
         foreach ($result as $day => $date) {
             $date_for_format = (is_string($date) || is_int($date)) ? $date : false;
-            $display_duration[$day] = Lang::t('%d days', $day) . ' (' . \Piwigo\Core\DateHelper::formatDate($date_for_format, ['day', 'month', 'year']) . ')';
+            $display_duration[$day] = $this->lang->t('%d days', $day) . ' (' . \Piwigo\Core\DateHelper::formatDate($date_for_format, ['day', 'month', 'year']) . ')';
         }
 
         if ($has_custom) {
-            $display_duration['custom'] = Lang::t('Custom date');
+            $display_duration['custom'] = $this->lang->t('Custom date');
         }
         $template->assign('API_EXPIRATION', $display_duration);
         $template->assign('API_SELECTED_EXPIRATION', array_key_first($display_duration));
@@ -400,8 +401,8 @@ final class ProfileFormHandler
         $current_user_email = $this->currentUser->get()
             ->email;
         $email_notifications_infos = $current_user_email !== '' ?
-          Lang::t('The email <em>%s</em> will be used to notify you when your API key is about to expire.', $current_user_email)
-          : Lang::t('You have no email address, so you will not be notified when your API key is about to expire.');
+          $this->lang->t('The email <em>%s</em> will be used to notify you when your API key is about to expire.', $current_user_email)
+          : $this->lang->t('You have no email address, so you will not be notified when your API key is about to expire.');
         $template->assign('API_EMAIL_INFOS', $email_notifications_infos);
 
         // allow plugins to add their own form data to content

@@ -34,7 +34,7 @@ final class GroupPermSubController implements AdminSubControllerInterface
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
-        new GroupPermPageRenderer($this->accessControl, $this->redirectService, $this->urlService, $this->currentUser, $this->currentTemplate, $this->auditService, $this->categoryService, $this->groupService, $this->permissionService, $this->htmlRenderer)
+        new GroupPermPageRenderer(\Piwigo\Core\Lang::current(), $this->accessControl, $this->redirectService, $this->urlService, $this->currentUser, $this->currentTemplate, $this->auditService, $this->categoryService, $this->groupService, $this->permissionService, $this->htmlRenderer)
             ->render();
     }
 }

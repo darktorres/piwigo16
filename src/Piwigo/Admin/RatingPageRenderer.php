@@ -16,7 +16,7 @@ use Piwigo\Image\DerivativeImage;
  */
 final class RatingPageRenderer
 {
-    public function render(AccessControl $accessControl, UrlServiceInterface $urlService, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Category\CategoryService $categoryService): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Category\CategoryService $categoryService): void
     {
         $template = $currentTemplate->get();
 
@@ -83,14 +83,14 @@ final class RatingPageRenderer
         );
 
         $available_order_by = [
-            [Lang::t('Rate date'), 'recently_rated DESC'],
-            [Lang::t('Rating score'), 'score DESC'],
-            [Lang::t('Average rate'), 'avg_rates DESC'],
-            [Lang::t('Number of rates'), 'nb_rates DESC'],
-            [Lang::t('Sum of rates'), 'sum_rates DESC'],
-            [Lang::t('File name'), 'file DESC'],
-            [Lang::t('Creation date'), 'date_creation DESC'],
-            [Lang::t('Post date'), 'date_available DESC'],
+            [$lang->t('Rate date'), 'recently_rated DESC'],
+            [$lang->t('Rating score'), 'score DESC'],
+            [$lang->t('Average rate'), 'avg_rates DESC'],
+            [$lang->t('Number of rates'), 'nb_rates DESC'],
+            [$lang->t('Sum of rates'), 'sum_rates DESC'],
+            [$lang->t('File name'), 'file DESC'],
+            [$lang->t('Creation date'), 'date_creation DESC'],
+            [$lang->t('Post date'), 'date_available DESC'],
         ];
 
         if ($order_by_index < 0 or $order_by_index >= count($available_order_by)) {
@@ -106,14 +106,14 @@ final class RatingPageRenderer
         $template->assign('order_by_options_selected', [$order_by_index]);
 
         $user_options = [
-            'all' => Lang::t('all'),
-            'user' => Lang::t('Users'),
-            'guest' => Lang::t('Guests'),
+            'all' => $lang->t('all'),
+            'user' => $lang->t('Users'),
+            'guest' => $lang->t('Guests'),
         ];
 
         $template->assign('user_options', $user_options);
         $template->assign('user_options_selected', [$ratingRequest->usersRaw]);
-        $template->assign('ADMIN_PAGE_TITLE', Lang::t('Rating'));
+        $template->assign('ADMIN_PAGE_TITLE', $lang->t('Rating'));
 
         $images = $rate_repository->findRatingReport(
             $filter_user_id,

@@ -19,7 +19,7 @@ use Piwigo\Lang\Translator;
  * `$GLOBALS['lang']` independently of this class and `Translator` -- the
  * bridge was two classes using a global as their own private IPC channel,
  * not a real external contract. `attachGlobals()` now pulls a one-time
- * snapshot from `Translator::get()->mirroredStrings()` instead.
+ * snapshot from `$translator->mirroredStrings()` instead.
  *
  * `t()` delegates to `Piwigo\Lang\Translator` (gettext-backed, P16) rather
  * than reading `self::$data` directly -- `Translator::translate()` itself
@@ -34,7 +34,30 @@ use Piwigo\Lang\Translator;
  * confirmed by grep, so neither needs to stay public) and `args()`/
  * `buildArgs()` (ported from `l10n_args()`/`get_l10n_args()`). See
  * `DefaultLanguageProviderInterface`'s own docblock for why `load()` needs
- * a static provider setter rather than a constructor dependency.
+ * a provider it can tolerate not having yet, rather than a required
+ * constructor dependency.
+ *
+ * Singleton/service-locator elimination campaign, Phase 8: converted to a
+ * real, container-shared instance -- `Translator`/`HtmlRenderingInterface`/
+ * `Paths`/`InstallationFlag` are constructor-injected (all already bound in
+ * `container.php`). `DefaultLanguageProviderInterface` deliberately stays a
+ * real, mutable, nullable instance property with its own
+ * `setDefaultLanguageProvider()` instance method instead -- unlike this
+ * class's other collaborators, it resolves (via its own `container.php`
+ * binding) to `UserService`, whose own dependency chain reaches a Doctrine
+ * repository; constructing a Doctrine repository for the first time in a
+ * process makes Doctrine eagerly connect to auto-detect the DB platform
+ * (the exact landmine `AccessControl::currentForCaching()`'s own docblock
+ * documents finding during Phase 7's close-out). Since `Lang::t()` is
+ * reached from `Template::parse()` on essentially every real page render,
+ * and `Admin\Install\InstallWizard::render()` calls it directly before any
+ * DB credentials exist at all, making this collaborator a required eager
+ * dependency would mean the install page could never render even once on
+ * a fresh install. `load()`/`currentUserLanguage()` already null-coalesce
+ * around an unset provider (`AppInfo::DEFAULT_LANGUAGE` fallback) -- "not
+ * yet wired" was already a real, tolerated state before this phase, so
+ * this collaborator keeps that shape instead of following the "becomes an
+ * ordinary constructor param" pattern the other 4 do.
  */
 final class Lang
 {
@@ -47,7 +70,7 @@ final class Lang
      *
      * @var array<string, string|array<int, string>>
      */
-    private static array $data = [];
+    private array $data = [];
 
     /**
      * Backs load()'s $lang_info (parent/code/direction/jquery_code/... --
@@ -61,7 +84,7 @@ final class Lang
      *
      * @var array<string, string|bool>
      */
-    private static array $langInfo = [];
+    private array $langInfo = [];
 
     /**
      * True once load() has populated $langInfo at least once in this
@@ -73,7 +96,7 @@ final class Lang
      * produce an empty array-shaped result, and that must still count as
      * "initialised", matching the original global's isset() semantics.
      */
-    private static bool $langInfoInitialized = false;
+    private bool $langInfoInitialized = false;
 
     /**
      * Tracks which plugin/theme language files load() has already loaded in
@@ -83,29 +106,49 @@ final class Lang
      *
      * @var array<string, array<string, array{language?: string, return?: bool, no_fallback?: bool, force_fallback?: bool|string, local?: bool}>>
      */
-    private static array $languageFiles = [];
+    private array $languageFiles = [];
 
-    private static ?DefaultLanguageProviderInterface $defaultLanguageProvider = null;
+    private ?DefaultLanguageProviderInterface $defaultLanguageProvider = null;
 
-    private static ?HtmlRenderingInterface $htmlRenderer = null;
+    public function __construct(
+        private readonly Translator $translator,
+        private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly Paths $paths,
+        private readonly InstallationFlag $installationFlag,
+    ) {}
 
     /**
-     * Set once by include/common.inc.php (legacy, not subject to deptrac) --
-     * same shape as setDefaultLanguageProvider() above, needed because this
-     * L1Infrastructure class may not depend on L3Presentation's HtmlService
-     * directly (deptrac).
+     * @deprecated transitional bridge for callers not yet converted to
+     * constructor injection -- see the singleton/service-locator
+     * elimination campaign plan, Phase 8. A live container resolve on
+     * every call (no memoized pre-boot fallback, unlike e.g.
+     * `CurrentUser::current()`): like `AccessControl`, this class has
+     * required real collaborators with no safe fake to fall back to, so
+     * this throws naturally (via `Kernel::container()`) if called before
+     * `Kernel::boot()`. Delete once `grep -rn "Lang::current("` outside
+     * tests/ returns nothing.
      */
-    public static function setHtmlRenderer(HtmlRenderingInterface $renderer): void
+    public static function current(): self
     {
-        self::$htmlRenderer = $renderer;
+        $instance = \Piwigo\Core\Kernel::container()->get(self::class);
+        if (! $instance instanceof self) {
+            throw new \LogicException('Container returned an unexpected type for ' . self::class);
+        }
+
+        return $instance;
     }
 
-    private static function fatalError(string $msg): never
+    private function fatalError(string $msg): never
     {
-        if (self::$htmlRenderer instanceof \Piwigo\Core\HtmlRenderingInterface) {
-            self::$htmlRenderer->fatalError($msg);
-        }
-        throw new \RuntimeException($msg);
+        // fatalError() is `never`-typed -- always terminates -- and
+        // $htmlRenderer is now a required constructor collaborator
+        // (singleton/service-locator elimination campaign, Phase 8), so
+        // there's no reachable fallthrough left to throw a plain
+        // RuntimeException from, unlike the old nullable-static design.
+        // PHPStan proves this (deadCode.unreachable) -- same real,
+        // permanent simplification AccessControl::checkStatus() got in
+        // Phase 7.
+        $this->htmlRenderer->fatalError($msg);
     }
 
     /**
@@ -115,21 +158,22 @@ final class Lang
      * only, mirroring PageState's own resolution placement in
      * RequestBootstrap and reasoning (no $lang concept on the CLI path).
      */
-    public static function attachGlobals(): void
+    public function attachGlobals(): void
     {
-        self::$data = self::filterLangValues(Translator::get()->mirroredStrings());
+        $this->data = $this->filterLangValues($this->translator->mirroredStrings());
     }
 
     /**
-     * Set once by include/common.inc.php (legacy, not subject to deptrac),
-     * at the same point its own former load_language() calls already ran --
-     * every later load() call in the request reuses the same provider
-     * instance instead of reconstructing UserService on every call the way
-     * the original free function did.
+     * Set once by RequestBootstrap::finalize(), at the same point its own
+     * former load_language() calls already ran -- every later load() call
+     * in the request reuses the same provider instance instead of
+     * reconstructing UserService on every call the way the original free
+     * function did. See this class's own docblock for why this stays a
+     * real, mutable instance method instead of a constructor dependency.
      */
-    public static function setDefaultLanguageProvider(DefaultLanguageProviderInterface $provider): void
+    public function setDefaultLanguageProvider(DefaultLanguageProviderInterface $provider): void
     {
-        self::$defaultLanguageProvider = $provider;
+        $this->defaultLanguageProvider = $provider;
     }
 
     /**
@@ -139,18 +183,18 @@ final class Lang
      * DefaultLanguageProviderInterface's own docblock. Null when no
      * provider has been set yet or it has no preference to report.
      */
-    public static function currentUserLanguage(): ?string
+    public function currentUserLanguage(): ?string
     {
-        return self::$defaultLanguageProvider?->getCurrentLanguage();
+        return $this->defaultLanguageProvider?->getCurrentLanguage();
     }
 
-    public static function t(string $key, mixed ...$args): string
+    public function t(string $key, mixed ...$args): string
     {
-        return Translator::get()->translate($key, ...$args);
+        return $this->translator->translate($key, ...$args);
     }
 
     /**
-     * Thin `Translator::get()->plural()` delegate carrying the one
+     * Thin `$this->translator->plural()` delegate carrying the one
      * behavioral difference the deleted `l10n_dec()` free function had:
      * `Translator::plural()` requires a strict native `int`, but this
      * boundary's real callers are Smarty-compiled-template expressions
@@ -159,14 +203,14 @@ final class Lang
      * numeric DB-row string (the exact real 500 `l10n_dec()`'s own
      * docblock already documented: menubar_categories.tpl passed one).
      * Every hand-written .php call site instead calls
-     * `Translator::get()->plural()` directly with an explicit int already
-     * in hand, per Legacy Coupling Retirement Phase 4d.
+     * `Translator::current()->plural()` directly with an explicit int
+     * already in hand, per Legacy Coupling Retirement Phase 4d.
      */
-    public static function plural(string $singular, string $plural, mixed $decimal): string
+    public function plural(string $singular, string $plural, mixed $decimal): string
     {
         $n = is_numeric($decimal) ? (int) $decimal : 0;
 
-        return Translator::get()->plural($singular, $plural, $n);
+        return $this->translator->plural($singular, $plural, $n);
     }
 
     /**
@@ -178,9 +222,9 @@ final class Lang
      *
      * @return array<string, string|array<int, string>>
      */
-    public static function snapshot(): array
+    public function snapshot(): array
     {
-        return self::$data;
+        return $this->data;
     }
 
     /**
@@ -189,63 +233,63 @@ final class Lang
      *
      * @param array<string, string|array<int, string>>|null $data
      */
-    public static function restore(?array $data): void
+    public function restore(?array $data): void
     {
-        self::$data = $data ?? [];
+        $this->data = $data ?? [];
     }
 
-    public static function has(string $key): bool
+    public function has(string $key): bool
     {
-        return isset(self::$data[$key]);
+        return isset($this->data[$key]);
     }
 
     /**
      * @return array<string, string|bool>
      */
-    public static function langInfo(): array
+    public function langInfo(): array
     {
-        return self::$langInfo;
+        return $this->langInfo;
     }
 
     /**
      * @see $langInfoInitialized
      */
-    public static function isLangInfoInitialized(): bool
+    public function isLangInfoInitialized(): bool
     {
-        return self::$langInfoInitialized;
+        return $this->langInfoInitialized;
     }
 
     /**
      * @param array<string, string|bool> $data
      */
-    public static function setLangInfo(array $data): void
+    public function setLangInfo(array $data): void
     {
-        self::$langInfo = $data;
-        self::$langInfoInitialized = true;
+        $this->langInfo = $data;
+        $this->langInfoInitialized = true;
     }
 
     /**
      * @return array<string, array<string, array{language?: string, return?: bool, no_fallback?: bool, force_fallback?: bool|string, local?: bool}>>
      */
-    public static function languageFiles(): array
+    public function languageFiles(): array
     {
-        return self::$languageFiles;
+        return $this->languageFiles;
     }
 
     /**
      * Day name by day-of-week index (0 = Sunday).
      */
-    public static function day(int $dayOfWeek): string
+    public function day(int $dayOfWeek): string
     {
-        return self::fromLangArray('day', $dayOfWeek);
+        return $this->fromLangArray('day', $dayOfWeek);
     }
 
     /**
      * Month name by month number (1 = January).
      */
-    public static function month(int $month): string
+    public function month(int $month): string
     {
-        return self::fromLangArray('month', $month);
+        return $this->fromLangArray('month', $month);
     }
 
     /**
@@ -255,9 +299,9 @@ final class Lang
      *
      * @return array<int, string>
      */
-    public static function days(): array
+    public function days(): array
     {
-        return self::langArrayGroup('day');
+        return $this->langArrayGroup('day');
     }
 
     /**
@@ -266,9 +310,9 @@ final class Lang
      *
      * @return array<int, string>
      */
-    public static function months(): array
+    public function months(): array
     {
-        return self::langArrayGroup('month');
+        return $this->langArrayGroup('month');
     }
 
     /**
@@ -285,24 +329,24 @@ final class Lang
      *        default language if *true* or specified language
      *     @option bool local - if true load file from local directory
      */
-    public static function load(string $filename, string $dirname = '', array $options = []): string|bool
+    public function load(string $filename, string $dirname = '', array $options = []): string|bool
     {
         // keep trace of plugins loaded files for switch_lang_to() function
         if ($dirname !== '' && $filename !== '' && ! ($options['return'] ?? false)
-          && ! isset(self::$languageFiles[$dirname][$filename])) {
-            self::$languageFiles[$dirname][$filename] = $options;
+          && ! isset($this->languageFiles[$dirname][$filename])) {
+            $this->languageFiles[$dirname][$filename] = $options;
         }
 
         if (! ($options['return'] ?? false)) {
             $filename .= '.php';
         }
         if ($dirname === '') {
-            $dirname = CurrentPaths::get()->root;
+            $dirname = $this->paths->root;
         }
         $dirname .= 'language/';
 
-        $default_language = InstallationFlag::isActiveStatic()
-            ? (self::$defaultLanguageProvider?->getDefaultLanguage() ?? AppInfo::DEFAULT_LANGUAGE)
+        $default_language = $this->installationFlag->isActive()
+            ? ($this->defaultLanguageProvider?->getDefaultLanguage() ?? AppInfo::DEFAULT_LANGUAGE)
             : AppInfo::DEFAULT_LANGUAGE;
 
         // construct list of potential languages
@@ -315,11 +359,11 @@ final class Lang
         if (! in_array($options['language'] ?? null, [null, false, 0, '0', '', []], true)) { // explicit language
             $languages[] = $options['language'];
         }
-        $current_user_language = self::$defaultLanguageProvider?->getCurrentLanguage();
+        $current_user_language = $this->defaultLanguageProvider?->getCurrentLanguage();
         if (! in_array($current_user_language, [null, ''], true)) { // use language
             $languages[] = $current_user_language;
         }
-        if (($parent = self::getParentLanguage()) !== null) { // parent language
+        if (($parent = $this->getParentLanguage()) !== null) { // parent language
             // this is only for when the "child" language is missing
             $languages[] = $parent;
         }
@@ -393,16 +437,16 @@ final class Lang
             return false;
         }
 
-        $lang_info = self::$langInfo;
+        $lang_info = $this->langInfo;
 
-        $translations = Translator::get()->load($selected_language, $po_file);
-        $load_lang_info = $translations instanceof \Gettext\Translations ? self::poHeadersToLangInfo($translations->getHeaders()) : [];
+        $translations = $this->translator->load($selected_language, $po_file);
+        $load_lang_info = $translations instanceof \Gettext\Translations ? $this->poHeadersToLangInfo($translations->getHeaders()) : [];
 
         if (isset($options['force_fallback']) && is_string($options['force_fallback'])
           && $options['force_fallback'] !== $selected_language) {
             $fallback_po = $dirname . $options['force_fallback'] . '/' . basename($po_file);
             if (is_readable($fallback_po)) {
-                Translator::get()->load($options['force_fallback'], $fallback_po);
+                $this->translator->load($options['force_fallback'], $fallback_po);
             }
         }
 
@@ -427,13 +471,13 @@ final class Lang
                 // "child overrides parent, parent fills the gaps"
                 // precedence (e.g. en_US inherits piwigo_day_N from
                 // its en_UK parent, but keeps its own overrides).
-                Translator::get()->load($parent_language, $parent_po);
-                Translator::get()->load($selected_language, $po_file);
+                $this->translator->load($parent_language, $parent_po);
+                $this->translator->load($selected_language, $po_file);
             }
         }
 
         $lang_info = array_merge($lang_info, $load_lang_info);
-        self::setLangInfo($lang_info);
+        $this->setLangInfo($lang_info);
         return true;
     }
 
@@ -445,7 +489,7 @@ final class Lang
      *   if args is a array, each values are used on sprintf
      * @return array{key_args: array<int, mixed>}
      */
-    public static function buildArgs(string $key, mixed $args = ''): array
+    public function buildArgs(string $key, mixed $args = ''): array
     {
         if (is_array($args)) {
             // array_values() guarantees a plain list even when $args carries
@@ -471,11 +515,11 @@ final class Lang
      *   not a redundant one
      * @param string $sep used when translated elements are concatened
      */
-    public static function args(mixed $key_args, string $sep = "\n"): string
+    public function args(mixed $key_args, string $sep = "\n"): string
     {
         $result = '';
         if (! is_array($key_args)) {
-            self::fatalError('Lang::args: Invalid arguments');
+            $this->fatalError('Lang::args: Invalid arguments');
         }
 
         $first = true;
@@ -500,20 +544,20 @@ final class Lang
                     continue;
                 }
 
-                array_unshift($element, self::t($l10n_key)); // translate the key
+                array_unshift($element, $this->t($l10n_key)); // translate the key
                 $formatted = call_user_func_array(sprintf(...), $element);
                 $result .= is_string($formatted) ? $formatted : '';
             } else {
-                $result .= self::args($element, $sep);
+                $result .= $this->args($element, $sep);
             }
         }
 
         return $result;
     }
 
-    private static function fromLangArray(string $key, int $index): string
+    private function fromLangArray(string $key, int $index): string
     {
-        $group = self::langArrayGroup($key);
+        $group = $this->langArrayGroup($key);
         $val = $group[$index] ?? null;
 
         return $val ?? '';
@@ -522,21 +566,21 @@ final class Lang
     /**
      * @return array<int, string>
      */
-    private static function langArrayGroup(string $key): array
+    private function langArrayGroup(string $key): array
     {
-        $group = self::$data[$key] ?? null;
+        $group = $this->data[$key] ?? null;
 
         return is_array($group) ? $group : [];
     }
 
-    private static function getParentLanguage(?string $lang_id = null): ?string
+    private function getParentLanguage(?string $lang_id = null): ?string
     {
         if ($lang_id === null || $lang_id === '') {
-            $parent = self::$langInfo['parent'] ?? null;
+            $parent = $this->langInfo['parent'] ?? null;
             return (is_string($parent) && $parent !== '') ? $parent : null;
         }
 
-        $f = CurrentPaths::get()->root . 'language/' . $lang_id . '/common.po';
+        $f = $this->paths->root . 'language/' . $lang_id . '/common.po';
         if (is_readable($f)) {
             $parent = new PoLoader()
                 ->loadFile($f)
@@ -559,7 +603,7 @@ final class Lang
      *
      * @return array<string, string|bool>
      */
-    private static function poHeadersToLangInfo(Headers $headers): array
+    private function poHeadersToLangInfo(Headers $headers): array
     {
         $info = [];
         $map = [
@@ -600,7 +644,7 @@ final class Lang
      * @param array<mixed, mixed> $value
      * @return array<string, string|array<int, string>>
      */
-    private static function filterLangValues(array $value): array
+    private function filterLangValues(array $value): array
     {
         $result = [];
         foreach ($value as $k => $v) {
@@ -638,19 +682,18 @@ final class Lang
      *
      * @param array<string, string|array<int, string>> $data
      */
-    public static function loadArray(array $data): void
+    public function loadArray(array $data): void
     {
-        self::$data = $data;
-        Translator::get()->loadArray($data);
+        $this->data = $data;
+        $this->translator->loadArray($data);
     }
 
-    public static function reset(): void
+    public function reset(): void
     {
-        self::$data = [];
-        self::$langInfo = [];
-        self::$langInfoInitialized = false;
-        self::$languageFiles = [];
-        self::$defaultLanguageProvider = null;
-        self::$htmlRenderer = null;
+        $this->data = [];
+        $this->langInfo = [];
+        $this->langInfoInitialized = false;
+        $this->languageFiles = [];
+        $this->defaultLanguageProvider = null;
     }
 }

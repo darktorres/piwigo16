@@ -39,6 +39,7 @@ final class AlbumSubController implements AdminSubControllerInterface
     private const array KNOWN_TABS = ['properties', 'sort_order', 'permissions', 'notification'];
 
     public function __construct(
+        private readonly Lang $lang,
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
@@ -85,13 +86,13 @@ final class AlbumSubController implements AdminSubControllerInterface
         $category_name = $nameEvent->categoryName;
         $category_id_display = (string) $category['id'];
         $template->assign([
-            'ADMIN_PAGE_TITLE' => Lang::t('Edit album') . ' <strong>' . $category_name . '</strong>',
+            'ADMIN_PAGE_TITLE' => $this->lang->t('Edit album') . ' <strong>' . $category_name . '</strong>',
             'ADMIN_PAGE_OBJECT_ID' => '#' . $category_id_display,
         ]);
 
         if ($tab === 'properties') {
             new CatModifyPageRenderer()
-                ->render($this->urlService, $category, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->activityService, $this->categoryService, $this->htmlRenderer);
+                ->render($this->lang, $this->urlService, $category, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->activityService, $this->categoryService, $this->htmlRenderer);
         } elseif ($tab === 'sort_order') {
             $this->elementSetRanksPageRenderer
                 ->render();

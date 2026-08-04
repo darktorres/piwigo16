@@ -74,6 +74,7 @@ use Piwigo\Ws\PwgServer;
 final class UploadService
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
         private readonly StorageRegistry $storageRegistry,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
@@ -105,7 +106,7 @@ final class UploadService
                 'max' => 20000,
                 'pattern' => '/^\d+$/',
                 'can_be_null' => false,
-                'error_message' => Lang::t('The original maximum width must be a number between %d and %d'),
+                'error_message' => $this->lang->t('The original maximum width must be a number between %d and %d'),
             ],
 
             'original_resize_maxheight' => [
@@ -114,7 +115,7 @@ final class UploadService
                 'max' => 20000,
                 'pattern' => '/^\d+$/',
                 'can_be_null' => false,
-                'error_message' => Lang::t('The original maximum height must be a number between %d and %d'),
+                'error_message' => $this->lang->t('The original maximum height must be a number between %d and %d'),
             ],
 
             'original_resize_quality' => [
@@ -123,7 +124,7 @@ final class UploadService
                 'max' => 98,
                 'pattern' => '/^\d+$/',
                 'can_be_null' => false,
-                'error_message' => Lang::t('The original image quality must be a number between %d and %d'),
+                'error_message' => $this->lang->t('The original image quality must be a number between %d and %d'),
             ],
         ];
     }
@@ -1388,16 +1389,16 @@ final class UploadService
 
         return match ($error_code) {
             UPLOAD_ERR_INI_SIZE => sprintf(
-                Lang::t('The uploaded file exceeds the upload_max_filesize directive in php.ini: %sB'),
+                $this->lang->t('The uploaded file exceeds the upload_max_filesize directive in php.ini: %sB'),
                 $ini_size === false ? 'unknown' : $ini_size
             ),
-            UPLOAD_ERR_FORM_SIZE => Lang::t('The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form'),
-            UPLOAD_ERR_PARTIAL => Lang::t('The uploaded file was only partially uploaded'),
-            UPLOAD_ERR_NO_FILE => Lang::t('No file was uploaded'),
-            UPLOAD_ERR_NO_TMP_DIR => Lang::t('Missing a temporary folder'),
-            UPLOAD_ERR_CANT_WRITE => Lang::t('Failed to write file to disk'),
-            UPLOAD_ERR_EXTENSION => Lang::t('File upload stopped by extension'),
-            default => Lang::t('Unknown upload error'),
+            UPLOAD_ERR_FORM_SIZE => $this->lang->t('The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form'),
+            UPLOAD_ERR_PARTIAL => $this->lang->t('The uploaded file was only partially uploaded'),
+            UPLOAD_ERR_NO_FILE => $this->lang->t('No file was uploaded'),
+            UPLOAD_ERR_NO_TMP_DIR => $this->lang->t('Missing a temporary folder'),
+            UPLOAD_ERR_CANT_WRITE => $this->lang->t('Failed to write file to disk'),
+            UPLOAD_ERR_EXTENSION => $this->lang->t('File upload stopped by extension'),
+            default => $this->lang->t('Unknown upload error'),
         };
     }
 
@@ -1460,7 +1461,7 @@ final class UploadService
         if (! is_dir($upload_dir)) {
             if (! is_writable(dirname($upload_dir))) {
                 return sprintf(
-                    Lang::t('Create the "%s" directory at the root of your Piwigo installation'),
+                    $this->lang->t('Create the "%s" directory at the root of your Piwigo installation'),
                     $relative_dir
                 );
             }
@@ -1475,7 +1476,7 @@ final class UploadService
                 // @phpstan-ignore booleanNot.alwaysTrue
                 if (! is_writable($upload_dir)) {
                     return sprintf(
-                        Lang::t('Give write access (chmod 777) to "%s" directory at the root of your Piwigo installation'),
+                        $this->lang->t('Give write access (chmod 777) to "%s" directory at the root of your Piwigo installation'),
                         $relative_dir
                     );
                 }

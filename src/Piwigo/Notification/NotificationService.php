@@ -26,6 +26,7 @@ use Piwigo\Permission\SqlCondition;
 final readonly class NotificationService
 {
     public function __construct(
+        private Lang $lang,
         private AccessControl $accessControl,
         private NotificationRepository $repo,
         private PermissionService $permissionService,
@@ -325,7 +326,7 @@ final readonly class NotificationService
               . '<a href="' . $this->urlService->addUrlParams($this->urlService->makeIndexUrl([
                   'section' => 'recent_pics',
               ]), $addUrlParams) . '">'
-                . Lang::t('Recent photos') . '</a>'
+                . $this->lang->t('Recent photos') . '</a>'
               . ')'
               . '</li><br>';
 
@@ -384,7 +385,7 @@ final readonly class NotificationService
 
         $dateAvailable = $dateDetail['date_available'] ?? '';
         if ((bool) preg_match('/^\d+-(\d+)-(\d+) /', $dateAvailable, $matches)) {
-            $monthName = \Piwigo\Core\Lang::month((int) $matches[1]);
+            $monthName = $this->lang->month((int) $matches[1]);
             $title .= ' (' . $monthName . ' ' . $matches[2] . ')';
         }
 

@@ -54,6 +54,7 @@ final readonly class TagService
     private TagIdCache $tagIdFromTagNameCache;
 
     public function __construct(
+        private Lang $lang,
         private TagRepository $repo,
         private PermissionService $permissionService,
         private ActivityLoggerInterface $activityLogger,
@@ -716,13 +717,13 @@ final readonly class TagService
             $insertedId = $this->repo->insert($tagName, $urlName);
 
             return [
-                'info' => Lang::t('Tag "%s" was added', stripslashes($tagName)),
+                'info' => $this->lang->t('Tag "%s" was added', stripslashes($tagName)),
                 'id' => $insertedId->value,
             ];
         }
 
         return [
-            'error' => Lang::t('Tag "%s" already exists', stripslashes($tagName)),
+            'error' => $this->lang->t('Tag "%s" already exists', stripslashes($tagName)),
         ];
     }
 

@@ -12,13 +12,13 @@ use Piwigo\Core\Lang;
  */
 final class PhotosAddFtpPageRenderer
 {
-    public function render(\Piwigo\Template\CurrentTemplate $currentTemplate): void
+    public function render(Lang $lang, \Piwigo\Template\CurrentTemplate $currentTemplate): void
     {
         $template = $currentTemplate->get();
 
         $template->assign(
             'FTP_HELP_CONTENT',
-            Lang::load(
+            $lang->load(
                 'help/photos_add_ftp.html',
                 '',
                 [
@@ -27,7 +27,7 @@ final class PhotosAddFtpPageRenderer
             )
         );
 
-        $template->assign('ADMIN_PAGE_TITLE', Lang::t('Upload Photos'));
+        $template->assign('ADMIN_PAGE_TITLE', $lang->t('Upload Photos'));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'photos_add');
     }

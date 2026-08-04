@@ -62,6 +62,7 @@ final class MaintenanceEnvPageRenderer
         private readonly \Piwigo\Category\CategoryService $categoryService,
         private readonly \Piwigo\Tag\TagService $tagService,
         private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
+        private readonly Lang $lang,
         private readonly ?\Piwigo\Cache\PersistentCache $persistentCache = null,
     ) {}
 
@@ -70,7 +71,7 @@ final class MaintenanceEnvPageRenderer
         $template = $this->currentTemplate->get();
 
         $action = MaintenanceActionRequest::fromGlobals()->action;
-        new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->filesystemIntegrityChecker, $this->sessionService, $this->translator, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->dbMaintenanceRepository, $this->activityService, $this->rateService, $this->categoryService, $this->tagService, $this->htmlRenderer, $this->persistentCache)
+        new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->filesystemIntegrityChecker, $this->sessionService, $this->translator, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->dbMaintenanceRepository, $this->activityService, $this->rateService, $this->categoryService, $this->tagService, $this->htmlRenderer, $this->lang, $this->persistentCache)
             ->dispatch($action);
 
         // +-------------------------------------------------------------------+
@@ -85,11 +86,11 @@ final class MaintenanceEnvPageRenderer
 
         /** @var array<string, string> $purge_urls */
         $purge_urls = [];
-        $purge_urls[Lang::t('All')] = sprintf($url_format, 'derivatives') . '&amp;type=all';
+        $purge_urls[$this->lang->t('All')] = sprintf($url_format, 'derivatives') . '&amp;type=all';
         foreach ($this->imageStdParams->get_defined_type_map() as $params) {
-            $purge_urls[Lang::t($params->type)] = sprintf($url_format, 'derivatives') . '&amp;type=' . $params->type;
+            $purge_urls[$this->lang->t($params->type)] = sprintf($url_format, 'derivatives') . '&amp;type=' . $params->type;
         }
-        $purge_urls[Lang::t(ImageStdParams::CUSTOM)] = sprintf($url_format, 'derivatives') . '&amp;type=' . ImageStdParams::CUSTOM;
+        $purge_urls[$this->lang->t(ImageStdParams::CUSTOM)] = sprintf($url_format, 'derivatives') . '&amp;type=' . ImageStdParams::CUSTOM;
 
         $dbInfo = new DbInfo(DbConnection::build());
         $php_current_timestamp = date('Y-m-d H:i:s');

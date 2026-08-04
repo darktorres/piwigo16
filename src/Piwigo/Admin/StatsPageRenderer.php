@@ -35,7 +35,7 @@ final class StatsPageRenderer
      * shared 'history' tabsheet group (see HistoryPageRenderer, its
      * sibling in that same group).
      */
-    public function render(AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, CoreTabs $coreTabs, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\History\HistoryService $historyService): void
+    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, CoreTabs $coreTabs, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\History\HistoryService $historyService): void
     {
         $template = $currentTemplate->get();
 
@@ -118,7 +118,7 @@ final class StatsPageRenderer
         // version also wrote the sorted copy back into the global table
         // (dead: nothing downstream in this request re-reads it, and the
         // join() call already reads this local variable, not the global).
-        $lang_month = \Piwigo\Core\Lang::months();
+        $lang_month = $lang->months();
         ksort($lang_month);
 
         // CurrentConfig::statCompareYearDisplayed() is SCHEMA-typed 'int' only (no
@@ -136,7 +136,7 @@ final class StatsPageRenderer
             'langCode' => $currentUser->get()
                 ->language,
             'month_labels' => join('~', array_filter($lang_month, is_string(...))),
-            'ADMIN_PAGE_TITLE' => Lang::t('History'),
+            'ADMIN_PAGE_TITLE' => $lang->t('History'),
         ]);
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'stats');

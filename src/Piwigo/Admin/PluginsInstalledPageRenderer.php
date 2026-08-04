@@ -51,7 +51,7 @@ final class PluginsInstalledPageRenderer
      * slug statically (it's the only class registered for the 'plugins'
      * slug in config/admin_pages.php).
      */
-    public function render(AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, \Piwigo\Core\CurrentLogger $currentLogger, SessionService $sessionService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Users\PreferencesService $preferencesService, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer): void
+    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, \Piwigo\Core\CurrentLogger $currentLogger, SessionService $sessionService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Users\PreferencesService $preferencesService, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer): void
     {
         $template = $currentTemplate->get();
 
@@ -85,7 +85,7 @@ final class PluginsInstalledPageRenderer
         // follows its documented convention and reads specific keys
         // defensively instead.
         $fs_plugins = new ExtensionScanner()
-            ->scan(ExtensionType::Plugin, $urlService);
+            ->scan(ExtensionType::Plugin, $urlService, $lang);
         uasort($fs_plugins, $htmlRenderer->nameCompare(...));
         $db_plugins_by_id = $extension_repository->findAll(ExtensionType::Plugin);
 
@@ -212,7 +212,7 @@ final class PluginsInstalledPageRenderer
 
                 $plugin_state = 'merged';
                 $tpl_plugin['STATE'] = $plugin_state;
-                $tpl_plugin['DESC'] = Lang::t('THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW.');
+                $tpl_plugin['DESC'] = $lang->t('THIS PLUGIN IS NOW PART OF PIWIGO CORE! DELETE IT NOW.');
                 $merged_plugins = true;
             }
 
@@ -239,7 +239,7 @@ final class PluginsInstalledPageRenderer
                     'NAME' => $plugin_id,
                     'ID' => $plugin_id,
                     'VERSION' => $db_plugins_by_id[$plugin_id]['version'],
-                    'DESC' => Lang::t('ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW.'),
+                    'DESC' => $lang->t('ERROR: THIS PLUGIN IS MISSING BUT IT IS INSTALLED! UNINSTALL IT NOW.'),
                     'STATE' => 'missing',
                 ];
                 $count_types_plugins['missing']++;
@@ -256,7 +256,7 @@ final class PluginsInstalledPageRenderer
                 'show_details' => $show_details,
                 'max_inactive_before_hide' => $pluginsDisplay->showInactive ? 999 : 8,
                 'isWebmaster' => ($accessControl->isWebmaster()) ? 1 : 0,
-                'ADMIN_PAGE_TITLE' => Lang::t('Plugins'),
+                'ADMIN_PAGE_TITLE' => $lang->t('Plugins'),
                 'view_selector' => $preferencesService
                     ->getParam('plugin-manager-view', 'classic'),
                 'CONF_ENABLE_EXTENSIONS_INSTALL' => \Piwigo\Config\CurrentConfig::enableExtensionsInstall(),

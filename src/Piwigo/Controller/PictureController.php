@@ -88,6 +88,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class PictureController implements ControllerInterface
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
@@ -119,7 +120,7 @@ final class PictureController implements ControllerInterface
 
     private function commentService(Connection $conn, UrlServiceInterface $urlService): CommentService
     {
-        return new CommentService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), $this->mailer, $this->htmlService, $urlService, $this->eventDispatcher, $this->pageState, $this->currentUser);
+        return new CommentService($this->lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), $this->mailer, $this->htmlService, $urlService, $this->eventDispatcher, $this->pageState, $this->currentUser);
     }
 
     #[\Override]
@@ -459,20 +460,20 @@ final class PictureController implements ControllerInterface
                                     if (! isset($_SESSION['page_infos']) or ! is_array($_SESSION['page_infos'])) {
                                         $_SESSION['page_infos'] = [];
                                     }
-                                    $_SESSION['page_infos'][] = Lang::t('An administrator must authorize your comment before it is visible.');
+                                    $_SESSION['page_infos'][] = $this->lang->t('An administrator must authorize your comment before it is visible.');
                                     // no break
                                 case 'validate':
                                     if (! isset($_SESSION['page_infos']) or ! is_array($_SESSION['page_infos'])) {
                                         $_SESSION['page_infos'] = [];
                                     }
-                                    $_SESSION['page_infos'][] = Lang::t('Your comment has been registered');
+                                    $_SESSION['page_infos'][] = $this->lang->t('Your comment has been registered');
                                     $perform_redirect = true;
                                     break;
                                 case 'reject':
                                     if (! isset($_SESSION['page_errors']) or ! is_array($_SESSION['page_errors'])) {
                                         $_SESSION['page_errors'] = [];
                                     }
-                                    $_SESSION['page_errors'][] = Lang::t('Your comment has NOT been registered because it did not pass the validation rules');
+                                    $_SESSION['page_errors'][] = $this->lang->t('Your comment has NOT been registered because it did not pass the validation rules');
                                     break;
                                 default:
                                     trigger_error('Invalid comment action ' . $comment_action, E_USER_WARNING);
@@ -836,8 +837,8 @@ final class PictureController implements ControllerInterface
                     $format_ext = $format['ext'];
                     $format['label'] = strtoupper($format_ext);
                     $lang_key = 'format ' . strtoupper($format_ext);
-                    if (\Piwigo\Core\Lang::has($lang_key)) {
-                        $format['label'] = \Piwigo\Core\Lang::t($lang_key);
+                    if ($this->lang->has($lang_key)) {
+                        $format['label'] = $this->lang->t($lang_key);
                     }
 
                     $format_filesize = $format['filesize'];
@@ -1059,7 +1060,7 @@ final class PictureController implements ControllerInterface
         // filesize
         $current_filesize = $picture['current']['filesize'] ?? null;
         if (is_numeric($current_filesize) && (float) $current_filesize !== 0.0) {
-            $infos['INFO_FILESIZE'] = Lang::t('%d Kb', $picture['current']['filesize']);
+            $infos['INFO_FILESIZE'] = $this->lang->t('%d Kb', $picture['current']['filesize']);
         }
 
         // number of visits
@@ -1215,11 +1216,11 @@ final class PictureController implements ControllerInterface
             ->render($image_id, $urlService, $picture, $url_self);
         if (\Piwigo\Config\CurrentConfig::activateComments()) {
             new PictureCommentRenderer()
-                ->render($this->accessControl, $edit_comment, $image_id, $section_context->start, $urlService, $related_categories, $url_self, $this->sessionService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->mailer);
+                ->render($this->lang, $this->accessControl, $edit_comment, $image_id, $section_context->start, $urlService, $related_categories, $url_self, $this->sessionService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->mailer);
         }
         if ($metadata_showable and $this->sessionService->getSessionVar('show_metadata') !== null) {
             new PictureMetadataRenderer()
-                ->render($picture, $this->currentLogger, $this->eventDispatcher, $this->currentTemplate);
+                ->render($this->lang, $picture, $this->currentLogger, $this->eventDispatcher, $this->currentTemplate);
         }
 
         // include menubar
@@ -1227,7 +1228,7 @@ final class PictureController implements ControllerInterface
         $themeconf = is_array($themeconf) ? $themeconf : [];
         if (\Piwigo\Config\CurrentConfig::pictureMenu() and (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('thePicturePage', $themeconf['hide_menu_on'], true))) {
             new MenubarRenderer()
-                ->render($this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
+                ->render($this->lang, $this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
         }
 
         // The slideshow branch above may have set $refresh/$url_link

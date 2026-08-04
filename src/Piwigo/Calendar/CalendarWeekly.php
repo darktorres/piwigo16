@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Calendar;
 
-use Piwigo\Core\Lang;
 use Piwigo\Permission\SqlCondition;
 
 /**
@@ -28,11 +27,11 @@ final class CalendarWeekly extends CalendarBase
         parent::initialize($inner_sql);
         $week_no_labels = [];
         for ($i = 1; $i <= 53; $i++) {
-            $week_no_labels[$i] = Lang::t('Week %d', $i);
+            $week_no_labels[$i] = $this->lang->t('Week %d', $i);
             // $week_no_labels[$i] = $i;
         }
 
-        $day_labels = \Piwigo\Core\Lang::days();
+        $day_labels = $this->lang->days();
 
         $this->calendar_levels = [
             [

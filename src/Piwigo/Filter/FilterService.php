@@ -159,6 +159,7 @@ final class FilterService implements FilterUpdaterInterface
                 // consumer (e.g. CategoryCatsRenderer) observes the same
                 // value.
                 $computedCategories = new CategoryService(
+                    \Piwigo\Core\Lang::current(),
                     \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Category\CategoryEntity::class),
                     new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($categoryConn)), \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($categoryConn)->getRepository(\Piwigo\Category\CategoryEntity::class))
                 )->getComputedCategories($user->toUserArray(), $filter_recent_period);

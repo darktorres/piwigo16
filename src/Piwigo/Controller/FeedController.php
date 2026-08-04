@@ -33,6 +33,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class FeedController implements ControllerInterface
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
@@ -62,7 +63,7 @@ final class FeedController implements ControllerInterface
         if ($feed_id !== '') {
             $feed_row = $feed_repo->findById($feed_id);
             if ($feed_row === null) {
-                $htmlRenderer->pageNotFound($this->redirectService, Lang::t('Unknown feed identifier'));
+                $htmlRenderer->pageNotFound($this->redirectService, $this->lang->t('Unknown feed identifier'));
             }
             $feed_last_check = $feed_row['lastCheck'];
             if ($feed_row['userId'] !== $this->currentUser->get()->id->value) { // new user
@@ -124,7 +125,7 @@ final class FeedController implements ControllerInterface
                 assert($dbnow_ts !== false);
 
                 $rss_items[] = [
-                    'title' => Lang::t('New on %s', \Piwigo\Core\DateHelper::formatDate($dbnow)),
+                    'title' => $this->lang->t('New on %s', \Piwigo\Core\DateHelper::formatDate($dbnow)),
                     'link' => $this->urlService->getGalleryHomeUrl(),
                     'description' => $description,
                     'html' => true,

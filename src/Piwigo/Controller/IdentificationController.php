@@ -41,6 +41,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class IdentificationController implements ControllerInterface
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
@@ -83,7 +84,7 @@ final class IdentificationController implements ControllerInterface
         if ($identificationSubmit->getRedirect !== null) {
             $redirect_to = urldecode($identificationSubmit->getRedirect);
             if (\Piwigo\Config\CurrentConfig::guestAccess() and ! $identificationSubmit->hideRedirectErrorPresent) {
-                $errors['login_page_error'] = Lang::t('You are not authorized to access the requested page');
+                $errors['login_page_error'] = $this->lang->t('You are not authorized to access the requested page');
             }
         }
 
@@ -91,7 +92,7 @@ final class IdentificationController implements ControllerInterface
             $session_cookie_name = session_name();
             $has_session_cookie = $session_cookie_name !== false && isset($_COOKIE[$session_cookie_name]);
             if (! $has_session_cookie) {
-                $errors['login_page_error'] = Lang::t('Cookies are blocked or not supported by your browser. You must enable cookies to connect.');
+                $errors['login_page_error'] = $this->lang->t('Cookies are blocked or not supported by your browser. You must enable cookies to connect.');
             } else {
                 // $_POST['username'] is required to be a string for
                 // try_log_user(); an unset/non-string value falls back to
@@ -135,7 +136,7 @@ final class IdentificationController implements ControllerInterface
                         : substr($root_url, 0, strlen($root_url) - strlen(new CookieService()->cookiePath())) . $redirect_to
                     );
                 } else {
-                    $errors['login_form_error'] = Lang::t('Invalid username or password!');
+                    $errors['login_form_error'] = $this->lang->t('Invalid username or password!');
                 }
             }
         }
@@ -147,7 +148,7 @@ final class IdentificationController implements ControllerInterface
         // file reads $GLOBALS['title']. Plain local, not global.
         $template = $this->currentTemplate->get();
 
-        $title = Lang::t('Identification');
+        $title = $this->lang->t('Identification');
         $this->pageState->setBodyId('theIdentificationPage');
 
         $template->set_filenames([
@@ -176,7 +177,7 @@ final class IdentificationController implements ControllerInterface
         $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
         if (! \Piwigo\Config\CurrentConfig::galleryLocked() && (! is_array($hide_menu_on) or ! in_array('theIdentificationPage', $hide_menu_on, true))) {
             new MenubarRenderer()
-                ->render($this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
+                ->render($this->lang, $this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
         }
 
         // Load language if cookie is set from login/register/password
@@ -193,7 +194,7 @@ final class IdentificationController implements ControllerInterface
             }
 
             $this->currentUser->updateLanguage($lang_cookie);
-            Lang::load('common.lang', '', [
+            $this->lang->load('common.lang', '', [
                 'language' => $lang_cookie,
             ]);
         }

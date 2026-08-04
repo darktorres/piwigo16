@@ -66,6 +66,7 @@ use Piwigo\Template\Template;
 final class BatchManagerUnitPageRenderer
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\ProcessCache $processCache,
@@ -174,7 +175,7 @@ final class BatchManagerUnitPageRenderer
             );
             $this->entityManager->clear();
 
-            $this->pageState->addInfo(Lang::t('Photo informations updated'));
+            $this->pageState->addInfo($this->lang->t('Photo informations updated'));
             PermissionCacheInvalidator::invalidate();
         }
 
@@ -219,7 +220,7 @@ final class BatchManagerUnitPageRenderer
 
                 'U_ELEMENTS_PAGE' => $base_url . $this->urlService->getQueryStringDiff(['display', 'start']),
                 'level_options' => \Piwigo\Permission\PermissionService::getPrivacyLevelOptions(),
-                'ADMIN_PAGE_TITLE' => Lang::t('Batch Manager'),
+                'ADMIN_PAGE_TITLE' => $this->lang->t('Batch Manager'),
                 'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
                     ->getToken(),
             ]
@@ -231,7 +232,7 @@ final class BatchManagerUnitPageRenderer
         $page_start = $pageStart;
 
         new FilterPanelRenderer()
-            ->render($template, $base_url, $collection, $cat_elements_id, $page_start, $this->urlService, $this->eventDispatcher, $this->pageState, $this->tagService, $this->htmlRenderer);
+            ->render($this->lang, $template, $base_url, $collection, $cat_elements_id, $page_start, $this->urlService, $this->eventDispatcher, $this->pageState, $this->tagService, $this->htmlRenderer);
         // +-------------------------------------------------------------------+
         // |                        global mode thumbnails                         |
         // +-------------------------------------------------------------------+
@@ -491,14 +492,14 @@ final class BatchManagerUnitPageRenderer
                             'TITLE' => $htmlRenderer->renderElementName($row),
                             'DIMENSIONS' => $row_width . 'x' . $row_height . ' px',
                             'FORMAT' => ($row_width >= $row_height) ? 1 : 0, // 0:horizontal, 1:vertical
-                            'FILESIZE' => Lang::t('%.2f MB', $row_filesize / 1024.0),
+                            'FILESIZE' => $this->lang->t('%.2f MB', $row_filesize / 1024.0),
                             'REGISTRATION_DATE' => \Piwigo\Core\DateHelper::formatDate($row_date_available),
-                            'EXT' => Lang::t('%s file type', end($extTab)),
-                            'POST_DATE' => Lang::t('Added on %s', \Piwigo\Core\DateHelper::formatDate($row_date_available, ['day', 'month', 'year'])),
-                            'AGE' => Lang::t(ucfirst(\Piwigo\Core\DateHelper::timeSince($row_date_available, 'year'))),
-                            'ADDED_BY' => Lang::t('Added by %s', $row_added_by !== null ? ($added_by_username_of[$row_added_by] ?? Lang::t('N/A')) : Lang::t('N/A')),
-                            'STATS' => Lang::t('Visited %d times', $row['hit']),
-                            'FILE' => Lang::t('%s', $row['file']),
+                            'EXT' => $this->lang->t('%s file type', end($extTab)),
+                            'POST_DATE' => $this->lang->t('Added on %s', \Piwigo\Core\DateHelper::formatDate($row_date_available, ['day', 'month', 'year'])),
+                            'AGE' => $this->lang->t(ucfirst(\Piwigo\Core\DateHelper::timeSince($row_date_available, 'year'))),
+                            'ADDED_BY' => $this->lang->t('Added by %s', $row_added_by !== null ? ($added_by_username_of[$row_added_by] ?? $this->lang->t('N/A')) : $this->lang->t('N/A')),
+                            'STATS' => $this->lang->t('Visited %d times', $row['hit']),
+                            'FILE' => $this->lang->t('%s', $row['file']),
                             'related_categories' => $related_categories,
                             'related_category_ids' => json_encode($related_category_ids),
                             'U_JUMPTO' => (isset($url_img) and $user->level >= $media['image']['level']) ? $url_img : null,

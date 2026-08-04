@@ -48,6 +48,7 @@ use Piwigo\Permission\SqlCondition;
 final readonly class CommentService
 {
     public function __construct(
+        private Lang $lang,
         private CommentRepository $repo,
         private EphemeralKeyService $ephemeralKeys,
         private MailerInterface $mailer,
@@ -241,7 +242,7 @@ final readonly class CommentService
         if (! \Piwigo\Auth\AccessControl::current()->isClassicUser()) {
             if (self::emptyValue($comm['author'])) {
                 if (\Piwigo\Config\CurrentConfig::commentsAuthorMandatory()) {
-                    $infos[] = Lang::t('Username is mandatory');
+                    $infos[] = $this->lang->t('Username is mandatory');
                     $commentAction = 'reject';
                 }
 
@@ -259,7 +260,7 @@ final readonly class CommentService
                 $usernameColumn = $user_fields['username'];
 
                 if ($this->repo->usernameExists($usernameColumn, $authorName)) {
-                    $infos[] = Lang::t('This login is already used by another user');
+                    $infos[] = $this->lang->t('This login is already used by another user');
                     $commentAction = 'reject';
                 }
             }
@@ -295,7 +296,7 @@ final readonly class CommentService
 
                 $comm['website_url'] = $websiteUrl;
                 if (! \Piwigo\Validation\InputValidator::checkUrlFormat($websiteUrl)) {
-                    $infos[] = Lang::t('Your website URL is invalid');
+                    $infos[] = $this->lang->t('Your website URL is invalid');
                     $commentAction = 'reject';
                 }
             }
@@ -308,13 +309,13 @@ final readonly class CommentService
             if (! self::emptyValue($currentUserEmail)) {
                 $comm['email'] = $currentUserEmail;
             } elseif (\Piwigo\Config\CurrentConfig::commentsEmailMandatory()) {
-                $infos[] = Lang::t('Email address is missing. Please specify an email address.');
+                $infos[] = $this->lang->t('Email address is missing. Please specify an email address.');
                 $commentAction = 'reject';
             }
         } else {
             $email = is_string($comm['email'] ?? null) ? $comm['email'] : null;
             if (! \Piwigo\Validation\InputValidator::checkEmailFormat($email)) {
-                $infos[] = Lang::t('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
+                $infos[] = $this->lang->t('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
                 $commentAction = 'reject';
             }
         }
@@ -342,7 +343,7 @@ final readonly class CommentService
             $anonymousIdPrefix = \Piwigo\Auth\AccessControl::current()->isClassicUser() ? null : $trimmedIp;
             $counter = $this->repo->countRecentComments($authorId, $anonymousIdPrefix, $antiFloodTime);
             if ($counter > 0) {
-                $infos[] = Lang::t('Anti-flood system : please wait for a moment before trying to post another comment');
+                $infos[] = $this->lang->t('Anti-flood system : please wait for a moment before trying to post another comment');
                 $commentAction = 'reject';
                 $this->pushCrReason('flood_time');
             }
@@ -378,19 +379,19 @@ final readonly class CommentService
                 $commentUrl = $this->urlService->getAbsoluteRootUrl() . 'comments.php?comment_id=' . $id->value;
 
                 $keyargsContent = [
-                    Lang::buildArgs('Author: %s', stripslashes($author)),
-                    Lang::buildArgs('Email: %s', stripslashes($email ?? '')),
-                    Lang::buildArgs('Comment: %s', stripslashes($content)),
-                    Lang::buildArgs(''),
-                    Lang::buildArgs('Manage this user comment: %s', $commentUrl),
+                    $this->lang->buildArgs('Author: %s', stripslashes($author)),
+                    $this->lang->buildArgs('Email: %s', stripslashes($email ?? '')),
+                    $this->lang->buildArgs('Comment: %s', stripslashes($content)),
+                    $this->lang->buildArgs(''),
+                    $this->lang->buildArgs('Manage this user comment: %s', $commentUrl),
                 ];
 
                 if ($commentAction === 'moderate') {
-                    $keyargsContent[] = Lang::buildArgs('(!) This comment requires validation');
+                    $keyargsContent[] = $this->lang->buildArgs('(!) This comment requires validation');
                 }
 
                 $this->mailer->mailNotificationAdmins(
-                    Lang::buildArgs('Comment by %s', stripslashes($author)),
+                    $this->lang->buildArgs('Comment by %s', stripslashes($author)),
                     $keyargsContent
                 );
             }
@@ -498,7 +499,7 @@ final readonly class CommentService
 
             $comment['website_url'] = $websiteUrl;
             if (! \Piwigo\Validation\InputValidator::checkUrlFormat($websiteUrl)) {
-                $this->pageState->addError(Lang::t('Your website URL is invalid'));
+                $this->pageState->addError($this->lang->t('Your website URL is invalid'));
                 $commentAction = 'reject';
             }
         }
@@ -535,15 +536,15 @@ final readonly class CommentService
                 $commentUrl = $this->urlService->getAbsoluteRootUrl() . 'comments.php?comment_id=' . $commentId->value;
 
                 $keyargsContent = [
-                    Lang::buildArgs('Author: %s', stripslashes($username)),
-                    Lang::buildArgs('Comment: %s', stripslashes($content)),
-                    Lang::buildArgs(''),
-                    Lang::buildArgs('Manage this user comment: %s', $commentUrl),
-                    Lang::buildArgs('(!) This comment requires validation'),
+                    $this->lang->buildArgs('Author: %s', stripslashes($username)),
+                    $this->lang->buildArgs('Comment: %s', stripslashes($content)),
+                    $this->lang->buildArgs(''),
+                    $this->lang->buildArgs('Manage this user comment: %s', $commentUrl),
+                    $this->lang->buildArgs('(!) This comment requires validation'),
                 ];
 
                 $this->mailer->mailNotificationAdmins(
-                    Lang::buildArgs('Comment by %s', stripslashes($username)),
+                    $this->lang->buildArgs('Comment by %s', stripslashes($username)),
                     $keyargsContent
                 );
             } elseif ($updated) {
@@ -580,18 +581,18 @@ final readonly class CommentService
 
         $author = is_string($comment['author'] ?? null) ? $comment['author'] : '';
         $keyargsContent = [
-            Lang::buildArgs('Author: %s', $author),
+            $this->lang->buildArgs('Author: %s', $author),
         ];
 
         if ($action === 'delete') {
-            $keyargsContent[] = Lang::buildArgs('This author removed the comment with id %d', $comment['comment_id']);
+            $keyargsContent[] = $this->lang->buildArgs('This author removed the comment with id %d', $comment['comment_id']);
         } else {
-            $keyargsContent[] = Lang::buildArgs('This author modified following comment:');
-            $keyargsContent[] = Lang::buildArgs('Comment: %s', $comment['content']);
+            $keyargsContent[] = $this->lang->buildArgs('This author modified following comment:');
+            $keyargsContent[] = $this->lang->buildArgs('Comment: %s', $comment['content']);
         }
 
         $this->mailer->mailNotificationAdmins(
-            Lang::buildArgs('Comment by %s', $author),
+            $this->lang->buildArgs('Comment by %s', $author),
             $keyargsContent
         );
     }

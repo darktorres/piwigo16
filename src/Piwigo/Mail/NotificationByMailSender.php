@@ -93,6 +93,7 @@ final class NotificationByMailSender
     private ?Template $mailTemplate = null;
 
     public function __construct(
+        private readonly Lang $lang,
         private readonly NotificationByMailService $notificationByMailService,
         private readonly NotificationService $notificationService,
         private readonly \Piwigo\Db\BatchWriter $batchWriter,
@@ -183,8 +184,8 @@ final class NotificationByMailSender
 
             $this->errorOnMailCount = 0;
             $this->sentMailCount = 0;
-            $this->msgInfo = Lang::t('Mail sent to %s [%s].');
-            $this->msgError = Lang::t('Error when sending email to %s [%s].');
+            $this->msgInfo = $this->lang->t('Mail sent to %s [%s].');
+            $this->msgError = $this->lang->t('Error when sending email to %s [%s].');
         }
     }
 
@@ -272,7 +273,7 @@ final class NotificationByMailSender
             }
         } else {
             if ($this->sentMailCount === 0) {
-                $this->pageState->addInfo(Lang::t('No mail to send.'));
+                $this->pageState->addInfo($this->lang->t('No mail to send.'));
             } else {
                 $this->pageState->addInfo($this->translator->plural(
                     '%d mail was sent.',
@@ -332,11 +333,11 @@ final class NotificationByMailSender
         $errorOnUpdatedDataCount = 0;
 
         if ($isSubscribe) {
-            $msgInfo = Lang::t('User %s [%s] was added to the subscription list.');
-            $msgError = Lang::t('User %s [%s] was not added to the subscription list.');
+            $msgInfo = $this->lang->t('User %s [%s] was added to the subscription list.');
+            $msgError = $this->lang->t('User %s [%s] was not added to the subscription list.');
         } else {
-            $msgInfo = Lang::t('User %s [%s] was removed from the subscription list.');
-            $msgError = Lang::t('User %s [%s] was not removed from the subscription list.');
+            $msgInfo = $this->lang->t('User %s [%s] was removed from the subscription list.');
+            $msgError = $this->lang->t('User %s [%s] was not removed from the subscription list.');
         }
 
         if (count($checkKeyList) !== 0) {
@@ -345,7 +346,7 @@ final class NotificationByMailSender
             $dataUsers = $this->getUserNotifications('subscribe', $checkKeyList, ! $isSubscribe);
 
             // Prepare message after change language
-            $msgBreakTimeout = Lang::t('Time to send mail is limited. Others mails are skipped.');
+            $msgBreakTimeout = $this->lang->t('Time to send mail is limited. Others mails are skipped.');
 
             $this->beginUsersEnv(true);
 
@@ -362,7 +363,7 @@ final class NotificationByMailSender
                 if ($nbmUser->mailAddress !== '') {
                     $this->setUserOnEnv($nbmUser, true);
 
-                    $subject = '[' . $galleryTitle . '] ' . ($isSubscribe ? Lang::t('Subscribe to notification by mail') : Lang::t('Unsubscribe from notification by mail'));
+                    $subject = '[' . $galleryTitle . '] ' . ($isSubscribe ? $this->lang->t('Subscribe to notification by mail') : $this->lang->t('Unsubscribe from notification by mail'));
 
                     $this->assignVarsNbmMailContent($nbmUser);
 
@@ -498,9 +499,9 @@ final class NotificationByMailSender
 
                     // Prepare message after change language
                     if ($isActionSend) {
-                        $msgBreakTimeout = Lang::t('Time to send mail is limited. Others mails are skipped.');
+                        $msgBreakTimeout = $this->lang->t('Time to send mail is limited. Others mails are skipped.');
                     } else {
-                        $msgBreakTimeout = Lang::t('Prepared time for list of users to send mail is limited. Others users are not listed.');
+                        $msgBreakTimeout = $this->lang->t('Prepared time for list of users to send mail is limited. Others users are not listed.');
                     }
 
                     $this->beginUsersEnv($isActionSend);
@@ -555,7 +556,7 @@ final class NotificationByMailSender
                                 // gallery_title is always a configured string
                                 // (see include/config_default.inc.php).
                                 $galleryTitle = \Piwigo\Config\CurrentConfig::galleryTitle();
-                                $subject = '[' . $galleryTitle . '] ' . Lang::t('New photos added');
+                                $subject = '[' . $galleryTitle . '] ' . $this->lang->t('New photos added');
 
                                 $mailEmailFormat = $this->emailFormat ?? $this->mailer
                                     ->getStrEmailFormat($nbmSendHtmlMail);
@@ -694,7 +695,7 @@ final class NotificationByMailSender
                     }
                 } else {
                     if ($isActionSend) {
-                        $this->pageState->addError(Lang::t('No user to send notifications by mail.'));
+                        $this->pageState->addError($this->lang->t('No user to send notifications by mail.'));
                     }
                 }
             } else {

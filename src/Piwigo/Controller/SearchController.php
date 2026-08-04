@@ -26,6 +26,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class SearchController implements ControllerInterface
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
@@ -144,7 +145,7 @@ final class SearchController implements ControllerInterface
                 ->existsAndNotForbidden((int) $cat_id, $forbidden_categories_csv);
             if (! $category_accessible) {
                 $this->htmlRenderer
-                    ->pageNotFound($this->redirectService, Lang::t('Requested album does not exist'));
+                    ->pageNotFound($this->redirectService, $this->lang->t('Requested album does not exist'));
             }
 
             $cat_ids = [$cat_id];

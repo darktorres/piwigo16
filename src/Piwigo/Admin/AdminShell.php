@@ -50,6 +50,7 @@ use Piwigo\Template\Template;
 final class AdminShell
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
@@ -264,8 +265,8 @@ final class AdminShell
         // | Template init                                                     |
         // +-------------------------------------------------------------------+
 
-        $title = Lang::t('Piwigo Administration'); // for the PageHeaderRenderer::render() call below
-        $this->pageState->setPageBanner('<h1>' . Lang::t('Piwigo Administration') . '</h1>');
+        $title = $this->lang->t('Piwigo Administration'); // for the PageHeaderRenderer::render() call below
+        $this->pageState->setPageBanner('<h1>' . $this->lang->t('Piwigo Administration') . '</h1>');
         $this->pageState->setBodyId('theAdminPage');
 
         $template->set_filenames([

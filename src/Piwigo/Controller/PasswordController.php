@@ -42,6 +42,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class PasswordController implements ControllerInterface
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
@@ -107,14 +108,14 @@ final class PasswordController implements ControllerInterface
 
             if ($action_param === 'lost') {
                 if ($this->processVerificationCode()) {
-                    $this->pageState->addInfo(Lang::t('If your account exists, a verification code has been sent to your email address.'));
+                    $this->pageState->addInfo($this->lang->t('If your account exists, a verification code has been sent to your email address.'));
                     $this->action = 'lost_code';
                 }
             }
 
             if ($action_param === 'lost_code') {
                 if ($this->processPasswordRequest()) {
-                    $this->pageState->addInfo(Lang::t('Verification successful! You can now choose a new password.'));
+                    $this->pageState->addInfo($this->lang->t('Verification successful! You can now choose a new password.'));
                     $this->action = 'reset';
                 }
             }
@@ -204,15 +205,15 @@ final class PasswordController implements ControllerInterface
         // $title is set and read entirely within this method (passed
         // straight into PageHeaderRenderer::render() below) -- no other
         // file reads $GLOBALS['title']. Plain local, not global.
-        $title = Lang::t('Password Reset');
+        $title = $this->lang->t('Password Reset');
         if ($action === 'lost') {
-            $title = Lang::t('Forgot your password?');
+            $title = $this->lang->t('Forgot your password?');
 
             if ($this->request->usernameOrEmailPresent) {
                 $template->assign('username_or_email', htmlspecialchars(stripslashes($this->request->usernameOrEmail)));
             }
         } elseif ($action === 'reset' and $first_login) {
-            $title = Lang::t('Welcome');
+            $title = $this->lang->t('Welcome');
             $template->assign('is_first_login', true);
         }
 
@@ -238,7 +239,7 @@ final class PasswordController implements ControllerInterface
         $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
         if (! is_array($hide_menu_on) or ! in_array('thePasswordPage', $hide_menu_on, true)) {
             new MenubarRenderer()
-                ->render($this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
+                ->render($this->lang, $this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
         }
 
         // Load language if cookie is set from login/register/password
@@ -251,7 +252,7 @@ final class PasswordController implements ControllerInterface
             }
 
             $this->currentUser->updateLanguage($cookie_lang);
-            Lang::load('common.lang', '', [
+            $this->lang->load('common.lang', '', [
                 'language' => $cookie_lang,
             ]);
         }
@@ -302,7 +303,7 @@ final class PasswordController implements ControllerInterface
         // empty param
         $username_or_email = trim($this->request->usernameOrEmail);
         if ($username_or_email === '') {
-            $this->errors['password_form_error'] = Lang::t('Invalid username or email');
+            $this->errors['password_form_error'] = $this->lang->t('Invalid username or email');
             return false;
         }
 
@@ -337,7 +338,7 @@ final class PasswordController implements ControllerInterface
             // consider theses users has sensible for username/email
             // enumeration
             if ($this->accessControl->isAGuest($status) or $this->accessControl->isGeneric($status)) {
-                $this->errors['password_form_error'] = Lang::t('Password reset is not allowed for this user');
+                $this->errors['password_form_error'] = $this->lang->t('Password reset is not allowed for this user');
                 return false;
             }
 
@@ -348,7 +349,7 @@ final class PasswordController implements ControllerInterface
                 and isset($preferences['reset_password_forbidden_until'])
                 and $preferences['reset_password_forbidden_until'] > time()
             ) {
-                $this->errors['password_form_error'] = Lang::t('Too many attempts, please try later..');
+                $this->errors['password_form_error'] = $this->lang->t('Too many attempts, please try later..');
                 return false;
             }
         }
@@ -407,7 +408,7 @@ final class PasswordController implements ControllerInterface
         // check expired
         if (time() > $created_at + $ttl) {
             unset($_SESSION['reset_password_code']);
-            $this->errors['password_form_error'] = Lang::t('Code expired');
+            $this->errors['password_form_error'] = $this->lang->t('Code expired');
             return false;
         }
 
@@ -469,14 +470,14 @@ final class PasswordController implements ControllerInterface
                 if (! isset($_SESSION['page_errors']) or ! is_array($_SESSION['page_errors'])) {
                     $_SESSION['page_errors'] = [];
                 }
-                $_SESSION['page_errors'][] = Lang::t('Too many attempts, please try later..');
+                $_SESSION['page_errors'][] = $this->lang->t('Too many attempts, please try later..');
                 return false;
             }
 
             if ($has_valid_user_id) {
                 $this->activityService->record('user', (int) $user_id_raw, 'reset_password_failure_code');
             }
-            $this->errors['password_form_error'] = Lang::t('Invalid verification code');
+            $this->errors['password_form_error'] = $this->lang->t('Invalid verification code');
             return false;
         }
 
@@ -484,7 +485,7 @@ final class PasswordController implements ControllerInterface
         unset($_SESSION['reset_password_code']);
 
         if (! $has_valid_user_id) {
-            $this->errors['password_form_error'] = Lang::t('Invalid verification code');
+            $this->errors['password_form_error'] = $this->lang->t('Invalid verification code');
             return false;
         }
         $user_id = \Piwigo\Common\ValueObject\UserId::from((int) $user_id_raw);
@@ -513,7 +514,7 @@ final class PasswordController implements ControllerInterface
         // fallback check: don't send mail when user is guest, generic or
         // doesn't have email
         if ($this->accessControl->isAGuest($status) || $this->accessControl->isGeneric($status) || $has_no_email) {
-            $this->errors['password_form_error'] = Lang::t('Password reset is not allowed for this user');
+            $this->errors['password_form_error'] = $this->lang->t('Password reset is not allowed for this user');
             return false;
         }
 
@@ -535,7 +536,7 @@ final class PasswordController implements ControllerInterface
     {
         $key = $reset_key ?? '';
         if (! (bool) preg_match('/^[a-z0-9]{20}$/i', $key)) {
-            $this->errors['password_page_error'] = Lang::t('Invalid key');
+            $this->errors['password_page_error'] = $this->lang->t('Invalid key');
             return false;
         }
 
@@ -546,7 +547,7 @@ final class PasswordController implements ControllerInterface
             }
             if ($this->passwordService->verify($key, $activationKeyRow->activationKey)) {
                 if ($this->accessControl->isAGuest($activationKeyRow->status) or $this->accessControl->isGeneric($activationKeyRow->status)) {
-                    $this->errors['password_page_error'] = Lang::t('Password reset is not allowed for this user');
+                    $this->errors['password_page_error'] = $this->lang->t('Password reset is not allowed for this user');
                     return false;
                 }
 
@@ -556,7 +557,7 @@ final class PasswordController implements ControllerInterface
         }
 
         if ($user_id === null) {
-            $this->errors['password_page_error'] = Lang::t('Invalid key');
+            $this->errors['password_page_error'] = $this->lang->t('Invalid key');
             return false;
         }
 
@@ -573,7 +574,7 @@ final class PasswordController implements ControllerInterface
         $password_conf = $this->request->passwordConf;
 
         if ($new_password !== $password_conf) {
-            $this->errors['password_form_error'] = Lang::t('The passwords do not match');
+            $this->errors['password_form_error'] = $this->lang->t('The passwords do not match');
             return false;
         }
 
@@ -581,7 +582,7 @@ final class PasswordController implements ControllerInterface
         $user_id = (bool) $reset_password_key_result ? $reset_password_key_result : $this->resetPasswordCode();
 
         if (! is_numeric($user_id)) {
-            $this->errors['password_form_error'] = Lang::t('Invalid key or code');
+            $this->errors['password_form_error'] = $this->lang->t('Invalid key or code');
             return false;
         }
 
@@ -631,8 +632,8 @@ final class PasswordController implements ControllerInterface
 
         $this->activityService->record('user', $user_id, 'reset_password_success');
 
-        $this->pageState->addInfo(Lang::t('Your password has been reset'));
-        $this->pageState->addInfo('<a href="' . $this->urlService->getRootUrl() . 'identification.php">' . Lang::t('Login') . '</a>');
+        $this->pageState->addInfo($this->lang->t('Your password has been reset'));
+        $this->pageState->addInfo('<a href="' . $this->urlService->getRootUrl() . 'identification.php">' . $this->lang->t('Login') . '</a>');
 
         return true;
     }

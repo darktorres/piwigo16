@@ -28,7 +28,7 @@ final class CalendarMonthly extends CalendarBase
     public function initialize(SqlCondition $inner_sql): void
     {
         parent::initialize($inner_sql);
-        $month_labels = \Piwigo\Core\Lang::months();
+        $month_labels = $this->lang->months();
         $this->calendar_levels = [
             [
                 'sql' => \Piwigo\Db\SqlDialect::getYear($this->date_field),
@@ -287,7 +287,7 @@ final class CalendarMonthly extends CalendarBase
             return false;
         }
 
-        $month_labels = \Piwigo\Core\Lang::months();
+        $month_labels = $this->lang->months();
         $calendar_bars = [];
         foreach ($items as $year => $year_data) {
             $chronology_date = [$year];
@@ -376,7 +376,7 @@ final class CalendarMonthly extends CalendarBase
             $this->chronology_date[self::CMONTH] = $m;
             return false;
         }
-        $month_labels = \Piwigo\Core\Lang::months();
+        $month_labels = $this->lang->months();
         $calendar_bars = [];
         // $this->chronology_date is not mutated between the snapshot above
         // and here (the only mutation happens in the early-return branch
@@ -501,7 +501,7 @@ final class CalendarMonthly extends CalendarBase
                 $first_day_dow += 7;
             }
             // first_day_dow = week day corresponding to the first day of this month
-            $wday_labels = \Piwigo\Core\Lang::days();
+            $wday_labels = $this->lang->days();
 
             if (\Piwigo\Config\CurrentConfig::weekStartsOn() === 'monday') {
                 if ($first_day_dow === 0) {

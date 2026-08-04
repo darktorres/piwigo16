@@ -42,6 +42,7 @@ use Piwigo\Template\Template;
 final class ThemesInstalledPageRenderer
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
@@ -67,7 +68,7 @@ final class ThemesInstalledPageRenderer
         $template = $this->currentTemplate->get();
 
         if (! $this->accessControl->isWebmaster()) {
-            $this->pageState->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
+            $this->pageState->addWarning(str_replace('%s', $this->lang->t('user_status_webmaster'), $this->lang->t('%s status is required to edit parameters.')));
         }
 
         $base_url = $this->urlService->getRootUrl() . 'admin.php?page=' . $pageSlug;
@@ -77,7 +78,7 @@ final class ThemesInstalledPageRenderer
         $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger);
         $extension_scanner = new ExtensionScanner();
         $plugin_migration_repo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class);
-        $extension_lifecycle = new ExtensionLifecycle($extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo, $this->activityService, $this->userService, $this->htmlRenderer);
+        $extension_lifecycle = new ExtensionLifecycle($this->lang, $extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo, $this->activityService, $this->userService, $this->htmlRenderer);
 
         // +-----------------------------------------------------------------------+
         // |                          perform actions                              |
@@ -88,7 +89,7 @@ final class ThemesInstalledPageRenderer
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
-            $fs_theme_entry = $extension_scanner->scan(ExtensionType::Theme, $this->urlService)[$themesAction->themeId] ?? null;
+            $fs_theme_entry = $extension_scanner->scan(ExtensionType::Theme, $this->urlService, $this->lang)[$themesAction->themeId] ?? null;
             $action_errors = $extension_lifecycle->performAction(ExtensionType::Theme, $themesAction->action, $themesAction->themeId, $fs_theme_entry);
             $this->pageState->errors = array_values(array_filter($action_errors, is_string(...)));
 
@@ -109,7 +110,7 @@ final class ThemesInstalledPageRenderer
         // that method's own docblock) -- every $fs_theme read below follows
         // its documented convention and reads specific keys defensively
         // instead.
-        $fs_themes = $extension_scanner->scan(ExtensionType::Theme, $this->urlService);
+        $fs_themes = $extension_scanner->scan(ExtensionType::Theme, $this->urlService, $this->lang);
         uasort($fs_themes, $this->htmlRenderer->nameCompare(...));
 
         $default_theme = $this->userService
@@ -146,7 +147,7 @@ final class ThemesInstalledPageRenderer
         $this->eventDispatcher->dispatchNotify(new LocEndThemesInstalled());
 
         $template->assign('isWebmaster', ($this->accessControl->isWebmaster()) ? 1 : 0);
-        $template->assign('ADMIN_PAGE_TITLE', Lang::t('Themes'));
+        $template->assign('ADMIN_PAGE_TITLE', $this->lang->t('Themes'));
         $template->assign('CONF_ENABLE_EXTENSIONS_INSTALL', \Piwigo\Config\CurrentConfig::enableExtensionsInstall());
 
         $template->set_filenames([
@@ -197,11 +198,11 @@ final class ThemesInstalledPageRenderer
 
             if (count($db_theme_ids) <= 1) {
                 $tpl_theme['DEACTIVABLE'] = false;
-                $tpl_theme['DEACTIVATE_TOOLTIP'] = Lang::t('Impossible to deactivate this theme, you need at least one theme.');
+                $tpl_theme['DEACTIVATE_TOOLTIP'] = $this->lang->t('Impossible to deactivate this theme, you need at least one theme.');
             }
             if ($tpl_theme['IS_DEFAULT']) {
                 $tpl_theme['DEACTIVABLE'] = false;
-                $tpl_theme['DEACTIVATE_TOOLTIP'] = Lang::t('Impossible to deactivate the default theme.');
+                $tpl_theme['DEACTIVATE_TOOLTIP'] = $this->lang->t('Impossible to deactivate the default theme.');
             }
         } else {
             $tpl_theme['STATE'] = 'inactive';
@@ -213,7 +214,7 @@ final class ThemesInstalledPageRenderer
             // gap.
             if (isset($fs_theme['activable']) and ! (bool) $fs_theme['activable']) {
                 $tpl_theme['ACTIVABLE'] = false;
-                $tpl_theme['ACTIVABLE_TOOLTIP'] = Lang::t('This theme was not designed to be directly activated');
+                $tpl_theme['ACTIVABLE_TOOLTIP'] = $this->lang->t('This theme was not designed to be directly activated');
             } else {
                 $tpl_theme['ACTIVABLE'] = true;
             }
@@ -222,7 +223,7 @@ final class ThemesInstalledPageRenderer
             if (isset($missing_parent)) {
                 $tpl_theme['ACTIVABLE'] = false;
 
-                $tpl_theme['ACTIVABLE_TOOLTIP'] = Lang::t(
+                $tpl_theme['ACTIVABLE_TOOLTIP'] = $this->lang->t(
                     'Impossible to activate this theme, the parent theme is missing: %s',
                     $missing_parent
                 );
@@ -242,7 +243,7 @@ final class ThemesInstalledPageRenderer
                 // so $children is provably all-strings before this line
                 // ever sees it. Confirmed while investigating a
                 // mutation-testing gap.
-                $tpl_theme['DELETE_TOOLTIP'] = Lang::t(
+                $tpl_theme['DELETE_TOOLTIP'] = $this->lang->t(
                     'Impossible to delete this theme. Other themes depends on it: %s',
                     implode(', ', array_filter($children, is_string(...)))
                 );

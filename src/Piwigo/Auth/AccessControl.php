@@ -111,7 +111,7 @@ final class AccessControl
             $guestUser->attachGlobals();
 
             return self::$cachingFallback = new self(
-                new class implements HtmlRenderingInterface {
+                new class() implements HtmlRenderingInterface {
                     #[\Override]
                     public function getCatDisplayName(array $catInformations, ?string $url = ''): string
                     {
@@ -201,7 +201,7 @@ final class AccessControl
                         throw new \LogicException('currentForCaching() fallback: htmlRenderer is never used by isAdmin()');
                     }
                 },
-                new class implements RedirectServiceInterface {
+                new class() implements RedirectServiceInterface {
                     #[\Override]
                     public function redirectHttp(string $url, int $status = 302): never
                     {

@@ -52,6 +52,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class PermalinksSubController implements AdminSubControllerInterface
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
@@ -186,7 +187,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
             'PWG_TOKEN' => $pwg_token,
             'U_HELP' => $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=permalinks',
             'deleted_permalinks' => $deleted_permalinks,
-            'ADMIN_PAGE_TITLE' => Lang::t('Albums'),
+            'ADMIN_PAGE_TITLE' => $this->lang->t('Albums'),
         ]);
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'permalinks');
@@ -253,7 +254,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
             }
             $template->assign(
                 $template_var . strtoupper($field),
-                '<a href="' . $url . $anchor . '" title="' . Lang::t('Sort order') . '">' . $disp . '</a>'
+                '<a href="' . $url . $anchor . '" title="' . $this->lang->t('Sort order') . '">' . $disp . '</a>'
             );
         }
         return $ret;

@@ -51,7 +51,7 @@ final class HistoryPageRenderer
      * regardless, so there was never a real bridge here even in
      * principle.
      */
-    public function render(AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\Template\CurrentTemplate $currentTemplate): void
+    public function render(Lang $lang, AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\Template\CurrentTemplate $currentTemplate): void
     {
         $template = $currentTemplate->get();
         $conn = DbConnection::build();
@@ -59,9 +59,9 @@ final class HistoryPageRenderer
         $types = array_merge(['none'], new DbInfo($conn)->getEnums(Tables::history(), 'image_type'));
 
         $display_thumbnails = [
-            'no_display_thumbnail' => Lang::t('No display'),
-            'display_thumbnail_classic' => Lang::t('Classic display'),
-            'display_thumbnail_hoverbox' => Lang::t('Hoverbox display'),
+            'no_display_thumbnail' => $lang->t('No display'),
+            'display_thumbnail_classic' => $lang->t('Classic display'),
+            'display_thumbnail_hoverbox' => $lang->t('Hoverbox display'),
         ];
 
         $accessControl->checkStatus(AccessLevel::Administrator);
@@ -138,7 +138,7 @@ final class HistoryPageRenderer
         $template->assign('display_thumbnails', $display_thumbnails);
         $template->assign('display_thumbnail_selected', $form['display_thumbnail'] ?? null);
         $template->assign('guest_id', \Piwigo\Config\CurrentConfig::guestId());
-        $template->assign('ADMIN_PAGE_TITLE', Lang::t('History'));
+        $template->assign('ADMIN_PAGE_TITLE', $lang->t('History'));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'history');
     }

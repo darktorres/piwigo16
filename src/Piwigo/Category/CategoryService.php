@@ -56,6 +56,7 @@ use Piwigo\Users\UserRepository;
 final readonly class CategoryService
 {
     public function __construct(
+        private Lang $lang,
         private CategoryRepository $repo,
         private PermissionService $permissionService,
     ) {}
@@ -257,18 +258,18 @@ final readonly class CategoryService
     {
 
         $orders = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new GetCategoryPreferredImageOrders([
-            [Lang::t('Default'), '', true],
-            [Lang::t('Photo title, A &rarr; Z'), 'name ASC', true],
-            [Lang::t('Photo title, Z &rarr; A'), 'name DESC', true],
-            [Lang::t('Date created, new &rarr; old'), 'date_creation DESC', true],
-            [Lang::t('Date created, old &rarr; new'), 'date_creation ASC', true],
-            [Lang::t('Date posted, new &rarr; old'), 'date_available DESC', true],
-            [Lang::t('Date posted, old &rarr; new'), 'date_available ASC', true],
-            [Lang::t('Rating score, high &rarr; low'), 'rating_score DESC', \Piwigo\Config\CurrentConfig::rateEnabled()],
-            [Lang::t('Rating score, low &rarr; high'), 'rating_score ASC', \Piwigo\Config\CurrentConfig::rateEnabled()],
-            [Lang::t('Visits, high &rarr; low'), 'hit DESC', true],
-            [Lang::t('Visits, low &rarr; high'), 'hit ASC', true],
-            [Lang::t('Permissions'), 'level DESC', \Piwigo\Auth\AccessControl::current()->isAdmin()],
+            [$this->lang->t('Default'), '', true],
+            [$this->lang->t('Photo title, A &rarr; Z'), 'name ASC', true],
+            [$this->lang->t('Photo title, Z &rarr; A'), 'name DESC', true],
+            [$this->lang->t('Date created, new &rarr; old'), 'date_creation DESC', true],
+            [$this->lang->t('Date created, old &rarr; new'), 'date_creation ASC', true],
+            [$this->lang->t('Date posted, new &rarr; old'), 'date_available DESC', true],
+            [$this->lang->t('Date posted, old &rarr; new'), 'date_available ASC', true],
+            [$this->lang->t('Rating score, high &rarr; low'), 'rating_score DESC', \Piwigo\Config\CurrentConfig::rateEnabled()],
+            [$this->lang->t('Rating score, low &rarr; high'), 'rating_score ASC', \Piwigo\Config\CurrentConfig::rateEnabled()],
+            [$this->lang->t('Visits, high &rarr; low'), 'hit DESC', true],
+            [$this->lang->t('Visits, low &rarr; high'), 'hit ASC', true],
+            [$this->lang->t('Permissions'), 'level DESC', \Piwigo\Auth\AccessControl::current()->isAdmin()],
         ]))->orders;
 
         $result = [];
@@ -343,7 +344,14 @@ final readonly class CategoryService
 
             if ($catCountCategories === 0 || $catNbImages === $catCountImages) {
                 if (! $shortMessage) {
-                    $displayText .= ' ' . Lang::t('in this album');
+                    // getDisplayImagesCount() is `public static` (no $this
+                    // available) -- Translator::get()'s own static resolver
+                    // is already used a few lines above in this same
+                    // method, so Lang::current()'s transitional shim
+                    // matches that established in-method precedent rather
+                    // than needing an explicit Lang param plumbed through
+                    // every real caller of this static utility.
+                    $displayText .= ' ' . \Piwigo\Core\Lang::current()->t('in this album');
                 }
             } else {
                 $displayText .= ' ' . Translator::get()->plural('in %d sub-album', 'in %d sub-albums', $catCountCategories);
@@ -1666,7 +1674,7 @@ final readonly class CategoryService
                 // technically, you can't move a category with uppercats 12,125,13,14
                 // into a new parent category with uppercats 12,125,13,14,24
                 if ((bool) preg_match('/^' . $category['uppercats'] . '(,|$)/', $newParentUppercats)) {
-                    $pageState->addError(Lang::t('You cannot move an album in its own sub album'));
+                    $pageState->addError($this->lang->t('You cannot move an album in its own sub album'));
                     return;
                 }
             }
@@ -1713,7 +1721,7 @@ final readonly class CategoryService
         // is the given category name only containing blank spaces ?
         if ((bool) preg_match('/^\s*$/', $categoryName)) {
             return [
-                'error' => Lang::t('The name of an album must not be empty'),
+                'error' => $this->lang->t('The name of an album must not be empty'),
             ];
         }
 
@@ -1771,7 +1779,7 @@ final readonly class CategoryService
             $parent = $this->repo->findParentCategoryForCreate($parentId);
             if ($parent === null) {
                 return [
-                    'error' => Lang::t('The parent album does not exist'),
+                    'error' => $this->lang->t('The parent album does not exist'),
                 ];
             }
 
@@ -1846,7 +1854,7 @@ final readonly class CategoryService
         $activityLogger->record('album', $insertedId, 'add');
 
         return [
-            'info' => Lang::t('Album added'),
+            'info' => $this->lang->t('Album added'),
             'id' => $insertedId,
         ];
     }

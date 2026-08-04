@@ -99,6 +99,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class SiteUpdateSubController implements AdminSubControllerInterface
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
@@ -167,12 +168,12 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
 
         $error_labels = [
             'PWG-UPDATE-1' => [
-                Lang::t('wrong filename'),
-                Lang::t('The name of directories and files must be composed of letters, numbers, "-", "_" or "."'),
+                $this->lang->t('wrong filename'),
+                $this->lang->t('The name of directories and files must be composed of letters, numbers, "-", "_" or "."'),
             ],
             'PWG-ERROR-NO-FS' => [
-                Lang::t('File/directory read error'),
-                Lang::t('The file or directory cannot be accessed (either it does not exist or the access is denied)'),
+                $this->lang->t('File/directory read error'),
+                $this->lang->t('The file or directory cannot be accessed (either it does not exist or the access is denied)'),
             ],
         ];
         $errors = [];
@@ -206,7 +207,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         if ($this->pageState->noMd5sumNumber !== null) {
             $template->assign(
                 [
-                    'save_error' => '<a href="admin.php?page=batch_manager&amp;filter=prefilter-no_sync_md5sum">' . Lang::t('Some checksums are missing.') . '<i class="icon-right"></i></a>',
+                    'save_error' => '<a href="admin.php?page=batch_manager&amp;filter=prefilter-no_sync_md5sum">' . $this->lang->t('Some checksums are missing.') . '<i class="icon-right"></i></a>',
                 ]
             );
 
@@ -413,7 +414,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                     $inserts[] = $insert;
                     $infos[] = [
                         'path' => $fulldir,
-                        'info' => Lang::t('added'),
+                        'info' => $this->lang->t('added'),
                     ];
 
                     // add the new category to $db_categories and $db_fulldirs array
@@ -520,7 +521,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
 
                 $infos[] = [
                     'path' => $fulldir,
-                    'info' => Lang::t('deleted'),
+                    'info' => $this->lang->t('deleted'),
                 ];
 
                 if (substr_compare($fulldir, '../', 0, 3) === 0) {
@@ -624,7 +625,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
 
                 $infos[] = [
                     'path' => $insert['path'],
-                    'info' => Lang::t('added'),
+                    'info' => $this->lang->t('added'),
                 ];
 
                 if (\Piwigo\Config\CurrentConfig::isFormatsEnabled()) {
@@ -639,7 +640,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
 
                             $infos[] = [
                                 'path' => $insert['path'],
-                                'info' => Lang::t('format %s added', $ext),
+                                'info' => $this->lang->t('format %s added', $ext),
                             ];
                         }
                     }
@@ -684,7 +685,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
 
                             $infos[] = [
                                 'path' => $db_elements[$image_id],
-                                'info' => Lang::t('format %s removed', $ext),
+                                'info' => $this->lang->t('format %s removed', $ext),
                             ];
                         }
                     }
@@ -710,7 +711,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
 
                             $infos[] = [
                                 'path' => $db_elements[$image_id],
-                                'info' => Lang::t('format %s added', $ext),
+                                'info' => $this->lang->t('format %s added', $ext),
                             ];
                         }
                     }
@@ -762,7 +763,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                 $to_delete_elements[] = $element_id;
                 $infos[] = [
                     'path' => $path,
-                    'info' => Lang::t('deleted'),
+                    'info' => $this->lang->t('deleted'),
                 ];
             }
             if (count($to_delete_elements) > 0) {
@@ -980,7 +981,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         ]);
         $result_title = '';
         if ($simulate) {
-            $result_title .= '[' . Lang::t('Simulation') . '] ';
+            $result_title .= '[' . $this->lang->t('Simulation') . '] ';
         }
 
         // used_metadata string is displayed to inform admin which metadata will be
@@ -991,11 +992,11 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             [
                 'SITE_URL' => $site_url,
                 'U_SITE_MANAGER' => $this->urlService->getRootUrl() . 'admin.php?page=site_manager',
-                'L_RESULT_UPDATE' => $result_title . Lang::t('Search for new images in the directories'),
-                'L_RESULT_METADATA' => $result_title . Lang::t('Metadata synchronization results'),
+                'L_RESULT_UPDATE' => $result_title . $this->lang->t('Search for new images in the directories'),
+                'L_RESULT_METADATA' => $result_title . $this->lang->t('Metadata synchronization results'),
                 'METADATA_LIST' => $used_metadata,
                 'U_HELP' => $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=synchronize',
-                'ADMIN_PAGE_TITLE' => Lang::t('Synchronize'),
+                'ADMIN_PAGE_TITLE' => $this->lang->t('Synchronize'),
                 'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()
                     ->getToken(),
             ]

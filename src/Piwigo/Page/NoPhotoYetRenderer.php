@@ -38,6 +38,7 @@ use Piwigo\Template\Template;
 final readonly class NoPhotoYetRenderer
 {
     public function __construct(
+        private Lang $lang,
         private AccessControl $accessControl,
         private ImageRepository $imageRepository,
         private ConfigService $configService,
@@ -71,7 +72,7 @@ final readonly class NoPhotoYetRenderer
                 // the "no photo yet" feature
                 $user_theme = $this->currentUser->get()
                     ->theme;
-                $user_theme = $user_theme !== '' ? $user_theme : new \Piwigo\Users\UserService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), $this->mailer, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), new HtmlService(), \Piwigo\Db\DbConnection::build(), $this->sessionService, $this->eventDispatcher, $this->deploymentPolicy, $this->currentUser)->getDefaultTheme();
+                $user_theme = $user_theme !== '' ? $user_theme : new \Piwigo\Users\UserService($this->lang, \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), $this->mailer, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), new HtmlService(), \Piwigo\Db\DbConnection::build(), $this->sessionService, $this->eventDispatcher, $this->deploymentPolicy, $this->currentUser)->getDefaultTheme();
                 $template = new Template($this->paths->root . 'themes', $user_theme);
                 $this->currentTemplate->set($template);
 
@@ -100,7 +101,7 @@ final readonly class NoPhotoYetRenderer
                     $template->assign(
                         [
                             'step' => 2,
-                            'intro' => Lang::t(
+                            'intro' => $this->lang->t(
                                 'Hello %s, your Piwigo photo gallery is empty!',
                                 $this->currentUser->get()
                                     ->username

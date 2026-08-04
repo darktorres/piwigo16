@@ -50,6 +50,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class LanguagesSubController implements AdminSubControllerInterface
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
@@ -82,8 +83,8 @@ final class LanguagesSubController implements AdminSubControllerInterface
 
         if ($tab === 'update') {
             new UpdatesExtPageRenderer()
-                ->render($this->accessControl, 'languages', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker, $this->htmlRenderer);
-            $template->assign('ADMIN_PAGE_TITLE', Lang::t('Languages'));
+                ->render($this->lang, $this->accessControl, 'languages', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker, $this->htmlRenderer);
+            $template->assign('ADMIN_PAGE_TITLE', $this->lang->t('Languages'));
         } elseif ($tab === 'new') {
             $this->languagesNewPageRenderer
                 ->render('languages', $tab);

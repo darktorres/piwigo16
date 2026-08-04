@@ -35,6 +35,7 @@ use Piwigo\Http\HttpClientService;
 final readonly class CoreUpdateService
 {
     public function __construct(
+        private readonly Lang $lang,
         private ZipExtractor $zipExtractor,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
@@ -210,19 +211,19 @@ final readonly class CoreUpdateService
         $this->mailService
             ->switchLangTo($this->userService->getDefaultLanguage());
 
-        $content = Lang::t('Hello,');
-        $content .= "\n\n" . Lang::t(
+        $content = $this->lang->t('Hello,');
+        $content .= "\n\n" . $this->lang->t(
             'Time has come to update your Piwigo with version %s, go to %s',
             $newVersionsString,
             $this->urlService->getAbsoluteRootUrl() . 'admin.php?page=updates'
         );
-        $content .= "\n\n" . Lang::t('It only takes a few clicks.');
-        $content .= "\n\n" . Lang::t('Running on an up-to-date Piwigo is important for security.');
+        $content .= "\n\n" . $this->lang->t('It only takes a few clicks.');
+        $content .= "\n\n" . $this->lang->t('Running on an up-to-date Piwigo is important for security.');
 
         $this->mailService
             ->mailAdmins(
                 [
-                    'subject' => Lang::t('Piwigo %s is available, please update', $newVersionsString),
+                    'subject' => $this->lang->t('Piwigo %s is available, please update', $newVersionsString),
                     'content' => $content,
                     'content_format' => 'text/plain',
                 ],
@@ -314,14 +315,14 @@ final readonly class CoreUpdateService
         }
 
         if (! (bool) @filesize($filename)) {
-            $this->pageState->addError(Lang::t('Piwigo cannot retrieve upgrade file from server'));
+            $this->pageState->addError($this->lang->t('Piwigo cannot retrieve upgrade file from server'));
             return;
         }
 
         $result = $this->zipExtractor->extract($filename, $this->paths->root, $removePath, 0755);
         if ($result === null) {
             FilesystemHelper::deltree($this->paths->root . $dataLocation . 'update');
-            $this->pageState->addError(Lang::t('An error has occured during upgrade.'));
+            $this->pageState->addError($this->lang->t('An error has occured during upgrade.'));
             return;
         }
 
@@ -347,7 +348,7 @@ final readonly class CoreUpdateService
         if ($error !== '') {
             file_put_contents($this->paths->root . $dataLocation . 'update/log_error.txt', $error);
 
-            $this->pageState->addError(Lang::t(
+            $this->pageState->addError($this->lang->t(
                 'An error has occured during extract. Please check files permissions of your piwigo installation.<br><a href="%s">Click here to show log error</a>.',
                 $this->urlService->getRootUrl() . $dataLocation . 'update/log_error.txt'
             ));
@@ -370,7 +371,7 @@ final readonly class CoreUpdateService
             $template->delete_compiled_templates();
             $this->configService->confDeleteParam('fs_quick_check_last_check');
 
-            $this->pageState->addInfo(Lang::t('Update Complete'));
+            $this->pageState->addInfo($this->lang->t('Update Complete'));
             $this->pageState->addInfo($upgradeTo);
             $this->pageState->setUpdatedVersion($upgradeTo);
             $step = -1;

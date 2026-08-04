@@ -43,7 +43,7 @@ final class CatModifyPageRenderer
      *
      * @param array<string, mixed> $category
      */
-    public function render(UrlServiceInterface $urlService, array $category, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Activity\ActivityService $activityService, \Piwigo\Category\CategoryService $categoryService, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer): void
+    public function render(Lang $lang, UrlServiceInterface $urlService, array $category, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Activity\ActivityService $activityService, \Piwigo\Category\CategoryService $categoryService, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer): void
     {
         $template = $currentTemplate->get();
 
@@ -108,7 +108,7 @@ final class CatModifyPageRenderer
                 $urlService->getRootUrl() . 'admin.php?page=album-'
             );
         } else {
-            $parent_navigation = Lang::t('Root');
+            $parent_navigation = $lang->t('Root');
         }
 
         // ----------------------------------------------------- template initialization
@@ -145,7 +145,7 @@ final class CatModifyPageRenderer
         }
 
         // We show or hide this warning in JS
-        $pageState->addWarning(Lang::t('This album is currently locked, visible only to administrators.') . '<span class="icon-cone unlock-album">' . Lang::t('Unlock it') . '</span>');
+        $pageState->addWarning($lang->t('This album is currently locked, visible only to administrators.') . '<span class="icon-cone unlock-album">' . $lang->t('Unlock it') . '</span>');
 
         $template->assign(
             [
@@ -201,13 +201,13 @@ final class CatModifyPageRenderer
             $max_date = is_string($max_date) ? $max_date : false;
 
             if ($min_date === $max_date) {
-                $info_title = Lang::t(
+                $info_title = $lang->t(
                     'This album contains %d photos, added on %s.',
                     $image_count,
                     \Piwigo\Core\DateHelper::formatDate($min_date)
                 );
             } else {
-                $info_title = Lang::t(
+                $info_title = $lang->t(
                     'This album contains %d photos, added between %s and %s.',
                     $image_count,
                     \Piwigo\Core\DateHelper::formatDate($min_date),
@@ -216,7 +216,7 @@ final class CatModifyPageRenderer
             }
 
         }
-        $info_photos = Lang::t('%d photos', $image_count);
+        $info_photos = $lang->t('%d photos', $image_count);
 
         $template->assign(
             [
@@ -248,7 +248,7 @@ final class CatModifyPageRenderer
 
         $template->assign(
             [
-                'INFO_DIRECT_SUB' => Lang::t(
+                'INFO_DIRECT_SUB' => $lang->t(
                     '%d sub-albums',
                     $nb_direct_sub
                 ),
@@ -261,14 +261,14 @@ final class CatModifyPageRenderer
         $category_lastmodified = is_string($category['lastmodified']) ? $category['lastmodified'] : null;
         $template->assign(
             [
-                'INFO_ID' => Lang::t('Numeric identifier : %d', $category_id),
+                'INFO_ID' => $lang->t('Numeric identifier : %d', $category_id),
                 'INFO_LAST_MODIFIED_SINCE' => \Piwigo\Core\DateHelper::timeSince($category_lastmodified ?? '', 'minute', $format = null, $with_text = true, $with_week = true, $only_last_unit = true),
                 'INFO_LAST_MODIFIED' => \Piwigo\Core\DateHelper::formatDate($category_lastmodified ?? false, ['day', 'month', 'year']),
-                'INFO_IMAGES_RECURSIVE' => Lang::t(
+                'INFO_IMAGES_RECURSIVE' => $lang->t(
                     '%d including sub-albums',
                     $category['nb_images_recursive']
                 ),
-                'INFO_SUBCATS' => Lang::t(
+                'INFO_SUBCATS' => $lang->t(
                     '%d in whole branch',
                     $category['nb_subcats']
                 ),

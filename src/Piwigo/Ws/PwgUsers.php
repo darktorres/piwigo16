@@ -44,7 +44,7 @@ final class PwgUsers
 {
     private static function userService(): UserService
     {
-        return new UserService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), DbConnection::build(), \Piwigo\Session\SessionService::get(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\DeploymentPolicy::current(), \Piwigo\Users\CurrentUser::current());
+        return new UserService(\Piwigo\Core\Lang::current(), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Users\UserInfoEntity::class), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), DbConnection::build(), \Piwigo\Session\SessionService::get(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\DeploymentPolicy::current(), \Piwigo\Users\CurrentUser::current());
     }
 
     /**
@@ -452,7 +452,7 @@ final class PwgUsers
 
         if (\Piwigo\Config\CurrentConfig::doublePasswordTypeInAdmin()) {
             if (($params['password'] ?? '') !== ($params['password_confirm'] ?? '')) {
-                return new PwgError(WsError::INVALID_PARAM, Lang::t('The passwords do not match'));
+                return new PwgError(WsError::INVALID_PARAM, Lang::current()->t('The passwords do not match'));
             }
         }
 
@@ -465,7 +465,7 @@ final class PwgUsers
         // otherwise reach it with null and crash inside pwg_password_hash() ->
         // password_hash() (a real string-typed native function).
         if ($params['password'] === null) {
-            return new PwgError(WsError::INVALID_PARAM, Lang::t('Please, enter a password'));
+            return new PwgError(WsError::INVALID_PARAM, Lang::current()->t('Please, enter a password'));
         }
 
         // Preserves the pre-SEC-31 behavior for this real caller (admin-
@@ -486,7 +486,7 @@ final class PwgUsers
 
         $errors = $result['errors'];
         if ($result['duplicateUsername']) {
-            array_unshift($errors, Lang::t('this login is already used'));
+            array_unshift($errors, Lang::current()->t('this login is already used'));
         }
 
         $user_id = $result['userId'] ?? false;
@@ -674,7 +674,7 @@ final class PwgUsers
 
         if (isset($params['password']) && $params['password'] !== '') {
             if (($params['new_password'] ?? '') !== ($params['conf_new_password'] ?? '')) {
-                return new PwgError(403, Lang::t('The passwords do not match'));
+                return new PwgError(403, Lang::current()->t('The passwords do not match'));
             }
 
             // \Piwigo\Config\CurrentConfig::userFields() maps generic field names to table-specific
@@ -692,7 +692,7 @@ final class PwgUsers
             $params_password = is_string($params['password']) ? $params['password'] : '';
 
             if (! \Piwigo\Bootstrap\CoreDomainAccessor::passwordService()->verify($params_password, $current_password)) {
-                return new PwgError(403, Lang::t('Current password is wrong'));
+                return new PwgError(403, Lang::current()->t('Current password is wrong'));
             }
 
             $params['password'] = $params['new_password'] ?? null;
@@ -724,7 +724,7 @@ final class PwgUsers
             return new PwgError($error_code, $error_message);
         }
 
-        return Lang::t('Your changes have been applied.');
+        return Lang::current()->t('Your changes have been applied.');
     }
 
     /**
@@ -1051,11 +1051,11 @@ final class PwgUsers
         }
 
         if (new CsrfService()->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, Lang::t('Invalid security token'));
+            return new PwgError(403, Lang::current()->t('Invalid security token'));
         }
 
         if (! (bool) preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $params['pkid'])) {
-            return new PwgError(403, Lang::t('Invalid pkid format'));
+            return new PwgError(403, Lang::current()->t('Invalid pkid format'));
         }
 
         $user_id = \Piwigo\Users\CurrentUser::current()->get()->id->value;
@@ -1068,7 +1068,7 @@ final class PwgUsers
 
         $logger->info('[api_key][user_id=' . $user_id . '][action=revoke][pkid=' . $params['pkid'] . ']');
 
-        return Lang::t('API Key has been successfully revoked.');
+        return Lang::current()->t('API Key has been successfully revoked.');
     }
 
     /**
@@ -1093,11 +1093,11 @@ final class PwgUsers
         }
 
         if (new CsrfService()->getToken() !== $params['pwg_token']) {
-            return new PwgError(403, Lang::t('Invalid security token'));
+            return new PwgError(403, Lang::current()->t('Invalid security token'));
         }
 
         if (! (bool) preg_match('/^pkid-\d{8}-[a-z0-9]{20}$/i', $params['pkid'])) {
-            return new PwgError(403, Lang::t('Invalid pkid format'));
+            return new PwgError(403, Lang::current()->t('Invalid pkid format'));
         }
 
         // realEscapeString() dropped: ApiKeyRepository::updateName()
@@ -1113,7 +1113,7 @@ final class PwgUsers
 
         $logger->info('[api_key][user_id=' . $user_id . '][action=edit][pkid=' . $params['pkid'] . '][new_name=' . $key_name . ']');
 
-        return Lang::t('API Key has been successfully edited.');
+        return Lang::current()->t('API Key has been successfully edited.');
     }
 
     /**
@@ -1149,6 +1149,6 @@ final class PwgUsers
         $user_id = \Piwigo\Users\CurrentUser::current()->get()->id->value;
         $api_keys = self::apiKeyService()->get($user_id);
 
-        return ((bool) $api_keys) ? $api_keys : Lang::t('No API key found');
+        return ((bool) $api_keys) ? $api_keys : Lang::current()->t('No API key found');
     }
 }

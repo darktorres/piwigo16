@@ -6,6 +6,7 @@ namespace Piwigo\Admin\Extensions;
 
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Env;
+use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Http\HttpClientService;
 
@@ -28,6 +29,7 @@ use Piwigo\Http\HttpClientService;
 final readonly class ExtensionUpdateChecker
 {
     public function __construct(
+        private Lang $lang,
         private ExtensionScanner $scanner,
         private PemCatalog $pemCatalog,
         private UrlServiceInterface $urlService,
@@ -77,7 +79,7 @@ final readonly class ExtensionUpdateChecker
      */
     public function getPendingUpdates(ExtensionType $type, string $version = AppInfo::VERSION): ?array
     {
-        $fsExtensions = $this->scanner->scan($type, $this->urlService);
+        $fsExtensions = $this->scanner->scan($type, $this->urlService, $this->lang);
 
         $fsExtensionIds = [];
         foreach ($fsExtensions as $fsExtension) {
@@ -184,7 +186,7 @@ final readonly class ExtensionUpdateChecker
                 continue;
             }
 
-            $fsExtensions = $this->scanner->scan($type, $this->urlService);
+            $fsExtensions = $this->scanner->scan($type, $this->urlService, $this->lang);
             foreach ($fsExtensions as $extId => $fsExt) {
                 $neededVersion = $typeUpdatesRaw[$extId] ?? null;
                 $fsVersionRaw = $fsExt['version'] ?? null;
@@ -246,7 +248,7 @@ final readonly class ExtensionUpdateChecker
         $missing = [];
 
         foreach (ExtensionType::cases() as $type) {
-            $fsExtensions = $this->scanner->scan($type, $this->urlService);
+            $fsExtensions = $this->scanner->scan($type, $this->urlService, $this->lang);
 
             $fsExtensionIds = [];
             foreach ($fsExtensions as $fsExtension) {

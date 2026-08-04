@@ -15,7 +15,7 @@ use Piwigo\Event\Location\LocEndHelp;
  */
 final class HelpPageRenderer
 {
-    public function render(AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate): void
     {
         $template = $currentTemplate->get();
 
@@ -42,7 +42,7 @@ final class HelpPageRenderer
 
         $template->assign(
             [
-                'HELP_CONTENT' => Lang::load(
+                'HELP_CONTENT' => $lang->load(
                     'help/help_' . $tabsheet->selected . '.html',
                     '',
                     [

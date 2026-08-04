@@ -18,10 +18,14 @@ use Piwigo\Lang\Translator;
 
 final class PwgTemplateAdapter
 {
+    public function __construct(
+        private readonly Lang $lang,
+    ) {}
+
     #[\Deprecated(message: 'use "translate" modifier')]
     public function l10n(string $text): string
     {
-        return Lang::t($text);
+        return $this->lang->t($text);
     }
 
     #[\Deprecated(message: 'use "translate_dec" modifier')]

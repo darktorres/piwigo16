@@ -49,6 +49,7 @@ final class CoreTabs
     private ?CoreTabsContext $context = null;
 
     public function __construct(
+        private readonly Lang $lang,
         private readonly UrlServiceInterface $urlService,
     ) {}
 
@@ -97,7 +98,7 @@ final class CoreTabs
         switch ($event->tabsheetId) {
             case 'admin_home':
                 $sheets[''] = [
-                    'caption' => Lang::t('Administration Home'),
+                    'caption' => $this->lang->t('Administration Home'),
                     'url' => 'admin.php',
                 ];
                 break;
@@ -105,7 +106,7 @@ final class CoreTabs
             case 'tags':
                 $my_base_url = self::contextField($this->context()->myBaseUrl, 'myBaseUrl');
                 $sheets[''] = [
-                    'caption' => '<span class="icon-menu"></span>' . Lang::t('List'),
+                    'caption' => '<span class="icon-menu"></span>' . $this->lang->t('List'),
                     'url' => $my_base_url . 'tags',
                 ];
                 break;
@@ -113,19 +114,19 @@ final class CoreTabs
             case 'album':
                 $admin_album_base_url = self::contextField($this->context()->adminAlbumBaseUrl, 'adminAlbumBaseUrl');
                 $sheets['properties'] = [
-                    'caption' => '<span class="icon-pencil"></span>' . Lang::t('Properties'),
+                    'caption' => '<span class="icon-pencil"></span>' . $this->lang->t('Properties'),
                     'url' => $admin_album_base_url . '-properties',
                 ];
                 $sheets['sort_order'] = [
-                    'caption' => '<span class="icon-shuffle"></span>' . Lang::t('Manage photo ranks'),
+                    'caption' => '<span class="icon-shuffle"></span>' . $this->lang->t('Manage photo ranks'),
                     'url' => $admin_album_base_url . '-sort_order',
                 ];
                 $sheets['permissions'] = [
-                    'caption' => '<span class="icon-lock"></span>' . Lang::t('Permissions'),
+                    'caption' => '<span class="icon-lock"></span>' . $this->lang->t('Permissions'),
                     'url' => $admin_album_base_url . '-permissions',
                 ];
                 $sheets['notification'] = [
-                    'caption' => '<span class="icon-mail-alt"></span>' . Lang::t('Notification'),
+                    'caption' => '<span class="icon-mail-alt"></span>' . $this->lang->t('Notification'),
                     'url' => $admin_album_base_url . '-notification',
                 ];
                 break;
@@ -133,11 +134,11 @@ final class CoreTabs
             case 'albums':
                 $my_base_url = self::contextField($this->context()->myBaseUrl, 'myBaseUrl');
                 $sheets['list'] = [
-                    'caption' => '<span class="icon-menu"></span>' . Lang::t('List'),
+                    'caption' => '<span class="icon-menu"></span>' . $this->lang->t('List'),
                     'url' => $my_base_url . 'albums',
                 ];
                 $sheets['permalinks'] = [
-                    'caption' => '<span class="icon-link-1"></span>' . Lang::t('Permalinks'),
+                    'caption' => '<span class="icon-link-1"></span>' . $this->lang->t('Permalinks'),
                     'url' => $my_base_url . 'permalinks',
                 ];
                 break;
@@ -145,11 +146,11 @@ final class CoreTabs
             case 'users':
                 $my_base_url = self::contextField($this->context()->myBaseUrl, 'myBaseUrl');
                 $sheets['user_list'] = [
-                    'caption' => '<span class="icon-menu"></span>' . Lang::t('List'),
+                    'caption' => '<span class="icon-menu"></span>' . $this->lang->t('List'),
                     'url' => $my_base_url . 'user_list',
                 ];
                 $sheets['user_activity'] = [
-                    'caption' => '<span class="icon-pulse"></span>' . Lang::t('Activity'),
+                    'caption' => '<span class="icon-pulse"></span>' . $this->lang->t('Activity'),
                     'url' => $my_base_url . 'user_activity',
                 ];
                 break;
@@ -157,11 +158,11 @@ final class CoreTabs
             case 'batch_manager':
                 $manager_link = self::contextField($this->context()->managerLink, 'managerLink');
                 $sheets['global'] = [
-                    'caption' => '<span class="icon-th"></span>' . Lang::t('global mode'),
+                    'caption' => '<span class="icon-th"></span>' . $this->lang->t('global mode'),
                     'url' => $manager_link . 'global',
                 ];
                 $sheets['unit'] = [
-                    'caption' => '<span class="icon-th-list"></span>' . Lang::t('unit mode'),
+                    'caption' => '<span class="icon-th-list"></span>' . $this->lang->t('unit mode'),
                     'url' => $manager_link . 'unit',
                 ];
                 break;
@@ -169,22 +170,22 @@ final class CoreTabs
             case 'cat_options':
                 $link_start = self::contextField($this->context()->linkStart, 'linkStart');
                 $sheets['status'] = [
-                    'caption' => '<span class="icon-lock"></span>' . Lang::t('Public / Private'),
+                    'caption' => '<span class="icon-lock"></span>' . $this->lang->t('Public / Private'),
                     'url' => $link_start . 'cat_options&amp;section=status',
                 ];
                 $sheets['visible'] = [
-                    'caption' => '<span class="icon-block"></span>' . Lang::t('Lock'),
+                    'caption' => '<span class="icon-block"></span>' . $this->lang->t('Lock'),
                     'url' => $link_start . 'cat_options&amp;section=visible',
                 ];
                 if (\Piwigo\Config\CurrentConfig::activateComments()) {
                     $sheets['comments'] = [
-                        'caption' => '<span class="icon-chat"></span>' . Lang::t('Comments'),
+                        'caption' => '<span class="icon-chat"></span>' . $this->lang->t('Comments'),
                         'url' => $link_start . 'cat_options&amp;section=comments',
                     ];
                 }
                 if (\Piwigo\Config\CurrentConfig::allowRandomRepresentative()) {
                     $sheets['representative'] = [
-                        'caption' => Lang::t('Representative'),
+                        'caption' => $this->lang->t('Representative'),
                         'url' => $link_start . 'cat_options&amp;section=representative',
                     ];
                 }
@@ -193,7 +194,7 @@ final class CoreTabs
             case 'comments':
                 $my_base_url = self::contextField($this->context()->myBaseUrl, 'myBaseUrl');
                 $sheets[''] = [
-                    'caption' => '<span class="icon-menu"></span>' . Lang::t('List'),
+                    'caption' => '<span class="icon-menu"></span>' . $this->lang->t('List'),
                     'url' => $my_base_url . 'comments',
                 ];
                 break;
@@ -201,7 +202,7 @@ final class CoreTabs
             case 'groups':
                 $my_base_url = self::contextField($this->context()->myBaseUrl, 'myBaseUrl');
                 $sheets[''] = [
-                    'caption' => '<span class="icon-menu"> </span>' . Lang::t('List'),
+                    'caption' => '<span class="icon-menu"> </span>' . $this->lang->t('List'),
                     'url' => $my_base_url . 'group_list',
                 ];
                 break;
@@ -209,27 +210,27 @@ final class CoreTabs
             case 'configuration':
                 $conf_link = self::contextField($this->context()->confLink, 'confLink');
                 $sheets['main'] = [
-                    'caption' => '<span class="icon-cog"></span>' . Lang::t('General'),
+                    'caption' => '<span class="icon-cog"></span>' . $this->lang->t('General'),
                     'url' => $conf_link . 'main',
                 ];
                 $sheets['sizes'] = [
-                    'caption' => '<span class="icon-zoom-square"></span>' . Lang::t('Photo sizes'),
+                    'caption' => '<span class="icon-zoom-square"></span>' . $this->lang->t('Photo sizes'),
                     'url' => $conf_link . 'sizes',
                 ];
                 $sheets['watermark'] = [
-                    'caption' => '<span class="icon-file-image"></span>' . Lang::t('Watermark'),
+                    'caption' => '<span class="icon-file-image"></span>' . $this->lang->t('Watermark'),
                     'url' => $conf_link . 'watermark',
                 ];
                 $sheets['display'] = [
-                    'caption' => '<span class="icon-television"></span>' . Lang::t('Display'),
+                    'caption' => '<span class="icon-television"></span>' . $this->lang->t('Display'),
                     'url' => $conf_link . 'display',
                 ];
                 $sheets['comments'] = [
-                    'caption' => '<span class="icon-chat"></span>' . Lang::t('Comments'),
+                    'caption' => '<span class="icon-chat"></span>' . $this->lang->t('Comments'),
                     'url' => $conf_link . 'comments',
                 ];
                 $sheets['search'] = [
-                    'caption' => '<span class="icon-search"></span>' . Lang::t('Search'),
+                    'caption' => '<span class="icon-search"></span>' . $this->lang->t('Search'),
                     'url' => $conf_link . 'search',
                 ];
                 // $sheets['default'] = array('caption' => l10n('Guest Settings'), 'url' => $conf_link.'default');
@@ -238,23 +239,23 @@ final class CoreTabs
             case 'help':
                 $help_link = self::contextField($this->context()->helpLink, 'helpLink');
                 $sheets['add_photos'] = [
-                    'caption' => Lang::t('Add Photos'),
+                    'caption' => $this->lang->t('Add Photos'),
                     'url' => $help_link . 'add_photos',
                 ];
                 $sheets['permissions'] = [
-                    'caption' => Lang::t('Permissions'),
+                    'caption' => $this->lang->t('Permissions'),
                     'url' => $help_link . 'permissions',
                 ];
                 $sheets['groups'] = [
-                    'caption' => Lang::t('Groups'),
+                    'caption' => $this->lang->t('Groups'),
                     'url' => $help_link . 'groups',
                 ];
                 $sheets['virtual_links'] = [
-                    'caption' => Lang::t('Virtual Links'),
+                    'caption' => $this->lang->t('Virtual Links'),
                     'url' => $help_link . 'virtual_links',
                 ];
                 $sheets['misc'] = [
-                    'caption' => Lang::t('Miscellaneous'),
+                    'caption' => $this->lang->t('Miscellaneous'),
                     'url' => $help_link . 'misc',
                 ];
                 break;
@@ -262,11 +263,11 @@ final class CoreTabs
             case 'history':
                 $link_start = self::contextField($this->context()->linkStart, 'linkStart');
                 $sheets['stats'] = [
-                    'caption' => '<span class="icon-signal"></span>' . Lang::t('Statistics'),
+                    'caption' => '<span class="icon-signal"></span>' . $this->lang->t('Statistics'),
                     'url' => $link_start . 'stats',
                 ];
                 $sheets['history'] = [
-                    'caption' => '<span class="icon-search"></span>' . Lang::t('Search'),
+                    'caption' => '<span class="icon-search"></span>' . $this->lang->t('Search'),
                     'url' => $link_start . 'history',
                 ];
                 break;
@@ -274,16 +275,16 @@ final class CoreTabs
             case 'languages':
                 $my_base_url = self::contextField($this->context()->myBaseUrl, 'myBaseUrl');
                 $sheets['installed'] = [
-                    'caption' => '<span class="icon-menu"></span>' . Lang::t('List'),
+                    'caption' => '<span class="icon-menu"></span>' . $this->lang->t('List'),
                     'url' => $my_base_url . '&amp;tab=installed',
                 ];
                 if (\Piwigo\Config\CurrentConfig::enableExtensionsInstall()) {
                     $sheets['update'] = [
-                        'caption' => '<span class="icon-arrows-cw"></span>' . Lang::t('Check for updates'),
+                        'caption' => '<span class="icon-arrows-cw"></span>' . $this->lang->t('Check for updates'),
                         'url' => $my_base_url . '&amp;tab=update',
                     ];
                     $sheets['new'] = [
-                        'caption' => '<span class="icon-plus-circled"></span>' . Lang::t('Add New Language'),
+                        'caption' => '<span class="icon-plus-circled"></span>' . $this->lang->t('Add New Language'),
                         'url' => $my_base_url . '&amp;tab=new',
                     ];
                 }
@@ -292,7 +293,7 @@ final class CoreTabs
             case 'menus':
                 $my_base_url = self::contextField($this->context()->myBaseUrl, 'myBaseUrl');
                 $sheets[''] = [
-                    'caption' => '<span class="icon-menu"></span>' . Lang::t('List'),
+                    'caption' => '<span class="icon-menu"></span>' . $this->lang->t('List'),
                     'url' => $my_base_url . 'menubar',
                 ];
                 break;
@@ -300,15 +301,15 @@ final class CoreTabs
             case 'nbm':
                 $base_url = self::contextField($this->context()->baseUrl, 'baseUrl');
                 $sheets['param'] = [
-                    'caption' => Lang::t('Parameter'),
+                    'caption' => $this->lang->t('Parameter'),
                     'url' => $base_url . '?page=notification_by_mail&amp;mode=param',
                 ];
                 $sheets['subscribe'] = [
-                    'caption' => Lang::t('Subscribe'),
+                    'caption' => $this->lang->t('Subscribe'),
                     'url' => $base_url . '?page=notification_by_mail&amp;mode=subscribe',
                 ];
                 $sheets['send'] = [
-                    'caption' => Lang::t('Send'),
+                    'caption' => $this->lang->t('Send'),
                     'url' => $base_url . '?page=notification_by_mail&amp;mode=send',
                 ];
                 break;
@@ -316,16 +317,16 @@ final class CoreTabs
             case 'photo':
                 $admin_photo_base_url = self::contextField($this->context()->adminPhotoBaseUrl, 'adminPhotoBaseUrl');
                 $sheets['properties'] = [
-                    'caption' => '<span class="icon-file-image"></span>' . Lang::t('Properties'),
+                    'caption' => '<span class="icon-file-image"></span>' . $this->lang->t('Properties'),
                     'url' => $admin_photo_base_url . '-properties',
                 ];
                 $sheets['coi'] = [
-                    'caption' => '<span class="icon-crop"></span>' . Lang::t('Center of interest'),
+                    'caption' => '<span class="icon-crop"></span>' . $this->lang->t('Center of interest'),
                     'url' => $admin_photo_base_url . '-coi',
                 ];
                 if (\Piwigo\Config\CurrentConfig::isFormatsEnabled()) {
                     $sheets['formats'] = [
-                        'caption' => '<span class="icon-docs"></span>' . Lang::t('Formats'),
+                        'caption' => '<span class="icon-docs"></span>' . $this->lang->t('Formats'),
                         'url' => $admin_photo_base_url . '-formats',
                     ];
                 }
@@ -333,16 +334,16 @@ final class CoreTabs
 
             case 'photos_add':
                 $sheets['direct'] = [
-                    'caption' => '<span class="icon-upload"></span>' . Lang::t('Web Form'),
+                    'caption' => '<span class="icon-upload"></span>' . $this->lang->t('Web Form'),
                     'url' => PhotosAddDirectPageRenderer::baseUrl($this->urlService) . '&amp;section=direct',
                 ];
                 $sheets['applications'] = [
-                    'caption' => '<span class="icon-network"></span>' . Lang::t('Applications'),
+                    'caption' => '<span class="icon-network"></span>' . $this->lang->t('Applications'),
                     'url' => PhotosAddDirectPageRenderer::baseUrl($this->urlService) . '&amp;section=applications',
                 ];
                 if (\Piwigo\Config\CurrentConfig::enableSynchronization()) {
                     $sheets['ftp'] = [
-                        'caption' => '<span class="icon-exchange"></span>' . Lang::t('FTP + Synchronization'),
+                        'caption' => '<span class="icon-exchange"></span>' . $this->lang->t('FTP + Synchronization'),
                         'url' => PhotosAddDirectPageRenderer::baseUrl($this->urlService) . '&amp;section=ftp',
                     ];
                 }
@@ -351,16 +352,16 @@ final class CoreTabs
             case 'plugins':
                 $my_base_url = self::contextField($this->context()->myBaseUrl, 'myBaseUrl');
                 $sheets['installed'] = [
-                    'caption' => '<span class="icon-menu"></span>' . Lang::t('List'),
+                    'caption' => '<span class="icon-menu"></span>' . $this->lang->t('List'),
                     'url' => $my_base_url . '&amp;tab=installed',
                 ];
                 if (\Piwigo\Config\CurrentConfig::enableExtensionsInstall()) {
                     $sheets['update'] = [
-                        'caption' => '<span class="icon-arrows-cw"></span>' . Lang::t('Check for updates'),
+                        'caption' => '<span class="icon-arrows-cw"></span>' . $this->lang->t('Check for updates'),
                         'url' => $my_base_url . '&amp;tab=update',
                     ];
                     $sheets['new'] = [
-                        'caption' => '<span class="icon-plus-circled"></span>' . Lang::t('Add New Plugin'),
+                        'caption' => '<span class="icon-plus-circled"></span>' . $this->lang->t('Add New Plugin'),
                         'url' => $my_base_url . '&amp;tab=new',
                     ];
                 }
@@ -368,11 +369,11 @@ final class CoreTabs
 
             case 'rating':
                 $sheets['rating'] = [
-                    'caption' => Lang::t('Photos'),
+                    'caption' => $this->lang->t('Photos'),
                     'url' => $this->urlService->getRootUrl() . 'admin.php?page=rating',
                 ];
                 $sheets['rating_user'] = [
-                    'caption' => Lang::t('Users'),
+                    'caption' => $this->lang->t('Users'),
                     'url' => $this->urlService->getRootUrl() . 'admin.php?page=rating_user',
                 ];
                 break;
@@ -380,21 +381,21 @@ final class CoreTabs
             case 'themes':
                 $my_base_url = self::contextField($this->context()->myBaseUrl, 'myBaseUrl');
                 $sheets['installed'] = [
-                    'caption' => '<span class="icon-menu"></span>' . Lang::t('List'),
+                    'caption' => '<span class="icon-menu"></span>' . $this->lang->t('List'),
                     'url' => $my_base_url . '&amp;tab=installed',
                 ];
                 if (\Piwigo\Config\CurrentConfig::enableExtensionsInstall()) {
                     $sheets['update'] = [
-                        'caption' => '<span class="icon-arrows-cw"></span>' . Lang::t('Check for updates'),
+                        'caption' => '<span class="icon-arrows-cw"></span>' . $this->lang->t('Check for updates'),
                         'url' => $my_base_url . '&amp;tab=update',
                     ];
                     $sheets['new'] = [
-                        'caption' => '<span class="icon-plus-circled"></span>' . Lang::t('Add New Theme'),
+                        'caption' => '<span class="icon-plus-circled"></span>' . $this->lang->t('Add New Theme'),
                         'url' => $my_base_url . '&amp;tab=new',
                     ];
                 }
                 $sheets['standard_pages'] = [
-                    'caption' => '<span class="icon-cog-alt"></span>' . Lang::t('Standard pages'),
+                    'caption' => '<span class="icon-cog-alt"></span>' . $this->lang->t('Standard pages'),
                     'url' => $my_base_url . '&amp;tab=standard_pages',
                 ];
                 break;
@@ -404,14 +405,14 @@ final class CoreTabs
 
                 if (\Piwigo\Config\CurrentConfig::enableCoreUpdate()) {
                     $sheets['pwg'] = [
-                        'caption' => Lang::t('Piwigo core'),
+                        'caption' => $this->lang->t('Piwigo core'),
                         'url' => $my_base_url,
                     ];
                 }
 
                 if (\Piwigo\Config\CurrentConfig::enableExtensionsInstall()) {
                     $sheets['ext'] = [
-                        'caption' => Lang::t('Extensions'),
+                        'caption' => $this->lang->t('Extensions'),
                         'url' => $my_base_url . '&amp;tab=ext',
                     ];
                 }
@@ -419,26 +420,26 @@ final class CoreTabs
             case 'site_update':
                 $my_base_url = self::contextField($this->context()->myBaseUrl, 'myBaseUrl');
                 $sheets['synchronization'] = [
-                    'caption' => '<span class="icon-exchange"></span>' . Lang::t('Synchronization'),
+                    'caption' => '<span class="icon-exchange"></span>' . $this->lang->t('Synchronization'),
                     'url' => $my_base_url . 'site_update&site=1',
                 ];
                 $sheets['site_maager'] = [
-                    'caption' => '<span class="icon-flow-branch"></span>' . Lang::t('Site manager'),
+                    'caption' => '<span class="icon-flow-branch"></span>' . $this->lang->t('Site manager'),
                     'url' => $my_base_url . 'site_manager',
                 ];
                 break;
             case 'maintenance':
                 $my_base_url = self::contextField($this->context()->myBaseUrl, 'myBaseUrl');
                 $sheets['actions'] = [
-                    'caption' => '<span class="icon-tools"></span>' . Lang::t('Actions'),
+                    'caption' => '<span class="icon-tools"></span>' . $this->lang->t('Actions'),
                     'url' => $my_base_url . 'maintenance&tab=actions',
                 ];
                 $sheets['env'] = [
-                    'caption' => '<span class="icon-television"></span>' . Lang::t('Environment'),
+                    'caption' => '<span class="icon-television"></span>' . $this->lang->t('Environment'),
                     'url' => $my_base_url . 'maintenance&tab=env',
                 ];
                 $sheets['sys'] = [
-                    'caption' => '<span class="icon-pulse"></span>' . Lang::t('System Activities'),
+                    'caption' => '<span class="icon-pulse"></span>' . $this->lang->t('System Activities'),
                     'url' => $my_base_url . 'maintenance&tab=sys',
                 ];
                 break;

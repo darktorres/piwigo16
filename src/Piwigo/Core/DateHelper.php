@@ -87,7 +87,7 @@ final class DateHelper
         $date = self::str2DateTime($original, $format);
 
         if (! (bool) $date) {
-            return Lang::t('N/A');
+            return Lang::current()->t('N/A');
         }
 
         if ($show === null) {
@@ -96,7 +96,7 @@ final class DateHelper
 
         $print = '';
         if (in_array('day_name', $show, true)) {
-            $print .= Lang::day((int) $date->format('w')) . ' ';
+            $print .= Lang::current()->day((int) $date->format('w')) . ' ';
         }
 
         if (in_array('day', $show, true)) {
@@ -104,7 +104,7 @@ final class DateHelper
         }
 
         if (in_array('month', $show, true)) {
-            $print .= Lang::month((int) $date->format('n')) . ' ';
+            $print .= Lang::current()->month((int) $date->format('n')) . ' ';
         }
 
         if (in_array('year', $show, true)) {
@@ -139,7 +139,7 @@ final class DateHelper
         $date = self::str2DateTime($original, $format);
 
         if (! (bool) $date) {
-            return Lang::t('N/A');
+            return Lang::current()->t('N/A');
         }
 
         if ($show === null) {
@@ -158,7 +158,7 @@ final class DateHelper
                 $dateType = \IntlDateFormatter::LONG;
             }
 
-            $fmt = new \IntlDateFormatter(Lang::currentUserLanguage() ?? AppInfo::DEFAULT_LANGUAGE, $dateType, $timeType);
+            $fmt = new \IntlDateFormatter(Lang::current()->currentUserLanguage() ?? AppInfo::DEFAULT_LANGUAGE, $dateType, $timeType);
             $formatted = $fmt->format($date);
             if ($formatted !== false) {
                 return $formatted;
@@ -177,7 +177,7 @@ final class DateHelper
         $toDate = self::str2DateTime($to);
 
         if ($fromDate === false || $toDate === false) {
-            return Lang::t('N/A');
+            return Lang::current()->t('N/A');
         }
 
         if ($fromDate->format('Y-m-d') === $toDate->format('Y-m-d')) {
@@ -192,7 +192,7 @@ final class DateHelper
             }
             $to_str = self::formatDate($toDate);
 
-            return Lang::t('from %s to %s', $from_str, $to_str);
+            return Lang::current()->t('from %s to %s', $from_str, $to_str);
         }
     }
 
@@ -209,7 +209,7 @@ final class DateHelper
         $date = self::str2DateTime($original, $format);
 
         if (! (bool) $date) {
-            return Lang::t('N/A');
+            return Lang::current()->t('N/A');
         }
 
         $now = Env::now();
@@ -273,9 +273,9 @@ final class DateHelper
             // tie; a frozen Env::now() test clock hits it whenever the compared
             // timestamp was itself written via Env::now().
             if ($now >= $date) {
-                $print = Lang::t('%s ago', $print);
+                $print = Lang::current()->t('%s ago', $print);
             } else {
-                $print = Lang::t('%s in the future', $print);
+                $print = Lang::current()->t('%s in the future', $print);
             }
         }
 

@@ -29,6 +29,6 @@ final class RatingUserSubController implements AdminSubControllerInterface
     public function handle(ServerRequestInterface $request): void
     {
         new RatingUserPageRenderer()
-            ->render($this->accessControl, $this->urlService, $this->imageStdParams, $this->currentTemplate);
+            ->render(\Piwigo\Core\Lang::current(), $this->accessControl, $this->urlService, $this->imageStdParams, $this->currentTemplate);
     }
 }

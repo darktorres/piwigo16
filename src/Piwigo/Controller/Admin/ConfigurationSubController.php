@@ -103,6 +103,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
     }
 
     public function __construct(
+        private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
@@ -153,7 +154,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         $conn = DbConnection::build();
 
         if (! $this->accessControl->isWebmaster()) {
-            $this->pageState->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
+            $this->pageState->addWarning(str_replace('%s', $this->lang->t('user_status_webmaster'), $this->lang->t('%s status is required to edit parameters.')));
         }
 
         // -------------------------------------------------------- sections definitions
@@ -246,26 +247,26 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         // image order management
         $sort_fields = [
             '' => '',
-            'file ASC' => Lang::t('File name, A &rarr; Z'),
-            'file DESC' => Lang::t('File name, Z &rarr; A'),
-            'name ASC' => Lang::t('Photo title, A &rarr; Z'),
-            'name DESC' => Lang::t('Photo title, Z &rarr; A'),
-            'date_creation DESC' => Lang::t('Date created, new &rarr; old'),
-            'date_creation ASC' => Lang::t('Date created, old &rarr; new'),
-            'date_available DESC' => Lang::t('Date posted, new &rarr; old'),
-            'date_available ASC' => Lang::t('Date posted, old &rarr; new'),
-            'rating_score DESC' => Lang::t('Rating score, high &rarr; low'),
-            'rating_score ASC' => Lang::t('Rating score, low &rarr; high'),
-            'hit DESC' => Lang::t('Visits, high &rarr; low'),
-            'hit ASC' => Lang::t('Visits, low &rarr; high'),
-            'id ASC' => Lang::t('Numeric identifier, 1 &rarr; 9'),
-            'id DESC' => Lang::t('Numeric identifier, 9 &rarr; 1'),
-            '`rank` ASC' => Lang::t('Manual sort order'),
+            'file ASC' => $this->lang->t('File name, A &rarr; Z'),
+            'file DESC' => $this->lang->t('File name, Z &rarr; A'),
+            'name ASC' => $this->lang->t('Photo title, A &rarr; Z'),
+            'name DESC' => $this->lang->t('Photo title, Z &rarr; A'),
+            'date_creation DESC' => $this->lang->t('Date created, new &rarr; old'),
+            'date_creation ASC' => $this->lang->t('Date created, old &rarr; new'),
+            'date_available DESC' => $this->lang->t('Date posted, new &rarr; old'),
+            'date_available ASC' => $this->lang->t('Date posted, old &rarr; new'),
+            'rating_score DESC' => $this->lang->t('Rating score, high &rarr; low'),
+            'rating_score ASC' => $this->lang->t('Rating score, low &rarr; high'),
+            'hit DESC' => $this->lang->t('Visits, high &rarr; low'),
+            'hit ASC' => $this->lang->t('Visits, low &rarr; high'),
+            'id ASC' => $this->lang->t('Numeric identifier, 1 &rarr; 9'),
+            'id DESC' => $this->lang->t('Numeric identifier, 9 &rarr; 1'),
+            '`rank` ASC' => $this->lang->t('Manual sort order'),
         ];
 
         $comments_order = [
-            'ASC' => Lang::t('Show oldest comments first'),
-            'DESC' => Lang::t('Show latest comments first'),
+            'ASC' => $this->lang->t('Show oldest comments first'),
+            'DESC' => $this->lang->t('Show latest comments first'),
         ];
 
         $mail_themes = [
@@ -318,7 +319,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                                 }
                             }
                             if (! (bool) count($order_by_input)) {
-                                $this->pageState->addError(Lang::t('No order field selected'));
+                                $this->pageState->addError($this->lang->t('No order field selected'));
                             } else {
                                 // limit to the number of available parameters
                                 $order_by = $order_by_inside_category = array_slice($order_by_input, 0, (int) ceil(count($sort_fields) / 2));
@@ -337,7 +338,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                                 $post['order_by_inside_category'] = 'ORDER BY ' . implode(', ', $order_by_inside_category);
                             }
                         } else {
-                            $this->pageState->addError(Lang::t('No order field selected'));
+                            $this->pageState->addError($this->lang->t('No order field selected'));
                         }
                     }
 
@@ -377,7 +378,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     if (! (bool) preg_match($int_pattern, is_string($nb_comment_page) ? $nb_comment_page : '')
                          or $nb_comment_page < 5
                          or $nb_comment_page > 50) {
-                        $this->pageState->addError(Lang::t('The number of comments a page must be between 5 and 50 included.'));
+                        $this->pageState->addError($this->lang->t('The number of comments a page must be between 5 and 50 included.'));
                     }
                     foreach ($comments_checkboxes as $checkbox) {
                         $post[$checkbox] = self::emptyValue($post[$checkbox] ?? null) ? 'false' : 'true';
@@ -394,7 +395,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     $nb_categories_page = $post['nb_categories_page'] ?? null;
                     if (! (bool) preg_match($int_pattern, is_string($nb_categories_page) ? $nb_categories_page : '')
                           or $nb_categories_page < 4) {
-                        $this->pageState->addError(Lang::t('The number of albums a page must be above 4.'));
+                        $this->pageState->addError($this->lang->t('The number of albums a page must be above 4.'));
                     }
                     foreach ($display_checkboxes as $checkbox) {
                         $post[$checkbox] = self::emptyValue($post[$checkbox] ?? null) ? 'false' : 'true';
@@ -460,7 +461,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 }
                 $template->assign(
                     [
-                        'save_success' => Lang::t('Your configuration settings are saved'),
+                        'save_success' => $this->lang->t('Your configuration settings are saved'),
                     ]
                 );
 
@@ -487,7 +488,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
             $template->assign(
                 [
-                    'save_success' => Lang::t('Your configuration settings are saved'),
+                    'save_success' => $this->lang->t('Your configuration settings are saved'),
                 ]
             );
 
@@ -535,7 +536,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             case 'main':
 
                 if (self::orderByIsLocal()) {
-                    $this->pageState->addWarning(Lang::t('You have specified <i>$conf[\'order_by\']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf[\'order_by_custom\']</i> !'));
+                    $this->pageState->addWarning($this->lang->t('You have specified <i>$conf[\'order_by\']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf[\'order_by_custom\']</i> !'));
                 }
 
                 if (\Piwigo\Config\CurrentConfig::orderByCustom() !== null or \Piwigo\Config\CurrentConfig::orderByInsideCategoryCustom() !== null) {
@@ -551,7 +552,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 $conf_gallery_title = \Piwigo\Config\CurrentConfig::galleryTitle();
                 $conf_page_banner = \Piwigo\Config\CurrentConfig::pageBanner();
                 $conf_email_admin_on_new_user = \Piwigo\Config\CurrentConfig::emailAdminOnNewUser();
-                $lang_day = \Piwigo\Core\Lang::days();
+                $lang_day = $this->lang->days();
 
                 $template->assign(
                     'main',
@@ -627,13 +628,13 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 // P22: profile.php's own save_profile_from_post()/
                 // load_profile_in_template() ported to Piwigo\Controller\
                 // ProfileFormHandler in P23 batch 8c.
-                $profileFormHandler = new ProfileFormHandler($this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->userService, $this->passwordService, $this->authService, $this->htmlRenderer, $this->mailService);
+                $profileFormHandler = new ProfileFormHandler($this->lang, $this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->userService, $this->passwordService, $this->authService, $this->htmlRenderer, $this->mailService);
 
                 $errors = [];
                 if ($profileFormHandler->saveFromPost($edit_user, $errors)) {
                     // Reload user
                     $edit_user = $this->userService->buildUser(\Piwigo\Common\ValueObject\UserId::from($guest_id));
-                    $this->pageState->addInfo(Lang::t('Information data registered in database'));
+                    $this->pageState->addInfo($this->lang->t('Information data registered in database'));
                 }
                 $this->pageState->errors = array_merge($this->pageState->errors, array_values(array_filter($errors, is_string(...))));
 
@@ -730,7 +731,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     $tpl_vars = [];
                     $now = time();
                     foreach ($this->imageStdParams->get_custom_timestamps() as $custom => $time) {
-                        $tpl_vars[$custom] = ($now - $time <= 24 * 3600) ? Lang::t('today') : \Piwigo\Core\DateHelper::timeSince($time, 'day');
+                        $tpl_vars[$custom] = ($now - $time <= 24 * 3600) ? $this->lang->t('today') : \Piwigo\Core\DateHelper::timeSince($time, 'day');
                     }
                     $template->assign('custom_derivatives', $tpl_vars);
                 }
@@ -816,7 +817,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         }
 
         $template->assign('isWebmaster', ($this->accessControl->isWebmaster()) ? 1 : 0);
-        $template->assign('ADMIN_PAGE_TITLE', Lang::t('Configuration'));
+        $template->assign('ADMIN_PAGE_TITLE', $this->lang->t('Configuration'));
 
         // ----------------------------------------------------------- sending html code
         $template->assign_var_from_handle('ADMIN_CONTENT', 'config');
@@ -977,7 +978,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         // PluginLoader::autoupdatePlugin()).
         $page_errors = $this->pageState->errors;
 
-        new UploadService($this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService)
+        new UploadService($this->lang, $this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService)
             ->saveUploadFormConfig($updates, $page_errors, $errors);
 
         $this->pageState->errors = array_values($page_errors);
@@ -1176,7 +1177,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
             $template->assign(
                 [
-                    'save_success' => Lang::t('Your configuration settings are saved'),
+                    'save_success' => $this->lang->t('Your configuration settings are saved'),
                 ]
             );
 
@@ -1256,7 +1257,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             $type = $image_size === false ? false : $image_size[2];
             if ($type !== IMAGETYPE_PNG) {
                 $errors['watermarkImage'] = sprintf(
-                    Lang::t('Allowed file types: %s.'),
+                    $this->lang->t('Allowed file types: %s.'),
                     'PNG'
                 );
             } else {
@@ -1299,10 +1300,10 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                         // project's Browser suite doesn't do for the class under
                         // test (see this file's own "no mocks of the class under
                         // test" convention).
-                        $this->pageState->addError($errors['watermarkImage'] = "{$file_path} " . Lang::t('no write access'));
+                        $this->pageState->addError($errors['watermarkImage'] = "{$file_path} " . $this->lang->t('no write access'));
                     }
                 } else {
-                    $this->pageState->addError($errors['watermarkImage'] = sprintf(Lang::t('Add write access to the "%s" directory'), $upload_dir));
+                    $this->pageState->addError($errors['watermarkImage'] = sprintf($this->lang->t('Add write access to the "%s" directory'), $upload_dir));
                 }
             }
         }
@@ -1427,7 +1428,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
             $template->assign(
                 [
-                    'save_success' => Lang::t('Your configuration settings are saved'),
+                    'save_success' => $this->lang->t('Your configuration settings are saved'),
                 ]
             );
 

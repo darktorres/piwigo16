@@ -40,13 +40,14 @@ use Piwigo\Db\EntityManagerFactory;
 final readonly class LangService
 {
     public function __construct(
+        private Lang $lang,
         private Paths $paths,
         private Translator $translator,
     ) {}
 
     public function t(?string $key, mixed ...$args): string
     {
-        return Lang::t($key ?? '', ...$args);
+        return $this->lang->t($key ?? '', ...$args);
     }
 
     public function l10n(?string $key, mixed ...$args): string

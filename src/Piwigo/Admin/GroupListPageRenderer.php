@@ -18,6 +18,7 @@ use Piwigo\Lang\Translator;
 final class GroupListPageRenderer
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
@@ -88,7 +89,7 @@ final class GroupListPageRenderer
                     // arithmetic on ID (group_list.tpl's `$group.ID%5`),
                     // which would TypeError against a bare VO object.
                     'ID' => $row->id->value,
-                    'IS_DEFAULT' => ($row->isDefault ? ' [' . Lang::t('default') . ']' : ''),
+                    'IS_DEFAULT' => ($row->isDefault ? ' [' . $this->lang->t('default') . ']' : ''),
                     'NB_MEMBERS' => count($members),
                     'L_MEMBERS' => implode(' <span class="userSeparator">&middot;</span> ', $members),
                     'MEMBERS' => $this->translator->plural('%d member', '%d members', count($members)),
@@ -102,7 +103,7 @@ final class GroupListPageRenderer
             $group_counter++;
         }
 
-        $template->assign('ADMIN_PAGE_TITLE', Lang::t('Groups') . ' <span class="badge-number">' . $group_counter . '</span>');
+        $template->assign('ADMIN_PAGE_TITLE', $this->lang->t('Groups') . ' <span class="badge-number">' . $group_counter . '</span>');
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'group_list');
     }

@@ -32,6 +32,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class RegisterController implements ControllerInterface
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
@@ -85,18 +86,18 @@ final class RegisterController implements ControllerInterface
         if ($registerSubmit->isSubmitted) {
             if (! new \Piwigo\Auth\EphemeralKeyService()->verify($registerSubmit->key)) {
                 $status = 403;
-                $errors['register_page_error'] = Lang::t('Invalid/expired form key');
+                $errors['register_page_error'] = $this->lang->t('Invalid/expired form key');
             }
 
             $post_password_raw = $registerSubmit->password;
             $post_password_conf_raw = $registerSubmit->passwordConf;
 
             if ($post_password_raw === '' || $post_password_raw === '0') {
-                $errors['register_form_error'] = Lang::t('Password is missing. Please enter the password.');
+                $errors['register_form_error'] = $this->lang->t('Password is missing. Please enter the password.');
             } elseif ($post_password_conf_raw === '' || $post_password_conf_raw === '0') {
-                $errors['register_form_error'] = Lang::t('Password confirmation is missing. Please confirm the chosen password.');
+                $errors['register_form_error'] = $this->lang->t('Password confirmation is missing. Please confirm the chosen password.');
             } elseif ($post_password_raw !== $post_password_conf_raw) {
-                $errors['register_form_error'] = Lang::t('The passwords do not match');
+                $errors['register_form_error'] = $this->lang->t('The passwords do not match');
             }
 
             $post_login = $registerSubmit->login;
@@ -159,7 +160,7 @@ final class RegisterController implements ControllerInterface
                         if (! isset($_SESSION['page_infos']) or ! is_array($_SESSION['page_infos'])) {
                             $_SESSION['page_infos'] = [];
                         }
-                        $_SESSION['page_infos'][] = Lang::t('Successfully registered, you will soon receive an email with your connection settings. Welcome!');
+                        $_SESSION['page_infos'][] = $this->lang->t('Successfully registered, you will soon receive an email with your connection settings. Welcome!');
                     }
 
                     // [SEC-31] Only a real new account gets logged in -- a
@@ -204,7 +205,7 @@ final class RegisterController implements ControllerInterface
         // file reads $GLOBALS['title']. Plain local, not global.
         $template = $this->currentTemplate->get();
 
-        $title = Lang::t('Registration');
+        $title = $this->lang->t('Registration');
         $this->pageState->setBodyId('theRegisterPage');
 
         $template->set_filenames([
@@ -223,7 +224,7 @@ final class RegisterController implements ControllerInterface
         $hide_menu_on = is_array($themeconf) ? ($themeconf['hide_menu_on'] ?? null) : null;
         if (! is_array($hide_menu_on) or ! in_array('theRegisterPage', $hide_menu_on, true)) {
             new MenubarRenderer()
-                ->render($this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
+                ->render($this->lang, $this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
         }
 
         // Load language if cookie is set from login/register/password
@@ -240,7 +241,7 @@ final class RegisterController implements ControllerInterface
             }
 
             $this->currentUser->updateLanguage($lang_cookie);
-            Lang::load('common.lang', '', [
+            $this->lang->load('common.lang', '', [
                 'language' => $lang_cookie,
             ]);
         }

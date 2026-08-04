@@ -59,6 +59,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class GalleryController implements ControllerInterface
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
@@ -200,7 +201,7 @@ final class GalleryController implements ControllerInterface
 
         // -------------------------------------------------- menubar
         $categoryCountCategories = new MenubarRenderer()
-            ->render($this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
+            ->render($this->lang, $this->accessControl, $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate);
 
         $template->set_filename('index', 'index.tpl');
 
@@ -535,7 +536,7 @@ final class GalleryController implements ControllerInterface
                     $template->append(
                         'image_derivatives',
                         [
-                            'DISPLAY' => Lang::t($params->type),
+                            'DISPLAY' => $this->lang->t($params->type),
                             'URL' => $url . $params->type,
                             'SELECTED' => $params->type === $selected_type,
                         ]

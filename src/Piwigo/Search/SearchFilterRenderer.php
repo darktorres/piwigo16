@@ -43,6 +43,7 @@ use Piwigo\Tag\TagService;
 final readonly class SearchFilterRenderer
 {
     public function __construct(
+        private Lang $lang,
         private AccessControl $accessControl,
         private HtmlRenderingInterface $htmlRenderer,
         private TemplateInterface $template,
@@ -140,7 +141,7 @@ final readonly class SearchFilterRenderer
         $userId = (string) $this->currentUser->get()
             ->id->value;
 
-        $langMonth = \Piwigo\Core\Lang::months();
+        $langMonth = $this->lang->months();
 
         $searchId = $page['search'] ?? '';
         $resolvedSearchId = null;
@@ -270,7 +271,7 @@ final readonly class SearchFilterRenderer
             if (! (bool) $displayFilters['expert']['access']) {
                 unset($searchFields['expert']);
             } else {
-                Lang::load('help_quick_search.lang');
+                $this->lang->load('help_quick_search.lang');
             }
         }
 
@@ -347,11 +348,11 @@ final readonly class SearchFilterRenderer
                 'date_posted',
                 'date_available',
                 [
-                    '24h' => Lang::t('last 24 hours'),
-                    '7d' => Lang::t('last 7 days'),
-                    '30d' => Lang::t('last 30 days'),
-                    '3m' => Lang::t('last 3 months'),
-                    '6m' => Lang::t('last 6 months'),
+                    '24h' => $this->lang->t('last 24 hours'),
+                    '7d' => $this->lang->t('last 7 days'),
+                    '30d' => $this->lang->t('last 30 days'),
+                    '3m' => $this->lang->t('last 3 months'),
+                    '6m' => $this->lang->t('last 6 months'),
                 ],
                 'LIST_DATE_POSTED',
                 'DATE_POSTED',
@@ -369,11 +370,11 @@ final readonly class SearchFilterRenderer
                 'date_created',
                 'date_creation',
                 [
-                    '7d' => Lang::t('last 7 days'),
-                    '30d' => Lang::t('last 30 days'),
-                    '3m' => Lang::t('last 3 months'),
-                    '6m' => Lang::t('last 6 months'),
-                    '12m' => Lang::t('last 12 months'),
+                    '7d' => $this->lang->t('last 7 days'),
+                    '30d' => $this->lang->t('last 30 days'),
+                    '3m' => $this->lang->t('last 3 months'),
+                    '6m' => $this->lang->t('last 6 months'),
+                    '12m' => $this->lang->t('last 12 months'),
                 ],
                 'LIST_DATE_CREATED',
                 'DATE_CREATED',
@@ -1212,7 +1213,7 @@ final readonly class SearchFilterRenderer
             if (! is_array($yearBucket)) {
                 continue;
             }
-            $yearBucket['label'] = Lang::t('year %d', $y);
+            $yearBucket['label'] = $this->lang->t('year %d', $y);
 
             $monthsBucket = $yearBucket['months'] ?? null;
             if (is_array($monthsBucket)) {

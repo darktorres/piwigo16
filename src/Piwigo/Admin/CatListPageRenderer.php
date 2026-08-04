@@ -37,6 +37,7 @@ use Piwigo\Template\Template;
 final class CatListPageRenderer
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
@@ -67,12 +68,12 @@ final class CatListPageRenderer
         }
 
         $sort_orders = [
-            'name ASC' => Lang::t('Album name, A &rarr; Z'),
-            'name DESC' => Lang::t('Album name, Z &rarr; A'),
-            'date_creation DESC' => Lang::t('Date created, new &rarr; old') . ' ' . Lang::t('(determined from photos)'),
-            'date_creation ASC' => Lang::t('Date created, old &rarr; new') . ' ' . Lang::t('(determined from photos)'),
-            'date_available DESC' => Lang::t('Date posted, new &rarr; old') . ' ' . Lang::t('(determined from photos)'),
-            'date_available ASC' => Lang::t('Date posted, old &rarr; new') . ' ' . Lang::t('(determined from photos)'),
+            'name ASC' => $this->lang->t('Album name, A &rarr; Z'),
+            'name DESC' => $this->lang->t('Album name, Z &rarr; A'),
+            'date_creation DESC' => $this->lang->t('Date created, new &rarr; old') . ' ' . $this->lang->t('(determined from photos)'),
+            'date_creation ASC' => $this->lang->t('Date created, old &rarr; new') . ' ' . $this->lang->t('(determined from photos)'),
+            'date_available DESC' => $this->lang->t('Date posted, new &rarr; old') . ' ' . $this->lang->t('(determined from photos)'),
+            'date_available ASC' => $this->lang->t('Date posted, old &rarr; new') . ' ' . $this->lang->t('(determined from photos)'),
         ];
 
         // +-------------------------------------------------------------------+
@@ -85,7 +86,7 @@ final class CatListPageRenderer
 
         $base_url = $this->urlService->getRootUrl() . 'admin.php?page=cat_list';
         $navigation = '<a href="' . $base_url . '">';
-        $navigation .= Lang::t('Home');
+        $navigation .= $this->lang->t('Home');
         $navigation .= '</a>';
 
         // +-------------------------------------------------------------------+
@@ -120,7 +121,7 @@ final class CatListPageRenderer
                 $catListRequest->photoDeletionMode
             );
 
-            $_SESSION['page_infos'] = [Lang::t('Virtual album deleted')];
+            $_SESSION['page_infos'] = [$this->lang->t('Virtual album deleted')];
             $categoryService->updateGlobalRank();
             PermissionCacheInvalidator::invalidate();
 
@@ -147,7 +148,7 @@ final class CatListPageRenderer
                 $this->pageState->addError($output_create_message);
             } else {
                 $edit_url = $this->urlService->getRootUrl() . 'admin.php?page=album-' . (string) $output_create->categoryId;
-                $this->pageState->addInfo($output_create_message . ' <a class="icon-pencil" href="' . $edit_url . '">' . Lang::t('Edit album') . '</a>');
+                $this->pageState->addInfo($output_create_message . ' <a class="icon-pencil" href="' . $edit_url . '">' . $this->lang->t('Edit album') . '</a>');
             }
         }
         // +-------------------------------------------------------------------+
@@ -179,7 +180,7 @@ final class CatListPageRenderer
         $sort_orders_checked = array_keys($sort_orders);
 
         $template->assign([
-            'ADMIN_PAGE_TITLE' => Lang::t('Album list management'),
+            'ADMIN_PAGE_TITLE' => $this->lang->t('Album list management'),
             'CATEGORIES_NAV' => preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation)),
             'F_ACTION' => $form_action,
             'PWG_TOKEN' => new \Piwigo\Csrf\CsrfService()

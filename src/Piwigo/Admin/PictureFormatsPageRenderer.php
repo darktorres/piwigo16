@@ -16,7 +16,7 @@ use Piwigo\Image\ImageStdParams;
  */
 final class PictureFormatsPageRenderer
 {
-    public function render(AccessControl $accessControl, UrlServiceInterface $urlService, ImageStdParams $imageStdParams, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer): void
+    public function render(\Piwigo\Core\Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, ImageStdParams $imageStdParams, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer): void
     {
         $template = $currentTemplate->get();
 
@@ -40,7 +40,7 @@ final class PictureFormatsPageRenderer
 
             $format['label'] = strtoupper($formatRow->ext);
             $lang_key = 'format ' . strtoupper($formatRow->ext);
-            $lang_label = \Piwigo\Core\Lang::has($lang_key) ? \Piwigo\Core\Lang::t($lang_key) : null;
+            $lang_label = $lang->has($lang_key) ? $lang->t($lang_key) : null;
             if ($lang_label !== null) {
                 $format['label'] = $lang_label;
             }

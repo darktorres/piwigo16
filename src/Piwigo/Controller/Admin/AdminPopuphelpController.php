@@ -44,6 +44,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class AdminPopuphelpController implements ControllerInterface
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Core\PageState $pageState,
@@ -66,7 +67,7 @@ final class AdminPopuphelpController implements ControllerInterface
 
         if ($output !== 'content_only') {
             $this->pageState->setBodyId('thePopuphelpPage');
-            $title = Lang::t('Piwigo Help');
+            $title = $this->lang->t('Piwigo Help');
             $this->pageState->setPageBanner('<h1>' . $title . '</h1>');
             $this->pageState->setMetaRobots([
                 'noindex' => 1,
@@ -92,7 +93,7 @@ final class AdminPopuphelpController implements ControllerInterface
             throw new ResponseReadyException(ResponseFactory::text('Hacking attempt!', 400));
         }
 
-        $help_content = Lang::load(
+        $help_content = $this->lang->load(
             'help/' . $rawPage . '.html',
             '',
             [

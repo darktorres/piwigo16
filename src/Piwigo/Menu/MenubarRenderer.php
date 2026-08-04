@@ -60,7 +60,7 @@ final class MenubarRenderer
      * write to, this method returns that value instead; every caller but
      * GalleryController ignores it.
      */
-    public function render(AccessControl $accessControl, UrlServiceInterface $urlService, \Piwigo\Core\FilterState $filterState, \Piwigo\Section\SectionContextRegistry $sectionContextRegistry, SessionService $sessionService, \Piwigo\Config\DeploymentPolicy $deploymentPolicy, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate): ?int
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, \Piwigo\Core\FilterState $filterState, \Piwigo\Section\SectionContextRegistry $sectionContextRegistry, SessionService $sessionService, \Piwigo\Config\DeploymentPolicy $deploymentPolicy, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate): ?int
     {
         $template = $currentTemplate->get();
         $section_context = $sectionContextRegistry->current();
@@ -69,8 +69,8 @@ final class MenubarRenderer
         // Built once, reused below -- was the same PermissionService recipe
         // repeated verbatim at 2 sites in this method (Phase 1k DI-chain audit).
         $permissionService = new PermissionService(new PermissionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class), \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class));
-        $tagService = new TagService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Tag\TagEntity::class), $permissionService, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\PluginConfig\EventDispatcher::get(), $currentUser);
-        $categoryService = new CategoryService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class), $permissionService);
+        $tagService = new TagService($lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Tag\TagEntity::class), $permissionService, new \Piwigo\Activity\ActivityService(\Piwigo\Db\EntityManagerFactory::build(\Piwigo\Db\DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), \Piwigo\PluginConfig\EventDispatcher::get(), $currentUser);
+        $categoryService = new CategoryService($lang, \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Category\CategoryEntity::class), $permissionService);
 
         $menu = new BlockManager('menubar', \Piwigo\PluginConfig\EventDispatcher::get(), $currentTemplate);
 
@@ -232,8 +232,8 @@ final class MenubarRenderer
                       'URL' => $urlService->makeIndexUrl([
                           'section' => 'favorites',
                       ]),
-                      'TITLE' => Lang::t('display your favorites photos'),
-                      'NAME' => Lang::t('Your favorites'),
+                      'TITLE' => $lang->t('display your favorites photos'),
+                      'NAME' => $lang->t('Your favorites'),
                   ];
             }
 
@@ -242,8 +242,8 @@ final class MenubarRenderer
                   'URL' => $urlService->makeIndexUrl([
                       'section' => 'most_visited',
                   ]),
-                  'TITLE' => Lang::t('display most visited photos'),
-                  'NAME' => Lang::t('Most visited'),
+                  'TITLE' => $lang->t('display most visited photos'),
+                  'NAME' => $lang->t('Most visited'),
               ];
 
             if (\Piwigo\Config\CurrentConfig::rateEnabled()) {
@@ -252,8 +252,8 @@ final class MenubarRenderer
                      'URL' => $urlService->makeIndexUrl([
                          'section' => 'best_rated',
                      ]),
-                     'TITLE' => Lang::t('display best rated photos'),
-                     'NAME' => Lang::t('Best rated'),
+                     'TITLE' => $lang->t('display best rated photos'),
+                     'NAME' => $lang->t('Best rated'),
                  ];
             }
 
@@ -262,8 +262,8 @@ final class MenubarRenderer
                   'URL' => $urlService->makeIndexUrl([
                       'section' => 'recent_pics',
                   ]),
-                  'TITLE' => Lang::t('display most recent photos'),
-                  'NAME' => Lang::t('Recent photos'),
+                  'TITLE' => $lang->t('display most recent photos'),
+                  'NAME' => $lang->t('Recent photos'),
               ];
 
             $block->data['recent_cats'] =
@@ -271,15 +271,15 @@ final class MenubarRenderer
                   'URL' => $urlService->makeIndexUrl([
                       'section' => 'recent_cats',
                   ]),
-                  'TITLE' => Lang::t('display recently updated albums'),
-                  'NAME' => Lang::t('Recent albums'),
+                  'TITLE' => $lang->t('display recently updated albums'),
+                  'NAME' => $lang->t('Recent albums'),
               ];
 
             $block->data['random'] =
               [
                   'URL' => $urlService->getRootUrl() . 'random.php',
-                  'TITLE' => Lang::t('display a set of random photos'),
-                  'NAME' => Lang::t('Random photos'),
+                  'TITLE' => $lang->t('display a set of random photos'),
+                  'NAME' => $lang->t('Random photos'),
                   'REL' => 'rel="nofollow"',
               ];
 
@@ -293,8 +293,8 @@ final class MenubarRenderer
                           'chronology_view' => 'calendar',
                       ]
                   ),
-                  'TITLE' => Lang::t('display each day with photos, month per month'),
-                  'NAME' => Lang::t('Calendar'),
+                  'TITLE' => $lang->t('display each day with photos, month per month'),
+                  'NAME' => $lang->t('Calendar'),
                   'REL' => 'rel="nofollow"',
               ];
             $block->template = 'menubar_specials.tpl';
@@ -310,8 +310,8 @@ final class MenubarRenderer
             // tags link
             $block->data['tags'] =
               [
-                  'TITLE' => Lang::t('display available tags'),
-                  'NAME' => Lang::t('Tags'),
+                  'TITLE' => $lang->t('display available tags'),
+                  'NAME' => $lang->t('Tags'),
                   'URL' => $urlService->getRootUrl() . 'tags.php',
                   'COUNTER' => $tagService->getNbAvailableTags(),
               ];
@@ -319,8 +319,8 @@ final class MenubarRenderer
             // search link
             $block->data['search'] =
               [
-                  'TITLE' => Lang::t('search'),
-                  'NAME' => Lang::t('Search'),
+                  'TITLE' => $lang->t('search'),
+                  'NAME' => $lang->t('Search'),
                   'URL' => $urlService->getRootUrl() . 'search.php',
                   'REL' => 'rel="search"',
               ];
@@ -329,8 +329,8 @@ final class MenubarRenderer
                 // comments link
                 $block->data['comments'] =
                   [
-                      'TITLE' => Lang::t('display last user comments'),
-                      'NAME' => Lang::t('Comments'),
+                      'TITLE' => $lang->t('display last user comments'),
+                      'NAME' => $lang->t('Comments'),
                       'URL' => $urlService->getRootUrl() . 'comments.php',
                       'COUNTER' => \Piwigo\Comment\CommentService::getNbAvailableComments(),
                   ];
@@ -339,16 +339,16 @@ final class MenubarRenderer
             // about link
             $block->data['about'] =
               [
-                  'TITLE' => Lang::t('About Piwigo'),
-                  'NAME' => Lang::t('About'),
+                  'TITLE' => $lang->t('About Piwigo'),
+                  'NAME' => $lang->t('About'),
                   'URL' => $urlService->getRootUrl() . 'about.php',
               ];
 
             // notification
             $block->data['rss'] =
               [
-                  'TITLE' => Lang::t('RSS feed'),
-                  'NAME' => Lang::t('Notification'),
+                  'TITLE' => $lang->t('RSS feed'),
+                  'NAME' => $lang->t('Notification'),
                   'URL' => $urlService->getRootUrl() . 'notification.php',
                   'REL' => 'rel="nofollow"',
               ];

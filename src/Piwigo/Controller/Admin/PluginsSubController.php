@@ -52,6 +52,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class PluginsSubController implements AdminSubControllerInterface
 {
     public function __construct(
+        private readonly Lang $lang,
         private readonly AccessControl $accessControl,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
@@ -87,14 +88,14 @@ final class PluginsSubController implements AdminSubControllerInterface
 
         if ($tab === 'update') {
             new UpdatesExtPageRenderer()
-                ->render($this->accessControl, 'plugins', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker, $this->htmlRenderer);
-            $template->assign('ADMIN_PAGE_TITLE', Lang::t('Plugins'));
+                ->render(\Piwigo\Core\Lang::current(), $this->accessControl, 'plugins', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker, $this->htmlRenderer);
+            $template->assign('ADMIN_PAGE_TITLE', $this->lang->t('Plugins'));
         } elseif ($tab === 'new') {
             $this->pluginsNewPageRenderer
                 ->render('plugins', $tab);
         } else {
             new PluginsInstalledPageRenderer()
-                ->render($this->accessControl, 'plugins', $this->urlService, $this->currentLogger, $this->sessionService, $this->eventDispatcher, $this->currentTemplate, $this->preferencesService, $this->htmlRenderer);
+                ->render(\Piwigo\Core\Lang::current(), $this->accessControl, 'plugins', $this->urlService, $this->currentLogger, $this->sessionService, $this->eventDispatcher, $this->currentTemplate, $this->preferencesService, $this->htmlRenderer);
         }
     }
 }

@@ -19,7 +19,7 @@ use Piwigo\Image\ImageStdParams;
  */
 final class RatingUserPageRenderer
 {
-    public function render(AccessControl $accessControl, UrlServiceInterface $urlService, ImageStdParams $imageStdParams, \Piwigo\Template\CurrentTemplate $currentTemplate): void
+    public function render(Lang $lang, AccessControl $accessControl, UrlServiceInterface $urlService, ImageStdParams $imageStdParams, \Piwigo\Template\CurrentTemplate $currentTemplate): void
     {
         $template = $currentTemplate->get();
 
@@ -165,11 +165,11 @@ final class RatingUserPageRenderer
         $order_by_index = 4;
 
         $available_order_by = [
-            [Lang::t('Average rate'), self::avgCompare(...)],
-            [Lang::t('Number of rates'), self::countCompare(...)],
-            [Lang::t('Variation'), self::cvCompare(...)],
-            [Lang::t('Consensus deviation'), self::consensusDevCompare(...)],
-            [Lang::t('Last'), self::lastRateCompare(...)],
+            [$lang->t('Average rate'), self::avgCompare(...)],
+            [$lang->t('Number of rates'), self::countCompare(...)],
+            [$lang->t('Variation'), self::cvCompare(...)],
+            [$lang->t('Consensus deviation'), self::consensusDevCompare(...)],
+            [$lang->t('Last'), self::lastRateCompare(...)],
         ];
 
         if ($ratingFilter->orderBy !== null and $ratingFilter->orderBy >= 0 and $ratingFilter->orderBy < count($available_order_by)) {
@@ -197,7 +197,7 @@ final class RatingUserPageRenderer
             'image_urls' => $image_urls,
             'TN_WIDTH' => $imageStdParams->get_by_type(ImageStdParams::SQUARE)->sizing->ideal_size[0],
             'NB_ELEMENTS' => $nb_elements,
-            'ADMIN_PAGE_TITLE' => Lang::t('Rating'),
+            'ADMIN_PAGE_TITLE' => $lang->t('Rating'),
         ]);
         $template->set_filename('rating', 'rating_user.tpl');
         $template->assign_var_from_handle('ADMIN_CONTENT', 'rating');

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Core\AccessLevel;
@@ -41,6 +42,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class PasswordController implements ControllerInterface
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\FilterState $filterState,
@@ -91,7 +93,7 @@ final class PasswordController implements ControllerInterface
     {
         $template = $this->currentTemplate->get();
 
-        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Free);
+        $this->accessControl->checkStatus(AccessLevel::Free);
 
         $this->eventDispatcher->dispatchNotify(new LocBeginPassword());
 
@@ -129,7 +131,7 @@ final class PasswordController implements ControllerInterface
 
         // a connected user can't reset the password from a mail
         $key = $this->request->key;
-        if ($key !== null and ! \Piwigo\Auth\AccessControl::isAGuest()) {
+        if ($key !== null and ! $this->accessControl->isAGuest()) {
             $key = null;
         }
 
@@ -160,12 +162,12 @@ final class PasswordController implements ControllerInterface
         }
 
         if ($this->action === 'reset') {
-            if (($key === null and (\Piwigo\Auth\AccessControl::isAGuest() or \Piwigo\Auth\AccessControl::isGeneric())) and ! isset($_SESSION['valid_reset_password_code'])) {
+            if (($key === null and ($this->accessControl->isAGuest() or $this->accessControl->isGeneric())) and ! isset($_SESSION['valid_reset_password_code'])) {
                 $this->redirectService->redirect($this->urlService->getGalleryHomeUrl());
             }
         }
 
-        if ($this->action === 'lost' and ! \Piwigo\Auth\AccessControl::isAGuest()) {
+        if ($this->action === 'lost' and ! $this->accessControl->isAGuest()) {
             $this->redirectService->redirect($this->urlService->getGalleryHomeUrl());
         }
 
@@ -334,7 +336,7 @@ final class PasswordController implements ControllerInterface
             // block early for generic or guest user because we don't
             // consider theses users has sensible for username/email
             // enumeration
-            if (\Piwigo\Auth\AccessControl::isAGuest($status) or \Piwigo\Auth\AccessControl::isGeneric($status)) {
+            if ($this->accessControl->isAGuest($status) or $this->accessControl->isGeneric($status)) {
                 $this->errors['password_form_error'] = Lang::t('Password reset is not allowed for this user');
                 return false;
             }
@@ -510,7 +512,7 @@ final class PasswordController implements ControllerInterface
 
         // fallback check: don't send mail when user is guest, generic or
         // doesn't have email
-        if (\Piwigo\Auth\AccessControl::isAGuest($status) || \Piwigo\Auth\AccessControl::isGeneric($status) || $has_no_email) {
+        if ($this->accessControl->isAGuest($status) || $this->accessControl->isGeneric($status) || $has_no_email) {
             $this->errors['password_form_error'] = Lang::t('Password reset is not allowed for this user');
             return false;
         }
@@ -543,7 +545,7 @@ final class PasswordController implements ControllerInterface
                 continue;
             }
             if ($this->passwordService->verify($key, $activationKeyRow->activationKey)) {
-                if (\Piwigo\Auth\AccessControl::isAGuest($activationKeyRow->status) or \Piwigo\Auth\AccessControl::isGeneric($activationKeyRow->status)) {
+                if ($this->accessControl->isAGuest($activationKeyRow->status) or $this->accessControl->isGeneric($activationKeyRow->status)) {
                     $this->errors['password_page_error'] = Lang::t('Password reset is not allowed for this user');
                     return false;
                 }

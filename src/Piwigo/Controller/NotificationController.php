@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Piwigo\Auth\AccessControl;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
@@ -34,6 +35,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class NotificationController implements ControllerInterface
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\FilterState $filterState,
         private readonly \Piwigo\Section\SectionContextRegistry $sectionContextRegistry,
@@ -49,7 +51,7 @@ final class NotificationController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
+        $this->accessControl->checkStatus(AccessLevel::Guest);
 
         $this->eventDispatcher->dispatchNotify(new LocBeginNotification());
 
@@ -68,7 +70,7 @@ final class NotificationController implements ControllerInterface
         $feedRepo->insert($feedId, $user_id);
 
         $feed_url = $urlService->getRootUrl() . 'feed.php';
-        if (\Piwigo\Auth\AccessControl::isAGuest()) {
+        if ($this->accessControl->isAGuest()) {
             $feed_image_only_url = $feed_url;
             $feed_url .= '?feed=' . $feedId;
         } else {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\AccessLevel;
@@ -58,6 +59,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class GalleryController implements ControllerInterface
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
@@ -88,7 +90,7 @@ final class GalleryController implements ControllerInterface
         $this->sectionPopulator
             ->populate();
 
-        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
+        $this->accessControl->checkStatus(AccessLevel::Guest);
 
         // Legacy Coupling Retirement Track A batch A5.2e: populate() always
         // calls SectionContextRegistry::set() as the very last thing it
@@ -386,14 +388,14 @@ final class GalleryController implements ControllerInterface
             );
         }
 
-        if ($section_context->category !== null and \Piwigo\Auth\AccessControl::isAdmin() and \Piwigo\Config\CurrentConfig::indexEditIcon()) {
+        if ($section_context->category !== null and $this->accessControl->isAdmin() and \Piwigo\Config\CurrentConfig::indexEditIcon()) {
             $template->assign(
                 'U_EDIT',
                 $urlService->getRootUrl() . 'admin.php?page=album-' . (is_numeric($section_context->category['id'] ?? null) ? (int) $section_context->category['id'] : 0)
             );
         }
 
-        if (\Piwigo\Auth\AccessControl::isAdmin() and $page_items !== [] and \Piwigo\Config\CurrentConfig::indexCaddieIcon()) {
+        if ($this->accessControl->isAdmin() and $page_items !== [] and \Piwigo\Config\CurrentConfig::indexCaddieIcon()) {
             $template->assign(
                 'U_CADDIE',
                 $urlService->addUrlParams($urlService->duplicateIndexUrl(), [

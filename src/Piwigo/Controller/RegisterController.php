@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Piwigo\Auth\AccessControl;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -31,6 +32,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class RegisterController implements ControllerInterface
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\FilterState $filterState,
@@ -69,7 +71,7 @@ final class RegisterController implements ControllerInterface
         // the fix, matching PictureController's own chosen pattern.
         $status = 200;
 
-        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Free);
+        $this->accessControl->checkStatus(AccessLevel::Free);
 
         if (! \Piwigo\Config\CurrentConfig::allowUserRegistration()) {
             $this->htmlService

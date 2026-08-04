@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -44,6 +45,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class ProfileController implements ControllerInterface
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\FilterState $filterState,
@@ -69,7 +71,7 @@ final class ProfileController implements ControllerInterface
     {
         $template = $this->currentTemplate->get();
 
-        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Classic);
+        $this->accessControl->checkStatus(AccessLevel::Classic);
 
         $profileAction = Request\ProfileActionRequest::fromGlobals();
 

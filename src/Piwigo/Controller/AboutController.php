@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
@@ -40,6 +41,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class AboutController implements ControllerInterface
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\FilterState $filterState,
         private readonly \Piwigo\Section\SectionContextRegistry $sectionContextRegistry,
@@ -55,7 +57,7 @@ final class AboutController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
+        $this->accessControl->checkStatus(AccessLevel::Guest);
 
         $urlService = $this->urlService;
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Piwigo\Auth\AccessControl;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
@@ -21,6 +22,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class QSearchController implements ControllerInterface
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
     ) {}
@@ -28,7 +30,7 @@ final class QSearchController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
+        $this->accessControl->checkStatus(AccessLevel::Guest);
 
         $q = $request->getQueryParams()['q'] ?? '';
         $q = is_string($q) ? $q : '';

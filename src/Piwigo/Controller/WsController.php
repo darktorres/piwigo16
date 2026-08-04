@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Piwigo\Auth\AccessControl;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Http\ControllerInterface;
@@ -41,6 +42,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class WsController implements ControllerInterface
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly \Piwigo\Html\HtmlService $htmlService,
     ) {}
@@ -48,7 +50,7 @@ final class WsController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Free);
+        $this->accessControl->checkStatus(AccessLevel::Free);
 
         if (! \Piwigo\Config\CurrentConfig::allowWebServices()) {
             $this->htmlService

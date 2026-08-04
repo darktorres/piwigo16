@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Piwigo\Auth\AccessControl;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
@@ -30,13 +31,14 @@ final readonly class VitalsController implements ControllerInterface
     private const array KNOWN_METRICS = ['CLS', 'FCP', 'INP', 'LCP', 'TTFB'];
 
     public function __construct(
+        private readonly AccessControl $accessControl,
         private LoggerInterface $logger,
     ) {}
 
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
+        $this->accessControl->checkStatus(AccessLevel::Guest);
 
         $metric = $this->parseMetric((string) $request->getBody());
         if ($metric !== null) {

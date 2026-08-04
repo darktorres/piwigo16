@@ -6,6 +6,7 @@ namespace Piwigo\Controller;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentService;
@@ -49,6 +50,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class CommentsController implements ControllerInterface
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\FilterState $filterState,
@@ -82,7 +84,7 @@ final class CommentsController implements ControllerInterface
                 ->pageNotFound($this->redirectService, null);
         }
 
-        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
+        $this->accessControl->checkStatus(AccessLevel::Guest);
 
         $url_self = $this->urlService->getRootUrl() . 'comments.php'
           . $this->urlService->getQueryStringDiff(['delete', 'edit', 'validate', 'pwg_token']);
@@ -223,7 +225,7 @@ final class CommentsController implements ControllerInterface
         if ($get_comment_id !== null) {
             // currently, the $_GET['comment_id'] is only used by admins
             // from email for management purpose (validate/delete)
-            if (! \Piwigo\Auth\AccessControl::isAdmin()) {
+            if (! $this->accessControl->isAdmin()) {
                 $request_uri = $_SERVER['REQUEST_URI'] ?? '';
                 $request_uri = is_string($request_uri) ? $request_uri : '';
                 $login_url =
@@ -274,7 +276,7 @@ final class CommentsController implements ControllerInterface
         $whereClauses[] = new SqlCondition($since_options[$since]['clause']);
 
         // which status to filter on ?
-        if (! \Piwigo\Auth\AccessControl::isAdmin()) {
+        if (! $this->accessControl->isAdmin()) {
             $whereClauses[] = new SqlCondition('validated=1');
         }
 
@@ -300,7 +302,7 @@ final class CommentsController implements ControllerInterface
             // die_on_error defaults to true, so false is unreachable here
             assert($comment_author_id !== false);
 
-            if (\Piwigo\Auth\AccessControl::canManageComment($action, $comment_author_id)) {
+            if ($this->accessControl->canManageComment($action, $comment_author_id)) {
                 $perform_redirect = false;
 
                 if ($action === 'delete') {
@@ -579,11 +581,11 @@ final class CommentsController implements ControllerInterface
                     'CONTENT' => $contentEvent->commentContent,
                 ];
 
-                if (\Piwigo\Auth\AccessControl::isAdmin()) {
+                if ($this->accessControl->isAdmin()) {
                     $tpl_comment['EMAIL'] = $email;
                 }
 
-                if (\Piwigo\Auth\AccessControl::canManageComment('delete', $author_id)) {
+                if ($this->accessControl->canManageComment('delete', $author_id)) {
                     $tpl_comment['U_DELETE'] = $urlService->addUrlParams(
                         $url_self,
                         [
@@ -594,7 +596,7 @@ final class CommentsController implements ControllerInterface
                     );
                 }
 
-                if (\Piwigo\Auth\AccessControl::canManageComment('edit', $author_id)) {
+                if ($this->accessControl->canManageComment('edit', $author_id)) {
                     $tpl_comment['U_EDIT'] = $urlService->addUrlParams(
                         $url_self,
                         [
@@ -615,7 +617,7 @@ final class CommentsController implements ControllerInterface
                     }
                 }
 
-                if (\Piwigo\Auth\AccessControl::canManageComment('validate', $author_id)) {
+                if ($this->accessControl->canManageComment('validate', $author_id)) {
                     if (! SqlDialect::getBoolean($comment['validated'])) {
                         $tpl_comment['U_VALIDATE'] = $urlService->addUrlParams(
                             $url_self,

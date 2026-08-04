@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Piwigo\Auth\AccessControl;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
@@ -55,6 +56,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class ActionController implements ControllerInterface
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
@@ -66,7 +68,7 @@ final class ActionController implements ControllerInterface
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
+        $this->accessControl->checkStatus(AccessLevel::Guest);
 
         $conn = DbConnection::build();
 
@@ -108,7 +110,7 @@ final class ActionController implements ControllerInterface
 
         // special download action for admins
         $is_admin_download = false;
-        if (\Piwigo\Auth\AccessControl::isAdmin() and $actionRequest->pwgToken === new \Piwigo\Csrf\CsrfService()->getToken()) {
+        if ($this->accessControl->isAdmin() and $actionRequest->pwgToken === new \Piwigo\Csrf\CsrfService()->getToken()) {
             $is_admin_download = true;
             $this->currentUser->set($this->currentUser->get()->withEnabledHigh(true));
         }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Http\ControllerInterface;
@@ -42,13 +43,14 @@ use Psr\Http\Message\ServerRequestInterface;
 final class CustomLogoController implements ControllerInterface
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly StorageRegistry $storageRegistry,
     ) {}
 
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
+        $this->accessControl->checkStatus(AccessLevel::Guest);
 
         $path = CurrentConfig::standardPagesSelectedLogoPath();
         if (! is_string($path) || $path === '') {

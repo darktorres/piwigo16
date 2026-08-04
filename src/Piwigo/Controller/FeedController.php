@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller;
 
 use DateTimeImmutable;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -32,6 +33,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class FeedController implements ControllerInterface
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
@@ -71,7 +73,7 @@ final class FeedController implements ControllerInterface
             }
         } else {
             $image_only = true;
-            if (! \Piwigo\Auth\AccessControl::isAGuest()) {// auto session was created - so switch to guest
+            if (! $this->accessControl->isAGuest()) {// auto session was created - so switch to guest
                 $guest_id = \Piwigo\Config\CurrentConfig::guestId();
                 $guest_user = $this->userService->buildUser(\Piwigo\Common\ValueObject\UserId::from($guest_id));
                 $this->currentUser->set(\Piwigo\Users\User::fromUserArray($guest_user));
@@ -79,7 +81,7 @@ final class FeedController implements ControllerInterface
         }
 
         // Check the status now after the user has been loaded
-        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
+        $this->accessControl->checkStatus(AccessLevel::Guest);
 
         // Env::now() rather than SQL's NOW() -- the real DB-server clock,
         // invisible to Env::now()'s own PIWIGO_TEST_NOW freeze, same

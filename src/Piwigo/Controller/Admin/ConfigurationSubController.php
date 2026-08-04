@@ -10,6 +10,7 @@ use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\Upload\UploadService;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Controller\ProfileFormHandler;
 use Piwigo\Core\ActivitySystem;
@@ -102,6 +103,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
     }
 
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
@@ -150,7 +152,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
         $conn = DbConnection::build();
 
-        if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
+        if (! $this->accessControl->isWebmaster()) {
             $this->pageState->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
@@ -441,7 +443,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             }
 
             // updating configuration if no error found
-            if (! in_array($page_section, ['sizes', 'watermark'], true) and ! $this->pageState->hasErrors() and \Piwigo\Auth\AccessControl::isWebmaster()) {
+            if (! in_array($page_section, ['sizes', 'watermark'], true) and ! $this->pageState->hasErrors() and $this->accessControl->isWebmaster()) {
                 foreach ($this->configService->getAllParamNames() as $param_name) {
                     if (isset($post[$param_name])) {
                         $post_value = $post[$param_name];
@@ -472,7 +474,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         }
 
         // restore default derivatives settings
-        if ($page['section'] === 'sizes' and $configurationRequest->restoreSettingsRequested and \Piwigo\Auth\AccessControl::isWebmaster()) {
+        if ($page['section'] === 'sizes' and $configurationRequest->restoreSettingsRequested and $this->accessControl->isWebmaster()) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
@@ -813,7 +815,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
         }
 
-        $template->assign('isWebmaster', (\Piwigo\Auth\AccessControl::isWebmaster()) ? 1 : 0);
+        $template->assign('isWebmaster', ($this->accessControl->isWebmaster()) ? 1 : 0);
         $template->assign('ADMIN_PAGE_TITLE', Lang::t('Configuration'));
 
         // ----------------------------------------------------------- sending html code
@@ -948,7 +950,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
     {
         $template = $this->currentTemplate->get();
 
-        if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
+        if (! $this->accessControl->isWebmaster()) {
             return;
         }
 
@@ -1215,7 +1217,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
     {
         $template = $this->currentTemplate->get();
 
-        if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
+        if (! $this->accessControl->isWebmaster()) {
             return;
         }
 

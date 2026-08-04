@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\CookieService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
@@ -40,6 +41,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class IdentificationController implements ControllerInterface
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\FilterState $filterState,
@@ -63,11 +65,11 @@ final class IdentificationController implements ControllerInterface
         // different shape than PageState::$errors' plain list<string>.
         $errors = [];
 
-        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Free);
+        $this->accessControl->checkStatus(AccessLevel::Free);
 
         // but if the user is already identified, we redirect to gallery
         // home instead of displaying the log in form
-        if (! \Piwigo\Auth\AccessControl::isAGuest()) {
+        if (! $this->accessControl->isAGuest()) {
             $this->redirectService->redirect($this->urlService->getGalleryHomeUrl());
         }
 

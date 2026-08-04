@@ -6,6 +6,7 @@ namespace Piwigo\Controller;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\CookieService;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Cache\PermissionCacheInvalidator;
@@ -87,6 +88,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class PictureController implements ControllerInterface
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
@@ -145,7 +147,7 @@ final class PictureController implements ControllerInterface
 
         $this->userService->saveEditContext($section_context->sectionUrl, $section_context->imageId);
 
-        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
+        $this->accessControl->checkStatus(AccessLevel::Guest);
 
         $page_category = $section_context->category;
 
@@ -392,7 +394,7 @@ final class PictureController implements ControllerInterface
                     // no break
                 case 'set_as_representative':
 
-                    if (\Piwigo\Auth\AccessControl::isAdmin() and $page_category !== null) {
+                    if ($this->accessControl->isAdmin() and $page_category !== null) {
                         $representative_category_id = $page_category['id'] ?? null;
                         $representative_category_id = is_numeric($representative_category_id) ? (int) $representative_category_id : 0;
                         $this->categoryService->setRepresentativeImage($representative_category_id, $image_id);
@@ -435,7 +437,7 @@ final class PictureController implements ControllerInterface
                     $author_id = $commentService->getCommentAuthorId(CommentId::from((int) $pictureRequest->commentToEdit));
                     assert($author_id !== false);
 
-                    if (\Piwigo\Auth\AccessControl::canManageComment('edit', $author_id)) {
+                    if ($this->accessControl->canManageComment('edit', $author_id)) {
                         // $_POST values are always strings (or arrays) --
                         // never a real PHP int/float/bool.
                         if ($pictureRequest->content !== null && $pictureRequest->content !== '' && $pictureRequest->content !== '0') {
@@ -505,7 +507,7 @@ final class PictureController implements ControllerInterface
                     $author_id = $commentService->getCommentAuthorId(CommentId::from((int) $pictureRequest->commentToDelete));
                     assert($author_id !== false);
 
-                    if (\Piwigo\Auth\AccessControl::canManageComment('delete', $author_id)) {
+                    if ($this->accessControl->canManageComment('delete', $author_id)) {
                         $commentService->deleteComment(CommentId::from((int) $pictureRequest->commentToDelete));
                     }
 
@@ -529,7 +531,7 @@ final class PictureController implements ControllerInterface
                     $author_id = $commentService->getCommentAuthorId(CommentId::from((int) $pictureRequest->commentToValidate));
                     assert($author_id !== false);
 
-                    if (\Piwigo\Auth\AccessControl::canManageComment('validate', $author_id)) {
+                    if ($this->accessControl->canManageComment('validate', $author_id)) {
                         $commentService->validateComment(CommentId::from((int) $pictureRequest->commentToValidate));
                     }
 
@@ -949,7 +951,7 @@ final class PictureController implements ControllerInterface
         // -------------------------------------------------- upper menu management
 
         // admin links
-        if (\Piwigo\Auth\AccessControl::isAdmin()) {
+        if ($this->accessControl->isAdmin()) {
             if ($page_category !== null and \Piwigo\Config\CurrentConfig::pictureRepresentativeIcon()) {
                 $template->assign(
                     [
@@ -979,7 +981,7 @@ final class PictureController implements ControllerInterface
         }
 
         // favorite manipulation
-        if (! \Piwigo\Auth\AccessControl::isAGuest() and \Piwigo\Config\CurrentConfig::pictureFavoriteIcon()) {
+        if (! $this->accessControl->isAGuest() and \Piwigo\Config\CurrentConfig::pictureFavoriteIcon()) {
             // verify if the picture is already in the favorite of the
             // user
             $is_favorite = $this->userService->isFavorite($user->id, $image_id);

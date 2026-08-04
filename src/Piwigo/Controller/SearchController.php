@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Controller;
 
+use Piwigo\Auth\AccessControl;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -25,6 +26,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class SearchController implements ControllerInterface
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
@@ -43,7 +45,7 @@ final class SearchController implements ControllerInterface
     {
         $searchService = $this->searchService;
 
-        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Guest);
+        $this->accessControl->checkStatus(AccessLevel::Guest);
 
         $this->eventDispatcher->dispatchNotify(new LocBeginSearch());
 
@@ -94,7 +96,7 @@ final class SearchController implements ControllerInterface
         }
 
         $last_filters_conf = $filters_conf['last_filters_conf'] ?? null;
-        if (\Piwigo\Auth\AccessControl::isAGuest() or \Piwigo\Auth\AccessControl::isGeneric() or ! (bool) $last_filters_conf) {
+        if ($this->accessControl->isAGuest() or $this->accessControl->isGeneric() or ! (bool) $last_filters_conf) {
             $fields = $default_fields;
         } else {
             $raw_fields = $this->preferencesService

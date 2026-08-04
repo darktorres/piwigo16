@@ -7,6 +7,7 @@ namespace Piwigo\Controller\Admin;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Tabsheet;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
@@ -85,6 +86,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class NotificationByMailSubController implements AdminSubControllerInterface
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
@@ -124,7 +126,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         // +-----------------------------------------------------------------------+
         // | Check Access and exit when user status is not ok                      |
         // +-----------------------------------------------------------------------+
-        \Piwigo\Auth\AccessControl::checkStatus(self::getTabStatus($page_mode));
+        $this->accessControl->checkStatus(self::getTabStatus($page_mode));
 
         // +-----------------------------------------------------------------------+
         // | Add event handler                                                     |
@@ -236,7 +238,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
             ]
         );
 
-        if (\Piwigo\Auth\AccessControl::isAuthorizeStatus(AccessLevel::Webmaster)) {
+        if ($this->accessControl->isAuthorizeStatus(AccessLevel::Webmaster)) {
             // TabSheet
             $tabsheet = new Tabsheet();
             $tabsheet->set_id('nbm');

@@ -606,8 +606,14 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_get_computed_categories_walks_up_through_more_than_one_ancestor_level(): void
     {
+        // `rank` is a genuine reserved word on both platforms (a bare
+        // backtick is MySQL-only); visible/commentable are genuine
+        // boolean columns (a bare `1` literal is rejected outright by
+        // Postgres). Both confirmed live.
+        $rank = $this->conn->getDatabasePlatform()->quoteSingleIdentifier('rank');
+        $trueLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
         $this->conn->executeStatement(
-            "INSERT INTO " . Tables::categories() . " (name, id_uppercat, `rank`, status, visible, uppercats, commentable, global_rank) VALUES ('Grandchild Album', 2, 1, 'public', 1, '1,2,0', 1, '1.1.1')"
+            "INSERT INTO " . Tables::categories() . " (name, id_uppercat, {$rank}, status, visible, uppercats, commentable, global_rank) VALUES ('Grandchild Album', 2, 1, 'public', {$trueLiteral}, '1,2,0', {$trueLiteral}, '1.1.1')"
         );
         $grandchildId = (int) $this->conn->lastInsertId();
         $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET uppercats = '1,2,{$grandchildId}' WHERE id = {$grandchildId}");
@@ -1115,7 +1121,12 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_create_virtual_category_inherits_invisibility_from_an_invisible_parent(): void
     {
-        $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET visible = 0 WHERE id = 1");
+        // visible is a genuine boolean column -- bare `0`/`1` literals in
+        // the SQL text (unlike a bound parameter, which the driver
+        // coerces implicitly) are rejected outright by Postgres.
+        $falseLiteral = $this->dbDriver === 'pgsql' ? 'false' : '0';
+        $trueLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
+        $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET visible = {$falseLiteral} WHERE id = 1");
 
         try {
             $result = $this->service->createVirtualCategory('Invisible Child Test', new CategoryServiceFakeActivityLogger(), \Piwigo\Users\CurrentUser::current(), 1);
@@ -1129,11 +1140,12 @@ final class CategoryServiceTest extends IntegrationTestCase
                 ->where('id = ' . $newId)
                 ->executeQuery()
                 ->fetchOne();
-            self::assertSame(0, is_numeric($visible) ? (int) $visible : null);
+            // A native PHP bool on Postgres, numeric 1/0 on MySQL.
+            self::assertSame(0, (int) (bool) $visible);
 
             $this->conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id = ' . $newId);
         } finally {
-            $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET visible = 1 WHERE id = 1");
+            $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET visible = {$trueLiteral} WHERE id = 1");
         }
     }
 
@@ -1219,7 +1231,12 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_set_cat_visible_with_unlock_child_unlocks_descendant_categories_too(): void
     {
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET visible = 0 WHERE id = 2');
+        // visible is a genuine boolean column -- bare `0`/`1` literals in
+        // the SQL text (unlike a bound parameter, which the driver
+        // coerces implicitly) are rejected outright by Postgres.
+        $falseLiteral = $this->dbDriver === 'pgsql' ? 'false' : '0';
+        $trueLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
+        $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET visible = {$falseLiteral} WHERE id = 2");
 
         try {
             // unlockChild=true merges getSubcatIds([1]) (== [1, 2]) into
@@ -1234,9 +1251,10 @@ final class CategoryServiceTest extends IntegrationTestCase
                 ->where('id = 2')
                 ->executeQuery()
                 ->fetchOne();
-            self::assertSame(1, is_numeric($visible) ? (int) $visible : null);
+            // A native PHP bool on Postgres, numeric 1/0 on MySQL.
+            self::assertSame(1, (int) (bool) $visible);
         } finally {
-            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET visible = 1 WHERE id = 2');
+            $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET visible = {$trueLiteral} WHERE id = 2");
         }
     }
 
@@ -1330,7 +1348,7 @@ final class CategoryServiceTest extends IntegrationTestCase
             $newId = (int) $newIdRaw;
 
             $rank = $this->conn->createQueryBuilder()
-                ->select('`rank`')
+                ->select($this->conn->getDatabasePlatform()->quoteSingleIdentifier('rank'))
                 ->from(Tables::categories())
                 ->where('id = ' . $newId)
                 ->executeQuery()

@@ -187,10 +187,13 @@ final class AuthRepositoryTest extends IntegrationTestCase
 
             self::assertIsArray($row);
             self::assertSame('2026-07-25 14:30:00', $row['last_visit']);
-            self::assertSame(1, is_numeric($row['last_visit_from_history']) ? (int) $row['last_visit_from_history'] : 0);
+            // last_visit_from_history is a genuine boolean column -- a
+            // native PHP bool on Postgres, numeric 1/0 on MySQL.
+            self::assertSame(1, (int) (bool) $row['last_visit_from_history']);
         } finally {
+            $lastVisitLiteral = $this->dbDriver === 'pgsql' ? 'false' : '0';
             $this->conn->executeStatement(
-                'UPDATE ' . Tables::userInfos() . " SET last_visit = NULL, last_visit_from_history = 0 WHERE user_id = 4"
+                'UPDATE ' . Tables::userInfos() . " SET last_visit = NULL, last_visit_from_history = {$lastVisitLiteral} WHERE user_id = 4"
             );
         }
     }
@@ -215,8 +218,9 @@ final class AuthRepositoryTest extends IntegrationTestCase
         self::assertIsArray($row);
         self::assertNull($row['last_visit']);
 
+        $lastVisitLiteral = $this->dbDriver === 'pgsql' ? 'false' : '0';
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::userInfos() . " SET last_visit_from_history = 0 WHERE user_id = 4"
+            'UPDATE ' . Tables::userInfos() . " SET last_visit_from_history = {$lastVisitLiteral} WHERE user_id = 4"
         );
     }
 }

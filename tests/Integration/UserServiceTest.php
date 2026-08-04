@@ -535,12 +535,29 @@ namespace Piwigo\Tests\Integration {
                     'SELECT level, language, theme, nb_image_page, recent_period, expand, show_nb_comments, show_nb_hits, enabled_high'
                     . ' FROM ' . Tables::userInfos() . ' WHERE user_id = 4'
                 );
+                self::assertIsArray($after);
+                // expand/show_nb_comments/show_nb_hits/enabled_high are
+                // genuine boolean columns -- a raw fetch returns a native
+                // PHP bool for them on Postgres, but a numeric 1/0 on
+                // MySQL. $expectedInfos's own 1/0 convention is preserved
+                // by normalizing $after's boolean-typed columns to match,
+                // rather than changing $expectedInfos itself (also
+                // compared above against $result['infos'], real
+                // application-level int data unaffected by this).
+                foreach (['expand', 'show_nb_comments', 'show_nb_hits', 'enabled_high'] as $boolColumn) {
+                    $after[$boolColumn] = (int) (bool) $after[$boolColumn];
+                }
                 self::assertSame($expectedInfos, $after);
             } finally {
                 $this->conn->executeStatement("DELETE FROM " . Tables::themes() . " WHERE id = 'default'");
+                $boolLiterals = $this->dbDriver === 'pgsql'
+                    ? ['expand' => 'false', 'show_nb_comments' => 'false', 'show_nb_hits' => 'false', 'enabled_high' => 'true']
+                    : ['expand' => '0', 'show_nb_comments' => '0', 'show_nb_hits' => '0', 'enabled_high' => '1'];
                 $this->conn->executeStatement(
                     "UPDATE " . Tables::userInfos() . " SET level = 0, language = 'en_UK', theme = 'default',"
-                    . ' nb_image_page = 15, recent_period = 7, expand = 0, show_nb_comments = 0, show_nb_hits = 0, enabled_high = 1'
+                    . " nb_image_page = 15, recent_period = 7, expand = {$boolLiterals['expand']},"
+                    . " show_nb_comments = {$boolLiterals['show_nb_comments']}, show_nb_hits = {$boolLiterals['show_nb_hits']},"
+                    . " enabled_high = {$boolLiterals['enabled_high']}"
                     . ' WHERE user_id = 4'
                 );
             }
@@ -697,7 +714,14 @@ namespace Piwigo\Tests\Integration {
             }
 
             self::assertStringNotContainsString('not-a-number', $condition->sql);
-            self::assertStringContainsString('INTERVAL 0 DAY', $condition->sql);
+            // SqlDialect::getRecentPeriodExpression()'s own real Postgres
+            // form is make_interval(days => 0), not SUBDATE's INTERVAL
+            // literal -- already driver-aware in production code, this
+            // assertion just wasn't updated to match.
+            self::assertStringContainsString(
+                $this->dbDriver === 'pgsql' ? 'make_interval(days => 0)' : 'INTERVAL 0 DAY',
+                $condition->sql
+            );
             self::assertSame('2024-01-01', $condition->parameters['recentLastPhotoDate']);
         }
 

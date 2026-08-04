@@ -66,7 +66,8 @@ final class ForbiddenCategoriesCacheTest extends IntegrationTestCase
     #[\Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'public', visible = 1");
+        $visibleLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
+        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'public', visible = {$visibleLiteral}");
         parent::tearDown();
     }
 

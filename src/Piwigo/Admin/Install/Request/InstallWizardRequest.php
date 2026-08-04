@@ -31,6 +31,8 @@ final readonly class InstallWizardRequest
         public string $dbuser,
         public string $dbpasswd,
         public string $dbname,
+        public string $dbdriver,
+        public ?int $dbport,
         public string $adminName,
         public string $adminPass1,
         public string $adminPass2,
@@ -52,8 +54,10 @@ final readonly class InstallWizardRequest
      */
     public static function fromArrays(array $get, array $post): self
     {
-        InputValidator::createStatic()
-            ->validate('dl', $get, false, '/^[a-f0-9]{32}$/');
+        $inputValidator = InputValidator::createStatic();
+        $inputValidator->validate('dl', $get, false, '/^[a-f0-9]{32}$/');
+        $inputValidator->validate('dbdriver', $post, false, '/^(mysqli|pgsql)$/');
+        $inputValidator->validate('dbport', $post, false, '/^\d{1,5}$/');
 
         $dl_raw = $get['dl'] ?? null;
         $dl = (is_string($dl_raw) && $dl_raw !== '') ? $dl_raw : null;
@@ -66,6 +70,10 @@ final readonly class InstallWizardRequest
         $dbpasswd = (is_string($dbpasswd_raw) && $dbpasswd_raw !== '') ? $dbpasswd_raw : '';
         $dbname_raw = $post['dbname'] ?? null;
         $dbname = (is_string($dbname_raw) && $dbname_raw !== '') ? $dbname_raw : '';
+        $dbdriver_raw = $post['dbdriver'] ?? null;
+        $dbdriver = (is_string($dbdriver_raw) && $dbdriver_raw === 'pgsql') ? 'pgsql' : 'mysqli';
+        $dbport_raw = $post['dbport'] ?? null;
+        $dbport = (is_string($dbport_raw) && $dbport_raw !== '' && is_numeric($dbport_raw)) ? (int) $dbport_raw : null;
 
         $admin_name_raw = $post['admin_name'] ?? null;
         $admin_name = (is_string($admin_name_raw) && $admin_name_raw !== '') ? $admin_name_raw : '';
@@ -90,6 +98,8 @@ final readonly class InstallWizardRequest
             $dbuser,
             $dbpasswd,
             $dbname,
+            $dbdriver,
+            $dbport,
             $admin_name,
             $admin_pass1,
             $admin_pass2,

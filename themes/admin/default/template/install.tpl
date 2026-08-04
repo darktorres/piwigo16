@@ -222,9 +222,24 @@ jQuery().ready(function(){ldelim}
 
   <table class="table2">
     <tr>
+      <td style="width: 30%;" class="fieldname">{'Database type'|@translate}</td>
+      <td>
+        <select name="dbdriver" id="dbdriver" onchange="document.getElementById('dbport').placeholder = (this.value === 'pgsql') ? '5432' : '3306';">
+          <option value="mysqli"{if $F_DB_DRIVER != 'pgsql'} selected{/if}>MySQL / MariaDB</option>
+          <option value="pgsql"{if $F_DB_DRIVER == 'pgsql'} selected{/if}>PostgreSQL</option>
+        </select>
+      </td>
+      <td class="fielddesc">{'MySQL/MariaDB or PostgreSQL, matching what your host provider gave you'|@translate}</td>
+    </tr>
+    <tr>
       <td style="width: 30%;" class="fieldname">{'Host'|@translate}</td>
       <td><input type="text" name="dbhost" value="{$F_DB_HOST}" required></td>
       <td class="fielddesc">{'localhost or other, supplied by your host provider'|@translate}</td>
+    </tr>
+    <tr>
+      <td class="fieldname">{'Port'|@translate}</td>
+      <td><input type="number" name="dbport" id="dbport" value="{$F_DB_PORT}" placeholder="{if $F_DB_DRIVER == 'pgsql'}5432{else}3306{/if}" min="1" max="65535"></td>
+      <td class="fielddesc">{'leave empty to use the default port for your chosen database type'|@translate}</td>
     </tr>
     <tr>
       <td class="fieldname">{'User'|@translate}</td>

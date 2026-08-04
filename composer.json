@@ -19,6 +19,7 @@
     "ext-mysqli": "*",
     "ext-openssl": "*",
     "ext-pcntl": "*",
+    "ext-pgsql": "*",
     "ext-session": "*",
     "ext-simplexml": "*",
     "ext-zip": "*",

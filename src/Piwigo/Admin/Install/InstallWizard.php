@@ -94,6 +94,8 @@ final class InstallWizard
 
     private string $dblayer = 'mysqli';
 
+    private ?int $dbport = null;
+
     private string $adminName = '';
 
     private string $adminPass1 = '';
@@ -226,6 +228,7 @@ final class InstallWizard
         $this->dbuser = $this->request->dbuser;
         $this->dbpasswd = $this->request->dbpasswd;
         $this->dbname = $this->request->dbname;
+        $this->dbport = $this->request->dbport;
 
         // Same reasoning as the db_prefix seeding in the install.php entry
         // shell: any code reached later in this same request that resolves
@@ -236,12 +239,17 @@ final class InstallWizard
         // UserService -> UserRepository -> DbConnection::build(), reached
         // from InstallService::activateCoreThemes() during step-2 theme
         // activation, fatals with "Access denied for user ''@'localhost'"
-        // without this.
+        // without this. PIWIGO_DB_DRIVER/PIWIGO_DB_PORT are seeded from the
+        // request's own dbdriver/dbport too, ahead of the extension check
+        // below, so DbConnection::params() picks the real chosen driver for
+        // every DB touch downstream, not just mysqli's default.
         $this->dbCredentials->seed([
             'PIWIGO_DB_HOST' => $this->dbhost,
             'PIWIGO_DB_USER' => $this->dbuser,
             'PIWIGO_DB_PASSWORD' => $this->dbpasswd,
             'PIWIGO_DB_BASE' => $this->dbname,
+            'PIWIGO_DB_DRIVER' => $this->request->dbdriver,
+            'PIWIGO_DB_PORT' => $this->dbport !== null ? (string) $this->dbport : null,
         ]);
 
         // Must run right here, not from install.php after boot() returns:
@@ -289,12 +297,16 @@ final class InstallWizard
             'archiveDays' => $this->currentConfig->logArchiveDays(),
         ]));
 
-        // dblayer
-        if (! extension_loaded('mysqli')) {
+        // dblayer -- was unconditionally hardcoded to 'mysqli' regardless of
+        // what the form submitted (the real reason a real pgsql install was
+        // never reachable through this wizard before); now reflects the
+        // real chosen driver, extension-checked accordingly.
+        $this->dblayer = $this->request->dbdriver;
+        $requiredExtension = $this->dblayer === 'pgsql' ? 'pgsql' : 'mysqli';
+        if (! extension_loaded($requiredExtension)) {
             \Piwigo\Bootstrap\PresentationAccessor::htmlService()
-                ->fatalError('PHP extension "mysqli" is not loaded');
+                ->fatalError('PHP extension "' . $requiredExtension . '" is not loaded');
         }
-        $this->dblayer = 'mysqli';
 
         $this->adminName = $this->request->adminName;
         $this->adminPass1 = $this->request->adminPass1;
@@ -470,7 +482,15 @@ final class InstallWizard
             'PIWIGO_DB_PASSWORD' => $this->dbpasswd,
             'PIWIGO_DB_BASE' => $this->dbname,
             'PIWIGO_DB_PREFIX' => $this->prefixeTable,
+            'PIWIGO_DB_DRIVER' => $this->dblayer,
         ];
+        // Only written when the operator actually chose a non-default port
+        // (the driver's own default applies otherwise, same as before this
+        // field existed) -- mergeIntoEnvFile()'s own $values shape is
+        // array<string, string>, so a null port is omitted rather than passed.
+        if ($this->dbport !== null) {
+            $env_values['PIWIGO_DB_PORT'] = (string) $this->dbport;
+        }
         // In test mode, also record the base URL so e2e runners know where to connect.
         if (Env::testModeIsActive()) {
             $scheme = (! in_array($_SERVER['HTTPS'] ?? null, [null, false, 0, '0', ''], true) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
@@ -680,6 +700,8 @@ define(\'DB_COLLATE\', \'\');
                 'F_DB_USER' => $this->dbuser,
                 'F_DB_NAME' => $this->dbname,
                 'F_DB_PREFIX' => $this->prefixeTable,
+                'F_DB_DRIVER' => $this->dblayer,
+                'F_DB_PORT' => $this->dbport,
                 'F_ADMIN' => $this->adminName,
                 'F_ADMIN_EMAIL' => $this->adminMail,
                 'EMAIL' => '<span class="adminEmail">' . $this->adminMail . '</span>',

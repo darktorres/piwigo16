@@ -12,6 +12,8 @@ test('fromArrays returns defaults for an empty GET/POST', function (): void {
         ->and($request->dbuser)->toBe('')
         ->and($request->dbpasswd)->toBe('')
         ->and($request->dbname)->toBe('')
+        ->and($request->dbdriver)->toBe('mysqli')
+        ->and($request->dbport)->toBeNull()
         ->and($request->adminName)->toBe('')
         ->and($request->adminPass1)->toBe('')
         ->and($request->adminPass2)->toBe('')
@@ -63,6 +65,40 @@ test('fromArrays parses db credentials from POST', function (): void {
         ->and($request->dbuser)->toBe('piwigo')
         ->and($request->dbpasswd)->toBe('secret')
         ->and($request->dbname)->toBe('piwigo_db');
+});
+
+test('fromArrays parses dbdriver=pgsql from POST', function (): void {
+    $request = InstallWizardRequest::fromArrays([], ['dbdriver' => 'pgsql']);
+
+    expect($request->dbdriver)->toBe('pgsql');
+});
+
+test('fromArrays keeps mysqli for an explicit dbdriver=mysqli', function (): void {
+    $request = InstallWizardRequest::fromArrays([], ['dbdriver' => 'mysqli']);
+
+    expect($request->dbdriver)->toBe('mysqli');
+});
+
+test('fromArrays rejects a dbdriver value outside mysqli/pgsql', function (): void {
+    expect(fn (): InstallWizardRequest => InstallWizardRequest::fromArrays([], ['dbdriver' => 'sqlite']))
+        ->toThrow(RuntimeException::class);
+});
+
+test('fromArrays parses dbport as an int from POST', function (): void {
+    $request = InstallWizardRequest::fromArrays([], ['dbport' => '5432']);
+
+    expect($request->dbport)->toBe(5432);
+});
+
+test('fromArrays leaves dbport null when absent', function (): void {
+    $request = InstallWizardRequest::fromArrays([], []);
+
+    expect($request->dbport)->toBeNull();
+});
+
+test('fromArrays rejects a non-numeric dbport', function (): void {
+    expect(fn (): InstallWizardRequest => InstallWizardRequest::fromArrays([], ['dbport' => 'not-a-port']))
+        ->toThrow(RuntimeException::class);
 });
 
 test('fromArrays parses admin credentials from POST', function (): void {

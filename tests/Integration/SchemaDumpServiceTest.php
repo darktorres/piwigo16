@@ -10,14 +10,21 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\SchemaDumpService;
 
 /**
- * Covers the MySQL path against the real fixture DB (the future
- * db-multi-provider CI matrix job -- Phase H -- covers PostgreSQL
- * directly against a real service container instead; this Integration
- * suite only ever runs against MySQL, per every other test file here).
+ * Covers whichever platform `.env.test`'s PIWIGO_DB_DRIVER points this
+ * Integration suite run at (pgsql support pass: this class used to be
+ * MySQL-only, deferring PostgreSQL entirely to Phase H's future
+ * db-multi-provider CI matrix job -- moot once the driver-aware Phase G
+ * pass made this suite itself runnable against either platform. Real bug
+ * found live once it actually ran against Postgres: `dump()`'s own real
+ * behavior correctly detects the connected platform and writes
+ * `piwigo_structure-pgsql.sql` in that case, but this test's own
+ * snapshot/restore -- and its `label` assertion -- were still hardcoded
+ * to the MySQL file/label, leaving the real pgsql file mutated with no
+ * restore).
  *
  * SchemaDumpService::dump() writes to the real, tracked
- * install/piwigo_structure-mysql.sql (there's no test-injectable output
- * path -- schema:dump is meant to run against a genuinely blank,
+ * install/piwigo_structure-{mysql,pgsql}.sql (there's no test-injectable
+ * output path -- schema:dump is meant to run against a genuinely blank,
  * freshly-migrated database and overwrite that file for real). The
  * fixture DB here is a captured historical snapshot, not a fresh
  * Migrator run, so its schema can carry harmless rendering differences
@@ -51,7 +58,7 @@ final class SchemaDumpServiceTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        $this->schemaFilePath = dirname(__DIR__, 2) . '/install/piwigo_structure-mysql.sql';
+        $this->schemaFilePath = dirname(__DIR__, 2) . '/install/piwigo_structure-' . ($this->dbDriver === 'pgsql' ? 'pgsql' : 'mysql') . '.sql';
         $this->originalSchemaFileContent = (string) file_get_contents($this->schemaFilePath);
     }
 
@@ -68,7 +75,7 @@ final class SchemaDumpServiceTest extends IntegrationTestCase
 
         $result = $service->dump();
 
-        self::assertSame('mysql', $result['label']);
+        self::assertSame($this->dbDriver === 'pgsql' ? 'pgsql' : 'mysql', $result['label']);
         self::assertFileExists($result['path']);
 
         $content = (string) file_get_contents($result['path']);

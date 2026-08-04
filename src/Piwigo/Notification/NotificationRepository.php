@@ -150,7 +150,7 @@ final class NotificationRepository
             // same way {@see \Piwigo\Comment\CommentEntity::$validated}
             // already does everywhere else.
             $qb->andWhere('c.validated = :false')
-                ->setParameter('false', false);
+                ->setParameter('false', false, \Doctrine\DBAL\Types\Types::BOOLEAN);
         }
 
         self::applyCondition($qb, $restrictCondition);
@@ -229,11 +229,21 @@ final class NotificationRepository
      */
     public function findRecentElementsForDate(SqlCondition $restrictCondition, string $dateAvailable, int $maxElements): array
     {
+        // pgsql support pass: real bug found live -- Postgres requires
+        // every ORDER BY expression to appear in the SELECT list for a
+        // SELECT DISTINCT query ("for SELECT DISTINCT, ORDER BY
+        // expressions must appear in select list"), which RAND()/
+        // RANDOM() never does by design; MySQL has no such restriction.
+        // GROUP BY has no equivalent rule on either platform and
+        // deduplicates i.id identically here (confirmed live) since the
+        // join can otherwise produce duplicate rows for an image in
+        // multiple categories.
         $qb = $this->em->createQueryBuilder()
-            ->select('DISTINCT i.id')
+            ->select('i.id')
             ->from(ImageEntity::class, 'i')
             ->innerJoin(ImageCategoryEntity::class, 'ic', Join::WITH, 'i.id = ic.imageId')
             ->andWhere('i.dateAvailable = :dateAvailable')
+            ->groupBy('i.id')
             ->orderBy('RAND()')
             ->setMaxResults($maxElements)
             ->setParameter('dateAvailable', $dateAvailable);

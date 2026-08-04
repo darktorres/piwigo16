@@ -67,7 +67,11 @@ final class NotificationServiceTest extends IntegrationTestCase
             // seeds every comment/image/user at one uniform timestamp,
             // this class's tests need distinguishable dates to exercise
             // date-RANGE filtering meaningfully.
-            $this->conn->executeStatement('UPDATE ' . Tables::comments() . " SET validation_date = '2026-07-07 05:02:38' WHERE validated = 1");
+            // validated is a genuine boolean column -- a bare `1` literal
+            // in the SQL text (unlike a bound parameter, which the driver
+            // coerces implicitly) is rejected outright by Postgres.
+            $validatedLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
+            $this->conn->executeStatement('UPDATE ' . Tables::comments() . " SET validation_date = '2026-07-07 05:02:38' WHERE validated = {$validatedLiteral}");
             $this->conn->executeStatement('UPDATE ' . Tables::images() . " SET date_available = '2026-07-07 05:02:36' WHERE id IN (1, 2)");
             $this->conn->executeStatement('UPDATE ' . Tables::images() . " SET date_available = '2026-07-07 05:02:37' WHERE id IN (3, 4)");
             $this->conn->executeStatement('UPDATE ' . Tables::images() . " SET date_available = '2026-07-07 05:02:38' WHERE id = 5");
@@ -256,8 +260,12 @@ final class NotificationServiceTest extends IntegrationTestCase
         // Insert a fresh unvalidated comment scoped to a date window with
         // no other real fixture activity, so only the admin-only
         // unvalidated-comments signal can fire in that window.
+        // validated is a genuine boolean column -- a bare `0` literal in
+        // the SQL text (unlike a bound parameter, which the driver
+        // coerces implicitly) is rejected outright by Postgres.
+        $validatedLiteral = $this->dbDriver === 'pgsql' ? 'false' : '0';
         $this->conn->executeStatement(
-            "INSERT INTO " . Tables::comments() . " (image_id, date, author, anonymous_id, content, validated) VALUES (1, '2026-08-01 00:00:00', ?, ?, ?, 0)",
+            "INSERT INTO " . Tables::comments() . " (image_id, date, author, anonymous_id, content, validated) VALUES (1, '2026-08-01 00:00:00', ?, ?, ?, {$validatedLiteral})",
             ['test author', '127.0.0.9', 'pending test comment']
         );
 

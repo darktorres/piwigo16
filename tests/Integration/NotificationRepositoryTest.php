@@ -63,7 +63,11 @@ final class NotificationRepositoryTest extends IntegrationTestCase
             // test class's own DB session only (never touches the shared
             // fixture file). See this class's own docblock for the exact
             // shape these values match.
-            $this->conn->executeStatement('UPDATE ' . Tables::comments() . " SET validation_date = '2026-07-07 05:02:38' WHERE validated = 1");
+            // validated is a genuine boolean column -- a bare `1` literal
+            // in the SQL text (unlike a bound parameter, which the driver
+            // coerces implicitly) is rejected outright by Postgres.
+            $validatedLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
+            $this->conn->executeStatement('UPDATE ' . Tables::comments() . " SET validation_date = '2026-07-07 05:02:38' WHERE validated = {$validatedLiteral}");
             $this->conn->executeStatement('UPDATE ' . Tables::images() . " SET date_available = '2026-07-07 05:02:36' WHERE id IN (1, 2)");
             $this->conn->executeStatement('UPDATE ' . Tables::images() . " SET date_available = '2026-07-07 05:02:37' WHERE id IN (3, 4)");
             $this->conn->executeStatement('UPDATE ' . Tables::images() . " SET date_available = '2026-07-07 05:02:38' WHERE id = 5");
@@ -205,10 +209,26 @@ final class NotificationRepositoryTest extends IntegrationTestCase
                 $byId[(int) $row['id']] = $row;
             }
         }
+        // The upload path's own hash suffix is baked into each fixture
+        // file at regen time and genuinely differs between
+        // piwigo-17.0.sql and piwigo-17.0-pgsql.sql -- both were
+        // generated via separate, independent install+upload runs
+        // (confirmed live: every one of the 5 real fixture photos has a
+        // different suffix between the two files), not a stale value.
         self::assertSame('fixture-photo-1.jpg', $byId[1]['file']);
-        self::assertSame('upload/2026/08/01/20260801000000-2e7ed018.jpg', $byId[1]['path']);
+        self::assertSame(
+            $this->dbDriver === 'pgsql'
+                ? 'upload/2026/08/01/20260801000000-2e7eba7a.jpg'
+                : 'upload/2026/08/01/20260801000000-2e7ed018.jpg',
+            $byId[1]['path']
+        );
         self::assertSame('fixture-photo-2.jpg', $byId[2]['file']);
-        self::assertSame('upload/2026/08/01/20260801000000-4a01786c.jpg', $byId[2]['path']);
+        self::assertSame(
+            $this->dbDriver === 'pgsql'
+                ? 'upload/2026/08/01/20260801000000-4a01513b.jpg'
+                : 'upload/2026/08/01/20260801000000-4a01786c.jpg',
+            $byId[2]['path']
+        );
     }
 
     public function test_find_recent_categories_for_date_returns_matching_rows(): void

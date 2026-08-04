@@ -44,6 +44,7 @@ final class CategoryAdminService
     public function __construct(
         private CategoryService $categoryService,
         private \Piwigo\Permission\PermissionService $permissionService,
+        private \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     /**
@@ -272,7 +273,7 @@ final class CategoryAdminService
 
         $catInfo = $this->categoryService->getCategoryInfo($catId);
         if ($catInfo === null) {
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+            $this->htmlRenderer
                 ->pageNotFound($redirectService, 'Requested album does not exist');
         }
 

@@ -50,6 +50,7 @@ final class AlbumSubController implements AdminSubControllerInterface
         private readonly AlbumNotificationPageRenderer $albumNotificationPageRenderer,
         private readonly \Piwigo\Activity\ActivityService $activityService,
         private readonly \Piwigo\Category\CategoryService $categoryService,
+        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     #[\Override]
@@ -67,7 +68,7 @@ final class AlbumSubController implements AdminSubControllerInterface
         $categoryRow = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Category\CategoryEntity::class)
             ->findById($cat_id);
         if ($categoryRow === null) {
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+            $this->htmlRenderer
                 ->fatalError('unknown album');
         }
         $category = $categoryRow->toArray();
@@ -90,7 +91,7 @@ final class AlbumSubController implements AdminSubControllerInterface
 
         if ($tab === 'properties') {
             new CatModifyPageRenderer()
-                ->render($this->urlService, $category, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->activityService, $this->categoryService);
+                ->render($this->urlService, $category, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->activityService, $this->categoryService, $this->htmlRenderer);
         } elseif ($tab === 'sort_order') {
             $this->elementSetRanksPageRenderer
                 ->render();

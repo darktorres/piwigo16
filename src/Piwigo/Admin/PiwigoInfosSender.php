@@ -54,6 +54,7 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
         private readonly \Piwigo\Activity\ActivityService $activityService,
         private readonly UserService $userService,
         private readonly \Piwigo\Image\ImageService $imageService,
+        private readonly \Piwigo\Core\UrlServiceInterface $urlService,
     ) {}
 
     #[\Override]
@@ -222,7 +223,7 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
             }
         }
 
-        $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
+        $urlService = $this->urlService;
         $fsPlugins = new ExtensionScanner()
             ->scan(ExtensionType::Plugin, $urlService);
         $dbPluginsById = new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($conn))

@@ -37,12 +37,13 @@ final class FeedController implements ControllerInterface
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly \Piwigo\Notification\NotificationService $notificationService,
         private readonly \Piwigo\Users\UserService $userService,
+        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     #[\Override]
     public function __invoke(ServerRequestInterface $request): ResponseInterface
     {
-        $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
+        $htmlRenderer = $this->htmlRenderer;
 
         $feed_helper = new FeedHelper();
         $conn = DbConnection::build();

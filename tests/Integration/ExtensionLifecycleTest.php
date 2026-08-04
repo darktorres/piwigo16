@@ -81,7 +81,9 @@ namespace Piwigo\Tests\Integration {
             self::assertInstanceOf(\Piwigo\Activity\ActivityService::class, $activityService);
             $userService = Kernel::container()->get(\Piwigo\Users\UserService::class);
             self::assertInstanceOf(\Piwigo\Users\UserService::class, $userService);
-            $this->lifecycle = new ExtensionLifecycle($this->repo, new PemCatalog(new ZipExtractor(), $currentLogger), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()), $this->pluginMigrationRepo, $activityService, $userService);
+            $htmlService = Kernel::container()->get(\Piwigo\Html\HtmlService::class);
+            self::assertInstanceOf(\Piwigo\Html\HtmlService::class, $htmlService);
+            $this->lifecycle = new ExtensionLifecycle($this->repo, new PemCatalog(new ZipExtractor(), $currentLogger), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()), $this->pluginMigrationRepo, $activityService, $userService, $htmlService);
 
             CurrentConfig::setEnableExtensionsInstall(true);
             CurrentConfig::setPhpExtensionInUrls(false);

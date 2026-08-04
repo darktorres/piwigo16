@@ -82,6 +82,7 @@ final class BatchManagerUnitPageRenderer
         private readonly CategoryService $categoryService,
         private readonly ImageService $imageService,
         private readonly \Piwigo\Users\UserService $userService,
+        private readonly \Piwigo\Html\HtmlService $htmlRenderer,
     ) {}
 
     /**
@@ -93,7 +94,7 @@ final class BatchManagerUnitPageRenderer
     {
         $template = $this->currentTemplate->get();
 
-        $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
+        $htmlRenderer = $this->htmlRenderer;
         $conn = DbConnection::build();
 
         $this->eventDispatcher->dispatchNotify(new LocBeginElementSetUnit());
@@ -230,7 +231,7 @@ final class BatchManagerUnitPageRenderer
         $page_start = $pageStart;
 
         new FilterPanelRenderer()
-            ->render($template, $base_url, $collection, $cat_elements_id, $page_start, $this->urlService, $this->eventDispatcher, $this->pageState, $this->tagService);
+            ->render($template, $base_url, $collection, $cat_elements_id, $page_start, $this->urlService, $this->eventDispatcher, $this->pageState, $this->tagService, $this->htmlRenderer);
         // +-------------------------------------------------------------------+
         // |                        global mode thumbnails                         |
         // +-------------------------------------------------------------------+

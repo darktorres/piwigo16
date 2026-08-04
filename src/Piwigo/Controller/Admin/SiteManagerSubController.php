@@ -61,6 +61,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly \Piwigo\Activity\ActivityService $activityService,
         private readonly \Piwigo\Category\CategoryService $categoryService,
+        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     #[\Override]
@@ -69,7 +70,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
         $template = $this->currentTemplate->get();
 
         if (! \Piwigo\Config\CurrentConfig::enableSynchronization()) {
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+            $this->htmlRenderer
                 ->fatalError('synchronization is disabled');
         }
 
@@ -77,7 +78,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
 
         if ($siteManagerRequest->requiresCsrfCheck) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
+                ->checkOrFail($this->htmlRenderer, $this->redirectService);
         }
 
         $conn = DbConnection::build();
@@ -102,7 +103,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
             $galleries_url_input = $siteManagerRequest->newSiteGalleriesUrl;
             $is_remote = $this->urlService->urlIsRemote($galleries_url_input);
             if ($is_remote) {
-                \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+                $this->htmlRenderer
                     ->fatalError('remote sites not supported');
             }
             $url = preg_replace('/[\/]*$/', '', $galleries_url_input);

@@ -35,6 +35,8 @@ final class AlbumNotificationPageRenderer
         private readonly \Piwigo\Auth\AuthService $authService,
         private readonly \Piwigo\Group\GroupService $groupService,
         private readonly \Piwigo\Category\CategoryService $categoryService,
+        private readonly \Piwigo\Html\HtmlService $htmlService,
+        private readonly \Piwigo\Mail\MailService $mailService,
     ) {}
 
     /**
@@ -82,7 +84,7 @@ final class AlbumNotificationPageRenderer
 
         if ($albumNotificationSubmit->isSubmitted) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
+                ->checkOrFail($this->htmlService, $this->redirectService);
             $this->urlService->setMakeFullUrl();
 
             $img = [];
@@ -184,11 +186,11 @@ final class AlbumNotificationPageRenderer
                     $user_language = is_string($u['language']) ? $u['language'] : $this->userService->getDefaultLanguage();
                     $user_email = is_string($u['email']) ? $u['email'] : '';
 
-                    \Piwigo\Bootstrap\PresentationAccessor::mailService()
+                    $this->mailService
                         ->switchLangTo($user_language);
-                    \Piwigo\Bootstrap\PresentationAccessor::mailService()
+                    $this->mailService
                         ->mail($user_email, $user_args, $user_tpl);
-                    \Piwigo\Bootstrap\PresentationAccessor::mailService()
+                    $this->mailService
                         ->switchLangBack();
                 }
 
@@ -208,7 +210,7 @@ final class AlbumNotificationPageRenderer
                 // for what follows.
                 $group_id = is_numeric($albumNotificationSubmit->group) ? (int) $albumNotificationSubmit->group : 0;
 
-                \Piwigo\Bootstrap\PresentationAccessor::mailService()
+                $this->mailService
                     ->mailGroup($group_id, $args, $tpl);
 
                 $group_name = $this->groupService->getName(\Piwigo\Common\ValueObject\GroupId::from($group_id));
@@ -238,7 +240,7 @@ final class AlbumNotificationPageRenderer
         $template->assign(
             [
                 'CATEGORIES_NAV' => trim(
-                    \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+                    $this->htmlService
                         ->getCatDisplayNameFromId(
                             $page_cat,
                             'admin.php?page=album-'

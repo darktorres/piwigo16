@@ -32,6 +32,7 @@ final class GroupPermPageRenderer
         private readonly \Piwigo\Category\CategoryService $categoryService,
         private readonly GroupService $groupService,
         private readonly \Piwigo\Permission\PermissionService $permissionService,
+        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     public function render(): void
@@ -47,14 +48,14 @@ final class GroupPermPageRenderer
 
         if ($groupPermSubmit->isSubmitted) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
+                ->checkOrFail($this->htmlRenderer, $this->redirectService);
         }
 
         $cat_true = $groupPermSubmit->catTrue;
         $cat_false = $groupPermSubmit->catFalse;
 
         if (! $groupPermSubmit->groupIdPresent) {
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+            $this->htmlRenderer
                 ->fatalError('group_id URL parameter is missing');
         }
 
@@ -64,7 +65,7 @@ final class GroupPermPageRenderer
         // existing checks above.
         $groupId = is_numeric($groupPermSubmit->groupId) ? GroupId::tryFrom((int) $groupPermSubmit->groupId) : null;
         if ($groupId === null) {
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+            $this->htmlRenderer
                 ->fatalError('group_id URL parameter is missing');
         }
 
@@ -133,7 +134,7 @@ SELECT id,name,uppercats,global_rank
   WHERE status = \'private\'
     AND group_id = :groupId
 ;';
-        $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true', \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $template, params: [
+        $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true', $this->htmlRenderer, $template, params: [
             'groupId' => $groupId->value,
         ]);
 
@@ -153,7 +154,7 @@ SELECT id,name,uppercats,global_rank
         }
         $query_false .= '
 ;';
-        $categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false', \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $template, params: $params_false, types: $types_false);
+        $categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false', $this->htmlRenderer, $template, params: $params_false, types: $types_false);
 
         $template->assign('PWG_TOKEN', new \Piwigo\Csrf\CsrfService()->getToken());
 

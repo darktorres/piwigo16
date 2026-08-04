@@ -65,6 +65,7 @@ final class AdminShell
         private readonly ImageService $imageService,
         private readonly \Piwigo\Users\PreferencesService $preferencesService,
         private readonly \Piwigo\Users\UserService $userService,
+        private readonly \Piwigo\Html\HtmlService $htmlService,
     ) {}
 
     /**
@@ -485,7 +486,7 @@ final class AdminShell
 
         $this->eventDispatcher->dispatchNotify(new LocEndAdmin());
 
-        \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+        $this->htmlService
             ->flushPageMessages();
 
         $template->pparse('admin');

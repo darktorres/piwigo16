@@ -44,6 +44,7 @@ final class RegisterController implements ControllerInterface
         private readonly \Piwigo\Users\UserService $userService,
         private readonly \Piwigo\Audit\AuditService $auditService,
         private readonly \Piwigo\Auth\AuthService $authService,
+        private readonly \Piwigo\Html\HtmlService $htmlService,
     ) {}
 
     #[\Override]
@@ -71,7 +72,7 @@ final class RegisterController implements ControllerInterface
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Free);
 
         if (! \Piwigo\Config\CurrentConfig::allowUserRegistration()) {
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+            $this->htmlService
                 ->pageForbidden($this->redirectService, 'User registration closed');
         }
 
@@ -228,11 +229,11 @@ final class RegisterController implements ControllerInterface
         $lang_cookie = $_COOKIE['lang'] ?? null;
         if ($lang_cookie !== null and (! is_string($lang_cookie) or $this->currentUser->get()->language !== $lang_cookie)) {
             if (! is_string($lang_cookie)) {
-                \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+                $this->htmlService
                     ->fatalError('[Hacking attempt] the input parameter "lang" is not valid');
             }
             if (! array_key_exists($lang_cookie, \Piwigo\Lang\LangService::getLanguages())) {
-                \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+                $this->htmlService
                     ->fatalError('[Hacking attempt] the input parameter "' . $lang_cookie . '" is not valid');
             }
 
@@ -264,9 +265,9 @@ final class RegisterController implements ControllerInterface
         new \Piwigo\Page\PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate);
         $this->eventDispatcher->dispatchNotify(new LocEndRegister());
-        \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+        $this->htmlService
             ->flushPageMessages();
-        \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+        $this->htmlService
             ->flushKeyedErrors($errors);
         $template->parse('register');
         $body = \Piwigo\Bootstrap\PageTail::renderToString();

@@ -56,6 +56,7 @@ final class FilterPanelRenderer
         \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         \Piwigo\Core\PageState $pageState,
         \Piwigo\Tag\TagService $tagService,
+        \Piwigo\Html\HtmlService $htmlService,
     ): void {
         $conn = DbConnection::build();
 
@@ -186,7 +187,7 @@ final class FilterPanelRenderer
             $filter_tags = $tagService
                 ->getTagList(
                     $query,
-                    \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
+                    $htmlService,
                     params: [
                         'tagIds' => array_map(intval(...), array_values($filter_tags_ids)),
                     ],
@@ -204,7 +205,7 @@ final class FilterPanelRenderer
 
         if (isset($bulk_manager_filter['category']) && is_numeric($bulk_manager_filter['category'])) {
             $selected_category = intval($bulk_manager_filter['category']);
-            $selected_category_name = \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+            $selected_category_name = $htmlService
                 ->getCatDisplayNameFromId($selected_category);
         }
 

@@ -40,6 +40,7 @@ final class UpdatesPwgPageRenderer
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly CoreUpdateService $coreUpdateService,
         private readonly ExtensionUpdateChecker $extensionUpdateChecker,
+        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     public function render(): void
@@ -47,7 +48,7 @@ final class UpdatesPwgPageRenderer
         $template = $this->currentTemplate->get();
 
         if (! \Piwigo\Config\CurrentConfig::enableCoreUpdate()) {
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+            $this->htmlRenderer
                 ->fatalError('Piwigo core update system is disabled');
         }
 
@@ -106,7 +107,7 @@ final class UpdatesPwgPageRenderer
         if ($step === 2 and \Piwigo\Auth\AccessControl::isWebmaster()) {
             if ($updatesPwgRequest->isUpgradeSubmitted) {
                 new \Piwigo\Csrf\CsrfService()
-                    ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
+                    ->checkOrFail($this->htmlRenderer, $this->redirectService);
                 $core_update_service->upgradeTo($updatesPwgRequest->upgradeToSubmitted, $step);
             }
         }
@@ -117,7 +118,7 @@ final class UpdatesPwgPageRenderer
         if ($step === 3 and \Piwigo\Auth\AccessControl::isWebmaster()) {
             if ($updatesPwgRequest->isUpgradeSubmitted) {
                 new \Piwigo\Csrf\CsrfService()
-                    ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
+                    ->checkOrFail($this->htmlRenderer, $this->redirectService);
                 $core_update_service->upgradeTo($updatesPwgRequest->upgradeToSubmitted, $step);
             }
 

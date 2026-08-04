@@ -1309,6 +1309,19 @@ final class RequestBootstrap
     }
 
     /**
+     * Same reasoning as commentService()/imageService() above.
+     */
+    public static function htmlService(): \Piwigo\Html\HtmlService
+    {
+        $htmlService = Kernel::container()->get(\Piwigo\Html\HtmlService::class);
+        if (! $htmlService instanceof \Piwigo\Html\HtmlService) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Html\HtmlService::class);
+        }
+
+        return $htmlService;
+    }
+
+    /**
      * Leaf values recursed into by array_walk_recursive() from $_GET/
      * $_POST/$_COOKIE are always strings in practice (HTTP request data
      * never contains scalars other than strings; arrays are recursed

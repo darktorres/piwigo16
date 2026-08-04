@@ -52,6 +52,7 @@ final class IdentificationController implements ControllerInterface
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly \Piwigo\Users\UserService $userService,
         private readonly \Piwigo\Auth\AuthService $authService,
+        private readonly \Piwigo\Html\HtmlService $htmlService,
     ) {}
 
     #[\Override]
@@ -181,11 +182,11 @@ final class IdentificationController implements ControllerInterface
         $lang_cookie = $_COOKIE['lang'] ?? null;
         if ($lang_cookie !== null and (! is_string($lang_cookie) or $this->currentUser->get()->language !== $lang_cookie)) {
             if (! is_string($lang_cookie)) {
-                \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+                $this->htmlService
                     ->fatalError('[Hacking attempt] the input parameter "lang" is not valid');
             }
             if (! array_key_exists($lang_cookie, \Piwigo\Lang\LangService::getLanguages())) {
-                \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+                $this->htmlService
                     ->fatalError('[Hacking attempt] the input parameter "' . $lang_cookie . '" is not valid');
             }
 
@@ -217,9 +218,9 @@ final class IdentificationController implements ControllerInterface
         new \Piwigo\Page\PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate);
         $this->eventDispatcher->dispatchNotify(new LocEndIdentification());
-        \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+        $this->htmlService
             ->flushPageMessages();
-        \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+        $this->htmlService
             ->flushKeyedErrors($errors);
         $template->parse('identification', false);
         $body = \Piwigo\Bootstrap\PageTail::renderToString();

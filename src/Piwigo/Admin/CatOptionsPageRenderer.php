@@ -32,6 +32,7 @@ final class CatOptionsPageRenderer
         private readonly CategoryAdminService $categoryAdminService,
         private readonly ActivityService $activityService,
         private readonly CategoryService $categoryService,
+        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     public function render(): void
@@ -45,7 +46,7 @@ final class CatOptionsPageRenderer
 
         if ($catOptionsRequest->isSubmitted) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
+                ->checkOrFail($this->htmlRenderer, $this->redirectService);
         }
 
         if ($catOptionsRequest->isFalsify and $catOptionsRequest->catTrue !== []) {
@@ -166,8 +167,8 @@ SELECT DISTINCT id,name,uppercats,global_rank
             ]
         );
         $categoryService = $this->categoryService;
-        $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true', \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $template);
-        $categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false', \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $template);
+        $categoryService->displaySelectCatWrapper($query_true, [], 'category_option_true', $this->htmlRenderer, $template);
+        $categoryService->displaySelectCatWrapper($query_false, [], 'category_option_false', $this->htmlRenderer, $template);
         $template->assign('PWG_TOKEN', new \Piwigo\Csrf\CsrfService()->getToken());
         $template->assign('ADMIN_PAGE_TITLE', Lang::t('Properties of abums'));
 

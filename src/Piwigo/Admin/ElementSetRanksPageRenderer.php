@@ -50,13 +50,14 @@ final class ElementSetRanksPageRenderer
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly CategoryAdminService $categoryAdminService,
         private readonly \Piwigo\Image\ImageService $imageService,
+        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     public function render(): void
     {
         $template = $this->currentTemplate->get();
 
-        $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
+        $htmlRenderer = $this->htmlRenderer;
         $conn = DbConnection::build();
 
         $sort_fields = [
@@ -100,7 +101,7 @@ final class ElementSetRanksPageRenderer
 
         if ($elementSetRanksRequest->isSubmitted) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
+                ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             if ($elementSetRanksRequest->rankOfImage !== []) {
                 $this->imageService

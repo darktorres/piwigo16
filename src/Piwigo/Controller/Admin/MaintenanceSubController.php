@@ -64,6 +64,7 @@ final class MaintenanceSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly MaintenanceEnvPageRenderer $maintenanceEnvPageRenderer,
         private readonly MaintenanceActionsPageRenderer $maintenanceActionsPageRenderer,
+        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     #[\Override]
@@ -81,7 +82,7 @@ final class MaintenanceSubController implements AdminSubControllerInterface
 
         if ($maintenanceDispatch->requiresCsrfCheck) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
+                ->checkOrFail($this->htmlRenderer, $this->redirectService);
         }
 
         // +-------------------------------------------------------------------+

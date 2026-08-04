@@ -23,6 +23,7 @@ final class TagsPageRenderer
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly \Piwigo\Tag\TagService $tagService,
+        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     public function render(): void
@@ -46,7 +47,7 @@ final class TagsPageRenderer
 
         if (Request\TagsActionRequest::fromGlobals()->isDeleteOrphans) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
+                ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             $tagService->deleteOrphanTags();
             $_SESSION['message_tags'] = Lang::t('Orphan tags deleted');
@@ -145,7 +146,7 @@ final class TagsPageRenderer
             }
             $all_tags[] = $tag;
         }
-        usort($all_tags, \Piwigo\Bootstrap\PresentationAccessor::htmlService()->tagAlphaCompare(...));
+        usort($all_tags, $this->htmlRenderer->tagAlphaCompare(...));
 
         $template->assign(
             [

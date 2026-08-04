@@ -93,6 +93,8 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         private readonly Translator $translator,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
+        private readonly \Piwigo\Mail\NotificationByMailSender $notificationByMailSender,
     ) {}
 
     #[\Override]
@@ -100,9 +102,9 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
     {
         $template = $this->currentTemplate->get();
 
-        $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
+        $htmlRenderer = $this->htmlRenderer;
 
-        $nbmSender = \Piwigo\Bootstrap\PresentationAccessor::notificationByMailSender();
+        $nbmSender = $this->notificationByMailSender;
 
         $notificationByMailRequest = Request\NotificationByMailRequest::fromGlobals();
         $page_mode = $notificationByMailRequest->pageMode;

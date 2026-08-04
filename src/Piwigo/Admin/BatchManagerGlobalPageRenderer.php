@@ -70,6 +70,7 @@ final class BatchManagerGlobalPageRenderer
         private readonly TagService $tagService,
         private readonly CategoryService $categoryService,
         private readonly ImageService $imageService,
+        private readonly \Piwigo\Html\HtmlService $htmlRenderer,
     ) {}
 
     /**
@@ -90,7 +91,7 @@ final class BatchManagerGlobalPageRenderer
         // Ws\PwgServer::isPost()'s own already-reviewed raw $_POST read.
         if (count($_POST) > 0) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
+                ->checkOrFail($this->htmlRenderer, $this->redirectService);
         }
 
         $this->eventDispatcher->dispatchNotify(new LocBeginElementSetGlobal());
@@ -118,7 +119,7 @@ final class BatchManagerGlobalPageRenderer
             // Instead, let's break the input parameter into pieces and check pieces one by one.
             foreach (explode(',', $batchManagerGlobalRequest->wholeSet) as $id) {
                 if (! (bool) preg_match('/^\d+$/', $id)) {
-                    \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+                    $this->htmlRenderer
                         ->fatalError('[Hacking attempt] the input parameter "whole_set" is not valid');
                 }
                 $collection[] = (int) $id;
@@ -459,7 +460,7 @@ final class BatchManagerGlobalPageRenderer
         $page_start = $pageStart;
 
         new FilterPanelRenderer()
-            ->render($template, $base_url, $collection, $cat_elements_id, $page_start, $this->urlService, $this->eventDispatcher, $this->pageState, $this->tagService);
+            ->render($template, $base_url, $collection, $cat_elements_id, $page_start, $this->urlService, $this->eventDispatcher, $this->pageState, $this->tagService, $this->htmlRenderer);
 
         // +-------------------------------------------------------------------+
         // |                            caddie options                             |
@@ -473,7 +474,7 @@ final class BatchManagerGlobalPageRenderer
         if (count($cat_elements_id) > 0) {
             // remove tags
             $template->assign('associated_tags', $this->tagService
-                ->getCommonTags($cat_elements_id, -1, \Piwigo\Bootstrap\PresentationAccessor::htmlService()));
+                ->getCommonTags($cat_elements_id, -1, $this->htmlRenderer));
         }
 
         // creation date
@@ -575,7 +576,7 @@ final class BatchManagerGlobalPageRenderer
                 $nb_thumbs_page++;
                 $src_image = new SrcImage($row);
 
-                $ttitle = \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+                $ttitle = $this->htmlRenderer
                     ->renderElementName($row);
                 $row_file = is_string($row['file']) ? $row['file'] : '';
                 if ($ttitle !== \Piwigo\Core\StringHelper::getNameFromFile($row_file)) {

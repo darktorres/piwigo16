@@ -26,12 +26,13 @@ final class UserActivitySubController implements AdminSubControllerInterface
         private readonly \Piwigo\Image\ImageService $imageService,
         private readonly \Piwigo\Category\CategoryService $categoryService,
         private readonly \Piwigo\Group\GroupService $groupService,
+        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
         new UserActivityPageRenderer()
-            ->render($this->urlService, $this->coreTabs, $this->currentTemplate, $this->activityService, $this->userService, $this->imageService, $this->categoryService, $this->groupService);
+            ->render($this->urlService, $this->coreTabs, $this->currentTemplate, $this->activityService, $this->userService, $this->imageService, $this->categoryService, $this->groupService, $this->htmlRenderer);
     }
 }

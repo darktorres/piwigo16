@@ -48,6 +48,8 @@ final class ProfileFormHandler
         private readonly UserService $userService,
         private readonly PasswordService $passwordService,
         private readonly AuthService $authService,
+        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
+        private readonly \Piwigo\Mail\MailService $mailService,
     ) {}
 
     // ------------------------------------------------------ update & customization
@@ -129,12 +131,12 @@ final class ProfileFormHandler
             }
 
             if (! in_array($post['language'] ?? null, array_keys(\Piwigo\Lang\LangService::getLanguages()), true)) {
-                \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+                $this->htmlRenderer
                     ->fatalError('Hacking attempt, incorrect language value');
             }
 
             if (! in_array($post['theme'] ?? null, array_keys(\Piwigo\Core\ThemeCatalog::getPwgThemes($this->eventDispatcher)), true)) {
-                \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+                $this->htmlRenderer
                     ->fatalError('Hacking attempt, incorrect theme value');
             }
         }
@@ -216,7 +218,7 @@ final class ProfileFormHandler
                         // send email to the user
                         if ($username !== $userdata['username']) {
                             $notification_language = is_string($userdata['language']) ? $userdata['language'] : $this->userService->getDefaultLanguage();
-                            \Piwigo\Bootstrap\PresentationAccessor::mailService()
+                            $this->mailService
                                 ->switchLangTo($notification_language);
 
                             $keyargs_content = [
@@ -225,7 +227,7 @@ final class ProfileFormHandler
                             ];
 
                             $gallery_title = \Piwigo\Config\CurrentConfig::galleryTitle();
-                            \Piwigo\Bootstrap\PresentationAccessor::mailService()
+                            $this->mailService
                                 ->mail(
                                     $mail_address,
                                     [
@@ -235,7 +237,7 @@ final class ProfileFormHandler
                                     ]
                                 );
 
-                            \Piwigo\Bootstrap\PresentationAccessor::mailService()
+                            $this->mailService
                                 ->switchLangBack();
                         }
                     }

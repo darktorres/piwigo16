@@ -66,13 +66,14 @@ final class UpdatesSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly ExtensionUpdateChecker $extensionUpdateChecker,
         private readonly UpdatesPwgPageRenderer $updatesPwgPageRenderer,
+        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
         if (! \Piwigo\Config\CurrentConfig::enableExtensionsInstall() and ! \Piwigo\Config\CurrentConfig::enableCoreUpdate()) {
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+            $this->htmlRenderer
                 ->fatalError('update system is disabled');
         }
 
@@ -91,7 +92,7 @@ final class UpdatesSubController implements AdminSubControllerInterface
 
         if ($tab === 'ext') {
             new UpdatesExtPageRenderer()
-                ->render('updates', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker);
+                ->render('updates', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker, $this->htmlRenderer);
         } else {
             $this->updatesPwgPageRenderer
                 ->render();

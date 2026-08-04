@@ -69,6 +69,7 @@ final class MaintenanceActionDispatcher
         private readonly \Piwigo\Rate\RateService $rateService,
         private readonly CategoryService $categoryService,
         private readonly \Piwigo\Tag\TagService $tagService,
+        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
         private readonly ?\Piwigo\Cache\PersistentCache $persistentCache = null,
     ) {}
 
@@ -206,7 +207,7 @@ final class MaintenanceActionDispatcher
                     ->delete_compiled_templates();
                 FileCombiner::clear_combined_files();
                 if (! $this->persistentCache instanceof \Piwigo\Cache\PersistentCache) {
-                    \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+                    $this->htmlRenderer
                         ->fatalError('persistent cache not initialized');
                 }
                 $this->persistentCache->purge(true);

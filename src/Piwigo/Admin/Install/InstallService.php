@@ -88,6 +88,7 @@ final class InstallService
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class),
             \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(),
             \Piwigo\Bootstrap\CoreDomainAccessor::userService(),
+            \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
         );
         $fs_themes = new ExtensionScanner()
             ->scan(ExtensionType::Theme, $urlService);

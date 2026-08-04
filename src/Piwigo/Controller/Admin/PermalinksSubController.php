@@ -58,6 +58,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly \Piwigo\Permalink\PermalinkService $permalinkService,
         private readonly \Piwigo\Category\CategoryService $categoryService,
+        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     #[\Override]
@@ -65,7 +66,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
     {
         $template = $this->currentTemplate->get();
 
-        $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
+        $htmlRenderer = $this->htmlRenderer;
         $conn = DbConnection::build();
 
         $permalinksRequest = Request\PermalinksRequest::fromGlobals();
@@ -224,7 +225,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
                 $is_first = false;
 
                 if (! in_array((string) $key, ['page', 'psf', 'dpsf', 'pwg_token'], true)) {
-                    \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+                    $this->htmlRenderer
                         ->fatalError('unexpected URL get key');
                 }
 

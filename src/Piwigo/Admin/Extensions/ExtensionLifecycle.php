@@ -75,6 +75,7 @@ final readonly class ExtensionLifecycle
         private PluginMigrationRepository $pluginMigrationRepo,
         private ActivityService $activityService,
         private UserService $userService,
+        private \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     /**
@@ -92,7 +93,7 @@ final readonly class ExtensionLifecycle
     ): array {
 
         if (! \Piwigo\Config\CurrentConfig::enableExtensionsInstall() and $action === 'delete') {
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+            $this->htmlRenderer
                 ->fatalError('Piwigo extensions install/update/delete system is disabled');
         }
 

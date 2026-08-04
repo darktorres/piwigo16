@@ -122,6 +122,8 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         private readonly \Piwigo\Group\GroupService $groupService,
         private readonly \Piwigo\Auth\PasswordService $passwordService,
         private readonly \Piwigo\Auth\AuthService $authService,
+        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
+        private readonly \Piwigo\Mail\MailService $mailService,
     ) {}
 
     /**
@@ -279,7 +281,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         // ------------------------------ verification and registration of modifications
         if ($configurationRequest->isSubmitted) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
+                ->checkOrFail($this->htmlRenderer, $this->redirectService);
             $int_pattern = '/^\d+$/';
 
             switch ($page['section']) {
@@ -472,7 +474,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         // restore default derivatives settings
         if ($page['section'] === 'sizes' and $configurationRequest->restoreSettingsRequested and \Piwigo\Auth\AccessControl::isWebmaster()) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
+                ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             $this->imageStdParams->restore_default();
             new DerivativeCacheService()
@@ -623,7 +625,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 // P22: profile.php's own save_profile_from_post()/
                 // load_profile_in_template() ported to Piwigo\Controller\
                 // ProfileFormHandler in P23 batch 8c.
-                $profileFormHandler = new ProfileFormHandler($this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->userService, $this->passwordService, $this->authService);
+                $profileFormHandler = new ProfileFormHandler($this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->userService, $this->passwordService, $this->authService, $this->htmlRenderer, $this->mailService);
 
                 $errors = [];
                 if ($profileFormHandler->saveFromPost($edit_user, $errors)) {

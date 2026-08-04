@@ -48,6 +48,7 @@ final class PhotosAddDirectPageRenderer
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly \Piwigo\Config\ConfigService $configService,
         private readonly EntityManagerInterface $entityManager,
+        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
         private readonly \Piwigo\Activity\ActivityService $activityService,
         private readonly \Piwigo\Metadata\MetadataService $metadataService,
         private readonly \Piwigo\Image\ImageService $imageService,
@@ -73,7 +74,7 @@ final class PhotosAddDirectPageRenderer
     {
         $template = $this->currentTemplate->get();
 
-        $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
+        $htmlRenderer = $this->htmlRenderer;
         $conn = DbConnection::build();
 
         $user_id = $this->currentUser->get()
@@ -87,7 +88,7 @@ final class PhotosAddDirectPageRenderer
 
         if ($photosAddDirectRequest->batchPresent) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
+                ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             new \Piwigo\Caddie\CaddieRepository($conn)
                 ->replaceForUser(
@@ -212,7 +213,7 @@ final class PhotosAddDirectPageRenderer
     {
         $template = $this->currentTemplate->get();
 
-        $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
+        $htmlRenderer = $this->htmlRenderer;
 
         $uploadService = new UploadService($this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService);
 

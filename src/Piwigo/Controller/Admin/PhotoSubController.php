@@ -48,6 +48,7 @@ final class PhotoSubController implements AdminSubControllerInterface
         private readonly PictureModifyPageRenderer $pictureModifyPageRenderer,
         private readonly PictureCoiPageRenderer $pictureCoiPageRenderer,
         private readonly \Piwigo\Image\ImageService $imageService,
+        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     #[\Override]
@@ -72,7 +73,7 @@ final class PhotoSubController implements AdminSubControllerInterface
         // retrieving direct information about picture
         $imageConn = DbConnection::build();
         $page['image'] = $this->imageService
-            ->getImageInfos($get_image_id, \Piwigo\Bootstrap\PresentationAccessor::htmlService(), true);
+            ->getImageInfos($get_image_id, $this->htmlRenderer, true);
 
         $tab = $photoDispatch->tab;
 
@@ -95,7 +96,7 @@ final class PhotoSubController implements AdminSubControllerInterface
                 ->render();
         } elseif (\Piwigo\Config\CurrentConfig::isFormatsEnabled()) {
             new PictureFormatsPageRenderer()
-                ->render($this->urlService, $this->imageStdParams, $this->currentTemplate);
+                ->render($this->urlService, $this->imageStdParams, $this->currentTemplate, $this->htmlRenderer);
         }
     }
 }

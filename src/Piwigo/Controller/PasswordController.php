@@ -57,6 +57,8 @@ final class PasswordController implements ControllerInterface
         private readonly AuthService $authService,
         private readonly \Piwigo\Users\PreferencesService $preferencesService,
         private readonly \Piwigo\Auth\ApiKeyService $apiKeyService,
+        private readonly \Piwigo\Html\HtmlService $htmlService,
+        private readonly \Piwigo\Mail\MailService $mailService,
     ) {}
 
     /**
@@ -99,7 +101,7 @@ final class PasswordController implements ControllerInterface
         // ------------------------------------------------------- process form
         if ($this->request->isSubmitted) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
+                ->checkOrFail($this->htmlService, $this->redirectService);
 
             if ($action_param === 'lost') {
                 if ($this->processVerificationCode()) {
@@ -242,7 +244,7 @@ final class PasswordController implements ControllerInterface
         $cookie_lang = $_COOKIE['lang'] ?? null;
         if (is_string($cookie_lang) and $this->currentUser->get()->language !== $cookie_lang) {
             if (! array_key_exists($cookie_lang, \Piwigo\Lang\LangService::getLanguages())) {
-                \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+                $this->htmlService
                     ->fatalError('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
             }
 
@@ -274,9 +276,9 @@ final class PasswordController implements ControllerInterface
         new \Piwigo\Page\PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate);
         $this->eventDispatcher->dispatchNotify(new LocEndPassword());
-        \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+        $this->htmlService
             ->flushPageMessages();
-        \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+        $this->htmlService
             ->flushKeyedErrors($formErrors);
         $template->parse('password', false);
         $body = \Piwigo\Bootstrap\PageTail::renderToString();
@@ -358,18 +360,18 @@ final class PasswordController implements ControllerInterface
         // send mail with verification code to user
         $language = $userdata['language'] ?? '';
         $language = is_string($language) ? $language : '';
-        \Piwigo\Bootstrap\PresentationAccessor::mailService()
+        $this->mailService
             ->switchLangTo($language);
         $user_code = \Piwigo\Auth\AuthService::generateUserCode();
-        $template_mail = \Piwigo\Bootstrap\PresentationAccessor::mailService()
+        $template_mail = $this->mailService
             ->generateCodeVerificationMail($user_code['code']);
         // $skip_mail already covers $email === null/''), so $email is
         // provably a non-empty string here.
         if (! $skip_mail) {
-            \Piwigo\Bootstrap\PresentationAccessor::mailService()
+            $this->mailService
                 ->mail($email, $template_mail);
         }
-        \Piwigo\Bootstrap\PresentationAccessor::mailService()
+        $this->mailService
             ->switchLangBack();
 
         $_SESSION['reset_password_code'] = [
@@ -600,7 +602,7 @@ final class PasswordController implements ControllerInterface
         if (is_array($reset_session) and is_string($reset_session_email) and $reset_session_email !== '') {
             $reset_language = $reset_session['language'] ?? '';
             $reset_language = is_string($reset_language) ? $reset_language : '';
-            \Piwigo\Bootstrap\PresentationAccessor::mailService()
+            $this->mailService
                 ->switchLangTo($reset_language);
 
             $reset_user_id = $reset_session['user_id'] ?? null;
@@ -611,16 +613,16 @@ final class PasswordController implements ControllerInterface
 
             $reset_username = $reset_session['username'] ?? '';
             $reset_username = is_string($reset_username) ? $reset_username : '';
-            $template_mail = \Piwigo\Bootstrap\PresentationAccessor::mailService()
+            $template_mail = $this->mailService
                 ->generateSuccessResetPasswordMail($reset_username, $nb_of_apikeys);
 
             // is_string($reset_session_email)/!== '' above already
             // guarantees this is a non-empty string.
             $reset_email = $reset_session_email;
-            \Piwigo\Bootstrap\PresentationAccessor::mailService()
+            $this->mailService
                 ->mail($reset_email, $template_mail);
 
-            \Piwigo\Bootstrap\PresentationAccessor::mailService()
+            $this->mailService
                 ->switchLangBack();
         }
         unset($_SESSION['valid_reset_password_code']);

@@ -111,11 +111,13 @@ final class PictureController implements ControllerInterface
         private readonly TagService $tagService,
         private readonly UserService $userService,
         private readonly ImageService $imageService,
+        private readonly \Piwigo\Html\HtmlService $htmlService,
+        private readonly PictureRateRenderer $pictureRateRenderer,
     ) {}
 
     private function commentService(Connection $conn, UrlServiceInterface $urlService): CommentService
     {
-        return new CommentService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $urlService, $this->eventDispatcher, $this->pageState, $this->currentUser);
+        return new CommentService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), $this->mailer, $this->htmlService, $urlService, $this->eventDispatcher, $this->pageState, $this->currentUser);
     }
 
     #[\Override]
@@ -150,7 +152,7 @@ final class PictureController implements ControllerInterface
         // access authorization check
         if ($page_category !== null) {
             $category_id = $page_category['id'] ?? null;
-            $this->categoryService->checkRestrictions(is_numeric($category_id) ? (int) $category_id : 0, \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService, $this->currentUser);
+            $this->categoryService->checkRestrictions(is_numeric($category_id) ? (int) $category_id : 0, $this->htmlService, $this->redirectService, $this->currentUser);
         }
 
         // $section_context->items is mutated in place below (best_rated
@@ -179,7 +181,7 @@ final class PictureController implements ControllerInterface
             }
             $row = $this->imageService->findByIdOrFilePattern($image_id, $escaped_image_file);
             if ($row === false) {// element does not exist
-                \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+                $this->htmlService
                     ->pageNotFound(
                         $this->redirectService,
                         'The requested image does not exist',
@@ -189,7 +191,7 @@ final class PictureController implements ControllerInterface
             $row_level = $row['level'];
             $user_level = $user->level;
             if ((is_numeric($row_level) ? (int) $row_level : 0) > $user_level) {
-                \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+                $this->htmlService
                     ->accessDenied($this->redirectService);
             }
 
@@ -214,7 +216,7 @@ final class PictureController implements ControllerInterface
                 $visible_images = $this->filterState->isInitialized() ? $this->filterState->visibleImages() : '';
                 if ($visible_images !== '' && $visible_images !== '-1' &&
                   ! in_array((string) $image_id, explode(',', $visible_images), true)) {
-                    \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+                    $this->htmlService
                         ->pageNotFound(
                             $this->redirectService,
                             'The requested image is filtered',
@@ -223,7 +225,7 @@ final class PictureController implements ControllerInterface
                 }
                 $page_section = $section_context->section;
                 if ($page_section === 'categories' and $page_category === null) {// flat view - all items
-                    \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+                    $this->htmlService
                         ->accessDenied($this->redirectService);
                 } else {// try to see if we can access it differently
                     $accessible = $this->imageService->isImageAccessibleWithCondition(
@@ -233,7 +235,7 @@ final class PictureController implements ControllerInterface
                         ])
                     );
                     if (! $accessible) {
-                        \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+                        $this->htmlService
                             ->accessDenied($this->redirectService);
                     } else {
                         if ($page_section === 'best_rated') {
@@ -300,8 +302,8 @@ final class PictureController implements ControllerInterface
         // thin adapter closure, leaving pwgNl2br() itself untouched.
         $this->eventDispatcher->addTypedHandler(
             RenderElementDescription::class,
-            static function (RenderElementDescription $e): RenderElementDescription {
-                $result = \Piwigo\Bootstrap\PresentationAccessor::htmlService()->pwgNl2br($e->elementDescription);
+            function (RenderElementDescription $e): RenderElementDescription {
+                $result = $this->htmlService->pwgNl2br($e->elementDescription);
                 $e->elementDescription = is_string($result) ? $result : '';
 
                 return $e;
@@ -438,7 +440,7 @@ final class PictureController implements ControllerInterface
                         // never a real PHP int/float/bool.
                         if ($pictureRequest->content !== null && $pictureRequest->content !== '' && $pictureRequest->content !== '0') {
                             new \Piwigo\Csrf\CsrfService()
-                                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
+                                ->checkOrFail($this->htmlService, $this->redirectService);
                             $comment_action = $commentService->updateComment(
                                 [
                                     'comment_id' => $pictureRequest->commentToEdit,
@@ -489,7 +491,7 @@ final class PictureController implements ControllerInterface
                 case 'delete_comment':
 
                     new \Piwigo\Csrf\CsrfService()
-                        ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
+                        ->checkOrFail($this->htmlService, $this->redirectService);
 
                     $commentService = $this->commentService($conn, $this->urlService);
 
@@ -513,7 +515,7 @@ final class PictureController implements ControllerInterface
                 case 'validate_comment':
 
                     new \Piwigo\Csrf\CsrfService()
-                        ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
+                        ->checkOrFail($this->htmlService, $this->redirectService);
 
                     $commentService = $this->commentService($conn, $this->urlService);
 
@@ -645,7 +647,7 @@ final class PictureController implements ControllerInterface
             );
 
             $picture[$i] = $row;
-            $picture[$i]['TITLE'] = \Piwigo\Bootstrap\PresentationAccessor::htmlService()->renderElementName($row);
+            $picture[$i]['TITLE'] = $this->htmlService->renderElementName($row);
             $picture[$i]['TITLE_ESC'] = str_replace('"', '&quot;', $picture[$i]['TITLE']);
 
             if ($i === 'previous' and (string) $previous_item === (string) $first_item) {
@@ -1069,7 +1071,7 @@ final class PictureController implements ControllerInterface
 
         // related tags
         $tags = $this->tagService
-            ->getCommonTags([$image_id], -1, \Piwigo\Bootstrap\PresentationAccessor::htmlService());
+            ->getCommonTags([$image_id], -1, $this->htmlService);
         if ($tags !== []) {
             foreach ($tags as $tag) {
                 $template->append(
@@ -1125,7 +1127,7 @@ final class PictureController implements ControllerInterface
             /** @var array<int, array<string, mixed>> $upper_names */
             $template->append(
                 'related_categories',
-                \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+                $this->htmlService
                     ->getCatDisplayName($upper_names)
             );
         } else { // use only 1 sql query to get names for all related categories
@@ -1142,7 +1144,7 @@ final class PictureController implements ControllerInterface
                 foreach (explode(',', is_scalar($categoryUppercats) ? (string) $categoryUppercats : '') as $id) {
                     $cats[] = $cat_map[$id];
                 }
-                $template->append('related_categories', \Piwigo\Bootstrap\PresentationAccessor::htmlService()->getCatDisplayName($cats));
+                $template->append('related_categories', $this->htmlService->getCatDisplayName($cats));
             }
         }
 
@@ -1207,7 +1209,7 @@ final class PictureController implements ControllerInterface
         // |                          sub pages                           |
         // +-------------------------------------------------------------+
 
-        \Piwigo\Bootstrap\PresentationAccessor::pictureRateRenderer()
+        $this->pictureRateRenderer
             ->render($image_id, $urlService, $picture, $url_self);
         if (\Piwigo\Config\CurrentConfig::activateComments()) {
             new PictureCommentRenderer()
@@ -1234,7 +1236,7 @@ final class PictureController implements ControllerInterface
         new \Piwigo\Page\PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $refresh_str, $url_link ?? null);
         $this->eventDispatcher->dispatchNotify(new LocEndPicture());
-        \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+        $this->htmlService
             ->flushPageMessages();
         if ($slideshow and \Piwigo\Config\CurrentConfig::lightSlideshow()) {
             $template->parse('slideshow', false);

@@ -22,13 +22,14 @@ final class PictureCoiPageRenderer
         private readonly RedirectServiceInterface $redirectService,
         private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     public function render(): void
     {
         $template = $this->currentTemplate->get();
 
-        $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
+        $htmlRenderer = $this->htmlRenderer;
         $conn = DbConnection::build();
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);

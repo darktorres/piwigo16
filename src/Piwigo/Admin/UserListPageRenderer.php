@@ -21,7 +21,7 @@ use Piwigo\Users\UserService;
  */
 final class UserListPageRenderer
 {
-    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, UserService $userService, PreferencesService $preferencesService, \Piwigo\Group\GroupService $groupService): void
+    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, UserService $userService, PreferencesService $preferencesService, \Piwigo\Group\GroupService $groupService, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer): void
     {
         $template = $currentTemplate->get();
         $conn = DbConnection::build();
@@ -67,7 +67,7 @@ final class UserListPageRenderer
 
         $default_user = $userService->getDefaultUserInfo();
         if (! is_array($default_user)) {
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+            $htmlRenderer
                 ->fatalError('Default user not found');
         }
 

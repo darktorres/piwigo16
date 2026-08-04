@@ -30,13 +30,14 @@ final class UserPermPageRenderer
         private readonly PermissionService $permissionService,
         private readonly CategoryService $categoryService,
         private readonly \Piwigo\Users\UserService $userService,
+        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     public function render(): void
     {
         $template = $this->currentTemplate->get();
 
-        $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
+        $htmlRenderer = $this->htmlRenderer;
 
         $permissionService = $this->permissionService;
         $categoryService = $this->categoryService;

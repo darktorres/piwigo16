@@ -62,6 +62,8 @@ final class CommentsController implements ControllerInterface
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly PermissionService $permissionService,
         private readonly CategoryService $categoryService,
+        private readonly \Piwigo\Html\HtmlService $htmlService,
+        private readonly \Piwigo\Core\MailerInterface $mailer,
     ) {}
 
     #[\Override]
@@ -76,7 +78,7 @@ final class CommentsController implements ControllerInterface
         $conn = DbConnection::build();
 
         if (! \Piwigo\Config\CurrentConfig::activateComments()) {
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+            $this->htmlService
                 ->pageNotFound($this->redirectService, null);
         }
 
@@ -290,7 +292,7 @@ final class CommentsController implements ControllerInterface
         $comment_id = $commentsRequest->actionCommentId;
         $edit_comment = null;
 
-        $commentService = new CommentService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->urlService, $this->eventDispatcher, $this->pageState, $this->currentUser);
+        $commentService = new CommentService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), $this->mailer, $this->htmlService, $this->urlService, $this->eventDispatcher, $this->pageState, $this->currentUser);
 
         if (isset($action) and $comment_id !== null) {
             $commentIdVo = CommentId::from($comment_id);
@@ -303,14 +305,14 @@ final class CommentsController implements ControllerInterface
 
                 if ($action === 'delete') {
                     new \Piwigo\Csrf\CsrfService()
-                        ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
+                        ->checkOrFail($this->htmlService, $this->redirectService);
                     $commentService->deleteComment($commentIdVo);
                     $perform_redirect = true;
                 }
 
                 if ($action === 'validate') {
                     new \Piwigo\Csrf\CsrfService()
-                        ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
+                        ->checkOrFail($this->htmlService, $this->redirectService);
                     $commentService->validateComment($commentIdVo);
                     $perform_redirect = true;
                 }
@@ -319,7 +321,7 @@ final class CommentsController implements ControllerInterface
                     $content = $commentsRequest->content;
                     if ($content !== null) {
                         new \Piwigo\Csrf\CsrfService()
-                            ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
+                            ->checkOrFail($this->htmlService, $this->redirectService);
                         $comment_action = $commentService->updateComment(
                             [
                                 'comment_id' => $comment_id,
@@ -411,7 +413,7 @@ final class CommentsController implements ControllerInterface
             {$categoryConditionSql}
             SQL;
         $this->categoryService
-            ->displaySelectCatWrapper($query, [$commentsRequest->catDisplay], $blockname, \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $template, true, $categoryCondition->parameters, $categoryCondition->types);
+            ->displaySelectCatWrapper($query, [$commentsRequest->catDisplay], $blockname, $this->htmlService, $template, true, $categoryCondition->parameters, $categoryCondition->types);
 
         // Filter on recent comments...
         $tpl_var = [];
@@ -646,7 +648,7 @@ final class CommentsController implements ControllerInterface
         new \Piwigo\Page\PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate);
         $this->eventDispatcher->dispatchNotify(new LocEndComments());
-        \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+        $this->htmlService
             ->flushPageMessages();
         if (count($comments) > 0) {
             $template->assign_var_from_handle('COMMENT_LIST', 'comment_list');

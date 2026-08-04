@@ -15,7 +15,7 @@ use Piwigo\Image\ImageStdParams;
  */
 final class PictureFormatsPageRenderer
 {
-    public function render(UrlServiceInterface $urlService, ImageStdParams $imageStdParams, \Piwigo\Template\CurrentTemplate $currentTemplate): void
+    public function render(UrlServiceInterface $urlService, ImageStdParams $imageStdParams, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer): void
     {
         $template = $currentTemplate->get();
 
@@ -27,7 +27,7 @@ final class PictureFormatsPageRenderer
         $imageRow = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
             ->findById($image_id);
         if ($imageRow === null) {
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+            $htmlRenderer
                 ->fatalError('image_id #' . $image_id . ' does not exist');
         }
         $image = $imageRow->toArray();

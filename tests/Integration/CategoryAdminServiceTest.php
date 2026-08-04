@@ -151,7 +151,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
             \Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Category\CategoryEntity::class),
             $permissionService
         );
-        $this->service = new CategoryAdminService($categoryService, $permissionService);
+        $this->service = new CategoryAdminService($categoryService, $permissionService, new \Piwigo\Html\HtmlService());
     }
 
     #[\Override]

@@ -60,6 +60,8 @@ final class ProfileController implements ControllerInterface
         private readonly UserService $userService,
         private readonly \Piwigo\Auth\PasswordService $passwordService,
         private readonly \Piwigo\Auth\AuthService $authService,
+        private readonly \Piwigo\Html\HtmlService $htmlService,
+        private readonly \Piwigo\Mail\MailService $mailService,
     ) {}
 
     #[\Override]
@@ -73,7 +75,7 @@ final class ProfileController implements ControllerInterface
 
         if ($profileAction->requiresCsrfCheck) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
+                ->checkOrFail($this->htmlService, $this->redirectService);
         }
 
         // Load language if cookie is set from login/register/password pages.
@@ -92,11 +94,11 @@ final class ProfileController implements ControllerInterface
         $cookie_lang = $_COOKIE['lang'] ?? null;
         if ($cookie_lang !== null and (! is_string($cookie_lang) or $this->currentUser->get()->language !== $cookie_lang)) {
             if (! is_string($cookie_lang)) {
-                \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+                $this->htmlService
                     ->fatalError('[Hacking attempt] the input parameter "lang" is not valid');
             }
             if (! array_key_exists($cookie_lang, \Piwigo\Lang\LangService::getLanguages())) {
-                \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+                $this->htmlService
                     ->fatalError('[Hacking attempt] the input parameter "' . $cookie_lang . '" is not valid');
             }
 
@@ -152,7 +154,7 @@ final class ProfileController implements ControllerInterface
             $userdata = array_merge($userdata, $default_user);
         }
 
-        $profileFormHandler = new ProfileFormHandler($this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->userService, $this->passwordService, $this->authService);
+        $profileFormHandler = new ProfileFormHandler($this->redirectService, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->entityManager, $this->activityService, $this->userService, $this->passwordService, $this->authService, $this->htmlService, $this->mailService);
 
         $page_errors = $this->pageState->errors;
         $profileFormHandler->saveFromPost($userdata, $page_errors);
@@ -212,7 +214,7 @@ final class ProfileController implements ControllerInterface
         $template->assign('HELP_LINK', $help_link);
 
         $this->eventDispatcher->dispatchNotify(new LocEndProfile());
-        \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+        $this->htmlService
             ->flushPageMessages();
         $template->parse('profile', false);
         $body = \Piwigo\Bootstrap\PageTail::renderToString();

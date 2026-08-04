@@ -125,6 +125,7 @@ final class PwgExtensions
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class),
             \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(),
             \Piwigo\Bootstrap\CoreDomainAccessor::userService(),
+            \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
         );
         $fsEntry = new ExtensionScanner()
             ->scan(ExtensionType::Plugin, $urlService)[$params['plugin']] ?? null;
@@ -175,6 +176,7 @@ final class PwgExtensions
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class),
             \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(),
             \Piwigo\Bootstrap\CoreDomainAccessor::userService(),
+            \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
         );
         $fsEntry = new ExtensionScanner()
             ->scan(ExtensionType::Theme, $urlService)[$params['theme']] ?? null;
@@ -237,7 +239,7 @@ final class PwgExtensions
         $repo = new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($conn));
         $pemCatalog = new PemCatalog(new ZipExtractor(), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger());
         $pluginMigrationRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class);
-        $lifecycle = new ExtensionLifecycle($repo, $pemCatalog, $urlService, CurrentConfigService::current()->get(), $pluginMigrationRepo, \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\CoreDomainAccessor::userService());
+        $lifecycle = new ExtensionLifecycle($repo, $pemCatalog, $urlService, CurrentConfigService::current()->get(), $pluginMigrationRepo, \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\CoreDomainAccessor::userService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService());
 
         if ($type === ExtensionType::Plugin) {
             $dbPluginsById = $repo->findAll(ExtensionType::Plugin);

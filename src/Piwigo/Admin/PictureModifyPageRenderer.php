@@ -57,6 +57,7 @@ final class PictureModifyPageRenderer
         private readonly TagService $tagService,
         private readonly CategoryService $categoryService,
         private readonly PermissionService $permissionService,
+        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     public function render(string $adminPhotoBaseUrl): void
@@ -81,7 +82,7 @@ final class PictureModifyPageRenderer
 
         $conn = DbConnection::build();
         $imageService = new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher);
-        $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
+        $htmlRenderer = $this->htmlRenderer;
 
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
 
@@ -105,7 +106,7 @@ final class PictureModifyPageRenderer
 
         if ($pictureModifyRequest->deletePresent) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
+                ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             $imageService->deleteElements([$image_id], $this->urlService, true);
             PermissionCacheInvalidator::invalidate();
@@ -133,7 +134,7 @@ final class PictureModifyPageRenderer
 
         if ($pictureModifyRequest->syncMetadataPresent) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
+                ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             $this->metadataService
                 ->syncMetadata([$image_id]);
@@ -145,7 +146,7 @@ final class PictureModifyPageRenderer
         $data = [];
         if ($pictureModifyRequest->isSubmitted) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
+                ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             $data = [];
             $data['id'] = $image_id;

@@ -116,6 +116,7 @@ final class ImageDerivativeController implements ControllerInterface
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
         private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
         private readonly \Piwigo\Permission\ImageVisibilityChecker $imageVisibilityChecker,
+        private readonly \Piwigo\Core\UrlServiceInterface $urlService,
     ) {}
 
     #[\Override]
@@ -385,7 +386,7 @@ final class ImageDerivativeController implements ControllerInterface
             // *different* already-cached derivative type (trySwitchSource()'s
             // own permission-checked redirect, see its own comment).
             if ($image_id !== null) {
-                $this->ierror(\Piwigo\Bootstrap\PresentationAccessor::urlService()->getActionUrl($image_id, 'e', false), 301, [
+                $this->ierror($this->urlService->getActionUrl($image_id, 'e', false), 301, [
                     'X-i' => 'No change',
                 ]);
             }
@@ -667,7 +668,7 @@ final class ImageDerivativeController implements ControllerInterface
 
         $this->srcLocation = $req . $ext;
         $this->srcPath = $this->paths->root . $this->srcLocation;
-        $this->srcUrl = \Piwigo\Bootstrap\PresentationAccessor::urlService()
+        $this->srcUrl = $this->urlService
             ->getAbsoluteRootUrl(false) . '/' . $this->srcLocation;
 
         // Every non-erroring path above sets $this->derivativeParams itself
@@ -793,7 +794,7 @@ final class ImageDerivativeController implements ControllerInterface
             // filesystem path -- still routes through this same
             // permission-checked controller, at a different derivative type.
             $rel_url = self::derivativeUrlPath($this->derivativeUrlSuffix, $params->type, $candidate->type);
-            $this->srcUrl = \Piwigo\Bootstrap\PresentationAccessor::urlService()
+            $this->srcUrl = $this->urlService
                 ->getAbsoluteRootUrl(false) . '/' . $rel_url;
             $this->rotationAngle = 0;
             return true;
@@ -843,7 +844,7 @@ final class ImageDerivativeController implements ControllerInterface
         $derivative_path = $this->derivativePath;
 
         if (Request\ImageDerivativeRequest::fromGlobals()->isAjaxLoad) {
-            $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
+            $urlService = $this->urlService;
 
             return ResponseFactory::json([
                 'url' => $urlService->embellishUrl($urlService->getAbsoluteRootUrl() . $derivative_path),

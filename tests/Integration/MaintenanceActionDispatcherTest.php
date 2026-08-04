@@ -170,7 +170,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
         $configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher());
-        $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService(), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), $configService, new FilesystemIntegrityChecker(CurrentTemplate::current(), CurrentConfigService::current(), $this->maintenanceActionDispatcherTestImageService()), new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class)), new Translator(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), CurrentTemplate::current(), new \Piwigo\Admin\Maintenance\DbMaintenanceRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Db\DbCredentials::current()), $this->maintenanceActionDispatcherTestActivityService(), $this->maintenanceActionDispatcherTestRateService(), $this->maintenanceActionDispatcherTestCategoryService(), $this->maintenanceActionDispatcherTestTagService());
+        $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService(), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), $configService, new FilesystemIntegrityChecker(CurrentTemplate::current(), CurrentConfigService::current(), $this->maintenanceActionDispatcherTestImageService()), new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class)), new Translator(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), CurrentTemplate::current(), new \Piwigo\Admin\Maintenance\DbMaintenanceRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Db\DbCredentials::current()), $this->maintenanceActionDispatcherTestActivityService(), $this->maintenanceActionDispatcherTestRateService(), $this->maintenanceActionDispatcherTestCategoryService(), $this->maintenanceActionDispatcherTestTagService(), new HtmlService());
     }
 
     #[\Override]
@@ -562,6 +562,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             $this->maintenanceActionDispatcherTestRateService(),
             $this->maintenanceActionDispatcherTestCategoryService(),
             $this->maintenanceActionDispatcherTestTagService(),
+            new HtmlService(),
             new \Piwigo\Cache\PersistentFileCache(),
         );
 

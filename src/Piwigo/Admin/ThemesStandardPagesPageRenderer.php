@@ -50,6 +50,7 @@ final class ThemesStandardPagesPageRenderer
         private readonly StorageRegistry $storageRegistry,
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     public function render(): void
@@ -89,7 +90,7 @@ final class ThemesStandardPagesPageRenderer
 
         if ($stdPagesSubmit->isSubmitted and \Piwigo\Auth\AccessControl::isWebmaster()) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
+                ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             $this->configService->confUpdateParam('use_standard_pages', $stdPagesSubmit->useStandardPages, true);
 

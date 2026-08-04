@@ -38,6 +38,7 @@ final class LanguagesNewPageRenderer
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly \Piwigo\Activity\ActivityService $activityService,
         private readonly \Piwigo\Users\UserService $userService,
+        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     /**
@@ -56,7 +57,7 @@ final class LanguagesNewPageRenderer
         $template = $this->currentTemplate->get();
 
         if (! \Piwigo\Config\CurrentConfig::enableExtensionsInstall()) {
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+            $this->htmlRenderer
                 ->fatalError('Piwigo extensions install/update system is disabled');
         }
 
@@ -70,7 +71,7 @@ final class LanguagesNewPageRenderer
         $pem_catalog = new PemCatalog(new ZipExtractor(), $this->currentLogger);
         $extension_scanner = new ExtensionScanner();
         $plugin_migration_repo = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class);
-        $extension_lifecycle = new ExtensionLifecycle($extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo, $this->activityService, $this->userService);
+        $extension_lifecycle = new ExtensionLifecycle($extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo, $this->activityService, $this->userService, $this->htmlRenderer);
 
         // +-----------------------------------------------------------------------+
         // |                           setup check                                 |
@@ -92,7 +93,7 @@ final class LanguagesNewPageRenderer
                 $this->pageState->addError(Lang::t('Webmaster status is required.'));
             } else {
                 new \Piwigo\Csrf\CsrfService()
-                    ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
+                    ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
                 $revision = $languagesNewInstall->revision;
 

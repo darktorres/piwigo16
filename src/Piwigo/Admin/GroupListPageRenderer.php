@@ -22,6 +22,7 @@ final class GroupListPageRenderer
         private readonly CoreTabs $coreTabs,
         private readonly Translator $translator,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     public function render(): void
@@ -43,7 +44,7 @@ final class GroupListPageRenderer
 
         if (Request\GroupListActionRequest::fromGlobals()->requiresCsrfCheck) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
+                ->checkOrFail($this->htmlRenderer, $this->redirectService);
         }
 
         $template->set_filenames([

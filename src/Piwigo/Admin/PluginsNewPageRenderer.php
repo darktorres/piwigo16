@@ -38,6 +38,7 @@ final class PluginsNewPageRenderer
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly \Piwigo\Activity\ActivityService $activityService,
+        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     /**
@@ -56,7 +57,7 @@ final class PluginsNewPageRenderer
         $template = $this->currentTemplate->get();
 
         if (! \Piwigo\Config\CurrentConfig::enableExtensionsInstall()) {
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+            $this->htmlRenderer
                 ->fatalError('Piwigo extensions install/update system is disabled');
         }
 
@@ -77,7 +78,7 @@ final class PluginsNewPageRenderer
                 $this->pageState->addError(Lang::t('Webmaster status is required.'));
             } else {
                 new \Piwigo\Csrf\CsrfService()
-                    ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
+                    ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
                 $extraction = $pem_catalog->extractArchive(ExtensionType::Plugin, 'install', $pluginsNewRequest->revision, $pluginsNewRequest->extension);
                 $install_status = $extraction['status'];

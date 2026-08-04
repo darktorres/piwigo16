@@ -48,6 +48,7 @@ final class CatListPageRenderer
         private readonly CategoryAdminService $categoryAdminService,
         private readonly \Piwigo\Activity\ActivityService $activityService,
         private readonly \Piwigo\Category\CategoryService $categoryService,
+        private readonly \Piwigo\Html\HtmlService $htmlRenderer,
     ) {}
 
     public function render(): void
@@ -62,7 +63,7 @@ final class CatListPageRenderer
 
         if ($catListRequest->isCsrfCheckRequired) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
+                ->checkOrFail($this->htmlRenderer, $this->redirectService);
         }
 
         $sort_orders = [
@@ -160,7 +161,7 @@ final class CatListPageRenderer
             $level_separator = \Piwigo\Config\CurrentConfig::levelSeparator();
             $navigation .= $level_separator;
 
-            $navigation .= \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+            $navigation .= $this->htmlRenderer
                 ->getCatDisplayNameFromId(
                     $parent_id,
                     $base_url . '&amp;parent_id='

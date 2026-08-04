@@ -62,6 +62,7 @@ final class PluginsSubController implements AdminSubControllerInterface
         private readonly ExtensionUpdateChecker $extensionUpdateChecker,
         private readonly PluginsNewPageRenderer $pluginsNewPageRenderer,
         private readonly \Piwigo\Users\PreferencesService $preferencesService,
+        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     #[\Override]
@@ -84,14 +85,14 @@ final class PluginsSubController implements AdminSubControllerInterface
 
         if ($tab === 'update') {
             new UpdatesExtPageRenderer()
-                ->render('plugins', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker);
+                ->render('plugins', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker, $this->htmlRenderer);
             $template->assign('ADMIN_PAGE_TITLE', Lang::t('Plugins'));
         } elseif ($tab === 'new') {
             $this->pluginsNewPageRenderer
                 ->render('plugins', $tab);
         } else {
             new PluginsInstalledPageRenderer()
-                ->render('plugins', $this->urlService, $this->currentLogger, $this->sessionService, $this->eventDispatcher, $this->currentTemplate, $this->preferencesService);
+                ->render('plugins', $this->urlService, $this->currentLogger, $this->sessionService, $this->eventDispatcher, $this->currentTemplate, $this->preferencesService, $this->htmlRenderer);
         }
     }
 }

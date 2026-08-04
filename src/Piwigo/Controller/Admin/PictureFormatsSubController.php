@@ -19,12 +19,13 @@ final class PictureFormatsSubController implements AdminSubControllerInterface
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     #[\Override]
     public function handle(ServerRequestInterface $request): void
     {
         new PictureFormatsPageRenderer()
-            ->render($this->urlService, $this->imageStdParams, $this->currentTemplate);
+            ->render($this->urlService, $this->imageStdParams, $this->currentTemplate, $this->htmlRenderer);
     }
 }

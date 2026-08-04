@@ -42,6 +42,7 @@ final class WsController implements ControllerInterface
 {
     public function __construct(
         private readonly RedirectServiceInterface $redirectService,
+        private readonly \Piwigo\Html\HtmlService $htmlService,
     ) {}
 
     #[\Override]
@@ -50,7 +51,7 @@ final class WsController implements ControllerInterface
         \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Free);
 
         if (! \Piwigo\Config\CurrentConfig::allowWebServices()) {
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+            $this->htmlService
                 ->pageForbidden($this->redirectService, 'Web services are disabled');
         }
 

@@ -19,7 +19,7 @@ use Piwigo\Template\Template;
  */
 final class UserActivityPageRenderer
 {
-    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Activity\ActivityService $activityService, \Piwigo\Users\UserService $userService, \Piwigo\Image\ImageService $imageService, \Piwigo\Category\CategoryService $categoryService, \Piwigo\Group\GroupService $groupService): void
+    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Activity\ActivityService $activityService, \Piwigo\Users\UserService $userService, \Piwigo\Image\ImageService $imageService, \Piwigo\Category\CategoryService $categoryService, \Piwigo\Group\GroupService $groupService, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer): void
     {
         $template = $currentTemplate->get();
 
@@ -139,7 +139,7 @@ final class UserActivityPageRenderer
             if ($userActivityRequest->hasFilter($filter_key)) {
                 $filter_value = $userActivityRequest->filterValue($filter_key);
                 if (! is_string($filter_value)) {
-                    \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+                    $htmlRenderer
                         ->fatalError('[Hacking attempt] the input parameter "' . $filter_key . '" is not valid');
                 }
 
@@ -151,7 +151,7 @@ final class UserActivityPageRenderer
                 };
 
                 if ($name === null) {
-                    \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+                    $htmlRenderer
                         ->fatalError($filter_key . ' #' . $filter_value . ' does not exist');
                 }
 

@@ -77,6 +77,7 @@ final class GalleryController implements ControllerInterface
         private readonly TagService $tagService,
         private readonly \Piwigo\Category\CategoryCatsRenderer $categoryCatsRenderer,
         private readonly \Piwigo\Category\CategoryDefaultRenderer $categoryDefaultRenderer,
+        private readonly \Piwigo\Html\HtmlService $htmlService,
     ) {}
 
     #[\Override]
@@ -109,10 +110,10 @@ final class GalleryController implements ControllerInterface
 
         // access authorization check
         if ($section_context->category !== null && is_numeric($section_context->category['id'] ?? null)) {
-            $this->categoryService->checkRestrictions((int) $section_context->category['id'], \Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService, $this->currentUser);
+            $this->categoryService->checkRestrictions((int) $section_context->category['id'], $this->htmlService, $this->redirectService, $this->currentUser);
         }
         if ($page_start > 0 && $page_start >= count($page_items)) {
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+            $this->htmlService
                 ->pageNotFound($this->redirectService, '', $this->urlService->duplicateIndexUrl([
                     'start' => 0,
                 ]));
@@ -299,7 +300,7 @@ final class GalleryController implements ControllerInterface
             $tags = $tagService->getCommonTags(
                 $page_items,
                 \Piwigo\Config\CurrentConfig::menubarTagCloudItemsNumber(),
-                \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
+                $this->htmlService,
                 $excluded_tag_ids
             );
 
@@ -413,10 +414,10 @@ final class GalleryController implements ControllerInterface
              */
             $cats = array_merge($matching_cats_no_images, $matching_cats);
             if ($cats !== []) {
-                usort($cats, \Piwigo\Bootstrap\PresentationAccessor::htmlService()->nameCompare(...));
+                usort($cats, $this->htmlService->nameCompare(...));
                 $hints = [];
                 foreach ($cats as $cat) {
-                    $hints[] = \Piwigo\Bootstrap\PresentationAccessor::htmlService()->getCatDisplayName([$cat], '');
+                    $hints[] = $this->htmlService->getCatDisplayName([$cat], '');
                 }
                 $template->assign('category_search_results', $hints);
             }
@@ -559,7 +560,7 @@ final class GalleryController implements ControllerInterface
         $body_data_section = $this->pageState->bodyData['section'] ?? null;
         if ($page_items !== [] and $body_data_section !== 'tags') {
             $selection = array_slice($page_items, $page_start, $page_nb_image_page);
-            $tags = $tagService->addLevelToTags($tagService->getCommonTags($selection, \Piwigo\Config\CurrentConfig::contentTagCloudItemsNumber(), \Piwigo\Bootstrap\PresentationAccessor::htmlService()));
+            $tags = $tagService->addLevelToTags($tagService->getCommonTags($selection, \Piwigo\Config\CurrentConfig::contentTagCloudItemsNumber(), $this->htmlService));
             $related_tags = [];
             foreach ($tags as $tag) {
                 $related_tags[] =
@@ -585,7 +586,7 @@ final class GalleryController implements ControllerInterface
         new \Piwigo\Page\PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate);
         $this->eventDispatcher->dispatchNotify(new LocEndIndex());
-        \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+        $this->htmlService
             ->flushPageMessages();
         $template->parse_index_buttons();
         $template->parse('index', false);

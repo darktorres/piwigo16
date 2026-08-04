@@ -59,6 +59,7 @@ final class MaintenanceActionsPageRenderer
         private readonly \Piwigo\Rate\RateService $rateService,
         private readonly \Piwigo\Category\CategoryService $categoryService,
         private readonly \Piwigo\Tag\TagService $tagService,
+        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
         private readonly ?\Piwigo\Cache\PersistentCache $persistentCache = null,
     ) {}
 
@@ -72,7 +73,7 @@ final class MaintenanceActionsPageRenderer
         $this->filesystemIntegrityChecker->fsQuickCheck();
 
         $action = MaintenanceActionRequest::fromGlobals()->action;
-        new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->filesystemIntegrityChecker, $this->sessionService, $this->translator, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->dbMaintenanceRepository, $this->activityService, $this->rateService, $this->categoryService, $this->tagService, $this->persistentCache)
+        new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->filesystemIntegrityChecker, $this->sessionService, $this->translator, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->dbMaintenanceRepository, $this->activityService, $this->rateService, $this->categoryService, $this->tagService, $this->htmlRenderer, $this->persistentCache)
             ->dispatch($action);
 
         // +-------------------------------------------------------------------+

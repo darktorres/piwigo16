@@ -35,6 +35,7 @@ final class SearchController implements ControllerInterface
         private readonly \Piwigo\Category\CategoryService $categoryService,
         private readonly \Piwigo\Tag\TagService $tagService,
         private readonly \Piwigo\Image\ImageService $imageService,
+        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     #[\Override]
@@ -121,7 +122,7 @@ final class SearchController implements ControllerInterface
         if ($searchQuery->hasCatId) {
             $cat_id_value = $searchQuery->catId;
             if (! is_string($cat_id_value)) {
-                \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+                $this->htmlRenderer
                     ->fatalError('[Hacking attempt] the input parameter "cat_id" is not valid');
             }
 
@@ -140,7 +141,7 @@ final class SearchController implements ControllerInterface
             $category_accessible = $this->categoryService
                 ->existsAndNotForbidden((int) $cat_id, $forbidden_categories_csv);
             if (! $category_accessible) {
-                \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+                $this->htmlRenderer
                     ->pageNotFound($this->redirectService, Lang::t('Requested album does not exist'));
             }
 
@@ -161,7 +162,7 @@ final class SearchController implements ControllerInterface
             if ($searchQuery->hasTagId) {
                 $tag_id_value = $searchQuery->tagId;
                 if (! is_string($tag_id_value)) {
-                    \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+                    $this->htmlRenderer
                         ->fatalError('[Hacking attempt] the input parameter "tag_id" is not valid');
                 }
 

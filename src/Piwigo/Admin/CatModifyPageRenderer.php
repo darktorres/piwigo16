@@ -43,11 +43,9 @@ final class CatModifyPageRenderer
      *
      * @param array<string, mixed> $category
      */
-    public function render(UrlServiceInterface $urlService, array $category, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Activity\ActivityService $activityService, \Piwigo\Category\CategoryService $categoryService): void
+    public function render(UrlServiceInterface $urlService, array $category, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Activity\ActivityService $activityService, \Piwigo\Category\CategoryService $categoryService, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer): void
     {
         $template = $currentTemplate->get();
-
-        $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
 
         $eventDispatcher->dispatchNotify(new LocBeginCatModify());
 

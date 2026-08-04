@@ -32,6 +32,7 @@ final class PluginSubController implements AdminSubControllerInterface
 {
     public function __construct(
         private readonly LoadedPlugins $loadedPlugins,
+        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     #[\Override]
@@ -40,7 +41,7 @@ final class PluginSubController implements AdminSubControllerInterface
         $pluginSection = PluginSectionRequest::fromGlobals();
 
         if (! isset($this->loadedPlugins->get()[$pluginSection->pluginId])) {
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+            $this->htmlRenderer
                 ->fatalError('Invalid URL - plugin ' . $pluginSection->pluginId . ' not active');
         }
 
@@ -48,7 +49,7 @@ final class PluginSubController implements AdminSubControllerInterface
         if (is_file($filename)) {
             include_once $filename;
         } else {
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+            $this->htmlRenderer
                 ->fatalError('Missing file ' . htmlentities($filename));
         }
     }

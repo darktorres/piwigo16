@@ -35,7 +35,7 @@ use Piwigo\Template\Template;
  */
 final class AlbumsPageRenderer
 {
-    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, CategoryAdminService $categoryAdminService, \Piwigo\Category\CategoryService $categoryService): void
+    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, CategoryAdminService $categoryAdminService, \Piwigo\Category\CategoryService $categoryService, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer): void
     {
         $template = $currentTemplate->get();
 
@@ -82,7 +82,7 @@ final class AlbumsPageRenderer
 
             $post_order = $albumsRequest->order;
             if (! is_string($post_order) || ! in_array($post_order, $sort_orders, true)) {
-                \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+                $htmlRenderer
                     ->fatalError('Invalid sort order');
             }
 

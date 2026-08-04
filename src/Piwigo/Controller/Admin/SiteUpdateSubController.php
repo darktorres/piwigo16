@@ -114,6 +114,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         private readonly PermissionService $permissionService,
         private readonly CategoryService $categoryService,
         private readonly \Piwigo\Tag\TagService $tagService,
+        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     private function imageService(Connection $conn): ImageService
@@ -132,14 +133,14 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         // +-----------------------------------------------------------------------+
 
         if (! \Piwigo\Config\CurrentConfig::enableSynchronization()) {
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+            $this->htmlRenderer
                 ->fatalError('synchronization is disabled');
         }
 
         $siteUpdateRequest = Request\SiteUpdateRequest::fromGlobals();
 
         if (! is_numeric($siteUpdateRequest->siteRaw)) {
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+            $this->htmlRenderer
                 ->fatalError('site param missing or invalid');
         }
         $site_id = (int) $siteUpdateRequest->siteRaw;
@@ -153,7 +154,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         $site_url = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Site\SiteEntity::class)
             ->findGalleriesUrlById($site_id);
         if (! is_string($site_url)) {
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+            $this->htmlRenderer
                 ->fatalError('site ' . $site_id . ' does not exist');
         }
         $site_is_remote = $this->urlService->urlIsRemote($site_url);
@@ -196,7 +197,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         $simulate = false;
 
         if ($site_is_remote) {
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+            $this->htmlRenderer
                 ->fatalError('remote sites not supported');
         } else {
             $site_reader = new LocalSiteReader($site_url, new \Piwigo\Metadata\MetadataService(new \Piwigo\Metadata\MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), $this->currentLogger, $this->eventDispatcher));
@@ -238,7 +239,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
 
         if ($siteUpdateRequest->quickSyncRequested) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
+                ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             $post['sync'] = 'files';
             $post['display_info'] = '1';
@@ -253,7 +254,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         $general_failure = true;
         if (isset($post['submit'])) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
+                ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
             if ($site_reader->open()) {
                 $general_failure = false;
@@ -1059,7 +1060,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             $query,
             $cat_selected,
             'category_options',
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService(),
+            $this->htmlRenderer,
             $template,
             false,
             [

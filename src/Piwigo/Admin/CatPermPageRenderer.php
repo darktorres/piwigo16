@@ -30,6 +30,7 @@ final class CatPermPageRenderer
         private readonly CategoryAdminService $categoryAdminService,
         private readonly \Piwigo\Group\GroupService $groupService,
         private readonly \Piwigo\Users\UserService $userService,
+        private readonly \Piwigo\Html\HtmlService $htmlService,
     ) {}
 
     /**
@@ -70,7 +71,7 @@ final class CatPermPageRenderer
         $catPermSubmit = Request\CatPermSubmitRequest::fromGlobals();
         if ($catPermSubmit->isSubmitted) {
             new \Piwigo\Csrf\CsrfService()
-                ->checkOrFail(\Piwigo\Bootstrap\PresentationAccessor::htmlService(), $this->redirectService);
+                ->checkOrFail($this->htmlService, $this->redirectService);
 
             $post_status = $catPermSubmit->status;
             $current_status = $category['status'];
@@ -97,7 +98,7 @@ final class CatPermPageRenderer
 
         $template->assign(
             [
-                'CATEGORIES_NAV' => \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+                'CATEGORIES_NAV' => $this->htmlService
                     ->getCatDisplayNameFromId(
                         $page['cat'],
                         'admin.php?page=album-'

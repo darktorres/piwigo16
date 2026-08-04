@@ -50,7 +50,7 @@ final class PluginsInstalledPageRenderer
      * slug statically (it's the only class registered for the 'plugins'
      * slug in config/admin_pages.php).
      */
-    public function render(string $pageSlug, UrlServiceInterface $urlService, \Piwigo\Core\CurrentLogger $currentLogger, SessionService $sessionService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Users\PreferencesService $preferencesService): void
+    public function render(string $pageSlug, UrlServiceInterface $urlService, \Piwigo\Core\CurrentLogger $currentLogger, SessionService $sessionService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Users\PreferencesService $preferencesService, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer): void
     {
         $template = $currentTemplate->get();
 
@@ -85,7 +85,7 @@ final class PluginsInstalledPageRenderer
         // defensively instead.
         $fs_plugins = new ExtensionScanner()
             ->scan(ExtensionType::Plugin, $urlService);
-        uasort($fs_plugins, \Piwigo\Bootstrap\PresentationAccessor::htmlService()->nameCompare(...));
+        uasort($fs_plugins, $htmlRenderer->nameCompare(...));
         $db_plugins_by_id = $extension_repository->findAll(ExtensionType::Plugin);
 
         // --------------------------------------------------------Incompatible Plugins

@@ -231,7 +231,7 @@ function themesInstalledLifecycle(): ExtensionLifecycle
 
     $activityRepo = EntityManagerFactory::build($conn)->getRepository(\Piwigo\Activity\ActivityEntity::class);
 
-    return new ExtensionLifecycle($repo, new PemCatalog(new ZipExtractor(), $currentLogger), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new ConfigService($configRepo, new \Piwigo\PluginConfig\EventDispatcher()), $pluginMigrationRepo, new \Piwigo\Activity\ActivityService($activityRepo), themesInstalledLifecycleUserService());
+    return new ExtensionLifecycle($repo, new PemCatalog(new ZipExtractor(), $currentLogger), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new ConfigService($configRepo, new \Piwigo\PluginConfig\EventDispatcher()), $pluginMigrationRepo, new \Piwigo\Activity\ActivityService($activityRepo), themesInstalledLifecycleUserService(), new HtmlService());
 }
 
 /**

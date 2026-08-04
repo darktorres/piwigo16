@@ -28,6 +28,7 @@ final class ThemeSubController implements AdminSubControllerInterface
 {
     public function __construct(
         private readonly UrlServiceInterface $urlService,
+        private readonly \Piwigo\Core\HtmlRenderingInterface $htmlRenderer,
     ) {}
 
     #[\Override]
@@ -38,7 +39,7 @@ final class ThemeSubController implements AdminSubControllerInterface
         $fs_themes = new ExtensionScanner()
             ->scan(ExtensionType::Theme, $this->urlService);
         if (! in_array($theme, array_keys($fs_themes), true)) {
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+            $this->htmlRenderer
                 ->fatalError('Invalid theme');
         }
 
@@ -46,7 +47,7 @@ final class ThemeSubController implements AdminSubControllerInterface
         if (is_file($filename)) {
             include_once $filename;
         } else {
-            \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+            $this->htmlRenderer
                 ->fatalError('Missing file ' . $filename);
         }
     }

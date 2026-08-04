@@ -2200,6 +2200,18 @@ final class CategoryRepository extends EntityRepository
      * `ga.groupId = :groupId` parameter needs the {@see GroupId} VO wrapper
      * (the well-supported single-value bind case, not the IN-clause array
      * one).
+     *
+     * pgsql support pass: explicit `ORDER BY c.id` added -- this query
+     * (and its 3 real siblings in this class with the identical gap:
+     * {@see findPrivateCategoriesExcluding()}, {@see findIdNameUppercatsRank()},
+     * {@see findPrivateCategoryIdsGrantedToGroup()}) had none, so its real
+     * row order was whatever the query planner happened to choose --
+     * MySQL incidentally returned id-ascending for this simple join, but
+     * Postgres's own planner picked a different (also SQL-standard-valid)
+     * order for the identical query, confirmed live via this exact
+     * method's own test going from `[1, 2]` to `[2, 1]`. A real
+     * nondeterminism gap the test happened to never previously catch, not
+     * a Postgres-only fix.
      */
     public function findPrivateCategoriesGrantedToGroup(int $groupId): array
     {
@@ -2210,6 +2222,7 @@ final class CategoryRepository extends EntityRepository
             ->andWhere('ga.groupId = :groupId')
             ->setParameter('status', 'private')
             ->setParameter('groupId', GroupId::from($groupId))
+            ->orderBy('c.id', 'ASC')
             ->getQuery()
             ->getArrayResult());
     }
@@ -2241,7 +2254,9 @@ final class CategoryRepository extends EntityRepository
                 ->setParameter('excludeCatIds', $excludeCatIds, ArrayParameterType::STRING);
         }
 
-        return self::narrowIdNameUppercatsRankRows($qb->getQuery()->getArrayResult());
+        // pgsql support pass: see findPrivateCategoriesGrantedToGroup()'s
+        // own docblock for why this needs an explicit order.
+        return self::narrowIdNameUppercatsRankRows($qb->orderBy('c.id', 'ASC')->getQuery()->getArrayResult());
     }
 
     /**
@@ -2279,7 +2294,9 @@ final class CategoryRepository extends EntityRepository
             $criteria->visibleCategoriesCondition('c.id'),
         ));
 
-        return self::narrowIdNameUppercatsRankRows($qb->getQuery()->getArrayResult());
+        // pgsql support pass: see findPrivateCategoriesGrantedToGroup()'s
+        // own docblock for why this needs an explicit order.
+        return self::narrowIdNameUppercatsRankRows($qb->orderBy('c.id', 'ASC')->getQuery()->getArrayResult());
     }
 
     /**
@@ -2850,6 +2867,9 @@ final class CategoryRepository extends EntityRepository
                 ->andWhere('ga.groupId = :groupId')
                 ->setParameter('status', 'private')
                 ->setParameter('groupId', GroupId::from($groupId))
+                // pgsql support pass: see findPrivateCategoriesGrantedToGroup()'s
+                // own docblock for why this needs an explicit order.
+                ->orderBy('c.id', 'ASC')
                 ->getQuery()
                 ->getSingleColumnResult()
         ));
@@ -3537,10 +3557,18 @@ final class CategoryRepository extends EntityRepository
             // operator (MySQL/MariaDB: RLIKE) rather than a hardcoded
             // 'REGEXP' dialect constant. No longer static since this
             // needs a real Connection to ask for it.
-            $regexOperator = $this->getEntityManager()
+            //
+            // pgsql support pass: real bug found live -- AbstractPlatform::
+            // getRegexpExpression() resolves to `SIMILAR TO` on Postgres, a
+            // genuinely different pattern-matching dialect than POSIX
+            // REGEXP (implicit whole-string anchoring, so the
+            // substring-search pattern below never matches -- confirmed
+            // live, same root cause as {@see \Piwigo\Db\DqlFunction\RegexpFunction}'s
+            // own fix). Postgres's own POSIX-regex operator is `~`.
+            $platform = $this->getEntityManager()
                 ->getConnection()
-                ->getDatabasePlatform()
-                ->getRegexpExpression();
+                ->getDatabasePlatform();
+            $regexOperator = $platform instanceof \Doctrine\DBAL\Platforms\PostgreSQLPlatform ? '~' : $platform->getRegexpExpression();
 
             return new SqlCondition('uppercats ' . $regexOperator . ' :catUppercatsLike', [
                 'catUppercatsLike' => '(^|,)' . $catId . '(,|$)',
@@ -3595,7 +3623,17 @@ final class CategoryRepository extends EntityRepository
         }
 
         if ($criteria->publicOnly) {
-            $conditions[] = new SqlCondition('status = "public" AND visible = 1');
+            // pgsql support pass: real bugs found live -- double-quoted
+            // "public" is a STRING LITERAL under MySQL's own lenient
+            // default (non-ANSI_QUOTES) SQL mode, but Postgres always
+            // treats double-quotes as an IDENTIFIER reference (never a
+            // string literal), so this failed outright there; switched to
+            // the single-quoted form both platforms treat identically.
+            // `visible` is a genuine boolean column -- a bare `1` literal
+            // is valid MySQL tinyint(1) input but Postgres rejects it
+            // outright against a real boolean column.
+            $visibleLiteral = $conn->getDatabasePlatform() instanceof \Doctrine\DBAL\Platforms\PostgreSQLPlatform ? 'true' : '1';
+            $conditions[] = new SqlCondition("status = 'public' AND visible = {$visibleLiteral}");
         }
 
         $combined = SqlCondition::combine('AND', new SqlCondition('1=1'), ...$conditions);
@@ -3629,9 +3667,11 @@ final class CategoryRepository extends EntityRepository
         }
 
         if ($limit !== null) {
+            $rankColumn = $conn->getDatabasePlatform()
+                ->quoteSingleIdentifier('rank');
             $sql .= <<<SQL
 
-                ORDER BY `rank` ASC
+                ORDER BY {$rankColumn} ASC
                 LIMIT :effectiveLimit
                 SQL;
             $params['effectiveLimit'] = $limit + ($limitPlusOne ? 1 : 0);

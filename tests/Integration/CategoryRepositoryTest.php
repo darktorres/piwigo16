@@ -68,8 +68,9 @@ final class CategoryRepositoryTest extends IntegrationTestCase
     {
         $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'public'");
         $this->conn->executeStatement('UPDATE ' . Tables::oldPermalinks() . " SET hit = 42, last_hit = '2026-07-07 05:02:38'");
+        $rank = $this->conn->getDatabasePlatform()->quoteSingleIdentifier('rank');
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::imageCategory() . ' SET `rank` = CASE image_id WHEN 1 THEN 1 WHEN 2 THEN 2 WHEN 3 THEN 3 END WHERE category_id = 1'
+            'UPDATE ' . Tables::imageCategory() . " SET {$rank} = CASE image_id WHEN 1 THEN 1 WHEN 2 THEN 2 WHEN 3 THEN 3 END WHERE category_id = 1"
         );
         parent::tearDown();
     }
@@ -272,13 +273,19 @@ final class CategoryRepositoryTest extends IntegrationTestCase
 
     public function test_find_image_ids_for_categories_orders_by_rank(): void
     {
-        // `` `rank` `` lives on the image_category join row, not on images
+        // `rank` lives on the image_category join row, not on images
         // itself -- deliberately set to the reverse of id order so a stale
         // fallback to id-order would fail this assertion.
+        $rank = $this->conn->getDatabasePlatform()->quoteSingleIdentifier('rank');
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::imageCategory() . ' SET `rank` = CASE image_id WHEN 1 THEN 3 WHEN 2 THEN 2 WHEN 3 THEN 1 END WHERE category_id = 1'
+            'UPDATE ' . Tables::imageCategory() . " SET {$rank} = CASE image_id WHEN 1 THEN 3 WHEN 2 THEN 2 WHEN 3 THEN 1 END WHERE category_id = 1"
         );
-        CurrentConfig::setOrderBy('ORDER BY `rank` ASC');
+        // No quoting needed here -- PhotoSortField::parseOrderByFragment()'s
+        // own regex already treats a surrounding backtick as optional, and
+        // this raw config string never round-trips through column()'s own
+        // (now driver-aware) quoted output, so a bare, unquoted field name
+        // parses identically on both platforms.
+        CurrentConfig::setOrderBy('ORDER BY rank ASC');
 
         $ids = $this->repo->findImageIdsForCategories([1], 'AND', self::noPermissionRestriction());
 
@@ -517,8 +524,14 @@ final class CategoryRepositoryTest extends IntegrationTestCase
     {
         $this->repo->updateCategoryVisibility([], false);
 
+        // visible is a genuine boolean column -- DBAL's raw (unmapped)
+        // fetchOne() returns a native PHP bool for it on Postgres, but a
+        // numeric 1/0 on MySQL (confirmed live). (int) (bool) normalizes
+        // either representation to the same value, unlike the old
+        // is_numeric()-gated cast, which silently produced null for a
+        // real Postgres bool.
         $visible = $this->conn->createQueryBuilder()->select('visible')->from(Tables::categories())->where('id = 1')->executeQuery()->fetchOne();
-        self::assertSame(1, is_numeric($visible) ? (int) $visible : null);
+        self::assertSame(1, (int) (bool) $visible);
     }
 
     public function test_update_category_commentable_is_a_no_op_for_no_ids(): void
@@ -526,7 +539,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         $this->repo->updateCategoryCommentable([], false);
 
         $commentable = $this->conn->createQueryBuilder()->select('commentable')->from(Tables::categories())->where('id = 1')->executeQuery()->fetchOne();
-        self::assertSame(1, is_numeric($commentable) ? (int) $commentable : null);
+        self::assertSame(1, (int) (bool) $commentable);
     }
 
     public function test_update_category_status_is_a_no_op_for_no_ids(): void

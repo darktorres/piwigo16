@@ -404,12 +404,27 @@ final class SearchRepository
      * quick-search tag/category text lookups need the whole row, not just
      * the id, to build `QResults::$all_tags`/`$all_cats`).
      *
+     * pgsql support pass: real bug found live -- `SELECT *` against
+     * `images`/`categories`/`tags` picks up their real Postgres-only
+     * `tsv_search`/`tsv_author` generated columns (Phase B/F's FULLTEXT
+     * migration), which no real caller here ever wants -- confirmed live
+     * leaking straight into `QResults::$all_tags`'s own row shape.
+     * Stripped by key prefix rather than narrowing the `SELECT *` itself:
+     * this method is deliberately generic across whatever table/columns
+     * each caller's own `$fromSql` names (its own docblock: "row shape
+     * genuinely varies"), and no legitimate caller's real column name
+     * would ever start with `tsv_` (this schema's own naming convention,
+     * confirmed via a fresh grep -- every real column is a plain noun,
+     * `tsv_*` is reserved for this FULLTEXT-generated-column purpose
+     * specifically), so this can't drop a real, wanted column for either
+     * platform.
+     *
      * @param  list<mixed>  $params
      * @return list<array<string, mixed>>
      */
     public function findRowsByClause(string $fromSql, string $whereSql, array $params = []): array
     {
-        return $this->em->getConnection()
+        $rows = $this->em->getConnection()
             ->executeQuery(
                 <<<SQL
                 SELECT * FROM {$fromSql} WHERE {$whereSql}
@@ -417,6 +432,15 @@ final class SearchRepository
                 ,
                 $params
             )->fetchAllAssociative();
+
+        return array_map(
+            static fn (array $row): array => array_filter(
+                $row,
+                static fn (string $key): bool => ! str_starts_with($key, 'tsv_'),
+                ARRAY_FILTER_USE_KEY
+            ),
+            $rows
+        );
     }
 
     /**

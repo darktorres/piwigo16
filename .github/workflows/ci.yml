@@ -2,16 +2,25 @@ name: CI
 
 on:
   push:
+    branches: ["17.x-rewrite"]
     paths-ignore:
       - "**/*.md"
       - "docs/**"
   pull_request:
+    branches: ["17.x-rewrite"]
     paths-ignore:
       - "**/*.md"
       - "docs/**"
 
 permissions:
   contents: read
+
+# Cancel superseded PR runs so rapid pushes don't pile up; never cancel a
+# push run on 17.x-rewrite itself, since that would silently drop that
+# commit's own SBOM/attestation output for no benefit.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   PHP_EXTENSIONS: calendar,ctype,curl,dom,fileinfo,filter,gd,iconv,intl,libxml,mbstring,mysqli,openssl,session,simplexml,zlib
@@ -427,7 +436,7 @@ jobs:
       - run: mkdir -p local && touch local/.installed.test
       - name: Start PHP built-in server
         run: |
-          php -S localhost:8080 -t . > /tmp/php-server.log 2>&1 &
+          php -S localhost:8080 -t public > /tmp/php-server.log 2>&1 &
           until curl -sf http://localhost:8080/index.php > /dev/null; do sleep 0.5; done
       - run: composer test:contract
 
@@ -490,7 +499,7 @@ jobs:
       - run: mkdir -p local && touch local/.installed.test
       - name: Start PHP built-in server
         run: |
-          php -S localhost:8080 -t . > /tmp/php-server.log 2>&1 &
+          php -S localhost:8080 -t public > /tmp/php-server.log 2>&1 &
           until curl -sf http://localhost:8080/index.php > /dev/null; do sleep 0.5; done
       - run: composer test:browser
 
@@ -559,16 +568,17 @@ jobs:
       # permanent, silent skip.
       - name: Start PHP built-in server
         run: |
-          # docs/PLAN.md gap-closure, 2026-07-23: -t public,
-          # not -t . like the other Browser-suite jobs above -- verified
-          # directly (a real `php -S -t .` + `curl /index.php` locally)
-          # that `-t .` 404s immediately at the PHP dev server's own
-          # routing layer, before any application code runs, since
-          # index.php/health.php/etc. only exist under public/, not the
-          # repo root. This job's own health-check would spin until
-          # timeout-minutes with the other jobs' -t . -- flagged
-          # separately as a likely pre-existing issue in those jobs
-          # rather than silently copied here.
+          # docs/PLAN.md gap-closure, 2026-07-23: -t public, not
+          # -t . -- verified directly (a real `php -S -t .` + `curl
+          # /index.php` locally) that `-t .` 404s immediately at the PHP dev
+          # server's own routing layer, before any application code runs,
+          # since index.php/health.php/etc. only exist under public/, not
+          # the repo root. This job's own health-check would spin until
+          # timeout-minutes with -t . -- the other Browser-suite jobs above
+          # carried the same bug (each burning its own full timeout every
+          # run) until it was propagated to them too; this job's own
+          # /health.php choice (see below) is unrelated to that fix and
+          # stays deliberate for this job's own reasons.
           php -S localhost:8080 -t public > /tmp/php-server.log 2>&1 &
           # health.php (not the clean /health URL -- that needs
           # .htaccess's RewriteRule, which php -S doesn't process) is
@@ -638,7 +648,7 @@ jobs:
       - run: mkdir -p local && touch local/.installed.test
       - name: Start PHP built-in server
         run: |
-          php -S localhost:8080 -t . > /tmp/php-server.log 2>&1 &
+          php -S localhost:8080 -t public > /tmp/php-server.log 2>&1 &
           until curl -sf http://localhost:8080/index.php > /dev/null; do sleep 0.5; done
       # Run in isolation from the mutating browser suite — bundling drifts
       # menu/album counts and produces false positives (see standing VR memory).
@@ -730,7 +740,7 @@ jobs:
       - run: mkdir -p local && touch local/.installed
       - name: Start PHP built-in server
         run: |
-          php -S 127.0.0.1:8123 -t . > /tmp/php-server.log 2>&1 &
+          php -S 127.0.0.1:8123 -t public > /tmp/php-server.log 2>&1 &
           until curl -sf http://127.0.0.1:8123/index.php > /dev/null; do sleep 0.5; done
       # lighthouserc.json has no `assert` block yet (P10 adds real budgets) —
       # collect + upload-to-filesystem only, cannot fail on scores today.
@@ -829,6 +839,29 @@ jobs:
               <Directory ${{ github.workspace }}/public>
                   Options FollowSymLinks
                   AllowOverride All
+                  Require all granted
+              </Directory>
+              # Apache's <Directory> access control is filesystem-path-based, not
+              # URL-based -- public/'s own 3 symlinks (themes/, dist/,
+              # _data/combined) resolve OUTSIDE the /public grant above, e.g. to
+              # ${{ github.workspace }}/themes. In the real production image
+              # (docker/apache-vhost.conf), that resolves under /var/www/, which
+              # the php:8.5-apache base image already grants Require all granted
+              # to by default (verified against the actual Debian apache2.conf +
+              # docker-library/php's own docker-php.conf) -- no fix needed there.
+              # This runner's checkout path isn't under /var/www/, so it gets no
+              # such implicit grant and falls through to global deny-by-default,
+              # 403ing anything reached only via those symlinks. Granted
+              # explicitly here so this harness matches what real deployments
+              # already get for free, instead of testing a stricter posture than
+              # what's actually shipped.
+              <Directory ${{ github.workspace }}/themes>
+                  Require all granted
+              </Directory>
+              <Directory ${{ github.workspace }}/dist>
+                  Require all granted
+              </Directory>
+              <Directory ${{ github.workspace }}/_data/combined>
                   Require all granted
               </Directory>
           </VirtualHost>

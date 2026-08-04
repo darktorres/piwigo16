@@ -1,10 +1,10 @@
 name: release-please
 
-# This repo's actual GitHub default branch is `16.x-rewrite` (an unrelated,
-# earlier rewrite lineage — see docs' P3 plan notes) and `17.x-rewrite` isn't
-# pushed to origin yet. release-please tracks *this* branch's own release
-# cadence, so target-branch is pinned explicitly below rather than relying
-# on "detected by default" (which would resolve to the wrong branch).
+# release-please tracks *this* branch's own release cadence, so
+# target-branch is pinned explicitly below rather than relying on
+# "detected by default" — `17.x-rewrite` is this repo's GitHub default
+# branch, but pinning it explicitly avoids ever silently retargeting a
+# release cadence if the default branch changes again in the future.
 on:
   push:
     branches: ["17.x-rewrite"]

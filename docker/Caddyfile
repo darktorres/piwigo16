@@ -18,13 +18,18 @@
 	# Part II (web-root isolation, docs/PLAN.md P29's pulled-forward
 	# entry-file-relocation slice): DocumentRoot is now /app/public, not
 	# /app itself. config/tools/dev/src/tests/install/vendor/node_modules/
-	# docs/deploy/.git -- and now also upload/galleries/local/language/
-	# plugins/_data (except _data/combined, symlinked into public/) -- are
-	# structurally unreachable by construction, no longer just deny-listed.
-	# The @denied/@denied_files rules below stay as defense-in-depth
-	# (matching this repo's own established SEC-01 precedent of keeping a
-	# rule even once its target is provably unreachable another way), not
-	# deleted.
+	# docs/deploy/.git are structurally unreachable by construction, no
+	# longer just deny-listed -- the @denied/@denied_files rules below stay
+	# as defense-in-depth (matching this repo's own established SEC-01
+	# precedent of keeping a rule even once its target is provably
+	# unreachable another way), not deleted.
+	#
+	# upload/galleries/local/language/plugins/_data (except _data/combined,
+	# symlinked into public/) are NOT structurally unreachable the same way,
+	# despite living outside /app/public too -- php_server's try_files
+	# fallback routes any non-static path to index.php instead of 404ing, so
+	# they need their own explicit deny (see @deniedRelocated/@deniedData
+	# below), the same as everything else in this block.
 	root * /app/public
 	encode zstd br gzip
 
@@ -49,6 +54,22 @@
 	# themes/*/vendor/. Checked directly, no change needed here.
 	@denied path /config/* /tools/* /dev/* /src/* /tests/* /install/* /vendor/* /node_modules/* /docs/* /deploy/* /.git/*
 	respond @denied 403
+
+	# docs/PLAN.md gap-closure: `root * /app/public` alone doesn't make
+	# upload/galleries/local/language/plugins/_data (except _data/combined,
+	# symlinked into public/) "structurally unreachable" the way the block
+	# comment above claims -- php_server's default try_files is `{path}
+	# {path}/index.php index.php`, so any request that isn't a real static
+	# file under /app/public silently falls through to index.php instead of
+	# 404ing at the web-server layer (confirmed against Caddy's own docs).
+	# Explicit deny, same as the @denied block above, closes that gap.
+	@deniedRelocated path /upload/* /galleries/* /local/* /language/* /plugins/*
+	respond @deniedRelocated 403
+	@deniedData {
+		path /_data/*
+		not path /_data/combined/*
+	}
+	respond @deniedData 403
 
 	# SEC-01: deny direct access to sensitive root-level tooling configs and
 	# dependency manifests too — not just the directories above. Mirrors

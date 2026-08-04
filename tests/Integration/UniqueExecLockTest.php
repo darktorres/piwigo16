@@ -76,15 +76,12 @@ final class UniqueExecLockTest extends IntegrationTestCase
         $otherConn = DbConnection::build();
 
         try {
-            $acquiredByOther = $otherConn->fetchOne(
-                'SELECT GET_LOCK(?, ?)',
-                [$this->lockNameFor($this->token), 1]
-            );
-            self::assertSame(1, $acquiredByOther);
+            $acquiredByOther = \Piwigo\Db\AdvisorySessionLock::acquire($otherConn, $this->lockNameFor($this->token), 1);
+            self::assertTrue($acquiredByOther);
 
             self::assertFalse(UniqueExecLock::begins($this->token));
         } finally {
-            $otherConn->fetchOne('SELECT RELEASE_LOCK(?)', [$this->lockNameFor($this->token)]);
+            \Piwigo\Db\AdvisorySessionLock::release($otherConn, $this->lockNameFor($this->token));
         }
     }
 
@@ -118,8 +115,8 @@ final class UniqueExecLockTest extends IntegrationTestCase
     {
         $otherConn = DbConnection::build();
 
-        $acquiredByOther = $otherConn->fetchOne('SELECT GET_LOCK(?, ?)', [$this->lockNameFor($this->token), 1]);
-        self::assertSame(1, $acquiredByOther, 'the other connection must genuinely hold the lock first');
+        $acquiredByOther = \Piwigo\Db\AdvisorySessionLock::acquire($otherConn, $this->lockNameFor($this->token), 1);
+        self::assertTrue($acquiredByOther, 'the other connection must genuinely hold the lock first');
         self::assertFalse(UniqueExecLock::begins($this->token), 'contended while the other connection is still open');
 
         // No RELEASE_LOCK() call -- close the connection outright and drop

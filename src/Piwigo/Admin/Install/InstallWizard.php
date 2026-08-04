@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Install;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\Migrations\Tools\Console\Command\MigrateCommand;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\AdminUiHelper;
@@ -32,6 +33,8 @@ use Piwigo\Core\Paths;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\MigrationDependencyFactory;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Html\HtmlService;
@@ -41,6 +44,8 @@ use Piwigo\Session\PwgSession;
 use Piwigo\Template\Template;
 use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
+use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Output\BufferedOutput;
 
 /**
  * install.php's orchestration, ported verbatim from that script's former
@@ -66,7 +71,7 @@ use Piwigo\Users\UserService;
  * every ConfigDb:: call here onto CurrentConfigService::get() -- safe
  * by the time performInstall() reaches them, since boot() already calls
  * InstallBootstrap::activateConfigService() and the config table exists
- * (piwigo_structure-mysql.sql/config.sql ran immediately above).
+ * (the Doctrine Migrations baseline/config.sql ran immediately above).
  */
 final class InstallWizard
 {
@@ -569,13 +574,40 @@ define(\'DB_COLLATE\', \'\');
             touch($this->paths->siteLocal . Env::testModeInstalledStamp());
         }
 
-        // tables creation, based on piwigo_structure.sql
-        InstallService::executeSqlfile(
-            $conn,
-            $this->paths->root . 'install/piwigo_structure-mysql.sql',
-            self::DEFAULT_PREFIX_TABLE,
-            $this->prefixeTable,
-        );
+        // tables creation, driven by the real Doctrine Migrations baseline
+        // (src/Piwigo/Migrations/) instead of a static SQL file -- see
+        // this class's own constructor docblock for why the
+        // DependencyFactory below is built directly from this
+        // already-seeded $conn rather than resolved via the container
+        // (config/container.php's own DependencyFactory::class entry
+        // backs bin/piwigo migrations:migrate's CLI usage only). Runs the
+        // real MigrateCommand programmatically (ArrayInput/setInteractive
+        // (false) skips its confirmation prompt, matching --no-interaction)
+        // rather than calling AliasResolver::resolveVersionAlias()/
+        // Migrator::migrate()/MigratorConfiguration directly -- confirmed
+        // via a real PHPStan run that all 3 are internal Doctrine APIs
+        // (method.internalInterface/new.internalClass), off limits from
+        // outside the Doctrine root namespace; MigrateCommand itself is
+        // the sanctioned public entry point, and running it this way also
+        // means a future point release adding a new migration file here
+        // becomes the real upgrade path for an existing install (bin/
+        // piwigo migrations:migrate), not just a fresh-install mechanism.
+        $migrationsEm = EntityManagerFactory::build($conn);
+        $dependencyFactory = MigrationDependencyFactory::build($migrationsEm, $this->dbCredentials);
+        $migrateInput = new ArrayInput([
+            'version' => 'latest',
+            '--allow-no-migration' => true,
+        ]);
+        $migrateInput->setInteractive(false);
+        $migrateOutput = new BufferedOutput();
+        $migrateExitCode = new MigrateCommand($dependencyFactory)
+            ->run($migrateInput, $migrateOutput);
+        if ($migrateExitCode !== 0) {
+            throw new \RuntimeException(
+                'Schema migration failed (migrations:migrate exit code ' . $migrateExitCode . '): ' . $migrateOutput->fetch()
+            );
+        }
+
         // We fill the tables with basic informations
         InstallService::executeSqlfile(
             $conn,

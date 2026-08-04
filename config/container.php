@@ -3,8 +3,6 @@
 declare(strict_types=1);
 
 use Doctrine\DBAL\Connection;
-use Doctrine\Migrations\Configuration\EntityManager\ExistingEntityManager;
-use Doctrine\Migrations\Configuration\Migration\ConfigurationArray;
 use Doctrine\Migrations\DependencyFactory;
 use Doctrine\Migrations\Tools\Console\Command\MigrateCommand;
 use Doctrine\ORM\EntityManagerInterface;
@@ -50,6 +48,7 @@ use Piwigo\Core\WebmasterMailProviderInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\MigrationDependencyFactory;
 use Piwigo\Feed\FeedEntity;
 use Piwigo\Feed\FeedRepository;
 use Piwigo\Filter\FilterService;
@@ -379,41 +378,21 @@ return [
     // Connection::class/EntityManagerInterface::class for the rest of the
     // request, which would permanently bind to whatever stale, pre-seed
     // credentials were current before install's own mid-request
-    // DbCredentials::seed() call runs) -- it builds a throwaway
-    // DependencyFactory of its own from an already-seeded connection
-    // instead, following the same pattern already established there for
-    // every other DB-touching service it needs.
+    // DbCredentials::seed() call runs) -- it calls
+    // MigrationDependencyFactory::build() directly instead, from its own
+    // already-seeded connection, following the same pattern already
+    // established there for every other DB-touching service it needs.
     //
-    // table_storage.table_name is set here, not in config/migrations.php
-    // itself, because it needs the real DbCredentials prefix at resolution
-    // time -- every other table in this schema carries PIWIGO_DB_PREFIX so
+    // The actual construction (table_storage.table_name prefixing --
+    // every other table in this schema carries PIWIGO_DB_PREFIX so
     // multiple installs can share one database; an unprefixed
     // doctrine_migration_versions ledger table would silently defeat that
-    // guarantee (two prefixed installs in the same DB would collide on,
-    // and corrupt, each other's migration history).
-    DependencyFactory::class => factory(static function (EntityManagerInterface $em, DbCredentials $dbCredentials): DependencyFactory {
-        $raw = require dirname(__DIR__) . '/config/migrations.php';
-        if (! is_array($raw)) {
-            throw new \RuntimeException('config/migrations.php must return an array.');
-        }
-
-        /** @var array<string, mixed> $migrationsConfig */
-        $migrationsConfig = [];
-        foreach ($raw as $key => $value) {
-            if (! is_string($key)) {
-                throw new \RuntimeException('config/migrations.php keys must be strings.');
-            }
-            $migrationsConfig[$key] = $value;
-        }
-        $migrationsConfig['table_storage'] = [
-            'table_name' => $dbCredentials->prefix . 'migration_versions',
-        ];
-
-        return DependencyFactory::fromEntityManager(
-            new ConfigurationArray($migrationsConfig),
-            new ExistingEntityManager($em),
-        );
-    }),
+    // guarantee) lives in MigrationDependencyFactory itself, not here, so
+    // both this container entry and InstallWizard's own direct call share
+    // one implementation.
+    DependencyFactory::class => factory(
+        static fn (EntityManagerInterface $em, DbCredentials $dbCredentials): DependencyFactory => MigrationDependencyFactory::build($em, $dbCredentials),
+    ),
 
     // MigrateCommand's constructor param is an OPTIONAL/nullable
     // DependencyFactory -- verified (same as every other optional

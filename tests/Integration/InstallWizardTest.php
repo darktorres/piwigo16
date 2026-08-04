@@ -23,17 +23,22 @@ use Piwigo\Tests\Support\KernelContainerOverride;
  * InstallWizard is install.php's whole orchestration, ported verbatim from
  * that script's former top-level code (see its own docblock). Every test
  * here runs the wizard for real -- a real Kernel-booted container, a real
- * Doctrine connection, real schema creation from install/piwigo_structure-
- * mysql.sql + install/config.sql -- against completely disposable state:
+ * Doctrine connection, real schema creation from the Doctrine Migrations
+ * baseline (src/Piwigo/Migrations/) + install/config.sql -- against
+ * completely disposable state:
  *
  *  - Paths::root is a throwaway directory under sys_get_temp_dir(), never
  *    the real repo root or the shared dev box's real local/.installed(.test)
  *    sentinel. install/, themes/, plugins/, language/ are symlinked in
  *    read-only from the real repo (InstallWizard needs the real admin
- *    theme's Smarty templates + the real install/*.sql files + the real
- *    bundled languages to behave authentically), but every WRITE path
- *    (.env(.test), local/config/database.inc.php, the install stamp,
+ *    theme's Smarty templates + the real install/config.sql file + the
+ *    real bundled languages to behave authentically), but every WRITE
+ *    path (.env(.test), local/config/database.inc.php, the install stamp,
  *    _data/, Smarty's compile dir) lands only inside this throwaway root.
+ *    Piwigo\Db\MigrationDependencyFactory::build() deliberately resolves
+ *    config/migrations.php relative to its own source file, not through
+ *    Paths (see that class's own docblock), so no config/ symlink is
+ *    needed here the way install/ needs one.
  *  - The database submitted through the (simulated) install form is a
  *    brand-new, uniquely-named database this test creates and drops itself,
  *    never the shared PIWIGO_DB_BASE Integration-test database every other

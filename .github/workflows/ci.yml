@@ -824,6 +824,24 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends apache2
           sudo a2enmod rewrite
+          # Confirmed via a real failing run's Apache error log (AH00035
+          # "search permissions are missing on a component of the path"),
+          # not assumed: /home/runner/work is owned by the `runner` user
+          # and isn't traversable by www-data (the default APACHE_RUN_USER),
+          # so the OS denies every request under this checkout before
+          # Apache's own <Directory>/.htaccess logic ever runs -- every
+          # "expected 403" assertion in this job happened to pass for the
+          # wrong reason (blocked by this OS-level wall, not by any
+          # rewrite rule), which is why this stayed hidden until the one
+          # assertion below that expects 200 instead. An explicit
+          # <Directory> grant can't fix this -- Apache's authorization
+          # phase is never reached. Simplest correct fix: run this
+          # throwaway CI-only Apache as the `runner` user, which already
+          # owns the whole checkout.
+          sudo sed -i \
+            -e 's/^export APACHE_RUN_USER=.*/export APACHE_RUN_USER=runner/' \
+            -e 's/^export APACHE_RUN_GROUP=.*/export APACHE_RUN_GROUP=runner/' \
+            /etc/apache2/envvars
       # Part II (web-root isolation): upload/, _data/i, _data/logs are
       # .gitignore'd runtime data, absent from a bare checkout -- created
       # here as real files so the new assertions below prove an existing,
@@ -844,29 +862,6 @@ jobs:
               <Directory ${{ github.workspace }}/public>
                   Options FollowSymLinks
                   AllowOverride All
-                  Require all granted
-              </Directory>
-              # Apache's <Directory> access control is filesystem-path-based, not
-              # URL-based -- public/'s own 3 symlinks (themes/, dist/,
-              # _data/combined) resolve OUTSIDE the /public grant above, e.g. to
-              # ${{ github.workspace }}/themes. In the real production image
-              # (docker/apache-vhost.conf), that resolves under /var/www/, which
-              # the php:8.5-apache base image already grants Require all granted
-              # to by default (verified against the actual Debian apache2.conf +
-              # docker-library/php's own docker-php.conf) -- no fix needed there.
-              # This runner's checkout path isn't under /var/www/, so it gets no
-              # such implicit grant and falls through to global deny-by-default,
-              # 403ing anything reached only via those symlinks. Granted
-              # explicitly here so this harness matches what real deployments
-              # already get for free, instead of testing a stricter posture than
-              # what's actually shipped.
-              <Directory ${{ github.workspace }}/themes>
-                  Require all granted
-              </Directory>
-              <Directory ${{ github.workspace }}/dist>
-                  Require all granted
-              </Directory>
-              <Directory ${{ github.workspace }}/_data/combined>
                   Require all granted
               </Directory>
           </VirtualHost>
@@ -919,20 +914,14 @@ jobs:
               exit 1
             fi
           done
-      # Temporary diagnostic (docs/PLAN.md gap-closure, follow-up): the
-      # exclusion regex above traces correctly by hand against
-      # %{REQUEST_URI}, a from-scratch local reproduction (Ubuntu 24.04 +
-      # apache2 2.4.58, matching this job's exact versions, both via
-      # apachectl and via `service`, both against a bind-mounted checkout
-      # and a fully synthetic filesystem) could NOT reproduce this 403 at
-      # all, and an explicit <Directory> grant for the symlink target made
-      # no difference on this runner either -- ruling out both the
-      # .htaccess rule itself and Apache's own Directory/Require config as
-      # the cause. Capturing real signal from the actual failing
-      # environment (AppArmor denials are the next candidate: a full VM
-      # runner enforces kernel-level confinement a plain container doesn't)
-      # instead of further guessing from a non-reproducing local harness.
-      - name: Debug Apache/AppArmor state on failure
+      # Root-caused via this step's own output on a real failing run (not
+      # local guessing, which never reproduced the bug): the "Install
+      # Apache" step's APACHE_RUN_USER=runner fix above addresses the real
+      # cause (AH00035, an OS-level permission wall, not the .htaccess rule
+      # or any Directory/Require config). Kept as a standing on-failure
+      # diagnostic for this job, matching the "Container logs" pattern
+      # below in container-deny-rules.
+      - name: Debug Apache state on failure
         if: failure()
         run: |
           echo "::group::AppArmor kernel module + status"

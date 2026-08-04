@@ -89,7 +89,7 @@ final class Version20260804122303 extends AbstractMigration
     #[\Override]
     public function up(Schema $schema): void
     {
-        $prefix = DbCredentials::current()->prefix;
+        $prefix = DbCredentials::fromEnv()->prefix;
         $isPostgres = $this->platform instanceof PostgreSQLPlatform;
 
         foreach (self::foreignKeys() as [$table, $constraintName, $column, $refTable, $refColumn, $onDelete]) {

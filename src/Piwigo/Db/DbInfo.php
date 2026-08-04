@@ -43,47 +43,11 @@ final readonly class DbInfo
     }
 
     /**
-     * Parses a column's live ENUM definition
-     * (`enum('blue','green','black')` -> `['blue', 'green', 'black']`) --
-     * matches the original `MysqliDb::getEnums()`'s own `DESC` +
-     * string-parse approach; no cross-driver-portable DBAL equivalent
-     * exists for reading a live ENUM definition. Shared here (not
-     * inlined per-caller) since it's called on different table/field
-     * pairs from multiple domains (Ws/Admin).
-     *
-     * @return list<string>
-     */
-    public function getEnums(string $table, string $field): array
-    {
-        // SQL-modernization audit: {$table} verified structural, not a
-        // splice defect -- every real caller passes a fixed Db\Tables::xxx()
-        // constant (Admin\HistoryPageRenderer, Ws\PwgCore, Ws\PwgUsers,
-        // Admin\UserListPageRenderer), never request-derived. $field is
-        // never interpolated into SQL at all (used only in the PHP-side
-        // row filter below).
-        $rows = $this->conn->executeQuery(<<<SQL
-            DESC {$table}
-            SQL)->fetchAllAssociative();
-
-        foreach ($rows as $row) {
-            if (($row['Field'] ?? null) === $field) {
-                $type = is_string($row['Type'] ?? null) ? $row['Type'] : '';
-                $options = explode(',', substr($type, 5, -1));
-
-                return array_map(static fn (string $option): string => str_replace('\'', '', $option), $options);
-            }
-        }
-
-        return [];
-    }
-
-    /**
      * A cheap "did this table change" fingerprint (its own max
      * `lastmodified` timestamp plus row count) -- Admin\AdminUiHelper's
      * own client-side cache-busting key, called on different tables from
      * multiple unrelated domains (categories/groups/images/tags/
-     * user_infos), same "no single owning domain" shape as
-     * {@see getEnums()} above.
+     * user_infos), no single owning domain.
      */
     public function getTableFingerprint(string $table): string
     {

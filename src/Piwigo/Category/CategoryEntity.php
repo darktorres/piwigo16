@@ -12,6 +12,17 @@ use Doctrine\ORM\Mapping as ORM;
  * `lastmodified` stays plain string, not \DateTimeImmutable -- matches
  * Category\Projection\Category's own already-documented decision.
  *
+ * `status` is `CategoryStatus` (native Doctrine `enumType` column), same
+ * pattern and same real gotcha as `Piwigo\Users\UserInfoEntity::$status`
+ * (Phase 5 Item 21): `enumType` hydration applies to *any* scalar/array
+ * DQL select of the field, not just full-entity reads, so every
+ * `CategoryRepository` method selecting `c.status` via
+ * `getArrayResult()`/`getSingleColumnResult()` was audited and updated to
+ * unwrap `->value` right after fetch, preserving each method's
+ * pre-existing plain-string return contract. WHERE/SET parameter binding
+ * (`setParameter('status', 'private')`) is unaffected either way, so
+ * those call sites are untouched.
+ *
  * Only a handful of CategoryRepository's 65 methods go through this
  * entity -- the large majority are bulk id-list operations against a
  * caller-supplied dynamic SQL fragment (permission conditions, ORDER BY
@@ -60,8 +71,8 @@ final class CategoryEntity
         public ?string $dir,
         #[ORM\Column(name: '`rank`', type: 'integer', nullable: true)]
         public ?int $rank,
-        #[ORM\Column(type: 'string', length: 10)]
-        public string $status,
+        #[ORM\Column(type: 'string', length: 10, enumType: CategoryStatus::class)]
+        public CategoryStatus $status,
         #[ORM\Column(name: 'site_id', type: 'integer', nullable: true)]
         public ?int $siteId,
         #[ORM\Column(type: 'boolean')]

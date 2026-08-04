@@ -7,9 +7,6 @@ namespace Piwigo\Admin;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\DbInfo;
-use Piwigo\Db\Tables;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\UserService;
 
@@ -24,7 +21,6 @@ final class UserListPageRenderer
     public function render(Lang $lang, UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, UserService $userService, PreferencesService $preferencesService, \Piwigo\Group\GroupService $groupService, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer, \Piwigo\Config\CurrentConfig $currentConfig): void
     {
         $template = $currentTemplate->get();
-        $conn = DbConnection::build();
 
         $userListFilter = Request\UserListFilterRequest::fromGlobals();
 
@@ -142,8 +138,8 @@ final class UserListPageRenderer
 
         // Status options
         $label_of_status = [];
-        foreach (new DbInfo($conn)->getEnums(Tables::userInfos(), 'status') as $status) {
-            $label_of_status[$status] = $lang->t('user_status_' . $status);
+        foreach (\Piwigo\Users\UserStatus::cases() as $userStatus) {
+            $label_of_status[$userStatus->value] = $lang->t('user_status_' . $userStatus->value);
         }
 
         $nb_users_by_status = [];

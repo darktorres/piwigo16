@@ -35,7 +35,7 @@ final class PluginRepository extends EntityRepository
             ->getResult();
 
         return array_map(
-            static fn (PluginEntity $entity): Plugin => new Plugin($entity->id, $entity->state, $entity->version),
+            static fn (PluginEntity $entity): Plugin => new Plugin($entity->id, $entity->state->value, $entity->version),
             $entities,
         );
     }

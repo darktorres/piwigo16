@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\History;
 
 use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\ORM\EntityRepository;
 use Piwigo\Auth\LastVisitLookupInterface;
 use Piwigo\Core\Env;
@@ -705,7 +706,7 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
                 'search_id' => is_numeric($row['searchId'] ?? null) ? (int) $row['searchId'] : null,
                 'tag_ids' => is_string($row['tagIds'] ?? null) ? $row['tagIds'] : null,
                 'image_id' => is_numeric($row['imageId'] ?? null) ? (int) $row['imageId'] : null,
-                'image_type' => is_string($row['imageType'] ?? null) ? $row['imageType'] : null,
+                'image_type' => ($row['imageType'] ?? null) instanceof HistoryImageType ? $row['imageType']->value : null,
             ];
         }
 
@@ -747,18 +748,38 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
      * approach -- no cross-driver-portable DBAL equivalent exists for
      * reading a live ENUM definition.
      *
+     * pgsql-support campaign: `section` deliberately carries no CHECK
+     * constraint on PostgreSQL at all (see the baseline migration's own
+     * docblock on this column) -- there is no schema-level "currently
+     * allowed values" construct to introspect the way MySQL's live ENUM
+     * definition provides. The Postgres branch instead derives the
+     * "known" set from real data (`SELECT DISTINCT section`) -- a
+     * self-healing analog: once a row using a given section value exists,
+     * a later cold-cache read recognizes it as known, same practical
+     * effect `alterSectionEnum()`'s MySQL-side schema widening exists to
+     * provide, without a DDL step.
+     *
      * @return list<string>
      */
     public function getSectionEnumOptions(): array
     {
+        $conn = $this->getEntityManager()
+            ->getConnection();
+        $historyTable = Tables::history();
+
+        if ($conn->getDatabasePlatform() instanceof PostgreSQLPlatform) {
+            $sections = $conn->executeQuery(<<<SQL
+                SELECT DISTINCT section FROM {$historyTable} WHERE section IS NOT NULL
+                SQL)->fetchFirstColumn();
+
+            return array_values(array_filter($sections, is_string(...)));
+        }
+
         // SQL-modernization audit: verified, {$historyTable} is a
         // structural Tables::history() constant, no real value spliced.
-        $historyTable = Tables::history();
-        $rows = $this->getEntityManager()
-            ->getConnection()
-            ->executeQuery(<<<SQL
-                DESC {$historyTable}
-                SQL)->fetchAllAssociative();
+        $rows = $conn->executeQuery(<<<SQL
+            DESC {$historyTable}
+            SQL)->fetchAllAssociative();
 
         foreach ($rows as $row) {
             if (($row['Field'] ?? null) === 'section') {
@@ -784,10 +805,21 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
      * logVisit(), `/^[a-zA-Z0-9_-]+$/`), never raw user input, matching
      * the original's own trust boundary for this DDL statement.
      *
+     * pgsql-support campaign: a genuine no-op on PostgreSQL -- `section`
+     * has no CHECK constraint there (see `getSectionEnumOptions()`'s own
+     * docblock), so every value the caller's own regex already accepts is
+     * already storable without any schema change.
+     *
      * @param  list<string>  $options
      */
     public function alterSectionEnum(array $options): void
     {
+        $conn = $this->getEntityManager()
+            ->getConnection();
+        if ($conn->getDatabasePlatform() instanceof PostgreSQLPlatform) {
+            return;
+        }
+
         // SQL-modernization audit: verified, not a target -- an ENUM
         // column definition has no bind-able parameter position in any
         // SQL dialect (DDL, same carve-out as Admin\Maintenance\
@@ -797,13 +829,11 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
         $enumList = implode(',', array_map(static fn (string $option): string => "'" . $option . "'", array_unique($options)));
 
         $historyTable = Tables::history();
-        $this->getEntityManager()
-            ->getConnection()
-            ->executeStatement(
-                <<<SQL
-                ALTER TABLE {$historyTable} CHANGE section section enum({$enumList}) DEFAULT NULL
-                SQL
-            );
+        $conn->executeStatement(
+            <<<SQL
+            ALTER TABLE {$historyTable} CHANGE section section enum({$enumList}) DEFAULT NULL
+            SQL
+        );
     }
 
     /**
@@ -827,7 +857,7 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
             searchId: $data['searchId'],
             tagIds: $data['tagsString'],
             imageId: $data['imageId'],
-            imageType: $data['imageType'],
+            imageType: $data['imageType'] !== null ? HistoryImageType::tryFrom($data['imageType']) : null,
             formatId: is_numeric($data['formatId']) ? (int) $data['formatId'] : null,
             authKeyId: $data['authKeyId'],
         );

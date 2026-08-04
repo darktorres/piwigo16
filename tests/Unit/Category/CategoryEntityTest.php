@@ -3,9 +3,10 @@
 declare(strict_types=1);
 
 use Piwigo\Category\CategoryEntity;
+use Piwigo\Category\CategoryStatus;
 
 /**
- * @return array{name: string, idUppercat: ?int, comment: ?string, dir: ?string, rank: ?int, status: string, siteId: ?int, visible: bool, representativePictureId: ?int, uppercats: string, commentable: bool, globalRank: ?string, imageOrder: ?string, permalink: ?string, lastmodified: string}
+ * @return array{name: string, idUppercat: ?int, comment: ?string, dir: ?string, rank: ?int, status: CategoryStatus, siteId: ?int, visible: bool, representativePictureId: ?int, uppercats: string, commentable: bool, globalRank: ?string, imageOrder: ?string, permalink: ?string, lastmodified: string}
  */
 function baseCategoryArgs(): array
 {
@@ -15,7 +16,7 @@ function baseCategoryArgs(): array
         'comment' => 'Photos from our trip to the coast',
         'dir' => 'summer-vacation-2026',
         'rank' => 3,
-        'status' => 'public',
+        'status' => CategoryStatus::Public,
         'siteId' => 1,
         'visible' => true,
         'representativePictureId' => 458,
@@ -37,7 +38,7 @@ test('constructs with distinct values for every property', function (): void {
         ->and($category->comment)->toBe('Photos from our trip to the coast')
         ->and($category->dir)->toBe('summer-vacation-2026')
         ->and($category->rank)->toBe(3)
-        ->and($category->status)->toBe('public')
+        ->and($category->status)->toBe(CategoryStatus::Public)
         ->and($category->siteId)->toBe(1)
         ->and($category->visible)->toBeTrue()
         ->and($category->representativePictureId)->toBe(458)

@@ -29,8 +29,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsError;
-use Piwigo\Db\DbInfo;
-use Piwigo\Db\Tables;
+use Piwigo\Db\DbConnection;
 use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Event\Tag\RenderTagName;
 use Piwigo\Event\Ws\GetHistory;
@@ -765,8 +764,12 @@ final class PwgCore
     public function historyLog(array $params, PwgServer &$service): void
     {
         $section = null;
-        if (! in_array($params['section'], [null, ''], true) and in_array($params['section'], new DbInfo($this->connection)->getEnums(Tables::history(), 'section'), true)) {
-            $section = $params['section'];
+        if (! in_array($params['section'], [null, ''], true)) {
+            $historyRepository = \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())
+                ->getRepository(\Piwigo\History\HistoryEntity::class);
+            if (in_array($params['section'], $historyRepository->getSectionEnumOptions(), true)) {
+                $section = $params['section'];
+            }
         }
 
         $category = null;
@@ -840,7 +843,10 @@ final class PwgCore
         $page = [];
         $page['start'] = Request\HistorySearchPageRequest::fromGlobals()->start;
 
-        $types = array_merge(['none'], new DbInfo($conn)->getEnums(Tables::history(), 'image_type'));
+        $types = array_merge(['none'], array_map(
+            static fn (\Piwigo\History\HistoryImageType $type): string => $type->value,
+            \Piwigo\History\HistoryImageType::cases()
+        ));
 
         $display_thumbnails = [
             'no_display_thumbnail' => $this->lang->t('No display'),

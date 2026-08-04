@@ -283,7 +283,7 @@ final class Version20260804122300 extends AbstractMigration
 
     private function upPostgres(): void
     {
-        $prefix = DbCredentials::current()->prefix;
+        $prefix = DbCredentials::fromEnv()->prefix;
 
         // Shared BEFORE UPDATE trigger function backing every
         // `ON UPDATE CURRENT_TIMESTAMP`-equivalent `lastmodified` column
@@ -548,6 +548,6 @@ final class Version20260804122300 extends AbstractMigration
      */
     private function withMysqlPrefix(string $sql): string
     {
-        return str_replace('piwigo_', DbCredentials::current()->prefix, $sql);
+        return str_replace('piwigo_', DbCredentials::fromEnv()->prefix, $sql);
     }
 }

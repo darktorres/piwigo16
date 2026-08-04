@@ -16,6 +16,11 @@ use Doctrine\ORM\Mapping as ORM;
  * (Item 14 Sub-phase B1) and only true for `findSummaryRowsForHierarchy()`'s
  * own dynamic composite-nullable-key WHERE; several sibling methods are
  * genuinely clean. Now mapped as {@see HistorySummaryEntity}.
+ *
+ * `imageType` is `HistoryImageType` (native Doctrine `enumType` column,
+ * pgsql-support campaign) -- `section` deliberately stays a plain
+ * `?string` instead, see {@see HistoryRepository::getSectionEnumOptions()}'s
+ * own docblock for why (plugin-widened at runtime, not a closed set).
  */
 #[ORM\Entity(repositoryClass: HistoryRepository::class)]
 #[ORM\Table(name: 'history')]
@@ -45,8 +50,8 @@ final class HistoryEntity
         public ?string $tagIds,
         #[ORM\Column(name: 'image_id', type: 'integer', nullable: true)]
         public ?int $imageId,
-        #[ORM\Column(name: 'image_type', type: 'string', length: 10, nullable: true)]
-        public ?string $imageType,
+        #[ORM\Column(name: 'image_type', type: 'string', length: 10, nullable: true, enumType: HistoryImageType::class)]
+        public ?HistoryImageType $imageType,
         #[ORM\Column(name: 'format_id', type: 'integer', nullable: true)]
         public ?int $formatId,
         #[ORM\Column(name: 'auth_key_id', type: 'integer', nullable: true)]

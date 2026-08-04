@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Category\Projection;
 
 use Piwigo\Category\CategoryEntity;
+use Piwigo\Category\CategoryStatus;
 
 /**
  * Typed row shape for `piwigo_categories` (P17-23 Stage 1b, Category domain
@@ -58,7 +59,7 @@ final readonly class Category
             comment: $entity->comment,
             dir: $entity->dir,
             rank: $entity->rank,
-            status: $entity->status,
+            status: $entity->status->value,
             siteId: $entity->siteId,
             visible: $entity->visible,
             representativePictureId: $entity->representativePictureId,
@@ -83,7 +84,7 @@ final readonly class Category
             comment: is_string($row['comment'] ?? null) ? $row['comment'] : null,
             dir: is_string($row['dir'] ?? null) ? $row['dir'] : null,
             rank: is_numeric($row['rank'] ?? null) ? (int) $row['rank'] : null,
-            status: is_string($row['status'] ?? null) ? $row['status'] : 'public',
+            status: self::narrowStatus($row['status'] ?? null),
             siteId: is_numeric($row['site_id'] ?? null) ? (int) $row['site_id'] : null,
             visible: is_numeric($row['visible'] ?? null) ? (bool) (int) $row['visible'] : true,
             representativePictureId: is_numeric($row['representative_picture_id'] ?? null) ? (int) $row['representative_picture_id'] : null,
@@ -94,6 +95,24 @@ final readonly class Category
             permalink: is_string($row['permalink'] ?? null) ? $row['permalink'] : null,
             lastmodified: is_string($row['lastmodified'] ?? null) ? $row['lastmodified'] : '',
         );
+    }
+
+    /**
+     * `$row['status']` is a plain string for a raw DBAL row, but a real
+     * `CategoryStatus` instance when `$row` came from DQL array hydration
+     * against {@see CategoryEntity}'s `enumType`-mapped `$status` (Phase 5
+     * Item 21's own gotcha, applied here: `enumType` hydration applies to
+     * scalar/array DQL selects too, not just full-entity reads) --
+     * `fromRow()` accepts either shape rather than assuming one caller
+     * convention.
+     */
+    private static function narrowStatus(mixed $value): string
+    {
+        if ($value instanceof CategoryStatus) {
+            return $value->value;
+        }
+
+        return is_string($value) ? $value : 'public';
     }
 
     /**

@@ -11,8 +11,6 @@ use Piwigo\Core\Env;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\DbInfo;
-use Piwigo\Db\Tables;
 
 /**
  * Ported from admin/history.php (page slug "history") -- displays the
@@ -56,7 +54,10 @@ final class HistoryPageRenderer
         $template = $currentTemplate->get();
         $conn = DbConnection::build();
 
-        $types = array_merge(['none'], new DbInfo($conn)->getEnums(Tables::history(), 'image_type'));
+        $types = array_merge(['none'], array_map(
+            static fn (\Piwigo\History\HistoryImageType $type): string => $type->value,
+            \Piwigo\History\HistoryImageType::cases()
+        ));
 
         $display_thumbnails = [
             'no_display_thumbnail' => $lang->t('No display'),

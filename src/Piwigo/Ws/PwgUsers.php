@@ -26,9 +26,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Core\WsError;
 use Piwigo\Csrf\CsrfService;
-use Piwigo\Db\DbInfo;
 use Piwigo\Db\SqlDialect;
-use Piwigo\Db\Tables;
 use Piwigo\Event\User\WsUsersGetList;
 use Piwigo\Group\GroupService;
 use Piwigo\Image\ImageService;
@@ -170,7 +168,10 @@ final class PwgUsers
 
         $status = null;
         if (isset($params['status']) && $params['status'] !== []) {
-            $matchedStatus = array_intersect($params['status'], new DbInfo($this->connection)->getEnums(Tables::userInfos(), 'status'));
+            $matchedStatus = array_intersect($params['status'], array_map(
+                static fn (\Piwigo\Users\UserStatus $userStatus): string => $userStatus->value,
+                \Piwigo\Users\UserStatus::cases()
+            ));
             if (count($matchedStatus) > 0) {
                 $status = array_values($matchedStatus);
             }

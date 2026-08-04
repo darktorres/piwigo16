@@ -1471,8 +1471,11 @@ final class CategoryRepository extends EntityRepository
 
         $byId = [];
         foreach ($rows as $row) {
-            /** @var array{id: int, status: string} $row */
-            $byId[$row['id']] = $row;
+            /** @var array{id: int, status: CategoryStatus} $row */
+            $byId[$row['id']] = [
+                'id' => $row['id'],
+                'status' => $row['status']->value,
+            ];
         }
 
         return $byId;
@@ -1899,7 +1902,7 @@ final class CategoryRepository extends EntityRepository
             $result[] = [
                 'id' => is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0,
                 'id_uppercat' => is_numeric($row['id_uppercat'] ?? null) ? (int) $row['id_uppercat'] : null,
-                'status' => is_string($row['status'] ?? null) ? $row['status'] : '',
+                'status' => ($row['status'] ?? null) instanceof CategoryStatus ? $row['status']->value : '',
                 'uppercats' => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
             ];
         }
@@ -1951,7 +1954,8 @@ final class CategoryRepository extends EntityRepository
      */
     public function findCategoryStatus(int $id): ?string
     {
-        return $this->find($id)?->status;
+        return $this->find($id)?->status
+            ->value;
     }
 
     /**
@@ -2014,7 +2018,7 @@ final class CategoryRepository extends EntityRepository
             'uppercats' => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
             'global_rank' => is_string($row['global_rank'] ?? null) ? $row['global_rank'] : '',
             'visible' => (bool) ($row['visible'] ?? false) ? 1 : 0,
-            'status' => is_string($row['status'] ?? null) ? $row['status'] : '',
+            'status' => ($row['status'] ?? null) instanceof CategoryStatus ? $row['status']->value : '',
         ];
     }
 
@@ -2971,13 +2975,14 @@ final class CategoryRepository extends EntityRepository
                 continue;
             }
 
+            $status = $row['status'] ?? null;
             $result[] = [
                 'id' => $row['id'] ?? null,
                 'name' => $row['name'] ?? null,
                 'permalink' => $row['permalink'] ?? null,
                 'dir' => $row['dir'] ?? null,
                 'rank' => $row['rank'] ?? null,
-                'status' => $row['status'] ?? null,
+                'status' => $status instanceof CategoryStatus ? $status->value : $status,
             ];
         }
 
@@ -3143,11 +3148,12 @@ final class CategoryRepository extends EntityRepository
                 continue;
             }
 
+            $status = $row['status'] ?? null;
             $result[] = [
                 'id' => $row['id'] ?? null,
                 'name' => $row['name'] ?? null,
                 'rank' => $row['rank'] ?? null,
-                'status' => $row['status'] ?? null,
+                'status' => $status instanceof CategoryStatus ? $status->value : $status,
                 'visible' => $row['visible'] ?? null,
                 'uppercats' => $row['uppercats'] ?? null,
                 'lastmodified' => $row['lastmodified'] ?? null,
@@ -3943,11 +3949,12 @@ final class CategoryRepository extends EntityRepository
                 continue;
             }
 
+            $status = $row['status'] ?? null;
             $result[] = [
                 'id' => $row['id'] ?? null,
                 'uppercats' => $row['uppercats'] ?? null,
                 'global_rank' => $row['global_rank'] ?? null,
-                'status' => $row['status'] ?? null,
+                'status' => $status instanceof CategoryStatus ? $status->value : $status,
                 'visible' => $row['visible'] ?? null,
             ];
         }

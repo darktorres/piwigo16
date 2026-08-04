@@ -183,7 +183,7 @@ final class Version20260804122301 extends AbstractMigration
 
     private function upPostgres(): void
     {
-        $prefix = DbCredentials::current()->prefix;
+        $prefix = DbCredentials::fromEnv()->prefix;
 
         $this->addSql('CREATE TABLE ' . $prefix . 'group_access (group_id integer NOT NULL, cat_id integer NOT NULL, PRIMARY KEY (group_id, cat_id))');
         $this->addSql("COMMENT ON TABLE {$prefix}group_access IS 'per-group private album permission grants'");
@@ -370,6 +370,6 @@ final class Version20260804122301 extends AbstractMigration
      */
     private function withMysqlPrefix(string $sql): string
     {
-        return str_replace('piwigo_', DbCredentials::current()->prefix, $sql);
+        return str_replace('piwigo_', DbCredentials::fromEnv()->prefix, $sql);
     }
 }

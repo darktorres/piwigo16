@@ -79,6 +79,21 @@ final class ContainerSmokeTest extends TestCase
         // DeploymentPolicy (Phase 4) -- fails to resolve for the identical
         // reason, one level removed.
         \Piwigo\Core\DefaultLanguageProviderInterface::class,
+        // Piwigo\Core\RedirectServiceInterface resolves to
+        // Piwigo\Bootstrap\RedirectService, which now constructor-injects
+        // Piwigo\Users\UserService (singleton/service-locator elimination
+        // campaign, Phase 6) -- same "Kernel booted with no real Paths"
+        // reasoning as DefaultLanguageProviderInterface above, one level
+        // removed through UserService's own DeploymentPolicy dependency.
+        \Piwigo\Core\RedirectServiceInterface::class,
+        // Piwigo\Core\TelemetrySenderInterface resolves to
+        // Piwigo\Admin\PiwigoInfosSender, which constructor-injects
+        // Piwigo\Admin\InstallationStats (singleton/service-locator
+        // elimination campaign, Phase 6's own ExtendedDomainAccessor
+        // sub-batch), which itself constructor-injects UserService -- same
+        // "Kernel booted with no real Paths" reasoning as
+        // DefaultLanguageProviderInterface above, two levels removed.
+        \Piwigo\Core\TelemetrySenderInterface::class,
     ];
 
     public function test_every_container_entry_resolves(): void

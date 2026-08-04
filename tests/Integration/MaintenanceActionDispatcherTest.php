@@ -144,18 +144,33 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
     }
 
     /**
-     * Never actually invoked -- same reasoning as
-     * maintenanceActionDispatcherTestImageService() (only
-     * `delete_orphan_tags` reaches it, verified live).
+     * `delete_orphan_tags` really does reach this (test_delete_orphan_tags_
+     * removes_a_tag_with_no_image_links() below), unlike this file's other
+     * "never actually invoked" throwaways -- TagService::deleteTags() reads
+     * (then rewrites) $this->currentUser->get(), so the CurrentUser passed
+     * here must be pre-seeded with a real User, not a bare, never-set
+     * instance (caught live: a bare `new CurrentUser()` throws "CurrentUser
+     * not initialised" the first time deleteTags() runs).
      */
     private function maintenanceActionDispatcherTestTagService(): \Piwigo\Tag\TagService
     {
+        $currentUser = new \Piwigo\Users\CurrentUser();
+        $currentUser->set(new \Piwigo\Users\User(
+            id: \Piwigo\Common\ValueObject\UserId::from(2),
+            username: 'maintenance-action-dispatcher-test-tag-service-user',
+            email: '',
+            language: '',
+            theme: '',
+            status: \Piwigo\Users\UserStatus::Normal,
+            enabledHigh: false,
+        ));
+
         return new \Piwigo\Tag\TagService(
             \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Tag\TagEntity::class),
             $this->maintenanceActionDispatcherTestPermissionService(),
             $this->maintenanceActionDispatcherTestActivityService(),
             new \Piwigo\PluginConfig\EventDispatcher(),
-            new \Piwigo\Users\CurrentUser(),
+            $currentUser,
         );
     }
 

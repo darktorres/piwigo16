@@ -47,7 +47,15 @@ final class InstallServiceTest extends IntegrationTestCase
         parent::setUp();
         $this->setUpConnectionFromEnv();
 
-        foreach (['PIWIGO_DB_HOST', 'PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD', 'PIWIGO_DB_BASE', 'PIWIGO_DB_PREFIX'] as $key) {
+        // pgsql support pass: real bug found live -- PIWIGO_DB_DRIVER/
+        // PIWIGO_DB_PORT were both missing here, defeating this exact
+        // list's own stated purpose above: installDbConnect() calls here
+        // (this class's real subject) mutate the real process env via
+        // DbCredentials::seed()/putenv(), submitting no explicit driver
+        // most of the time (defaults to mysqli), which then leaked
+        // unrestored into every later Integration test class in the same
+        // process -- confirmed live via a full suite run.
+        foreach (['PIWIGO_DB_HOST', 'PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD', 'PIWIGO_DB_BASE', 'PIWIGO_DB_PREFIX', 'PIWIGO_DB_DRIVER', 'PIWIGO_DB_PORT'] as $key) {
             $value = getenv($key);
             $this->originalDbEnv[$key] = $value === false ? '' : $value;
         }
@@ -184,17 +192,28 @@ final class InstallServiceTest extends IntegrationTestCase
         // really is the driver's authentication failure (distinct from the
         // "unknown database" branch exercised just below, which fails for a
         // completely different reason and must not report the same text).
-        self::assertStringContainsString('Access denied', $errors[0]);
-        self::assertStringContainsString("'" . $this->dbUser . "'", $errors[0]);
+        // Real wording (and even the username quoting style) differs per
+        // driver -- MySQL's mysqli says "Access denied ... 'user'@'host'"
+        // (single-quoted), Postgres says 'password authentication failed
+        // for user "user"' (double-quoted), confirmed live against the
+        // real server.
+        if ($this->dbDriver === 'pgsql') {
+            self::assertStringContainsString('password authentication failed', $errors[0]);
+            self::assertStringContainsString('"' . $this->dbUser . '"', $errors[0]);
+        } else {
+            self::assertStringContainsString('Access denied', $errors[0]);
+            self::assertStringContainsString("'" . $this->dbUser . "'", $errors[0]);
+        }
         self::assertSame([], $infos);
     }
 
     public function test_installDbConnect_returns_null_and_records_an_error_for_an_unknown_database_name(): void
     {
         // A bogus dbname (rather than an unreachable host/IP) fails fast --
-        // MySQL replies "Unknown database" immediately once the TCP
-        // connection itself succeeds, unlike an unreachable host, which
-        // would otherwise block on a real ~60s connect-timeout here.
+        // both drivers reply immediately once the TCP connection itself
+        // succeeds (MySQL: "Unknown database"; Postgres: "database ...
+        // does not exist"), unlike an unreachable host, which would
+        // otherwise block on a real ~60s connect-timeout here.
         DbCredentials::current()->seed([
             'PIWIGO_DB_HOST' => $this->dbHost,
             'PIWIGO_DB_USER' => $this->dbUser,
@@ -218,7 +237,10 @@ final class InstallServiceTest extends IntegrationTestCase
         // while writing this test: a broken credential-reseeding sequence
         // between the two test methods above produced exactly that
         // indistinguishable-failure symptom).
-        self::assertStringContainsString('Unknown database', $errors[0]);
+        self::assertStringContainsString(
+            $this->dbDriver === 'pgsql' ? 'does not exist' : 'Unknown database',
+            $errors[0]
+        );
         self::assertStringContainsString('piwigo_test_db_that_does_not_exist_xyz', $errors[0]);
     }
 

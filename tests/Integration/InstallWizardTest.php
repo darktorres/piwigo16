@@ -182,7 +182,19 @@ final class InstallWizardTest extends IntegrationTestCase
         Kernel::reset();
         $this->setUpConnectionFromEnv();
 
-        foreach (['PIWIGO_DB_HOST', 'PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD', 'PIWIGO_DB_BASE', 'PIWIGO_DB_PREFIX'] as $key) {
+        // pgsql support pass: real bug found live -- PIWIGO_DB_DRIVER/
+        // PIWIGO_DB_PORT were both missing from this list, so boot()'s own
+        // real DbCredentials::seed() call (every real test here reaches
+        // it via analyzeForm()/boot(), submitting no explicit 'dbdriver'
+        // field, which InstallWizardRequest defaults to 'mysqli') left
+        // the REAL process env var permanently flipped to mysqli after
+        // this class's own tests ran, unrestored by tearDown() below --
+        // confirmed live via a full Integration-suite run: dozens of
+        // unrelated later test classes silently ran against the wrong
+        // driver (`PIWIGO_DB_DRIVER=pgsql` in `.env.test`, but
+        // `getenv('PIWIGO_DB_DRIVER')` returning the leaked 'mysqli')
+        // once this class's tests happened to run first in process order.
+        foreach (['PIWIGO_DB_HOST', 'PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD', 'PIWIGO_DB_BASE', 'PIWIGO_DB_PREFIX', 'PIWIGO_DB_DRIVER', 'PIWIGO_DB_PORT'] as $key) {
             $value = getenv($key);
             $this->originalDbEnv[$key] = $value === false ? '' : $value;
         }
@@ -230,9 +242,7 @@ final class InstallWizardTest extends IntegrationTestCase
         }
         Kernel::reset();
         foreach ($this->createdDatabases as $dbName) {
-            $db = $this->newMysqli('');
-            $db->query(sprintf('DROP DATABASE IF EXISTS `%s`', $dbName));
-            $db->close();
+            $this->dropDatabase($dbName);
         }
         $this->removeTree($this->tempRoot);
         parent::tearDown();
@@ -267,10 +277,7 @@ final class InstallWizardTest extends IntegrationTestCase
     private function createFreshDatabase(): string
     {
         $name = 'piwigo_installwizard_' . bin2hex(random_bytes(5));
-        $db = $this->newMysqli('');
-        self::assertSame(0, $db->connect_errno, $db->connect_error ?? '');
-        self::assertTrue($db->query(sprintf('CREATE DATABASE `%s` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci', $name)));
-        $db->close();
+        $this->dropAndCreateDatabase($name);
         $this->createdDatabases[] = $name;
 
         return $name;
@@ -338,8 +345,38 @@ final class InstallWizardTest extends IntegrationTestCase
         return implode('; ', array_map(static fn (mixed $e): string => is_string($e) ? $e : '', $errors));
     }
 
-    private function queryOne(string $dbName, string $sql): mixed
+    /**
+     * pg_fetch_assoc()/mysqli_result::fetch_assoc() are both documented to
+     * return purely string-keyed rows (column names) in practice, but
+     * their own PHPStan stubs are conservative about it (`array<int|string,
+     * ...>` for the pg one) -- rebuilt into a genuinely string-keyed array
+     * here rather than trusting/casting past that, since every real caller
+     * only ever accesses a named key (e.g. $row['c']).
+     *
+     * @return array<string, mixed>|null
+     */
+    private function queryOne(string $dbName, string $sql): ?array
     {
+        if ($this->dbDriver === 'pgsql') {
+            $conn = $this->newPgsqlConnection($dbName);
+            $result = pg_query($conn, $sql);
+            self::assertNotFalse($result, 'pg_query failed');
+            $row = pg_fetch_assoc($result);
+            pg_close($conn);
+
+            if ($row === false) {
+                return null;
+            }
+
+            $stringKeyed = [];
+            foreach ($row as $key => $value) {
+                self::assertIsString($key, 'queryOne() expects string column names');
+                $stringKeyed[$key] = $value;
+            }
+
+            return $stringKeyed;
+        }
+
         $db = $this->newMysqli($dbName);
         self::assertSame(0, $db->connect_errno, $db->connect_error ?? '');
         $result = $db->query($sql);
@@ -347,7 +384,7 @@ final class InstallWizardTest extends IntegrationTestCase
         $row = $result->fetch_assoc();
         $db->close();
 
-        return $row;
+        return $row === false ? null : $row;
     }
 
     /** Runs a `SELECT COUNT(*) AS c ...` query and returns the count as a real int. */
@@ -400,6 +437,7 @@ final class InstallWizardTest extends IntegrationTestCase
 
         $wizard = $this->submit([
             'dbhost' => $this->dbHost,
+            'dbdriver' => $this->dbDriver,
             'dbuser' => $this->dbUser,
             'dbpasswd' => $this->dbPass,
             'dbname' => $this->dbName,
@@ -434,6 +472,7 @@ final class InstallWizardTest extends IntegrationTestCase
 
         $wizard = $this->submit([
             'dbhost' => $this->dbHost,
+            'dbdriver' => $this->dbDriver,
             'dbuser' => $this->dbUser,
             'dbpasswd' => $this->dbPass,
             'dbname' => $this->dbName,
@@ -496,6 +535,7 @@ final class InstallWizardTest extends IntegrationTestCase
 
         $wizard = $this->submit([
             'dbhost' => $this->dbHost,
+            'dbdriver' => $this->dbDriver,
             'dbuser' => $this->dbUser,
             'dbpasswd' => $this->dbPass,
             'dbname' => $this->dbName,
@@ -541,6 +581,7 @@ final class InstallWizardTest extends IntegrationTestCase
 
         $wizard = $this->submit([
             'dbhost' => $this->dbHost,
+            'dbdriver' => $this->dbDriver,
             'dbuser' => $this->dbUser,
             'dbpasswd' => $this->dbPass,
             'dbname' => $this->dbName,
@@ -560,6 +601,7 @@ final class InstallWizardTest extends IntegrationTestCase
 
         $wizard = $this->submit([
             'dbhost' => $this->dbHost,
+            'dbdriver' => $this->dbDriver,
             'dbuser' => $this->dbUser,
             'dbpasswd' => $this->dbPass,
             'dbname' => $freshDb,
@@ -663,6 +705,7 @@ final class InstallWizardTest extends IntegrationTestCase
 
         $wizard = $this->submit([
             'dbhost' => $this->dbHost,
+            'dbdriver' => $this->dbDriver,
             'dbuser' => $this->dbUser,
             'dbpasswd' => $this->dbPass,
             'dbname' => $freshDb,
@@ -759,6 +802,7 @@ final class InstallWizardTest extends IntegrationTestCase
 
         $wizard = $this->submit([
             'dbhost' => $this->dbHost,
+            'dbdriver' => $this->dbDriver,
             'dbuser' => $this->dbUser,
             'dbpasswd' => $this->dbPass,
             'dbname' => $freshDb,
@@ -828,6 +872,7 @@ final class InstallWizardTest extends IntegrationTestCase
 
         $wizard = $this->submit([
             'dbhost' => $this->dbHost,
+            'dbdriver' => $this->dbDriver,
             'dbuser' => $this->dbUser,
             'dbpasswd' => $this->dbPass,
             'dbname' => $freshDb,
@@ -1072,6 +1117,7 @@ final class InstallWizardTest extends IntegrationTestCase
 
         $wizard = $this->submit([
             'dbhost' => $this->dbHost,
+            'dbdriver' => $this->dbDriver,
             'dbuser' => $this->dbUser,
             'dbpasswd' => $this->dbPass,
             'dbname' => $this->dbName,
@@ -1097,6 +1143,7 @@ final class InstallWizardTest extends IntegrationTestCase
 
         $wizard = $this->submit([
             'dbhost' => $this->dbHost,
+            'dbdriver' => $this->dbDriver,
             'dbuser' => $this->dbUser,
             'dbpasswd' => $this->dbPass,
             'dbname' => $this->dbName,
@@ -1198,6 +1245,7 @@ final class InstallWizardTest extends IntegrationTestCase
 
         $wizard = $this->submit([
             'dbhost' => $this->dbHost,
+            'dbdriver' => $this->dbDriver,
             'dbuser' => $this->dbUser,
             'dbpasswd' => $this->dbPass,
             'dbname' => $freshDb,
@@ -1276,6 +1324,7 @@ final class InstallWizardTest extends IntegrationTestCase
 
         $wizard = $this->submit([
             'dbhost' => $this->dbHost,
+            'dbdriver' => $this->dbDriver,
             'dbuser' => $this->dbUser,
             'dbpasswd' => $this->dbPass,
             'dbname' => $freshDb,
@@ -1324,6 +1373,7 @@ final class InstallWizardTest extends IntegrationTestCase
         $this->bootInstallBootstrap();
         $wizard = $this->submit([
             'dbhost' => $this->dbHost,
+            'dbdriver' => $this->dbDriver,
             'dbuser' => $this->dbUser,
             'dbpasswd' => $this->dbPass,
             'dbname' => $this->dbName,

@@ -75,7 +75,13 @@ final class RequestBootstrapBootEntryPointTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        foreach (['PIWIGO_DB_HOST', 'PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD', 'PIWIGO_DB_BASE', 'PIWIGO_DB_PREFIX'] as $key) {
+        // pgsql support pass: PIWIGO_DB_DRIVER/PIWIGO_DB_PORT added for
+        // completeness -- see InstallWizardTest/InstallServiceTest's own
+        // docblocks for the real live-confirmed bug this exact list
+        // missing these two keys caused elsewhere (a permanently leaked
+        // env var corrupting every later Integration test class in the
+        // same process).
+        foreach (['PIWIGO_DB_HOST', 'PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD', 'PIWIGO_DB_BASE', 'PIWIGO_DB_PREFIX', 'PIWIGO_DB_DRIVER', 'PIWIGO_DB_PORT'] as $key) {
             $value = getenv($key);
             $this->originalDbEnv[$key] = $value === false ? '' : $value;
         }

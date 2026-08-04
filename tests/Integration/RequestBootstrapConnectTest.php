@@ -82,7 +82,15 @@ final class RequestBootstrapConnectTest extends IntegrationTestCase
             self::$fixtureReady = true;
         }
 
-        foreach (['PIWIGO_DB_HOST', 'PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD', 'PIWIGO_DB_BASE', 'PIWIGO_DB_PREFIX'] as $key) {
+        // pgsql support pass: PIWIGO_DB_DRIVER/PIWIGO_DB_PORT added for
+        // completeness -- see InstallWizardTest/InstallServiceTest's own
+        // docblocks for the real live-confirmed bug this exact list
+        // missing these two keys caused elsewhere (a permanently leaked
+        // env var corrupting every later Integration test class in the
+        // same process). This class's own seed() call below doesn't
+        // currently touch either key, but capturing them here too closes
+        // the same class of gap before a future edit could reintroduce it.
+        foreach (['PIWIGO_DB_HOST', 'PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD', 'PIWIGO_DB_BASE', 'PIWIGO_DB_PREFIX', 'PIWIGO_DB_DRIVER', 'PIWIGO_DB_PORT'] as $key) {
             $value = getenv($key);
             $this->originalDbEnv[$key] = $value === false ? '' : $value;
         }
@@ -140,7 +148,7 @@ final class RequestBootstrapConnectTest extends IntegrationTestCase
 
     public function test_connect_shows_a_fatal_error_page_when_the_database_is_unreachable(): void
     {
-        // A wrong password fails fast (a real MySQL "Access denied" reply)
+        // A wrong password fails fast (a real driver auth-failure reply)
         // instead of blocking on a real ~60s connect-timeout the way an
         // unreachable host/IP would -- same reasoning as
         // InstallServiceTest::test_installDbConnect_returns_null_and_records_an_error_for_a_wrong_password.
@@ -161,7 +169,13 @@ final class RequestBootstrapConnectTest extends IntegrationTestCase
             // Specific content, not just "some non-empty string" -- proves
             // the real driver exception message made it through
             // Lang::t($e->getMessage()) into the fatalError() page body.
-            self::assertStringContainsString('Access denied', (string) $response->getBody());
+            // Real wording differs per driver -- MySQL's mysqli says
+            // "Access denied", Postgres says "password authentication
+            // failed" (confirmed live against the real server).
+            self::assertStringContainsString(
+                $this->dbDriver === 'pgsql' ? 'password authentication failed' : 'Access denied',
+                (string) $response->getBody()
+            );
         }
     }
 
@@ -275,8 +289,13 @@ final class RequestBootstrapConnectTest extends IntegrationTestCase
             self::assertSame('16.0.0', $decoded['from_version']);
             self::assertSame(AppInfo::VERSION, $decoded['to_version']);
         } finally {
+            // activity.details is a genuine json column on MySQL (LIKE
+            // works directly) but jsonb on Postgres, which rejects LIKE
+            // against it outright ("operator does not exist: jsonb ~~
+            // unknown") -- needs an explicit ::text cast there.
+            $detailsColumn = $this->dbDriver === 'pgsql' ? 'details::text' : 'details';
             $this->conn->executeStatement(
-                'DELETE FROM ' . Tables::activity() . ' WHERE object = ? AND object_id = ? AND action = ? AND details LIKE ?',
+                'DELETE FROM ' . Tables::activity() . ' WHERE object = ? AND object_id = ? AND action = ? AND ' . $detailsColumn . ' LIKE ?',
                 ['system', ActivitySystem::Core, 'autoupdate', '%16.0.0%']
             );
             $this->configService->confUpdateParam('piwigo_installed_version', '16.3.0');

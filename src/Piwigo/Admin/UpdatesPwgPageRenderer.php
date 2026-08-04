@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Piwigo\Admin\Extensions\CoreUpdateService;
 use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -35,6 +36,7 @@ use Piwigo\Template\Template;
 final class UpdatesPwgPageRenderer
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
@@ -104,7 +106,7 @@ final class UpdatesPwgPageRenderer
         // +-----------------------------------------------------------------------+
         // |                                Step 2                                 |
         // +-----------------------------------------------------------------------+
-        if ($step === 2 and \Piwigo\Auth\AccessControl::isWebmaster()) {
+        if ($step === 2 and $this->accessControl->isWebmaster()) {
             if ($updatesPwgRequest->isUpgradeSubmitted) {
                 new \Piwigo\Csrf\CsrfService()
                     ->checkOrFail($this->htmlRenderer, $this->redirectService);
@@ -115,7 +117,7 @@ final class UpdatesPwgPageRenderer
         // +-----------------------------------------------------------------------+
         // |                                Step 3                                 |
         // +-----------------------------------------------------------------------+
-        if ($step === 3 and \Piwigo\Auth\AccessControl::isWebmaster()) {
+        if ($step === 3 and $this->accessControl->isWebmaster()) {
             if ($updatesPwgRequest->isUpgradeSubmitted) {
                 new \Piwigo\Csrf\CsrfService()
                     ->checkOrFail($this->htmlRenderer, $this->redirectService);
@@ -142,7 +144,7 @@ final class UpdatesPwgPageRenderer
         // |                        Process template                               |
         // +-----------------------------------------------------------------------+
 
-        if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
+        if (! $this->accessControl->isWebmaster()) {
             $this->pageState->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 

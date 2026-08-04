@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Auth\AccessControl;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
@@ -16,11 +17,11 @@ use Piwigo\Template\Template;
  */
 final class CommentsPageRenderer
 {
-    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\Template\CurrentTemplate $currentTemplate): void
+    public function render(AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\Template\CurrentTemplate $currentTemplate): void
     {
         $template = $currentTemplate->get();
 
-        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
+        $accessControl->checkStatus(AccessLevel::Administrator);
 
         $template->set_filenames([
             'comments' => 'comments.tpl',

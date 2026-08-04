@@ -10,6 +10,7 @@ use Piwigo\Admin\Maintenance\DbMaintenanceRepository;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Admin\Maintenance\MaintenanceActionDispatcher;
 use Piwigo\Admin\Maintenance\Request\MaintenanceActionRequest;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
@@ -44,6 +45,7 @@ use Piwigo\Template\Template;
 final class MaintenanceActionsPageRenderer
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
@@ -87,7 +89,7 @@ final class MaintenanceActionsPageRenderer
             ->getToken();
         $url_format = $this->urlService->getRootUrl() . 'admin.php?page=maintenance&amp;action=%s&amp;pwg_token=' . new \Piwigo\Csrf\CsrfService()->getToken();
 
-        if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
+        if (! $this->accessControl->isWebmaster()) {
             $this->pageState->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
@@ -216,7 +218,7 @@ final class MaintenanceActionsPageRenderer
             );
         }
 
-        $template->assign('isWebmaster', (\Piwigo\Auth\AccessControl::isWebmaster()) ? 1 : 0);
+        $template->assign('isWebmaster', ($this->accessControl->isWebmaster()) ? 1 : 0);
 
         // +-------------------------------------------------------------------+
         // | Define advanced features                                              |

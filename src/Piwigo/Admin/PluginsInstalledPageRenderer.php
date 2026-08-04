@@ -9,6 +9,7 @@ use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
@@ -50,7 +51,7 @@ final class PluginsInstalledPageRenderer
      * slug statically (it's the only class registered for the 'plugins'
      * slug in config/admin_pages.php).
      */
-    public function render(string $pageSlug, UrlServiceInterface $urlService, \Piwigo\Core\CurrentLogger $currentLogger, SessionService $sessionService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Users\PreferencesService $preferencesService, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer): void
+    public function render(AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, \Piwigo\Core\CurrentLogger $currentLogger, SessionService $sessionService, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Users\PreferencesService $preferencesService, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer): void
     {
         $template = $currentTemplate->get();
 
@@ -254,7 +255,7 @@ final class PluginsInstalledPageRenderer
                 'base_url' => $base_url,
                 'show_details' => $show_details,
                 'max_inactive_before_hide' => $pluginsDisplay->showInactive ? 999 : 8,
-                'isWebmaster' => (\Piwigo\Auth\AccessControl::isWebmaster()) ? 1 : 0,
+                'isWebmaster' => ($accessControl->isWebmaster()) ? 1 : 0,
                 'ADMIN_PAGE_TITLE' => Lang::t('Plugins'),
                 'view_selector' => $preferencesService
                     ->getParam('plugin-manager-view', 'classic'),

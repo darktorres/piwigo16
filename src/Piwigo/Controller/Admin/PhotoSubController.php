@@ -10,6 +10,7 @@ use Piwigo\Admin\PictureCoiPageRenderer;
 use Piwigo\Admin\PictureFormatsPageRenderer;
 use Piwigo\Admin\PictureModifyPageRenderer;
 use Piwigo\Admin\Tabsheet;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
@@ -41,6 +42,7 @@ final class PhotoSubController implements AdminSubControllerInterface
     private const array KNOWN_TABS = ['properties', 'coi', 'formats'];
 
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
         private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
@@ -62,7 +64,7 @@ final class PhotoSubController implements AdminSubControllerInterface
         $page = [];
         $template = $this->currentTemplate->get();
 
-        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
+        $this->accessControl->checkStatus(AccessLevel::Administrator);
 
         $photoDispatch = Request\PhotoDispatchRequest::fromGlobals(self::KNOWN_TABS);
         $get_image_id = $photoDispatch->imageId;
@@ -96,7 +98,7 @@ final class PhotoSubController implements AdminSubControllerInterface
                 ->render();
         } elseif (\Piwigo\Config\CurrentConfig::isFormatsEnabled()) {
             new PictureFormatsPageRenderer()
-                ->render($this->urlService, $this->imageStdParams, $this->currentTemplate, $this->htmlRenderer);
+                ->render($this->accessControl, $this->urlService, $this->imageStdParams, $this->currentTemplate, $this->htmlRenderer);
         }
     }
 }

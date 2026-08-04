@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Auth\AccessControl;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
@@ -15,11 +16,11 @@ use Piwigo\Image\DerivativeImage;
  */
 final class RatingPageRenderer
 {
-    public function render(UrlServiceInterface $urlService, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Category\CategoryService $categoryService): void
+    public function render(AccessControl $accessControl, UrlServiceInterface $urlService, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Category\CategoryService $categoryService): void
     {
         $template = $currentTemplate->get();
 
-        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
+        $accessControl->checkStatus(AccessLevel::Administrator);
 
         $ratingRequest = Request\RatingRequest::fromGlobals();
 

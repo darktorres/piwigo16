@@ -11,6 +11,7 @@ use Piwigo\Admin\PluginsInstalledPageRenderer;
 use Piwigo\Admin\PluginsNewPageRenderer;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\UpdatesExtPageRenderer;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
@@ -51,6 +52,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class PluginsSubController implements AdminSubControllerInterface
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
@@ -85,14 +87,14 @@ final class PluginsSubController implements AdminSubControllerInterface
 
         if ($tab === 'update') {
             new UpdatesExtPageRenderer()
-                ->render('plugins', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker, $this->htmlRenderer);
+                ->render($this->accessControl, 'plugins', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker, $this->htmlRenderer);
             $template->assign('ADMIN_PAGE_TITLE', Lang::t('Plugins'));
         } elseif ($tab === 'new') {
             $this->pluginsNewPageRenderer
                 ->render('plugins', $tab);
         } else {
             new PluginsInstalledPageRenderer()
-                ->render('plugins', $this->urlService, $this->currentLogger, $this->sessionService, $this->eventDispatcher, $this->currentTemplate, $this->preferencesService, $this->htmlRenderer);
+                ->render($this->accessControl, 'plugins', $this->urlService, $this->currentLogger, $this->sessionService, $this->eventDispatcher, $this->currentTemplate, $this->preferencesService, $this->htmlRenderer);
         }
     }
 }

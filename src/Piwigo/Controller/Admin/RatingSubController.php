@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Piwigo\Admin\RatingPageRenderer;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Core\UrlServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -21,6 +22,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class RatingSubController implements AdminSubControllerInterface
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
         private readonly \Piwigo\Category\CategoryService $categoryService,
@@ -30,6 +32,6 @@ final class RatingSubController implements AdminSubControllerInterface
     public function handle(ServerRequestInterface $request): void
     {
         new RatingPageRenderer()
-            ->render($this->urlService, $this->currentTemplate, $this->categoryService);
+            ->render($this->accessControl, $this->urlService, $this->currentTemplate, $this->categoryService);
     }
 }

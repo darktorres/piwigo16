@@ -81,7 +81,7 @@ class PluginMaintain
      */
     public function autoUpdate(): void
     {
-        if (\Piwigo\Auth\AccessControl::isAdmin() && ! \Piwigo\Core\WsContext::isActiveStatic()) {
+        if (\Piwigo\Auth\AccessControl::current()->isAdmin() && ! \Piwigo\Core\WsContext::isActiveStatic()) {
             trigger_error('Function PluginMaintain::autoUpdate deprecated', E_USER_WARNING);
         }
     }

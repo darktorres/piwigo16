@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Admin\Maintenance\ActivityLogEntryFormatter;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Core\Lang;
 use Piwigo\Db\DbConnection;
 use Piwigo\Template\Template;
@@ -28,7 +29,7 @@ final class MaintenanceSysPageRenderer
     /**
      * @param array<string, array{icon: string, label: string}> $maintActions
      */
-    public function render(array $maintActions, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate): void
+    public function render(AccessControl $accessControl, array $maintActions, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate): void
     {
         $template = $currentTemplate->get();
 
@@ -36,7 +37,7 @@ final class MaintenanceSysPageRenderer
         // |                    Only Webmaster can see this tab                    |
         // +-------------------------------------------------------------------+
 
-        if (\Piwigo\Auth\AccessControl::isWebmaster()) {
+        if ($accessControl->isWebmaster()) {
             // Get system activities data
             if (Request\MaintenanceSysMethodRequest::fromGlobals()->isActivitySysGetList) {
                 $data = [];
@@ -70,7 +71,7 @@ final class MaintenanceSysPageRenderer
         // |                             template init                             |
         // +-------------------------------------------------------------------+
 
-        $template->assign('isWebmaster', (\Piwigo\Auth\AccessControl::isWebmaster()) ? 1 : 0);
+        $template->assign('isWebmaster', ($accessControl->isWebmaster()) ? 1 : 0);
         $template->set_filenames([
             'maintenance' => 'maintenance_sys.tpl',
         ]);

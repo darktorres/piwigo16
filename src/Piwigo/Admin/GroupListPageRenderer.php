@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Auth\AccessControl;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -17,6 +18,7 @@ use Piwigo\Lang\Translator;
 final class GroupListPageRenderer
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
@@ -40,7 +42,7 @@ final class GroupListPageRenderer
         $tabsheet->select('group_list');
         $tabsheet->assign($this->currentTemplate);
 
-        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
+        $this->accessControl->checkStatus(AccessLevel::Administrator);
 
         if (Request\GroupListActionRequest::fromGlobals()->requiresCsrfCheck) {
             new \Piwigo\Csrf\CsrfService()

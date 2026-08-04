@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
@@ -41,6 +42,7 @@ use Piwigo\Users\UserService;
 final class PictureModifyPageRenderer
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\ProcessCache $processCache,
@@ -84,7 +86,7 @@ final class PictureModifyPageRenderer
         $imageService = new ImageService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher);
         $htmlRenderer = $this->htmlRenderer;
 
-        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
+        $this->accessControl->checkStatus(AccessLevel::Administrator);
 
         $pictureModifyRequest = Request\PictureModifyRequest::fromGlobals();
 

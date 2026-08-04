@@ -10,6 +10,7 @@ use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -30,6 +31,7 @@ use Piwigo\Template\Template;
 final class LanguagesNewPageRenderer
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
@@ -89,7 +91,7 @@ final class LanguagesNewPageRenderer
         $languagesNewInstall = Request\LanguagesNewInstallRequest::fromGlobals();
 
         if ($languagesNewInstall->revision !== null) {
-            if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
+            if (! $this->accessControl->isWebmaster()) {
                 $this->pageState->addError(Lang::t('Webmaster status is required.'));
             } else {
                 new \Piwigo\Csrf\CsrfService()
@@ -184,7 +186,7 @@ final class LanguagesNewPageRenderer
             $this->pageState->addError(Lang::t('Can\'t connect to server.'));
         }
         $template->assign('ADMIN_PAGE_TITLE', Lang::t('Languages'));
-        $template->assign('isWebmaster', (\Piwigo\Auth\AccessControl::isWebmaster()) ? 1 : 0);
+        $template->assign('isWebmaster', ($this->accessControl->isWebmaster()) ? 1 : 0);
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'languages');
     }

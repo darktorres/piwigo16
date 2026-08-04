@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
 use Piwigo\Admin\Extensions\PemCatalog;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
@@ -41,7 +42,7 @@ final class UpdatesExtPageRenderer
      * slug statically (config/admin_pages.php registers each of those 4
      * controllers for exactly one slug), so each passes its own literal.
      */
-    public function render(string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate, ExtensionUpdateChecker $extensionUpdateChecker, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer): void
+    public function render(AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate, ExtensionUpdateChecker $extensionUpdateChecker, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer): void
     {
         $template = $currentTemplate->get();
 
@@ -50,7 +51,7 @@ final class UpdatesExtPageRenderer
                 ->fatalError('Piwigo extensions install/update system is disabled');
         }
 
-        if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
+        if (! $accessControl->isWebmaster()) {
             $pageState->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
@@ -159,7 +160,7 @@ final class UpdatesExtPageRenderer
         $template->assign('SHOW_RESET', $show_reset);
         $template->assign('PWG_TOKEN', new \Piwigo\Csrf\CsrfService()->getToken());
         $template->assign('EXT_TYPE', $pageSlug === 'updates' ? 'extensions' : $pageSlug);
-        $template->assign('isWebmaster', (\Piwigo\Auth\AccessControl::isWebmaster()) ? 1 : 0);
+        $template->assign('isWebmaster', ($accessControl->isWebmaster()) ? 1 : 0);
         $template->set_filename('plugin_admin_content', 'updates_ext.tpl');
         $template->assign_var_from_handle('ADMIN_CONTENT', 'plugin_admin_content');
         $template->assign('ADMIN_PAGE_TITLE', Lang::t('Updates'));

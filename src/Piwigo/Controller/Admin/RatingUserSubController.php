@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Piwigo\Admin\RatingUserPageRenderer;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Core\UrlServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -18,6 +19,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class RatingUserSubController implements AdminSubControllerInterface
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
@@ -27,6 +29,6 @@ final class RatingUserSubController implements AdminSubControllerInterface
     public function handle(ServerRequestInterface $request): void
     {
         new RatingUserPageRenderer()
-            ->render($this->urlService, $this->imageStdParams, $this->currentTemplate);
+            ->render($this->accessControl, $this->urlService, $this->imageStdParams, $this->currentTemplate);
     }
 }

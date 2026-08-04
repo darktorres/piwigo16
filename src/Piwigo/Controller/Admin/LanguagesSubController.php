@@ -11,6 +11,7 @@ use Piwigo\Admin\LanguagesInstalledPageRenderer;
 use Piwigo\Admin\LanguagesNewPageRenderer;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\UpdatesExtPageRenderer;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
@@ -49,6 +50,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class LanguagesSubController implements AdminSubControllerInterface
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
         private readonly CoreTabs $coreTabs,
@@ -80,7 +82,7 @@ final class LanguagesSubController implements AdminSubControllerInterface
 
         if ($tab === 'update') {
             new UpdatesExtPageRenderer()
-                ->render('languages', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker, $this->htmlRenderer);
+                ->render($this->accessControl, 'languages', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker, $this->htmlRenderer);
             $template->assign('ADMIN_PAGE_TITLE', Lang::t('Languages'));
         } elseif ($tab === 'new') {
             $this->languagesNewPageRenderer

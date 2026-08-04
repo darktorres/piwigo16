@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Auth\AccessControl;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
@@ -19,6 +20,7 @@ use Piwigo\Image\SrcImage;
 final class PictureCoiPageRenderer
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
@@ -32,7 +34,7 @@ final class PictureCoiPageRenderer
         $htmlRenderer = $this->htmlRenderer;
         $conn = DbConnection::build();
 
-        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
+        $this->accessControl->checkStatus(AccessLevel::Administrator);
 
         $pictureCoiRequest = Request\PictureCoiRequest::fromGlobals();
         $image_id = $pictureCoiRequest->imageId;

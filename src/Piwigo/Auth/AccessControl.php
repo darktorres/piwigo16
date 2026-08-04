@@ -12,12 +12,22 @@ use Piwigo\Core\RedirectServiceInterface;
  * Current-request access-level checks: status/ACCESS_* introspection,
  * reading Piwigo\Users\CurrentUser (Legacy Coupling Retirement Track A
  * batch A3 -- previously the legacy `global $user;` bridge array directly)
- * and `global $conf;`. Static, no constructor -- every method is a pure
- * read (same "global read inside a service method" shape already
- * established by TagService::addLevelToTags()/NotificationService's news()
- * family), zero DB access, so a static utility (matching AccessLevel's own
- * static-const convention) is cheaper for ~250 combined call sites than
- * instance construction.
+ * and `global $conf;`.
+ *
+ * Singleton/service-locator elimination campaign, Phase 7: converted to a
+ * real, container-shared instance -- HtmlRenderingInterface/
+ * RedirectServiceInterface/CurrentUser are constructor-injected (all 3
+ * already bound in `container.php`, so this needed zero new container
+ * config). checkStatus()'s former nullable-collaborator guard is gone: a
+ * container-resolved instance is now *always* guaranteed both
+ * collaborators (unlike the old static design, which allowed
+ * setHtmlRenderer()/setRedirectService() to simply never be called), so
+ * accessDenied() is unconditionally reachable -- a real, permanent
+ * simplification, not just a test artifact.
+ *
+ * `CurrentConfig::guestAccess()`/`userCanEditComment()`/
+ * `userCanDeleteComment()` stay static calls for now (Phase 9 > 7, per
+ * this campaign's own plan).
  *
  * P23 batch 8d: ported from include/functions_user.inc.php's
  * get_user_status()/get_access_type_status()/is_autorize_status()/
@@ -26,48 +36,49 @@ use Piwigo\Core\RedirectServiceInterface;
  */
 final class AccessControl
 {
-    private function __construct() {}
-
-    private static ?HtmlRenderingInterface $htmlRenderer = null;
-
-    private static ?RedirectServiceInterface $redirectService = null;
-
-    /**
-     * Set once by include/common.inc.php (legacy, not subject to deptrac) --
-     * same static-setter shape as Piwigo\Core\Lang::setDefaultLanguageProvider(),
-     * chosen for the same reason: checkStatus() is this class's own primary,
-     * near-universal entry point (36 real call sites), so constructor/
-     * per-method injection would ripple across every one of them for zero
-     * real benefit.
-     */
-    public static function setHtmlRenderer(HtmlRenderingInterface $renderer): void
-    {
-        self::$htmlRenderer = $renderer;
-    }
+    public function __construct(
+        private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly RedirectServiceInterface $redirectService,
+        private readonly \Piwigo\Users\CurrentUser $currentUser,
+    ) {}
 
     /**
-     * Set once alongside setHtmlRenderer() above, same reasoning (Legacy
-     * Coupling Retirement Phase 4b) -- accessDenied() needs one to reach
-     * the former redirect_http() free function now that it's retired.
+     * @deprecated transitional bridge for callers not yet converted to
+     * constructor injection -- see the singleton/service-locator
+     * elimination campaign plan, Phase 7. A live container resolve on
+     * every call (no memoized pre-boot fallback, unlike e.g.
+     * `CurrentUser::current()`): unlike a boolean marker/holder, this
+     * class has no safe "unset" default to fall back to -- access-control
+     * decisions must always reflect real state, so this throws naturally
+     * (via `Kernel::container()`) if called before `Kernel::boot()`,
+     * matching `SrcImage`/`DerivativeImage`/`ScriptLoader`'s own Phase 6
+     * bridge shape, not `CurrentUser`/`CurrentTemplate`'s memoized-fallback
+     * shape. Delete once `grep -rn "AccessControl::current("` outside
+     * tests/ returns nothing.
      */
-    public static function setRedirectService(RedirectServiceInterface $redirectService): void
+    public static function current(): self
     {
-        self::$redirectService = $redirectService;
+        $instance = \Piwigo\Core\Kernel::container()->get(self::class);
+        if (! $instance instanceof self) {
+            throw new \LogicException('Container returned an unexpected type for ' . self::class);
+        }
+
+        return $instance;
     }
 
-    public static function getUserStatus(string $userStatus = ''): string
+    public function getUserStatus(string $userStatus = ''): string
     {
         if ($userStatus === '') {
-            return \Piwigo\Users\CurrentUser::current()->get()->status->value;
+            return $this->currentUser->get()->status->value;
         }
 
         return $userStatus;
     }
 
-    public static function getAccessTypeStatus(string $userStatus = ''): int
+    public function getAccessTypeStatus(string $userStatus = ''): int
     {
 
-        return match (self::getUserStatus($userStatus)) {
+        return match ($this->getUserStatus($userStatus)) {
             'guest' => \Piwigo\Config\CurrentConfig::guestAccess() ? AccessLevel::Guest : AccessLevel::Free,
             'generic' => AccessLevel::Guest,
             'normal' => AccessLevel::Classic,
@@ -77,50 +88,51 @@ final class AccessControl
         };
     }
 
-    public static function isAuthorizeStatus(int $accessType, string $userStatus = ''): bool
+    public function isAuthorizeStatus(int $accessType, string $userStatus = ''): bool
     {
-        return self::getAccessTypeStatus($userStatus) >= $accessType;
+        return $this->getAccessTypeStatus($userStatus) >= $accessType;
     }
 
-    public static function checkStatus(int $accessType, string $userStatus = ''): void
+    public function checkStatus(int $accessType, string $userStatus = ''): void
     {
-        if (! self::isAuthorizeStatus($accessType, $userStatus)) {
-            if (self::$htmlRenderer instanceof \Piwigo\Core\HtmlRenderingInterface && self::$redirectService instanceof RedirectServiceInterface) {
-                self::$htmlRenderer->accessDenied(self::$redirectService);
-            }
-            throw new \RuntimeException('Access denied');
+        if (! $this->isAuthorizeStatus($accessType, $userStatus)) {
+            // accessDenied() is `never`-typed -- always terminates (throws
+            // or redirects), so unlike the old nullable-collaborator design
+            // there is no reachable fallthrough left to throw a plain
+            // RuntimeException from (PHPStan proves this: deadCode.unreachable).
+            $this->htmlRenderer->accessDenied($this->redirectService);
         }
     }
 
-    public static function isGeneric(string $userStatus = ''): bool
+    public function isGeneric(string $userStatus = ''): bool
     {
-        return self::getUserStatus($userStatus) === 'generic';
+        return $this->getUserStatus($userStatus) === 'generic';
     }
 
-    public static function isAGuest(string $userStatus = ''): bool
+    public function isAGuest(string $userStatus = ''): bool
     {
-        return self::getUserStatus($userStatus) === 'guest';
+        return $this->getUserStatus($userStatus) === 'guest';
     }
 
-    public static function isClassicUser(string $userStatus = ''): bool
+    public function isClassicUser(string $userStatus = ''): bool
     {
-        return self::isAuthorizeStatus(AccessLevel::Classic, $userStatus);
+        return $this->isAuthorizeStatus(AccessLevel::Classic, $userStatus);
     }
 
-    public static function isAdmin(string $userStatus = ''): bool
+    public function isAdmin(string $userStatus = ''): bool
     {
-        return self::isAuthorizeStatus(AccessLevel::Administrator, $userStatus);
+        return $this->isAuthorizeStatus(AccessLevel::Administrator, $userStatus);
     }
 
-    public static function isWebmaster(string $userStatus = ''): bool
+    public function isWebmaster(string $userStatus = ''): bool
     {
-        return self::isAuthorizeStatus(AccessLevel::Webmaster, $userStatus);
+        return $this->isAuthorizeStatus(AccessLevel::Webmaster, $userStatus);
     }
 
-    public static function canManageComment(string $action, int|string|null $commentAuthorId): bool
+    public function canManageComment(string $action, int|string|null $commentAuthorId): bool
     {
 
-        if (self::isAGuest()) {
+        if ($this->isAGuest()) {
             return false;
         }
 
@@ -128,7 +140,7 @@ final class AccessControl
             return false;
         }
 
-        if (self::isAdmin()) {
+        if ($this->isAdmin()) {
             return true;
         }
 
@@ -144,7 +156,7 @@ final class AccessControl
             return false;
         }
 
-        $currentUserId = \Piwigo\Users\CurrentUser::current()->get()->id->value;
+        $currentUserId = $this->currentUser->get()->id->value;
 
         if ($action === 'edit' && \Piwigo\Config\CurrentConfig::userCanEditComment()) {
             if ((int) $commentAuthorId === $currentUserId) {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Doctrine\DBAL\ArrayParameterType;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
@@ -24,6 +25,7 @@ use Piwigo\Permission\PermissionService;
 final class UserPermPageRenderer
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
@@ -42,7 +44,7 @@ final class UserPermPageRenderer
         $permissionService = $this->permissionService;
         $categoryService = $this->categoryService;
 
-        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
+        $this->accessControl->checkStatus(AccessLevel::Administrator);
 
         $userPermSubmit = Request\UserPermSubmitRequest::fromGlobals();
 

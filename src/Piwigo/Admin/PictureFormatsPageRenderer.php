@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Auth\AccessControl;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
@@ -15,11 +16,11 @@ use Piwigo\Image\ImageStdParams;
  */
 final class PictureFormatsPageRenderer
 {
-    public function render(UrlServiceInterface $urlService, ImageStdParams $imageStdParams, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer): void
+    public function render(AccessControl $accessControl, UrlServiceInterface $urlService, ImageStdParams $imageStdParams, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Core\HtmlRenderingInterface $htmlRenderer): void
     {
         $template = $currentTemplate->get();
 
-        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
+        $accessControl->checkStatus(AccessLevel::Administrator);
 
         $image_id = Request\PictureFormatsImageIdRequest::fromGlobals()->imageId;
 

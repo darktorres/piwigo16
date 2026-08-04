@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use DateInterval;
 use DateTime;
 use InvalidArgumentException;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
@@ -34,11 +35,11 @@ final class StatsPageRenderer
      * shared 'history' tabsheet group (see HistoryPageRenderer, its
      * sibling in that same group).
      */
-    public function render(string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, CoreTabs $coreTabs, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\History\HistoryService $historyService): void
+    public function render(AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, ConfigService $configService, CoreTabs $coreTabs, \Piwigo\Users\CurrentUser $currentUser, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\History\HistoryService $historyService): void
     {
         $template = $currentTemplate->get();
 
-        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
+        $accessControl->checkStatus(AccessLevel::Administrator);
 
         // Gap-closure Stage 4j (docs/plan/gap-closure-p0-p23.md): bounded to
         // match HistoryService::logVisit()'s own self-triggered summarize()

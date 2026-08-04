@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Audit\AuditService;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Core\AccessLevel;
@@ -24,6 +25,7 @@ use Piwigo\Group\GroupService;
 final class GroupPermPageRenderer
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
@@ -42,7 +44,7 @@ final class GroupPermPageRenderer
         $conn = DbConnection::build();
         $categoryService = $this->categoryService;
 
-        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
+        $this->accessControl->checkStatus(AccessLevel::Administrator);
 
         $groupPermSubmit = Request\GroupPermSubmitRequest::fromGlobals();
 

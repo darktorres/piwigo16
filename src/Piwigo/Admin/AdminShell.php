@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Bootstrap\AdminDispatcher;
 use Piwigo\Bootstrap\PageTail;
 use Piwigo\Cache\PermissionCacheInvalidator;
@@ -49,6 +50,7 @@ use Piwigo\Template\Template;
 final class AdminShell
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
@@ -102,7 +104,7 @@ final class AdminShell
         // | Check Access and exit when user status is not ok                  |
         // +-------------------------------------------------------------------+
 
-        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
+        $this->accessControl->checkStatus(AccessLevel::Administrator);
 
         $adminShellRequest = Request\AdminShellRequest::fromGlobals();
 

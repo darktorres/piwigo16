@@ -6,6 +6,7 @@ namespace Piwigo\Controller\Admin;
 
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\MenubarPageRenderer;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Core\UrlServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -19,6 +20,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class MenubarSubController implements AdminSubControllerInterface
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
@@ -30,6 +32,6 @@ final class MenubarSubController implements AdminSubControllerInterface
     public function handle(ServerRequestInterface $request): void
     {
         new MenubarPageRenderer()
-            ->render($this->urlService, $this->coreTabs, $this->eventDispatcher, $this->pageState, $this->currentTemplate);
+            ->render($this->accessControl, $this->urlService, $this->coreTabs, $this->eventDispatcher, $this->pageState, $this->currentTemplate);
     }
 }

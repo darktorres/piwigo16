@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Auth\AccessControl;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -17,6 +18,7 @@ use Piwigo\Event\Tag\RenderTagName;
 final class TagsPageRenderer
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
@@ -30,7 +32,7 @@ final class TagsPageRenderer
     {
         $template = $this->currentTemplate->get();
 
-        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
+        $this->accessControl->checkStatus(AccessLevel::Administrator);
 
         // Legacy Coupling Retirement Phase 8, 8g: real, previously-unfixed
         // bug -- nothing had ever called CoreTabs::setContext() with

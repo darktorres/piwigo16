@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Category\CategoryAdminService;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
@@ -25,6 +26,7 @@ use Piwigo\Db\Tables;
 final class CatOptionsPageRenderer
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
@@ -40,7 +42,7 @@ final class CatOptionsPageRenderer
         $conn = DbConnection::build();
         $template = $this->currentTemplate->get();
 
-        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
+        $this->accessControl->checkStatus(AccessLevel::Administrator);
 
         $catOptionsRequest = Request\CatOptionsRequest::fromGlobals();
 

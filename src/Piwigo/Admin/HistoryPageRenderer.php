@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\CookieService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Env;
@@ -50,7 +51,7 @@ final class HistoryPageRenderer
      * regardless, so there was never a real bridge here even in
      * principle.
      */
-    public function render(string $pageSlug, UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\Template\CurrentTemplate $currentTemplate): void
+    public function render(AccessControl $accessControl, string $pageSlug, UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\Template\CurrentTemplate $currentTemplate): void
     {
         $template = $currentTemplate->get();
         $conn = DbConnection::build();
@@ -63,7 +64,7 @@ final class HistoryPageRenderer
             'display_thumbnail_hoverbox' => Lang::t('Hoverbox display'),
         ];
 
-        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
+        $accessControl->checkStatus(AccessLevel::Administrator);
 
         $historyFilter = Request\HistoryFilterRequest::fromGlobals();
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\FilesystemHelper;
@@ -29,11 +30,11 @@ use Piwigo\Template\Template;
  */
 final class ExtendForTemplatesPageRenderer
 {
-    public function render(UrlServiceInterface $urlService, ConfigService $configService, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Category\CategoryService $categoryService): void
+    public function render(AccessControl $accessControl, UrlServiceInterface $urlService, ConfigService $configService, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate, \Piwigo\Category\CategoryService $categoryService): void
     {
         $template = $currentTemplate->get();
 
-        \Piwigo\Auth\AccessControl::checkStatus(AccessLevel::Administrator);
+        $accessControl->checkStatus(AccessLevel::Administrator);
 
         $tpl_extension = [];
         // extentsForTemplates() defaults to [] when never configured, so

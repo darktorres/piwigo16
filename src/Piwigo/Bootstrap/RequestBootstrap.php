@@ -305,21 +305,19 @@ final class RequestBootstrap
         Env::loadEnvFile($paths->root);
 
         // P23 batch 8f-3: wires the static-setter HtmlRenderingInterface
-        // consumers (Piwigo\Core class-level fatal-error/access-denied paths
-        // that can't take constructor/per-method injection without an
-        // unreasonable call-site ripple, same reasoning as
-        // Piwigo\Core\Lang::setDefaultLanguageProvider() in finalize()
-        // below). AccessControl::setRedirectService() (Legacy Coupling
-        // Retirement Phase 4b) follows right alongside its own
-        // setHtmlRenderer() call, same reasoning. Safely post-autoload here: the seam file only calls this
-        // class after its include/env.inc.php include, which is what
-        // actually requires vendor/autoload.php -- some entry points (e.g.
-        // random.php) rely entirely on that include to make every Piwigo\
-        // class autoloadable and never require the autoloader themselves
-        // beforehand, unlike admin.php/index.php's own explicit up-front
-        // require (ordering bug caught live via a random.php smoke test).
-        \Piwigo\Auth\AccessControl::setHtmlRenderer(new HtmlService());
-        \Piwigo\Auth\AccessControl::setRedirectService(new RedirectService(self::userService()));
+        // consumer (Piwigo\Core class-level fatal-error paths that can't
+        // take constructor/per-method injection without an unreasonable
+        // call-site ripple). Safely post-autoload here: the seam file only
+        // calls this class after its include/env.inc.php include, which is
+        // what actually requires vendor/autoload.php -- some entry points
+        // (e.g. random.php) rely entirely on that include to make every
+        // Piwigo\ class autoloadable and never require the autoloader
+        // themselves beforehand, unlike admin.php/index.php's own explicit
+        // up-front require (ordering bug caught live via a random.php
+        // smoke test). AccessControl::setHtmlRenderer()/setRedirectService()
+        // used to sit here too -- removed (singleton/service-locator
+        // elimination campaign, Phase 7): AccessControl is now a real,
+        // container-shared instance, autowired with zero manual wiring.
         Lang::setHtmlRenderer(new HtmlService());
 
         // Piwigo\Db\Tables::*()/other Piwigo\Config\Config::* accessors used
@@ -570,7 +568,7 @@ final class RequestBootstrap
             self::currentUser(),
         ));
         Lang::load('common.lang');
-        if (\Piwigo\Auth\AccessControl::isAdmin() || self::adminContext()->isActive()) {
+        if (\Piwigo\Auth\AccessControl::current()->isAdmin() || self::adminContext()->isActive()) {
             Lang::load('admin.lang');
             // Add language for temporary strings for new popup, from piwigo 15
             Lang::load('whats_new_' . \Piwigo\Core\VersionHelper::getBranchFromVersion(AppInfo::VERSION) . '.lang');
@@ -583,7 +581,7 @@ final class RequestBootstrap
 
         // only now we can set the localized username of the guest user (and not in
         // UserBootstrap::initialize())
-        if (\Piwigo\Auth\AccessControl::isAGuest()) {
+        if (\Piwigo\Auth\AccessControl::current()->isAGuest()) {
             // Second CurrentUser sync point (the first is inside
             // UserBootstrap::initialize()) -- isAGuest() itself already
             // reads CurrentUser (synced there with the pre-localization
@@ -683,7 +681,7 @@ final class RequestBootstrap
         if (\Piwigo\Config\CurrentConfig::galleryLocked()) {
             $pageState->addHeaderMessage(Lang::t('The gallery is locked for maintenance. Please, come back later.'));
 
-            if (\Piwigo\Core\PageFilterHelper::scriptBasename() !== 'identification' and ! \Piwigo\Auth\AccessControl::isAdmin()) {
+            if (\Piwigo\Core\PageFilterHelper::scriptBasename() !== 'identification' and ! \Piwigo\Auth\AccessControl::current()->isAdmin()) {
                 // Workstream C3, catch point 1: throws instead of the
                 // former raw header()+echo+exit() -- caught in
                 // include/common.inc.php, the one seam both dispatch

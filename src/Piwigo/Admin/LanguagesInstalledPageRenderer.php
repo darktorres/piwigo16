@@ -10,6 +10,7 @@ use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
@@ -40,6 +41,7 @@ use Piwigo\Users\UserService;
 final class LanguagesInstalledPageRenderer
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
@@ -64,7 +66,7 @@ final class LanguagesInstalledPageRenderer
     {
         $template = $this->currentTemplate->get();
 
-        if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
+        if (! $this->accessControl->isWebmaster()) {
             $this->pageState->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
@@ -87,7 +89,7 @@ final class LanguagesInstalledPageRenderer
         // --------------------------------------------------perform requested actions
         $languagesAction = Request\LanguagesInstalledActionRequest::fromGlobals('/^(' . join('|', array_keys($fs_languages)) . ')$/');
 
-        if ($languagesAction->action !== null and $languagesAction->languageId !== null and \Piwigo\Auth\AccessControl::isWebmaster()) {
+        if ($languagesAction->action !== null and $languagesAction->languageId !== null and $this->accessControl->isWebmaster()) {
             new \Piwigo\Csrf\CsrfService()
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
@@ -158,7 +160,7 @@ final class LanguagesInstalledPageRenderer
             $extension_repository->delete(ExtensionType::Language, $language_id);
         }
 
-        $template->assign('isWebmaster', (\Piwigo\Auth\AccessControl::isWebmaster()) ? 1 : 0);
+        $template->assign('isWebmaster', ($this->accessControl->isWebmaster()) ? 1 : 0);
         $template->assign('ADMIN_PAGE_TITLE', Lang::t('Languages'));
         $template->assign('CONF_ENABLE_EXTENSIONS_INSTALL', \Piwigo\Config\CurrentConfig::enableExtensionsInstall());
 

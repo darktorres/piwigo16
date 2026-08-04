@@ -10,6 +10,7 @@ use Piwigo\Admin\MaintenanceActionsPageRenderer;
 use Piwigo\Admin\MaintenanceEnvPageRenderer;
 use Piwigo\Admin\MaintenanceSysPageRenderer;
 use Piwigo\Admin\Tabsheet;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
@@ -57,6 +58,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class MaintenanceSubController implements AdminSubControllerInterface
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly CoreTabs $coreTabs,
@@ -172,7 +174,7 @@ final class MaintenanceSubController implements AdminSubControllerInterface
                 ->render();
         } elseif ($tab === 'sys') {
             new MaintenanceSysPageRenderer()
-                ->render($maintActions, $this->pageState, $this->currentTemplate);
+                ->render($this->accessControl, $maintActions, $this->pageState, $this->currentTemplate);
         } else {
             $this->maintenanceActionsPageRenderer
                 ->render($maintActions);

@@ -12,6 +12,7 @@ use Piwigo\Admin\ThemesInstalledPageRenderer;
 use Piwigo\Admin\ThemesNewPageRenderer;
 use Piwigo\Admin\ThemesStandardPagesPageRenderer;
 use Piwigo\Admin\UpdatesExtPageRenderer;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
@@ -56,6 +57,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class ThemesSubController implements AdminSubControllerInterface
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
         private readonly CoreTabs $coreTabs,
@@ -88,7 +90,7 @@ final class ThemesSubController implements AdminSubControllerInterface
 
         if ($tab === 'update') {
             new UpdatesExtPageRenderer()
-                ->render('themes', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker, $this->htmlRenderer);
+                ->render($this->accessControl, 'themes', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker, $this->htmlRenderer);
             $template->assign('ADMIN_PAGE_TITLE', Lang::t('Themes'));
         } elseif ($tab === 'new') {
             $this->themesNewPageRenderer

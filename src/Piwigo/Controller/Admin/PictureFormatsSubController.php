@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin;
 
 use Piwigo\Admin\PictureFormatsPageRenderer;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Core\UrlServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -16,6 +17,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class PictureFormatsSubController implements AdminSubControllerInterface
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Image\ImageStdParams $imageStdParams,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
@@ -26,6 +28,6 @@ final class PictureFormatsSubController implements AdminSubControllerInterface
     public function handle(ServerRequestInterface $request): void
     {
         new PictureFormatsPageRenderer()
-            ->render($this->urlService, $this->imageStdParams, $this->currentTemplate, $this->htmlRenderer);
+            ->render($this->accessControl, $this->urlService, $this->imageStdParams, $this->currentTemplate, $this->htmlRenderer);
     }
 }

@@ -10,6 +10,7 @@ use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\UpdatesExtPageRenderer;
 use Piwigo\Admin\UpdatesPwgPageRenderer;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\UrlServiceInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -59,6 +60,7 @@ use Psr\Http\Message\ServerRequestInterface;
 final class UpdatesSubController implements AdminSubControllerInterface
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly UrlServiceInterface $urlService,
         private readonly ConfigService $configService,
         private readonly CoreTabs $coreTabs,
@@ -92,7 +94,7 @@ final class UpdatesSubController implements AdminSubControllerInterface
 
         if ($tab === 'ext') {
             new UpdatesExtPageRenderer()
-                ->render('updates', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker, $this->htmlRenderer);
+                ->render($this->accessControl, 'updates', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker, $this->htmlRenderer);
         } else {
             $this->updatesPwgPageRenderer
                 ->render();

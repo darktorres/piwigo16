@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Auth\AccessControl;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
@@ -18,7 +19,7 @@ use Piwigo\Image\ImageStdParams;
  */
 final class RatingUserPageRenderer
 {
-    public function render(UrlServiceInterface $urlService, ImageStdParams $imageStdParams, \Piwigo\Template\CurrentTemplate $currentTemplate): void
+    public function render(AccessControl $accessControl, UrlServiceInterface $urlService, ImageStdParams $imageStdParams, \Piwigo\Template\CurrentTemplate $currentTemplate): void
     {
         $template = $currentTemplate->get();
 
@@ -40,7 +41,7 @@ final class RatingUserPageRenderer
         foreach ($rate_repository->findUsersWithStatusByIdUsername($user_fields['id'], $user_fields['username']) as $u) {
             $users_by_id[$u['id']] = [
                 'name' => $u['name'],
-                'anon' => ! \Piwigo\Auth\AccessControl::isAuthorizeStatus(AccessLevel::Classic, $u['status']),
+                'anon' => ! $accessControl->isAuthorizeStatus(AccessLevel::Classic, $u['status']),
             ];
         }
 

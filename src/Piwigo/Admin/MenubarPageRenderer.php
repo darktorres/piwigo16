@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Auth\AccessControl;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
@@ -26,11 +27,11 @@ use Piwigo\Menu\BlockManager;
  */
 final class MenubarPageRenderer
 {
-    public function render(UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate): void
+    public function render(AccessControl $accessControl, UrlServiceInterface $urlService, CoreTabs $coreTabs, \Piwigo\PluginConfig\EventDispatcher $eventDispatcher, \Piwigo\Core\PageState $pageState, \Piwigo\Template\CurrentTemplate $currentTemplate): void
     {
         $template = $currentTemplate->get();
 
-        if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
+        if (! $accessControl->isWebmaster()) {
             $pageState->addWarning(str_replace('%s', Lang::t('user_status_webmaster'), Lang::t('%s status is required to edit parameters.')));
         }
 
@@ -79,7 +80,7 @@ final class MenubarPageRenderer
         }
 
         $menubarSubmit = Request\MenubarSubmitRequest::fromGlobals();
-        if ($menubarSubmit->isSubmitted and \Piwigo\Auth\AccessControl::isWebmaster()) {
+        if ($menubarSubmit->isSubmitted and $accessControl->isWebmaster()) {
             foreach ($mb_conf as $id => $pos) {
                 $hide = $menubarSubmit->isHidden($id);
                 $mb_conf[$id] = ($hide ? -1 : +1) * abs($pos);
@@ -129,7 +130,7 @@ final class MenubarPageRenderer
             'F_ACTION' => $action,
         ]);
 
-        $template->assign('isWebmaster', \Piwigo\Auth\AccessControl::isWebmaster() ? 1 : 0);
+        $template->assign('isWebmaster', $accessControl->isWebmaster() ? 1 : 0);
         $template->assign('ADMIN_PAGE_TITLE', Lang::t('Menu Management'));
 
         $template->set_filename('menubar_admin_content', 'menubar.tpl');

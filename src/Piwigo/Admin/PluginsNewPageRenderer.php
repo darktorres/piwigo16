@@ -9,6 +9,7 @@ use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Lang;
@@ -31,6 +32,7 @@ use Piwigo\Template\Template;
 final class PluginsNewPageRenderer
 {
     public function __construct(
+        private readonly AccessControl $accessControl,
         private readonly RedirectServiceInterface $redirectService,
         private readonly UrlServiceInterface $urlService,
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
@@ -74,7 +76,7 @@ final class PluginsNewPageRenderer
 
         // ------------------------------------------------------automatic installation
         if ($pluginsNewRequest->revision !== null and $pluginsNewRequest->extension !== null) {
-            if (! \Piwigo\Auth\AccessControl::isWebmaster()) {
+            if (! $this->accessControl->isWebmaster()) {
                 $this->pageState->addError(Lang::t('Webmaster status is required.'));
             } else {
                 new \Piwigo\Csrf\CsrfService()

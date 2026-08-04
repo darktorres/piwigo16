@@ -573,6 +573,15 @@ final class BrowserTestHelpers
      * CSRF-gated GET action) -- navigateOk()/gotoOk() only assert success,
      * they don't hand back the status code for a real 400/403 response.
      *
+     * cache: 'no-store' matters here specifically: admin.php sends no
+     * explicit Cache-Control headers of its own, so without this a repeat
+     * rawGet() to the exact same URL within one browser session/test file
+     * (a real pattern in this suite -- multiple tests hit the identical
+     * '/admin.php?page=notification_by_mail' path) risks the browser's own
+     * default HTTP cache serving a stale response instead of making a real
+     * network request, undermining the whole point of asserting a fresh
+     * status code.
+     *
      * @return array{status: int, body: string}
      */
     public static function rawGet(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $path): array
@@ -582,6 +591,7 @@ final class BrowserTestHelpers
         fetch('{$url}', {
             method: 'GET',
             redirect: 'manual',
+            cache: 'no-store',
         }).then(async r => JSON.stringify({status: r.status, body: await r.text()}))
         JS;
 

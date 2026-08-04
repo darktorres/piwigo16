@@ -160,13 +160,22 @@ function nbmSetUserMailAddress(int $userId, ?string $mailAddress): void
  * itself can't be used to set them; H::setConfigValue() writes the
  * `config` table directly, properly JSON-typed, instead).
  *
+ * nbm_treatment_timeout_default is forced to -1, not 0: checkSendmailTimeout()
+ * compares `(microtime(true) - $startTime) > $this->sendmailTimeout`, and a
+ * 0 threshold requires strictly positive elapsed wall-clock time between
+ * construction and the check with no margin -- a real, if rare, race under
+ * full-suite load (found live: 2 of 5 full composer test:browser runs hit
+ * it, always this same self-heal timeout scenario). -1 guarantees the
+ * comparison holds regardless of clock resolution or scheduling, since
+ * elapsed time can never be negative.
+ *
  * @return array<string, ?string> snapshot for H::restoreConfig()
  */
 function nbmForceInstantSendmailTimeout(): array
 {
     $snapshot = H::snapshotConfig(['nbm_max_treatment_timeout_percent', 'nbm_treatment_timeout_default']);
     H::setConfigValue('nbm_max_treatment_timeout_percent', '0');
-    H::setConfigValue('nbm_treatment_timeout_default', '0');
+    H::setConfigValue('nbm_treatment_timeout_default', '-1');
 
     return $snapshot;
 }
@@ -578,13 +587,8 @@ it('cleans up newly-inserted notification rows and redirects when the plain-load
     expect($snapshot)->not->toBeNull();
     assert($snapshot !== null);
 
-    $configSnapshot = H::snapshotConfig([
-        'nbm_max_treatment_timeout_percent',
-        'nbm_treatment_timeout_default',
-        'nbm_default_value_user_enabled',
-    ]);
-    H::setConfigValue('nbm_max_treatment_timeout_percent', '0');
-    H::setConfigValue('nbm_treatment_timeout_default', '0');
+    $timeoutSnapshot = nbmForceInstantSendmailTimeout();
+    $enabledSnapshot = H::snapshotConfig(['nbm_default_value_user_enabled']);
     H::setConfigValue('nbm_default_value_user_enabled', 'true');
 
     nbmSetUserMailNotificationRow(1, null);
@@ -607,6 +611,7 @@ it('cleans up newly-inserted notification rows and redirects when the plain-load
         expect(nbmUserMailNotificationRow(1))->toBeNull();
     } finally {
         nbmSetUserMailNotificationRow(1, $snapshot);
-        H::restoreConfig($configSnapshot);
+        H::restoreConfig($enabledSnapshot);
+        H::restoreConfig($timeoutSnapshot);
     }
 });

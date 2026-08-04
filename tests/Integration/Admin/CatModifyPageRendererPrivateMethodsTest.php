@@ -29,6 +29,17 @@ beforeEach(function (): void {
     Kernel::boot();
 });
 
+afterEach(function (): void {
+    // Without this, Kernel stays booted with no real Paths bound for the
+    // rest of this shared composer test:integration process -- the exact
+    // "cross-file Kernel-state leak" bug class already known elsewhere in
+    // this codebase (see e.g. C13yInternalTest.php's own identical
+    // afterEach()), caught live: this file's own bare Kernel::boot() above
+    // was silently leaking into whichever Integration test file happened
+    // to run next, making its own real-Paths Kernel::boot() call a no-op.
+    Kernel::reset();
+});
+
 function catModifyReflect(string $method, int|string $categoryId): string
 {
     $reflected = new ReflectionMethod(CatModifyPageRenderer::class, $method);

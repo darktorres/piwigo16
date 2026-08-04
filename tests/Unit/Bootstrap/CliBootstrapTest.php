@@ -69,8 +69,8 @@ test('buildApplication attaches a real CurrentUser (guest) globally', function (
 test('buildApplication initializes CurrentConfigService with a real, resolved ConfigService', function (): void {
     CliBootstrap::buildApplication();
 
-    expect(fn () => \Piwigo\Config\CurrentConfigService::get())->not->toThrow(LogicException::class);
-    expect(\Piwigo\Config\CurrentConfigService::get())->toBeInstanceOf(ConfigService::class);
+    expect(fn () => \Piwigo\Config\CurrentConfigService::current()->get())->not->toThrow(LogicException::class);
+    expect(\Piwigo\Config\CurrentConfigService::current()->get())->toBeInstanceOf(ConfigService::class);
 });
 
 test('run() installs the shutdown handler, builds the Application and executes the given argv', function (): void {

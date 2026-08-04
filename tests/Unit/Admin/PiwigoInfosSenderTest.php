@@ -34,7 +34,15 @@ test('send returns immediately without touching the DB or network when telemetry
     // proven by simply completing without the DB-reload/network code below
     // it ever running (both would throw or hang in this sandboxed test
     // environment if reached).
-    new PiwigoInfosSender($currentLogger, new ImageStdParams())->send();
+    // Never actually read -- send() returns before touching ConfigService,
+    // per this file's own docblock -- so a throwaway instance (no
+    // Kernel::boot() needed; EntityManagerFactory::build() only
+    // constructs objects, it never opens a real connection) is enough.
+    $configService = new \Piwigo\Config\ConfigService(
+        \Piwigo\Db\EntityManagerFactory::build()->getRepository(\Piwigo\Config\ConfigEntry::class),
+        new \Piwigo\PluginConfig\EventDispatcher(),
+    );
+    new PiwigoInfosSender($currentLogger, new ImageStdParams(), $configService)->send();
 
     expect(true)->toBeTrue();
 });

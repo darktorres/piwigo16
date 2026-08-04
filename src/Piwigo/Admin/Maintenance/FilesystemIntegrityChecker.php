@@ -20,16 +20,29 @@ use Piwigo\Core\Lang;
  * IntroSubController, Admin\MaintenanceActionsPageRenderer, Admin\
  * AdminShell, Admin\Maintenance\MaintenanceActionDispatcher) is already
  * container-autowired or takes this via constructor injection -- no shim
- * needed. `CoreDomainAccessor::imageService()`/`CurrentConfig`/
- * `CurrentConfigService`/`Lang` inside fsQuickCheck()/imagesIntegrity()
- * stay plain (unconverted) static calls, revisited once each of those
- * targets' own phase lands; `CurrentTemplate` itself took real
- * constructor injection once its own phase (5) landed.
+ * needed. `CoreDomainAccessor::imageService()`/`CurrentConfig`/`Lang`
+ * inside fsQuickCheck()/imagesIntegrity() stay plain (unconverted) static
+ * calls, revisited once each of those targets' own phase lands;
+ * `CurrentTemplate` and `CurrentConfigService` themselves took real
+ * constructor injection once their own phase (5) landed.
+ * `CurrentConfigService` (the wrapper), not plain `ConfigService`, despite
+ * every real construction site here being HTTP-admin-page-only (no
+ * install/CLI timing risk): this class is resolved from the container by
+ * its own test (`tests/Integration/FilesystemIntegrityCheckerTest.php`),
+ * which needs to substitute a test-specific `ConfigService` (a deliberately
+ * separate `EntityManager`, for Doctrine identity-map isolation from the
+ * test's own raw-SQL writes) -- only the wrapper's `set()` reaches a
+ * container-resolved consumer that way; direct `ConfigService` injection
+ * would always receive the container's own default instance instead, no
+ * matter what the test seeds. `Controller\Admin\ConfigurationSubController`
+ * gets away with direct injection because nothing in its own tests needs
+ * that same substitution.
  */
 final class FilesystemIntegrityChecker
 {
     public function __construct(
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly \Piwigo\Config\CurrentConfigService $currentConfigService,
     ) {}
 
     /**
@@ -62,7 +75,7 @@ final class FilesystemIntegrityChecker
         }
 
         $this->fsQuickCheckDone = true;
-        \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('fs_quick_check_last_check', date('c'));
+        $this->currentConfigService->get()->confUpdateParam('fs_quick_check_last_check', date('c'));
 
         $imageService = \Piwigo\Bootstrap\CoreDomainAccessor::imageService();
 

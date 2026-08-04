@@ -308,7 +308,7 @@ final class InstallWizardTest extends IntegrationTestCase
         ]);
         \Piwigo\Template\ScriptLoader::setUrlService(new \Piwigo\Url\UrlService(new \Piwigo\Html\HtmlService()));
 
-        $wizard = new InstallWizard($prefix, $this->paths, $dbCredentials);
+        $wizard = new InstallWizard($prefix, $this->paths, $dbCredentials, \Piwigo\Config\CurrentConfigService::current());
         $wizard->boot();
 
         return $wizard;
@@ -364,7 +364,7 @@ final class InstallWizardTest extends IntegrationTestCase
         // the CurrentPaths::get() shim. KernelContainerOverride::with()
         // rebinds Paths::class for just this test's own scope instead.
         KernelContainerOverride::with([Paths::class => $this->paths], function (): void {
-            $wizard = new InstallWizard('itest_', $this->paths, DbCredentials::current());
+            $wizard = new InstallWizard('itest_', $this->paths, DbCredentials::current(), \Piwigo\Config\CurrentConfigService::current());
 
             self::assertSame('_data/', $this->reflectPrivate($wizard, 'confDataLocation'));
         });
@@ -378,7 +378,7 @@ final class InstallWizardTest extends IntegrationTestCase
         $this->expectExceptionMessage("Invalid \$conf['data_location'] configuration: expected a string.");
 
         KernelContainerOverride::with([Paths::class => $this->paths], function (): void {
-            new InstallWizard('itest_', $this->paths, DbCredentials::current());
+            new InstallWizard('itest_', $this->paths, DbCredentials::current(), \Piwigo\Config\CurrentConfigService::current());
         });
     }
 

@@ -114,7 +114,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         $repo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
         self::assertInstanceOf(\Piwigo\Config\ConfigRepository::class, $repo);
         $configService = new ConfigService($repo, new \Piwigo\PluginConfig\EventDispatcher());
-        CurrentConfigService::set($configService);
+        CurrentConfigService::current()->set($configService);
         // sendMailNotifications()'s recent-post-dates block builds real
         // thumbnail URLs (NotificationService::getHtmlDescriptionRecentPostDate()
         // -> DerivativeImage::thumb_url()) -- confirmed via a standalone

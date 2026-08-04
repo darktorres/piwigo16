@@ -340,7 +340,7 @@ final readonly class ImageService
             [$runningExecId, $runningExecStartTime] = explode('-', $emptyLoungeRunning);
             if (time() - (int) $runningExecStartTime > 60) {
                 $logger->debug(__FUNCTION__ . ', exec=' . $runningExecId . ', timeout stopped by another call to the function');
-                \Piwigo\Config\CurrentConfigService::get()->confDeleteParam('empty_lounge_running');
+                \Piwigo\Config\CurrentConfigService::current()->get()->confDeleteParam('empty_lounge_running');
             }
         }
 
@@ -390,7 +390,7 @@ final readonly class ImageService
             PermissionCacheInvalidator::invalidate();
         }
 
-        \Piwigo\Config\CurrentConfigService::get()->confDeleteParam('empty_lounge_running');
+        \Piwigo\Config\CurrentConfigService::current()->get()->confDeleteParam('empty_lounge_running');
 
         $logger->debug(__FUNCTION__ . ', exec=' . $execId . ', ends');
 
@@ -553,7 +553,7 @@ final readonly class ImageService
             // we don't care about the list of image_ids, we only care about the number
             // of orphans, so let's use a faster method than calling count(getOrphans())
             $counter = $this->repo->countAllImages() - $this->repo->countImagesInCategories();
-            \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('count_orphans', $counter, updateGlobal: true);
+            \Piwigo\Config\CurrentConfigService::current()->get()->confUpdateParam('count_orphans', $counter, updateGlobal: true);
         }
 
         return \Piwigo\Config\CurrentConfig::countOrphans() ?? 0;

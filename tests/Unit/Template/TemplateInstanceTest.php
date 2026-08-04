@@ -351,12 +351,12 @@ test('constructor creates the configured data-location directory when data_dir_c
 
 test('constructor actually reaches CurrentConfigService::confUpdateParam() when data_dir_checked is unset, not just the local isset() check', function (): void {
     // The try/catch around this call only catches Doctrine\DBAL\Exception
-    // -- CurrentConfigService::get() itself throws a plain \LogicException
+    // -- CurrentConfigService::current()->get() itself throws a plain \LogicException
     // when unset (never initialised in this Unit test), which propagates
     // straight out of the constructor. That only happens if the
     // confUpdateParam() call site is genuinely still reached; removing it
     // entirely would let construction finish without throwing anything.
-    \Piwigo\Config\CurrentConfigService::reset();
+    \Piwigo\Config\CurrentConfigService::current()->reset();
     CurrentConfig::setDataLocation('mydata3/');
     CurrentConfig::setDataDirChecked(null);
 

@@ -975,7 +975,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         // PluginLoader::autoupdatePlugin()).
         $page_errors = $this->pageState->errors;
 
-        new UploadService($this->currentLogger, $this->storageRegistry, $this->eventDispatcher)
+        new UploadService($this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService)
             ->saveUploadFormConfig($updates, $page_errors, $errors);
 
         $this->pageState->errors = array_values($page_errors);

@@ -76,7 +76,7 @@ $dbCredentials->seed([
 \Piwigo\Template\ScriptLoader::setUrlService(new \Piwigo\Url\UrlService(new \Piwigo\Html\HtmlService()));
 
 // ---------------------------------------------------------------- orchestration
-$wizard = new InstallWizard($prefixeTable, $paths, $dbCredentials);
+$wizard = new InstallWizard($prefixeTable, $paths, $dbCredentials, \Piwigo\Config\CurrentConfigService::current());
 
 // Found live while verifying Part II's public/ relocation, unrelated to the
 // move itself: InstallWizard::boot()'s own "PHP extension mysqli is not

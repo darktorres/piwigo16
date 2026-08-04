@@ -76,6 +76,7 @@ final class UploadService
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
         private readonly StorageRegistry $storageRegistry,
         private readonly \Piwigo\PluginConfig\EventDispatcher $eventDispatcher,
+        private readonly \Piwigo\Config\ConfigService $configService,
     ) {}
 
     /**
@@ -594,7 +595,7 @@ final class UploadService
             // check if we need to use the lounge from now
             $nb_photos = \Piwigo\Bootstrap\CoreDomainAccessor::imageService()->getTotalImageCount();
             if ($nb_photos >= \Piwigo\Config\CurrentConfig::loungeActivateThreshold()) {
-                \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('lounge_active', true, true);
+                $this->configService->confUpdateParam('lounge_active', true, true);
             }
         }
 

@@ -38,6 +38,6 @@ final class PermissionCacheInvalidator
     {
         CachePools::permissions()->clear();
         CachePools::effectivePermissions()->clear();
-        \Piwigo\Config\CurrentConfigService::get()->confDeleteParam('count_orphans');
+        \Piwigo\Config\CurrentConfigService::current()->get()->confDeleteParam('count_orphans');
     }
 }

@@ -205,7 +205,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         Lang::load('admin.lang');
 
         $this->configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher());
-        CurrentConfigService::set($this->configService);
+        CurrentConfigService::current()->set($this->configService);
 
         // themes_standard_pages.tpl's own {combine_script}/{footer_script}
         // tags only *register* scripts (ScriptLoader::add()/add_inline(),
@@ -300,6 +300,14 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         // by this renderer) throws "not initialised" against this fresh,
         // unseeded container.
         \Piwigo\Users\CurrentUser::current()->attachGlobals();
+        // Same reasoning again -- Kernel::reset() also discards the
+        // container-shared CurrentConfigService instance setUp()'s own
+        // set() call populated; without reseeding here, Template's own
+        // constructor (its Tier-2 CurrentConfigService::current()->get()
+        // read, see that class's own docblock) throws "not initialised"
+        // against this fresh, unseeded container the moment the new
+        // Template below is constructed.
+        CurrentConfigService::current()->set($this->configService);
         // Same reasoning as the CurrentUser reseed above -- Kernel::reset()
         // also discards the container-shared CurrentTemplate instance
         // setUp()'s own set() call populated; without reseeding here,

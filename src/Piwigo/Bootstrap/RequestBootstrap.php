@@ -218,14 +218,13 @@ final class RequestBootstrap
         ConfigLoader::applyEnvOverrides();
         Kernel::boot($paths);
         self::serverTiming()->start('boot', $bootStart);
-        if (\Piwigo\Config\CurrentConfigService::isSet()) {
-            $configService = \Piwigo\Config\CurrentConfigService::get();
-        } else {
+        $currentConfigService = self::currentConfigService();
+        if (! $currentConfigService->isSet()) {
             $configService = Kernel::container()->get(\Piwigo\Config\ConfigService::class);
             if (! $configService instanceof \Piwigo\Config\ConfigService) {
                 throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\ConfigService::class);
             }
-            \Piwigo\Config\CurrentConfigService::set($configService);
+            $currentConfigService->set($configService);
             $configService->loadConfFromDb();
         }
         self::currentUser()->attachGlobals();
@@ -420,7 +419,7 @@ final class RequestBootstrap
         if (! $configService instanceof \Piwigo\Config\ConfigService) {
             throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\ConfigService::class);
         }
-        \Piwigo\Config\CurrentConfigService::set($configService);
+        self::currentConfigService()->set($configService);
         $configService->loadConfFromDb();
 
         $log_data_location = \Piwigo\Config\CurrentConfig::dataLocation();
@@ -672,7 +671,7 @@ final class RequestBootstrap
             // when it decides to take over the page. CurrentConfigService::get()
             // reuses the instance connect() already resolved earlier in the
             // same request (Legacy Coupling Retirement Phase 8, 8d).
-            new NoPhotoYetRenderer(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), \Piwigo\Config\CurrentConfigService::get(), new RedirectService(), new UrlService(new HtmlService()), CurrentPaths::get(), self::adminContext(), self::sessionService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::deploymentPolicy(), self::currentUser(), self::currentTemplate())
+            new NoPhotoYetRenderer(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), self::currentConfigService()->get(), new RedirectService(), new UrlService(new HtmlService()), CurrentPaths::get(), self::adminContext(), self::sessionService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::deploymentPolicy(), self::currentUser(), self::currentTemplate())
                 ->render();
         }
 
@@ -1032,6 +1031,25 @@ final class RequestBootstrap
         }
 
         return $currentTemplate;
+    }
+
+    /**
+     * Public, same reason as currentTemplate() above: public/admin.php's
+     * own legacy-style `new AdminShell(...)` manual construction needs a
+     * way to obtain the same container-shared instance every other
+     * CurrentConfigService consumer receives via constructor injection,
+     * without calling Kernel::container() directly itself (arch-tested to
+     * Bootstrap/ only) -- singleton/service-locator elimination campaign,
+     * Phase 5.
+     */
+    public static function currentConfigService(): \Piwigo\Config\CurrentConfigService
+    {
+        $currentConfigService = Kernel::container()->get(\Piwigo\Config\CurrentConfigService::class);
+        if (! $currentConfigService instanceof \Piwigo\Config\CurrentConfigService) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\CurrentConfigService::class);
+        }
+
+        return $currentConfigService;
     }
 
     /**

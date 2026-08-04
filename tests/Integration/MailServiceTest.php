@@ -114,7 +114,7 @@ final class MailServiceTest extends IntegrationTestCase
         $repo = EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class);
         self::assertInstanceOf(\Piwigo\Config\ConfigRepository::class, $repo);
         $configService = new ConfigService($repo, new \Piwigo\PluginConfig\EventDispatcher());
-        CurrentConfigService::set($configService);
+        CurrentConfigService::current()->set($configService);
         $configService->loadConfFromDb();
 
         MailService::reset();

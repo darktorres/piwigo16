@@ -93,12 +93,12 @@ namespace Piwigo\Tests\Integration {
             // checkAndSaveUserInfos()'s own success path (any call that
             // doesn't return an early 'error') reaches
             // PermissionCacheInvalidator::invalidate() ->
-            // CurrentConfigService::get() -- confirmed via a standalone
+            // CurrentConfigService::current()->get() -- confirmed via a standalone
             // sanity script that a bare "CurrentConfigService not
             // initialised" LogicException is the real failure mode
             // without this, since no other test in this file previously
             // reached that call chain.
-            CurrentConfigService::set(new ConfigService(EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class), new \Piwigo\PluginConfig\EventDispatcher()));
+            CurrentConfigService::current()->set(new ConfigService(EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class), new \Piwigo\PluginConfig\EventDispatcher()));
         }
 
         /** @param array<int<0, max>|string, mixed> $params */

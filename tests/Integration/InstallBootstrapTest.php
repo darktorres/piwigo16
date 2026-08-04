@@ -196,11 +196,11 @@ final class InstallBootstrapTest extends IntegrationTestCase
 
         InstallBootstrap::activateConfigService();
 
-        self::assertTrue(CurrentConfigService::isSet());
+        self::assertTrue(CurrentConfigService::current()->isSet());
         // Same instance as the container would hand out itself -- proves
         // this really pulled the container's own (implicitly singleton)
         // ConfigService rather than building a detached one.
-        self::assertSame(Kernel::container()->get(ConfigService::class), CurrentConfigService::get());
+        self::assertSame(Kernel::container()->get(ConfigService::class), CurrentConfigService::current()->get());
 
         restore_error_handler();
     }

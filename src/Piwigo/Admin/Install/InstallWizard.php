@@ -163,6 +163,7 @@ final class InstallWizard
         private readonly string $prefixeTable,
         private readonly Paths $paths,
         private readonly DbCredentials $dbCredentials,
+        private readonly \Piwigo\Config\CurrentConfigService $currentConfigService,
     ) {
         $conf_data_location = LegacyFileConf::read()['data_location'] ?? null;
         if (! is_string($conf_data_location)) {
@@ -578,7 +579,7 @@ define(\'DB_COLLATE\', \'\');
             'secretKey' => $secretKeyJson,
         ]);
 
-        $configService = \Piwigo\Config\CurrentConfigService::get();
+        $configService = $this->currentConfigService->get();
         $configService->confUpdateParam('gallery_title', Lang::t('Just another Piwigo gallery'));
 
         $configService->confUpdateParam(

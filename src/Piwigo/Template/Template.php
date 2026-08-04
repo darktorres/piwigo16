@@ -204,7 +204,7 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
                 // json_encode() produces the JSON-quoted text
                 // hydrate()'s 'string' branch expects back, not a bare
                 // JSON number that decodes to an int instead.
-                \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('data_dir_checked', '1');
+                \Piwigo\Config\CurrentConfigService::current()->get()->confUpdateParam('data_dir_checked', '1');
             } catch (\Doctrine\DBAL\Exception) {
             }
         }

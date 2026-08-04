@@ -1240,7 +1240,7 @@ final class PwgImages
         if ($params['type'] === 'file') {
             $do_update = false;
 
-            $infos = new UploadService(\Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get())
+            $infos = new UploadService(\Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfigService::current()->get())
                 ->pwgImageInfos($file_path);
 
             foreach (['width', 'height', 'filesize'] as $image_info) {
@@ -1255,7 +1255,7 @@ final class PwgImages
             }
         }
 
-        $image_id = new UploadService(\Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get())
+        $image_id = new UploadService(\Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfigService::current()->get())
             ->addUploadedFile(
                 $file_path,
                 \Piwigo\Bootstrap\PresentationAccessor::urlService(),
@@ -1341,7 +1341,7 @@ final class PwgImages
         self::mergeChunks($file_path, $params['original_sum'], $original_type);
         chmod($file_path, 0644);
 
-        $image_id = new UploadService(\Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get())
+        $image_id = new UploadService(\Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfigService::current()->get())
             ->addUploadedFile(
                 $file_path,
                 \Piwigo\Bootstrap\PresentationAccessor::urlService(),
@@ -1457,7 +1457,7 @@ final class PwgImages
             return new PwgError(500, '[ws_images_addSimple] missing uploaded file temp name');
         }
 
-        $image_id = new UploadService(\Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get())
+        $image_id = new UploadService(\Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfigService::current()->get())
             ->addUploadedFile(
                 $uploaded_tmp_name,
                 \Piwigo\Bootstrap\PresentationAccessor::urlService(),
@@ -1654,7 +1654,7 @@ final class PwgImages
                 }
                 $image = $imageRow->toArray();
 
-                $add_status = new UploadService(\Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get())
+                $add_status = new UploadService(\Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfigService::current()->get())
                     ->addFormat($filePath, $format_ext, $imageRow->id);
 
                 return [
@@ -1677,7 +1677,7 @@ final class PwgImages
                 }
             }
 
-            $image_id = new UploadService(\Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get())
+            $image_id = new UploadService(\Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfigService::current()->get())
                 ->addUploadedFile(
                     $filePath,
                     \Piwigo\Bootstrap\PresentationAccessor::urlService(),
@@ -1899,7 +1899,7 @@ final class PwgImages
 
         $logger->debug(__FUNCTION__ . ' ' . $output_filepath . ' MD5 checksum OK');
 
-        $image_id = new UploadService(\Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get())
+        $image_id = new UploadService(\Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfigService::current()->get())
             ->addUploadedFile(
                 $output_filepath,
                 \Piwigo\Bootstrap\PresentationAccessor::urlService(),
@@ -2504,7 +2504,7 @@ final class PwgImages
     public static function checkUpload(array $params, PwgServer $service): array
     {
         $ret = [];
-        $ret['message'] = new UploadService(\Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get())->readyForUploadMessage();
+        $ret['message'] = new UploadService(\Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfigService::current()->get())->readyForUploadMessage();
         $ret['ready_for_upload'] = true;
         if (! in_array($ret['message'], [null, ''], true)) {
             $ret['ready_for_upload'] = false;

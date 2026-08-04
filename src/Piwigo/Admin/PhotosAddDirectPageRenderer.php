@@ -45,6 +45,7 @@ final class PhotosAddDirectPageRenderer
         private readonly \Piwigo\Core\PageState $pageState,
         private readonly \Piwigo\Users\CurrentUser $currentUser,
         private readonly \Piwigo\Template\CurrentTemplate $currentTemplate,
+        private readonly \Piwigo\Config\ConfigService $configService,
     ) {}
 
     /**
@@ -207,7 +208,7 @@ final class PhotosAddDirectPageRenderer
 
         $htmlRenderer = \Piwigo\Bootstrap\PresentationAccessor::htmlService();
 
-        $uploadService = new UploadService($this->currentLogger, $this->storageRegistry, $this->eventDispatcher);
+        $uploadService = new UploadService($this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService);
 
         // +-------------------------------------------------------------------+
         // | Photo selection                                                    |

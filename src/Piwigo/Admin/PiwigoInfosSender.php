@@ -49,6 +49,7 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
     public function __construct(
         private readonly \Piwigo\Core\CurrentLogger $currentLogger,
         private readonly ImageStdParams $imageStdParams,
+        private readonly \Piwigo\Config\ConfigService $configService,
     ) {}
 
     /**
@@ -74,7 +75,7 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
         // \Piwigo\Config\CurrentConfig::sendPiwigoInfosLastNotice() has been loaded in include/common, maybe
         // a few seconds earlier, we need a refreshed value from the database. Another
         // concurrent execution might have already performed send_piwigo_infos 3 seconds ago.
-        \Piwigo\Config\CurrentConfigService::get()->loadConfFromDb('send_piwigo_infos_last_notice', false);
+        $this->configService->loadConfFromDb('send_piwigo_infos_last_notice', false);
 
         $doSend = false;
         $lastNotice = \Piwigo\Config\CurrentConfig::sendPiwigoInfosLastNotice() ?? null;
@@ -98,7 +99,7 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
 
         $logger->info('[' . __FUNCTION__ . '] current conf.send_piwigo_infos_last_notice=' . ($lastNoticeStr ?? 'notFound') . ' => lets do it');
 
-        if (! \Piwigo\Config\CurrentConfigService::get()->pwgIsDbconfWriteable()) {
+        if (! $this->configService->pwgIsDbconfWriteable()) {
             $logger->info('[' . __FUNCTION__ . '] conf is not writeable, abort');
             return;
         }
@@ -114,7 +115,7 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
         $dbCurrentDate = $dbInfo->currentDateTime();
 
         if (\Piwigo\Config\CurrentConfig::sendPiwigoInfosOriginHash() === null) {
-            \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('send_piwigo_infos_origin_hash', sha1(random_bytes(1000)), true);
+            $this->configService->confUpdateParam('send_piwigo_infos_origin_hash', sha1(random_bytes(1000)), true);
         }
 
         [$containerType, $containerVersion] = ContainerDetector::detect();
@@ -506,7 +507,7 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
             $this->retryLater(24 * 60 * 60);
         } else {
             $lastNotice = date('c');
-            \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('send_piwigo_infos_last_notice', $lastNotice, true);
+            $this->configService->confUpdateParam('send_piwigo_infos_last_notice', $lastNotice, true);
             $logger->info('[' . __FUNCTION__ . '][exec=' . $execId . '] fetchRemote success, new send_piwigo_infos_last_notice=' . $lastNotice);
         }
 
@@ -524,7 +525,7 @@ final class PiwigoInfosSender implements \Piwigo\Core\TelemetrySenderInterface
         $lastNotice = ($lastNotice === false ? time() : $lastNotice) + $waitTime;
 
         $newLastNotice = date('c', $lastNotice);
-        \Piwigo\Config\CurrentConfigService::get()->confUpdateParam('send_piwigo_infos_last_notice', $newLastNotice, true);
+        $this->configService->confUpdateParam('send_piwigo_infos_last_notice', $newLastNotice, true);
         $logger->info('[' . __FUNCTION__ . '] new send_piwigo_infos_last_notice=' . $newLastNotice);
     }
 }

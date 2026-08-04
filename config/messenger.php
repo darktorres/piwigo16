@@ -46,7 +46,14 @@ return [
 
     // message class => handler factory
     'handlers' => [
-        BatchUploadJob::class => static fn (): callable => new BatchUploadHandler(new UrlService(new HtmlService()), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get()),
+        // ConfigService is built directly here (same EntityManagerFactory
+        // recipe as ReindexImagesJob's MetadataService below), not via the
+        // CurrentConfigService shim -- every handler factory in this map
+        // is invoked eagerly when the bus is built, not lazily per
+        // dispatch, so a shim that throws when nothing has activated it
+        // yet would break every job type's construction, not just this
+        // one's.
+        BatchUploadJob::class => static fn (): callable => new BatchUploadHandler(new UrlService(new HtmlService()), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get(), new \Piwigo\Config\ConfigService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Config\ConfigEntry::class), \Piwigo\PluginConfig\EventDispatcher::get())),
         GenerateDerivativeJob::class => static fn (): callable => new GenerateDerivativeHandler(new DerivativeCacheService()),
         RegenerateAllDerivativesJob::class => static fn (): callable => new RegenerateAllDerivativesHandler(new DerivativeCacheService()),
         ReindexImagesJob::class => static fn (): callable => new ReindexImagesHandler(new MetadataService(new MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\PluginConfig\EventDispatcher::get())),

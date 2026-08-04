@@ -121,7 +121,7 @@ final class PwgExtensions
             new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
             new PemCatalog(new ZipExtractor(), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger()),
             $urlService,
-            CurrentConfigService::get(),
+            CurrentConfigService::current()->get(),
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class),
         );
         $fsEntry = new ExtensionScanner()
@@ -169,7 +169,7 @@ final class PwgExtensions
             new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
             new PemCatalog(new ZipExtractor(), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger()),
             $urlService,
-            CurrentConfigService::get(),
+            CurrentConfigService::current()->get(),
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class),
         );
         $fsEntry = new ExtensionScanner()
@@ -233,7 +233,7 @@ final class PwgExtensions
         $repo = new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($conn));
         $pemCatalog = new PemCatalog(new ZipExtractor(), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger());
         $pluginMigrationRepo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class);
-        $lifecycle = new ExtensionLifecycle($repo, $pemCatalog, $urlService, CurrentConfigService::get(), $pluginMigrationRepo);
+        $lifecycle = new ExtensionLifecycle($repo, $pemCatalog, $urlService, CurrentConfigService::current()->get(), $pluginMigrationRepo);
 
         if ($type === ExtensionType::Plugin) {
             $dbPluginsById = $repo->findAll(ExtensionType::Plugin);

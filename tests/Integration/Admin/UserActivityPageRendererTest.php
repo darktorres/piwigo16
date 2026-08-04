@@ -98,10 +98,10 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
 
         Lang::load('admin.lang');
         // Template::__construct()'s own data_dir_checked first-time-setup
-        // flow reaches CurrentConfigService::get() -- same wiring every
+        // flow reaches CurrentConfigService::current()->get() -- same wiring every
         // other Integration test constructing a real Template directly
         // does (e.g. ThemesStandardPagesPageRendererTest's own setUp()).
-        CurrentConfigService::set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
+        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
         CurrentTemplate::current()->set(new Template(CurrentPaths::get()->root . 'themes/admin', 'default'));
 
         $_GET = [];

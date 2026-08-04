@@ -96,7 +96,7 @@ final class SectionInitializerTest extends IntegrationTestCase
     private function bootRedirectPreconditions(): void
     {
         Kernel::boot();
-        CurrentConfigService::set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
+        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
         ScriptLoader::setUrlService(new UrlService(new HtmlService()));
         Lang::setLangInfo(['code' => 'en_UK', 'direction' => 'ltr']);
         CurrentTemplate::current()->set(new Template(\Piwigo\Core\CurrentPaths::get()->root . 'themes', 'default'));

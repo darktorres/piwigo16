@@ -377,7 +377,7 @@ final class PwgCore
             ];
         }
 
-        CurrentConfigService::get()->confUpdateParam('cache_sizes', $output, true);
+        CurrentConfigService::current()->get()->confUpdateParam('cache_sizes', $output, true);
 
         return [
             'infos' => new PwgNamedArray($output, 'item'),

@@ -245,6 +245,7 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
         '/src/Piwigo/Core/PageState.php',
         '/src/Piwigo/Users/CurrentUser.php',
         '/src/Piwigo/Template/CurrentTemplate.php',
+        '/src/Piwigo/Config/CurrentConfigService.php',
     ];
 
     $hits = [
@@ -376,6 +377,53 @@ test('CurrentConfigService::reset() is only called from tests/', function (): vo
     ];
 
     expect(describeCallSites($hits))->toBe([]);
+});
+
+test('CurrentConfigService::current() transitional bridge has a shrinking, known allow-list', function (): void {
+    // Singleton/service-locator elimination campaign, Phase 5: current()
+    // kept its original name (no `Static` suffix, matching CurrentTemplate/
+    // CurrentUser/PageState/ImageStdParams/DeploymentPolicy/DbCredentials's
+    // own precedent -- no competing real instance method to disambiguate
+    // from). Every phase that converts one more of these files to
+    // constructor-injected ConfigService/CurrentConfigService should
+    // remove it from the allow-list below.
+    // Core/UniqueExecLock.php, Cache/PermissionCacheInvalidator.php, and
+    // Admin/Install/InstallService.php are genuinely static utilities, no
+    // constructor at all. Image/ImageService.php (10 real construction
+    // sites) and Template/Template.php (hundreds) match ImageStdParams's
+    // own too-many-sites precedent for this exact file. Ws/PwgUsers.php,
+    // Ws/PwgExtensions.php, Ws/PwgCore.php, and Ws/PwgImages.php are
+    // Phase-10-locked static dispatch. public/install.php passes the
+    // wrapper itself (not ->get()) into InstallWizard's constructor --
+    // same "raw entry-shell root file that never boots Kernel before this
+    // point" reasoning as every prior phase's identical allow-list entry
+    // for this file.
+    $repoRoot = __DIR__ . '/../..';
+
+    $allowedFiles = [
+        '/src/Piwigo/Core/UniqueExecLock.php',
+        '/src/Piwigo/Admin/Install/InstallService.php',
+        '/src/Piwigo/Cache/PermissionCacheInvalidator.php',
+        '/src/Piwigo/Image/ImageService.php',
+        '/src/Piwigo/Template/Template.php',
+        '/src/Piwigo/Ws/PwgCore.php',
+        '/src/Piwigo/Ws/PwgExtensions.php',
+        '/src/Piwigo/Ws/PwgImages.php',
+        '/src/Piwigo/Ws/PwgUsers.php',
+        '/public/install.php',
+    ];
+
+    $hits = [
+        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'CurrentConfigService::current('),
+        ...findCallSitesOutsideComments($repoRoot . '/public', 'CurrentConfigService::current('),
+    ];
+
+    $disallowed = array_values(array_filter(
+        $hits,
+        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
+    ));
+
+    expect(describeCallSites($disallowed))->toBe([]);
 });
 
 test('DeploymentPolicy::current() transitional bridge has a shrinking, known allow-list', function (): void {

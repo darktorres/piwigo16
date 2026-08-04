@@ -83,10 +83,10 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
 
         $this->configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher());
         // Template::__construct()'s own data_dir_checked first-time-setup
-        // flow reaches CurrentConfigService::get() -- same wiring every
+        // flow reaches CurrentConfigService::current()->get() -- same wiring every
         // other Integration test constructing a real Template directly
         // does (e.g. ThemesStandardPagesPageRendererTest's own setUp()).
-        CurrentConfigService::set($this->configService);
+        CurrentConfigService::current()->set($this->configService);
         CurrentTemplate::current()->set(new Template(CurrentPaths::get()->root . 'themes/admin', 'default'));
 
         $urlService = new UrlService(new HtmlService());

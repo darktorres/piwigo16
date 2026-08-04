@@ -21,7 +21,6 @@ require __DIR__ . '/../vendor/autoload.php';
 
 use Piwigo\Admin\AdminShell;
 use Piwigo\Bootstrap\RedirectService;
-use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\Paths;
 use Piwigo\Html\HtmlService;
 use Piwigo\Url\UrlService;
@@ -30,5 +29,5 @@ $paths = Paths::fromRoot(dirname(__DIR__));
 
 \Piwigo\Bootstrap\RequestBootstrap::bootEntryPoint($paths, isAdmin: true);
 
-new AdminShell(new RedirectService(), new UrlService(new HtmlService()), CurrentConfigService::get(), $paths, \Piwigo\Bootstrap\RequestBootstrap::filesystemIntegrityChecker(), \Piwigo\Bootstrap\RequestBootstrap::coreTabs(), \Piwigo\Bootstrap\RequestBootstrap::sessionService(), \Piwigo\Bootstrap\RequestBootstrap::eventDispatcher(), \Piwigo\Bootstrap\RequestBootstrap::deploymentPolicy(), \Piwigo\Bootstrap\RequestBootstrap::pageState(), \Piwigo\Bootstrap\RequestBootstrap::currentUser(), \Piwigo\Bootstrap\RequestBootstrap::currentTemplate())
+new AdminShell(new RedirectService(), new UrlService(new HtmlService()), \Piwigo\Bootstrap\RequestBootstrap::currentConfigService()->get(), $paths, \Piwigo\Bootstrap\RequestBootstrap::filesystemIntegrityChecker(), \Piwigo\Bootstrap\RequestBootstrap::coreTabs(), \Piwigo\Bootstrap\RequestBootstrap::sessionService(), \Piwigo\Bootstrap\RequestBootstrap::eventDispatcher(), \Piwigo\Bootstrap\RequestBootstrap::deploymentPolicy(), \Piwigo\Bootstrap\RequestBootstrap::pageState(), \Piwigo\Bootstrap\RequestBootstrap::currentUser(), \Piwigo\Bootstrap\RequestBootstrap::currentTemplate())
     ->run();

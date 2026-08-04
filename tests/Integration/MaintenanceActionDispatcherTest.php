@@ -82,8 +82,9 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         Lang::load('admin.lang');
 
         $this->conn = DbConnection::build();
-        CurrentConfigService::set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
-        $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService(), new UrlService(new HtmlService()), new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()), new FilesystemIntegrityChecker(CurrentTemplate::current()), new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class)), new Translator(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), CurrentTemplate::current());
+        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
+        $configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher());
+        $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService(), new UrlService(new HtmlService()), $configService, new FilesystemIntegrityChecker(CurrentTemplate::current(), CurrentConfigService::current()), new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class)), new Translator(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), CurrentTemplate::current());
     }
 
     #[\Override]
@@ -459,11 +460,12 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         // setUp() with no persistent cache) -- constructor injection means
         // this test just passes the fixture it wants directly, no static
         // set()/reset() ceremony needed.
+        $configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher());
         $dispatcher = new MaintenanceActionDispatcher(
             new RedirectService(),
             new UrlService(new HtmlService()),
-            new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()),
-            new FilesystemIntegrityChecker(CurrentTemplate::current()),
+            $configService,
+            new FilesystemIntegrityChecker(CurrentTemplate::current(), CurrentConfigService::current()),
             new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class)),
             new Translator(),
             new \Piwigo\PluginConfig\EventDispatcher(),

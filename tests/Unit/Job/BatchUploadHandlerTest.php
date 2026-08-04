@@ -57,6 +57,21 @@ function batch_upload_handler_test_storage_registry(): StorageRegistry
     return $storageRegistry;
 }
 
+/**
+ * Never actually read -- this suite forces loungeActive true specifically
+ * so UploadService's own confUpdateParam() call (the only real reader of
+ * this dependency) never runs, per this file's own docblock above.
+ */
+function batch_upload_handler_test_config_service(): \Piwigo\Config\ConfigService
+{
+    $configService = Kernel::container()->get(\Piwigo\Config\ConfigService::class);
+    if (! $configService instanceof \Piwigo\Config\ConfigService) {
+        throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\ConfigService::class);
+    }
+
+    return $configService;
+}
+
 beforeEach(function (): void {
     // A real Paths is required, not a bare boot: batch_upload_handler_test_
     // storage_registry() resolves StorageRegistry::class from the
@@ -85,7 +100,7 @@ test('__invoke returns the existing image id and deletes the newly uploaded file
         $sourceFilepath = sys_get_temp_dir() . '/piwigo-batch-upload-handler-test-' . bin2hex(random_bytes(8)) . '.jpg';
         file_put_contents($sourceFilepath, 'duplicate-upload-bytes');
 
-        $handler = new BatchUploadHandler(new UrlService(new HtmlService()), batch_upload_handler_test_current_logger(), batch_upload_handler_test_storage_registry(), \Piwigo\PluginConfig\EventDispatcher::get());
+        $handler = new BatchUploadHandler(new UrlService(new HtmlService()), batch_upload_handler_test_current_logger(), batch_upload_handler_test_storage_registry(), \Piwigo\PluginConfig\EventDispatcher::get(), batch_upload_handler_test_config_service());
 
         $imageId = $handler(new BatchUploadJob(
             sourceFilepath: $sourceFilepath,

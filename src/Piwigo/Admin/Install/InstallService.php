@@ -84,7 +84,7 @@ final class InstallService
             new ExtensionRepository(\Piwigo\Db\EntityManagerFactory::build($conn)),
             new PemCatalog(new ZipExtractor(), \Piwigo\Bootstrap\InstallBootstrap::currentLogger()),
             $urlService,
-            CurrentConfigService::get(),
+            CurrentConfigService::current()->get(),
             \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Admin\Extensions\PluginMigrationEntity::class),
         );
         $fs_themes = new ExtensionScanner()

@@ -202,9 +202,9 @@ abstract class IntegrationTestCase extends TestCase
         }
         \Piwigo\Config\CurrentConfig::reset();
         // Harmless even for test classes that never call
-        // buildConfigRepository()/wire CurrentConfigService::set() at
+        // buildConfigRepository()/wire CurrentConfigService::current()->set() at
         // all -- reset() on an already-unset registry is a no-op.
-        \Piwigo\Config\CurrentConfigService::reset();
+        \Piwigo\Config\CurrentConfigService::current()->reset();
         if (\Piwigo\Core\Kernel::isBooted()) {
             $pageState = \Piwigo\Core\Kernel::container()->get(\Piwigo\Core\PageState::class);
             if ($pageState instanceof \Piwigo\Core\PageState) {

@@ -68,7 +68,12 @@ function upload_service_test_make(): UploadService
         throw new \LogicException('Container returned an unexpected type for ' . StorageRegistry::class);
     }
 
-    return new UploadService(upload_service_test_current_logger(), $storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get());
+    $configService = Kernel::container()->get(\Piwigo\Config\ConfigService::class);
+    if (! $configService instanceof \Piwigo\Config\ConfigService) {
+        throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Config\ConfigService::class);
+    }
+
+    return new UploadService(upload_service_test_current_logger(), $storageRegistry, \Piwigo\PluginConfig\EventDispatcher::get(), $configService);
 }
 
 beforeEach(function (): void {

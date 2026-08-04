@@ -37,7 +37,7 @@ use Piwigo\Group\GroupService;
  *
  * The specific gaps below (duplicate()'s and merge()'s own per-member
  * activity-logging loop, addAccess()) are the one real exception: they
- * only need PermissionCacheInvalidator::invalidate() -> CurrentConfigService::get()
+ * only need PermissionCacheInvalidator::invalidate() -> CurrentConfigService::current()->get()
  * wired, the same one missing piece UserServiceTest's own setUp() already
  * documents fixing the same way -- everything else those methods touch
  * (repo writes, the real ActivityService instance already constructed
@@ -79,10 +79,10 @@ final class GroupServiceTest extends IntegrationTestCase
         $this->service = new GroupService($this->repo, new ActivityService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Activity\ActivityEntity::class)), new AuditService($auditRepo), $this->configService, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Users\CurrentUser::current());
 
         // Only addAccess()/duplicate()/merge() need this (see class docblock)
-        // -- PermissionCacheInvalidator::invalidate() -> CurrentConfigService::get()
+        // -- PermissionCacheInvalidator::invalidate() -> CurrentConfigService::current()->get()
         // would otherwise throw "not initialised" the moment any of their
         // real success paths run.
-        CurrentConfigService::set(new ConfigService(EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class), new \Piwigo\PluginConfig\EventDispatcher()));
+        CurrentConfigService::current()->set(new ConfigService(EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class), new \Piwigo\PluginConfig\EventDispatcher()));
     }
 
     public function test_create_rejects_an_already_used_name(): void

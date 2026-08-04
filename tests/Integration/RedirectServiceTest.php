@@ -70,7 +70,7 @@ final class RedirectServiceTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
         // Kernel is already booted by parent::setUp() with this exact same
         // dirname(__DIR__, 2) root -- no need to boot (or bind Paths) again.
-        CurrentConfigService::set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
+        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
 
         // footer.tpl's {get_combined_scripts load='footer'} tag reaches
         // ScriptLoader::urlService() -- unset by default, real
@@ -89,6 +89,18 @@ final class RedirectServiceTest extends IntegrationTestCase
     #[\Override]
     protected function tearDown(): void
     {
+        // KernelContainerOverride::with()'s own finally clause (used by
+        // the "unexpected type for userservice" test above) unconditionally
+        // resets Kernel before this tearDown() runs, discarding whatever
+        // CurrentConfigService that test's own callback seeded -- reseed
+        // here so UniqueExecLock::ends() below (its own real DB write,
+        // genuinely needed regardless of Kernel's PHP-level boot state, to
+        // release the lock every other test in this file also relies on)
+        // doesn't throw "not initialised" against the resulting fresh,
+        // unseeded fallback instance. Harmless for the other 3 tests,
+        // which never touch Kernel::reset() themselves and already have a
+        // real one set from setUp().
+        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
         UniqueExecLock::ends('check_for_updates');
         CurrentTemplate::current()->reset();
         Lang::reset();
@@ -112,6 +124,14 @@ final class RedirectServiceTest extends IntegrationTestCase
                 Paths::class => Paths::fromRoot(dirname(__DIR__, 2)),
             ],
             function (): void {
+                // The rebuilt container's own CurrentConfigService starts
+                // unset -- PageTail::checkForUpdates()'s own internal
+                // UniqueExecLock::begins() call (reached before
+                // redirectHtml() ever gets to the UserService resolution
+                // this test targets) would otherwise throw "not
+                // initialised" first, masking the exception under test.
+                CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
+
                 new RedirectService()->redirectHtml('http://example.test/x');
             }
         );

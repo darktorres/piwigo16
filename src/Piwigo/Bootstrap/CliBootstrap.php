@@ -102,7 +102,11 @@ final class CliBootstrap
         if (! $configService instanceof ConfigService) {
             throw new \LogicException('Container returned an unexpected type for ' . ConfigService::class);
         }
-        CurrentConfigService::set($configService);
+        $currentConfigService = $container->get(CurrentConfigService::class);
+        if (! $currentConfigService instanceof CurrentConfigService) {
+            throw new \LogicException('Container returned an unexpected type for ' . CurrentConfigService::class);
+        }
+        $currentConfigService->set($configService);
 
         $commandClasses = require $commandsFile ?? dirname(__DIR__, 3) . '/config/commands.php';
         if (! is_array($commandClasses)) {

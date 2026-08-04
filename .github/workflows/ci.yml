@@ -914,6 +914,39 @@ jobs:
               exit 1
             fi
           done
+      # Temporary diagnostic (docs/PLAN.md gap-closure, follow-up): the
+      # exclusion regex above traces correctly by hand against
+      # %{REQUEST_URI}, a from-scratch local reproduction (Ubuntu 24.04 +
+      # apache2 2.4.58, matching this job's exact versions, both via
+      # apachectl and via `service`, both against a bind-mounted checkout
+      # and a fully synthetic filesystem) could NOT reproduce this 403 at
+      # all, and an explicit <Directory> grant for the symlink target made
+      # no difference on this runner either -- ruling out both the
+      # .htaccess rule itself and Apache's own Directory/Require config as
+      # the cause. Capturing real signal from the actual failing
+      # environment (AppArmor denials are the next candidate: a full VM
+      # runner enforces kernel-level confinement a plain container doesn't)
+      # instead of further guessing from a non-reproducing local harness.
+      - name: Debug Apache/AppArmor state on failure
+        if: failure()
+        run: |
+          echo "::group::AppArmor kernel module + status"
+          cat /sys/module/apparmor/parameters/enabled 2>&1 || echo "no apparmor parameters file"
+          sudo aa-status 2>&1 || echo "aa-status unavailable"
+          echo "::endgroup::"
+          echo "::group::Kernel AppArmor denial messages"
+          sudo dmesg 2>&1 | grep -i apparmor || echo "no apparmor lines in dmesg"
+          sudo journalctl -k --no-pager 2>&1 | grep -i apparmor || echo "no apparmor lines in journalctl -k"
+          echo "::endgroup::"
+          echo "::group::Apache error log"
+          sudo tail -n 150 /var/log/apache2/error.log
+          echo "::endgroup::"
+          echo "::group::namei on the real resolved path"
+          namei -l "${{ github.workspace }}/public/themes/default/vendor/fontello/css/gallery-icon.css"
+          echo "::endgroup::"
+          echo "::group::verbose curl"
+          curl -v http://localhost/themes/default/vendor/fontello/css/gallery-icon.css 2>&1
+          echo "::endgroup::"
       - name: Assert permission-gated content is now structurally unreachable (SEC-33/35/38/47)
         run: |
           # The real Part II fix, previously untested: unlike the SEC-01
@@ -996,9 +1029,14 @@ jobs:
           # Part II: Caddyfile's root is now /app/public, not /app -- unlike
           # the @denied/@denied_files matchers above (URL-pattern rules,
           # unaffected by the root change, still fire the same way), these
-          # paths never had a matching rule at all. Before Part II they were
-          # served straight off disk; now they're outside root and 404. The
-          # Dockerfile's production stage already mkdir's _data/local/
+          # paths never had a matching rule at all. They were NOT actually
+          # 404ing on "outside root" alone, though: php_server's default
+          # try_files (`{path} {path}/index.php index.php`) silently routed
+          # any non-static path to index.php instead, returning 200 (found
+          # live, verified against Caddy's own docs) -- the
+          # @deniedRelocated/@deniedData matchers added above close that gap
+          # with an explicit 403, same as the @denied/@denied_files paths.
+          # The Dockerfile's production stage already mkdir's _data/local/
           # galleries/upload empty and chowns them to www-data -- write a
           # real file into the running container so this proves an
           # existing, readable file is unreachable, not just a missing path.
@@ -1011,8 +1049,8 @@ jobs:
               _data/i/derivative-th.jpg _data/logs/piwigo.log; do
             status=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8080/${path}")
             echo "GET /${path} -> ${status}"
-            if [ "${status}" != "404" ]; then
-              echo "::error::expected 404 (outside /app/public) for /${path}, got ${status}"
+            if [ "${status}" != "403" ]; then
+              echo "::error::expected 403 (denied by @deniedRelocated/@deniedData) for /${path}, got ${status}"
               exit 1
             fi
           done

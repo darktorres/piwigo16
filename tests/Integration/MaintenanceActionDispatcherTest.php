@@ -95,6 +95,30 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         );
     }
 
+    /**
+     * Never actually invoked -- same reasoning as
+     * maintenanceActionDispatcherTestImageService(). Singleton/
+     * service-locator elimination campaign, Phase 6: RedirectService now
+     * takes UserService via constructor injection.
+     */
+    private function maintenanceActionDispatcherTestUserService(): \Piwigo\Users\UserService
+    {
+        $conn = DbConnection::build();
+
+        return new \Piwigo\Users\UserService(
+            \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Users\UserInfoEntity::class),
+            \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Group\GroupEntity::class),
+            new \Piwigo\Mail\MailService(),
+            $this->maintenanceActionDispatcherTestActivityService(),
+            new HtmlService(),
+            $conn,
+            new SessionService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(SessionEntity::class)),
+            new \Piwigo\PluginConfig\EventDispatcher(),
+            new \Piwigo\Config\DeploymentPolicy(),
+            new \Piwigo\Users\CurrentUser(),
+        );
+    }
+
     private function maintenanceActionDispatcherTestPermissionService(): \Piwigo\Permission\PermissionService
     {
         $conn = DbConnection::build();
@@ -170,7 +194,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
         $configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher());
-        $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService(), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), $configService, new FilesystemIntegrityChecker(CurrentTemplate::current(), CurrentConfigService::current(), $this->maintenanceActionDispatcherTestImageService()), new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class)), new Translator(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), CurrentTemplate::current(), new \Piwigo\Admin\Maintenance\DbMaintenanceRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Db\DbCredentials::current()), $this->maintenanceActionDispatcherTestActivityService(), $this->maintenanceActionDispatcherTestRateService(), $this->maintenanceActionDispatcherTestCategoryService(), $this->maintenanceActionDispatcherTestTagService(), new HtmlService());
+        $this->dispatcher = new MaintenanceActionDispatcher(new RedirectService($this->maintenanceActionDispatcherTestUserService()), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), $configService, new FilesystemIntegrityChecker(CurrentTemplate::current(), CurrentConfigService::current(), $this->maintenanceActionDispatcherTestImageService()), new SessionService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class)), new Translator(), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Core\PageState::current(), CurrentTemplate::current(), new \Piwigo\Admin\Maintenance\DbMaintenanceRepository(\Piwigo\Db\EntityManagerFactory::build($this->conn), \Piwigo\Db\DbCredentials::current()), $this->maintenanceActionDispatcherTestActivityService(), $this->maintenanceActionDispatcherTestRateService(), $this->maintenanceActionDispatcherTestCategoryService(), $this->maintenanceActionDispatcherTestTagService(), new HtmlService());
     }
 
     #[\Override]
@@ -548,7 +572,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         // set()/reset() ceremony needed.
         $configService = new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher());
         $dispatcher = new MaintenanceActionDispatcher(
-            new RedirectService(),
+            new RedirectService($this->maintenanceActionDispatcherTestUserService()),
             new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()),
             $configService,
             new FilesystemIntegrityChecker(CurrentTemplate::current(), CurrentConfigService::current(), $this->maintenanceActionDispatcherTestImageService()),

@@ -271,7 +271,7 @@ final class SearchServiceTest extends IntegrationTestCase
             ),
             new MailService(),
             new HtmlService(),
-            new RedirectService(),
+            new RedirectService($this->userService()),
             new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)), \Piwigo\PluginConfig\EventDispatcher::get(),
             \Piwigo\Users\CurrentUser::current(),
         );
@@ -284,6 +284,20 @@ final class SearchServiceTest extends IntegrationTestCase
         \Piwigo\Core\Kernel::reset();
 
         parent::tearDown();
+    }
+
+    private function userService(): \Piwigo\Users\UserService
+    {
+        // Kernel is already booted in setUp() above -- resolve the same
+        // container-shared instance a real request would get, matching
+        // RedirectService's own real production callers (singleton/
+        // service-locator elimination campaign, Phase 6).
+        $userService = \Piwigo\Core\Kernel::container()->get(\Piwigo\Users\UserService::class);
+        if (! $userService instanceof \Piwigo\Users\UserService) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Users\UserService::class);
+        }
+
+        return $userService;
     }
 
     /**
@@ -303,7 +317,7 @@ final class SearchServiceTest extends IntegrationTestCase
             ),
             new MailService(),
             $htmlRenderer,
-            new RedirectService(),
+            new RedirectService($this->userService()),
             new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)), \Piwigo\PluginConfig\EventDispatcher::get(),
             \Piwigo\Users\CurrentUser::current(),
         );

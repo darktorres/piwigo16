@@ -104,7 +104,11 @@ final class NoPhotoYetRendererTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
-        $this->renderer = new NoPhotoYetRenderer(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Image\ImageEntity::class), new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()), new RedirectService(), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot(dirname(__DIR__, 2)), new AdminContext(), new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current(), new \Piwigo\Mail\MailService());
+        $userService = \Piwigo\Core\Kernel::container()->get(\Piwigo\Users\UserService::class);
+        if (! $userService instanceof \Piwigo\Users\UserService) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Users\UserService::class);
+        }
+        $this->renderer = new NoPhotoYetRenderer(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(\Piwigo\Image\ImageEntity::class), new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()), new RedirectService($userService), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), Paths::fromRoot(dirname(__DIR__, 2)), new AdminContext(), new SessionService(\Piwigo\Db\EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class)), new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current(), new \Piwigo\Mail\MailService());
 
         // NoPhotoYetRenderer calls Piwigo\Auth\AccessControl::isAGuest()/
         // isAdmin() directly (real class methods), which read

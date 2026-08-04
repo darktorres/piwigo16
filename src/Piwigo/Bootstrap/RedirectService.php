@@ -10,7 +10,6 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Event\Lifecycle\LoadingLang;
-use Piwigo\Html\HtmlService;
 use Piwigo\Page\PageHeaderRenderer;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
@@ -26,17 +25,19 @@ use Piwigo\Users\UserService;
  * `Bootstrap` (L4Integration) for the same reason the deleted
  * include/page_tail.php seam did: `redirectHtml()`'s real body calls
  * `PageTail::renderToString()`, itself L4Integration -- see
- * `Piwigo\Core\RedirectServiceInterface`'s own docblock. Needs zero
- * constructor args -- every dependency is constructed inline, exactly as
- * the free functions already did.
+ * `Piwigo\Core\RedirectServiceInterface`'s own docblock.
  *
- * Legacy Coupling Retirement Phase 8, 8a: userService() below resolves via
- * Kernel::container() instead of manually repeating UserService's 6-arg
- * construction chain 3 times in redirectHtml() -- safe because
- * RequestBootstrap::configure() (Phase 8, 8a) now calls Kernel::boot() as
- * its own first statement, ahead of every real call site of this class
- * reachable from connect()/finalize() (e.g. the early-crash fallback path
- * below), so the container is guaranteed available at every one of them.
+ * Singleton/service-locator elimination campaign, Phase 6: `UserService` is
+ * now a real constructor-injected dependency (was: a `userService()` private
+ * static resolver reaching `Kernel::container()` on every call, the exact
+ * shape the Bootstrap Accessor classes this phase converts already target --
+ * this class's own docblock was the literal precedent cited for including it
+ * in that phase). `currentUser()`/`currentTemplate()` below stay as
+ * Kernel-container-resolving static helpers, not constructor-injected --
+ * both are container-shared wrapper types this class mutates via `set()`
+ * from a genuinely-static (no-`$this`-needed) call shape, matching every
+ * other Bootstrap/-internal resolver of this kind; only `userService()`,
+ * the actual Bootstrap-Accessor-shaped locator, was in scope here.
  *
  * Workstream C3: redirectHttp()/redirectHtml() now throw
  * Piwigo\Http\ResponseReadyException instead of calling header()/echo/
@@ -54,22 +55,9 @@ use Piwigo\Users\UserService;
  */
 final class RedirectService implements RedirectServiceInterface
 {
-    /**
-     * DRY-extracted (Legacy Coupling Retirement Phase 8, 8a) -- was 3
-     * identical `new UserService(new UserRepository(DbConnection::build()),
-     * new GroupRepository(DbConnection::build()), new MailService(), new
-     * ActivityService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Activity\ActivityEntity::class)), new
-     * HtmlService(), DbConnection::build())` chains inline in
-     * redirectHtml() below.
-     */
-    private static function userService(): UserService
-    {
-        $userService = Kernel::container()->get(UserService::class);
-        if (! $userService instanceof UserService) {
-            throw new \LogicException('Container returned an unexpected type for ' . UserService::class);
-        }
-        return $userService;
-    }
+    public function __construct(
+        private readonly UserService $userService,
+    ) {}
 
     private static function currentUser(): CurrentUser
     {
@@ -117,7 +105,7 @@ final class RedirectService implements RedirectServiceInterface
         if (! Lang::isLangInfoInitialized() || ! isset($template)) {
             $paths = CurrentPaths::get();
             $guest_id = CurrentConfig::guestId();
-            $user = self::userService()->buildUser(\Piwigo\Common\ValueObject\UserId::from($guest_id));
+            $user = $this->userService->buildUser(\Piwigo\Common\ValueObject\UserId::from($guest_id));
             self::currentUser()->set(User::fromUserArray($user));
             Lang::load('common.lang');
             EventDispatcher::get()->dispatchNotify(new LoadingLang());
@@ -125,10 +113,10 @@ final class RedirectService implements RedirectServiceInterface
                 'no_fallback' => true,
                 'local' => true,
             ]);
-            $template = new Template($paths->root . 'themes', self::userService()->getDefaultTheme());
+            $template = new Template($paths->root . 'themes', $this->userService->getDefaultTheme());
             self::currentTemplate()->set($template);
         } elseif (\Piwigo\Core\AdminContext::isActiveStatic()) {
-            $template = new Template(CurrentPaths::get()->root . 'themes', self::userService()->getDefaultTheme());
+            $template = new Template(CurrentPaths::get()->root . 'themes', $this->userService->getDefaultTheme());
             self::currentTemplate()->set($template);
         }
 

@@ -11,14 +11,12 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\Lang;
-use Piwigo\Core\Paths;
 use Piwigo\Core\UniqueExecLock;
 use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\ScriptLoader;
 use Piwigo\Template\Template;
-use Piwigo\Tests\Support\KernelContainerOverride;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\UserService;
 
@@ -28,8 +26,6 @@ use Piwigo\Users\UserService;
  * cover redirectHttp() entirely, but redirectHtml()'s own body needs a
  * real Template/UserService/DB, so the remaining red lines land here:
  *
- *  - userService()'s own "Container returned an unexpected type"
- *    \LogicException (shared by both real call sites inside redirectHtml()).
  *  - the "no $template/$lang_info yet" early-crash fallback branch (a
  *    guest User + a fresh Template built from scratch) -- reachable only
  *    when CurrentTemplate/Lang genuinely haven't been initialised yet,
@@ -88,18 +84,6 @@ final class RedirectServiceTest extends IntegrationTestCase
     #[\Override]
     protected function tearDown(): void
     {
-        // KernelContainerOverride::with()'s own finally clause (used by
-        // the "unexpected type for userservice" test above) unconditionally
-        // resets Kernel before this tearDown() runs, discarding whatever
-        // CurrentConfigService that test's own callback seeded -- reseed
-        // here so UniqueExecLock::ends() below (its own real DB write,
-        // genuinely needed regardless of Kernel's PHP-level boot state, to
-        // release the lock every other test in this file also relies on)
-        // doesn't throw "not initialised" against the resulting fresh,
-        // unseeded fallback instance. Harmless for the other 3 tests,
-        // which never touch Kernel::reset() themselves and already have a
-        // real one set from setUp().
-        CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
         UniqueExecLock::ends('check_for_updates');
         CurrentTemplate::current()->reset();
         Lang::reset();
@@ -107,33 +91,25 @@ final class RedirectServiceTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    public function test_redirectHtml_throws_when_the_container_returns_an_unexpected_type_for_userservice(): void
+    private function userService(): UserService
     {
-        $this->expectException(\LogicException::class);
-        $this->expectExceptionMessage('Container returned an unexpected type for ' . UserService::class);
+        // Kernel is already booted by parent::setUp() -- resolve the same
+        // container-shared instance a real request would get, matching
+        // RedirectService's own real production callers (singleton/
+        // service-locator elimination campaign, Phase 6). RedirectService
+        // no longer resolves UserService itself (that was the deleted
+        // `userService()` private static resolver this class used to have,
+        // along with its own "Container returned an unexpected type"
+        // \LogicException -- the equivalent check now lives on whichever
+        // Bootstrap resolver a real caller uses, e.g.
+        // RequestBootstrap::userService(), already covered by that class's
+        // own tests).
+        $userService = \Piwigo\Core\Kernel::container()->get(UserService::class);
+        if (! $userService instanceof UserService) {
+            throw new \LogicException('Container returned an unexpected type for ' . UserService::class);
+        }
 
-        // KernelContainerOverride::with() rebuilds the container from
-        // scratch, so Paths::class needs re-binding alongside the
-        // deliberately-wrong UserService::class override -- CurrentPaths is
-        // a pure shim now (Phase 3) with no state of its own to survive the
-        // rebuild.
-        KernelContainerOverride::with(
-            [
-                UserService::class => new \stdClass(),
-                Paths::class => Paths::fromRoot(dirname(__DIR__, 2)),
-            ],
-            function (): void {
-                // The rebuilt container's own CurrentConfigService starts
-                // unset -- PageTail::checkForUpdates()'s own internal
-                // UniqueExecLock::begins() call (reached before
-                // redirectHtml() ever gets to the UserService resolution
-                // this test targets) would otherwise throw "not
-                // initialised" first, masking the exception under test.
-                CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
-
-                new RedirectService()->redirectHtml('http://example.test/x');
-            }
-        );
+        return $userService;
     }
 
     public function test_redirectHtml_builds_a_guest_user_and_a_fresh_template_when_neither_was_initialised_yet(): void
@@ -151,7 +127,7 @@ final class RedirectServiceTest extends IntegrationTestCase
         $body = null;
         $status = null;
         try {
-            new RedirectService()->redirectHtml('http://example.test/target.php', 'A custom redirect message');
+            new RedirectService($this->userService())->redirectHtml('http://example.test/target.php', 'A custom redirect message');
         } catch (ResponseReadyException $e) {
             $response = $e->response();
             $status = $response->getStatusCode();
@@ -188,7 +164,7 @@ final class RedirectServiceTest extends IntegrationTestCase
 
         $body = null;
         try {
-            new RedirectService()->redirectHtml('http://example.test/other.php', '');
+            new RedirectService($this->userService())->redirectHtml('http://example.test/other.php', '');
         } catch (ResponseReadyException $e) {
             $body = (string) $e->response()->getBody();
         }
@@ -215,7 +191,7 @@ final class RedirectServiceTest extends IntegrationTestCase
         $status = null;
         $body = null;
         try {
-            new RedirectService()->redirect('http://example.test/refresh-target.php', 'Refresh redirect', 5);
+            new RedirectService($this->userService())->redirect('http://example.test/refresh-target.php', 'Refresh redirect', 5);
         } catch (ResponseReadyException $e) {
             $response = $e->response();
             $status = $response->getStatusCode();

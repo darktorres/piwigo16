@@ -250,7 +250,7 @@ final class PwgExtensions
                 $fsEntry = $scanner->scan(ExtensionType::Plugin, $urlService)[$extension_id] ?? null;
                 $lifecycle->performAction(ExtensionType::Plugin, 'deactivate', $extension_id, $fsEntry);
 
-                new RedirectService()
+                new RedirectService(\Piwigo\Bootstrap\CoreDomainAccessor::userService())
                     ->redirect(
                         $urlService->getRootUrl()
                                 . 'ws.php'

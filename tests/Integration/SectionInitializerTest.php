@@ -93,6 +93,20 @@ final class SectionInitializerTest extends IntegrationTestCase
      * 'lang_info' var (confirmed live: a real "Undefined array key"
      * warning under this suite's failOnWarning=true otherwise).
      */
+    private function userService(): \Piwigo\Users\UserService
+    {
+        // IntegrationTestCase::setUp() already booted Kernel -- resolve the
+        // same container-shared instance a real request would get, matching
+        // RedirectService's own real production callers (singleton/
+        // service-locator elimination campaign, Phase 6).
+        $userService = Kernel::container()->get(\Piwigo\Users\UserService::class);
+        if (! $userService instanceof \Piwigo\Users\UserService) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Users\UserService::class);
+        }
+
+        return $userService;
+    }
+
     private function bootRedirectPreconditions(): void
     {
         Kernel::boot();
@@ -106,7 +120,7 @@ final class SectionInitializerTest extends IntegrationTestCase
     {
         $_SERVER['PATH_INFO'] = '/category/1';
 
-        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService(), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new RequestMountDepth())
+        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService($this->userService()), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new RequestMountDepth())
             ->parse();
 
         self::assertSame('../../', $context->rootPath);
@@ -118,7 +132,7 @@ final class SectionInitializerTest extends IntegrationTestCase
     {
         $_SERVER['PATH_INFO'] = '/category/1/start-20';
 
-        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService(), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new RequestMountDepth())
+        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService($this->userService()), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new RequestMountDepth())
             ->parse();
 
         self::assertSame('../../../', $context->rootPath);
@@ -128,7 +142,7 @@ final class SectionInitializerTest extends IntegrationTestCase
     {
         $_SERVER['PATH_INFO'] = '/category/1';
 
-        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService(), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new RequestMountDepth())
+        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService($this->userService()), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new RequestMountDepth())
             ->parse();
 
         self::assertNull($context->imageId);
@@ -140,7 +154,7 @@ final class SectionInitializerTest extends IntegrationTestCase
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/picture.php';
         $_SERVER['PATH_INFO'] = '/42';
 
-        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService(), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new RequestMountDepth())
+        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService($this->userService()), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new RequestMountDepth())
             ->parse();
 
         self::assertSame('42', $context->imageId);
@@ -153,7 +167,7 @@ final class SectionInitializerTest extends IntegrationTestCase
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/picture.php';
         $_SERVER['PATH_INFO'] = '/42-my-photo';
 
-        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService(), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new RequestMountDepth())
+        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService($this->userService()), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new RequestMountDepth())
             ->parse();
 
         self::assertSame('42', $context->imageId);
@@ -168,7 +182,7 @@ final class SectionInitializerTest extends IntegrationTestCase
         // happened rather than this being a hardcoded default.
         $_SERVER['PATH_INFO'] = '/most_visited';
 
-        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService(), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new RequestMountDepth())
+        $context = new SectionInitializer(new HtmlService(), $this->repo, new RedirectService($this->userService()), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new RequestMountDepth())
             ->parse();
 
         self::assertSame('most_visited', $context->parsed['section'] ?? null);
@@ -185,7 +199,7 @@ final class SectionInitializerTest extends IntegrationTestCase
         $body = null;
         $status = null;
         try {
-            new SectionInitializer(new HtmlService(), $this->repo, new RedirectService(), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new RequestMountDepth())
+            new SectionInitializer(new HtmlService(), $this->repo, new RedirectService($this->userService()), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new RequestMountDepth())
                 ->parse();
         } catch (ResponseReadyException $e) {
             $response = $e->response();
@@ -215,7 +229,7 @@ final class SectionInitializerTest extends IntegrationTestCase
         $body = null;
         $status = null;
         try {
-            new SectionInitializer(new HtmlService(), $this->repo, new RedirectService(), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new RequestMountDepth())
+            new SectionInitializer(new HtmlService(), $this->repo, new RedirectService($this->userService()), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new RequestMountDepth())
                 ->parse();
         } catch (ResponseReadyException $e) {
             $response = $e->response();

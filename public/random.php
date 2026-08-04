@@ -86,7 +86,7 @@ $types = [
 // config/routes.php. A 4th, file-local catch point, same shape as
 // AdminShell::run()'s own dispatch-context catch point.
 try {
-    new \Piwigo\Bootstrap\RedirectService()
+    new \Piwigo\Bootstrap\RedirectService(\Piwigo\Bootstrap\RequestBootstrap::userService())
         ->redirect(\Piwigo\Bootstrap\RequestBootstrap::urlService()->makeIndexUrl([
             'list' => array_map(
                 static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',

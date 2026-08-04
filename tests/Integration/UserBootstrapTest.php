@@ -126,13 +126,27 @@ final class UserBootstrapTest extends IntegrationTestCase
         parent::tearDown();
     }
 
+    private function userService(): \Piwigo\Users\UserService
+    {
+        // Kernel::boot() already ran in setUp() -- resolve the same
+        // container-shared instance a real request would get, matching
+        // RedirectService's own real production callers (singleton/
+        // service-locator elimination campaign, Phase 6).
+        $userService = Kernel::container()->get(\Piwigo\Users\UserService::class);
+        if (! $userService instanceof \Piwigo\Users\UserService) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Users\UserService::class);
+        }
+
+        return $userService;
+    }
+
     private function bootstrap(?WsContext $wsContext = null, ?DeploymentPolicy $deploymentPolicy = null): UserBootstrap
     {
         // The api_key branch that reads CurrentLogger ends in a bare
         // exit() and is deliberately left uncovered here (see this class's
         // own docblock) -- never actually read, so a fresh, never-set()
         // instance is fine.
-        return new UserBootstrap(new RedirectService(), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new ApiKeyRequestFlag(), new CurrentLogger(), $wsContext ?? new WsContext(), $deploymentPolicy ?? new DeploymentPolicy());
+        return new UserBootstrap(new RedirectService($this->userService()), new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), new ApiKeyRequestFlag(), new CurrentLogger(), $wsContext ?? new WsContext(), $deploymentPolicy ?? new DeploymentPolicy());
     }
 
     public function test_initialize_auto_registers_a_new_local_account_for_an_unknown_apache_remote_user(): void

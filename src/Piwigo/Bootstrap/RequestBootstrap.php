@@ -319,7 +319,7 @@ final class RequestBootstrap
         // beforehand, unlike admin.php/index.php's own explicit up-front
         // require (ordering bug caught live via a random.php smoke test).
         \Piwigo\Auth\AccessControl::setHtmlRenderer(new HtmlService());
-        \Piwigo\Auth\AccessControl::setRedirectService(new RedirectService());
+        \Piwigo\Auth\AccessControl::setRedirectService(new RedirectService(self::userService()));
         Lang::setHtmlRenderer(new HtmlService());
 
         // Piwigo\Db\Tables::*()/other Piwigo\Config\Config::* accessors used
@@ -515,7 +515,7 @@ final class RequestBootstrap
             self::currentUser(),
         )->pwgLogin(...));
         new UserBootstrap(
-            new RedirectService(),
+            new RedirectService(self::userService()),
             self::urlService(),
             self::apiKeyRequestFlag(),
             self::currentLogger(),
@@ -671,7 +671,7 @@ final class RequestBootstrap
             // when it decides to take over the page. CurrentConfigService::get()
             // reuses the instance connect() already resolved earlier in the
             // same request (Legacy Coupling Retirement Phase 8, 8d).
-            new NoPhotoYetRenderer(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), self::currentConfigService()->get(), new RedirectService(), self::urlService(), CurrentPaths::get(), self::adminContext(), self::sessionService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::deploymentPolicy(), self::currentUser(), self::currentTemplate(), self::mailService())
+            new NoPhotoYetRenderer(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), self::currentConfigService()->get(), new RedirectService(self::userService()), self::urlService(), CurrentPaths::get(), self::adminContext(), self::sessionService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::deploymentPolicy(), self::currentUser(), self::currentTemplate(), self::mailService())
                 ->render();
         }
 

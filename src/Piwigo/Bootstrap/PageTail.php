@@ -225,7 +225,7 @@ final class PageTail
             if ($check_for_updates) {
                 $exec_id = UniqueExecLock::begins('check_for_updates');
                 if ($exec_id !== false) {
-                    new CoreUpdateService(new ZipExtractor(), new RedirectService(), self::urlService(), self::currentConfigService()->get(), \Piwigo\Core\CurrentPaths::get(), self::pageState(), self::currentTemplate(), self::activityService(), self::userService(), self::mailService())
+                    new CoreUpdateService(new ZipExtractor(), new RedirectService(self::userService()), self::urlService(), self::currentConfigService()->get(), \Piwigo\Core\CurrentPaths::get(), self::pageState(), self::currentTemplate(), self::activityService(), self::userService(), self::mailService())
                         ->notifyPiwigoNewVersions();
 
                     UniqueExecLock::ends('check_for_updates');

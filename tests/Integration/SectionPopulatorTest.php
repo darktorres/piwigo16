@@ -132,8 +132,8 @@ final class SectionPopulatorTest extends IntegrationTestCase
         $this->categoryService = new CategoryService($categoryRepo, $this->permissionService);
         $this->tagService = new TagService($em->getRepository(TagEntity::class), $this->permissionService, new ActivityService($em->getRepository(ActivityEntity::class)), new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Users\CurrentUser::current());
         $this->sessionService = new SessionService($em->getRepository(SessionEntity::class));
-        $this->searchService = new SearchService(new SearchRepository($this->conn), $this->permissionService, $this->categoryService, new MailService(), new HtmlService(), new RedirectService(), $this->sessionService, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Users\CurrentUser::current(), $this->tagService);
         $this->userService = new UserService($em->getRepository(UserInfoEntity::class), $em->getRepository(GroupEntity::class), new MailService(), new ActivityService($em->getRepository(ActivityEntity::class)), new HtmlService(), $this->conn, $this->sessionService, new \Piwigo\PluginConfig\EventDispatcher(), new \Piwigo\Config\DeploymentPolicy(), \Piwigo\Users\CurrentUser::current());
+        $this->searchService = new SearchService(new SearchRepository($this->conn), $this->permissionService, $this->categoryService, new MailService(), new HtmlService(), new RedirectService($this->userService), $this->sessionService, new \Piwigo\PluginConfig\EventDispatcher(), \Piwigo\Users\CurrentUser::current(), $this->tagService);
         $this->sectionRepo = new SectionRepository($this->conn);
         $this->filterState = new FilterState();
         $this->currentLogger = new CurrentLogger();
@@ -184,7 +184,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
             $this->tagService,
             $this->searchService,
             $this->userService,
-            new RedirectService(),
+            new RedirectService($this->userService),
             new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()),
             $this->filterState,
             $this->currentLogger,

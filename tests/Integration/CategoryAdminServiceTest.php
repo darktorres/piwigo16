@@ -154,6 +154,20 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         $this->service = new CategoryAdminService($categoryService, $permissionService, new \Piwigo\Html\HtmlService());
     }
 
+    private function userService(): \Piwigo\Users\UserService
+    {
+        // Kernel::boot() already ran above -- resolve the same
+        // container-shared instance a real request would get, matching
+        // RedirectService's own real production callers (singleton/
+        // service-locator elimination campaign, Phase 6).
+        $userService = Kernel::container()->get(\Piwigo\Users\UserService::class);
+        if (! $userService instanceof \Piwigo\Users\UserService) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Users\UserService::class);
+        }
+
+        return $userService;
+    }
+
     #[\Override]
     protected function tearDown(): void
     {
@@ -301,7 +315,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
 
     public function test_save_image_order_updates_the_category_row_only_when_subcats_is_false(): void
     {
-        $this->service->saveImageOrder(2, '`rank` ASC', false, new RedirectService());
+        $this->service->saveImageOrder(2, '`rank` ASC', false, new RedirectService($this->userService()));
 
         $cat1 = $this->fetchCategory(1);
         $cat2 = $this->fetchCategory(2);
@@ -316,7 +330,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         // Category 2's own uppercats ('1,2') includes category 1 --
         // saving on category 1 with $applySubcats=true matches every row
         // whose uppercats starts with '1,', which includes category 2.
-        $this->service->saveImageOrder(1, 'id ASC', true, new RedirectService());
+        $this->service->saveImageOrder(1, 'id ASC', true, new RedirectService($this->userService()));
 
         $cat1 = $this->fetchCategory(1);
         $cat2 = $this->fetchCategory(2);

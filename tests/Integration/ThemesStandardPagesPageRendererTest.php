@@ -248,6 +248,22 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         parent::tearDown();
     }
 
+    private function userService(): \Piwigo\Users\UserService
+    {
+        // Kernel is already booted by this point (either parent::setUp()'s
+        // own default boot, or overrideSiteLocal()'s throwaway-fixture
+        // reboot) -- resolve the same container-shared instance a real
+        // request would get, matching RedirectService's own real
+        // production callers (singleton/service-locator elimination
+        // campaign, Phase 6).
+        $userService = Kernel::container()->get(\Piwigo\Users\UserService::class);
+        if (! $userService instanceof \Piwigo\Users\UserService) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Users\UserService::class);
+        }
+
+        return $userService;
+    }
+
     private function makeRenderer(): ThemesStandardPagesPageRenderer
     {
         // StorageRegistry is built fresh here (not container-resolved
@@ -260,7 +276,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         // resolves anything, singleton/service-locator elimination
         // campaign, Phase 2).
         return new ThemesStandardPagesPageRenderer(
-            new RedirectService(),
+            new RedirectService($this->userService()),
             new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()),
             $this->configService,
             StorageRegistry::fromConfig(dirname(__DIR__, 2) . '/config/storage.php'),

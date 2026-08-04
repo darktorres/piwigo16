@@ -5,10 +5,9 @@ declare(strict_types=1);
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
-use Piwigo\Html\HtmlService;
 use Piwigo\Template\Script;
 use Piwigo\Template\ScriptLoader;
-use Piwigo\Url\UrlService;
+use Piwigo\Tests\Support\KernelContainerOverride;
 use Piwigo\Users\CurrentUser;
 
 // Most of this file inspects/invokes ScriptLoader's private state and
@@ -22,19 +21,11 @@ use Piwigo\Users\CurrentUser;
 // direct combine() coverage), so the tests further down call them for
 // real against real files under an isolated Paths root.
 
-function scriptLoaderResetUrlService(): void
-{
-    $property = new ReflectionProperty(ScriptLoader::class, 'urlService');
-    $property->setValue(null, null);
-}
-
 beforeEach(function (): void {
-    scriptLoaderResetUrlService();
     CurrentUser::current()->attachGlobals();
 });
 
 afterEach(function (): void {
-    scriptLoaderResetUrlService();
     CurrentUser::current()->reset();
     Kernel::reset();
 });
@@ -410,7 +401,6 @@ test('get_head_scripts warns and excludes a script whose path was explicitly set
     // become '' through add() itself -- this simulates a script whose
     // path was assigned directly (bypassing set_path()), covering the
     // second element of the [null, ''] in_array() check on its own.
-    ScriptLoader::setUrlService(new UrlService(new HtmlService()));
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
     CurrentUser::current()->attachGlobals();
 
@@ -448,7 +438,6 @@ test('get_footer_scripts runs check_load_dep when the head has not been written 
     // check_load_dep() downgrades the precedent to 1 so execution order
     // stays guaranteed; this only ever runs from get_head_scripts() or
     // get_footer_scripts() itself (when !did_head).
-    ScriptLoader::setUrlService(new UrlService(new HtmlService()));
     $root = sys_get_temp_dir() . '/piwigo-scriptloader-footer-checkdep-' . bin2hex(random_bytes(8));
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/a.js', 'var a=1;');
@@ -474,7 +463,6 @@ test('get_footer_scripts runs check_load_dep when the head has not been written 
 });
 
 test('get_footer_scripts skips check_load_dep when the head was already written (get_head_scripts already ran it)', function (): void {
-    ScriptLoader::setUrlService(new UrlService(new HtmlService()));
     $root = sys_get_temp_dir() . '/piwigo-scriptloader-footer-skipcheckdep-' . bin2hex(random_bytes(8));
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/a.js', 'var a=1;');
@@ -504,7 +492,6 @@ test('get_footer_scripts skips check_load_dep when the head was already written 
 });
 
 test('get_footer_scripts marks did_footer, which then makes add_inline warn', function (): void {
-    ScriptLoader::setUrlService(new UrlService(new HtmlService()));
     $root = sys_get_temp_dir() . '/piwigo-scriptloader-didfooter-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
     Kernel::boot(Paths::fromRoot($root));
@@ -538,7 +525,6 @@ test('get_footer_scripts marks did_footer, which then makes add_inline warn', fu
 });
 
 test('get_footer_scripts separates sync (load_mode=1) and async (load_mode=2) scripts into their own combined outputs', function (): void {
-    ScriptLoader::setUrlService(new UrlService(new HtmlService()));
     $root = sys_get_temp_dir() . '/piwigo-scriptloader-footer-split-' . bin2hex(random_bytes(8));
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/sync.js', 'var s=1;');
@@ -567,7 +553,6 @@ test('get_footer_scripts separates sync (load_mode=1) and async (load_mode=2) sc
 });
 
 test('get_footer_scripts excludes scripts already claimed by get_head_scripts', function (): void {
-    ScriptLoader::setUrlService(new UrlService(new HtmlService()));
     $root = sys_get_temp_dir() . '/piwigo-scriptloader-footer-excludes-head-' . bin2hex(random_bytes(8));
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/head.js', 'var h=1;');
@@ -595,7 +580,6 @@ test('get_footer_scripts excludes scripts already claimed by get_head_scripts', 
 });
 
 test('get_head_scripts runs check_load_dep before sorting, downgrading an async precedent of an async script', function (): void {
-    ScriptLoader::setUrlService(new UrlService(new HtmlService()));
     CurrentConfig::setTemplateCombineFiles(false);
     // Both scripts are load_mode=2, so head_done_scripts stays empty --
     // do_combine([]) still needs a valid CurrentPaths regardless.
@@ -616,7 +600,6 @@ test('get_head_scripts runs check_load_dep before sorting, downgrading an async 
 });
 
 test('get_head_scripts computes and uses each script\'s topological order to sort within the same load_mode', function (): void {
-    ScriptLoader::setUrlService(new UrlService(new HtmlService()));
     $root = sys_get_temp_dir() . '/piwigo-scriptloader-head-toposort-' . bin2hex(random_bytes(8));
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/base.js', 'var base=1;');
@@ -658,7 +641,6 @@ test('cmp_by_mode_and_order sorts a remote script before a same-mode, same-order
     // and (...) xor (...)` remote/local tiebreak. Registered in two
     // different orders across the two loaders below so the outcome can't
     // be an artifact of whichever side uasort() happens to pass as $s1.
-    ScriptLoader::setUrlService(new UrlService(new HtmlService()));
     $root = sys_get_temp_dir() . '/piwigo-scriptloader-remote-tiebreak-' . bin2hex(random_bytes(8));
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/local.js', 'var a=1;');
@@ -688,7 +670,6 @@ test('cmp_by_mode_and_order sorts a remote script before a same-mode, same-order
 });
 
 test('get_head_scripts collects every mode=0 script up to (not including) the first non-head script', function (): void {
-    ScriptLoader::setUrlService(new UrlService(new HtmlService()));
     $root = sys_get_temp_dir() . '/piwigo-scriptloader-head-stops-' . bin2hex(random_bytes(8));
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/head.js', 'var h=1;');
@@ -721,7 +702,6 @@ test('get_head_scripts warns and excludes a head-mode script whose path was neve
     // Confirmed live: before this file's own fix, this crashed with a
     // TypeError inside FileCombiner::combine() (is_remote() calling
     // urlIsRemote(null)) instead of hitting this warning at all.
-    ScriptLoader::setUrlService(new UrlService(new HtmlService()));
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
     CurrentUser::current()->attachGlobals();
 
@@ -745,7 +725,6 @@ test('get_head_scripts warns and excludes a head-mode script whose path was neve
 });
 
 test('get_head_scripts marks did_head, which then makes a subsequent head-mode add() warn', function (): void {
-    ScriptLoader::setUrlService(new UrlService(new HtmlService()));
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
     CurrentUser::current()->attachGlobals();
 
@@ -769,7 +748,6 @@ test('get_head_scripts marks did_head, which then makes a subsequent head-mode a
 });
 
 test('get_footer_scripts sorts within the same load_mode by topological order too', function (): void {
-    ScriptLoader::setUrlService(new UrlService(new HtmlService()));
     $root = sys_get_temp_dir() . '/piwigo-scriptloader-footer-toposort-' . bin2hex(random_bytes(8));
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/base.js', 'var base=1;');
@@ -797,7 +775,6 @@ test('get_footer_scripts sorts within the same load_mode by topological order to
 });
 
 test('get_footer_scripts excludes mode=0 scripts even when get_head_scripts was never called first', function (): void {
-    ScriptLoader::setUrlService(new UrlService(new HtmlService()));
     $root = sys_get_temp_dir() . '/piwigo-scriptloader-footer-nohead-' . bin2hex(random_bytes(8));
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/head.js', 'var h=1;');
@@ -831,7 +808,6 @@ test('check_load_dep converges over multiple passes for a 3-level async dependen
     // once for the downgrade to propagate all the way from the deepest
     // precedent up through the middle one -- a single pass only catches
     // the first hop.
-    ScriptLoader::setUrlService(new UrlService(new HtmlService()));
     CurrentConfig::setTemplateCombineFiles(false);
 
     $loader = new ScriptLoader();
@@ -840,8 +816,14 @@ test('check_load_dep converges over multiple passes for a 3-level async dependen
     $loader->add('a', 2, ['b'], 'themes/default/js/a.js');
 
     try {
-        $method = new ReflectionMethod(ScriptLoader::class, 'check_load_dep');
-        $method->invoke(null, scriptLoaderRegistered($loader));
+        // check_load_dep() reaches self::urlService() for this graph (both
+        // 'a'/'b' and 'b'/'c' are load_mode=2 on both sides) -- needs a
+        // booted Kernel, unlike the plain-local-precedent check_load_dep
+        // tests elsewhere in this file.
+        KernelContainerOverride::with([], function () use ($loader): void {
+            $method = new ReflectionMethod(ScriptLoader::class, 'check_load_dep');
+            $method->invoke(null, scriptLoaderRegistered($loader));
+        });
 
         // check_load_dep() receives the array by value but Script objects
         // by reference -- their own load_mode mutations are visible on
@@ -1123,7 +1105,6 @@ test('check_load_dep needs a second pass to cascade an unconditional downgrade t
     // remote) paths keep the async-specific downgrade branch inert, so
     // this isolates the do-while's own repeat -- a single pass leaves
     // bottom at its stale load_mode=2 instead of the converged 0.
-    ScriptLoader::setUrlService(new UrlService(new HtmlService()));
     CurrentConfig::setTemplateCombineFiles(true);
 
     $loader = new ScriptLoader();
@@ -1132,8 +1113,12 @@ test('check_load_dep needs a second pass to cascade an unconditional downgrade t
     $loader->add('top', 0, ['mid'], 'themes/default/js/top.js');
 
     try {
-        $method = new ReflectionMethod(ScriptLoader::class, 'check_load_dep');
-        $method->invoke(null, scriptLoaderRegistered($loader));
+        // 'mid'/'bottom' are both load_mode=2 -- check_load_dep() reaches
+        // self::urlService() for that pair, needing a booted Kernel.
+        KernelContainerOverride::with([], function () use ($loader): void {
+            $method = new ReflectionMethod(ScriptLoader::class, 'check_load_dep');
+            $method->invoke(null, scriptLoaderRegistered($loader));
+        });
 
         expect(scriptLoaderRegistered($loader)['bottom']->load_mode)->toBe(0);
     } finally {
@@ -1155,7 +1140,6 @@ test('check_load_dep needs a further pass unlocked by the async branch\'s own ch
     // graphs can, because it needs both an unconditional AND an async
     // downgrade coexisting in the same pass, with the async one ending up
     // last.
-    ScriptLoader::setUrlService(new UrlService(new HtmlService()));
     CurrentConfig::setTemplateCombineFiles(false);
 
     $loader = new ScriptLoader();
@@ -1166,8 +1150,13 @@ test('check_load_dep needs a further pass unlocked by the async branch\'s own ch
     $loader->add('n0', 2, ['n3', 'n1'], 'themes/default/js/n0.js');
 
     try {
-        $method = new ReflectionMethod(ScriptLoader::class, 'check_load_dep');
-        $method->invoke(null, scriptLoaderRegistered($loader));
+        // Several node pairs here are load_mode=2 on both sides --
+        // check_load_dep() reaches self::urlService(), needing a booted
+        // Kernel.
+        KernelContainerOverride::with([], function () use ($loader): void {
+            $method = new ReflectionMethod(ScriptLoader::class, 'check_load_dep');
+            $method->invoke(null, scriptLoaderRegistered($loader));
+        });
 
         expect(scriptLoaderRegistered($loader)['n1']->load_mode)->toBe(0);
     } finally {
@@ -1212,7 +1201,6 @@ test('cmp_by_mode_and_order falls through to strcmp when orders match but are no
     // (LogicalAndToLogicalOr on the `and` would wrongly let a non-zero
     // order fall into the remote/local ±1 branch just because the xor
     // half is true).
-    ScriptLoader::setUrlService(new UrlService(new HtmlService()));
 
     $s1 = new Script(0, 'local-id', 'themes/default/js/local.js');
     $s1->extra['order'] = 5;
@@ -1228,14 +1216,15 @@ test('cmp_by_mode_and_order sorts a remote script strictly before a local one at
     // IncrementInteger mutant on that literal (-1 -> 0, a tie instead of
     // "before") and a DecrementInteger one (-1 -> -2, still negative for
     // sorting purposes but a different pinned value here).
-    ScriptLoader::setUrlService(new UrlService(new HtmlService()));
 
     $remote = new Script(0, 'remote-id', 'https://cdn.example.com/x.js');
     $remote->extra['order'] = 0;
     $local = new Script(0, 'local-id', 'themes/default/js/local.js');
     $local->extra['order'] = 0;
 
-    expect(scriptLoaderCmp($remote, $local))->toBe(-1);
+    // order===0 on both sides reaches the remote/local xor tiebreak,
+    // which calls self::urlService() -- needs a booted Kernel.
+    expect(KernelContainerOverride::with([], fn () => scriptLoaderCmp($remote, $local)))->toBe(-1);
 });
 
 test('cmp_by_mode_and_order sorts a local script strictly after a remote one at the same mode/order (direct comparator invocation)', function (): void {
@@ -1243,12 +1232,13 @@ test('cmp_by_mode_and_order sorts a local script strictly after a remote one at 
     // branch (`$s1` is the local one this time) -- pins the exact +1
     // return value, closing an IncrementInteger mutant on that literal
     // (1 -> 2).
-    ScriptLoader::setUrlService(new UrlService(new HtmlService()));
 
     $remote = new Script(0, 'remote-id', 'https://cdn.example.com/x.js');
     $remote->extra['order'] = 0;
     $local = new Script(0, 'local-id', 'themes/default/js/local.js');
     $local->extra['order'] = 0;
 
-    expect(scriptLoaderCmp($local, $remote))->toBe(1);
+    // order===0 on both sides reaches the remote/local xor tiebreak,
+    // which calls self::urlService() -- needs a booted Kernel.
+    expect(KernelContainerOverride::with([], fn () => scriptLoaderCmp($local, $remote)))->toBe(1);
 });

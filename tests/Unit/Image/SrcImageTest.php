@@ -6,6 +6,7 @@ namespace Piwigo\Tests\Unit\Image;
 
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\CurrentThemeConfProvider;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
@@ -13,8 +14,9 @@ use Piwigo\Core\ThemeConfProviderInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Event\Picture\GetMimetypeLocation;
 use Piwigo\Image\Event\GetSrcImageUrl;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\SrcImage;
-use ReflectionProperty;
+use Piwigo\Tests\Support\KernelContainerOverride;
 
 /**
  * Piwigo\Image\SrcImage had zero dedicated test file. Covers: the 3
@@ -27,25 +29,25 @@ use ReflectionProperty;
  * get_url()'s mimetype-icon branch; and get_size()'s DIM_NOT_GIVEN
  * fatalError() (both with and without an installed HtmlRenderingInterface)
  * plus its live getimagesize() re-read.
+ *
+ * Singleton/service-locator elimination campaign, Phase 6: SrcImage's own
+ * 4 static collaborator bridges are gone -- htmlRenderer/urlService/
+ * imageRepository now resolve fresh from the container on every call (no
+ * independently-settable wrapper), so a fake/real collaborator for those 3
+ * is installed via KernelContainerOverride::with(), not direct Reflection
+ * into a (now nonexistent) static property. themeConfProvider is the one
+ * exception -- CurrentThemeConfProvider is a real, dedicated, independently
+ * settable wrapper (works whether or not Kernel is booted), so
+ * srcImageTestSetThemeConfProvider() below still exists and still behaves
+ * like a direct setter.
  */
-function srcImageTestSetHtmlRenderer(?HtmlRenderingInterface $renderer): void
-{
-    new ReflectionProperty(SrcImage::class, 'htmlRenderer')->setValue(null, $renderer);
-}
-
 function srcImageTestSetThemeConfProvider(?ThemeConfProviderInterface $provider): void
 {
-    new ReflectionProperty(SrcImage::class, 'themeConfProvider')->setValue(null, $provider);
-}
-
-function srcImageTestSetUrlService(?UrlServiceInterface $service): void
-{
-    new ReflectionProperty(SrcImage::class, 'urlService')->setValue(null, $service);
-}
-
-function srcImageTestSetImageRepository(?\Piwigo\Image\ImageRepository $repo): void
-{
-    new ReflectionProperty(SrcImage::class, 'imageRepository')->setValue(null, $repo);
+    if ($provider instanceof ThemeConfProviderInterface) {
+        CurrentThemeConfProvider::current()->set($provider);
+    } else {
+        CurrentThemeConfProvider::current()->reset();
+    }
 }
 
 /**
@@ -92,10 +94,7 @@ beforeEach(function (): void {
 afterEach(function (): void {
     CurrentConfig::reset();
     Kernel::reset();
-    srcImageTestSetHtmlRenderer(null);
     srcImageTestSetThemeConfProvider(null);
-    srcImageTestSetUrlService(null);
-    srcImageTestSetImageRepository(null);
 });
 
 test('themeConf() throws a RuntimeException when no ThemeConfProviderInterface has been installed yet', function (): void {
@@ -109,8 +108,9 @@ test('themeConf() throws a RuntimeException when no ThemeConfProviderInterface h
 });
 
 test('urlService() throws a RuntimeException when no UrlServiceInterface has been installed yet', function (): void {
-    srcImageTestSetUrlService(null);
-
+    // Kernel is unbooted by default (no prior test in this file boots one
+    // without resetting it in its own afterEach) -- urlService()'s own
+    // Kernel::isBooted() guard is what throws here, no setup needed.
     $src = new SrcImage([
         'id' => 1,
         'path' => 'upload/2026/07/photo.jpg',
@@ -122,8 +122,8 @@ test('urlService() throws a RuntimeException when no UrlServiceInterface has bee
 });
 
 test('get_size() throws a RuntimeException carrying the untranslated message when dimensions are required but not provided and no HtmlRenderingInterface is installed', function (): void {
-    srcImageTestSetHtmlRenderer(null);
-
+    // Kernel is unbooted by default -- fatalError()'s own Kernel::isBooted()
+    // guard is what makes it fall through to the plain RuntimeException.
     $src = new SrcImage([
         'id' => 5,
         'path' => 'upload/2026/07/photo.jpg',
@@ -136,16 +136,17 @@ test('get_size() throws a RuntimeException carrying the untranslated message whe
 
 test('get_size() delegates the fatal message to the installed HtmlRenderingInterface instead of throwing RuntimeException directly', function (): void {
     $renderer = new SrcImageTestFatalRenderer();
-    srcImageTestSetHtmlRenderer($renderer);
 
-    $src = new SrcImage([
-        'id' => 5,
-        'path' => 'upload/2026/07/photo.jpg',
-        'file' => 'photo.jpg',
-    ]);
+    KernelContainerOverride::with([HtmlRenderingInterface::class => $renderer], function () use ($renderer): void {
+        $src = new SrcImage([
+            'id' => 5,
+            'path' => 'upload/2026/07/photo.jpg',
+            'file' => 'photo.jpg',
+        ]);
 
-    expect(fn () => $src->get_size())->toThrow(SrcImageTestFatalSignal::class);
-    expect($renderer->lastMessage)->toBe('SrcImage dimensions required but not provided');
+        expect(fn () => $src->get_size())->toThrow(SrcImageTestFatalSignal::class);
+        expect($renderer->lastMessage)->toBe('SrcImage dimensions required but not provided');
+    });
 });
 
 test('constructor narrows a numeric-string id to a real int', function (): void {
@@ -236,24 +237,31 @@ test('get_path() joins the current root with the resolved rel_path', function ()
 
 test('constructor finds a real per-extension mimetype icon, and get_url() embellishes the root-relative icon url', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-srcimage-test-' . bin2hex(random_bytes(8));
-    Kernel::boot(Paths::fromRoot($root));
-    srcImageTestSetThemeConfProvider(new SrcImageTestFakeThemeConfProvider('themes/default/icon/mimetypes/'));
-    srcImageTestSetUrlService(new SrcImageTestFakeUrlService());
     srcImageTestMakePng($root . '/themes/default/icon/mimetypes/zzz.png', 16, 12);
 
     try {
-        $src = new SrcImage([
-            'id' => 1,
-            'path' => 'upload/2026/07/file.zzz',
-            'file' => 'file.zzz',
-        ]);
+        KernelContainerOverride::with([
+            Paths::class => Paths::fromRoot($root),
+            UrlServiceInterface::class => new SrcImageTestFakeUrlService(),
+        ], function (): void {
+            // Must be seeded AFTER the container above is built -- CurrentThemeConfProvider::current()
+            // resolves a different instance once Kernel is booted than the
+            // pre-boot memoized fallback it returns beforehand.
+            srcImageTestSetThemeConfProvider(new SrcImageTestFakeThemeConfProvider('themes/default/icon/mimetypes/'));
 
-        expect($src->is_mimetype())->toBeTrue();
-        expect($src->is_original())->toBeFalse();
-        expect($src->rel_path)->toBe('themes/default/icon/mimetypes/zzz.png');
-        expect($src->has_size())->toBeTrue();
-        expect($src->get_size())->toBe([16, 12]);
-        expect($src->get_url())->toBe('/root/themes/default/icon/mimetypes/zzz.png');
+            $src = new SrcImage([
+                'id' => 1,
+                'path' => 'upload/2026/07/file.zzz',
+                'file' => 'file.zzz',
+            ]);
+
+            expect($src->is_mimetype())->toBeTrue();
+            expect($src->is_original())->toBeFalse();
+            expect($src->rel_path)->toBe('themes/default/icon/mimetypes/zzz.png');
+            expect($src->has_size())->toBeTrue();
+            expect($src->get_size())->toBe([16, 12]);
+            expect($src->get_url())->toBe('/root/themes/default/icon/mimetypes/zzz.png');
+        });
     } finally {
         srcImageTestRrmdir($root);
     }
@@ -482,34 +490,36 @@ test('get_url() for a real original image requests part "e" without download, th
     // every sibling get_url() test above only exercises the mimetype-icon
     // branch, never this one.
     $fakeUrlService = new SrcImageTestFakeUrlService();
-    srcImageTestSetUrlService($fakeUrlService);
 
-    $src = new SrcImage([
-        'id' => 7,
-        'path' => 'upload/2026/07/photo.jpg',
-        'file' => 'photo.jpg',
-    ]);
+    KernelContainerOverride::with([UrlServiceInterface::class => $fakeUrlService], function () use ($fakeUrlService): void {
+        $src = new SrcImage([
+            'id' => 7,
+            'path' => 'upload/2026/07/photo.jpg',
+            'file' => 'photo.jpg',
+        ]);
 
-    expect($src->is_original())->toBeTrue();
-    expect($src->get_url())->toBe('/action/7/e');
-    expect($fakeUrlService->lastActionUrlArgs)->toBe([7, 'e', false]);
+        expect($src->is_original())->toBeTrue();
+        expect($src->get_url())->toBe('/action/7/e');
+        expect($fakeUrlService->lastActionUrlArgs)->toBe([7, 'e', false]);
+    });
 });
 
 test('get_url() for a real representative image requests part "r"', function (): void {
     // Kills line 270's TernaryNegated from the other direction.
     $fakeUrlService = new SrcImageTestFakeUrlService();
-    srcImageTestSetUrlService($fakeUrlService);
 
-    $src = new SrcImage([
-        'id' => 8,
-        'path' => 'upload/2026/07/doc.pdf',
-        'file' => 'doc.pdf',
-        'representative_ext' => 'jpg',
-    ]);
+    KernelContainerOverride::with([UrlServiceInterface::class => $fakeUrlService], function () use ($fakeUrlService): void {
+        $src = new SrcImage([
+            'id' => 8,
+            'path' => 'upload/2026/07/doc.pdf',
+            'file' => 'doc.pdf',
+            'representative_ext' => 'jpg',
+        ]);
 
-    expect($src->is_original())->toBeFalse();
-    expect($src->get_url())->toBe('/action/8/r');
-    expect($fakeUrlService->lastActionUrlArgs)->toBe([8, 'r', false]);
+        expect($src->is_original())->toBeFalse();
+        expect($src->get_url())->toBe('/action/8/r');
+        expect($fakeUrlService->lastActionUrlArgs)->toBe([8, 'r', false]);
+    });
 });
 
 test('get_url() throws when a get_src_image_url handler returns something other than a GetSrcImageUrl instance', function (): void {
@@ -518,26 +528,27 @@ test('get_url() throws when a get_src_image_url handler returns something other 
     // pre-filter url unchanged (already a string), never reaching
     // dispatchChange()'s own instanceof enforcement.
     $fakeUrlService = new SrcImageTestFakeUrlService();
-    srcImageTestSetUrlService($fakeUrlService);
 
-    // addEventHandler(), not addTypedHandler() -- a real plugin handler
-    // is untyped from PHPStan's perspective, and this test exercises
-    // dispatchChange()'s own runtime enforcement, not a static one.
-    $handler = static fn (): int => 42;
-    \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler(GetSrcImageUrl::class, $handler);
+    KernelContainerOverride::with([UrlServiceInterface::class => $fakeUrlService], function (): void {
+        // addEventHandler(), not addTypedHandler() -- a real plugin handler
+        // is untyped from PHPStan's perspective, and this test exercises
+        // dispatchChange()'s own runtime enforcement, not a static one.
+        $handler = static fn (): int => 42;
+        \Piwigo\PluginConfig\EventDispatcher::get()->addEventHandler(GetSrcImageUrl::class, $handler);
 
-    try {
-        $src = new SrcImage([
-            'id' => 7,
-            'path' => 'upload/2026/07/photo.jpg',
-            'file' => 'photo.jpg',
-        ]);
+        try {
+            $src = new SrcImage([
+                'id' => 7,
+                'path' => 'upload/2026/07/photo.jpg',
+                'file' => 'photo.jpg',
+            ]);
 
-        expect(static fn () => $src->get_url())
-            ->toThrow(\Error::class, 'must return an instance of');
-    } finally {
-        \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(GetSrcImageUrl::class, $handler);
-    }
+            expect(static fn () => $src->get_url())
+                ->toThrow(\Error::class, 'must return an instance of');
+        } finally {
+            \Piwigo\PluginConfig\EventDispatcher::get()->removeEventHandler(GetSrcImageUrl::class, $handler);
+        }
+    });
 });
 
 test('get_size() persists the real, correctly-ordered width/height back onto the image repository', function (): void {
@@ -548,8 +559,7 @@ test('get_size() persists the real, correctly-ordered width/height back onto the
     // their own correct column, not swapped or duplicated.
     $conn = \Piwigo\Db\DbConnection::build();
     $repo = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class);
-    expect($repo)->toBeInstanceOf(\Piwigo\Image\ImageRepository::class);
-    srcImageTestSetImageRepository($repo);
+    expect($repo)->toBeInstanceOf(ImageRepository::class);
 
     $conn->createQueryBuilder()
         ->insert(\Piwigo\Db\Tables::images())
@@ -560,19 +570,28 @@ test('get_size() persists the real, correctly-ordered width/height back onto the
     $imageId = (int) $conn->lastInsertId();
 
     $root = sys_get_temp_dir() . '/piwigo-srcimage-test-' . bin2hex(random_bytes(8));
-    Kernel::boot(Paths::fromRoot($root));
     srcImageTestMakePng($root . '/upload/2026/07/update-dimensions.jpg', 77, 55);
 
     try {
-        $src = new SrcImage([
-            'id' => $imageId,
-            'path' => 'upload/2026/07/update-dimensions.jpg',
-            'file' => 'update-dimensions.jpg',
-            'width' => null,
-            'height' => null,
-        ]);
+        // ImageRepository::class bound directly to this real, manually-built
+        // repository instance -- get_size()'s own container resolve must
+        // reach the SAME EntityManager/Connection this test reads back
+        // through afterward, not the container's own default (unrelated)
+        // ImageRepository instance.
+        KernelContainerOverride::with([
+            Paths::class => Paths::fromRoot($root),
+            ImageRepository::class => $repo,
+        ], function () use ($imageId): void {
+            $src = new SrcImage([
+                'id' => $imageId,
+                'path' => 'upload/2026/07/update-dimensions.jpg',
+                'file' => 'update-dimensions.jpg',
+                'width' => null,
+                'height' => null,
+            ]);
 
-        expect($src->get_size())->toBe([77, 55]);
+            expect($src->get_size())->toBe([77, 55]);
+        });
 
         $row = $conn->fetchAssociative('SELECT width, height FROM ' . \Piwigo\Db\Tables::images() . " WHERE id = {$imageId}");
         expect($row)->toBe(['width' => 77, 'height' => 55]);

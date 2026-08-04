@@ -13,7 +13,7 @@ namespace Piwigo\Image;
 
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\HtmlRenderingInterface;
-use Piwigo\Core\ThemeConfProviderInterface;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Event\Picture\GetMimetypeLocation;
 use Piwigo\Image\Event\GetSrcImageUrl;
@@ -22,102 +22,52 @@ use Piwigo\Image\Event\GetSrcImageUrl;
  * A source image is used to get a derivative image. It is either
  * the original file for a jpg/png/... or a 'representative' image
  * of a  non image file or a standard icon for the non-image file.
+ *
+ * Singleton/service-locator elimination campaign, Phase 6: the 4
+ * `setX()`/`private static ?X $x` collaborator bridges (htmlRenderer,
+ * themeConfProvider, imageRepository, urlService) are gone -- each was a
+ * bare static, a real SEC-60 worker-mode leak risk. This class still
+ * can't take them via constructor injection (~20 real construction sites,
+ * all raw `new SrcImage($infos)` from DB rows, no DI involved) or depend
+ * on `Piwigo\Url\UrlService`/`Piwigo\Template\Template` directly (deptrac:
+ * this is L2aCoreDomain), so each collaborator method now resolves fresh
+ * from the container instead of reading a value some bootstrap code set
+ * once. `HtmlRenderingInterface`/`UrlServiceInterface`/`ImageRepository`
+ * are all already bound/autowirable in `config/container.php`, so this is
+ * a live, always-current read, not a cache. `themeConf()` resolves
+ * `Piwigo\Core\CurrentThemeConfProvider` (a new, dedicated container-
+ * shared wrapper, not `Piwigo\Template\CurrentTemplate`) -- see that
+ * wrapper's own docblock for why delegating straight to `CurrentTemplate`
+ * would silently reintroduce the exact upward L3Presentation coupling
+ * `ThemeConfProviderInterface` exists to prevent.
  */
 final class SrcImage
 {
-    private static ?HtmlRenderingInterface $htmlRenderer = null;
-
-    /**
-     * Set once by include/common.inc.php (legacy, not subject to deptrac) --
-     * same static-setter shape as Piwigo\Core\Lang::setDefaultLanguageProvider().
-     * P23 batch 8f-3: get_size()'s fatal_error() call sits behind a rare
-     * edge case (dimensions genuinely never provided); this class has ~20
-     * real construction sites and get_size() itself is called transitively
-     * through DerivativeImage's own many callers, so constructor/
-     * per-method injection would ripple unreasonably for a rarely-hit path
-     * -- same reasoning as Validation\InputValidator.
-     */
-    public static function setHtmlRenderer(HtmlRenderingInterface $renderer): void
-    {
-        self::$htmlRenderer = $renderer;
-    }
-
     private static function fatalError(string $msg): never
     {
-        if (self::$htmlRenderer instanceof \Piwigo\Core\HtmlRenderingInterface) {
-            self::$htmlRenderer->fatalError($msg);
+        $htmlRenderer = Kernel::isBooted() ? Kernel::container()->get(HtmlRenderingInterface::class) : null;
+        if ($htmlRenderer instanceof HtmlRenderingInterface) {
+            $htmlRenderer->fatalError($msg);
         }
         throw new \RuntimeException($msg);
     }
 
-    private static ?ThemeConfProviderInterface $themeConfProvider = null;
-
-    /**
-     * P23 batch 8f-4: set once by include/common.inc.php right after the
-     * request's $template instance is constructed (Template implements
-     * ThemeConfProviderInterface) -- same static-setter shape as
-     * setHtmlRenderer() above, and for the same reason: this
-     * L2aCoreDomain class may not depend on L3Presentation's Template
-     * directly (deptrac), and its ~20 real construction sites make
-     * constructor injection an unreasonable ripple. Replaces the deleted
-     * get_themeconf() free function's own `$GLOBALS['template']` read,
-     * with the same availability window (the provider exists as soon as
-     * the template does; no SrcImage is ever constructed earlier in a
-     * real request).
-     */
-    public static function setThemeConfProvider(ThemeConfProviderInterface $provider): void
-    {
-        self::$themeConfProvider = $provider;
-    }
-
     private static function themeConf(string $key): string
     {
-        if (! self::$themeConfProvider instanceof \Piwigo\Core\ThemeConfProviderInterface) {
-            throw new \RuntimeException('SrcImage: no theme-conf provider set (Template not constructed yet?)');
-        }
-
-        return self::$themeConfProvider->themeConf($key);
-    }
-
-    private static ?ImageRepository $imageRepository = null;
-
-    /**
-     * Set once by include/common.inc.php (legacy, not subject to deptrac) --
-     * same static-setter shape as setHtmlRenderer()/setThemeConfProvider()
-     * above, for the same reason: get_size()'s width/height write-back
-     * (Legacy Coupling Retirement: DI+DBAL migration, Phase 1b) sits behind
-     * a rare edge case (dimensions not yet metadata-synced), and this
-     * class's ~20 real construction sites make constructor injection an
-     * unreasonable ripple.
-     */
-    public static function setImageRepository(ImageRepository $repo): void
-    {
-        self::$imageRepository = $repo;
-    }
-
-    private static ?UrlServiceInterface $urlService = null;
-
-    /**
-     * Set once by Bootstrap\RequestBootstrap (Legacy Coupling Retirement
-     * Phase 4c) -- same static-setter shape as setHtmlRenderer()/
-     * setThemeConfProvider()/setImageRepository() above, for the same
-     * reason: this L2aCoreDomain class may not depend on
-     * Piwigo\Url\UrlService (L2bExtendedDomain) directly (deptrac), and
-     * its ~20 real construction sites make constructor injection an
-     * unreasonable ripple.
-     */
-    public static function setUrlService(UrlServiceInterface $urlService): void
-    {
-        self::$urlService = $urlService;
+        return \Piwigo\Core\CurrentThemeConfProvider::current()->get()->themeConf($key);
     }
 
     private static function urlService(): UrlServiceInterface
     {
-        if (! self::$urlService instanceof UrlServiceInterface) {
+        if (! Kernel::isBooted()) {
+            throw new \RuntimeException('SrcImage: no URL service set (RequestBootstrap not run yet?)');
+        }
+        $urlService = Kernel::container()->get(UrlServiceInterface::class);
+        if (! $urlService instanceof UrlServiceInterface) {
             throw new \RuntimeException('SrcImage: no URL service set (RequestBootstrap not run yet?)');
         }
 
-        return self::$urlService;
+        return $urlService;
     }
 
     public const int IS_ORIGINAL = 0x01;
@@ -291,7 +241,12 @@ final class SrcImage
             // probably not metadata synced
             if (($size = getimagesize($this->get_path())) !== false) {
                 $this->size = [$size[0], $size[1]];
-                self::$imageRepository?->updateDimensions($this->id, $size[0], $size[1]);
+                if (Kernel::isBooted()) {
+                    $imageRepository = Kernel::container()->get(ImageRepository::class);
+                    if ($imageRepository instanceof ImageRepository) {
+                        $imageRepository->updateDimensions($this->id, $size[0], $size[1]);
+                    }
+                }
             }
         }
         return $this->size;

@@ -57,6 +57,25 @@ function htmlServiceTestRenderCommentContent(HtmlService $service, string $conte
     return $service->renderCommentContent(new RenderCommentContent($content))->commentContent;
 }
 
+/**
+ * HtmlService::urlService() now resolves UrlServiceInterface (and, via its
+ * own constructor, RootPathOverride) live from the container on every call
+ * (singleton/service-locator elimination campaign, Phase 6) -- a bare
+ * RootPathOverride::push()/pop() static call no longer exists at all,
+ * let alone affects the same instance. This resolves the one, real,
+ * container-shared RootPathOverride every UrlService construction in this
+ * booted Kernel shares.
+ */
+function htmlServiceTestRootPathOverride(): \Piwigo\Url\RootPathOverride
+{
+    $rootPathOverride = Kernel::container()->get(\Piwigo\Url\RootPathOverride::class);
+    if (! $rootPathOverride instanceof \Piwigo\Url\RootPathOverride) {
+        throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Url\RootPathOverride::class);
+    }
+
+    return $rootPathOverride;
+}
+
 test('renderCommentContent escapes html and linkifies bare URLs', function (): void {
     $service = new HtmlService();
 
@@ -629,14 +648,14 @@ test('getTagsContentTitle builds the exact link markup, prefixed by the real roo
     // apart from the real one, and the default empty getRootUrl() used
     // by the sibling test above can't distinguish a dropped/reordered
     // getRootUrl() call specifically.
-    \Piwigo\Url\RootPathOverride::push('/gallery/');
+    htmlServiceTestRootPathOverride()->push('/gallery/');
 
     try {
         $result = new HtmlService()->getTagsContentTitle([['name' => 'a']]);
 
         expect($result)->toBe('<a href="/gallery/tags.php" title="display available tags">Tag</a> ');
     } finally {
-        \Piwigo\Url\RootPathOverride::reset();
+        htmlServiceTestRootPathOverride()->reset();
     }
 });
 
@@ -863,7 +882,7 @@ test('getCatDisplayName builds one link per category, in order, when url is an e
     $catA = ['id' => 3, 'name' => 'Nature', 'permalink' => null];
     $catB = ['id' => 7, 'name' => 'Portraits', 'permalink' => null];
 
-    $urlService = new UrlService($service);
+    $urlService = new UrlService($service, new \Piwigo\Url\RootPathOverride());
     $linkA = $urlService->makeIndexUrl(['category' => $catA]);
     $linkB = $urlService->makeIndexUrl(['category' => $catB]);
 
@@ -908,7 +927,7 @@ test('getCatDisplayNameCache\'s singleLink href uses the LAST uppercats id, pref
     // getRootUrl() is '', the default in every other test in this
     // file), and line 177's ConcatEqualToEqual (`=` instead of `.=` on
     // the opening `<a href="..."` fragment).
-    \Piwigo\Url\RootPathOverride::push('/gallery/');
+    htmlServiceTestRootPathOverride()->push('/gallery/');
     ProcessCache::setStatic('cat_names', [
         '3' => ['id' => 3, 'name' => 'Nature', 'permalink' => null],
         '7' => ['id' => 7, 'name' => 'Portraits', 'permalink' => null],
@@ -920,7 +939,7 @@ test('getCatDisplayNameCache\'s singleLink href uses the LAST uppercats id, pref
 
         expect($result)->toStartWith('<a href="/gallery/index.php?/category/7"');
     } finally {
-        \Piwigo\Url\RootPathOverride::reset();
+        htmlServiceTestRootPathOverride()->reset();
     }
 });
 
@@ -950,7 +969,7 @@ test('getCombinedCategoriesContentTitle renders a single category link without a
     // getCombinedCategoriesContentTitle() itself delegates to (via
     // getCatDisplayName()) -- an exact-value assertion without
     // re-implementing makeSectionInUrl()'s own url-building algorithm here.
-    $expectedLink = new UrlService($service)->makeIndexUrl(['category' => $category]);
+    $expectedLink = new UrlService($service, new \Piwigo\Url\RootPathOverride())->makeIndexUrl(['category' => $category]);
 
     $title = $service->getCombinedCategoriesContentTitle($category, []);
 
@@ -962,7 +981,7 @@ test('getCombinedCategoriesContentTitle appends a remove-tag link referencing th
     $catA = ['id' => 3, 'name' => 'Nature', 'permalink' => null];
     $catB = ['id' => 7, 'name' => 'Portraits', 'permalink' => null];
 
-    $urlService = new UrlService($service);
+    $urlService = new UrlService($service, new \Piwigo\Url\RootPathOverride());
     $linkA = $urlService->makeIndexUrl(['category' => $catA]);
     $linkB = $urlService->makeIndexUrl(['category' => $catB]);
 
@@ -1010,14 +1029,20 @@ test('getCombinedCategoriesContentTitle uses the current template\'s real icon_d
         // ConcatSwitchSides (moves getRootUrl() to prefix the whole `$title
         // .=` expression instead of just the src) -- both are unobservable
         // via toContain() alone when getRootUrl() defaults to ''.
-        \Piwigo\Url\RootPathOverride::push('/gallery/');
+        htmlServiceTestRootPathOverride()->push('/gallery/');
 
         try {
             $service = new HtmlService();
             $catA = ['id' => 3, 'name' => 'Nature', 'permalink' => null];
             $catB = ['id' => 7, 'name' => 'Portraits', 'permalink' => null];
 
-            $urlService = new UrlService($service);
+            // The SHARED container-resolved RootPathOverride, not a fresh
+            // one -- getCombinedCategoriesContentTitle()'s own internal
+            // urlService() (HtmlService's container-live-resolve bridge)
+            // reads from that same shared instance, so its <a href> links
+            // reflect the pushed '/gallery/' override too, not just the
+            // icon src built alongside it.
+            $urlService = new UrlService($service, htmlServiceTestRootPathOverride());
             $linkA = $urlService->makeIndexUrl(['category' => $catA]);
             $linkB = $urlService->makeIndexUrl(['category' => $catB]);
             $removeLinkTemplate = static fn (string $removeUrl): string => '<a id="TagsGroupRemoveTag" href="' . $removeUrl . '" style="border:none;" title="remove this tag from the list">'
@@ -1038,7 +1063,7 @@ test('getCombinedCategoriesContentTitle uses the current template\'s real icon_d
                 . '<a href="' . $linkB . '">Portraits</a>' . $removeLinkTemplate($linkA),
             );
         } finally {
-            \Piwigo\Url\RootPathOverride::reset();
+            htmlServiceTestRootPathOverride()->reset();
             CurrentTemplate::current()->reset();
             $iterator = new \RecursiveIteratorIterator(
                 new \RecursiveDirectoryIterator($root, \FilesystemIterator::SKIP_DOTS),
@@ -1065,7 +1090,7 @@ test('getCombinedCategoriesContentTitle folds every other category into combined
     $catB = ['id' => 7, 'name' => 'Portraits', 'permalink' => null];
     $catC = ['id' => 9, 'name' => 'Travel', 'permalink' => null];
 
-    $urlService = new UrlService($service);
+    $urlService = new UrlService($service, new \Piwigo\Url\RootPathOverride());
     // catA's own remove-link: array_shift() takes catB (the lowest-keyed
     // remaining element after unset()), leaving catC to fold into
     // combined_categories.
@@ -1286,7 +1311,7 @@ test('accessDenied renders a 401 page instead of redirecting when a real (non-gu
     // the real one, and getRootUrl() defaulting to '' in this file's own
     // beforeEach can't distinguish a dropped/reordered makeIndexUrl()
     // call either.
-    $expectedIndexUrl = new UrlService($service)->makeIndexUrl();
+    $expectedIndexUrl = new UrlService($service, new \Piwigo\Url\RootPathOverride())->makeIndexUrl();
     $expectedHtml = '<meta http-equiv="Content-Type" content="text/html; charset=utf-8">'
         . "\n" . '<link rel="shortcut icon" type="image/x-icon" href="themes/default/icon/favicon.ico">'
         . "\n" . '<div style="display: flex; justify-content: center;align-items: center;height: 100vh;margin: 0;color: #3C3C3C;font-family: \'Open Sans\', sans-serif;font-size: 20px;font-style: normal;font-weight: 600;line-height: normal;">'
@@ -1375,7 +1400,7 @@ test('accessDenied prefixes the identification.php redirect with the real root u
     // and ConcatSwitchSides (reordering it after the redirect param) --
     // indistinguishable with the sibling tests' default empty
     // getRootUrl().
-    \Piwigo\Url\RootPathOverride::push('/gallery/');
+    htmlServiceTestRootPathOverride()->push('/gallery/');
     $service = new HtmlService();
     $redirectService = new HtmlServiceTestCapturingRedirectHttpService();
     $_SERVER['REQUEST_URI'] = '/x';
@@ -1385,7 +1410,7 @@ test('accessDenied prefixes the identification.php redirect with the real root u
     } catch (\RuntimeException) {
     } finally {
         unset($_SERVER['REQUEST_URI']);
-        \Piwigo\Url\RootPathOverride::reset();
+        htmlServiceTestRootPathOverride()->reset();
     }
 
     expect($redirectService->capturedUrl)->toBe('/gallery/identification.php?redirect=' . urlencode(urlencode('/x')));
@@ -1417,7 +1442,7 @@ test('pageForbidden redirects to the given alternate url with a 403 status, a 5 
 test('pageForbidden computes the default alternate url via makeIndexUrl when none is given', function (): void {
     $service = new HtmlService();
     $redirectService = new HtmlServiceTestCapturingRedirectHtmlService();
-    $expectedUrl = new UrlService($service)->makeIndexUrl();
+    $expectedUrl = new UrlService($service, new \Piwigo\Url\RootPathOverride())->makeIndexUrl();
 
     try {
         $service->pageForbidden($redirectService, 'blocked');

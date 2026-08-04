@@ -87,7 +87,7 @@ $types = [
 // AdminShell::run()'s own dispatch-context catch point.
 try {
     new \Piwigo\Bootstrap\RedirectService()
-        ->redirect(new \Piwigo\Url\UrlService(new \Piwigo\Html\HtmlService())->makeIndexUrl([
+        ->redirect(\Piwigo\Bootstrap\RequestBootstrap::urlService()->makeIndexUrl([
             'list' => array_map(
                 static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
                 $conn->fetchFirstColumn($query, $params, $types)

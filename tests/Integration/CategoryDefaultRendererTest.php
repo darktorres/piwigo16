@@ -12,11 +12,11 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Location\LocIndexThumbnailsSelection;
 use Piwigo\Html\HtmlService;
-use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
@@ -92,13 +92,18 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         self::assertInstanceOf(CommentRepository::class, $commentRepo);
 
         $htmlService = new HtmlService();
-        $urlService = new UrlService($htmlService);
         // thumbnails.tpl's own {assign var=derivative
         // value=$pwg->derivative(...)} constructs a real DerivativeImage per
-        // thumbnail, whose get_url() reaches for this same static registry
-        // -- same real-UrlService-instance wiring as CalendarMonthlyTest's
-        // own DerivativeImage::setUrlService() call.
-        DerivativeImage::setUrlService($urlService);
+        // thumbnail, whose get_url() now resolves UrlServiceInterface live
+        // from the container (singleton/service-locator elimination
+        // campaign, Phase 6) -- $urlService below must share the same
+        // container-shared RootPathOverride for setMakeFullUrl()-style
+        // state to be visible across both, see that class's own docblock.
+        $rootPathOverride = Kernel::container()->get(\Piwigo\Url\RootPathOverride::class);
+        if (! $rootPathOverride instanceof \Piwigo\Url\RootPathOverride) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Url\RootPathOverride::class);
+        }
+        $urlService = new UrlService($htmlService, $rootPathOverride);
 
         $this->renderer = new CategoryDefaultRenderer($htmlService, $this->buildTemplate(), $imageRepo, $commentRepo, $urlService, new SessionService($em->getRepository(SessionEntity::class)), EventDispatcher::get(), ImageStdParams::current(), \Piwigo\Users\CurrentUser::current());
     }
@@ -172,7 +177,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
     public function test_render_returns_the_slideshow_url_for_the_first_ranked_picture(): void
     {
         $this->seedUser(showNbHits: false, showNbComments: false);
-        $urlService = new UrlService(new HtmlService());
+        $urlService = new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride());
 
         $slideshowUrl = $this->renderer->render([3, 1, 2], 0, 3, '');
 

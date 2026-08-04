@@ -70,7 +70,6 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
         // footer.tpl (reached via CurrentTemplate's parse()) needs this --
         // same as PageTailTest/RedirectServiceTest's own identical setup.
-        ScriptLoader::setUrlService(new UrlService(new HtmlService()));
 
         CurrentUser::current()->set(new User(
             id: UserId::from(3),
@@ -103,7 +102,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         self::assertSame(
             [Lang::t('Your authentication key is no longer valid.') . sprintf(
                 ' <a href="%s">%s</a>',
-                new UrlService(new HtmlService())->getRootUrl() . 'identification.php',
+                new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride())->getRootUrl() . 'identification.php',
                 Lang::t('Login')
             )],
             PageState::current()->errors
@@ -186,7 +185,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
             $response = $e->response();
             self::assertSame(503, $response->getStatusCode());
             self::assertSame('900', $response->getHeaderLine('Retry-After'));
-            $expectedBody = '<a href="' . new UrlService(new HtmlService())->getAbsoluteRootUrl(false) . 'identification.php">'
+            $expectedBody = '<a href="' . new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride())->getAbsoluteRootUrl(false) . 'identification.php">'
                 . Lang::t('The gallery is locked for maintenance. Please, come back later.') . '</a>'
                 . str_repeat(' ', 512);
             self::assertSame($expectedBody, (string) $response->getBody());
@@ -205,7 +204,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         ));
 
         self::assertSame(
-            new UrlService(new HtmlService())->getActionUrl(42, 'e', false),
+            new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride())->getActionUrl(42, 'e', false),
             $result->url
         );
     }

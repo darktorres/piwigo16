@@ -26,7 +26,7 @@ use Piwigo\Url\UrlService;
  */
 function coreTabsUrlService(): UrlServiceInterface
 {
-    return new UrlService(new HtmlService(), null);
+    return new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride(), null);
 }
 
 /**

@@ -25,7 +25,6 @@ use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Template\Event\CombinedCss;
 use Piwigo\Template\Event\CombinedScript;
-use Piwigo\Url\UrlService;
 use Smarty\Smarty;
 
 /**
@@ -293,16 +292,25 @@ final class Template implements \Piwigo\Core\ThemeConfProviderInterface, \Piwigo
     }
 
     /**
-     * Throwaway construction, not a constructor property -- this
-     * constructor takes only 3 plain strings and has 8 real construction
-     * sites; none of its own methods run during construction, so a new
-     * required dependency would ripple for no benefit. `private static`
-     * (not `private`) so it's reachable from make_script_src() below,
-     * which is itself static. Legacy Coupling Retirement Phase 4c.
+     * Container resolve, not a constructor property -- this constructor
+     * takes only 3 plain strings and has 8 real construction sites; none
+     * of its own methods run during construction, so a new required
+     * dependency would ripple for no benefit. `private static` (not
+     * `private`) so it's reachable from make_script_src() below, which is
+     * itself static. Resolves the container-shared instance (singleton/
+     * service-locator elimination campaign, Phase 6), not a throwaway
+     * `new UrlService(new HtmlService())` -- see Image\SrcImage's own
+     * docblock for why (RootPathOverride's cross-instance sharing
+     * requirement).
      */
     private static function urlService(): UrlServiceInterface
     {
-        return new UrlService(new HtmlService());
+        $urlService = \Piwigo\Core\Kernel::container()->get(UrlServiceInterface::class);
+        if (! $urlService instanceof UrlServiceInterface) {
+            throw new \LogicException('Container returned an unexpected type for ' . UrlServiceInterface::class);
+        }
+
+        return $urlService;
     }
 
     /**

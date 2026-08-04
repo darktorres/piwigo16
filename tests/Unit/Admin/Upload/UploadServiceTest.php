@@ -928,7 +928,7 @@ test('saveUploadFormConfig persists a valid in-range numeric field', function ()
 test('addUploadedFile throws when md5_file() fails to read the source file', function (): void {
     $service = upload_service_test_make();
     $missingPath = upload_service_test_marker() . '/does-not-exist-at-all.jpg';
-    $urlService = new UrlService(new HtmlService());
+    $urlService = new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride());
 
     // md5_file() on a missing file emits a real PHP warning (confirmed live:
     // "Failed to open stream: No such file or directory") that

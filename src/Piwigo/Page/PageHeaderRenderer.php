@@ -9,8 +9,6 @@ use Piwigo\Event\Lifecycle\LocAfterPageHeader;
 use Piwigo\Event\Location\LocBeginPageHeader;
 use Piwigo\Event\Location\LocEndPageHeader;
 use Piwigo\Event\Template\RenderPageBanner;
-use Piwigo\Html\HtmlService;
-use Piwigo\Url\UrlService;
 
 /**
  * Renders the page `<head>`/opening chrome into $template. Injects
@@ -18,8 +16,10 @@ use Piwigo\Url\UrlService;
  * Menu\MenubarRenderer: cross-domain calls (get_pwg_charset(),
  * trigger_notify()) stay as plain global-function calls to modules
  * migrated in earlier phases; the one real Url-family call
- * (getGalleryHomeUrl()) goes through a throwaway UrlService construction
- * instead (Legacy Coupling Retirement Phase 4c) -- this class has no
+ * (getGalleryHomeUrl()) goes through the container-resolved
+ * UrlServiceInterface below (singleton/service-locator elimination
+ * campaign, Phase 6 -- see RootPathOverride's own docblock for why a
+ * throwaway construction is no longer safe) -- this class has no
  * constructor at all today, so no dependency is added.
  * Piwigo\Bootstrap\RedirectService's own redirectHtml() early-crash
  * fallback constructs this class directly (`new PageHeaderRenderer()`),
@@ -30,7 +30,12 @@ final class PageHeaderRenderer
 {
     private static function urlService(): UrlServiceInterface
     {
-        return new UrlService(new HtmlService());
+        $urlService = \Piwigo\Core\Kernel::container()->get(UrlServiceInterface::class);
+        if (! $urlService instanceof UrlServiceInterface) {
+            throw new \LogicException('Container returned an unexpected type for ' . UrlServiceInterface::class);
+        }
+
+        return $urlService;
     }
 
     /**

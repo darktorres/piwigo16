@@ -59,7 +59,6 @@ final class PageHeaderRendererTest extends IntegrationTestCase
         // header.tpl's own {get_combined_css}/{get_combined_scripts
         // load='header'} tags reach ScriptLoader::urlService() -- unset by
         // default, real RequestBootstrap-only wiring this test never boots.
-        ScriptLoader::setUrlService(new UrlService(new HtmlService()));
         // header.tpl's own {$lang_info.code}/{$lang_info.direction} reach
         // Lang::langInfo() -- unset by default, real RequestBootstrap-only
         // wiring this test never boots (same reasoning as SectionInitializerTest/

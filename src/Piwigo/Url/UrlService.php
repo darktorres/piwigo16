@@ -46,6 +46,7 @@ final class UrlService implements UrlServiceInterface
 {
     public function __construct(
         private readonly HtmlRenderingInterface $htmlRenderer,
+        private readonly RootPathOverride $rootPathOverride,
         private ?Connection $conn = null,
     ) {}
 
@@ -62,7 +63,7 @@ final class UrlService implements UrlServiceInterface
         // -- nullable here (unlike GalleryController/PictureController's
         // own guaranteed-non-null read) since this runs for non-gallery
         // pages too, matching the original's own `?? null` fallback.
-        $root_path = RootPathOverride::current() ?? SectionContextRegistry::currentStatic()?->rootPath;
+        $root_path = $this->rootPathOverride->current() ?? SectionContextRegistry::currentStatic()?->rootPath;
         if ($root_path === null || $root_path === '') {
             // Legacy Coupling Retirement gap-closure (entry-shell
             // define()/include round): used to read the raw PHPWG_ROOT_PATH
@@ -296,7 +297,7 @@ final class UrlService implements UrlServiceInterface
     {
         $params = SectionContextRegistry::currentStatic()?->toUrlParams() ?? [];
 
-        $rootPathOverride = RootPathOverride::current();
+        $rootPathOverride = $this->rootPathOverride->current();
         if ($rootPathOverride !== null) {
             $params['root_path'] = $rootPathOverride;
         }
@@ -887,7 +888,7 @@ final class UrlService implements UrlServiceInterface
     #[\Override]
     public function setMakeFullUrl(): void
     {
-        RootPathOverride::push($this->getAbsoluteRootUrl());
+        $this->rootPathOverride->push($this->getAbsoluteRootUrl());
     }
 
     /**
@@ -896,7 +897,7 @@ final class UrlService implements UrlServiceInterface
     #[\Override]
     public function unsetMakeFullUrl(): void
     {
-        RootPathOverride::pop();
+        $this->rootPathOverride->pop();
     }
 
     /**

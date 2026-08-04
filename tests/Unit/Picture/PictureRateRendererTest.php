@@ -58,7 +58,7 @@ test('render does nothing when rating is disabled', function (): void {
     CurrentConfig::setRateEnabled(false);
     $renderer = new PictureRateRenderer(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Rate\RateEntity::class), \Piwigo\Users\CurrentUser::current(), \Piwigo\Template\CurrentTemplate::current());
 
-    $renderer->render(42, new UrlService(new HtmlService()), [], '/picture.php');
+    $renderer->render(42, new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()), [], '/picture.php');
 
     expect(CurrentTemplate::current()->get()->get_template_vars('rate_summary'))->toBeNull()
         ->and(CurrentTemplate::current()->get()->get_template_vars('rating'))->toBeNull();

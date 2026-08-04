@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Piwigo\Db\DbConnection;
-use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Job\BatchUploadJob;
 use Piwigo\Job\GenerateDerivativeJob;
@@ -18,7 +17,6 @@ use Piwigo\Job\SendNotificationEmailJob;
 use Piwigo\Mail\MailService;
 use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
-use Piwigo\Url\UrlService;
 
 /**
  * Transport + routing + handler-factory configuration for
@@ -53,7 +51,7 @@ return [
         // dispatch, so a shim that throws when nothing has activated it
         // yet would break every job type's construction, not just this
         // one's.
-        BatchUploadJob::class => static fn (): callable => new BatchUploadHandler(new UrlService(new HtmlService()), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get(), new \Piwigo\Config\ConfigService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Config\ConfigEntry::class), \Piwigo\PluginConfig\EventDispatcher::get())),
+        BatchUploadJob::class => static fn (): callable => new BatchUploadHandler(\Piwigo\Bootstrap\PresentationAccessor::urlService(), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get(), new \Piwigo\Config\ConfigService(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Config\ConfigEntry::class), \Piwigo\PluginConfig\EventDispatcher::get())),
         GenerateDerivativeJob::class => static fn (): callable => new GenerateDerivativeHandler(new DerivativeCacheService()),
         RegenerateAllDerivativesJob::class => static fn (): callable => new RegenerateAllDerivativesHandler(new DerivativeCacheService()),
         ReindexImagesJob::class => static fn (): callable => new ReindexImagesHandler(new MetadataService(new MetadataRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\PluginConfig\EventDispatcher::get())),

@@ -27,7 +27,6 @@ use Piwigo\Lang\Translator;
 use Piwigo\Menu\Event\BlockManagerRegisterBlocks;
 use Piwigo\Menu\RegisteredBlock;
 use Piwigo\Template\Template;
-use Piwigo\Url\UrlService;
 
 /**
  * HTML rendering helpers, error pages, and status/header utilities.
@@ -53,16 +52,21 @@ use Piwigo\Url\UrlService;
  * pass through.
  *
  * The remaining Url-family calls (Legacy Coupling Retirement Phase 4c)
- * go through the private urlService() helper below -- a throwaway,
- * non-constructor `new UrlService($this)` per call, not a constructor
- * property: `UrlService` requires `HtmlRenderingInterface` (this class
- * implements it), so a constructor-injected `UrlServiceInterface` here
- * would close a real cycle (`UrlService -> HtmlRenderingInterface ->
- * HtmlService -> UrlServiceInterface -> UrlService`). PHP-DI's
- * reflection-based autowiring only ever inspects class constructors,
- * never ordinary methods, so a private helper method sidesteps that --
- * unlike an optional/nullable constructor property of the same type,
- * which PHP-DI may still attempt to autowire.
+ * go through the private urlService() helper below -- a container
+ * resolve, not a constructor property: `UrlService` requires
+ * `HtmlRenderingInterface` (this class implements it), so a
+ * constructor-injected `UrlServiceInterface` here would close a real
+ * cycle (`UrlService -> HtmlRenderingInterface -> HtmlService ->
+ * UrlServiceInterface -> UrlService`). PHP-DI's reflection-based
+ * autowiring only ever inspects class constructors, never ordinary
+ * methods, so a private helper method sidesteps that -- unlike an
+ * optional/nullable constructor property of the same type, which PHP-DI
+ * may still attempt to autowire. Resolves the container-shared instance
+ * (singleton/service-locator elimination campaign, Phase 6), not a
+ * throwaway `new UrlService($this)`, so `RootPathOverride`'s own
+ * cross-instance sharing requirement holds (see that class's own
+ * docblock) -- behaviorally equivalent to the old `$this`-backed
+ * `HtmlRenderingInterface`, since it carries no per-instance state.
  *
  * Implements HtmlRenderingInterface (P23 batch 8f-3) so L1/L2a/L2b classes
  * that can't depend on this L3Presentation class directly can depend on
@@ -82,7 +86,12 @@ final class HtmlService implements HtmlRenderingInterface
 
     private function urlService(): UrlServiceInterface
     {
-        return new UrlService($this);
+        $urlService = \Piwigo\Core\Kernel::container()->get(UrlServiceInterface::class);
+        if (! $urlService instanceof UrlServiceInterface) {
+            throw new \LogicException('Container returned an unexpected type for ' . UrlServiceInterface::class);
+        }
+
+        return $urlService;
     }
 
     /**

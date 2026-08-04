@@ -1168,7 +1168,16 @@ test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end mes
     $logDir = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
     mkdir($logDir, 0o777, true);
     imageServiceTestSeedCurrentLogger(new \Piwigo\Core\Logger(['severity' => \Piwigo\Core\Logger::DEBUG, 'directory' => $logDir, 'filename' => 'emptylounge.log']));
-    $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param = 'empty_lounge_running'");
+    // Also pre-cleans 'count_orphans' (not just 'empty_lounge_running'),
+    // matching the sibling test right below -- a prior run of this exact
+    // test that failed BEFORE reaching its own try/finally (e.g. between
+    // this point and the INSERT further down) would otherwise leave a
+    // stale row here, making the next run's own INSERT below fail with a
+    // duplicate-key error and never release imageServiceTestAcquireEmptyLoungeDbLock()'s
+    // lock either -- confirmed live: a real interrupted run left exactly
+    // that stale 'count_orphans' row behind, cascading into every later
+    // emptyLounge() test's own lock-acquire timeout.
+    $conn->executeStatement("DELETE FROM " . \Piwigo\Db\Tables::config() . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
     // Single hyphen, matching the real "$execId-$startTime" shape
     // tryAcquireLoungeLock() itself always constructs (SessionService::
     // generateKey()'s base64 alphabet, minus '+'/'/', never contains a

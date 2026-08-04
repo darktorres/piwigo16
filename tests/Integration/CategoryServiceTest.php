@@ -223,15 +223,16 @@ final class CategoryServiceTest extends IntegrationTestCase
         CurrentUser::current()->set(User::fromUserArray(['id' => 1]));
         CurrentConfig::setRateEnabled(true);
         // getCategoryRepresentantProperties()'s own DerivativeImage::thumb_url()/
-        // url() calls need a real, populated ImageStdParams type map (and
-        // a real UrlService, DerivativeImage::url()'s own fallback for a
-        // non-null $params) -- unset by default since this test never
-        // boots a full RequestBootstrap, same reasoning as
-        // NotificationByMailSenderTest's own identical setUp trio.
+        // url() calls need a real, populated ImageStdParams type map --
+        // DerivativeImage::urlService() itself now resolves
+        // UrlServiceInterface live from the container once Kernel is
+        // booted (singleton/service-locator elimination campaign, Phase
+        // 6), which this test already is via parent::setUp() -- no
+        // explicit wiring needed here anymore, same reasoning as
+        // NotificationByMailSenderTest's own identical setUp.
         // ImageStdParams::load_from_db() itself needs CurrentConfigService.
         CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
         ImageStdParams::current()->load_from_db();
-        DerivativeImage::setUrlService(new UrlService(new HtmlService()));
     }
 
     #[\Override]
@@ -689,7 +690,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         // needs the ancestor present to correctly nest category 2 under
         // it (LEVEL-based <ul> nesting), it just renders a bare link with
         // no href via its own isset($cat.url) guard.
-        $cats = $this->service->getRelatedCategoriesMenuWithUrls([4], new UrlService(new HtmlService()));
+        $cats = $this->service->getRelatedCategoriesMenuWithUrls([4], new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()));
 
         $ids = array_map(static fn (array $c): mixed => $c['id'], $cats);
         self::assertContains(1, $ids);
@@ -708,7 +709,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_get_related_categories_menu_with_urls_merges_combined_categories_into_the_url(): void
     {
-        $urlService = new UrlService(new HtmlService());
+        $urlService = new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride());
         $priorCat = ['id' => 99, 'name' => 'Prior Combined Category', 'permalink' => null];
         $pageCategory = ['id' => 1, 'name' => 'Sample Album', 'permalink' => null];
 
@@ -742,7 +743,7 @@ final class CategoryServiceTest extends IntegrationTestCase
     public function test_delete_categories_delete_orphans_mode_preserves_an_image_still_linked_elsewhere(): void
     {
         $activityLogger = new CategoryServiceFakeActivityLogger();
-        $urlService = new UrlService(new HtmlService());
+        $urlService = new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride());
 
         $result = $this->service->createVirtualCategory('Orphan Diff Temp', $activityLogger, \Piwigo\Users\CurrentUser::current());
         $tempIdRaw = $result['id'] ?? null;
@@ -899,12 +900,12 @@ final class CategoryServiceTest extends IntegrationTestCase
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('getCategoryRepresentantProperties(): image 999999 does not exist (stale representative_picture_id?)');
 
-        $this->service->getCategoryRepresentantProperties(999999, new UrlService(new HtmlService()));
+        $this->service->getCategoryRepresentantProperties(999999, new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()));
     }
 
     public function test_get_category_representant_properties_returns_a_thumb_url_when_size_is_null(): void
     {
-        $urlService = new UrlService(new HtmlService());
+        $urlService = new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride());
 
         $props = $this->service->getCategoryRepresentantProperties(1, $urlService);
 

@@ -66,14 +66,6 @@ $dbCredentials->seed([
 // PHPWG_INSTALLED guard, so it stays the no-op it always was at this point
 // of a fresh install).
 \Piwigo\Bootstrap\SessionBootstrap::register();
-// Pre-existing gap, found live while verifying Legacy Coupling Retirement
-// Phase 8, 8b (this file's own render() call always reaches install.tpl's
-// unconditional {get_combined_scripts load='footer'} -- unrelated to 8a/8b
-// themselves, just never caught because tests/Browser/RegenerateFixtureTest.php
-// is excluded from routine CI runs, per its own docblock): every other
-// entry path wires this via RequestBootstrap::configure(), which
-// install.php never runs.
-\Piwigo\Template\ScriptLoader::setUrlService(new \Piwigo\Url\UrlService(new \Piwigo\Html\HtmlService()));
 
 // ---------------------------------------------------------------- orchestration
 $wizard = new InstallWizard($prefixeTable, $paths, $dbCredentials, \Piwigo\Config\CurrentConfigService::current());

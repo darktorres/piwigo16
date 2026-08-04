@@ -97,7 +97,7 @@ final class PictureRateRendererTest extends IntegrationTestCase
 
     private function urlService(): UrlService
     {
-        return new UrlService(new HtmlService());
+        return new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride());
     }
 
     public function test_render_computes_the_rate_summary_and_the_current_classic_users_own_rate(): void

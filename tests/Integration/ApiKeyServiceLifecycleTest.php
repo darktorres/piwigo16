@@ -106,7 +106,7 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
             new ApiKeyServiceLifecycleTestSpyMailer(),
             new ApiKeyRepository($this->em),
             new PasswordService(new PasswordRepository($this->conn), new \Piwigo\Config\DeploymentPolicy()),
-            new UrlService(new HtmlService()),
+            new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()),
             new SessionService($this->em->getRepository(SessionEntity::class)),
         );
 
@@ -205,7 +205,7 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
             $mailer,
             new ApiKeyRepository($this->em),
             new PasswordService(new PasswordRepository($this->conn), new \Piwigo\Config\DeploymentPolicy()),
-            new UrlService(new HtmlService()),
+            new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()),
             new SessionService($this->em->getRepository(SessionEntity::class)),
         );
 
@@ -227,7 +227,7 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
             $mailer,
             new ApiKeyRepository($this->em),
             new PasswordService(new PasswordRepository($this->conn), new \Piwigo\Config\DeploymentPolicy()),
-            new UrlService(new HtmlService()),
+            new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()),
             new SessionService($this->em->getRepository(SessionEntity::class)),
         );
 

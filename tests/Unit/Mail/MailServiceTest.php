@@ -568,6 +568,7 @@ test('getMailConfiguration reads debug_mail-adjacent smtp settings from CurrentC
 });
 
 test('generateResetPasswordMail builds an HTML mail with the reset link and gallery-title-prefixed subject', function (): void {
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     $service = new MailService();
 
     $mail = $service->generateResetPasswordMail('jane', 'https://example.test/password.php?key=abc', 'My Gallery', '2 hours');
@@ -580,6 +581,7 @@ test('generateResetPasswordMail builds an HTML mail with the reset link and gall
 });
 
 test('generateSetPasswordMail builds an HTML mail with the activation link and a welcome subject', function (): void {
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     $service = new MailService();
 
     $mail = $service->generateSetPasswordMail('jane', 'https://example.test/password.php?key=xyz', 'My Gallery', '48 hours');
@@ -593,6 +595,7 @@ test('generateSetPasswordMail builds an HTML mail with the activation link and a
 
 test('generateCodeVerificationMail embeds the raw verification code and the current gallery title', function (): void {
     CurrentConfig::setGalleryTitle('My Gallery');
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     $service = new MailService();
 
     $mail = $service->generateCodeVerificationMail('482913');
@@ -603,6 +606,7 @@ test('generateCodeVerificationMail embeds the raw verification code and the curr
 });
 
 test('generateSuccessResetPasswordMail omits the API-key-revocation notice when there are no API keys', function (): void {
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     $service = new MailService();
 
     $mail = $service->generateSuccessResetPasswordMail('jane', 0);
@@ -612,6 +616,7 @@ test('generateSuccessResetPasswordMail omits the API-key-revocation notice when 
 });
 
 test('generateSuccessResetPasswordMail includes the API-key-revocation notice with the real key count when there are some', function (): void {
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     $service = new MailService();
 
     $mail = $service->generateSuccessResetPasswordMail('jane', 3);
@@ -627,6 +632,7 @@ test('generateSuccessResetPasswordMail includes the API-key-revocation notice wi
 // of those chained pieces from the real, correctly-ordered result.
 
 test('generateResetPasswordMail assembles the exact HTML content, in order, from every concatenated piece', function (): void {
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     $service = new MailService();
 
     $mail = $service->generateResetPasswordMail('jane', 'https://example.test/password.php?key=abc', 'My Gallery', '2 hours');
@@ -642,6 +648,7 @@ test('generateResetPasswordMail assembles the exact HTML content, in order, from
 });
 
 test('generateResetPasswordMail throws when a render_lost_password_mail_content handler returns something other than a RenderLostPasswordMailContent instance', function (): void {
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     $service = new MailService();
     $handler = static fn (): bool => false;
     EventDispatcher::get()->addEventHandler(RenderLostPasswordMailContent::class, $handler);
@@ -655,6 +662,7 @@ test('generateResetPasswordMail throws when a render_lost_password_mail_content 
 });
 
 test('generateResetPasswordMail uses the render_lost_password_mail_content handler\'s own replacement when it returns a real string', function (): void {
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     $service = new MailService();
     $handler = static fn (RenderLostPasswordMailContent $event): RenderLostPasswordMailContent => new RenderLostPasswordMailContent('REPLACED CONTENT');
     EventDispatcher::get()->addTypedHandler(RenderLostPasswordMailContent::class, $handler);
@@ -669,6 +677,7 @@ test('generateResetPasswordMail uses the render_lost_password_mail_content handl
 });
 
 test('generateSetPasswordMail assembles the exact HTML content, in order, from every concatenated piece', function (): void {
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     $service = new MailService();
 
     $mail = $service->generateSetPasswordMail('jane', 'https://example.test/password.php?key=xyz', 'My Gallery', '48 hours');
@@ -684,6 +693,7 @@ test('generateSetPasswordMail assembles the exact HTML content, in order, from e
 });
 
 test('generateSetPasswordMail uses the render_lost_password_mail_content handler\'s own replacement when it returns a real string', function (): void {
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     $service = new MailService();
     $handler = static fn (RenderLostPasswordMailContent $event): RenderLostPasswordMailContent => new RenderLostPasswordMailContent('REPLACED CONTENT');
     EventDispatcher::get()->addTypedHandler(RenderLostPasswordMailContent::class, $handler);
@@ -699,6 +709,7 @@ test('generateSetPasswordMail uses the render_lost_password_mail_content handler
 
 test('generateCodeVerificationMail assembles the exact HTML content, in order, from every concatenated piece', function (): void {
     CurrentConfig::setGalleryTitle('My Gallery');
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     $service = new MailService();
 
     $mail = $service->generateCodeVerificationMail('482913');
@@ -712,6 +723,7 @@ test('generateCodeVerificationMail assembles the exact HTML content, in order, f
 });
 
 test('generateSuccessResetPasswordMail assembles the exact HTML content with no API-key notice when there are none', function (): void {
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     $service = new MailService();
 
     $mail = $service->generateSuccessResetPasswordMail('jane', 0);
@@ -726,6 +738,7 @@ test('generateSuccessResetPasswordMail assembles the exact HTML content with no 
 });
 
 test('generateSuccessResetPasswordMail includes the API-key-revocation notice at exactly 1 key, the boundary right above the ">0" guard', function (): void {
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     $service = new MailService();
 
     $mail = $service->generateSuccessResetPasswordMail('jane', 1);
@@ -747,6 +760,7 @@ test('generateSuccessResetPasswordMail includes the API-key-revocation notice at
 // all 3 methods' identical shape): mutated, both of that method's tests
 // still passed, restored byte-identical.
 test('generateSuccessResetPasswordMail assembles the exact HTML content, in order, including the API-key notice and real profile URL when there are some', function (): void {
+    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     $service = new MailService();
     // getRootUrl() is environment-dependent (RootPathOverride/cwd), same
     // real value generateSuccessResetPasswordMail() itself uses internally

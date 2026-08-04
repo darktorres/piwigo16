@@ -54,7 +54,6 @@ final class PwgTemplateAdapterTest extends IntegrationTestCase
         CurrentConfigService::current()->set($configService);
         $configService->loadConfFromDb();
         \Piwigo\Image\ImageStdParams::current()->load_from_db();
-        \Piwigo\Image\DerivativeImage::setUrlService(new \Piwigo\Url\UrlService(new \Piwigo\Html\HtmlService()));
 
         $this->adapter = new PwgTemplateAdapter();
     }

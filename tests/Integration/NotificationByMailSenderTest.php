@@ -117,16 +117,17 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         CurrentConfigService::current()->set($configService);
         // sendMailNotifications()'s recent-post-dates block builds real
         // thumbnail URLs (NotificationService::getHtmlDescriptionRecentPostDate()
-        // -> DerivativeImage::thumb_url()) -- confirmed via a standalone
-        // sanity script that without this trio, that call chain throws
-        // ("no URL service set (RequestBootstrap not run yet?)" / a null
-        // DerivativeParams from an empty ImageStdParams type map), since
-        // IntegrationTestCase never runs a full RequestBootstrap. Same
+        // -> DerivativeImage::thumb_url()) -- needs ImageStdParams loaded
+        // (below) since IntegrationTestCase never runs a full
+        // RequestBootstrap. DerivativeImage::urlService() itself now
+        // resolves UrlServiceInterface live from the container once
+        // Kernel is booted (singleton/service-locator elimination
+        // campaign, Phase 6), which this test already is via
+        // parent::setUp() -- no explicit wiring needed here anymore. Same
         // real-config-row wiring as CategoryDefaultRendererTest/
         // CalendarMonthlyTest's own identical setUp.
         $configService->loadConfFromDb();
         \Piwigo\Image\ImageStdParams::current()->load_from_db();
-        \Piwigo\Image\DerivativeImage::setUrlService(new \Piwigo\Url\UrlService(new \Piwigo\Html\HtmlService()));
 
         $this->conn = $conn;
         $row = $this->conn->fetchAssociative(

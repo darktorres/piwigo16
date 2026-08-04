@@ -12,12 +12,13 @@ namespace Piwigo\Core;
  * depend upward on L3 per deptrac's ruleset. Lives in `Piwigo\Core`
  * (L1Infrastructure, same direction as `HtmlRenderingInterface`/
  * `MailerInterface`) so SrcImage can depend downward on this instead.
- * `Template implements` it; the request's own Template instance is handed
- * to `SrcImage::setThemeConfProvider()` from include/common.inc.php right
- * after `$template` is constructed (a static setter, not a container
- * binding: Template's constructor takes runtime path/theme strings and is
- * never container-managed, unlike the autowirable implementations behind
- * the other Core interfaces in config/container.php).
+ * `Template implements` it; `SrcImage::themeConf()` (singleton/service-
+ * locator elimination campaign, Phase 6) reads the request's own Template
+ * instance via `Piwigo\Template\CurrentTemplate::current()->get()`, not a
+ * container binding for this interface itself: Template's constructor
+ * takes runtime path/theme strings and is never container-managed, unlike
+ * the autowirable implementations behind the other Core interfaces in
+ * config/container.php.
  */
 interface ThemeConfProviderInterface
 {

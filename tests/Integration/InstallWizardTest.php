@@ -306,7 +306,6 @@ final class InstallWizardTest extends IntegrationTestCase
         $dbCredentials->seed([
             'PIWIGO_DB_PREFIX' => $prefix,
         ]);
-        \Piwigo\Template\ScriptLoader::setUrlService(new \Piwigo\Url\UrlService(new \Piwigo\Html\HtmlService()));
 
         $wizard = new InstallWizard($prefix, $this->paths, $dbCredentials, \Piwigo\Config\CurrentConfigService::current());
         $wizard->boot();

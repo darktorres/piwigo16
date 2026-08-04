@@ -19,7 +19,6 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Event\User\UserInit;
 use Piwigo\Html\HtmlService;
 use Piwigo\Session\SessionService;
-use Piwigo\Url\UrlService;
 use Piwigo\Ws\PwgCore;
 use Piwigo\Ws\PwgError;
 
@@ -136,8 +135,12 @@ final class UserBootstrap
             if ($remote_user !== null) {
                 $remoteUsername = \Piwigo\Common\ValueObject\Username::tryFrom($remote_user);
                 if (! (bool) ($user['id'] = $remoteUsername === null ? null : $userService->getUserId($remoteUsername)?->value)) {
+                    $urlService = Kernel::container()->get(UrlServiceInterface::class);
+                    if (! $urlService instanceof UrlServiceInterface) {
+                        throw new \LogicException('Container returned an unexpected type for ' . UrlServiceInterface::class);
+                    }
                     $user['id'] = $userService
-                        ->registerUser($remote_user, '', '', new UrlService(new HtmlService()), false)['userId'] ?? false;
+                        ->registerUser($remote_user, '', '', $urlService, false)['userId'] ?? false;
                 }
             }
         }

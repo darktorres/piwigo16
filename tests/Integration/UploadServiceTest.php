@@ -21,9 +21,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Picture\UploadFile;
 use Piwigo\Html\HtmlService;
-use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
-use Piwigo\Image\SrcImage;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Url\UrlService;
@@ -221,19 +219,31 @@ final class UploadServiceTest extends IntegrationTestCase
         CurrentConfig::setLoungeActivateThreshold(1_000_000);
 
         $htmlService = new HtmlService();
-        $this->urlService = new UrlService($htmlService);
-        DerivativeImage::setUrlService($this->urlService);
-        // SrcImage::get_url()'s own mimetype-icon branch (same
-        // finfo-fallback test as the ThemeConfProvider below) needs this
-        // too -- a distinct static setter from DerivativeImage's own,
-        // normally set once by Bootstrap\RequestBootstrap in a real
-        // request.
-        SrcImage::setUrlService($this->urlService);
+        // RootPathOverride must be the one real, container-shared instance
+        // (singleton/service-locator elimination campaign, Phase 6) --
+        // addUploadedFileAddToCategories()'s own $urlService->setMakeFullUrl()
+        // call (on this instance) must be visible to DerivativeImage's/
+        // SrcImage's own internal urlService() reads (now also
+        // container-resolved), which use a *different* UrlService object
+        // than this one unless both share the same RootPathOverride. See
+        // that class's own docblock.
+        $rootPathOverride = Kernel::container()->get(\Piwigo\Url\RootPathOverride::class);
+        if (! $rootPathOverride instanceof \Piwigo\Url\RootPathOverride) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Url\RootPathOverride::class);
+        }
+        $this->urlService = new UrlService($htmlService, $rootPathOverride);
         // See UploadServiceTestThemeConfProvider's own docblock -- harmless
         // for every test but the finfo-fallback one, which only reaches
         // SrcImage's real theme lookup when the stored extension isn't a
         // picture extension and has no representative_ext.
-        SrcImage::setThemeConfProvider(new UploadServiceTestThemeConfProvider());
+        // Piwigo\Core\CurrentThemeConfProvider (Phase 6), not
+        // SrcImage::setThemeConfProvider() (deleted) -- see that wrapper's
+        // own docblock for why it's independent of CurrentTemplate.
+        $currentThemeConfProvider = Kernel::container()->get(\Piwigo\Core\CurrentThemeConfProvider::class);
+        if (! $currentThemeConfProvider instanceof \Piwigo\Core\CurrentThemeConfProvider) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\CurrentThemeConfProvider::class);
+        }
+        $currentThemeConfProvider->set(new UploadServiceTestThemeConfProvider());
 
         // StorageRegistry is a container factory binding (singleton/
         // service-locator elimination campaign, Phase 2) that reads

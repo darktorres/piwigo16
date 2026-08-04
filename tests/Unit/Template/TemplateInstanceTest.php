@@ -10,7 +10,6 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
-use Piwigo\Html\HtmlService;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\Event\CombinedCss;
@@ -18,8 +17,23 @@ use Piwigo\Template\Event\CombinedScript;
 use Piwigo\Template\PwgTemplateAdapter;
 use Piwigo\Template\ScriptLoader;
 use Piwigo\Template\Template;
-use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
+
+/**
+ * Template::urlService() now resolves the container-shared UrlServiceInterface
+ * (and, via its own constructor, RootPathOverride) live on every call
+ * (singleton/service-locator elimination campaign, Phase 6) -- a bare
+ * RootPathOverride::push()/reset() static call no longer exists at all.
+ */
+function template_instance_test_root_path_override(): \Piwigo\Url\RootPathOverride
+{
+    $rootPathOverride = Kernel::container()->get(\Piwigo\Url\RootPathOverride::class);
+    if (! $rootPathOverride instanceof \Piwigo\Url\RootPathOverride) {
+        throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Url\RootPathOverride::class);
+    }
+
+    return $rootPathOverride;
+}
 
 /**
  * @return array<int|string, object>
@@ -201,7 +215,6 @@ beforeEach(function (): void {
     mkdir($root, 0o777, true);
     CurrentConfig::setDataLocation('data/');
     CurrentConfig::setDataDirChecked('1');
-    ScriptLoader::setUrlService(new UrlService(new HtmlService()));
     // Template's own ProcessCache usage now goes through a transitional
     // static shim (singleton/service-locator elimination campaign, Phase 1
     // -- Template isn't converted to constructor injection, see that
@@ -1587,11 +1600,11 @@ test('func_get_combined_scripts prefixes the root URL onto the script src, in th
     $t = new Template();
     file_put_contents(CurrentPaths::get()->root . '/sync.js', 'console.log(1);');
     $t->func_combine_script(['id' => 'sync-script', 'path' => 'sync.js', 'load' => 'footer']);
-    \Piwigo\Url\RootPathOverride::push('http://example.test/root/');
+    template_instance_test_root_path_override()->push('http://example.test/root/');
     try {
         $result = $t->func_get_combined_scripts(['load' => 'footer']);
     } finally {
-        \Piwigo\Url\RootPathOverride::reset();
+        template_instance_test_root_path_override()->reset();
     }
 
     expect($result)->toBe('<script type="text/javascript" src="http://example.test/root/sync.js?v' . AppInfo::VERSION . '"></script>');
@@ -1904,14 +1917,14 @@ test('finalizeOutput does not append a version query string when combined_css ve
 test('finalizeOutput builds the combined-css href by prefixing the root URL onto the combi path', function (): void {
     $t = new Template();
     file_put_contents(CurrentPaths::get()->root . '/style.css', 'body{}');
-    \Piwigo\Url\RootPathOverride::push('http://example.test/root/');
+    template_instance_test_root_path_override()->push('http://example.test/root/');
     try {
         $t->func_combine_css(['path' => 'style.css', 'version' => false]);
         $t->output = Template::COMBINED_CSS_TAG;
 
         $result = $t->fetchOutput();
     } finally {
-        \Piwigo\Url\RootPathOverride::reset();
+        template_instance_test_root_path_override()->reset();
     }
 
     expect($result)->toBe('<link rel="stylesheet" type="text/css" href="http://example.test/root/style.css">');

@@ -15,6 +15,7 @@ use Piwigo\Image\Event\GetDerivativeUrl;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SizingParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Tests\Support\KernelContainerOverride;
 use ReflectionProperty;
 use RuntimeException;
 
@@ -37,11 +38,19 @@ use RuntimeException;
  * the token/extension/cache-style logic this file exists to close. The
  * one test that does need has_size()=true (the smaller-defined-type
  * search) sets width/height explicitly and says so.
+ *
+ * Singleton/service-locator elimination campaign, Phase 6: urlService() no
+ * longer has an independently-settable static -- it resolves fresh from the
+ * container on every call. A plain Kernel::boot(Paths::fromRoot(...)) is
+ * enough for it to succeed at all (config/container.php's own default
+ * UrlServiceInterface binding), and that default, unconfigured UrlService
+ * happens to compute the exact same '' root url + identity-like
+ * embellishUrl() the old shared DerivativeImageTestFakeUrlService default
+ * did -- so most tests below need no override at all. The 2 tests that
+ * assert a non-default, non-empty root url install a real
+ * DerivativeImageTestFakeUrlService via KernelContainerOverride::with()
+ * instead.
  */
-function derivativeImageTestSetUrlService(?UrlServiceInterface $service): void
-{
-    new ReflectionProperty(DerivativeImage::class, 'urlService')->setValue(null, $service);
-}
 
 /**
  * Round-trips ImageStdParams' 3 static maps through derivativeImageTestRestoreStdParams()
@@ -102,18 +111,16 @@ function derivativeImageTestRestoreStdParams(array $snapshot): void
 
 beforeEach(function (): void {
     CurrentConfig::reset();
-    derivativeImageTestSetUrlService(new DerivativeImageTestFakeUrlService());
 });
 
 afterEach(function (): void {
     CurrentConfig::reset();
     Kernel::reset();
-    derivativeImageTestSetUrlService(null);
 });
 
 test('urlService() throws a RuntimeException when RequestBootstrap has not set one yet', function (): void {
-    derivativeImageTestSetUrlService(null);
-
+    // Kernel is unbooted by default -- urlService()'s own Kernel::isBooted()
+    // guard is what throws here, no setup needed.
     $src = new SrcImage([
         'id' => 42,
         'path' => 'upload/2026/07/photo.jpg',
@@ -138,21 +145,23 @@ test('url() computes the derivative url via a real build() call, prefixed by the
     // $rel_url stays '' and $params stays non-null, producing just the
     // bare root url instead) and line 107's ConcatRemoveLeft/
     // ConcatRemoveRight/ConcatSwitchSides -- every other test in this
-    // file uses the shared fake's default '' root url, which can't
-    // distinguish a dropped or reordered getRootUrl() call from a kept,
-    // correctly-ordered one.
-    derivativeImageTestSetUrlService(new DerivativeImageTestFakeUrlService('/gallery/'));
-    Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-url-only'));
+    // file boots a plain Kernel with the container's own default
+    // UrlService, whose '' root url can't distinguish a dropped or
+    // reordered getRootUrl() call from a kept, correctly-ordered one.
+    KernelContainerOverride::with([
+        Paths::class => Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-url-only'),
+        UrlServiceInterface::class => new DerivativeImageTestFakeUrlService('/gallery/'),
+    ], function (): void {
+        $src = new SrcImage([
+            'id' => 1,
+            'path' => 'gallery/photo.jpg',
+            'file' => 'photo.jpg',
+        ]);
 
-    $src = new SrcImage([
-        'id' => 1,
-        'path' => 'gallery/photo.jpg',
-        'file' => 'photo.jpg',
-    ]);
+        $url = DerivativeImage::url(new DerivativeParams(SizingParams::classic(80, 60)), $src);
 
-    $url = DerivativeImage::url(new DerivativeParams(SizingParams::classic(80, 60)), $src);
-
-    expect($url)->toBe('/gallery/i.php?/gallery/photo-cu_80x60_a.jpg');
+        expect($url)->toBe('/gallery/i.php?/gallery/photo-cu_80x60_a.jpg');
+    });
 });
 
 test('url() throws when a get_derivative_url handler returns something other than a GetDerivativeUrl instance', function (): void {
@@ -676,21 +685,24 @@ test('build() links directly to a static file when derivative_url_style is auto 
 
 test('get_url() prefixes the computed rel_url with the real root url', function (): void {
     // Kills line 280's ConcatRemoveLeft/ConcatSwitchSides -- every
-    // other get_url()-exercising test in this file uses the shared
-    // fake's default '' root url, which can't distinguish a dropped or
-    // reordered getRootUrl() call from a kept, correctly-ordered one.
-    derivativeImageTestSetUrlService(new DerivativeImageTestFakeUrlService('/gallery/'));
-    Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-get-url-only'));
+    // other get_url()-exercising test in this file boots a plain Kernel
+    // with the container's own default UrlService, whose '' root url
+    // can't distinguish a dropped or reordered getRootUrl() call from a
+    // kept, correctly-ordered one.
+    KernelContainerOverride::with([
+        Paths::class => Paths::fromRoot(sys_get_temp_dir() . '/piwigo-derivative-image-test-get-url-only'),
+        UrlServiceInterface::class => new DerivativeImageTestFakeUrlService('/gallery/'),
+    ], function (): void {
+        $src = new SrcImage([
+            'id' => 1,
+            'path' => 'gallery/photo.jpg',
+            'file' => 'photo.jpg',
+        ]);
 
-    $src = new SrcImage([
-        'id' => 1,
-        'path' => 'gallery/photo.jpg',
-        'file' => 'photo.jpg',
-    ]);
+        $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(80, 60)), $src);
 
-    $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(80, 60)), $src);
-
-    expect($derivative->get_url())->toBe('/gallery/i.php?/gallery/photo-cu_80x60_a.jpg');
+        expect($derivative->get_url())->toBe('/gallery/i.php?/gallery/photo-cu_80x60_a.jpg');
+    });
 });
 
 test('get_url() throws when a get_derivative_url handler returns something other than a GetDerivativeUrl instance', function (): void {

@@ -322,11 +322,6 @@ final class RequestBootstrap
         \Piwigo\Auth\AccessControl::setHtmlRenderer(new HtmlService());
         \Piwigo\Auth\AccessControl::setRedirectService(new RedirectService());
         Lang::setHtmlRenderer(new HtmlService());
-        \Piwigo\Image\SrcImage::setHtmlRenderer(new HtmlService());
-        \Piwigo\Image\SrcImage::setImageRepository(\Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Image\ImageEntity::class));
-        \Piwigo\Image\SrcImage::setUrlService(new UrlService(new HtmlService()));
-        \Piwigo\Image\DerivativeImage::setUrlService(new UrlService(new HtmlService()));
-        \Piwigo\Template\ScriptLoader::setUrlService(new UrlService(new HtmlService()));
 
         // Piwigo\Db\Tables::*()/other Piwigo\Config\Config::* accessors used
         // further down in this bootstrap's own body (not just by code that
@@ -522,7 +517,7 @@ final class RequestBootstrap
         )->pwgLogin(...));
         new UserBootstrap(
             new RedirectService(),
-            new UrlService(new HtmlService()),
+            self::urlService(),
             self::apiKeyRequestFlag(),
             self::currentLogger(),
             self::wsContext(),
@@ -606,7 +601,7 @@ final class RequestBootstrap
         if ($pageState->authKeyInvalid) {
             $pageState->addError(
                 Lang::t('Your authentication key is no longer valid.')
-              . sprintf(' <a href="%s">%s</a>', new UrlService(new HtmlService())->getRootUrl() . 'identification.php', Lang::t('Login'))
+              . sprintf(' <a href="%s">%s</a>', self::urlService()->getRootUrl() . 'identification.php', Lang::t('Login'))
             );
         }
 
@@ -616,7 +611,7 @@ final class RequestBootstrap
             $notify_username = self::currentUser()->get()->username;
             $notify_email = self::currentUser()->get()->email;
             $apiKeyRepo = new \Piwigo\Auth\ApiKeyRepository(\Piwigo\Db\EntityManagerFactory::build($conn));
-            $is_mail_send = new \Piwigo\Auth\ApiKeyService(new MailService(), $apiKeyRepo, new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn), self::deploymentPolicy()), new UrlService(new HtmlService()), self::sessionService())
+            $is_mail_send = new \Piwigo\Auth\ApiKeyService(new MailService(), $apiKeyRepo, new \Piwigo\Auth\PasswordService(new \Piwigo\Auth\PasswordRepository($conn), self::deploymentPolicy()), self::urlService(), self::sessionService())
                 ->notifyExpiration($notify_username, $notify_email, $notify_api_key_expiration['days_left']);
 
             if ($is_mail_send) {
@@ -655,15 +650,21 @@ final class RequestBootstrap
         // repo-wide scan confirmed every other consumer had already been
         // retargeted onto CurrentTemplate::get() (this was the last site).
         self::currentTemplate()->set($template);
-
-        // P23 batch 8f-4: SrcImage (L2aCoreDomain) reads theme conf through
+        // Image\SrcImage (L2aCoreDomain) reads theme conf through
         // Piwigo\Core\ThemeConfProviderInterface (implemented by Template)
-        // instead of the deleted get_themeconf() free function's
-        // $GLOBALS['template'] read. Wired here, not in the setHtmlRenderer
-        // block in configure() -- the provider IS the request's $template
-        // instance, which only exists from this point on (the deleted free
-        // function had the exact same availability window).
-        \Piwigo\Image\SrcImage::setThemeConfProvider($template);
+        // instead of depending on Template directly (deptrac) -- wired
+        // here, not earlier, for the same "the provider IS the request's
+        // $template instance, which only exists from this point on"
+        // reason the deleted get_themeconf() free function's own
+        // $GLOBALS['template'] read had. Piwigo\Core\CurrentThemeConfProvider
+        // (singleton/service-locator elimination campaign, Phase 6) is a
+        // separate container-shared wrapper from CurrentTemplate above,
+        // not a delegate to it -- see that wrapper's own docblock.
+        $currentThemeConfProvider = Kernel::container()->get(\Piwigo\Core\CurrentThemeConfProvider::class);
+        if (! $currentThemeConfProvider instanceof \Piwigo\Core\CurrentThemeConfProvider) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\CurrentThemeConfProvider::class);
+        }
+        $currentThemeConfProvider->set($template);
 
         if (\Piwigo\Config\CurrentConfig::noPhotoYet() === null) {
             // Formerly include/no_photo_yet.inc.php, a seam of exactly this
@@ -671,7 +672,7 @@ final class RequestBootstrap
             // when it decides to take over the page. CurrentConfigService::get()
             // reuses the instance connect() already resolved earlier in the
             // same request (Legacy Coupling Retirement Phase 8, 8d).
-            new NoPhotoYetRenderer(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), self::currentConfigService()->get(), new RedirectService(), new UrlService(new HtmlService()), CurrentPaths::get(), self::adminContext(), self::sessionService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::deploymentPolicy(), self::currentUser(), self::currentTemplate())
+            new NoPhotoYetRenderer(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class), self::currentConfigService()->get(), new RedirectService(), self::urlService(), CurrentPaths::get(), self::adminContext(), self::sessionService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::deploymentPolicy(), self::currentUser(), self::currentTemplate())
                 ->render();
         }
 
@@ -689,7 +690,7 @@ final class RequestBootstrap
                 // include/common.inc.php, the one seam both dispatch
                 // contexts that reach this code (pipeline-routed root
                 // files and admin.php/admin/popuphelp.php) include.
-                $body = '<a href="' . new UrlService(new HtmlService())->getAbsoluteRootUrl(false) . 'identification.php">' . Lang::t('The gallery is locked for maintenance. Please, come back later.') . '</a>';
+                $body = '<a href="' . self::urlService()->getAbsoluteRootUrl(false) . 'identification.php">' . Lang::t('The gallery is locked for maintenance. Please, come back later.') . '</a>';
                 $body .= str_repeat(' ', 512); // IE6 doesn't error output if below a size
                 throw new \Piwigo\Http\ResponseReadyException(\Piwigo\Http\ResponseFactory::raw($body, [
                     'Retry-After' => '900',
@@ -773,7 +774,7 @@ final class RequestBootstrap
         // (unlike UploadService's static upload_file handlers below), hence the
         // bound first-class-callable form rather than a bare [Class::class, 'method']
         // array.
-        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(UserCommentCheck::class, new CommentService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), new MailService(), new HtmlService(), new UrlService(new HtmlService()), \Piwigo\PluginConfig\EventDispatcher::get(), self::pageState(), self::currentUser())->checkForSpam(...));
+        \Piwigo\PluginConfig\EventDispatcher::get()->addTypedHandler(UserCommentCheck::class, new CommentService(\Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(), new MailService(), new HtmlService(), self::urlService(), \Piwigo\PluginConfig\EventDispatcher::get(), self::pageState(), self::currentUser())->checkForSpam(...));
         // try_log_user's own handler is registered in connect() instead,
         // before UserBootstrap::initialize() -- see that registration's
         // own comment for why.
@@ -1050,6 +1051,25 @@ final class RequestBootstrap
         }
 
         return $currentConfigService;
+    }
+
+    /**
+     * Public, same reason as currentTemplate()/currentConfigService()
+     * above: public/admin.php's/install.php's/random.php's own manual
+     * construction needs a way to obtain the same container-shared
+     * UrlService every other consumer receives via constructor injection
+     * -- singleton/service-locator elimination campaign, Phase 6.
+     * Resolving the interface (not the concrete UrlService) matches every
+     * other real UrlServiceInterface consumer in the codebase.
+     */
+    public static function urlService(): \Piwigo\Core\UrlServiceInterface
+    {
+        $urlService = Kernel::container()->get(\Piwigo\Core\UrlServiceInterface::class);
+        if (! $urlService instanceof \Piwigo\Core\UrlServiceInterface) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Core\UrlServiceInterface::class);
+        }
+
+        return $urlService;
     }
 
     /**

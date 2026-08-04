@@ -13,6 +13,7 @@ namespace Piwigo\Image;
 
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Image\Event\GetDerivativeUrl;
 
@@ -20,32 +21,29 @@ use Piwigo\Image\Event\GetDerivativeUrl;
  * Holds information (path, url, dimensions) about a derivative image.
  * A derivative image is constructed from a source image (SrcImage class)
  * and derivative parameters (DerivativeParams class).
+ *
+ * Singleton/service-locator elimination campaign, Phase 6: urlService()
+ * resolves the container-shared UrlServiceInterface fresh on every call
+ * instead of reading a bare-static value some bootstrap code set once
+ * (see Image\SrcImage's own docblock for the full reasoning, including
+ * why RootPathOverride's cross-instance sharing requirement rules out any
+ * throwaway-construction alternative).
  */
 final class DerivativeImage
 {
     private ?DerivativeParams $params = null;
 
-    private static ?UrlServiceInterface $urlService = null;
-
-    /**
-     * Set once by Bootstrap\RequestBootstrap (Legacy Coupling Retirement
-     * Phase 4c) -- same static-setter shape as Image\SrcImage::
-     * setUrlService(), for the same reason: this L2aCoreDomain class may
-     * not depend on Piwigo\Url\UrlService (L2bExtendedDomain) directly
-     * (deptrac).
-     */
-    public static function setUrlService(UrlServiceInterface $urlService): void
-    {
-        self::$urlService = $urlService;
-    }
-
     private static function urlService(): UrlServiceInterface
     {
-        if (! self::$urlService instanceof UrlServiceInterface) {
+        if (! Kernel::isBooted()) {
+            throw new \RuntimeException('DerivativeImage: no URL service set (RequestBootstrap not run yet?)');
+        }
+        $urlService = Kernel::container()->get(UrlServiceInterface::class);
+        if (! $urlService instanceof UrlServiceInterface) {
             throw new \RuntimeException('DerivativeImage: no URL service set (RequestBootstrap not run yet?)');
         }
 
-        return self::$urlService;
+        return $urlService;
     }
 
     /**

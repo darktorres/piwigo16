@@ -10,18 +10,22 @@ namespace Piwigo\Url;
  * the former `global $page['save_root_path']`/`['root_path']` mutation
  * pair (UrlService::setMakeFullUrl()/unsetMakeFullUrl()) with this.
  *
- * UrlService is `final readonly class` (unlike 16.x-rewrite's own plain
- * `final class`, which used two simple `private static` properties for
- * this same ref-counting stack) -- PHP forbids `static` properties inside
- * a `readonly class`, so this state can't live on UrlService itself.
- * Static methods here instead, same shape as SectionContextRegistry --
- * required anyway since real callers each construct their own `new
- * UrlService(new HtmlService())` instance at the call site (Mail\
- * MailService, Admin\Upload\UploadService, Ws\WsInitializer, ... --
- * Url/functions.php's own free-function bridge, including
- * set_make_full_url()/unset_make_full_url(), was deleted in Phase 4c),
- * so a per-instance property couldn't share ref-count state across calls
- * the way the original global did.
+ * Singleton/service-locator elimination campaign, Phase 6: converted from
+ * a bare static (its own former docblock explained why a per-instance
+ * property couldn't work, back when every real caller manually
+ * constructed its own throwaway `UrlService`) to a container-shared
+ * instance, constructor-injected into `UrlService` directly. Its own
+ * cross-instance sharing requirement -- `setMakeFullUrl()` called on one
+ * `UrlService` instance (e.g. `UploadService`'s constructor-injected one)
+ * must be visible to a *different* instance's later `getRootUrl()` read
+ * (e.g. `Image\DerivativeImage`'s own internal `urlService()` bridge) --
+ * is why every real `UrlService` construction site, with zero exceptions,
+ * must resolve this same container-shared instance rather than a fresh
+ * one: PHP-DI's default autowiring-and-sharing already provides this for
+ * free, as long as nothing bypasses it.
+ *
+ * All 4 real usages are internal to `UrlService` itself (confirmed by
+ * direct grep) -- no external caller needs a transitional shim here.
  *
  * Simpler than the original's own save/restore dance: the original had
  * to remember the previous `$page['root_path']` value (or its absence)
@@ -32,40 +36,42 @@ namespace Piwigo\Url;
  */
 final class RootPathOverride
 {
-    private static int $count = 0;
+    private int $count = 0;
 
-    private static ?string $path = null;
+    private ?string $path = null;
 
-    public static function push(string $absolutePath): void
+    public function push(string $absolutePath): void
     {
-        if (self::$count === 0) {
-            self::$path = $absolutePath;
+        if ($this->count === 0) {
+            $this->path = $absolutePath;
         }
-        self::$count++;
+        $this->count++;
     }
 
-    public static function pop(): void
+    public function pop(): void
     {
-        if (self::$count === 0) {
+        if ($this->count === 0) {
             return;
         }
-        self::$count--;
-        if (self::$count === 0) {
-            self::$path = null;
+        $this->count--;
+        if ($this->count === 0) {
+            $this->path = null;
         }
     }
 
-    public static function current(): ?string
+    public function current(): ?string
     {
-        return self::$count > 0 ? self::$path : null;
+        return $this->count > 0 ? $this->path : null;
     }
 
     /**
-     * Tests only -- production code never needs to clear this mid-request.
+     * Test-only -- restricted to tests/ by an arch test, mirroring the
+     * equivalent guard on CurrentTemplate's/CurrentUser's own reset()
+     * methods.
      */
-    public static function reset(): void
+    public function reset(): void
     {
-        self::$count = 0;
-        self::$path = null;
+        $this->count = 0;
+        $this->path = null;
     }
 }

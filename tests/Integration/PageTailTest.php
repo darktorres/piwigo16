@@ -70,7 +70,6 @@ final class PageTailTest extends IntegrationTestCase
         // footer.tpl's own {get_combined_scripts load='footer'} tag reaches
         // ScriptLoader::urlService() -- unset by default, real
         // RequestBootstrap-only wiring this test never boots.
-        ScriptLoader::setUrlService(new UrlService(new HtmlService()));
         CurrentTemplate::current()->set(new Template(CurrentPaths::get()->root . 'themes', 'default'));
 
         CurrentConfig::setSendPiwigoInfos(false);

@@ -215,7 +215,6 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         // for the same defensive reason PageTailRendererTest's own setUp()
         // sets it: real RequestBootstrap-only wiring this isolated test
         // never boots otherwise.
-        ScriptLoader::setUrlService(new UrlService(new HtmlService()));
         CurrentTemplate::current()->set(new Template(CurrentPaths::get()->root . 'themes/admin', 'default'));
 
         $this->renderer = $this->makeRenderer();
@@ -262,7 +261,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         // campaign, Phase 2).
         return new ThemesStandardPagesPageRenderer(
             new RedirectService(),
-            new UrlService(new HtmlService()),
+            new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()),
             $this->configService,
             StorageRegistry::fromConfig(dirname(__DIR__, 2) . '/config/storage.php'),
             \Piwigo\Core\PageState::current(),

@@ -75,7 +75,8 @@ final class FilesystemIntegrityChecker
         }
 
         $this->fsQuickCheckDone = true;
-        $this->currentConfigService->get()->confUpdateParam('fs_quick_check_last_check', date('c'));
+        $this->currentConfigService->get()
+            ->confUpdateParam('fs_quick_check_last_check', date('c'));
 
         $imageService = \Piwigo\Bootstrap\CoreDomainAccessor::imageService();
 

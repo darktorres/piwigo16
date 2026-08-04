@@ -17,13 +17,13 @@ use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\CurrentPaths;
 use Piwigo\Core\FilterUpdaterInterface;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Html\HtmlService;
-use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageStdParams;
@@ -158,14 +158,17 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         $this->categoryService = new CategoryService($categoryRepo, $permissionService);
 
         $htmlService = new HtmlService();
-        $urlService = new UrlService($htmlService);
         // mainpage_categories.tpl's own {assign var=derivative
         // value=$pwg->derivative(...)} constructs a real DerivativeImage per
-        // category thumbnail, whose get_url() reaches for this same static
-        // registry -- same real-UrlService-instance wiring as
-        // CategoryDefaultRendererTest's own DerivativeImage::setUrlService()
-        // call.
-        DerivativeImage::setUrlService($urlService);
+        // category thumbnail, whose get_url() now resolves UrlServiceInterface
+        // live from the container (singleton/service-locator elimination
+        // campaign, Phase 6) -- $urlService below must share the same
+        // container-shared RootPathOverride, see that class's own docblock.
+        $rootPathOverride = Kernel::container()->get(\Piwigo\Url\RootPathOverride::class);
+        if (! $rootPathOverride instanceof \Piwigo\Url\RootPathOverride) {
+            throw new \LogicException('Container returned an unexpected type for ' . \Piwigo\Url\RootPathOverride::class);
+        }
+        $urlService = new UrlService($htmlService, $rootPathOverride);
 
         $this->filterUpdater = new CategoryCatsRendererFakeFilterUpdater();
 

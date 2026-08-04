@@ -59,31 +59,28 @@ final class ScriptLoader
         $this->clear();
     }
 
-    private static ?UrlServiceInterface $urlService = null;
-
     /**
-     * Set once by Bootstrap\RequestBootstrap (Legacy Coupling Retirement
-     * Phase 4c) -- same static-setter shape as Image\SrcImage/
-     * Image\DerivativeImage, but for a different reason: cmp_by_mode_and_order()
-     * below is passed to uasort() as a first-class callable, so its
-     * `(Script, Script): int` signature is externally fixed and cannot gain
-     * a new param; check_load_dep() is grouped the same way for consistency,
-     * and both statics avoid rippling a constructor param across this
-     * class's ~12 zero-arg Unit test construction sites for a dependency
-     * only these 2 comparator/validation helpers need.
+     * Singleton/service-locator elimination campaign, Phase 6: resolves
+     * the container-shared UrlServiceInterface fresh on every call instead
+     * of reading a bare-static value some bootstrap code set once (see
+     * Image\SrcImage's own docblock for the full reasoning). Kept as a
+     * container resolve rather than a constructor param for the same
+     * reason as SrcImage/DerivativeImage -- consistent treatment across
+     * the whole UrlService-bridge trio, not because a constructor param
+     * would be unsafe here (this class's own single real production
+     * construction site, Template.php, could receive one).
      */
-    public static function setUrlService(UrlServiceInterface $urlService): void
-    {
-        self::$urlService = $urlService;
-    }
-
     private static function urlService(): UrlServiceInterface
     {
-        if (! self::$urlService instanceof UrlServiceInterface) {
+        if (! \Piwigo\Core\Kernel::isBooted()) {
+            throw new \RuntimeException('ScriptLoader: no URL service set (RequestBootstrap not run yet?)');
+        }
+        $urlService = \Piwigo\Core\Kernel::container()->get(UrlServiceInterface::class);
+        if (! $urlService instanceof UrlServiceInterface) {
             throw new \RuntimeException('ScriptLoader: no URL service set (RequestBootstrap not run yet?)');
         }
 
-        return self::$urlService;
+        return $urlService;
     }
 
     final public function clear(): void

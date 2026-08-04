@@ -121,7 +121,6 @@ final class SectionPopulatorTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         CurrentConfigService::current()->set(new ConfigService($this->buildConfigRepository(), new \Piwigo\PluginConfig\EventDispatcher()));
-        ScriptLoader::setUrlService(new UrlService(new HtmlService()));
         Lang::setLangInfo(['code' => 'en_UK', 'direction' => 'ltr']);
         CurrentConfig::setSendPiwigoInfos(false);
         CurrentConfig::setQuestionMarkInUrls(false);
@@ -186,7 +185,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
             $this->searchService,
             $this->userService,
             new RedirectService(),
-            new UrlService(new HtmlService()),
+            new UrlService(new HtmlService(), new \Piwigo\Url\RootPathOverride()),
             $this->filterState,
             $this->currentLogger,
             $this->sectionContextRegistry,

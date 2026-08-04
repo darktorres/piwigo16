@@ -17,7 +17,6 @@ use Piwigo\Event\Mail\BeforeSendMail;
 use Piwigo\Event\Mail\RenderLostPasswordMailContent;
 use Piwigo\Html\HtmlService;
 use Piwigo\Template\Template;
-use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Symfony\Component\Mailer\Mailer;
@@ -140,20 +139,29 @@ final class MailService implements MailerInterface
     }
 
     /**
-     * Throwaway construction, not a constructor property -- this class
-     * has ~50 `new MailService()` construction sites, several of them
-     * inside Piwigo\Bootstrap\RedirectService's own early-crash fallback
-     * chain (RedirectService -> UserService -> MailService, all literal
-     * `new` calls). PHP-DI's reflection-based autowiring only ever
-     * inspects class constructors, never ordinary methods, so a private
-     * helper method is safe from re-closing that chain even though an
+     * Container resolve, not a constructor property -- this class has
+     * ~50 `new MailService()` construction sites, several of them inside
+     * Piwigo\Bootstrap\RedirectService's own early-crash fallback chain
+     * (RedirectService -> UserService -> MailService, all literal `new`
+     * calls). PHP-DI's reflection-based autowiring only ever inspects
+     * class constructors, never ordinary methods, so a private helper
+     * method is safe from re-closing that chain even though an
      * optional/nullable constructor property of the same type would not
      * be (PHP-DI may still attempt to autowire an optional typed
-     * constructor param). Legacy Coupling Retirement Phase 4c.
+     * constructor param). Resolves the container-shared instance
+     * (singleton/service-locator elimination campaign, Phase 6), not a
+     * throwaway `new UrlService(new HtmlService())` -- see
+     * Image\SrcImage's own docblock for why (RootPathOverride's
+     * cross-instance sharing requirement).
      */
     private function urlService(): UrlServiceInterface
     {
-        return new UrlService(new HtmlService());
+        $urlService = \Piwigo\Core\Kernel::container()->get(UrlServiceInterface::class);
+        if (! $urlService instanceof UrlServiceInterface) {
+            throw new \LogicException('Container returned an unexpected type for ' . UrlServiceInterface::class);
+        }
+
+        return $urlService;
     }
 
     /**

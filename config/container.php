@@ -202,9 +202,9 @@ return [
     // No equivalent entry for Piwigo\Core\ThemeConfProviderInterface (also
     // P23 batch 8f-4): its implementation is the request's own
     // Piwigo\Template\Template instance (constructed with runtime
-    // path/theme strings in include/common.inc.php, never
-    // container-managed), handed to SrcImage::setThemeConfProvider() via
-    // the established static-setter pattern instead.
+    // path/theme strings, never container-managed) -- SrcImage::themeConf()
+    // reaches it via Piwigo\Template\CurrentTemplate::current()->get()
+    // instead (singleton/service-locator elimination campaign, Phase 6).
     WebmasterMailProviderInterface::class => \DI\get(UserRepository::class),
 
     // Unresolvable string param (the routes file path) -- Router::fromFile()

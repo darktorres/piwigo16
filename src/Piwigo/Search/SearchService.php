@@ -14,6 +14,7 @@ use Piwigo\Core\MailerInterface;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\DbCredentials;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Search\QsearchGetScopes;
 use Piwigo\Event\Search\QsearchPre;
@@ -850,6 +851,29 @@ final readonly class SearchService
      */
     public function qsearchGetTextTokenSearchSql(QSingleToken $token, array $fields): array
     {
+        // Neither REGEXP nor MATCH()/AGAINST() has a Postgres equivalent --
+        // ~* (POSIX case-INSENSITIVE regex match, verified live to need \y
+        // not \b for a real word boundary -- 'the cat sat' ~* '\bcat\b' is
+        // false, ~* '\ycat\y' is true) and a tsquery match against the real
+        // per-table tsv_search/tsv_author generated column Phase B's
+        // migrations already create (see toTsqueryTerm()'s own docblock)
+        // are the real ones. ~* specifically, not ~ (case-SENSITIVE) --
+        // every real $fields column here (name/comment/author) inherits
+        // its table's default utf8mb4_unicode_ci collation with no
+        // per-column override, and MySQL's REGEXP case-sensitivity follows
+        // the operand's collation, so REGEXP against these columns is
+        // already case-insensitive today (verified live: both
+        // 'Mountain View' REGEXP '\\bmountain\\b' and 'mountain view'
+        // REGEXP '\\bMountain\\b' match) -- a bare ~ would silently make
+        // search case-sensitive only on Postgres, a real behavior
+        // regression, not a portability wash. $fields' own shape
+        // ({'name','comment'} on categories/images, {'name'} on tags,
+        // {'author'} on images) deterministically picks the tsvector
+        // column: every shape except {'author'} maps to tsv_search,
+        // matching how each migration paired that generated column with
+        // exactly the same field combination.
+        $isPostgres = DbCredentials::fromEnv()->driver === 'pgsql';
+
         $clauses = [];
         $values = [];
         $variants = array_merge([$token->term], $token->variants);
@@ -877,6 +901,17 @@ final readonly class SearchService
             }
 
             if (! $useFt) {
+                if ($isPostgres) {
+                    $pre = ((bool) ($token->modifier & QSingleToken::QST_WILDCARD_BEGIN)) ? '' : '\\y';
+                    $post = ((bool) ($token->modifier & QSingleToken::QST_WILDCARD_END)) ? '' : '\\y';
+                    foreach ($fields as $field) {
+                        $clauses[] = $field . ' ~* ?';
+                        $values[] = $pre . preg_quote($variant) . $post;
+                    }
+
+                    continue;
+                }
+
                 // getDbVersion() is a property read on the already-connected
                 // driver handle, not a query -- no memoization needed.
                 $dbVersion = $this->repo->getDbVersion();
@@ -899,6 +934,11 @@ final readonly class SearchService
                     $clauses[] = $field . ' REGEXP ?';
                     $values[] = $pre . preg_quote($variant) . $post;
                 }
+            } elseif ($isPostgres) {
+                $ftPostgres = self::toTsqueryTerm($variant, (bool) ($token->modifier & QSingleToken::QST_WILDCARD_END));
+                if ($ftPostgres !== null) {
+                    $fts[] = $ftPostgres;
+                }
             } else {
                 $ft = $variant;
                 if ((bool) ($token->modifier & QSingleToken::QST_QUOTED)) {
@@ -914,11 +954,77 @@ final readonly class SearchService
         }
 
         if ($fts !== []) {
-            $clauses[] = 'MATCH(' . implode(', ', $fields) . ') AGAINST(? IN BOOLEAN MODE)';
-            $values[] = implode(' ', $fts);
+            if ($isPostgres) {
+                $tsvColumn = $fields === ['author'] ? 'tsv_author' : 'tsv_search';
+                $clauses[] = $tsvColumn . " @@ to_tsquery('simple', ?)";
+                // Variants of the *same* token (spelling/accent-folded
+                // alternatives) are a "match either" set, same as the
+                // MySQL branch's own implode(' ', $fts) below (its IN
+                // BOOLEAN MODE default, unprefixed-term combining is a
+                // should-match/OR-like ranking, not a strict AND) -- |
+                // (tsquery OR) is the direct equivalent. <-> (used inside
+                // each $fts entry for a multi-word phrase, see
+                // toTsqueryTerm()) binds tighter than | in tsquery's own
+                // operator precedence, so no extra parentheses are needed
+                // to keep a phrase's words grouped together.
+                $values[] = implode(' | ', $fts);
+            } else {
+                $clauses[] = 'MATCH(' . implode(', ', $fields) . ') AGAINST(? IN BOOLEAN MODE)';
+                $values[] = implode(' ', $fts);
+            }
         }
 
         return [$clauses, $values];
+    }
+
+    /**
+     * One tsquery-syntax fragment for a single search-token variant --
+     * the Postgres counterpart to the MySQL branch's own $ft-building
+     * (see this method's own caller). Quoted phrases and a trailing
+     * wildcard are mutually exclusive by construction (the caller's own
+     * $useFt-eligibility check above already forces that combination onto
+     * the REGEXP fallback instead), so this never needs to combine a
+     * phraseto_tsquery()-shaped adjacency with a :* prefix on the same
+     * term.
+     *
+     * Re-splits $variant on the same punctuation charset the
+     * FULLTEXT-eligibility check above already uses, plus whitespace --
+     * to_tsquery()'s own argument is a query language, not plain text, so
+     * passing a raw word containing one of its own operator characters
+     * (&|!():<->) unescaped could throw a parse error or silently change
+     * the query's meaning; splitting first and rejoining with only the
+     * &/</-/> characters this method itself controls avoids that
+     * entirely, with no bespoke escaper needed. Whitespace specifically
+     * is real, found live: the eligibility check's own punctuation-only
+     * split pattern leaves a plain multi-word phrase like "blue sky"
+     * completely unsplit (space isn't in that charset, and that check
+     * only needs the longest delimited run's length, not real per-word
+     * boundaries) -- passed straight through unsplit here too, a bare
+     * "blue sky" would go to to_tsquery() as one un-operatored 2-word
+     * string, which Postgres rejects outright ("syntax error in
+     * tsquery"), not a query engine that just no-ops on suspect input. A
+     * quoted multi-word phrase becomes phraseto_tsquery()-shaped word1
+     * <-> word2 <-> ... adjacency (Postgres's own real phrase-match
+     * operator); a trailing wildcard becomes term:* prefix syntax on the
+     * last word.
+     */
+    private static function toTsqueryTerm(string $variant, bool $wildcardEnd): ?string
+    {
+        $words = preg_split(
+            '/[\s' . preg_quote('-\'!"#$%&()*+,./:;<=>?@[\]^`{|}~', '/') . ']+/',
+            $variant,
+            -1,
+            PREG_SPLIT_NO_EMPTY
+        );
+        if ($words === false || $words === []) {
+            return null;
+        }
+
+        if ($wildcardEnd) {
+            $words[count($words) - 1] .= ':*';
+        }
+
+        return implode(' <-> ', $words);
     }
 
     /**
@@ -928,10 +1034,25 @@ final readonly class SearchService
      * (LIKE's own wildcard syntax, meaningful even inside a bound value,
      * not a SQL string-literal concern a bound parameter would already
      * handle).
+     *
+     * pgsql support pass: `CONVERT(file, CHAR)` dropped for Postgres --
+     * `images.file` is a plain `varchar(255)` on both platforms (`COLLATE
+     * utf8mb4_bin`/`COLLATE "C"`, both real byte-order/case-sensitive
+     * collations), never a binary/blob type this cast would have a real
+     * purpose against; a defensive no-op even on the MySQL side (kept
+     * there unchanged rather than removed, out of this pass's scope).
+     * Plain `LIKE` is the correct case-SENSITIVE match on Postgres too
+     * (its own default, unlike MySQL's collation-dependent default) --
+     * confirmed the column's real collation on both platforms is a
+     * case-sensitive one, not the case-insensitive default this schema
+     * uses elsewhere, so no `ILIKE` is needed to preserve the existing
+     * behavior.
      */
     public function qsearchGetImages(QExpression $expr, QResults $qsr): void
     {
         $qsr->images_iids = array_fill(0, count($expr->stokens), []);
+
+        $isPostgres = DbCredentials::fromEnv()->driver === 'pgsql';
 
         for ($i = 0; $i < count($expr->stokens); $i++) {
             $token = $expr->stokens[$i];
@@ -941,7 +1062,7 @@ final readonly class SearchService
             $params = [];
 
             $like = str_replace(['%', '_'], ['\\%', '\\_'], $token->term);
-            $fileLike = 'CONVERT(file, CHAR) LIKE ?';
+            $fileLike = $isPostgres ? 'file LIKE ?' : 'CONVERT(file, CHAR) LIKE ?';
             $fileLikeValue = '%' . $like . '%';
 
             switch ($scopeId) {

@@ -51,6 +51,16 @@ use Piwigo\Image\ImageEntity;
 final class HistoryRepository extends EntityRepository implements LastVisitLookupInterface
 {
     /**
+     * `history.section`'s original MySQL ENUM member list, at schema
+     * creation time -- see {@see getSectionEnumOptions()}'s own docblock
+     * for why this needs restating here for the Postgres branch.
+     */
+    private const array BASE_SECTIONS = [
+        'categories', 'tags', 'search', 'list', 'favorites',
+        'most_visited', 'best_rated', 'recent_pics', 'recent_cats',
+    ];
+
+    /**
      * Item 16F: real DQL replacement for the raw DBAL read
      * {@see \Piwigo\Auth\AuthRepository::findLastVisitFromHistory()} used
      * to do directly -- `Auth` (`L2aCoreDomain`) can't depend on
@@ -752,12 +762,26 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
      * constraint on PostgreSQL at all (see the baseline migration's own
      * docblock on this column) -- there is no schema-level "currently
      * allowed values" construct to introspect the way MySQL's live ENUM
-     * definition provides. The Postgres branch instead derives the
-     * "known" set from real data (`SELECT DISTINCT section`) -- a
-     * self-healing analog: once a row using a given section value exists,
-     * a later cold-cache read recognizes it as known, same practical
-     * effect `alterSectionEnum()`'s MySQL-side schema widening exists to
+     * definition provides. The Postgres branch derives the "known" set
+     * from real data (`SELECT DISTINCT section`) -- a self-healing
+     * analog: once a row using a given section value exists, a later
+     * cold-cache read recognizes it as known, same practical effect
+     * `alterSectionEnum()`'s MySQL-side schema widening exists to
      * provide, without a DDL step.
+     *
+     * Real bug found live in that analog, fixed here: a genuinely
+     * cold table (no row has ever used a given core section yet -- a
+     * fresh install, or an isolated test fixture) has nothing for
+     * `SELECT DISTINCT` to find, so even Piwigo's own built-in sections
+     * read back as "unknown" on a first use, unlike MySQL's live ENUM
+     * definition (which always carries the original schema-defined
+     * member list regardless of what data exists). {@see BASE_SECTIONS}
+     * -- the exact same initial member list the MySQL schema's own
+     * `section` ENUM column was created with -- is unioned in so the
+     * built-in sections are always recognized, matching MySQL's real
+     * behavior; plugin-defined sections (never in this static list)
+     * still rely on the same self-healing DISTINCT-from-data lookup as
+     * before, unchanged.
      *
      * @return list<string>
      */
@@ -772,7 +796,10 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
                 SELECT DISTINCT section FROM {$historyTable} WHERE section IS NOT NULL
                 SQL)->fetchFirstColumn();
 
-            return array_values(array_filter($sections, is_string(...)));
+            return array_values(array_unique([
+                ...self::BASE_SECTIONS,
+                ...array_filter($sections, is_string(...)),
+            ]));
         }
 
         // SQL-modernization audit: verified, {$historyTable} is a

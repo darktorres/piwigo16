@@ -409,7 +409,22 @@ final class HistoryServiceTest extends IntegrationTestCase
         $this->insertHistoryLine(1, '2026-07-12', '03:00:00');
         self::assertNull($this->fetchSummaryNbPages(2026, 7, 12, null));
 
-        $this->conn->executeStatement('ALTER TABLE ' . Tables::history() . ' AUTO_INCREMENT = 1000');
+        // pgsql support pass: real bug found live -- `ALTER TABLE ...
+        // AUTO_INCREMENT = n` is MySQL-only syntax ("syntax error at or
+        // near 'AUTO_INCREMENT'"). Postgres's identity mechanism is a
+        // real sequence object, not a per-table counter -- setval() with
+        // is_called=false makes the *next* nextval() call return exactly
+        // 1000, matching AUTO_INCREMENT = 1000's own "the next inserted
+        // row gets this id" semantics precisely (unlike is_called=true,
+        // which would make the next call return 1001).
+        if ($this->dbDriver === 'pgsql') {
+            $this->conn->executeStatement(
+                "SELECT setval(pg_get_serial_sequence(?, 'id'), 1000, false)",
+                [Tables::history()]
+            );
+        } else {
+            $this->conn->executeStatement('ALTER TABLE ' . Tables::history() . ' AUTO_INCREMENT = 1000');
+        }
 
         self::assertTrue($this->service->logVisit());
 

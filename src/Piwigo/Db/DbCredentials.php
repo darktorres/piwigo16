@@ -154,6 +154,29 @@ final class DbCredentials
         return $args;
     }
 
+    /**
+     * pgsql support pass: mirrors toMysqlArgs() for the psql/pg_dump/
+     * pg_restore client family -- real, deliberate flag differences, not
+     * an oversight: psql's own `-p` is the PORT flag (mysql's `-P`), and
+     * psql has no password CLI flag at all (`PGPASSWORD` env var or
+     * `~/.pgpass` only) -- the caller is responsible for setting
+     * `PGPASSWORD` in the child process's own env when {@see $password}
+     * is non-empty, same convention every real psql-shelling call site in
+     * this codebase already uses (IntegrationTestCase::loadFixtureViaPsql(),
+     * RegenerateFixtureTest's own pg_dump call).
+     *
+     * @return list<string>
+     */
+    public function toPsqlArgs(): array
+    {
+        $args = ['-h' . $this->host, '-U' . $this->user];
+        if ($this->port !== null) {
+            $args[] = '-p' . $this->port;
+        }
+
+        return $args;
+    }
+
     private static function env(string $name, string $default): string
     {
         $value = getenv($name);

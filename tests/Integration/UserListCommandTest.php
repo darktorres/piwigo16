@@ -11,8 +11,8 @@ use Symfony\Component\Console\Tester\CommandTester;
 /**
  * New CLI-only capability (no web equivalent) -- see
  * docs/PLAN.md's P12 section ("CLI tool + backup/restore +
- * graceful shutdown"). Reads via a raw `mysql` client shell-out, so this
- * needs a real DB, hence Integration tier rather than Unit.
+ * graceful shutdown"). Reads via a raw `mysql`/`psql` client shell-out, so
+ * this needs a real DB, hence Integration tier rather than Unit.
  */
 final class UserListCommandTest extends IntegrationTestCase
 {
@@ -67,19 +67,27 @@ final class UserListCommandTest extends IntegrationTestCase
 
     public function test_reports_no_users_found_against_an_empty_database(): void
     {
-        // Destructive against the shared fixture DB (TRUNCATE the two
+        // Destructive against the shared fixture DB (empties the two
         // tables this command queries) -- reloads the full fixture again
         // in a finally block so every other test in this shared-process
         // suite still sees the real fixture data afterward, regardless of
         // pass/fail here. loadFixture() is the same idempotent, full
         // DROP+CREATE+INSERT reset setUp() itself relies on for whichever
         // Integration test class happens to run first.
-        $db = $this->newMysqli($this->dbName);
-        $db->query('SET FOREIGN_KEY_CHECKS=0');
-        $db->query('TRUNCATE TABLE `' . $this->dbPrefix . 'user_infos`');
-        $db->query('TRUNCATE TABLE `' . $this->dbPrefix . 'users`');
-        $db->query('SET FOREIGN_KEY_CHECKS=1');
-        $db->close();
+        // DELETE, not TRUNCATE -- Postgres's TRUNCATE refuses a table with
+        // live incoming FK references regardless of
+        // session_replication_role ("cannot truncate a table referenced
+        // in a foreign key constraint"), confirmed live: that check isn't
+        // trigger-based the way FK *enforcement* is, so disabling
+        // triggers doesn't help it. DELETE's own FK check is trigger-based
+        // and correctly bypassed the same way every other real
+        // disableForeignKeyChecks() caller in this suite already relies
+        // on.
+        $conn = \Piwigo\Db\DbConnection::build();
+        $this->disableForeignKeyChecks($conn);
+        $conn->executeStatement('DELETE FROM ' . $this->dbPrefix . 'user_infos');
+        $conn->executeStatement('DELETE FROM ' . $this->dbPrefix . 'users');
+        $this->enableForeignKeyChecks($conn);
 
         try {
             $command = new UserListCommand();

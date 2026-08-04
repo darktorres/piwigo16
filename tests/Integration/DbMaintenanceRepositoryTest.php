@@ -343,8 +343,16 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
         ));
         sort($introspectedTableNames);
 
+        // pgsql support pass: real bug found live -- SHOW TABLES is
+        // MySQL-only syntax ("syntax error at or near 'LIKE'"). Postgres's
+        // real ground-truth equivalent is pg_tables.
         /** @var list<string> $rawTableNames */
-        $rawTableNames = $this->conn->fetchFirstColumn('SHOW TABLES LIKE ' . $this->conn->quote($prefix . '%'));
+        $rawTableNames = $this->dbDriver === 'pgsql'
+            ? $this->conn->fetchFirstColumn(
+                'SELECT tablename FROM pg_tables WHERE schemaname = current_schema() AND tablename LIKE ?',
+                [$prefix . '%']
+            )
+            : $this->conn->fetchFirstColumn('SHOW TABLES LIKE ' . $this->conn->quote($prefix . '%'));
         sort($rawTableNames);
 
         self::assertSame($rawTableNames, $introspectedTableNames, 'introspectTableNames() must find the exact same table set raw SHOW TABLES does');
@@ -361,14 +369,31 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
                 $primaryKey->getColumnNames(),
             );
 
-            $createTableRow = $this->conn->fetchAssociative('SHOW CREATE TABLE ' . $tableName);
-            self::assertIsArray($createTableRow);
-            $createTableSql = $createTableRow['Create Table'] ?? null;
-            self::assertIsString($createTableSql);
+            // pgsql support pass: real bug found live -- SHOW CREATE TABLE
+            // is MySQL-only syntax. Postgres's own pg_get_constraintdef()
+            // reports the exact same "PRIMARY KEY (col1, col2)" shape for
+            // a table's primary key constraint (confirmed live), so the
+            // same regex-based extraction below applies unchanged once
+            // fed this instead.
+            if ($this->dbDriver === 'pgsql') {
+                $createTableSql = $this->conn->fetchOne(
+                    "SELECT pg_get_constraintdef(oid) FROM pg_constraint WHERE contype = 'p' AND conrelid = ?::regclass",
+                    [$tableName]
+                );
+                $createTableSql = is_string($createTableSql) ? $createTableSql : '';
+            } else {
+                $createTableRow = $this->conn->fetchAssociative('SHOW CREATE TABLE ' . $tableName);
+                self::assertIsArray($createTableRow);
+                $createTableSql = $createTableRow['Create Table'] ?? null;
+                self::assertIsString($createTableSql);
+            }
 
             $matched = preg_match('/PRIMARY KEY\s*\(([^)]*)\)/', $createTableSql, $matches);
             $rawPkColumns = $matched !== 1 ? [] : array_map(
-                static fn (string $column): string => trim($column, '` '),
+                // '`' (MySQL's own SHOW CREATE TABLE quoting) and '"'
+                // (Postgres's, though none of this schema's own PK
+                // columns actually need it).
+                static fn (string $column): string => trim($column, '`" '),
                 explode(',', $matches[1]),
             );
 

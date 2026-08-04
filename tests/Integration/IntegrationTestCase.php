@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Events;
 use Doctrine\ORM\ORMSetup;
@@ -438,6 +439,22 @@ abstract class IntegrationTestCase extends TestCase
      * exit 0), which would silently leave a partially-loaded fixture
      * indistinguishable from a fully-loaded one to this method's own
      * exit-code check.
+     *
+     * Real bug found live once a genuine `pg_dump` output (rather than a
+     * hand-crafted throwaway fixture) exercised this path: every real
+     * `pg_dump` emits `SELECT pg_catalog.set_config('search_path', '',
+     * false);` as its own standard preamble -- a real query that returns
+     * a real one-row result set, which `psql` writes to stdout as a
+     * formatted table regardless of `-q` (quiet mode only suppresses
+     * psql's own informational messages, not query output). Blindly
+     * `fclose()`-ing $pipes[1] without ever reading it left nothing on
+     * the other end of that pipe, so psql's own write failed with EPIPE
+     * ("could not print result table: Broken pipe") the moment it tried
+     * -- confirmed live, and confirmed this never surfaced against
+     * `piwigo-17.0.sql`'s own `mysqldump` output because MySQL's dump
+     * format contains no bare `SELECT` that returns a real result set to
+     * print. Drained the same way $pipes[2] (stderr) already was, rather
+     * than left unread.
      */
     private function loadFixtureViaPsql(string $path): void
     {
@@ -464,11 +481,12 @@ abstract class IntegrationTestCase extends TestCase
         $proc = proc_open($cmd, $descriptors, $pipes, null, $env);
         self::assertIsResource($proc, 'proc_open failed for psql fixture load');
         fclose($pipes[0]);
+        $stdout = stream_get_contents($pipes[1]);
         fclose($pipes[1]);
         $stderr = stream_get_contents($pipes[2]);
         fclose($pipes[2]);
         $exit = proc_close($proc);
-        self::assertSame(0, $exit, 'psql fixture load failed: ' . ($stderr === false ? '' : $stderr));
+        self::assertSame(0, $exit, 'psql fixture load failed: ' . ($stderr === false ? '' : $stderr) . ($stdout === false ? '' : $stdout));
     }
 
     /**
@@ -527,6 +545,37 @@ abstract class IntegrationTestCase extends TestCase
             usleep(100_000);
         }
         self::fail('Test database did not become queryable within 30s after fixture load.');
+    }
+
+    /**
+     * pgsql support pass: several real Integration/Contract tests
+     * temporarily disable FK enforcement to reproduce an orphaned-row
+     * state no normal write path can ever produce on its own (e.g. a
+     * bulk import/migration that ran with checks off) -- MySQL's own
+     * `SET FOREIGN_KEY_CHECKS=0/1` is session-scoped and needs no
+     * per-table bookkeeping, which every real call site's own shape
+     * already relies on (disable once, insert into 1-2 different tables,
+     * re-enable). Postgres has no single blanket session setting an
+     * ordinary role can reach: `SET session_replication_role = replica`
+     * is the real equivalent (also session-scoped, also disables every
+     * table's FK-enforcement trigger at once, matching the MySQL
+     * semantic exactly) but is a superuser-only GUC (confirmed live --
+     * `ALTER TABLE ... DISABLE TRIGGER ALL` was tried first and rejected
+     * identically: "permission denied: ... is a system trigger", even
+     * against the table's own owner). The dedicated Postgres test role
+     * needs `SUPERUSER` granted for this to work at all -- the same
+     * elevated-privilege convention this codebase's own MySQL test setup
+     * already relies on (`PIWIGO_DB_USER=root` in `.env.test`), not a
+     * new asymmetry Postgres introduces.
+     */
+    protected function disableForeignKeyChecks(Connection $conn): void
+    {
+        $conn->executeStatement($this->dbDriver === 'pgsql' ? 'SET session_replication_role = replica' : 'SET FOREIGN_KEY_CHECKS=0');
+    }
+
+    protected function enableForeignKeyChecks(Connection $conn): void
+    {
+        $conn->executeStatement($this->dbDriver === 'pgsql' ? 'SET session_replication_role = DEFAULT' : 'SET FOREIGN_KEY_CHECKS=1');
     }
 
     protected function markTestInstalled(): void

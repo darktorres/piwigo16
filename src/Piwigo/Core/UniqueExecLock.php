@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Core;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
 
@@ -74,6 +75,60 @@ use Piwigo\Db\DbCredentials;
  * operation." {@see connection()} lazily opens and caches one connection
  * per request instead, matching this class's own "released when the
  * request ends" contract precisely.
+ *
+ * pgsql support pass: PostgreSQL has the same session-scoped advisory
+ * lock primitive (`pg_try_advisory_lock(bigint)`/`pg_advisory_unlock(bigint)`),
+ * verified live to share every real behavior `GET_LOCK()`/`RELEASE_LOCK()`
+ * has here -- reentrant per session (a 2nd `pg_try_advisory_lock()` call
+ * for a name already held by *this* session succeeds again, matching
+ * `test_begins_on_the_same_connection_succeeds_again_for_the_same_token`),
+ * a single unlock call only decrements that reentrant count by one
+ * (confirmed MySQL does this too, live: GET_LOCK() twice then
+ * RELEASE_LOCK() once still leaves IS_USED_LOCK() reporting it held --
+ * not a portability gap to fix, an existing property of both), and an
+ * unlock call against a name this session never held is a safe no-op
+ * (returns `false`, not an error, confirmed live) exactly like
+ * `RELEASE_LOCK()` returning `NULL`.
+ *
+ * Two real differences needed real handling, not just a syntax swap:
+ *  - Advisory lock names are a `bigint` key, not an arbitrary string --
+ *    {@see lockKey()} takes the first 8 bytes of {@see lockName()}'s own
+ *    raw (non-hex) sha1 digest and reinterprets them as a signed 64-bit
+ *    int via `unpack('J', ...)` -- verified live that PHP's 'J' format
+ *    (`unsigned long long, big endian`) actually reinterprets a
+ *    high-bit-set value as PHP's native *signed* 64-bit int (there is no
+ *    unsigned 64-bit type to represent it otherwise), which is exactly
+ *    the same bit pattern Postgres's own signed `bigint` column expects
+ *    -- both sides agree on the same two's-complement interpretation, so
+ *    binding the raw PHP int directly as the query parameter round-trips
+ *    correctly for the full bigint range (confirmed live for the most
+ *    negative and most positive 64-bit values, not just typical
+ *    small/positive hash outputs).
+ *  - `GET_LOCK(name, timeout)`'s blocking-with-a-cap has no built-in
+ *    Postgres equivalent (`pg_try_advisory_lock()` never blocks at all;
+ *    `pg_advisory_lock()` blocks with no timeout option) -- {@see
+ *    beginsPostgres()} emulates it with a short poll loop
+ *    (`pg_try_advisory_lock()` + `usleep()`, capped by a wall-clock
+ *    deadline), which correctly degrades to a single non-blocking attempt
+ *    for the real, only-ever-used `$timeout = 0` default (no loop/sleep
+ *    at all in that case).
+ *  - `IS_USED_LOCK(name)` has no single-call Postgres equivalent either
+ *    (a try-then-unlock probe would incorrectly report "not held" for
+ *    the exact self-check case
+ *    `test_begins_acquires_the_lock` exercises, since a same-session
+ *    `pg_try_advisory_lock()` on an already-held name succeeds too, per
+ *    the reentrancy note above) -- {@see isRunningPostgres()} instead
+ *    queries the real `pg_locks` system view. Verified live exactly how
+ *    Postgres stores a single-bigint-key advisory lock there: the 64-bit
+ *    key is split into `classid` (high 32 bits) and `objid` (low 32
+ *    bits), both stored as unsigned 32-bit values, with `objsubid = 1`
+ *    marking the single-bigint-argument form specifically (the two-int32-
+ *    argument form uses `objsubid = 2`, a different key scheme this class
+ *    never uses) -- `((classid::bigint << 32) | objid::bigint) = ?`
+ *    reconstructs the exact original signed bigint key entirely in SQL
+ *    (verified live for both the most negative and most positive 64-bit
+ *    values), so no PHP-side bit-splitting of the bound parameter is
+ *    needed.
  */
 final class UniqueExecLock
 {
@@ -82,10 +137,13 @@ final class UniqueExecLock
     public static function begins(string $tokenName, int $timeout = 0): bool
     {
         $logger = \Piwigo\Core\CurrentLogger::getStatic();
+        $conn = self::connection();
 
-        $acquired = self::connection()
-            ->fetchOne('SELECT GET_LOCK(?, ?)', [self::lockName($tokenName), $timeout]);
-        if ($acquired !== 1) {
+        $acquired = $conn->getDatabasePlatform() instanceof PostgreSQLPlatform
+            ? self::beginsPostgres($conn, $tokenName, $timeout)
+            : $conn->fetchOne('SELECT GET_LOCK(?, ?)', [self::lockName($tokenName), $timeout]) === 1;
+
+        if (! $acquired) {
             $logger->info('[' . $tokenName . '] another execution is running, abort');
 
             return false;
@@ -98,16 +156,25 @@ final class UniqueExecLock
 
     public static function isRunning(string $tokenName): bool
     {
-        return self::connection()
-            ->fetchOne('SELECT IS_USED_LOCK(?)', [self::lockName($tokenName)]) !== null;
+        $conn = self::connection();
+
+        if ($conn->getDatabasePlatform() instanceof PostgreSQLPlatform) {
+            return self::isRunningPostgres($conn, $tokenName);
+        }
+
+        return $conn->fetchOne('SELECT IS_USED_LOCK(?)', [self::lockName($tokenName)]) !== null;
     }
 
     public static function ends(string $tokenName): void
     {
         $logger = \Piwigo\Core\CurrentLogger::getStatic();
+        $conn = self::connection();
 
-        self::connection()
-            ->fetchOne('SELECT RELEASE_LOCK(?)', [self::lockName($tokenName)]);
+        if ($conn->getDatabasePlatform() instanceof PostgreSQLPlatform) {
+            $conn->fetchOne('SELECT pg_advisory_unlock(?)', [self::lockKey($tokenName)]);
+        } else {
+            $conn->fetchOne('SELECT RELEASE_LOCK(?)', [self::lockName($tokenName)]);
+        }
         $logger->info('[' . $tokenName . '] ends now');
     }
 
@@ -128,10 +195,46 @@ final class UniqueExecLock
         return self::$conn ??= DbConnection::build();
     }
 
+    private static function beginsPostgres(Connection $conn, string $tokenName, int $timeout): bool
+    {
+        $key = self::lockKey($tokenName);
+        $deadline = microtime(true) + $timeout;
+
+        while (true) {
+            $acquired = (bool) $conn->fetchOne('SELECT pg_try_advisory_lock(?)', [$key]);
+            if ($acquired || microtime(true) >= $deadline) {
+                return $acquired;
+            }
+
+            usleep(100_000);
+        }
+    }
+
+    private static function isRunningPostgres(Connection $conn, string $tokenName): bool
+    {
+        $held = $conn->fetchOne(
+            'SELECT 1 FROM pg_locks WHERE locktype = ? AND objsubid = ? AND ((classid::bigint << 32) | objid::bigint) = ?',
+            ['advisory', 1, self::lockKey($tokenName)]
+        );
+
+        return $held !== false;
+    }
+
     private static function lockName(string $tokenName): string
     {
         $prefix = DbCredentials::current()->prefix;
 
         return 'piwigo_exec_' . sha1($prefix . ':unique_exec:' . $tokenName);
+    }
+
+    private static function lockKey(string $tokenName): int
+    {
+        $prefix = DbCredentials::current()->prefix;
+        $rawHash = sha1($prefix . ':unique_exec:' . $tokenName, true);
+
+        /** @var array{1: int} $unpacked */
+        $unpacked = unpack('J', substr($rawHash, 0, 8));
+
+        return $unpacked[1];
     }
 }

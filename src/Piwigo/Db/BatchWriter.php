@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Db;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 
 /**
  * Parameterized replacement for `MysqliDb::singleInsert()`/`massInserts()`/
@@ -68,6 +69,29 @@ final readonly class BatchWriter
     }
 
     /**
+     * `INSERT IGNORE` has no Postgres equivalent -- `ON CONFLICT DO
+     * NOTHING` is the real per-platform match, appended after `VALUES
+     * (...)` rather than as a keyword before `INTO` like MySQL's `IGNORE`.
+     * No conflict target needed: a bare `ON CONFLICT DO NOTHING`
+     * downgrades any collision to a no-op, matching `INSERT IGNORE`'s own
+     * "duplicate key becomes a silent skip" semantic exactly for every
+     * real caller here (all about duplicate-key avoidance on a genuine
+     * unique/primary key, never a broader error-suppression need).
+     */
+    private function buildInsertSql(string $protectedTable, string $columnsSql, string $placeholdersSql, bool $ignore): string
+    {
+        if (! $ignore) {
+            return "INSERT INTO {$protectedTable} ({$columnsSql}) VALUES ({$placeholdersSql})";
+        }
+
+        if ($this->conn->getDatabasePlatform() instanceof PostgreSQLPlatform) {
+            return "INSERT INTO {$protectedTable} ({$columnsSql}) VALUES ({$placeholdersSql}) ON CONFLICT DO NOTHING";
+        }
+
+        return "INSERT IGNORE INTO {$protectedTable} ({$columnsSql}) VALUES ({$placeholdersSql})";
+    }
+
+    /**
      * @param array<string, mixed> $data
      * @param array{ignore?: bool} $options
      */
@@ -78,26 +102,24 @@ final readonly class BatchWriter
         }
 
         // SQL-modernization audit (recursive-cuddling-squid.md): verified,
-        // not a raw-string-splice defect -- {$ignore}/{$protectedTable}/
-        // {$columnsSql}/{$placeholdersSql} below are all structural
-        // (protected identifiers + bound-parameter placeholder syntax),
-        // every real value flows through $params/executeStatement()'s own
-        // binding. Stays on raw Connection rather than QueryBuilder::insert()
-        // deliberately: DBAL's QueryBuilder has no INSERT IGNORE support
-        // (confirmed against its own source), and IGNORE is a real,
-        // load-bearing behavior for callers of this method (see
+        // not a raw-string-splice defect -- buildInsertSql()'s own
+        // $protectedTable/$columnsSql/$placeholdersSql inputs below are
+        // all structural (protected identifiers + bound-parameter
+        // placeholder syntax), every real value flows through
+        // $params/executeStatement()'s own binding. Stays on raw
+        // Connection rather than QueryBuilder::insert() deliberately:
+        // DBAL's QueryBuilder has no INSERT IGNORE/ON CONFLICT support
+        // (confirmed against its own source), and that behavior is real,
+        // load-bearing for callers of this method (see
         // Permission\PermissionRepository::massInsertUserAccess()'s own
         // docblock on the same constraint).
-        $ignore = ($options['ignore'] ?? false) ? 'IGNORE' : '';
         $columns = array_map($this->protectColumnName(...), array_keys($data));
         $placeholders = array_map(static fn (string $key): string => ':' . $key, array_keys($data));
 
         $protectedTable = $this->protectColumnName($table);
         $columnsSql = implode(',', $columns);
         $placeholdersSql = implode(',', $placeholders);
-        $query = <<<SQL
-            INSERT {$ignore} INTO {$protectedTable} ({$columnsSql}) VALUES ({$placeholdersSql})
-            SQL;
+        $query = $this->buildInsertSql($protectedTable, $columnsSql, $placeholdersSql, $options['ignore'] ?? false);
 
         $params = [];
         foreach ($data as $key => $value) {
@@ -127,7 +149,7 @@ final readonly class BatchWriter
 
         // SQL-modernization audit: same verified-safe, stays-raw shape as
         // singleInsert() above -- see its own comment.
-        $ignore = ($options['ignore'] ?? false) ? 'IGNORE' : '';
+        $ignore = $options['ignore'] ?? false;
         $columns = array_map($this->protectColumnName(...), $dbfields);
         $protectedTable = $this->protectColumnName($table);
         $columnsSql = implode(',', $columns);
@@ -149,9 +171,7 @@ final readonly class BatchWriter
                 }
 
                 $placeholdersSql = implode(',', $placeholders);
-                $query = <<<SQL
-                    INSERT {$ignore} INTO {$protectedTable} ({$columnsSql}) VALUES ({$placeholdersSql})
-                    SQL;
+                $query = $this->buildInsertSql($protectedTable, $columnsSql, $placeholdersSql, $ignore);
 
                 $conn->executeStatement($query, $params);
             }

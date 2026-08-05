@@ -4,23 +4,17 @@ declare(strict_types=1);
 
 use League\Flysystem\Filesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
-use Piwigo\Core\Kernel;
-use Piwigo\Core\Paths;
 use Piwigo\Storage\StorageRegistry;
 
 /**
  * Container-shared instance (singleton/service-locator elimination
- * campaign, Phase 2) -- most tests construct their own fresh instance
+ * campaign, Phase 2) -- every test constructs its own fresh instance
  * directly via `new StorageRegistry([...])`/`fromConfig()`; no reset()
- * needed for the instance API. disk()'s own Kernel::isBooted()-adjacent
- * behavior (it has no safe default, so it throws via Kernel::container()
- * itself when not booted) is covered separately below.
+ * needed for the instance API. The transitional `disk()` shim (and its
+ * own dedicated Kernel-boot tests) was deleted in Phase 10 once
+ * `Piwigo\Ws\PwgImages`, its last remaining caller, converted to real
+ * constructor injection.
  */
-afterEach(function (): void {
-    if (Kernel::isBooted()) {
-        Kernel::reset();
-    }
-});
 
 test('get round-trips a write and read on a real local disk', function (): void {
     $dir = sys_get_temp_dir() . '/piwigo-storage-registry-test-' . bin2hex(random_bytes(4));
@@ -74,29 +68,6 @@ test('get lists the disk names (array_keys), not the factory closures, in the un
 
     $registry->get('does-not-exist');
 })->throws(InvalidArgumentException::class, "Unknown storage disk 'does-not-exist'. Available: alpha, beta.");
-
-test('disk throws when Kernel has not booted', function (): void {
-    expect(Kernel::isBooted())->toBeFalse();
-
-    expect(fn () => StorageRegistry::disk('temp'))->toThrow(
-        \LogicException::class,
-        'Kernel not booted — call Kernel::boot() first.',
-    );
-});
-
-test('disk delegates to the container-shared instance once Kernel has booted', function (): void {
-    // StorageRegistry::class's own container factory (config/container.php)
-    // always calls fromConfig(), which requires() config/storage.php --
-    // that file unconditionally calls CurrentPaths::get(), so a real Paths
-    // must be given here, not a bare Kernel::boot().
-    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3)));
-    $storageRegistry = Kernel::container()->get(StorageRegistry::class);
-    if (! $storageRegistry instanceof StorageRegistry) {
-        throw new \LogicException('Container returned an unexpected type for ' . StorageRegistry::class);
-    }
-
-    expect(StorageRegistry::disk('temp'))->toBe($storageRegistry->get('temp'));
-});
 
 test('fromConfig loads factories from the exact given path, not a hardcoded one', function (): void {
     // Unlike the container's own StorageRegistry::class factory binding

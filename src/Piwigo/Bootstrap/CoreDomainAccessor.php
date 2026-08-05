@@ -4,11 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Bootstrap;
 
-use Piwigo\Category\CategoryService;
 use Piwigo\Core\Kernel;
 use Piwigo\Image\ImageService;
-use Piwigo\Permission\PermissionService;
-use Piwigo\Tag\TagService;
 use Piwigo\Users\UserService;
 
 /**
@@ -28,32 +25,26 @@ use Piwigo\Users\UserService;
  * CategoryService` constructing `Permission\PermissionService` directly)
  * was already deptrac-compliant before this initiative and stays as
  * plain `new()`.
+ *
+ * Singleton/service-locator elimination campaign, Phase 10: PwgImages's
+ * own conversion (the last Ws/Pwg* class using this accessor) emptied
+ * permissionService()/categoryService()/tagService() -- deleted along with
+ * their dedicated tests. userService() and imageService() both stay:
+ * userService()'s only remaining callers are Admin/Install/{InstallService,
+ * InstallWizard}.php's own genuinely-static-context install flow;
+ * imageService()'s only remaining caller is config/messenger.php (outside
+ * `src/Piwigo`, and deliberately outside the `Kernel::container()`
+ * arch-test boundary too, per that file's own docblock) -- a real, missed
+ * caller the initial "grep src/" sweep for this trim didn't catch, found
+ * only once the full-repo PHPStan pass ran.
  */
 final class CoreDomainAccessor
 {
-    public static function permissionService(): PermissionService
+    public static function userService(): UserService
     {
-        $service = Kernel::container()->get(PermissionService::class);
-        if (! $service instanceof PermissionService) {
-            throw new \LogicException('Container returned an unexpected type for ' . PermissionService::class);
-        }
-        return $service;
-    }
-
-    public static function categoryService(): CategoryService
-    {
-        $service = Kernel::container()->get(CategoryService::class);
-        if (! $service instanceof CategoryService) {
-            throw new \LogicException('Container returned an unexpected type for ' . CategoryService::class);
-        }
-        return $service;
-    }
-
-    public static function tagService(): TagService
-    {
-        $service = Kernel::container()->get(TagService::class);
-        if (! $service instanceof TagService) {
-            throw new \LogicException('Container returned an unexpected type for ' . TagService::class);
+        $service = Kernel::container()->get(UserService::class);
+        if (! $service instanceof UserService) {
+            throw new \LogicException('Container returned an unexpected type for ' . UserService::class);
         }
         return $service;
     }
@@ -63,15 +54,6 @@ final class CoreDomainAccessor
         $service = Kernel::container()->get(ImageService::class);
         if (! $service instanceof ImageService) {
             throw new \LogicException('Container returned an unexpected type for ' . ImageService::class);
-        }
-        return $service;
-    }
-
-    public static function userService(): UserService
-    {
-        $service = Kernel::container()->get(UserService::class);
-        if (! $service instanceof UserService) {
-            throw new \LogicException('Container returned an unexpected type for ' . UserService::class);
         }
         return $service;
     }

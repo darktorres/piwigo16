@@ -5,11 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Bootstrap;
 
 use Piwigo\Activity\ActivityService;
-use Piwigo\Comment\CommentService;
 use Piwigo\Core\Kernel;
 use Piwigo\Metadata\MetadataService;
-use Piwigo\Rate\RateService;
-use Piwigo\Search\SearchService;
 
 /**
  * DI-migration follow-on to gap-closure Stage 4: typed accessors to
@@ -17,6 +14,18 @@ use Piwigo\Search\SearchService;
  * (Admin/Command/Controller/Ws) that can't call `Kernel::container()`
  * directly -- see `Bootstrap\CoreDomainAccessor`'s own docblock for the
  * full rationale (same shape, different deptrac layer).
+ *
+ * Singleton/service-locator elimination campaign, Phase 10: PwgImages's
+ * own conversion (the last Ws/Pwg* class using this accessor) emptied
+ * commentService()/searchService()/rateService() -- deleted along with
+ * their dedicated tests. activityService() and metadataService() both
+ * stay: activityService()'s only remaining callers are Admin/Install/
+ * {InstallService,InstallWizard}.php's own genuinely-static-context
+ * install flow; metadataService()'s only remaining caller is config/
+ * messenger.php (outside `src/Piwigo`, and deliberately outside the
+ * `Kernel::container()` arch-test boundary too, per that file's own
+ * docblock) -- see CoreDomainAccessor's own matching note for
+ * imageService(), the identical gap, found the same way.
  */
 final class ExtendedDomainAccessor
 {
@@ -29,38 +38,11 @@ final class ExtendedDomainAccessor
         return $service;
     }
 
-    public static function commentService(): CommentService
-    {
-        $service = Kernel::container()->get(CommentService::class);
-        if (! $service instanceof CommentService) {
-            throw new \LogicException('Container returned an unexpected type for ' . CommentService::class);
-        }
-        return $service;
-    }
-
-    public static function searchService(): SearchService
-    {
-        $service = Kernel::container()->get(SearchService::class);
-        if (! $service instanceof SearchService) {
-            throw new \LogicException('Container returned an unexpected type for ' . SearchService::class);
-        }
-        return $service;
-    }
-
     public static function metadataService(): MetadataService
     {
         $service = Kernel::container()->get(MetadataService::class);
         if (! $service instanceof MetadataService) {
             throw new \LogicException('Container returned an unexpected type for ' . MetadataService::class);
-        }
-        return $service;
-    }
-
-    public static function rateService(): RateService
-    {
-        $service = Kernel::container()->get(RateService::class);
-        if (! $service instanceof RateService) {
-            throw new \LogicException('Container returned an unexpected type for ' . RateService::class);
         }
         return $service;
     }

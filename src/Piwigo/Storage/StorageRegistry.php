@@ -19,10 +19,10 @@ use League\Flysystem\FilesystemOperator;
  * (CurrentPersistentCache) -- there's no "current instance" concept
  * genuinely needed here: this is a plain container-resolved service
  * (`factory(...)` entry in config/container.php calling fromConfig()
- * below), not a self-managed static facade. Most real readers take it via
- * constructor injection; `disk()` remains as a `@deprecated` transitional
- * shim for callers not yet converted (procedural upload code reached from
- * the still-static Ws\Pwg* dispatch layer, Phase 10).
+ * below), not a self-managed static facade. Every real reader takes it
+ * via constructor injection -- the transitional `disk()` shim (Phase 2)
+ * was deleted in Phase 10 once `Piwigo\Ws\PwgImages`, its last remaining
+ * caller, converted to real injection.
  */
 final class StorageRegistry
 {
@@ -55,27 +55,6 @@ final class StorageRegistry
         $factories = require $configPath;
 
         return new self($factories);
-    }
-
-    /**
-     * @deprecated transitional bridge for callers not yet converted to
-     * constructor injection (`Piwigo\Ws\PwgImages` -- Phase 10's
-     * still-static dispatch layer) -- delete once
-     * `grep -rn "StorageRegistry::disk("` outside tests/ returns nothing.
-     * No safe default to gracefully fall back to (a missing storage disk
-     * has no sensible substitute), so this throws via
-     * `Kernel::container()` itself if `Kernel::boot()` hasn't run, same as
-     * every other shim in this campaign backing a value with no sensible
-     * default.
-     */
-    public static function disk(string $name): FilesystemOperator
-    {
-        $instance = \Piwigo\Core\Kernel::container()->get(self::class);
-        if (! $instance instanceof self) {
-            throw new \LogicException('Container returned an unexpected type for ' . self::class);
-        }
-
-        return $instance->get($name);
     }
 
     public function get(string $name): FilesystemOperator

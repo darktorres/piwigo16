@@ -4,67 +4,43 @@ declare(strict_types=1);
 
 use Piwigo\Activity\ActivityService;
 use Piwigo\Bootstrap\ExtendedDomainAccessor;
-use Piwigo\Comment\CommentService;
 use Piwigo\Core\Kernel;
 use Piwigo\Metadata\MetadataService;
-use Piwigo\Rate\RateService;
-use Piwigo\Search\SearchService;
 use Piwigo\Tests\Support\KernelContainerOverride;
 
 /**
- * Piwigo\Bootstrap\ExtendedDomainAccessor -- singleton/service-locator
- * elimination campaign, Phase 6: 5 of its original 11 typed accessors
- * (searchFilterRenderer()/notificationService()/notificationByMailService()/
- * permalinkService()/sectionPopulator()) were deleted once every real
- * caller converted to constructor injection, leaving zero remaining callers
- * for those 5; Phase 10 deleted a 6th (historyService()) once PwgCore's own
- * conversion emptied its last remaining caller -- the other 5
- * (activityService()/commentService()/searchService()/metadataService()/
- * rateService()) stay, each still reached from at least one Ws/Pwg*.php
- * static-dispatch call site (Phase-10-locked) or config/messenger.php/
- * Admin/Install's own genuinely-static-context callers.
+ * Piwigo\Bootstrap\ExtendedDomainAccessor -- same "26/26 AdminAccessor" gap
+ * shape, but for this class's own remaining 2 accessors. Phase 6's own
+ * ExtendedDomainAccessor sub-batch deleted 5 of its original 11 typed
+ * accessors (searchFilterRenderer()/notificationService()/
+ * notificationByMailService()/permalinkService()/sectionPopulator()) once
+ * every real caller converted to constructor injection; Phase 10 deleted a
+ * 6th (historyService()) once PwgCore's own conversion emptied its last
+ * remaining caller, then a 7th-9th (commentService()/searchService()/
+ * rateService()) once PwgImages, their last remaining `src/Piwigo` caller,
+ * converted too -- deleted the same way, along with their own dedicated
+ * tests. activityService() and metadataService() both stay:
+ * activityService()'s only remaining callers are Admin/Install/
+ * {InstallWizard,InstallService}.php's own genuinely-static-context install
+ * flow; metadataService()'s only remaining caller is config/messenger.php
+ * (outside `src/Piwigo`, and deliberately outside the `Kernel::container()`
+ * arch-test boundary too) -- a real, missed caller the initial
+ * PwgImages-sub-batch trim didn't catch (its own "grep src/" sweep doesn't
+ * reach `config/`), found only once the full-repo PHPStan pass ran.
  *
- * commentService()'s own "zero coverage" gap (see /home/torres/.claude/
- * plans/piped-enchanting-spark.md, Wave 1) is closed below -- the
- * underlying container binding IS exercised elsewhere (Piwigo\Tests\
- * Integration\ContainerSmokeTest resolves every config/container.php entry
- * directly), but nothing called this specific thin wrapper method before.
- * Matches ContainerSmokeTest's own "extends plain TestCase, no DB needed to
- * resolve a service" precedent -- these services are lazy DBAL wrappers,
- * not eager connections, at construction time.
- *
- * Every remaining accessor's own "Container returned an unexpected type"
- * \LogicException guard is covered too -- see Piwigo\Tests\Support\
- * KernelContainerOverride's own docblock and AdminAccessorTest.php's
- * identical shape for the other sibling accessor classes.
+ * The container really does resolve the right type on every real call site
+ * elsewhere in the codebase, so the "unexpected type" \LogicException
+ * guard itself had zero coverage. See AdminAccessorTest.php's own
+ * docblock for the KernelContainerOverride rationale.
  */
-beforeEach(function (): void {
-    Kernel::reset();
-    Kernel::boot(\Piwigo\Core\Paths::fromRoot(sys_get_temp_dir()));
-});
-
 afterEach(function (): void {
     Kernel::reset();
 });
 
 test('activityService resolves a real ActivityService from the container', function (): void {
+    Kernel::boot(\Piwigo\Core\Paths::fromRoot(sys_get_temp_dir()));
+
     expect(ExtendedDomainAccessor::activityService())->toBeInstanceOf(ActivityService::class);
-});
-
-test('commentService resolves a real CommentService from the container', function (): void {
-    expect(ExtendedDomainAccessor::commentService())->toBeInstanceOf(CommentService::class);
-});
-
-test('searchService resolves a real SearchService from the container', function (): void {
-    expect(ExtendedDomainAccessor::searchService())->toBeInstanceOf(SearchService::class);
-});
-
-test('metadataService resolves a real MetadataService from the container', function (): void {
-    expect(ExtendedDomainAccessor::metadataService())->toBeInstanceOf(MetadataService::class);
-});
-
-test('rateService resolves a real RateService from the container', function (): void {
-    expect(ExtendedDomainAccessor::rateService())->toBeInstanceOf(RateService::class);
 });
 
 test('activityService throws when the container returns an unexpected type', function (): void {
@@ -74,19 +50,11 @@ test('activityService throws when the container returns an unexpected type', fun
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . ActivityService::class);
 
-test('commentService throws when the container returns an unexpected type', function (): void {
-    KernelContainerOverride::withWrongTypeFor(
-        CommentService::class,
-        static fn () => ExtendedDomainAccessor::commentService()
-    );
-})->throws(LogicException::class, 'Container returned an unexpected type for ' . CommentService::class);
+test('metadataService resolves a real MetadataService from the container', function (): void {
+    Kernel::boot(\Piwigo\Core\Paths::fromRoot(sys_get_temp_dir()));
 
-test('searchService throws when the container returns an unexpected type', function (): void {
-    KernelContainerOverride::withWrongTypeFor(
-        SearchService::class,
-        static fn () => ExtendedDomainAccessor::searchService()
-    );
-})->throws(LogicException::class, 'Container returned an unexpected type for ' . SearchService::class);
+    expect(ExtendedDomainAccessor::metadataService())->toBeInstanceOf(MetadataService::class);
+});
 
 test('metadataService throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
@@ -94,10 +62,3 @@ test('metadataService throws when the container returns an unexpected type', fun
         static fn () => ExtendedDomainAccessor::metadataService()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . MetadataService::class);
-
-test('rateService throws when the container returns an unexpected type', function (): void {
-    KernelContainerOverride::withWrongTypeFor(
-        RateService::class,
-        static fn () => ExtendedDomainAccessor::rateService()
-    );
-})->throws(LogicException::class, 'Container returned an unexpected type for ' . RateService::class);

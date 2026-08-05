@@ -228,7 +228,6 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
         '/src/Piwigo/Core/FilterState.php',
         '/src/Piwigo/Core/CurrentLogger.php',
         '/src/Piwigo/Section/SectionContextRegistry.php',
-        '/src/Piwigo/Storage/StorageRegistry.php',
         '/src/Piwigo/Core/ErrorCollector.php',
         '/src/Piwigo/Core/RequestMountDepth.php',
         '/src/Piwigo/Core/WsContext.php',
@@ -420,7 +419,6 @@ test('CurrentConfig::current() transitional bridge has a shrinking, known allow-
         '/src/Piwigo/Template/Template.php',
         '/src/Piwigo/Url/UrlService.php',
         '/src/Piwigo/Users/UserRepository.php',
-        '/src/Piwigo/Ws/PwgImages.php',
         '/src/Piwigo/Ws/PwgServer.php',
         '/src/Piwigo/Ws/WsDefaultMethods.php',
     ];
@@ -446,30 +444,6 @@ test('SessionService::reset() is only called from tests/', function (): void {
     ];
 
     expect(describeCallSites($hits))->toBe([]);
-});
-
-test('StorageRegistry::disk() transitional shim has a shrinking, known allow-list', function (): void {
-    // Singleton/service-locator elimination campaign, Phase 2: Piwigo\Ws\
-    // PwgImages's chunked-upload assembly is the one remaining real caller
-    // (the still-static Ws\Pwg* dispatch layer, Phase 10) not converted to
-    // constructor injection, so it uses this static shim instead of the
-    // real get() instance method (see that method's own docblock). Every
-    // phase that converts one more of these files should remove it from
-    // the allow-list below; once empty, delete the shim and this test.
-    $repoRoot = __DIR__ . '/../..';
-
-    $allowedFiles = [
-        '/src/Piwigo/Ws/PwgImages.php',
-    ];
-
-    $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'StorageRegistry::disk(');
-
-    $disallowed = array_values(array_filter(
-        $hits,
-        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
-    ));
-
-    expect(describeCallSites($disallowed))->toBe([]);
 });
 
 test('CurrentConfigService::reset() is only called from tests/', function (): void {
@@ -513,7 +487,6 @@ test('CurrentConfigService::current() transitional bridge has a shrinking, known
         '/src/Piwigo/Image/ImageService.php',
         '/src/Piwigo/Template/Template.php',
         '/src/Piwigo/Ws/PwgCore.php',
-        '/src/Piwigo/Ws/PwgImages.php',
         '/src/Piwigo/Ws/PwgUsers.php',
         '/public/install.php',
     ];
@@ -627,7 +600,6 @@ test('PageState::current() transitional bridge has a shrinking, known allow-list
         '/src/Piwigo/Html/HtmlService.php',
         '/src/Piwigo/Mail/MailService.php',
         '/src/Piwigo/Template/Template.php',
-        '/src/Piwigo/Ws/PwgImages.php',
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'PageState::current(');
@@ -729,7 +701,6 @@ test('CurrentLogger::getStatic() transitional shim has a shrinking, known allow-
         '/src/Piwigo/Admin/Upload/UploadService.php',
         '/src/Piwigo/Tag/TagService.php',
         '/src/Piwigo/Image/ImageService.php',
-        '/src/Piwigo/Ws/PwgImages.php',
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'CurrentLogger::getStatic(');
@@ -802,7 +773,6 @@ test('CurrentPaths::get()/isSet() transitional bridge has a shrinking, known all
         '/src/Piwigo/Template/FileCombiner.php',
         '/src/Piwigo/Template/ScriptLoader.php',
         '/src/Piwigo/Template/Template.php',
-        '/src/Piwigo/Ws/PwgImages.php',
     ];
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'CurrentPaths::');
@@ -1271,7 +1241,6 @@ test('EventDispatcher::get() transitional bridge has a shrinking, known allow-li
         '/src/Piwigo/Template/Template.php',
         '/src/Piwigo/Url/UrlService.php',
         '/src/Piwigo/Users/UserRepository.php',
-        '/src/Piwigo/Ws/PwgImages.php',
         '/src/Piwigo/Ws/WsInitializer.php',
     ];
 
@@ -1432,7 +1401,6 @@ test('CurrentUser::current() transitional bridge has a shrinking, known allow-li
         '/src/Piwigo/Metadata/MetadataService.php',
         '/src/Piwigo/Permission/PermissionService.php',
         '/src/Piwigo/Url/UrlService.php',
-        '/src/Piwigo/Ws/PwgImages.php',
         '/src/Piwigo/Ws/WsDefaultMethods.php',
         '/src/Piwigo/Ws/WsHelper.php',
     ];
@@ -1499,7 +1467,6 @@ test('AccessControl::current() transitional bridge has a shrinking, known allow-
         '/src/Piwigo/Template/Template.php',
         '/src/Piwigo/Url/UrlService.php',
         '/src/Piwigo/Users/UserService.php',
-        '/src/Piwigo/Ws/PwgImages.php',
         '/src/Piwigo/Ws/PwgServer.php',
         '/src/Piwigo/Ws/WsDefaultMethods.php',
         '/src/Piwigo/Ws/WsHelper.php',

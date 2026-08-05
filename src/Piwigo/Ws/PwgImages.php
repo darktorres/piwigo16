@@ -11,10 +11,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
-use Doctrine\DBAL\Connection;
 use Exception;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Upload\UploadService;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
@@ -22,24 +22,30 @@ use Piwigo\Comment\CommentService;
 use Piwigo\Comment\Projection\CommentSummary;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\CurrentPaths;
+use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Core\WsError;
-use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Picture\RenderElementDescription;
 use Piwigo\Event\Picture\RenderElementName;
 use Piwigo\Event\Picture\WsImagesUploadCompleted;
 use Piwigo\Event\Template\RenderCategoryName;
+use Piwigo\Html\HtmlService;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Metadata\MetadataService;
 use Piwigo\Permission\PermissionService;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Rate\RateService;
 use Piwigo\Search\SearchService;
 use Piwigo\Storage\StorageRegistry;
-use Piwigo\Tag\TagRepository;
 use Piwigo\Tag\TagService;
+use Piwigo\Users\CurrentUser;
 use Piwigo\Ws\Encoder\PwgResponseEncoder;
 
 /**
@@ -52,63 +58,39 @@ use Piwigo\Ws\Encoder\PwgResponseEncoder;
  */
 final class PwgImages
 {
-    /**
-     * Constructed identically 4 times across this file (addComment(),
-     * getInfo() x2, rate()) -- takes no arguments; delegates to
-     * Bootstrap\CoreDomainAccessor::permissionService(), same zero-argument
-     * accessor shape as categoryService()/searchService() above.
-     */
-    private static function permissionService(): PermissionService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::permissionService();
-    }
-
-    private static function categoryService(): CategoryService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::categoryService();
-    }
-
-    private static function searchService(): SearchService
-    {
-        return \Piwigo\Bootstrap\ExtendedDomainAccessor::searchService();
-    }
-
-    /**
-     * Constructed identically 5 times across this file. Takes no arguments;
-     * delegates to Bootstrap\CoreDomainAccessor::tagService(), same
-     * zero-argument accessor shape as categoryService()/searchService()
-     * above.
-     */
-    private static function tagService(): TagService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::tagService();
-    }
-
-    /**
-     * Constructed identically 7 times across this file.
-     */
-    private static function imageService(): ImageService
-    {
-        return \Piwigo\Bootstrap\CoreDomainAccessor::imageService();
-    }
-
-    /**
-     * Constructed identically (standalone, not wrapped in Image/TagService)
-     * 2 times across this file.
-     */
-    private static function activityService(Connection $conn): ActivityService
-    {
-        return \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService();
-    }
+    public function __construct(
+        private readonly PermissionService $permissionService,
+        private readonly CategoryService $categoryService,
+        private readonly SearchService $searchService,
+        private readonly TagService $tagService,
+        private readonly ImageService $imageService,
+        private readonly ActivityService $activityService,
+        private readonly RateService $rateService,
+        private readonly MetadataService $metadataService,
+        private readonly CommentService $commentService,
+        private readonly UploadService $uploadService,
+        private readonly CurrentConfig $currentConfig,
+        private readonly UrlServiceInterface $urlService,
+        private readonly EventDispatcher $eventDispatcher,
+        private readonly \Doctrine\ORM\EntityManagerInterface $entityManager,
+        private readonly Lang $lang,
+        private readonly CurrentLogger $currentLogger,
+        private readonly CurrentUser $currentUser,
+        private readonly AccessControl $accessControl,
+        private readonly HtmlService $htmlService,
+        private readonly Paths $paths,
+        private readonly StorageRegistry $storageRegistry,
+        private readonly ImageRepository $imageRepository,
+    ) {}
 
     /**
      * Sets associations of an image
      * @param string $categories_string - "cat_id[,rank];cat_id[,rank]"
      * @param bool $replace_mode - removes old associations
      */
-    private static function addImageCategoryRelations(int $image_id, string $categories_string, bool $replace_mode = false): true|PwgError
+    private function addImageCategoryRelations(int $image_id, string $categories_string, bool $replace_mode = false): true|PwgError
     {
-        $categoryService = self::categoryService();
+        $categoryService = $this->categoryService;
 
         // let's add links between the image and the categories
         //
@@ -123,7 +105,7 @@ final class PwgImages
 
         if ($categories_string === '') {
             if ($replace_mode) {
-                self::imageService()->deleteImageCategoryRowsForImageIds([$image_id]);
+                $this->imageService->deleteImageCategoryRowsForImageIds([$image_id]);
                 $categoryService->updateCategory([]);
             }
             return true;
@@ -150,7 +132,7 @@ final class PwgImages
 
         if (count($cat_ids) === 0) {
             if ($replace_mode) {
-                self::imageService()->deleteImageCategoryRowsForImageIds([$image_id]);
+                $this->imageService->deleteImageCategoryRowsForImageIds([$image_id]);
                 $categoryService->updateCategory([]);
             }
             return true;
@@ -175,12 +157,12 @@ final class PwgImages
         // in case of replace mode, we first check the existing associations
         // native int under DBAL -- same string-cast rationale as
         // $db_cat_ids above.
-        $existing_cat_ids = array_map(strval(...), self::imageService()->getCategoryIdsForImage($image_id));
+        $existing_cat_ids = array_map(strval(...), $this->imageService->getCategoryIdsForImage($image_id));
 
         if ($replace_mode) {
             $to_remove_cat_ids = array_values(array_diff($existing_cat_ids, $cat_ids));
             if (count($to_remove_cat_ids) > 0) {
-                self::imageService()->deleteImageCategoryLinksForCategoryIds($image_id, $to_remove_cat_ids);
+                $this->imageService->deleteImageCategoryLinksForCategoryIds($image_id, $to_remove_cat_ids);
                 $categoryService->updateCategory($to_remove_cat_ids);
             }
         }
@@ -191,7 +173,7 @@ final class PwgImages
         }
 
         if ($search_current_ranks) {
-            $current_rank_of = self::imageService()->getMaxRanksByCategory($new_cat_ids);
+            $current_rank_of = $this->imageService->getMaxRanksByCategory($new_cat_ids);
 
             foreach ($new_cat_ids as $cat_id) {
                 if (! isset($current_rank_of[$cat_id])) {
@@ -214,7 +196,7 @@ final class PwgImages
             ];
         }
 
-        self::imageService()->insertImageCategoryLinks($inserts);
+        $this->imageService->insertImageCategoryLinks($inserts);
 
         $categoryService->updateCategory($new_cat_ids);
         return true;
@@ -223,9 +205,9 @@ final class PwgImages
     /**
      * Merge chunks added by pwg.images.addChunk
      */
-    private static function mergeChunks(string $output_filepath, string $original_sum, string $type): ?PwgError
+    private function mergeChunks(string $output_filepath, string $original_sum, string $type): ?PwgError
     {
-        $logger = \Piwigo\Core\CurrentLogger::getStatic();
+        $logger = $this->currentLogger->get();
 
         $logger->debug('[merge_chunks] input parameter $output_filepath : ' . $output_filepath, 'WS');
 
@@ -237,7 +219,7 @@ final class PwgImages
             }
         }
 
-        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\CurrentConfig::current()->uploadDir();
+        $upload_dir_conf = $this->paths->root . $this->currentConfig->uploadDir();
         $upload_dir = $upload_dir_conf . '/buffer';
         $pattern = '/' . $original_sum . '-' . $type . '/';
         $chunks = [];
@@ -293,10 +275,10 @@ final class PwgImages
      * will be the biggest (we could remove the thumb, but let's use the same
      * algorithm)
      */
-    private static function removeChunks($original_sum, string $type): void
+    private function removeChunks($original_sum, string $type): void
     {
 
-        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\CurrentConfig::current()->uploadDir();
+        $upload_dir_conf = $this->paths->root . $this->currentConfig->uploadDir();
         $upload_dir = $upload_dir_conf . '/buffer';
         $pattern = '/' . $original_sum . '-' . $type . '/';
         $chunks = [];
@@ -326,20 +308,20 @@ final class PwgImages
      *    content/key are mandatory)
      * @return PwgError|array{comment: PwgNamedStruct}
      */
-    public static function addComment(array $params, PwgServer $service): PwgError|array
+    public function addComment(array $params, PwgServer $service): PwgError|array
     {
 
-        if (! \Piwigo\Config\CurrentConfig::current()->activateComments()) {
+        if (! $this->currentConfig->activateComments()) {
             return new PwgError(403, 'Comments are disabled');
         }
 
-        $permissionCondition = self::permissionService()->getSqlConditionFandFAsCondition([
+        $permissionCondition = $this->permissionService->getSqlConditionFandFAsCondition([
             'forbidden_categories' => 'id',
             'visible_categories' => 'id',
             'visible_images' => 'image_id',
         ]);
 
-        if (! self::imageService()->isImageCommentableWithCondition($params['image_id'], $permissionCondition)) {
+        if (! $this->imageService->isImageCommentableWithCondition($params['image_id'], $permissionCondition)) {
             return new PwgError(WsError::INVALID_PARAM, 'Invalid image_id');
         }
 
@@ -350,12 +332,12 @@ final class PwgImages
         ];
 
         $infos = [];
-        $comment_action = new CommentService(\Piwigo\Core\Lang::current(), \Piwigo\Db\EntityManagerFactory::build(DbConnection::build())->getRepository(\Piwigo\Comment\CommentEntity::class), new EphemeralKeyService(\Piwigo\Config\CurrentConfig::current()), \Piwigo\Bootstrap\PresentationAccessor::mailService(), \Piwigo\Bootstrap\PresentationAccessor::htmlService(), \Piwigo\Bootstrap\PresentationAccessor::urlService(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Core\PageState::current(), \Piwigo\Users\CurrentUser::current(), \Piwigo\Config\CurrentConfig::current())
+        $comment_action = $this->commentService
             ->insertComment($comm, $params['key'], $infos);
 
         switch ($comment_action) {
             case 'reject':
-                $infos[] = Lang::current()->t('Your comment has NOT been registered because it did not pass the validation rules');
+                $infos[] = $this->lang->t('Your comment has NOT been registered because it did not pass the validation rules');
                 return new PwgError(403, implode('; ', $infos));
 
             case 'validate':
@@ -382,12 +364,12 @@ final class PwgImages
      *    comments_per_page have defaults, so always present too)
      * @return PwgError|array<string, mixed>
      */
-    public static function getInfo(array $params, PwgServer $service): PwgError|array
+    public function getInfo(array $params, PwgServer $service): PwgError|array
     {
 
-        $image_row = self::imageService()->getRowWithCondition(
+        $image_row = $this->imageService->getRowWithCondition(
             $params['image_id'],
-            self::permissionService()->getSqlConditionFandFAsCondition([
+            $this->permissionService->getSqlConditionFandFAsCondition([
                 'visible_images' => 'id',
             ])
         );
@@ -408,20 +390,20 @@ final class PwgImages
         // open tail for the rest of the row and the page_url/element_url/
         // download_url/derivatives keys WsHelper::stdGetUrls() injects.
         /** @var array{id: int, file: string, name: string|null, comment: string|null, rating_score: string|null, ...} $image_row */
-        $image_row = array_merge($image_row, WsHelper::stdGetUrls($image_row, \Piwigo\Bootstrap\PresentationAccessor::urlService()));
+        $image_row = array_merge($image_row, WsHelper::stdGetUrls($image_row, $this->urlService));
 
         $image_row['name_raw'] = $image_row['name'];
-        $nameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderElementName(is_string($image_row['name']) ? $image_row['name'] : '', __FUNCTION__));
+        $nameEvent = $this->eventDispatcher->dispatchChange(new RenderElementName(is_string($image_row['name']) ? $image_row['name'] : '', __FUNCTION__));
         $image_row['name'] = strip_tags($nameEvent->elementName);
 
         $image_row['comment_raw'] = $image_row['comment'];
-        $descriptionEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderElementDescription(is_string($image_row['comment']) ? $image_row['comment'] : '', __FUNCTION__));
+        $descriptionEvent = $this->eventDispatcher->dispatchChange(new RenderElementDescription(is_string($image_row['comment']) ? $image_row['comment'] : '', __FUNCTION__));
         $image_row['comment'] = $descriptionEvent->elementDescription;
 
         // -------------------------------------------------------- related categories
-        $related_category_rows = self::imageService()->getRelatedCategoriesForImage(
+        $related_category_rows = $this->imageService->getRelatedCategoriesForImage(
             $image_id,
-            self::permissionService()->getSqlConditionFandFAsCondition([
+            $this->permissionService->getSqlConditionFandFAsCondition([
                 'forbidden_categories' => 'category_id',
             ])
         );
@@ -434,13 +416,13 @@ final class PwgImages
             }
             unset($row['commentable']);
 
-            $row['url'] = \Piwigo\Bootstrap\PresentationAccessor::urlService()->makeIndexUrl(
+            $row['url'] = $this->urlService->makeIndexUrl(
                 [
                     'category' => $row,
                 ]
             );
 
-            $row['page_url'] = \Piwigo\Bootstrap\PresentationAccessor::urlService()->makePictureUrl(
+            $row['page_url'] = $this->urlService->makePictureUrl(
                 [
                     'image_id' => $image_row['id'],
                     'image_file' => $image_row['file'],
@@ -450,29 +432,29 @@ final class PwgImages
 
             $row['id'] = is_numeric($row['id']) ? (int) $row['id'] : 0;
 
-            $nameEvent = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderCategoryName(is_string($row['name']) ? $row['name'] : '', __FUNCTION__));
+            $nameEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryName(is_string($row['name']) ? $row['name'] : '', __FUNCTION__));
             $row['name'] = strip_tags($nameEvent->categoryName);
 
             $related_categories[] = $row;
         }
         usort($related_categories, CategoryService::compareByGlobalRank(...));
 
-        if ($related_categories === [] and ! \Piwigo\Auth\AccessControl::current()->isAdmin()) {
+        if ($related_categories === [] and ! $this->accessControl->isAdmin()) {
             // photo might be in the lounge? or simply orphan. A standard user should not get
             // info. An admin should still be able to get info.
             return new PwgError(401, 'Access denied');
         }
 
         // -------------------------------------------------------------- related tags
-        $related_tags = self::tagService()
-            ->getCommonTags([$image_id], -1, \Piwigo\Bootstrap\PresentationAccessor::htmlService());
+        $related_tags = $this->tagService
+            ->getCommonTags([$image_id], -1, $this->htmlService);
         foreach ($related_tags as $i => $tag) {
-            $tag['url'] = \Piwigo\Bootstrap\PresentationAccessor::urlService()->makeIndexUrl(
+            $tag['url'] = $this->urlService->makeIndexUrl(
                 [
                     'tags' => [$tag],
                 ]
             );
-            $tag['page_url'] = \Piwigo\Bootstrap\PresentationAccessor::urlService()->makePictureUrl(
+            $tag['page_url'] = $this->urlService->makePictureUrl(
                 [
                     'image_id' => $image_row['id'],
                     'image_file' => $image_row['file'],
@@ -492,7 +474,7 @@ final class PwgImages
             'average' => null,
         ];
         if (isset($rating['score'])) {
-            $rate_summary = \Piwigo\Bootstrap\ExtendedDomainAccessor::rateService()->getRateSummaryForElement($image_id);
+            $rate_summary = $this->rateService->getRateSummaryForElement($image_id);
 
             assert(is_numeric($rating_score_raw));
             $rating['score'] = (float) $rating_score_raw;
@@ -503,8 +485,8 @@ final class PwgImages
         // ---------------------------------------------------------- related comments
         $related_comments = [];
 
-        $only_validated_comments = ! \Piwigo\Auth\AccessControl::current()->isAdmin();
-        $commentService = \Piwigo\Bootstrap\ExtendedDomainAccessor::commentService();
+        $only_validated_comments = ! $this->accessControl->isAdmin();
+        $commentService = $this->commentService;
 
         $nb_comments = $commentService->countForImage($image_id, $only_validated_comments);
 
@@ -521,15 +503,16 @@ final class PwgImages
         }
 
         $comment_post_data = null;
-        if (\Piwigo\Config\CurrentConfig::current()->activateComments() and
+        if ($this->currentConfig->activateComments() and
             $is_commentable and
-            (! \Piwigo\Auth\AccessControl::current()->isAGuest()
-              or \Piwigo\Config\CurrentConfig::current()->commentsForall()
+            (! $this->accessControl->isAGuest()
+              or $this->currentConfig->commentsForall()
             )
         ) {
-            $username = \Piwigo\Users\CurrentUser::current()->get()->username;
+            $username = $this->currentUser->get()
+                ->username;
             $comment_post_data['author'] = stripslashes($username);
-            $comment_post_data['key'] = new EphemeralKeyService(\Piwigo\Config\CurrentConfig::current())->generate(2, (string) $params['image_id']);
+            $comment_post_data['key'] = new EphemeralKeyService($this->currentConfig)->generate(2, (string) $params['image_id']);
         }
 
         $ret = $image_row;
@@ -593,11 +576,11 @@ final class PwgImages
      * @return PwgError|array<string, mixed> matches
      *   Rate\RateService::rate()'s own already-reviewed by-design shape
      */
-    public static function rate(array $params, PwgServer $service): PwgError|array
+    public function rate(array $params, PwgServer $service): PwgError|array
     {
-        $accessible = self::imageService()->isImageAccessibleWithCondition(
+        $accessible = $this->imageService->isImageAccessibleWithCondition(
             $params['image_id'],
-            self::permissionService()->getSqlConditionFandFAsCondition([
+            $this->permissionService->getSqlConditionFandFAsCondition([
                 'forbidden_categories' => 'category_id',
                 'forbidden_images' => 'id',
             ])
@@ -606,11 +589,11 @@ final class PwgImages
             return new PwgError(404, 'Invalid image_id or access denied');
         }
 
-        $res = \Piwigo\Bootstrap\ExtendedDomainAccessor::rateService()
+        $res = $this->rateService
             ->rate($params['image_id'], (int) $params['rate']);
 
         if ($res === false) {
-            $rate_items = \Piwigo\Config\CurrentConfig::current()->rateItems();
+            $rate_items = $this->currentConfig->rateItems();
             return new PwgError(403, 'Forbidden or rate not in ' . implode(',', $rate_items));
         }
         return $res;
@@ -625,7 +608,7 @@ final class PwgImages
      *    merged in via ws.php's $f_params)
      * @return array{paging: PwgNamedStruct, images: PwgNamedArray}
      */
-    public static function search(array $params, PwgServer $service): array
+    public function search(array $params, PwgServer $service): array
     {
         $images = [];
         $filterCondition = WsHelper::stdImageSqlFilter($params, $service, 'i.');
@@ -635,10 +618,10 @@ final class PwgImages
         if ($order_by !== '') {
             // Communicates the effective order_by to SearchService::
             // getQuickSearchResults()/getRegularSearchResults() etc, which
-            // read it back from CurrentConfig::current()-> for the rest of this request --
-            // an in-memory-only override (CurrentConfig::current()->setOrderBy()), not a
+            // read it back from $this->currentConfig-> for the rest of this request --
+            // an in-memory-only override ($this->currentConfig->setOrderBy()), not a
             // DB write.
-            \Piwigo\Config\CurrentConfig::current()->setOrderBy('ORDER BY ' . $order_by);
+            $this->currentConfig->setOrderBy('ORDER BY ' . $order_by);
             $super_order_by = true; // quick_search_result might be faster
         }
 
@@ -659,8 +642,7 @@ final class PwgImages
             $images_where = str_replace(':' . $placeholder, is_string($value) ? "'" . $value . "'" : (string) $value, $images_where);
         }
 
-        $searchConn = DbConnection::build();
-        $search_result = self::searchService()->getQuickSearchResults(
+        $search_result = $this->searchService->getQuickSearchResults(
             $params['query'],
             [
                 'super_order_by' => $super_order_by,
@@ -688,10 +670,10 @@ final class PwgImages
 
         if ((bool) count($image_ids)) {
             $image_ids = array_flip($image_ids);
-            $favorite_ids = \Piwigo\Bootstrap\PresentationAccessor::urlService()
+            $favorite_ids = $this->urlService
                 ->getUserFavorites();
 
-            foreach (\Piwigo\Db\EntityManagerFactory::build($searchConn)->getRepository(\Piwigo\Image\ImageEntity::class)->findByIds(array_keys($image_ids)) as $imageRow) {
+            foreach ($this->imageRepository->findByIds(array_keys($image_ids)) as $imageRow) {
                 // Unboxed here rather than kept as the typed object -- this
                 // loop rebuilds a differently-shaped $image array from
                 // $row's fields and separately passes the whole row to
@@ -709,12 +691,12 @@ final class PwgImages
                     $image[$k] = $row[$k] ?? null;
                 }
 
-                $nameEvent2 = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderElementName(is_string($image['name']) ? $image['name'] : '', __FUNCTION__));
+                $nameEvent2 = $this->eventDispatcher->dispatchChange(new RenderElementName(is_string($image['name']) ? $image['name'] : '', __FUNCTION__));
                 $image['name'] = strip_tags($nameEvent2->elementName);
-                $descriptionEvent2 = \Piwigo\PluginConfig\EventDispatcher::get()->dispatchChange(new RenderElementDescription(is_string($image['comment']) ? $image['comment'] : '', __FUNCTION__));
+                $descriptionEvent2 = $this->eventDispatcher->dispatchChange(new RenderElementDescription(is_string($image['comment']) ? $image['comment'] : '', __FUNCTION__));
                 $image['comment'] = $descriptionEvent2->elementDescription;
 
-                $image = array_merge($image, WsHelper::stdGetUrls($row, \Piwigo\Bootstrap\PresentationAccessor::urlService()));
+                $image = array_merge($image, WsHelper::stdGetUrls($row, $this->urlService));
                 $images[$image_ids[$image['id']]] = $image;
             }
             ksort($images, SORT_NUMERIC);
@@ -751,10 +733,10 @@ final class PwgImages
      * @param array{search_id?: string, allwords?: string, allwords_mode?: string, allwords_fields?: array<int, string>, tags?: array<int, int>, tags_mode?: string, categories?: array<int, int>, categories_withsubs?: bool, authors?: array<int, string>, added_by?: array<int, int>, filetypes?: array<int, string>, date_posted_preset?: string, date_posted_custom?: array<int, string>, date_created_preset?: string, date_created_custom?: array<int, string>, ratios?: array<int, string>, ratings?: array<int, string>, filesize_min?: int, filesize_max?: int, height_min?: int, height_max?: int, width_min?: int, width_max?: int, ...} $params
      * @return PwgError|array{search_id: string, search_url: string}
      */
-    public static function filteredSearchCreate(array $params, PwgServer $service): PwgError|array
+    public function filteredSearchCreate(array $params, PwgServer $service): PwgError|array
     {
 
-        $searchService = self::searchService();
+        $searchService = $this->searchService;
 
         // * check the search exists
         $search_info = null;
@@ -987,7 +969,7 @@ final class PwgImages
             ];
         }
 
-        if (\Piwigo\Config\CurrentConfig::current()->rateEnabled() and isset($params['ratings'])) {
+        if ($this->currentConfig->rateEnabled() and isset($params['ratings'])) {
             $search['fields']['ratings'] = $params['ratings'];
         }
 
@@ -1016,7 +998,7 @@ final class PwgImages
         }
 
         $forked_from = $search_info?->id;
-        [$search_uuid, $search_url] = $searchService->saveSearch($search, \Piwigo\Bootstrap\PresentationAccessor::urlService(), $forked_from);
+        [$search_uuid, $search_url] = $searchService->saveSearch($search, $this->urlService, $forked_from);
 
         return [
             'search_id' => $search_uuid,
@@ -1033,10 +1015,10 @@ final class PwgImages
      *    level: WsParamType::INT|WsParamType::POSITIVE, mandatory (no 'default') -- always
      *      a plain int by the time this runs
      */
-    public static function setPrivacyLevel(array $params, PwgServer $service): PwgError|int
+    public function setPrivacyLevel(array $params, PwgServer $service): PwgError|int
     {
 
-        $available_permission_levels = \Piwigo\Config\CurrentConfig::current()->availablePermissionLevels();
+        $available_permission_levels = $this->currentConfig->availablePermissionLevels();
 
         if (! in_array($params['level'], $available_permission_levels, true)) {
             return new PwgError(WsError::INVALID_PARAM, 'Invalid level');
@@ -1046,10 +1028,10 @@ final class PwgImages
         // affected-row count directly, replacing the separate
         // MysqliDb::changes() call (which only worked because this query,
         // unlike ratesDelete()'s dormant one, was actually executed).
-        $affected_rows = self::imageService()->updateLevelForImages($params['image_id'], $params['level']);
-        \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+        $affected_rows = $this->imageService->updateLevelForImages($params['image_id'], $params['level']);
+        $this->entityManager->clear();
 
-        self::activityService(DbConnection::build())->record('photo', $params['image_id'], 'edit');
+        $this->activityService->record('photo', $params['image_id'], 'edit');
 
         if ($affected_rows > 0) {
             PermissionCacheInvalidator::invalidate();
@@ -1071,16 +1053,16 @@ final class PwgImages
      *   the single-image branch below returns the one image_id plus its
      *   new rank
      */
-    public static function setRank(array $params, PwgServer $service): array|PwgError
+    public function setRank(array $params, PwgServer $service): array|PwgError
     {
         if (count($params['image_id']) > 1) {
-            self::imageService()
+            $this->imageService
                 ->saveImagesOrder(
                     $params['category_id'],
                     $params['image_id']
                 );
 
-            $image_ids = self::imageService()->getImageIdsOrderedByRankForCategory($params['category_id']);
+            $image_ids = $this->imageService->getImageIdsOrderedByRankForCategory($params['category_id']);
 
             // return data for client
             return [
@@ -1101,17 +1083,17 @@ final class PwgImages
         }
 
         // does the image really exist?
-        if (! self::imageService()->existsById($params['image_id'])) {
+        if (! $this->imageService->existsById($params['image_id'])) {
             return new PwgError(404, 'image_id not found');
         }
 
         // is the image associated to this category?
-        if (! self::imageService()->isImageInCategory($params['image_id'], $params['category_id'])) {
+        if (! $this->imageService->isImageInCategory($params['image_id'], $params['category_id'])) {
             return new PwgError(404, 'This image is not associated to this category');
         }
 
         // what is the current higher rank for this category?
-        $max_rank = self::imageService()->getMaxRankForCategory($params['category_id']);
+        $max_rank = $this->imageService->getMaxRankForCategory($params['category_id']);
 
         if ($max_rank !== null) {
             if ($params['rank'] > $max_rank) {
@@ -1122,10 +1104,10 @@ final class PwgImages
         }
 
         // update rank for all other photos in the same category
-        self::imageService()->incrementRanksFromForCategory($params['category_id'], $params['rank']);
+        $this->imageService->incrementRanksFromForCategory($params['category_id'], $params['rank']);
 
         // set the new rank for the photo
-        self::imageService()->updateRankForImageInCategory($params['image_id'], $params['category_id'], $params['rank']);
+        $this->imageService->updateRankForImageInCategory($params['image_id'], $params['category_id'], $params['rank']);
 
         // return data for client
         return [
@@ -1143,9 +1125,9 @@ final class PwgImages
      *    mandatory (no 'default'), type defaults to 'file' -- all always plain
      *    strings (see PwgServer::invoke()'s array-rejection check)
      */
-    public static function addChunk(array $params, PwgServer $service): ?PwgError
+    public function addChunk(array $params, PwgServer $service): ?PwgError
     {
-        $logger = \Piwigo\Core\CurrentLogger::getStatic();
+        $logger = $this->currentLogger->get();
 
         foreach ($params as $param_key => $param_value) {
             if ($param_key === 'data') {
@@ -1159,7 +1141,7 @@ final class PwgImages
             ), 'WS');
         }
 
-        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\CurrentConfig::current()->uploadDir();
+        $upload_dir_conf = $this->paths->root . $this->currentConfig->uploadDir();
         $upload_dir = $upload_dir_conf . '/buffer';
 
         // create the upload directory tree if not exists
@@ -1198,14 +1180,14 @@ final class PwgImages
      *    image_id: WsParamType::ID, mandatory. type: no WS_TYPE flag, defaults to
      *    'file'. sum: no WS_TYPE flag, mandatory -- both always plain strings
      */
-    public static function addFile(array $params, PwgServer $service): PwgError|bool|null
+    public function addFile(array $params, PwgServer $service): PwgError|bool|null
     {
-        $logger = \Piwigo\Core\CurrentLogger::getStatic();
+        $logger = $this->currentLogger->get();
 
         $logger->debug(__FUNCTION__, 'WS', $params);
 
         // what is the path and other infos about the photo?
-        $image = self::imageService()->getUploadInfoById($params['image_id']);
+        $image = $this->imageService->getUploadInfoById($params['image_id']);
         if ($image === null) {
             return new PwgError(404, 'image_id not found');
         }
@@ -1219,7 +1201,7 @@ final class PwgImages
 
         // since Piwigo 2.4 and derivatives, we do not take the imported "thumb" into account
         if ($params['type'] === 'thumb') {
-            self::removeChunks($image['md5sum'], $params['type']);
+            $this->removeChunks($image['md5sum'], $params['type']);
             return true;
         }
 
@@ -1229,10 +1211,10 @@ final class PwgImages
             $original_type = 'high';
         }
 
-        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\CurrentConfig::current()->uploadDir();
+        $upload_dir_conf = $this->paths->root . $this->currentConfig->uploadDir();
         $file_path = $upload_dir_conf . '/buffer/' . $image['md5sum'] . '-original';
 
-        self::mergeChunks($file_path, $image['md5sum'], $original_type);
+        $this->mergeChunks($file_path, $image['md5sum'], $original_type);
         chmod($file_path, 0644);
 
         // if we receive the "file", we only update the original if the "file" is
@@ -1240,7 +1222,7 @@ final class PwgImages
         if ($params['type'] === 'file') {
             $do_update = false;
 
-            $infos = new UploadService(\Piwigo\Core\Lang::current(), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfigService::current()->get(), \Piwigo\Bootstrap\InfrastructureAccessor::entityManager(), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService(), \Piwigo\Bootstrap\CoreDomainAccessor::imageService(), \Piwigo\Config\CurrentConfig::current())
+            $infos = $this->uploadService
                 ->pwgImageInfos($file_path);
 
             foreach (['width', 'height', 'filesize'] as $image_info) {
@@ -1255,10 +1237,10 @@ final class PwgImages
             }
         }
 
-        $image_id = new UploadService(\Piwigo\Core\Lang::current(), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfigService::current()->get(), \Piwigo\Bootstrap\InfrastructureAccessor::entityManager(), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService(), \Piwigo\Bootstrap\CoreDomainAccessor::imageService(), \Piwigo\Config\CurrentConfig::current())
+        $image_id = $this->uploadService
             ->addUploadedFile(
                 $file_path,
-                \Piwigo\Bootstrap\PresentationAccessor::urlService(),
+                $this->urlService,
                 $image['file'],
                 null,
                 null,
@@ -1282,9 +1264,9 @@ final class PwgImages
      *    image_id: WsParamType::ID, null default -- int|null.
      * @return PwgError|array{image_id: int|string, url: string}
      */
-    public static function add(array $params, PwgServer $service): PwgError|array
+    public function add(array $params, PwgServer $service): PwgError|array
     {
-        $logger = \Piwigo\Core\CurrentLogger::getStatic();
+        $logger = $this->currentLogger->get();
 
         foreach ($params as $param_key => $param_value) {
             $logger->debug(sprintf(
@@ -1295,7 +1277,7 @@ final class PwgImages
         }
 
         if ($params['image_id'] > 0) {
-            if (! self::imageService()->existsById($params['image_id'])) {
+            if (! $this->imageService->existsById($params['image_id'])) {
                 return new PwgError(404, 'image_id not found');
             }
         }
@@ -1308,7 +1290,7 @@ final class PwgImages
         // constraints, so this was a real SQL injection. Fixed by binding
         // the value through existsWithColumnValue() instead.
         if ($params['check_uniqueness']) {
-            $uniqueness_column = match (\Piwigo\Config\CurrentConfig::current()->uniquenessMode()) {
+            $uniqueness_column = match ($this->currentConfig->uniquenessMode()) {
                 'md5sum' => 'md5sum',
                 'filename' => 'file',
                 default => null, // no known uniqueness_mode: skip the uniqueness check
@@ -1316,7 +1298,7 @@ final class PwgImages
 
             if ($uniqueness_column !== null) {
                 $uniqueness_value = $uniqueness_column === 'md5sum' ? $params['original_sum'] : ($params['original_filename'] ?? '');
-                if (self::imageService()->existsWithColumnValue($uniqueness_column, $uniqueness_value)) {
+                if ($this->imageService->existsWithColumnValue($uniqueness_column, $uniqueness_value)) {
                     return new PwgError(500, 'file already exists');
                 }
             }
@@ -1326,25 +1308,25 @@ final class PwgImages
         // Piwigo 2.4, we only take the biggest photos sent on
         // pwg.images.addChunk. If "high" is available we use it as "original"
         // else we use "file".
-        self::removeChunks($params['original_sum'], 'thumb');
+        $this->removeChunks($params['original_sum'], 'thumb');
 
         if (isset($params['high_sum'])) {
             $original_type = 'high';
-            self::removeChunks($params['original_sum'], 'file');
+            $this->removeChunks($params['original_sum'], 'file');
         } else {
             $original_type = 'file';
         }
 
-        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\CurrentConfig::current()->uploadDir();
+        $upload_dir_conf = $this->paths->root . $this->currentConfig->uploadDir();
         $file_path = $upload_dir_conf . '/buffer/' . $params['original_sum'] . '-original';
 
-        self::mergeChunks($file_path, $params['original_sum'], $original_type);
+        $this->mergeChunks($file_path, $params['original_sum'], $original_type);
         chmod($file_path, 0644);
 
-        $image_id = new UploadService(\Piwigo\Core\Lang::current(), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfigService::current()->get(), \Piwigo\Bootstrap\InfrastructureAccessor::entityManager(), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService(), \Piwigo\Bootstrap\CoreDomainAccessor::imageService(), \Piwigo\Config\CurrentConfig::current())
+        $image_id = $this->uploadService
             ->addUploadedFile(
                 $file_path,
-                \Piwigo\Bootstrap\PresentationAccessor::urlService(),
+                $this->urlService,
                 $params['original_filename'],
                 null, // categories
                 $params['level'],
@@ -1360,7 +1342,7 @@ final class PwgImages
             'date_creation',
         ];
 
-        self::imageService()->updateDescriptiveFields(
+        $this->imageService->updateDescriptiveFields(
             $image_id,
             name: is_string($params['name'] ?? null) ? $params['name'] : null,
             author: is_string($params['author'] ?? null) ? $params['author'] : null,
@@ -1374,12 +1356,12 @@ final class PwgImages
 
         // let's add links between the image and the categories
         if (isset($params['categories'])) {
-            self::addImageCategoryRelations($image_id, $params['categories']);
+            $this->addImageCategoryRelations($image_id, $params['categories']);
 
             if ((bool) preg_match('/^\d+/', $params['categories'], $matches)) {
                 $category_id = $matches[0];
 
-                $category = self::categoryService()->getIdNamePermalinkById((int) $category_id);
+                $category = $this->categoryService->getIdNamePermalinkById((int) $category_id);
 
                 $url_params['section'] = 'categories';
                 $url_params['category'] = $category;
@@ -1388,7 +1370,7 @@ final class PwgImages
 
         // and now, let's create tag associations
         if (isset($params['tag_ids']) and $params['tag_ids'] !== '') {
-            self::tagService()
+            $this->tagService
                 ->setTags(
                     array_values(array_filter(array_map(TagId::tryFrom(...), explode(',', $params['tag_ids'])))),
                     $image_id
@@ -1399,7 +1381,7 @@ final class PwgImages
 
         return [
             'image_id' => $image_id,
-            'url' => \Piwigo\Bootstrap\PresentationAccessor::urlService()
+            'url' => $this->urlService
                 ->makePictureUrl($url_params),
         ];
     }
@@ -1418,9 +1400,9 @@ final class PwgImages
      *    default -- int|null.
      * @return PwgError|array{image_id: int|string, url: string}
      */
-    public static function addSimple(array $params, PwgServer $service): PwgError|array
+    public function addSimple(array $params, PwgServer $service): PwgError|array
     {
-        $logger = \Piwigo\Core\CurrentLogger::getStatic();
+        $logger = $this->currentLogger->get();
 
         $uploaded_image = \Piwigo\Ws\Request\UploadedFileRequest::fromFilesKey('image');
         if (! $uploaded_image->present) {
@@ -1447,7 +1429,7 @@ final class PwgImages
         }
 
         if ($params['image_id'] > 0) {
-            if (! self::imageService()->existsById($params['image_id'])) {
+            if (! $this->imageService->existsById($params['image_id'])) {
                 return new PwgError(404, 'image_id not found');
             }
         }
@@ -1457,10 +1439,10 @@ final class PwgImages
             return new PwgError(500, '[ws_images_addSimple] missing uploaded file temp name');
         }
 
-        $image_id = new UploadService(\Piwigo\Core\Lang::current(), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfigService::current()->get(), \Piwigo\Bootstrap\InfrastructureAccessor::entityManager(), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService(), \Piwigo\Bootstrap\CoreDomainAccessor::imageService(), \Piwigo\Config\CurrentConfig::current())
+        $image_id = $this->uploadService
             ->addUploadedFile(
                 $uploaded_tmp_name,
-                \Piwigo\Bootstrap\PresentationAccessor::urlService(),
+                $this->urlService,
                 $uploaded_image->name,
                 $params['category'],
                 8,
@@ -1469,19 +1451,19 @@ final class PwgImages
                 $service
             );
 
-        self::imageService()->updateLevelForImages([$image_id], $params['level']);
+        $this->imageService->updateLevelForImages([$image_id], $params['level']);
 
-        self::imageService()->updateDescriptiveFields(
+        $this->imageService->updateDescriptiveFields(
             $image_id,
             name: is_string($params['name'] ?? null) ? $params['name'] : null,
             author: is_string($params['author'] ?? null) ? $params['author'] : null,
             comment: is_string($params['comment'] ?? null) ? $params['comment'] : null,
             dateCreation: is_string($params['date_creation'] ?? null) ? $params['date_creation'] : null,
         );
-        \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+        $this->entityManager->clear();
 
         if (isset($params['tags']) and $params['tags'] !== '' and $params['tags'] !== []) {
-            $tagService = self::tagService();
+            $tagService = $this->tagService;
 
             $tag_ids = [];
             if (is_array($params['tags'])) {
@@ -1508,7 +1490,7 @@ final class PwgImages
         ];
 
         if ($params['category'] !== []) {
-            $category = self::categoryService()->getIdNamePermalinkById($params['category'][0]);
+            $category = $this->categoryService->getIdNamePermalinkById($params['category'][0]);
 
             $url_params['section'] = 'categories';
             $url_params['category'] = $category;
@@ -1516,12 +1498,12 @@ final class PwgImages
 
         // update metadata from the uploaded file (exif/iptc), even if the sync
         // was already performed by add_uploaded_file().
-        \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService()
+        $this->metadataService
             ->syncMetadata([$image_id]);
 
         return [
             'image_id' => $image_id,
-            'url' => \Piwigo\Bootstrap\PresentationAccessor::urlService()
+            'url' => $this->urlService
                 ->makePictureUrl($url_params),
         ];
     }
@@ -1544,10 +1526,8 @@ final class PwgImages
      * array<string, mixed> rather than an unverified 2-branch union.
      * @return PwgError|array<string, mixed>|null
      */
-    public static function upload(array $params, PwgServer $service): PwgError|array|null
+    public function upload(array $params, PwgServer $service): PwgError|array|null
     {
-        $conn = DbConnection::build();
-
         $format_ext = null;
 
         if (new \Piwigo\Csrf\CsrfService()->getToken() !== $params['pwg_token']) {
@@ -1556,11 +1536,11 @@ final class PwgImages
 
         if (isset($params['format_of'])) {
             // are formats enabled?
-            if (! \Piwigo\Config\CurrentConfig::current()->isFormatsEnabled()) {
+            if (! $this->currentConfig->isFormatsEnabled()) {
                 return new PwgError(401, 'formats are disabled');
             }
 
-            $format_ext_list = \Piwigo\Config\CurrentConfig::current()->formatExtensions();
+            $format_ext_list = $this->currentConfig->formatExtensions();
 
             // We must check if the extension is in the authorized list.
             if ((bool) preg_match('/\.(' . implode('|', $format_ext_list) . ')$/', (string) $params['name'], $matches)) {
@@ -1572,7 +1552,7 @@ final class PwgImages
             }
         }
 
-        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\CurrentConfig::current()->uploadDir();
+        $upload_dir_conf = $this->paths->root . $this->currentConfig->uploadDir();
         $upload_dir = $upload_dir_conf . '/buffer';
 
         // create the upload directory tree if not exists
@@ -1647,14 +1627,13 @@ final class PwgImages
             rename("{$filePath}.part", $filePath);
 
             if (isset($params['format_of'])) {
-                $imageRow = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
-                    ->findById($params['format_of']);
+                $imageRow = $this->imageRepository->findById($params['format_of']);
                 if ($imageRow === null) {
                     return new PwgError(404, __FUNCTION__ . ' : image_id not found');
                 }
                 $image = $imageRow->toArray();
 
-                $add_status = new UploadService(\Piwigo\Core\Lang::current(), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfigService::current()->get(), \Piwigo\Bootstrap\InfrastructureAccessor::entityManager(), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService(), \Piwigo\Bootstrap\CoreDomainAccessor::imageService(), \Piwigo\Config\CurrentConfig::current())
+                $add_status = $this->uploadService
                     ->addFormat($filePath, $format_ext, $imageRow->id);
 
                 return [
@@ -1670,17 +1649,17 @@ final class PwgImages
             $id_image = null; // null by default
 
             if ($params['update_mode']) {
-                $existing_ids = self::imageService()->getIdsByFilenameInCategory($name, $params['category'][0]);
+                $existing_ids = $this->imageService->getIdsByFilenameInCategory($name, $params['category'][0]);
                 if ($existing_ids !== []) {
                     $id_image = $existing_ids[0]; // take the id of the already existing image to replace it
                     $add_status = 'update';
                 }
             }
 
-            $image_id = new UploadService(\Piwigo\Core\Lang::current(), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfigService::current()->get(), \Piwigo\Bootstrap\InfrastructureAccessor::entityManager(), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService(), \Piwigo\Bootstrap\CoreDomainAccessor::imageService(), \Piwigo\Config\CurrentConfig::current())
+            $image_id = $this->uploadService
                 ->addUploadedFile(
                     $filePath,
-                    \Piwigo\Bootstrap\PresentationAccessor::urlService(),
+                    $this->urlService,
                     $name, // function add_uploaded_file will secure before insert
                     $params['category'],
                     $params['level'],
@@ -1689,15 +1668,15 @@ final class PwgImages
                     $service
                 );
 
-            $image_infos = self::imageService()->getUploadResultInfoById($image_id);
+            $image_infos = $this->imageService->getUploadResultInfoById($image_id);
             if ($image_infos === null) {
                 throw new Exception('ws_images_upload(): image fetch failed right after inserting it');
             }
 
-            $nb_photos_in_category = self::imageService()->countImagesInCategory($params['category'][0]);
-            $nb_photos_lounge = self::imageService()->countLoungeImagesPendingForCategory($params['category'][0]);
+            $nb_photos_in_category = $this->imageService->countImagesInCategory($params['category'][0]);
+            $nb_photos_lounge = $this->imageService->countLoungeImagesPendingForCategory($params['category'][0]);
 
-            $category_name = \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+            $category_name = $this->htmlService
                 ->getCatDisplayNameFromId($params['category'][0], null);
 
             return [
@@ -1737,9 +1716,9 @@ final class PwgImages
      * same PwgServer::invoke() by-name-dispatcher rationale as
      * Ws\PwgUsers::add()/setInfo().
      */
-    public static function uploadAsync(array $params, PwgServer &$service): mixed
+    public function uploadAsync(array $params, PwgServer &$service): mixed
     {
-        $logger = \Piwigo\Core\CurrentLogger::getStatic();
+        $logger = $this->currentLogger->get();
 
         // the username/password parameters have been used in include/user.inc.php
         // to authenticate the request (a much better time/place than here)
@@ -1750,13 +1729,13 @@ final class PwgImages
         }
 
         if ($params['image_id'] > 0) {
-            if (! self::imageService()->existsById($params['image_id'])) {
+            if (! $this->imageService->existsById($params['image_id'])) {
                 return new PwgError(404, __FUNCTION__ . ' : image_id not found');
             }
         }
 
-        $upload_dir_conf = \Piwigo\Core\CurrentPaths::get()->root . \Piwigo\Config\CurrentConfig::current()->uploadDir();
-        $output_filepath_prefix = $upload_dir_conf . '/buffer/' . $params['original_sum'] . '-u' . \Piwigo\Users\CurrentUser::current()->get()->id->value;
+        $upload_dir_conf = $this->paths->root . $this->currentConfig->uploadDir();
+        $output_filepath_prefix = $upload_dir_conf . '/buffer/' . $params['original_sum'] . '-u' . $this->currentUser->get()->id->value;
         $chunkfile_path_pattern = $output_filepath_prefix . '-%03uof%03u.chunk';
 
         $chunkfile_path = sprintf($chunkfile_path_pattern, $params['chunk'] + 1, $params['chunks']);
@@ -1773,18 +1752,19 @@ final class PwgImages
             return new PwgError(500, 'missing uploaded chunk file');
         }
         // $chunkfile_path is already absolute ($upload_dir_conf above
-        // includes the CurrentPaths::get()->root prefix, Part II) -- just
+        // includes the $this->paths->root prefix, Part II) -- just
         // normalize backslashes/'/./' segments before stripRoot() can
         // compute the 'uploads' disk-relative path; everything downstream
         // keeps using the original absolute $chunkfile_path unchanged, since
         // the 'uploads' disk is rooted at the same real filesystem location.
-        $paths = CurrentPaths::get();
-        $chunk_root = $paths->root . CurrentConfig::current()->uploadDir();
+        $paths = $this->paths;
+        $chunk_root = $paths->root . $this->currentConfig->uploadDir();
         $chunk_abs_path = str_replace(['\\', '/./'], ['/', '/'], $chunkfile_path);
         $chunk_rel_path = StorageRegistry::stripRoot($chunk_root, $chunk_abs_path);
         $chunk_stream = fopen($uploaded_chunk_tmp_name, 'rb');
         if ($chunk_stream !== false) {
-            StorageRegistry::disk('uploads')->writeStream($chunk_rel_path, $chunk_stream);
+            $this->storageRegistry->get('uploads')
+                ->writeStream($chunk_rel_path, $chunk_stream);
             fclose($chunk_stream);
         }
         $logger->debug(__FUNCTION__ . ' uploaded ' . $chunkfile_path);
@@ -1899,10 +1879,10 @@ final class PwgImages
 
         $logger->debug(__FUNCTION__ . ' ' . $output_filepath . ' MD5 checksum OK');
 
-        $image_id = new UploadService(\Piwigo\Core\Lang::current(), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfigService::current()->get(), \Piwigo\Bootstrap\InfrastructureAccessor::entityManager(), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService(), \Piwigo\Bootstrap\CoreDomainAccessor::imageService(), \Piwigo\Config\CurrentConfig::current())
+        $image_id = $this->uploadService
             ->addUploadedFile(
                 $output_filepath,
-                \Piwigo\Bootstrap\PresentationAccessor::urlService(),
+                $this->urlService,
                 $params['filename'],
                 $params['category'],
                 $params['level'],
@@ -1915,7 +1895,7 @@ final class PwgImages
 
         // and now, let's create tag associations
         if (isset($params['tag_ids']) and $params['tag_ids'] !== '') {
-            self::tagService()
+            $this->tagService
                 ->setTags(
                     array_values(array_filter(array_map(TagId::tryFrom(...), explode(',', $params['tag_ids'])))),
                     $image_id
@@ -1923,7 +1903,7 @@ final class PwgImages
         }
 
         // time to set other infos
-        self::imageService()->updateDescriptiveFields(
+        $this->imageService->updateDescriptiveFields(
             $image_id,
             name: is_string($params['name'] ?? null) ? $params['name'] : null,
             author: is_string($params['author'] ?? null) ? $params['author'] : null,
@@ -1935,12 +1915,12 @@ final class PwgImages
         PermissionCacheInvalidator::invalidate();
 
         // trick to bypass get_sql_condition_FandF
-        if ($params['level'] !== 0 and $params['level'] > \Piwigo\Users\CurrentUser::current()->get()->level) {
+        if ($params['level'] !== 0 and $params['level'] > $this->currentUser->get()->level) {
             // this will not persist -- Legacy Coupling Retirement Phase 8,
             // 8i: CurrentUser is the only real reader now (the parallel
             // `global $user;` array was never read by anything else in
             // src/Piwigo/, confirmed via grep before deleting it).
-            \Piwigo\Users\CurrentUser::current()->set(\Piwigo\Users\CurrentUser::current()->get()->withLevel($params['level']));
+            $this->currentUser->set($this->currentUser->get()->withLevel($params['level']));
         }
 
         // delete chunks older than a week
@@ -1992,16 +1972,16 @@ final class PwgImages
      *   id is Tables::images()'s NOT NULL primary key (int|string per
      *   driver), or null when no matching photo was found
      */
-    public static function exist(array $params, PwgServer $service): array
+    public function exist(array $params, PwgServer $service): array
     {
-        $logger = \Piwigo\Core\CurrentLogger::getStatic();
+        $logger = $this->currentLogger->get();
 
         $logger->debug(__FUNCTION__, 'WS', $params);
 
         $split_pattern = '/[\s,;\|]/';
         $result = [];
 
-        if (\Piwigo\Config\CurrentConfig::current()->uniquenessMode() === 'md5sum') {
+        if ($this->currentConfig->uniquenessMode() === 'md5sum') {
             // search among photos the list of photos already added, based on md5sum list
             $md5sums = preg_split(
                 $split_pattern,
@@ -2013,12 +1993,12 @@ final class PwgImages
                 throw new Exception('ws_images_exist(): preg_split() failed');
             }
 
-            $id_of_md5 = self::imageService()->getIdsByMd5sums($md5sums);
+            $id_of_md5 = $this->imageService->getIdsByMd5sums($md5sums);
 
             foreach ($md5sums as $md5sum) {
                 $result[$md5sum] = $id_of_md5[$md5sum] ?? null;
             }
-        } elseif (\Piwigo\Config\CurrentConfig::current()->uniquenessMode() === 'filename') {
+        } elseif ($this->currentConfig->uniquenessMode() === 'filename') {
             // search among photos the list of photos already added, based on
             // filename list
             $filenames = preg_split(
@@ -2031,7 +2011,7 @@ final class PwgImages
                 throw new Exception('ws_images_exist(): preg_split() failed');
             }
 
-            $id_of_filename = self::imageService()->getIdsByFilenames($filenames);
+            $id_of_filename = $this->imageService->getIdsByFilenames($filenames);
 
             foreach ($filenames as $filename) {
                 $result[$filename] = $id_of_filename[$filename] ?? null;
@@ -2057,9 +2037,9 @@ final class PwgImages
      * Phase 4 (SEC-40/P26 Request DTOs).
      * @return array<int|string, array<string, mixed>>
      */
-    public static function formatsSearchImage(array $params, PwgServer $service): array
+    public function formatsSearchImage(array $params, PwgServer $service): array
     {
-        $logger = \Piwigo\Core\CurrentLogger::getStatic();
+        $logger = $this->currentLogger->get();
 
         $logger->debug(__FUNCTION__, 'WS', $params);
 
@@ -2070,21 +2050,21 @@ final class PwgImages
         /** @var array<int|string, mixed> $candidates */
         $unique_filenames_db = [];
 
-        foreach (self::imageService()->getAllIdsAndFiles() as $row) {
+        foreach ($this->imageService->getAllIdsAndFiles() as $row) {
             $filename_wo_ext = \Piwigo\Core\StringHelper::getFilenameWoExtension($row['file']);
             @$unique_filenames_db[$filename_wo_ext][] = $row['id'];
         }
 
         // we want "long" format extensions first to match "cmyk.jpg" before "jpg" for example
         // (kept as a local variable, not written back to $conf: the original
-        // in-place usort() by reference on \Piwigo\Config\CurrentConfig::current()->formatExtensions() only ever
+        // in-place usort() by reference on $this->currentConfig->formatExtensions() only ever
         // mutated the request-local config copy anyway, since $conf is reloaded
         // from scratch on every request)
-        $format_ext_list = \Piwigo\Config\CurrentConfig::current()->formatExtensions();
+        $format_ext_list = $this->currentConfig->formatExtensions();
         usort($format_ext_list, static fn (string $a, string $b): int => strlen($b) - strlen($a));
 
         $format_db = [];
-        foreach (self::imageService()->getAllImageIdsAndExts() as $row) {
+        foreach ($this->imageService->getAllImageIdsAndExts() as $row) {
             $format_image_id = $row['image_id'];
             @$format_db[$format_image_id][] = $row['ext'];
         }
@@ -2153,7 +2133,7 @@ final class PwgImages
      *    plain int, a list of ints, or null. pwg_token: no WS_TYPE flag,
      *    mandatory -- always a plain string.
      */
-    public static function formatsDelete(array $params, PwgServer $service): PwgError|bool
+    public function formatsDelete(array $params, PwgServer $service): PwgError|bool
     {
         if (new \Piwigo\Csrf\CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -2186,7 +2166,7 @@ final class PwgImages
         // Delete physical file
         $ok = true;
 
-        foreach (self::imageService()->getImageIdsAndExtsByFormatIds($format_ids) as $row) {
+        foreach ($this->imageService->getImageIdsAndExtsByFormatIds($format_ids) as $row) {
             if (! isset($formats_of[$row['image_id']])) {
                 $image_ids[] = $row['image_id'];
                 $formats_of[$row['image_id']] = [];
@@ -2199,8 +2179,8 @@ final class PwgImages
             return new PwgError(404, 'No format found for the id(s) given');
         }
 
-        $urlService = \Piwigo\Bootstrap\PresentationAccessor::urlService();
-        foreach (self::imageService()->getPathsForFileDeletion($image_ids) as $image_row) {
+        $urlService = $this->urlService;
+        foreach ($this->imageService->getPathsForFileDeletion($image_ids) as $image_row) {
             if ($urlService->urlIsRemote($image_row['path'])) {
                 continue;
             }
@@ -2224,7 +2204,7 @@ final class PwgImages
         }
 
         // Delete format in the database
-        self::imageService()->deleteFormatsByIds($format_ids);
+        $this->imageService->deleteFormatsByIds($format_ids);
 
         PermissionCacheInvalidator::invalidate();
 
@@ -2239,13 +2219,13 @@ final class PwgImages
      *    thumbnail_sum/high_sum: no WS_TYPE flag, null default -- string|null.
      * @return PwgError|array<string, string>
      */
-    public static function checkFiles(array $params, PwgServer $service): PwgError|array
+    public function checkFiles(array $params, PwgServer $service): PwgError|array
     {
-        $logger = \Piwigo\Core\CurrentLogger::getStatic();
+        $logger = $this->currentLogger->get();
 
         $logger->debug(__FUNCTION__, 'WS', $params);
 
-        $path = self::imageService()->getPathById($params['image_id']);
+        $path = $this->imageService->getPathById($params['image_id']);
 
         if ($path === null) {
             return new PwgError(404, 'image_id not found');
@@ -2260,7 +2240,7 @@ final class PwgImages
             [
                 'path' => $path,
             ],
-            \Piwigo\Bootstrap\PresentationAccessor::urlService()
+            $this->urlService
         );
 
         $ret = [];
@@ -2305,16 +2285,14 @@ final class PwgImages
      *    non-null string defaults -- always string. pwg_token:
      *    WsParamFlag::OPTIONAL with no 'default' key -- may be entirely absent.
      */
-    public static function setInfo(array $params, PwgServer $service): ?PwgError
+    public function setInfo(array $params, PwgServer $service): ?PwgError
     {
 
         if (isset($params['pwg_token']) and new \Piwigo\Csrf\CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
-        $conn = DbConnection::build();
-        $imageRow = \Piwigo\Db\EntityManagerFactory::build($conn)->getRepository(\Piwigo\Image\ImageEntity::class)
-            ->findById($params['image_id']);
+        $imageRow = $this->imageRepository->findById($params['image_id']);
 
         if ($imageRow === null) {
             return new PwgError(404, 'image_id not found');
@@ -2337,7 +2315,7 @@ final class PwgImages
 
         foreach ($info_columns as $key) {
             if (isset($params[$key])) {
-                if (! \Piwigo\Config\CurrentConfig::current()->allowHtmlDescriptions() or ! isset($params['pwg_token'])) {
+                if (! $this->currentConfig->allowHtmlDescriptions() or ! isset($params['pwg_token'])) {
                     $params[$key] = strip_tags((string) $params[$key], '<b><strong><em><i>');
                 }
 
@@ -2378,14 +2356,14 @@ final class PwgImages
         }
 
         if (count(array_keys($update)) > 0) {
-            self::imageService()->updateFields($params['image_id'], $update);
-            \Piwigo\Bootstrap\InfrastructureAccessor::entityManager()->clear();
+            $this->imageService->updateFields($params['image_id'], $update);
+            $this->entityManager->clear();
 
-            self::activityService($conn)->record('photo', $params['image_id'], 'edit');
+            $this->activityService->record('photo', $params['image_id'], 'edit');
         }
 
         if (isset($params['categories'])) {
-            self::addImageCategoryRelations(
+            $this->addImageCategoryRelations(
                 $params['image_id'],
                 $params['categories'],
                 ($params['multiple_value_mode'] === 'replace' ? true : false)
@@ -2393,7 +2371,7 @@ final class PwgImages
         }
 
         // and now, let's create tag associations
-        $tagService = self::tagService();
+        $tagService = $this->tagService;
 
         if (isset($params['tag_ids'])) {
             $tag_ids = [];
@@ -2461,7 +2439,7 @@ final class PwgImages
      *    mandatory -- a plain string or an array, never null. pwg_token: no
      *    WS_TYPE flag, mandatory -- always a plain string.
      */
-    public static function delete(array $params, PwgServer $service): PwgError|int
+    public function delete(array $params, PwgServer $service): PwgError|int
     {
         if (new \Piwigo\Csrf\CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -2488,8 +2466,8 @@ final class PwgImages
             }
         }
 
-        $ret = self::imageService()
-            ->deleteElements($image_ids, \Piwigo\Bootstrap\PresentationAccessor::urlService(), true);
+        $ret = $this->imageService
+            ->deleteElements($image_ids, $this->urlService, true);
         PermissionCacheInvalidator::invalidate();
 
         return $ret;
@@ -2501,10 +2479,10 @@ final class PwgImages
      * @param mixed[] $params
      * @return array{message: ?string, ready_for_upload: bool}
      */
-    public static function checkUpload(array $params, PwgServer $service): array
+    public function checkUpload(array $params, PwgServer $service): array
     {
         $ret = [];
-        $ret['message'] = new UploadService(\Piwigo\Core\Lang::current(), \Piwigo\Bootstrap\InfrastructureAccessor::currentLogger(), \Piwigo\Bootstrap\InfrastructureAccessor::storageRegistry(), \Piwigo\PluginConfig\EventDispatcher::get(), \Piwigo\Config\CurrentConfigService::current()->get(), \Piwigo\Bootstrap\InfrastructureAccessor::entityManager(), \Piwigo\Bootstrap\ExtendedDomainAccessor::activityService(), \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService(), \Piwigo\Bootstrap\CoreDomainAccessor::imageService(), \Piwigo\Config\CurrentConfig::current())->readyForUploadMessage();
+        $ret['message'] = $this->uploadService->readyForUploadMessage();
         $ret['ready_for_upload'] = true;
         if (! in_array($ret['message'], [null, ''], true)) {
             $ret['ready_for_upload'] = false;
@@ -2521,10 +2499,10 @@ final class PwgImages
      * @return array{rows: list<array{image_id: int, category_id: int}>|null} matches
      *   ImageService::emptyLounge()'s own already-precise return type
      */
-    public static function emptyLounge(array $params, PwgServer $service): array
+    public function emptyLounge(array $params, PwgServer $service): array
     {
         $ret = [
-            'rows' => self::imageService()
+            'rows' => $this->imageService
                 ->emptyLounge(),
         ];
 
@@ -2542,7 +2520,7 @@ final class PwgImages
      *    always int.
      * @return PwgError|array{moved_from_lounge: list<array{image_id: int, category_id: int}>|null, category: array{id: int, nb_photos: int, label: string}}
      */
-    public static function uploadCompleted(array $params, PwgServer $service): PwgError|array
+    public function uploadCompleted(array $params, PwgServer $service): PwgError|array
     {
         if (new \Piwigo\Csrf\CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -2576,14 +2554,14 @@ final class PwgImages
 
         // the list of images moved from the lounge might not be the same than
         // $image_ids (canbe a subset or more image_ids from another upload too)
-        $moved_from_lounge = self::imageService()
+        $moved_from_lounge = $this->imageService
             ->emptyLounge();
 
-        $nb_photos = self::imageService()->countImagesInCategory($params['category_id']);
-        $category_name = \Piwigo\Bootstrap\PresentationAccessor::htmlService()
+        $nb_photos = $this->imageService->countImagesInCategory($params['category_id']);
+        $category_name = $this->htmlService
             ->getCatDisplayNameFromId($params['category_id'], null);
 
-        \Piwigo\PluginConfig\EventDispatcher::get()->dispatchNotify(new WsImagesUploadCompleted([
+        $this->eventDispatcher->dispatchNotify(new WsImagesUploadCompleted([
             'image_ids' => $image_ids,
             'category_id' => $params['category_id'],
             'moved_from_lounge' => $moved_from_lounge,
@@ -2607,13 +2585,13 @@ final class PwgImages
      *    -- always int. pwg_token: no WS_TYPE flag, mandatory -- always string.
      * @return PwgError|array{nb_added: int, nb_no_md5sum: int}
      */
-    public static function setMd5sum(array $params, PwgServer $service): PwgError|array
+    public function setMd5sum(array $params, PwgServer $service): PwgError|array
     {
         if (new \Piwigo\Csrf\CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
-        $imageService = self::imageService();
+        $imageService = $this->imageService;
 
         $no_md5sum_ids = $imageService->getPhotosNoMd5sum();
         $added_count = 0;
@@ -2637,7 +2615,7 @@ final class PwgImages
      *    plain string or an array, never null. pwg_token: mandatory string.
      * @return PwgError|array{nb_synchronized: int}
      */
-    public static function syncMetadata(array $params, PwgServer $service): PwgError|array
+    public function syncMetadata(array $params, PwgServer $service): PwgError|array
     {
         if (new \Piwigo\Csrf\CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -2671,13 +2649,13 @@ final class PwgImages
             return new PwgError(WsError::INVALID_PARAM, 'Invalid image_id (no value after filters)');
         }
 
-        $image_ids = self::imageService()->getExistingIds($image_ids);
+        $image_ids = $this->imageService->getExistingIds($image_ids);
 
         if ($image_ids === []) {
             return new PwgError(403, 'No image found');
         }
 
-        \Piwigo\Bootstrap\ExtendedDomainAccessor::metadataService()
+        $this->metadataService
             ->syncMetadata($image_ids);
 
         return [
@@ -2693,16 +2671,16 @@ final class PwgImages
      *    int. pwg_token: no WS_TYPE flag, mandatory -- always string.
      * @return PwgError|array{nb_deleted: int, nb_orphans: int}
      */
-    public static function deleteOrphans(array $params, PwgServer $service): PwgError|array
+    public function deleteOrphans(array $params, PwgServer $service): PwgError|array
     {
         if (new \Piwigo\Csrf\CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
-        $imageService = self::imageService();
+        $imageService = $this->imageService;
 
         $orphan_ids_to_delete = array_slice($imageService->getOrphans(), 0, $params['block_size']);
-        $deleted_count = $imageService->deleteElements($orphan_ids_to_delete, \Piwigo\Bootstrap\PresentationAccessor::urlService(), true);
+        $deleted_count = $imageService->deleteElements($orphan_ids_to_delete, $this->urlService, true);
         PermissionCacheInvalidator::invalidate();
 
         return [
@@ -2722,18 +2700,18 @@ final class PwgImages
      *    WS_TYPE flag, but always plain strings (action has a string default,
      *    pwg_token is mandatory)
      */
-    public static function setCategory(array $params, PwgServer $service): ?PwgError
+    public function setCategory(array $params, PwgServer $service): ?PwgError
     {
         if (new \Piwigo\Csrf\CsrfService()->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
         }
 
         // does the category really exist?
-        if (! self::categoryService()->existsById($params['category_id'])) {
+        if (! $this->categoryService->existsById($params['category_id'])) {
             return new PwgError(404, 'category_id not found');
         }
 
-        $imageService = self::imageService();
+        $imageService = $this->imageService;
 
         if ($params['action'] === 'associate') {
             $imageService->associateImagesToCategories($params['image_id'], [$params['category_id']]);

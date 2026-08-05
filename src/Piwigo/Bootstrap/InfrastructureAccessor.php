@@ -27,6 +27,14 @@ use Piwigo\Storage\StorageRegistry;
  * repository shares -- so a raw DBAL/BatchWriter write elsewhere in the
  * same request can clear() the *same* identity map those repositories
  * read through, not a throwaway one of its own.
+ *
+ * Singleton/service-locator elimination campaign, Phase 10: PwgImages's
+ * own conversion (the last Ws/Pwg* class using this accessor) emptied
+ * every real `src/Piwigo` caller of all 3 methods -- but `config/
+ * messenger.php` (outside `src/Piwigo`, and deliberately outside the
+ * `Kernel::container()` arch-test boundary too, per its own docblock)
+ * calls all 3 to build its handler factories' object graphs, so this
+ * class stays permanently, not just until Phase 10's own close-out.
  */
 final class InfrastructureAccessor
 {
@@ -41,7 +49,7 @@ final class InfrastructureAccessor
 
     /**
      * Same rationale as entityManager() above -- gives still-static callers
-     * (e.g. Ws\PwgExtensions's PemCatalog construction) the real
+     * (e.g. config/messenger.php's handler factories) the real
      * container-shared CurrentLogger instance, not just the Logger value
      * CurrentLogger::getStatic() itself unwraps to (singleton/
      * service-locator elimination campaign, Phase 2).
@@ -56,12 +64,10 @@ final class InfrastructureAccessor
     }
 
     /**
-     * Same rationale as currentLogger() above -- StorageRegistry::disk()
-     * itself already exists as a transitional shim, but callers that need
-     * to *construct* a wrapper-typed object (e.g. Ws\PwgImages's own
-     * `new UploadService(...)` sites) can't use that shim the same way
-     * currentLogger()'s callers couldn't use CurrentLogger::getStatic()
-     * (singleton/service-locator elimination campaign, Phase 2).
+     * Same rationale as currentLogger() above -- StorageRegistry's own
+     * `get()` method needs a real, container-shared instance to call it
+     * on, which a still-static caller (config/messenger.php) can't obtain
+     * via constructor injection.
      */
     public static function storageRegistry(): StorageRegistry
     {

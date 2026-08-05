@@ -49,6 +49,7 @@ final class WsDefaultMethods
         private readonly PwgGroups $pwgGroups,
         private readonly PwgTags $pwgTags,
         private readonly PwgUsers $pwgUsers,
+        private readonly PwgImages $pwgImages,
     ) {}
 
     /**
@@ -314,7 +315,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.addComment',
-            PwgImages::addComment(...),
+            $this->pwgImages->addComment(...),
             [
                 'image_id' => [
                     'type' => WsParamType::ID,
@@ -333,7 +334,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.getInfo',
-            PwgImages::getInfo(...),
+            $this->pwgImages->getInfo(...),
             [
                 'image_id' => [
                     'type' => WsParamType::ID,
@@ -353,7 +354,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.rate',
-            PwgImages::rate(...),
+            $this->pwgImages->rate(...),
             [
                 'image_id' => [
                     'type' => WsParamType::ID,
@@ -367,7 +368,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.search',
-            PwgImages::search(...),
+            $this->pwgImages->search(...),
             array_merge([
                 'query' => [],
                 'per_page' => [
@@ -389,7 +390,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.setPrivacyLevel',
-            PwgImages::setPrivacyLevel(...),
+            $this->pwgImages->setPrivacyLevel(...),
             [
                 'image_id' => [
                     'flags' => WsParamFlag::FORCE_ARRAY,
@@ -409,7 +410,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.formats.searchImage',
-            PwgImages::formatsSearchImage(...),
+            $this->pwgImages->formatsSearchImage(...),
             [
                 'filename_list' => [],
             ],
@@ -422,7 +423,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.formats.delete',
-            PwgImages::formatsDelete(...),
+            $this->pwgImages->formatsDelete(...),
             [
                 'format_id' => [
                     'type' => WsParamType::ID,
@@ -440,7 +441,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.setRank',
-            PwgImages::setRank(...),
+            $this->pwgImages->setRank(...),
             [
                 'image_id' => [
                     'type' => WsParamType::ID,
@@ -468,7 +469,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.setCategory',
-            PwgImages::setCategory(...),
+            $this->pwgImages->setCategory(...),
             [
                 'image_id' => [
                     'flags' => WsParamFlag::FORCE_ARRAY,
@@ -593,7 +594,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.addChunk',
-            PwgImages::addChunk(...),
+            $this->pwgImages->addChunk(...),
             [
                 'data' => [],
                 'original_sum' => [],
@@ -612,7 +613,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.addFile',
-            PwgImages::addFile(...),
+            $this->pwgImages->addFile(...),
             [
                 'image_id' => [
                     'type' => WsParamType::ID,
@@ -632,7 +633,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.add',
-            PwgImages::add(...),
+            $this->pwgImages->add(...),
             [
                 'thumbnail_sum' => [
                     'default' => null,
@@ -689,7 +690,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.addSimple',
-            PwgImages::addSimple(...),
+            $this->pwgImages->addSimple(...),
             [
                 'category' => [
                     'default' => null,
@@ -731,7 +732,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.upload',
-            PwgImages::upload(...),
+            $this->pwgImages->upload(...),
             [
                 'name' => [
                     'default' => null,
@@ -769,7 +770,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.uploadAsync',
-            PwgImages::uploadAsync(...),
+            $this->pwgImages->uploadAsync(...),
             [
                 'username' => [
                     'flags' => WsParamFlag::OPTIONAL,
@@ -832,7 +833,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.delete',
-            PwgImages::delete(...),
+            $this->pwgImages->delete(...),
             [
                 'image_id' => [
                     'flags' => WsParamFlag::ACCEPT_ARRAY,
@@ -848,7 +849,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.setMd5sum',
-            PwgImages::setMd5sum(...),
+            $this->pwgImages->setMd5sum(...),
             [
                 'block_size' => [
                     'default' => \Piwigo\Config\CurrentConfig::current()->checksumComputeBlocksize(),
@@ -865,7 +866,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.syncMetadata',
-            PwgImages::syncMetadata(...),
+            $this->pwgImages->syncMetadata(...),
             [
                 'image_id' => [
                     'flags' => WsParamFlag::ACCEPT_ARRAY,
@@ -882,7 +883,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.deleteOrphans',
-            PwgImages::deleteOrphans(...),
+            $this->pwgImages->deleteOrphans(...),
             [
                 'block_size' => [
                     'default' => 1000,
@@ -1165,7 +1166,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.exist',
-            PwgImages::exist(...),
+            $this->pwgImages->exist(...),
             [
                 'md5sum_list' => [
                     'default' => null,
@@ -1183,7 +1184,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.checkFiles',
-            PwgImages::checkFiles(...),
+            $this->pwgImages->checkFiles(...),
             [
                 'image_id' => [
                     'type' => WsParamType::ID,
@@ -1207,7 +1208,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.checkUpload',
-            PwgImages::checkUpload(...),
+            $this->pwgImages->checkUpload(...),
             null,
             'Checks if Piwigo is ready for upload.',
             options: [
@@ -1217,7 +1218,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.emptyLounge',
-            PwgImages::emptyLounge(...),
+            $this->pwgImages->emptyLounge(...),
             null,
             'Empty lounge, where images may be waiting before taking off.',
             options: [
@@ -1227,7 +1228,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.uploadCompleted',
-            PwgImages::uploadCompleted(...),
+            $this->pwgImages->uploadCompleted(...),
             [
                 'image_id' => [
                     'default' => null,
@@ -1246,7 +1247,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.setInfo',
-            PwgImages::setInfo(...),
+            $this->pwgImages->setInfo(...),
             [
                 'image_id' => [
                     'type' => WsParamType::ID,
@@ -2105,7 +2106,7 @@ final class WsDefaultMethods
 
         $service->addMethod(
             'pwg.images.filteredSearch.create',
-            PwgImages::filteredSearchCreate(...),
+            $this->pwgImages->filteredSearchCreate(...),
             [
                 'search_id' => [
                     'flags' => WsParamFlag::OPTIONAL,
